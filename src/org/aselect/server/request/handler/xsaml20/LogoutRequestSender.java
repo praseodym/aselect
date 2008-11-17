@@ -78,7 +78,7 @@ public class LogoutRequestSender
 		messageContext.setOutboundMessageTransport(outTransport);
 		messageContext.setOutboundSAMLMessage(logoutRequest);
 		messageContext.setPeerEntityEndpoint(samlEndpoint);
-		messageContext.setRelayState("relay");
+		// 20081109: messageContext.setRelayState("relay");
 
 		BasicX509Credential credential = new BasicX509Credential();
 

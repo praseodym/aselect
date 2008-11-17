@@ -1,11 +1,11 @@
 /*
  * Created on 21-aug-2007
+ * 20081109: added RelayState to the Artifact redirection
  */
 package org.aselect.server.request.handler.xsaml20;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.io.StringWriter;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -16,9 +16,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.xerces.util.DOMUtil;
-import org.apache.xml.serialize.OutputFormat;
-import org.apache.xml.serialize.XMLSerializer;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.sam.ASelectSAMAgent;
@@ -27,14 +24,10 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.storagemanager.StorageManager;
-import org.opensaml.Configuration;
 import org.opensaml.common.SAMLObject;
 import org.opensaml.saml2.binding.artifact.SAML2ArtifactType0004;
-import org.opensaml.saml2.core.ArtifactResponse;
 import org.opensaml.ws.message.encoder.MessageEncodingException;
 import org.opensaml.xml.XMLObject;
-import org.opensaml.xml.io.Unmarshaller;
-import org.opensaml.xml.io.UnmarshallerFactory;
 import org.opensaml.xml.util.XMLHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -76,7 +69,7 @@ public class Saml20_ArtifactManager extends StorageManager
 	 * @throws ASelectStorageException
 	 */
 	public void sendArtifact(String sArtifact, SAMLObject samlObject, String sAppUrl,
-			HttpServletResponse oHttpServletResponse)
+			HttpServletResponse oHttpServletResponse, String sRelayState)
 		throws IOException, ASelectStorageException
 	{
 		String sMethod = "sendArtifact()";
@@ -85,9 +78,15 @@ public class Saml20_ArtifactManager extends StorageManager
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Encode");
 		String uencArtifact = URLEncoder.encode(sArtifact, "UTF-8");
 		String sRedirectUrl = sAppUrl + "?SAMLart=" + uencArtifact;
+		if (sRelayState != null)
+			sRedirectUrl += "&RelayState=" + URLEncoder.encode(sRelayState, "UTF-8");
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sRedirectUrl);
+		// RH, 20081113, Set appropriate headers here
+		oHttpServletResponse.setHeader("Cache-Control", "no-cache, no-store");
+		oHttpServletResponse.setHeader("Pragma", "no-cache");
 		oHttpServletResponse.sendRedirect(sRedirectUrl);
+		
 	}
 
 //	private void putArtifactInStorage(Object key, SAMLObject samlObject) // RH, 20080715, o
@@ -131,6 +130,35 @@ public class Saml20_ArtifactManager extends StorageManager
         }*/
 	}
 
+	
+	// We want an XMLObject removed
+	private void removeArtifactFromStorage(Object key)  // RH, 2008113, n
+	throws ASelectStorageException
+	{
+		String sMethod = "removeArtifactFromStorage";
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "key="+key);
+
+		// Remove the object from underlying storage
+		super.remove(key);
+//		super.put(key, dom);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "remove done");
+		
+		// debug:
+		/*Hashtable htAll = super.getAll();
+        Enumeration eKeys = htAll.keys();
+        while (eKeys.hasMoreElements())
+        {
+            Object oKey = eKeys.nextElement();
+    		_systemLogger.log(Level.INFO, MODULE, sMethod, "key="+oKey);            
+            Hashtable xStorageContainer = (Hashtable)htAll.get(oKey);
+            Object oValue = xStorageContainer.get("contents");
+    		_systemLogger.log(Level.INFO, MODULE, sMethod, "key="+oKey+" contents="+oValue.toString());            
+        }*/
+	}
+
+	
+	
+	
 	/**
 	 * Gets Artifact from Storage. <br>
 	 * 

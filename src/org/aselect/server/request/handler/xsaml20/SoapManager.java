@@ -97,7 +97,9 @@ public class SoapManager
 			connection.setRequestProperty("SOAPAction", sbSOAPAction.toString());
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Send: ContentType: "+CONTENT_TYPE+
 					" Action: "+sbSOAPAction);
-
+			// RH, 20081113, set appropriate headers
+			connection.setRequestProperty("Pragma", "no-cache");
+			connection.setRequestProperty("Cache-Control", "no-cache, no-store");
 			// write message to output
 			PrintStream osOutput = new PrintStream(connection.getOutputStream());
 			osOutput.println(sMessage);

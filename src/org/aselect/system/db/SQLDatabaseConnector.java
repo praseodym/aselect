@@ -210,6 +210,11 @@ public class SQLDatabaseConnector
      * 
      * @return A new created <code>Statement</code>.
      */
+    // TODO, we shouldn't use this method because it uses java.sql.Statement
+    // java.sql.Statement can be vulnerable to sql-injection attacks
+    // better use PreparedStatement
+    // At the moment this method is only used for configuration queries
+    // that do not use "external" parameters, so for now this is safe
     public synchronized Statement connect()
     {
         String sMethod = "connect()";

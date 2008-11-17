@@ -209,7 +209,14 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler // RH, 20080606, n
 			authnRequest.setVersion(SAMLVersion.VERSION_20);
 			authnRequest.setIssuer(issuer);
 			authnRequest.setRequestedAuthnContext(requestedAuthnContext);
-	
+			
+			// Check if we have to set the ForceAuthn attribute
+	        String sForcedLogin = (String) htSessionContext.get("forced_logon");
+	        if ("true".equalsIgnoreCase(sForcedLogin)) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Setting the ForceAuthn attribute");
+	        	authnRequest.setForceAuthn(true);
+	        }
+	        
 			SAMLObjectBuilder<Endpoint> endpointBuilder = (SAMLObjectBuilder<Endpoint>) builderFactory
 					.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);
 			Endpoint samlEndpoint = endpointBuilder.buildObject();
@@ -218,6 +225,9 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler // RH, 20080606, n
 	
 //			HttpServletResponseAdapter outTransport = new HttpServletResponseAdapter(response); // RH 20080529, o
 			HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response, sDestination); // RH 20080529, n
+			// RH, 20081113, set appropriate headers
+			outTransport.setHeader("Pragma", "no-cache");
+			outTransport.setHeader("Cache-Control", "no-cache, no-store");
 			
 			BasicSAMLMessageContext messageContext = new BasicSAMLMessageContext();
 			messageContext.setOutboundMessageTransport(outTransport);

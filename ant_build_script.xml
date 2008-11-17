@@ -74,6 +74,8 @@
     <build-jar jar-name="authspserver"
                include-pattern="org/aselect/authspserver/**/*.class"
                exclude-pattern-1="org/aselect/authspserver/authsp/**/*.class" />
+    <build-jar jar-name="authspserver-all"
+               include-pattern="org/aselect/authspserver/**/*.class" />
     <build-jar jar-name="server.attributes.requestors.api"
                include-pattern="org/aselect/server/attributes/requestors/api/**/*.class" />
     <build-jar jar-name="server.attributes.requestors.flatfile"
@@ -118,5 +120,7 @@
     <build-jar jar-name="udb.jndi" include-pattern="org/aselect/server/udb/jndi/**/*.class" />
     <build-jar jar-name="udb.nodb" include-pattern="org/aselect/server/udb/nodb/**/*.class" />
     <build-jar jar-name="udb.sasdb" include-pattern="org/aselect/server/udb/sasdb/**/*.class" />
+    <build-jar jar-name="server-all"
+               include-pattern="org/aselect/server/**/*.class" />
   </target>
 </project>

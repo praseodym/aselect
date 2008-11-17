@@ -210,7 +210,7 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 			}
 		}
 		try {
-			logout.sendSoapLogoutRequest(url, issuerUrl, sNameID, "logout:sp-timeout", pkey);
+			logout.sendSoapLogoutRequest(url, issuerUrl, sNameID, "urn:oasis:names:tc:SAML:2.0:logout:sp-timeout", pkey);
 		}
 		catch (ASelectException e) {
 			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "exception trying to send Logout message", e);

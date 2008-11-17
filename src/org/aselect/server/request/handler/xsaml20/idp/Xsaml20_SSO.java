@@ -115,16 +115,20 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
 
 		try {
+			String sRelayState = (String)httpRequest.getParameter("RelayState");
 			Response errorResponse = validateAuthnRequest(authnRequest, httpRequest);
 			if (errorResponse != null) {
-				sendErrorArtifact(errorResponse, authnRequest, httpResponse);
+				sendErrorArtifact(errorResponse, authnRequest, httpResponse, sRelayState);
 				return;
 			}
 			// The message is OK
 			String sAppId = authnRequest.getIssuer().getValue();  // authnRequest.getProviderName();
 			String sSPRid = authnRequest.getID();
 			String sIssuer = authnRequest.getIssuer().getValue();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "SPRid = " + sSPRid);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "SPRid = "+sSPRid+" RelayState="+sRelayState);
+
+			boolean bForcedLogon = authnRequest.isForceAuthn();
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "ForceAuthn = " + bForcedLogon);
 
 			String sAssertionConsumerServiceURL = getAssertionConsumerServiceURL(samlMessage);
 			if (sAssertionConsumerServiceURL == null) {
@@ -142,12 +146,22 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 			// The new sessionhttpRequest
 			Hashtable htSession = _oSessionManager.getSessionContext(sIDPRid);
+			if (sRelayState != null)
+				htSession.put("RelayState", sRelayState);
 			htSession.put("sp_rid", sSPRid);
 			htSession.put("sp_issuer", sIssuer);
 			htSession.put("sp_assert_url", sAssertionConsumerServiceURL);
 			htSession.put("forced_uid", "saml20_user");
+			
+			// RH, 20081117, strictly speaking forced_logon != forced_authenticate
+			// 	but this is used throughout all code
+			if (bForcedLogon) {
+				htSession.put("forced_authenticate", new Boolean(bForcedLogon));
+//				htSession.put("forced_logon", new Boolean(bForcedLogon));
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "'forced_authenticate' in htSession set to: " + bForcedLogon);
+			}
 
-			// Het betrouwbaarheidsniveau wordt hier in de sessiecontext gestopt
+			// The betrouwbaarheidsniveau is stored in the sessiecontext
 			RequestedAuthnContext requestedAuthnContext = authnRequest.getRequestedAuthnContext();
 			String sBetrouwbaarheidsNiveau = SecurityLevel.getBetrouwbaarheidsNiveau(requestedAuthnContext);
 			if (sBetrouwbaarheidsNiveau.equals(SecurityLevel.BN_NOT_FOUND)) {
@@ -156,7 +170,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				errorResponse = errorResponse(sSPRid, sAssertionConsumerServiceURL,
 								StatusCode.NO_AUTHN_CONTEXT_URI, sStatusMessage);
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sStatusMessage);
-				sendErrorArtifact(errorResponse, authnRequest, httpResponse);
+				sendErrorArtifact(errorResponse, authnRequest, httpResponse, sRelayState);
 				return;
 			}
 			// debug
@@ -174,6 +188,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			StringBuffer sbURL = new StringBuffer(sASelectServerUrl);
 			sbURL.append("&rid=").append(sIDPRid);
 			sbURL.append("&a-select-server=").append(_sASelectServerID);
+			if (bForcedLogon) sbURL.append("&forced_logon=").append(bForcedLogon);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sbURL.toString());
 			httpResponse.sendRedirect(sbURL.toString());
 		}
@@ -190,7 +205,6 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	throws ASelectException
 	{
 		String sMethod = "getAssertionConsumerServiceURL()";
-		
 		String elementName = samlMessage.getElementQName().getLocalPart();
 		Issuer issuer = retrieveIssuer(elementName, samlMessage);
 		if (issuer == null) {
@@ -201,6 +215,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		String sEntityId = issuer.getValue();
 		String sElementName = AssertionConsumerService.DEFAULT_ELEMENT_LOCAL_NAME;
 		String sBindingName = SAMLConstants.SAML2_ARTIFACT_BINDING_URI;
+
 		try {
 			MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
 			sAssertionConsumerServiceURL = metadataManager.getLocation(sEntityId, sElementName, sBindingName);
@@ -220,7 +235,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	}
 
 	// This is an error response
-	private void sendErrorArtifact(Response errorResponse, AuthnRequest authnRequest, HttpServletResponse httpResponse)
+	private void sendErrorArtifact(Response errorResponse, AuthnRequest authnRequest,
+					HttpServletResponse httpResponse, String sRelayState)
 	throws IOException, ASelectException
 	{
 		String sMethod = "sendErrorArtifact()";
@@ -235,7 +251,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		// So in this case send a message to the browser
 		String sAssertionConsumerServiceURL = getAssertionConsumerServiceURL(authnRequest);
 		if (sAssertionConsumerServiceURL != null) {
-			artifactManager.sendArtifact(sArtifact, errorResponse, sAssertionConsumerServiceURL, httpResponse);
+			artifactManager.sendArtifact(sArtifact, errorResponse, sAssertionConsumerServiceURL, httpResponse, sRelayState);
 		}
 		else {
 			String errorMessage = "Something wrong in SAML communication";
@@ -273,6 +289,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	        }
 
 	        String sAssertUrl = null;
+	        String sRelayState = null;
 	        if (htTGTContext != null)
 	        	sAssertUrl = (String)htTGTContext.get("sp_assert_url");
 	        if (sAssertUrl == null && htSessionContext != null)
@@ -282,8 +299,14 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	            throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
 	        }
 	        
+	        // Actually, if RelayState was given, it should be available in the Session Context.
+	        if (htTGTContext != null)
+	        	sRelayState = (String)htTGTContext.get("RelayState");
+	        if (sRelayState == null && htSessionContext != null)
+	        	sRelayState = (String)htSessionContext.get("RelayState");
+	        
 	        // And off you go!
-			sendSAMLArtifactRedirect(sAssertUrl, sRid, htSessionContext, sTgt, htTGTContext, httpResponse);
+			sendSAMLArtifactRedirect(sAssertUrl, sRid, htSessionContext, sTgt, htTGTContext, httpResponse, sRelayState);
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -300,7 +323,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	//
 	@SuppressWarnings("unchecked")
 	private void sendSAMLArtifactRedirect(String sAppUrl, String sRid, Hashtable htSessionContext,
-				String sTgt, Hashtable htTGTContext, HttpServletResponse oHttpServletResponse)
+				String sTgt, Hashtable htTGTContext, HttpServletResponse oHttpServletResponse, String sRelayState)
 	throws ASelectException
 	{
 		String sMethod = "sendSAMLArtifactRedirect()";
@@ -325,6 +348,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				String sUid = (String) htTGTContext.get("uid");
 				String sCtxRid = (String) htTGTContext.get("rid");
 				String sSubjectLocalityAddress = (String) htTGTContext.get("client_ip");
+				String sAssertionID = SamlTools.generateIdentifier(_systemLogger, MODULE); 
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "CHECK ctxRid="+sCtxRid+" rid="+sRid +" client_ip="+sSubjectLocalityAddress);
 
 				// Attributes
@@ -368,6 +392,10 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 						.getBuilder(AuthnStatement.DEFAULT_ELEMENT_NAME);
 				AuthnStatement authnStatement = authnStatementBuilder.buildObject();
 				authnStatement.setAuthnInstant(new DateTime());
+				// Sun doesn't like this:
+				// authnStatement.setSessionIndex((String) htTGTContext.get("sp_issuer"));
+				String sSessionIndex = sAssertionID.replaceAll("_", "");
+				authnStatement.setSessionIndex(sSessionIndex);
 				// Always try to set the locality address, except when null or empty
 				if (sSubjectLocalityAddress != null && !"".equals(sSubjectLocalityAddress)) {
 					SAMLObjectBuilder<SubjectLocality> subjectLocalityBuilder = (SAMLObjectBuilder<SubjectLocality>) builderFactory
@@ -382,7 +410,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				SAMLObjectBuilder<Audience> audienceBuilder = (SAMLObjectBuilder<Audience>) builderFactory
 						.getBuilder(Audience.DEFAULT_ELEMENT_NAME);
 				Audience audience = audienceBuilder.buildObject();
-				audience.setAudienceURI((String) htTGTContext.get("sp_issuer"));
+				audience.setAudienceURI((String) htTGTContext.get("sp_issuer"));  // 20081109 added
 	
 				SAMLObjectBuilder<AudienceRestriction> audienceRestrictionBuilder = (SAMLObjectBuilder<AudienceRestriction>) builderFactory
 						.getBuilder(AudienceRestriction.DEFAULT_ELEMENT_NAME);
@@ -394,7 +422,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				SubjectConfirmationData subjectConfirmationData = subjectConfirmationDataBuilder.buildObject();
 				subjectConfirmationData = (SubjectConfirmationData)SamlTools.setValidityInterval(subjectConfirmationData,  tStamp, null, getMaxNotOnOrAfter());
 				subjectConfirmationData.setRecipient((String) htTGTContext.get("sp_assert_url"));
-	
+
 				// Bauke: added for OpenSSO 20080329
 				subjectConfirmationData.setInResponseTo(sSPRid);
 	
@@ -428,7 +456,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 						.getBuilder(Assertion.DEFAULT_ELEMENT_NAME);
 				assertion = assertionBuilder.buildObject();
 	
-				assertion.setID(SamlTools.generateIdentifier(_systemLogger, MODULE));
+				assertion.setID(sAssertionID);
 				assertion.setIssueInstant(tStamp);
 				// Set interval conditions
 				assertion = (Assertion)SamlTools.setValidityInterval(assertion, tStamp, getMaxNotBefore(), getMaxNotOnOrAfter());
@@ -484,7 +512,10 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			Saml20_ArtifactManager artifactManager = Saml20_ArtifactManager.getTheArtifactManager();
 			String sArtifact = artifactManager.buildArtifact(response, _sASelectServerUrl, sRid);
 
-			artifactManager.sendArtifact(sArtifact, response, sAppUrl, oHttpServletResponse);
+			artifactManager.sendArtifact(sArtifact, response, sAppUrl, oHttpServletResponse, sRelayState);
+			// TODO, shouldn't we remove the artifact from storage here?
+			//	or maybe in artifactManager.sendArtifact itself
+
 		}
 		catch (IOException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,

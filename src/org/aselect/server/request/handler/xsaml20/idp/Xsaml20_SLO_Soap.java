@@ -11,6 +11,7 @@ import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletInputStream;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilder;
@@ -51,6 +52,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler // RH, 20080602, n
 {
 	private final static String MODULE = "Xsaml20_SLO_Soap";
 	private static final String SOAP_TYPE = "text/xml";
+	private static final String CONTENT_TYPE = "text/xml; charset=utf-8";
 	private SystemLogger _oSystemLogger = _systemLogger;
 	private String _sRedirectUrl;
 	private static final String LOGOUTREQUEST = "LogoutRequest";
@@ -203,8 +205,18 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler // RH, 20080602, n
 			SoapManager soapManager = new SoapManager();
 			Envelope envelope = soapManager.buildSOAPMessage(logoutResponse);
 			Element envelopeElem = SamlTools.marshallMessage(envelope);
-			PrintWriter writer = response.getWriter();
-			writer.write(URLEncoder.encode(XMLHelper.nodeToString(envelopeElem), "UTF-8"));
+
+			// Bauke 20081112: used same code for all Soap messages
+//			_systemLogger.log(Level.INFO, MODULE, sMethod, "Send: ContentType: "+CONTENT_TYPE);
+			// Remy: 20081113: Move this code to HandlerTools for uniformity
+			SamlTools.sendSOAPResponse(response, XMLHelper.nodeToString(envelopeElem));
+			// RH, 20081113, so
+//			response.setContentType(CONTENT_TYPE);			
+//            ServletOutputStream sos = response.getOutputStream();
+//			sos.print(XMLHelper.nodeToString(envelopeElem));
+//			sos.println("\r\n\r\n");
+//			sos.close();
+			// RH, 20081113, eo
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);

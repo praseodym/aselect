@@ -3,9 +3,11 @@ package org.aselect.server.request.handler.xsaml20.sp;
 import java.util.logging.Level;
 
 import org.aselect.server.request.handler.xsaml20.Saml20_Metadata;
+import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.joda.time.DateTime;
 import org.opensaml.Configuration;
 import org.opensaml.common.SAMLObjectBuilder;
 import org.opensaml.common.xml.SAMLConstants;
@@ -101,6 +103,8 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 	{
 		String sMethod = "createMetaDataXML()";
 		String xmlMDRequest = null;
+		
+		DateTime tStamp = new DateTime();
 
 /*
 		// TODO, this should be done by a transformer (using xslt)
@@ -144,7 +148,13 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 		
 		EntityDescriptor entityDescriptor = entityDescriptorBuilder.buildObject();
 		entityDescriptor.setEntityID(getEntityIdIdp());
+		entityDescriptor.setID(SamlTools.generateIdentifier(_systemLogger, MODULE));
 		
+		if (getValidUntil()!=null)
+			entityDescriptor.setValidUntil(tStamp.plus(getValidUntil().longValue()));
+		if (getCacheDuration()!=null)
+			entityDescriptor.setCacheDuration(getCacheDuration());
+
 		// Create the KeyDescriptor
 		SAMLObjectBuilder<KeyDescriptor> keyDescriptorBuilder = (SAMLObjectBuilder<KeyDescriptor>) _oBuilderFactory
 		.getBuilder(KeyDescriptor.DEFAULT_ELEMENT_NAME);
@@ -217,6 +227,8 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 		ssoDescriptor.getKeyDescriptors().add(keyDescriptor);
 		ssoDescriptor.addSupportedProtocol(SAMLConstants.SAML20P_NS);
 		entityDescriptor.getRoleDescriptors().add(ssoDescriptor);
+
+		entityDescriptor = (EntityDescriptor)SamlTools.sign(entityDescriptor);
 
 		// TODO create descriptor (PDPDescriptor?) for session sync here
 		

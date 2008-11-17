@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilder;
@@ -315,15 +316,21 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 		_systemLogger.log(Level.INFO, MODULE, _sMethod, "Send SAML response: "
 				+ XMLHelper.prettyPrintXML(envelopeElem));
 		
-//		response.setContentType("text/xml"); // RH, 20080721, o,  we must also set charset
-		response.setContentType(CONTENT_TYPE); // RH, 20080721, n
-		try {
-			PrintWriter writer = response.getWriter();
-			writer.write(URLEncoder.encode(XMLHelper.nodeToString(envelopeElem), "UTF-8"));
-			writer.close();
+		try {  // Bauke 20081112: used same code for all Soap messages
+//			_systemLogger.log(Level.INFO, MODULE, _sMethod, "Send: ContentType: "+CONTENT_TYPE);
+			// Remy: 20081113: Move this code to HandlerTools for uniformity
+			SamlTools.sendSOAPResponse(response, XMLHelper.nodeToString(envelopeElem));
+			// RH, 20081113, so
+//			response.setContentType(CONTENT_TYPE);			
+//			ServletOutputStream sos = response.getOutputStream();
+//			sos.print(XMLHelper.nodeToString(envelopeElem));
+//			sos.println("\r\n\r\n");
+//			sos.close();
+			// RH, 20081113, eo
+
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, MODULE, _sMethod, "failed to send response to sp", e);
+			_systemLogger.log(Level.WARNING, MODULE, _sMethod, "Failed to send response", e);
 		}
 	}
 

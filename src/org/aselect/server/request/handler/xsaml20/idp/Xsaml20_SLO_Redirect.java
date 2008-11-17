@@ -61,15 +61,9 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 	}
 
 	/**
-	 * send a LogoutRequests to one of the other involved SPs TO: De
-	 * federatie-idp vernietigd de lokale serversessie en clientcookie. De
-	 * federatie-idp verwijderd de PIP-sessie en kijkt in eigen sessietabel voor
-	 * overige bestaande sessie. Federatie-idp stuurt gebruiker naar de
-	 * logoutservice van de eerstvolgende SP samen met een SAML-logoutrequest.
-	 * This other SP will respond with an artifact, which will be resolved in
-	 * the idp artifactResolver. There it will look for even more SPs and
-	 * initiate communication with them. If there are no more other SPs a logout
-	 * response will be sent to the original initiating SP
+	 * Send a LogoutRequests to one of the other involved SPs
+	 * When control returns here, the next SP will be handled.
+	 * After the last one the TGT will be destroyed.
 	 */
 	protected void handleSpecificSaml20Request(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
 					SignableSAMLObject samlMessage)
@@ -133,9 +127,8 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 		}
 	}
 
-	// TODO kijken waar allemaal op gevalideerd kan/moet worden
 	private Response validateLogoutRequest(LogoutRequest logoutRequest, HttpServletRequest httpRequest)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "validateLogoutRequest()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");

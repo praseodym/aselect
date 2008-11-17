@@ -369,6 +369,10 @@ public class TGTIssuer
             }
             // RH, 20080619, en
             
+            // Bauke 20081110 copy RelayState to the TgT
+            String sRelayState = (String)htSessionContext.get("RelayState");
+            if (sRelayState != null) htTGTContext.put("RelayState", sRelayState);
+            
             Hashtable htOldTGTContext = null;
             if (sOldTGT != null)
             {
@@ -564,6 +568,7 @@ public class TGTIssuer
             String sIssuer = (String)htSessionContext.get("sp_issuer");
             if (sIssuer != null) {
             	// SSO Sessions in effect
+            	htTGTContext.put("sp_issuer", sIssuer);
             	if (ssoSession == null) {
                     _systemLogger.log(Level.INFO, MODULE, sMethod, "NEW SSO session for "+sUserId+" issuer="+sIssuer);
             		ssoSession = new UserSsoSession(sUserId, "");  // sTgt);
@@ -580,6 +585,10 @@ public class TGTIssuer
                 htTGTContext.put("client_ip", htSessionContext.get("client_ip"));
             }
             // RH, 20080619, en
+
+            // Bauke 20081110 copy RelayState to the TgT
+            String sRelayState = (String)htSessionContext.get("RelayState");
+            if (sRelayState != null) htTGTContext.put("RelayState", sRelayState);
 
             _systemLogger.log(Level.INFO, MODULE, sMethod, "Store Context "+htTGTContext);
             if (htOldTGTContext == null) {  // Create a new TGT

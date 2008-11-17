@@ -614,7 +614,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							}
 							else {
 							    sRedirectUrl = (String)_htSessionContext.get("local_as_url");
-							    // Old saml20 code: sRedirectUrl = (String)_htSessionContext.get("sp_assert_url");
 							}
 		                    // update TGT with app_id or local_organization
 							// needed for attribute gathering in verify_tgt
@@ -750,10 +749,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
                 String sUid = (String)htServiceRequest.get("aselect_credentials_uid");
                 String sServerId = (String)htServiceRequest.get("aselect_credentials_server_id");
 
-				_systemLogger.log(Level.INFO, _sModule, sMethod, "SSO branch");
-                // check if a request was done for an other user-id
+                // Check if a request was done for an other user-id
     			String sForcedUid = (String)_htSessionContext.get("forced_uid");
-                if (sForcedUid != null && !sForcedUid.equals("saml20_user") && !sUid.equals(sForcedUid)) //user_id does not match
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "SSO branch uid="+sUid+" forced_uid="+sForcedUid);
+                if (sForcedUid != null && !sForcedUid.equals("saml20_user") &&
+                		!sForcedUid.equals("siam_user") && !sUid.equals(sForcedUid)) //user_id does not match
                 {
                     _tgtManager.remove(sTgt);
                 }
@@ -799,6 +799,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							// Add the SP to SSO administration - xsaml20
 							String spUrl = (String) _htSessionContext.get("sp_issuer");
 							if (spUrl != null) {
+								htTGTContext.put("sp_issuer", spUrl);  // save latest issuer
 								UserSsoSession ssoSession = (UserSsoSession)htTGTContext.get("sso_session");
 								if (ssoSession != null) {
 									ServiceProvider sp = new ServiceProvider(spUrl);

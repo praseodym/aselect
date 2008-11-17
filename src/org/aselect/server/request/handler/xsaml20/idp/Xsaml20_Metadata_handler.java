@@ -4,9 +4,11 @@ import java.util.logging.Level;
 
 import org.apache.xerces.util.DOMUtil;
 import org.aselect.server.request.handler.xsaml20.Saml20_Metadata;
+import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.joda.time.DateTime;
 import org.opensaml.Configuration;
 import org.opensaml.common.SAMLObjectBuilder;
 import org.opensaml.common.xml.SAMLConstants;
@@ -123,6 +125,9 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 	{
 		String sMethod = "createMetaDataXML()";
 		String xmlMDRequest = null;
+		
+		DateTime tStamp = new DateTime();
+
 /*
 		// TODO, this should be done by a transformer (using xslt)
 		String xmlMDRequest = "<?xml version=\"1.0\"?>"
@@ -169,6 +174,12 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 		
 		EntityDescriptor entityDescriptor = entityDescriptorBuilder.buildObject();
 		entityDescriptor.setEntityID(getEntityIdIdp());
+		entityDescriptor.setID(SamlTools.generateIdentifier(_systemLogger, MODULE));
+		
+		if (getValidUntil()!=null)
+			entityDescriptor.setValidUntil(tStamp.plus(getValidUntil().longValue()));
+		if (getCacheDuration()!=null)
+			entityDescriptor.setCacheDuration(getCacheDuration());
 		
 /*		
 		// Create the KeyDescriptor
@@ -274,6 +285,8 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 		pdpDescriptor.getKeyDescriptors().add( createKeyDescriptor(getSigningCertificate()));
 		pdpDescriptor.addSupportedProtocol(SAMLConstants.SAML20P_NS);
 		entityDescriptor.getRoleDescriptors().add(pdpDescriptor);
+
+		entityDescriptor = (EntityDescriptor)SamlTools.sign(entityDescriptor);
 		
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Just built the entityDescriptor");
 		

@@ -76,12 +76,15 @@ public class LogoutResponseSender
 
 //		HttpServletResponseAdapter outTransport = new HttpServletResponseAdapter(response); // RH 20080529, o
 		HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response, logoutResponseLocation); // RH 20080529, n
-
+		// RH 20081113, set appropriate headers
+		outTransport.setHeader("Pragma", "no-cache");
+		outTransport.setHeader("Cache-Control", "no-cache, no-store");
+		
 		BasicSAMLMessageContext messageContext = new BasicSAMLMessageContext();
 		messageContext.setOutboundMessageTransport(outTransport);
 		messageContext.setOutboundSAMLMessage(logoutResponse);
 		messageContext.setPeerEntityEndpoint(samlEndpoint);
-		messageContext.setRelayState("relay");
+		// 20081109: messageContext.setRelayState("relay");
 
 		BasicX509Credential credential = new BasicX509Credential();
 

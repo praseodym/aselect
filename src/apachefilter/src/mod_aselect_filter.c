@@ -9,10 +9,17 @@
  * If you did not receive a copy of the LICENSE 
  * please contact SURFnet bv. (http://www.surfnet.nl)
  *
- * Marked Parts:
- * Author: Bauke Hiemstra - www.anoigo.nl
- *
  */
+// Marked Parts:
+// Author: Bauke Hiemstra - www.anoigo.nl
+
+// Bauke 20081108:
+// - boolean "aselect_filter_secure_url" to activate URL escape sequence removal
+//   default is 1.
+
+// Bauke 20080928:
+// - added configurable Logout Bar
+// - aselect_filter_trace() calls all replaced by TRACE()
 
 /* 
  * $Id: mod_aselect_filter.c,v 1.10 2006/03/01 08:56:39 remco Exp $
@@ -90,9 +97,10 @@ static const char * aselect_filter_set_agent_port(cmd_parms *parms, void *mconfi
 static const char * aselect_filter_add_secure_app(cmd_parms *parms, void *mconfig, const char *arg1, const char *arg2, const char *arg3);
 static const char * aselect_filter_add_authz_rule(cmd_parms *parms, void *mconfig, const char *arg1, const char *arg2, const char *arg3);
 static const char * aselect_filter_set_html_error_template(cmd_parms *parms, void *mconfig, const char *arg );
+static const char * aselect_filter_set_html_logout_template(cmd_parms *parms, void *mconfig, const char *arg );
 static const char * aselect_filter_set_redirection_mode(cmd_parms *parms, void *mconfig, const char *arg );
 static const char * aselect_filter_set_use_aselect_bar(cmd_parms *parms, void *mconfig, const char *arg );
-static const char *aselect_filter_use_cookie(cmd_parms *parms, void *mconfig, const char *arg );
+static const char *aselect_filter_secure_url(cmd_parms *parms, void *mconfig, const char *arg );
 static const char *aselect_filter_pass_attributes(cmd_parms *parms, void *mconfig, const char *arg );
 static const char *aselect_filter_add_attribute(cmd_parms *parms, void *mconfig, const char *arg );
 
@@ -120,7 +128,6 @@ aselect_filter_init(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *pPool, serv
         ap_get_module_config(pServer->module_config, &aselect_filter_module);
 
     TRACE1("aselect_filter_init: %x", pServer);
-
     if (pConfig)
     {
         ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
@@ -360,11 +367,10 @@ aselect_filter_kill_ticket(request_rec *pRequest,
     int             ccSendMessage;
     char            *pcResponse;
 
-    TRACE("aselect_filter_kill_ticket");
-    
     //
     // Create the message
     //
+    TRACE("aselect_filter_kill_ticket");
     pcSendMessage = ap_psprintf(pPool, "request=kill_ticket&ticket=%s&app_id=%s\r\n", 
         aselect_filter_url_encode(pPool, pcTicket), 
         aselect_filter_url_encode(pPool, pConfig->pCurrentApp->pcAppId));
@@ -542,13 +548,11 @@ aselect_filter_verify_config(PASELECT_FILTER_CONFIG pConfig)
     if (pConfig->iAppCount == 0)
         return ASELECT_FILTER_ERROR_CONFIG;
 
-    if (pConfig->pcErrorTemplate)
-    {
-        if (strlen(pConfig->pcErrorTemplate) <= 0)
-            return ASELECT_FILTER_ERROR_CONFIG;
-    }
-    else
-        return ASELECT_FILTER_ERROR_CONFIG;
+    if (!pConfig->pcErrorTemplate || strlen(pConfig->pcErrorTemplate) <= 0)
+	return ASELECT_FILTER_ERROR_CONFIG;
+
+    if (!pConfig->pcLogoutTemplate || strlen(pConfig->pcLogoutTemplate) <= 0)
+	return ASELECT_FILTER_ERROR_CONFIG;
     
     return ASELECT_FILTER_ERROR_OK;
 }
@@ -599,13 +603,11 @@ aselect_filter_handler(request_rec *pRequest)
     int             bFirstParam;
 
     ap_log_error(APLOG_MARK, APLOG_INFO, pRequest->server, ap_psprintf(pRequest->pool, "XX Url - %s", pRequest->uri));
-#ifdef ASELECT_FILTER_TRACE
     TRACE("");
     TRACE("----------------------------------------------------------- aselect_filter_handler");
     TRACE1("GET %s", pRequest->uri);
     TRACE("-----------------------------------------------------------");
     ap_table_do(aselect_filter_print_table, pRequest, headers_in, NULL);
-#endif
 
     //
     // Select which pool to use
@@ -716,8 +718,8 @@ aselect_filter_handler(request_rec *pRequest)
             //
             if ((pcOrganizationIn = aselect_filter_get_cookie(pPool, headers_in, "aselectorganization=")))
             {
-                TRACE3("aselect_filter_handler: found organization: %s, UseCookie=%d PassAttributes=%s",
-			pcOrganizationIn, pConfig->bUseCookie, pConfig->pcPassAttributes);
+                TRACE3("aselect_filter_handler: found organization: %s, bSecureUrl=%d PassAttributes=%s",
+			pcOrganizationIn, pConfig->bSecureUrl, pConfig->pcPassAttributes);
 
                 //
                 // Check attributes
@@ -754,6 +756,7 @@ aselect_filter_handler(request_rec *pRequest)
                             if (iError == ASELECT_SERVER_ERROR_TGT_NOT_VALID ||
                                 iError == ASELECT_SERVER_ERROR_TGT_EXPIRED ||
                                 iError == ASELECT_SERVER_ERROR_TGT_TOO_LOW ||
+                                iError == ASELECT_SERVER_ERROR_UNKNOWN_TGT ||  // Bauke, 20080928 added
                                 iError == ASELECT_FILTER_ASAGENT_ERROR_TICKET_INVALID ||
                                 iError == ASELECT_FILTER_ASAGENT_ERROR_TICKET_EXPIRED ||
                                 iError == ASELECT_FILTER_ASAGENT_ERROR_UNKNOWN_TICKET)
@@ -873,6 +876,7 @@ aselect_filter_handler(request_rec *pRequest)
                         if (iError == ASELECT_SERVER_ERROR_TGT_NOT_VALID ||
                             iError == ASELECT_SERVER_ERROR_TGT_EXPIRED ||
                             iError == ASELECT_SERVER_ERROR_TGT_TOO_LOW ||
+			    iError == ASELECT_SERVER_ERROR_UNKNOWN_TGT ||  // Bauke, 20080928 added
                             iError == ASELECT_FILTER_ASAGENT_ERROR_TICKET_INVALID ||
                             iError == ASELECT_FILTER_ASAGENT_ERROR_TICKET_EXPIRED ||
                             iError == ASELECT_FILTER_ASAGENT_ERROR_UNKNOWN_TICKET)
@@ -944,13 +948,18 @@ aselect_filter_handler(request_rec *pRequest)
                         }
                         else if (strstr(pcRequest, "aselect_generate_bar"))
                         {
-                            //
                             // return the bar html content
-                            //
-                            pRequest->content_type = "text/html";
+			    char *pcLogoutHTML = pConfig->pcLogoutTemplate;
 
+                            pRequest->content_type = "text/html";
                             ap_send_http_header(pRequest);
-                            ap_rprintf(pRequest, ASELECT_LOGOUT_BAR, pConfig->pCurrentApp->pcLocation);
+
+			    // Bauke 20080928: added configurable Logout Bar
+			    while (pcLogoutHTML && (strstr(pcLogoutHTML, "[action]") != NULL))
+			    pcLogoutHTML = aselect_filter_replace_tag(pPool, "[action]", pConfig->pCurrentApp->pcLocation, pcLogoutHTML);
+
+			    ap_rprintf(pRequest, "%s\n", (pcLogoutHTML)? pcLogoutHTML: "");
+                            // OLD ap_rprintf(pRequest, ASELECT_LOGOUT_BAR, pConfig->pCurrentApp->pcLocation);
                             iRet = DONE;
                         }
                         else if (strstr(pcRequest, "aselect_kill_ticket"))
@@ -1141,7 +1150,6 @@ aselect_filter_handler(request_rec *pRequest)
                 //
                 // Generate & set A-Select cookies
                 //
-
                 TRACE3("Action: ASELECT_FILTER_ACTION_SET_TICKET: %s - %s - %s", pcTicketOut, pcUIDOut, pcOrganizationOut);
 		if (/*pConfig->bUseCookie ||*/ strchr(pConfig->pcPassAttributes,'c')!=0) {  // Bauke: added
 		    // Pass attributes in a cookie
@@ -1172,15 +1180,17 @@ aselect_filter_handler(request_rec *pRequest)
                 TRACE1("Set-Cookie: %s", pcCookie3);
                 ap_table_add(headers_out, "Set-Cookie", pcCookie3); 
 
-                TRACE1("Request args: '%s'", pRequest->args);
+                TRACE2("SecureUrl=%d RequestArgs: '%s'", pConfig->bSecureUrl, pRequest->args);
                 pcStrippedParams  = NULL;
                 bFirstParam = TRUE;
                 pcTmp = strtok(pRequest->args, "?&");
                 while (pcTmp != NULL)
                 {
+		    // Skip these parameters:
                     if ((pcTmp2 = strstr(pcTmp, "aselect_credentials")) == NULL) {
 	                if ((pcTmp2 = strstr(pcTmp, "rid")) == NULL) {
      	                    if ((pcTmp2 = strstr(pcTmp, "a-select-server")) == NULL) {
+				// The rest will pass
     	                        if (bFirstParam) {
     	                            pcStrippedParams = ap_psprintf(pPool, "?%s", pcTmp);
     	                            bFirstParam = FALSE;
@@ -1262,13 +1272,13 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 		if (pcAttributes) {
 		    pcAttributes = aselect_filter_base64_decode(pPool, pcAttributes);
 
-		    TRACE1("Start: pRequest->args=%s", (pRequest->args)? pRequest->args: "NULL");
+		    TRACE2("Start: SecureUrl=%d pRequestArgs=%s", pConfig->bSecureUrl, (pRequest->args)? pRequest->args: "NULL");
 		    TRACE1("Attributes from Agent: %s", pcAttributes);
 		    // Filter out unwanted characters in the URL
-		    for (stop=0 ; !stop && pRequest->args; ) {
+		    for (stop=0 ; pConfig->bSecureUrl && !stop && pRequest->args; ) {
 			int len = strlen(pRequest->args);
 			aselect_filter_url_decode(pRequest->args);
-			TRACE1("Start: %s", (pRequest->args)? pRequest->args: "NULL");
+			TRACE1("Loop: %s", (pRequest->args)? pRequest->args: "NULL");
 			if (len == strlen(pRequest->args)) {
 			    char *p, *q;
 			    for (p = q = pRequest->args; *q; ) {
@@ -1281,7 +1291,7 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 			    stop = 1;
 			}
 		    }
-		    TRACE1("Start: %s", (pRequest->args)? pRequest->args: "NULL");
+		    TRACE2("End: %s, AttrCount=%d", (pRequest->args)? pRequest->args: "NULL", pConfig->iAttrCount);
 
 		    // Perform attribute filtering!
 		    // The config file tells us which attributes to pass on and from which source
@@ -1292,9 +1302,8 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 			int len, constant;
 
 			p = pConfig->pAttrFilter[i];
-#ifdef ASELECT_FILTER_TRACE
-			aselect_filter_trace("aselect_filter_attribute_check:: %d: %s", i, p);
-#endif
+			TRACE2("aselect_filter_attribute_check:: %d: %s", i, p);
+
 			digidName[0] = ldapName[0] = attrName[0] = '\0';
 			q = strchr(p, ',');
 			if (q) {
@@ -1398,6 +1407,7 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 		    TRACE("No attributes in response");
 		    //pRequest->args = "";
 		}
+		TRACE1("PassAttributes=%d", pConfig->pcPassAttributes);
 		if (strchr(pConfig->pcPassAttributes,'q')!=0) {
 		    // Add the new args in front of the original ones
 		    if (pRequest->args && pRequest->args[0])
@@ -1424,18 +1434,14 @@ aselect_filter_create_config(pool *pPool, server_rec *pServer)
 {
     PASELECT_FILTER_CONFIG  pConfig = NULL;
 
-#ifdef ASELECT_FILTER_TRACE
-    aselect_filter_trace("aselect_filter_create_config");
-#endif
+    TRACE("aselect_filter_create_config");
     if ((pConfig = (PASELECT_FILTER_CONFIG) ap_palloc(pPool, sizeof(ASELECT_FILTER_CONFIG))))
     {
         memset(pConfig, 0, sizeof(ASELECT_FILTER_CONFIG));
     }
     else
     {
-#ifdef ASELECT_FILTER_TRACE
-            aselect_filter_trace("aselect_filter_create_config::ERROR:: could not allocate memory for pConfig");
-#endif
+	TRACE("aselect_filter_create_config::ERROR:: could not allocate memory for pConfig");
     }
 
     return pConfig;
@@ -1450,9 +1456,7 @@ aselect_filter_set_agent_address(cmd_parms *parms, void *mconfig, const char *ar
     {
         if ((pConfig->pcASAIP = ap_pstrdup(parms->pool, arg)))
         {
-#ifdef ASELECT_FILTER_TRACE
-            aselect_filter_trace("aselect_filter_set_agent_address:: ip: %s", pConfig->pcASAIP);
-#endif
+            TRACE1("aselect_filter_set_agent_address:: ip: %s", pConfig->pcASAIP);
         }
         else
         {
@@ -1477,9 +1481,7 @@ aselect_filter_set_agent_port(cmd_parms *parms, void *mconfig, const char *arg)
     {
         if ((pcASAPort = ap_pstrdup(parms->pool, arg)))
         {
-#ifdef ASELECT_FILTER_TRACE
-            aselect_filter_trace("aselect_filter_set_agent_port:: port: %s", pcASAPort);
-#endif
+            TRACE1("aselect_filter_set_agent_port:: port: %s", pcASAPort);
             pConfig->iASAPort = atoi(pcASAPort);
         }
         else
@@ -1512,7 +1514,7 @@ aselect_filter_add_authz_rule(cmd_parms *parms, void *mconfig, const char *arg1,
         }
         if (i >= pConfig->iAppCount)
         {
-            TRACE1("aselect_filter_add_secure_app: Unknown app_id \"%s\"", arg1);
+            TRACE1("aselect_filter_add_authz_rule: Unknown app_id \"%s\"", arg1);
             return "A-Select ERROR: Unknown application ID in authorization rule";
         }
         pApp = &pConfig->pApplications[i];
@@ -1520,7 +1522,7 @@ aselect_filter_add_authz_rule(cmd_parms *parms, void *mconfig, const char *arg1,
             return "A-Select ERROR: Maximum amount of authorization rules per application exceeded";
         pApp->pTargets[pApp->iRuleCount] = aselect_filter_url_encode(parms->pool, arg2);
         pApp->pConditions[pApp->iRuleCount] = aselect_filter_url_encode(parms->pool, arg3);
-        TRACE3("aselect_filter_add_secure_app: app=%s, target=%s, added condition \"%s\"",
+        TRACE3("aselect_filter_add_authz_rule: app=%s, target=%s, added condition \"%s\"",
             arg1, arg2, arg3);
         ++(pApp->iRuleCount);
     }
@@ -1711,14 +1713,10 @@ aselect_filter_add_attribute(cmd_parms *parms, void *mconfig, const char *arg)
 
         if (pConfig) {
 		if (pConfig->iAttrCount < ASELECT_FILTER_MAX_ATTR) {
-#ifdef ASELECT_FILTER_TRACE
-			aselect_filter_trace("aselect_filter_add_attribute:: %d", pConfig->iAttrCount);
-#endif
+			TRACE1("aselect_filter_add_attribute:: %d", pConfig->iAttrCount);
 			pAttr = &pConfig->pAttrFilter[pConfig->iAttrCount];
 			*pAttr = ap_pstrdup(parms->pool, arg);
-#ifdef ASELECT_FILTER_TRACE
-			aselect_filter_trace("aselect_filter_add_attribute:: %s", *pAttr);
-#endif
+			TRACE1("aselect_filter_add_attribute:: %s", *pAttr);
 			pConfig->iAttrCount++;
                 }
                 else {
@@ -1746,12 +1744,8 @@ static const char *aselect_filter_set_redirection_mode(cmd_parms *parms, void *m
                         else{
                 return "A-Select ERROR: Invalid argument to aselect_filter_set_redirect_mode";
             }
-#ifdef ASELECT_FILTER_TRACE
-            aselect_filter_trace("aselect_filter_set_redirect_mode:: %d (%s)", 
-                pConfig->iRedirectMode,
-                (pConfig->iRedirectMode == ASELECT_FILTER_REDIRECT_TO_APP)
-                ? "app" : "full");
-#endif
+            TRACE2("aselect_filter_set_redirect_mode:: %d (%s)", pConfig->iRedirectMode,
+		    (pConfig->iRedirectMode == ASELECT_FILTER_REDIRECT_TO_APP) ? "app" : "full");
         }
         else{
             return "A-Select ERROR: Internal error while setting redirect_mode";
@@ -1759,7 +1753,6 @@ static const char *aselect_filter_set_redirection_mode(cmd_parms *parms, void *m
     }
     return NULL;
 }
-
 
 static const char *
 aselect_filter_set_html_error_template(cmd_parms *parms, void *mconfig, const char *arg)
@@ -1771,98 +1764,116 @@ aselect_filter_set_html_error_template(cmd_parms *parms, void *mconfig, const ch
         char    cLine[100];
         char    *pcFile;
 
-        if (pConfig)
-        {
-                if ((pcFile = ap_pstrdup(parms->pool, arg)))
-                {
-#ifdef ASELECT_FILTER_TRACE
-                        aselect_filter_trace("aselect_filter_set_html_error_template:: %s", pcFile);
-#endif
-                        if ((file = fopen(pcFile, "r")))
-                        {
-                                if (fseek(file, 0, SEEK_END) == 0)
-                                {
-                                        if (fgetpos(file, &fpos) == 0)
-                                        {
+        if (pConfig) {
+                if ((pcFile = ap_pstrdup(parms->pool, arg))) {
+                        TRACE1("aselect_filter_set_html_error_template:: %s", pcFile);
+                        if ((file = fopen(pcFile, "r"))) {
+                                if (fseek(file, 0, SEEK_END) == 0) {
+                                        if (fgetpos(file, &fpos) == 0) {
                                                 memcpy(&ipos, &fpos, sizeof(ipos));
-
-#ifdef ASELECT_FILTER_TRACE
-                                                aselect_filter_trace("aselect_filter_set_html_error_template:: size of template: %d", ipos);
-#endif
-
-                                                if (fseek(file, 0, SEEK_SET) == 0)
-                                                {
-                                                        if ((pConfig->pcErrorTemplate = (char*) ap_palloc(parms->pool, ipos)))
-                                                        {
+                                                TRACE1("aselect_filter_set_html_error_template:: size of template: %d", ipos);
+                                                if (fseek(file, 0, SEEK_SET) == 0) {
+                                                        if ((pConfig->pcErrorTemplate = (char*) ap_palloc(parms->pool, ipos))) {
                                                                 memset(pConfig->pcErrorTemplate, 0, sizeof(ipos));
-
                                                                 while (fgets(cLine, sizeof(cLine), file) != NULL)
                                                                         strcat(pConfig->pcErrorTemplate, cLine);
                                                         }
-                                                        else
-                                                        {
-#ifdef ASELECT_FILTER_TRACE
-                                                                aselect_filter_trace("aselect_filter_set_html_error_template:: failed to allocate mem for pConfig->pcErrorTemplate");
-#endif
+                                                        else {
+                                                                TRACE("aselect_filter_set_html_error_template:: failed to allocate mem for pConfig->pcErrorTemplate");
                                                                 fclose(file);
-
                                                                 return "A-Select ERROR: Internal error when setting html_error_template file";
                                                         }
                                                 }
-                                                else
-                                                {
-#ifdef ASELECT_FILTER_TRACE
-                                                        aselect_filter_trace("aselect_filter_set_html_error_template:: fseek(SEEK_SET) failed");
-#endif
+                                                else {
+                                                        TRACE("aselect_filter_set_html_error_template:: fseek(SEEK_SET) failed");
                                                         fclose(file);
-
                                                         return "A-Select ERROR: Internal error when setting html_error_template file";
                                                 }
                                         }
-                                        else
-                                        {
+                                        else {
                                                 fclose(file);
-
-#ifdef ASELECT_FILTER_TRACE
-                                                aselect_filter_trace("aselect_filter_set_html_error_template:: fgetpos failed");
-#endif
-
+                                                TRACE("aselect_filter_set_html_error_template:: fgetpos failed");
                                                 return "A-Select ERROR: Internal error when setting html_error_template file";
                                         }
                                 }
-                                else
-                                {
-#ifdef ASELECT_FILTER_TRACE
-                                        aselect_filter_trace("aselect_filter_set_html_error_template:: fseek(SEEK_END) failed");
-#endif
+                                else {
+                                        TRACE("aselect_filter_set_html_error_template:: fseek(SEEK_END) failed");
                                         fclose(file);
-
                                         return "A-Select ERROR: Internal error when setting html_error_template file";
                                 }
-
                                 fclose(file);
                         }
-                        else
-                        {
-#ifdef ASELECT_FILTER_TRACE
-                                aselect_filter_trace("aselect_filter_set_html_error_template:: fopen failed");
-#endif
+                        else {
+                                TRACE("aselect_filter_set_html_error_template:: fopen failed");
                                 return "A-Select ERROR: Could not open html_error_template";
                         }
                 }
-                else
-                {
+                else {
                         return "A-Select ERROR: Internal error when setting html_error_template file";
                 }
         }
-        else
-        {
+        else {
                 return "A-Select ERROR: Internal error when setting html_error_template file";
         }
-
         return NULL;
 }
 
+// Bauke, 20080928, Logout Template added
+// www.anoigo.nl
+static const char *aselect_filter_set_html_logout_template(cmd_parms *parms, void *mconfig, const char *arg)
+{
+	char *funName = "aselect_filter_set_html_logout_template";
+        PASELECT_FILTER_CONFIG pConfig;
+        FILE    *file;
+        fpos_t  fpos;
+        int     ipos;
+        char    cLine[100];
+        char    *pcFile;
+
+        pConfig = (PASELECT_FILTER_CONFIG) ap_get_module_config(parms->server->module_config, &aselect_filter_module);
+        if (!pConfig) {
+                return "A-Select ERROR: Internal error when setting html_error_template file";
+        }
+	pcFile = ap_pstrdup(parms->pool, arg);
+	if (!pcFile) {
+		return "A-Select ERROR: Internal error when setting html_error_template file";
+	}
+	TRACE2("%s:: %s", funName, pcFile);
+	file = fopen(pcFile, "r");
+	if (!file) {
+		TRACE1("%s:: fopen failed", funName);
+		return "A-Select ERROR: Could not open html_error_template";
+	}
+	if (fseek(file, 0, SEEK_END) != 0) {
+		TRACE1("%s:: fseek(SEEK_END) failed", funName);
+		fclose(file);
+		return "A-Select ERROR: Internal error when setting html_error_template file";
+	}
+	if (fgetpos(file, &fpos) != 0) {
+		fclose(file);
+		TRACE1("%s:: fgetpos failed", funName);
+		return "A-Select ERROR: Internal error when setting html_error_template file";
+	}
+	memcpy(&ipos, &fpos, sizeof(ipos));
+	TRACE2("%s:: size of template: %d", funName, ipos);
+	if (fseek(file, 0, SEEK_SET) != 0) {
+		TRACE1("%s:: fseek(SEEK_SET) failed", funName);
+		fclose(file);
+		return "A-Select ERROR: Internal error when setting html_error_template file";
+	}
+	if ((pConfig->pcLogoutTemplate = (char*) ap_palloc(parms->pool, ipos))) {
+		memset(pConfig->pcLogoutTemplate, 0, sizeof(ipos));
+		while (fgets(cLine, sizeof(cLine), file) != NULL)
+			strcat(pConfig->pcLogoutTemplate, cLine);
+	}
+	else {
+		TRACE1("%s:: failed to allocate mem for pConfig->pcLogoutTemplate", funName);
+		fclose(file);
+		return "A-Select ERROR: Internal error when setting html_error_template file";
+	}
+	fclose(file);
+        return NULL;
+}
 
 static const char *
 aselect_filter_set_use_aselect_bar(cmd_parms *parms, void *mconfig, const char *arg)
@@ -1874,9 +1885,7 @@ aselect_filter_set_use_aselect_bar(cmd_parms *parms, void *mconfig, const char *
         {
                 if ((pcUseASelectBar = ap_pstrdup(parms->pool, arg)))
                 {
-#ifdef ASELECT_FILTER_TRACE
-                        aselect_filter_trace("aselect_filter_set_use_aselect_bar:: %s", pcUseASelectBar);
-#endif
+                        TRACE1("aselect_filter_set_use_aselect_bar:: %s", pcUseASelectBar);
                         pConfig->bUseASelectBar = FALSE;
 
                         if (strcasecmp(pcUseASelectBar, "1") == 0)
@@ -1895,30 +1904,27 @@ aselect_filter_set_use_aselect_bar(cmd_parms *parms, void *mconfig, const char *
         return NULL;
 }
 
-// Bauke: added
-// Do we want to use cookies to pass attributes or use the HTTP header
-// Read flag from the config file
+// Bauke 20081108: added
+// Boolean to activate URL escape sequence removal
 //
-static const char * aselect_filter_use_cookie(cmd_parms *parms, void *mconfig, const char *arg)
+static const char * aselect_filter_secure_url(cmd_parms *parms, void *mconfig, const char *arg)
 {
     PASELECT_FILTER_CONFIG pConfig = (PASELECT_FILTER_CONFIG) ap_get_module_config(parms->server->module_config, &aselect_filter_module);
-    char *pcUseCookie;
+    char *pcSecureUrl;
 
     if (pConfig) {
-	if ((pcUseCookie = ap_pstrdup(parms->pool, arg))) {
-#ifdef ASELECT_FILTER_TRACE
-	    aselect_filter_trace("aselect_filter_use_cookie:: %s", pcUseCookie);
-#endif
-	    pConfig->bUseCookie = FALSE;
-	    if (strcmp(pcUseCookie, "1") == 0)
-		pConfig->bUseCookie = TRUE;
+	if ((pcSecureUrl = ap_pstrdup(parms->pool, arg))) {
+	    TRACE1("aselect_filter_secure_url:: %s", pcSecureUrl);
+	    pConfig->bSecureUrl = TRUE;  // the default
+	    if (strcmp(pcSecureUrl, "0") == 0)
+		pConfig->bSecureUrl = FALSE;
 	}
 	else {
-	    return "A-Select ERROR: Internal error when setting use_cookie";
+	    return "A-Select ERROR: Internal error when setting secure_url";
 	}
     }
     else {
-	return "A-Select ERROR: Internal error when setting use_cookie";
+	return "A-Select ERROR: Internal error when setting secure_url";
     }
     return NULL;
 }
@@ -1928,14 +1934,9 @@ static const char * aselect_filter_pass_attributes(cmd_parms *parms, void *mconf
     PASELECT_FILTER_CONFIG pConfig = (PASELECT_FILTER_CONFIG) ap_get_module_config(parms->server->module_config, &aselect_filter_module);
     char *pcPassAttr;
 
-#ifdef ASELECT_FILTER_TRACE
-    aselect_filter_trace("pass_attributes: aselect_filter_use_cookie=%s", (pConfig->bUseCookie)?"TRUE":"FALSE");
-#endif
     if (pConfig) {
 	if ((pcPassAttr = ap_pstrdup(parms->pool, arg))) {
-#ifdef ASELECT_FILTER_TRACE
-	    aselect_filter_trace("aselect_filter_pass_attributes:: %s", pcPassAttr);
-#endif
+	    TRACE1("aselect_filter_pass_attributes:: %s", pcPassAttr);
 	    pConfig->pcPassAttributes[0] = '\0';
 	    if (strchr(pcPassAttr, 'c') != 0)
 		strcat(pConfig->pcPassAttributes,"c");
@@ -1945,11 +1946,11 @@ static const char * aselect_filter_pass_attributes(cmd_parms *parms, void *mconf
 		strcat(pConfig->pcPassAttributes,"h");
 	}
 	else {
-	    return "A-Select ERROR: Internal error when setting use_cookie";
+	    return "A-Select ERROR: Internal error when setting pass_attributes";
 	}
     }
     else {
-	return "A-Select ERROR: Internal error when setting use_cookie";
+	return "A-Select ERROR: Internal error when setting pass_attributes";
     }
     return NULL;
 }
@@ -1994,12 +1995,16 @@ aselect_filter_cmds[] =
         RSRC_CONF,
         TAKE3,
         "Usage aselect_filter_add_authz_rule <application id> <target uri> <condition>, example: aselect_filter_add_authz_rule \"app1\" \"*\" \"role=student\"" },
-    { "aselect_filter_set_html_error_template",
-        aselect_filter_set_html_error_template,
-        NULL,
-        RSRC_CONF,
-        TAKE1,
-        "Usage aselect_filter_set_html_error_template <path to template html page>, example: aselect_filter_set_html_error_template \"///usr//local//apache//aselect//error.html\"" },
+
+    { "aselect_filter_set_html_error_template", aselect_filter_set_html_error_template,
+        NULL, RSRC_CONF, TAKE1,
+        "Usage aselect_filter_set_html_error_template <path to template html page>, example: aselect_filter_set_html_error_template \"///usr//local//apache//aselect//error.html\""
+    },
+    { "aselect_filter_set_html_logout_template", aselect_filter_set_html_logout_template,
+        NULL, RSRC_CONF, TAKE1,
+        "Usage aselect_filter_set_html_logout_template <path to template html page>, example: aselect_filter_set_html_logout_template \"///usr//local//apache//aselect//logout.html\""
+    },
+
     { "aselect_filter_set_use_aselect_bar",
         aselect_filter_set_use_aselect_bar,
         NULL,
@@ -2014,9 +2019,9 @@ aselect_filter_cmds[] =
         "Usage aselect_filter_redirect_mode <app | full>, example: aselect_filter_redirect_mode \"app\"" },
 
 // Bauke: added 2 entries
-    { "aselect_filter_use_cookie", aselect_filter_use_cookie,
+    { "aselect_filter_secure_url", aselect_filter_secure_url,
         NULL, RSRC_CONF, TAKE1,
-        "Usage aselect_filter_use_cookie < 1 | 0 >, example: aselect_filter_use_cookie \"0\"" },
+        "Usage aselect_filter_secure_url < 1 | 0 >, example: aselect_filter_secure_url \"1\"" },
 
     { "aselect_filter_pass_attributes", aselect_filter_pass_attributes,
         NULL, RSRC_CONF, TAKE1,
@@ -2083,11 +2088,14 @@ aselect_filter_cmds[] =
         NULL,
         RSRC_CONF,
         "Usage aselect_filter_add_authz_rule <application id> <target uri> <condition>, example: aselect_filter_add_authz_rule \"app1\" \"*\" \"role=student\"" ),
-    AP_INIT_TAKE1( "aselect_filter_set_html_error_template",
-        aselect_filter_set_html_error_template,
-        NULL,
-        RSRC_CONF,
+
+    AP_INIT_TAKE1( "aselect_filter_set_html_error_template", aselect_filter_set_html_error_template,
+        NULL, RSRC_CONF,
         "Usage aselect_filter_set_html_error_template <path to template html page>, example: aselect_filter_set_html_error_template \"///usr//local//apache//aselect//error.html\"" ),
+    AP_INIT_TAKE1( "aselect_filter_set_html_logout_template", aselect_filter_set_html_logout_template,
+        NULL, RSRC_CONF,
+        "Usage aselect_filter_set_html_logout_template <path to template html page>, example: aselect_filter_set_html_logout_template \"///usr//local//apache//aselect//logout.html\"" ),
+
     AP_INIT_TAKE1( "aselect_filter_set_use_aselect_bar",
         aselect_filter_set_use_aselect_bar,
         NULL,
@@ -2100,9 +2108,9 @@ aselect_filter_cmds[] =
         "Usage aselect_filter_redirect_mode <app | full>, example: aselect_filter_redirect_mode \"app\""),
 
 // Bauke: added 3 entries
-    AP_INIT_TAKE1("aselect_filter_use_cookie", aselect_filter_use_cookie,
+    AP_INIT_TAKE1("aselect_filter_secure_url", aselect_filter_secure_url,
         NULL, RSRC_CONF,
-        "Usage aselect_filter_use_cookie < 0 | 1 >, example: aselect_filter_use_cookie \"0\""),
+        "Usage aselect_filter_secure_url < 0 | 1 >, example: aselect_filter_secure_url \"1\""),
 
     AP_INIT_TAKE1("aselect_filter_pass_attributes", aselect_filter_pass_attributes,
         NULL, RSRC_CONF,
@@ -2120,18 +2128,14 @@ aselect_filter_create_server_config( apr_pool_t *pPool, server_rec *pServer )
 {
     PASELECT_FILTER_CONFIG  pConfig = NULL;
 
-#ifdef ASELECT_FILTER_TRACE
-    aselect_filter_trace( "aselect_filter_create_config" );
-#endif
+    TRACE( "aselect_filter_create_config" );
     if( ( pConfig = ( PASELECT_FILTER_CONFIG ) apr_palloc( pPool, sizeof( ASELECT_FILTER_CONFIG ) ) ) )
     {
         memset( pConfig, 0, sizeof( ASELECT_FILTER_CONFIG ) );
     }
     else
     {
-#ifdef ASELECT_FILTER_TRACE
-        aselect_filter_trace( "aselect_filter_create_config::ERROR:: could not allocate memory for pConfig" );
-#endif
+        TRACE( "aselect_filter_create_config::ERROR:: could not allocate memory for pConfig" );
         pConfig = NULL;
     }
 
@@ -2142,9 +2146,7 @@ void
 aselect_filter_register_hooks( apr_pool_t *p )
 {
 
-#ifdef ASELECT_FILTER_TRACE
-    aselect_filter_trace( "aselect_filter_register_hooks" );
-#endif
+    TRACE( "aselect_filter_register_hooks" );
     ap_hook_post_config( aselect_filter_init, NULL, NULL, APR_HOOK_MIDDLE );
     ap_hook_access_checker( aselect_filter_handler, NULL, NULL, APR_HOOK_MIDDLE );
 }

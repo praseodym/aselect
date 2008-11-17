@@ -65,7 +65,8 @@ public class Xsaml20_Logout extends Saml20_BaseHandler  // RH, 20080602, n
 
 	    _sLogoutResultPage = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "logoutresult.html");    
 	    _sLogoutResultPage = org.aselect.system.utils.Utils.replaceString(_sLogoutResultPage, "[version]", Version.getVersion());
-	    _sLogoutResultPage = org.aselect.system.utils.Utils.replaceString(_sLogoutResultPage, "[organization_friendly_name]", _sFriendlyName);
+	    // Was: [organization_friendly_name], replaced 20081104
+	    _sLogoutResultPage = org.aselect.system.utils.Utils.replaceString(_sLogoutResultPage, "[organization_friendly]", _sFriendlyName);
 
 	    /*try {
 			_sLogoutPage = _configManager.getParam(aselect, "logout_page");
@@ -206,7 +207,7 @@ public class Xsaml20_Logout extends Saml20_BaseHandler  // RH, 20080602, n
 		String url = metadataManager.getLocation(_sFederationUrl, SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME,
 				SAMLConstants.SAML2_REDIRECT_BINDING_URI);
 
-		logoutRequestSender.sendLogoutRequest(url, _sReturnUrl, sNameID, request, response, "user initiated logout");
+		logoutRequestSender.sendLogoutRequest(url, _sReturnUrl, sNameID, request, response, "urn:oasis:names:tc:SAML:2.0:logout:user");
 	}
 
 	/**

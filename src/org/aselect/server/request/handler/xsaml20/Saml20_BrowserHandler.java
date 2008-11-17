@@ -1,6 +1,5 @@
 package org.aselect.server.request.handler.xsaml20;
 
-import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.util.Date;
 import java.util.Hashtable;
@@ -31,7 +30,6 @@ import org.opensaml.common.SAMLObjectBuilder;
 import org.opensaml.common.SAMLVersion;
 import org.opensaml.common.SignableSAMLObject;
 import org.opensaml.common.binding.BasicSAMLMessageContext;
-import org.opensaml.common.impl.SecureRandomIdentifierGenerator;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.core.*;
 import org.opensaml.saml2.metadata.SingleLogoutService;
@@ -282,6 +280,11 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 				}
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Signature OK");
 			}
+			
+			// Set appropriate headers Pragma and Cache-Control
+			httpResponse.setHeader("Pragma", "no-cache");
+			httpResponse.setHeader("Cache-Control", "no-cache");
+			httpResponse.addHeader("Cache-Control", "no-store");
 			handleSpecificSaml20Request(httpRequest, httpResponse, samlMessage);
 		}
 		catch (ASelectException e) {
@@ -436,16 +439,20 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 		SAMLObjectBuilder<Response> responseBuilder = (SAMLObjectBuilder<Response>) _oBuilderFactory
 				.getBuilder(Response.DEFAULT_ELEMENT_NAME);
 		Response response = responseBuilder.buildObject();
-		SecureRandomIdentifierGenerator idGenerator = null;
-		try {
-			idGenerator = new SecureRandomIdentifierGenerator();
-		}
-		catch (NoSuchAlgorithmException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "The SHA1PRNG algorithm is not supported by the JVM", e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-		}
-
-		response.setID(idGenerator.generateIdentifier());
+		// RH, 20081107, use SamlTools now
+//		SecureRandomIdentifierGenerator idGenerator = null;
+//		try {
+//			idGenerator = new SecureRandomIdentifierGenerator();
+//		}
+//		catch (NoSuchAlgorithmException e) {
+//			_systemLogger.log(Level.WARNING, MODULE, sMethod, "The SHA1PRNG algorithm is not supported by the JVM", e);
+//			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+//		}
+		// TODO, add '_' to this ID to make it saml NCName compliant
+//		response.setID(idGenerator.generateIdentifier());
+//		response.setID("_" + idGenerator.generateIdentifier());
+		// RH, 20081107, use SamlTools
+		response.setID(SamlTools.generateIdentifier(_systemLogger, MODULE));
 		response.setInResponseTo(sInResponseTo);
 		response.setVersion(SAMLVersion.VERSION_20);
 		response.setIssueInstant(new DateTime());
@@ -466,6 +473,10 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 		String sNameID = logoutRequest.getNameID().getValue();
 		TGTManager tgtManager = TGTManager.getHandle();
 		Hashtable<String, Object> htTGTContext = tgtManager.getTGT(sNameID);
+		
+		// TODO: if one or more sessionindexes are mentioned in the logout request
+		//       only logout the ones mentioned!!
+		// List SessionIndexes = logoutRequest.getSessionIndexes();
 		
 		if (htTGTContext != null) {
 			UserSsoSession sso = (UserSsoSession)htTGTContext.get("sso_session");
@@ -514,7 +525,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect logout for SP="+serviceProvider);
 					LogoutRequestSender sender = new LogoutRequestSender();
 					sender.sendLogoutRequest(url, _sASelectServerUrl, sNameID, httpRequest, httpResponse,
-							"federation initiated redirect logout");
+							"urn:oasis:names:tc:SAML:2.0:logout:user");  // was "federation initiated redirect logout"
 				}
 				else {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "TIMER logout for SP="+serviceProvider);

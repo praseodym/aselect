@@ -1,5 +1,6 @@
 package org.aselect.server.request.handler.xsaml20;
 
+import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -9,6 +10,7 @@ import java.util.Enumeration;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -82,7 +84,9 @@ public class SamlTools
 						e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
-		return idGenerator.generateIdentifier();
+		// RH, 20081107, add '_' to this ID to make it saml NCName compliant
+//		return idGenerator.generateIdentifier();
+		return "_" + idGenerator.generateIdentifier();
 	}
 
 	/**
@@ -221,8 +225,9 @@ public class SamlTools
      * @return valid                true = valid, false otherwise (invalid or undetermined)
      * @throws ValidationException  Thrown if an error occurs
      */
-        public static boolean checkValidityInterval(SAMLObject obj, DateTime refInstant) throws ASelectException {
-    	
+    public static boolean checkValidityInterval(SAMLObject obj, DateTime refInstant)
+    throws ASelectException
+    {	
     	boolean valid = true;
 		String sMethod = "checkValidityInterval";
 		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
@@ -456,7 +461,11 @@ public class SamlTools
 		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
 		Signature sig = ssObject.getSignature();
 		
-	    _systemLogger.log(Level.INFO,MODULE,sMethod, "pkey="+pKey);
+	    _systemLogger.log(Level.INFO,MODULE,sMethod, "pkey="+pKey+" sig="+sig);
+	    if (sig == null) {
+	        _systemLogger.log(Level.WARNING, MODULE, sMethod, "Expected signature not found");
+	    	return false;
+	    }
 
 	    SAMLSignatureProfileValidator profileValidator = new SAMLSignatureProfileValidator();
 	    try {
@@ -676,6 +685,26 @@ public class SamlTools
 //		return new HttpServletResponseAdapter(response);
 		// for new libs
 		return new HttpServletResponseAdapter(response, remoteURL == null ? false : remoteURL.toLowerCase().startsWith("https"));
+	}
+
+	/**
+	 * Set saml20 appropriate headers and
+	 * send the HTTP SOAP response and close the stream
+	 * @param response, the servletresponse
+	 * @param envelope, the (soapenvelope) string to send
+	 * @throws IOException
+	 */
+	public static void sendSOAPResponse(HttpServletResponse response, String envelope) throws IOException {
+		final String CONTENT_TYPE = "text/xml; charset=utf-8";
+	
+		response.setContentType(CONTENT_TYPE);	
+		response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, private");
+		response.setHeader("Pragma", "no-cache");
+		
+	    ServletOutputStream sos = response.getOutputStream();
+		sos.print(envelope);
+		sos.println("\r\n\r\n");
+		sos.close();
 	}
 		
 }

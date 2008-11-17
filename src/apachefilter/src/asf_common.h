@@ -105,19 +105,16 @@ typedef apr_table_t     table;
     "<script language=\"JavaScript\">top.location=\"%s\";</script>\n" \
     "</HEAD><BODY></BODY></HTML>\n"
 
-// DenHaag #006e79 border #064448, mijnoverheid.nl.png
-// Original: "border-color:#9999cc;"
-//	"background-color:#8080ff;"
-//	"<img src=\"/aselectres/aselectlogotiny.gif\">&nbsp;&nbsp;"
+// Bauke: No longer used!!
 #define ASELECT_LOGOUT_BAR \
 	"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">" \
 	"<html><head>" \
 	"<style>" \
 	".bttn {" \
 	"border-style:outset;" \
-	"border-color:#064448;" \
+	"border-color:#9999cc;" \
 	"border-width:2px;" \
-	"background-color:#006e79;" \
+	"background-color:#8080ff;" \
 	"text-align:center;" \
 	"width:90px;" \
 	"height:20px;" \
@@ -133,10 +130,10 @@ typedef apr_table_t     table;
 	"<tr>" \
 	"<td valign=\"top\" align=\"left\"></td>" \
 	"<td valign=\"top\" align=\"right\">" \
-	"<FORM action=\"%s\" target=\"_top\">" \
+	"<FORM action=\"[action]\" target=\"_top\">" \
 	"<INPUT Type=\"Hidden\" Name=\"request\" value=\"aselect_kill_ticket\">" \
 	"<INPUT Type=\"Submit\" class=bttn value=\"Log out\">" \
-	"<a href=\"https://www.mijnoverheid.nl\"><img src=\"https://siam.denhaag.nl/aselectres/mijnoverheid.nl_tiny.png\" border=0></a>&nbsp;&nbsp;" \
+	"<a href=\"http://www.aselect.org\"><img src=\"/aselectres/aselectlogotiny.gif\" border=0></a>&nbsp;&nbsp;" \
 	"</FORM>" \
 	"</td>" \
 	"</tr>" \
@@ -148,7 +145,6 @@ typedef apr_table_t     table;
 	"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">" \
 	"<html>" \
 	"<head>" \
-    "<title>" ASELECT_FILTER_VERSION "</title>" \
 	"</head>" \
 	"<frameset rows=\"40,*\" frameborder=\"1\" bordercolor=\"#effaf6\">" \
 	"<frame src=\"%s?request=aselect_generate_bar\" name=\"aselect_bar_frame\" scrolling=\"No\" id=\"aselectframe\" noresize marginwidth=\"0\" marginheight=\"0\" frameborder=\"0\">" \
@@ -195,6 +191,7 @@ typedef apr_table_t     table;
 #define ASELECT_SERVER_ERROR_TGT_NOT_VALID      0x0004  // The credentials are invalid
 #define ASELECT_SERVER_ERROR_TGT_EXPIRED        0x0005  // The credentials have expired
 #define ASELECT_SERVER_ERROR_TGT_TOO_LOW        0x0006  // The credentials are only valid for lower level authentication method 
+#define ASELECT_SERVER_ERROR_UNKNOWN_TGT        0x0007  // Server Ticket is invalid
 
 
 /*
@@ -221,8 +218,9 @@ typedef struct _ASELECT_APPLICATION
     char *pConditions[ASELECT_FILTER_MAX_RULES_PER_APP];
     char *pTargets[ASELECT_FILTER_MAX_RULES_PER_APP];  
 } ASELECT_APPLICATION, *PASELECT_APPLICATION;
+
 /*
- * Per-server configuration
+ * Per-filter configuration
  */
 typedef struct _ASELECT_FILTER_CONFIG               
 {
@@ -236,13 +234,13 @@ typedef struct _ASELECT_FILTER_CONFIG
     int     bUseASelectBar;
     int     iRedirectMode;
     int     bConfigError;
- // Bauke: added 5 lines
-    int bUseCookie;
+ // Bauke: added lines
+    int     bSecureUrl;
     char    pcPassAttributes[10];  // can contain a combination of 'c', 'q', 'h' (cookie, query string, header)
     char    *pAttrFilter[ASELECT_FILTER_MAX_ATTR];
     int     iAttrCount;
+    char    *pcLogoutTemplate;
 } ASELECT_FILTER_CONFIG, *PASELECT_FILTER_CONFIG;
-
 
 /*
  * used to decide what action the filter must take
@@ -255,7 +253,6 @@ typedef enum _ASELECT_FILTER_ACTION
     ASELECT_FILTER_ACTION_VERIFY_CREDENTIALS,
     ASELECT_FILTER_ACTION_SET_TICKET
 } ASELECT_FILTER_ACTION;
-
 
 /*
  * Function declarations

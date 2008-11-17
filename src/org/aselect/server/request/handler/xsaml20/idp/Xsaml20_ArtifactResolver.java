@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import java.net.URLEncoder;
 import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.logging.Level;
@@ -241,6 +242,9 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler  // RH, 2008060
 						.getArtifactFromStorage(sReceivedArtifact);
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "samlResponse retrieved from storage:\n" + XMLHelper.nodeToString(samlResponse.getDOM()));
 
+				// We will not allow to use the artifact again
+				artifactManager.remove(sReceivedArtifact);	// RH, 20081113, n
+
 				SAMLObjectBuilder<StatusCode> statusCodeBuilder = (SAMLObjectBuilder<StatusCode>) _oBuilderFactory
 						.getBuilder(StatusCode.DEFAULT_ELEMENT_NAME);
 				StatusCode statusCode = statusCodeBuilder.buildObject();
@@ -268,6 +272,8 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler  // RH, 2008060
 				artifactResponse.setStatus(status);
 				artifactResponse.setIssuer(issuer);
 				artifactResponse.setMessage(samlResponse);
+				
+
 			}
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the artifactResponse >======" );
@@ -279,20 +285,19 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler  // RH, 2008060
 			//_systemLogger.log(Level.INFO, MODULE, sMethod, "Writing SOAP message to response:\n"
 			//		+ XMLHelper.prettyPrintXML(envelopeElem));
 
-			// Bauke: added, it's polite to tell the other side what we are sending
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Send: ContentType: "+CONTENT_TYPE);
-			response.setContentType(CONTENT_TYPE);
+			// Bauke: added, it's considered polite to tell the other side what we are sending
+//			_systemLogger.log(Level.INFO, MODULE, sMethod, "Send: ContentType: "+CONTENT_TYPE);
+			// Remy: 20081113: Move this code to HandlerTools for uniformity
+			SamlTools.sendSOAPResponse(response, XMLHelper.nodeToString(envelopeElem));
+			// RH, 20081113, so
+//			response.setContentType(CONTENT_TYPE);			
+//			ServletOutputStream sos = response.getOutputStream();
+//			sos.print(XMLHelper.nodeToString(envelopeElem));
+//			sos.println("\r\n\r\n");
+//			sos.close();
+			// RH, 20081113, eo
 			
-//			response.setCharacterEncoding("UTF-8");
-//			PrintWriter pwOut = response.getWriter();
-//			pwOut.write(XMLHelper.nodeToString(envelopeElem));
-//			pwOut.flush();
-//			pwOut.close();
-			ServletOutputStream sos = response.getOutputStream();
-			sos.print(XMLHelper.nodeToString(envelopeElem));
-			sos.flush();
-			sos.close();
-			
+
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Internal error", e);

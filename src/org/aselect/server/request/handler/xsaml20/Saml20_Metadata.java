@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
+import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.ProtoRequestHandler;
 import org.aselect.system.error.Errors;
@@ -31,6 +32,10 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	private String signingCertificate;
 	private String publicKeyAlias;
 	private String entityIdIdp;
+	
+	private Long validUntil = null; 	// validity period after now() of metadata (seconds)
+	private Long cacheDuration = null; 	// advised period (in seconds) for peer to keep metadata in cache
+
 	
 	private String singleSignOnServiceTarget = "";
 	private String artifactResolverTarget = "";
@@ -77,6 +82,17 @@ public class Saml20_Metadata extends ProtoRequestHandler
                 setRedirectURL(_configManager.getParam(oASelect, "redirect_url"));
             	// redirect_url will be used as entityIdIdp in metadata
                 setEntityIdIdp(_configManager.getParam(oASelect, "redirect_url"));
+                
+        		String sValidUntil = HandlerTools.getSimpleParam(oConfig, "valid_until", false);
+        		if (sValidUntil != null) {
+        			setValidUntil(new Long( Long.parseLong(sValidUntil) * 1000));
+        		}
+        		String sCacheDuration = HandlerTools.getSimpleParam(oConfig, "cache_duration", false);
+        		if (sCacheDuration != null) {
+        			setCacheDuration(new Long( Long.parseLong(sValidUntil) * 1000));
+        		}
+
+                
             }
             catch (ASelectConfigException e) {
                 _systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'redirect_url' in section 'aselect' found", e);
@@ -166,7 +182,9 @@ public class Saml20_Metadata extends ProtoRequestHandler
 		String mdxml = createMetaDataXML();
 	
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "metadatXML file for entityID " + getEntityIdIdp() + " " + mdxml);
-		httpResponse.setContentType("text/xml");
+//		httpResponse.setContentType("text/xml");
+		httpResponse.setContentType("application/samlmetadata+xml");
+		
 		PrintWriter out;
 		try {
 			out = httpResponse.getWriter();
@@ -346,5 +364,21 @@ public class Saml20_Metadata extends ProtoRequestHandler
 
 	public synchronized void setIdpSSSoapLocation(String idpSSSoapLocation) {
 		this.idpSSSoapLocation = idpSSSoapLocation;
+	}
+
+	public synchronized Long getValidUntil() {
+		return validUntil;
+	}
+
+	public synchronized void setValidUntil(Long validUntil) {
+		this.validUntil = validUntil;
+	}
+
+	public synchronized Long getCacheDuration() {
+		return cacheDuration;
+	}
+
+	public synchronized void setCacheDuration(Long cacheDuration) {
+		this.cacheDuration = cacheDuration;
 	}
 }

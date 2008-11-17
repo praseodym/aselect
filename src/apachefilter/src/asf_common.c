@@ -59,9 +59,7 @@
 
 #include "asf_common.h"
 
-
 #ifdef ASELECT_FILTER_TRACE
-
 //
 // Bauke: Added fall back when logfile cannot be created
 //
@@ -70,8 +68,7 @@ static char *LogfileName = ASELECT_FILTER_TRACE_FILE;
 //
 // Trace function, traces the time, process id and the logstring
 //
-void
-aselect_filter_trace(const char *fmt, ...)
+void aselect_filter_trace(const char *fmt, ...)
 {
     char    *pcTime;
     time_t  t;
@@ -127,10 +124,7 @@ void aselect_filter_trace2(const char *filename, int line, const char *fmt, ...)
         fclose(f);
     }
 }
-
-
 #endif
-
 
 //
 // Prints out the contents of a table if tracing is enabled
@@ -286,10 +280,10 @@ aselect_filter_receive_msg(int sd, char *pcReceiveMsg, int ccReceiveMsg)
     char *pMsg = pcReceiveMsg;
     char *pLF;
 int cnt;
-static int count = 0;
+static int count = 1000;
 cnt = ++count;
 
-    TRACE3("%d aselect_filter_receive_msg (%d): %x", cnt, ccReceiveMsg, pcReceiveMsg);
+    TRACE3("RCV[%d] aselect_filter_receive_msg (%d): %x", cnt, ccReceiveMsg, pcReceiveMsg);
 
     // Receive data while their is data or till we find a "\r"
     while ((iRemaining > 0) && ((iReceived = recv(sd, pMsg, iRemaining, 0)) > 0))
@@ -308,7 +302,7 @@ cnt = ++count;
     if (iReceived != -1)
         iReceived = ccReceiveMsg - iRemaining;
         
-    TRACE4("%d aselect_filter_receive_msg %d: [%.*s]", cnt, iReceived, iReceived, pcReceiveMsg);
+    TRACE4("RCV[%d] aselect_filter_receive_msg %d: [%.*s]", cnt, iReceived, iReceived, pcReceiveMsg);
     return iReceived;
 }
 
@@ -330,12 +324,11 @@ aselect_filter_send_request(server_rec *pServer,
     int                 timeout;
     char                pcReceiveMessage[ASELECT_FILTER_MAX_RECV+1];
     int                 ccReceiveMessage;
-    char                *pcResponse = NULL;
-int cnt;
+    char                *pcResponse = NULL; int cnt;
 static int count = 0;
 cnt = ++count;
 
-    TRACE2("ToAGENT aselect_filter_send_request { cnt=%d [%s]", cnt, pcSendMessage);
+    TRACE2("ToAGENT[%d] aselect_filter_send_request { [%s]", cnt, pcSendMessage);
     memset(pcReceiveMessage, 0, ASELECT_FILTER_MAX_RECV);
 
     //
@@ -488,7 +481,7 @@ cnt = ++count;
             ap_psprintf(pPool, "ASELECT_FILTER:: could not create socket (%d)", errno));
     }
 
-    TRACE2("} FromAGENT aselect_filter_send_request, cnt=%d, response=[%s]", cnt, pcResponse?pcResponse:"NULL");
+    TRACE2("} FromAGENT[%d] aselect_filter_send_request, response=[%s]", cnt, pcResponse?pcResponse:"NULL");
     return pcResponse;
 }
 
@@ -504,7 +497,7 @@ aselect_filter_get_param(
     int             ccValue = 0;
     char *p;
 
-    //aselect_filter_trace("aselect_filter_get_param: %s", pcParam);
+    TRACE1("aselect_filter_get_param: %s", pcParam);
     if (pcArgs)
     {
 	// Bauke: example args: my_uid=9876&uid2=0000&uid=1234&...
@@ -515,8 +508,8 @@ aselect_filter_get_param(
 	    pcTemp = strstr(p, pcParam);
 	    if (!pcTemp)
 		break;
-	    //aselect_filter_trace("aselect_filter_get_param: 1.TEMP=%s '%c'", pcTemp, (pcTemp==pcArgs)? '#': *(pcTemp-1));
-	    //aselect_filter_trace("%d %d %d", (pcTemp==pcArgs), *(pcTemp-1) == *pcDelimiter, *(pcTemp-1) == ' ');
+	    //TRACE1("aselect_filter_get_param: 1.TEMP=%s '%c'", pcTemp, (pcTemp==pcArgs)? '#': *(pcTemp-1));
+	    //TRACE1("%d %d %d", (pcTemp==pcArgs), *(pcTemp-1) == *pcDelimiter, *(pcTemp-1) == ' ');
 	    if (pcTemp==pcArgs || *(pcTemp-1) == *pcDelimiter || *(pcTemp-1) == ' ') {
 		break;
 	    }
@@ -580,9 +573,7 @@ aselect_filter_get_param(
 	// No arguments to read, return error
 	//
     }
-#ifdef ASELECT_FILTER_TRACE
-    aselect_filter_trace("aselect_filter_get_param: %s %s", pcParam, pcValue?pcValue:"NULL");
-#endif
+    TRACE2("aselect_filter_get_param: %s %s", pcParam, pcValue?pcValue:"NULL");
     return pcValue;
 }
 
@@ -823,13 +814,10 @@ aselect_filter_gen_top_redirect(pool * pPool, request_rec *pRequest,
     TRACE1("Set-Cookie: %s", pcCookie);
 
     aselect_filter_add_nocache_headers(headers_out);
-
     ap_send_http_header(pRequest);
 
-    pcRedirectURL = ap_psprintf(pPool, "%s&a-select-server=%s&rid=%s", 
-        pcASUrl, pcASelectServer, pcRID);
-    ap_rprintf(pRequest, ASELECT_FILTER_CLIENT_REDIRECT, 
-        pcRedirectURL, pcRedirectURL);
+    pcRedirectURL = ap_psprintf(pPool, "%s&a-select-server=%s&rid=%s", pcASUrl, pcASelectServer, pcRID);
+    ap_rprintf(pRequest, ASELECT_FILTER_CLIENT_REDIRECT, pcRedirectURL, pcRedirectURL);
 
     return DONE;
 }

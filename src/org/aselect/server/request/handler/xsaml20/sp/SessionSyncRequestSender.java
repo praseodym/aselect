@@ -377,11 +377,14 @@ public class SessionSyncRequestSender
 				.getBuilder(SubjectConfirmation.DEFAULT_ELEMENT_NAME);
 		SubjectConfirmation sconf = confirmationBuilder.buildObject();
 
+		sconf.setMethod("urn:oasis:names:tc:SAML:2.0:cm:bearer");
+		
 		// Build SubjectConfirmationData
 		SAMLObjectBuilder<SubjectConfirmationData> confirmationDataBuilder = (SAMLObjectBuilder<SubjectConfirmationData>) oBuilderFactory
 				.getBuilder(SubjectConfirmationData.DEFAULT_ELEMENT_NAME);
 		SubjectConfirmationData sconfdata = confirmationDataBuilder.buildObject();
 		SamlTools.setValidityInterval(sconfdata, new DateTime(), get_maxNotBefore(), get_maxNotOnOrAfter());
+		sconfdata.setRecipient(_sFederationUrl);
 
 		// Add validityInterval data to the subject
 		sconf.setSubjectConfirmationData(sconfdata);

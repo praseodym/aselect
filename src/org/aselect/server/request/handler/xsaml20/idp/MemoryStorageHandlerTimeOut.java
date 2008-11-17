@@ -205,7 +205,7 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 						}
 						_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "IDPTO - Send Logout to SP="
 								+ sp.getServiceProviderUrl());
-						sendLogOutRequest(sNameID, sp.getServiceProviderUrl());
+						sendLogoutRequestToSp(sNameID, sp.getServiceProviderUrl());
 					}
 				}
 			}
@@ -229,7 +229,7 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 	 * @throws ASelectException
 	 *             If send request fails.
 	 */
-	private void sendLogOutRequest(String sNameID, String urlSp)
+	private void sendLogoutRequestToSp(String sNameID, String urlSp)
 		throws ASelectException
 	{
 		String _sMethod = "sendLogOutRequest";
@@ -247,7 +247,7 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 			}
 		}
 		try {
-			requestSender.sendSoapLogoutRequest(url, _serverUrl, sNameID, "logout:sp-timeout", pkey);
+			requestSender.sendSoapLogoutRequest(url, _serverUrl, sNameID, "urn:oasis:names:tc:SAML:2.0:logout:sp-timeout", pkey);
 		}
 		catch (ASelectException e) {
 			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "IDP - exception trying too send logout request", e);

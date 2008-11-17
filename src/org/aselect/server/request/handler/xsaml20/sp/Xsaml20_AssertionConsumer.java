@@ -183,15 +183,20 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 			SAMLObjectBuilder<ArtifactResolve> artifactResolveBuilder = (SAMLObjectBuilder<ArtifactResolve>) _oBuilderFactory
 					.getBuilder(ArtifactResolve.DEFAULT_ELEMENT_NAME);
 			ArtifactResolve artifactResolve = artifactResolveBuilder.buildObject();
-			SecureRandomIdentifierGenerator idGenerator = null;
-			try {
-				idGenerator = new SecureRandomIdentifierGenerator();
-			}
-			catch (NoSuchAlgorithmException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "The SHA1PRNG algorithm is not supported by the JVM",	e);
-				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-			}
-			artifactResolve.setID(idGenerator.generateIdentifier());
+			// RH, 20081107, use SamlTools now
+//			SecureRandomIdentifierGenerator idGenerator = null;
+//			try {
+//				idGenerator = new SecureRandomIdentifierGenerator();
+//			}
+//			catch (NoSuchAlgorithmException e) {
+//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "The SHA1PRNG algorithm is not supported by the JVM",	e);
+//				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+//			}
+			// TODO, add '_' to this ID to make it saml NCName compliant
+//			artifactResolve.setID(idGenerator.generateIdentifier());
+//			artifactResolve.setID("_" + idGenerator.generateIdentifier());
+			// RH, 20081107, use SamlTools
+			artifactResolve.setID(SamlTools.generateIdentifier(_systemLogger, MODULE));
 			artifactResolve.setVersion(SAMLVersion.VERSION_20);
 			artifactResolve.setIssueInstant(new DateTime());
 			// We decided that the other side could retrieve public key from metadata
@@ -286,8 +291,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 			}
 			
 			Object samlResponseObject = artifactResponse.getMessage();
-			// object kan een Response zijn of een StatusResponseType in het
-			// geval van resp. SSO of SLO
+			
+			// The object can either a Response (SSO case) or a StatusResponseType (SLO case)
 			if (samlResponseObject instanceof Response) {
 				// SSO
 				Response samlResponse = (Response) samlResponseObject;
@@ -356,6 +361,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 					handleSSOResponse(htRemoteAttributes, request, response);
 				}
 				else {
+					// SLO
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Response was not successful: "+sStatusCode);
 					Hashtable htRemoteAttributes = new Hashtable();
 					htRemoteAttributes.put("remote_rid", sRemoteRid);
@@ -463,6 +469,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 				// and we might have received remote attributes.
 				TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 				String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
+				// Will also redirect the user
 				oTGTIssuer.issueCrossTGT(sLocalRid, null, htRemoteAttributes, servletResponse, sOldTGT);
 			}
 		}
