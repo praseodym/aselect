@@ -260,14 +260,20 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			String sBetrouwbaarheidsNiveau = (String) htSessionContext.get("requested_betrouwbaarheidsniveau");
 			String sAppId;
 			String sSharedSecret;
-			if (sBetrouwbaarheidsNiveau != null && !sBetrouwbaarheidsNiveau.equals("empty")) {
-				sAppId = _htBetrouwbaarheidsNiveaus.get(sBetrouwbaarheidsNiveau);
-				sSharedSecret = _htSharedSecrets.get(sBetrouwbaarheidsNiveau);
-			}
-			else {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "requested level="+sBetrouwbaarheidsNiveau+ " default level="+_sDefaultBetrouwbaarheidsNiveau);
+			if (sBetrouwbaarheidsNiveau == null || sBetrouwbaarheidsNiveau.equals("empty")) {
 				// if betrouwbaarheidsniveau was not specified, we use the default.
-				sAppId = _htBetrouwbaarheidsNiveaus.get(_sDefaultBetrouwbaarheidsNiveau);
-				sSharedSecret = _htSharedSecrets.get(_sDefaultBetrouwbaarheidsNiveau);
+				sBetrouwbaarheidsNiveau = _sDefaultBetrouwbaarheidsNiveau;
+			}
+			sAppId = _htBetrouwbaarheidsNiveaus.get(sBetrouwbaarheidsNiveau);
+			sSharedSecret = _htSharedSecrets.get(sBetrouwbaarheidsNiveau);
+			if (sAppId == null) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No <application> found for level="+sBetrouwbaarheidsNiveau);
+				throw new ASelectException(Errors.ERROR_ASELECT_CONFIG_ERROR);
+			}
+			if (sSharedSecret == null) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No <betrouwbaarheidsniveau> found for level="+sBetrouwbaarheidsNiveau);
+				throw new ASelectException(Errors.ERROR_ASELECT_CONFIG_ERROR);
 			}
 
 			//String sAppUrl = (String) htSessionContext.get("my_url") + "?local_rid=" + sRid + "&authsp=" + _sAuthSPId;

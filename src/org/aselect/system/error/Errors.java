@@ -129,10 +129,6 @@ public class Errors
      */
     public final static String 
     			ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER = "0003";
-
-    /**
-     * A-Select error: The A-Select Server could not authenticate the user.
-     */
     public final static String 
     			ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER = "0003";
     
@@ -149,7 +145,7 @@ public class Errors
     /**
      * A-Select error: TGT credentials are too low.
      */
-    public final static String ERROR_ASELECT_SERVER_TGT_TOO_LOW = "0006";
+//    public final static String ERROR_ASELECT_SERVER_TGT_TOO_LOW = "0006";
 
     /**
      * A-Select error: Unknown TGT.
@@ -191,7 +187,7 @@ public class Errors
     /**
      * A-Select error: Invalid application URL was sent to the A-Select Server.
      */
-    public final static String ERROR_ASELECT_SERVER_INVALID_APP_URL = "0032";
+//    public final static String ERROR_ASELECT_SERVER_INVALID_APP_URL = "0032";
 
     /**
      * A-Select error: A-Select Server id mismatch.
@@ -250,28 +246,28 @@ public class Errors
     /**
      * Agent error: Could not authenticate user.
      */
-    public final static String ERROR_ASELECT_AGENT_COULD_NOT_AUTHENTICATE_USER = "0103";
+//    public final static String ERROR_ASELECT_AGENT_COULD_NOT_AUTHENTICATE_USER = "0103";
 
     /**
      * Agent error: User's TGT is not valid.
      */
-    public final static String ERROR_ASELECT_AGENT_TGT_NOT_VALID = "0105";
+//    public final static String ERROR_ASELECT_AGENT_TGT_NOT_VALID = "0105";
 
     /**
      * Agent error: User's TGT has expired.
      */
-    public final static String ERROR_ASELECT_AGENT_TGT_EXPIRED = "0106";
+//    public final static String ERROR_ASELECT_AGENT_TGT_EXPIRED = "0106";
 
     /**
      * Agent error: User's TGT does not meet the level of required
      * authentication.
      */
-    public final static String ERROR_ASELECT_AGENT_TGT_TOO_LOW = "0107";
+//    public final static String ERROR_ASELECT_AGENT_TGT_TOO_LOW = "0107";
 
     /**
      * Agent error: Unknown TGT.
      */
-    public final static String ERROR_ASELECT_AGENT_UNKNOWN_TGT = "0108";
+//    public final static String ERROR_ASELECT_AGENT_UNKNOWN_TGT = "0108";
 
     /**
      * Agent error: User's ticket is not valid.
@@ -281,7 +277,7 @@ public class Errors
     /**
      * Agent error: User's ticket has expired.
      */
-    public final static String ERROR_ASELECT_AGENT_TICKET_EXPIRED = "010a";
+//    public final static String ERROR_ASELECT_AGENT_TICKET_EXPIRED = "010a";
 
     /**
      * Agent error: Unknown ticket.
@@ -291,8 +287,7 @@ public class Errors
     /**
      * Agent error: A-Select Agent could not reach A-Select Server.
      */
-    public final static String 
-    				ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER = "010c";
+    public final static String ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER = "010c";
 
     /**
      * Agent error: Maximum number of issued tickets has been reached.
@@ -419,12 +414,12 @@ public class Errors
     /**
      * Storage encoding failed
      */
-    public final static String ERROR_ASELECT_STORAGE_ENCODING_FAILURE = "6007";
+//    public final static String ERROR_ASELECT_STORAGE_ENCODING_FAILURE = "6007";
     
     /**
      * Storage decoding failed
      */
-    public final static String ERROR_ASELECT_STORAGE_DECODING_FAILURE = "6008";
+//    public final static String ERROR_ASELECT_STORAGE_DECODING_FAILURE = "6008";
     
     /**
      * Storage connection failed

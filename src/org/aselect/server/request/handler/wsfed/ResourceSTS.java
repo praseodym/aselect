@@ -38,7 +38,7 @@ public class ResourceSTS extends ProtoRequestHandler
 {
 	public final static String MODULE = "ResourceSTS";
 	private final static String RETURN_SUFFIX = "_return";
-	private final static String SESSION_ID_PREFIX = "wsfed_";
+	private final static String SESSION_ID_PREFIX = "";  // 20081125 "wsfed_";
 	private String _sProviderId;
 	private String _sNameIdFormat;
 	private String _sPostTemplate;

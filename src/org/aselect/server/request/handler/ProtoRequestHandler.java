@@ -458,6 +458,8 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
     protected void showErrorPage(String sErrorCode, Hashtable htSessionContext, PrintWriter pwOut)
     {
         String sMethod = "showErrorPage()";
+    	_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM[error] "+sErrorCode+":"+
+				_configManager.getErrorMessage(sErrorCode));
         try {
             String sErrorForm = _configManager.getForm("error");
             sErrorForm = Utils.replaceString(sErrorForm, "[error]", sErrorCode);
@@ -482,7 +484,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	{
 	    String sMethod = "handleShowForm()";
 	    PrintWriter pwOut = null;
-	    _systemLogger.log(Level.INFO, MODULE, sMethod, "SHOW Form["+sTemplate+"]: Action="+sAction+" Context="+sPassContext+
+	    _systemLogger.log(Level.INFO, MODULE, sMethod, "Form Action="+sAction+" Context="+sPassContext+
 	    		" ReplyTo="+sReplyTo+" AselectUrl="+sAselectUrl+" Rid="+sRid+" Server="+sAselectServer);
 	    
 	    try {
@@ -516,6 +518,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		    sTemplate = Utils.replaceString(sTemplate, "[rid]", sRid);
 		    sTemplate = Utils.replaceString(sTemplate, "[a-select-server]", sAselectServer);
 	        
+		    _systemLogger.log(Level.INFO, MODULE, sMethod, "Form "+sTemplate);
 	        pwOut.print(sTemplate);
 	    }
 	    catch (Exception e) {

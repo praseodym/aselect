@@ -279,15 +279,14 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
      */
     protected void showErrorPage(String sErrorCode, Hashtable htServiceRequest, PrintWriter pwOut)
     {
-        String sMethod = "showErrorPage()";
+        String sMethod = "showErrorPage";
+    	_systemLogger.log(Level.INFO, _sModule, sMethod, "FORM[error] "+sErrorCode+":"+
+    							_configManager.getErrorMessage(sErrorCode));
         try
         {
             String sErrorForm = _configManager.getForm("error");
-            sErrorForm = Utils.replaceString(sErrorForm, "[error]",
-                sErrorCode);
-            sErrorForm = Utils.replaceString(sErrorForm, "[error_message]",
-                _configManager
-                    .getErrorMessage(sErrorCode));
+            sErrorForm = Utils.replaceString(sErrorForm, "[error]", sErrorCode);
+            sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", _configManager.getErrorMessage(sErrorCode));
             
             String sRid = (String)htServiceRequest.get("rid");
             if (sRid != null)
@@ -298,7 +297,6 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
                 htSession = SessionManager.getHandle().getSessionContext(sRid);
 
             sErrorForm = _configManager.updateTemplate(sErrorForm, htSession);
-            
             pwOut.println(sErrorForm);        
         }
         catch (Exception e)

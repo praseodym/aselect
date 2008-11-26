@@ -41,7 +41,7 @@ public class AccountSTS extends ProtoRequestHandler
 {
 	public final static String MODULE = "AccountSTS";
 	private final static String RETURN_SUFFIX = "_return";
-	private final static String SESSION_ID_PREFIX = "wsfed_";
+	private final static String SESSION_ID_PREFIX = "";  // 20081125 "wsfed_";
 
 	private IClientCommunicator _oClientCommunicator;
 	private TGTManager _oTGTManager;

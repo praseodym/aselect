@@ -71,6 +71,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.utils.Utils;
@@ -192,6 +193,10 @@ public abstract class ASelectHttpServlet extends HttpServlet
     public void showErrorPage(PrintWriter pwOut, String sTemplate, 
         String sError, String sErrorMessage)
     {
+    	String sMethod = "showErrorPage";
+    	ASelectSystemLogger _oAuthSPSystemLogger = ASelectSystemLogger.getHandle();
+    	_oAuthSPSystemLogger.log(Level.INFO, MODULE, sMethod, "FORM["+sTemplate+"] "+sError+":"+sErrorMessage);
+    	
         String sErrorForm = new String(sTemplate);
         sErrorForm = Utils.replaceString(sErrorForm, "[error]", sError);
         sErrorForm = Utils.replaceString(sErrorForm, 
