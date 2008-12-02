@@ -440,9 +440,49 @@ aselect_filter_auth_user(request_rec *pRequest,
     return pcResponse;
 }
 
+// Bauke 20081201: added to support Saml token in a header
+//
+static char *getRequestedAttributes(pool *pPool, PASELECT_FILTER_CONFIG pConfig)
+{
+    char *p, *q, *paramNames = NULL;
+    char ldapName[90];
+    int i, len;
+
+    for (i = 0; i < pConfig->iAttrCount; i++) {
+	p = pConfig->pAttrFilter[i];
+	TRACE2("getRequestedAttributes:: %d: %s", i, p);
+	ldapName[0] = '\0';
+	q = strchr(p, ',');
+	if (q) {  // digidName
+	    p = q+1;
+	    q = strchr(p, ',');
+	    if (q) {  // ldapName
+		len = (q-p < sizeof(ldapName))? q-p: sizeof(ldapName)-1;
+		strncpy(ldapName, p, len);
+		ldapName[len] = '\0';
+	    }
+	    // Also continue when attrName is empty
+	}
+	if (ldapName[0] == '\0')
+	    continue;
+
+	// Decent ldapName present, if it's a constant, skip it
+	if (ldapName[0] == '\'' && ldapName[strlen(ldapName)-1] == '\'')
+	    continue;
+
+	// Add ldapName
+	if (paramNames)
+	    paramNames = ap_psprintf(pPool, "%s,%s", paramNames, ldapName);
+	else
+	    paramNames = ap_psprintf(pPool, "%s", ldapName);
+    }
+    return paramNames;
+}
+
 //
 // Verify the credentials
 // sends the RID and the credentials to the Aselect Agent for verification
+// Bauke 20081201: added saml_attributes
 //
 char *
 aselect_filter_verify_credentials(request_rec *pRequest,
@@ -454,34 +494,24 @@ aselect_filter_verify_credentials(request_rec *pRequest,
     char    *pcSendMessage;
     int     ccSendMessage;
     char    *pcResponse;
-
-    TRACE("aselect_filter_verify_credentials");
+    char *attrNames = NULL;
 
     //
     // Create the message
     //
-    pcSendMessage = ap_psprintf(pPool, "request=verify_credentials&rid=%s&aselect_credentials=%s\r\n", 
-        aselect_filter_url_encode(pPool, pcRID), 
-        aselect_filter_url_encode(pPool, pcCredentials));
+    TRACE("aselect_filter_verify_credentials");
+    if (strchr(pConfig->pcPassAttributes,'t')!=0) {
+	// Need token later on, pass the attribute names we need
+	attrNames = getRequestedAttributes(pPool, pConfig);
+    }
+    pcSendMessage = ap_psprintf(pPool, "request=verify_credentials&rid=%s&aselect_credentials=%s%s%s\r\n", 
+	    aselect_filter_url_encode(pPool, pcRID), aselect_filter_url_encode(pPool, pcCredentials),
+	    (attrNames)? "&saml_attributes=": "", (attrNames)? attrNames: "");
     ccSendMessage = strlen(pcSendMessage);
 
     //TRACE2("request(%d): %s", ccSendMessage, pcSendMessage);
-    if ((pcResponse = aselect_filter_send_request(pRequest->server,
-                            pPool,
-                            pConfig->pcASAIP,
-                            pConfig->iASAPort,
-                            pcSendMessage,
-                            ccSendMessage)))
-    {
-        //TRACE1("response message: %s", pcResponse);
-    }
-    else
-    {
-        //
-        // could not send request to A-Select Agent
-        //
-        pcResponse = NULL;
-    }
+    pcResponse = aselect_filter_send_request(pRequest->server, pPool, pConfig->pcASAIP,
+                            pConfig->iASAPort, pcSendMessage, ccSendMessage);
 
     return pcResponse;
 }
@@ -1159,7 +1189,7 @@ aselect_filter_handler(request_rec *pRequest)
 		    ap_table_add(headers_out, "Set-Cookie", pcCookie4); 
 		}
 		if (/*!pConfig->bUseCookie ||*/ strchr(pConfig->pcPassAttributes,'q')!=0 ||
-					    strchr(pConfig->pcPassAttributes,'h')!=0) {  // Bauke: added
+			    strchr(pConfig->pcPassAttributes,'h')!=0 || strchr(pConfig->pcPassAttributes,'t')!=0) {  // Bauke: added
 		    // Pass attributes in the html header and/or query string
 		    iError = passAttributesInUrl(iError, pcAttributes, pPool, pRequest, pConfig,
 				    pcTicketOut, pcUIDOut, pcOrganizationOut, headers_in);
@@ -1232,9 +1262,8 @@ aselect_filter_handler(request_rec *pRequest)
     }
 
     // Bauke: added
-    if (iError == ASELECT_FILTER_ERROR_OK && (/*!pConfig->bUseCookie ||*/
-	    strchr(pConfig->pcPassAttributes,'q')!=0 || strchr(pConfig->pcPassAttributes,'h')!=0) &&
-	    iAction == ASELECT_FILTER_ACTION_ACCESS_GRANTED) {
+    if (iError == ASELECT_FILTER_ERROR_OK && iAction == ASELECT_FILTER_ACTION_ACCESS_GRANTED && (/*!pConfig->bUseCookie ||*/
+	    strchr(pConfig->pcPassAttributes,'q')!=0 || strchr(pConfig->pcPassAttributes,'h')!=0 || strchr(pConfig->pcPassAttributes,'t')!=0) ) {
 	iError = passAttributesInUrl(iError, pcAttributes, pPool, pRequest, pConfig, pcTicketIn, pcUIDIn, pcOrganizationIn, headers_in);
     }
 
@@ -1249,7 +1278,7 @@ aselect_filter_handler(request_rec *pRequest)
 }
 
 //
-// Bauke added: Pass attributes in the query string and in the header
+// Bauke added: Pass attributes in the query string and/or in the header
 //
 static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, request_rec *pRequest,
 	    PASELECT_FILTER_CONFIG pConfig, char *pcTicketIn, char *pcUIDIn, char *pcOrganizationIn, table *headers_in)
@@ -1294,6 +1323,18 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 		    TRACE2("End: %s, AttrCount=%d", (pRequest->args)? pRequest->args: "NULL", pConfig->iAttrCount);
 
 		    // Perform attribute filtering!
+		    // First handle the special Saml attribute token (if present)
+		    if (strchr(pConfig->pcPassAttributes,'t')!=0) {  // Pass Saml token in header
+			char *p;
+			p = aselect_filter_get_param(pPool, pcAttributes, "saml_attribute_token=", "&", TRUE/*UrlDecode*/);
+			if (p && *p) {
+			    // We have a base64 encoded Saml token, pass it in a custom header
+			    // Note the minus signs instead of underscores
+			    TRACE1("X-saml-attribute-token: %s", p);
+			    ap_table_set(headers_in, "X-saml-attribute-token", p);
+			}
+		    }
+
 		    // The config file tells us which attributes to pass on and from which source
 		    // If not present in the Ldap attributes, use the DigiD value!
 		    for (i = 0; i < pConfig->iAttrCount; i++) {
@@ -1306,19 +1347,20 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 
 			digidName[0] = ldapName[0] = attrName[0] = '\0';
 			q = strchr(p, ',');
-			if (q) {
+			if (q) {  // digidName
 			    len = (q-p < sizeof(digidName))? q-p: sizeof(digidName)-1;
 			    strncpy(digidName, p, len);
 			    digidName[len] = '\0';
 			    p = q+1;
 			    q = strchr(p, ',');
-			    if (q) {
+			    if (q) {  // ldapName
 				len = (q-p < sizeof(ldapName))? q-p: sizeof(ldapName)-1;
 				strncpy(ldapName, p, len);
 				ldapName[len] = '\0';
 				p = q+1;
 				for (q=p; *q; q++)
 				    ;
+				//attrName
 				len = (q-p < sizeof(attrName))? q-p: sizeof(attrName)-1;
 				strncpy(attrName, p, len);
 				attrName[len] = '\0';
@@ -1329,6 +1371,7 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 
 			TRACE3("%s,%s,%s", digidName, ldapName, attrName);
 			// attrName has a value
+			// Pass this attribute, 
 			p = (char *)0;
 			constant = 0;
 			if (ldapName[0] != '\0') {  // try to use Ldap value
@@ -1944,6 +1987,8 @@ static const char * aselect_filter_pass_attributes(cmd_parms *parms, void *mconf
 		strcat(pConfig->pcPassAttributes,"q");
 	    if (strchr(pcPassAttr, 'h') != 0)
 		strcat(pConfig->pcPassAttributes,"h");
+	    if (strchr(pcPassAttr, 't') != 0)
+		strcat(pConfig->pcPassAttributes,"t");
 	}
 	else {
 	    return "A-Select ERROR: Internal error when setting pass_attributes";

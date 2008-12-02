@@ -165,7 +165,7 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 		StringBuffer sbBuffer = null;
 		Hashtable htResponse = new Hashtable();
 		htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
-		_systemLogger.log(Level.WARNING, MODULE, sMethod, "sRid=" + sRid);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "sRid=" + sRid);
 
 		try {
 			Hashtable htSessionContext = _sessionManager.getSessionContext(sRid);

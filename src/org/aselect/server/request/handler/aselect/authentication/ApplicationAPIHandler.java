@@ -209,6 +209,7 @@ import org.aselect.server.authspprotocol.handler.AuthSPHandlerManager;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.request.HandlerTools;
+import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.server.request.handler.xsaml20.sp.MetaDataManagerSp;
 import org.aselect.server.request.handler.xsaml20.sp.SessionSyncRequestSender;
 import org.aselect.server.session.SessionManager;
@@ -218,6 +219,7 @@ import org.aselect.system.communication.server.IOutputMessage;
 import org.aselect.system.communication.server.IProtocolRequest;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
+import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.utils.Utils;
@@ -259,6 +261,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
     private CryptoEngine _cryptoEngine;
 
     private MetaDataManagerSp _metadataManager;
+	protected String _sServerUrl;
 
     /**
      * Create a new instance.
@@ -280,7 +283,8 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
         								HttpServletRequest servletRequest, 
         								HttpServletResponse servletResponse,
         								String sMyServerId, 
-        								String sMyOrg) throws ASelectCommunicationException
+        								String sMyOrg)
+    throws ASelectCommunicationException
     {    
         super(reqParser, servletRequest, servletResponse, sMyServerId, sMyOrg);
 
@@ -292,6 +296,13 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
         _applicationManager = ApplicationManager.getHandle();
         _authSPManagerManager = AuthSPHandlerManager.getHandle();
         _cryptoEngine = CryptoEngine.getHandle();
+
+        try {
+			_sServerUrl = HandlerTools.getParamFromSection(null, "aselect", "redirect_url");
+		}
+		catch (ASelectConfigException e) {
+            throw new ASelectCommunicationException(Errors.ERROR_ASELECT_CONFIG_ERROR, e);
+		}
         
         try {
 			_metadataManager = MetaDataManagerSp.getHandle();
@@ -846,223 +857,188 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
      * @param oOutputMessage The output message.
      * @throws ASelectException If proccessing fails.
      */
-    private void handleVerifyCredentialsRequest(IInputMessage oInputMessage,
-        IOutputMessage oOutputMessage) throws ASelectException
-    {
-        String sMethod = "handleVerifyCredentialsRequest()";
-        
-        Hashtable htTGTContext = null;
-        String sRid = null;
-        String sUid = null;
-        String sResultCode  = null;
-        String sEncTgt = null;
-        String sASelectServer = null;
-        String sTGT = null;
+	//
+	// Bauke 20081201: added support for parameter "saml_attributes"
+	//
+    private void handleVerifyCredentialsRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
+	throws ASelectException
+	{
+		String sMethod = "handleVerifyCredentialsRequest()";
+		Hashtable htTGTContext = null;
+		String sRid = null;
+		String sUid = null;
+		String sResultCode = null;
+		String sEncTgt = null;
+		String sASelectServer = null;
+		String sTGT = null;
+		String sSamlAttributes = null;
 
-        try
-        {
-        	sEncTgt = oInputMessage.getParam("aselect_credentials");
-            sASelectServer = oInputMessage.getParam("a-select-server");
-            sRid = oInputMessage.getParam("rid");
-        }
-        catch(ASelectCommunicationException eAC)
-        {
-            _systemLogger.log(Level.WARNING, 
-                _sModule, 
-    			sMethod, 
-    			"Missing required parameters");            
-            throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST); 
-        }
-        _systemLogger.log(Level.INFO, _sModule, sMethod, "Encrypted TGT=["+sEncTgt+"]");
-        
-        try
-        {
-	        byte[] baTgtBytes = CryptoEngine.getHandle().decryptTGT(sEncTgt);
-	        sTGT = Utils.toHexString(baTgtBytes);
-        }
-        catch(ASelectException eAC) //decrypt failed
-        {
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "could not decrypt TGT",eAC);
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID,eAC);
-        }
-        catch(Exception e) //HEX conversion fails
-        {
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "could not decrypt TGT",e);
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID,e);
-        }
+		try {
+			sEncTgt = oInputMessage.getParam("aselect_credentials");
+			sASelectServer = oInputMessage.getParam("a-select-server");
+			sRid = oInputMessage.getParam("rid");
+		}
+		catch (ASelectCommunicationException eAC) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing required parameters");
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+		sSamlAttributes = oInputMessage.getParam("saml_attributes");
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "Encrypted TGT=[" + sEncTgt + "]"+" saml_attributes="+sSamlAttributes);
 
-        htTGTContext = _oTGTManager.getTGT(sTGT);
-        _systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED ApplApi rid="+sRid+
-        		", Decrypted TGT="+sTGT+", TGTContext="+htTGTContext + ", inputMessage="+oInputMessage); 
-        
-        if (htTGTContext == null)
-        {
-            _systemLogger.log(Level.WARNING, 
-                _sModule, 
-    			sMethod, 
-    			"Unknown TGT");            
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT); 
-        }
+		try {
+			byte[] baTgtBytes = CryptoEngine.getHandle().decryptTGT(sEncTgt);
+			sTGT = Utils.toHexString(baTgtBytes);
+		}
+		catch (ASelectException eAC) // decrypt failed
+		{
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "could not decrypt TGT", eAC);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID, eAC);
+		}
+		catch (Exception e) // HEX conversion fails
+		{
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "could not decrypt TGT", e);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID, e);
+		}
 
-        // check rid
-        if (!(sRid).equalsIgnoreCase((String)htTGTContext.get("rid")))
-        {
-            _systemLogger.log(Level.WARNING, 
-                _sModule, 
-    			sMethod, 
-    			"Invalid RID");
-                           
-            StringBuffer sbBuffer = new StringBuffer("RID is other than expected. Received ");
-            sbBuffer.append(sRid);
-            sbBuffer.append(" but expected ");
-            sbBuffer.append((String)htTGTContext.get("rid"));
+		htTGTContext = _oTGTManager.getTGT(sTGT);
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED ApplApi rid=" + sRid + ", Decrypted TGT=" + sTGT
+				+ ", TGTContext=" + htTGTContext + ", inputMessage=" + oInputMessage);
 
-            _systemLogger.log(Level.FINE, 
-                _sModule, 
-    			sMethod, 
-    			sbBuffer.toString());
-            
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);                
-        }
-        //get app_id from TGT context.
-        String sAppId = (String)htTGTContext.get("app_id");
+		if (htTGTContext == null) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unknown TGT");
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT);
+		}
 
-        if (sAppId == null)
-        {
-            _systemLogger.log(Level.WARNING, 
-                _sModule, 
-    			sMethod, 
-    			"invalid Application ID");
-                                      
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);             
-        }
-        
-        // Check if request should be signed
-        if (_applicationManager.isSigningRequired())
-        {
-	        // Note: we should do this earlier, but we don't have an
-	        // app_id until now
-            
-            StringBuffer sbData = new StringBuffer(sASelectServer).append(
-                sEncTgt).append(sRid);
-            verifyApplicationSignature(oInputMessage, sbData.toString(),sAppId);    
-	        
-        }
+		// check rid
+		if (!(sRid).equalsIgnoreCase((String) htTGTContext.get("rid"))) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid RID");
 
-        try
-        {
-            oOutputMessage.setParam("rid", sRid);
-        }
-        catch(ASelectCommunicationException eAC)
-	    {
-	        _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-	            "Could not set 'rid' response parameter",eAC);
-	        throw new ASelectCommunicationException(
-	            Errors.ERROR_ASELECT_INTERNAL_ERROR,eAC);
-	    }  
+			StringBuffer sbBuffer = new StringBuffer("RID is other than expected. Received ");
+			sbBuffer.append(sRid);
+			sbBuffer.append(" but expected ");
+			sbBuffer.append((String) htTGTContext.get("rid"));
 
-        sResultCode = (String)htTGTContext.get("result_code");
+			_systemLogger.log(Level.FINE, _sModule, sMethod, sbBuffer.toString());
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
+		}
+		
+		// get app_id from TGT context.
+		String sAppId = (String) htTGTContext.get("app_id");
+		if (sAppId == null) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "invalid Application ID");
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
 
-        if (sResultCode != null) //Resultcode avaliable in TGT context
-        {  
-            if (sResultCode != Errors.ERROR_ASELECT_SUCCESS) //Error in context
-            {
-                _oTGTManager.remove(sTGT);                
-                throw new ASelectCommunicationException(sResultCode); 
-                //message with error code and rid is send in "processAPIRequest()"
-            }
-        }
-        
-        //Get other response parameters
-        sUid = (String)htTGTContext.get("uid");
-        String sAuthSPLevel = (String)htTGTContext.get("authsp_level");
-        String sAuthSP = (String)htTGTContext.get("authsp");
-        long lExpTime = 0;
-        try
-        {
-            lExpTime = _oTGTManager.getExpirationTime(sTGT);
-        }
-        catch(ASelectStorageException eAS)
-        {
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Could not fetch TGT timeout",eAS);
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);   
-        }
-        
-        // Gather attributes
-        AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
-        Hashtable htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
-        String sSerializedAttributes = serializeAttributes(htAttribs);
+		// Check if request should be signed
+		if (_applicationManager.isSigningRequired()) {
+			// Note: we should do this earlier, but we don't have an app_id until now
+			StringBuffer sbData = new StringBuffer(sASelectServer).append(sEncTgt).append(sRid);
+			verifyApplicationSignature(oInputMessage, sbData.toString(), sAppId);
+		}
 
-        _systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED SerAttr="+sSerializedAttributes); 
-        
-        try
-        {
-	        oOutputMessage.setParam("app_id", sAppId);
-	        oOutputMessage.setParam("organization", (String)htTGTContext
-	            .get("organization"));
-	        oOutputMessage.setParam("app_level", (String)htTGTContext
-	            .get("app_level"));
-	        //Return both asp and authsp variables to remain compatible
-	        //with A-Select 1.3 and 1.4
-	        oOutputMessage.setParam("asp_level", sAuthSPLevel);
-	        oOutputMessage.setParam("asp", sAuthSP);
-	        oOutputMessage.setParam("authsp_level", sAuthSPLevel);
-	        oOutputMessage.setParam("authsp", sAuthSP);
-            
-            if (_applicationManager.isUseOpaqueUid(sAppId))
-            { 
-                // the returned user ID must contain an opaque value 
-                MessageDigest oMessageDigest = null;
-                try
-                {
-                    oMessageDigest = MessageDigest.getInstance("SHA1");
-                    oMessageDigest.update(sUid.getBytes("UTF-8"));
-                    sUid = Utils.toHexString(oMessageDigest.digest());
-                }
-                catch (Exception e)
-                {
-                    _systemLogger.log(Level.WARNING, _sModule, sMethod,
-                        "Unable to generate SHA1 hash from UID", e);
-                    throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-                }
-            }
+		try {
+			oOutputMessage.setParam("rid", sRid);
+		}
+		catch (ASelectCommunicationException eAC) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not set 'rid' response parameter", eAC);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR, eAC);
+		}
 
-            oOutputMessage.setParam("uid", sUid);
-            oOutputMessage.setParam("tgt_exp_time", new Long(lExpTime).toString());
-	        if (sSerializedAttributes != null)
-	            oOutputMessage.setParam("attributes", sSerializedAttributes);
-	        oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
-	        _systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED result_code==SUCCESS");
-        }
-        catch(ASelectCommunicationException eAC)
-	    {
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-	            "Could not set response parameters",eAC);
-	        throw new ASelectCommunicationException(
-	            Errors.ERROR_ASELECT_INTERNAL_ERROR,eAC);
-	    }  
-        
-        // Kill TGT if single sign-on is disabled
-        if (!_configManager.isSingleSignOn()) _oTGTManager.remove(sTGT);
-    }
+		sResultCode = (String) htTGTContext.get("result_code");
+		if (sResultCode != null) // Resultcode avaliable in TGT context
+		{
+			if (sResultCode != Errors.ERROR_ASELECT_SUCCESS) // Error in context
+			{
+				_oTGTManager.remove(sTGT);
+				throw new ASelectCommunicationException(sResultCode);
+				// message with error code and rid is send in "processAPIRequest()"
+			}
+		}
+
+		// Get other response parameters
+		sUid = (String) htTGTContext.get("uid");
+		String sAuthSPLevel = (String) htTGTContext.get("authsp_level");
+		String sAuthSP = (String) htTGTContext.get("authsp");
+		long lExpTime = 0;
+		try {
+			lExpTime = _oTGTManager.getExpirationTime(sTGT);
+		}
+		catch (ASelectStorageException eAS) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not fetch TGT timeout", eAS);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
+		}
+
+		// Gather attributes
+		AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
+		Hashtable<String,Object> htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
+		String sToken = null;
+		if (sSamlAttributes != null) {
+			// Comma seperated list of attribute names
+			String[] arrAttrNames = sSamlAttributes.split(",");
+			Hashtable htSelectedAttr = SamlTools.extractFromHashtable(arrAttrNames, htAttribs, true/*include*/);
+			// Add Saml Token to the attributes, must be signed and base64 encoded
+			sToken = SamlTools.createAttributeToken(_sServerUrl, sTGT, htSelectedAttr);
+			htAttribs.put("saml_attribute_token", sToken);
+		}
+		String sSerializedAttributes = serializeAttributes(htAttribs);
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED SerAttr=" + Utils.firstPartOf(sSerializedAttributes,40) +
+							" Token="+ Utils.firstPartOf(sToken,40));
+
+		try {
+			oOutputMessage.setParam("app_id", sAppId);
+			oOutputMessage.setParam("organization", (String) htTGTContext.get("organization"));
+			oOutputMessage.setParam("app_level", (String) htTGTContext.get("app_level"));
+			// Return both asp and authsp variables to remain compatible
+			// with A-Select 1.3 and 1.4
+			oOutputMessage.setParam("asp_level", sAuthSPLevel);
+			oOutputMessage.setParam("asp", sAuthSP);
+			oOutputMessage.setParam("authsp_level", sAuthSPLevel);
+			oOutputMessage.setParam("authsp", sAuthSP);
+
+			if (_applicationManager.isUseOpaqueUid(sAppId)) {
+				// the returned user ID must contain an opaque value
+				MessageDigest oMessageDigest = null;
+				try {
+					oMessageDigest = MessageDigest.getInstance("SHA1");
+					oMessageDigest.update(sUid.getBytes("UTF-8"));
+					sUid = Utils.toHexString(oMessageDigest.digest());
+				}
+				catch (Exception e) {
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unable to generate SHA1 hash from UID", e);
+					throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+				}
+			}
+
+			oOutputMessage.setParam("uid", sUid);
+			oOutputMessage.setParam("tgt_exp_time", new Long(lExpTime).toString());
+			if (sSerializedAttributes != null)
+				oOutputMessage.setParam("attributes", sSerializedAttributes);
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED result_code==SUCCESS");
+		}
+		catch (ASelectCommunicationException eAC) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not set response parameters", eAC);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR, eAC);
+		}
+
+		// Kill TGT if single sign-on is disabled
+		if (!_configManager.isSingleSignOn())
+			_oTGTManager.remove(sTGT);
+	}
     
-    /** 
-     * Verify the application signing signature.
-     * <br><br>
-     * @param oInputMessage The input message.
-     * @param sData The data to validate upon.
-     * @param sAppId The application ID.
-     * @throws ASelectException If signature is invalid.
-     */
+    /**
+	 * Verify the application signing signature. <br>
+	 * <br>
+	 * 
+	 * @param oInputMessage
+	 *            The input message.
+	 * @param sData
+	 *            The data to validate upon.
+	 * @param sAppId
+	 *            The application ID.
+	 * @throws ASelectException
+	 *             If signature is invalid.
+	 */
     private void verifyApplicationSignature(IInputMessage oInputMessage, 
         String sData, String sAppId) throws ASelectException
     {
@@ -1102,7 +1078,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
         }
         
         if (!_cryptoEngine.verifyApplicationSignature(pk, sData, sSignature )) 
-            //throws ERROR_ASELECT_INTERNAL_ERROR 
+            // throws ERROR_ASELECT_INTERNAL_ERROR
         {
             _systemLogger.log(Level.WARNING, 
                 _sModule, 

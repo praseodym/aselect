@@ -573,7 +573,7 @@ aselect_filter_get_param(
 	// No arguments to read, return error
 	//
     }
-    TRACE2("aselect_filter_get_param: %s %s", pcParam, pcValue?pcValue:"NULL");
+    TRACE2("aselect_filter_get_param: %s %.80s", pcParam, pcValue?pcValue:"NULL");
     return pcValue;
 }
 
@@ -932,7 +932,7 @@ char *aselect_filter_base64_decode(pool *pPool, const char *pszValue)
     pszValue = ap_pstrdup(pPool, pszValue);    
     memset(szDest, 0, iDestCount+1);
 
-    TRACE2("decoding %s into %d bytes", pszValue, iDestCount);
+    TRACE2("decoding %.200s into %d bytes", pszValue, iDestCount);
     for (state=iDest=0; *pszValue; ++pszValue)
     {
         if (*pszValue == '=')
