@@ -1,12 +1,14 @@
 package org.aselect.server.request.handler.xsaml20;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -21,6 +23,7 @@ import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.BASE64Encoder;
 import org.joda.time.DateTime;
 import org.opensaml.Configuration;
 import org.opensaml.common.SAMLObject;
@@ -716,6 +719,51 @@ public class SamlTools
 		sos.close();
 	}
 	
+	//
+	// Create a new Hashtable based on an htSource
+	// If include is true only include the attributes mentioned in arrAttr
+	// Else take htSource, but exclude the attributes in arrAttr from the result.
+	//
+	public static Hashtable extractFromHashtable(String[] arrAttr, Hashtable<String, Object> htSource, boolean include)
+	{
+		Object oValue;
+		Hashtable<String, Object> htResult = new Hashtable<String, Object>();
+		
+		if (!include) htResult.putAll(htSource);
+		for (int i=0; i < arrAttr.length; i++) {
+			oValue = htSource.get(arrAttr[i]);
+			if (include && oValue != null)
+				htResult.put(arrAttr[i], oValue);
+			if (!include)
+				htResult.remove(arrAttr[i]);
+		}
+		return htResult;
+	}
+	
+	// Create a signed and base64 encoded Saml Token
+	// containing the attributes present in htAttributes.
+	public static String createAttributeToken(String sIssuer, String sTgt, Hashtable htAttributes)
+	throws ASelectException
+	{
+		String sMethod = "createAttributeToken";
+		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
+
+		Assertion samlAssert = SamlTools.createAttributeStatementAssertion(htAttributes,
+								sIssuer/*Issuer*/, sTgt/*Subject*/, true/*sign*/);
+		String sAssertion = XMLHelper.nodeToString(samlAssert.getDOM());
+		systemLogger.log(Level.INFO, MODULE, sMethod, "Assertion="+sAssertion);
+
+		try {
+	        byte[] bBase64Assertion = sAssertion.getBytes("UTF-8");
+	        BASE64Encoder b64enc = new BASE64Encoder();
+	        return b64enc.encode(bBase64Assertion);
+		}
+		catch (UnsupportedEncodingException e) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		}
+	}
+
 	@SuppressWarnings({"unchecked"})
 	public static Assertion createAttributeStatementAssertion(Map parms, String sIssuer, String sSubject, boolean sign)
 	throws ASelectException
@@ -774,7 +822,18 @@ public class SamlTools
 		systemLogger.log(Level.INFO, MODULE, sMethod, "Start iterating through parameters");
 		while (itr.hasNext()) {
 			String parmName =  (String)itr.next();
-			String[] parmValues = (String[])parms.get(parmName);
+			
+			// Bauke, 20081202 replaced, cannot convert parms.get() to a String[]
+			String sValue = (String)parms.get(parmName);
+			systemLogger.log(Level.INFO, MODULE, sMethod, "parm:"+ parmName + " has value:"+ sValue);
+			Attribute attribute = attributeBuilder.buildObject();
+			attribute.setName(parmName);
+			XSString attributeValue = (XSString) stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,	XSString.TYPE_NAME);
+			attributeValue.setValue(sValue);
+			attribute.getAttributeValues().add(attributeValue);
+
+			// Original code:
+			/*String[] parmValues = (String[])parms.get(parmName);
 			systemLogger.log(Level.INFO, MODULE, sMethod, "parm:"+ parmName + " has value(s):"+ parmValues);
 			
 			Attribute attribute = attributeBuilder.buildObject();
@@ -786,16 +845,16 @@ public class SamlTools
 				systemLogger.log(Level.INFO, MODULE, sMethod, "Found value[" + i + "]=" + parmValues[i]);
 				attributeValue.setValue(parmValues[i]);
 				attribute.getAttributeValues().add(attributeValue);
-			}
+			}*/
 			attributeStatement.getAttributes().add(attribute);
 		}
 		systemLogger.log(Level.INFO, MODULE, sMethod, "Finalizing the assertion building");
 		assertion.getAttributeStatements().add(attributeStatement);
 		assertion = marshallAssertion(assertion);
 		if (sign) {
-			systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the final Assertion >======" );
+			systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the final Assertion >======");
 			assertion = (Assertion)sign(assertion);
-			systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the Assertion ======<" );
+			systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the Assertion ======<"+assertion);
 		}
 		
 //		// Only for testing
