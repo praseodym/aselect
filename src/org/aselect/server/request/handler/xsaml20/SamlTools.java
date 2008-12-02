@@ -7,6 +7,8 @@ import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 
@@ -27,6 +29,9 @@ import org.opensaml.common.SAMLVersion;
 import org.opensaml.common.SignableSAMLObject;
 import org.opensaml.common.impl.SecureRandomIdentifierGenerator;
 import org.opensaml.saml2.core.Assertion;
+import org.opensaml.saml2.core.Attribute;
+import org.opensaml.saml2.core.AttributeStatement;
+import org.opensaml.saml2.core.AttributeValue;
 import org.opensaml.saml2.core.AudienceRestriction;
 import org.opensaml.saml2.core.AuthnRequest;
 import org.opensaml.saml2.core.AuthnStatement;
@@ -35,20 +40,24 @@ import org.opensaml.saml2.core.Issuer;
 import org.opensaml.saml2.core.LogoutRequest;
 import org.opensaml.saml2.core.LogoutResponse;
 import org.opensaml.saml2.core.NameID;
+import org.opensaml.saml2.core.NameIDType;
 import org.opensaml.saml2.core.Status;
 import org.opensaml.saml2.core.StatusCode;
+import org.opensaml.saml2.core.Subject;
 import org.opensaml.saml2.core.SubjectConfirmationData;
 import org.opensaml.security.SAMLSignatureProfileValidator;
 import org.opensaml.ws.message.decoder.MessageDecodingException;
 import org.opensaml.ws.message.encoder.MessageEncodingException;
 import org.opensaml.ws.transport.http.HttpServletResponseAdapter;
 import org.opensaml.xml.XMLObject;
+import org.opensaml.xml.XMLObjectBuilder;
 import org.opensaml.xml.XMLObjectBuilderFactory;
 import org.opensaml.xml.io.Marshaller;
 import org.opensaml.xml.io.MarshallerFactory;
 import org.opensaml.xml.io.MarshallingException;
 import org.opensaml.xml.io.Unmarshaller;
 import org.opensaml.xml.io.UnmarshallingException;
+import org.opensaml.xml.schema.XSString;
 import org.opensaml.xml.security.credential.BasicCredential;
 import org.opensaml.xml.signature.Signature;
 import org.opensaml.xml.signature.SignatureConstants;
@@ -706,5 +715,114 @@ public class SamlTools
 		sos.println("\r\n\r\n");
 		sos.close();
 	}
+	
+	@SuppressWarnings({"unchecked"})
+	public static Assertion createAttributeStatementAssertion(Map parms, String sIssuer, String sSubject, boolean sign)
+	throws ASelectException
+	{	
+		String sMethod = "createAttributeStatementAssertion()";
+		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
+		XMLObjectBuilderFactory _oBuilderFactory;
+		_oBuilderFactory = Configuration.getBuilderFactory();
+
+		XMLObjectBuilder stringBuilder = _oBuilderFactory.getBuilder(XSString.TYPE_NAME);
+
+		SAMLObjectBuilder<AttributeStatement> attributeStatementBuilder = (SAMLObjectBuilder<AttributeStatement>) _oBuilderFactory
+		.getBuilder(AttributeStatement.DEFAULT_ELEMENT_NAME);
 		
+		SAMLObjectBuilder<Assertion> assertionBuilder = (SAMLObjectBuilder<Assertion>) _oBuilderFactory
+		.getBuilder(Assertion.DEFAULT_ELEMENT_NAME);
+		
+		Assertion assertion = assertionBuilder.buildObject();
+		assertion.setVersion(SAMLVersion.VERSION_20);
+		
+		SAMLObjectBuilder<NameID> nameIDBuilder = (SAMLObjectBuilder<NameID>) _oBuilderFactory
+		.getBuilder(NameID.DEFAULT_ELEMENT_NAME);
+		NameID nameID = nameIDBuilder.buildObject();
+		nameID.setFormat(NameIDType.TRANSIENT);  // was PERSISTENT
+		nameID.setNameQualifier(sIssuer);
+		nameID.setValue(sSubject); 	
+		systemLogger.log(Level.INFO, MODULE, sMethod, nameID.getValue());
+		SAMLObjectBuilder<Subject> subjectBuilder = (SAMLObjectBuilder<Subject>) _oBuilderFactory
+				.getBuilder(Subject.DEFAULT_ELEMENT_NAME);
+		Subject subject = subjectBuilder.buildObject();
+		subject.setNameID(nameID);
+		
+		SAMLObjectBuilder<Issuer> assertionIssuerBuilder = (SAMLObjectBuilder<Issuer>) _oBuilderFactory
+				.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
+		Issuer assertionIssuer = assertionIssuerBuilder.buildObject();
+		assertionIssuer.setFormat(NameIDType.ENTITY);
+		assertionIssuer.setValue(sIssuer);
+		
+		assertion.setIssuer(assertionIssuer);
+		assertion.setSubject(subject);
+		DateTime tStamp = new DateTime();
+		assertion.setIssueInstant(tStamp);
+		try {
+			assertion.setID(SamlTools.generateIdentifier(systemLogger, MODULE));
+		}
+		catch (ASelectException ase) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod, "failed to build SAML response", ase);
+		}
+
+		AttributeStatement attributeStatement = attributeStatementBuilder.buildObject();
+
+		SAMLObjectBuilder<Attribute> attributeBuilder = (SAMLObjectBuilder<Attribute>) _oBuilderFactory
+		.getBuilder(Attribute.DEFAULT_ELEMENT_NAME);
+
+		Iterator itr = parms.keySet().iterator();
+		systemLogger.log(Level.INFO, MODULE, sMethod, "Start iterating through parameters");
+		while (itr.hasNext()) {
+			String parmName =  (String)itr.next();
+			String[] parmValues = (String[])parms.get(parmName);
+			systemLogger.log(Level.INFO, MODULE, sMethod, "parm:"+ parmName + " has value(s):"+ parmValues);
+			
+			Attribute attribute = attributeBuilder.buildObject();
+			attribute.setName(parmName);
+			systemLogger.log(Level.INFO, MODULE, sMethod, "Now starting to iterate through " + parmValues.length + " values");
+			for (int i=0; i<parmValues.length; i++) {
+				XSString attributeValue = (XSString) stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
+						XSString.TYPE_NAME);
+				systemLogger.log(Level.INFO, MODULE, sMethod, "Found value[" + i + "]=" + parmValues[i]);
+				attributeValue.setValue(parmValues[i]);
+				attribute.getAttributeValues().add(attributeValue);
+			}
+			attributeStatement.getAttributes().add(attribute);
+		}
+		systemLogger.log(Level.INFO, MODULE, sMethod, "Finalizing the assertion building");
+		assertion.getAttributeStatements().add(attributeStatement);
+		assertion = marshallAssertion(assertion);
+		if (sign) {
+			systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the final Assertion >======" );
+			assertion = (Assertion)sign(assertion);
+			systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the Assertion ======<" );
+		}
+		
+//		// Only for testing
+//		if (!SamlTools.checkSignature(assertion, _configManager.getDefaultCertificate().getPublicKey()) ) {
+//			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signing verification says signature NOT valid ?!?" );
+//		} else {
+//			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signing verification says signature is valid!" );
+//		}
+		return assertion;
+	}
+	
+	private static Assertion marshallAssertion(Assertion assertion)
+	throws ASelectException
+	{
+		String sMethod = "marshallAssertion";
+		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
+		MarshallerFactory factory = Configuration.getMarshallerFactory();
+		Marshaller marshaller = factory.getMarshaller(assertion);
+		try {
+			Node node = marshaller.marshall(assertion);
+			String msg = XMLHelper.prettyPrintXML(node);
+			systemLogger.log(Level.INFO, MODULE, sMethod, msg);
+		}
+		catch (MarshallingException e) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		}
+		return assertion;
+	}		
 }
