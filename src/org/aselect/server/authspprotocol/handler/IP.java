@@ -548,7 +548,7 @@ public class IP implements IAuthSPProtocolHandler
                 ,sSignature))
             {
                 _oASelectSystemLogger.log(Level.WARNING, MODULE,
-					sMethod, "Invalid signature in response from AuthSP");
+					sMethod, "Invalid signature in response from AuthSP:"+_sAuthsp);
                 
                 throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
             }

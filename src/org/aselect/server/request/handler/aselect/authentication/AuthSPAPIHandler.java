@@ -196,13 +196,10 @@ public class AuthSPAPIHandler extends AbstractAPIRequestHandler
                 Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST, eAC);
         }
 
-        if( !CryptoEngine.getHandle().verifySignature(sAuthSP,
-            									sSessionId, sSignature))
+        if( !CryptoEngine.getHandle().verifySignature(sAuthSP,sSessionId, sSignature))
         {
             _systemLogger.log(Level.WARNING, 
-				_sModule,
-				sMethod,
-				"Invalid signature from AuthSP: " + sAuthSP);
+				_sModule, sMethod, "AuthSP:" + sAuthSP+ " Invalid signature:"+sSignature);
 
             throw new ASelectCommunicationException(
                 		Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);

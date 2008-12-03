@@ -225,6 +225,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
         String sMethod = "getParam()";
         StringBuffer sbBuffer = null;
         String sRetVal = null;
+        //_systemLogger.log(Level.INFO, MODULE, sMethod, "param:"+sName);
         if (sName != null)
         {
             if (_htInputTable.containsKey(sName)) //check if name exists

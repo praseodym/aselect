@@ -53,7 +53,7 @@ public interface IInputMessage
 {
     /**
      * Get a Parameter value from this message.
-     * <br><br>
+     * <br><br>getParam(
      * <b>Description:</b>
      * <br>
      * Returns a parameter value from the message. 
@@ -78,7 +78,7 @@ public interface IInputMessage
      */
     public String getParam(String sName) throws ASelectCommunicationException;
 
-    /**
+    /**RequestHandler.processVerifyCredentialsRequest
      * Get array Parameter values from this message.
      * <br><br>
      * <b>Description:</b>

@@ -312,16 +312,15 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
     public String getParam(String sName) throws ASelectCommunicationException
     {
         String sMethod = "getParam()";
+        //_systemLogger.log(Level.INFO, MODULE, sMethod, "param:"+sName);
         if (_oInputMessage == null)
         {
-            _systemLogger.log(Level.WARNING,
-                MODULE, sMethod,  
-                "No input message available, cause: " + 
-                Errors.ERROR_ASELECT_USE_ERROR);
-            throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
+            _systemLogger.log(Level.WARNING, MODULE, sMethod, "No input message available, cause: "
+					+ Errors.ERROR_ASELECT_USE_ERROR);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
         }
 
-        //get parameters with [name] from RPC SOAP body
+        // get parameters with [name] from RPC SOAP body
         NodeList nlParams = _elInputRPCBody.getElementsByTagNameNS(_sMethodEnv,
             sName);
         String sValue = "";

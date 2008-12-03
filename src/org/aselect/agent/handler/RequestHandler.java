@@ -1199,7 +1199,7 @@ public class RequestHandler extends Thread
 
 				Hashtable htSessionContext = _sessionManager.getSessionContext(sRid);
 				if (htSessionContext == null) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "invalid session");
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid session");
 					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_SESSION_EXPIRED);
 					return;
 				}
@@ -1216,7 +1216,11 @@ public class RequestHandler extends Thread
 				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
 				return;
 			}
-			sSamlAttributes = oInputMessage.getParam("saml_attributes");
+			try {
+				sSamlAttributes = oInputMessage.getParam("saml_attributes");
+			}
+			catch (ASelectCommunicationException eAC) {  // ignore absence
+			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "VerCRED rid=" + sRid + " sAsId=" + sAsId +
 					" samlAttr=" + sSamlAttributes);
 
@@ -2241,19 +2245,14 @@ public class RequestHandler extends Thread
         Hashtable htResponse = new Hashtable();
 
         ASelectAgentSAMAgent oSAMAgent = ASelectAgentSAMAgent.getHandle();
-
-        try
-        {
-            SAMResource oResource = oSAMAgent
-                .getActiveResource("aselectserver");
+        try {
+            SAMResource oResource = oSAMAgent.getActiveResource("aselectserver");
             Object oConfigSection = oResource.getAttributes();
 
-            String sAS = _configManager.getParam(oConfigSection,
-                "aselect-server-id");
+            String sAS = _configManager.getParam(oConfigSection, "aselect-server-id");
             String sAsUrl = _configManager.getParam(oConfigSection, "url");
 
             htParams.put("a-select-server",sAS);
-            
             signRequest(htParams);
 
             _systemLogger.log(Level.INFO, MODULE, sMethod, "ToSERVER, url="+sAsUrl+", params="+htParams);
@@ -2300,7 +2299,6 @@ public class RequestHandler extends Thread
                 oSignature = Signature.getInstance(sSignatureAlgorithm, oSignatureProvider);
             else
                 oSignature = Signature.getInstance(sSignatureAlgorithm);
-
 	        
 	        StringBuffer sbCreateFrom = new StringBuffer();
 	        TreeSet sortedSet = new TreeSet(htRequest.keySet());
@@ -2312,6 +2310,7 @@ public class RequestHandler extends Thread
 	                sbCreateFrom.append(htRequest.get(sKey));
 	        }
 	        
+            _systemLogger.log(Level.INFO, MODULE, "signRequest()", "Sign:"+sbCreateFrom);
 	        oSignature.initSign(_configManager.getSigningKey());
 	        oSignature.update(sbCreateFrom.toString().getBytes());
 	        byte[] baRawSignature = oSignature.sign();
@@ -2321,8 +2320,7 @@ public class RequestHandler extends Thread
         }
         catch(Exception e)
         {
-            _systemLogger.log(Level.SEVERE,
-                MODULE, "signRequest()", "Could not sign request:", e );
+            _systemLogger.log(Level.SEVERE, MODULE, "signRequest()", "Could not sign request:", e );
             throw new Exception("Unable to sign request.");
         }
     }

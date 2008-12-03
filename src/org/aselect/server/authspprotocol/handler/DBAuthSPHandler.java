@@ -326,7 +326,7 @@ public class DBAuthSPHandler implements IAuthSPProtocolHandler {
 					_sAuthsp, sbSignature.toString(), sSignature);
 			if (!bVerifies) {
 				_systemLogger.log(Level.WARNING, "DBAuthSPHandler", sMethod,
-						"invalid signature in response from AuthSP.");
+						"invalid signature in response from AuthSP:"+_sAuthsp);
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 			}
 			Hashtable htSessionContext = _sessionManager

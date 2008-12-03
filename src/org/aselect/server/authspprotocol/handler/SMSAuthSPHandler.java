@@ -309,7 +309,7 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 			sbSignature.append(sAsId);
 			boolean bVerifies = CryptoEngine.getHandle().verifySignature(_sAuthsp, sbSignature.toString(), sSignature);
 			if (!bVerifies) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "invalid signature in response from AuthSP.");
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "invalid signature in response from AuthSP:"+_sAuthsp);
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 			}
 			Hashtable htSessionContext = _sessionManager.getSessionContext(sRid);

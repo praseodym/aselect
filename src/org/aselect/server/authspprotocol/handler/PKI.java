@@ -446,7 +446,7 @@ public class PKI implements IAuthSPProtocolHandler
             if (!bVerifies)
             {
                 sbTemp = new StringBuffer(sMethod);
-                sbTemp.append("invalid signature in response from AuthSP");
+                sbTemp.append("invalid signature in response from AuthSP:"+_sAuthsp);
                 _systemLogger.log(Level.INFO, sbTemp.toString());
 
                 htResponse.put("result",

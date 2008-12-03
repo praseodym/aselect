@@ -414,7 +414,7 @@ public class NullAuthSP implements IAuthSPProtocolHandler
             if (!_cryptoEngine.verifySignature(_sAuthSP, sbSignature.toString(),sSignature))
             {
                 _systemLogger.log(Level.WARNING, MODULE,
-					sMethod, "Invalid signature in response from AuthSP");
+					sMethod, "Invalid signature in response from AuthSP:"+_sAuthSP);
                 
                 throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
             }

@@ -486,10 +486,7 @@ cnt = ++count;
 }
 
 
-char *
-aselect_filter_get_param(
-    pool *pPool, char *pcArgs, char *pcParam, 
-    char * pcDelimiter, int bUrlDecode)
+char *aselect_filter_get_param(pool *pPool, char *pcArgs, char *pcParam, char *pcDelimiter, int bUrlDecode)
 {
     char            *pcTemp;
     char            *pcTemp2;
@@ -497,9 +494,8 @@ aselect_filter_get_param(
     int             ccValue = 0;
     char *p;
 
-    TRACE1("aselect_filter_get_param: %s", pcParam);
-    if (pcArgs)
-    {
+    //TRACE1("aselect_filter_get_param: %s", pcParam);
+    if (pcArgs) {
 	// Bauke: example args: my_uid=9876&uid2=0000&uid=1234&...
 	//        get parameter "uid" must result in: 1234
 	// NOTE: Delimiter is a single character, but in pcArgs it can be followed by a space!
@@ -515,69 +511,39 @@ aselect_filter_get_param(
 	    }
 	}
 
-        if (pcTemp)
-        {
-            //
+        if (pcTemp) {
             // Update pointer to point to parameter data 
-            //
             pcTemp = pcTemp + strlen(pcParam);
 
-            //
             // Found the query parameter attribute
-            //
-            if ((pcTemp2 = strstr(pcTemp, pcDelimiter)))
-            {
+            if ((pcTemp2 = strstr(pcTemp, pcDelimiter))) {
                 ccValue = pcTemp2 - pcTemp;
-                //TRACE1("param length: %d", ccValue);
             }
-            else
-            {
+            else {
                 ccValue = strlen(pcTemp);
-                //TRACE1("param length: %d", ccValue);
             }
 
-            if (ccValue >= 0)
-            {
-                if ((pcValue = ap_pstrndup(pPool, pcTemp, ccValue)))
-                {
+            if (ccValue >= 0) {
+                if ((pcValue = ap_pstrndup(pPool, pcTemp, ccValue))) {
                     *(pcValue + ccValue) = '\0';
                     if (bUrlDecode)
                         aselect_filter_url_decode(pcValue);
                 }
-                else
-                {
-                    //
-                    // Not enough memory
-                    // Set error
-                    //
+                else { // Not enough memory, Set error
                     pcValue = NULL;
                 }
             }
-            else
-            {
-                //
-                // parameter value is empty 
-                //
+            else { // parameter value is empty
             }
         }
-        else
-        {
-            //
-            // Arguments do not contain parameter
-            //
+        else { // Arguments do not contain parameters
         }
     }
-    else
-    {
-	//
-	// No arguments to read, return error
-	//
+    else { // No arguments to read, return error
     }
-    TRACE2("aselect_filter_get_param: %s %.80s", pcParam, pcValue?pcValue:"NULL");
+    //TRACE2("aselect_filter_get_param: %s %.80s", pcParam, pcValue?pcValue:"NULL");
     return pcValue;
 }
-
-
 
 /**
  * Encode a string as application/x-www-form-urlencoded.
@@ -629,7 +595,6 @@ char *aselect_filter_url_encode(pool *pPool, const char *pszValue)
     return result;
 }
 
-
 /**
  * Decode an URL encoded string
  */
@@ -665,8 +630,7 @@ void aselect_filter_add_nocache_headers(table *headers_out)
     ap_table_add(headers_out, "Expires", "-1");
 }
 
-int
-aselect_filter_gen_error_page(pool *pPool, request_rec *pRequest, int iError, char *pcErrorTemplate)
+int aselect_filter_gen_error_page(pool *pPool, request_rec *pRequest, int iError, char *pcErrorTemplate)
 {
     table   *headers_out = pRequest->headers_out;
     char    *pcErrorHTML, *pcContinueURL;
@@ -681,30 +645,28 @@ aselect_filter_gen_error_page(pool *pPool, request_rec *pRequest, int iError, ch
     ap_send_http_header(pRequest);
     sprintf(pcError, "%x", iError);
 
-	pcErrorHTML = pcErrorTemplate;
-	while (pcErrorHTML && (strstr(pcErrorHTML, "[error_code]") != NULL))
-		pcErrorHTML = aselect_filter_replace_tag(pPool, "[error_code]", pcError, pcErrorHTML);
+    pcErrorHTML = pcErrorTemplate;
+    while (pcErrorHTML && (strstr(pcErrorHTML, "[error_code]") != NULL))
+	    pcErrorHTML = aselect_filter_replace_tag(pPool, "[error_code]", pcError, pcErrorHTML);
 
-	// Bauke: Added to facilitate a Continue button
-	// NOTE: app_url is only available on successful calls
-	if (pRequest->parsed_uri.port == 0)
-	    pcContinueURL = ap_psprintf(pPool, "http://%s/%s", pRequest->hostname, pRequest->parsed_uri.path);
-	else
-	    pcContinueURL = ap_psprintf(pPool, "http://%s:%d/%s", pRequest->hostname, pRequest->parsed_uri.port, pRequest->parsed_uri.path);
-	TRACE1("ContinueUrl=%s", pcContinueURL);
-	while (pcErrorHTML && (strstr(pcErrorHTML, "[continue_url]") != NULL))
-		pcErrorHTML = aselect_filter_replace_tag(pPool, "[continue_url]", pcContinueURL, pcErrorHTML);
-	// end of add
+    // Bauke: Added to facilitate a Continue button
+    // NOTE: app_url is only available on successful calls
+    if (pRequest->parsed_uri.port == 0)
+	pcContinueURL = ap_psprintf(pPool, "http://%s/%s", pRequest->hostname, pRequest->parsed_uri.path);
+    else
+	pcContinueURL = ap_psprintf(pPool, "http://%s:%d/%s", pRequest->hostname, pRequest->parsed_uri.port, pRequest->parsed_uri.path);
+    TRACE1("ContinueUrl=%s", pcContinueURL);
+    while (pcErrorHTML && (strstr(pcErrorHTML, "[continue_url]") != NULL))
+	    pcErrorHTML = aselect_filter_replace_tag(pPool, "[continue_url]", pcContinueURL, pcErrorHTML);
+    // end of add
 
-	if (pcErrorHTML)
-	{
-	    ap_rprintf(pRequest, "%s\n", pcErrorHTML);
-	    iRet = ASELECT_FILTER_ERROR_OK;
-	}
-
+    if (pcErrorHTML)
+    {
+	ap_rprintf(pRequest, "%s\n", pcErrorHTML);
+	iRet = ASELECT_FILTER_ERROR_OK;
+    }
     return iRet;
 }
-
 
 //
 // Generate a client-side (HTML) redirection page.

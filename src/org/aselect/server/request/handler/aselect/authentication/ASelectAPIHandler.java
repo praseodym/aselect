@@ -706,14 +706,11 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
                 Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
         }                 
         	            
-        PublicKey oPublicKey = 
-            _crossASelectManager.getLocalASelectServerPublicKey(sOrg);
+        PublicKey oPublicKey = _crossASelectManager.getLocalASelectServerPublicKey(sOrg);
         if(oPublicKey == null)
         {
             _systemLogger.log(Level.WARNING, 
-                _sModule, 
-    			sMethod, 
-    			"No local A-Select Server signing key found with alias: " + sOrg);
+                _sModule, sMethod, "No local A-Select Server signing key found with alias: " + sOrg);
 
             throw new ASelectCommunicationException(
                 Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST); 
@@ -722,9 +719,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
         if (!_cryptoEngine.verifyApplicationSignature(oPublicKey, sData, sSignature)) 
         {
             _systemLogger.log(Level.WARNING, 
-                _sModule, 
-    			sMethod, 
-    			"Invalid signature");
+                _sModule, sMethod, "Organization:"+sOrg + " Invalid signature:"+sSignature);
 
             throw new ASelectCommunicationException(
                 Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);

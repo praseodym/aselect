@@ -1903,7 +1903,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
                 sPrivilegedApplication, sbBuffer.toString(), sSignature))
             {
                 _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Invalid request received: invalid signature.");
+                "Application:"+sPrivilegedApplication+" Invalid signature:"+sSignature);
                 throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
                 
             }

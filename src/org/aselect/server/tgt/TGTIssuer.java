@@ -339,6 +339,9 @@ public class TGTIssuer
             if (fld != null) htTGTContext.put("sp_assert_url", fld);
             fld = (String)htRemoteAttributes.get("name_id");
             if (fld != null) htTGTContext.put("name_id", fld);
+            // Bauke 20081203: Store Saml20 remote token in the context
+            fld = (String)htRemoteAttributes.get("saml_remote_token");
+            if (fld != null) htTGTContext.put("saml_remote_token", fld);
             
             htTGTContext.put("uid", sUserId);
             htTGTContext.put("organization", sUserOrganization);

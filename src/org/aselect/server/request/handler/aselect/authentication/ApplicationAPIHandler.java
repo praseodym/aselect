@@ -633,8 +633,8 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
         if (_applicationManager.isSigningRequired())
         {
 	        //check signature
-	        StringBuffer sbData = new StringBuffer(sASelectServer)
-	        .append(sAppId);
+	        StringBuffer sbData = new StringBuffer(sASelectServer).append(sAppId);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "sbData="+sbData);
 	        verifyApplicationSignature(oInputMessage, sbData.toString(),sAppId); 
         }
 
@@ -728,8 +728,8 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
         {
 	        // Note: we should do this earlier, but we don't have an app_id until now
 	        String sAppId = (String)htTGTContext.get("app_id");
-	        StringBuffer sbData = new StringBuffer(sASelectServer)
-	        .append(sEncTGT);
+	        StringBuffer sbData = new StringBuffer(sASelectServer).append(sEncTGT);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "sbData="+sbData);
 	        verifyApplicationSignature(oInputMessage,sbData.toString(),sAppId);	        
         }
         _systemLogger.log(Level.INFO, _sModule, sMethod, "KILL TICKET context="+htTGTContext);
@@ -798,6 +798,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	        // Note: we should do this earlier, but we don't have an app_id until now
 	        String sAppId = (String)htTGTContext.get("app_id");
 	        StringBuffer sbData = new StringBuffer(sASelectServer).append(sEncTGT);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "sbData="+sbData);
 	        verifyApplicationSignature(oInputMessage,sbData.toString(),sAppId);	        
         }
         _systemLogger.log(Level.INFO, _sModule, sMethod, "Upgrade TICKET context="+htTGTContext);
@@ -882,7 +883,11 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing required parameters");
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
-		sSamlAttributes = oInputMessage.getParam("saml_attributes");
+		try {
+			sSamlAttributes = oInputMessage.getParam("saml_attributes");
+		}
+		catch (ASelectCommunicationException eAC) {  // ignore absence
+		}
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "Encrypted TGT=[" + sEncTgt + "]"+" saml_attributes="+sSamlAttributes);
 
 		try {
@@ -932,7 +937,11 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		// Check if request should be signed
 		if (_applicationManager.isSigningRequired()) {
 			// Note: we should do this earlier, but we don't have an app_id until now
+			// Another NOTE: see to it that all data is put in sData sorted  on parameter name!
 			StringBuffer sbData = new StringBuffer(sASelectServer).append(sEncTgt).append(sRid);
+			if (sSamlAttributes != null)
+				sbData = sbData.append(sSamlAttributes);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "sbData="+sbData);
 			verifyApplicationSignature(oInputMessage, sbData.toString(), sAppId);
 		}
 
@@ -973,9 +982,15 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		Hashtable<String,Object> htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
 		String sToken = null;
 		if (sSamlAttributes != null) {
-			// Comma seperated list of attribute names
+			// Comma seperated list of attribute names was given
 			String[] arrAttrNames = sSamlAttributes.split(",");
 			Hashtable htSelectedAttr = SamlTools.extractFromHashtable(arrAttrNames, htAttribs, true/*include*/);
+			
+			// Also include the original IdP token
+			String sRemoteToken = (String)htTGTContext.get("saml_remote_token");
+			if (sRemoteToken != null)
+				htSelectedAttr.put("saml_remote_token", sRemoteToken);
+			
 			// Add Saml Token to the attributes, must be signed and base64 encoded
 			sToken = SamlTools.createAttributeToken(_sServerUrl, sTGT, htSelectedAttr);
 			htAttribs.put("saml_attribute_token", sToken);
@@ -1039,55 +1054,36 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 * @throws ASelectException
 	 *             If signature is invalid.
 	 */
-    private void verifyApplicationSignature(IInputMessage oInputMessage, 
-        String sData, String sAppId) throws ASelectException
-    {
-        String sMethod = "verifyApplicationSignature()";
+    private void verifyApplicationSignature(IInputMessage oInputMessage, String sData, String sAppId)
+	throws ASelectException
+	{
+		String sMethod = "verifyApplicationSignature()";
 
-        String sSignature = null;
-        try
-        {
-            sSignature = oInputMessage.getParam("signature");
-        }
-        catch(ASelectCommunicationException eAC)
-        {
-            _systemLogger.log(Level.WARNING, 
-                _sModule, 
-    			sMethod, 
-    			"Missing required 'signature' parameter", eAC);
+		String sSignature = null;
+		try {
+			sSignature = oInputMessage.getParam("signature");
+		}
+		catch (ASelectCommunicationException eAC) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing required 'signature' parameter", eAC);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
 
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-        }                 
-        	
-        PublicKey pk = null;
-        
-        try
-        {
-            pk = _applicationManager.getSigningKey(sAppId);
-        }
-        catch(ASelectException e)
-        {
-            _systemLogger.log(Level.WARNING, 
-                _sModule, 
-    			sMethod,             
-			"Invalid application ID: \"" +sAppId +"\". Could not find signing key for application.", e);
-            
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-        }
-        
-        if (!_cryptoEngine.verifyApplicationSignature(pk, sData, sSignature )) 
-            // throws ERROR_ASELECT_INTERNAL_ERROR
-        {
-            _systemLogger.log(Level.WARNING, 
-                _sModule, 
-    			sMethod, 
-    			"Invalid signature");
+		PublicKey pk = null;
+		try {
+			pk = _applicationManager.getSigningKey(sAppId);
+		}
+		catch (ASelectException e) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid application ID: \"" + sAppId
+					+ "\". Could not find signing key for application.", e);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
 
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-        }
-    }  
-    
+		if (!_cryptoEngine.verifyApplicationSignature(pk, sData, sSignature))
+		// throws ERROR_ASELECT_INTERNAL_ERROR
+		{
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Application:" + sAppId + " Invalid signature:"
+					+ sSignature+" Key="+pk);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+	}
 }

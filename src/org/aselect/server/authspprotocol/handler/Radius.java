@@ -493,7 +493,7 @@ public class Radius implements IAuthSPProtocolHandler
             if (!bVerifies)
             {
                 _oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, 
-                    "invalid signature in response from AuthSP");
+                    "invalid signature in response from AuthSP:"+_sAuthsp);
                 
                 throw new ASelectAuthSPException(
                     Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);

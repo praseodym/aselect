@@ -32,6 +32,7 @@ import org.aselect.server.tgt.TGTIssuer;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.BASE64Encoder;
 import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
 import org.opensaml.Configuration;
@@ -227,7 +228,9 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 			// Send/Receive the SOAP message
 			String sSamlResponse = soapManager.sendSOAP(XMLHelper.nodeToString(envelopeElem), sASelectServerUrl);
 //			String sSamlResponse = URLDecoder.decode(soapManager.sendSOAP(XMLHelper.nodeToString(envelopeElem), sASelectServerUrl), "UTF-8");
+			
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Received response: " + sSamlResponse);
+			
 			byte[] sSamlResponseAsBytes = sSamlResponse.getBytes();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Received response length: " + sSamlResponseAsBytes.length);
 
@@ -255,7 +258,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 			Unmarshaller unmarshaller = factory.getUnmarshaller((Element) eltArtifactResponse);
 
 			ArtifactResponse artifactResponse = (ArtifactResponse) unmarshaller
-					.unmarshall((Element) eltArtifactResponse);
+						.unmarshall((Element) eltArtifactResponse);
 
 			String artifactResponseIssuer = ( artifactResponse.getIssuer() == null || // avoid nullpointers
 						artifactResponse.getIssuer().getValue() == null ||
@@ -283,9 +286,9 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 //				if (checkSignature(artifactResponse, pkey )) { // We don't need the indirection anymore
 				if (SamlTools.checkSignature(artifactResponse, pkey )) {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "artifactResponse was signed OK");
-				} else {
+				}
+				else {
 					_systemLogger.log(Level.SEVERE, MODULE, sMethod, "artifactResponse was NOT signed OK");
-
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
 			}
@@ -304,26 +307,27 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "RemoteRid="+sRemoteRid+" LocalRid"+sLocalRid);
 				if (sStatusCode.equals(StatusCode.SUCCESS_URI)) {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Response was successful "+samlResponse.toString());
-					String sOrganization = samlResponse.getAssertions().get(0).getIssuer().getValue();
-					String sNameID = samlResponse.getAssertions().get(0).getSubject().getNameID().getValue();
+					Assertion samlAssertion = samlResponse.getAssertions().get(0);
+					String sOrganization = samlAssertion.getIssuer().getValue();
+					String sNameID = samlAssertion.getSubject().getNameID().getValue();
 					// Now check for time interval validation
 					// We only check first object from the list
 					// First the assertion itself
-					if ( is_bVerifyInterval() && !SamlTools.checkValidityInterval(samlResponse.getAssertions().get(0)) ) {
+					if ( is_bVerifyInterval() && !SamlTools.checkValidityInterval(samlAssertion) ) {
 						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Assertion time interval was NOT valid");
 						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 					}
 					// then the AuthnStatement
-					if ( is_bVerifyInterval() && !SamlTools.checkValidityInterval(samlResponse.getAssertions().get(0).getAuthnStatements().get(0)) ) {
+					if ( is_bVerifyInterval() && !SamlTools.checkValidityInterval(samlAssertion.getAuthnStatements().get(0)) ) {
 						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "AuthnStatement time interval was NOT valid");
 						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 					}
 					// check subjectlocalityaddress
-					if ( isLocalityAddressRequired() && !SamlTools.checkLocalityAddress(samlResponse.getAssertions().get(0).getAuthnStatements().get(0), request.getRemoteAddr()) ) {
+					if ( isLocalityAddressRequired() && !SamlTools.checkLocalityAddress(samlAssertion.getAuthnStatements().get(0), request.getRemoteAddr()) ) {
 						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "AuthnStatement subjectlocalityaddress was NOT valid");
 						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 					}
-					String sAuthnContextClassRefURI = samlResponse.getAssertions().get(0).getAuthnStatements().get(0)
+					String sAuthnContextClassRefURI = samlAssertion.getAuthnStatements().get(0)
 							.getAuthnContext().getAuthnContextClassRef().getAuthnContextClassRef();
 					String sAuthSpLevel = SecurityLevel.convertAuthnContextClassRefURIToLevel(sAuthnContextClassRefURI, _systemLogger, MODULE);
 
@@ -332,7 +336,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 					// This is the quickest way to get "name_id" into the Context
 					
 					// Retrieve the embedded attributes
-					List<AttributeStatement> lAttrStatList = samlResponse.getAssertions().get(0).getAttributeStatements();
+					List<AttributeStatement> lAttrStatList = samlAssertion.getAttributeStatements();
 					Iterator<AttributeStatement> iASList = lAttrStatList.iterator();
 					while (iASList.hasNext()) {
 						AttributeStatement sAttr = iASList.next();
@@ -350,12 +354,19 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "NameID="+sNameID+
 							" remote_rid="+sRemoteRid+" local_rid="+sLocalRid+
 							" authsp_level="+sAuthSpLevel+" organization/authsp="+sOrganization);
+					
 					htRemoteAttributes.put("remote_rid", sRemoteRid);
 					htRemoteAttributes.put("local_rid", sLocalRid);
 
 					htRemoteAttributes.put("authsp_level", sAuthSpLevel);
 					htRemoteAttributes.put("organization", sOrganization);
 					htRemoteAttributes.put("authsp", sOrganization);
+					String sAssertion = XMLHelper.nodeToString(samlAssertion.getDOM());
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "sAssertion="+sAssertion);
+		            
+					BASE64Encoder b64Enc = new BASE64Encoder();
+		            sAssertion = b64Enc.encode(sAssertion.getBytes("UTF-8"));
+					htRemoteAttributes.put("saml_remote_token", sAssertion);
 					
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "htRemoteAttributes="+htRemoteAttributes);
 					handleSSOResponse(htRemoteAttributes, request, response);
