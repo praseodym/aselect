@@ -361,12 +361,18 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 					htRemoteAttributes.put("authsp_level", sAuthSpLevel);
 					htRemoteAttributes.put("organization", sOrganization);
 					htRemoteAttributes.put("authsp", sOrganization);
+					
+					// Bauke, 20081204: If we want to send the IdP token as an attribute
+					// to the application,we need the following code:
+					/*
 					String sAssertion = XMLHelper.nodeToString(samlAssertion.getDOM());
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "sAssertion="+sAssertion);
 		            
 					BASE64Encoder b64Enc = new BASE64Encoder();
 		            sAssertion = b64Enc.encode(sAssertion.getBytes("UTF-8"));
 					htRemoteAttributes.put("saml_remote_token", sAssertion);
+					*/
+					// End of IdP token
 					
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "htRemoteAttributes="+htRemoteAttributes);
 					handleSSOResponse(htRemoteAttributes, request, response);

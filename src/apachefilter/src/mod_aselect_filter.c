@@ -1325,13 +1325,27 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 		    // Perform attribute filtering!
 		    // First handle the special Saml attribute token (if present)
 		    if (strchr(pConfig->pcPassAttributes,'t')!=0) {  // Pass Saml token in header
-			char *p;
+			char *p, *q, hdrName[40];
+			int i, len, save;
+
 			p = aselect_filter_get_param(pPool, pcAttributes, "saml_attribute_token=", "&", TRUE/*UrlDecode*/);
-			if (p && *p) {
-			    // We have a base64 encoded Saml token, pass it in a custom header
-			    // Note the minus signs instead of underscores
-			    TRACE1("X-saml-attribute-token: %s", p);
-			    ap_table_set(headers_in, "X-saml-attribute-token", p);
+			// We have a base64 encoded Saml token, pass it in a custom header
+			// Note the minus signs in the header name instead of underscores
+			len = strlen(p);
+			for (i = 1; p && *p && len > 0; i++) {
+			    if (len > ASELECT_FILTER_MAX_HEADER_SIZE) {
+				q = p + ASELECT_FILTER_MAX_HEADER_SIZE;
+				save = *q;
+				*q = '\0';
+			    }
+			    sprintf(hdrName, "X-saml-attribute-token%d", i);
+			    TRACE2("%s: %.100s", hdrName, p);
+			    ap_table_set(headers_in, hdrName, p);
+			    if (len > ASELECT_FILTER_MAX_HEADER_SIZE) {  // restore
+				*q = save;
+				p = q;
+			    }
+			    len -= ASELECT_FILTER_MAX_HEADER_SIZE;
 			}
 		    }
 

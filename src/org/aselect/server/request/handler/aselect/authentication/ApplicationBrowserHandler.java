@@ -304,6 +304,8 @@ import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.ServletException;
+import org.aselect.system.servlet.HtmlInfo;
 
 import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler;
@@ -329,7 +331,6 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.AuthenticationLogger;
 import org.aselect.system.sam.agent.SAMResource;
-//import org.aselect.system.servlet.HtmlInfo;
 import org.aselect.system.utils.Utils;
 
 /**
@@ -414,32 +415,34 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
         _systemLogger.log(Level.INFO,_sModule,sMethod, "ApplBrowREQ sRequest="+sRequest+", htServiceRequest="+htServiceRequest);
         if(sRequest == null)
         {
-              // show info page if nothing else to do
+            // Show info page if nothing else to do
 	        _systemLogger.log(Level.INFO,_sModule,sMethod, "ApplBrowREQ sRequest==null");
             String sUrl = (String)htServiceRequest.get("my_url");
-            if (htServiceRequest.containsKey("aselect_credentials_uid") 
-            		/*&& !(sUrl != null && sUrl.contains("htmlinfo"))*/)
+            
+            // Bauke: start htmlinfo
+            /*if (sUrl != null && sUrl.contains("htmlinfo")) {
+		        try {
+	            	HtmlInfo x = new HtmlInfo();
+	        		x.init();
+	    	        _systemLogger.log(Level.INFO,_sModule,sMethod, "handleHtmlInfo");
+	    	        x.handleHtmlInfo(_servletRequest, _servletResponse, _systemLogger, htServiceRequest);
+	    	        x.destroy();
+	    	        return;                
+				}
+		        catch (ServletException e) {
+		        	_systemLogger.log(Level.INFO,_sModule,sMethod, "Oops "+e);
+	    	    }
+	        }
+	        else*/
+	        // Bauke: end htmlinfo
+	        	
+            if (htServiceRequest.containsKey("aselect_credentials_uid")) 
                 showUserInfo(htServiceRequest, _servletResponse);
-            else
-            {   // Bauke: html info
+            else {
     	        _systemLogger.log(Level.INFO,_sModule,sMethod, "ApplBrowREQ sUrl="+sUrl);
-                /*if (sUrl != null && sUrl.contains("htmlinfo")) {
-        	        try {
-                    	HtmlInfo x = new HtmlInfo();
-                		x.init();
-            	        _systemLogger.log(Level.INFO,_sModule,sMethod, "handleHtmlInfo");
-            	        x.handleHtmlInfo(_servletRequest, _servletResponse, _systemLogger, htServiceRequest);
-            	        x.destroy();                
-        			}
-        	        catch (ServletException e) {
-        	        	_systemLogger.log(Level.INFO,_sModule,sMethod, "Oops "+e);
-            	    }
-                }
-                else */ {  // Bauke: original code
-	                String sServerInfoForm = _configManager.getForm("serverinfo");
-	                sServerInfoForm = Utils.replaceString(sServerInfoForm, "[message]", " ");
-	                pwOut.println(sServerInfoForm);
-                }
+    	        String sServerInfoForm = _configManager.getForm("serverinfo");
+                sServerInfoForm = Utils.replaceString(sServerInfoForm, "[message]", " ");
+                pwOut.println(sServerInfoForm);
             }	        
         }
         else if (sRequest.equals("logout")) {

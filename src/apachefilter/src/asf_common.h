@@ -89,6 +89,7 @@ typedef apr_table_t     table;
  */                                                      
 #define ASELECT_FILTER_MAX_MSG          1024        // Max message that can be sent through a socket
 #define ASELECT_FILTER_MAX_RECV         20000       // Max size of a response from Agent
+#define ASELECT_FILTER_MAX_HEADER_SIZE  7500        // Max length of a header field (should be less than 8190 (see the LimitRequestFieldsize directive))
 #define ASELECT_FILTER_SOCKET_TIME_OUT  120         // Timeout used for sockets
 #define ASELECT_FILTER_MAX_APP          50          // max apps this filter can protect
 #define ASELECT_FILTER_MAX_ATTR          50         // Bauke: max attribute filters
