@@ -59,6 +59,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 	private String _sIstsUrl;
 
 	protected String getSessionIdPrefix() { return SESSION_ID_PREFIX; }
+    protected boolean useConfigToCreateSamlBuilder() { return true; }
 
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
@@ -312,7 +313,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 
 				// Start an authenticate request
 				htTgtContext = performAuthenticateRequest(sASelectURL, sPathInfo, RETURN_SUFFIX,
-								_sMyAppId, _oClientCommunicator);
+								_sMyAppId, true, _oClientCommunicator);
 
 				sRid = (String) htTgtContext.get("rid");
 				storeSessionDataWithRid(response, htIdffSession, SESSION_ID_PREFIX, sRid);

@@ -33,6 +33,7 @@ public class XSAML11Receiver extends SamlAssertionConsumer
     private final static String MODULE = "XSAML11Receiver";
 
     protected String getSessionIdPrefix() { return ""; }
+    protected boolean useConfigToCreateSamlBuilder() { return false; }
 
     //
     public void init(ServletConfig oServletConfig, Object oConfig)

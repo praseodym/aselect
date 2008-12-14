@@ -25,4 +25,5 @@ public class XSAML11Artifact extends SamlArtifactResolver
 {
     private final static String MODULE = "XSAML11Artifact";
 	protected String getSessionIdPrefix() { return ""; }
+    protected boolean useConfigToCreateSamlBuilder() { return false; }
 }

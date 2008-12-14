@@ -265,22 +265,15 @@ public class ApplicationManager
                     eAC);
             }
             
-            if (_bRequireSigning)
-            {
-                _sApplicationsKeystoreName = new StringBuffer(_oASelectConfigManager.getWorkingdir()).
-            	append(File.separator).
-            	append("keystores").
-            	append(File.separator).
-            	append("applications").
-            	append(File.separator).
-            	append("applications.keystore").
-            	toString();
-                
-            }
+            if (_bRequireSigning) {
+				_sApplicationsKeystoreName = new StringBuffer(_oASelectConfigManager.getWorkingdir()).append(
+						File.separator).append("keystores").append(File.separator).append("applications").append(
+						File.separator).append("applications.keystore").toString();
+			}
             Object oApplication = null;
             try
             {
-                //for testing purposes: check if at least one application is
+                // for testing purposes: check if at least one application is
                 // defined
                 oApplication = _oASelectConfigManager.getSection(_oApplicationsConfigSection,
                     "application");
@@ -305,7 +298,6 @@ public class ApplicationManager
                 boolean bUseOpaqueId = false;
                 Application application = new Application();
                 String sAttributePolicy = null;
-                
                 
                 try
 	            {

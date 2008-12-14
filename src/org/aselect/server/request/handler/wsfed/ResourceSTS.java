@@ -45,6 +45,7 @@ public class ResourceSTS extends ProtoRequestHandler
     protected boolean _bCheckSigning = false;
 
 	protected String getSessionIdPrefix() { return SESSION_ID_PREFIX; }
+    protected boolean useConfigToCreateSamlBuilder() { return true; }
 
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
@@ -97,7 +98,7 @@ public class ResourceSTS extends ProtoRequestHandler
 	    	if (!sIdPUrl.endsWith("?"))
 	            sIdPUrl = sIdPUrl + "?";
 	    	
-			String sASelectURL = _sServerUrl;  // extractAselectServerUrl(request);
+			String sASelectURL = _sServerUrl;
 			String sReplyTo = sASelectURL + sPathInfo + RETURN_SUFFIX;
 			
 	        StringBuffer sbRedirect = new StringBuffer(sIdPUrl);

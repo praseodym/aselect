@@ -138,7 +138,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			
 			// Start an authenticate request
 			Hashtable htResponse = performAuthenticateRequest(_sASelectServerUrl, 
-					httpRequest.getPathInfo(), RETURN_SUFFIX, sAppId, _oClientCommunicator);
+					httpRequest.getPathInfo(), RETURN_SUFFIX, sAppId, true /*check sig*/, _oClientCommunicator);
 
 			String sASelectServerUrl = (String) htResponse.get("as_url");
 			String sIDPRid = (String) htResponse.get("rid");

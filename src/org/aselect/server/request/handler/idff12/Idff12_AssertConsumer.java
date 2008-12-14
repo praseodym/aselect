@@ -37,6 +37,7 @@ public class Idff12_AssertConsumer extends SamlAssertionConsumer
 {
     protected final static String MODULE = "Idff12_AssertConsumer";
     protected String getSessionIdPrefix() { return ""; }
+    protected boolean useConfigToCreateSamlBuilder() { return false; }
 
     public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException

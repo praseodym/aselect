@@ -157,9 +157,6 @@ public abstract class SamlArtifactResolver extends ProtoRequestHandler
 					null /*recipient*/, vSAMLAssertions, null);
             _systemLogger.log(Level.INFO,MODULE,sMethod, "SAMLRespone="+oSAMLResponse);
 
-            //Hashtable htIdffSession = retrieveRidSessionData(request, getSessionIdPrefix());
-            //String sRequestID = (String)htIdffSession.get("libRequestID");
-
             Node n = oSAMLResponse.toDOM();
             // Add SessionIndex: goes in <saml:AuthenticationStatement ...>
             Tools.addAttributeToElement(n, _systemLogger, "AuthenticationStatement", "SessionIndex", Tools.getTimestamp());

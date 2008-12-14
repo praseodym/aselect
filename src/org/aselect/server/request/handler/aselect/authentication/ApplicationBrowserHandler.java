@@ -1099,8 +1099,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
                 return;
             }
 
-            // we have now the list of authsps that the user may use
-            // show the selectform
+            // We now have the list of authsps that the user may use
+            // Show the selectform
             Hashtable htAuthsps = (Hashtable)_htSessionContext.get("allowed_user_authsps");
             // should the user be bothered with the selection form
             // if it is only able to choose from 1 method?
@@ -1162,10 +1162,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	            .append("&a-select-server=").append(_sMyServerId)
 	            .append("&rid=").append(sRid);
             
-            sSelectForm = Utils.replaceString(sSelectForm, "[cancel]", sb
-                .toString());
-            
+            sSelectForm = Utils.replaceString(sSelectForm, "[cancel]", sb.toString());
             sSelectForm = _configManager.updateTemplate(sSelectForm, _htSessionContext);
+            //_systemLogger.log(Level.FINER, _sModule, sMethod, "Form select=["+sSelectForm+"]");
             pwOut.println(sSelectForm);
         }
         catch (ASelectException ae) {

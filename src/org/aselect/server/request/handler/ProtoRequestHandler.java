@@ -102,15 +102,11 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			_sASelectServerID = HandlerTools.getParamFromSection(null, "aselect", "server_id");
 			_sASelectOrganization = HandlerTools.getParamFromSection(null, "aselect", "organization");
 
-   			// DefaultBootstrap.bootstrap(); // RH, 20080530, n  // Bauke 20080617, o (already done in Saml20_BaseHandler)
-
-   			// Initialize assertion building, if needed
-	        if (getSessionIdPrefix() != null) {
-	        	if (getSessionIdPrefix().equals(""))
-		        	_saml11Builder = new Saml11Builder();  // object only
-	        	else
-	        		_saml11Builder = createSAML11Builder(oConfig, getSessionIdPrefix());
-	        }
+  			// Initialize assertion building, if needed
+	        if (useConfigToCreateSamlBuilder())
+        		_saml11Builder = createSAML11Builder(oConfig, getSessionIdPrefix());
+	        else
+		        _saml11Builder = new Saml11Builder();  // object only
 		}
         catch (ASelectException e) {
             throw e;
@@ -131,13 +127,20 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
     
     // Default implementation
     // In Subclasses you can redefine this method:
-    // - return "" if you need a SamlBuilder object only
-    // - return a real prefix if you also want to recognize config parameters: 
+    // - return false if you need a SamlBuilder object only
+    // - return true if you also want to recognize config parameters: 
     //		<assertion expire="600"/>
     //		<attribute namespace="..." send_statement="true"/>
+    protected boolean useConfigToCreateSamlBuilder()
+    {
+    	return false;
+    }
+    
+    // Define the prefix used to create a RID-key
+    // Default is an empty prefix
     protected String getSessionIdPrefix()
     {
-    	return null;
+    	return "";
     }
     
     // Look for the "aselect_credentials" cookie
@@ -145,33 +148,38 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
     // Gather attributes and copy them over the TGT Context Attributes
     // Return all data as Credentials
     //
+    // Bauke 20081209: getCredentialsFromCookie now returns a string
+    //
     protected Hashtable getASelectCredentials(HttpServletRequest servletRequest)
     throws ASelectException
     {
     	String sMethod = "getAselectCredentials";
 
         // Check for credentials that might be present
-    	Hashtable htCredentialsParams = getCredentialsFromCookie(servletRequest);
-        if (htCredentialsParams == null)
-            return null;
+    	String sTgt = getCredentialsFromCookie(servletRequest);
+        //if (htCredentialsParams == null)
+        //    return null;
         
-        String sTgt = (String)htCredentialsParams.get("tgt");
-        String sUserId = (String)htCredentialsParams.get("uid");
-        String sServerId = (String)htCredentialsParams.get("a-select-server");
-        if ((sTgt == null) || (sUserId == null) || (sServerId == null))
+        //String sTgt = (String)htCredentialsParams.get("tgt");
+        //String sUserId = (String)htCredentialsParams.get("uid");
+        //String sServerId = (String)htCredentialsParams.get("a-select-server");
+        if (sTgt == null) // || (sUserId == null) || (sServerId == null)
             return null;
-        if (!sServerId.equals(_sASelectServerID))
-            return null;
+        //if (!sServerId.equals(_sASelectServerID))
+        //    return null;
         
         Hashtable htTGTContext = getContextFromTgt(sTgt, true);  // Check expiration
         if (htTGTContext == null)
             return null;
+        String sUserId = (String)htTGTContext.get("uid");
+        if (sUserId == null)
+        	return null;
         
         // Check corresponding parameters
-        if (!sUserId.equals(htTGTContext.get("uid"))) {
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "sUserId="+ sUserId+" != uid="+htTGTContext.get("uid"));
-            return null;
-        }
+        //if (!sUserId.equals(htTGTContext.get("uid"))) {
+        //    _systemLogger.log(Level.INFO, MODULE, sMethod, "sUserId="+ sUserId+" != uid="+htTGTContext.get("uid"));
+        //    return null;
+        //}
         String sRid = (String)htTGTContext.get("rid");  // Bauke: added
         if (sRid == null) {
             _systemLogger.log(Level.INFO, MODULE, sMethod, "sRid="+ sUserId+" != uid="+htTGTContext.get("rid"));
@@ -188,7 +196,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
         //htCredentials.put("aselect_credentials", sCredentialsCookie);  // not crypted
         htCredentials.put("rid", sRid);
         htCredentials.put("uid", sUserId);
-        htCredentials.put("a-select-server", sServerId);
+        htCredentials.put("a-select-server", _sASelectServerID);  // sServerId);
         htCredentials.put("tgt", sTgt);
         String sPar = (String)htTGTContext.get("tgt_exp_time");
         if (sPar != null) htCredentials.put("tgt_exp_time", sPar);
@@ -207,13 +215,20 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
         if (sPar != null) htCredentials.put("authsp", sPar);
         sPar = (String)htTGTContext.get("authsp");
         if (sPar != null) htCredentials.put("authsp", sPar);
+
+        // Bauke, 20081209 added for ADFS / WS-Fed
+        String sPwreply = (String)htTGTContext.get("wreply");
+        if (sPwreply != null) htCredentials.put("wreply", sPwreply);            
+        String sPwtrealm = (String)htTGTContext.get("wtrealm");
+        if (sPwtrealm != null) htCredentials.put("wtrealm", sPwtrealm);
+        String sPwctx = (String)htTGTContext.get("wctx");
+        if (sPwctx != null) htCredentials.put("wctx", sPwctx);
         
         // And put the attributes back where they belong
         String sSerializedAttributes = serializeTheseAttributes(htAllAttributes);
         if (sSerializedAttributes != null)
         	htCredentials.put("attributes", sSerializedAttributes);
         htCredentials.put("result_code", Errors.ERROR_ASELECT_SUCCESS);
-        
         return htCredentials;
     }
 
@@ -271,38 +286,23 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
         }
         return htTGTContext;
 	}
-
-	public Hashtable getCredentialsFromCookie(HttpServletRequest servletRequest) 
+	
+    // Bauke 20081209: getCredentialsFromCookie now returns a string
+	//
+	public String getCredentialsFromCookie(HttpServletRequest servletRequest) 
 	{
-		String sMethod = "getCredentialsFromCookie()";
+		String sMethod = "getCredentialsFromCookie";
 		
-/*	   	Cookie[] aCookies = servletRequest.getCookies();
-        if (aCookies == null)
-             return null;
-
-        String sCredentialsCookie = null;
-        for (int i = 0; i < aCookies.length; i++)
-        {
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "Try Cookie: "+aCookies[i].getName()+"="+aCookies[i].getValue());
-            if (aCookies[i].getName().equals("aselect_credentials"))
-            {
-                sCredentialsCookie = aCookies[i].getValue();
-                //remove '"' surrounding cookie if applicable
-                int iLength = sCredentialsCookie.length();
-                if(sCredentialsCookie.charAt(0) == '"' &&
-                    sCredentialsCookie.charAt(iLength-1) == '"')
-                {
-                    sCredentialsCookie = sCredentialsCookie.substring(1, iLength-1);
-                }
-            }
-        }*/
 		String sCredentialsCookie = HandlerTools.getCookieValue(servletRequest, "aselect_credentials", _systemLogger);
         if (sCredentialsCookie == null)
             return null;
         
+        _systemLogger.log(Level.INFO, MODULE, sMethod, "sCredentialsCookie="+sCredentialsCookie);
+        /* Bauke,  20081209: Cookie only contains tgt-value
         Hashtable htCredentialsParams = Utils.convertCGIMessage(sCredentialsCookie);
-        _systemLogger.log(Level.INFO, MODULE, sMethod, "Use Cookie: CredentialsParams="+htCredentialsParams);
-        return htCredentialsParams;
+        _systemLogger.log(Level.INFO, MODULE, sMethod, "CredentialsParams="+htCredentialsParams);
+        return htCredentialsParams; */
+        return sCredentialsCookie;
     }
         
     // Bauke: moved from ShibbolethWAYFProfile
@@ -541,6 +541,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	    try {
 	        sTemplate = Utils.replaceString(sTemplate, "[form_action]", sAction);
 	        sTemplate = Utils.replaceString(sTemplate, "[input_area]", sInputLines);
+		    _systemLogger.log(Level.FINER, MODULE, sMethod, "sTemplate="+sTemplate);
 	        
 	    	response.setContentType("text/html");
 	        pwOut = response.getWriter();
@@ -567,7 +568,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	}
 
 	protected Hashtable performAuthenticateRequest(String sASelectURL, String sPathInfo,
-			String sReturnSuffix, String sAppId, IClientCommunicator iClientComm)
+			String sReturnSuffix, String sAppId, boolean checkSignature, IClientCommunicator iClientComm)
 	throws ASelectException
 	{
 		String sMethod = "performAuthenticateRequest()";
@@ -578,6 +579,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		htRequest.put("app_id", sAppId);
 		htRequest.put("app_url", sASelectURL + sPathInfo + sReturnSuffix); // My return address
 		htRequest.put("a-select-server", _sASelectServerID);
+		htRequest.put("check-signature", Boolean.toString(checkSignature));
 	
 		Hashtable htResponse = null;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "htRequest=" + htRequest);
@@ -638,12 +640,12 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	    }
 	}
 
-	protected void storeSessionDataWithRid(HttpServletResponse response, Hashtable htSessionData,
+	protected void storeSessionDataWithRid(HttpServletResponse response, Hashtable htSessionMoreData,
 					String sPrefix, String sRid)
 	{
 		String sMethod = "storeRidSessionData()";
-		_systemLogger.log(Level.INFO, MODULE, sMethod,"Create session:"+sPrefix+sRid+
-				" htSessionData="+htSessionData);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Update Session: "+sPrefix+sRid+
+				" htSessionMoreData="+htSessionMoreData);
 
 		// RH, 20080619, sn
 		// TODO, this method is now only used by idff and wsfed
@@ -654,7 +656,16 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 //        _systemLogger.log(Level.INFO, MODULE, sMethod, "htSessionData client_ip is now "+ htSessionData.get("client_ip"));
 		// RH, 20080619, en
 		
-		_oSessionManager.createSession(sPrefix + sRid, htSessionData);
+		// Bauke 20081209 Update the session instead of always creating a new one
+		// This will also give you the "client_ip" Remy.
+		Hashtable htSessionData = _oSessionManager.getSessionContext(sPrefix + sRid);
+		if (htSessionData == null)
+			_oSessionManager.createSession(sPrefix + sRid, htSessionMoreData);
+		else {
+			htSessionData.putAll(htSessionMoreData);
+			_systemLogger.log(Level.INFO, MODULE, sMethod,"Update Session:"+htSessionData);
+			_oSessionManager.updateSession(sPrefix + sRid, htSessionData);
+		}
 		
 		// Also store the rid used
 		String sCookieDomain = _configManager.getCookieDomain();
@@ -796,7 +807,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		return htResult;
 	}
 
-	public void createContextAndIssueTGT(HttpServletResponse response, String sRid,
+	public void createContextAndIssueTGT(HttpServletResponse response, String sRid /* can be null */,
 					String sServerId, String sOrg, String sAppId, String sTgt, Hashtable htAttributes)
 	throws ASelectException
 	{
@@ -813,7 +824,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		if (sSecLevel == null) sSecLevel = (String)htAttributes.get("betrouwbaarheidsniveau");
 		if (sSecLevel == null) sSecLevel = (String)htAttributes.get("authsp_level");
 		if (sSecLevel == null) sSecLevel = "5";
-		_systemLogger.log(Level.WARNING, MODULE, sMethod, "FromSAML UserId="+sUserId+", secLevel="+sSecLevel);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "UserId="+sUserId+", secLevel="+sSecLevel);
 		
 		htAttributes.put("uid", sUserId);
 		htAttributes.put("betrouwbaarheidsniveau", sSecLevel);
@@ -834,7 +845,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		htTGTContext.put("app_id", sAppId);
 		htTGTContext.put("app_level", "2");
 //		if (sRid != null) htTGTContext.put("rid", sRid); // RH, 20080617, o
-		 // RH, 20080617, sn
+		// RH, 20080617, sn
 		if (sRid != null) {
 			htTGTContext.put("rid", sRid);
 			htTGTContext.put("client_ip", _sessionManager.getSessionContext(sRid).get("client_ip"));
@@ -849,7 +860,8 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		
 		// We don't need the session any more
 //	    SessionManager _sessionManager = SessionManager.getHandle(); // RH, 20080617, o
-        _sessionManager.killSession(sRid);           
+		if (sRid != null)  // Bauke, 20081209 added
+			_sessionManager.killSession(sRid);      
 
 		// No effect, cross functionality??:
 		//htTGTContext.put("aselect_credentials_tgt", sTgt);

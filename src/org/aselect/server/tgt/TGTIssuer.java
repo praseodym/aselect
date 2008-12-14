@@ -581,6 +581,14 @@ public class TGTIssuer
                 _systemLogger.log(Level.INFO, MODULE, sMethod, "SSO session "+ssoSession);
         		htTGTContext.put("sso_session", ssoSession);
             }
+            
+            // Bauke, 20081209 added for ADFS / WS-Fed
+            String sPwreply = (String)htSessionContext.get("wreply");
+            if (sPwreply != null) htTGTContext.put("wreply", sPwreply);            
+            String sPwtrealm = (String)htSessionContext.get("wtrealm");
+            if (sPwtrealm != null) htTGTContext.put("wtrealm", sPwtrealm);
+            String sPwctx = (String)htSessionContext.get("wctx");
+            if (sPwctx != null) htTGTContext.put("wctx", sPwctx);
 
             // RH, 20080619, sn
             // We will now only put the client_ip in the TGT if there is a non-zero value present in the sessioncontext

@@ -47,6 +47,7 @@ public class Idff12_ISTS extends ProtoRequestHandler
     private String _sOracleGlitch = null;
 
     protected String getSessionIdPrefix() { return ""; }
+    protected boolean useConfigToCreateSamlBuilder() { return false; }
 
     public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException

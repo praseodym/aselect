@@ -28,6 +28,7 @@ public class Idff12_ArtifactResolver extends SamlArtifactResolver
 	public final static String SESSION_ID_PREFIX = "idff12_";
 
 	protected String getSessionIdPrefix() { return SESSION_ID_PREFIX; }
+    protected boolean useConfigToCreateSamlBuilder() { return true; }
 
     public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException

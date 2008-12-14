@@ -335,42 +335,6 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
     	Hashtable htCredentials = new Hashtable();
 
        // check for credentials that might be present
-/*        Cookie[] aCookies = servletRequest.getCookies();
-        if (aCookies == null) {
-            return null;
-        }
-        String sCredentialsCookie = null;
-        for (int i = 0; i < aCookies.length; i++)
-        {
-            _systemLogger.log(Level.INFO, _sModule, sMethod, "Try Cookie: "+aCookies[i].getName()+
-            		"="+aCookies[i].getValue()+", domain="+aCookies[i].getDomain());
-            if (aCookies[i].getName().equals("aselect_credentials"))
-            {
-                sCredentialsCookie = aCookies[i].getValue();
-                //remove '"' surrounding cookie if applicable
-                int iLength = sCredentialsCookie.length();
-                if(sCredentialsCookie.charAt(0) == '"' && sCredentialsCookie.charAt(iLength-1) == '"')
-                {
-                    sCredentialsCookie = sCredentialsCookie.substring(1, iLength-1);
-                }
-                // Bauke: try all cookies for a match
-                Hashtable sCreds = Utils.convertCGIMessage(sCredentialsCookie);
-                if (sCreds == null)
-                	continue;
-                String sTgt = (String)sCreds.get("tgt");
-                if (sTgt == null)
-                	continue;
-                Hashtable htTGTContext = _tgtManager.getTGT(sTgt);
-                if (htTGTContext == null)
-                	continue;
-                String sUserId = (String)sCreds.get("uid");
-                if (sUserId == null)
-                	continue;
-                if (!sUserId.equals(htTGTContext.get("uid")))
-                	continue;
-                break;  // OK
-            }
-        }*/
     	// Bauke 20080618, we only store the tgt value from now on
 		String sTgt = HandlerTools.getCookieValue(servletRequest, "aselect_credentials", _systemLogger);
         if (sTgt == null) {

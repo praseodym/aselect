@@ -60,6 +60,7 @@ public class AccountSTS extends ProtoRequestHandler
     //protected Hashtable _htSP_ErrorUrl;
 
 	protected String getSessionIdPrefix() { return SESSION_ID_PREFIX; }
+    protected boolean useConfigToCreateSamlBuilder() { return true; }
 
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
@@ -166,25 +167,30 @@ public class AccountSTS extends ProtoRequestHandler
 		if (sPwctx != null) htSessionData.put("wctx", sPwctx);
 
 		// Look for a possible TGT
-    	Hashtable htCredentialsParams = getCredentialsFromCookie(request);
-        if (htCredentialsParams != null) {
-        	String sTgt = (String)htCredentialsParams.get("tgt");
-        	if (sTgt != null) {
-        		Hashtable htTGTContext = getContextFromTgt(sTgt, true);  // Check expiration
-        		if (htTGTContext != null) {  // Valid TGT context found
-        	        // Update TGT timestamp
-        			_oTGTManager.updateTGT(sTgt, htTGTContext);
-        	        // Return to the caller
-        			String sUid = (String)htTGTContext.get("uid");
-        	 		Hashtable htAllAttributes = getAttributesFromTgtAndGatherer(htTGTContext);
-        			return postRequestorToken(request, response, sUid, htSessionData, htAllAttributes);
-        		}
+//    	Hashtable htCredentialsParams = getCredentialsFromCookie(request);
+	    // Bauke 20081209: getCredentialsFromCookie now returns a string
+    	String sTgt = getCredentialsFromCookie(request);
+        //if (htCredentialsParams != null) {
+        //	String sTgt = (String)htCredentialsParams.get("tgt");
+        if (sTgt != null) {
+        	Hashtable htTGTContext = getContextFromTgt(sTgt, true);  // Check expiration
+        	if (htTGTContext != null) {  // Valid TGT context found
+                // Update TGT timestamp
+        		_oTGTManager.updateTGT(sTgt, htTGTContext);
+                // Return to the caller
+        		String sUid = (String)htTGTContext.get("uid");
+         		Hashtable htAllAttributes = getAttributesFromTgtAndGatherer(htTGTContext);
+        		return postRequestorToken(request, response, sUid, htSessionData, htAllAttributes);
         	}
         }
+        //}
 		// Start an authenticate request
-		String sASelectURL = _sServerUrl; // extractAselectServerUrl(request);
+		String sASelectURL = _sServerUrl;
+		
+		// TODO Would be a lot more efficient if this request would simply call
+		//      the handleAuthenticateRequest() method in the ApplicationAPIHandler
 		Hashtable htResponse = performAuthenticateRequest(sASelectURL, sPathInfo, RETURN_SUFFIX,
-													_sMyAppId, _oClientCommunicator);
+									_sMyAppId, false/*don't check signature*/, _oClientCommunicator);
 		String sRid = (String)htResponse.get("rid");
 		
         // We need this stuff when we come back
@@ -220,9 +226,7 @@ public class AccountSTS extends ProtoRequestHandler
 		//String sUrlServer = (String) request.getParameter("a-select-server");
 		String sUrlTgt = (String) request.getParameter("aselect_credentials");
 		
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "wsfed_ap_return sPwa=" + sPwa + " sUrlRid="+sUrlRid);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Token IN: wresult=" + sPwresult);
-		
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "sPwa="+sPwa+" wresult="+sPwresult+" sUrlRid="+sUrlRid);		
 		String sUid = null;
 		String sTgt = null;
 		Hashtable htCredentials = null;
@@ -232,14 +236,16 @@ public class AccountSTS extends ProtoRequestHandler
 				// From Resource Partner, get attributes from resource token
 				htAttributes = extractUidAndAttributes(sPwresult);
 				sUid = (String)htAttributes.get("uid");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "From Resource Partner, uid="+sUid);
 				// TODO check incoming token (signature?, time)
 			}
 			else {
 				// From A-Select server
 				sUrlTgt = decryptCredentials(sUrlTgt);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "URL TGT=" + Tools.clipString(sUrlTgt, 40, true));
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "From A-Select TGT=" + Tools.clipString(sUrlTgt, 40, true));
 	
-				htCredentials = getASelectCredentials(request);  // Get credentials and attributes using Cookie
+				// Get credentials and attributes using Cookie
+				htCredentials = getASelectCredentials(request);
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "getAselectCredentials: "+htCredentials);
 				sUid = (String) htCredentials.get("uid");
 				if (sUid == null) {
@@ -261,14 +267,18 @@ public class AccountSTS extends ProtoRequestHandler
     		if (sTryUid == null) htAttributes.put("uid", sUid);
     		_systemLogger.log(Level.INFO, MODULE, sMethod, "htAttributes=" + htAttributes);
     		
-    		// Issue a TGT
-			createContextAndIssueTGT(response, null, _sASelectServerID, _sASelectOrganization, _sMyAppId, sTgt, htAttributes);
-    		
-    		// Create Token and POST it to the caller
-			Hashtable htSessionData = retrieveSessionDataFromRid(request, SESSION_ID_PREFIX);
-			if (htSessionData == null)
-				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
-    		return postRequestorToken(request, response, sUid, htSessionData, htAttributes);
+    		if (htCredentials == null) {
+	    		// No credentials were made yet, Issue a TGT
+				createContextAndIssueTGT(response, null, _sASelectServerID, _sASelectOrganization, _sMyAppId, sTgt, htAttributes);
+	    		
+	    		// Create Token and POST it to the caller
+				Hashtable htSessionData = retrieveSessionDataFromRid(request, SESSION_ID_PREFIX);
+				if (htSessionData == null)
+					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
+	    		return postRequestorToken(request, response, sUid, htSessionData, htAttributes);
+    		}
+    		else
+    			return postRequestorToken(request, response, sUid, htCredentials, htAttributes);
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -289,7 +299,7 @@ public class AccountSTS extends ProtoRequestHandler
 		String sAudience = (String)htSessionData.get("wtrealm");
 		String sPwreply = (String)htSessionData.get("wreply");
 		String sPwctx = (String)htSessionData.get("wctx");  // context, must be returned unchanged
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "wtrealm="+sAudience+" wreply=" + sPwreply+"wctx=" + sPwctx);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "wtrealm="+sAudience+" wreply="+sPwreply+" wctx="+sPwctx);
 		//sPwctx = sPwctx.replaceAll("\\.*", "");
 		
 		try {
@@ -342,15 +352,17 @@ public class AccountSTS extends ProtoRequestHandler
 		String sMethod = "processSignout()";
 
 		// First look for a possible TGT
-    	Hashtable htCredentialsParams = getCredentialsFromCookie(request);
-        if (htCredentialsParams != null) {
-        	String sTgt = (String)htCredentialsParams.get("tgt");
-        	if (sTgt != null) {
-       			_oTGTManager.remove(sTgt);
-        	}
-        	// Remove the TGT cookie
-        	HandlerTools.delCookieValue(response, "aselect_credentials", _sCookieDomain, _systemLogger);
+    	//Hashtable htCredentialsParams = getCredentialsFromCookie(request);
+	    // Bauke 20081209: getCredentialsFromCookie now returns a string
+    	String sTgt = getCredentialsFromCookie(request);
+        //if (htCredentialsParams != null) {
+        //	String sTgt = (String)htCredentialsParams.get("tgt");
+        if (sTgt != null) {
+       		_oTGTManager.remove(sTgt);
         }
+        // Remove the TGT cookie
+        HandlerTools.delCookieValue(response, "aselect_credentials", _sCookieDomain, _systemLogger);
+        //}
         
         try {
 	        // Find out where we need to send the user back to

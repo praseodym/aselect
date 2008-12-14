@@ -53,6 +53,7 @@ public class XSAML11RequestHandler extends ProtoRequestHandler
 	String _sProviderId = null;
 
 	protected String getSessionIdPrefix() { return SESSION_ID_PREFIX; }
+    protected boolean useConfigToCreateSamlBuilder() { return true; }
 
     /**
      * Initializes the Transfer SAML 1.1 Request Handler.

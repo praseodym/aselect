@@ -145,7 +145,7 @@ public class MemoryStorageHandler implements IStorageHandler
         String sMethod = "get()";
         Object oValue = null;
 
-		_systemLogger.log(Level.FINER, MODULE, sMethod, this+" store="+_htStorage);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, this+" store="+_htStorage);
         String sTxt = Utils.firstPartOf(oKey.toString(), 30);
         try {
             synchronized (_htStorage) {
@@ -218,7 +218,7 @@ public class MemoryStorageHandler implements IStorageHandler
     {
     	String sMethod = "getAll()";
         Hashtable htReturnTable = new Hashtable();
-		_systemLogger.log(Level.FINER, MODULE, sMethod, " this="+/*this.getClass()+" "+*/this+" store="+_htStorage);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, " this="+/*this.getClass()+" "+*/this+" store="+_htStorage);
 
         synchronized (_htStorage) {
             Enumeration eKeys = _htStorage.keys();
@@ -241,7 +241,7 @@ public class MemoryStorageHandler implements IStorageHandler
         throws ASelectStorageException
     {
         String sMethod = "put";
-		_systemLogger.log(Level.FINE, MODULE, sMethod, this+" store="+_htStorage);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, this+" store="+_htStorage);
         _systemLogger.log(Level.INFO, MODULE, sMethod, "MSH put("+Utils.firstPartOf(oKey.toString(),30)+") ="+oValue.toString()+" TS="+lTimestamp);
         
         Hashtable htStorageContainer = new Hashtable();

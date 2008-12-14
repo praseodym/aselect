@@ -72,7 +72,7 @@ public class HandlerTools
 		if (sCookieDomain != null) cookie.setDomain(sCookieDomain);
 		cookie.setPath("/aselectserver/server");
 		cookie.setMaxAge(0);
-		logger.log(Level.INFO, MODULE, sMethod, "Delete Cookie "+sCookieName+" Domain "+sCookieDomain);
+		logger.log(Level.INFO, MODULE, sMethod, "Delete Cookie="+sCookieName+" Domain="+sCookieDomain);
 		response.addCookie(cookie);
 	}
 
@@ -110,7 +110,7 @@ public class HandlerTools
 		String sMethod = "logCookies()";
 	    Cookie[] aCookies = servletRequest.getCookies();
 	    if (aCookies == null) {
-	        logger.log(Level.INFO, MODULE, sMethod, "No Cookies");
+	        logger.log(Level.FINER, MODULE, sMethod, "No Cookies");
 	        return;
 	    }
 	
