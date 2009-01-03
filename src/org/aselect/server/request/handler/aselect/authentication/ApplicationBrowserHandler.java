@@ -416,8 +416,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
         if(sRequest == null)
         {
             // Show info page if nothing else to do
-	        _systemLogger.log(Level.INFO,_sModule,sMethod, "ApplBrowREQ sRequest==null");
             String sUrl = (String)htServiceRequest.get("my_url");
+	        _systemLogger.log(Level.INFO,_sModule,sMethod, "ApplBrowREQ sRequest==null sUrl="+sUrl);
             
             // Bauke: start htmlinfo
             /*if (sUrl != null && sUrl.contains("htmlinfo")) {
@@ -439,7 +439,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
             if (htServiceRequest.containsKey("aselect_credentials_uid")) 
                 showUserInfo(htServiceRequest, _servletResponse);
             else {
-    	        _systemLogger.log(Level.INFO,_sModule,sMethod, "ApplBrowREQ sUrl="+sUrl);
     	        String sServerInfoForm = _configManager.getForm("serverinfo");
                 sServerInfoForm = Utils.replaceString(sServerInfoForm, "[message]", " ");
                 pwOut.println(sServerInfoForm);
@@ -461,7 +460,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	        // If a valid session is found, it will be valid during the whole
 	        // servlet request handling.
 	        _htSessionContext = _sessionManager.getSessionContext(sRid);
-	        
 	        if (_htSessionContext == null)
 	        {
 	            _systemLogger.log(Level.WARNING,_sModule,sMethod, "Invalid RID: "+sRid);	            
@@ -1604,11 +1602,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
                             _htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr());
                             _systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip is now "+ _htSessionContext.get("client_ip"));
 
-                            _sessionManager.createSession(sRid,
-                                _htSessionContext);
+                            _sessionManager.createSession(sRid, _htSessionContext);
 
-                            Hashtable htTgtContext = _tgtManager
-                                .getTGT(sTgt);
+                            Hashtable htTgtContext = _tgtManager.getTGT(sTgt);
                             String sAuthsp = (String)htTgtContext.get("authsp");
 
                             // kill existing tgt

@@ -210,7 +210,10 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
 	            htSessionContext.put("app_id", _sMyAppId);
 	            htSessionContext.put("app_url", sRedirectUrl);
 	            htSessionContext.put("organization", _sMyOrg);
-	            htSessionContext.put("client_ip", request.getRemoteAddr()); // RH, 20080617, n
+	            // Bauke 20081217: should already be stored, so don't set them again
+	            //htSessionContext.put("client_ip", request.getRemoteAddr()); // RH, 20080617, n
+				//String sAgent = (String)request.getHeader("User-Agent");
+				//if (sAgent != null) htSessionContext.put("user_agent", sAgent);
 	            
 	            //htSessionContext.put("level", intAppLevel);
 	            sSessionId = _sessionManager.createSession(htSessionContext);

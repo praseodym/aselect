@@ -367,10 +367,12 @@ public class TGTIssuer
 
             // RH, 20080619, sn
             // We will now only put the client_ip in the TGT if there is a non-zero value present in the sessioncontext
-            if (htSessionContext.get("client_ip") != null && !"".equals( ((String)htSessionContext.get("client_ip")).trim() )) {
-                htTGTContext.put("client_ip", htSessionContext.get("client_ip"));
-            }
+            String sClientIP = (String)htSessionContext.get("client_ip");
+            if (sClientIP != null && !"".equals(sClientIP)) htTGTContext.put("client_ip", sClientIP);
             // RH, 20080619, en
+    		
+            String sAgent = (String)htSessionContext.get("user_agent");
+    		if (sAgent != null) htTGTContext.put("user_agent", sAgent);
             
             // Bauke 20081110 copy RelayState to the TgT
             String sRelayState = (String)htSessionContext.get("RelayState");
@@ -592,10 +594,11 @@ public class TGTIssuer
 
             // RH, 20080619, sn
             // We will now only put the client_ip in the TGT if there is a non-zero value present in the sessioncontext
-            if (htSessionContext.get("client_ip") != null && !"".equals( ((String)htSessionContext.get("client_ip")).trim() )) {
-                htTGTContext.put("client_ip", htSessionContext.get("client_ip"));
-            }
+            String sClientIP = (String)htSessionContext.get("client_ip");
+            if (sClientIP != null && !"".equals(sClientIP)) htTGTContext.put("client_ip", sClientIP);
             // RH, 20080619, en
+    		String sAgent = (String)htSessionContext.get("User-Agent");
+    		if (sAgent != null) htTGTContext.put("user_agent", sAgent);
 
             // Bauke 20081110 copy RelayState to the TgT
             String sRelayState = (String)htSessionContext.get("RelayState");
@@ -720,11 +723,11 @@ public class TGTIssuer
             // We will now always put the client_ip in the TGT
             // There should always be a client_ip in the sessioncontext
             htTGTContext.put("client_ip", htSessionContext.get("client_ip"));
+    		String sAgent = (String)htSessionContext.get("User-Agent");
+    		if (sAgent != null) htTGTContext.put("user_agent", sAgent);
 
             String sTgt = oTGTManager.createTGT(htTGTContext);
-
             sendRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse);
-
             sessionManager.killSession(sRid);            
         }
         catch (ASelectException e)
@@ -732,7 +735,6 @@ public class TGTIssuer
             StringBuffer sbError = new StringBuffer("Issue cancel TGT for request '");
             sbError.append(sRid).append("' failed");
             _systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
-            
             throw e;
         }
         catch (Exception e)
@@ -740,7 +742,6 @@ public class TGTIssuer
             StringBuffer sbError = new StringBuffer("Issue cancel TGT for request '");
             sbError.append(sRid).append("' failed due to internal error");
             _systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
-            
             throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
         }
     }

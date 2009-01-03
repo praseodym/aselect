@@ -430,6 +430,8 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 
         htServiceRequest.put("my_url", servletRequest.getRequestURL().toString());
 	    htServiceRequest.put("client_ip", servletRequest.getRemoteAddr());
+		String sAgent = servletRequest.getHeader("User-Agent");
+		if (sAgent != null) htServiceRequest.put("user_agent", sAgent);
 	    Hashtable htCredentials = getASelectCredentials(servletRequest);
 	    if (htCredentials != null)
 	    {

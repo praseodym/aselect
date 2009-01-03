@@ -532,7 +532,10 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 		}
 
 		htServiceRequest.put("my_url", servletRequest.getRequestURL().toString());
-		htServiceRequest.put("client_ip", servletRequest.getRemoteAddr());
+		// Bauke 20081217: client_ip and user_agent should already be set
+		//htServiceRequest.put("client_ip", servletRequest.getRemoteAddr());
+		//String sAgent = servletRequest.getHeader("User-Agent");
+		//if (sAgent != null) htServiceRequest.put("user_agent", sAgent);
 		Hashtable htCredentials = getASelectCredentials(servletRequest);
 		if (htCredentials != null) {
 			htServiceRequest.put("aselect_credentials_tgt", htCredentials.get("aselect_credentials_tgt"));

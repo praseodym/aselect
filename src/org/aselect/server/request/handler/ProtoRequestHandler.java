@@ -849,10 +849,11 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		if (sRid != null) {
 			htTGTContext.put("rid", sRid);
 			htTGTContext.put("client_ip", _sessionManager.getSessionContext(sRid).get("client_ip"));
+			String sAgent = (String)_sessionManager.getSessionContext(sRid).get("user_agent");
+			if (sAgent != null) htTGTContext.put("user_agent", sAgent);
 		}
-		 // RH, 20080617, en
+		// RH, 20080617, en
 	    
-		
 		if (sTgt == null)
 			sTgt = _tgtManager.createTGT(htTGTContext);
 		else

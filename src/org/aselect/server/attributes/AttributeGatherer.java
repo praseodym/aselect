@@ -668,28 +668,24 @@ public class AttributeGatherer
         // Bauke: Pass Digid Attributes
         _systemLogger.log(Level.INFO, _MODULE, sMethod, "Add additional attributes");
         String fld = (String)htTGTContext.get("uid");
-        if (fld != null) {
-        	htAttributes.put("uid", fld);
-        }
+        if (fld != null) htAttributes.put("uid", fld);
+        
         fld = (String)htTGTContext.get("digid_uid");
-        if (fld != null) {
-        	htAttributes.put("digid_uid", fld);
-        }
+        if (fld != null) htAttributes.put("digid_uid", fld);
         fld = (String)htTGTContext.get("digid_betrouwbaarheidsniveau");
-        if (fld != null) {
-        	htAttributes.put("digid_betrouwbaarheidsniveau", fld);
-        }
+        if (fld != null) htAttributes.put("digid_betrouwbaarheidsniveau", fld);
         fld = (String)htTGTContext.get("sel_uid");
-        if (fld != null) {
-        	htAttributes.put("sel_uid", fld);
-        }
+        if (fld != null) htAttributes.put("sel_uid", fld);
+        
         // Bauke: added additional attributes
         String sAuthsp = (String)htTGTContext.get("authsp");
-        if (sAuthsp != null)
-        	htAttributes.put("sel_authsp", sAuthsp);
+        if (sAuthsp != null) htAttributes.put("sel_authsp", sAuthsp);
         String sAuthspLevel = (String)htTGTContext.get("authsp_level");
-        if (sAuthsp != null)
-        	htAttributes.put("sel_level", sAuthspLevel);
+        if (sAuthsp != null) htAttributes.put("sel_level", sAuthspLevel);
+        String sClientIp = (String)htTGTContext.get("client_ip");
+        if (sClientIp != null) htAttributes.put("client_ip", sClientIp);
+        String sUserAgent = (String)htTGTContext.get("user_agent");
+        if (sUserAgent != null) htAttributes.put("user_agent", sUserAgent);
         
         String sSubjectDN = (String)htTGTContext.get("pki_subject_dn");
         String sToken;
@@ -731,8 +727,7 @@ public class AttributeGatherer
         }
 
        String sSmsPhone = (String)htTGTContext.get("sms_phone");
-        if (sSmsPhone != null)
-        	htAttributes.put("sms_phone", sSmsPhone);
+        if (sSmsPhone != null) htAttributes.put("sms_phone", sSmsPhone);
         // End of additions
 
         _systemLogger.log(Level.INFO, _MODULE, sMethod, "Add handler");

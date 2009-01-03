@@ -526,9 +526,11 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		if (sLanguage != null && sLanguage.trim().length() > 0)
 			htSessionContext.put("language", sLanguage);
 
-		// We only want to set the client_ip on application browserrequests (see
-		// ApplicationBrwoserHandler)
-		htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr()); // RH, 20080716, n // RH, 20080719, o
+		// We only want to set the client_ip on application browserrequests (see ApplicationBrwoserHandler)
+		// Bauke 20081217: Therefore the lines below should go!
+		//htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr()); // RH, 20080716, n // RH, 20080719, o
+		//String sAgent = get_servletRequest().getHeader("User-Agent");
+		//if (sAgent != null) htSessionContext.put("user_agent", sAgent);
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "CTX htSessionContext=" + htSessionContext);
 
 		sSessionId = _sessionManager.createSession(htSessionContext);

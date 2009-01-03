@@ -190,7 +190,8 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
      * <br><br>
      * @see org.aselect.server.request.handler.aselect.authentication.IRequestHandler#processRequest()
      */
-    public void processRequest() throws ASelectException
+    public void processRequest()
+    throws ASelectException
     {
         String sMethod = "processRequest()";
         PrintWriter pwOut = null; 
@@ -225,7 +226,6 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 	  			    throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_ID_MISMATCH);
 	            }
             }
-            
             processBrowserRequest(htServiceRequest, _servletResponse, pwOut);
 	    }
 	    catch(ASelectException ae)
@@ -410,6 +410,8 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 
         htServiceRequest.put("my_url", servletRequest.getRequestURL().toString());
 	    htServiceRequest.put("client_ip", servletRequest.getRemoteAddr());
+		String sAgent = servletRequest.getHeader("User-Agent");
+		if (sAgent != null) htServiceRequest.put("user_agent", sAgent);
 	    Hashtable htCredentials = getASelectCredentials(servletRequest);
 	    if (htCredentials != null)
 	    {
@@ -417,10 +419,8 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 	            .get("aselect_credentials_tgt"));
 	        htServiceRequest.put("aselect_credentials_uid", htCredentials
 	            .get("aselect_credentials_uid"));
-	        htServiceRequest.put("aselect_credentials_server_id",
-	            _sMyServerId);
+	        htServiceRequest.put("aselect_credentials_server_id", _sMyServerId);
 	    }
-	    
 	    return htServiceRequest;
     }
 
