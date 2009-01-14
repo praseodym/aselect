@@ -994,8 +994,7 @@ public class ASelectConfigManager extends ConfigManager {
 	 * @return A <code>String</code> representation of the requested form.
 	 */
 	public String getForm(String sForm) {
-		_systemLogger.log(Level.INFO, "ASelectConfigManager", "getForm",
-				"Get FORM " + sForm);
+		_systemLogger.log(Level.INFO, "ASelectConfigManager", "getForm", "Get FORM " + sForm);
 		if (sForm.equals("login"))
 			return _sLoginForm;
 
@@ -1898,57 +1897,34 @@ public class ASelectConfigManager extends ConfigManager {
 		}
 
 		try {
-			String sCrossFallbackEnabled = this.getParam(oUdbCfgSection,
-					"cross_fallback");
-			_bCrossFallbackEnabled = sCrossFallbackEnabled.trim()
-					.equalsIgnoreCase("true");
+			String sCrossFallbackEnabled = this.getParam(oUdbCfgSection, "cross_fallback");
+			_bCrossFallbackEnabled = sCrossFallbackEnabled.trim().equalsIgnoreCase("true");
 		} catch (ASelectConfigException eAC) {
-			_systemLogger
-					.log(
-							Level.CONFIG,
-							MODULE,
-							sMethod,
-							"Could not find 'cross_fallback' param in udb config section, so 'cross_fallback' disabled.",
-							eAC);
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+					"Could not find 'cross_fallback' param in udb config section, so 'cross_fallback' disabled.", eAC);
 		}
 
 		try {
 			sConnectorID = this.getParam(oUdbCfgSection, "connector");
 		} catch (ASelectConfigException eAC) {
-			_systemLogger
-					.log(
-							Level.WARNING,
-							MODULE,
-							sMethod,
-							"Could not retrieve 'connector' config parameter in udb config section",
-							eAC);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"Could not retrieve 'connector' config parameter in udb config section", eAC);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
 		}
 
 		try {
-			oUdbConnectorCfgSection = this.getSection(oUdbCfgSection,
-					"connector", "id=" + sConnectorID);
+			oUdbConnectorCfgSection = this.getSection(oUdbCfgSection, "connector", "id=" + sConnectorID);
 		} catch (ASelectConfigException eAC) {
-			_systemLogger
-					.log(
-							Level.WARNING,
-							MODULE,
-							sMethod,
-							"Could not retrieve connector config parameter in udb config section",
-							eAC);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"Could not retrieve connector config parameter in udb config section", eAC);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
 		}
 
 		try {
 			sConnectorClass = this.getParam(oUdbConnectorCfgSection, "class");
 		} catch (ASelectConfigException eAC) {
-			_systemLogger
-					.log(
-							Level.WARNING,
-							MODULE,
-							sMethod,
-							"Could not retrieve 'class' config parameter in udb connector config section",
-							eAC);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"Could not retrieve 'class' config parameter in udb connector config section", eAC);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
 		}
 
@@ -1956,29 +1932,18 @@ public class ASelectConfigManager extends ConfigManager {
 			Class classConnector = Class.forName(sConnectorClass);
 			oUDBConnector = (IUDBConnector) classConnector.newInstance();
 		} catch (Exception e) {
-			_systemLogger
-					.log(
-							Level.WARNING,
-							MODULE,
-							sMethod,
-							"The configured udb connector class is not a valid UDBConnector class",
-							e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"The configured udb connector class is not a valid UDBConnector class", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 
 		try {
 			oUDBConnector.init(oUdbConnectorCfgSection);
 		} catch (ASelectUDBException eAUDB) {
-			_systemLogger
-					.log(
-							Level.WARNING,
-							MODULE,
-							sMethod,
-							"Could not initialize UDB as configured in the udb resource",
-							eAUDB);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"Could not initialize UDB as configured in the udb resource", eAUDB);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAUDB);
 		}
-
 	}
 
 	/**
@@ -2020,13 +1985,8 @@ public class ASelectConfigManager extends ConfigManager {
 		try {
 			getParam(_oASelectConfigSection, "organization_friendly_name");
 		} catch (ASelectConfigException eAC) {
-			_systemLogger
-					.log(
-							Level.WARNING,
-							MODULE,
-							sMethod,
-							"missing 'organization_friendly_name' parameter in configuration",
-							eAC);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"missing 'organization_friendly_name' parameter in configuration", eAC);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
 		}
 
@@ -2043,13 +2003,8 @@ public class ASelectConfigManager extends ConfigManager {
 		try {
 			oTemp = getSection(null, "storagemanager", "id=session");
 		} catch (ASelectConfigException eAC) {
-			_systemLogger
-					.log(
-							Level.WARNING,
-							MODULE,
-							sMethod,
-							"missing 'storagemanager' section with id=session in configuration",
-							eAC);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"missing 'storagemanager' section with id=session in configuration", eAC);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
 		}
 
@@ -2063,49 +2018,36 @@ public class ASelectConfigManager extends ConfigManager {
 
 		try {
 			getParam(oTemp, "expire");
-		} catch (ASelectConfigException eAC) {
-			_systemLogger
-					.log(
-							Level.WARNING,
-							MODULE,
-							sMethod,
-							"missing 'expire' (in session section) parameter in configuration",
-							eAC);
+		}
+		catch (ASelectConfigException eAC) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"missing 'expire' (in session section) parameter in configuration", eAC);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 		}
 
 		// check ticket config
 		try {
 			oTemp = getSection(null, "storagemanager", "id=tgt");
-		} catch (ASelectConfigException e) {
-			_systemLogger
-					.log(
-							Level.WARNING,
-							MODULE,
-							sMethod,
-							"missing 'storagemanager' section with id=tgt in configuration",
-							e);
+		}
+		catch (ASelectConfigException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"missing 'storagemanager' section with id=tgt in configuration", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 
 		try {
 			getParam(oTemp, "max");
-		} catch (ASelectConfigException eAC) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"missing 'max' parameter in configuration", eAC);
+		}
+		catch (ASelectConfigException eAC) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "missing 'max' parameter in configuration", eAC);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
 		}
 
 		try {
 			getParam(oTemp, "expire");
 		} catch (ASelectConfigException eAC) {
-			_systemLogger
-					.log(
-							Level.WARNING,
-							MODULE,
-							sMethod,
-							"missing 'expire' (in tgt section) parameter in configuration",
-							eAC);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"missing 'expire' (in tgt section) parameter in configuration", eAC);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
 		}
 

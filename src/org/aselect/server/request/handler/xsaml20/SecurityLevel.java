@@ -16,7 +16,9 @@ import org.opensaml.saml2.core.RequestedAuthnContext;
 
 public class SecurityLevel
 {
-	final static String MODULE = "Utils";
+	final static String MODULE = "SecurityLevel";
+	
+	// Saml text
 	final static String UNSPECIFIED_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified";
 	final static String PASSWORDPROTECTEDTRANSPORT_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport";
 	final static String MOBILETWOFACTORCONTRACT_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorContract";
@@ -29,12 +31,13 @@ public class SecurityLevel
 
 	final private static int NOT_FOUND = -1;
 
+	// 20090109: Bauke changed levels
 	final private static int MIN = 0;
-	final private static int NUL = 1;
-	final private static int LAAG = 2;
-	final private static int MIDDEN = 3;
-	final private static int HOOG = 4;
-	final private static int MAX = 5;
+	final private static int NUL = 5;  // 1;
+	final private static int LAAG = 10;  // 2;
+	final private static int MIDDEN = 20;  // 3;
+	final private static int HOOG = 30;  //4;
+	final private static int MAX = 999;  //5;
 
 	public final static String BN_EMPTY = "empty";
 	public final static String BN_NUL = "5";
@@ -102,8 +105,9 @@ public class SecurityLevel
 		}
 	}
 
-	public static String getBetrouwbaarheidsNiveau(RequestedAuthnContext requestedAuthnContext)
+	public static String getBetrouwbaarheidsNiveau(RequestedAuthnContext requestedAuthnContext, ASelectSystemLogger systemLogger)
 	{
+		String sMethod = "getBetrouwbaarheidsNiveau";
 		final int EXACT = 0;
 		final int MINIMUM = 1;
 		final int MAXIMUM = 2;
@@ -111,8 +115,7 @@ public class SecurityLevel
 
 		if (requestedAuthnContext != null) {
 			int iComparison = EXACT;
-			AuthnContextComparisonTypeEnumeration authnContextComparisonTypeEnumeration = requestedAuthnContext
-					.getComparison();
+			AuthnContextComparisonTypeEnumeration authnContextComparisonTypeEnumeration = requestedAuthnContext.getComparison();
 			if (authnContextComparisonTypeEnumeration != null) {
 				if (authnContextComparisonTypeEnumeration.equals(AuthnContextComparisonTypeEnumeration.MINIMUM)) {
 					iComparison = MINIMUM;
@@ -189,6 +192,7 @@ public class SecurityLevel
 				sMatchedBetrouwheidsNiveau = getBetrouwbaarheidsNiveau(iCurrentMaxBetrouwheidsNiveau);
 			}
 
+			systemLogger.log(Level.INFO, MODULE, sMethod, "Level=" + sMatchedBetrouwheidsNiveau);
 			return sMatchedBetrouwheidsNiveau;
 
 		}

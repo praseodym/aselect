@@ -171,7 +171,7 @@ public class ASelectAgent
     /**
      * Version string.
      */
-    public final static String VERSION = "1.6";
+    public final static String VERSION = "1.7";
     
     /**
      * Port number of A-Select Agent for receiving API requests.

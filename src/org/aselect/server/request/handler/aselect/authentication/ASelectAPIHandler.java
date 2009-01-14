@@ -292,438 +292,349 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
      * @param oOutputMessage The output message.
      * @throws ASelectException If proccessing fails.
      */
-	private void handleAuthenticateRequest(IProtocolRequest oProtocolRequest,
-        							IInputMessage oInputMessage, 
-        							IOutputMessage oOutputMessage)
-        throws ASelectException
-    {
-        String sMethod = "handleAuthenticateRequest()";
-        String sSessionId = null;
-        String sASelectServer = null;
-        String sLocalASUrl = null;
-        String sLocalOrgId = null;
-        String sRequiredLevel = null;
-        Hashtable htSessionContext = null;
-        String sLevel = null;
-        String sUid = null;
-        String sLanguage = null;
-        String sCountry = null;
+	private void handleAuthenticateRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
+			IOutputMessage oOutputMessage)
+	throws ASelectException
+	{
+		String sMethod = "handleAuthenticateRequest()";
+		String sSessionId = null;
+		String sASelectServer = null;
+		String sLocalASUrl = null;
+		String sLocalOrgId = null;
+		String sRequiredLevel = null;
+		Hashtable htSessionContext = null;
+		String sLevel = null;
+		String sUid = null;
+		String sLanguage = null;
+		String sCountry = null;
 
-        if (! _crossASelectManager.localServersEnabled())
-        {
-            // No trusted local servers configured.
-            _systemLogger.log(Level.WARNING, 
-    			_sModule, 
-    			sMethod, 
-    			"Invalid request since no local servers are configured.");
+		if (!_crossASelectManager.localServersEnabled()) {
+			// No trusted local servers configured.
+			_systemLogger.log(Level.WARNING, _sModule, sMethod,
+					"Invalid request since no local servers are configured.");
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
 
-            	throw new ASelectException(
-            	    Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-        }
-        
-        try
-        {
-            // Since the request was forwarded by a local server
-            // we do not know any application_id or url
-            sLocalASUrl = oInputMessage.getParam("local_as_url");
-            sLocalOrgId = oInputMessage.getParam("local_organization");
-            sRequiredLevel = oInputMessage.getParam("required_level");
-            sASelectServer = oInputMessage.getParam("a-select-server");
-        }
-        catch(ASelectCommunicationException eAC)
-        {
-            _systemLogger.log(Level.WARNING, 
-    			_sModule, 
-    			sMethod, 
-    			"Missing required parameters",eAC);
+		try {
+			// Since the request was forwarded by a local server
+			// we do not know any application_id or url
+			sLocalASUrl = oInputMessage.getParam("local_as_url");
+			sLocalOrgId = oInputMessage.getParam("local_organization");
+			sRequiredLevel = oInputMessage.getParam("required_level");
+			sLevel = oInputMessage.getParam("level");
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "On Input: required_level="+sRequiredLevel+" level="+sLevel);
+			sASelectServer = oInputMessage.getParam("a-select-server");
+		}
+		catch (ASelectCommunicationException eAC) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing required parameters", eAC);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+		try {
+			sUid = oInputMessage.getParam("uid");
+		}
+		catch (ASelectCommunicationException eAC) {
+			_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'uid' parameter found.", eAC);
+		}
 
-            	throw new ASelectCommunicationException(
-            	    Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-        }            
-        try
-        {
-            sUid = oInputMessage.getParam("uid");
-        }
-        catch(ASelectCommunicationException eAC)
-        {
-            _systemLogger.log(Level.FINE, _sModule, sMethod, 
-    			"No optional 'uid' parameter found.",eAC);
-        }
-        
-        try
-        {
-            sCountry = oInputMessage.getParam("country");
-        }
-        catch(ASelectCommunicationException e)
-        {
-            _systemLogger.log(Level.FINE, _sModule, sMethod, 
-    			"No optional 'country' parameter found.", e);
-        }
-        
-        try
-        {
-            sLanguage = oInputMessage.getParam("language");
-        }
-        catch(ASelectCommunicationException e)
-        {
-            _systemLogger.log(Level.FINE, _sModule, sMethod, 
-    			"No optional 'language' parameter found.", e);
-        }
+		try {
+			sCountry = oInputMessage.getParam("country");
+		}
+		catch (ASelectCommunicationException e) {
+			_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'country' parameter found.", e);
+		}
 
-        //check if the request must be handled as a forced authentication
-        Boolean boolForced = null;
-        String sForcedLogon = null;
-        try
-        {
-            sForcedLogon = oInputMessage.getParam("forced_logon");
-            boolForced = new Boolean(sForcedLogon);  
-        }
-        catch(ASelectCommunicationException e)
-        {
-            boolForced = new Boolean(false);
-            _systemLogger.log(Level.FINE, _sModule, sMethod, 
-    			"No optional 'forced_logon' parameter found.", e);
-        }
+		try {
+			sLanguage = oInputMessage.getParam("language");
+		}
+		catch (ASelectCommunicationException e) {
+			_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'language' parameter found.", e);
+		}
 
-        //TODO include other optional parameters as well (remco)
-        if (_crossASelectManager.isLocalSigningRequired())
-        {
-	        StringBuffer sbData = new StringBuffer(sASelectServer);
-	        if(sCountry != null)
-	            sbData.append(sCountry);
-	        if (sForcedLogon != null)
-	            sbData.append(sForcedLogon);
-	        if(sLanguage != null)
-	            sbData.append(sLanguage);
-	        sbData.append(sLocalASUrl).append(sLocalOrgId).append(sRequiredLevel);
-	        if (sUid != null)
-	            sbData.append(sUid);
-	        verifyLocalASelectServerSignature(oInputMessage,sbData.toString(),
-	            sLocalOrgId);
-        }
+		// check if the request must be handled as a forced authentication
+		Boolean boolForced = null;
+		String sForcedLogon = null;
+		try {
+			sForcedLogon = oInputMessage.getParam("forced_logon");
+			boolForced = new Boolean(sForcedLogon);
+		}
+		catch (ASelectCommunicationException e) {
+			boolForced = new Boolean(false);
+			_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'forced_logon' parameter found.", e);
+		}
 
-        sLevel = _crossASelectManager.getLocalParam(sLocalOrgId, "level");
-        if (sLevel != null && Integer.parseInt(sLevel) > Integer.parseInt(sRequiredLevel))
-            sRequiredLevel = sLevel;
+		// TODO include other optional parameters as well (remco)
+		if (_crossASelectManager.isLocalSigningRequired()) {
+			StringBuffer sbData = new StringBuffer(sASelectServer);
+			if (sCountry != null)
+				sbData.append(sCountry);
+			if (sForcedLogon != null)
+				sbData.append(sForcedLogon);
+			if (sLanguage != null)
+				sbData.append(sLanguage);
+			sbData.append(sLocalASUrl).append(sLocalOrgId).append(sRequiredLevel);
+			if (sUid != null)
+				sbData.append(sUid);
+			verifyLocalASelectServerSignature(oInputMessage, sbData.toString(), sLocalOrgId);
+		}
 
-        //Create Session
-        htSessionContext = new Hashtable();
-        htSessionContext.put("local_organization", sLocalOrgId);
-        htSessionContext.put("remote_session", "true");
-        htSessionContext.put("local_as_url", sLocalASUrl);
-        htSessionContext.put("level", new Integer(sRequiredLevel));
-        htSessionContext.put("organization", _sMyOrg);
+		sLevel = _crossASelectManager.getLocalParam(sLocalOrgId, "level");
+		if (sLevel != null && Integer.parseInt(sLevel) > Integer.parseInt(sRequiredLevel)) {
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "required_level updated to cross level: "+sLevel);
+			sRequiredLevel = sLevel;
+		}
 
-        // Uid is stored in the session context with a temporary identifier.
-        // This because the value is not validated yet.
-        // After validation, the values can be set as 'user_id'.
-        if (sUid != null)
-            htSessionContext.put("forced_uid", sUid);
-        if(sCountry != null && sCountry.trim().length() > 0)
-                htSessionContext.put("country", sCountry);
-        if (sLanguage != null && sLanguage.trim().length() > 0)
-                htSessionContext.put("language", sLanguage);
-        
+		// Create Session
+		htSessionContext = new Hashtable();
+		htSessionContext.put("local_organization", sLocalOrgId);
+		htSessionContext.put("remote_session", "true");
+		htSessionContext.put("local_as_url", sLocalASUrl);
+		htSessionContext.put("level", new Integer(sRequiredLevel));
+		htSessionContext.put("organization", _sMyOrg);
 
-        //need to check if the request must be handled as a forced authentication
-        if (!boolForced.booleanValue() &&
-            _crossASelectManager.isForcedAuthenticateEnabled(sLocalOrgId))
-        {
-            boolForced = new Boolean(true);
-        }
-        htSessionContext.put("forced_authenticate", boolForced);
-        
-        // RH, 20080619, for now we only set the client_ip if it's an application browserrequests (ApplicationBrowserHandler)
-        // htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr()); // RH, 20080716, n // RH, 20080719, o
+		// Uid is stored in the session context with a temporary identifier.
+		// This because the value is not validated yet.
+		// After validation, the values can be set as 'user_id'.
+		if (sUid != null)
+			htSessionContext.put("forced_uid", sUid);
+		if (sCountry != null && sCountry.trim().length() > 0)
+			htSessionContext.put("country", sCountry);
+		if (sLanguage != null && sLanguage.trim().length() > 0)
+			htSessionContext.put("language", sLanguage);
 
-        sSessionId = _sessionManager.createSession(htSessionContext);
-        if (sSessionId == null)
-        {
-            _systemLogger.log(Level.WARNING, 
-                _sModule, 
-    			sMethod, 
-    			"Unable to create session");
-            
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);              
-        }
-        
-        //Authentication OK
-        StringBuffer sbAsUrl = new StringBuffer();
-        String sAsUrl = _configManager.getRedirectURL();
-        if (sAsUrl != null)
-            sbAsUrl.append(sAsUrl);
-        else
-            sbAsUrl.append(oProtocolRequest.getTarget());
+		// need to check if the request must be handled as a forced
+		// authentication
+		if (!boolForced.booleanValue() && _crossASelectManager.isForcedAuthenticateEnabled(sLocalOrgId)) {
+			boolForced = new Boolean(true);
+		}
+		htSessionContext.put("forced_authenticate", boolForced);
 
-        // 1.5.4 addition
-        Integer intMaxLevel = new Integer(99);
-        Vector vAuthSPs = AuthSPHandlerManager.getHandle().getConfiguredAuthSPs(new Integer(sRequiredLevel), intMaxLevel);
-        if(vAuthSPs.size() == 1 && AuthSPHandlerManager.getHandle().isDirectAuthSP((String)vAuthSPs.get(0)))
-        {
-            // A-Select will show username and password box in one page.
-            sbAsUrl.append("?request=direct_login1");
-            htSessionContext.put("direct_authsp",vAuthSPs.get(0));
-        }
-        else {
-            sbAsUrl.append("?request=login1");
-        }
-        
-        try {           
-            String sAsURL = sbAsUrl.toString();
-            oOutputMessage.setParam("rid", sSessionId);
-            oOutputMessage.setParam("as_url", sAsURL);
-            oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
-        }
-        catch(ASelectCommunicationException eAC)
-        {
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Could not set response parameter",eAC);
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_INTERNAL_ERROR,eAC);
-        }
-    }
+		// RH, 20080619, for now we only set the client_ip if it's an
+		// application browserrequests (ApplicationBrowserHandler)
+		// htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr()); // RH, 20080716, n // RH,
+		// 20080719, o
+		sSessionId = _sessionManager.createSession(htSessionContext);
+		if (sSessionId == null) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unable to create session");
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
+		}
+
+		// Authentication OK
+		StringBuffer sbAsUrl = new StringBuffer();
+		String sAsUrl = _configManager.getRedirectURL();
+		if (sAsUrl != null)
+			sbAsUrl.append(sAsUrl);
+		else
+			sbAsUrl.append(oProtocolRequest.getTarget());
+
+		// 1.5.4 addition
+		Integer intMaxLevel = new Integer(99);
+		Vector vAuthSPs = AuthSPHandlerManager.getHandle().getConfiguredAuthSPs(new Integer(sRequiredLevel),
+				intMaxLevel);
+		if (vAuthSPs.size() == 1 && AuthSPHandlerManager.getHandle().isDirectAuthSP((String) vAuthSPs.get(0))) {
+			// A-Select will show username and password box in one page.
+			sbAsUrl.append("?request=direct_login1");
+			htSessionContext.put("direct_authsp", vAuthSPs.get(0));
+		}
+		else {
+			sbAsUrl.append("?request=login1");
+		}
+
+		try {
+			String sAsURL = sbAsUrl.toString();
+			oOutputMessage.setParam("rid", sSessionId);
+			oOutputMessage.setParam("as_url", sAsURL);
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
+		}
+		catch (ASelectCommunicationException eAC) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not set response parameter", eAC);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR, eAC);
+		}
+	}
     /**
-     * This method handles the <code>request=verify_credentials</code> request. If the
-     * tgt of the user is valid, then this method returns the information of the
-     * user to the local server. 
-     * <br>
-     * @param oInputMessage The input message.
-     * @param oOutputMessage The output message.
-     * @throws ASelectException If proccessing fails.
-     */
-    private void handleVerifyCredentialsRequest(IInputMessage oInputMessage,
-        IOutputMessage oOutputMessage) throws ASelectException
-    {
-        String sMethod = "handleVerifyCredentialsRequest()";
+	 * This method handles the <code>request=verify_credentials</code>
+	 * request. If the tgt of the user is valid, then this method returns the
+	 * information of the user to the local server. <br>
+	 * 
+	 * @param oInputMessage
+	 *            The input message.
+	 * @param oOutputMessage
+	 *            The output message.
+	 * @throws ASelectException
+	 *             If proccessing fails.
+	 */
+    private void handleVerifyCredentialsRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
+		throws ASelectException
+	{
+		String sMethod = "handleVerifyCredentialsRequest()";
 
-        Hashtable htTGTContext = null;
-        String sRid = null;
-        String sUid = null;
-        String sResultCode  = null;
-        String sASelectServer = null;
-        String sEncTgt = null;
-        String sTGT = null;
-        
-        try
-        {
-            sEncTgt = oInputMessage.getParam("aselect_credentials");
-            sRid = oInputMessage.getParam("rid");
-            sASelectServer = oInputMessage.getParam("a-select-server");
-        }
-        catch(ASelectCommunicationException eAC)
-        {
-            _systemLogger.log(Level.WARNING, 
-                _sModule, 
-    			sMethod, 
-    			"Missing required parameters");            
-            throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST); 
-        }
-        _systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED AselApi rid="+sRid); 
-        
-        try
-        {
-	        byte[] baTgtBytes = CryptoEngine.getHandle().decryptTGT(
-	            sEncTgt);
-	        sTGT = Utils.toHexString(baTgtBytes);
-        }
-        catch(ASelectException eAC) //decrypt failed
-        {
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "could not decrypt TGT",eAC);
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID,eAC);
-        }
-        catch(Exception e) //HEX conversion fails
-        {
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "could not decrypt TGT",e);
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID,e);
-        }
+		Hashtable htTGTContext = null;
+		String sRid = null;
+		String sUid = null;
+		String sResultCode = null;
+		String sASelectServer = null;
+		String sEncTgt = null;
+		String sTGT = null;
 
-        htTGTContext = _tgtManager.getTGT(sTGT);
-        
-        if (htTGTContext == null)
-        {
-            _systemLogger.log(Level.WARNING, 
-                _sModule, 
-    			sMethod, 
-    			"Unknown TGT");            
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT); 
-        }
+		try {
+			sEncTgt = oInputMessage.getParam("aselect_credentials");
+			sRid = oInputMessage.getParam("rid");
+			sASelectServer = oInputMessage.getParam("a-select-server");
+		}
+		catch (ASelectCommunicationException eAC) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing required parameters");
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED AselApi rid=" + sRid);
 
-        // check rid
-        if (!(sRid).equalsIgnoreCase((String)htTGTContext.get("rid")))
-        {
-            _systemLogger.log(Level.WARNING, 
-                _sModule, 
-    			sMethod, 
-    			"Invalid RID");
-                           
-            StringBuffer sbBuffer = new StringBuffer("RID is other than expected. Received ");
-            sbBuffer.append(sRid);
-            sbBuffer.append(" but expected ");
-            sbBuffer.append((String)htTGTContext.get("rid"));
+		try {
+			byte[] baTgtBytes = CryptoEngine.getHandle().decryptTGT(sEncTgt);
+			sTGT = Utils.toHexString(baTgtBytes);
+		}
+		catch (ASelectException eAC) //decrypt failed
+		{
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "could not decrypt TGT", eAC);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID, eAC);
+		}
+		catch (Exception e) //HEX conversion fails
+		{
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "could not decrypt TGT", e);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID, e);
+		}
 
-            _systemLogger.log(Level.FINE, 
-                _sModule, 
-    			sMethod, 
-    			sbBuffer.toString());
-            
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);                
-        }    
-        
-        //get local_organisation from TGT context.
-        String sLocalOrg = (String)htTGTContext.get("local_organization");
+		htTGTContext = _tgtManager.getTGT(sTGT);
 
-        if (sLocalOrg == null)
-        {
-            _systemLogger.log(Level.WARNING, 
-                _sModule, 
-    			sMethod, 
-    			"invalid local organization");
-                                      
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);             
-        }
-        
-        //Check if request should be signed
-        if (_crossASelectManager.isLocalSigningRequired())
-        {
-            StringBuffer sbData = new StringBuffer(sASelectServer);
-            sbData.append(sEncTgt).append(sLocalOrg).append(sRid);
-	        verifyLocalASelectServerSignature(oInputMessage,sbData.toString(),
-	            sLocalOrg);
-        }
+		if (htTGTContext == null) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unknown TGT");
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT);
+		}
 
-        try
-        {
-            oOutputMessage.setParam("rid", sRid);
-        }
-        catch(ASelectCommunicationException eAC)
-	    {
-	        _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-	            "Could not set 'rid' response parameter",eAC);
-	        throw new ASelectCommunicationException(
-	            Errors.ERROR_ASELECT_INTERNAL_ERROR,eAC);
-	    }  
+		// check rid
+		if (!(sRid).equalsIgnoreCase((String) htTGTContext.get("rid"))) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid RID");
 
-        sResultCode = (String)htTGTContext.get("result_code");
+			StringBuffer sbBuffer = new StringBuffer("RID is other than expected. Received ");
+			sbBuffer.append(sRid);
+			sbBuffer.append(" but expected ");
+			sbBuffer.append((String) htTGTContext.get("rid"));
 
-        if (sResultCode != null) //Resultcode available in TGT context
-        {  
-            if (sResultCode != Errors.ERROR_ASELECT_SUCCESS) //Error in context
-            {
-                _tgtManager.remove(sTGT);                
-                throw new ASelectCommunicationException(sResultCode); 
-                //message with error code and rid is send in "processAPIRequest()"
-            }
-        }
-        
-        //Get other response parameters
-        sUid = (String)htTGTContext.get("uid");
-        String sAuthSPLevel = (String)htTGTContext.get("authsp_level");
-        String sAuthSP = (String)htTGTContext.get("authsp");
-        long lExpTime = 0;
-        try
-        {
-            lExpTime = _tgtManager.getExpirationTime(sTGT);
-        }
-        catch(ASelectStorageException eAS)
-        {
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Could not fetch TGT timeout",eAS);
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);   
-        }
-        
-        // Gather attributes
-        AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
-        Hashtable htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
-        String sSerializedAttributes = serializeAttributes(htAttribs);
+			_systemLogger.log(Level.FINE, _sModule, sMethod, sbBuffer.toString());
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
+		}
 
-        _systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED SerAttr="+sSerializedAttributes); 
+		//get local_organisation from TGT context.
+		String sLocalOrg = (String) htTGTContext.get("local_organization");
 
-        try
-        {
-	        oOutputMessage.setParam("organization", (String)htTGTContext
-            .get("organization"));
-	        oOutputMessage.setParam("app_level", (String)htTGTContext.get("app_level"));
-	        //Return both asp and authsp variables to remain compatible
-	        //with A-Select 1.3 and 1.4
-	        oOutputMessage.setParam("asp_level", sAuthSPLevel);
-	        oOutputMessage.setParam("asp", sAuthSP);
-	        oOutputMessage.setParam("authsp_level", sAuthSPLevel);
-	        oOutputMessage.setParam("authsp", sAuthSP);
-	        oOutputMessage.setParam("uid", sUid);                 
-	        oOutputMessage.setParam("tgt_exp_time", new Long(lExpTime).toString());
-	        if (sSerializedAttributes != null)
-	            oOutputMessage.setParam("attributes", sSerializedAttributes);
-	        oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
-	        _systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED result_code==SUCCESS");
-        }
-        catch(ASelectCommunicationException eAC)
-	    {
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-	            "Could not set response parameters",eAC);
-	        throw new ASelectCommunicationException(
-	            Errors.ERROR_ASELECT_INTERNAL_ERROR,eAC);
-	    }  
+		if (sLocalOrg == null) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "invalid local organization");
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
 
-        // Kill TGT if single sign-on is disabled
-        if (!ASelectConfigManager.getHandle().isSingleSignOn()) _tgtManager.remove(sTGT);
-    }
-    
-    /** 
-     * Verify the local A-Select Server signing signature.
-     * <br><br>
-     * @param oInputMessage The input message.
-     * @param sData The data to validate upon.
-     * @param sOrg The organisation of the local A-Select Server.
-     * @throws ASelectException If signature is invalid.
-     */
-    private void verifyLocalASelectServerSignature(IInputMessage oInputMessage, 
-        String sData, String sOrg) throws ASelectException
-    {
-        String sMethod = "verifyLocalASelectServerSignature()";
+		//Check if request should be signed
+		if (_crossASelectManager.isLocalSigningRequired()) {
+			StringBuffer sbData = new StringBuffer(sASelectServer);
+			sbData.append(sEncTgt).append(sLocalOrg).append(sRid);
+			verifyLocalASelectServerSignature(oInputMessage, sbData.toString(), sLocalOrg);
+		}
 
-        String sSignature = null;
-        try
-        {
-            sSignature = oInputMessage.getParam("signature");
-        }
-        catch(ASelectCommunicationException eAC)
-        {
-            _systemLogger.log(Level.WARNING, 
-                _sModule, 
-    			sMethod, 
-    			"Missing required 'signature' parameter", eAC);
+		try {
+			oOutputMessage.setParam("rid", sRid);
+		}
+		catch (ASelectCommunicationException eAC) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not set 'rid' response parameter", eAC);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR, eAC);
+		}
 
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-        }                 
-        	            
-        PublicKey oPublicKey = _crossASelectManager.getLocalASelectServerPublicKey(sOrg);
-        if(oPublicKey == null)
-        {
-            _systemLogger.log(Level.WARNING, 
-                _sModule, sMethod, "No local A-Select Server signing key found with alias: " + sOrg);
+		sResultCode = (String) htTGTContext.get("result_code");
 
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST); 
-        }
-        
-        if (!_cryptoEngine.verifyApplicationSignature(oPublicKey, sData, sSignature)) 
-        {
-            _systemLogger.log(Level.WARNING, 
-                _sModule, sMethod, "Organization:"+sOrg + " Invalid signature:"+sSignature);
+		if (sResultCode != null) //Resultcode available in TGT context
+		{
+			if (sResultCode != Errors.ERROR_ASELECT_SUCCESS) //Error in context
+			{
+				_tgtManager.remove(sTGT);
+				throw new ASelectCommunicationException(sResultCode);
+				//message with error code and rid is send in "processAPIRequest()"
+			}
+		}
 
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-        }
-    }  
+		//Get other response parameters
+		sUid = (String) htTGTContext.get("uid");
+		String sAuthSPLevel = (String) htTGTContext.get("authsp_level");
+		String sAuthSP = (String) htTGTContext.get("authsp");
+		long lExpTime = 0;
+		try {
+			lExpTime = _tgtManager.getExpirationTime(sTGT);
+		}
+		catch (ASelectStorageException eAS) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not fetch TGT timeout", eAS);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
+		}
+
+		// Gather attributes
+		AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
+		Hashtable htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
+		String sSerializedAttributes = serializeAttributes(htAttribs);
+
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED SerAttr=" + sSerializedAttributes);
+
+		try {
+			oOutputMessage.setParam("organization", (String) htTGTContext.get("organization"));
+			oOutputMessage.setParam("app_level", (String) htTGTContext.get("app_level"));
+			//Return both asp and authsp variables to remain compatible
+			//with A-Select 1.3 and 1.4
+			oOutputMessage.setParam("asp_level", sAuthSPLevel);
+			oOutputMessage.setParam("asp", sAuthSP);
+			oOutputMessage.setParam("authsp_level", sAuthSPLevel);
+			oOutputMessage.setParam("authsp", sAuthSP);
+			oOutputMessage.setParam("uid", sUid);
+			oOutputMessage.setParam("tgt_exp_time", new Long(lExpTime).toString());
+			if (sSerializedAttributes != null)
+				oOutputMessage.setParam("attributes", sSerializedAttributes);
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED result_code==SUCCESS");
+		}
+		catch (ASelectCommunicationException eAC) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not set response parameters", eAC);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR, eAC);
+		}
+
+		// Kill TGT if single sign-on is disabled
+		if (!ASelectConfigManager.getHandle().isSingleSignOn())
+			_tgtManager.remove(sTGT);
+	}
+
+	/** 
+	 * Verify the local A-Select Server signing signature.
+	 * <br><br>
+	 * @param oInputMessage The input message.
+	 * @param sData The data to validate upon.
+	 * @param sOrg The organisation of the local A-Select Server.
+	 * @throws ASelectException If signature is invalid.
+	 */
+	private void verifyLocalASelectServerSignature(IInputMessage oInputMessage, String sData, String sOrg)
+		throws ASelectException
+	{
+		String sMethod = "verifyLocalASelectServerSignature()";
+
+		String sSignature = null;
+		try {
+			sSignature = oInputMessage.getParam("signature");
+		}
+		catch (ASelectCommunicationException eAC) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing required 'signature' parameter", eAC);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+
+		PublicKey oPublicKey = _crossASelectManager.getLocalASelectServerPublicKey(sOrg);
+		if (oPublicKey == null) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod,
+					"No local A-Select Server signing key found with alias: " + sOrg);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+
+		if (!_cryptoEngine.verifyApplicationSignature(oPublicKey, sData, sSignature)) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Organization:" + sOrg + " Invalid signature:"
+					+ sSignature);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+	}
 }
-

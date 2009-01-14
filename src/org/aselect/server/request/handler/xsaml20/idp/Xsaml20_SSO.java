@@ -163,7 +163,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 			// The betrouwbaarheidsniveau is stored in the sessiecontext
 			RequestedAuthnContext requestedAuthnContext = authnRequest.getRequestedAuthnContext();
-			String sBetrouwbaarheidsNiveau = SecurityLevel.getBetrouwbaarheidsNiveau(requestedAuthnContext);
+			String sBetrouwbaarheidsNiveau = SecurityLevel.getBetrouwbaarheidsNiveau(requestedAuthnContext, _systemLogger);
 			if (sBetrouwbaarheidsNiveau.equals(SecurityLevel.BN_NOT_FOUND)) {
 				// We've got a security level but isn't present in the configuration
 				String sStatusMessage = "The requested AuthnContext isn't present in the configuration";
@@ -180,7 +180,9 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 						" Subject.NameID="+mySubj.getNameID());
 			}
 
-			htSession.put("requested_betrouwbaarheidsniveau", sBetrouwbaarheidsNiveau);
+			// 20090110, Bauke changed requested_betrouwbaarheidsniveau  to required_level
+			htSession.put("required_level", sBetrouwbaarheidsNiveau);
+			htSession.put("level", Integer.parseInt(sBetrouwbaarheidsNiveau));  // 20090111, Bauke added
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "htSession=" + htSession);
 			_oSessionManager.updateSession(sIDPRid, htSession);
 

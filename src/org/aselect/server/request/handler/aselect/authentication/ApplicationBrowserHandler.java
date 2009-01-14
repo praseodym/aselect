@@ -411,7 +411,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
         String sMethod = "processBrowserRequest()";
         
         sRequest = (String) htServiceRequest.get("request");
-        
         _systemLogger.log(Level.INFO,_sModule,sMethod, "ApplBrowREQ sRequest="+sRequest+", htServiceRequest="+htServiceRequest);
         if(sRequest == null)
         {
@@ -838,11 +837,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	                String sTempOrg = (String)htTGTContext.get("proxy_organization");
 	                if (sTempOrg == null)
 	                    sTempOrg = (String)htTGTContext.get("organization");
-	                if (!sTempOrg.equals(_sMyOrg))
+	                if (!sTempOrg.equals(_sMyOrg) &&
+	                	// 20090111, Bauke Added test:
+	        			_crossASelectManager.isCrossSelectorEnabled() && _configManager.isCrossFallBackEnabled())
 	                {
 	                    _htSessionContext.put("forced_uid", sUid);
 	                    _htSessionContext.put("forced_organization", sTempOrg);
-						_systemLogger.log(Level.INFO, _sModule, sMethod, "To CROSS");
+						_systemLogger.log(Level.INFO, _sModule, sMethod, "To CROSS MyOrg="+_sMyOrg+" != org="+sTempOrg);
 	    			    handleCrossLogin(htServiceRequest, servletResponse, pwOut);
 	    			    return;
 	                }
@@ -1013,8 +1014,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
      * @param pwOut Used to write information back to the user (HTML)
      * @throws ASelectException
      */
-    private void handleLogin2(Hashtable htServiceRequest,
-        HttpServletResponse servletResponse, PrintWriter pwOut)
+    private void handleLogin2(Hashtable htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
     throws ASelectException
     {
         String sRid = null;
@@ -1027,54 +1027,44 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
         try
         {
             sRid = (String)htServiceRequest.get("rid");
-            sAuthsp = (String)htServiceRequest.get("forced_authsp");
+            Hashtable htSessionContext = _sessionManager.getSessionContext(sRid);
+            sAuthsp = (String)htSessionContext.get("forced_authsp");  // 20090111, Bauke from SessionContext not ServiceRequest
             if (sAuthsp != null) {
             	// Bauke 20080511: added
             	// Redirect to the AuthSP's ISTS
 				String sAsUrl = _configManager.getRedirectURL();  // <redirect_url> in aselect.xml
 				sAsUrl = sAsUrl + "/"+sAuthsp+"?rid=" + sRid;  // e.g. saml20_ists
-				_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR to "+sAsUrl);
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "Forced REDIR to "+sAsUrl);
 				servletResponse.sendRedirect(sAsUrl);
                 return;
             }
             sUid = (String)htServiceRequest.get("user_id");
-            if (sUid == null)
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod,
-                    "Invalid request, missing parmeter 'user_id'");
-                throw new ASelectCommunicationException(
-                    Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);  
-            }
+            if (sUid == null) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request, missing parmeter 'user_id'");
+				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
 
-            // If uid contains any spaces, they where transformed to '+'
-            // Now first set it back to spaces
-            try
-            {
-                sUid = URLDecoder.decode(sUid, "UTF-8");
-            }
-            catch (UnsupportedEncodingException e)
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod,
-                    "Failed to decode user id.", e);
-                throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR,
-                    e);
-            }
-            
-            try
-            {
-                getAuthsps(sRid, sUid);
-            }
-            catch (ASelectException e)
-            {
-                if(_crossASelectManager.isCrossSelectorEnabled() && _configManager.isCrossFallBackEnabled())
-                {
-                    handleCrossLogin(htServiceRequest,servletResponse, pwOut);
-                    return;
-                }                
-                _systemLogger.log(Level.WARNING, _sModule, sMethod,
-                    "Failed to retrieve AuthSPs of user " + sUid);
-                throw e;
-            }
+			// If uid contains any spaces, they where transformed to '+'
+			// Now first set it back to spaces
+			try {
+				sUid = URLDecoder.decode(sUid, "UTF-8");
+			}
+			catch (UnsupportedEncodingException e) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to decode user id.", e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+			}
+
+			try {
+				getAuthsps(sRid, sUid);
+			}
+			catch (ASelectException e) {
+				if (_crossASelectManager.isCrossSelectorEnabled() && _configManager.isCrossFallBackEnabled()) {
+					handleCrossLogin(htServiceRequest, servletResponse, pwOut);
+					return;
+				}
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to retrieve AuthSPs of user " + sUid);
+				throw e;
+			}
 
             // Bauke: added shortcut when using "Verkeersplein" method
             String sFixedAuthsp = (String)_htSessionContext.get("fixed_authsp");
@@ -1151,8 +1141,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					throw ace;
 				}
 			}
-            sSelectForm = Utils.replaceString(sSelectForm,
-                "[allowed_user_authsps]", sb.toString());
+            sSelectForm = Utils.replaceString(sSelectForm, "[allowed_user_authsps]", sb.toString());
             
             sb = new StringBuffer((String)htServiceRequest.get("my_url"))
 	            .append("?request=error")
@@ -1426,6 +1415,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			Integer intLevel = (Integer) _htSessionContext.get("level");
 			htRequestTable.put("required_level", intLevel.toString());
+			htRequestTable.put("level", intLevel);  // 20090111, Bauke added
 			htRequestTable.put("a-select-server", sRemoteServer);
 
 			if (sUid != null) {
@@ -1686,8 +1676,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
             sLevel = _configManager.getParam(authSPsection, "level");
 
-            if (sLevel == null
-                || Integer.parseInt(sLevel) < intRequiredLevel.intValue())
+            if (sLevel == null || Integer.parseInt(sLevel) < intRequiredLevel.intValue())
             {
                 sb = new StringBuffer(sMethod);
                 sb.append("Could not perform IP authentication. Reason : ");
@@ -1724,14 +1713,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
         }
         catch (Exception e)
         {
-            _systemLogger
-            .log(
-                Level.WARNING,
-                _sModule,
-                sMethod,
-                "Internal error",
-                e);
-            
+            _systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error", e);
             throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
         }
     }
@@ -1870,7 +1852,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
             String sUID = (String)htServiceRequest.get("uid");
             String sPrivilegedApplication = (String)htServiceRequest.get("app_id");
             String sSignature = (String)htServiceRequest.get("signature");
-            String sAuthspLevel = (String)htServiceRequest.get("level");
+            String sAuthspLevel = (String)htServiceRequest.get("level");  // NOTE: String!!
 
             // Verify parameters
             if ((sRid == null) || (sUID == null) || (sPrivilegedApplication == null) || (sSignature == null)
@@ -1903,7 +1885,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
                 _systemLogger.log(Level.WARNING, _sModule, sMethod, 
                 "Application:"+sPrivilegedApplication+" Invalid signature:"+sSignature);
                 throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-                
             }
             
             // Get session context
@@ -2007,126 +1988,109 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @throws ASelectException
 	 */
     private void getAuthsps(String sRid, String sUid)
-        throws ASelectException
-    {
-        Integer intRequiredLevel = null;
-        Integer intMaxLevel = null;
-        Hashtable htUserAuthsps = new Hashtable();
-        Hashtable htAllowedAuthsps = new Hashtable();
-        String sMethod = "getAuthsps()";
+		throws ASelectException
+	{
+		Integer intRequiredLevel = null;
+		Integer intMaxLevel = null;
+		Hashtable htUserAuthsps = new Hashtable();
+		Hashtable htAllowedAuthsps = new Hashtable();
+		String sMethod = "getAuthsps";
 
-        try
-        {
-            IUDBConnector oUDBConnector = null;
-            try
-            {
-                oUDBConnector = UDBConnectorFactory.getUDBConnector();
-            }
-            catch (ASelectException e)
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod,
-                    "Failed to connect with UDB.", e);
-                throw e;
-            }
+		try {
+			IUDBConnector oUDBConnector = null;
+			try {
+				oUDBConnector = UDBConnectorFactory.getUDBConnector();
+			}
+			catch (ASelectException e) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to connect with UDB.", e);
+				throw e;
+			}
 
-            Hashtable htUserProfile;
-            htUserProfile = oUDBConnector.getUserProfile(sUid);
-            if (!((String)htUserProfile.get("result_code"))
-                .equals(Errors.ERROR_ASELECT_SUCCESS))
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod,
-                    "Failed to get user profile.");
-                throw new ASelectException((String)htUserProfile
-                    .get("result_code"));
-            }
-            htUserAuthsps = (Hashtable)htUserProfile.get("user_authsps");
-            if (htUserAuthsps == null)
-            {
-                //should never happen
-                _systemLogger.log(Level.SEVERE, _sModule, sMethod,
-                    "INTERNAL ERROR");
-                throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-            }
+			Hashtable htUserProfile;
+			htUserProfile = oUDBConnector.getUserProfile(sUid);
+			if (!((String) htUserProfile.get("result_code")).equals(Errors.ERROR_ASELECT_SUCCESS)) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to get user profile.");
+				throw new ASelectException((String) htUserProfile.get("result_code"));
+			}
+			htUserAuthsps = (Hashtable) htUserProfile.get("user_authsps");
+			if (htUserAuthsps == null) {
+				// should never happen
+				_systemLogger.log(Level.SEVERE, _sModule, sMethod, "INTERNAL ERROR");
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			}
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "uid=" + sUid + " profile=" + htUserProfile +
+					" user_authsps=" + htUserAuthsps+" SessionContext="+_htSessionContext);
 
-            _systemLogger.log(Level.INFO, _sModule, sMethod, "uid="+sUid+" profile="+htUserProfile+" authsps="+htUserAuthsps);
-            
-            // which level is required for the application?
-            intRequiredLevel = (Integer)_htSessionContext.get("level");
-            if (intRequiredLevel == null)
-            {
-                //'normal' request
-                intRequiredLevel = _applicationManager.getRequiredLevel((String)_htSessionContext.get("app_id"));
-                //TODO check if this is still necessary. (leon)
-            }
-            intMaxLevel = (Integer)_htSessionContext.get("max_level"); //'max_level' may be null
+			// which level is required for the application?
+			// 20090110, Bauke added required_level!
+			intMaxLevel = (Integer)_htSessionContext.get("max_level"); // 'max_level' may be null
+			intRequiredLevel = Integer.valueOf((String)_htSessionContext.get("required_level"));
+			Integer intLevel = (Integer)_htSessionContext.get("level");
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "required_level=" + intRequiredLevel +
+					" level="+intLevel+" maxlevel="+intMaxLevel);
+			if (intRequiredLevel == null)
+				intRequiredLevel = Integer.valueOf((String)_htSessionContext.get("level"));
 
-            // fetch the authsps that the user has registered for and
-            // satisfy the level for the current application
-            Vector vAllowedAuthSPs;
-            vAllowedAuthSPs = _authspHandlerManager.getConfiguredAuthSPs(intRequiredLevel, intMaxLevel);//getAllowedAuthSPs(intRequiredLevel.intValue(), htUserAuthsps);
-            if (vAllowedAuthSPs == null)
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod,
-                    "INTERNAL ERROR" + sUid);
-                throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-            }
-            
-            for (int i = 0; i < vAllowedAuthSPs.size(); i++)
-            {
-                String sAuthSP = (String)vAllowedAuthSPs.elementAt(i);
-                if(htUserAuthsps.containsKey(sAuthSP))
-                {
-                    htAllowedAuthsps.put(sAuthSP, htUserAuthsps.get(sAuthSP));
-                }
-            }
-            if (htAllowedAuthsps.size() == 0)
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod,
-                    "No valid AuthSPs found for user: " + sUid);
-                throw new ASelectException(
-                    Errors.ERROR_ASELECT_SERVER_USER_NOT_ALLOWED);
-            }
-            
-            _systemLogger.log(Level.INFO, _sModule, sMethod, "AuthSPs "+htAllowedAuthsps);
-            		            
-            _htSessionContext.put("allowed_user_authsps", htAllowedAuthsps);
-            _htSessionContext.put("user_id", sUid);
-   
-            // RH, should be set through AbstractBrowserRequestHandler
-            // but this seems to be the wrong one (AbstractBrowserRequestHandler sets the idp address on the idp)
-            _systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip was "+ _htSessionContext.get("client_ip"));
-            _htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr());
-            _systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip is now "+ _htSessionContext.get("client_ip"));
-            
-            if (!_sessionManager.createSession(sRid, _htSessionContext))
-            {
-                // logged in sessionmanager
-                throw new ASelectException(
-                    Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
-            }
-            return;// Errors.ERROR_ASELECT_SUCCESS;
-        }
-        catch (ASelectException e)
-        {
-            throw e;
-        }
-    }
+			// fetch the authsps that the user has registered for and
+			// satisfy the level for the current application
+			Vector vAllowedAuthSPs;
+			vAllowedAuthSPs = _authspHandlerManager.getConfiguredAuthSPs(intRequiredLevel, intMaxLevel);
+			// getAllowedAuthSPs(intRequiredLevel.intValue(), htUserAuthsps);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "AllowedAuthSPs=" + vAllowedAuthSPs);
+			if (vAllowedAuthSPs == null) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "INTERNAL ERROR" + sUid);
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			}
+
+			for (int i = 0; i < vAllowedAuthSPs.size(); i++) {
+				String sAuthSP = (String) vAllowedAuthSPs.elementAt(i);
+				if (htUserAuthsps.containsKey(sAuthSP)) {
+					htAllowedAuthsps.put(sAuthSP, htUserAuthsps.get(sAuthSP));
+				}
+			}
+			if (htAllowedAuthsps.size() == 0) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "No valid AuthSPs found for user: " + sUid);
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_USER_NOT_ALLOWED);
+			}
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "Allowed AuthSPs " + htAllowedAuthsps);
+
+			_htSessionContext.put("allowed_user_authsps", htAllowedAuthsps);
+			_htSessionContext.put("user_id", sUid);
+
+			// RH, should be set through AbstractBrowserRequestHandler
+			// but this seems to be the wrong one (AbstractBrowserRequestHandler
+			// sets the idp address on the idp)
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip was "
+					+ _htSessionContext.get("client_ip"));
+			_htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr());
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip is now "
+					+ _htSessionContext.get("client_ip"));
+
+			if (!_sessionManager.createSession(sRid, _htSessionContext)) {
+				// logged in sessionmanager
+				throw new ASelectException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
+			}
+			return;// Errors.ERROR_ASELECT_SUCCESS;
+		}
+		catch (ASelectException e) {
+			throw e;
+		}
+	}
 
     /**
-     * This method will instantiate the protocol handler for the selected AuthSP.
-     * 
-     * The protocol handler will compose a redirect url and return it. This
-     * method will return this redirect url. Some AuthSP's will require a signed
-     * request from the A-Select Server. The protocol handler will be
-     * responsible for placing it.
-     * 
-     * @param sRid
-     *            The RID.
-     * @param htLoginRequest
-     *            The request parameters.
-     * @return The error code.
-     * @throws ASelectException
-     */
+	 * This method will instantiate the protocol handler for the selected
+	 * AuthSP. The protocol handler will compose a redirect url and return it.
+	 * This method will return this redirect url. Some AuthSP's will require a
+	 * signed request from the A-Select Server. The protocol handler will be
+	 * responsible for placing it.
+	 * 
+	 * @param sRid
+	 *            The RID.
+	 * @param htLoginRequest
+	 *            The request parameters.
+	 * @return The error code.
+	 * @throws ASelectException
+	 */
     private String startAuthentication(String sRid, Hashtable htLoginRequest)
         throws ASelectException
     {
@@ -2349,6 +2313,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			String sRemoteAsUrl = null;
 			if (!sTemp.equals(_sMyOrg)) {
+				// 20090113, Bauke: This is only mandatory when we reached "organization" using cross!
 				try {
 					CrossASelectManager oCrossASelectManager = CrossASelectManager.getHandle();
 					String sResourcegroup = oCrossASelectManager.getRemoteParam(sTemp, "resourcegroup");
@@ -2358,7 +2323,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				}
 				catch (ASelectException ae) {
 					_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to read SAM.", ae);
-					sRemoteAsUrl = null;
+				}
+				catch (Exception ae) { // Bauke: added
+					_systemLogger.log(Level.INFO, _sModule, sMethod, "Not a 'cross' organization: "+sTemp, ae);
 				}
 			}
 			if (sRemoteAsUrl == null) {

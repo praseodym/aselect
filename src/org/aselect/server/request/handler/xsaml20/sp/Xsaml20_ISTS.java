@@ -148,7 +148,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler // RH, 20080606, n
 	            throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 	        }
 	        
-	        // ??????????????????????????????????????????? surprise, surprise ???
+			/* 20090113, Bauke TRY TO SKIP THIS CODE, "remote_organization" will not be set
 			CrossASelectManager oCrossASelectManager = CrossASelectManager.getHandle();
 			// Gets from organization key/value = id/friendforced_ly_name
 			Hashtable htRemoteServers = oCrossASelectManager.getRemoteServers();
@@ -157,7 +157,9 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler // RH, 20080606, n
 
 			htSessionContext.put("remote_organization", sRemoteOrganization);
 			_oSessionManager.updateSession(sRid, htSessionContext);
+			*/
 
+	        _systemLogger.log(Level.INFO, MODULE, sMethod, "Get MetaData");
 			MetaDataManagerSp metadataMgr = MetaDataManagerSp.getHandle();
 			// TODO maybe allow for other BINDINGs
 			String sDestination = metadataMgr.getLocation(sFederationUrl, SingleSignOnService.DEFAULT_ELEMENT_LOCAL_NAME, singleSignOnServiceBindingConstantREDIRECT);

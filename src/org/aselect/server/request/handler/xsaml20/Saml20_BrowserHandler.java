@@ -143,8 +143,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			_sMyServerId = _configManager.getParam(oASelect, "server_id");
 		}
 		catch (ASelectConfigException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'server_id' found in 'aselect' section",
-					e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'server_id' found in 'aselect' section", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 

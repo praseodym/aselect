@@ -530,8 +530,7 @@ public class CrossASelectManager
         {
             try
             {
-                oRemoteOrg = _oASelectConfigManager.getSection(
-                    _oRemoteConfigSection, "organization", "id=" + sOrgId);
+                oRemoteOrg = _oASelectConfigManager.getSection(_oRemoteConfigSection, "organization", "id=" + sOrgId);
             }
             catch (ASelectConfigException eAC)
             {

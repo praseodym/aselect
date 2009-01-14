@@ -209,10 +209,8 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
     {
         String sMethod = "deSerializeAttributes()";
         Hashtable htAttributes = new Hashtable();
-        if(sSerializedAttributes != null) //Attributes available
-        {
-            try
-            {
+        if (sSerializedAttributes != null) { //Attributes available
+            try {
                 //base64 decode
                 String sDecodedUserAttrs = new String(Base64.decode(sSerializedAttributes));
                 
@@ -225,17 +223,14 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
                     String sValue = "";
                     Vector vVector = null;
                     
-                    if (iEqualChar > 0)
-                    {
+                    if (iEqualChar > 0) {
                         sKey = URLDecoder.decode(
                             saAttrs[i].substring(0 , iEqualChar), "UTF-8");
                         
                         sValue= URLDecoder.decode(
                             saAttrs[i].substring(iEqualChar + 1), "UTF-8");
                         
-                        if (sKey.endsWith("[]"))
-                        { //it's a multi-valued attribute
-                            // Strip [] from sKey
+                        if (sKey.endsWith("[]")) { //it's a multi-valued attributeStrip [] from sKey
                             sKey = sKey.substring(0,sKey.length() - 2);
                             
                             if ((vVector = (Vector)htAttributes.get(sKey)) == null)
@@ -247,7 +242,6 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
                     else
                         sKey = URLDecoder.decode(saAttrs[i], "UTF-8");
                     
-                    
                     if (vVector != null)
                         //store multivalue attribute
                         htAttributes.put(sKey, vVector);
@@ -256,8 +250,7 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
                         htAttributes.put(sKey, sValue);
                 }
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 _systemLogger.log(Level.WARNING, MODULE, sMethod, 
                     "Error during deserialization of attributes", e);
                 throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);

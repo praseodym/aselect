@@ -257,10 +257,13 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			
 			// De appId wordt bepaald adhv de hoogte van het gewenste betrouwbaarheidsniveau
 			// Deze zit in de sessioncontext
-			String sBetrouwbaarheidsNiveau = (String) htSessionContext.get("requested_betrouwbaarheidsniveau");
+			// 20090110, Bauke changed requested_betrouwbaarheidsniveau  to required_level
+			String sBetrouwbaarheidsNiveau = (String) htSessionContext.get("required_level");
+			Integer intLevel = (Integer) htSessionContext.get("level");
 			String sAppId;
 			String sSharedSecret;
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "requested level="+sBetrouwbaarheidsNiveau+ " default level="+_sDefaultBetrouwbaarheidsNiveau);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "requested required_level="+sBetrouwbaarheidsNiveau+
+					" level="+intLevel+" default level="+_sDefaultBetrouwbaarheidsNiveau);
 			if (sBetrouwbaarheidsNiveau == null || sBetrouwbaarheidsNiveau.equals("empty")) {
 				// if betrouwbaarheidsniveau was not specified, we use the default.
 				sBetrouwbaarheidsNiveau = _sDefaultBetrouwbaarheidsNiveau;
@@ -354,7 +357,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
 
 		Hashtable<String, String> result = new Hashtable<String, String>();
-		String resultCode = Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR;
+		String resultCode = Errors.ERROR_ASELECT_INTERNAL_ERROR;
 
 		try {
 			String sLocalRid = (String) htResponse.get("local_rid");
@@ -371,7 +374,10 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			SessionManager sessionManager = SessionManager.getHandle();
 			if (sessionManager.containsKey(sLocalRid)) {
 				Hashtable sessionContext = sessionManager.getSessionContext(sLocalRid);
-				sReqLevel = (String) sessionContext.get("requested_betrouwbaarheidsniveau");
+				// 20090110, Bauke changed requested_betrouwbaarheidsniveau  to required_level
+				sReqLevel = (String) sessionContext.get("required_level");
+				Integer intLevel = (Integer)sessionContext.get("level");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "required_level="+sReqLevel+" level="+intLevel);
 				if (sReqLevel == null || sReqLevel.equals("empty"))
 					sReqLevel = _sDefaultBetrouwbaarheidsNiveau;
 				sharedSecret = _htSharedSecrets.get(sReqLevel);
@@ -408,7 +414,8 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			String sRid = (String) response.get("rid");
 			String sOrganization = (String) response.get("organization");
 			String sAppID = (String) response.get("app_id");
-			
+			//if ("950000528".equals(sUid))  // Bauke: testing levels
+			//		sBetrouwbaarheidsniveau = "20";
 			//
 			// Also match sBetrouwbaarheidsniveau against the requested level
 			//
@@ -450,7 +457,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 		}
 		catch (ASelectException e) {
 			if (((String) result.get("result")).equals(Errors.ERROR_ASELECT_SUCCESS)) {
-				result.put("result", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+				result.put("result", e.getMessage());  // Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
 		}
 		return result;

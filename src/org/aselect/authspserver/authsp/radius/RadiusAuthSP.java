@@ -175,7 +175,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
     private AuthSPConfigManager _configManager;
     private Object _oAuthSPConfig;
     private final String MODULE = "RadiusAuthSP";
-    private final String VERSION = "A-Select RADIUS AuthSP 1.6"; 
+    private final String VERSION = "A-Select RADIUS AuthSP 1.7"; 
     private final static String DEFAULT_FAILUREHANDLING = "aselect";
    
     /**

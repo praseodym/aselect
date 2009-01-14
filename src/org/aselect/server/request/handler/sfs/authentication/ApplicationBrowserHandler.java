@@ -1473,6 +1473,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
             
             Integer intLevel = (Integer)_htSessionContext.get("level");
             htRequestTable.put("required_level", intLevel.toString());
+            htRequestTable.put("level", intLevel);  // 20090111, Bauke added
             htRequestTable.put("a-select-server", sRemoteServer);
            
             if (sUid != null && !sUid.trim().equals(""))

@@ -56,7 +56,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 	private final static String DEFAULT_FAILUREHANDLING = "aselect";
 
 	/** The version. */
-	public static final String VERSION = "BTTSD SMS AuthSP 1.6";
+	public static final String VERSION = "A-Select SMS AuthSP 1.7";
 
 	/** The logger that logs system information. */
 	private AuthSPSystemLogger _systemLogger;

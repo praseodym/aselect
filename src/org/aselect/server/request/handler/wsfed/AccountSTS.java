@@ -186,6 +186,7 @@ public class AccountSTS extends ProtoRequestHandler
         //}
 		// Start an authenticate request
 		String sASelectURL = _sServerUrl;
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Start Authenticate");
 		
 		// TODO Would be a lot more efficient if this request would simply call
 		//      the handleAuthenticateRequest() method in the ApplicationAPIHandler
@@ -305,10 +306,12 @@ public class AccountSTS extends ProtoRequestHandler
 		try {
 			String sSubjConf = SAMLSubject.CONF_BEARER;  // default value
 			String sLevel = (String)htAttributes.get("betrouwbaarheidsniveau");
+			if (sLevel == null) sLevel = (String)htAttributes.get("authsp_level");
+			if (sLevel == null) sLevel = (String)htAttributes.get("sel_level");
 			if (sLevel != null) {
 				String urn = (String)_htSecLevels.get(sLevel);
 				if (urn != null)
-					sSubjConf = urn;
+					sSubjConf = urn;  // default when not found
 			}
 			String sRequestorToken = createRequestorToken(request, _sProviderId, sUid, _sNameIdFormat,
 															sAudience, htAttributes, sSubjConf);
@@ -355,20 +358,28 @@ public class AccountSTS extends ProtoRequestHandler
     	//Hashtable htCredentialsParams = getCredentialsFromCookie(request);
 	    // Bauke 20081209: getCredentialsFromCookie now returns a string
     	String sTgt = getCredentialsFromCookie(request);
+    	String sWtRealm = null;
         //if (htCredentialsParams != null) {
         //	String sTgt = (String)htCredentialsParams.get("tgt");
         if (sTgt != null) {
+        	Hashtable htTGTContext = getContextFromTgt(sTgt, false);  // Don't check expiration
+        	if (htTGTContext != null) {  // Valid TGT context found
+        		sWtRealm = (String)htTGTContext.get("wtrealm");
+        	}
        		_oTGTManager.remove(sTgt);
         }
+        _systemLogger.log(Level.INFO, MODULE, sMethod, "wtrealm="+sWtRealm);
         // Remove the TGT cookie
         HandlerTools.delCookieValue(response, "aselect_credentials", _sCookieDomain, _systemLogger);
         //}
         
         try {
 	        // Find out where we need to send the user back to
-	        String sRealm = HandlerTools.getCookieValue(request, SESSION_ID_PREFIX+"realm", _systemLogger);
-			String sReply = (String)_htSP_LogoutReturn.get(sRealm);
-	        _systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT to SP="+sReply);
+        	if (sWtRealm == null) {
+        		sWtRealm = HandlerTools.getCookieValue(request, SESSION_ID_PREFIX+"realm", _systemLogger);
+        	}
+			String sReply = (String)_htSP_LogoutReturn.get(sWtRealm);
+	        _systemLogger.log(Level.INFO, MODULE, sMethod, "Used "+sWtRealm+" to find return address, REDIRECT to SP="+sReply);
 	        
 	        // To play it nice, we should clean-up the 'realm' cookie,
 	        // But ... ADFS sometimes seems to allow the user to logout when they're already logged out

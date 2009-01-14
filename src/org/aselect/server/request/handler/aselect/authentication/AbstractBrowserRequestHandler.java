@@ -227,6 +227,7 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 	            }
             }
             processBrowserRequest(htServiceRequest, _servletResponse, pwOut);
+            _systemLogger.log(Level.INFO,_sModule,sMethod, "AbstBrowREQ Done");
 	    }
 	    catch(ASelectException ae)
 	    {

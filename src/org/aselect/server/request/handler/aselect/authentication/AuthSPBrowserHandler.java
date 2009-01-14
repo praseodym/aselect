@@ -256,7 +256,9 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			if (sUid != null) {  // Saml20 code
 				htSessionContext.put("user_id", sUid);
 				String sSecLevel = (String)htResponse.get("betrouwbaarheidsniveau");
-				if (sSecLevel != null) htSessionContext.put("assigned_betrouwbaarheidsniveau", sSecLevel);
+				// 20090110, Bauke: changed assigned_betrouwbaarheidsniveau to assigned_level,
+				// seem to be not used anymore!
+				if (sSecLevel != null) htSessionContext.put("assigned_level", sSecLevel);
 				_sessionManager.updateSession(sRid, htSessionContext);
 
 				if (sSecLevel != null) htAdditional.put("betrouwbaarheidsniveau", sSecLevel);

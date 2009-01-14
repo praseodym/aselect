@@ -488,7 +488,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		htSessionContext = new Hashtable();
 		htSessionContext.put("app_id", sAppId);
 		htSessionContext.put("app_url", sAppUrl);
-		htSessionContext.put("level", intAppLevel);
+		htSessionContext.put("level", intAppLevel);  // NOTE: Integer put
 		if (intMaxAppLevel != null)
 			htSessionContext.put("max_level", intMaxAppLevel);
 		htSessionContext.put("organization", _sMyOrg);
