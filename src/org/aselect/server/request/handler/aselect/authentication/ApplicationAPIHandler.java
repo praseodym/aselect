@@ -865,7 +865,9 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 		catch (ASelectCommunicationException eAC) {  // ignore absence
 		}
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "Encrypted TGT=[" + sEncTgt + "]"+" saml_attributes="+sSamlAttributes);
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "a-select-server="+sASelectServer+" rid=" +sRid+
+				" aselect_credentials(encrypted TGT)=" + sEncTgt + " saml_attributes="+sSamlAttributes+
+				" signature="+oInputMessage.getParam("signature"));
 
 		try {
 			byte[] baTgtBytes = CryptoEngine.getHandle().decryptTGT(sEncTgt);
@@ -883,8 +885,8 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 
 		htTGTContext = _oTGTManager.getTGT(sTGT);
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED ApplApi rid=" + sRid + ", Decrypted TGT=" + sTGT
-				+ ", TGTContext=" + htTGTContext + ", inputMessage=" + oInputMessage);
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED ApplApi rid=" + sRid +
+				", TGTContext=" + htTGTContext + ", inputMessage=" + oInputMessage);
 
 		if (htTGTContext == null) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unknown TGT");

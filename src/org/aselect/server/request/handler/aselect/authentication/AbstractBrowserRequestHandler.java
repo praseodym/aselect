@@ -410,16 +410,15 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
         }
 
         htServiceRequest.put("my_url", servletRequest.getRequestURL().toString());
-	    htServiceRequest.put("client_ip", servletRequest.getRemoteAddr());
+	    String sClientIp = servletRequest.getRemoteAddr();
+	    if (sClientIp != null) htServiceRequest.put("client_ip", servletRequest.getRemoteAddr());
 		String sAgent = servletRequest.getHeader("User-Agent");
 		if (sAgent != null) htServiceRequest.put("user_agent", sAgent);
 	    Hashtable htCredentials = getASelectCredentials(servletRequest);
 	    if (htCredentials != null)
 	    {
-	        htServiceRequest.put("aselect_credentials_tgt", htCredentials
-	            .get("aselect_credentials_tgt"));
-	        htServiceRequest.put("aselect_credentials_uid", htCredentials
-	            .get("aselect_credentials_uid"));
+	        htServiceRequest.put("aselect_credentials_tgt", htCredentials.get("aselect_credentials_tgt"));
+	        htServiceRequest.put("aselect_credentials_uid", htCredentials.get("aselect_credentials_uid"));
 	        htServiceRequest.put("aselect_credentials_server_id", _sMyServerId);
 	    }
 	    return htServiceRequest;

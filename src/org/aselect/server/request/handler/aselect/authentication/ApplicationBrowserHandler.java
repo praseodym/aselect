@@ -319,6 +319,7 @@ import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.handler.xsaml20.ServiceProvider;
 import org.aselect.server.request.handler.xsaml20.idp.UserSsoSession;
 import org.aselect.server.sam.ASelectSAMAgent;
+import org.aselect.server.session.SessionManager;
 import org.aselect.server.tgt.TGTIssuer;
 import org.aselect.server.udb.IUDBConnector;
 import org.aselect.server.udb.UDBConnectorFactory;
@@ -857,7 +858,20 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "no TGT found or killed (other uid)");
 			if (!handleUserConsent(htServiceRequest, servletResponse, pwOut, sRid))
 				return;  // Quit
-
+			
+			// 20090120, Bauke store Client IP and User Agent in the Session
+			SessionManager _oSessionManager = SessionManager.getHandle();
+	        Hashtable htSessionContext = _oSessionManager.getSessionContext(sRid);
+	        if (htSessionContext == null) {
+	            _systemLogger.log(Level.WARNING,_sModule,sMethod, "No session found for RID: "+sRid);	            
+	            throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+	        }
+			String sClientIp = (String) htServiceRequest.get("client_ip");
+			if (sClientIp != null) htSessionContext.put("client_ip", sClientIp);
+			String sUserAgent = (String) htServiceRequest.get("user_agent");
+			if (sUserAgent != null) htSessionContext.put("user_agent", sUserAgent);
+			_oSessionManager.update(sRid, htSessionContext);
+			
             // no TGT found or killed (other uid)
 			if( !_configManager.isUDBEnabled() || _htSessionContext.containsKey("forced_organization"))
 			{
@@ -881,8 +895,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
             sLoginForm = Utils.replaceString(sLoginForm, "[rid]", sRid);
             sLoginForm = Utils.replaceString(sLoginForm, "[aselect_url]",
                 (String)htServiceRequest.get("my_url"));
-            sLoginForm = Utils.replaceString(sLoginForm, "[a-select-server]",
-                _sMyServerId);
+            sLoginForm = Utils.replaceString(sLoginForm, "[a-select-server]", _sMyServerId);
             sLoginForm = Utils.replaceString(sLoginForm, "[request]", "login2");
             sLoginForm = Utils.replaceString(sLoginForm, "[cross_request]", "cross_login");
 
@@ -891,8 +904,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
                 .append("&result_code=").append(Errors.ERROR_ASELECT_SERVER_CANCEL)
                 .append("&a-select-server=").append(_sMyServerId)
                 .append("&rid=").append(sRid);
-            sLoginForm = Utils.replaceString(sLoginForm, "[cancel]", sbUrl
-                .toString());
+            sLoginForm = Utils.replaceString(sLoginForm, "[cancel]", sbUrl.toString());
             
             sLoginForm = _configManager.updateTemplate(sLoginForm, _htSessionContext);
             pwOut.println(sLoginForm);
