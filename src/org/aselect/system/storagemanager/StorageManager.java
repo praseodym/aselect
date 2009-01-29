@@ -726,7 +726,8 @@ public class StorageManager
                 }                
                 catch (ASelectStorageException eAS)
                 {
-                    _systemLogger.log(Level.INFO, MODULE, sMethod,
+//                    _systemLogger.log(Level.INFO, MODULE, sMethod,
+                      _systemLogger.log(Level.WARNING, MODULE, sMethod,
                         "The storage cleanup failed.", eAS);
                 }
                 catch (InterruptedException eI)
@@ -735,7 +736,8 @@ public class StorageManager
                 }
                 catch (Exception e)
                 {
-                    _systemLogger.log(Level.INFO, MODULE, sMethod,
+//                    _systemLogger.log(Level.INFO, MODULE, sMethod,
+                      _systemLogger.log(Level.WARNING, MODULE, sMethod,
                         "The cleaner could not do her work properly.", e);
                 }
             }

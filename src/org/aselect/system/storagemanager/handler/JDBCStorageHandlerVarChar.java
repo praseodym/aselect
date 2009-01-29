@@ -41,8 +41,10 @@ public class JDBCStorageHandlerVarChar extends JDBCStorageHandler {
             sbBuffer.append("SELECT ").append(_sContextValue).append(" ");
             sbBuffer.append("FROM ").append(_sTableName).append(" ");
             sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?");
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "Looking for hashkey -> "+iKey);
+//            _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
+//            _systemLogger.log(Level.INFO, MODULE, sMethod, "Looking for hashkey -> "+iKey);
+            _systemLogger.log(Level.FINER, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
+            _systemLogger.log(Level.FINER, MODULE, sMethod, "Looking for hashkey -> "+iKey);
 
             Connection oConnection = getConnection();
             oStatement = oConnection.prepareStatement(
@@ -56,11 +58,13 @@ public class JDBCStorageHandlerVarChar extends JDBCStorageHandler {
 //                oRet = decode(oResultSet.getBytes(_sContextValue.replace(BACKTICK, ' ').trim()));
             	BASE64Decoder b64e = new BASE64Decoder();
                 oRet = decode(b64e.decodeBuffer(oResultSet.getString(_sContextValue.replace(BACKTICK, ' ').trim())));
-                _systemLogger.log(Level.INFO, MODULE, sMethod, "result="+oRet);
+//                _systemLogger.log(Level.INFO, MODULE, sMethod, "result="+oRet);
+                _systemLogger.log(Level.FINER, MODULE, sMethod, "result="+oRet);
             }
             else
             {
-                _systemLogger.log(Level.FINE, MODULE, sMethod, "The supplied key is not mapped to any value.");
+//                _systemLogger.log(Level.FINE, MODULE, sMethod, "The supplied key is not mapped to any value.");
+                _systemLogger.log(Level.WARNING, MODULE, sMethod, "The supplied key is not mapped to any value.");
                 throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_NO_SUCH_KEY);
             }
         }
@@ -139,12 +143,14 @@ public class JDBCStorageHandlerVarChar extends JDBCStorageHandler {
             sbBuffer.append("SELECT ").append(_sContextTimestamp).append(" ");
             sbBuffer.append("FROM ").append(_sTableName).append(" ");
             sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?");
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
+//            _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
+            _systemLogger.log(Level.FINER, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
             
             Connection oConnection = getConnection();
             oStatement = oConnection.prepareStatement(sbBuffer.toString());
             oStatement.setInt(1, iKey);
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "Looking for hashkey -> "+iKey);
+//            _systemLogger.log(Level.INFO, MODULE, sMethod, "Looking for hashkey -> "+iKey);
+            _systemLogger.log(Level.FINER, MODULE, sMethod, "Looking for hashkey -> "+iKey);
             oResultSet = oStatement.executeQuery();
 
             if (oResultSet.next()) // record exists.
@@ -155,8 +161,10 @@ public class JDBCStorageHandlerVarChar extends JDBCStorageHandler {
                 sbBuffer.append("SET ").append(_sContextValue).append(" = ? , ")
                     					.append(_sContextTimestamp).append(" = ? ");
                 sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?");
-                _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
-                _systemLogger.log(Level.INFO, MODULE, sMethod, "Updating for hashkey -> "+iKey);
+//                _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
+//                _systemLogger.log(Level.INFO, MODULE, sMethod, "Updating for hashkey -> "+iKey);
+                _systemLogger.log(Level.FINER, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
+                _systemLogger.log(Level.FINER, MODULE, sMethod, "Updating for hashkey -> "+iKey);
 
                 try {  // added 1.5.4
 					oStatement.close();
@@ -179,8 +187,10 @@ public class JDBCStorageHandlerVarChar extends JDBCStorageHandler {
                 sbBuffer.append("INSERT INTO ").append(_sTableName).append(" ");
 //                sbBuffer.append("VALUES (?,?,?,?)");
                 sbBuffer.append("VALUES (?,?,?,?,?)");
-                _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
-                _systemLogger.log(Level.INFO, MODULE, sMethod, "Inserting hashkey -> "+iKey);
+//                _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
+//                _systemLogger.log(Level.INFO, MODULE, sMethod, "Inserting hashkey -> "+iKey);
+                _systemLogger.log(Level.FINER, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
+                _systemLogger.log(Level.FINER, MODULE, sMethod, "Inserting hashkey -> "+iKey);
 
                 try {  // added 1.5.4
 					oStatement.close();
@@ -199,7 +209,8 @@ public class JDBCStorageHandlerVarChar extends JDBCStorageHandler {
             }
             // oStatement.executeUpdate();
             int rowsAffected = oStatement.executeUpdate();
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "Rows affected -> "+rowsAffected);
+//            _systemLogger.log(Level.INFO, MODULE, sMethod, "Rows affected -> "+rowsAffected);
+            _systemLogger.log(Level.FINER, MODULE, sMethod, "Rows affected -> "+rowsAffected);
         }
         catch (IOException eIO)
         {

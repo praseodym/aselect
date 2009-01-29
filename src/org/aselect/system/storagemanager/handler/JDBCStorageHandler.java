@@ -324,8 +324,10 @@ public class JDBCStorageHandler implements IStorageHandler
             sbBuffer.append("SELECT ").append(_sContextValue).append(" ");
             sbBuffer.append("FROM ").append(_sTableName).append(" ");
             sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?");
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "Looking for hashkey -> "+iKey);
+//            _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
+//            _systemLogger.log(Level.INFO, MODULE, sMethod, "Looking for hashkey -> "+iKey);
+            _systemLogger.log(Level.FINER, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
+            _systemLogger.log(Level.FINER, MODULE, sMethod, "Looking for hashkey -> "+iKey);
 
             Connection oConnection = getConnection();
             oStatement = oConnection.prepareStatement(
@@ -336,7 +338,8 @@ public class JDBCStorageHandler implements IStorageHandler
             if (oResultSet.next()) // record exists.
             { 
                 oRet = decode(oResultSet.getBytes(_sContextValue.replace(BACKTICK, ' ').trim()));
-                _systemLogger.log(Level.INFO, MODULE, sMethod, "result="+oRet);
+//                _systemLogger.log(Level.INFO, MODULE, sMethod, "result="+oRet);
+                _systemLogger.log(Level.FINER, MODULE, sMethod, "result="+oRet);
             }
             else
             {
@@ -415,7 +418,10 @@ public class JDBCStorageHandler implements IStorageHandler
             sbQuery.append("SELECT ").append(_sContextTimestamp).append(" ");
             sbQuery.append("FROM ").append(_sTableName).append(" ");
             sbQuery.append("WHERE ").append(_sContextKeyHash).append(" = ?");
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbQuery+" -> "+oKey);
+//            _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbQuery+" -> "+oKey);
+//            _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbQuery+" -> "+oKey);
+            _systemLogger.log(Level.FINER, MODULE, sMethod, "sql="+sbQuery+" -> "+oKey);
+            _systemLogger.log(Level.FINER, MODULE, sMethod, "sql="+sbQuery+" -> "+oKey);
 
             Connection oConnection = getConnection();
             oStatement = oConnection.prepareStatement(sbQuery.toString());
@@ -543,7 +549,8 @@ public class JDBCStorageHandler implements IStorageHandler
             sbBuffer = new StringBuffer();
             sbBuffer.append("SELECT * ");
             sbBuffer.append("FROM ").append(_sTableName);
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer);
+//            _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer);
+            _systemLogger.log(Level.FINER, MODULE, sMethod, "sql="+sbBuffer);
 
             Connection oConnection = getConnection();
             oStatement = oConnection.prepareStatement(
@@ -616,12 +623,14 @@ public class JDBCStorageHandler implements IStorageHandler
             sbBuffer.append("SELECT ").append(_sContextTimestamp).append(" ");
             sbBuffer.append("FROM ").append(_sTableName).append(" ");
             sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?");
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
+//            _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
+            _systemLogger.log(Level.FINER, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
             
             Connection oConnection = getConnection();
             oStatement = oConnection.prepareStatement(sbBuffer.toString());
             oStatement.setInt(1, iKey);
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "Looking for hashkey -> "+iKey);
+//            _systemLogger.log(Level.INFO, MODULE, sMethod, "Looking for hashkey -> "+iKey);
+            _systemLogger.log(Level.FINER, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
             oResultSet = oStatement.executeQuery();
 
             if (oResultSet.next()) // record exists.
@@ -632,8 +641,10 @@ public class JDBCStorageHandler implements IStorageHandler
                 sbBuffer.append("SET ").append(_sContextValue).append(" = ? , ")
                     					.append(_sContextTimestamp).append(" = ? ");
                 sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?");
-                _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
-                _systemLogger.log(Level.INFO, MODULE, sMethod, "Updating for hashkey -> "+iKey);
+//                _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
+//                _systemLogger.log(Level.INFO, MODULE, sMethod, "Updating for hashkey -> "+iKey);
+                _systemLogger.log(Level.FINER, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
+                _systemLogger.log(Level.FINER, MODULE, sMethod, "Updating for hashkey -> "+iKey);
 
                 try {  // added 1.5.4
 					oStatement.close();
@@ -660,8 +671,10 @@ public class JDBCStorageHandler implements IStorageHandler
                 sbBuffer.append(") ");
                 // RH, 20080714, en                
                 sbBuffer.append("VALUES (?,?,?,?)");
-                _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
-                _systemLogger.log(Level.INFO, MODULE, sMethod, "Inserting hashkey -> "+iKey);
+//                _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
+//                _systemLogger.log(Level.INFO, MODULE, sMethod, "Inserting hashkey -> "+iKey);
+                _systemLogger.log(Level.FINER, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
+                _systemLogger.log(Level.FINER, MODULE, sMethod, "Updating for hashkey -> "+iKey);
 
                 try {  // added 1.5.4
 					oStatement.close();
@@ -677,7 +690,8 @@ public class JDBCStorageHandler implements IStorageHandler
             }
             // oStatement.executeUpdate();
             int rowsAffected = oStatement.executeUpdate();
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "Rows affected -> "+rowsAffected);
+//            _systemLogger.log(Level.INFO, MODULE, sMethod, "Rows affected -> "+rowsAffected);
+            _systemLogger.log(Level.FINER, MODULE, sMethod, "Rows affected -> "+rowsAffected);
         }
         catch (IOException eIO)
         {
@@ -716,7 +730,8 @@ public class JDBCStorageHandler implements IStorageHandler
         String sMethod = "remove()";
         StringBuffer sbBuffer = null;
         PreparedStatement oStatement = null;
-        _systemLogger.log(Level.INFO, MODULE, sMethod, " -> "+oKey);
+//        _systemLogger.log(Level.INFO, MODULE, sMethod, " -> "+oKey);
+      _systemLogger.log(Level.FINER, MODULE, sMethod, " -> "+oKey);
         try
         {
             int iKey = oKey.hashCode();
@@ -724,7 +739,8 @@ public class JDBCStorageHandler implements IStorageHandler
             sbBuffer = new StringBuffer();
             sbBuffer.append("DELETE FROM ").append(_sTableName).append(" ");
             sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?");
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
+//            _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
+          _systemLogger.log(Level.FINER, MODULE, sMethod, "sql="+sbBuffer+" -> "+oKey);
 
             Connection oConnection = null;
             try
@@ -788,7 +804,8 @@ public class JDBCStorageHandler implements IStorageHandler
         {
             sbBuffer = new StringBuffer();
             sbBuffer.append("DELETE FROM ").append(_sTableName);
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer);
+//            _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer);
+            _systemLogger.log(Level.FINER, MODULE, sMethod, "sql="+sbBuffer);
 
             Connection oConnection = getConnection();
             oStatement = oConnection.prepareStatement(
@@ -837,7 +854,8 @@ public class JDBCStorageHandler implements IStorageHandler
             sbBuffer = new StringBuffer();
             sbBuffer.append("DELETE FROM ").append(_sTableName).append(" ");
             sbBuffer.append("WHERE ").append(_sContextTimestamp).append(" <= ?");
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer+" -> "+lTimestamp);
+//            _systemLogger.log(Level.INFO, MODULE, sMethod, "sql="+sbBuffer+" -> "+lTimestamp); // RH, 20090127, o
+            _systemLogger.log(Level.FINEST, MODULE, sMethod, "sql="+sbBuffer+" -> "+lTimestamp); // RH, 20090127, n
 
             Connection oConnection = getConnection();
             oStatement = oConnection.prepareStatement(
@@ -960,7 +978,8 @@ public class JDBCStorageHandler implements IStorageHandler
 		sbQuery.append(_sContextKeyHash); // was _sContextKey in the sfs
 											// release, saml20 update
 		sbQuery.append(" = ?");
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "sql=" + sbQuery + " -> " + oKey);
+//		_systemLogger.log(Level.INFO, MODULE, sMethod, "sql=" + sbQuery + " -> " + oKey);
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbQuery + " -> " + oKey);
 
 		try {
 			int iKey = oKey.hashCode();

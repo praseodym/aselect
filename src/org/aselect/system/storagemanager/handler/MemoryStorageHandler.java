@@ -151,7 +151,8 @@ public class MemoryStorageHandler implements IStorageHandler
             synchronized (_htStorage) {
                 Hashtable htStorageContainer = (Hashtable)_htStorage.get(oKey);
                 oValue = htStorageContainer.get("contents");
-                _systemLogger.log(Level.INFO, MODULE, sMethod, "MSH get("+sTxt+") -->"+htStorageContainer);
+//                _systemLogger.log(Level.INFO, MODULE, sMethod, "MSH get("+sTxt+") -->"+htStorageContainer);
+                _systemLogger.log(Level.FINER, MODULE, sMethod, "MSH get("+sTxt+") -->"+htStorageContainer);
             }
         }
         catch (NullPointerException eNP) {
@@ -182,6 +183,7 @@ public class MemoryStorageHandler implements IStorageHandler
                 Hashtable htStorageContainer = (Hashtable)_htStorage.get(oKey);
                 Long lValue = (Long)htStorageContainer.get("timestamp");
                 lTimestamp = lValue.longValue();
+
             }
         }
         catch (NullPointerException eNP) {
@@ -218,7 +220,7 @@ public class MemoryStorageHandler implements IStorageHandler
     {
     	String sMethod = "getAll()";
         Hashtable htReturnTable = new Hashtable();
-		_systemLogger.log(Level.FINEST, MODULE, sMethod, " this="+/*this.getClass()+" "+*/this+" store="+_htStorage);
+		_systemLogger.log(Level.FINER, MODULE, sMethod, " this="+/*this.getClass()+" "+*/this+" store="+_htStorage);
 
         synchronized (_htStorage) {
             Enumeration eKeys = _htStorage.keys();
@@ -242,7 +244,8 @@ public class MemoryStorageHandler implements IStorageHandler
     {
         String sMethod = "put";
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, this+" store="+_htStorage);
-        _systemLogger.log(Level.INFO, MODULE, sMethod, "MSH put("+Utils.firstPartOf(oKey.toString(),30)+") ="+oValue.toString()+" TS="+lTimestamp);
+//        _systemLogger.log(Level.INFO, MODULE, sMethod, "MSH put("+Utils.firstPartOf(oKey.toString(),30)+") ="+oValue.toString()+" TS="+lTimestamp);
+        _systemLogger.log(Level.FINER, MODULE, sMethod, "MSH put("+Utils.firstPartOf(oKey.toString(),30)+") ="+oValue.toString()+" TS="+lTimestamp);
         
         Hashtable htStorageContainer = new Hashtable();
         try {
@@ -271,8 +274,10 @@ public class MemoryStorageHandler implements IStorageHandler
     public void remove(Object oKey) throws ASelectStorageException
     {
         String sMethod = "remove()";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, " this="+/*this.getClass()+" "+*/this+" "+_htStorage);
-        _systemLogger.log(Level.INFO, MODULE, sMethod, "MSH remove("+Utils.firstPartOf(oKey.toString(),30)+") ");
+//		_systemLogger.log(Level.INFO, MODULE, sMethod, " this="+/*this.getClass()+" "+*/this+" "+_htStorage);
+//        _systemLogger.log(Level.INFO, MODULE, sMethod, "MSH remove("+Utils.firstPartOf(oKey.toString(),30)+") ");
+		_systemLogger.log(Level.FINER, MODULE, sMethod, " this="+/*this.getClass()+" "+*/this+" "+_htStorage);
+        _systemLogger.log(Level.FINER, MODULE, sMethod, "MSH remove("+Utils.firstPartOf(oKey.toString(),30)+") ");
         try {
             synchronized (_htStorage) {
                 if (_htStorage.remove(oKey) == null) {
@@ -317,7 +322,8 @@ public class MemoryStorageHandler implements IStorageHandler
                 		" TimeStamp="+lStorageTime+" CleanupTime="+lTimestamp);
 
                 if (lTimestamp.longValue() >= lStorageTime.longValue()) {
-                    _systemLogger.log(Level.INFO, MODULE, sMethod, "MSH cleanup("+sTxt+") ");
+//                    _systemLogger.log(Level.INFO, MODULE, sMethod, "MSH cleanup("+sTxt+") "); // RH, 20090127, o
+                    _systemLogger.log(Level.FINEST, MODULE, sMethod, "MSH cleanup("+sTxt+") "); // RH, 20090127, o
                     _htStorage.remove(oKey);
                 }
             }
