@@ -87,7 +87,9 @@ public class HandlerTools
 	    for (int i = 0; i < oCookie.length; i++)
 	    {
 	        String sCookieName = oCookie[i].getName();
-	        logger.log(Level.INFO, MODULE, sMethod, "Try "+sCookieName);
+	        if (logger != null) { // allow for null logger
+	        	logger.log(Level.INFO, MODULE, sMethod, "Try "+sCookieName);
+	        }
 	        if (sCookieName.equals(sName))
 	        {
 	            String sCookieValue = oCookie[i].getValue();
@@ -97,7 +99,9 @@ public class HandlerTools
 	            {
 	                sCookieName = sCookieName.substring(1, iLength-1);
 	            }
-	            logger.log(Level.INFO, MODULE, sMethod, sCookieName+"="+sCookieValue);
+		        if (logger != null) {// allow for null logger 
+		        	logger.log(Level.INFO, MODULE, sMethod, sCookieName+"="+sCookieValue);
+		        }
 	            sReturnValue = sCookieValue;
 	            break;
 	        }

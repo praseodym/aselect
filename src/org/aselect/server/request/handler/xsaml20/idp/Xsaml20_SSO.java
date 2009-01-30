@@ -15,6 +15,8 @@ import org.aselect.server.request.handler.xsaml20.SecurityLevel;
 import org.aselect.server.request.handler.xsaml20.Saml20_ArtifactManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.logging.Audit;
+import org.aselect.system.logging.AuditLevel;
 import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
 import org.opensaml.common.SAMLObjectBuilder;
@@ -85,6 +87,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		String sMethod = "process()";
 		String sPathInfo = request.getPathInfo();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "==== Path="+sPathInfo+" RequestQuery: " + request.getQueryString());
+		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request received === Path="+sPathInfo);
 
 		if (sPathInfo.endsWith(RETURN_SUFFIX)) {
 			processReturn(request, response);
@@ -96,6 +99,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Request: "+request.getQueryString()+" is not recognized");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
+		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request handled ");
 		return new RequestState(null);
 	}
 
@@ -122,6 +126,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				return;
 			}
 			// The message is OK
+			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> SAML AuthnRequest received");
 			String sAppId = authnRequest.getIssuer().getValue();  // authnRequest.getProviderName();
 			String sSPRid = authnRequest.getID();
 			String sIssuer = authnRequest.getIssuer().getValue();
@@ -192,6 +197,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			sbURL.append("&a-select-server=").append(_sASelectServerID);
 			if (bForcedLogon) sbURL.append("&forced_logon=").append(bForcedLogon);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sbURL.toString());
+			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Challenge for credentials, redirect to:"  + sbURL.toString());
 			httpResponse.sendRedirect(sbURL.toString());
 		}
 		catch (ASelectException e) {
@@ -201,6 +207,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
+		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> SAML AuthnRequest handled");
 	}
 
 	private String getAssertionConsumerServiceURL(SignableSAMLObject samlMessage)
@@ -272,6 +279,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
         Hashtable htTGTContext = null;
         Hashtable htSessionContext = null;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
+		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Handle return from the AuthSP");
 		
 		try {
 			// We have to return to the calling SP using a SAML Artifact
@@ -308,6 +316,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	        	sRelayState = (String)htSessionContext.get("RelayState");
 	        
 	        // And off you go!
+			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Redirecting with artifact to: "+ sAssertUrl);
 			sendSAMLArtifactRedirect(sAssertUrl, sRid, htSessionContext, sTgt, htTGTContext, httpResponse, sRelayState);
 		}
 		catch (ASelectException e) {
@@ -317,6 +326,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
+		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Return from  AuthSP handled");
 	}
 
 	//

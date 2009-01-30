@@ -13,6 +13,7 @@ import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.logging.Audit;
 import org.opensaml.common.SignableSAMLObject;
 import org.opensaml.saml2.core.Issuer;
 import org.opensaml.saml2.core.LogoutRequest;
@@ -71,6 +72,8 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 	{
 		String sMethod = "handleSpecificSaml20Request";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
+		String pathInfo = httpRequest.getPathInfo();
+		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request received === Path="+ pathInfo);
 
 		try {
 			LogoutRequest logoutRequest = (LogoutRequest) samlMessage;
@@ -114,6 +117,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 	        String sCookieDomain = _configManager.getCookieDomain();
 	        HandlerTools.delCookieValue(httpResponse, "aselect_credentials", sCookieDomain, _systemLogger);
 			// NOTE: cookie GOES, TGT STAYS in admin!!
+			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Removed cookie for domain: "+sCookieDomain);
 			
 	        logoutNextSessionSP(httpRequest, httpResponse, logoutRequest, initiatingSP,
 						_bTryRedirectLogoutFirst, _iRedirectLogoutTimeout);
@@ -125,6 +129,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
+		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request handled " + pathInfo);
 	}
 
 	private Response validateLogoutRequest(LogoutRequest logoutRequest, HttpServletRequest httpRequest)

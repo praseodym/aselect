@@ -240,7 +240,7 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler  // RH, 2008060
 //				.getArtifactFromStorage(sReceivedArtifact);
 				Response samlResponse = (Response) artifactManager
 						.getArtifactFromStorage(sReceivedArtifact);
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "samlResponse retrieved from storage:\n" + XMLHelper.nodeToString(samlResponse.getDOM()));
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "samlResponse retrieved from storage:\n" + XMLHelper.nodeToString(samlResponse.getDOM()));
 
 				// We will not allow to use the artifact again
 				artifactManager.remove(sReceivedArtifact);	// RH, 20081113, n

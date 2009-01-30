@@ -45,6 +45,7 @@ import java.util.logging.Level;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.logging.Audit;
 import org.aselect.system.logging.SystemLogger;
 
 /**
@@ -151,7 +152,8 @@ public class ASelectSystemLogger extends SystemLogger
                 try
 		        {
 		            String sSysLogLevel = oASelectConfigManager.getParam(oSysLogging, "level");
-		            levelSysLog = Level.parse(sSysLogLevel);
+//		            levelSysLog = Level.parse(sSysLogLevel);
+		            levelSysLog = Audit.parse(sSysLogLevel);
 		        }
 		        catch (Exception e)
 		        {

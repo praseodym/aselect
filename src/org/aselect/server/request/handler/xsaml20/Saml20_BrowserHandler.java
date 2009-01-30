@@ -25,6 +25,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
+import org.aselect.system.logging.Audit;
 import org.joda.time.DateTime;
 import org.opensaml.common.SAMLObjectBuilder;
 import org.opensaml.common.SAMLVersion;
@@ -232,6 +233,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	{
 		String sMethod = "handleSAMLMessage";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
+		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">> SAMLMessage received");
 
 		try {
 			BasicSAMLMessageContext messageContext = new BasicSAMLMessageContext();
@@ -293,6 +295,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
+		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">> SAMLMessage handled");
 	}
 
 	/**
@@ -523,6 +526,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect logout for SP="+serviceProvider);
 					LogoutRequestSender sender = new LogoutRequestSender();
+					_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">> Sending logoutrequest to: "+ url);
 					sender.sendLogoutRequest(url, _sASelectServerUrl, sNameID, httpRequest, httpResponse,
 							"urn:oasis:names:tc:SAML:2.0:logout:user");  // was "federation initiated redirect logout"
 				}
@@ -558,6 +562,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 
 		String statusCode = StatusCode.SUCCESS_URI;
 		LogoutResponseSender sender = new LogoutResponseSender();
+		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">> Sending logoutresponse to: "+ logoutResponseLocation);
 		sender.sendLogoutResponse(logoutResponseLocation, _sASelectServerUrl, statusCode,
 							logoutRequest.getID(), httpRequest, httpResponse);		
 	}
