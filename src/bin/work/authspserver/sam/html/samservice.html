@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+	<HEAD>
+		<TITLE>A-Select AuthSP Server - Sam Service</TITLE>
+		<link rel="stylesheet" type="text/css" href="style/aselect.css" >
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta http-equiv="PRAGMA" content="NO-CACHE"> 
+		<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+		<meta http-equiv="Expires" content="0">	
+		<script language='JavaScript' type='text/javascript'>
+			function refresh()
+			{
+				var ref = document.getElementById('auto_refresh');
+				var refTime = document.getElementById('refresh_time').value;
+				if(ref.checked)
+				{
+					parent.SAMService.location.reload();
+				}
+				if(refTime == null || refTime == '')
+				{
+					refTime = 1;
+				}
+				if(refTime < 1)
+				{
+					refTime = 1;
+				}
+				setTimeout(refresh, refTime * 1000);
+			}
+		</script>
+	</HEAD>
+
+	<BODY onLoad='refresh()'>
+		<table width="100%">
+			<tr>
+				<td>&nbsp;</td>
+				<td align="right"><img align="right" src="img/aselectlogo.png" alt="A-Select"></td>
+			</tr>
+			<tr>
+				<td>&nbsp;</td>
+				<td align="right"><p class="itemHead">A-Select AuthSP Server</p></td>
+			</tr>
+		</table>
+		<hr>
+		<table width='100%' align='center' border='0'>
+			<tr>
+				<td align='right' width='50%'><b>Enable automatic refresh: </b></td>
+				<td align='left' width='50%'><input type='checkbox' id='auto_refresh'></td>
+			</tr>
+			<tr>
+				<td align='right' width='50%'><b>Refresh time: </b></td>
+				<td align='left' width='50%'>&nbsp;<input type='text' maxlength='4' value='1' id='refresh_time' size='2'><i>sec</i></td>
+			</tr>
+		</table>
+		<hr>
+		<center>
+			<iframe frameborder='0' width='100%' height='90%' src='[samservice_status_url]' name='SAMService'>
+			</iframe>
+		</center>
+	</BODY>
+</HTML>

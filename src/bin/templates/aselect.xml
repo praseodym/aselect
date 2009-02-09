@@ -1,0 +1,1492 @@
+<xml>
+	<!-- A-Select main Configuration -->
+	<aselect>
+
+		<!--	The "server_id" is the unique ID of this A-Select Server. It may 
+				not contain an underscore '_' character. 
+				An example value is "aselect". -->
+		<server_id>default.aselect.org</server_id>
+
+		<!--	The "organization" is the A-Select Server organization ID. An 
+				example value is "testorg". -->
+		<organization>testorg</organization>
+
+		<!--	The "organization_friendly_name" is the friendly organization
+				name. This value is displayed to a user during authentication.
+				An example value is "A-Select Server". -->
+		<organization_friendly_name>A-Select Server</organization_friendly_name>
+
+		<!--	The "keystore_password" is the password that is used for
+				accessing the A-Select Server keystore. An example value is
+				"changeit". Do not forget to change this value to a more secure
+				one. -->
+		<keystore_password>changeit</keystore_password>
+
+		<!--	If the "admin_gui" configuration item is set to TRUE a graphical 
+				user interface will be started containing session and tgt 
+				information of the A-Select Server. If the item is configured as 
+				FALSE, the grafical user interface will not be started.	
+				The admin gui is not needed for a successful startup and usage 
+				of the A-Select Server.
+				
+				The "admin_gui" tag is optional, the default value is 'false'. -->
+		<admin_gui>false</admin_gui>
+
+		<!--	The "single_sign_on" configuration item is used to for enable or 
+				disable single sign-on. The "single_sign_on" configuration is 
+				optional, the default value is 'true'. -->
+		<single_sign_on>true</single_sign_on>
+
+		<!--	The "cookie_domain" is the domain used to set A-Select cookies.
+				This is usefull in redundant configurations where multiple servers
+				have to share the same cookie. An example value would be 'mydomain.com'.
+				All A-Select Servers in this subdomain can share their 
+				sessions and TGT's. 
+				
+				This configuration item is optional, if omitted the cookie will 
+				be set using the complete FQDN of the A-Select Server.-->
+		<!-- <cookie_domain>mydomain.com</cookie_domain> -->
+		
+		<!-- 	The "redirect_url" configuration is an optional item which can be used
+				to redirect to. This option can be needed when using SSL offloading.-->
+		<!-- <redirect_url>https://localhost/aselectserver/server</redirect_url> -->
+
+		<!--	The "crypto" configuration contains the configuration items concerning all crypto. 
+
+				NOTE: The A-Select distribution is shipped with the Cryptix provider 
+				(cryptix.jce.provider.CryptixCrypto) that supports the 
+				SHA1withRSA algorithm for signing, the DESede algorithm for encryption and
+				the SHA1PRNG algorithm for random generation.
+				
+				A-Select has also been succesfully tested with the IBM JCE FIPS provider 
+				(com.ibm.crypto.provider.IBMJCA) for more information see www.ibm.com. -->
+		<crypto>
+			
+			<!--	The "signature_algorithm" is the signature used to sign and verify requests
+					during A-Select communication.
+					The "algorithm" is the actual algorithm that will be used, for 
+					example "SHA1withRSA".
+					The "provider" is the corresponding crypto provider "id". See the
+					crypto provider documentation for more information on which algorithms
+					are supported. An example would be "Cryptix".
+					
+					If no provider is configured, the default provider is used. Usually 
+					SUN. However a valid algorithm must be configured. For more information
+					see the Java crypto documentation. -->									
+			<signature_algorithm provider="Cryptix" algorithm="SHA1withRSA"/>
+
+			<!--	The "encryption_algorithm" is the used for all encryption functionality within
+					the A-Select Server.
+					The "algorithm" is the actual algorithm that will be used for
+					encryption, for example "DESede".
+					The "provider" is the corresponding provider "id". -->					
+			<encryption_algorithm algorithm="DESede"/>
+
+			<!--	The "random_generator_algorithm" is used for all random functionality 
+					within the A-Select Server.
+					The "algorithm" is the actual algorithm that will be used for
+					random generation, for example "SHA1PRNG".
+					The "provider" is the correspondingprovider "id". -->					
+			<random_generator_algorithm algorithm="SHA1PRNG"/>
+			
+			<!--	The Cryptographic Service Providers configuration -->			
+			<providers>
+
+				<!--	A "provider" is a Cryptographic Service Provider (CSP) that implements 
+						certain cryptograpic algorithms. These providers are used
+						in combination with the "signature_algorithm", "encryption_algorithm" and 
+						"random_generator_algorithm" configuration to perform the actual work.
+
+						The "id" must be an unique provider name that can be 
+						used in the "*_algorithm" configurations.
+						
+						The "class" is the provider class of the actual CSP.
+						
+						The "provider" configuration item is optional. 
+						
+						NOTE: When configuring a provider make sure the necessary jar files
+						are installed in the appropriate directory. -->
+						
+				<!--	The Cryptix provider is shipped with the default A-Select distribution -->
+				<provider id="Cryptix" class="cryptix.jce.provider.CryptixCrypto"/>
+
+				<!--	The SUN provider is the default SUN JCE provider -->
+				<provider id="Sun" class="com.sun.crypto.provider.SunJCE"/>
+
+			</providers>			
+		</crypto>
+		
+		<!--	The A-Select Server system logger configuration. 
+				The "id" value must contain the value "system". 
+				The "target" refers to a corresponding target "id". -->				
+		<logging id="system" target='file'>
+
+			<!--	The "level" is the log level that indicates the detail of 
+					the A-Select logging.
+					
+					The following levels can be configured, each level includes
+					the logging generated by the lower level, WARNING will log
+					WARNING and SEVERE messages:
+					- SEVERE:  SEVERE messages indicate problems with A-Select 
+						   preventing A-Select from working properly.
+					- WARNING: WARNING messages indicate a problem that does not affect
+						   A-Select.
+					- INFO:    INFO messages contain general A-Select information.
+					- CONFIG:  CONFIG messages show information concering the configuration
+					           of A-Select. This usually indicates when a default option has
+					           been selected. 
+					- FINE:    INFO messages contains more extensive logging
+					- FINER:   FINER messages contain maximum logging, without stacktraces
+					- FINEST:  FINEST messages maximum logging with stacktraces
+					- ALL:     equal to FINEST	
+					
+					The "level" configuration item is optional, by defaul the level will be 
+					set to CONFIG. -->				
+			<level>FINER</level>
+
+			<!--	The target "id" identifies this target configuration and 
+					must be an unique name that corresponds with the configured 
+					"target" attribute of the logging tag. -->
+			<target id='file'>
+
+				<!--	The "max_file_size" indicates the maximum log file size 
+						in bytes for one log file. An example is "524288" that 
+						corresponds to a 512Kb log file.
+						
+						The "max_file_size" configuration item is optional, if 
+						omitted the value will be set to "307200" that indicates
+						a filesize of 300Kb. -->
+				<max_file_size>524288</max_file_size>
+
+				<!--	The "nr_of_files" indicates the number of files that 
+						will be used when rotating the log files. If the log file 
+						becomes larger than the configured "max_file_size" a new 
+						file is created. This process will repeat the 
+						configured until the number of files is reached.
+						An example value is "4".
+						
+						The "nr_of_files" configuration item is optional, if 
+						omitted the value will be set to "4". -->
+				<nr_of_files>4</nr_of_files>
+			
+				<!--	The target "directory" is the directory where the 	
+						logging files will be written. The system logging files are 
+						written in a subdirectory "system".
+
+						The "directory" configuration item is optional, if 
+						omitted the directory will be the:
+						"A-Select working directory"\log\system. -->
+				<directory>[aselect_home]/log/aselectserver/</directory>
+
+			</target>
+		</logging>
+		
+		<!--	The A-Select authentication logger configuration.
+				The "id" value must contain "authentication". 
+				The "target" must refers to a corresponding target "id". -->
+		<logging id="authentication" target="file">
+			
+			<target id='file'>
+
+				<max_file_size>524288</max_file_size>
+
+				<nr_of_files>4</nr_of_files>
+				
+				<directory>[aselect_home]/log/aselectserver/</directory>
+
+			</target>
+
+			<!--	To configure the authentication logger to log to a database,
+					replace the target id="file" configuration with the
+					following, don't forget to set the correct target in the "logging"
+					configuration: -->
+					
+			<!-- <target id="database"> -->
+
+				<!--	The "url" of the database. -->
+				<!-- <url>jdbc:mysql://localhost/aselect</url> -->
+
+				<!--	The JDBC driver that is used to communicate with the 
+						database.
+						NOTE: When configuring a JDBC driver make sure the necessary jar files
+						are installed in the appropriate directory. -->
+				<!-- <driver>com.mysql.jdbc.Driver</driver> -->
+
+				<!--	The "user" is the user name that has sufficient 
+						rights for accessing the database and table. 
+						An example username is "aselect_user". -->
+				<!-- <user>aselect_user</user> -->
+
+				<!--	The "password" is the password for the above user name.
+						An example password is "changeit". -->
+				<!-- <password>changeit</password> -->
+
+				<!--	The "table" is the actual database table used to store the logging.
+						The table "name" is the name that corresponds with the 
+						database table name, for example TBL_SERVER_AUTHLOGGING.
+						-->
+				<!-- <table name="TBL_SERVER_AUTHLOGGING"> -->
+
+					<!--	The appropriate columns must be configured to allow A-Select
+							to log information. The following logging can be logged in 
+							columns and only in this sequence:
+								- The A-Select Component name
+								- The action
+								- The A-Select user ID
+								- The organization ID
+								- The IP address of the user
+								- The app_id were the user wants to authenticate 
+								for
+								- The message
+								- The resultcode
+
+							NOTE: The configured table names must correspond to the 
+							      table names in the JDBC database.
+					-->
+					<!--
+					<column name="ASELECTCOMPONENT"/>
+					<column name="ACTION"/>
+					<column name="USER"/>
+					<column name="IP"/>
+					<column name="ORGANIZATION"/>
+					<column name="APPID"/>
+					<column name="MESSAGE"/>
+					<column name="RESULTCODE"/>
+					-->
+			<!--
+				</table>
+			</target>
+			-->
+
+		</logging>
+	</aselect>
+
+	<!-- Request handler factory configuration -->
+	<requests>
+		<handlers>
+
+		<!--	<handler 
+				id='restart' 
+				class='org.aselect.server.request.handler.aselect.ASelectRestartRequestHandler' 
+				target='\?request=restart.*'> -->
+
+				<!--	The "shared_secret" is a shared secret that is used for 
+						restarting the A-Select Server. The A-Select Server can be 
+						restarted using a CGI request or the browser, for example: 
+						https://localhost/aselectserver/server?request=restart&shared_secret=changeit
+						
+						Note: The shared_secret must be changed. Do not keep the default value! -->
+				<!-- <shared_secret>changeit</shared_secret> -->
+		<!--	</handler> -->
+			
+		<!--	<handler 
+				id='shibboleth' 
+				class='org.aselect.server.request.handler.shibboleth.ShibbolethAuthenticationProfile' 
+				target='\/shib-idp.*'> -->
+
+				<!-- the type of communication that must be used to send the request=authenticate to the SAML11RequestHandler -->
+				<!--	<clientcommunicator>raw</clientcommunicator> -->				
+				<!-- The URI to the SAML11RequestHandler as configured in this A-Select Server -->
+				<!--	<response_uri>/sso</response_uri> --> <!-- SAML 1.1 Request Handler URL -->
+
+				<!-- system time difference that will be accepted between Service Provider and Identity Provider in seconds-->
+				<!--	<time offset='120'/> -->
+				<!-- Mapping from providerId, as known in the Shibboleth SP to the app_id as known in the A-Select Server -->
+				<!--	<providers> -->
+					<!-- The id is the providerId as known in the Shibboleth SP. The app_id is the app_id as known in A-Select -->
+			<!--	<provider id='app1' app_id='app1'/>
+					<provider id='app2' app_id='app2'/>
+					<provider id='app3' app_id='app3'/>
+				</providers>
+			</handler> -->
+
+		<!--	<handler 
+				id='shibboleth-wayf' 
+				class='org.aselect.server.request.handler.shibboleth.ShibbolethWAYFProfile' 
+				target='\/shib-wayf.*'> -->
+
+				<!-- the name of the template used for the WAYF, it must exist in the ../work/aselectserver/server/conf/html/ directory -->
+				<!-- <template>samlwayf.html</template> -->
+
+				<!-- domain to set the cookie for, only needed in redundant environments -->
+				<!-- <cookie domain='a-select.org' /> -->
+
+				<!-- system time difference that will be accepted between Service Provider and Identity Provider in seconds-->
+				<!--	<time offset='120'/> -->
+				<!-- identity providers that will show up in the selection pull down -->
+				<!--	<identity_providers> -->					
+					<!-- alias is the name that will be shown in the pull down, the url is the target were the request will be redirected to -->
+				<!--	<idp alias="Local IdP" url='https://localhost:8443/aselectserver/server/shib-idp'/>
+				</identity_providers>
+			</handler> -->
+
+		<!--	<handler 
+				id='saml_11' 
+				class='org.aselect.server.request.handler.saml11.SAML11RequestHandler' 
+				target='\/sso.*'> -->
+
+				<!-- the type of communication that must be used to send the request=verify_credentials to the A-Select Server -->
+				<!--	<clientcommunicator>raw</clientcommunicator> -->
+
+				<!-- the time in seconds that an assertion is valid in the query response -->
+				<!--	<assertion expire='600' /> -->
+
+				<!-- attribute namespace that will be used for every attribute in the SAML Response -->
+				<!-- the send_statement indicates if an AttributeStatement (if attributes are available) must be sent with the 
+					 SAML Response message -->
+				<!-- <attribute namespace='urn:mace:shibboleth:1.0:attributeNamespace:uri' send_statement='false'/> -->
+
+				<!-- specify the profile that must when authenticating for every specific app_id -->
+				<!-- <applications> -->
+				
+				<!-- 'id' must correspond to the A-Select application id -->
+				<!-- 'profile' is the profile that must be used when authenticating for the application -->
+				<!--	<application id='app1' profile='post'/> -->
+
+				<!-- </applications> -->
+
+				<!-- 'default' must be the default profile 'id' that must be used if the application is not specificaly mapped to a profile -->
+				<!--	<websso default='artifact'> -->
+				<!--	<profile id='post' class='org.aselect.server.request.handler.saml11.websso.profile.BrowserPost'> -->
+
+				<!-- the name of the template used, it must exist in the ../work/aselectserver/server/conf/html/ directory -->
+				<!--	<template>samlbp.html</template> -->
+				<!--	</profile> -->
+
+				<!-- The value of 'artifact' must be the 'id' of the artifact config that must be used-->
+				<!--	<profile id='artifact' class='org.aselect.server.request.handler.saml11.websso.profile.BrowserArtifact' artifact="b"> -->		
+				
+				<!-- artifact type must be 1 or 2 -->
+				<!-- artifact type 1 does not require specific configuration -->
+				<!--	<artifact id='a' type='1' > -->
+				<!--	</artifact> -->
+
+				<!-- artifact type mus be 1 or 2 -->
+				<!--	<artifact id='b' type='2' > -->
+
+				<!-- the sourcelocation must be the full URL to the SAML11ArtifactRequestHandler -->
+				<!--	<sourcelocation>https://localhost:8443/aselectserver/server/artifact</sourcelocation> -->
+
+				<!--	</artifact>
+					</profile>
+				</websso> -->
+
+				<!-- AssertionSessionManager Configuration, corresponds with the Session Storage Manager configuration -->
+				<!--	<storagemanager id="assertions">
+						<handler class="org.aselect.system.storagemanager.handler.MemoryStorageHandler" id="memory" />
+						<expire>600</expire>
+						<interval>10</interval>
+						<max>10000</max>
+
+						<storagehandler id="memory" />
+				</storagemanager>
+			</handler> -->
+
+		<!--	<handler 
+				id='saml_11_artifact' 
+				class='org.aselect.server.request.handler.saml11.SAML11ArtifactRequestHandler' 
+				target='\/artifact.*' /> -->
+
+		<!--	<handler 
+				id='saml_11_query' 
+				class='org.aselect.server.request.handler.saml11.SAML11QueryRequestHandler' 
+				target='\/query.*'> -->
+
+				<!-- the time in seconds that an assertion is valid in the query response -->
+				<!--	<assertion expire='600' /> -->
+
+				<!-- attribute namespace that will be used for every attribute in the Attribute Query Response-->
+				<!--	<attribute namespace='urn:mace:shibboleth:1.0:attributeNamespace:uri'/> -->
+
+				<!-- authentication method mapping from authsp_id to SAML URI -->
+				<!-- password authsp's can use: urn:oasis:names:tc:SAML:1.0:am:password -->
+				<!-- other authsp's can use: urn:oasis:names:tc:SAML:1.0:am:unspecified -->
+
+				<!--	<authentication_methods> 
+					<identifier authsp_id="NullAuthSP" uri="urn:oasis:names:tc:SAML:1.0:am:unspecified"/>
+				</authentication_methods>
+			</handler> -->
+
+			<handler 
+				id='aselect' 
+				class='org.aselect.server.request.handler.aselect.ASelectAuthenticationProfile' 
+				target='.*' />
+
+		</handlers>
+	</requests>
+
+
+	<!--	Storage Managers store information items in key=value pairs. Storage Managers 
+			also manage the expiration time, cleanup of old information and the maximum 
+			number of information items that can be stored.
+	
+		The A-Select Server requires three Storage Managers
+			- A Session Storage Manager used to store A-Select pending sessions.
+			- A Ticket Storage Manager used to store A-Select TGT's.
+			- A Crypto Storage Manager used to store the A-Select main encryption key. -->
+			
+	<!-- The Session Storage Manager.-->
+	<storagemanager id="session">
+
+		<!--	The "expire" configuration item indicates the expiration time in seconds. 
+
+				The "expire" configuration item is optional, if omitted the
+				value will be set to "0" indicating information stored with this  
+				storage manager does not expire. -->
+		<expire>600</expire>
+
+		<!--	The "interval" configuration item indicates the time in seconds that a storage 
+				manager checks for expired information.
+				
+				The "interval" configuration item is optional, if omitted the
+				value will be set to "60" indicating an interval of 1 minute. 
+				-->
+		<interval>10</interval>
+
+		<!--	The "max" configuration item indicates the maximum of number of information
+				items that may exist in this storage manager. -->
+		<max>1000</max>
+
+		<!--	The "handler" configuration item of a Storage Manager is the type of storage 
+				that will be used to store the sessions in. 
+		
+				The "class" is the class that contains the Storage Handler implemenation. 
+				
+				The current A-Select distribution contains two implementations:
+				- org.aselect.system.storagemanager.handler.MemoryStorageHandler
+				- org.aselect.system.storagemanager.handler.JDBCStorageHandler
+			
+				The "id" refers to the "storagehandler" configuration item containing
+				the specific configuration. An example value is "memory". 
+				
+				An example handler configuration for usage of the JDBStorageHandler is:
+				<handler class="org.aselect.system.storagemanager.handler.JDBCStorageHandler" id="jdbc"/> -->
+		<handler class="org.aselect.system.storagemanager.handler.MemoryStorageHandler" id="memory"/>
+
+		<!--	The "storagehandler" handles the communication to the actual storage medium. 
+				The "id" of the storagehandler is the unique name used in combination
+				with the "handler" configuration item to initialize a Storage Handler.
+				
+				An example value is "memory". 
+				
+				NOTE: The memory handler does not need any additional configuration.-->
+		<storagehandler id="memory"/>
+
+		<!--	If in the "handler" configuration the "class" is configured to
+				"org.aselect.system.storagemanager.handler.JDBCStorageHandler" 
+				the storagehandler requires additional configuration.
+				
+				The "id" of the storagehandler is the unique storagehandler name 
+				within this storagemanager. 
+				
+				The "resourcegroup" is the group of resources that is to be used 
+				to connect with the physical storage.
+
+				An example value for "id" is "jdbc" and an example value for 
+				"resourcegroup" is "jdbc_resources". -->
+		<!-- <storagehandler id="jdbc" resourcegroup="jdbc_resources"> -->
+
+			<!--	The "table" configuration item is the actual table used to store 
+				and retrieve information.
+					
+				The "name" configuration item is the name of the table that 
+				exists in the JDBC storage.
+					
+				An example "name" is "TBL_SERVER_SESSIONS". 
+				
+				NOTE: The following shows the required table structure in a MYSQL 
+					database:
+						CREATE TABLE TBL_SERVER_SESSIONS 
+						( 
+						  hash varchar(20),    
+						  timestamp timestamp(14),    
+						  s_key blob,    
+						  s_value blob
+						) PRIMARYKEY(hash); -->
+			<!-- <table name="TBL_SERVER_SESSIONS"> -->
+				
+				<!--	The "hash" configuration item indicates the column in 
+						the database table that is used for storing the 
+						identification hash of the item.
+
+						An example "hash" column name is "hash". -->
+				<!-- <hash>hash</hash> -->
+				
+				<!--	The "timestamp" configuration item indicates the column 
+						in the database table that is used to store the 
+						timestamp of the item. This timestamp is used 
+						to validate the expiration time.
+
+						An example "timestamp" column name is "timestamp". -->
+				<!-- <timestamp>timestamp</timestamp> -->
+
+				<!--	The "key" configuration item indicates the column 
+						in the database table that is used for storing the 
+						key of the item. 
+						
+						An example "key" column name is "s_key". -->
+				<!-- <key>s_key</key> -->
+				
+				<!--	The "value" configuration item indicates the column 
+						in the database table that is used for storing the 
+						actual item.
+
+						An example "value" column name is "s_value". -->
+				<!-- <value>s_value</value> -->
+
+			<!-- </table> -->
+		<!-- </storagehandler> -->
+	</storagemanager>
+
+	<!-- The TGT Storage Manager.-->
+	<storagemanager id="tgt">
+
+		<expire>600</expire>
+
+		<interval>10</interval>
+
+		<max>1000</max>
+
+		<handler class="org.aselect.system.storagemanager.handler.MemoryStorageHandler" id="memory"/>
+		
+		<storagehandler id="memory"/>
+
+	</storagemanager>
+
+	<!-- The Crypto Storage Manager.-->
+	<storagemanager id="crypto">
+
+		<expire>0</expire>
+
+		<interval>0</interval>
+			
+		<max>1</max>
+
+		<handler class="org.aselect.system.storagemanager.handler.MemoryStorageHandler" id="memory" />
+		
+		<storagehandler id="memory" />
+		
+	</storagemanager>
+
+	<!--	The "applications" configuration contains the A-Select aware applications that 
+			are known to this A-Select Server. 
+			
+			If the applications "require_signing" configuration value is set to 
+			"true", all API calls sent to this A-Select Server have to be signed. 
+			
+			An example value is "false". One or more appications can be configured. -->
+	<applications require_signing="false">
+
+		<!--	An "application" must have an unique "id" (app_id) and a "level" 
+				(app_level) which is the minimum AuthSP level required to access
+				this application.
+				Example values are "app1" for the "id" configuration item and 
+				"1" for the "level". 
+				-->
+		<application id="app1" level="1">
+			
+			<!--	The "friendly_name" representing the name of the application. 
+					If provided it is shown as a field on the login forms. -->
+			<!-- <friendly_name>app1 friendly name</friendly_name> -->
+
+			<!--	The "maintainer_email" representing the email account of 
+					the application. If provided it is shown as a field on 
+					the login forms. -->					
+			<!-- <maintainer_email>email@domain.com</maintainer_email> -->
+			
+			<!--	The "show_url" is an optional tag. If true it shows
+					the applications URL as a field on the login forms. -->
+			<!-- <show_url>true</show_url> -->
+
+			<!-- 	Optional configurable feature which allows a user of A-Select 
+					to send the A-Select User ID as an attribute. Configurable per 
+					application. The default value is false -->		
+			<!-- <use_opaque_uid>false</use_opaque_uid>-->
+			
+			<!--	A "privileged" application is an application that may use 
+					the create_tgt API call. An example value is "true".
+
+					The "privileged" configuration item is optional, if omitted 
+					the value is set to "false". -->
+			<!-- <privileged>true</privileged> -->
+
+			<!--	A "attribute_policy" for an application is the policy id 	
+					used to decide which attributes to return to this application. 
+
+					The "attribute_policy" configuration item is optional, if 
+					omitted no attributes will be returned to the application. -->
+			<attribute_policy>policyA</attribute_policy>
+
+			<!--	If the "forced_authenticate" configuration item is 
+					set to "true", users accessing this application will always
+					have to authenticate even if the user has a valid TGT. 
+					An example value is "true".
+			
+					The "forced_authenticate" configuration item is optional, if 
+					omitted forced authentication for this application is disabled. -->
+			<!-- <forced_authenticate>true</forced_authenticate> -->
+
+			<!--	"max_level" is an optional parameter to set the maximum "level" (app_level) 
+					an application requires. This can be used when to limit the number 
+					of available AuthSP's for an application. This can be useful to 
+					trigger "Direct Login" for example. -->					
+			<!-- <max_level>30</max_level> -->
+		</application>
+	</applications>
+
+	<!--	The User Database Configuration can be found in the "udb" configuration item. 
+			The udb "connector" is the connector that is used to connect to
+			the user database, for example "flatfile". 
+			
+			The default A-Select Server installation includes four udb connectors:
+			- flatfile, for testing purposes a file can be used as user database.
+			- JNDI, for connecting to a JNDI database.
+			- JDBC, for connecting with a JDBC database.
+			- SASDB, a Simplefied AuthSP Selection Database that tries to resolve 
+			  the user from one of the above databases, if this fails a default 
+			  userattribute is generated. 		  
+	
+			  When "cross_fallback" is set to "true" and cross A-Select is 
+ 			  configured, A-Select will automaticaly switch to cross_mode, when a 
+			  user not is found in the local A-Select user database. -->	  
+	<udb connector="flatfile" cross_fallback="false" >
+
+		<!--	The specific configuration for the flatfile udb "connector" can 
+				be configured using an unique "id" (for example "flatfile"), a 
+				"class" containing the connector implemention 
+				("org.aselect.server.udb.flatfile.FlatFileConnector") and a 
+				"resource_group" were the resource for the connector is 
+				located (for example "flatfile_resourcegroup") -->
+		<connector id="flatfile" class="org.aselect.server.udb.flatfile.FlatFileConnector" resourcegroup="flatfile_resourcegroup"/>
+
+		<!--	The specific configuration for the JNDI udb "connector" can 
+				be configured using an unique "id" (for example "jndi"), a 
+				"class" containing the jndi implemention 
+				("org.aselect.server.udb.jndi.JNDIConnector") and a 
+				"resource_group" with the JNDI connection 
+				information (for example "jndi_resourcegroup") -->
+		<!-- <connector id="jndi" class="org.aselect.server.udb.jndi.JNDIConnector" resourcegroup="jndi_resourcegroup"> -->
+
+			<!--	The "base_dn" is the DN where the users are located or where 
+					to start searching for users. -->
+			<!-- <base_dn>ou=users,ou=aselect,dc=yourdomain.com</base_dn> -->
+
+			<!--	The "user_dn" specifies the attribute name on which users 
+					are indexed. -->
+			<!-- <user_dn>cn</user_dn> -->
+
+		<!-- </connector> -->
+
+		<!--	The specific configuration for the JDBC udb "connector" can 
+				be configured using an unique "id" (for example "jdbc"), a 
+				"class" containing the jdbc implemention 
+				("org.aselect.server.udb.jndi.JNDIConnector") and a 
+				"resource_group" with the JNDI connection information (for
+				example "jndi_resourcegroup") -->
+		<!-- <connector id="jdbc" class="org.aselect.server.udb.jdbc.JDBCConnector" resourcegroup="mysql_resourcegroup"> -->
+
+			<!--	The "users_table" is the database table name were the user 
+					ID's are stored in, for example "TBL_ASELECT_USERS". -->
+			<!-- <users_table>TBL_ASELECT_USERS</users_table> -->
+
+			<!--	The "users_table_id_column" is the database column name in 
+					the "users_table" in which the A-Select Usernames are 
+					stored, for example "aselectUserName". -->
+			<!-- <users_table_id_column>aselectUserName</users_table_id_column> -->
+
+		<!-- </connector> -->
+
+		<!--	The specific configuration for the SASDB udb "connector" can 
+				be configured using an unique "id" (for example "sasdb"), a 
+				"class" containing the SASDB implemention 
+				("org.aselect.server.udb.sasdb.SASDBConnector") -->
+		<!-- <connector id="sasdb" class="org.aselect.server.udb.sasdb.SASDBConnector"> -->
+
+			<!--	The "udb_storage" includes the configuration of the backup 
+					udb. This udb is used first to search for A-Select users. 
+					The "connector" is the "id" of an existing connector 
+					configuration, for example "jdbc". -->
+			<!-- <udb_storage connector="jdbc"/> -->
+
+			<!--	The "authsps" configuration contains the AuthSP's for which 
+					default user attributes for will be generated. -->
+			<!-- <authsps>
+
+				<authsp id="NullAuthSP"/>
+			
+			</authsps> -->
+
+			<!--	You can use one or more "filters" to limit the group of 
+					users that are allowed to use SASDB. If no filters are 
+					specified then everyone is allowed. You can use wildcards 
+					(* and ?) in the filter definitions. 
+					
+					NOTE: All comparisons are case sensitive! -->
+			<!-- <filters> -->
+
+				<!--	A "filter" must have an unique numbered "id" starting 
+						with "1". 
+						The "pattern" contains the actual filter pattern, for 
+						example "uid!=root@*" specifies that a user id may 
+						not start with root@.
+						The pattern must start with uid= (user id must match) or 
+						uid!= (user id may not match) and contains wildcards (* and ?).-->
+				<!-- <filter id="1" pattern="uid!=root@*"/> -->
+		<!-- 
+			</filters>
+		</connector>
+		-->
+
+	</udb>
+
+	<!--	The "authsps" configuration item contains the configuration of all AuthSP's enabled 
+			for this A-Select Server.
+			The "always_show_select_form" configuration item is used for testing 
+			purposes. Setting this option to "true" will always show the AuthSP 
+			selection screen (with the pulldown) even if there is only one AuthSP 
+			for the specific user enabled. 
+	
+			The "always_show_select_form" configuration is optional, if omitted 
+			the value is set to "false". -->
+	<authsps always_show_select_form="false">
+		
+		<!--	The specific configuration for the NULL "authsp" can 
+				be configured using an unique "id" (for example "NullAuthSP")
+				that corresponds with the Null AuthSP signing key alias and a 
+				"resource_group" with the NullAuthSP location (for example
+				"null_authsp_resources")
+				
+				"direct_authsp" a new optional parameter introduced to enable the new 
+				feature Direct Login, when "direct_authsp" is set to "true" and the application 
+				is configured so that only this specific AuthSP is available, the A-Select server 
+				shows a new form where an user can submit its username and password in one screen. 
+				Currently only the Ldap AuthSP is extended with this new 
+				functionality.	
+				
+				Note: The Null AuthSP is for testing purposes only.-->	
+		<authsp id="NullAuthSP" resourcegroup="null_authsp_resources" direct_authsp="false">
+			
+			<!--	The AuthSP "level" indicates the strength of the 
+					authentication service provider (AuthSP). The higher the 
+					level, the stronger the authentication.
+					An example value is '1' for the Null AuthSP. -->
+			<level>1</level>
+
+			<!--	The AuthSP "friendly_name" is the AuthSP name that will be 
+					displayed in the pulldown menu in the AuthSP selection 
+					screen. An example value is "Null Authentication 
+					(NullAuthSP)" for the Null AuthSP. -->
+			<friendly_name>Null Authentication (NullAuthSP)</friendly_name>
+		
+			<!--	The AuthSP "handler" contains the Null AuthSP implemention. -->	
+			<handler>org.aselect.server.authspprotocol.handler.NullAuthSP</handler>
+
+			<!--	If the AuthSP "popup" configuration item is set to "true" the 	
+					authentication screen of the AuthSP will be opened in a 
+					popup screen. An example value is "false". -->
+			<popup>false</popup>
+
+			<!--	The AuthSP "type" indicates the location of the AuthSP, it 
+					can be configured to "local" if it is an AuthSP that is 
+					hosted locally. If the AuthSP is configured as "remote" the 
+					AuthSP is hosted remotely. The difference between the two
+					is the way A-Select handles the signing keys of the AuthSPs.-->
+			<type>local</type>
+		</authsp>
+
+		<!--	The specific configuration for the DB "authsp"  -->
+		<authsp id="DB" resourcegroup="db_authsp_resources" direct_authsp="false">
+		  <level>20</level>
+		  <friendly_name>Database Authentication (DBAuthSP)</friendly_name>
+		  <handler>org.aselect.server.authspprotocol.handler.DBAuthSPHandler</handler>
+		  <popup>false</popup>
+		  <type>local</type>
+		</authsp>
+		
+		<!--	The specific configuration for the Radius "authsp"  -->			
+		<!--	
+		<authsp id="Radius" resourcegroup="radius_authsp_resources" direct_authsp="false">
+		  <level>20</level>
+		  <friendly_name>Radius Authentication (RadiusAuthSP)</friendly_name>
+		  <handler>org.aselect.server.authspprotocol.handler.Radius</handler>
+		  <popup>false</popup>
+		  <type>local</type>
+		</authsp>
+		-->
+
+		<!--	The specific configuration for the Ldap "authsp" -->
+		<!--	
+		<authsp id="Ldap" resourcegroup="ldap_authsp_resources direct_authsp="false"">
+			<level>30</level>
+			<friendly_name>Ldap Authentication (LdapAuthSP)</friendly_name>
+			<handler>org.aselect.server.authspprotocol.handler.Ldap</handler>
+			<popup>false</popup>
+			<type>local</type>
+		</authsp>
+		-->
+		
+		<!--	The specific configuration for the IP "authsp".-->	
+		<!--
+		<authsp id="IP" resourcegroup="ip_authsp_resources" direct_authsp="false">
+			<level>10</level>
+			<friendly_name>IP Authentication (IPAuthSP)</friendly_name>
+			<handler>org.aselect.server.authspprotocol.handler.IP</handler>
+			<popup>false</popup>
+			<type>local</type> -->
+
+			<!--	The "applications" configuration section contains the configuration 
+					for the ip ranges of the users that may access the specified 
+					applications.
+					-->
+			<!-- <applications> -->
+				
+				<!--	An "application" that can accessed using the IP 
+						authentication will neeed the app_id (as configured in 
+						the A-Select Server applications configuration), for 
+						example "app1". -->
+				<!-- <application app_id="app1"> -->
+					
+					<!--	The "iprange" against which the user will be checked must
+							be configured using a unique "id". This "id" must
+							correspond with an iprange configured in the IP AuthSP.
+							An example "id" is "administration". -->
+					<!-- <iprange id="administration" /> -->
+			
+		<!--	
+				</application>
+			</applications>
+		</authsp>	
+		-->
+
+	</authsps>
+
+	<!--	The "sso_groups" configuration item contains the single sign-on groups configuration. 
+			One or more single sign-on groups can be configured within the "sso_groups" 
+			configuration.
+			
+			The "sso_groups" configuration is optional, if omitted single
+			sign-on groups are disabled.
+
+			NOTE: The single_sign_on configuration item must be enabled for sso_groups. 
+			-->	
+	<!-- <sso_groups> -->
+		
+		<!--	Each "sso_group" configuration item contains the application that have
+				single sign on with each other.
+				
+				The "id" is the unique group ID. An example value is "groupA".-->
+		<!-- <sso_group id="groupA"> -->
+			
+			<!--	An "application" that is configured in an "sso_group" must
+					that corresponds with an application id from the "applications" 
+					configuration section. An example "id" is "app1". -->
+			<!-- <application id="app1"/> -->
+	<!--
+		</sso_group>
+	</sso_groups>
+	-->
+
+	<!--	The "attribute_gathering" configuration item is used to configure how atttributes are
+			handled in A-Select. 
+			
+			The attribute_gathering configuration is optional, if omitted attribute gathering 
+			is disabled. -->
+	<attribute_gathering>
+	    <attribute_requestors>
+			<requestor id="FlatFileRequestor" class="org.aselect.server.attributes.requestors.flatfile.FlatFileAttributeRequestor" />
+			<requestor id="TGTRequestor" class="org.aselect.server.attributes.requestors.tgt.TGTAttributeRequestor" />
+		</attribute_requestors>
+		<attribute_release_policies>
+			<release_policy id="policyA">
+				<attribute id="*" requestor="TGTRequestor" />
+				<attribute id="*" requestor="FlatFileRequestor" />
+			</release_policy>
+		</attribute_release_policies>
+	</attribute_gathering>
+	<requestor id="TGTRequestor" />
+	<requestor id="FlatFileRequestor" resourcegroup="flatfile_resourcegroup1" /> 
+	
+	<!-- 
+	<attribute_gathering>
+	    	<attribute_requestors> -->
+			<!--	A "requestor" is a handler that resolves the attributes for 
+					the A-Select Atribute Gatherer.
+					The requestor "id" is the unique ID of the requestor that is 
+					used to identify the requestor in the attribute release 
+					policies.
+					The "class" is the class that contains the requestor 
+					implementation. The default A-Select Server installation
+					contains three implementations:
+					- org.aselect.server.attributes.requestors.opaque.OpaqueAttributeRequestor
+					- org.aselect.server.attributes.requestors.jndi.JNDIAttributeRequestor
+					- org.aselect.server.attributes.requestors.api.APIAttributeRequestor
+					- org.aselect.server.attributes.requestors.flatfile.FlatFileAttributeRequestor -->
+					
+		<!--	The opaque attribute requestor is a dummy attribute requestor for 
+				testing the attribute gathering process.-->
+	    <!-- <requestor id="OpaqueHandleRequestor" class="org.aselect.server.attributes.requestors.opaque.OpaqueAttributeRequestor" />  -->
+	    	
+		<!--	The JNDI attribute requestor resolves it's attributes from a
+				JNDI database. -->
+	    <!-- <requestor id="JNDIAttributeRequestor" class="org.aselect.server.attributes.requestors.jndi.JNDIAttributeRequestor" />  -->
+		
+		<!--	The API attribute requestor resolves it's attributes from a
+				CGI or SOAP server.-->
+		<!-- <requestor id="APIAttributeRequestor" class="org.aselect.server.attributes.requestors.api.APIAttributeRequestor" />  -->
+		
+		<!--	The FlatFile attribute requestor resolves it's attributes from an
+				XML file.-->
+		<!-- <requestor id="FlatFileRequestor" class="org.aselect.server.attributes.requestors.flatfile.FlatFileAttributeRequestor" />  -->
+	    	
+		<!-- </attribute_requestors> -->
+		
+		<!--	The "attribute_release_policies" configuration item contains the 
+				release policies for this A-Select Server.-->
+		<!-- <attribute_release_policies> -->
+
+			<!--	Each "release_policy" is a policy for releasing attributes to 
+					an application. It has an unique "id" that can be used in 
+					the "applications" or Cross A-Select "local_servers" 
+					configuration items.
+					
+					One or more release_policy tags can be configured.-->
+			<!-- <release_policy id="policyA"> -->
+
+				<!--	The "attribute" configuration item is used to configure
+						which attributes belong to this Attribute Release Policy.
+						Each attibute has an unique "id", for example "opaquehandle" and a 
+						"requestor", for example "OpaqueHandleRequestor" where the attribute
+						can be retrieved. The "requestor" must refer to a "requestor" defined
+						in the "attribute_requestors" configuration section.
+						
+						NOTE: To retrieve all possible attribute from a requestor specify "*"
+						as the "id" of an attribute. -->
+				<!-- <attribute id="opaquehandle" requestor="OpaqueHandleRequestor" /> -->
+				<!-- <attribute id="username" requestor="JNDIAttributeRequestor" /> -->
+				<!-- <attribute id="*" requestor="APIAttributeRequestor" /> -->
+				<!-- <attribute id="*" requestor="FlatFileRequestor" /> -->
+	<!--
+			</release_policy>
+		</attribute_release_policies>
+	</attribute_gathering>
+	-->
+
+	<!--	The "requestor" implementation:  	
+			"org.aselect.server.attributes.requestors.opaque.OpaqueAttributeRequestor" can be configured within this tag. 
+			The requestor "id", corresponds with the requestor id in the 
+			attribute gatherer configuration. 
+			The Opaque requestor requires no further configuration. -->
+	<!-- <requestor id="OpaqueHandleRequestor" /> -->
+
+	<!--	The "requestor" implementation:  	
+			"org.aselect.server.attributes.requestors.flatfile.FlatFileAttributeRequestor" can be configured within this tag. 
+			The requestor "id", corresponds with the requestor id in the 
+			attribute gatherer configuration. 
+			The FlatFile requestor requires no further configuration. -->
+	<!-- <requestor id="FlatFileRequestor" resourcegroup="flatfileattribute_resources" /> -->
+	
+	<!--	The "requestor" implementation:  	
+			"org.aselect.server.attributes.requestors.jndi.JNDIAttributeRequestor" can be configured within this tag. 
+			The requestor "id", corresponds with the requestor id in the 
+			attribute gatherer configuration. 
+			The requestor "resourcegroup" indicates the resource that must be 
+			used for setting up the connection, for example 
+			"jndi_resourcegroup". -->
+	<!-- <requestor id="JNDIAttributeRequestor" resourcegroup="jndi_resourcegroup"> -->
+
+		<!--	The "main" tag contains the main configuration for this 
+				requestor. -->
+		<!-- <main> -->
+			<!--	The "authsp_uid" is the AuthSP ID Configuration of the AuthSP were the 
+					user ID can be retrieved from. An example value is "Ldap". 
+					-->
+			<!-- <authsp_uid>Ldap</authsp_uid> -->
+
+			<!--	The "base_dn" is the DN where the users are located or where 
+					to start searching for users. -->
+			<!-- <base_dn>ou=users,ou=aselect,dc=yourdomain.com</base_dn> -->
+
+			<!--	The "user_dn" specifies the attribute name on which users 
+					are indexed. -->
+			<!-- <user_dn>cn</user_dn> -->
+			
+			<!--	Defines whether to send the full user id (including realm) to 
+					the JNDI server or to strip the realm and send only 
+					the user name. Specify true or false.	-->
+			<!-- <full_uid>false</full_uid> -->
+
+		<!-- </main> -->
+
+		<!--	Attribute names can be mapped to readable names in the 
+				"attribute_mapping" configuration. -->
+		<!-- <attribute_mapping> -->
+
+				<!--	The "attribute" that can be found in the JNDI database 
+						with "map" value "sn" will be released as attribute with 
+						the name "jndi_surname" as configured in the "id". -->
+				<!-- <attribute id="jndi_surname" map="sn"/> -->
+	
+	<!-- 
+		</attribute_mapping>
+	</requestor>
+	-->
+
+	<!--	The "requestor" implementation: 
+			"org.aselect.server.attributes.requestors.api.APIAttributeRequestor"
+			can be configured within this tag. 
+			The requestor "id", corresponds with the requestor id in the 
+			attribute gatherer configuration. 
+			The requestor "resourcegroup" indicates the resource that must be 
+			used for setting up the connection, for example 
+			"api_resourcegroup". -->
+	<!-- <requestor id="APIAttributeRequestor" resourcegroup="api_resourcegroup"> -->
+		
+		<!--	The "main" tag contains the main configuration for this 
+				requestor. -->
+		<!-- <main> -->
+			<!--	The "transferprotocol" indicates the type of communication 
+					that must be used to communicate with the backend.
+					The following communication types are supported: "raw", 
+					"soap11" and "soap12". -->
+			<!-- <transferprotocol>raw</transferprotocol> -->
+
+			<!--	The name of the "method" that is remotely called. -->
+			<!-- <method>Status</method> -->
+		
+		<!-- </main> -->
+
+		<!--	The "parameters" that are sent with the method that is remotely 
+				called can be configured here. -->
+		<!-- <parameters> -->
+
+			<!--	A "parameter" can be retrieved from the user session, for 
+					example the "uid" (A-Select User ID). In this case the 
+					parameter "id" must be configured with value "uid" and the 
+					"session" must be set to "true". -->
+			<!-- <parameter id="uid" session="true"/> -->
+
+			<!--	A "parameter" can also be directly retrieved from this
+					configuration. In this case the parameter "session" 
+					configuration item must be set to "false". For example 
+					the parameter "id" is configured with value "type", the
+					parameter "value" is configured with value "string" and the 
+					"session" is configured as "false". -->
+			<!-- <parameter id="type" session="false" value="string"/> -->
+		
+		<!-- </parameters> -->
+
+		<!--	The "attribute_parameter_name" is the name of the array 
+				that will be sent and returned by the API backend, for 
+				example the value "get" can be configured for communicating 
+				with a SAM Service Servlet.  -->
+		<!-- <attribute_parameter_name>get</attribute_parameter_name> -->
+		
+		<!--	Attribute names can be mapped to readable names in the 
+				"attribute_mapping" configuration.  -->
+		<!-- <attribute_mapping> -->
+
+			<!--	The "attribute" that can be found in the API backend 
+					with "map" value "1.3.6.1.4.1.15396.10.10.2.1.1" will be
+					released as attribute with 
+					the name "sysDescr" as configured in the "id". -->
+			<!-- <attribute id="sysDescr" map="1.3.6.1.4.1.15396.10.10.2.1.1"/>
+			-->
+	<!-- 
+		</attribute_mapping>
+	</requestor>
+	-->
+
+	<cross_aselect>
+		<cross_selector handler="default">
+			<handler id="default">
+				<class>org.aselect.server.cross.selectorhandler.DefaultSelectorHandler</class>
+			</handler>
+		</cross_selector>
+		<remote_servers sign_requests="false"> 
+			<organization id="dummy-remote" 
+				server="dummy-remote.aselect.org" 
+				friendly_name="Dummy Remote A-Select Server" 
+				resourcegroup="remote_aselect_resources"/>
+		</remote_servers>
+	</cross_aselect>
+
+	<!--	The "cross_aselect" tag contains the Cross A-Select Configuration. 
+			This configuration is fully optional, if omitted the Cross A-Select 
+			functionality will be disabled. -->
+	<!-- <cross_aselect> -->
+
+		<!--	A "cross_selector" is a handler that used to determine the remote A-Select Server.
+				Their are 2 ways of determining the remote organization:
+				
+				- The user is presented with a a web form from which the user chooses
+				  the organization.
+				- The organization is sent by an application during the authenticate 
+				  request.
+				
+				The "handler" is the cross selector implementation that will be 
+				used. It's value must correspond with a configured "handler" 
+				"id", for example "default". 
+				
+				The "cross_selector" configuration is optional, if omitted the 
+				default handler is used. -->
+		<!-- <cross_selector handler="default"> -->
+
+			<!--	A Cross Selector "handler" must be configured with an unique 
+					"id". An example value is "default". -->
+			<!-- <handler id="default"> -->
+
+				<!--	The "class" is the implementation of the cross selector 
+						handler. The default cross selector handler is 
+						"org.aselect.server.cross.selectorhandler.DefaultSelectorHandler" -->				
+				<!-- <class>org.aselect.server.cross.selectorhandler.DefaultSelectorHandler</class> -->
+		
+			<!-- </handler> -->
+			
+			<!-- 	The regex selector handler is an implementation of the cross selector handler 
+					interface. The regex selector handler determines on basis of regular expressions
+					to which remote_organization a user belongs. -->
+			<!-- <handler id="regex"> -->
+				<!-- <class>org.aselect.server.cross.selectorhandler.RegexSelectorHandler</class> -->
+				<!-- the "expressions" section contains one or more "regex" sections -->
+				<!-- <expressions> -->
+					<!--	the username will be matched against the following regular expressions
+							- paramater "value" contains the regular expression
+							- parameter "remote_organization" contiains the organization id of the 
+							  corresponding  remote organization 
+							If a username matches more than one of the following regular expressions the 
+							user will be sent to the topmost remote_organization in this list -->
+					<!-- <regex value="[a-zA-Z0-9.]+@remote.org"  remote_organization="remote-org"/> -->
+					<!-- <regex value="NL-[0-9]+"  remote_organization="nl-org"/> -->
+				<!-- </expressions>	-->
+			<!-- </handler> -->			
+			
+		<!-- </cross_selector> -->
+		
+
+		<!--	The "local_servers" tag contains the configuration of all 
+				A-Select Servers that are allowed to cross authenticate with this
+				A-Select Server.
+
+				If the local_servers "require_signing" configuration value is 
+				set to "true", all cross API calls sent to this A-Select Server 
+				need to be signed. An example value is "false". 
+				
+				The local_servers configuration is optional, if omitted no
+				local_servers can use this A-Select Server for authentication.
+				-->
+		<!-- <local_servers require_signing="false"> -->
+
+			<!--	The "organization" is the organization of the calling A-Select Server
+					that is allowed to initiate a cross authenticate with this 
+					A-Select Server. 
+					The "id" is the name of the calling A-Select Server organization, 
+					for example "local_org". -->
+			 <!-- <organization id="local_org"> -->
+
+				<!--	The organization "level" is the minimum AuthSP level the 
+						calling A-Select Server requires, for example "10".
+						
+						The "level" is optional, if omitted the level is not
+						checked for the calling A-Select Server. -->
+				<!-- <level>10</level> -->
+
+				<!--	A "attribute_policy" for an organization is the policy 
+					id used for returning attributes to calling A-Select Server. 
+					An example value is "policyA".
+
+					The "attribute_policy" configuration item is optional, if 
+					omitted no attributes will be returned to the calling A-Select Server. 
+					-->
+				<!-- <attribute_policy>policyA</attribute_policy> -->
+
+				<!--	If the "forced_authenticate" configuration item is 
+					set to "true", users sent by the calling A-Select Server 
+					will have to authenticate even if the user has a valid TGT. 
+					An example value is "true".
+			
+					The "forced_authenticate" configuration item is optional, if 
+					omitted forced authentication for the calling A-Select Server is 
+					disabled. -->
+				<!-- <forced_authenticate>true</forced_authenticate> -->
+
+		<!--
+			</organization>
+		</local_servers>
+		-->
+		
+
+		<!--	The "remote_servers" tag contains the configuration of all Cross A-Select Servers 
+				that this A-Select Server can use to cross authenticate users.
+
+				If the remote_servers "sign_requests" configuration value is 
+				set to "true", all API calls sent to a Cross A-Select Server 
+				will be signed. An example value is "false". 
+				
+				The remote_servers configuration is optional, if omitted 
+				no remote_servers can be used for cross authentication. -->
+		<!-- <remote_servers sign_requests="false"> -->
+
+			<!--	The "organization" configuration item is the Cross A-Select Server organization
+					with which this A-Select Server can cross authenticate. 
+					- The "id" is the name of the Cross A-Select Server organization, 
+					for example "remote-org".
+					- The "server" is the name of the Cross A-Select Server, for 
+					example "remote_aselect".
+					- The "friendly_name" is the name that will be shown to the 
+					user in a Cross A-Select Server selection pulldown menu, for example
+					"Remote A-Select Server".
+					- The resourcegroup with the Cross A-Select Server location (for 
+					example "remote_aselect_resources"). -->
+			<!-- <organization id="remote-org" 
+				server="remote_aselect" 
+				friendly_name="Remote A-Select Server" 
+				resourcegroup="remote_aselect_resources"/> -->
+		<!--
+		</remote_servers>
+		-->
+	<!-- </cross_aselect> -->
+	
+
+	<!--	The "SAM" is the Simple A-Select Manager, which handles all A-Select resources. -->
+	<sam>
+
+		<!--	The SAM "agent" is the resource group manager. All resources 
+				within A-Select Server are defined within in a resource group. -->
+		<agent>
+		
+			<resourcegroup id="flatfile_resourcegroup1" interval="30">
+				<resource id="FLATFILE_1">
+					<file>[aselect_home]/work/aselectserver/conf/flatfile/attributes.xml</file>
+				</resource>
+			</resourcegroup>
+
+			<!--	A "resourcegroup" contains one or more resources that are of 
+					the same type. 
+					For example, if the flatfile user database is configured the 
+					SAM agent configuration must have a corresponding 
+					resource_group id. 
+					The "interval" is the interval in seconds at which the 
+					different resources within a resource group are polled. 
+					An example value for "interval" is "30".
+
+					The "interval" configuration item is optional, if omitted
+					the interval will be set to 50 seconds. -->
+			<resourcegroup id="flatfile_resourcegroup" interval="30">
+
+				<!--	A "resource" configuration item is an A-Select Server resource, 
+						like an A-Select Server, AuthSP or database. 
+						The resource "id" is an unique ID for the resource within 
+						the resource group. This ID is used in logging if a 
+						resource is down. An example value is "FLATFILE_1".
+
+						The "polling" configuration item indicates the polling 
+						method that is to be used to poll this resource.
+						The "interval" configuration item is the interval 
+						time in seconds at which the resource will be polled.
+
+						An example resource configuration is:
+						<resource id="FLATFILE_1" polling="icmp" interval="30">
+						
+						If the "polling" item and "interval" item are omitted,
+						the polling functionality will be disabled for this
+						resource. -->
+				<resource id="FLATFILE_1">
+
+					<!--	For the flatfile database, a "file" must be 
+							configured which points to the database file 
+							containing the A-Select User information. It must be 
+							configured with a full path to the file.  -->
+					<file>[aselect_home]/work/aselectserver/conf/flatfile/flatfile.udb</file>
+
+					<!-- Each resource can have multiple polling methods required to determine if a resource
+					is down -->
+					
+					<!--	A "pollingmethod" is a method that will be used to 	
+							poll the resource. 
+							
+							The "id" configuration item is the unique ID for
+							this pollingmethod within the resource. An example value is "icmp".
+							
+							The "class" item is the implementation that is used 
+							of the pollingmethod.
+							
+							The default A-Select distribution contains two polling methods: 
+							- org.aselect.system.sam.agent.polling.SAMICMPPollingMethod
+							- org.aselect.system.sam.agent.polling.SAMAPIPollingMethod
+
+							The SAMICMPPollingMethod polls the resources by
+							using an ICMP PING command to the target system, the 
+							SAMAPIPollingMethod polls an A-Select component 
+							using the SAM API calls. -->
+					<!-- <pollingmethod id="icmp" class="org.aselect.system.sam.agent.polling.SAMICMPPollingMethod">-->
+
+					<!--	The icmp polling command requires a "pingcommand". 
+							This ping command will be used to ping the resource 
+							system once.
+							
+							An example ping command on a Windows system is: "ping -n 1" 
+							An example ping command on a Linux system is: "ping -c 1" -->
+					<!--
+						<pingcommand>ping -n 1</pingcommand>
+					
+					</pollingmethod>
+					-->
+
+					<!--	The SAMAPIPollingMethod uses the SAM protocol to determine if a resource is down 
+					
+							- The "transferprotocol" is the transferprotocol that will be used to 
+								communicate with the sam service.
+								
+							The transferprotocol is optional, if omitted the 
+							value will be set to "raw". -->
+					<!--
+					<pollingmethod id="sam" class="org.aselect.system.sam.agent.polling.SAMAPIPollingMethod" 
+					transferprotocol="raw">
+					-->
+
+					<!--	The "url" is the unified resource locator which 
+							points to the SAM Service servlet.
+							A sample value is https://localhost/authspserver/sam 
+							-->
+					<!--
+						<url>https://localhost/authspserver/sam</url>
+					</pollingmethod>
+					-->
+				</resource>
+			</resourcegroup>
+
+			<!--	A JNDI resource as needed by the JNDI user database 
+					connector requires a resource group configuration with:
+					- An "id", for example "jndi_resourcegroup"
+					- An "interval", for example "30"
+					- A "resource" configuration item
+					
+					The specific JNDI resource configuration should contain the following:
+					- A "driver" specifying the JNDI driver needed to connect 
+					with the backend, like "com.sun.jndi.ldap.LdapCtxFactory".
+					- An "url" starting with "ldap://" and including a port 
+					configuration like ":389", for example 
+					"ldap://localhost:389".
+					- "ssl", indicating whether to use ssl or not. An example value is "true".
+					- A "security_principal_dn" is used to specify the username 
+					that has enough rights to do a search on the JNDI server, 
+					for example "CN=aselect administrator,CN=Users,DC=yourdomain.com".
+					- A "security_principal_password" The password for the user 
+					specified with "security_principal_dn" for example 
+					"changeit". -->
+			<!-- 
+			<resourcegroup id="jndi_resourcegroup" interval="30">
+				<resource id="JNDI_1">
+					<driver>com.sun.jndi.ldap.LdapCtxFactory</driver>
+					<url>ldap://localhost:389</url>
+					<ssl>false</ssl>
+					<security_principal_dn>CN=aselect administrator,CN=Users,DC=yourdomain.com</security_principal_dn>
+					<security_principal_password>changeit</security_principal_password>
+				</resource>
+			</resourcegroup>
+			-->
+
+			<!--	A JDBC resource as needed by the JDBC user database 
+					connector requires a resource group configuration with:
+					- An "id", for example "jdbc_resources"
+					- An "interval", for example "30"
+					- A resource "id", for example "JDBC_1"
+					
+					The specific JNDI resource configuration should contain the following:
+					- A "driver" specifying the JDBC driver needed to connect 
+					with the backend, like "com.mysql.jdbc.Driver".
+					- The "url" to the database for example 
+					"jdbc:mysql://localhost/aselect".
+					- A "username" is used to specify the username that has 
+					enough rights to access the JDBC server, for example
+					"aselect_user".
+					- A "password" The password for the user specified with 
+					"username", for example "changeit".-->
+			<!-- 
+			<resourcegroup id="jdbc_resources" interval="30">
+				<resource id="JDBC_1">
+					<driver>com.mysql.jdbc.Driver</driver>
+					<url>jdbc:mysql://localhost/aselect</url>
+					<username>aselect_user</username>
+					<password>changeit</password>
+				</resource>
+			</resourcegroup>
+			-->
+
+			<!--	A Null AuthSP resource as needed for the Null AuthSP 
+					handler requires a resource group configuration with:
+					- An "id" like "null_authsp_resources"
+					- An "interval" like "30"
+					- A resource "id" like "NULLAUTHSP_1"
+					
+					And the following resource configuration:
+					- The "url" to the AuthSP for example 
+					"https://localhost/authspserver/null". -->
+			<resourcegroup id="null_authsp_resources" interval="30">
+				<resource id="NULLAUTHSP_1">
+					<url>https://localhost/authspserver/null</url>
+				</resource>	
+			</resourcegroup>
+			
+			<!--	A DB AuthSP resource example -->
+			<resourcegroup id="db_authsp_resources" interval="30">
+				<resource id="DB_1">
+					<url>https://localhost/authspserver/db</url>
+				</resource>	
+			</resourcegroup>
+			
+			<!--	A Radius AuthSP resource example -->
+			<!--
+			<resourcegroup id="radius_authsp_resources" interval="30">
+				<resource id="RADIUS_1">
+					<url>https://localhost/authspserver/radius</url>
+				</resource>	
+			</resourcegroup>
+			-->
+	
+			<!--	An LDAP AuthSP resource example -->
+			<!--
+			<resourcegroup id="ldap_authsp_resources" interval="30">
+				<resource id="LDAP_1">
+					<url>https://localhost/authspserver/ldap</url>
+				</resource>	
+			</resourcegroup>
+			-->
+
+			<!--	An IP AuthSP resource example -->
+			<!--
+			<resourcegroup id="ip_authsp_resources" interval="30">
+				<resource id="IP_1">
+					<url>https://localhost/authspserver/ip</url>
+				</resource>	
+			</resourcegroup>
+			-->
+
+			<!--	An API requestor resource example -->
+			<!--
+			<resourcegroup id="api_resourcegroup" interval="30">
+				<resource id="SERVER_SAM_1">
+					<url>https://localhost/aselectserver/sam</url>
+				</resource>	
+			</resourcegroup>
+			-->
+
+			<!--	A FlatFile requestor resource example -->
+			<!--
+			<resourcegroup id="flatfileattribute_resources" interval="30">
+				<resource id="FLATFILE_ATTRIBUTE_1">
+					<file>[aselect_home]/work/aselectserver/conf/flatfile/attributes.xml</file>
+				</resource>
+			</resourcegroup>
+			-->
+
+			<!--	A Cross A-Select Remote Server example -->
+			<resourcegroup id="remote_aselect_resources" interval="30">
+				<resource id="ASELECT_REMOTE_SERVER_1">						
+					<url>https://localhost/aselectserver/server</url>
+				</resource>	
+			</resourcegroup>
+		</agent>
+	</sam>
+
+</xml>

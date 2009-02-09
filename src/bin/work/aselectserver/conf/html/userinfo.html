@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+	<head>
+		<title>Session information | [version] - [organization_friendly]</title>
+		<link rel="stylesheet" type="text/css" href="style/aselect.css" >
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	</head>
+	<body>
+		<table width="100%" >
+			<tr>
+				<td>&nbsp;</td>
+				<td align="right"><img align="right" src="img/aselectlogo.png" alt="A-Select"></td>
+			</tr>
+			<tr>
+				<td>&nbsp;</td>
+				<td align="right"><p class="itemHead">[organization_friendly]</p></td>
+			</tr>
+		</table>
+		 
+		<table width="100%">
+			<tr>
+				<td>&nbsp;</td>
+				<td width="30%">
+					<p class="itemHead">A-Select Session Information</p>
+					To log out completely, press the "Log Out" button.
+					<br/>
+					<br/>
+				</td>
+				<td valign="top">&nbsp;</td>
+			</tr>
+			<tr>
+				<td>&nbsp;</td>
+				<td>
+					User-id
+				</td>
+				<td valign="top">[uid]</td>
+			</tr>
+			<tr>
+				<td>&nbsp;</td>
+				<td>
+					Organization
+				</td>
+				<td valign="top">[org]</td>
+			</tr>
+			<tr>
+				<td>&nbsp;</td>
+				<td>
+					TGT-level
+				</td>
+				<td valign="top">[tgt_level]</td>
+			</tr>
+			<tr>
+				<td>&nbsp;</td>
+				<td valign="top">
+					TGT expires at
+				</td>
+				<td valign="top">[tgt_exp_time]</td>
+			</tr>
+			<tr>
+				<td>&nbsp;</td>
+				<td nowrap>
+					Last accessed application
+				</td>
+				<td valign="top">[app]</td>
+			</tr>
+			<tr>
+				<td>&nbsp;</td>
+				<td>
+					Authentication method
+				</td>
+				<td valign="top">[authsp]</td>
+			</tr>
+			<tr>
+				<td>&nbsp;</td>
+				<td>
+					<form action="[aselect_url]" method="post" name="info">
+						<input type="hidden" name="request" value="logout">
+						<input type="hidden" name="a-select-server" value="[a-select-server]">
+						<input type="submit" name="logoutbutton" value="  Log Out ">
+					</form>
+				</td>
+				<td valign="top">&nbsp;</td>
+			</tr>	
+			
+			<tr>
+				<td height="50">&nbsp;</td>
+				<td>&nbsp;</td>
+			</tr>
+			<tr>
+				<td>&nbsp;</td>
+				<td align="left"><span class="smallText">[requestor_friendly_name]</span></td>
+			</tr>
+			<tr>
+				<td>&nbsp;</td>
+				<td align="left"><span class="smallText"><a href="mailto:[requestor_maintainer_email]">[requestor_maintainer_email]</a></span></td>
+			</tr>
+			<tr>
+				<td>&nbsp;</td>
+				<td align="left"><span class="smallText">[requestor_url]</span></td>
+			</tr>
+			<tr>
+				<td height="50">&nbsp;</td>
+				<td colspan="2" nowrap><span class="footerText">[version] | This product includes software developed by <a href="http://www.alfa-ariss.com" target="_blank">Alfa & Ariss B.V.</a> </span></td>
+			</tr>
+		</table>
+
+	</body>
+</html>

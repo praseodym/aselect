@@ -1,0 +1,26 @@
+#!/bin/sh
+#
+export ASELECT_HOME=[aselect_home]
+
+case "$1" in
+  start)
+    #
+    # Start A-Select Agent
+    #
+    exec java -Duser.dir="$ASELECT_HOME/work/aselectagent" -server -jar "$ASELECT_HOME/bin/aselectagent/org.aselect.agent.jar" &
+
+    ;;
+
+  stop)
+    #
+    # Stop A-Select Agent
+    #
+    exec java -classpath "$ASELECT_HOME/bin/aselectagent/" StopAgent &
+
+    ;;
+
+  *)
+    echo "Usage local.aselectagent start/stop"
+    exit 1;;
+esac
+

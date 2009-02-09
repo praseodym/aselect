@@ -1,0 +1,86 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+  <head>
+    <title>
+		[version] - [organization_friendly]
+    </title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link rel="stylesheet" type="text/css" href="style/style.css">
+  </head>
+  <body onload="document.AUTHENTICATEFORM.password.focus()">
+	<div id="top">
+         <img align="right" src="img/aselectlogo.png" alt='A-Select'>
+	</div>
+	<div id="content">
+		<Table cellspacing="0" cellpadding="0" border="0" align="center" width="100%">
+		  <tr>
+			<td align="center">
+			  <Table cellspacing="0" cellpadding="5" border="0" width="750">
+				<tr>
+					<td class=bottomdots>&nbsp;</td>
+				</tr>
+				<tr>
+					<td class="itemHead">
+						<b>A-Select PKI AuthSP</b>
+					</td>
+				</tr>
+				<tr>
+				  <td height="234" align="center">
+					<table cellspacing="0" cellpadding="0" border="0" width="500">
+					  <tr>
+						<td class="text" valign="top">
+							<br>
+							  <FORM ACTION="[server]" METHOD="POST" NAME="AUTHENTICATEFORM">
+								<INPUT TYPE="HIDDEN" NAME="rid" VALUE="[rid]">
+								<INPUT TYPE="HIDDEN" NAME="as_url" VALUE="[as_url]">
+								<INPUT TYPE="HIDDEN" NAME="user_attribute" VALUE="[user_attribute]">
+								<INPUT TYPE="HIDDEN" NAME="a-select-server" VALUE="[a-select-server]">
+								<INPUT TYPE="HIDDEN" NAME="tf_authsp" VALUE="[tf_authsp]">
+								<INPUT TYPE="HIDDEN" NAME="tf_url" VALUE="[tf_url]">
+								<INPUT TYPE="HIDDEN" NAME="tf_uid" VALUE="[tf_uid]">
+								<INPUT TYPE="HIDDEN" NAME="tf_retries" VALUE="[tf_retries]">
+								<INPUT TYPE="HIDDEN" NAME="signature" VALUE="[signature]">
+								<TABLE CELLPADDING=10 CELLSPACING=5 BORDER=0>
+								  <TR>
+									<TD ALIGN="left" NOWRAP>password:</TD>
+									<TD ALIGN="CENTER">
+										<INPUT TYPE="password" NAME="password" SIZE="26"> 
+									</TD>
+								  </TR>								  
+								  <TR>
+									<TD ALIGN="CENTER" colspan=2>
+									  <FONT SIZE="3">
+										<INPUT TYPE="Submit" VALUE="  Authenticate ">
+									  </FONT>
+									</TD>
+								</TR>
+								<TR>
+									<TD ALIGN="CENTER" colspan=2>
+									<B>[error_msg]</B>
+									</TD>
+								</TR>	
+								</TABLE>
+							  </FORM>
+							</td>
+						  </tr>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td class="bottomdots">
+							<br />
+							<br />
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<span class="text" style="font-size: 10px; margin-left: 0;">[version] - [organization_friendly]<br/>This product includes software developed by <a href="http://www.alfa-ariss.com" target="_blank">Alfa & Ariss B.V.</a></span>
+					</td>
+				</tr>
+			  </table>
+			</td>
+		</tr>
+	  </table>
+	</div>
+  </body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+	<head>
+		<title>SURF Federatie Identity Provider Selectie | [version] - [organization_friendly]</title>
+		<link rel="stylesheet" type="text/css" href="style/aselect.css" >
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	        <script type="text/javascript" src="img/cookie.js"></script>
+                <script type="text/javascript" src="img/toggle.js"></script>
+        </head>
+        <body onload='show_c(getCookie("language"),"select","home_idp");'>
+                <table width="100%">
+                        <tr>
+                                <td>&nbsp;</td>
+                                <td align="right"><img align="right" src="img/aselectlogo.png" alt="A-Select"></td>
+                        </tr>
+                        <tr>
+                                <td>&nbsp;</td>
+                                <td align="right"><p class="itemHead"><a href="http://federatie.surfnet.nl/">[organization_friendly]</a></p></td>
+                        </tr>
+                        <tr>
+                                <td>&nbsp;</td>
+                                <td align="right"><p class="smallText"><a href="#" onclick='setCookie("language", "NL","365","/");show_c("NL","select","home_idp");return false'>Nederlands</a> | <a href="#" onclick='setCookie("language", "EN","365","/");show_c("EN","select","home_idp");return false'>English</a></p></td>
+                        </tr>
+                </table>
+
+<div id="EN" style="position:absolute; z-index:1; visibility: hidden">
+
+		<table width="100%">
+			<tr>
+				<td>&nbsp;</td>
+				<td>
+					<p class="itemHead">Authenticate using SURF Federation</p>
+					Select an Identity Provider within the SURF Federation to authenticate yourself, select "Proceed" to start the authentication process.
+					<br/>
+					Press the "Cancel" button to go back.
+					
+					<br/>
+					<br/>
+					<form action="[aselect_url]" method="post" name="select_en">
+						<input type="hidden" name="request" value="[request]">
+						<input type="hidden" name="rid" value="[rid]">
+						<input type="hidden" name="a-select-server" value="[a-select-server]">
+						<input type="hidden" name="remote_server" value="[remote_server]">
+						 SURF Federation Identity Provider::<br />
+
+						<select id="home_idp" name="home_idp">
+							[available_home_idps]
+						</select>
+						<br />
+						<br />
+						<input type="submit" value="  Proceed ">
+						<input type="button" value="  Cancel  " onclick="window.location='[cancel]'; return true;">
+					</form>
+				</td>
+
+			</tr>
+			<tr>
+				<td height="200">&nbsp;</td>
+				<td><span class="footerText">[version] | Javascript and cookies required.</a> </span></td>
+			</tr>
+		</table>
+</div>
+
+<div id="NL" style="position:absolute; z-index:1; visibility: visible">
+
+		<table width="100%">
+			<tr>
+				<td>&nbsp;</td>
+				<td>
+					
+				    <p class="itemHead">Authenticeren via de SURF Federatie</p>
+				    Selecteer een Identity Provider binnen de SURF Federatie om te authenticeren, en druk op de knop "Doorgaan" om de authenticatie te starten.
+				    <br/>
+				    Gebruik de knop "Afbreken" om terug te keren.
+
+					<br/>
+					<br/>
+					<form action="[aselect_url]" method="post" name="select_nl">
+						<input type="hidden" name="request" value="[request]">
+						<input type="hidden" name="rid" value="[rid]">
+						<input type="hidden" name="a-select-server" value="[a-select-server]">
+						<input type="hidden" name="remote_server" value="[remote_server]">
+						 SURF Federatie Identity Provider:<br />
+
+						<select id="home_idp" name="home_idp">
+							[available_home_idps]
+						</select>
+						<br />
+						<br />
+						<input type="submit" value="  Doorgaan ">
+						<input type="button" value="  Afbreken  " onclick="window.location='[cancel]'; return true;">
+					</form>
+				</td>
+
+			</tr>
+			<tr>
+				<td height="200">&nbsp;</td>
+				<td><span class="footerText">[version] | Javascript en cookies vereist</span></td>
+			</tr>
+		</table>
+</div>
+	</body>
+</html>

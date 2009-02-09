@@ -1,0 +1,28 @@
+<html>
+<head>
+	<title>Please wait...</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<script language="JavaScript" type="text/javascript">
+		window.onload = function() {
+			document.getElementById('noscript').style.visibility = 'hidden';
+			document.forms[0].submit();
+		}
+	</script>
+</head>
+<body>
+<center>
+Please wait while you are being redirected to the application (this may take up to 30 seconds)...
+<p>
+<form method='POST' action='[action]' name="dopost">
+	<input type=hidden name="TARGET" value="[target]">
+	<input type=hidden name="SAMLResponse" value="[samlresponse]">
+	<div id="noscript">
+	    Javascript is not enabled in your browser so you have to press the continue button below manually.<br>
+	    Warning: avoid pushing the button twice since that may result in errors in the target application.
+	    <p>
+		<input type=submit name='Post' value='continue'><br>
+	</div>
+</form>
+</center>
+</body>
+</html>

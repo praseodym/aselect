@@ -1,0 +1,46 @@
+/* A-Select basic style sheet */
+BODY {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size:12px;
+	line-height: 18px;
+}
+P {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	line-height: 18px;	
+}
+TD {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size:12px;
+	line-height: 18px;	
+}
+
+.error
+{
+	color: red;
+	font-weight:bold;
+	margin: 0px;
+}
+
+.warning
+{
+	color: #FF9900;
+	font-weight:bold;
+	margin: 0px;
+}
+
+.itemHead {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size:14px;
+	font-weight:bold;
+	line-height: 18px;	
+}
+.footerText {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size:10px;
+	font-weight:bold;
+	line-height: 18px;	
+	border-top-style:solid;
+	border-top-color:#000000;
+	border-top-width:thin;
+}
