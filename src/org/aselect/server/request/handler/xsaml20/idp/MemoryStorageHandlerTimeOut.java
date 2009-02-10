@@ -7,9 +7,8 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.logging.Level;
 
-import org.aselect.server.request.handler.xsaml20.SoapLogoutRequestSender;
 import org.aselect.server.request.handler.xsaml20.ServiceProvider;
-import org.aselect.server.request.handler.xsaml20.idp.MetaDataManagerIdp;
+import org.aselect.server.request.handler.xsaml20.SoapLogoutRequestSender;
 import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
@@ -22,9 +21,9 @@ import org.aselect.system.storagemanager.handler.MemoryStorageHandler;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
-/**
- * MemoryStorageHandlerTimeOut<br><br>
- * <b>Description:</b><br>
+/*
+ * NOTE: Code is identical to JDBCStorageHandlerTimeOut (except for class-names of course)
+ *       Though it is different from the sp-version.
  */
 public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 {

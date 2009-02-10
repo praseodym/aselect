@@ -1,14 +1,14 @@
 /*
-* Copyright (c) Stichting SURF. All rights reserved.
-* 
-* A-Select is a trademark registered by SURFnet bv.
-* 
-* This program is distributed under the A-Select license.
-* See the included LICENSE file for details.
-* 
-* If you did not receive a copy of the LICENSE 
-* please contact SURFnet bv. (http://www.surfnet.nl)
-*/
+ * Copyright (c) Stichting SURF. All rights reserved.
+ * 
+ * A-Select is a trademark registered by SURFnet bv.
+ * 
+ * This program is distributed under the A-Select license.
+ * See the included LICENSE file for details.
+ * 
+ * If you did not receive a copy of the LICENSE 
+ * please contact SURFnet bv. (http://www.surfnet.nl)
+ */
 
 /* 
  * $Id: AuthorizationRuleEvaluator.java,v 1.7 2006/04/14 13:42:48 tom Exp $ 
@@ -81,541 +81,451 @@ import org.aselect.system.utils.Utils;
  */
 public class AuthorizationRuleEvaluator
 {
-    /**
-     * The module name.
-     */
-    public static final String MODULE = "AuthorizationRuleEvaluator";
-    
-    /**
-     * The logger for system entries.
-     */
-    private SystemLogger _systemLogger;
-    
-    /**
-     * Create a new <code>AuthorizationRuleEvaluator</code>.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Create a new instance of the <code>AuthorizationRuleEvaluator</code> 
-     * with the given logger.
-     * <br><br>
-     * @param systemLoger The system logger to be used.
-     */
-    public AuthorizationRuleEvaluator(SystemLogger systemLoger)
-    {
-        _systemLogger = systemLoger;
-    }
-    
-    /**
-     * Evaluate a authorization rule.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * this method uses the given evaluation tree and fills in the user 
-     * attributes if all the expressions in the evaluation tree are 
-     * valid for the user attributes this method returns true, otherwise false.
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * @param htAttributes The user attributes.
-     * @param tEvaluation The evaluation tree to evaluate upon.
-     * @return <code>true</code> if the tree evaluates to <code>true</code>
-     * 	for the given user attributes, otherwise false.
-     * @throws ASelectAuthorizationException If evaluating fails.
-     */
-    public boolean evaluate(Hashtable htAttributes, EvaluationTree tEvaluation) 
-    throws ASelectAuthorizationException
-    {
-        final String sMethod = "evaluate()";
-        boolean bAuthorized = false;
-        //check not empty
-        if(tEvaluation == null || tEvaluation.isEmpty())
-        {
-            _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-                "Evaluation tree not available or empty.");
-            throw new ASelectAuthorizationException(
-                Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-        }
-        
-        //get token
-        AuthorizationRuleToken oToken = 
-            (AuthorizationRuleToken)tEvaluation._oNode;
-        //check group
-        _systemLogger.log(Level.WARNING, MODULE, sMethod, "Group="+oToken._iGroup); 
-        switch(oToken._iGroup)
-        {
-            case AuthorizationRuleToken.LOGIC_OPERATOR_GROUP:
-            {
-                bAuthorized = evaluateLogic(htAttributes, tEvaluation);
-                break;
-            }
-            case AuthorizationRuleToken.OPERATOR_GROUP:
-            {
-                //simple expression with operator
-                bAuthorized = evaluateSimple(htAttributes, tEvaluation);
-                break;
-            }
-            case AuthorizationRuleToken.DATA_GROUP:
-            {
-                //simple expression with just a key
-                bAuthorized = evaluateSimple(htAttributes, tEvaluation);
-                break;                 
-            }
-            default:
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-                "Invalid evaluation tree: unknown token group.");
-                throw new ASelectAuthorizationException(
-                    Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-            }
-        }  
-        return bAuthorized;        
-    }
-    
-    /**
-     * Evaluate a simple expression.
-     * 
-     * @param htAttributes The user attributes.
-     * @param tEvaluation The evaluation tree to evaluate upon.
-     * @return <code>true</code> if the simple expression tree evaluates to 
-     * 	<code>true</code> for the given user attributes, otherwise false.
-     * @throws ASelectAuthorizationException If evaluating fails.
-     */
-    private boolean evaluateSimple(Hashtable htAttributes,
-        EvaluationTree tEvaluation) throws ASelectAuthorizationException
-    {
-        final String sMethod = "evaluateSimple()";
-        boolean bAuthorized = false;
-        AuthorizationRuleToken oToken = (AuthorizationRuleToken)tEvaluation._oNode;
+	/**
+	 * The module name.
+	 */
+	public static final String MODULE = "AuthorizationRuleEvaluator";
 
-        if (tEvaluation.isLeaf()) //simple expression with just a key
-        {
-            _systemLogger.log(Level.WARNING, MODULE, sMethod, "Leaf "+oToken.getValue()); 
-            bAuthorized = htAttributes.containsKey(oToken.getValue());
-        }
-        else
-        //simple expression with operator
-        {
-            //Get key
-            AuthorizationRuleToken oKey = (AuthorizationRuleToken)tEvaluation._tLeft._oNode;
-            String sKey = (String)oKey.getValue();
+	/**
+	 * The logger for system entries.
+	 */
+	private SystemLogger _systemLogger;
 
-            Object oValue = htAttributes.get(sKey);
-            _systemLogger.log(Level.WARNING, MODULE, sMethod, "Expr key="+sKey+" value="+oValue); 
+	/**
+	 * Create a new <code>AuthorizationRuleEvaluator</code>.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Create a new instance of the <code>AuthorizationRuleEvaluator</code> 
+	 * with the given logger.
+	 * <br><br>
+	 * @param systemLoger The system logger to be used.
+	 */
+	public AuthorizationRuleEvaluator(SystemLogger systemLoger) {
+		_systemLogger = systemLoger;
+	}
 
-            if (oValue == null) //attribute not available
-                bAuthorized = false;
-            else
-            {
+	/**
+	 * Evaluate a authorization rule.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * this method uses the given evaluation tree and fills in the user 
+	 * attributes if all the expressions in the evaluation tree are 
+	 * valid for the user attributes this method returns true, otherwise false.
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * @param htAttributes The user attributes.
+	 * @param tEvaluation The evaluation tree to evaluate upon.
+	 * @return <code>true</code> if the tree evaluates to <code>true</code>
+	 * 	for the given user attributes, otherwise false.
+	 * @throws ASelectAuthorizationException If evaluating fails.
+	 */
+	public boolean evaluate(Hashtable htAttributes, EvaluationTree tEvaluation)
+		throws ASelectAuthorizationException
+	{
+		final String sMethod = "evaluate()";
+		boolean bAuthorized = false;
+		//check not empty
+		if (tEvaluation == null || tEvaluation.isEmpty()) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Evaluation tree not available or empty.");
+			throw new ASelectAuthorizationException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+		}
 
-                AuthorizationRuleToken oExpectedValue = (AuthorizationRuleToken)tEvaluation._tRight._oNode;
+		//get token
+		AuthorizationRuleToken oToken = (AuthorizationRuleToken) tEvaluation._oNode;
+		//check group
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "Group=" + oToken._iGroup);
+		switch (oToken._iGroup) {
+		case AuthorizationRuleToken.LOGIC_OPERATOR_GROUP: {
+			bAuthorized = evaluateLogic(htAttributes, tEvaluation);
+			break;
+		}
+		case AuthorizationRuleToken.OPERATOR_GROUP: {
+			//simple expression with operator
+			bAuthorized = evaluateSimple(htAttributes, tEvaluation);
+			break;
+		}
+		case AuthorizationRuleToken.DATA_GROUP: {
+			//simple expression with just a key
+			bAuthorized = evaluateSimple(htAttributes, tEvaluation);
+			break;
+		}
+		default: {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid evaluation tree: unknown token group.");
+			throw new ASelectAuthorizationException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+		}
+		}
+		return bAuthorized;
+	}
 
-                if (oValue instanceof Vector)
-                {
-                    bAuthorized = evaluateSimpleMultiValuedAttribute(oToken,
-                        oExpectedValue, (Vector)oValue);
+	/**
+	 * Evaluate a simple expression.
+	 * 
+	 * @param htAttributes The user attributes.
+	 * @param tEvaluation The evaluation tree to evaluate upon.
+	 * @return <code>true</code> if the simple expression tree evaluates to 
+	 * 	<code>true</code> for the given user attributes, otherwise false.
+	 * @throws ASelectAuthorizationException If evaluating fails.
+	 */
+	private boolean evaluateSimple(Hashtable htAttributes, EvaluationTree tEvaluation)
+		throws ASelectAuthorizationException
+	{
+		final String sMethod = "evaluateSimple()";
+		boolean bAuthorized = false;
+		AuthorizationRuleToken oToken = (AuthorizationRuleToken) tEvaluation._oNode;
 
-                }
-                else if (oValue instanceof String)
-                {
-                    String sValue = (String)oValue;
+		if (tEvaluation.isLeaf()) //simple expression with just a key
+		{
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "Leaf " + oToken.getValue());
+			bAuthorized = htAttributes.containsKey(oToken.getValue());
+		}
+		else
+		//simple expression with operator
+		{
+			//Get key
+			AuthorizationRuleToken oKey = (AuthorizationRuleToken) tEvaluation._tLeft._oNode;
+			String sKey = (String) oKey.getValue();
 
-                    _systemLogger.log(Level.WARNING, MODULE, sMethod, "Expr kind="+oToken._iKind+" exp="+oExpectedValue); 
-                    switch (oToken._iKind)
-                    {
+			Object oValue = htAttributes.get(sKey);
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "Expr key=" + sKey + " value=" + oValue);
 
-                        case AuthorizationRuleToken.EQUAL_TO:
-                        {
-                            Comparable cExpectedValue = (Comparable)oExpectedValue
-                                .getValue();
-                            Comparable cValue = convertAttributeValue(
-                                cExpectedValue, sValue);
-                            _systemLogger.log(Level.WARNING, MODULE, sMethod, "EqualTo exp="+oExpectedValue); 
-                            bAuthorized = cExpectedValue.compareTo(cValue) == 0;
-                            break;
-                        }
-                        case AuthorizationRuleToken.NOT_EQUAL_TO:
-                        {
-                            Comparable cExpectedValue = (Comparable)oExpectedValue
-                                .getValue();
-                            Comparable cValue = convertAttributeValue(
-                                cExpectedValue, sValue);
-                            bAuthorized = cExpectedValue.compareTo(cValue) != 0;
-                            break;
-                        }
-                        case AuthorizationRuleToken.GREATER_THEN:
-                        {
-                            Comparable cExpectedValue = (Comparable)oExpectedValue
-                                .getValue();
-                            Comparable cValue = convertAttributeValue(
-                                cExpectedValue, sValue);
-                            bAuthorized = cExpectedValue.compareTo(cValue) < 0;
-                            break;
-                        }
-                        case AuthorizationRuleToken.GREATER_THEN_OR_EQUAL_TO:
-                        {
-                            Comparable cExpectedValue = (Comparable)oExpectedValue
-                                .getValue();
-                            Comparable cValue = convertAttributeValue(
-                                cExpectedValue, sValue);
-                            bAuthorized = cExpectedValue.compareTo(cValue) <= 0;
-                            break;
-                        }
-                        case AuthorizationRuleToken.LESS_THEN:
-                        {
-                            Comparable cExpectedValue = (Comparable)oExpectedValue
-                                .getValue();
-                            Comparable cValue = convertAttributeValue(
-                                cExpectedValue, sValue);
-                            bAuthorized = cExpectedValue.compareTo(cValue) > 0;
-                            break;
-                        }
-                        case AuthorizationRuleToken.LESS_THEN_OR_EQUAL_TO:
-                        {
-                            Comparable cExpectedValue = (Comparable)oExpectedValue
-                                .getValue();
-                            Comparable cValue = convertAttributeValue(
-                                cExpectedValue, sValue);
-                            bAuthorized = cExpectedValue.compareTo(cValue) >= 0;
-                            break;
-                        }
-                        case AuthorizationRuleToken.IN:
-                        {
-                            List lExpected = (List)oExpectedValue.getValue();
-                            bAuthorized = lExpected.contains(sValue);
-                            break;
-                        }
-                        case AuthorizationRuleToken.MATCH_REGULAR_EXPRESSION:
-                        {
-                            Pattern p = (Pattern)oExpectedValue.getValue();
-                            Matcher m = p.matcher(sValue);
-                            bAuthorized = m.matches();
-                            break;
-                        }
-                        case AuthorizationRuleToken.MATCH_WILDCARD_EXPRESSION:
-                        {
-                            String sExpectedValue = (String)oExpectedValue
-                                .getValue();
-                            bAuthorized = Utils.matchWildcardMask(sValue,
-                                sExpectedValue);
-                            break;
-                        }
-                        default:
-                        {
-                            _systemLogger.log(Level.WARNING, MODULE, sMethod,
-                                "Invalid evaluation tree: invalid token kind.");
-                            throw new ASelectAuthorizationException(
-                                Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-                        }
-                    }
-                }
-            }
-        }
-        return bAuthorized;
-    }
+			if (oValue == null) //attribute not available
+				bAuthorized = false;
+			else {
 
-    /**
-     * Evaluate a simple expression for multi-valued attributes.
-     * 
-     * @param oToken Authorization rule token which represents different types of tokens from an authorization rule.
-     * @param oExpectedValue The expected authorization token.
-     * @param vValue The multi-values to evaluate.
-     * @return <code>true</code> if the simple expression tree evaluates to 
-     *  <code>true</code> if one of the given values of the mutli-valued user attribute
-     *  matches the rule, otherwise false.
-     * @throws ASelectAuthorizationException If evaluating fails.
-     */
-    private boolean evaluateSimpleMultiValuedAttribute(AuthorizationRuleToken oToken, AuthorizationRuleToken oExpectedValue, Vector vValue) throws ASelectAuthorizationException{
-        final String sMethod = "evaluateSimpleMultiValuedAttribute()";
-        boolean bAuthorized = false;
-        Enumeration eEnum = vValue.elements();
-                
-        String sValue = "";
+				AuthorizationRuleToken oExpectedValue = (AuthorizationRuleToken) tEvaluation._tRight._oNode;
 
-        switch(oToken._iKind)
-        {
-            
-            case AuthorizationRuleToken.EQUAL_TO:
-            {   
-                // If one of the values of the multi-valued attribute is equal to than true is returned
-                while(eEnum.hasMoreElements() && bAuthorized == false)
-                { 
-                    sValue = (String)eEnum.nextElement();
-                    Comparable cExpectedValue = (Comparable)oExpectedValue.getValue();
-                    Comparable cValue = convertAttributeValue(cExpectedValue, sValue);
-                    bAuthorized = cExpectedValue.compareTo(cValue) == 0;
-                }
-                break;
-            }
-            case AuthorizationRuleToken.NOT_EQUAL_TO:
-            {
-                // If one of the values of the multi-valued attribute is not equal to than true is returned
-                while(eEnum.hasMoreElements() && bAuthorized == false)
-                {
-                    sValue = (String)eEnum.nextElement();
-                    Comparable cExpectedValue = (Comparable)oExpectedValue.getValue();
-                    Comparable cValue = convertAttributeValue(cExpectedValue, sValue);
-                    bAuthorized = cExpectedValue.compareTo(cValue) != 0;
-                }
-                break;
-            }
-            case AuthorizationRuleToken.GREATER_THEN:
-            {
-                // If one of the values of the multi-valued attribute is greater then true is returned
-                while(eEnum.hasMoreElements() && bAuthorized == false)
-                {
-                    sValue = (String)eEnum.nextElement();
-                    Comparable cExpectedValue = (Comparable)oExpectedValue.getValue();
-                    Comparable cValue = convertAttributeValue(cExpectedValue, sValue);
-                    bAuthorized = cExpectedValue.compareTo(cValue) < 0;
-                }
-                break;
-            }
-            case AuthorizationRuleToken.GREATER_THEN_OR_EQUAL_TO:
-            {
-                // If one of the values of the multi-valued attribute is greater then or equal to true is returned
-                while(eEnum.hasMoreElements() && bAuthorized == false)
-                {
-                    sValue = (String)eEnum.nextElement();
-                    Comparable cExpectedValue = (Comparable)oExpectedValue.getValue();
-                    Comparable cValue = convertAttributeValue(cExpectedValue, sValue);
-                    bAuthorized = cExpectedValue.compareTo(cValue) <= 0;
-                }
-                break;
-            }
-            case AuthorizationRuleToken.LESS_THEN:
-            {
-                // If one of the values of the multi-valued attribute is less then true is returned
-                while(eEnum.hasMoreElements() && bAuthorized == false)
-                {
-                    sValue = (String)eEnum.nextElement();
-                    Comparable cExpectedValue = (Comparable)oExpectedValue.getValue();
-                    Comparable cValue = convertAttributeValue(cExpectedValue, sValue);
-                    bAuthorized = cExpectedValue.compareTo(cValue) > 0;
-                }
-                break;
-            }
-            case AuthorizationRuleToken.LESS_THEN_OR_EQUAL_TO:
-            {
-                // If one of the values of the multi-valued attribute is less then or equal to true is returned
-                while(eEnum.hasMoreElements() && bAuthorized == false)
-                {
-                    sValue = (String)eEnum.nextElement();
-                    Comparable cExpectedValue = (Comparable)oExpectedValue.getValue();
-                    Comparable cValue = convertAttributeValue(cExpectedValue, sValue);
-                    bAuthorized = cExpectedValue.compareTo(cValue) >= 0;
-                }
-                break;
-            }               
-            case AuthorizationRuleToken.IN:
-            {
-                // returns true if one of the values of the multi-valued attribute is inside the list
-                while(eEnum.hasMoreElements() && bAuthorized == false)
-                {
-                    sValue = (String)eEnum.nextElement();
-                    List lExpected = (List)oExpectedValue.getValue();
-                    bAuthorized = lExpected.contains(sValue);
-                }
-                break;
-            }
-            case AuthorizationRuleToken.MATCH_REGULAR_EXPRESSION:
-            {                       
-                // returns true if one of the values of the multi-valued attribute matches the regular expression
-                while(eEnum.hasMoreElements() && bAuthorized == false)
-                {
-                    sValue = (String)eEnum.nextElement();
-                    Pattern p = (Pattern)oExpectedValue.getValue();
-                    Matcher m = p.matcher(sValue);
-                    bAuthorized = m.matches();
-                }
-                break;
-            }
-            case AuthorizationRuleToken.MATCH_WILDCARD_EXPRESSION:
-            {
-                // returns true if one of the values of the multi-valued attribute matches the wildcard expression
-                while(eEnum.hasMoreElements() && bAuthorized == false)
-                {
-                    sValue = (String)eEnum.nextElement();
-                    String sExpectedValue = (String)oExpectedValue.getValue();
-                    bAuthorized = Utils.matchWildcardMask(sValue, sExpectedValue);
-                }
-                break; 
-            }
-            default: 
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-                "Invalid evaluation tree: invalid token kind for multi-attribute.");
-                throw new ASelectAuthorizationException(
-                    Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-            }
-        }
-        return bAuthorized;
-    }
-    
-    /**
-     * Evaluate a logic expression. 
-     * 
-     * @param htAttributes The user attributes.
-     * @param tEvaluation The evaluation tree to evaluate upon.
-     * @return <code>true</code> if the logic expression tree evaluates to 
-     * 	<code>true</code> for the given user attributes, otherwise false.
-     * @throws ASelectAuthorizationException If evaluating fails.
-     */
-    private boolean evaluateLogic(Hashtable htAttributes, 
-        EvaluationTree tEvaluation) throws ASelectAuthorizationException
-    {
-        final String sMethod = "evaluateLogic()";
-        boolean bAuthorized = false;
-        AuthorizationRuleToken oToken = (AuthorizationRuleToken)tEvaluation._oNode;
-        _systemLogger.log(Level.WARNING, MODULE, sMethod, "Kind="+oToken._iKind); 
-        switch(oToken._iKind)
-        {
-            case AuthorizationRuleToken.NOT:
-            {
-                bAuthorized = !evaluate(htAttributes, tEvaluation._tLeft); 
-                break;
-            }
-            case AuthorizationRuleToken.AND:
-            {
-                bAuthorized = 	evaluate(htAttributes, tEvaluation._tLeft) && 
-                    			evaluate(htAttributes, tEvaluation._tRight);
-                break;
-            }
-            case AuthorizationRuleToken.OR:
-            {
-                bAuthorized = 	evaluate(htAttributes, tEvaluation._tLeft) || 
-                    			evaluate(htAttributes, tEvaluation._tRight);
-                break;
-            }
-            
-            default:
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-                "Invalid evaluation tree: invalid token kind.");
-                throw new ASelectAuthorizationException(
-                    Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-            }
-            
-        }
-        return bAuthorized;
-    }
-        
-    /**
-     * Converts a attribute value to the same type as the expected value.
-     * @param cExpected The expected object to which the value is compared.
-     * @param sValue De value of the attribute as String.
-     * @return The value as a comparable type.
-     * @throws ASelectAuthorizationException If the value can not be converted 
-     * 	to the same type as the expected value. 
-     */
-    private Comparable convertAttributeValue(Comparable cExpected, 
-        String sValue) throws ASelectAuthorizationException
-    {
-        final String sMethod = "convertAttributeValue()";
-        StringBuffer sb = null;
-        Comparable cRet = null;
-        
-        try
-        {
-	        //convert value
-	        if (cExpected instanceof IPv4Address)
-	        {
-	            cRet = new IPv4Address(sValue);	           
-	        }
-	        else if (cExpected instanceof IPv6Address)
-	        {
-	            cRet = new IPv6Address(sValue);	            
-	        }
-	        else if (cExpected instanceof Date)
-	        {
-	            //get all local datetime formats
-	            Locale[] lc = DateFormat.getAvailableLocales();
-		        boolean bConverted = false;
-		        
-		        //try DateTime		                
-		        for(int i = 0;i<lc.length && !bConverted;i++)
-		        {
-		          DateFormat oDateTimeFormat = DateFormat.getDateTimeInstance(
-		              DateFormat.SHORT,DateFormat.SHORT,lc[i]); 	          
-		          try
-			      {
-		              cRet = oDateTimeFormat.parse(sValue);
-		              bConverted = true;
-			      }
-			      catch (ParseException e)
-			      {
-			          //try next format
-			      }
-		        }		        
-		        //try Date
-		        for(int i = 0;i<lc.length && !bConverted;i++)
-		        {
-		          DateFormat oDateFormat = DateFormat.getDateInstance(
-		              DateFormat.SHORT,lc[i]); 	          
-		          try
-			      {
-		              cRet = oDateFormat.parse(sValue);
-		              bConverted = true;
-			      }
-			      catch (ParseException e)
-			      {
-			          //try next format
-			      }
-		        }
-		        
-		        //try Time	
-		        for(int i = 0;i<lc.length && !bConverted;i++)
-		        {
-		          DateFormat oTimeFormat = DateFormat.getTimeInstance(
-		              DateFormat.SHORT,lc[i]); 	          
-		          try
-			      {
-		              cRet = oTimeFormat.parse(sValue);
-		              bConverted = true;
-			      }
-			      catch (ParseException e)
-			      {
-			          //try next format
-			      }
-		        } 
-	            
-		        if(!bConverted)
-		        {
-		            throw new Exception("Not a valid date or time format."); 
-		        }		            
-	        }
-	        else if (cExpected instanceof Integer)
-	        {
-	            cRet = new Integer(sValue);
-	        }
-	        else
-	        {
-                cRet = sValue;
-	        }
-	    }
-        catch(NumberFormatException e)
-        {
-            sb = new StringBuffer("Invalid attribute value: '");
-	        sb.append(sValue).append("'. Could not compare to a number.");
-            _systemLogger.log(Level.WARNING, MODULE, sMethod, sb.toString());
-	        throw new ASelectAuthorizationException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR, e); 
-        }
-	    catch(Exception e)
-	    {
-	        sb = new StringBuffer("Invalid attribute value: '");
-	        sb.append(sValue).append("'. Could not compare to a an '");
-	        sb.append(cExpected.getClass().getName()).append("' value");
-	        _systemLogger.log(Level.WARNING, MODULE, sMethod, sb.toString(), e);
-	        throw new ASelectAuthorizationException(
-	            Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR, e);
-	    }        
-        return cRet;
-    }    
+				if (oValue instanceof Vector) {
+					bAuthorized = evaluateSimpleMultiValuedAttribute(oToken, oExpectedValue, (Vector) oValue);
 
+				}
+				else if (oValue instanceof String) {
+					String sValue = (String) oValue;
+
+					_systemLogger.log(Level.FINE, MODULE, sMethod, "Expr kind=" + oToken._iKind + " exp="
+							+ oExpectedValue);
+					switch (oToken._iKind) {
+
+					case AuthorizationRuleToken.EQUAL_TO: {
+						Comparable cExpectedValue = (Comparable) oExpectedValue.getValue();
+						Comparable cValue = convertAttributeValue(cExpectedValue, sValue);
+						_systemLogger.log(Level.FINER, MODULE, sMethod, "EqualTo exp=" + oExpectedValue);
+						bAuthorized = cExpectedValue.compareTo(cValue) == 0;
+						break;
+					}
+					case AuthorizationRuleToken.NOT_EQUAL_TO: {
+						Comparable cExpectedValue = (Comparable) oExpectedValue.getValue();
+						Comparable cValue = convertAttributeValue(cExpectedValue, sValue);
+						bAuthorized = cExpectedValue.compareTo(cValue) != 0;
+						break;
+					}
+					case AuthorizationRuleToken.GREATER_THEN: {
+						Comparable cExpectedValue = (Comparable) oExpectedValue.getValue();
+						Comparable cValue = convertAttributeValue(cExpectedValue, sValue);
+						bAuthorized = cExpectedValue.compareTo(cValue) < 0;
+						break;
+					}
+					case AuthorizationRuleToken.GREATER_THEN_OR_EQUAL_TO: {
+						Comparable cExpectedValue = (Comparable) oExpectedValue.getValue();
+						Comparable cValue = convertAttributeValue(cExpectedValue, sValue);
+						bAuthorized = cExpectedValue.compareTo(cValue) <= 0;
+						break;
+					}
+					case AuthorizationRuleToken.LESS_THEN: {
+						Comparable cExpectedValue = (Comparable) oExpectedValue.getValue();
+						Comparable cValue = convertAttributeValue(cExpectedValue, sValue);
+						bAuthorized = cExpectedValue.compareTo(cValue) > 0;
+						break;
+					}
+					case AuthorizationRuleToken.LESS_THEN_OR_EQUAL_TO: {
+						Comparable cExpectedValue = (Comparable) oExpectedValue.getValue();
+						Comparable cValue = convertAttributeValue(cExpectedValue, sValue);
+						bAuthorized = cExpectedValue.compareTo(cValue) >= 0;
+						break;
+					}
+					case AuthorizationRuleToken.IN: {
+						List lExpected = (List) oExpectedValue.getValue();
+						bAuthorized = lExpected.contains(sValue);
+						break;
+					}
+					case AuthorizationRuleToken.MATCH_REGULAR_EXPRESSION: {
+						Pattern p = (Pattern) oExpectedValue.getValue();
+						Matcher m = p.matcher(sValue);
+						bAuthorized = m.matches();
+						break;
+					}
+					case AuthorizationRuleToken.MATCH_WILDCARD_EXPRESSION: {
+						String sExpectedValue = (String) oExpectedValue.getValue();
+						bAuthorized = Utils.matchWildcardMask(sValue, sExpectedValue);
+						break;
+					}
+					default: {
+						_systemLogger.log(Level.WARNING, MODULE, sMethod,
+								"Invalid evaluation tree: invalid token kind.");
+						throw new ASelectAuthorizationException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+					}
+					}
+				}
+			}
+		}
+		return bAuthorized;
+	}
+
+	/**
+	 * Evaluate a simple expression for multi-valued attributes.
+	 * 
+	 * @param oToken Authorization rule token which represents different types of tokens from an authorization rule.
+	 * @param oExpectedValue The expected authorization token.
+	 * @param vValue The multi-values to evaluate.
+	 * @return <code>true</code> if the simple expression tree evaluates to 
+	 *  <code>true</code> if one of the given values of the mutli-valued user attribute
+	 *  matches the rule, otherwise false.
+	 * @throws ASelectAuthorizationException If evaluating fails.
+	 */
+	private boolean evaluateSimpleMultiValuedAttribute(AuthorizationRuleToken oToken,
+			AuthorizationRuleToken oExpectedValue, Vector vValue)
+		throws ASelectAuthorizationException
+	{
+		final String sMethod = "evaluateSimpleMultiValuedAttribute()";
+		boolean bAuthorized = false;
+		Enumeration eEnum = vValue.elements();
+
+		String sValue = "";
+
+		switch (oToken._iKind) {
+
+		case AuthorizationRuleToken.EQUAL_TO: {
+			// If one of the values of the multi-valued attribute is equal to than true is returned
+			while (eEnum.hasMoreElements() && bAuthorized == false) {
+				sValue = (String) eEnum.nextElement();
+				Comparable cExpectedValue = (Comparable) oExpectedValue.getValue();
+				Comparable cValue = convertAttributeValue(cExpectedValue, sValue);
+				bAuthorized = cExpectedValue.compareTo(cValue) == 0;
+			}
+			break;
+		}
+		case AuthorizationRuleToken.NOT_EQUAL_TO: {
+			// If one of the values of the multi-valued attribute is not equal to than true is returned
+			while (eEnum.hasMoreElements() && bAuthorized == false) {
+				sValue = (String) eEnum.nextElement();
+				Comparable cExpectedValue = (Comparable) oExpectedValue.getValue();
+				Comparable cValue = convertAttributeValue(cExpectedValue, sValue);
+				bAuthorized = cExpectedValue.compareTo(cValue) != 0;
+			}
+			break;
+		}
+		case AuthorizationRuleToken.GREATER_THEN: {
+			// If one of the values of the multi-valued attribute is greater then true is returned
+			while (eEnum.hasMoreElements() && bAuthorized == false) {
+				sValue = (String) eEnum.nextElement();
+				Comparable cExpectedValue = (Comparable) oExpectedValue.getValue();
+				Comparable cValue = convertAttributeValue(cExpectedValue, sValue);
+				bAuthorized = cExpectedValue.compareTo(cValue) < 0;
+			}
+			break;
+		}
+		case AuthorizationRuleToken.GREATER_THEN_OR_EQUAL_TO: {
+			// If one of the values of the multi-valued attribute is greater then or equal to true is returned
+			while (eEnum.hasMoreElements() && bAuthorized == false) {
+				sValue = (String) eEnum.nextElement();
+				Comparable cExpectedValue = (Comparable) oExpectedValue.getValue();
+				Comparable cValue = convertAttributeValue(cExpectedValue, sValue);
+				bAuthorized = cExpectedValue.compareTo(cValue) <= 0;
+			}
+			break;
+		}
+		case AuthorizationRuleToken.LESS_THEN: {
+			// If one of the values of the multi-valued attribute is less then true is returned
+			while (eEnum.hasMoreElements() && bAuthorized == false) {
+				sValue = (String) eEnum.nextElement();
+				Comparable cExpectedValue = (Comparable) oExpectedValue.getValue();
+				Comparable cValue = convertAttributeValue(cExpectedValue, sValue);
+				bAuthorized = cExpectedValue.compareTo(cValue) > 0;
+			}
+			break;
+		}
+		case AuthorizationRuleToken.LESS_THEN_OR_EQUAL_TO: {
+			// If one of the values of the multi-valued attribute is less then or equal to true is returned
+			while (eEnum.hasMoreElements() && bAuthorized == false) {
+				sValue = (String) eEnum.nextElement();
+				Comparable cExpectedValue = (Comparable) oExpectedValue.getValue();
+				Comparable cValue = convertAttributeValue(cExpectedValue, sValue);
+				bAuthorized = cExpectedValue.compareTo(cValue) >= 0;
+			}
+			break;
+		}
+		case AuthorizationRuleToken.IN: {
+			// returns true if one of the values of the multi-valued attribute is inside the list
+			while (eEnum.hasMoreElements() && bAuthorized == false) {
+				sValue = (String) eEnum.nextElement();
+				List lExpected = (List) oExpectedValue.getValue();
+				bAuthorized = lExpected.contains(sValue);
+			}
+			break;
+		}
+		case AuthorizationRuleToken.MATCH_REGULAR_EXPRESSION: {
+			// returns true if one of the values of the multi-valued attribute matches the regular expression
+			while (eEnum.hasMoreElements() && bAuthorized == false) {
+				sValue = (String) eEnum.nextElement();
+				Pattern p = (Pattern) oExpectedValue.getValue();
+				Matcher m = p.matcher(sValue);
+				bAuthorized = m.matches();
+			}
+			break;
+		}
+		case AuthorizationRuleToken.MATCH_WILDCARD_EXPRESSION: {
+			// returns true if one of the values of the multi-valued attribute matches the wildcard expression
+			while (eEnum.hasMoreElements() && bAuthorized == false) {
+				sValue = (String) eEnum.nextElement();
+				String sExpectedValue = (String) oExpectedValue.getValue();
+				bAuthorized = Utils.matchWildcardMask(sValue, sExpectedValue);
+			}
+			break;
+		}
+		default: {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"Invalid evaluation tree: invalid token kind for multi-attribute.");
+			throw new ASelectAuthorizationException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+		}
+		}
+		return bAuthorized;
+	}
+
+	/**
+	 * Evaluate a logic expression. 
+	 * 
+	 * @param htAttributes The user attributes.
+	 * @param tEvaluation The evaluation tree to evaluate upon.
+	 * @return <code>true</code> if the logic expression tree evaluates to 
+	 * 	<code>true</code> for the given user attributes, otherwise false.
+	 * @throws ASelectAuthorizationException If evaluating fails.
+	 */
+	private boolean evaluateLogic(Hashtable htAttributes, EvaluationTree tEvaluation)
+		throws ASelectAuthorizationException
+	{
+		final String sMethod = "evaluateLogic()";
+		boolean bAuthorized = false;
+		AuthorizationRuleToken oToken = (AuthorizationRuleToken) tEvaluation._oNode;
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "Kind=" + oToken._iKind);
+		switch (oToken._iKind) {
+		case AuthorizationRuleToken.NOT: {
+			bAuthorized = !evaluate(htAttributes, tEvaluation._tLeft);
+			break;
+		}
+		case AuthorizationRuleToken.AND: {
+			bAuthorized = evaluate(htAttributes, tEvaluation._tLeft) && evaluate(htAttributes, tEvaluation._tRight);
+			break;
+		}
+		case AuthorizationRuleToken.OR: {
+			bAuthorized = evaluate(htAttributes, tEvaluation._tLeft) || evaluate(htAttributes, tEvaluation._tRight);
+			break;
+		}
+
+		default: {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid evaluation tree: invalid token kind.");
+			throw new ASelectAuthorizationException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+		}
+
+		}
+		return bAuthorized;
+	}
+
+	/**
+	 * Converts a attribute value to the same type as the expected value.
+	 * @param cExpected The expected object to which the value is compared.
+	 * @param sValue De value of the attribute as String.
+	 * @return The value as a comparable type.
+	 * @throws ASelectAuthorizationException If the value can not be converted 
+	 * 	to the same type as the expected value. 
+	 */
+	private Comparable convertAttributeValue(Comparable cExpected, String sValue)
+		throws ASelectAuthorizationException
+	{
+		final String sMethod = "convertAttributeValue()";
+		StringBuffer sb = null;
+		Comparable cRet = null;
+
+		try {
+			//convert value
+			if (cExpected instanceof IPv4Address) {
+				cRet = new IPv4Address(sValue);
+			}
+			else if (cExpected instanceof IPv6Address) {
+				cRet = new IPv6Address(sValue);
+			}
+			else if (cExpected instanceof Date) {
+				//get all local datetime formats
+				Locale[] lc = DateFormat.getAvailableLocales();
+				boolean bConverted = false;
+
+				//try DateTime		                
+				for (int i = 0; i < lc.length && !bConverted; i++) {
+					DateFormat oDateTimeFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT,
+							lc[i]);
+					try {
+						cRet = oDateTimeFormat.parse(sValue);
+						bConverted = true;
+					}
+					catch (ParseException e) {
+						//try next format
+					}
+				}
+				//try Date
+				for (int i = 0; i < lc.length && !bConverted; i++) {
+					DateFormat oDateFormat = DateFormat.getDateInstance(DateFormat.SHORT, lc[i]);
+					try {
+						cRet = oDateFormat.parse(sValue);
+						bConverted = true;
+					}
+					catch (ParseException e) {
+						//try next format
+					}
+				}
+
+				//try Time	
+				for (int i = 0; i < lc.length && !bConverted; i++) {
+					DateFormat oTimeFormat = DateFormat.getTimeInstance(DateFormat.SHORT, lc[i]);
+					try {
+						cRet = oTimeFormat.parse(sValue);
+						bConverted = true;
+					}
+					catch (ParseException e) {
+						//try next format
+					}
+				}
+
+				if (!bConverted) {
+					throw new Exception("Not a valid date or time format.");
+				}
+			}
+			else if (cExpected instanceof Integer) {
+				cRet = new Integer(sValue);
+			}
+			else {
+				cRet = sValue;
+			}
+		}
+		catch (NumberFormatException e) {
+			sb = new StringBuffer("Invalid attribute value: '");
+			sb.append(sValue).append("'. Could not compare to a number.");
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sb.toString());
+			throw new ASelectAuthorizationException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR, e);
+		}
+		catch (Exception e) {
+			sb = new StringBuffer("Invalid attribute value: '");
+			sb.append(sValue).append("'. Could not compare to a an '");
+			sb.append(cExpected.getClass().getName()).append("' value");
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sb.toString(), e);
+			throw new ASelectAuthorizationException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR, e);
+		}
+		return cRet;
+	}
 }

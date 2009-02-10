@@ -7,7 +7,6 @@ import java.util.Hashtable;
 import java.util.logging.Level;
 
 import org.aselect.server.request.handler.xsaml20.SoapLogoutRequestSender;
-import org.aselect.server.request.handler.xsaml20.sp.MetaDataManagerSp;
 import org.aselect.server.tgt.TGTManager;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.configmanager.ConfigManager;
@@ -21,18 +20,18 @@ import org.aselect.system.storagemanager.handler.MemoryStorageHandler;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
+/*
+ * NOTE: Code is identical to JDBCStorageHandlerTimeOut (except for class-names of course)
+ */
 public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 {
 	private final static String MODULE = "MemoryStorageHandlerTimeOut";
 	private TGTManager _oTGTManager;
 	private ConfigManager _oConfigManager;
 	private ASelectSystemLogger _oSystemLogger;
-	long timeOutTime = 0L;
-
 	private String _serverUrl;
 	private String _sFederationUrl;
 	private boolean _bVerifySignature = false; 	
-
 
 	@Override
 	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger systemLogger, SAMAgent oSAMAgent)

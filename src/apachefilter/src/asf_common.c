@@ -324,7 +324,8 @@ aselect_filter_send_request(server_rec *pServer,
     int                 timeout;
     char                pcReceiveMessage[ASELECT_FILTER_MAX_RECV+1];
     int                 ccReceiveMessage;
-    char                *pcResponse = NULL; int cnt;
+    char                *pcResponse = NULL;
+int cnt;
 static int count = 0;
 cnt = ++count;
 

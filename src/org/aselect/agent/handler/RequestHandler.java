@@ -224,10 +224,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMResource;
-import org.aselect.system.utils.BASE64Decoder;
-import org.aselect.system.utils.BASE64Encoder;
-import org.aselect.system.utils.Base64;
-import org.aselect.system.utils.Utils;
 import org.aselect.system.utils.*;
 
 /**
@@ -259,932 +255,836 @@ import org.aselect.system.utils.*;
  */
 public class RequestHandler extends Thread
 {
-    /**
-     * The module name.
-     */
-    public String MODULE;
-    
-    //TODO Are the following names correct? (Erwin)
-    //TODO should there be more default attributes? (Erwin)
-    /**
-     * The attribute that contains the current date time.
-     * 
-     */
-    private final String CURRENT_TIME_ATTRIBUTE = "current_time"; 
-    
-    /**
-     * The attribute that contains the local IP address of the user.
-     */
-    private final String IP_ATTRIBUTE = "ip"; 
-    
-    /**
-     * Handle to SystemLogger.
-     */
-    protected SystemLogger _systemLogger;
-    /**
-     * A-Select error state identifier.
-     */
-    protected String _sErrorCode;
-    /**
-     * Handle to TicketManager.
-     */
-    private TicketManager _ticketManager;
-    /**
-     * Handle to ASelectAgentConfigManager.
-     */
-    private ASelectAgentConfigManager _configManager;
+	/**
+	 * The module name.
+	 */
+	public String MODULE;
 
-    /**
-     * The socket bound to the calling application.
-     */
-    private Socket _socket;
-    
-    /**
-     * Handle to SessionManager.
-     */
-    private SessionManager _sessionManager;
-    
-    /**
-     * Handle to ClientCommunicator.
-     */
-    private IClientCommunicator _clientCommunicator;
-    
-    /**
-     * <code>true</code> if Authorization is enabled.
-     */
-    private boolean _bAuthorization = false;
+	//TODO Are the following names correct? (Erwin)
+	//TODO should there be more default attributes? (Erwin)
+	/**
+	 * The attribute that contains the current date time.
+	 * 
+	 */
+	private final String CURRENT_TIME_ATTRIBUTE = "current_time";
 
-    /**
-     * Initializes instance variables. 
-     * <br><br>
-     * <b>Description: </b> 
-     * <br>
-     * Constructs this object, sets fields and initializes managers. <br>
-     * <br>
-     * <b>Concurrency issues: </b> 
-     * <br>
-     * None. <br>
-     * <br>
-     * <b>Preconditions: </b> 
-     * <br>
-     * None. <br>
-     * <br>
-     * <b>Postconditions: </b> 
-     * <br>
-     * None. 
-     * <br>
-     * 
-     * @param oSocket
-     *            socket to read and write to.
-     * @param oCommunicator
-     *            <code>ClientCommunicator</code> to use for communicating
-     *            with the A-Select Server.
-     * @param bAuthorization <code>true</code> if authorization is enabled, 
-     * 	otherwise <code>false</code>.
-     */
-    public RequestHandler (Socket oSocket, IClientCommunicator oCommunicator, boolean bAuthorization)
-    {
-        MODULE = "RequestHandler";
-        _socket = oSocket;
-        _ticketManager = TicketManager.getHandle();
-        _configManager = ASelectAgentConfigManager.getHandle();
-        _sessionManager = SessionManager.getHandle();
-        _systemLogger = ASelectAgentSystemLogger.getHandle();
-        _clientCommunicator = oCommunicator;
-        _bAuthorization = bAuthorization;
-    }
+	/**
+	 * The attribute that contains the local IP address of the user.
+	 */
+	private final String IP_ATTRIBUTE = "ip";
 
-    /**
-     * Returns the ClientCommunicator.
-     * @return A handle to the ClientCommunicator object.
-     */
-    public IClientCommunicator getClientCommunicator()
-    {
-        return _clientCommunicator;
-    }
+	/**
+	 * Handle to SystemLogger.
+	 */
+	protected SystemLogger _systemLogger;
+	/**
+	 * A-Select error state identifier.
+	 */
+	protected String _sErrorCode;
+	/**
+	 * Handle to TicketManager.
+	 */
+	private TicketManager _ticketManager;
+	/**
+	 * Handle to ASelectAgentConfigManager.
+	 */
+	private ASelectAgentConfigManager _configManager;
 
-    /**
-     * Main method for reading the request and processing it. 
-     * <br><br>
-     * <b>Description: </b> 
-     * <br>
-     * This method reads the request from the socket with the caller. The
-     * request may be one of the supported communication protocols. Once the
-     * corresponding protocol is recognized, the API request is deduced and
-     * dispatched to <code>processRequest</code> for processing. 
-     * <br><br>
-     * <b>Concurrency issues: </b> 
-     * <br>
-     * None. 
-     * <br><br>
-     * <b>Preconditions: </b> 
-     * <br>
-     * None. 
-     * <br><br>
-     * <b>Postconditions: </b> 
-     * <br>
-     * None.
-     */
-    public void run()
-    {
-        String sMethod = "run()";
+	/**
+	 * The socket bound to the calling application.
+	 */
+	private Socket _socket;
 
-        try
-        {          
-            // create protocol requests
-            TCPProtocolRequest oTCPProtocolRequest = new TCPProtocolRequest(
-                _socket);
-            TCPProtocolResponse oTCPProtocolResponse = new TCPProtocolResponse(
-                _socket, oTCPProtocolRequest.getProtocolName());
+	/**
+	 * Handle to SessionManager.
+	 */
+	private SessionManager _sessionManager;
 
-            IMessageCreatorInterface oMessageCreator = null;
+	/**
+	 * Handle to ClientCommunicator.
+	 */
+	private IClientCommunicator _clientCommunicator;
 
-            // Determine what type of protocol request the caller is using.
-            String sContentType = oTCPProtocolRequest
-                .getProperty("Content-Type");
-            if (sContentType == null)
-                sContentType = "";
+	/**
+	 * <code>true</code> if Authorization is enabled.
+	 */
+	private boolean _bAuthorization = false;
 
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "ContentType: "+sContentType+", socket="+_socket);
-            // Check if it is a SOAP 1.1 request
-            if (sContentType.indexOf("text/xml") > -1)
-            {
-                // Instantiate a SOAP11MessageCreator object
-                oMessageCreator = new SOAP11MessageCreator(oTCPProtocolRequest
-                    .getTarget(), "ASelect", ASelectAgentSystemLogger
-                    .getHandle());
-            }
-            // Check if it is a SOAP 1.2 request
-            else if (sContentType.indexOf("application/soap+xml") > -1)
-            {
-                // Instantiate a SOAP12MessageCreator object
-                oMessageCreator = new SOAP12MessageCreator(oTCPProtocolRequest
-                    .getTarget(), "ASelect", ASelectAgentSystemLogger
-                    .getHandle());
-            }
-            else
-            // Must be A-Select Raw request
-            {
-                // Instantiate a RawMessageCreator object
-                oMessageCreator = new RawMessageCreator(
-                    ASelectAgentSystemLogger.getHandle());
-            }
+	/**
+	 * Initializes instance variables. 
+	 * <br><br>
+	 * <b>Description: </b> 
+	 * <br>
+	 * Constructs this object, sets fields and initializes managers. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> 
+	 * <br>
+	 * None. <br>
+	 * <br>
+	 * <b>Preconditions: </b> 
+	 * <br>
+	 * None. <br>
+	 * <br>
+	 * <b>Postconditions: </b> 
+	 * <br>
+	 * None. 
+	 * <br>
+	 * 
+	 * @param oSocket
+	 *            socket to read and write to.
+	 * @param oCommunicator
+	 *            <code>ClientCommunicator</code> to use for communicating
+	 *            with the A-Select Server.
+	 * @param bAuthorization <code>true</code> if authorization is enabled, 
+	 * 	otherwise <code>false</code>.
+	 */
+	public RequestHandler(Socket oSocket, IClientCommunicator oCommunicator, boolean bAuthorization)
+	{
+		MODULE = "RequestHandler";
+		
+		_socket = oSocket;
+		_ticketManager = TicketManager.getHandle();
+		_configManager = ASelectAgentConfigManager.getHandle();
+		_sessionManager = SessionManager.getHandle();
+		_systemLogger = ASelectAgentSystemLogger.getHandle();
+		_clientCommunicator = oCommunicator;
+		_bAuthorization = bAuthorization;
+	}
 
-            // Create Communicator object with the specified messagecreator
-            Communicator xCommunicator = new Communicator(oMessageCreator);
+	/**
+	 * Returns the ClientCommunicator.
+	 * @return A handle to the ClientCommunicator object.
+	 */
+	public IClientCommunicator getClientCommunicator()
+	{
+		return _clientCommunicator;
+	}
 
-            // Initialize the communicator
-            if (xCommunicator.init(oTCPProtocolRequest, oTCPProtocolResponse))
-            {
-                // Call processRequest for procesing
-                processRequest(xCommunicator);
+	/**
+	 * Main method for reading the request and processing it. 
+	 * <br><br>
+	 * <b>Description: </b> 
+	 * <br>
+	 * This method reads the request from the socket with the caller. The
+	 * request may be one of the supported communication protocols. Once the
+	 * corresponding protocol is recognized, the API request is deduced and
+	 * dispatched to <code>processRequest</code> for processing. 
+	 * <br><br>
+	 * <b>Concurrency issues: </b> 
+	 * <br>
+	 * None. 
+	 * <br><br>
+	 * <b>Preconditions: </b> 
+	 * <br>
+	 * None. 
+	 * <br><br>
+	 * <b>Postconditions: </b> 
+	 * <br>
+	 * None.
+	 */
+	public void run()
+	{
+		String sMethod = "run()";
+		int port = _socket.getPort();
 
-                // Send our response
-                if (!xCommunicator.send())
-                {
-                    _systemLogger.log(Level.WARNING, 
-                        MODULE, sMethod, "Could not send response to caller.");
-                }
-            }
-            else
-            {
+		try {
+			// create protocol requests
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "RUN stt T="+ System.currentTimeMillis()+" socket=" + _socket + " port=" + port);
+			TCPProtocolRequest oTCPProtocolRequest = new TCPProtocolRequest(_socket);
+			TCPProtocolResponse oTCPProtocolResponse = new TCPProtocolResponse(_socket, oTCPProtocolRequest
+					.getProtocolName());
 
-                _systemLogger.log(Level.WARNING, 
-                    MODULE, sMethod, "Could not initialize request.");
-            }
-        }
-        catch (ASelectCommunicationException eAC)
-        {
-            _systemLogger.log(Level.WARNING, 
-                MODULE, sMethod, "Could not initialize request.", eAC);
-        }
-        catch (Exception e)
-        {
-            StringBuffer sbError = new StringBuffer("Exception: \"");
-            sbError.append(e);
-            sbError.append("\"");
-            _systemLogger.log(Level.SEVERE, 
-                MODULE, sMethod, sbError.toString(), e);
-        }
-        finally
-        // Close socket
-        {
-            if (_socket != null)
-            {
-                try
-                {
-                    _socket.close();
-                    _socket = null;
-                }
-                catch (IOException eIO) //closing failed
-                {
-                    _systemLogger.log(Level.WARNING, 
-                        MODULE, sMethod, "Error closing socket.", eIO);
-                }
-            }
-        }
-    }
+			IMessageCreatorInterface oMessageCreator = null;
 
-    /**
-     * Main API request dispatch method. 
-     * <br><br>
-     * <b>Description: </b> 
-     * <br>
-     * This method dispatches the API request to the approperiate methods. <br>
-     * Currently, the following API requests are supported: 
-     * <ul>
-     * 	<li><code>authenticate</code></li>
-     * 	<li><code>cross_authenticate</code></li>
-     * 	<li><code>verify_credentials</code></li>
-     * 	<li><code>verify_ticket</code></li>
-     * 	<li><code>kill_ticket</code></li>
-     * 	<li><code>set_authorization_rules</code></li>
-     * </ul>
-     * <br>
-     * <b>Concurrency issues: </b> 
-     * <br>
-     * None. 
-     * <br><br>
-     * <b>Preconditions: </b> 
-     * <br>
-     * None. 
-     * <br><br>
-     * <b>Postconditions: </b> 
-     * <br>
-     * None. 
-     * 
-     * @param oCommunicator
-     *            handle to <code>Communicator</code> object for the request.
-     */
-    protected void processRequest(Communicator oCommunicator)
-    {
-        String sMethod = "processRequest()";
+			// Determine what type of protocol request the caller is using.
+			String sContentType = oTCPProtocolRequest.getProperty("Content-Type");
+			if (sContentType == null)
+				sContentType = "";
 
-        try
-        {
-            //create the input and output message
-            IInputMessage oInputMessage = oCommunicator.getInputMessage();
-            IOutputMessage oOutputMessage = oCommunicator.getOutputMessage();
-
-            String sRequest = null;
-
-            try
-            {
-                sRequest = oInputMessage.getParam("request");
-            }
-            catch (Exception eX)
-            { //sRequest is allready null
-
-            }
-
-            if (sRequest == null)
-            {
-                oOutputMessage.setParam("result_code",
-                    Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
-            }
-            else
-            {
-                _systemLogger.log(Level.INFO, MODULE, sMethod, "REQ { T="+System.currentTimeMillis() +
-                		": " + sRequest +", oInput="+oInputMessage);
-                
-                // check which API request was sent and let it be processed
-                if (sRequest.equals("authenticate")) 
-                {
-                    processAuthenticateRequest(oInputMessage, oOutputMessage);
-                }
-                else if (sRequest.equals("verify_credentials")) 
-                {
-                    processVerifyCredentialsRequest(oInputMessage,
-                        oOutputMessage);
-                }
-                else if (sRequest.equals("verify_ticket"))
-                {
-                    processVerifyTicketRequest(oInputMessage, oOutputMessage);
-                }
-                else if (sRequest.equals("kill_ticket"))
-                {
-                    processKillTicketRequest(oInputMessage, oOutputMessage);
-                }  
-                else if (sRequest.equals("attributes"))
-                {
-                    processAttributesRequest(oInputMessage, oOutputMessage);
-                }
-                else if (sRequest.equals("set_authorization_rules"))
-                {
-                    processSetAuthorizationRulesRequest(
-                        oInputMessage, oOutputMessage);
-                }
-                else
-                // Unknown or unsupported request
-                {
-                    _systemLogger.log(Level.WARNING, 
-                        MODULE, sMethod, "Unknown or unsupported request received.");
-                    oOutputMessage.setParam("result_code",
-                        Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
-                }
-                _systemLogger.log(Level.INFO, MODULE, sMethod, "} REQ T="+System.currentTimeMillis()+": "+ sRequest);
-            }
-        }
-        catch (ASelectCommunicationException eAC)
-        {
-            _systemLogger.log(Level.WARNING, 
-                MODULE, sMethod, "Communication with A-Select Server failed.", eAC);
-        }
-    }
-
-    /**
-     * Uses a <code>IClientCommunicator</code> to send a API call 
-     * to the A-Select server.
-     * @param sUrl The A-Select Server URL.
-     * @param htParamsTable The parameters to send to A-Select.
-     * @return The return parameters in a <code>Hashtable</code>.
-     */
-    protected Hashtable sendRequestToASelectServer(String sUrl, 
-        Hashtable htParamsTable)
-    {
-        String sMethod = "sendRequestToASelectServer()";
-    
-        //send message
-        Hashtable htReturnTable = new Hashtable();
-        try
-        {
-            htReturnTable = _clientCommunicator.sendMessage(htParamsTable, sUrl);
-        }
-        catch (ASelectCommunicationException e)
-        {
-            _systemLogger.log(Level.SEVERE, 
-                MODULE, sMethod, "The A-Select server could not be reached.", e);
-            _sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
-        }
-    
-        //return reponse
-        return htReturnTable;
-    }
-
-    /**
-     * Performs initiation of (forced) authentication with the A-Select Server. 
-     * <br><br>
-     * <b>Description: </b> 
-     * <br>
-     * This method performs the A-Select Server's (forced) authenticate request 
-     * and parses the response from the A-Select Server. This method contacts any
-     * available A-Select Server through the SAM Agent. 
-     * <br><br>
-     * The API request should contain the following parameters: 
-     * <br>
-     * <table border="1" cellspacing="0" cellpadding="3">
-     * <tr>
-     * 	<td style="" bgcolor="#EEEEFF">Parameter</td>
-     * 	<td bgcolor="#EEEEFF">Value</td>
-     * </tr>
-     * <tr>
-     * 	<td><code>request</code></td>
-     * 	<td>Should contain <code>authenticate</code> or <code>forced_authenticate
-     * </code>.</td>
-     * </tr>
-     * <tr>
-     * 	<td><code>app_url</code></td>
-     * 	<td>Should contain the full URL to the caller. This parameter should be
-     * 	a <code>http</code> or <code>https</code> URL.</td>
-     * </tr>
-     * <tr>
-     * 	<td><code>app_id</code></td>
-     * 	<td>The ID of the application (i.e., the caller of this API request).
-     * 	</td>
-     * </tr>
-     * <tr>
-     * 	<td><code>remote_organization</code></td>
-     * 	<td>Optional paramater: the organization where the user originates from.</td>
-     * </tr>
-     * </table> 
-     * <br><br>
-     * The API response contains the following parameters:
-     * <br>
-     * <table border="1" cellspacing="0" cellpadding="3">
-     * <tr>
-     * 	<td style="" bgcolor="#EEEEFF">Parameter</td>
-     * 	<td bgcolor="#EEEEFF">Value</td>
-     * </tr>    
-     * <tr>
-     * 	<td><code>as_url</code></td>
-     * 	<td>The A-Select server URL for redirecting</td>
-     * </tr>
-     * <tr>
-     * 	<td><code>a-select-server</code></td>
-     * 	<td>The ID of the A-Select Server that handled the request.</td>
-     * </tr>
-     * <tr>
-     * 	<td><code>result_code</code></td>
-     * 	<td>
-     * 		The A-Select response code:
-     * 		<ul>
-     * 			<li>{@link Errors#ERROR_ASELECT_SUCCESS} (OK)</li>
-     * 			<li>{@link Errors#ERROR_ASELECT_AGENT_INVALID_REQUEST}</li>
-     * 			<li>{@link Errors#ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER}</li>
-     * 			<li>{@link Errors#ERROR_ASELECT_AGENT_INTERNAL_ERROR}</li>
-     * 		</ul>
-     * 	</td>
-     * </tr>
-     * <tr>
-     * 	<td><code>rid</code></td>
-     * 	<td>The A-Select server request ID</td>
-     * </tr> 
-     * </table>
-     * <br><br>
-     * <b>Concurrency issues: </b> 
-     * <br>
-     * None. <br>
-     * <br>
-     * <b>Preconditions: </b> 
-     * <ul>
-     * 	<li><code>oInputMessage != null</code></li>
-     * 	<li><code>oOutputMessage != null</code></li>
-     * </ul>
-     * <br>
-     * <b>Postconditions: </b> 
-     * <br>
-     * Upon a succesfull response from the A-Select Server, a session context
-     * with key <code>rid</code> is created with the following parameters:
-     * <table border="1" cellspacing="0" cellpadding="3">
-     * <tr>
-     * 	<td bgcolor="#EEEEFF">Parameter</td>
-     * 	<td bgcolor="#EEEEFF">Value</td>
-     * </tr>
-     * <tr>
-     * 	<td><code>rid</code></td>
-     * 	<td>The rid was received from the A-Select Server.</td>
-     * </tr>
-     * <tr>
-     * 	<td><code>a-select-server</code></td>
-     * 	<td>The ID of the A-Select Server that handled the request.</td>
-     * </tr>
-     * <tr>
-     * <td><code>user_type</code></td>
-     * <td>Set to <code>local</code> to denote a local authentication.</td>
-     * </tr>
-     * <tr>
-     * 	<td><code>app_id</code></td>
-     * 	<td>
-     * 		The ID of the application (i.e., the caller of this API request).
-     * 	</td>
-     * </tr>
-     * <tr>
-     * 	<td><code>as_url</code></td>
-     * 	<td>
-     * 		The A-Select server URL.
-     * 	</td>
-     * </tr>
-     * </table>
-     * <br>
-     * 
-     * @param oInputMessage The API request message.
-     * @param oOutputMessage The API response message.
-     * @throws ASelectCommunicationException If sending response fails.
-     */
-    private void processAuthenticateRequest(IInputMessage oInputMessage,
-        IOutputMessage oOutputMessage) throws ASelectCommunicationException
-    {
-        String sMethod = "processAuthenticateRequest()";
-        StringBuffer sbBuffer = new StringBuffer();
-        try
-        {
-            String sAppUrl = null;
-            String sAppId = null;
-            String sUid = null;
-            String sAuthsp = null;
-            String sForcedLogon = null;
-            String sRemoteOrg = null;
-
-            try
-            {
-                sAppUrl = oInputMessage.getParam("app_url");
-                if (!sAppUrl.startsWith("http"))
-                {
-                    _systemLogger.log(Level.WARNING, 
-                        MODULE, sMethod, "invalid 'app_url'");
-                    oOutputMessage.setParam("result_code",
-                        Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
-                    return;
-                }
-                sAppId = oInputMessage.getParam("app_id");
-                if (sAppId.length() == 0)
-                {
-                    _systemLogger.log(Level.WARNING, 
-                        MODULE, sMethod, "invalid 'app_id'");
-                    oOutputMessage.setParam("result_code",
-                        Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
-                    return;
-                }
-            }
-            catch (ASelectCommunicationException eAC)
-            {
-                _systemLogger.log(Level.WARNING,
-                    MODULE, sMethod, "Invalid request received.", eAC);
-                oOutputMessage.setParam("result_code",
-                    Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
-                return;
-            }
-            try
-            {
-                sUid = oInputMessage.getParam("uid");
-                if (sUid.length() == 0)
-                {
-                    _systemLogger.log(Level.FINE, 
-                        MODULE, sMethod, "Ignoring empty 'uid'.");
-                    sUid = null;
-                }
-            }
-            catch (ASelectCommunicationException eAC)
-            {
-                _systemLogger.log(Level.FINE, MODULE, sMethod, "No optional parameter 'uid' found.");
-                sUid = null;
-            }
-            // Bauke: added to choose the AuthSP in advance
-            try {
-                sAuthsp = oInputMessage.getParam("authsp");
-                if (sAuthsp.length() == 0) {
-                    _systemLogger.log(Level.FINE, MODULE, sMethod, "Ignoring empty 'authsp'.");
-                    sAuthsp = null;
-                }
-            }
-            catch (ASelectCommunicationException eAC) {
-                sAuthsp = null;
-            }
-            try
-            {
-                sForcedLogon = oInputMessage.getParam("forced_logon");
-            }
-            catch (ASelectCommunicationException eAC)
-            {
-                _systemLogger.log(Level.FINE, 
-                    MODULE, sMethod, "No optional parameter 'forced_logon' found.");
-            }
-            try
-            {
-                sRemoteOrg = oInputMessage.getParam("remote_organization");
-                if (sRemoteOrg.length() == 0)
-                {
-                    _systemLogger.log(Level.FINE, 
-                        MODULE, sMethod, "Ignoring empty 'remote_organization'.");
-                    sRemoteOrg = null;
-                }
-            }
-            catch (ASelectCommunicationException eAC)
-            {
-                _systemLogger.log(Level.FINE, 
-                    MODULE, sMethod, "No optional parameter 'remote_organization' found.");
-                sRemoteOrg = null;
-            }
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "AuthREQ sAppUrl="+sAppUrl+", sAppId="+sAppId+
-            		", sUid="+sUid+", sAuthsp="+sAuthsp+", sForcedLogon="+sForcedLogon+", sRemoteOrg="+sRemoteOrg);
-
-            // send an authenticate request to the A-Select Server
-            Hashtable htRequest = new Hashtable();
-            htRequest.put("request", "authenticate");  
-            // Bauke: added htmlEncode to prevent cross-site scripting
-            htRequest.put("app_url",Tools.htmlEncode(sAppUrl));
-            htRequest.put("app_id",sAppId);
-            if (sUid != null)
-                htRequest.put("uid",sUid);
-            if (sAuthsp != null)
-                htRequest.put("authsp",sAuthsp);
-            if (sRemoteOrg != null)
-                htRequest.put("remote_organization",sRemoteOrg);
-            if (sForcedLogon != null)
-                htRequest.put("forced_logon",sForcedLogon);
-
-            String sCountry = null;
-            try
-			{
-            	sCountry = oInputMessage.getParam("country");
-            	if (sCountry.trim().length() > 0)
-            	    htRequest.put("country", sCountry);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "RUN ctt T="+ System.currentTimeMillis()+" ContentType=" + sContentType + " port=" + port);
+			// Check if it is a SOAP 1.1 request
+			if (sContentType.indexOf("text/xml") > -1) {
+				// Instantiate a SOAP11MessageCreator object
+				oMessageCreator = new SOAP11MessageCreator(oTCPProtocolRequest.getTarget(), "ASelect",
+						ASelectAgentSystemLogger.getHandle());
 			}
-            catch (ASelectCommunicationException e)
-			{
-            	sCountry = null;
+			// Check if it is a SOAP 1.2 request
+			else if (sContentType.indexOf("application/soap+xml") > -1) {
+				// Instantiate a SOAP12MessageCreator object
+				oMessageCreator = new SOAP12MessageCreator(oTCPProtocolRequest.getTarget(), "ASelect",
+						ASelectAgentSystemLogger.getHandle());
 			}
-            
-            String sLanguage = null;
-            try
-			{
-                sLanguage = oInputMessage.getParam("language");
-                if (sLanguage.trim().length() > 0)
-                    htRequest.put("language", sLanguage);
+			else {  // Instantiate a RawMessageCreator object
+				oMessageCreator = new RawMessageCreator(ASelectAgentSystemLogger.getHandle());
 			}
-            catch (ASelectCommunicationException e)
-			{
-                sLanguage = null;
+
+			// Create Communicator object with the specified messagecreator
+			Communicator xCommunicator = new Communicator(oMessageCreator);
+
+			// Initialize the communicator
+			if (xCommunicator.init(oTCPProtocolRequest, oTCPProtocolResponse)) {
+				// Call processRequest for procesing
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "RUN prc T="+ System.currentTimeMillis()+" port=" + port);
+				processRequest(xCommunicator, port);
+
+				// Send our response
+				if (!xCommunicator.send()) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not send response to caller.");
+				}
 			}
-            
-            Hashtable htResponseParameters = sendToASelectServer(htRequest);
-            if (htResponseParameters.isEmpty())
-            {
-                _systemLogger.log(Level.WARNING, 
-                    MODULE, sMethod, "Could not reach A-Select Server.");
-                oOutputMessage.setParam("result_code",
-                    Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
-                return;
-            }
+			else {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not initialize request.");
+			}
+		}
+		catch (ASelectCommunicationException eAC) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not initialize request.", eAC);
+		}
+		catch (Exception e) {
+			StringBuffer sbError = new StringBuffer("Exception: \"");
+			sbError.append(e);
+			sbError.append("\"");
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
+		}
+		finally
+		// Close socket
+		{
+			if (_socket != null) {
+				try {
+					_socket.close();
+					_socket = null;
+				}
+				catch (IOException eIO) //closing failed
+				{
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error closing socket.", eIO);
+				}
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "RUN end T="+ System.currentTimeMillis() + " port=" + port);
+		}
+	}
 
-            String sResultCode = (String)htResponseParameters
-                .get("result_code");
-            if (sResultCode == null)
-            {
-                _systemLogger.log(Level.WARNING, 
-                    MODULE, sMethod, "Invalid response from A-Select Server.");
-                oOutputMessage.setParam("result_code",
-                    Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
-                return;
-            }
-            if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS))
-            {
-                sbBuffer = new StringBuffer("A-Select Server returned error: '");
-                sbBuffer.append(sResultCode);
-                sbBuffer.append("'.");
-                _systemLogger.log(Level.WARNING, 
-                    MODULE, sMethod, sbBuffer.toString());
+	/**
+	 * Main API request dispatch method. 
+	 * <br><br>
+	 * <b>Description: </b> 
+	 * <br>
+	 * This method dispatches the API request to the approperiate methods. <br>
+	 * Currently, the following API requests are supported: 
+	 * <ul>
+	 * 	<li><code>authenticate</code></li>
+	 * 	<li><code>cross_authenticate</code></li>
+	 * 	<li><code>verify_credentials</code></li>
+	 * 	<li><code>verify_ticket</code></li>
+	 * 	<li><code>kill_ticket</code></li>
+	 * 	<li><code>set_authorization_rules</code></li>
+	 * </ul>
+	 * <br>
+	 * <b>Concurrency issues: </b> 
+	 * <br>
+	 * None. 
+	 * <br><br>
+	 * <b>Preconditions: </b> 
+	 * <br>
+	 * None. 
+	 * <br><br>
+	 * <b>Postconditions: </b> 
+	 * <br>
+	 * None. 
+	 * 
+	 * @param oCommunicator
+	 *            handle to <code>Communicator</code> object for the request.
+	 */
+	protected void processRequest(Communicator oCommunicator, int port)
+	{
+		String sMethod = "processRequest()";
 
-                oOutputMessage.setParam("result_code", sResultCode);
-                return;
-            }
+		try {
+			//create the input and output message
+			IInputMessage oInputMessage = oCommunicator.getInputMessage();
+			IOutputMessage oOutputMessage = oCommunicator.getOutputMessage();
 
-            // check the response of the A-Select Server
-            String sRid = (String)htResponseParameters.get("rid");
-            if (sRid == null)
-            {
-                _systemLogger.log(Level.WARNING, 
-                    MODULE, sMethod, "A-Select Server did not return 'rid'.");
-                oOutputMessage.setParam("result_code",
-                    Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
-                return;
-            }
-            String sAsUrl = (String)htResponseParameters.get("as_url");
-            if (sAsUrl == null)
-            {
-                _systemLogger.log(Level.WARNING, 
-                    MODULE, sMethod, "A-Select Server did not return 'as_url'.");
-                oOutputMessage.setParam("result_code",
-                    Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
-                return;
-            }
-            String sAsId = (String)htResponseParameters.get("a-select-server");
-            if (sAsId == null)
-            {
-                _systemLogger.log(Level.WARNING, 
-                    MODULE, sMethod, "A-Select Server did not return 'a-select-server'.");
-                oOutputMessage.setParam("result_code",
-                    Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
-                return;
-            }
+			String sRequest = null;
 
-            // create a session
-            Hashtable htSessionContext = new Hashtable();
-            htSessionContext.put("rid", sRid);
-            htSessionContext.put("a-select-server", sAsId);
-            htSessionContext.put("user_type", "Local");
-            htSessionContext.put("app_id", sAppId);
-            htSessionContext.put("as_url", sAsUrl);
+			try {
+				sRequest = oInputMessage.getParam("request");
+			}
+			catch (Exception eX) { //sRequest is allready null
 
-            if (!_sessionManager.createSession(sRid, htSessionContext))
-            {
-                _systemLogger.log(Level.SEVERE, 
-                    MODULE, sMethod, "could not create session.");
-                oOutputMessage.setParam("result_code",
-                    Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-                return;
-            }
+			}
 
-            // session created, set output parameters for caller
-            oOutputMessage.setParam("as_url", sAsUrl);
-            oOutputMessage.setParam("a-select-server", sAsId);
-            oOutputMessage.setParam("rid", sRid);
-            oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
-        }
-        catch (ASelectCommunicationException eAC)
-        {
-            _systemLogger.log(Level.SEVERE, 
-                MODULE, sMethod, "Could not create response message.", eAC);
-            oOutputMessage.setParam("result_code",
-                Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-        }
-        catch (Exception e)
-        {
+			if (sRequest == null) {
+				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+			}
+			else {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "REQ { T=" + System.currentTimeMillis() + " port=" + port + ": "
+						+ sRequest + ", oInput=" + oInputMessage);
 
-            sbBuffer = new StringBuffer("Exception while processing request: \"");
-            sbBuffer.append(e.getMessage());
-            sbBuffer.append("\"");
-            _systemLogger.log(Level.SEVERE, 
-                MODULE, sMethod, sbBuffer.toString(), e);
-            oOutputMessage.setParam("result_code",
-                Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-        }
-    }
+				// check which API request was sent and let it be processed
+				if (sRequest.equals("authenticate")) {
+					processAuthenticateRequest(oInputMessage, oOutputMessage);
+				}
+				else if (sRequest.equals("verify_credentials")) {
+					processVerifyCredentialsRequest(oInputMessage, oOutputMessage);
+				}
+				else if (sRequest.equals("verify_ticket")) {
+					processVerifyTicketRequest(oInputMessage, oOutputMessage);
+				}
+				else if (sRequest.equals("kill_ticket")) {
+					processKillTicketRequest(oInputMessage, oOutputMessage);
+				}
+				else if (sRequest.equals("attributes")) {
+					processAttributesRequest(oInputMessage, oOutputMessage);
+				}
+				else if (sRequest.equals("set_authorization_rules")) {
+					processSetAuthorizationRulesRequest(oInputMessage, oOutputMessage);
+				}
+				else {	// Unknown or unsupported request
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unknown or unsupported request received.");
+					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+				}
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "} REQ T=" + System.currentTimeMillis() + " port=" + port + ": " + sRequest);
+			}
+		}
+		catch (ASelectCommunicationException eAC) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Communication with A-Select Server failed.", eAC);
+		}
+	}
 
-    /**
-     * Performs verification of A-Select credentials with the A-Select Server.
-     * <br><br>
-     * <b>Description: </b> 
-     * <br>
-     * This method performs the verification of authentication of a user when a
-     * user is redirected back to the calling application having A-Select
-     * credentials. 
-     * <br><br>
-     * This API request should contain the following parameters: 
-     * <br>
-     * <table border="1" cellspacing="0" cellpadding="3">
-     * 	<tr>
-     * 		<td bgcolor="#EEEEFF">Parameter</td>
-     * 		<td bgcolor="#EEEEFF">Value</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>request</code></td>
-     * 		<td>Should contain <code>verify_credentials</code>.</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>rid</code></td>
-     * 		<td>
-     * 			Must contain the request identifier as received by the 
-     * 			A-Select Server.
-     * 		</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>aselect_credentials</code></td>
-     * 		<td>The credentials as received from the A-Select server.</td>
-     * 	</tr>
-     * </table> 
-     * <br><br>
-     * The API response contains the following parameters:
-     * <br>
-     * <table border="1" cellspacing="0" cellpadding="3">
-     * 	<tr>
-     * 		<td style="" bgcolor="#EEEEFF">Parameter</td>
-     * 		<td bgcolor="#EEEEFF">Value</td>
-     * 	</tr>    
-     * 	<tr>
-     * 		<td><code>ticket</code></td>
-     * 		<td>The A-Select application ticket.</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>ticket_start_time</code></td>
-     * 		<td>The start time of the application ticket.</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>ticket_exp_time</code></td>
-     * 		<td>The expiration time of the application ticket.</td>
-     * 	</tr>
-     *  <tr>
-     * 		<td><code>uid</code></td>
-     * 		<td>The user ID.</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>organization</code></td>
-     * 		<td>The users' organisation.</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>authsp_level</code></td>
-     * 		<td>
-     * 			The authentication level of the AuthSP 
-     * 			that authenticated the user.
-     * 		</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>authsp</code></td>
-     * 		<td>The AuthSP that authenticated the user.</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>attributes</code></td>
-     * 		<td>The complete set of attributes.<br><br>
-     * The attributes are encoded using a combination of base64 and 
-     * url encoding.To retrieve the attributes an application must first 
-     * decode the attributes using base64, the result is an attributes 
-     * string containing a concatenation of the attributes (key=value)
-     * using &amp as the delimiter. The attributes key and value are 
-     * url encoded.<br><br>
-     * <b>NOTE: If no attributes are available the attributes 
-     * parameter is omitted.</b>
-     * <br><br>
-     *  </td>
-     * 	</tr> 
-     * 	<tr>
-     * 		<td><code>result_code</code></td>
-     * 		<td>
-     * 		  The A-Select response code:
-     * 		  <ul>
-     * 			<li>{@link Errors#ERROR_ASELECT_SUCCESS} (OK)</li>
-     * 			<li>{@link Errors#ERROR_ASELECT_AGENT_INVALID_REQUEST}</li>
-     * 			<li>{@link Errors#ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER}</li>
-     * 			<li>{@link Errors#ERROR_ASELECT_AGENT_INTERNAL_ERROR}</li>
-     * 		  </ul>
-     * 		</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>asp_level</code></td>
-     * 		<td>
-     * 			The authentication level of the AuthSP 
-     * 			that authenticated the user. 
-     * 			(added for backwards compatibility with A-Select 1.4)
-     * 		</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>asp</code></td>
-     * 		<td>
-     * 			The AuthSP that authenticated the user.
-     * 			(added for backwards compatibility with A-Select 1.4)
-     * 		</td>
-     * 	</tr>
-     * </table>
-     * <br><br>
-     * <b>Concurrency issues: </b> 
-     * <br>
-     * None. 
-     * <br><br>
-     * <b>Preconditions: </b> 
-     * <ul>
-     * 	<li><code>oInputMessage != null</code></li>
-     * 	<li><code>oOutputMessage != null</code></li>
-     * 	<li>
-     * 	  The caller must have initiated authentication (local or remote) 
-     * 	  and thus a session context must be present identified by the 
-     * 	  given <code>rid</code>.	
-     * 	</li>
-     * </ul>
-     * <br>
-     * <b>Postconditions: </b> 
-     * <br>
-     * Upon a succesfull response from the A-Select Server, a ticket context 
-     * with key <code>ticket</code> is created with the 
-     * following parameters:
-     * <table border="1" cellspacing="0" cellpadding="3">
-     * 	<tr>
-     * 		<td bgcolor="#EEEEFF">Parameter</td>
-     * 		<td bgcolor="#EEEEFF">Value</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>uid</code></td>
-     * 		<td>The user ID.</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>organization</code></td>
-     * 		<td>The user its organisation.</td>
-     * 	</tr>
-     * <tr>
-     * 		<td><code>authsp_level</code></td>
-     * 		<td>
-     * 			The authentication level of the AuthSP 
-     * 			that authenticated the user.
-     * 		</td>
-     * 	</tr>
-     * <tr>
-     * 		<td><code>authsp</code></td>
-     * 		<td>The AuthSP that authenticated the user.</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>app_id</code></td>
-     * 		<td>The ID of the application (i.e., the caller of this 
-     * 				API request).
-     * 		</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>app_level</code></td>
-     * 		<td>The required level of the application.</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>a-select-server</code></td>
-     * 		<td>The ID of the A-Select Server that handled the request.</td>
-     * 	</tr> 	
-     * 	<tr>
-     * 		<td><code>tgt_exp_time</code></td>
-     * 		<td>The ticket expiration time of the TGT</td>
-     * 	</tr>
-     * <tr>
-     * 		<td><code>attributes</code></td>
-     * 		<td>The base64 encoded attributes string received from the A-Select Server</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>attributes_hash</code></td>
-     * 		<td>The SHA1 hash computed over the attributes string after being base64 decoded.</td>
-     * 	</tr>
-     *  
-     * </table>   
-     * <br>
-     * In addition the user its session is deleted after successful 
-     * processing the request.  
-     * <br> 
-     *  
-     * @param oInputMessage The API request message.
-     * @param oOutputMessage The API response message.
-     * @throws ASelectCommunicationException 
-     * 		If setting response parameters fails.
-     */
-    //
-    // Bauke 20081201: added parameter: saml_attributes=<attr1>,<attr2>,...
-    // Will request the server to send a Saml token containing the requested attributes
-    //
-    private void processVerifyCredentialsRequest(IInputMessage oInputMessage,
-        IOutputMessage oOutputMessage) throws ASelectCommunicationException
-    {
-        String sMethod = "processVerifyCredentialsRequest()";
+	/**
+	 * Uses a <code>IClientCommunicator</code> to send a API call 
+	 * to the A-Select server.
+	 * @param sUrl The A-Select Server URL.
+	 * @param htParamsTable The parameters to send to A-Select.
+	 * @return The return parameters in a <code>Hashtable</code>.
+	 */
+	protected Hashtable sendRequestToASelectServer(String sUrl, Hashtable htParamsTable)
+	{
+		String sMethod = "sendRequestToASelectServer()";
+
+		//send message
+		Hashtable htReturnTable = new Hashtable();
+		try {
+			htReturnTable = _clientCommunicator.sendMessage(htParamsTable, sUrl);
+		}
+		catch (ASelectCommunicationException e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "The A-Select server could not be reached.", e);
+			_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
+		}
+
+		//return reponse
+		return htReturnTable;
+	}
+
+	/**
+	 * Performs initiation of (forced) authentication with the A-Select Server. 
+	 * <br><br>
+	 * <b>Description: </b> 
+	 * <br>
+	 * This method performs the A-Select Server's (forced) authenticate request 
+	 * and parses the response from the A-Select Server. This method contacts any
+	 * available A-Select Server through the SAM Agent. 
+	 * <br><br>
+	 * The API request should contain the following parameters: 
+	 * <br>
+	 * <table border="1" cellspacing="0" cellpadding="3">
+	 * <tr>
+	 * 	<td style="" bgcolor="#EEEEFF">Parameter</td>
+	 * 	<td bgcolor="#EEEEFF">Value</td>
+	 * </tr>
+	 * <tr>
+	 * 	<td><code>request</code></td>
+	 * 	<td>Should contain <code>authenticate</code> or <code>forced_authenticate
+	 * </code>.</td>
+	 * </tr>
+	 * <tr>
+	 * 	<td><code>app_url</code></td>
+	 * 	<td>Should contain the full URL to the caller. This parameter should be
+	 * 	a <code>http</code> or <code>https</code> URL.</td>
+	 * </tr>
+	 * <tr>
+	 * 	<td><code>app_id</code></td>
+	 * 	<td>The ID of the application (i.e., the caller of this API request).
+	 * 	</td>
+	 * </tr>
+	 * <tr>
+	 * 	<td><code>remote_organization</code></td>
+	 * 	<td>Optional paramater: the organization where the user originates from.</td>
+	 * </tr>
+	 * </table> 
+	 * <br><br>
+	 * The API response contains the following parameters:
+	 * <br>
+	 * <table border="1" cellspacing="0" cellpadding="3">
+	 * <tr>
+	 * 	<td style="" bgcolor="#EEEEFF">Parameter</td>
+	 * 	<td bgcolor="#EEEEFF">Value</td>
+	 * </tr>    
+	 * <tr>
+	 * 	<td><code>as_url</code></td>
+	 * 	<td>The A-Select server URL for redirecting</td>
+	 * </tr>
+	 * <tr>
+	 * 	<td><code>a-select-server</code></td>
+	 * 	<td>The ID of the A-Select Server that handled the request.</td>
+	 * </tr>
+	 * <tr>
+	 * 	<td><code>result_code</code></td>
+	 * 	<td>
+	 * 		The A-Select response code:
+	 * 		<ul>
+	 * 			<li>{@link Errors#ERROR_ASELECT_SUCCESS} (OK)</li>
+	 * 			<li>{@link Errors#ERROR_ASELECT_AGENT_INVALID_REQUEST}</li>
+	 * 			<li>{@link Errors#ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER}</li>
+	 * 			<li>{@link Errors#ERROR_ASELECT_AGENT_INTERNAL_ERROR}</li>
+	 * 		</ul>
+	 * 	</td>
+	 * </tr>
+	 * <tr>
+	 * 	<td><code>rid</code></td>
+	 * 	<td>The A-Select server request ID</td>
+	 * </tr> 
+	 * </table>
+	 * <br><br>
+	 * <b>Concurrency issues: </b> 
+	 * <br>
+	 * None. <br>
+	 * <br>
+	 * <b>Preconditions: </b> 
+	 * <ul>
+	 * 	<li><code>oInputMessage != null</code></li>
+	 * 	<li><code>oOutputMessage != null</code></li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions: </b> 
+	 * <br>
+	 * Upon a succesfull response from the A-Select Server, a session context
+	 * with key <code>rid</code> is created with the following parameters:
+	 * <table border="1" cellspacing="0" cellpadding="3">
+	 * <tr>
+	 * 	<td bgcolor="#EEEEFF">Parameter</td>
+	 * 	<td bgcolor="#EEEEFF">Value</td>
+	 * </tr>
+	 * <tr>
+	 * 	<td><code>rid</code></td>
+	 * 	<td>The rid was received from the A-Select Server.</td>
+	 * </tr>
+	 * <tr>
+	 * 	<td><code>a-select-server</code></td>
+	 * 	<td>The ID of the A-Select Server that handled the request.</td>
+	 * </tr>
+	 * <tr>
+	 * <td><code>user_type</code></td>
+	 * <td>Set to <code>local</code> to denote a local authentication.</td>
+	 * </tr>
+	 * <tr>
+	 * 	<td><code>app_id</code></td>
+	 * 	<td>
+	 * 		The ID of the application (i.e., the caller of this API request).
+	 * 	</td>
+	 * </tr>
+	 * <tr>
+	 * 	<td><code>as_url</code></td>
+	 * 	<td>
+	 * 		The A-Select server URL.
+	 * 	</td>
+	 * </tr>
+	 * </table>
+	 * <br>
+	 * 
+	 * @param oInputMessage The API request message.
+	 * @param oOutputMessage The API response message.
+	 * @throws ASelectCommunicationException If sending response fails.
+	 */
+	private void processAuthenticateRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
+		throws ASelectCommunicationException
+	{
+		String sMethod = "processAuthenticateRequest()";
+		StringBuffer sbBuffer = new StringBuffer();
+		try {
+			String sAppUrl = null;
+			String sAppId = null;
+			String sUid = null;
+			String sAuthsp = null;
+			String sForcedLogon = null;
+			String sRemoteOrg = null;
+
+			try {
+				sAppUrl = oInputMessage.getParam("app_url");
+				if (!sAppUrl.startsWith("http")) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "invalid 'app_url'");
+					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+					return;
+				}
+				sAppId = oInputMessage.getParam("app_id");
+				if (sAppId.length() == 0) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "invalid 'app_id'");
+					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+					return;
+				}
+			}
+			catch (ASelectCommunicationException eAC) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received.", eAC);
+				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+				return;
+			}
+			try {
+				sUid = oInputMessage.getParam("uid");
+				if (sUid.length() == 0) {
+					_systemLogger.log(Level.FINE, MODULE, sMethod, "Ignoring empty 'uid'.");
+					sUid = null;
+				}
+			}
+			catch (ASelectCommunicationException eAC) {
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "No optional parameter 'uid' found.");
+				sUid = null;
+			}
+			// Bauke: added to choose the AuthSP in advance
+			try {
+				sAuthsp = oInputMessage.getParam("authsp");
+				if (sAuthsp.length() == 0) {
+					_systemLogger.log(Level.FINE, MODULE, sMethod, "Ignoring empty 'authsp'.");
+					sAuthsp = null;
+				}
+			}
+			catch (ASelectCommunicationException eAC) {
+				sAuthsp = null;
+			}
+			try {
+				sForcedLogon = oInputMessage.getParam("forced_logon");
+			}
+			catch (ASelectCommunicationException eAC) {
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "No optional parameter 'forced_logon' found.");
+			}
+			try {
+				sRemoteOrg = oInputMessage.getParam("remote_organization");
+				if (sRemoteOrg.length() == 0) {
+					_systemLogger.log(Level.FINE, MODULE, sMethod, "Ignoring empty 'remote_organization'.");
+					sRemoteOrg = null;
+				}
+			}
+			catch (ASelectCommunicationException eAC) {
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "No optional parameter 'remote_organization' found.");
+				sRemoteOrg = null;
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "AuthREQ sAppUrl=" + sAppUrl + ", sAppId=" + sAppId
+					+ ", sUid=" + sUid + ", sAuthsp=" + sAuthsp + ", sForcedLogon=" + sForcedLogon + ", sRemoteOrg="
+					+ sRemoteOrg);
+
+			// send an authenticate request to the A-Select Server
+			Hashtable htRequest = new Hashtable();
+			htRequest.put("request", "authenticate");
+			// Bauke: added htmlEncode to prevent cross-site scripting
+			htRequest.put("app_url", Tools.htmlEncode(sAppUrl));
+			htRequest.put("app_id", sAppId);
+			if (sUid != null)
+				htRequest.put("uid", sUid);
+			if (sAuthsp != null)
+				htRequest.put("authsp", sAuthsp);
+			if (sRemoteOrg != null)
+				htRequest.put("remote_organization", sRemoteOrg);
+			if (sForcedLogon != null)
+				htRequest.put("forced_logon", sForcedLogon);
+
+			String sCountry = null;
+			try {
+				sCountry = oInputMessage.getParam("country");
+				if (sCountry.trim().length() > 0)
+					htRequest.put("country", sCountry);
+			}
+			catch (ASelectCommunicationException e) {
+				sCountry = null;
+			}
+
+			String sLanguage = null;
+			try {
+				sLanguage = oInputMessage.getParam("language");
+				if (sLanguage.trim().length() > 0)
+					htRequest.put("language", sLanguage);
+			}
+			catch (ASelectCommunicationException e) {
+				sLanguage = null;
+			}
+
+			Hashtable htResponseParameters = sendToASelectServer(htRequest);
+			if (htResponseParameters.isEmpty()) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not reach A-Select Server.");
+				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+				return;
+			}
+
+			String sResultCode = (String) htResponseParameters.get("result_code");
+			if (sResultCode == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid response from A-Select Server.");
+				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+				return;
+			}
+			if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
+				sbBuffer = new StringBuffer("A-Select Server returned error: '");
+				sbBuffer.append(sResultCode);
+				sbBuffer.append("'.");
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
+
+				oOutputMessage.setParam("result_code", sResultCode);
+				return;
+			}
+
+			// check the response of the A-Select Server
+			String sRid = (String) htResponseParameters.get("rid");
+			if (sRid == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "A-Select Server did not return 'rid'.");
+				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+				return;
+			}
+			String sAsUrl = (String) htResponseParameters.get("as_url");
+			if (sAsUrl == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "A-Select Server did not return 'as_url'.");
+				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+				return;
+			}
+			String sAsId = (String) htResponseParameters.get("a-select-server");
+			if (sAsId == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "A-Select Server did not return 'a-select-server'.");
+				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+				return;
+			}
+
+			// create a session
+			Hashtable htSessionContext = new Hashtable();
+			htSessionContext.put("rid", sRid);
+			htSessionContext.put("a-select-server", sAsId);
+			htSessionContext.put("user_type", "Local");
+			htSessionContext.put("app_id", sAppId);
+			htSessionContext.put("as_url", sAsUrl);
+
+			if (!_sessionManager.createSession(sRid, htSessionContext)) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "could not create session.");
+				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+				return;
+			}
+
+			// session created, set output parameters for caller
+			oOutputMessage.setParam("as_url", sAsUrl);
+			oOutputMessage.setParam("a-select-server", sAsId);
+			oOutputMessage.setParam("rid", sRid);
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
+		}
+		catch (ASelectCommunicationException eAC) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not create response message.", eAC);
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+		}
+		catch (Exception e) {
+
+			sbBuffer = new StringBuffer("Exception while processing request: \"");
+			sbBuffer.append(e.getMessage());
+			sbBuffer.append("\"");
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), e);
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+		}
+	}
+
+	/**
+	 * Performs verification of A-Select credentials with the A-Select Server.
+	 * <br><br>
+	 * <b>Description: </b> 
+	 * <br>
+	 * This method performs the verification of authentication of a user when a
+	 * user is redirected back to the calling application having A-Select
+	 * credentials. 
+	 * <br><br>
+	 * This API request should contain the following parameters: 
+	 * <br>
+	 * <table border="1" cellspacing="0" cellpadding="3">
+	 * 	<tr>
+	 * 		<td bgcolor="#EEEEFF">Parameter</td>
+	 * 		<td bgcolor="#EEEEFF">Value</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>request</code></td>
+	 * 		<td>Should contain <code>verify_credentials</code>.</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>rid</code></td>
+	 * 		<td>
+	 * 			Must contain the request identifier as received by the 
+	 * 			A-Select Server.
+	 * 		</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>aselect_credentials</code></td>
+	 * 		<td>The credentials as received from the A-Select server.</td>
+	 * 	</tr>
+	 * </table> 
+	 * <br><br>
+	 * The API response contains the following parameters:
+	 * <br>
+	 * <table border="1" cellspacing="0" cellpadding="3">
+	 * 	<tr>
+	 * 		<td style="" bgcolor="#EEEEFF">Parameter</td>
+	 * 		<td bgcolor="#EEEEFF">Value</td>
+	 * 	</tr>    
+	 * 	<tr>
+	 * 		<td><code>ticket</code></td>
+	 * 		<td>The A-Select application ticket.</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>ticket_start_time</code></td>
+	 * 		<td>The start time of the application ticket.</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>ticket_exp_time</code></td>
+	 * 		<td>The expiration time of the application ticket.</td>
+	 * 	</tr>
+	 *  <tr>
+	 * 		<td><code>uid</code></td>
+	 * 		<td>The user ID.</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>organization</code></td>
+	 * 		<td>The users' organisation.</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>authsp_level</code></td>
+	 * 		<td>
+	 * 			The authentication level of the AuthSP 
+	 * 			that authenticated the user.
+	 * 		</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>authsp</code></td>
+	 * 		<td>The AuthSP that authenticated the user.</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>attributes</code></td>
+	 * 		<td>The complete set of attributes.<br><br>
+	 * The attributes are encoded using a combination of base64 and 
+	 * url encoding.To retrieve the attributes an application must first 
+	 * decode the attributes using base64, the result is an attributes 
+	 * string containing a concatenation of the attributes (key=value)
+	 * using &amp as the delimiter. The attributes key and value are 
+	 * url encoded.<br><br>
+	 * <b>NOTE: If no attributes are available the attributes 
+	 * parameter is omitted.</b>
+	 * <br><br>
+	 *  </td>
+	 * 	</tr> 
+	 * 	<tr>
+	 * 		<td><code>result_code</code></td>
+	 * 		<td>
+	 * 		  The A-Select response code:
+	 * 		  <ul>
+	 * 			<li>{@link Errors#ERROR_ASELECT_SUCCESS} (OK)</li>
+	 * 			<li>{@link Errors#ERROR_ASELECT_AGENT_INVALID_REQUEST}</li>
+	 * 			<li>{@link Errors#ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER}</li>
+	 * 			<li>{@link Errors#ERROR_ASELECT_AGENT_INTERNAL_ERROR}</li>
+	 * 		  </ul>
+	 * 		</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>asp_level</code></td>
+	 * 		<td>
+	 * 			The authentication level of the AuthSP 
+	 * 			that authenticated the user. 
+	 * 			(added for backwards compatibility with A-Select 1.4)
+	 * 		</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>asp</code></td>
+	 * 		<td>
+	 * 			The AuthSP that authenticated the user.
+	 * 			(added for backwards compatibility with A-Select 1.4)
+	 * 		</td>
+	 * 	</tr>
+	 * </table>
+	 * <br><br>
+	 * <b>Concurrency issues: </b> 
+	 * <br>
+	 * None. 
+	 * <br><br>
+	 * <b>Preconditions: </b> 
+	 * <ul>
+	 * 	<li><code>oInputMessage != null</code></li>
+	 * 	<li><code>oOutputMessage != null</code></li>
+	 * 	<li>
+	 * 	  The caller must have initiated authentication (local or remote) 
+	 * 	  and thus a session context must be present identified by the 
+	 * 	  given <code>rid</code>.	
+	 * 	</li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions: </b> 
+	 * <br>
+	 * Upon a succesfull response from the A-Select Server, a ticket context 
+	 * with key <code>ticket</code> is created with the 
+	 * following parameters:
+	 * <table border="1" cellspacing="0" cellpadding="3">
+	 * 	<tr>
+	 * 		<td bgcolor="#EEEEFF">Parameter</td>
+	 * 		<td bgcolor="#EEEEFF">Value</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>uid</code></td>
+	 * 		<td>The user ID.</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>organization</code></td>
+	 * 		<td>The user its organisation.</td>
+	 * 	</tr>
+	 * <tr>
+	 * 		<td><code>authsp_level</code></td>
+	 * 		<td>
+	 * 			The authentication level of the AuthSP 
+	 * 			that authenticated the user.
+	 * 		</td>
+	 * 	</tr>
+	 * <tr>
+	 * 		<td><code>authsp</code></td>
+	 * 		<td>The AuthSP that authenticated the user.</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>app_id</code></td>
+	 * 		<td>The ID of the application (i.e., the caller of this 
+	 * 				API request).
+	 * 		</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>app_level</code></td>
+	 * 		<td>The required level of the application.</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>a-select-server</code></td>
+	 * 		<td>The ID of the A-Select Server that handled the request.</td>
+	 * 	</tr> 	
+	 * 	<tr>
+	 * 		<td><code>tgt_exp_time</code></td>
+	 * 		<td>The ticket expiration time of the TGT</td>
+	 * 	</tr>
+	 * <tr>
+	 * 		<td><code>attributes</code></td>
+	 * 		<td>The base64 encoded attributes string received from the A-Select Server</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>attributes_hash</code></td>
+	 * 		<td>The SHA1 hash computed over the attributes string after being base64 decoded.</td>
+	 * 	</tr>
+	 *  
+	 * </table>   
+	 * <br>
+	 * In addition the user its session is deleted after successful 
+	 * processing the request.  
+	 * <br> 
+	 *  
+	 * @param oInputMessage The API request message.
+	 * @param oOutputMessage The API response message.
+	 * @throws ASelectCommunicationException 
+	 * 		If setting response parameters fails.
+	 */
+	//
+	// Bauke 20081201: added parameter: saml_attributes=<attr1>,<attr2>,...
+	// Will request the server to send a Saml token containing the requested attributes
+	//
+	private void processVerifyCredentialsRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
+		throws ASelectCommunicationException
+	{
+		String sMethod = "processVerifyCredentialsRequest()";
 		StringBuffer sbBuffer = new StringBuffer();
 
 		try {
@@ -1219,10 +1119,10 @@ public class RequestHandler extends Thread
 			try {
 				sSamlAttributes = oInputMessage.getParam("saml_attributes");
 			}
-			catch (ASelectCommunicationException eAC) {  // ignore absence
+			catch (ASelectCommunicationException eAC) { // ignore absence
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "VerCRED rid=" + sRid + " sAsId=" + sAsId +
-					" samlAttr=" + sSamlAttributes);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "VerCRED rid=" + sRid + " sAsId=" + sAsId + " samlAttr="
+					+ sSamlAttributes);
 
 			// send the verify credentials request to the A-Select Server
 			Hashtable htRequest = new Hashtable();
@@ -1312,21 +1212,21 @@ public class RequestHandler extends Thread
 				return;
 			}
 
-            // all parameters are there; create a ticket for this user and
-            // store it in a ticket context
-            Hashtable htTicketContext = new Hashtable();
-            htTicketContext.put("uid", sUID);
-            htTicketContext.put("organization", sOrg);
-            htTicketContext.put("authsp_level", sAL);
-            htTicketContext.put("authsp", sASP);
-            htTicketContext.put("app_id", sAPP);
-            htTicketContext.put("app_level", sAppLevel);
-            htTicketContext.put("a-select-server", sAsId);
-            htTicketContext.put("tgt_exp_time", new Long(sTgtExp));
-            // Bauke: added to allow upgrading the server's TGT
-            htTicketContext.put("crypted_credentials", sCredentials);
-            
-            // The attributes parameter is optional.
+			// all parameters are there; create a ticket for this user and
+			// store it in a ticket context
+			Hashtable htTicketContext = new Hashtable();
+			htTicketContext.put("uid", sUID);
+			htTicketContext.put("organization", sOrg);
+			htTicketContext.put("authsp_level", sAL);
+			htTicketContext.put("authsp", sASP);
+			htTicketContext.put("app_id", sAPP);
+			htTicketContext.put("app_level", sAppLevel);
+			htTicketContext.put("a-select-server", sAsId);
+			htTicketContext.put("tgt_exp_time", new Long(sTgtExp));
+			// Bauke: added to allow upgrading the server's TGT
+			htTicketContext.put("crypted_credentials", sCredentials);
+
+			// The attributes parameter is optional.
 			String sAttributes = (String) htResponseParameters.get("attributes");
 			if (sAttributes != null) {
 				htTicketContext.put("attributes", sAttributes);
@@ -1349,7 +1249,8 @@ public class RequestHandler extends Thread
 
 			// prepare the response parameters for the calling application
 			oOutputMessage.setParam("ticket", sTicket);
-			oOutputMessage.setParam("ticket_start_time", new Long(_ticketManager.getTicketStartTime(sTicket)).toString());
+			oOutputMessage.setParam("ticket_start_time", new Long(_ticketManager.getTicketStartTime(sTicket))
+					.toString());
 			oOutputMessage.setParam("ticket_exp_time", new Long(_ticketManager.getTicketTimeout(sTicket)).toString());
 			oOutputMessage.setParam("uid", sUID);
 			oOutputMessage.setParam("organization", sOrg);
@@ -1380,7 +1281,7 @@ public class RequestHandler extends Thread
 		}
 	}
 
-    /**
+	/**
 	 * Performs verification of A-Select application ticket. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
@@ -1490,907 +1391,806 @@ public class RequestHandler extends Thread
 	 * @throws ASelectCommunicationException
 	 *             If setting response parameters fails.
 	 */
-    private void processVerifyTicketRequest(IInputMessage oInputMessage,
-        IOutputMessage oOutputMessage) throws ASelectCommunicationException
-    {
-        String sMethod = "processVerifyTicketRequest()";
-        StringBuffer sbBuffer = new StringBuffer();
+	private void processVerifyTicketRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
+		throws ASelectCommunicationException
+	{
+		String sMethod = "processVerifyTicketRequest()";
+		StringBuffer sbBuffer = new StringBuffer();
 
-        try
-        {
-            String sTicket = null;
-            String sUid = null;
-            String sOrg = null;
-            String sAttributesHash = null;
-            String sRequestURI = null;
-            String sIP = null;
-            try
-            {
-                // get required API parameters
-                sTicket = oInputMessage.getParam("ticket");
-                sUid = oInputMessage.getParam("uid");
-                sOrg = oInputMessage.getParam("organization");
-            }
-            catch (ASelectCommunicationException eAC)
-            {
-                //missing required API parameters
-                _systemLogger.log(Level.WARNING, 
-                    MODULE, sMethod, "Invalid request received.", eAC);
-                oOutputMessage.setParam("result_code",
-                    Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
-                return;
-            }
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET uid="+sUid+", org="+sOrg+", ticket="+sTicket);
+		try {
+			String sTicket = null;
+			String sUid = null;
+			String sOrg = null;
+			String sAttributesHash = null;
+			String sRequestURI = null;
+			String sIP = null;
+			try {
+				// get required API parameters
+				sTicket = oInputMessage.getParam("ticket");
+				sUid = oInputMessage.getParam("uid");
+				sOrg = oInputMessage.getParam("organization");
+			}
+			catch (ASelectCommunicationException eAC) {
+				//missing required API parameters
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received.", eAC);
+				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+				return;
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET uid=" + sUid + ", org=" + sOrg + ", ticket="
+					+ sTicket);
 
-            //Get optional parameters
-            // Parameter "attributes_hash" and 'request_uri' are not required
-            // Bauke: modified, if "attributes_hash" was not present, the other parameters would not be read.
-            try {
-                sAttributesHash = oInputMessage.getParam("attributes_hash");
-            } catch (ASelectCommunicationException e) { }
-            try {
-                sRequestURI = oInputMessage.getParam("request_uri");
-            } catch (ASelectCommunicationException e) { }
-            try {
-                sIP = oInputMessage.getParam("ip");
-            } catch (ASelectCommunicationException e) { }
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET attributes_hash="+sAttributesHash+
-            		", request_uri="+sRequestURI+", ip="+sIP);
-            
-            //get the ticket context
-            Hashtable htTicketContext = _ticketManager
-                .getTicketContext(sTicket);
-            if (htTicketContext == null)
-            {
-                _systemLogger.log(Level.WARNING, 
-                    MODULE, sMethod, "Invalid request: unknown ticket.");
-                oOutputMessage.setParam("result_code",
-                    Errors.ERROR_ASELECT_AGENT_UNKNOWN_TICKET);
-                return;
-            }
-            
-            String sStoredUid = (String)htTicketContext.get("uid");
-            String sStoredOrg = (String)htTicketContext.get("organization");
-            String sStoredAttributes = (String)htTicketContext.get("attributes_hash");
+			//Get optional parameters
+			// Parameter "attributes_hash" and 'request_uri' are not required
+			// Bauke: modified, if "attributes_hash" was not present, the other parameters would not be read.
+			try {
+				sAttributesHash = oInputMessage.getParam("attributes_hash");
+			}
+			catch (ASelectCommunicationException e) {
+			}
+			try {
+				sRequestURI = oInputMessage.getParam("request_uri");
+			}
+			catch (ASelectCommunicationException e) {
+			}
+			try {
+				sIP = oInputMessage.getParam("ip");
+			}
+			catch (ASelectCommunicationException e) {
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET attributes_hash=" + sAttributesHash
+					+ ", request_uri=" + sRequestURI + ", ip=" + sIP);
 
-            // check uid match
-            if (!sStoredUid.equals(sUid))
-            {
-                sbBuffer = new StringBuffer("Invalid request: uid mismatch: expected ");
-                sbBuffer.append(sStoredUid).append(" but got ").append(sUid);
-                _systemLogger.log(Level.WARNING, 
-                    MODULE, sMethod, sbBuffer.toString());
-                oOutputMessage.setParam("result_code",
-                    Errors.ERROR_ASELECT_AGENT_TICKET_NOT_VALID);
-                return;
-            }
-            // check organization match
-            if (!sStoredOrg.equals(sOrg))
-            {
-                sbBuffer = new StringBuffer("Invalid request: organization mismatch: ");
-                sbBuffer.append("expected ").append(sStoredOrg);
-                sbBuffer.append(" but got ").append(sOrg);
-                _systemLogger.log(Level.WARNING, 
-                    MODULE, sMethod, sbBuffer.toString());
-                oOutputMessage.setParam("result_code",
-                    Errors.ERROR_ASELECT_AGENT_TICKET_NOT_VALID);
-                return;
-            }            
-            // match attributes
-            if (sAttributesHash != null)
-            {
-	            if (!sStoredAttributes.equalsIgnoreCase(sAttributesHash))
-	            {
-	                _systemLogger.log(Level.WARNING, 
-	                    MODULE, sMethod, "Received attributes do not match stored attributes.");
-	                sStoredAttributes = (String)htTicketContext.get("attributes");
-	                if (sStoredAttributes == null)
-	                    sStoredAttributes = "";
-	                oOutputMessage.setParam("attributes",
-	                	sStoredAttributes);
-	                oOutputMessage.setParam("result_code",
-	                    Errors.ERROR_ASELECT_AGENT_CORRUPT_ATTRIBUTES);
-	                return;
-	            }
-            }
-            //Authorize if applicable
-            if(_bAuthorization)
-            {
-                //get app_id
-                String sAppId = (String)htTicketContext.get("app_id");
-                //get user attributes
-                Hashtable htUserAttributes = deserializeAttributes(
-                    (String)htTicketContext.get("attributes"));
-                
-                _systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET attr="+htUserAttributes);
-                
-                //Add ip if applicable
-                if(sIP != null)
-                    htUserAttributes.put(IP_ATTRIBUTE, sIP);
-                //Add current date
-                DateFormat df = DateFormat.getDateTimeInstance(
-                    DateFormat.SHORT, DateFormat.SHORT); //current time
-                htUserAttributes.put(CURRENT_TIME_ATTRIBUTE, df.format(
-                    new Date(System.currentTimeMillis())));
-                //Add all Ticket attributes
-                htUserAttributes.putAll(htTicketContext);
-                //Remove encoded attributes
-                htUserAttributes.remove("attributes");
-                if(!AuthorizationEngine.getHandle().isUserAuthorized(
-                    sAppId, sRequestURI, htUserAttributes))
-                {
-                    //not authorized
-                    _systemLogger.log(Level.WARNING, 
-                        MODULE, sMethod, "User not authorized to access application " + sAppId);
-                    oOutputMessage.setParam("result_code",
-                        Errors.ERROR_ASELECT_AGENT_AUTHORIZATION_FAILED);
-                    return;
-                }                   
-                _systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET OK");
-            }
+			//get the ticket context
+			Hashtable htTicketContext = _ticketManager.getTicketContext(sTicket);
+			if (htTicketContext == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request: unknown ticket.");
+				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_UNKNOWN_TICKET);
+				return;
+			}
 
-            // Bauke: added, upgrade ticket so it will live longer and prosper
-            // must also be send to the server, to keep the user's session alive accross different applications
-            // START NEW CODE
-            boolean _bSendUpgrade_tgt = true;
-            if (_bSendUpgrade_tgt) {
-	            String sCryptedCredentials = (String)htTicketContext.get("crypted_credentials");
-	            String sAselectServer = (String)htTicketContext.get("a-select-server");
-	            Hashtable htRequest = new Hashtable();
-                _systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET upgrade_tgt");
-	            htRequest.put("request", "upgrade_tgt");
-	            htRequest.put("a-select-server", sAselectServer);
-	            //htRequest.put("rid",sRid);
-	            htRequest.put("crypted_credentials", sCryptedCredentials);
-	
-	            Hashtable htResponseParameters = sendToASelectServer(htRequest);
-	            if (htResponseParameters.isEmpty()) {
-	                _systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not reach A-Select Server.");
-	                oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
-	                return;
-	            }
-	            String sResultCode = (String)htResponseParameters.get("result_code");
-	            if (sResultCode == null) {
-	                _systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid response from A-Select Server.");
-	                oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
-	                return;
-	            }
-	            if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
-	                sbBuffer = new StringBuffer("A-Select Server returned error: '");
-	                sbBuffer.append(sResultCode);
-	                sbBuffer.append("'.");
-	                _systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
-	                oOutputMessage.setParam("result_code", sResultCode);
-	                return;
-	            }
-            }
-            // END NEW CODE
-            
-            _ticketManager.updateTicketContext(sTicket, htTicketContext);
-            //Ticket OK, create response message
-	        oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
-        }
-        catch (NumberFormatException eNF)
-        {
-            _systemLogger.log(Level.SEVERE, 
-                MODULE, sMethod, "Could not create response message.", eNF);
-            oOutputMessage.setParam("result_code",
-                Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-        }
-        catch (ASelectCommunicationException eAC)
-        {
-            sbBuffer = new StringBuffer("Could not create response message.");
-            _systemLogger.log(Level.SEVERE, 
-                MODULE, sMethod, sbBuffer.toString(), eAC);
-            oOutputMessage.setParam("result_code",
-                Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-        }
-        catch (ASelectException eAS)
-        {
-            _systemLogger.log(Level.SEVERE, 
-                MODULE, sMethod, "Error while processing request", eAS);
-            oOutputMessage.setParam("result_code",
-                Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.SEVERE, 
-                MODULE, sMethod, "Internal error while processing request", e);
-            oOutputMessage.setParam("result_code",
-                Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-        }
-    }
+			String sStoredUid = (String) htTicketContext.get("uid");
+			String sStoredOrg = (String) htTicketContext.get("organization");
+			String sStoredAttributes = (String) htTicketContext.get("attributes_hash");
 
-    /**
-     * Supplies all attributes.
-     * <br><br>
-     * <b>Description: </b> 
-     * <br>
-     * This method performs the retrieval of all known attributes after the 
-     * verification of the user ticket when a user is accessing the calling 
-     * application having a application ticket.
-     * This method processes the <code>attributes</code> request. 
-     * <br><br>
-     * This API request should contain the following parameters: 
-     * <br>
-     * <table border="1" cellspacing="0" cellpadding="3">
-     * 	<tr>
-     * 		<td bgcolor="#EEEEFF">Parameter</td>
-     * 		<td bgcolor="#EEEEFF">Value</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>request</code></td>
-     * 		<td>Should contain <code>attributes</code>.</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>ticket</code></td>
-     * 		<td>
-     * 			The A-Select application ticket that was issued to the user.
-     * 		</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>uid</code></td>
-     * 		<td>The user ID.</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>organization</code></td>
-     * 		<td>The organization that the user belongs to.</td>
-     * 	</tr>
-     * </table> 
-     * <br><br>
-     * The API response contains the following parameters:
-     * <br>
-     * <table border="1" cellspacing="0" cellpadding="3">
-     * 	<tr>
-     * 		<td style="" bgcolor="#EEEEFF">Parameter</td>
-     * 		<td bgcolor="#EEEEFF">Value</td>
-     * 	</tr>    
-     * 	<tr>
-     * 		<td><code>ticket_start_time</code></td>
-     * 		<td>The start time of the application ticket.</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>ticket_exp_time</code></td>
-     * 		<td>The expiration time of the application ticket.</td>
-     * 	</tr>
-     *  <tr>
-     * 		<td><code>uid</code></td>
-     * 		<td>The user ID.</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>organization</code></td>
-     * 		<td>The users' organisation.</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>authsp_level</code></td>
-     * 		<td>
-     * 			The authentication level of the AuthSP 
-     * 			that authenticated the user.
-     * 		</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>authsp</code></td>
-     * 		<td>The AuthSP that authenticated the user.</td>
-     * 	</tr>     
-     * 	<tr>
-     * 		<td><code>asp_level</code></td>
-     * 		<td>
-     * 			The authentication level of the AuthSP 
-     * 			that authenticated the user. 
-     * 			(added for backwards compatibility with A-Select 1.4)
-     * 		</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>asp</code></td>
-     * 		<td>
-     * 			The AuthSP that authenticated the user.
-     * 			(added for backwards compatibility with A-Select 1.4)
-     * 		</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>attributes</code></td>
-     * 		<td>The attributes.</td>
-     * 	</tr>
-     *      <tr>
-     * 		<td><code>attributes</code></td>
-     * 		<td>
-     * 			The complete set of attributes. <br><br>
-     * 			See {@link RequestHandler#processVerifyCredentialsRequest} 
-     * 			for detailed information.
-     * 			<br><br>
-     * 			<b>NOTE: If no attributes are available the attributes parameter 
-     * 			is still sent but will contain an empty string <code>""</code></b>
-     * 		</td>
-     * 	</tr> 
-     * 	<tr>
-     * 		<td><code>result_code</code></td>
-     * 		<td>
-     * 		  The A-Select response code:
-     * 		  <ul>
-     * 			<li>{@link Errors#ERROR_ASELECT_SUCCESS} (OK)</li>
-     * 			<li>{@link Errors#ERROR_ASELECT_AGENT_INVALID_REQUEST}</li>
-     * 			<li>{@link Errors#ERROR_ASELECT_AGENT_UNKNOWN_TICKET}</li>
-     * 			<li>{@link Errors#ERROR_ASELECT_AGENT_INTERNAL_ERROR}</li>
-     * 		  </ul>
-     * 		</td>
-     * 	</tr>
-     * </table>
-     * <br><br>
-     * <b>Concurrency issues: </b> 
-     * <br>
-     * None. 
-     * <br><br>
-     * <b>Preconditions: </b> 
-     * <ul>
-     * 	<li><code>oInputMessage != null</code></li>
-     * 	<li><code>oOutputMessage != null</code></li>
-     * 	<li>
-     * 	  The caller must have validated A-Select credentials with the 
-     * 	  A-Select Server 
-     * 	  ({@link #processVerifyCredentialsRequest(IInputMessage, IOutputMessage)})  
-     * 	  and thus a ticket context must be present identified by the given
-     * 	  <code>ticket</code>.
-     * 	</li>
-     * </ul>
-     * <br>
-     * <b>Postconditions: </b> 
-     * <br>
-     * On successful processing the given uid and organisation are checked upon
-     * and are therefore valid.
-     * <br>
-     * 
-     * @param oInputMessage The API request message.
-     * @param oOutputMessage The API response message.
-     * @throws ASelectCommunicationException 
-     * 		If setting response parameters fails.
-     */
-    private void processAttributesRequest(IInputMessage oInputMessage,
-        IOutputMessage oOutputMessage) throws ASelectCommunicationException
-    {
-        String sMethod = "processAttributesRequest()";
-        StringBuffer sbBuffer = new StringBuffer();
+			// check uid match
+			if (!sStoredUid.equals(sUid)) {
+				sbBuffer = new StringBuffer("Invalid request: uid mismatch: expected ");
+				sbBuffer.append(sStoredUid).append(" but got ").append(sUid);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
+				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_TICKET_NOT_VALID);
+				return;
+			}
+			// check organization match
+			if (!sStoredOrg.equals(sOrg)) {
+				sbBuffer = new StringBuffer("Invalid request: organization mismatch: ");
+				sbBuffer.append("expected ").append(sStoredOrg);
+				sbBuffer.append(" but got ").append(sOrg);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
+				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_TICKET_NOT_VALID);
+				return;
+			}
+			// match attributes
+			if (sAttributesHash != null) {
+				if (!sStoredAttributes.equalsIgnoreCase(sAttributesHash)) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod,
+							"Received attributes do not match stored attributes.");
+					sStoredAttributes = (String) htTicketContext.get("attributes");
+					if (sStoredAttributes == null)
+						sStoredAttributes = "";
+					oOutputMessage.setParam("attributes", sStoredAttributes);
+					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_CORRUPT_ATTRIBUTES);
+					return;
+				}
+			}
+			//Authorize if applicable
+			if (_bAuthorization) {
+				//get app_id
+				String sAppId = (String) htTicketContext.get("app_id");
+				//get user attributes
+				Hashtable htUserAttributes = deserializeAttributes((String) htTicketContext.get("attributes"));
 
-        try
-        {
-            String sTicket = null;
-            String sUid = null;
-            String sOrg = null;
-            try
-            {
-                // get required API parameters
-                sTicket = oInputMessage.getParam("ticket");
-                sUid = oInputMessage.getParam("uid");
-                sOrg = oInputMessage.getParam("organization");
-            }
-            catch (ASelectCommunicationException eAC)
-            {
-                //missing required API parameters
-                _systemLogger.log(Level.WARNING, 
-                    MODULE, sMethod, "Invalid request received.", eAC);
-                oOutputMessage.setParam("result_code",
-                    Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
-                return;
-            }
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "AttrReq uid="+sUid+", org="+sOrg+", ticket="+sTicket);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET attr=" + htUserAttributes);
 
-            //get the ticket context
-            Hashtable htTicketContext = _ticketManager
-                .getTicketContext(sTicket);
-            if (htTicketContext == null)
-            {
-                _systemLogger.log(Level.WARNING, 
-                    MODULE, sMethod, "Invalid request: unknown ticket.");
-                oOutputMessage.setParam("result_code",
-                    Errors.ERROR_ASELECT_AGENT_UNKNOWN_TICKET);
-                return;
-            }
+				//Add ip if applicable
+				if (sIP != null)
+					htUserAttributes.put(IP_ATTRIBUTE, sIP);
+				//Add current date
+				DateFormat df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT); //current time
+				htUserAttributes.put(CURRENT_TIME_ATTRIBUTE, df.format(new Date(System.currentTimeMillis())));
+				//Add all Ticket attributes
+				htUserAttributes.putAll(htTicketContext);
+				//Remove encoded attributes
+				htUserAttributes.remove("attributes");
+				if (!AuthorizationEngine.getHandle().isUserAuthorized(sAppId, sRequestURI, htUserAttributes)) {
+					//not authorized
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "User not authorized to access application "
+							+ sAppId);
+					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_AUTHORIZATION_FAILED);
+					return;
+				}
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET OK");
+			}
 
-            String sAuthSP = (String)htTicketContext.get("authsp");
-            String sAppLevel = (String)htTicketContext.get("app_level");
-            
-            oOutputMessage.setParam("ticket_start_time", 
-                new Long(_ticketManager.getTicketStartTime(sTicket)).toString());
-            oOutputMessage.setParam("ticket_exp_time", 
-                new Long(_ticketManager.getTicketTimeout(sTicket)).toString());
-            oOutputMessage.setParam("uid", sUid);
-            oOutputMessage.setParam("organization", sOrg);
-            oOutputMessage.setParam("authsp_level", sAppLevel);
-            oOutputMessage.setParam("authsp", sAuthSP);
-            // 1.4 backwards compatibility
-            oOutputMessage.setParam("asp_level", sAppLevel);
-            oOutputMessage.setParam("asp", sAuthSP);
-            
-            // Append attributes to the result
-            String sAttributes = (String)htTicketContext.get("attributes");
-            if (sAttributes != null)
-                oOutputMessage.setParam("attributes", sAttributes);
-            else
-                oOutputMessage.setParam("attributes", "");
-            
-            oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
-        }
-        catch (NumberFormatException eNF)
-        {
-            _systemLogger.log(Level.SEVERE, 
-                MODULE, sMethod, "Could not create response message.", eNF);
-            oOutputMessage.setParam("result_code",
-                Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-        }
-        catch (ASelectCommunicationException eAC)
-        {
-            _systemLogger.log(Level.SEVERE, 
-                MODULE, sMethod, "Could not create response message.", eAC);
-            oOutputMessage.setParam("result_code",
-                Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-        }
-        catch (Exception e)
-        {
+			// Bauke: added, upgrade ticket so it will live longer and prosper
+			// must also be send to the server, to keep the user's session alive accross different applications
+			// START NEW CODE
+			boolean _bSendUpgrade_tgt = true;
+			if (_bSendUpgrade_tgt) {
+				String sCryptedCredentials = (String) htTicketContext.get("crypted_credentials");
+				String sAselectServer = (String) htTicketContext.get("a-select-server");
+				Hashtable htRequest = new Hashtable();
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET upgrade_tgt");
+				htRequest.put("request", "upgrade_tgt");
+				htRequest.put("a-select-server", sAselectServer);
+				//htRequest.put("rid",sRid);
+				htRequest.put("crypted_credentials", sCryptedCredentials);
 
-            sbBuffer = new StringBuffer("Exception while processing request: \"");
-            sbBuffer.append(e.getMessage());
-            sbBuffer.append("\"");
-            _systemLogger.log(Level.SEVERE, 
-                MODULE, sMethod, sbBuffer.toString(), e);
-            oOutputMessage.setParam("result_code",
-                Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-        }
-    }    
-    
-    /**
-     * Performs the deletion of an A-Select application ticket.
-     * <br><br>
-     * <b>Description: </b> 
-     * <br>
-     * Processes a kill_ticket request.
-     * That is, the caller has specified <code>request=kill_ticket</code>.
-     * <br><br>
-     * This API request should contain the following parameters: 
-     * <br>
-     * <table border="1" cellspacing="0" cellpadding="3">
-     * 	<tr>
-     * 		<td bgcolor="#EEEEFF">Parameter</td>
-     * 		<td bgcolor="#EEEEFF">Value</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>request</code></td>
-     * 		<td>Should contain <code>kill_ticket</code>.</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>ticket</code></td>
-     * 		<td>
-     * 			The A-Select application ticket that was issued to the user.
-     * 		</td>
-     * 	</tr>
-     * </table> 
-     * <br><br>
-     * The API response contains the following parameters:
-     * <br>
-     * <table border="1" cellspacing="0" cellpadding="3">
-     * 	<tr>
-     * 		<td style="" bgcolor="#EEEEFF">Parameter</td>
-     * 		<td bgcolor="#EEEEFF">Value</td>
-     * 	</tr>    
-     * 	<tr>
-     * 		<td><code>result_code</code></td>
-     * 		<td>
-     * 		  The A-Select response code:
-     * 		  <ul>
-     * 			<li>{@link Errors#ERROR_ASELECT_SUCCESS} (OK)</li>
-     * 			<li>{@link Errors#ERROR_ASELECT_AGENT_INVALID_REQUEST}</li>
-     * 			<li>{@link Errors#ERROR_ASELECT_AGENT_UNKNOWN_TICKET}</li>
-     * 			<li>{@link Errors#ERROR_ASELECT_AGENT_INTERNAL_ERROR}</li>
-     * 		  </ul>
-     * 		</td>
-     * 	</tr>
-     * </table>
-     * <br><br>
-     * <b>Concurrency issues:</b> 
-     * <br>
-     * None. 
-     * <br><br>
-     * <b>Preconditions: </b> 
-     * <ul>
-     * 	<li><code>oInputMessage != null</code></li>
-     * 	<li><code>oOutputMessage != null</code></li>
-     * 	<li>
-     * 	  The caller must have a valid A-Select application <code>ticket</code>.
-     * 	</li>
-     * </ul>
-     * <br>
-     * <b>Postconditions: </b> 
-     * <br>
-     * The ticket context is deleted and the application ticket is no longer 
-     * valid. The user can still have a valid TGT at the A-Select server.
-     * <br>
-     * 
-     * @param oInputMessage The API request message.
-     * @param oOutputMessage The API response message.
-     * @throws ASelectCommunicationException 
-     * 		If setting response parameters fails.
-     */
-    private void processKillTicketRequest(IInputMessage oInputMessage,
-        IOutputMessage oOutputMessage) throws ASelectCommunicationException
-    {
-        String sMethod = "processKillTicketRequest()";
-        StringBuffer sbBuffer = new StringBuffer();
-        String sTicket = null;
-        try
-        {
-            //Get parameters
-            sTicket = oInputMessage.getParam("ticket"); //mandatory              
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "VerCRED sTicket="+sTicket);
-            
-            if (!_ticketManager.killTicket(sTicket))
-            {
-                _systemLogger.log(Level.WARNING, 
-                    MODULE, sMethod, "could not kill ticket");
-                oOutputMessage.setParam("result_code",
-                    Errors.ERROR_ASELECT_AGENT_UNKNOWN_TICKET);
-                return;
-            }
+				Hashtable htResponseParameters = sendToASelectServer(htRequest);
+				if (htResponseParameters.isEmpty()) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not reach A-Select Server.");
+					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+					return;
+				}
+				String sResultCode = (String) htResponseParameters.get("result_code");
+				if (sResultCode == null) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid response from A-Select Server.");
+					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+					return;
+				}
+				if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
+					sbBuffer = new StringBuffer("A-Select Server returned error: '");
+					sbBuffer.append(sResultCode);
+					sbBuffer.append("'.");
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
+					oOutputMessage.setParam("result_code", sResultCode);
+					return;
+				}
+			}
+			// END NEW CODE
 
-            //set response parameters
-            oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
-        }
-        catch (ASelectCommunicationException eAC)
-        {
-            //mandatory parameter missing
-            _systemLogger.log(Level.WARNING, 
-                MODULE, sMethod, "Invalid request received.", eAC);
-            oOutputMessage.setParam("result_code",
-                Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
-            return;
-        }
-        catch (Exception e)
-        {
-            sbBuffer = new StringBuffer("Exception while processing request: \"");
-            sbBuffer.append(e.getMessage());
-            sbBuffer.append("\"");
-            _systemLogger.log(Level.SEVERE, 
-                MODULE, sMethod, sbBuffer.toString(), e);
-            oOutputMessage.setParam("result_code",
-                Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-        }
-    }
-    
-    /**
-     * Add authorization rules to the A-Select Agent Authorization Engine.
-     * <br><br>
-     * <b>Description:</b> 
-     * <br>
-     * This method processes the <code>request=set_authorization_rules</code> 
-     * API call. The <code>set_authorization_rules</code> request can be used 
-     * by applications and A-Select Filters to add authorization rules to the 
-     * A-Select Agent Authorisation engine. These rules are then used for 
-     * authorizing users during the runtime of the A-Select Agent. 
-     * <br><br>
-     * If authorization rules exist for the application that is issuing the 
-     * request, for example configured in the Agent configuration, they are 
-     * removed before adding the new authorization rules.
-     * <br><br> 
-     * This API request should contain the following parameters: 
-     * <br>
-     * <table border="1" cellspacing="0" cellpadding="3">
-     * 	<tr>
-     * 		<td bgcolor="#EEEEFF">Parameter</td>
-     * 		<td bgcolor="#EEEEFF">Value</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>request</code></td>
-     * 		<td>Should contain <code>set_authorization_rules</code>.</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>app_id</code></td>
-     * 		<td>
-     * 			The id of the application that has been registered with 
-     * 			the A-Select Server.
-     * 		</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td><code>rules</code></td>
-     * 		<td>
-     * 			The authorization rules that have to be added to the 
-     * 			application. These rules should be placed in a array parameter
-     * 			conform the following syntax:
-     * 			<code>
-     * 				rules[]=[Rule-1];[URI-1]&rules[]=[Rule-2];[URI-2]rules[]=[Rule-n];[URI-n]
-     * 			</code>
-     * 			<br><br>
-     * 			The URI may be omitted.
-     * 		</td>
-     * 	</tr>
-     * </table> 
-     * <br><br>
-     * The API response contains the following parameters:
-     * <br>
-     * <table border="1" cellspacing="0" cellpadding="3">
-     * 	<tr>
-     * 		<td style="" bgcolor="#EEEEFF">Parameter</td>
-     * 		<td bgcolor="#EEEEFF">Value</td>
-     * 	</tr>    
-     * 	<tr>
-     * 		<td><code>result_code</code></td>
-     * 		<td>
-     * 		  The A-Select response code:
-     * 		  <ul>
-     * 			<li>{@link Errors#ERROR_ASELECT_SUCCESS} (OK)</li>
-     * 			<li>{@link Errors#ERROR_ASELECT_AGENT_INVALID_REQUEST}</li>
-     * 			<li>{@link Errors#ERROR_ASELECT_AGENT_AUTHORIZATION_NOT_ENABLED}</li>
-     * 		  </ul>
-     * 		</td>
-     * 	</tr>
-     * </table>
-     * <br><br>
-     * <b>Concurrency issues:</b> 
-     * <br>
-     * None. 
-     * <br><br>
-     * <b>Preconditions: </b> 
-     * <ul>
-     * 	<li><code>oInputMessage != null</code></li>
-     * 	<li><code>oOutputMessage != null</code></li>
-     * </ul>
-     * <br>
-     * <b>Postconditions: </b> 
-     * <br>
-     * The possible existing rules for this application are removed. The new
-     * authorization rules are set.
-     * <br>
-     * 
-     * @param oInputMessage The API request message.
-     * @param oOutputMessage The API response message.
-     * @throws ASelectCommunicationException 
-     * 		If setting response parameters fails.
-     */
-    private void processSetAuthorizationRulesRequest(IInputMessage oInputMessage,
-        IOutputMessage oOutputMessage) throws ASelectCommunicationException
-    {
-        final String sMethod = "processSetAuthorizationRulesRequest()";
-        if(!_bAuthorization)
-        {
-            //Authorization not enabled
-            _systemLogger.log(Level.WARNING, 
-                MODULE, sMethod, 
-                "Invalid request received: authorization is not enabled.");
-            oOutputMessage.setParam("result_code",
-                Errors.ERROR_ASELECT_AGENT_AUTHORIZATION_NOT_ENABLED);
-            return;
-        }
-        
-        try
-        {
-            // get required API parameters
-            String sAppId = oInputMessage.getParam("app_id");
-            String[] saReceivedRules = oInputMessage.getArray("rules");
+			_ticketManager.updateTicketContext(sTicket, htTicketContext);
+			//Ticket OK, create response message
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
+		}
+		catch (NumberFormatException eNF) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not create response message.", eNF);
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+		}
+		catch (ASelectCommunicationException eAC) {
+			sbBuffer = new StringBuffer("Could not create response message.");
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), eAC);
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+		}
+		catch (ASelectException eAS) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Error while processing request", eAS);
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Internal error while processing request", e);
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+		}
+	}
 
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "RULES sAppId="+sAppId+", saReceivedRules="+saReceivedRules);
-            
-            //Split id, rules and URI's
-            String[] saRuleIDs = new String[saReceivedRules.length];
-            String[] saURIs = new String[saReceivedRules.length];
-            String[] saRules = new String[saReceivedRules.length];
-            for(int i=0; i < saReceivedRules.length; i++)
-            {
-                _systemLogger.log(Level.INFO, MODULE, sMethod, "RULES Rule="+sAppId+", saReceivedRules="+saReceivedRules[i]);
-                String[] saSplit = saReceivedRules[i].split(";",3);
-                if(saSplit.length == 3)
-                {
-                    saRuleIDs[i] = saSplit[0];
-                    if(!saSplit[1].equals(""))
-                        saURIs[i] = saSplit[1];
-                    else
-                        saURIs[i] = null;
-                    saRules[i] = saSplit[2];
-                        
-                }
-                else if(saSplit.length == 2)
-                {
-                    saRuleIDs[i] = saSplit[0];
-                    saRules[i] = saSplit[1];
-                    saURIs[i] = null;
-                }
-                else
-                {
-                    //Invalid rules
-                    _systemLogger.log(Level.WARNING, 
-                        MODULE, sMethod, "Invalid request received: invalid rules[].");
-                    oOutputMessage.setParam("result_code",
-                        Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST); 
-                    return;
-                }                            
-            }
-            //add rules for this application
-            AuthorizationEngine.getHandle().setAuthorizationRules(
-                sAppId, saRuleIDs, saRules, saURIs);
-            
-            //set result code OK
-            _systemLogger.log(Level.CONFIG, MODULE, sMethod, 
-                "Authorization rules set for application " + sAppId);
-            oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
-        }
-        catch (ASelectCommunicationException eAC)
-        {
-            //missing required API parameters
-            _systemLogger.log(Level.WARNING, 
-                MODULE, sMethod, "Invalid request received.", eAC);
-            oOutputMessage.setParam("result_code",
-                Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
-        }
-        catch (ASelectAuthorizationException e)
-        {
-            //Invalid rule parameter
-            _systemLogger.log(Level.WARNING, 
-                MODULE, sMethod, 
-                "Invalid request received: one or more rules are invalid", e);
-            oOutputMessage.setParam("result_code",
-                Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
-            return;
-        }         
-    }
-    
-    /**
-     * Send a request to the A-Select Server.
-     * <br><br>
-     * <b>Description: </b> 
-     * <br>
-     * This method sends a request to the A-Select Server by using a 
-     * configured {@link IClientCommunicator} implementation.
-     * 
-     * @param htParams the request parameters.
-     * @return The response parameters.
-     */
-    private Hashtable sendToASelectServer(Hashtable htParams)
-    {
-        String sMethod = "sendToASelectServer()";
-        Hashtable htResponse = new Hashtable();
+	/**
+	 * Supplies all attributes.
+	 * <br><br>
+	 * <b>Description: </b> 
+	 * <br>
+	 * This method performs the retrieval of all known attributes after the 
+	 * verification of the user ticket when a user is accessing the calling 
+	 * application having a application ticket.
+	 * This method processes the <code>attributes</code> request. 
+	 * <br><br>
+	 * This API request should contain the following parameters: 
+	 * <br>
+	 * <table border="1" cellspacing="0" cellpadding="3">
+	 * 	<tr>
+	 * 		<td bgcolor="#EEEEFF">Parameter</td>
+	 * 		<td bgcolor="#EEEEFF">Value</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>request</code></td>
+	 * 		<td>Should contain <code>attributes</code>.</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>ticket</code></td>
+	 * 		<td>
+	 * 			The A-Select application ticket that was issued to the user.
+	 * 		</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>uid</code></td>
+	 * 		<td>The user ID.</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>organization</code></td>
+	 * 		<td>The organization that the user belongs to.</td>
+	 * 	</tr>
+	 * </table> 
+	 * <br><br>
+	 * The API response contains the following parameters:
+	 * <br>
+	 * <table border="1" cellspacing="0" cellpadding="3">
+	 * 	<tr>
+	 * 		<td style="" bgcolor="#EEEEFF">Parameter</td>
+	 * 		<td bgcolor="#EEEEFF">Value</td>
+	 * 	</tr>    
+	 * 	<tr>
+	 * 		<td><code>ticket_start_time</code></td>
+	 * 		<td>The start time of the application ticket.</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>ticket_exp_time</code></td>
+	 * 		<td>The expiration time of the application ticket.</td>
+	 * 	</tr>
+	 *  <tr>
+	 * 		<td><code>uid</code></td>
+	 * 		<td>The user ID.</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>organization</code></td>
+	 * 		<td>The users' organisation.</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>authsp_level</code></td>
+	 * 		<td>
+	 * 			The authentication level of the AuthSP 
+	 * 			that authenticated the user.
+	 * 		</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>authsp</code></td>
+	 * 		<td>The AuthSP that authenticated the user.</td>
+	 * 	</tr>     
+	 * 	<tr>
+	 * 		<td><code>asp_level</code></td>
+	 * 		<td>
+	 * 			The authentication level of the AuthSP 
+	 * 			that authenticated the user. 
+	 * 			(added for backwards compatibility with A-Select 1.4)
+	 * 		</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>asp</code></td>
+	 * 		<td>
+	 * 			The AuthSP that authenticated the user.
+	 * 			(added for backwards compatibility with A-Select 1.4)
+	 * 		</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>attributes</code></td>
+	 * 		<td>The attributes.</td>
+	 * 	</tr>
+	 *      <tr>
+	 * 		<td><code>attributes</code></td>
+	 * 		<td>
+	 * 			The complete set of attributes. <br><br>
+	 * 			See {@link RequestHandler#processVerifyCredentialsRequest} 
+	 * 			for detailed information.
+	 * 			<br><br>
+	 * 			<b>NOTE: If no attributes are available the attributes parameter 
+	 * 			is still sent but will contain an empty string <code>""</code></b>
+	 * 		</td>
+	 * 	</tr> 
+	 * 	<tr>
+	 * 		<td><code>result_code</code></td>
+	 * 		<td>
+	 * 		  The A-Select response code:
+	 * 		  <ul>
+	 * 			<li>{@link Errors#ERROR_ASELECT_SUCCESS} (OK)</li>
+	 * 			<li>{@link Errors#ERROR_ASELECT_AGENT_INVALID_REQUEST}</li>
+	 * 			<li>{@link Errors#ERROR_ASELECT_AGENT_UNKNOWN_TICKET}</li>
+	 * 			<li>{@link Errors#ERROR_ASELECT_AGENT_INTERNAL_ERROR}</li>
+	 * 		  </ul>
+	 * 		</td>
+	 * 	</tr>
+	 * </table>
+	 * <br><br>
+	 * <b>Concurrency issues: </b> 
+	 * <br>
+	 * None. 
+	 * <br><br>
+	 * <b>Preconditions: </b> 
+	 * <ul>
+	 * 	<li><code>oInputMessage != null</code></li>
+	 * 	<li><code>oOutputMessage != null</code></li>
+	 * 	<li>
+	 * 	  The caller must have validated A-Select credentials with the 
+	 * 	  A-Select Server 
+	 * 	  ({@link #processVerifyCredentialsRequest(IInputMessage, IOutputMessage)})  
+	 * 	  and thus a ticket context must be present identified by the given
+	 * 	  <code>ticket</code>.
+	 * 	</li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions: </b> 
+	 * <br>
+	 * On successful processing the given uid and organisation are checked upon
+	 * and are therefore valid.
+	 * <br>
+	 * 
+	 * @param oInputMessage The API request message.
+	 * @param oOutputMessage The API response message.
+	 * @throws ASelectCommunicationException 
+	 * 		If setting response parameters fails.
+	 */
+	private void processAttributesRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
+		throws ASelectCommunicationException
+	{
+		String sMethod = "processAttributesRequest()";
+		StringBuffer sbBuffer = new StringBuffer();
 
-        ASelectAgentSAMAgent oSAMAgent = ASelectAgentSAMAgent.getHandle();
-        try {
-            SAMResource oResource = oSAMAgent.getActiveResource("aselectserver");
-            Object oConfigSection = oResource.getAttributes();
+		try {
+			String sTicket = null;
+			String sUid = null;
+			String sOrg = null;
+			try {
+				// get required API parameters
+				sTicket = oInputMessage.getParam("ticket");
+				sUid = oInputMessage.getParam("uid");
+				sOrg = oInputMessage.getParam("organization");
+			}
+			catch (ASelectCommunicationException eAC) {
+				//missing required API parameters
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received.", eAC);
+				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+				return;
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "AttrReq uid=" + sUid + ", org=" + sOrg + ", ticket="
+					+ sTicket);
 
-            String sAS = _configManager.getParam(oConfigSection, "aselect-server-id");
-            String sAsUrl = _configManager.getParam(oConfigSection, "url");
+			//get the ticket context
+			Hashtable htTicketContext = _ticketManager.getTicketContext(sTicket);
+			if (htTicketContext == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request: unknown ticket.");
+				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_UNKNOWN_TICKET);
+				return;
+			}
 
-            htParams.put("a-select-server",sAS);
-            signRequest(htParams);
+			String sAuthSP = (String) htTicketContext.get("authsp");
+			String sAppLevel = (String) htTicketContext.get("app_level");
 
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "ToSERVER, url="+sAsUrl+", params="+htParams);
+			oOutputMessage.setParam("ticket_start_time", new Long(_ticketManager.getTicketStartTime(sTicket))
+					.toString());
+			oOutputMessage.setParam("ticket_exp_time", new Long(_ticketManager.getTicketTimeout(sTicket)).toString());
+			oOutputMessage.setParam("uid", sUid);
+			oOutputMessage.setParam("organization", sOrg);
+			oOutputMessage.setParam("authsp_level", sAppLevel);
+			oOutputMessage.setParam("authsp", sAuthSP);
+			// 1.4 backwards compatibility
+			oOutputMessage.setParam("asp_level", sAppLevel);
+			oOutputMessage.setParam("asp", sAuthSP);
 
-            htResponse = sendRequestToASelectServer(sAsUrl, htParams);
+			// Append attributes to the result
+			String sAttributes = (String) htTicketContext.get("attributes");
+			if (sAttributes != null)
+				oOutputMessage.setParam("attributes", sAttributes);
+			else
+				oOutputMessage.setParam("attributes", "");
 
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "FromSERVER, htResponse="+htResponse);
-        }
-        catch (ASelectSAMException eSAM)
-        {
-            _systemLogger.log(Level.SEVERE, 
-                MODULE, sMethod, "Error retrieving A-Select Server resource.", eSAM);
-        }
-        catch (ASelectConfigException eAC)
-        {
-            _systemLogger.log(Level.SEVERE, 
-                MODULE, sMethod, "Mandatory A-Select Server configuration parameter not found", eAC);
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.SEVERE, 
-                MODULE, sMethod, "Unknown error reading A-Select server configuration.", e);
-        }
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
+		}
+		catch (NumberFormatException eNF) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not create response message.", eNF);
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+		}
+		catch (ASelectCommunicationException eAC) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not create response message.", eAC);
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+		}
+		catch (Exception e) {
 
-        return htResponse;
-    }
-    
-    /** 
-     * Sign a request if necessary 
-     * @param htRequest The request parameters.
-     * @throws Exception If signing fails.
-     */
-    private void signRequest(Hashtable htRequest)
-    throws Exception 
-    {
-        if (!_configManager.isSigningEnabled())
-            return;
-        try
-        {
-	        String sSignatureAlgorithm = _configManager.getSignatureAlgorithm();       
-	        Provider oSignatureProvider = _configManager.getSignatureProvider();
-	        Signature oSignature = null;
-            if (oSignatureProvider != null)
-                oSignature = Signature.getInstance(sSignatureAlgorithm, oSignatureProvider);
-            else
-                oSignature = Signature.getInstance(sSignatureAlgorithm);
-	        
-	        StringBuffer sbCreateFrom = new StringBuffer();
-	        TreeSet sortedSet = new TreeSet(htRequest.keySet());
-	        for (Iterator i = sortedSet.iterator();
-	        	i.hasNext(); )
-	        {
-	            String sKey = (String)i.next();
-	            if (!sKey.equals("request"))
-	                sbCreateFrom.append(htRequest.get(sKey));
-	        }
-	        
-            _systemLogger.log(Level.INFO, MODULE, "signRequest()", "Sign:"+sbCreateFrom);
-	        oSignature.initSign(_configManager.getSigningKey());
-	        oSignature.update(sbCreateFrom.toString().getBytes());
-	        byte[] baRawSignature = oSignature.sign();
-	        BASE64Encoder oBase64Enc = new BASE64Encoder();
-	        String sRawSignature = oBase64Enc.encode(baRawSignature);
-	        htRequest.put("signature", sRawSignature);
-        }
-        catch(Exception e)
-        {
-            _systemLogger.log(Level.SEVERE, MODULE, "signRequest()", "Could not sign request:", e );
-            throw new Exception("Unable to sign request.");
-        }
-    }
-    
-    /**
-     * Deserialize attributes and convertion to a <code>Hashtable</code>.
-     * @param sSerializedAttributes the serialized attributes.
-     * @return The deserialized attributes (key,value in <code>Hashtable</code>)
-     * @throws ASelectException If URLDecode fails
-     */
-    protected Hashtable deserializeAttributes(String sSerializedAttributes) 
-    	throws ASelectException
-    {
-        String sMethod = "deSerializeAttributes()";
-        Hashtable htAttributes = new Hashtable();
-        if(sSerializedAttributes != null) //Attributes available
-        {
-	        try
-	        {
-		        //base64 decode
+			sbBuffer = new StringBuffer("Exception while processing request: \"");
+			sbBuffer.append(e.getMessage());
+			sbBuffer.append("\"");
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), e);
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+		}
+	}
+
+	/**
+	 * Performs the deletion of an A-Select application ticket.
+	 * <br><br>
+	 * <b>Description: </b> 
+	 * <br>
+	 * Processes a kill_ticket request.
+	 * That is, the caller has specified <code>request=kill_ticket</code>.
+	 * <br><br>
+	 * This API request should contain the following parameters: 
+	 * <br>
+	 * <table border="1" cellspacing="0" cellpadding="3">
+	 * 	<tr>
+	 * 		<td bgcolor="#EEEEFF">Parameter</td>
+	 * 		<td bgcolor="#EEEEFF">Value</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>request</code></td>
+	 * 		<td>Should contain <code>kill_ticket</code>.</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>ticket</code></td>
+	 * 		<td>
+	 * 			The A-Select application ticket that was issued to the user.
+	 * 		</td>
+	 * 	</tr>
+	 * </table> 
+	 * <br><br>
+	 * The API response contains the following parameters:
+	 * <br>
+	 * <table border="1" cellspacing="0" cellpadding="3">
+	 * 	<tr>
+	 * 		<td style="" bgcolor="#EEEEFF">Parameter</td>
+	 * 		<td bgcolor="#EEEEFF">Value</td>
+	 * 	</tr>    
+	 * 	<tr>
+	 * 		<td><code>result_code</code></td>
+	 * 		<td>
+	 * 		  The A-Select response code:
+	 * 		  <ul>
+	 * 			<li>{@link Errors#ERROR_ASELECT_SUCCESS} (OK)</li>
+	 * 			<li>{@link Errors#ERROR_ASELECT_AGENT_INVALID_REQUEST}</li>
+	 * 			<li>{@link Errors#ERROR_ASELECT_AGENT_UNKNOWN_TICKET}</li>
+	 * 			<li>{@link Errors#ERROR_ASELECT_AGENT_INTERNAL_ERROR}</li>
+	 * 		  </ul>
+	 * 		</td>
+	 * 	</tr>
+	 * </table>
+	 * <br><br>
+	 * <b>Concurrency issues:</b> 
+	 * <br>
+	 * None. 
+	 * <br><br>
+	 * <b>Preconditions: </b> 
+	 * <ul>
+	 * 	<li><code>oInputMessage != null</code></li>
+	 * 	<li><code>oOutputMessage != null</code></li>
+	 * 	<li>
+	 * 	  The caller must have a valid A-Select application <code>ticket</code>.
+	 * 	</li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions: </b> 
+	 * <br>
+	 * The ticket context is deleted and the application ticket is no longer 
+	 * valid. The user can still have a valid TGT at the A-Select server.
+	 * <br>
+	 * 
+	 * @param oInputMessage The API request message.
+	 * @param oOutputMessage The API response message.
+	 * @throws ASelectCommunicationException 
+	 * 		If setting response parameters fails.
+	 */
+	private void processKillTicketRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
+		throws ASelectCommunicationException
+	{
+		String sMethod = "processKillTicketRequest()";
+		StringBuffer sbBuffer = new StringBuffer();
+		String sTicket = null;
+		try {
+			//Get parameters
+			sTicket = oInputMessage.getParam("ticket"); //mandatory              
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "VerCRED sTicket=" + sTicket);
+
+			if (!_ticketManager.killTicket(sTicket)) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "could not kill ticket");
+				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_UNKNOWN_TICKET);
+				return;
+			}
+
+			//set response parameters
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
+		}
+		catch (ASelectCommunicationException eAC) {
+			//mandatory parameter missing
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received.", eAC);
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+			return;
+		}
+		catch (Exception e) {
+			sbBuffer = new StringBuffer("Exception while processing request: \"");
+			sbBuffer.append(e.getMessage());
+			sbBuffer.append("\"");
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), e);
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+		}
+	}
+
+	/**
+	 * Add authorization rules to the A-Select Agent Authorization Engine.
+	 * <br><br>
+	 * <b>Description:</b> 
+	 * <br>
+	 * This method processes the <code>request=set_authorization_rules</code> 
+	 * API call. The <code>set_authorization_rules</code> request can be used 
+	 * by applications and A-Select Filters to add authorization rules to the 
+	 * A-Select Agent Authorisation engine. These rules are then used for 
+	 * authorizing users during the runtime of the A-Select Agent. 
+	 * <br><br>
+	 * If authorization rules exist for the application that is issuing the 
+	 * request, for example configured in the Agent configuration, they are 
+	 * removed before adding the new authorization rules.
+	 * <br><br> 
+	 * This API request should contain the following parameters: 
+	 * <br>
+	 * <table border="1" cellspacing="0" cellpadding="3">
+	 * 	<tr>
+	 * 		<td bgcolor="#EEEEFF">Parameter</td>
+	 * 		<td bgcolor="#EEEEFF">Value</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>request</code></td>
+	 * 		<td>Should contain <code>set_authorization_rules</code>.</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>app_id</code></td>
+	 * 		<td>
+	 * 			The id of the application that has been registered with 
+	 * 			the A-Select Server.
+	 * 		</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td><code>rules</code></td>
+	 * 		<td>
+	 * 			The authorization rules that have to be added to the 
+	 * 			application. These rules should be placed in a array parameter
+	 * 			conform the following syntax:
+	 * 			<code>
+	 * 				rules[]=[Rule-1];[URI-1]&rules[]=[Rule-2];[URI-2]rules[]=[Rule-n];[URI-n]
+	 * 			</code>
+	 * 			<br><br>
+	 * 			The URI may be omitted.
+	 * 		</td>
+	 * 	</tr>
+	 * </table> 
+	 * <br><br>
+	 * The API response contains the following parameters:
+	 * <br>
+	 * <table border="1" cellspacing="0" cellpadding="3">
+	 * 	<tr>
+	 * 		<td style="" bgcolor="#EEEEFF">Parameter</td>
+	 * 		<td bgcolor="#EEEEFF">Value</td>
+	 * 	</tr>    
+	 * 	<tr>
+	 * 		<td><code>result_code</code></td>
+	 * 		<td>
+	 * 		  The A-Select response code:
+	 * 		  <ul>
+	 * 			<li>{@link Errors#ERROR_ASELECT_SUCCESS} (OK)</li>
+	 * 			<li>{@link Errors#ERROR_ASELECT_AGENT_INVALID_REQUEST}</li>
+	 * 			<li>{@link Errors#ERROR_ASELECT_AGENT_AUTHORIZATION_NOT_ENABLED}</li>
+	 * 		  </ul>
+	 * 		</td>
+	 * 	</tr>
+	 * </table>
+	 * <br><br>
+	 * <b>Concurrency issues:</b> 
+	 * <br>
+	 * None. 
+	 * <br><br>
+	 * <b>Preconditions: </b> 
+	 * <ul>
+	 * 	<li><code>oInputMessage != null</code></li>
+	 * 	<li><code>oOutputMessage != null</code></li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions: </b> 
+	 * <br>
+	 * The possible existing rules for this application are removed. The new
+	 * authorization rules are set.
+	 * <br>
+	 * 
+	 * @param oInputMessage The API request message.
+	 * @param oOutputMessage The API response message.
+	 * @throws ASelectCommunicationException 
+	 * 		If setting response parameters fails.
+	 */
+	private void processSetAuthorizationRulesRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
+		throws ASelectCommunicationException
+	{
+		final String sMethod = "processSetAuthorizationRulesRequest()";
+		if (!_bAuthorization) {  //Authorization not enabled
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: authorization is not enabled.");
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_AUTHORIZATION_NOT_ENABLED);
+			return;
+		}
+
+		try {  // get required API parameters
+			String sAppId = oInputMessage.getParam("app_id");
+			String[] saReceivedRules = oInputMessage.getArray("rules");
+
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "RULES sAppId=" + sAppId + ", saReceivedRules="
+					+ saReceivedRules);
+
+			// Split id, rules and URI's
+			String[] saRuleIDs = new String[saReceivedRules.length];
+			String[] saURIs = new String[saReceivedRules.length];
+			String[] saRules = new String[saReceivedRules.length];
+			for (int i = 0; i < saReceivedRules.length; i++) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "RULES Rule=" + sAppId + ", saReceivedRules="
+						+ saReceivedRules[i]);
+				String[] saSplit = saReceivedRules[i].split(";", 3);
+				if (saSplit.length == 3) {
+					saRuleIDs[i] = saSplit[0];
+					if (!saSplit[1].equals(""))
+						saURIs[i] = saSplit[1];
+					else
+						saURIs[i] = null;
+					saRules[i] = saSplit[2];
+
+				}
+				else if (saSplit.length == 2) {
+					saRuleIDs[i] = saSplit[0];
+					saRules[i] = saSplit[1];
+					saURIs[i] = null;
+				}
+				else {  // Invalid rules
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: invalid rules[].");
+					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+					return;
+				}
+			}
+			//add rules for this application
+			AuthorizationEngine.getHandle().setAuthorizationRules(sAppId, saRuleIDs, saRules, saURIs);
+
+			//set result code OK
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod, "Authorization rules set for application " + sAppId);
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
+		}
+		catch (ASelectCommunicationException eAC) {
+			//missing required API parameters
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received.", eAC);
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+		}
+		catch (ASelectAuthorizationException e) {
+			//Invalid rule parameter
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"Invalid request received: one or more rules are invalid", e);
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+			return;
+		}
+	}
+
+	/**
+	 * Send a request to the A-Select Server.
+	 * <br><br>
+	 * <b>Description: </b> 
+	 * <br>
+	 * This method sends a request to the A-Select Server by using a 
+	 * configured {@link IClientCommunicator} implementation.
+	 * 
+	 * @param htParams the request parameters.
+	 * @return The response parameters.
+	 */
+	private Hashtable sendToASelectServer(Hashtable htParams)
+	{
+		String sMethod = "sendToASelectServer()";
+		Hashtable htResponse = new Hashtable();
+
+		ASelectAgentSAMAgent oSAMAgent = ASelectAgentSAMAgent.getHandle();
+		try {
+			SAMResource oResource = oSAMAgent.getActiveResource("aselectserver");
+			Object oConfigSection = oResource.getAttributes();
+
+			String sAS = _configManager.getParam(oConfigSection, "aselect-server-id");
+			String sAsUrl = _configManager.getParam(oConfigSection, "url");
+
+			htParams.put("a-select-server", sAS);
+			signRequest(htParams);
+
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "ToSERVER, url=" + sAsUrl + ", params=" + htParams);
+			htResponse = sendRequestToASelectServer(sAsUrl, htParams);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "FromSERVER, htResponse=" + htResponse);
+		}
+		catch (ASelectSAMException eSAM) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Error retrieving A-Select Server resource.", eSAM);
+		}
+		catch (ASelectConfigException eAC) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod,
+					"Mandatory A-Select Server configuration parameter not found", eAC);
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Unknown error reading A-Select server configuration.", e);
+		}
+		return htResponse;
+	}
+
+	/** 
+	 * Sign a request if necessary 
+	 * @param htRequest The request parameters.
+	 * @throws Exception If signing fails.
+	 */
+	private void signRequest(Hashtable htRequest)
+		throws Exception
+	{
+		if (!_configManager.isSigningEnabled())
+			return;
+		try {
+			String sSignatureAlgorithm = _configManager.getSignatureAlgorithm();
+			Provider oSignatureProvider = _configManager.getSignatureProvider();
+			Signature oSignature = null;
+			if (oSignatureProvider != null)
+				oSignature = Signature.getInstance(sSignatureAlgorithm, oSignatureProvider);
+			else
+				oSignature = Signature.getInstance(sSignatureAlgorithm);
+
+			StringBuffer sbCreateFrom = new StringBuffer();
+			TreeSet sortedSet = new TreeSet(htRequest.keySet());
+			for (Iterator i = sortedSet.iterator(); i.hasNext();) {
+				String sKey = (String) i.next();
+				if (!sKey.equals("request"))
+					sbCreateFrom.append(htRequest.get(sKey));
+			}
+
+			_systemLogger.log(Level.INFO, MODULE, "signRequest()", "Sign:" + sbCreateFrom);
+			oSignature.initSign(_configManager.getSigningKey());
+			oSignature.update(sbCreateFrom.toString().getBytes());
+			byte[] baRawSignature = oSignature.sign();
+			BASE64Encoder oBase64Enc = new BASE64Encoder();
+			String sRawSignature = oBase64Enc.encode(baRawSignature);
+			htRequest.put("signature", sRawSignature);
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, "signRequest()", "Could not sign request:", e);
+			throw new Exception("Unable to sign request.");
+		}
+	}
+
+	/**
+	 * Deserialize attributes and convertion to a <code>Hashtable</code>.
+	 * @param sSerializedAttributes the serialized attributes.
+	 * @return The deserialized attributes (key,value in <code>Hashtable</code>)
+	 * @throws ASelectException If URLDecode fails
+	 */
+	protected Hashtable deserializeAttributes(String sSerializedAttributes)
+		throws ASelectException
+	{
+		String sMethod = "deSerializeAttributes()";
+		Hashtable htAttributes = new Hashtable();
+		if (sSerializedAttributes != null) //Attributes available
+		{
+			try {
+				//base64 decode
 				String sDecodedUserAttrs = new String(Base64.decode(sSerializedAttributes));
-				
-				//decode & and = chars
-		        String[] saAttrs = sDecodedUserAttrs.split("&");
-		        for (int i = 0; i < saAttrs.length; i++)
-		        {
-		            int iEqualChar = saAttrs[i].indexOf("=");
-		            String sKey = "";
-		            String sValue = "";
-                    Vector vVector = null;
-                    
-		            if (iEqualChar > 0)
-		            {
-                        sKey = URLDecoder.decode(
-                            saAttrs[i].substring(0 , iEqualChar), "UTF-8");
-                        
-                        sValue= URLDecoder.decode(
-                            saAttrs[i].substring(iEqualChar + 1), "UTF-8");
-                        
-                        if (sKey.endsWith("[]"))
-                        { //it's a multi-valued attribute
-                            // Strip [] from sKey
-                            sKey = sKey.substring(0,sKey.length() - 2);
-                            
-                            if ((vVector = (Vector)htAttributes.get(sKey)) == null)
-                                vVector = new Vector();                                
-                            
-                            vVector.add(sValue);
-                        }                        
-		            }
-		            else
-		            	sKey = URLDecoder.decode(saAttrs[i], "UTF-8");
-		            
-                    
-                    if (vVector != null)
-                        //store multivalue attribute
-                        htAttributes.put(sKey, vVector);
-                    else
-                        //store singlevalue attribute
-                        htAttributes.put(sKey, sValue);
-		        }
-	        }
-	        catch (Exception e)
-	        {
-	            _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-	                "Error during deserialization of attributes", e);
-	            throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-	        }
-        }
-        return htAttributes;
-    }
-}
 
+				//decode & and = chars
+				String[] saAttrs = sDecodedUserAttrs.split("&");
+				for (int i = 0; i < saAttrs.length; i++) {
+					int iEqualChar = saAttrs[i].indexOf("=");
+					String sKey = "";
+					String sValue = "";
+					Vector vVector = null;
+
+					if (iEqualChar > 0) {
+						sKey = URLDecoder.decode(saAttrs[i].substring(0, iEqualChar), "UTF-8");
+
+						sValue = URLDecoder.decode(saAttrs[i].substring(iEqualChar + 1), "UTF-8");
+
+						if (sKey.endsWith("[]")) { //it's a multi-valued attribute
+							// Strip [] from sKey
+							sKey = sKey.substring(0, sKey.length() - 2);
+
+							if ((vVector = (Vector) htAttributes.get(sKey)) == null)
+								vVector = new Vector();
+
+							vVector.add(sValue);
+						}
+					}
+					else
+						sKey = URLDecoder.decode(saAttrs[i], "UTF-8");
+
+					if (vVector != null)
+						//store multivalue attribute
+						htAttributes.put(sKey, vVector);
+					else
+						//store singlevalue attribute
+						htAttributes.put(sKey, sValue);
+				}
+			}
+			catch (Exception e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error during deserialization of attributes", e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+			}
+		}
+		return htAttributes;
+	}
+}

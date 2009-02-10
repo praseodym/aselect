@@ -9,7 +9,6 @@ import java.util.logging.Level;
 
 import org.aselect.server.request.handler.xsaml20.ServiceProvider;
 import org.aselect.server.request.handler.xsaml20.SoapLogoutRequestSender;
-import org.aselect.server.request.handler.xsaml20.idp.MetaDataManagerIdp;
 import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
@@ -22,16 +21,9 @@ import org.aselect.system.storagemanager.handler.JDBCStorageHandler;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
-/**
- * JDBCStorageHandlerTimeOut. <br>
- * <br>
- * <b>Description:</b><br>
- * This class is used for timeout. <br>
- * <br>
- * <br>
- * <br>
- * 
- * @author Atos Origin
+/*
+ * NOTE: Code is identical to MemoryStorageHandlerTimeOut (except for class-names of course).
+ *       Though it is different from the sp-version.
  */
 public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 {
@@ -195,8 +187,9 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 						spLastSync = _oTGTManager.getTimestamp(key);
 					}
 					_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "IDPTO - ListSize="+spList.size()+
-								" ExpInt=" + lExpInterval + " LastSync=" + (spLastSync - now) +
-								" Left="+(spLastSync+lExpInterval-now)+" SP=" + sp.getServiceProviderUrl());
+							((danishLogout)?" DANISH": "")+((spLastSync < now - lExpInterval)?" EXPIRED":"")+
+							" ExpInt=" + lExpInterval + " LastSync=" + (spLastSync - now) +
+							" Left="+(spLastSync+lExpInterval-now)+" SP=" + sp.getServiceProviderUrl());
 					if (danishLogout || spLastSync < now - lExpInterval) {  // was: timeLimitSp) {
 						if (spList.size() == 1) {
 							_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "IDPTO - Remove TGT Key=" + sKey);

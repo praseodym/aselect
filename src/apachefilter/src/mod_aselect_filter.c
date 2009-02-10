@@ -767,7 +767,7 @@ aselect_filter_handler(request_rec *pRequest)
                     //
 		    // Bauke: added, always send rules
 		    if (aselect_filter_upload_all_rules(pConfig, pRequest->server, pPool))
-			;
+		    	;
 
                     if ((pcResponseVT = aselect_filter_verify_ticket(pRequest, pPool, pConfig, pcTicketIn, pcUIDIn, pcOrganizationIn, pcAttributesIn)))
                     {

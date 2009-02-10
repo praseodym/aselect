@@ -7,8 +7,6 @@ import java.util.Hashtable;
 import java.util.logging.Level;
 
 import org.aselect.server.request.handler.xsaml20.SoapLogoutRequestSender;
-import org.aselect.server.request.handler.xsaml20.sp.SessionSyncRequestSender;
-import org.aselect.server.request.handler.xsaml20.sp.MetaDataManagerSp;
 import org.aselect.server.tgt.TGTManager;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.configmanager.ConfigManager;
@@ -22,24 +20,22 @@ import org.aselect.system.storagemanager.handler.JDBCStorageHandler;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
+/*
+ * NOTE: Code is identical to MemoryStorageHandlerTimeOut (except for class-names of course)
+ */
 public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 {
 	private final static String MODULE = "JDBCStorageHandlerTimeOut";
-
 	private TGTManager _oTGTManager;
 	private ConfigManager _oConfigManager;
 	private ASelectSystemLogger _oSystemLogger;
-
-//	private String timeOut;
-//	long timeOutTime = 0L;
-
 	private String _serverUrl;
 	private String _sFederationUrl;
 	private boolean _bVerifySignature = false; 	
 
 	@Override
 	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger systemLogger, SAMAgent oSAMAgent)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "init()";
 
@@ -78,7 +74,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "verify_signature = " + is_bVerifySignature());
 		}
 		catch (ASelectConfigException e) {
-			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "verify_signature not found tgt section or no tgt section, set to = " + is_bVerifySignature());
+			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "verify_signature not found, set to = " + is_bVerifySignature());
 		}
 	}
 

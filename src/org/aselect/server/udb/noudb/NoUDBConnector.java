@@ -89,379 +89,206 @@ import org.aselect.system.sam.agent.SAMResource;
  */
 public class NoUDBConnector implements IUDBConnector
 {
-    /**
-     * The name of the class, used for logging.
-     */
-    private final static String MODULE = "NoUDBConnector";
-    
-    /**
-     * The A-Select config manager used for reading config parameters
-     */
-    private ASelectConfigManager _oASelectConfigManager;
-    /**
-     * The logger that is used for system logging 
-     */
-    private ASelectSystemLogger _oASelectSystemLogger;
-    /**
-     * Logger used for authentication logging
-     */
-    private ASelectAuthenticationLogger _oASelectAuthenticationLogger;
-    /**
-     * The UDB flatfile
-     */
-    private Properties _propFlatFile;
-    
-    /**
-     * Initializes managers and loads the A-Select user db flatfile into a 
-     * <code>Properties</code> object.
-     * <br><br>
-     * @see org.aselect.server.udb.IUDBConnector#init(java.lang.Object)
-     */
-    public void init(Object oConfigSection)
-        throws ASelectUDBException
-    {
-        //String sFlatFile = null;
-        String sUDBResourceGroup = null;
-        String sMethod = "init()";
-        _oASelectSystemLogger = ASelectSystemLogger.getHandle();
-        _oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "NoUDB");         
+	/**
+	 * The name of the class, used for logging.
+	 */
+	private final static String MODULE = "NoUDBConnector";
 
-        _oASelectConfigManager = ASelectConfigManager.getHandle();
-        _oASelectAuthenticationLogger = ASelectAuthenticationLogger.getHandle();
-        ASelectSAMAgent oASelectSAMAgent = ASelectSAMAgent.getHandle();
-       
-        try  {	        
-	        try {
-			    sUDBResourceGroup = _oASelectConfigManager.getParam(oConfigSection, "resourcegroup");
+	/**
+	 * The A-Select config manager used for reading config parameters
+	 */
+	private ASelectConfigManager _oASelectConfigManager;
+	/**
+	 * The logger that is used for system logging 
+	 */
+	private ASelectSystemLogger _oASelectSystemLogger;
+	/**
+	 * Logger used for authentication logging
+	 */
+	private ASelectAuthenticationLogger _oASelectAuthenticationLogger;
+	/**
+	 * The UDB flatfile
+	 */
+	private Properties _propFlatFile;
+
+	/**
+	 * Initializes managers and loads the A-Select user db flatfile into a 
+	 * <code>Properties</code> object.
+	 * <br><br>
+	 * @see org.aselect.server.udb.IUDBConnector#init(java.lang.Object)
+	 */
+	public void init(Object oConfigSection)
+		throws ASelectUDBException
+	{
+		//String sFlatFile = null;
+		String sUDBResourceGroup = null;
+		String sMethod = "init()";
+		_oASelectSystemLogger = ASelectSystemLogger.getHandle();
+		_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "NoUDB");
+
+		_oASelectConfigManager = ASelectConfigManager.getHandle();
+		_oASelectAuthenticationLogger = ASelectAuthenticationLogger.getHandle();
+		ASelectSAMAgent oASelectSAMAgent = ASelectSAMAgent.getHandle();
+
+		try {
+			try {
+				sUDBResourceGroup = _oASelectConfigManager.getParam(oConfigSection, "resourcegroup");
 			}
-			catch (ASelectConfigException e)
-			{
-			    _oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod,
-			        "No 'resourcegroup' config item found in udb 'connector' config section.", e);
-			    
-			    throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			catch (ASelectConfigException e) {
+				_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod,
+						"No 'resourcegroup' config item found in udb 'connector' config section.", e);
+
+				throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
-			
-	        SAMResource oSAMResource = null;
-	        try
-			{
-			    oSAMResource = oASelectSAMAgent.getActiveResource(sUDBResourceGroup);
+
+			SAMResource oSAMResource = null;
+			try {
+				oSAMResource = oASelectSAMAgent.getActiveResource(sUDBResourceGroup);
 			}
-			catch (ASelectSAMException e)
-			{
-			    StringBuffer sbFailed = new StringBuffer(
-					"No active resource found in udb resourcegroup: ");
-			    sbFailed.append(sUDBResourceGroup);
-			    _oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod,
-			        sbFailed.toString(), e);
-			    
-			    throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			catch (ASelectSAMException e) {
+				StringBuffer sbFailed = new StringBuffer("No active resource found in udb resourcegroup: ");
+				sbFailed.append(sUDBResourceGroup);
+				_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbFailed.toString(), e);
+
+				throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
-			
-			Object oResourceConfig = oSAMResource.getAttributes();
-			/*			
-	        try
-	        {
-//	            sFlatFile = _oASelectConfigManager.getParam(oResourceConfig, "file");
-	        }
-	        catch (Exception e)
-	        {
-	            _oASelectSystemLogger.log(Level.SEVERE, 
-	                MODULE, sMethod, "No config item 'authsp' found in noudb resource.", e);
+		}
+		catch (ASelectUDBException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			StringBuffer sbBuffer = new StringBuffer("Could not initialize the noUDB connector: ");
+			sbBuffer.append(e.getMessage());
+			_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), e);
 
-	            throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-	        }
-			 */
-	        /*
-	        File fUDBFile = new File(sFlatFile);
-            if( !fUDBFile.exists() )
-            {
-                StringBuffer sbBuffer = new StringBuffer("Can't access UDB file: ");
-                sbBuffer.append(sFlatFile);
-                _oASelectSystemLogger.log(Level.SEVERE, 
-                    MODULE, sMethod, sbBuffer.toString());
-                throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR);
-            }
-            
-            _propFlatFile = new Properties();
-            _propFlatFile.load(new FileInputStream(fUDBFile));
-            */
-        }
-        catch (ASelectUDBException e)
-        {
-            throw e;
-        }
-        catch (Exception e)
-        {
-            StringBuffer sbBuffer = new StringBuffer("Could not initialize the noUDB connector: ");
-            sbBuffer.append(e.getMessage());
-            _oASelectSystemLogger.log(Level.SEVERE, 
-                MODULE, sMethod, sbBuffer.toString(), e);
+			throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+		}
+	}
 
-            throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-        }
-    }
+	/**
+	 * Returns a hashtable with the user's record.
+	 * <br><br>
+	 * <b>Description</b>:
+	 * <br>
+	 * The returned hashtable contains a <code>result_code</code> and  
+	 * <code>user_authsps</code> which is a hashtable containing the AuthSP's that the user is registered for.
+	 * Within this hashtable each AuthSP has an entry with the value of the
+	 * user attributes that specific AuthSP.
+	 * <br><br>
+	 * @see org.aselect.server.udb.IUDBConnector#getUserProfile(java.lang.String)
+	 */
+	public Hashtable getUserProfile(String sUserId)
+	{
+		String sMethod = "getUserProfile()";
 
-    /**
-     * Returns a hashtable with the user's record.
-     * <br><br>
-     * <b>Description</b>:
-     * <br>
-     * The returned hashtable contains a <code>result_code</code> and  
-     * <code>user_authsps</code> which is a hashtable containing the AuthSP's that the user is registered for.
-     * Within this hashtable each AuthSP has an entry with the value of the
-     * user attributes that specific AuthSP.
-     * <br><br>
-     * @see org.aselect.server.udb.IUDBConnector#getUserProfile(java.lang.String)
-     */
-    public Hashtable getUserProfile(String sUserId)
-    {
-        String sMethod = "getUserProfile()";
-        
-        _oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "user="+sUserId);         
-        Hashtable htResponse = new Hashtable();
-        Hashtable htUserAttributes = new Hashtable();
-        Object oAuthSPsSection = null;
-        Object oAuthSP = null;
-        String sAuthSPID = null;
+		_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "user=" + sUserId);
+		Hashtable htResponse = new Hashtable();
+		Hashtable htUserAttributes = new Hashtable();
+		Object oAuthSPsSection = null;
+		Object oAuthSP = null;
+		String sAuthSPID = null;
 
-        /*
-        String sUID = sUserId.replace(' ', '+'); 
-        
-        StringBuffer sbAccountEnabled = new StringBuffer("user.");
-        sbAccountEnabled.append(sUID);
-        sbAccountEnabled.append(".accountenabled");
-        */
-        try
-        {
-        	// TODO, maybe make some way to disable users on basis of regex
-        	
-            htResponse.put("result_code", Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
-            /*
-            if (!_propFlatFile.containsKey(sbAccountEnabled.toString()))
-            {
-                logAuthentication(sUID, 
-                    Errors.ERROR_ASELECT_UDB_UNKNOWN_USER, "denied");
-                
-                throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_UNKNOWN_USER);
-            }
+		try {
+			htResponse.put("result_code", Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
+			try {
+				oAuthSPsSection = _oASelectConfigManager.getSection(null, "authsps");
+			}
+			catch (Exception e) {
+				_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, "Config section 'authsps' not found.");
 
-            //first check if the user was enabled
-            String sAcountEnabled = (String)_propFlatFile.get(sbAccountEnabled.toString());
-            if (!sAcountEnabled.equalsIgnoreCase("true"))
-            {
-                logAuthentication(sUID, 
-                    Errors.ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED, "denied");
-               
-                throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED);
-            }
-            */
-            try
-            {
-                oAuthSPsSection = _oASelectConfigManager.getSection(null, "authsps");
-            }
-            catch (Exception e)
-            {
-                _oASelectSystemLogger.log(Level.SEVERE, 
-                    MODULE, sMethod, "Config section 'authsps' not found.");
-                
-                throw new ASelectUDBException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-            }
-            
-            try
-            {
-                oAuthSP = _oASelectConfigManager.getSection(oAuthSPsSection, "authsp");
-            }
-            catch (Exception e)
-            {
-                _oASelectSystemLogger.log(Level.SEVERE, 
-                    MODULE, sMethod, "Not even one config section 'authsp' found in config section 'authsps'.");
-                
-                throw new ASelectUDBException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-            }
-            
-            // Loop through all available authsp's
-            while(oAuthSP != null)
-            {
-                try
-                {
-                    sAuthSPID = _oASelectConfigManager.getParam(oAuthSP, "id");
-                }
-                catch (Exception e)
-                {
-                    _oASelectSystemLogger.log(Level.SEVERE, 
-                        MODULE, sMethod, "No config item 'id' found in 'authsp' config section.");
-                    
-                    throw new ASelectUDBException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-                }
+				throw new ASelectUDBException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			}
 
-                /*
-            	StringBuffer sbUserRegistered = new StringBuffer("user.");
-            	sbUserRegistered.append(sUID);
-            	sbUserRegistered.append(".");
-            	sbUserRegistered.append(sAuthSPID);
-            	sbUserRegistered.append(".registered");
-            	
-                String sUserRegistered = (String)_propFlatFile.get(sbUserRegistered.toString());
-                _oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "Authsp: "+sAuthSPID+" reg="+sUserRegistered);
-                
-                if (sUserRegistered != null && sUserRegistered.equalsIgnoreCase("true"))
-                {
-                    StringBuffer sbUserAttributes = new StringBuffer("user.");
-                    sbUserAttributes.append(sUID);
-                    sbUserAttributes.append(".");
-                    sbUserAttributes.append(sAuthSPID);
-                    sbUserAttributes.append(".attributes");
-                    
-                    String sAttributesValue = (String)_propFlatFile.get(sbUserAttributes.toString());
-                    if (sAttributesValue == null) sAttributesValue = "";
-                    htUserAttributes.put(sAuthSPID, sAttributesValue);
-                }
-                */
-                // TODO maybe make some way to "rewrite" sUserId through regex
-                // TODO maybe make some way to inject fixed attribute
-                htUserAttributes.put(sAuthSPID, sUserId == null ? "" : sUserId);
+			try {
+				oAuthSP = _oASelectConfigManager.getSection(oAuthSPsSection, "authsp");
+			}
+			catch (Exception e) {
+				_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod,
+						"Not even one config section 'authsp' found in config section 'authsps'.");
 
-                oAuthSP = _oASelectConfigManager.getNextSection(oAuthSP);
-            }
+				throw new ASelectUDBException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			}
 
-            if (htUserAttributes.size() == 0)
-            {
-                StringBuffer sbBuffer = new StringBuffer("No user attributes found for user: ");
-                sbBuffer.append(sUserId);
-                _oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
-                
-                throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
-            }
+			// Loop through all available authsp's
+			while (oAuthSP != null) {
+				try {
+					sAuthSPID = _oASelectConfigManager.getParam(oAuthSP, "id");
+				}
+				catch (Exception e) {
+					_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod,
+							"No config item 'id' found in 'authsp' config section.");
 
-            htResponse.put("user_authsps", htUserAttributes);
-            htResponse.put("result_code", Errors.ERROR_ASELECT_SUCCESS);
-        }
-        catch (ASelectUDBException e)
-        {
-            htResponse.put("result_code", e.getMessage());
-        }
-        catch (Exception e)
-        {
-            StringBuffer sbBuffer = new StringBuffer("Failed to fetch profile of user ");
-            sbBuffer.append(sUserId);
-            sbBuffer.append(": ");
-            sbBuffer.append(e.getMessage());
-            
-            _oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), e);
-            
-            htResponse.put("result_code", Errors.ERROR_ASELECT_UDB_INTERNAL);
-        }
-        
-        return htResponse;
-    }
-   
-    /**
-     * Check if user is A-Select enabled.
-     * <br><br>
-     * @see org.aselect.server.udb.IUDBConnector#isUserEnabled(java.lang.String)
-     */
-    public boolean isUserEnabled(String sUserId)
-    {
-        String sMethod = "isUserEnabled()";
-//        boolean bEnabled = false;
-        // TODO maybe make some way to disable user based on regex
-        boolean bEnabled = true; 
-        _oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "user="+sUserId);         
-        /*              
-        String sUID = sUserId.replace(' ', '+'); //TODO this could be removed (Erwin) 
-        
-        StringBuffer sbAccountEnabled = new StringBuffer("user.");
-        sbAccountEnabled.append(sUID);
-        sbAccountEnabled.append(".accountenabled");
-        
-              
-        if (_propFlatFile.containsKey(sbAccountEnabled.toString())) //user exists
-        {   
-            
-            //Check if the user was enabled
-            String sAcountEnabled = (String)_propFlatFile.get(sbAccountEnabled.toString());
-            if(sAcountEnabled != null && sAcountEnabled.equalsIgnoreCase("true"))
-            {   
-                //account enabled
-                bEnabled = true;
-            }
-            else
-            {
-                StringBuffer sb = new StringBuffer("User not A-Select enabled: '");
-                sb.append(sUserId).append("'");
-                _oASelectSystemLogger.log(Level.FINE, 
-                    MODULE, sMethod, sb.toString(), new ASelectUDBException(
-                        Errors.ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED));
-            }           
-        }
-        else
-        {
-            StringBuffer sb = new StringBuffer("User not found: '");
-            sb.append(sUserId).append("'");
-            _oASelectSystemLogger.log(Level.FINE, 
-                MODULE, sMethod, sb.toString(), new ASelectUDBException(
-                    Errors.ERROR_ASELECT_UDB_UNKNOWN_USER));
-        }
-        */
-        return bEnabled;              
-    }
+					throw new ASelectUDBException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+				}
+				htUserAttributes.put(sAuthSPID, sUserId == null ? "" : sUserId);
+				oAuthSP = _oASelectConfigManager.getNextSection(oAuthSP);
+			}
 
-    /**
-     * Retrieve the A-Select user attributes.
-     * <br><br>
-     * @see org.aselect.server.udb.IUDBConnector#getUserAttributes(java.lang.String, java.lang.String)
-     */
-    public String getUserAttributes(String sUserId, String sAuthSPId)
-    {
-        String sMethod = "getUserAttributes()";
-        _oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "user="+sUserId+" Authsp="+sAuthSPId);
-        // TODO maybe make some way to "rewrite" attribute through regex
-        String sAttributesValue = sUserId == null ? "" : sUserId;      
-        /*
-        String sAttributesValue = null;      
-        String sUID = sUserId.replace(' ', '+');              
-        
-   
-        StringBuffer sbUserAttributes = new StringBuffer("user.");
-        sbUserAttributes.append(sUID);
-        sbUserAttributes.append(".");
-        sbUserAttributes.append(sAuthSPId);
-        sbUserAttributes.append(".attributes");
-        
-        sAttributesValue = (String)_propFlatFile.get(sbUserAttributes.toString());
-        if (sAttributesValue == null) 
-        {
-            StringBuffer sb = new StringBuffer("User attributes for authsp '");
-            sb.append(sAuthSPId).append("' not found for user: '");
-            sb.append(sUserId).append("'");
-            _oASelectSystemLogger.log(Level.FINE, 
-                MODULE, sMethod, sb.toString(), new ASelectUDBException(
-                    Errors.ERROR_ASELECT_UDB_UNKNOWN_USER));
-        }
-        */        
-        return sAttributesValue;
-    }
+			if (htUserAttributes.size() == 0) {
+				StringBuffer sbBuffer = new StringBuffer("No user attributes found for user: ");
+				sbBuffer.append(sUserId);
+				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
 
-    /**
-     * Sorts authentication logging parameters and logs them.
-     * <br><br>
-     * @param sUserID The A-Select user id
-     * @param sErrorCode The error code of the error that occured
-     * @param sMessage The authenitcation log message
-     */
-    private void logAuthentication(String sUserID, String sErrorCode, String sMessage)
-    {
-        _oASelectAuthenticationLogger.log( new Object[] { 
-    		MODULE,
-            sUserID,
-            null,
-            null,
-            null,
-            sMessage,
-            sErrorCode});
-    }
+				throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
+			}
 
+			htResponse.put("user_authsps", htUserAttributes);
+			htResponse.put("result_code", Errors.ERROR_ASELECT_SUCCESS);
+		}
+		catch (ASelectUDBException e) {
+			htResponse.put("result_code", e.getMessage());
+		}
+		catch (Exception e) {
+			StringBuffer sbBuffer = new StringBuffer("Failed to fetch profile of user ");
+			sbBuffer.append(sUserId);
+			sbBuffer.append(": ");
+			sbBuffer.append(e.getMessage());
+
+			_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), e);
+
+			htResponse.put("result_code", Errors.ERROR_ASELECT_UDB_INTERNAL);
+		}
+
+		return htResponse;
+	}
+
+	/**
+	 * Check if user is A-Select enabled.
+	 * <br><br>
+	 * @see org.aselect.server.udb.IUDBConnector#isUserEnabled(java.lang.String)
+	 */
+	public boolean isUserEnabled(String sUserId)
+	{
+		String sMethod = "isUserEnabled()";
+		boolean bEnabled = true;
+		_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "user=" + sUserId);
+		return bEnabled;
+	}
+
+	/**
+	 * Retrieve the A-Select user attributes.
+	 * <br><br>
+	 * @see org.aselect.server.udb.IUDBConnector#getUserAttributes(java.lang.String, java.lang.String)
+	 */
+	public String getUserAttributes(String sUserId, String sAuthSPId)
+	{
+		String sMethod = "getUserAttributes()";
+		_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "User=" + sUserId + " Authsp=" + sAuthSPId);
+		String sAttributesValue = sUserId == null ? "" : sUserId;
+		return sAttributesValue;
+	}
+
+	/**
+	 * Sorts authentication logging parameters and logs them.
+	 * <br><br>
+	 * @param sUserID The A-Select user id
+	 * @param sErrorCode The error code of the error that occured
+	 * @param sMessage The authenitcation log message
+	 */
+	private void logAuthentication(String sUserID, String sErrorCode, String sMessage)
+	{
+		_oASelectAuthenticationLogger.log(new Object[] {
+			MODULE, sUserID, null, null, null, sMessage, sErrorCode
+		});
+	}
 }
-
-
