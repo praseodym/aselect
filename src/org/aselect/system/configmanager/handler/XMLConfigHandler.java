@@ -628,8 +628,7 @@ public class XMLConfigHandler implements IConfigHandler
         {
             sbError.append("Error retrieving parameter: ");
             sbError.append(sConfigItem+oSection.toString());
-            _oSystemLogger.log(Level.FINE, 
-                MODULE, sMethod, sbError.toString());
+            _oSystemLogger.log(Level.FINER, MODULE, sMethod, sbError.toString());
             throw new ASelectConfigException(Errors.ERROR_ASELECT_NOT_FOUND);
         }
         return sValue;

@@ -2,11 +2,8 @@ package org.aselect.system.logging;
 
 import java.util.logging.Level;
 
-import org.aselect.server.ASelectServer;
-import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
-import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 
 public class SystemLogger implements ISystemLogger {
@@ -16,8 +13,8 @@ public class SystemLogger implements ISystemLogger {
 	private ISystemLogger _logger;
 	private String className;
 	
-	public SystemLogger() {
-		ASelectConfigManager oASelectConfigManager = ASelectConfigManager.getHandle();
+	public SystemLogger()
+	{
         
         try
         {
