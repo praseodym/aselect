@@ -241,11 +241,15 @@ public class SessionSyncRequestSender
 		}
 
 		Long now = new Date().getTime();
-		Long lastSync = Long.parseLong((String)htTGTContext.get("sessionsynctime"));
+		String ssTime = (String)htTGTContext.get("sessionsynctime");
+		Long lastSync = (ssTime==null)? -1: Long.parseLong(ssTime);
 		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "update_interval="+_lUpdateInterval+
 				" LastSync="+(lastSync-now)+" Left="+(lastSync+_lUpdateInterval-now));
 		
-		if (now >= lastSync + _lUpdateInterval) {
+		if (ssTime==null) {
+			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SP - Session Sync NOT ACTIVATED (no TimeOut handler?)");
+		}
+		else if (now >= lastSync + _lUpdateInterval) {
 			// Session Sync needed
 			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SP - Session Sync, type="+_sSamlMessageType+" now="+now);
 			String sNameID = (String)htTGTContext.get("name_id");

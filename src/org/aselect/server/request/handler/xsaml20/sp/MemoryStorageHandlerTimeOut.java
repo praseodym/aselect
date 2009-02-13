@@ -146,7 +146,8 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 
 			String sKey = (key.length() > 30) ? key.substring(0, 30) + "..." : key;
 			_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO - NameID=" + sNameID + 
-					" TimeStamp="+(timeStamp-now)+" Left=" + (expireTime - now) + " lastSync=" + (lastSync-now)+" Key=" + sKey);
+					" TimeStamp="+(timeStamp-now)+" Left=" + (expireTime - now) + 
+					" lastSync=" + (lastSync-now)+" Key=" + sKey);
 			
 			// Check Ticket Expiration
 			if (now >= expireTime) {

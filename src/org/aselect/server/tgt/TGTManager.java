@@ -330,7 +330,7 @@ public class TGTManager extends StorageManager
                 bReturn = false;                
                 StringBuffer sbError = new StringBuffer("Could not update context of TGT: ");
                 sbError.append(sTGT);
-                _systemLogger.log(Level.WARNING, MODULE, "updateTGT()", sbError.toString(), e);
+                _systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
             }
         }
         return bReturn;

@@ -574,6 +574,8 @@ public class TGTIssuer
             if (sIssuer != null) {
             	// SSO Sessions in effect
             	htTGTContext.put("sp_issuer", sIssuer);
+                String sSpRid = (String)htSessionContext.get("sp_rid");
+                if (sSpRid != null) htTGTContext.put("sp_rid", sSpRid);
             	if (ssoSession == null) {
                     _systemLogger.log(Level.INFO, MODULE, sMethod, "NEW SSO session for "+sUserId+" issuer="+sIssuer);
             		ssoSession = new UserSsoSession(sUserId, "");  // sTgt);

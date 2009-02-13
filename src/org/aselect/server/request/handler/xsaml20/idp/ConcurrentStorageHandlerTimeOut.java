@@ -17,7 +17,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMAgent;
-import org.aselect.system.storagemanager.handler.MemoryStorageHandler;
+import org.aselect.system.storagemanager.handler.ConcurrentStorageHandler;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
@@ -25,7 +25,7 @@ import org.opensaml.saml2.metadata.SingleLogoutService;
  * NOTE: Code is identical to MemoryStorageHandlerTimeOut (except for class-names of course)
  *       Though it is different from the sp-version.
  */
-public class ConcurrentStorageHandlerTimeOut extends MemoryStorageHandler
+public class ConcurrentStorageHandlerTimeOut extends ConcurrentStorageHandler
 {
 	private final static String MODULE = "ConcurrentStorageHandlerTimeOut";
 	private TGTManager _oTGTManager;

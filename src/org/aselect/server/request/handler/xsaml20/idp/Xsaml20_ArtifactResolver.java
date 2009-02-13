@@ -272,8 +272,6 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler  // RH, 2008060
 				artifactResponse.setStatus(status);
 				artifactResponse.setIssuer(issuer);
 				artifactResponse.setMessage(samlResponse);
-				
-
 			}
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the artifactResponse >======" );

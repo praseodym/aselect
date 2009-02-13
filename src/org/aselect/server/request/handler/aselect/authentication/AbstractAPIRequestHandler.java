@@ -74,7 +74,7 @@
  * Moved redundant code to seperate class (AbstractAPIRequestHandler)
  *
  */
- 
+
 package org.aselect.server.request.handler.aselect.authentication;
 
 import java.net.URLEncoder;
@@ -121,275 +121,240 @@ import org.aselect.system.utils.BASE64Encoder;
  */
 public abstract class AbstractAPIRequestHandler implements IRequestHandler
 {
-    /** The module name. Can be overwritten in sub classes */
-    protected String _sModule = "AbstractAPIRequestHandler";  
-    
-    /** The message creator. */
-    private IMessageCreatorInterface _messageCreator = null;
-    
-    /** The system logger. */
-    protected ASelectSystemLogger _systemLogger; 
-    
-    private HttpServletRequest _servletRequest;    
-    private HttpServletResponse _servletResponse;
-    
-    /** The server ID */
-    protected String _sMyServerId;
-    
-    /** The origanisation */
-    protected String _sMyOrg;
-        
-    /**
-     * Construct a instance.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Handles are obtained to relevant managers and determines the protocol.
-     * <br>
-     * @param reqParser The request parser to be used.
-     * @param servletRequest The request.
-     * @param servletResponse The response.
-     * @param sMyServerId The A-Select Server ID.
-     * @param sMyOrg The A-Select Server organisation.
-     * @throws ASelectCommunicationException If communication fails.
-     */
-    public AbstractAPIRequestHandler (RequestParser reqParser, 
-        								HttpServletRequest servletRequest, 
-        								HttpServletResponse servletResponse,
-        								String sMyServerId, String sMyOrg)
-    throws ASelectCommunicationException
-    {       
-        String sMethod = "AbstractAPIRequestHandler()";
-        
-        _systemLogger = ASelectSystemLogger.getHandle();
+	/** The module name. Can be overwritten in sub classes */
+	protected String _sModule = "AbstractAPIRequestHandler";
+
+	/** The message creator. */
+	private IMessageCreatorInterface _messageCreator = null;
+
+	/** The system logger. */
+	protected ASelectSystemLogger _systemLogger;
+
+	private HttpServletRequest _servletRequest;
+	private HttpServletResponse _servletResponse;
+
+	/** The server ID */
+	protected String _sMyServerId;
+
+	/** The origanisation */
+	protected String _sMyOrg;
+
+	/**
+	 * Construct a instance.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Handles are obtained to relevant managers and determines the protocol.
+	 * <br>
+	 * @param reqParser The request parser to be used.
+	 * @param servletRequest The request.
+	 * @param servletResponse The response.
+	 * @param sMyServerId The A-Select Server ID.
+	 * @param sMyOrg The A-Select Server organisation.
+	 * @throws ASelectCommunicationException If communication fails.
+	 */
+	public AbstractAPIRequestHandler(RequestParser reqParser, HttpServletRequest servletRequest,
+			HttpServletResponse servletResponse, String sMyServerId, String sMyOrg)
+	throws ASelectCommunicationException
+	{
+		String sMethod = "AbstractAPIRequestHandler()";
+
+		_systemLogger = ASelectSystemLogger.getHandle();
 		_servletRequest = servletRequest;
 		_servletResponse = servletResponse;
 		_sMyServerId = sMyServerId;
 		_sMyOrg = sMyOrg;
-		
-		switch(reqParser.getRequestProtocol())
-		{
-		    case RequestParser.PROTOCOL_SOAP11:
-		        _messageCreator = new SOAP11MessageCreator(
-		            _servletRequest.getRequestURL().toString(), "ASelect",
-		            _systemLogger);
-		    	break;
-		    case RequestParser.PROTOCOL_SOAP12:
-		        _messageCreator = new SOAP12MessageCreator(
-		            _servletRequest.getRequestURL().toString(), "ASelect",
-		            _systemLogger);
-		    	break;
-		    case RequestParser.PROTOCOL_CGI:
-		        _messageCreator = new RawMessageCreator(
-		            _systemLogger);
-		    	break;
-		    default:
-		        _systemLogger.log(Level.WARNING,_sModule,sMethod,
-		            "Invalid request protocol received.");
-		        throw new ASelectCommunicationException(
-		            Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "Protocol="+reqParser.getRequestProtocol());
+		switch (reqParser.getRequestProtocol()) {
+		case RequestParser.PROTOCOL_SOAP11:
+			_messageCreator = new SOAP11MessageCreator(_servletRequest.getRequestURL().toString(), "ASelect",
+					_systemLogger);
+			break;
+		case RequestParser.PROTOCOL_SOAP12:
+			_messageCreator = new SOAP12MessageCreator(_servletRequest.getRequestURL().toString(), "ASelect",
+					_systemLogger);
+			break;
+		case RequestParser.PROTOCOL_CGI:
+			_messageCreator = new RawMessageCreator(_systemLogger);
+			break;
+		default:
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request protocol received.");
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
-    }
-      
-    /**
-     * Main process function.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Creates a <code>Communicator</code> and calls  
-     * {@link #processAPIRequest(IProtocolRequest, IInputMessage, IOutputMessage)}
-     * @throws ASelectException if communication fails and no response 
-     * is send to the client.
-     */
-    public void processRequest() throws ASelectException
-    {
-        String sMethod = "processRequest()";
-
-        //create protocol wrappers
-        IProtocolRequest protocolRequest = new ServletRequestWrapper(
-            _servletRequest);
-        IProtocolResponse protocolResponse = new ServletResponseWrapper(
-            _servletResponse);
-
-        //create the communicator with the messagecreator
-        Communicator communicator = new Communicator(_messageCreator);
-        try
-        {
-            if (communicator.init(protocolRequest, protocolResponse))
-            {
-                IInputMessage inputMessage = communicator.getInputMessage();
-                IOutputMessage outputMessage = communicator
-                    .getOutputMessage();
-               
-                try
-                {
-                    String sServerId = null;
-                    
-                    try
-                    {
-                        sServerId = inputMessage.getParam("a-select-server");
-                    }
-                    catch(ASelectException ase)
-                    {
-     	 			   _systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing required parameter \"a-select-server\"");
-                        throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);                
-            		}
-                    
-            		if (!sServerId.equals(_sMyServerId))
-            		{
-     	  			   _systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid \"a-select-server\" parameter: " +sServerId);
-            		    throw new ASelectCommunicationException(
-            		        Errors.ERROR_ASELECT_SERVER_ID_MISMATCH);
-            		}
-
-    	            _systemLogger.log(Level.INFO, _sModule, sMethod, "AbstApiREQ processAPIRequest"); 
-            		processAPIRequest(protocolRequest, 
-                        	inputMessage, outputMessage);
-            	}
-	            catch (ASelectException ace)
-	    	    {     
-	    	        try
-	    	        {
-	    	            outputMessage.setParam("result_code",ace.getMessage());
-	    	        }
-	    	        catch(ASelectCommunicationException ace2)
-	    	        {
-	    	            _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-	    	                "Error setting 'result_code' in outputmessage", ace2);
-	    	            throw ace2;	            
-	    	        }                        
-	    	    }  
-	            finally
-	            {
-		            try
-			        {
-		                outputMessage.setParam("a-select-server", _sMyServerId);
-			        }
-			        catch(ASelectCommunicationException ace2)
-			        {
-			            _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-			                "Error setting 'a-select-server' in outputmessage", ace2);
-			            throw ace2;
-			        }
-	            }
-                
-	            communicator.send();
-            }
-            else
-            //could not init
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod,
-                    "Can't initialize Message Creator object: "
-                    + _messageCreator.getClass().getName());
-                //error is sent in communicator.
-            }
-        }
-        catch(ASelectException eAS)
-        {
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Error while processing API request",eAS);
-            throw eAS;
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.SEVERE, _sModule, sMethod, 
-                "Internal error while processing API request", e);
-            throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR,e);
-        }
-    }
-    
-    /**
-     * Prosesses the API request.
-     * <br><br>
-     * @param oProtocolRequest The request protocol properties.
-     * @param oInputMessage The input message.
-     * @param oOutputMessage The output message.
-     * @throws ASelectException If processing fails and no response 
-     * is send to the client.
-     */
-    abstract protected void processAPIRequest(
-        IProtocolRequest oProtocolRequest, 
-        IInputMessage oInputMessage, 
-        IOutputMessage oOutputMessage) throws ASelectException;
-    
-    /**
-     * Serialize attributes contained in a hashtable.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * This method serializes attributes contained in a hashtable:
-     * <ul>
-     * <li>They are formatted as attr1=value1&attr2=value2;...
-     * <li>If a "&amp;" or a "=" appears in either the attribute name
-     * or value, they are transformed to %26 or %3d respectively.
-     * <li>The end result is base64 encoded.
-     * </ul>
-     * <br>
-     * @param htAttributes Hashtable containing all attributes
-     * @return Serialized representation of the attributes
-     * @throws ASelectException If serialization fails.
-     */
-    protected String serializeAttributes(Hashtable htAttributes)
-    throws ASelectException
-    {
-        final String sMethod = "serializeAttributes()";
-        try
-        {
-            if (htAttributes == null || htAttributes.isEmpty())
-                return null;
-            StringBuffer sb = new StringBuffer();
-            for (Enumeration e = htAttributes.keys();
-                e.hasMoreElements(); )
-            {
-                String sKey = (String)e.nextElement();
-                Object oValue = htAttributes.get(sKey);
-                
-                if (oValue instanceof Vector)
-                {//it's a multivalue attribute
-                    Vector vValue = (Vector)oValue;
-                    
-                    sKey = URLEncoder.encode(sKey + "[]", "UTF-8");
-                    Enumeration eEnum = vValue.elements();
-                    while (eEnum.hasMoreElements())
-                    {
-                        String sValue = (String)eEnum.nextElement();
-
-                        //add: key[]=value 
-                        sb.append(sKey);
-                        sb.append("=");
-                        sb.append(URLEncoder.encode(sValue, "UTF-8")); 
-                        
-                        if (eEnum.hasMoreElements())
-                            sb.append("&");
-                    }
-                }
-                else if(oValue instanceof String)
-                {//it's a single value attribute
-                    String sValue = (String)oValue;
-
-                    sb.append(URLEncoder.encode(sKey, "UTF-8"));
-                    sb.append("=");
-                    sb.append(URLEncoder.encode(sValue, "UTF-8"));
-                }
-                
-                if (e.hasMoreElements())
-                    sb.append("&");
-            }
-            BASE64Encoder b64enc = new BASE64Encoder();
-            return b64enc.encode(sb.toString().getBytes("UTF-8"));
-        }
-        catch(Exception e)
-        {
-            _systemLogger.log(Level.WARNING, _sModule, sMethod,
-                "Could not serialize attributes", e);
-            throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-        }
-    }
-
-
-	public synchronized HttpServletRequest get_servletRequest() {
-		return _servletRequest;
 	}
 
+	/**
+	 * Main process function.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Creates a <code>Communicator</code> and calls  
+	 * {@link #processAPIRequest(IProtocolRequest, IInputMessage, IOutputMessage)}
+	 * @throws ASelectException if communication fails and no response 
+	 * is send to the client.
+	 */
+	public void processRequest()
+	throws ASelectException
+	{
+		String sMethod = "processRequest()";
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "processRequest");
+
+		//create protocol wrappers
+		IProtocolRequest protocolRequest = new ServletRequestWrapper(_servletRequest);
+		IProtocolResponse protocolResponse = new ServletResponseWrapper(_servletResponse);
+
+		//create the communicator with the messagecreator
+		Communicator communicator = new Communicator(_messageCreator);
+		try {
+			if (communicator.init(protocolRequest, protocolResponse)) {
+				IInputMessage inputMessage = communicator.getInputMessage();
+				IOutputMessage outputMessage = communicator.getOutputMessage();
+
+				try {
+					String sServerId = null;
+
+					_systemLogger.log(Level.INFO, _sModule, sMethod, "get a-select-server");
+					try {
+						sServerId = inputMessage.getParam("a-select-server");
+					}
+					catch (ASelectException ase) {
+						_systemLogger.log(Level.WARNING, _sModule, sMethod,
+								"Missing required parameter \"a-select-server\"");
+						throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+					}
+
+					_systemLogger.log(Level.INFO, _sModule, sMethod, "a-select-server="+sServerId);
+					if (!sServerId.equals(_sMyServerId)) {
+						_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid \"a-select-server\" parameter: "
+								+ sServerId);
+						throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_ID_MISMATCH);
+					}
+
+					_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstApiREQ processAPIRequest");
+					processAPIRequest(protocolRequest, inputMessage, outputMessage);
+				}
+				catch (ASelectException ace) {
+					try {
+						outputMessage.setParam("result_code", ace.getMessage());
+					}
+					catch (ASelectCommunicationException ace2) {
+						_systemLogger.log(Level.WARNING, _sModule, sMethod,
+								"Error setting 'result_code' in outputmessage", ace2);
+						throw ace2;
+					}
+				}
+				finally {
+					try {
+						outputMessage.setParam("a-select-server", _sMyServerId);
+					}
+					catch (ASelectCommunicationException ace2) {
+						_systemLogger.log(Level.WARNING, _sModule, sMethod,
+								"Error setting 'a-select-server' in outputmessage", ace2);
+						throw ace2;
+					}
+				}
+
+				communicator.send();
+			}
+			else {  //could not init
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Can't initialize Message Creator object: "
+						+ _messageCreator.getClass().getName());
+				//error is sent in communicator.
+			}
+		}
+		catch (ASelectException eAS) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Error while processing API request", eAS);
+			throw eAS;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Internal error while processing API request", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+	}
+
+	/**
+	 * Prosesses the API request.
+	 * <br><br>
+	 * @param oProtocolRequest The request protocol properties.
+	 * @param oInputMessage The input message.
+	 * @param oOutputMessage The output message.
+	 * @throws ASelectException If processing fails and no response 
+	 * is send to the client.
+	 */
+	abstract protected void processAPIRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
+			IOutputMessage oOutputMessage)
+		throws ASelectException;
+
+	/**
+	 * Serialize attributes contained in a hashtable.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * This method serializes attributes contained in a hashtable:
+	 * <ul>
+	 * <li>They are formatted as attr1=value1&attr2=value2;...
+	 * <li>If a "&amp;" or a "=" appears in either the attribute name
+	 * or value, they are transformed to %26 or %3d respectively.
+	 * <li>The end result is base64 encoded.
+	 * </ul>
+	 * <br>
+	 * @param htAttributes Hashtable containing all attributes
+	 * @return Serialized representation of the attributes
+	 * @throws ASelectException If serialization fails.
+	 */
+	protected String serializeAttributes(Hashtable htAttributes)
+	throws ASelectException
+	{
+		final String sMethod = "serializeAttributes()";
+		try {
+			if (htAttributes == null || htAttributes.isEmpty())
+				return null;
+			StringBuffer sb = new StringBuffer();
+			for (Enumeration e = htAttributes.keys(); e.hasMoreElements();) {
+				String sKey = (String) e.nextElement();
+				Object oValue = htAttributes.get(sKey);
+
+				if (oValue instanceof Vector) {//it's a multivalue attribute
+					Vector vValue = (Vector) oValue;
+
+					sKey = URLEncoder.encode(sKey + "[]", "UTF-8");
+					Enumeration eEnum = vValue.elements();
+					while (eEnum.hasMoreElements()) {
+						String sValue = (String) eEnum.nextElement();
+
+						//add: key[]=value 
+						sb.append(sKey);
+						sb.append("=");
+						sb.append(URLEncoder.encode(sValue, "UTF-8"));
+
+						if (eEnum.hasMoreElements())
+							sb.append("&");
+					}
+				}
+				else if (oValue instanceof String) {//it's a single value attribute
+					String sValue = (String) oValue;
+
+					sb.append(URLEncoder.encode(sKey, "UTF-8"));
+					sb.append("=");
+					sb.append(URLEncoder.encode(sValue, "UTF-8"));
+				}
+
+				if (e.hasMoreElements())
+					sb.append("&");
+			}
+			BASE64Encoder b64enc = new BASE64Encoder();
+			return b64enc.encode(sb.toString().getBytes("UTF-8"));
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not serialize attributes", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		}
+	}
+
+	public synchronized HttpServletRequest get_servletRequest()
+	{
+		return _servletRequest;
+	}
 
 }

@@ -17,10 +17,10 @@ import org.aselect.system.utils.Utils;
  * Concurrent Memory storage handler. <br>
  * <br>
  * <b>Description: </b> <br>
- * The MemoryStorageHandler uses a <code>Hashtable</code> for storing objects
+ * The ConcurrentStorageHandler uses a <code>Hashtable</code> for storing objects
  * in memory. <br>
  * <br>
- * In the MemoryStorageHandler an additional Hashtable is created in which
+ * In the ConcurrentStorageHandler an additional Hashtable is created in which
  * information about the stored record is kept: <code><pre>
  * 
  *  Hashtable htStorage { 
@@ -43,10 +43,10 @@ public class ConcurrentStorageHandler implements IStorageHandler
     private SystemLogger _systemLogger;
 
     /**
-     * Initialize the <code>MemoryStorageHandler</code>.
+     * Initialize the <code>ConcurrentStorageHandler</code>.
      * <br><br>
      * <b>Description: </b>
-     * Initalises the <code>MemoryStorageHandler</code>:
+     * Initalises the <code>ConcurrentStorageHandler</code>:
      * <ul>
      * 	<li>Set system logger</li>
      * 	<li>create new storage <code>Hashtable</code></li>
@@ -110,7 +110,7 @@ public class ConcurrentStorageHandler implements IStorageHandler
     }
     
     /**
-     * Retrieve an object its timestamp from storage.
+     * Retrieve an object's timestamp from storage.
      * <br><br>
      * @see org.aselect.system.storagemanager.IStorageHandler#getTimestamp(java.lang.Object)
      */
@@ -127,8 +127,6 @@ public class ConcurrentStorageHandler implements IStorageHandler
             //}
         }
         catch (NullPointerException eNP) {
-            StringBuffer sb = new StringBuffer("MemoryStorageHandler.getTimestamp() -> ");
-            sb.append("Empty (null) key-object was supplied");
             _systemLogger.log(Level.FINE, MODULE, sMethod, "Empty (null) key-object was supplied.");
             throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_RETRIEVE,eNP);
         }

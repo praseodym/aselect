@@ -2002,8 +2002,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
     private void getAuthsps(String sRid, String sUid)
 		throws ASelectException
 	{
-		Integer intRequiredLevel = null;
-		Integer intMaxLevel = null;
 		Hashtable htUserAuthsps = new Hashtable();
 		Hashtable htAllowedAuthsps = new Hashtable();
 		String sMethod = "getAuthsps";
@@ -2035,13 +2033,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			// which level is required for the application?
 			// 20090110, Bauke added required_level!
-			intMaxLevel = (Integer)_htSessionContext.get("max_level"); // 'max_level' may be null
-			intRequiredLevel = Integer.valueOf((String)_htSessionContext.get("required_level"));
+			Integer intMaxLevel = (Integer)_htSessionContext.get("max_level"); // 'max_level' can be null
 			Integer intLevel = (Integer)_htSessionContext.get("level");
+			String sRequiredLevel = (String)_htSessionContext.get("required_level");
+			
+			Integer intRequiredLevel = (sRequiredLevel==null)? intLevel: Integer.valueOf(sRequiredLevel);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "required_level=" + intRequiredLevel +
 					" level="+intLevel+" maxlevel="+intMaxLevel);
-			if (intRequiredLevel == null)
-				intRequiredLevel = Integer.valueOf((String)_htSessionContext.get("level"));
 
 			// fetch the authsps that the user has registered for and
 			// satisfy the level for the current application

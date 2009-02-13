@@ -124,7 +124,7 @@ public class TicketManager
     private long _lTicketsCounter;
 
     /** The length of the Agent ticket. */
-    private static final int TICKET_LENGTH = 256;
+    private static final int TICKET_LENGTH = 128;  // 256;
 
     /**
      * Get a static handle to the <code>TicketManager</code> instance.

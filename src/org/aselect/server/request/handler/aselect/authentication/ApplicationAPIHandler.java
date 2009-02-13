@@ -799,7 +799,6 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			}
 
 			String verify_interval = (String)htResult.get("verify_interval");
-
 			String max_notbefore = (String)htResult.get("max_notbefore");
 			String max_notonorafter = (String)htResult.get("max_notonorafter");
 			Long l_max_notbefore = null;
@@ -850,6 +849,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		String sASelectServer = null;
 		String sTGT = null;
 		String sSamlAttributes = null;
+		String sSignature = null;
 
 		try {
 			sEncTgt = oInputMessage.getParam("aselect_credentials");
@@ -862,12 +862,13 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 		try {
 			sSamlAttributes = oInputMessage.getParam("saml_attributes");
+			sSignature = oInputMessage.getParam("signature");
 		}
 		catch (ASelectCommunicationException eAC) {  // ignore absence
 		}
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "a-select-server="+sASelectServer+" rid=" +sRid+
 				" aselect_credentials(encrypted TGT)=" + sEncTgt + " saml_attributes="+sSamlAttributes+
-				" signature="+oInputMessage.getParam("signature"));
+				" signature="+sSignature);
 
 		try {
 			byte[] baTgtBytes = CryptoEngine.getHandle().decryptTGT(sEncTgt);

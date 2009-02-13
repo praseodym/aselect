@@ -16,7 +16,6 @@ import org.aselect.server.request.handler.xsaml20.Saml20_ArtifactManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.Audit;
-import org.aselect.system.logging.AuditLevel;
 import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
 import org.opensaml.common.SAMLObjectBuilder;
@@ -61,8 +60,6 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 {
     private final static String MODULE = "Xsaml20_SSO";
 	private final static String RETURN_SUFFIX = "_return";
-//	private final static String SESSION_ID_PREFIX = "saml20_";
-
     private final String AUTHNREQUEST = "AuthnRequest";
     
     public Issuer retrieveIssuer(String elementName, SignableSAMLObject samlMessage)
@@ -338,7 +335,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				String sTgt, Hashtable htTGTContext, HttpServletResponse oHttpServletResponse, String sRelayState)
 	throws ASelectException
 	{
-		String sMethod = "sendSAMLArtifactRedirect()";
+		String sMethod = "sendSAMLArtifactRedirect";
 		boolean isSuccessResponse = (htTGTContext != null);
 		Assertion assertion = null;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
@@ -357,6 +354,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			if (htTGTContext != null) {
 				sSPRid = (String) htTGTContext.get("sp_rid");
 				String sAuthspLevel = (String) htTGTContext.get("betrouwbaarheidsniveau");
+				if (sAuthspLevel==null)
+					sAuthspLevel = (String) htTGTContext.get("authsp_level");
 				String sUid = (String) htTGTContext.get("uid");
 				String sCtxRid = (String) htTGTContext.get("rid");
 				String sSubjectLocalityAddress = (String) htTGTContext.get("client_ip");

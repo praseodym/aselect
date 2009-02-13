@@ -304,7 +304,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 				String sStatusCode = samlResponse.getStatus().getStatusCode().getValue();
 				String sRemoteRid = samlResponse.getID();
 				String sLocalRid = samlResponse.getInResponseTo();
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "RemoteRid="+sRemoteRid+" LocalRid"+sLocalRid);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "RemoteRid="+sRemoteRid+" LocalRid="+sLocalRid);
 				if (sStatusCode.equals(StatusCode.SUCCESS_URI)) {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Response was successful "+samlResponse.toString());
 					Assertion samlAssertion = samlResponse.getAssertions().get(0);

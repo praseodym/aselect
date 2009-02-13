@@ -86,695 +86,665 @@ import org.aselect.system.sam.agent.SAMAgent;
  */
 public class StorageManager
 {
-    /** The module name. */
-    public static final String MODULE = "StorageManager";
+	/** The module name. */
+	public static final String MODULE = "StorageManager";
 
-    /** The configured maximum. */
-    private long _iMax;
-    
-    /** The storage handler. */
-    private IStorageHandler _oStorageHandler;
+	/** The configured maximum. */
+	private long _iMax;
 
-    private SystemLogger _oSystemLogger;
-    
-    /** The storage cleaner. */
-    private Cleaner _oCleaner;
-    
-    /** The storage expiration time. */
-    private long _lExpireTime = 0;
+	/** The storage handler. */
+	private IStorageHandler _oStorageHandler;
 
-    /** Default constructor. */
-    public StorageManager ()
-    {}
+	private SystemLogger _oSystemLogger;
 
-    /**
-     * (Re)initialize the storage. 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * This function initializes the StorageManager. The following steps are
-     * taken:
-     * <ul>
-     * <li>Get handler from configuration.</li>
-     * <li>Create e new instance of the handler.</li>
-     * <li>Clear old recouerses if this is a reinitialization.</li>
-     * <li>Initialize the handler.</li>
-     * <li>Create a new cleaner and start the cleaning thread.</li>
-     * </ul>
-     * <br>
-     * <b>Concurrency issues: </b> <br>-<br>
-     * <br>
-     * <b>Preconditions: </b>
-     * <ul>
-     * <li><code>oConfigManager != null</code></li>
-     * <li><code>systemLogger != null</code></li>
-     * <li><code>oSAMAgent != null</code></li>
-     * </ul>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * The storage is initialized. <br>
-     * 
-     * @param oConfigSection
-     *            The section within the configuration file in which the
-     *            parameters for the StorageManager can be found.
-     * @param oConfigManager
-     *            The configuration to be used.
-     * @param systemLogger
-     *            The logger for system entries.
-     * @param oSAMAgent
-     *            The SAM agent to be used.
-     * @throws ASelectStorageException
-     *             If storage initialization fails.
-     */
-    public void init(Object oConfigSection, ConfigManager oConfigManager,
-        SystemLogger systemLogger, SAMAgent oSAMAgent)
-        throws ASelectStorageException
-    {
-        String sMethod = "init()";
-        Object oHandlerSection;
-        Class cClass;
-        String sStorageHandlerId;
-        Object oStorageHandlerSection;
+	/** The storage cleaner. */
+	private Cleaner _oCleaner;
 
-        _oSystemLogger = systemLogger;
-        try
-        {
-            oHandlerSection = oConfigManager.getSection(oConfigSection,
-                "handler");
-        }
-        catch (ASelectConfigException x)
-        {
-            systemLogger.log(Level.WARNING, MODULE, sMethod, "'<handler />' is missing in the configuration file. value was null");
-            throw new ASelectStorageException(
-                Errors.ERROR_ASELECT_STORAGE_INIT, x);
-        }
-        
-        String sMax = null;
-        
-        try
-        {
-            sMax = oConfigManager.getParam(oConfigSection, "max");
-        }
-        catch (ASelectConfigException e)
-        {
-            systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'max' config item found in storagemanager config section", e);
-            throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INIT, e);
-        }
-        
-        try
-        {
-            _iMax = Integer.parseInt(sMax.trim());
-        }
-        catch (Exception e)
-        {
-            systemLogger.log(Level.WARNING, MODULE, sMethod, "'max' config item in storagemanager config section is not a long: " +sMax, e);
-            throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INIT, e);
-        }
+	/** The storage expiration time. */
+	private long _lExpireTime = 0;
 
-        try
-        {
-            cClass = Class.forName(oConfigManager.getParam(oHandlerSection,
-                "class"));
-        }
-        catch (ASelectConfigException ace)
-        {
-            systemLogger.log(Level.WARNING, MODULE, sMethod, "'class' is missing in the configuration file", ace);
-            throw new ASelectStorageException(
-                Errors.ERROR_ASELECT_STORAGE_INIT, ace);
+	/** Default constructor. */
+	public StorageManager() {
+	}
 
-        }
-        catch (ClassNotFoundException cnfe)
-        {
-            systemLogger.log(Level.WARNING,MODULE, sMethod,
-                "Could not load the IStorageHandler, class not found", cnfe);
-            throw new ASelectStorageException(
-                Errors.ERROR_ASELECT_STORAGE_INIT, cnfe);
-        }
+	/**
+	 * (Re)initialize the storage. 
+	 * <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * This function initializes the StorageManager. The following steps are
+	 * taken:
+	 * <ul>
+	 * <li>Get handler from configuration.</li>
+	 * <li>Create e new instance of the handler.</li>
+	 * <li>Clear old recouerses if this is a reinitialization.</li>
+	 * <li>Initialize the handler.</li>
+	 * <li>Create a new cleaner and start the cleaning thread.</li>
+	 * </ul>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <br>
+	 * <b>Preconditions: </b>
+	 * <ul>
+	 * <li><code>oConfigManager != null</code></li>
+	 * <li><code>systemLogger != null</code></li>
+	 * <li><code>oSAMAgent != null</code></li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * The storage is initialized. <br>
+	 * 
+	 * @param oConfigSection
+	 *            The section within the configuration file in which the
+	 *            parameters for the StorageManager can be found.
+	 * @param oConfigManager
+	 *            The configuration to be used.
+	 * @param systemLogger
+	 *            The logger for system entries.
+	 * @param oSAMAgent
+	 *            The SAM agent to be used.
+	 * @throws ASelectStorageException
+	 *             If storage initialization fails.
+	 */
+	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger systemLogger, SAMAgent oSAMAgent)
+		throws ASelectStorageException
+	{
+		String sMethod = "init()";
+		Object oHandlerSection;
+		Class cClass;
+		String sStorageHandlerId;
+		Object oStorageHandlerSection;
 
-        try
-        {
-            sStorageHandlerId = oConfigManager.getParam(oHandlerSection, "id");
-        }
-        catch (ASelectConfigException ace)
-        {
-            systemLogger.log(Level.WARNING, MODULE, sMethod, "'id' is missing in the configuration file", ace);
-            throw new ASelectStorageException(
-                Errors.ERROR_ASELECT_STORAGE_INIT, ace);
-        }
+		_oSystemLogger = systemLogger;
+		try {
+			oHandlerSection = oConfigManager.getSection(oConfigSection, "handler");
+		}
+		catch (ASelectConfigException x) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"'<handler />' is missing in the configuration file. value was null");
+			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INIT, x);
+		}
 
-        try
-        {
-            oStorageHandlerSection = oConfigManager.getSection(oConfigSection,
-                "storagehandler", "id=" + sStorageHandlerId);
-        }
-        catch (ASelectConfigException ace)
-        {
-            systemLogger.log(Level.WARNING, MODULE, sMethod,
-            "<storagehandler> </storagehandler> is missing in the configuration file", ace);
-            throw new ASelectStorageException(
-                Errors.ERROR_ASELECT_STORAGE_INIT, ace);
-        }
+		String sMax = null;
 
-        
-        try
-        {
-        	String sConfiguredExpireTime = oConfigManager.getParam(
-                oConfigSection, "expire");
-        
-        	_lExpireTime = (Long.parseLong(sConfiguredExpireTime.trim()) * 1000);
-        }
-        catch (ASelectConfigException e)
-        {
-            _lExpireTime = -1;
-            systemLogger.log(Level.CONFIG, MODULE, sMethod, "'expire' config item not specified. Cleaning disabled.");
-        }
-        
-        long lInterval = 0;
-        if (_lExpireTime != -1)
-        {
-            try
-            {
-                String sConfiguredInterval = oConfigManager.getParam(
-                    oConfigSection, "interval");
-                
-                lInterval = (Long.parseLong(sConfiguredInterval.trim()) * 1000);
-                
-            }
-            catch (ASelectConfigException e)
-            {
-                lInterval = 60000; // default 1 minute.
-                systemLogger.log(Level.CONFIG, MODULE, sMethod, "'interval' config item not specified. Using default (1 minute)");
-            }
-        }
-        
-        try
-        {
-            // If reinit -> clear old resources
-            destroy();
+		try {
+			sMax = oConfigManager.getParam(oConfigSection, "max");
+		}
+		catch (ASelectConfigException e) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"No valid 'max' config item found in storagemanager config section", e);
+			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INIT, e);
+		}
 
-            _oStorageHandler = (IStorageHandler)cClass.newInstance();
-    		systemLogger.log(Level.INFO, MODULE, sMethod, "ConfigManager="+oConfigManager+
-    				" ConfigSection="+oStorageHandlerSection+" this="+this.getClass()+" handler="+_oStorageHandler.getClass());
-           _oStorageHandler.init(oStorageHandlerSection, oConfigManager,
-                systemLogger, oSAMAgent);
+		try {
+			_iMax = Integer.parseInt(sMax.trim());
+		}
+		catch (Exception e) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"'max' config item in storagemanager config section is not a long: " + sMax, e);
+			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INIT, e);
+		}
 
-            /**
-             * The cleaner will keep the storage clean.
-             */
-            _oCleaner = new Cleaner();
+		try {
+			cClass = Class.forName(oConfigManager.getParam(oHandlerSection, "class"));
+		}
+		catch (ASelectConfigException ace) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod, "'class' is missing in the configuration file", ace);
+			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INIT, ace);
 
-            _oCleaner.init(_lExpireTime, lInterval, systemLogger);
-            _oCleaner.interrupt();
-            _oCleaner.start();
-        }
-        catch (Exception e)
-        {
-            systemLogger.log(Level.WARNING, MODULE, sMethod, 
-                "Could not initialize the StorageManager", e);
-            throw new ASelectStorageException(
-                Errors.ERROR_ASELECT_STORAGE_INIT, e);
-        }
-    }
+		}
+		catch (ClassNotFoundException cnfe) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not load the IStorageHandler, class not found",
+					cnfe);
+			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INIT, cnfe);
+		}
 
-    /**
-     * Retrieve object from storage. 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * Returns a particular object from the storage. Calls the handler its
-     * <code>get()</code>.<br>
-     * <br>
-     * <b>Concurrency issues: </b> 
-     * <br>-<br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * <code>oKey != null</code><br>
-     * <br>
-     * <b>Postconditions: </b> 
-     * <br>-<br>
-     * 
-     * @param oKey
-     *            The identifier of the object that needs to be obtained from
-     *            the storage.
-     * @return The stored object.
-     * @throws ASelectStorageException
-     *             If retrieving fails.
-     * @see IStorageHandler#get(Object)
-     */
-    public Object get(Object oKey) throws ASelectStorageException
-    {
-        String sMethod = "get";
+		try {
+			sStorageHandlerId = oConfigManager.getParam(oHandlerSection, "id");
+		}
+		catch (ASelectConfigException ace) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod, "'id' is missing in the configuration file", ace);
+			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INIT, ace);
+		}
+
+		try {
+			oStorageHandlerSection = oConfigManager.getSection(oConfigSection, "storagehandler", "id="
+					+ sStorageHandlerId);
+		}
+		catch (ASelectConfigException ace) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"<storagehandler> </storagehandler> is missing in the configuration file", ace);
+			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INIT, ace);
+		}
+
+		try {
+			String sConfiguredExpireTime = oConfigManager.getParam(oConfigSection, "expire");
+
+			_lExpireTime = (Long.parseLong(sConfiguredExpireTime.trim()) * 1000);
+		}
+		catch (ASelectConfigException e) {
+			_lExpireTime = -1;
+			systemLogger.log(Level.CONFIG, MODULE, sMethod, "'expire' config item not specified. Cleaning disabled.");
+		}
+
+		long lInterval = 0;
+		if (_lExpireTime != -1) {
+			try {
+				String sConfiguredInterval = oConfigManager.getParam(oConfigSection, "interval");
+
+				lInterval = (Long.parseLong(sConfiguredInterval.trim()) * 1000);
+
+			}
+			catch (ASelectConfigException e) {
+				lInterval = 60000; // default 1 minute.
+				systemLogger.log(Level.CONFIG, MODULE, sMethod,
+						"'interval' config item not specified. Using default (1 minute)");
+			}
+		}
+
+		try {
+			// If reinit -> clear old resources
+			destroy();
+
+			_oStorageHandler = (IStorageHandler) cClass.newInstance();
+			systemLogger.log(Level.INFO, MODULE, sMethod, "ConfigManager=" + oConfigManager + " ConfigSection="
+					+ oStorageHandlerSection + " this=" + this.getClass() + " handler=" + _oStorageHandler.getClass());
+			_oStorageHandler.init(oStorageHandlerSection, oConfigManager, systemLogger, oSAMAgent);
+
+			/**
+			 * The cleaner will keep the storage clean.
+			 */
+			_oCleaner = new Cleaner();
+
+			_oCleaner.init(_lExpireTime, lInterval, systemLogger);
+			_oCleaner.interrupt();
+			_oCleaner.start();
+		}
+		catch (Exception e) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not initialize the StorageManager", e);
+			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INIT, e);
+		}
+	}
+
+	/**
+	 * Retrieve object from storage. 
+	 * <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Returns a particular object from the storage. Calls the handler its
+	 * <code>get()</code>.<br>
+	 * <br>
+	 * <b>Concurrency issues: </b> 
+	 * <br>-<br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * <code>oKey != null</code><br>
+	 * <br>
+	 * <b>Postconditions: </b> 
+	 * <br>-<br>
+	 * 
+	 * @param oKey
+	 *            The identifier of the object that needs to be obtained from
+	 *            the storage.
+	 * @return The stored object.
+	 * @throws ASelectStorageException
+	 *             If retrieving fails.
+	 * @see IStorageHandler#get(Object)
+	 */
+	public Object get(Object oKey)
+		throws ASelectStorageException
+	{
+		String sMethod = "get";
 
 		//_oSystemLogger.log(Level.INFO, MODULE, sMethod, " this="+this.getClass()+" handler="+_oStorageHandler.getClass());
-        return _oStorageHandler.get(oKey);
-    }
-    
-    /**
-     * Retrieve an object its expiration time from storage. 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * Returns the storage expiration time of a particular object from the storage. 
-     * Calls the handler its <code>getTimestamp()</code> and adds the 
-     * configured expiration time.
-     * <br><br>
-     * <b>Concurrency issues: </b> 
-     * <br>-<br>
-     * <br>
-     * <b>Preconditions: </b> 
-     * <br>
-     * <code>oKey != null</code>
-     * <br><br>
-     * <b>Postconditions: </b> 
-     * <br>-<br>
-     * 
-     * @param oKey
-     *            The identifier of the object that needs to be obtained from
-     *            the storage.
-     * @return The expiration time of the stored object.
-     * @throws ASelectStorageException
-     *             If retrieving fails.
-     * @see IStorageHandler#getTimestamp(Object)
-     */
-    public long getExpirationTime(Object oKey) throws ASelectStorageException
-    {
-        long lTimestamp = _oStorageHandler.getTimestamp(oKey);
-        return lTimestamp + _lExpireTime;
-    }
-    
-    /**
-     * Retrieve an object its timestamp from storage. 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * Returns the storage timestamp of a particular object from the storage. 
-     * Calls the handler its <code>getTimestamp()</code>.
-     * <br><br>
-     * <b>Concurrency issues: </b> 
-     * <br>-<br>
-     * <br>
-     * <b>Preconditions: </b> 
-     * <br>
-     * <code>oKey != null</code>
-     * <br><br>
-     * <b>Postconditions: </b> 
-     * <br>-<br>
-     * 
-     * @param oKey
-     *            The identifier of the object that needs to be obtained from
-     *            the storage.
-     * @return The timestamp of the stored object.
-     * @throws ASelectStorageException
-     *             If retrieving fails.
-     * @see IStorageHandler#getTimestamp(Object)
-     */
-    public long getTimestamp(Object oKey) throws ASelectStorageException
-    {
-        long lTimestamp = _oStorageHandler.getTimestamp(oKey);
-        return lTimestamp;
-    }
+		return _oStorageHandler.get(oKey);
+	}
 
-    /**
-     * Retrieve all stored objects. 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * Returns all the stored objects. Calls the handler its
-     * <code>getAll()</code>.<br>
-     * <br>
-     * <b>Concurrency issues: </b> 
-     * <br>-<br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * The storage manager and handler must be initialized. <br>
-     * <br>
-     * <b>Postconditions: </b> 
-     * <br>-<br>
-     * 
-     * @return A <code>Hashtable</code> containing all stored object as
-     *         key/value.
-     * @throws ASelectStorageException
-     *             if retrieving fails.
-     * @see IStorageHandler#getAll()
-     */
-    public Hashtable getAll() throws ASelectStorageException
-    {
-        return _oStorageHandler.getAll();
-    }
+	/**
+	 * Retrieve an object its expiration time from storage. 
+	 * <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Returns the storage expiration time of a particular object from the storage. 
+	 * Calls the handler its <code>getTimestamp()</code> and adds the 
+	 * configured expiration time.
+	 * <br><br>
+	 * <b>Concurrency issues: </b> 
+	 * <br>-<br>
+	 * <br>
+	 * <b>Preconditions: </b> 
+	 * <br>
+	 * <code>oKey != null</code>
+	 * <br><br>
+	 * <b>Postconditions: </b> 
+	 * <br>-<br>
+	 * 
+	 * @param oKey
+	 *            The identifier of the object that needs to be obtained from
+	 *            the storage.
+	 * @return The expiration time of the stored object.
+	 * @throws ASelectStorageException
+	 *             If retrieving fails.
+	 * @see IStorageHandler#getTimestamp(Object)
+	 */
+	public long getExpirationTime(Object oKey)
+		throws ASelectStorageException
+	{
+		long lTimestamp = _oStorageHandler.getTimestamp(oKey);
+		return lTimestamp + _lExpireTime;
+	}
 
-    /**
-     * Retrieve the number of stored objects.
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * Returns the number of stored objects. Calls the handler its
-     * <code>getCount()</code>.<br>
-     * <br>
-     * <b>Concurrency issues: </b>
-     * <br>-<br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * The storage manager and handler must be initialized. <br>
-     * <br>
-     * <b>Postconditions: </b>
-     * <br>-<br>
-     *
-     * @return The number of stored objects
-     * @throws ASelectStorageException
-     *             if retrieving fails.
-     * @see IStorageHandler#getCount()
-     */
-    public long getCount() throws ASelectStorageException
-    {
-        return _oStorageHandler.getCount();
-    }
+	/**
+	 * Retrieve an object its timestamp from storage. 
+	 * <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Returns the storage timestamp of a particular object from the storage. 
+	 * Calls the handler its <code>getTimestamp()</code>.
+	 * <br><br>
+	 * <b>Concurrency issues: </b> 
+	 * <br>-<br>
+	 * <br>
+	 * <b>Preconditions: </b> 
+	 * <br>
+	 * <code>oKey != null</code>
+	 * <br><br>
+	 * <b>Postconditions: </b> 
+	 * <br>-<br>
+	 * 
+	 * @param oKey
+	 *            The identifier of the object that needs to be obtained from
+	 *            the storage.
+	 * @return The timestamp of the stored object.
+	 * @throws ASelectStorageException
+	 *             If retrieving fails.
+	 * @see IStorageHandler#getTimestamp(Object)
+	 */
+	public long getTimestamp(Object oKey)
+		throws ASelectStorageException
+	{
+		long lTimestamp = _oStorageHandler.getTimestamp(oKey);
+		return lTimestamp;
+	}
 
-    /**
-     * Insert an object in storage. 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * Inserts an object into the storage. Along with the storing of the object,
-     * a timestamp is created. This timestamp is used to evaluate whether or not
-     * the object should be kept in storage (expiration). <br>
-     * <br>
-     * Calls the handler its <code>put()</code>.<br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>-<br>
-     * <br>
-     * <b>Preconditions: </b>
-     * <ul>
-     * <li><code>oKey != null</code></li>
-     * <li><code>oValue != null</code></li>
-     * </ul>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * The storage contains the given object. <br>
-     * 
-     * @param oKey
-     *            The identifier of the object that is to be stored.
-     * @param oValue
-     *            The object that is to be stored.
-     * @throws ASelectStorageException
-     *             If storing fails.
-     * @see IStorageHandler#put(Object, Object, Long)
-     */
-    public void put(Object oKey, Object oValue) throws ASelectStorageException
-    {
-        String sMethod = "put";
-        if (_oStorageHandler.isMaximum(_iMax))
-            throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_MAXIMUM_REACHED);
-        
+	/**
+	 * Retrieve all stored objects. 
+	 * <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Returns all the stored objects. Calls the handler its
+	 * <code>getAll()</code>.<br>
+	 * <br>
+	 * <b>Concurrency issues: </b> 
+	 * <br>-<br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * The storage manager and handler must be initialized. <br>
+	 * <br>
+	 * <b>Postconditions: </b> 
+	 * <br>-<br>
+	 * 
+	 * @return A <code>Hashtable</code> containing all stored object as
+	 *         key/value.
+	 * @throws ASelectStorageException
+	 *             if retrieving fails.
+	 * @see IStorageHandler#getAll()
+	 */
+	public Hashtable getAll()
+		throws ASelectStorageException
+	{
+		return _oStorageHandler.getAll();
+	}
+
+	/**
+	 * Retrieve the number of stored objects.
+	 * <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Returns the number of stored objects. Calls the handler its
+	 * <code>getCount()</code>.<br>
+	 * <br>
+	 * <b>Concurrency issues: </b>
+	 * <br>-<br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * The storage manager and handler must be initialized. <br>
+	 * <br>
+	 * <b>Postconditions: </b>
+	 * <br>-<br>
+	 *
+	 * @return The number of stored objects
+	 * @throws ASelectStorageException
+	 *             if retrieving fails.
+	 * @see IStorageHandler#getCount()
+	 */
+	public long getCount()
+		throws ASelectStorageException
+	{
+		return _oStorageHandler.getCount();
+	}
+
+	/**
+	 * Insert an object in storage. 
+	 * <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Inserts an object into the storage. Along with the storing of the object,
+	 * a timestamp is created. This timestamp is used to evaluate whether or not
+	 * the object should be kept in storage (expiration). <br>
+	 * <br>
+	 * Calls the handler its <code>put()</code>.<br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <br>
+	 * <b>Preconditions: </b>
+	 * <ul>
+	 * <li><code>oKey != null</code></li>
+	 * <li><code>oValue != null</code></li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * The storage contains the given object. <br>
+	 * 
+	 * @param oKey
+	 *            The identifier of the object that is to be stored.
+	 * @param oValue
+	 *            The object that is to be stored.
+	 * @throws ASelectStorageException
+	 *             If storing fails.
+	 * @see IStorageHandler#put(Object, Object, Long)
+	 */
+	public void put(Object oKey, Object oValue)
+		throws ASelectStorageException
+	{
+		String sMethod = "put";
+		if (_oStorageHandler.isMaximum(_iMax))
+			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_MAXIMUM_REACHED);
+
 		//_oSystemLogger.log(Level.INFO, MODULE, sMethod, " this="+this.getClass()+" handler="+_oStorageHandler.getClass());
-        Long lTimestamp = new Long(System.currentTimeMillis());
-        _oStorageHandler.put(oKey, oValue, lTimestamp);
-    }
-    
-    /**
-     * Updates an object in storage. 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * Updates an object into the storage. Along with the storing of the object,
-     * a timestamp is created. This timestamp is used to evaluate whether or not
-     * the object should be kept in storage (expiration). <br>
-     * <br>
-     * Calls the handler its <code>put()</code>.<br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>-<br>
-     * <br>
-     * <b>Preconditions: </b>
-     * <ul>
-     * <li><code>oKey</code> must exist in storage.</li>
-     * <li><code>oKey != null</code></li>
-     * <li><code>oValue != null</code></li>
-     * </ul>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * The storage contains the given object. <br>
-     * 
-     * @param oKey
-     *            The identifier of the object that is to be stored.
-     * @param oValue
-     *            The object that is to be stored.
-     * @throws ASelectStorageException
-     *             If storing fails.
-     * @see IStorageHandler#put(Object, Object, Long)
-     */
-    public void update(Object oKey, Object oValue) throws ASelectStorageException
-    {
-    	//_oSystemLogger.log(Level.INFO, MODULE, "update", "StorageHandlerClass="+_oStorageHandler.getClass()+" this="+this.getClass());
-    	Long lTimestamp = new Long(System.currentTimeMillis());
-        _oStorageHandler.put(oKey, oValue, lTimestamp);
-    }
-    
-    /**
-     * Checks if the supplied key already exists in the physical storage
-     * @param oKey The unique key that will be checked for existance 
-     * @return TRUE if the key exists
-     * @throws ASelectStorageException if IO error occurred with physical storage
-     */
-    public boolean containsKey(Object oKey) throws ASelectStorageException
-    {
-        return _oStorageHandler.containsKey(oKey);
-    }
+		Long lTimestamp = new Long(System.currentTimeMillis());
+		_oStorageHandler.put(oKey, oValue, lTimestamp);
+	}
 
-    /**
-     * Remove a storage object. 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * Removes a particular object from the storage. Calls the handler its
-     * <code>remove()</code>.<br>
-     * <br>
-     * <b>Concurrency issues: </b> 
-     * <br>-<br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * <code>oKey != null</code><br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * The object with the given key is removed from the storage. <br>
-     * 
-     * @param oKey
-     *            The identifier of the object that needs to be removed.
-     * @throws ASelectStorageException
-     *             If removal fails.
-     * @see IStorageHandler#remove(Object)
-     */
-    public void remove(Object oKey) throws ASelectStorageException
-    {
-        _oStorageHandler.remove(oKey);
-    }
+	/**
+	 * Updates an object in storage. 
+	 * <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Updates an object into the storage. Along with the storing of the object,
+	 * a timestamp is created. This timestamp is used to evaluate whether or not
+	 * the object should be kept in storage (expiration). <br>
+	 * <br>
+	 * Calls the handler its <code>put()</code>.<br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <br>
+	 * <b>Preconditions: </b>
+	 * <ul>
+	 * <li><code>oKey</code> must exist in storage.</li>
+	 * <li><code>oKey != null</code></li>
+	 * <li><code>oValue != null</code></li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * The storage contains the given object. <br>
+	 * 
+	 * @param oKey
+	 *            The identifier of the object that is to be stored.
+	 * @param oValue
+	 *            The object that is to be stored.
+	 * @throws ASelectStorageException
+	 *             If storing fails.
+	 * @see IStorageHandler#put(Object, Object, Long)
+	 */
+	public void update(Object oKey, Object oValue)
+		throws ASelectStorageException
+	{
+		//_oSystemLogger.log(Level.INFO, MODULE, "update", "StorageHandlerClass="+_oStorageHandler.getClass()+" this="+this.getClass());
+		Long lTimestamp = new Long(System.currentTimeMillis());
+		_oStorageHandler.put(oKey, oValue, lTimestamp);
+	}
 
-    /**
-     * Remove all stored objects. 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * Removes all the stored objects from the storage. Calls the handler its
-     * <code>removeAll()</code>.<br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>-<br>
-     * <br>
-     * <b>Preconditions: </b> <br>-<br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * All objects in storage are removed. <br>
-     * 
-     * @throws ASelectStorageException
-     *             If removal fails.
-     * @see IStorageHandler#removeAll()
-     */
-    public void removeAll() throws ASelectStorageException
-    {
-        _oStorageHandler.removeAll();
-    }
+	/**
+	 * Checks if the supplied key already exists in the physical storage
+	 * @param oKey The unique key that will be checked for existance 
+	 * @return TRUE if the key exists
+	 * @throws ASelectStorageException if IO error occurred with physical storage
+	 */
+	public boolean containsKey(Object oKey)
+		throws ASelectStorageException
+	{
+		return _oStorageHandler.containsKey(oKey);
+	}
 
-    /**
-     * Clean up all used resources. 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * Performs the following steps:
-     * <ul>
-     * <li>Destroy the storage handler.</li>
-     * <li>Destroy the Cleaner thread.</li>
-     * </ul>
-     * <br>
-     * <b>Concurrency issues: </b> <br>-<br>
-     * <br>
-     * <b>Preconditions: </b> <br>-<br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * The storage manager is cleared.
-     * 
-     * @see IStorageHandler#destroy()
-     * @see Cleaner#destroy()
-     */
-    public void destroy()
-    {
-        _oSystemLogger.log(Level.FINE, MODULE, "destroy", ""+this.getClass());
-        if (_oStorageHandler != null)
-        {
-            _oStorageHandler.destroy();
-            _oStorageHandler = null;
-        }
+	/**
+	 * Remove a storage object. 
+	 * <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Removes a particular object from the storage. Calls the handler its
+	 * <code>remove()</code>.<br>
+	 * <br>
+	 * <b>Concurrency issues: </b> 
+	 * <br>-<br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * <code>oKey != null</code><br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * The object with the given key is removed from the storage. <br>
+	 * 
+	 * @param oKey
+	 *            The identifier of the object that needs to be removed.
+	 * @throws ASelectStorageException
+	 *             If removal fails.
+	 * @see IStorageHandler#remove(Object)
+	 */
+	public void remove(Object oKey)
+		throws ASelectStorageException
+	{
+		_oStorageHandler.remove(oKey);
+	}
 
-        if (_oCleaner != null)
-        {
-            _oCleaner.destroy();
-            _oCleaner = null;
-        }
-    }
+	/**
+	 * Remove all stored objects. 
+	 * <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Removes all the stored objects from the storage. Calls the handler its
+	 * <code>removeAll()</code>.<br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>-<br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * All objects in storage are removed. <br>
+	 * 
+	 * @throws ASelectStorageException
+	 *             If removal fails.
+	 * @see IStorageHandler#removeAll()
+	 */
+	public void removeAll()
+		throws ASelectStorageException
+	{
+		_oStorageHandler.removeAll();
+	}
 
-    /**
-     * Storage cleaner. 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * The inner-class Cleaner is a thread that removes objects that have
-     * expired from the storage. This is done by generating a timestamp and
-     * calling the cleanup function of the handler. <br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * The called cleanup function should be a thread safe implementation. <br>
-     * 
-     * @author Alfa & Ariss
-     * 
-     * @see IStorageHandler#cleanup(Long)
-     */
-    private class Cleaner extends Thread
-    {
-        /** Cleaning interval */
-        private long _lInterval = 0;
+	/**
+	 * Clean up all used resources. 
+	 * <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Performs the following steps:
+	 * <ul>
+	 * <li>Destroy the storage handler.</li>
+	 * <li>Destroy the Cleaner thread.</li>
+	 * </ul>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>-<br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * The storage manager is cleared.
+	 * 
+	 * @see IStorageHandler#destroy()
+	 * @see Cleaner#destroy()
+	 */
+	public void destroy()
+	{
+		_oSystemLogger.log(Level.FINE, MODULE, "destroy", "" + this.getClass());
+		if (_oStorageHandler != null) {
+			_oStorageHandler.destroy();
+			_oStorageHandler = null;
+		}
 
-        /** Expiration time. */
-        private long _lExpireTime = 0;
+		if (_oCleaner != null) {
+			_oCleaner.destroy();
+			_oCleaner = null;
+		}
+	}
 
-        /** True while running. */
-        private boolean _bGo = false;
+	/**
+	 * Storage cleaner. 
+	 * <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * The inner-class Cleaner is a thread that removes objects that have
+	 * expired from the storage. This is done by generating a timestamp and
+	 * calling the cleanup function of the handler. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * The called cleanup function should be a thread safe implementation. <br>
+	 * 
+	 * @author Alfa & Ariss
+	 * 
+	 * @see IStorageHandler#cleanup(Long)
+	 */
+	private class Cleaner extends Thread
+	{
+		/** Cleaning interval */
+		private long _lInterval = 0;
 
-        /** The logger for system entries. */
-        private SystemLogger _systemLogger;
+		/** Expiration time. */
+		private long _lExpireTime = 0;
 
-        /** Default constructor. */
-        public Cleaner ()
-        {}
+		/** True while running. */
+		private boolean _bGo = false;
 
-        /**
-         * Initialize the <code>Cleaner</code>.
-         * <br>
-         * <br>
-         * <b>Description: </b> <br>
-         * Sets the cleaning interval and the expiration time. <br>
-         * <br>
-         * <b>Concurrency issues: </b> <br>-<br>
-         * <br>
-         * <b>Preconditions: </b>
-         * <ul>
-         * <li><code>oConfigSection != null</code></li>
-         * <li><code>systemLogger != null</code></li>
-         * </ul>
-         * <br>
-         * <b>Postconditions: </b> <br>
-         * The <code>Cleaner</code> is initialized.
-         * @param lExpireTime The expire time in seconds
-         * @param lInterval The interval time in seconds
-         * @param systemLogger
-         *            The logger to log system entries.
-         */
-        public void init(long lExpireTime, long lInterval, SystemLogger systemLogger)
-        {
-            _lExpireTime = lExpireTime;
-            _lInterval = lInterval;
-            _systemLogger = systemLogger;
+		/** The logger for system entries. */
+		private SystemLogger _systemLogger;
 
-            if (_lExpireTime > 0) _bGo = true;
-        }
+		/** Default constructor. */
+		public Cleaner() {
+		}
 
-        /**
-         * Cleanup the storage. 
-         * <br>
-         * <br>
-         * <b>Description: </b> <br>
-         * Cleans all expired storage objects at the configured interval. <br>
-         * <br>
-         * <b>Concurrency issues: </b> <br>-<br>
-         * <br>
-         * <b>Preconditions: </b> <br>
-         * The <code>Cleaner</code> is initialized. <br>
-         * <br>
-         * <b>Postconditions: </b> <br>-
-         * 
-         * @see java.lang.Runnable#run()
-         */
-        public void run()
-        {
-            String sMethod = "run()";
-            while (_bGo)
-            {
-                try
-                {
-                    sleep(_lInterval);
+		/**
+		 * Initialize the <code>Cleaner</code>.
+		 * <br>
+		 * <br>
+		 * <b>Description: </b> <br>
+		 * Sets the cleaning interval and the expiration time. <br>
+		 * <br>
+		 * <b>Concurrency issues: </b> <br>-<br>
+		 * <br>
+		 * <b>Preconditions: </b>
+		 * <ul>
+		 * <li><code>oConfigSection != null</code></li>
+		 * <li><code>systemLogger != null</code></li>
+		 * </ul>
+		 * <br>
+		 * <b>Postconditions: </b> <br>
+		 * The <code>Cleaner</code> is initialized.
+		 * @param lExpireTime The expire time in seconds
+		 * @param lInterval The interval time in seconds
+		 * @param systemLogger
+		 *            The logger to log system entries.
+		 */
+		public void init(long lExpireTime, long lInterval, SystemLogger systemLogger)
+		{
+			_lExpireTime = lExpireTime;
+			_lInterval = lInterval;
+			_systemLogger = systemLogger;
 
-                    long lCurrentTimestamp = System.currentTimeMillis();
-                    Long lCleanupTimestamp = new Long(lCurrentTimestamp
-                        - _lExpireTime);
+			if (_lExpireTime > 0)
+				_bGo = true;
+		}
 
-                    _oStorageHandler.cleanup(lCleanupTimestamp);
-                }                
-                catch (ASelectStorageException eAS)
-                {
-//                    _systemLogger.log(Level.INFO, MODULE, sMethod,
-                      _systemLogger.log(Level.WARNING, MODULE, sMethod,
-                        "The storage cleanup failed.", eAS);
-                }
-                catch (InterruptedException eI)
-                {
-                    //Do nothing if interrupted
-                }
-                catch (Exception e)
-                {
-//                    _systemLogger.log(Level.INFO, MODULE, sMethod,
-                      _systemLogger.log(Level.WARNING, MODULE, sMethod,
-                        "The cleaner could not do her work properly.", e);
-                }
-            }
-            _systemLogger.log(Level.FINE, MODULE, sMethod, "The cleaner has stopped: "+this.getClass());
-        }
+		/**
+		 * Cleanup the storage. 
+		 * <br>
+		 * <br>
+		 * <b>Description: </b> <br>
+		 * Cleans all expired storage objects at the configured interval. <br>
+		 * <br>
+		 * <b>Concurrency issues: </b> <br>-<br>
+		 * <br>
+		 * <b>Preconditions: </b> <br>
+		 * The <code>Cleaner</code> is initialized. <br>
+		 * <br>
+		 * <b>Postconditions: </b> <br>-
+		 * 
+		 * @see java.lang.Runnable#run()
+		 */
+		public void run()
+		{
+			String sMethod = "run()";
+			while (_bGo) {
+				try {
+					sleep(_lInterval);
 
-        /**
-         * Destroys the Cleaner. 
-         * <br>
-         * <br>
-         * <b>Description: </b> <br>
-         * Stop the thread from running. <br>
-         * <br>
-         * <b>Concurrency issues: </b> <br>-<br>
-         * <br>
-         * <b>Preconditions: </b> <br>
-         * The <code>Cleaner</code> is initialized. <br>
-         * <br>
-         * <b>Postconditions: </b> <br>-
-         * 
-         * @see java.lang.Thread#destroy()
-         */
-        public void destroy()
-        {
-        	String sMethod = "destroy";
-            _bGo = false;
-            _systemLogger.log(Level.FINE, MODULE, sMethod, ""+this.getClass());
-            try
-            //interrupt if sleeping
-            {
-                interrupt();
-            }
-            catch (Exception e)
-            {
-                //no logging
-            }
+					long lCurrentTimestamp = System.currentTimeMillis();
+					Long lCleanupTimestamp = new Long(lCurrentTimestamp - _lExpireTime);
 
-        }
-    }    
+					_oStorageHandler.cleanup(lCleanupTimestamp);
+				}
+				catch (ASelectStorageException eAS) {
+					//                    _systemLogger.log(Level.INFO, MODULE, sMethod,
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "The storage cleanup failed.", eAS);
+				}
+				catch (InterruptedException eI) {
+					//Do nothing if interrupted
+				}
+				catch (Exception e) {
+					//                    _systemLogger.log(Level.INFO, MODULE, sMethod,
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "The cleaner could not do her work properly.", e);
+				}
+			}
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "The cleaner has stopped: " + this.getClass());
+		}
+
+		/**
+		 * Destroys the Cleaner. 
+		 * <br>
+		 * <br>
+		 * <b>Description: </b> <br>
+		 * Stop the thread from running. <br>
+		 * <br>
+		 * <b>Concurrency issues: </b> <br>-<br>
+		 * <br>
+		 * <b>Preconditions: </b> <br>
+		 * The <code>Cleaner</code> is initialized. <br>
+		 * <br>
+		 * <b>Postconditions: </b> <br>-
+		 * 
+		 * @see java.lang.Thread#destroy()
+		 */
+		public void destroy()
+		{
+			String sMethod = "destroy";
+			_bGo = false;
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "" + this.getClass());
+			try
+			//interrupt if sleeping
+			{
+				interrupt();
+			}
+			catch (Exception e) {
+				//no logging
+			}
+
+		}
+	}
 }
