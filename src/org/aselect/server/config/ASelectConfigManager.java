@@ -994,7 +994,7 @@ public class ASelectConfigManager extends ConfigManager {
 	 * @return A <code>String</code> representation of the requested form.
 	 */
 	public String getForm(String sForm) {
-		_systemLogger.log(Level.INFO, "ASelectConfigManager", "getForm", "Get FORM " + sForm);
+		_systemLogger.log(Level.INFO, "ASelectConfigManager", "getForm", "Get FORM '" + sForm +"'");
 		if (sForm.equals("login"))
 			return _sLoginForm;
 

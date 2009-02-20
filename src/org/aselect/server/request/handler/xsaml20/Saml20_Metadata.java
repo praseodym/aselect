@@ -36,7 +36,6 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	private Long validUntil = null; 	// validity period after now() of metadata (seconds)
 	private Long cacheDuration = null; 	// advised period (in seconds) for peer to keep metadata in cache
 
-	
 	private String singleSignOnServiceTarget = "";
 	private String artifactResolverTarget = "";
 	private String assertionConsumerTarget = "";
@@ -91,8 +90,6 @@ public class Saml20_Metadata extends ProtoRequestHandler
         		if (sCacheDuration != null) {
         			setCacheDuration(new Long( Long.parseLong(sValidUntil) * 1000));
         		}
-
-                
             }
             catch (ASelectConfigException e) {
                 _systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'redirect_url' in section 'aselect' found", e);
@@ -213,7 +210,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
         String sMethod = "process()";
         try {
         	// TODO make these method calls more transparent
-        	// all kind of things get set that we don't now off
+        	// all kind of things get set that we don't know off
         	aselectReader(); // among other things this sets the publicKeyAlias
         	readMetaDataPublicKeyCert(getWorkingDir()); // This sets the signing certificate using the publicKeyAlias
     		handleMetaDataRequest(request, response);

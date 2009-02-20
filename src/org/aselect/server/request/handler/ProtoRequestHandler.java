@@ -964,50 +964,9 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
      * @return obj                  The signed object
      * @throws ValidationException  Thrown if an error occurs while signing
      */
-    public SignableSAMLObject sign(SignableSAMLObject obj) throws ASelectException {
-    	
-    	/* "old" opensaml20 library code:
-		String sMethod = "sign(SignableSAMLObject obj)";
-	    _systemLogger.log(Level.INFO,MODULE,sMethod, "obj->"+obj);
-        if (!obj.isSigned()) {
-    	    ASelectConfigManager _oASelectConfigManager = ASelectConfigManager.getHandle();
-    		PrivateKey privKey = _oASelectConfigManager.getDefaultPrivateKey();
-            Signature signature = new SignatureBuilder().buildObject();
-//          SAMLObjectContentReference contentRef = new SAMLObjectContentReference(obj);
-//          signature.getContentReferences().add(contentRef);
-    		String signingAlgo;
-    		if ("RSA".equalsIgnoreCase(privKey.getAlgorithm())) {
-    			signingAlgo = SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA1;
-    		}
-    		else {
-    			signingAlgo = SignatureConstants.ALGO_ID_SIGNATURE_ECDSA_SHA1;
-    		}
-    	    _systemLogger.log(Level.INFO,MODULE,sMethod, "using signingAlgo="+signingAlgo);
-    		BasicCredential credential = new BasicCredential();
-    		credential.setPrivateKey(privKey);
-            signature.setSigningCredential(credential);
-            signature.setSignatureAlgorithm(signingAlgo);
-            signature.setCanonicalizationAlgorithm(SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
-            
-            obj.setSignature(signature);
-        	try {
-    		    Configuration.getMarshallerFactory().getMarshaller(obj).marshall(obj);
-    		} catch (MarshallingException e) {
-    	        _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Cannot marshall object for signature", e);
-    	        throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-    		}
-    	
-            try {
-            	Signer.signObject(signature);
-            } catch (SignatureException e) {
-    	        _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Cannot sign the object", e);
-    	        throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-            }
-       } else 
-	        _systemLogger.log(Level.INFO, MODULE, sMethod, "Object already signed!");
-    	   
-        return obj;
-        */ 
+    public SignableSAMLObject sign(SignableSAMLObject obj)
+    throws ASelectException
+    {	
     	return SamlTools.sign(obj);
     }
     

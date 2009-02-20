@@ -14,10 +14,8 @@ public class SystemLogger implements ISystemLogger {
 	private String className;
 	
 	public SystemLogger()
-	{
-        
-        try
-        {
+	{    
+        try {
             className = System.getProperty("org.aselect.system.logging.SystemLogger");
         	if (className == null) className = DEFAULTSYSTEMLOGGER;
         	_logger = (ISystemLogger) Class.forName(className).newInstance();
@@ -62,9 +60,7 @@ public class SystemLogger implements ISystemLogger {
 		_logger.log(level, module, method, message, cause);
 
 	}
-
 	public void setLevel(Level level) {
 		_logger.setLevel(level);
 	}
-
 }

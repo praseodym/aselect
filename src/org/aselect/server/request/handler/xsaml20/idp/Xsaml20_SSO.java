@@ -49,6 +49,7 @@ import org.opensaml.xml.Configuration;
 import org.opensaml.xml.XMLObjectBuilder;
 import org.opensaml.xml.XMLObjectBuilderFactory;
 import org.opensaml.xml.schema.XSString;
+import org.opensaml.xml.util.XMLHelper;
 
 // Example configuration
 // <handler id="saml20_sso"
@@ -111,7 +112,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			SignableSAMLObject samlMessage)
 	throws ASelectException
 	{
-		String sMethod = "handleSpecificSaml20Request";
+		String sMethod = "handleSpecificSaml20Request "+Thread.currentThread().getId();
 		AuthnRequest authnRequest = (AuthnRequest)samlMessage;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
 
@@ -119,6 +120,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			String sRelayState = (String)httpRequest.getParameter("RelayState");
 			Response errorResponse = validateAuthnRequest(authnRequest, httpRequest);
 			if (errorResponse != null) {
+				_systemLogger.log(Audit.SEVERE, MODULE, sMethod, "validateAuthnRequest failed");
 				sendErrorArtifact(errorResponse, authnRequest, httpResponse, sRelayState);
 				return;
 			}
@@ -127,7 +129,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			String sAppId = authnRequest.getIssuer().getValue();  // authnRequest.getProviderName();
 			String sSPRid = authnRequest.getID();
 			String sIssuer = authnRequest.getIssuer().getValue();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "SPRid = "+sSPRid+" RelayState="+sRelayState);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "==== SPRid="+sSPRid+" RelayState="+sRelayState);
 
 			boolean bForcedLogon = authnRequest.isForceAuthn();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "ForceAuthn = " + bForcedLogon);
@@ -139,6 +141,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			}
 			
 			// Start an authenticate request
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "performAuthenticateRequest " + sAppId);
 			Hashtable htResponse = performAuthenticateRequest(_sASelectServerUrl, 
 					httpRequest.getPathInfo(), RETURN_SUFFIX, sAppId, true /*check sig*/, _oClientCommunicator);
 
@@ -176,16 +179,15 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				return;
 			}
 			// debug
-			org.opensaml.saml2.core.Subject mySubj = authnRequest.getSubject();
+			/*org.opensaml.saml2.core.Subject mySubj = authnRequest.getSubject();
 			if (mySubj != null) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Subject.BaseID="+mySubj.getBaseID()+
 						" Subject.NameID="+mySubj.getNameID());
-			}
+			}*/
 
 			// 20090110, Bauke changed requested_betrouwbaarheidsniveau  to required_level
 			htSession.put("required_level", sBetrouwbaarheidsNiveau);
 			htSession.put("level", Integer.parseInt(sBetrouwbaarheidsNiveau));  // 20090111, Bauke added
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "htSession=" + htSession);
 			_oSessionManager.updateSession(sIDPRid, htSession);
 
 			// redirect with A-Select request=login1
@@ -202,6 +204,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process", e);
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, XMLHelper.prettyPrintXML(samlMessage.getDOM()));
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> SAML AuthnRequest handled");
@@ -210,11 +213,12 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	private String getAssertionConsumerServiceURL(SignableSAMLObject samlMessage)
 	throws ASelectException
 	{
-		String sMethod = "getAssertionConsumerServiceURL()";
+		String sMethod = "getAssertionConsumerServiceURL "+Thread.currentThread().getId();
+		
 		String elementName = samlMessage.getElementQName().getLocalPart();
 		Issuer issuer = retrieveIssuer(elementName, samlMessage);
 		if (issuer == null) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "SAMLMessage: "+elementName+" was not recognized");
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "SAMLMessage: "+elementName+" was not recognized");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
 		String sAssertionConsumerServiceURL = null;
@@ -223,20 +227,23 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		String sBindingName = SAMLConstants.SAML2_ARTIFACT_BINDING_URI;
 
 		try {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta");
 			MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
 			sAssertionConsumerServiceURL = metadataManager.getLocation(sEntityId, sElementName, sBindingName);
 		}
 		catch (ASelectException e) {
-			// Getting it from metadata is not succeeded so see if it is in
-			// the message
+			// Getting it from metadata is not succeeded so see if it is in the message
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage());
 		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta1 OK "+sAssertionConsumerServiceURL);
 		if (sAssertionConsumerServiceURL == null) {
 			if (elementName.equals(AUTHNREQUEST)) {
 				AuthnRequest authnRequest = (AuthnRequest) samlMessage;
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "get from AuthnRequest");
 				sAssertionConsumerServiceURL = authnRequest.getAssertionConsumerServiceURL();
 			}
 		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Return "+sAssertionConsumerServiceURL);
 		return sAssertionConsumerServiceURL;
 	}
 

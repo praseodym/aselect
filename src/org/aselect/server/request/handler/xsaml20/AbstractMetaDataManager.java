@@ -5,10 +5,9 @@ import java.io.PrintWriter;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 import org.aselect.server.config.ASelectConfigManager;
@@ -45,17 +44,17 @@ import org.w3c.dom.NodeList;
 
 public abstract class AbstractMetaDataManager
 {
+	protected final String MODULE = "MetaDataManagerIdp";
+	protected final String sFederationIdpKeyword = "federation-idp";
 	protected String protocolSupportEnumeration = SAMLConstants.SAML20P_NS; // "urn:oasis:names:tc:SAML:2.0:protocol"
 	protected ASelectConfigManager _configManager;
 	protected SystemLogger _systemLogger;
-	protected final String MODULE = "MetaDataManagerIdp";
 	protected String myRole = "IDP";
-	protected final String sFederationIdpKeyword = "federation-idp";
 
 	// All descriptors
-	protected HashMap<String, EntityDescriptor> entityDescriptors = new HashMap<String, EntityDescriptor>();
-	protected HashMap<String, SSODescriptor> SSODescriptors = new HashMap<String, SSODescriptor>();
-	protected Hashtable<String, String> metadataSPs = new Hashtable<String, String>();
+	//protected ConcurrentHashMap<String, EntityDescriptor> entityDescriptors = new ConcurrentHashMap<String, EntityDescriptor>();
+	protected ConcurrentHashMap<String, SSODescriptor> SSODescriptors = new ConcurrentHashMap<String, SSODescriptor>();
+	protected ConcurrentHashMap<String, String> metadataSPs = new ConcurrentHashMap<String, String>();
 
 	protected void init()
 		throws ASelectException
@@ -124,7 +123,7 @@ public abstract class AbstractMetaDataManager
 	//
 	// If a new SP is making contact with the IdP, we must be able to read it's metadata
 	// Can be called any time, not necessarily at startup
-	// Must be called before using SSODescriptors or entityDescriptors
+	// Must be called before using SSODescriptors
 	//
 	protected void checkMetadataProvider(String entityId)
 	{
@@ -132,8 +131,7 @@ public abstract class AbstractMetaDataManager
 		String metadataURL = null;
 		ChainingMetadataProvider myMetadataProvider = new ChainingMetadataProvider();
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "1. SSODescriptors=" + SSODescriptors);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "2. entityDescriptors=" + entityDescriptors);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "SSODescriptors=" + SSODescriptors); // +" entityDescriptors=" + entityDescriptors);
 		if (entityId == null)
 			return;
 		if (SSODescriptors.containsKey(entityId)) {
@@ -160,16 +158,17 @@ public abstract class AbstractMetaDataManager
 		
 		// Result was stored in myMetadataProvider
 		addMetadata(myMetadataProvider);
-		// Will have added to SSODescriptors and entityDescriptors
+		// Will have added to SSODescriptors
 	}
 
 	// Bauke: added
-	// Remove an entity from the metadata storage
+	// List all entries or Remove an entity from the metadata storage
+	// Produces output on stdout!
 	//
 	public void handleMetadataProvider(PrintWriter out, String entityId, boolean sList)
 	{
 		String sMethod = "handleMetadataProvider";
-		int remove = 2;
+		//int remove = 2;
 
 		if (sList) {
 			Set SSOkeys = SSODescriptors.keySet();
@@ -178,31 +177,28 @@ public abstract class AbstractMetaDataManager
 			}
 			return;
 		}
-		// Remove entry from SSODescriptors and entityDescriptors
-		if (!SSODescriptors.containsKey(entityId)) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "SSODescriptors does not contain entityId=" + entityId);
-			out.println("Entity "+entityId+" not found.");
-			remove--;
+		// Remove entry from SSODescriptors
+		SSODescriptor descriptor = SSODescriptors.remove(entityId);
+		if (descriptor==null) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity "+entityId+" not found");
+			out.println("Entity "+entityId+" not found");
 		}
-		else 
-			SSODescriptors.remove(entityId);
-		if (!entityDescriptors.containsKey(entityId)) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "entityDescriptors does not contain entityId=" + entityId);
-			if (remove == 2) out.println("Entity "+entityId+" not found.");
+		
+		/*if (!entityDescriptors.containsKey(entityId)) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity "+entityId+" not found.");
 			remove--;
 		}
 		else
 			entityDescriptors.remove(entityId);
+		
 		if (remove != 0) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "removed entityId=" + entityId);
-			out.println("Entity "+entityId+" removed.");
-		}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity "+entityId+" removed.");
+		}*/
 	}
 
 	/**
-	 * Get issuer(entityID) and metadata file location from application Put this
-	 * values in the hashMap SSODescriptors and entityDescriptors The key is the
-	 * entityID and the value the Descriptors
+	 * Get issuer(entityID) and metadata file location from application Put these
+	 * values in SSODescriptors. The key is the entityID and the value the Descriptors
 	 * 
 	 * @param application
 	 * @throws ASelectException
@@ -218,24 +214,17 @@ public abstract class AbstractMetaDataManager
 		for (MetadataProvider metadataEntityId : metadataProviderArray) {
 
 			try {
-				Element domDescriptor;
 				EntityDescriptor entityDescriptorValue = null;
 				XMLObject domdoc = metadataEntityId.getMetadata();
 
-				BasicParserPool parser = new BasicParserPool();
-				parser.setNamespaceAware(true);
-
-				MarshallerFactory marshallerFactory = Configuration.getMarshallerFactory();
-				Marshaller marshaller = marshallerFactory.getMarshaller(domdoc);
-				domDescriptor = marshaller.marshall(domdoc, parser.newDocument());
-
+				Element domDescriptor = marshallDescriptor(domdoc);
 				String entityId = domDescriptor.getAttribute("entityID");
 
-				// We will get and fill the HASHMAPs SSODescriptors and entityDescriptors
+				// We will get and fill SSODescriptors
 				entityDescriptorValue = metadataEntityId.getEntityDescriptor(entityId);
 
 				if (entityDescriptorValue != null) {
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity Descriptor: " + entityDescriptorValue
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "New Entity Descriptor: " + entityDescriptorValue
 							+ " for " + entityId);
 					SSODescriptor descriptorValueIDP = entityDescriptorValue.getIDPSSODescriptor(protocolSupportEnumeration);
 					SSODescriptor descriptorValueSP = entityDescriptorValue.getSPSSODescriptor(protocolSupportEnumeration);
@@ -245,18 +234,17 @@ public abstract class AbstractMetaDataManager
 					else if (descriptorValueSP != null) {
 						SSODescriptors.put(entityId, descriptorValueSP);
 					}
-
-					entityDescriptors.put(entityId, entityDescriptorValue);
+					//entityDescriptors.put(entityId, entityDescriptorValue);
 				}
 			}
 			catch (MarshallingException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Marshalling failed with the following error: ", e);
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Marshalling failed with the following error: ", e);
 			}
 			catch (XMLParserException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Parser failed with the following error: ", e);
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Parser failed with the following error: ", e);
 			}
 			catch (MetadataProviderException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not read metadata xml file ", e);
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not read metadata xml file ", e);
 			}
 		}
 	}
@@ -281,11 +269,8 @@ public abstract class AbstractMetaDataManager
 	public String getLocation(String entityId, String elementName, String bindingName)
 		throws ASelectException
 	{
-
 		String locationValue = getMDNodevalue(entityId, elementName, bindingName, "Location");
-
 		return locationValue;
-
 	}
 
 	/**
@@ -306,7 +291,7 @@ public abstract class AbstractMetaDataManager
 	 * @throws ASelectException
 	 */
 	public String getResponseLocation(String entityId, String elementName, String bindingName)
-		throws ASelectException
+	throws ASelectException
 	{
 		return getMDNodevalue(entityId, elementName, bindingName, "ResponseLocation");
 	}
@@ -320,31 +305,26 @@ public abstract class AbstractMetaDataManager
 	 * @throws ASelectException
 	 */
 	protected String getMDNodevalue(String entityId, String elementName, String bindingName, String attrName)
-		throws ASelectException
+	throws ASelectException
 	{
-		String sMethod = "getMDNodevalue()";
+		String sMethod = "getMDNodevalue "+Thread.currentThread().getId();
 		String location = null;
 
 		if (entityId == null)
 			return null;
 		checkMetadataProvider(entityId);
-		if (SSODescriptors.containsKey(entityId)) {
-
-			SSODescriptor descriptor = SSODescriptors.get(entityId);
-
-			BasicParserPool parser = new BasicParserPool();
-			parser.setNamespaceAware(true);
-
-			MarshallerFactory marshallerFactory = Configuration.getMarshallerFactory();
-			Marshaller marshaller = marshallerFactory.getMarshaller(descriptor);
-
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta checked for "+entityId);
+		SSODescriptor descriptor = SSODescriptors.get(entityId);
+		
+		if (descriptor != null) {
 			try {
-				Element domDescriptor;
-				domDescriptor = marshaller.marshall(descriptor, parser.newDocument());
-
-				NodeList nodeList = domDescriptor.getChildNodes();
+				Element domDescriptor = marshallDescriptor(descriptor);
+				NodeList nodeList = domDescriptor.getChildNodes();				
+				
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Try "+nodeList.getLength()+" entries");
 				for (int i = 0; i < nodeList.getLength(); i++) {
 					Node childNode = nodeList.item(i);
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Node "+childNode.getLocalName());
 					if (elementName.equals(childNode.getLocalName())) {
 						NamedNodeMap nodeMap = childNode.getAttributes();
 						String bindingMDValue = nodeMap.getNamedItem("Binding").getNodeValue();
@@ -352,30 +332,46 @@ public abstract class AbstractMetaDataManager
 							Node node = nodeMap.getNamedItem(attrName);
 							if (node != null) {
 								location = node.getNodeValue();
-								_systemLogger.log(Level.INFO, MODULE, sMethod, "Found location for entityId: "
-										+ entityId + " elementName: " + elementName + " bindingName: " + bindingName
-										+ " attrName: " + attrName + " location value= " + location);
+								_systemLogger.log(Level.INFO, MODULE, sMethod, "Found location for entityId="
+										+ entityId + " elementName=" + elementName + " bindingName=" + bindingName
+										+ " attrName=" + attrName + " location=" + location);
 							}
 							else {
-								_systemLogger.log(Level.INFO, MODULE, sMethod, "Did not find location for entityId: "
-										+ entityId + " elementName: " + elementName + " bindingName: " + bindingName
-										+ " attrName: " + attrName + " location value= " + location);
+								_systemLogger.log(Level.INFO, MODULE, sMethod, "Did not find location for entityId="
+										+ entityId + " elementName=" + elementName + " bindingName=" + bindingName
+										+ " attrName=" + attrName + " locatione=" + location);
 							}
 						}
 					}
 				}
 			}
 			catch (MarshallingException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Marshalling failed with the following error: ", e);
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Marshalling failed with the following error: ", e);
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 
 			}
 			catch (XMLParserException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Parser failed with the following error: ", e);
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Parser failed with the following error: ", e);
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Return "+location);
 		return location;
+	}
+
+	private synchronized Element marshallDescriptor(XMLObject descriptor)
+	throws MarshallingException, XMLParserException
+	{
+		String sMethod = "marshallDescriptor";
+		
+		BasicParserPool parser = new BasicParserPool();
+		parser.setNamespaceAware(true);
+		MarshallerFactory marshallerFactory = Configuration.getMarshallerFactory();
+		Marshaller marshaller = marshallerFactory.getMarshaller(descriptor);
+		
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Marshall "+descriptor);
+		Element domDescriptor = marshaller.marshall(descriptor, parser.newDocument());
+		return domDescriptor;
 	}
 
 	/**
@@ -390,12 +386,11 @@ public abstract class AbstractMetaDataManager
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId="+entityId);
 		checkMetadataProvider(entityId);
 		
-		if (!SSODescriptors.containsKey(entityId)) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity id: " + entityId + " not in SSODescriptors");
+		SSODescriptor descriptor = SSODescriptors.get(entityId);
+		if (descriptor == null) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Entity id: " + entityId + " not in SSODescriptors");
 			return null;
 		}
-
-		SSODescriptor descriptor = SSODescriptors.get(entityId);
 
 		List<KeyDescriptor> keyDescriptors = descriptor.getKeyDescriptors();
 		for (KeyDescriptor keydescriptor : keyDescriptors) {
@@ -428,8 +423,7 @@ public abstract class AbstractMetaDataManager
 					}
 				}
 				catch (CertificateException e) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot retrieve the public key from metadata: ",
-							e);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot retrieve the public key from metadata: ", e);
 				}
 			}
 		}

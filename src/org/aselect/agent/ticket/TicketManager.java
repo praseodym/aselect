@@ -102,511 +102,471 @@ import org.aselect.system.utils.Utils;
  */
 public class TicketManager
 {
-    /** The module name */
-    public static final String MODULE = "TicketManager";
+	/** The module name */
+	public static final String MODULE = "TicketManager";
 
-    /** The static instance. */
-    private static TicketManager _instance;
-        
-    /** The configuration. */
-    private ASelectAgentConfigManager _oConfigManager;
-    
-    /** The actual storage. */
-    private StorageManager _oTicketTable;
-    
-    /** The random generator. */
-    private SecureRandom _oRandomGenerator;
-    
-    /** The logger for system log entries. */
-    private SystemLogger _systemLogger;
-    
-    /** number of Agent tickets issued since startup. */
-    private long _lTicketsCounter;
+	/** The static instance. */
+	private static TicketManager _instance;
 
-    /** The length of the Agent ticket. */
-    private static final int TICKET_LENGTH = 128;  // 256;
+	/** The configuration. */
+	private ASelectAgentConfigManager _oConfigManager;
 
-    /**
-     * Get a static handle to the <code>TicketManager</code> instance.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Checks if a static instance exists, otherwise it is created. This 
-     * instance is returned.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * A static instance of the <code>TicketManager</code> exists.
-     * 
-     * @return A static handle to the <code>TicketManager</code>
-     */
-    public static TicketManager getHandle()
-    {
-        if(_instance == null)
-            _instance = new TicketManager();     
-        return _instance;
-    }
+	/** The actual storage. */
+	private StorageManager _oTicketTable;
 
-    /**
-     * Initializes the <code>TicketManager</code>.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Read configuration settings and initializes the components.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * The instance variables and components are initialized.
-     * <br>
-     * @return true if initialization succeeds, otherwise false.
-     */
-    public boolean init()
-    {
-        String sMethod = "init()";
-        try
-        {
-            _oConfigManager = ASelectAgentConfigManager.getHandle();
-    
-            Object objTicketMngrConfig = null;
-            try
-            {
-                objTicketMngrConfig = _oConfigManager.getSection(null,
-                    "storagemanager", "id=ticket");
-            }
-            catch (ASelectConfigException eAC)
-            {
-                _systemLogger.log(Level.SEVERE, 
-                    MODULE, sMethod, "no storagemanager section with 'id=ticket' declared in config file", eAC);
-                return false;
-            }
-    
-            _oTicketTable = new StorageManager();
-            _oTicketTable.init(objTicketMngrConfig, _oConfigManager,
-                ASelectAgentSystemLogger.getHandle(), ASelectAgentSAMAgent
-                    .getHandle());
-    
-            //initialize Randomgenerator
-            _oRandomGenerator = SecureRandom.getInstance("SHA1PRNG");
-            _oRandomGenerator.setSeed(_oRandomGenerator.generateSeed(20));
-    
-            _lTicketsCounter = 0;
-    
-            _systemLogger.log(Level.INFO, 
-                MODULE, sMethod, "Ticket manager Successfully started.");
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.SEVERE, 
-                MODULE, sMethod, "Exception occured.", e);
-            return false;
-        }
-        return true;
-    }
+	/** The random generator. */
+	private SecureRandom _oRandomGenerator;
 
-    /**
-     * Stop the <code>TicketManager</code>.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Destroys all current tickets.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * After this method is finished, no methods may be called 
-     * in other threads.
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * The <code>TicketManager</code> has stopped.
-     * 
-     */
-    public void stop()
-    {
-        String sMethod = "stop()";
+	/** The logger for system log entries. */
+	private SystemLogger _systemLogger;
 
-        if (_oTicketTable != null)
-            _oTicketTable.destroy();
+	/** number of Agent tickets issued since startup. */
+	private long _lTicketsCounter;
 
-        _systemLogger.log(Level.INFO, 
-            MODULE, sMethod, "Ticket manager stopped.");
-    }
+	/** The length of the Agent ticket. */
+	private static final int TICKET_LENGTH = 128; // 256;
 
-    /**
-     * Create a Agent ticket.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Create a new Agent ticket which is used as a ID for the given 
-     * ticket context. Adds the given ticket context to the storage.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * <code>htTicketContext != null</code>
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * The ticket context is added to the storage.
-     * <br>
-     * @param htTicketContext The ccontext to be add.
-     * @return The created ticket.
-     */
-    public String createTicket(Hashtable htTicketContext)
-    {
-        String sMethod = "createTicket()";
-        String sTicket = null;
-        byte[] baTicketBytes = new byte[TICKET_LENGTH];
-    
-        try
-        {
-            synchronized (_oTicketTable)
-            {
-                _oRandomGenerator.nextBytes(baTicketBytes);
-                sTicket = Utils.toHexString(baTicketBytes);
-    
-                while (_oTicketTable.containsKey(sTicket))
-                {
-                    _oRandomGenerator.nextBytes(baTicketBytes);
-                    sTicket = Utils.toHexString(baTicketBytes);
-                }               
-                               
-                try
-                {
-                    _systemLogger.log(Level.INFO, MODULE, sMethod, "New Ticket="+sTicket+", Context="+htTicketContext);
-                    _oTicketTable.put(sTicket, htTicketContext);
-                }
-                catch (ASelectStorageException e)
-                {
-                    if (e.getMessage().equals(Errors.ERROR_ASELECT_STORAGE_MAXIMUM_REACHED))
-                    {
-                        _systemLogger.log(Level.WARNING, MODULE, sMethod, "Maximum number of tickets reached", e);
-                        return null;
-                    }
-                    
-                    throw e;
-                }
-    
-                _lTicketsCounter++;
-            }
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.SEVERE, 
-                MODULE, sMethod, "Exception occured.", e);
-        }
-    
-        return sTicket;
-    }
+	/**
+	 * Get a static handle to the <code>TicketManager</code> instance.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Checks if a static instance exists, otherwise it is created. This 
+	 * instance is returned.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * A static instance of the <code>TicketManager</code> exists.
+	 * 
+	 * @return A static handle to the <code>TicketManager</code>
+	 */
+	public static TicketManager getHandle()
+	{
+		if (_instance == null)
+			_instance = new TicketManager();
+		return _instance;
+	}
 
-    /**
-     * Update a ticket.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Overwrites the new ticket context in the storage.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <ul>
-     * 	<li><code>sTicket != null</code></li>
-     * 	<li><code>htTicketContext != null</code></li>
-     * </ul>
-     * <br>
-     * <b>Postconditions:</b>
-     * <br>
-     * The given ticket is updated with the new context.
-     * <br>
-     * @param sTicket The ticket to be updated.
-     * @param htTicketContext The new ticket context.
-     */
-    public void updateTicketContext(String sTicket, Hashtable htTicketContext)
-    {
-        String sMethod = "updateTicketContext()";
-    
-        try
-        {
-            synchronized (_oTicketTable)
-            {
-                _oTicketTable.update(sTicket, htTicketContext);
-            }
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.WARNING, 
-                MODULE, sMethod, "Exception occured.", e);
-        }
-    }
+	/**
+	 * Initializes the <code>TicketManager</code>.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Read configuration settings and initializes the components.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * The instance variables and components are initialized.
+	 * <br>
+	 * @return true if initialization succeeds, otherwise false.
+	 */
+	public boolean init()
+	{
+		String sMethod = "init()";
+		try {
+			_oConfigManager = ASelectAgentConfigManager.getHandle();
 
-    /**
-     * Kill Agent ticket.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Remove the context of a given ticket from the storage.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * <code>sTicket != null</code>
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * The ticket context is removed from storage.
-     * <br>
-     * @param sTicket The ticket to be removed.
-     * @return True if removal succeeds, otherwise false.
-     */
-    public boolean killTicket(String sTicket)
-    {
-        String sMethod = "killTicket()";
-    
-        try
-        {
-            synchronized (_oTicketTable)
-            {
-                _oTicketTable.remove(sTicket);
-            }
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.WARNING, 
-                MODULE, sMethod, "Exception occured.", e);
-            return false;
-        }
-    
-        return true;
-    }    
+			Object objTicketMngrConfig = null;
+			try {
+				objTicketMngrConfig = _oConfigManager.getSection(null, "storagemanager", "id=ticket");
+			}
+			catch (ASelectConfigException eAC) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod,
+						"no storagemanager section with 'id=ticket' declared in config file", eAC);
+				return false;
+			}
 
-    /**
-     * Kill all Agent tickets.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Remove all ticket contexts from the storage.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * The ticket storage is empty.
-     * <br>
-     * 
-     */
-    public void killAllTickets()
-    {
-        String sMethod = "killAllTickets()";
-    
-        try
-        {
-            synchronized (_oTicketTable)
-            {
-                _oTicketTable.removeAll();
-            }
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.WARNING, 
-                MODULE, sMethod, "Exception occured.", e);
-        }
-    }
+			_oTicketTable = new StorageManager();
+			_oTicketTable.init(objTicketMngrConfig, _oConfigManager, ASelectAgentSystemLogger.getHandle(),
+					ASelectAgentSAMAgent.getHandle());
 
-    /**
-     * Get Agent ticket context.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Retrieve Agent ticket context from the storage.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @param sTicket The ticket to retrieve.
-     * @return The ticket context.
-     */
-    public Hashtable getTicketContext(String sTicket)
-    {
-        String sMethod = "getTicketContext()";
-        Hashtable htResponse = null;
-    
-        if (sTicket == null || sTicket.equals(""))
-            return null;
-    
-        try
-        {
-        	int len = sTicket.length();
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "Get Ticket("+sTicket.substring(0, (len<30)?len:30));
-            htResponse = (Hashtable)_oTicketTable.get(sTicket);
-        }
-        catch (Exception e)
-        {
-            StringBuffer sbError = new StringBuffer("Ticket doesn't exist: ");
-            sbError.append(sTicket);
-            _systemLogger.log(Level.FINE, 
-                MODULE, sMethod, sbError.toString(), e);
-        }
-        return htResponse;
-    }
-    
-    /**
-     * Returns the ticket timeout.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Return the ticket timeout from the given ticket.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * <code>sTicket != null</code>
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @param sTicket the ticket.
-     * @return The expiration time of the ticket.
-     * @throws ASelectStorageException If retrieving ticket timeout fails.
-     */
-    public long getTicketTimeout(String sTicket) throws ASelectStorageException
-    {
-        return _oTicketTable.getExpirationTime(sTicket);
-    }
-    
-    /**
-     * Returns the ticket start time.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Return the ticket timestamp form the given ticket.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * <code>sTicket != null</code>
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @param sTicket the ticket.
-     * @return The start time of the ticket.
-     * @throws ASelectStorageException If retrieving ticket start time fails.
-     */
-    public long getTicketStartTime(String sTicket) throws ASelectStorageException
-    {
-        return _oTicketTable.getTimestamp(sTicket);
-    }
+			//initialize Randomgenerator
+			_oRandomGenerator = SecureRandom.getInstance("SHA1PRNG");
+			_oRandomGenerator.setSeed(_oRandomGenerator.generateSeed(20));
+			_lTicketsCounter = 0;
 
-    /**
-     * Get all ticket context.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Retrieve all Agent ticket contexts from the storage.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @return all Agent ticket contexts in a <code>Hashtable</code>.
-     */
-    public Hashtable getTicketContexts()
-    {
-        String sMethod = "getTicketContexts()";
-        Hashtable xResponse = null;
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Ticket manager Successfully started.");
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Exception occured.", e);
+			return false;
+		}
+		return true;
+	}
 
-        try
-        {
-            xResponse = _oTicketTable.getAll();
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.SEVERE, 
-                MODULE, sMethod, "Exception occured.", e);
-        }
+	/**
+	 * Stop the <code>TicketManager</code>.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Destroys all current tickets.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * After this method is finished, no methods may be called 
+	 * in other threads.
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * The <code>TicketManager</code> has stopped.
+	 * 
+	 */
+	public void stop()
+	{
+		String sMethod = "stop()";
 
-        return xResponse;
-    }
+		if (_oTicketTable != null)
+			_oTicketTable.destroy();
 
-    /** 
-     * Get the number of issued tickets since startup.    
-     * @return The number of issued Agent tickets.
-     */
-    public long getTicketsCounter()
-    {
-        return _lTicketsCounter;
-    }
-    
-    
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Ticket manager stopped.");
+	}
 
-    /**
-     * Private constructor.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * retrieves a handle to the system logger.  
-     * 
-     */
-    private TicketManager()
-    {
-        _systemLogger = ASelectAgentSystemLogger.getHandle();
-    }
+	/**
+	 * Create a Agent ticket.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Create a new Agent ticket which is used as a ID for the given 
+	 * ticket context. Adds the given ticket context to the storage.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * <code>htTicketContext != null</code>
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * The ticket context is added to the storage.
+	 * <br>
+	 * @param htTicketContext The ccontext to be add.
+	 * @return The created ticket.
+	 */
+	public String createTicket(Hashtable htTicketContext)
+	{
+		String sMethod = "createTicket()";
+		String sTicket = null;
+		byte[] baTicketBytes = new byte[TICKET_LENGTH];
+
+		try {
+			synchronized (_oTicketTable) {
+				_oRandomGenerator.nextBytes(baTicketBytes);
+				sTicket = Utils.toHexString(baTicketBytes);
+
+				while (_oTicketTable.containsKey(sTicket)) {
+					_oRandomGenerator.nextBytes(baTicketBytes);
+					sTicket = Utils.toHexString(baTicketBytes);
+				}
+
+				try {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "New Ticket=" + sTicket + ", Context="
+							+ htTicketContext);
+					_oTicketTable.put(sTicket, htTicketContext);
+				}
+				catch (ASelectStorageException e) {
+					if (e.getMessage().equals(Errors.ERROR_ASELECT_STORAGE_MAXIMUM_REACHED)) {
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Maximum number of tickets reached", e);
+						return null;
+					}
+					throw e;
+				}
+				_lTicketsCounter++;
+			}
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Exception occured.", e);
+		}
+		return sTicket;
+	}
+
+	/**
+	 * Update a ticket.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Overwrites the new ticket context in the storage.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <ul>
+	 * 	<li><code>sTicket != null</code></li>
+	 * 	<li><code>htTicketContext != null</code></li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * The given ticket is updated with the new context.
+	 * <br>
+	 * @param sTicket The ticket to be updated.
+	 * @param htTicketContext The new ticket context.
+	 */
+	public void updateTicketContext(String sTicket, Hashtable htTicketContext)
+	{
+		String sMethod = "updateTicketContext()";
+
+		try {
+			synchronized (_oTicketTable) {
+				_oTicketTable.update(sTicket, htTicketContext);
+			}
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Exception occured.", e);
+		}
+	}
+
+	/**
+	 * Kill Agent ticket.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Remove the context of a given ticket from the storage.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * <code>sTicket != null</code>
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * The ticket context is removed from storage.
+	 * <br>
+	 * @param sTicket The ticket to be removed.
+	 * @return True if removal succeeds, otherwise false.
+	 */
+	public boolean killTicket(String sTicket)
+	{
+		String sMethod = "killTicket()";
+
+		try {
+			synchronized (_oTicketTable) {
+				_oTicketTable.remove(sTicket);
+			}
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Exception occured.", e);
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Kill all Agent tickets.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Remove all ticket contexts from the storage.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * The ticket storage is empty.
+	 * <br>
+	 * 
+	 */
+	public void killAllTickets()
+	{
+		String sMethod = "killAllTickets()";
+
+		try {
+			synchronized (_oTicketTable) {
+				_oTicketTable.removeAll();
+			}
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Exception occured.", e);
+		}
+	}
+
+	/**
+	 * Get Agent ticket context.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Retrieve Agent ticket context from the storage.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * @param sTicket The ticket to retrieve.
+	 * @return The ticket context.
+	 */
+	public Hashtable getTicketContext(String sTicket)
+	{
+		String sMethod = "getTicketContext()";
+		Hashtable htResponse = null;
+
+		if (sTicket == null || sTicket.equals(""))
+			return null;
+
+		try {
+			int len = sTicket.length();
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get Ticket(" + sTicket.substring(0, (len < 30) ? len : 30));
+			htResponse = (Hashtable) _oTicketTable.get(sTicket);
+		}
+		catch (Exception e) {
+			StringBuffer sbError = new StringBuffer("Ticket doesn't exist: ");
+			sbError.append(sTicket);
+			_systemLogger.log(Level.FINE, MODULE, sMethod, sbError.toString(), e);
+		}
+		return htResponse;
+	}
+
+	/**
+	 * Returns the ticket timeout.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Return the ticket timeout from the given ticket.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * <code>sTicket != null</code>
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * @param sTicket the ticket.
+	 * @return The expiration time of the ticket.
+	 * @throws ASelectStorageException If retrieving ticket timeout fails.
+	 */
+	public long getTicketTimeout(String sTicket)
+		throws ASelectStorageException
+	{
+		return _oTicketTable.getExpirationTime(sTicket);
+	}
+
+	/**
+	 * Returns the ticket start time.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Return the ticket timestamp form the given ticket.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * <code>sTicket != null</code>
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * @param sTicket the ticket.
+	 * @return The start time of the ticket.
+	 * @throws ASelectStorageException If retrieving ticket start time fails.
+	 */
+	public long getTicketStartTime(String sTicket)
+		throws ASelectStorageException
+	{
+		return _oTicketTable.getTimestamp(sTicket);
+	}
+
+	/**
+	 * Get all ticket context.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Retrieve all Agent ticket contexts from the storage.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * @return all Agent ticket contexts in a <code>Hashtable</code>.
+	 */
+	public Hashtable getTicketContexts()
+	{
+		String sMethod = "getTicketContexts()";
+		Hashtable xResponse = null;
+
+		try {
+			xResponse = _oTicketTable.getAll();
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Exception occured.", e);
+		}
+
+		return xResponse;
+	}
+
+	/** 
+	 * Get the number of issued tickets since startup.    
+	 * @return The number of issued Agent tickets.
+	 */
+	public long getTicketsCounter()
+	{
+		return _lTicketsCounter;
+	}
+
+	/**
+	 * Private constructor.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * retrieves a handle to the system logger.  
+	 * 
+	 */
+	private TicketManager() {
+		_systemLogger = ASelectAgentSystemLogger.getHandle();
+	}
 }

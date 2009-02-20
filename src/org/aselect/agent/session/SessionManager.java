@@ -82,445 +82,393 @@ import org.aselect.system.storagemanager.StorageManager;
  */
 public class SessionManager
 {
-    /** The MODULE name. */
-    public static final String MODULE = "SessionManager";
-    
-    /** The static instance. */
-    private static SessionManager _instance;
-    
-    /** The configuration. */
-    private ASelectAgentConfigManager _oConfigManager;
-    
-    /** The session storage. */
-    private StorageManager _oSessionTable;
-    
-    /** The random generator. */
-    private SecureRandom _oRandomGenerator;
-    
-    /** The logger for system log entries. */
-    private SystemLogger _systemLogger;
-    
-    /** number of sessions issued since startup. */
-    private long _lSessionsCounter; 
+	/** The MODULE name. */
+	public static final String MODULE = "SessionManager";
 
-    /**
-     * Get a static handle to the <code>SessionManager</code> instance.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Checks if a static instance exists, otherwise it is created. This 
-     * instance is returned.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * One instance of the <code>SessionManager</code> exists.
-     * 
-     * @return A static handle to the <code>SessionManager</code>
-     */
-    public static SessionManager getHandle()
-    {    
-        if(_instance == null)
-            _instance = new SessionManager();
-         return _instance;
-    }
+	/** The static instance. */
+	private static SessionManager _instance;
 
-    /**
-     * Initializes the <code>SessionManager</code>.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Read configuration settings and initializes the components.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * The instance variables and components are initialized.
-     * <br>
-     * @return true if initialization succeeds, otherwise false.
-     */
-    public boolean init()
-    {
-        String sMethod = "init()";
+	/** The configuration. */
+	private ASelectAgentConfigManager _oConfigManager;
 
-        try
-        {
-            _oConfigManager = ASelectAgentConfigManager.getHandle();
+	/** The session storage. */
+	private StorageManager _oSessionTable;
 
-            _oSessionTable = new StorageManager();
+	/** The random generator. */
+	private SecureRandom _oRandomGenerator;
 
-            Object objSessionMngrConfig = null;
-            try
-            {
-                objSessionMngrConfig = _oConfigManager.getSection(null,
-                    "storagemanager", "id=session");
-            }
-            catch (ASelectConfigException e)
-            {
-                _systemLogger.log(
-                        Level.SEVERE,
-                        MODULE, sMethod,
-                            "no storagemanager section with id=session declared in config file",
-                        e);
-                return false;
-            }
+	/** The logger for system log entries. */
+	private SystemLogger _systemLogger;
 
-            _oSessionTable.init(objSessionMngrConfig, _oConfigManager,
-                ASelectAgentSystemLogger.getHandle(), ASelectAgentSAMAgent
-                    .getHandle());
+	/** number of sessions issued since startup. */
+	private long _lSessionsCounter;
 
-            //initilize Randomgenerator
-            _oRandomGenerator = SecureRandom.getInstance("SHA1PRNG");
-            _oRandomGenerator.setSeed(_oRandomGenerator.generateSeed(20));
+	/**
+	 * Get a static handle to the <code>SessionManager</code> instance.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Checks if a static instance exists, otherwise it is created. This 
+	 * instance is returned.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * One instance of the <code>SessionManager</code> exists.
+	 * 
+	 * @return A static handle to the <code>SessionManager</code>
+	 */
+	public static SessionManager getHandle()
+	{
+		if (_instance == null)
+			_instance = new SessionManager();
+		return _instance;
+	}
 
-            _lSessionsCounter = 0;
+	/**
+	 * Initializes the <code>SessionManager</code>.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Read configuration settings and initializes the components.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * The instance variables and components are initialized.
+	 * <br>
+	 * @return true if initialization succeeds, otherwise false.
+	 */
+	public boolean init()
+	{
+		String sMethod = "init()";
 
-            _systemLogger.log(Level.INFO, 
-                MODULE, sMethod, "Successfully started");
-            return true;
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.SEVERE, 
-                MODULE, sMethod, "exception: " + e.getMessage(),
-                e);
-        }
-        return false;
-    }
+		try {
+			_oConfigManager = ASelectAgentConfigManager.getHandle();
 
-    /**
-     * Stop the <code>SessionManager</code>.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Destroys all current sessions.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * After this method is finished, no methods may be called 
-     * in other threads.
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * The <code>SessionManager</code> has stopped.
-     * <br>
-     * 
-     */
-    public void stop()
-    {
-        if (_oSessionTable != null)
-            _oSessionTable.destroy();
+			_oSessionTable = new StorageManager();
 
-        _systemLogger.log(Level.INFO, 
-            MODULE, "stop()", "Session manager stopped.");
-    }
+			Object objSessionMngrConfig = null;
+			try {
+				objSessionMngrConfig = _oConfigManager.getSection(null, "storagemanager", "id=session");
+			}
+			catch (ASelectConfigException e) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod,
+						"no storagemanager section with id=session declared in config file", e);
+				return false;
+			}
 
-    /**
-     * Create a session.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Adds the given session context with the given ID to the storage.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * none.
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <ul>
-     * 	<li><code>sSessionId != null</code></li>
-     * 	<li><code>htSessionContext != null</code></li>
-     * </ul>
-     * <br>
-     * <b>Postconditions:</b>
-     * <br>
-     * The given session is stored.
-     * <br>
-     * @param sSessionId The id of the session. 
-     * @param htSessionContext The contents of the session (context).
-     * @return True if creation succeeds, otherwise false.
-     */
-    public boolean createSession(String sSessionId, Hashtable htSessionContext)
-    {
-        String sMethod = "createSession()";
-        
-        try
-        {
-            synchronized (_oSessionTable)
-            {
-                if (_oSessionTable.containsKey(sSessionId))
-                {
-                    return false;
-                }
-                try
-                {
-                    _systemLogger.log(Level.INFO, MODULE, sMethod, "New SessionId/Rid="+sSessionId+", htSessionContext="+htSessionContext); 
-                    _oSessionTable.put(sSessionId, htSessionContext);
-                }
-                catch (ASelectStorageException e)
-                {
-                    if (e.getMessage().equals(Errors.ERROR_ASELECT_STORAGE_MAXIMUM_REACHED))
-                    {
-                        _systemLogger.log(Level.WARNING, 
-                            MODULE, sMethod, "Maximum number of sessions reached", e);
-                        return false;
-                    }
-                    throw e;
-                }
-                
-                _lSessionsCounter++;
-            }
-            return true;
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(
-                Level.SEVERE, 
-                MODULE, sMethod, 
-                "Exception: " + e.getMessage(),e);
-        }
+			_oSessionTable.init(objSessionMngrConfig, _oConfigManager, ASelectAgentSystemLogger.getHandle(),
+					ASelectAgentSAMAgent.getHandle());
 
-        return false;
-    }
+			//initilize Randomgenerator
+			_oRandomGenerator = SecureRandom.getInstance("SHA1PRNG");
+			_oRandomGenerator.setSeed(_oRandomGenerator.generateSeed(20));
 
-    /**
-     * Kill a session.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Removes the session with the given ID form the storage.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * <code>sSessionId != null</code>
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * The session is removed from storage.
-     * <br>
-     * @param sSessionId The ID of the session to be removed.
-     */
-    public void killSession(String sSessionId)
-    {   
-        try
-        {
-            synchronized (_oSessionTable)
-            {
-                _systemLogger.log(Level.INFO, MODULE, "killSession()", "Kill SessionId="+sSessionId);            
-                _oSessionTable.remove(sSessionId);
-            }
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(
-                Level.SEVERE, 
-                MODULE, "killSession()", 
-                "Exception: " + 
-                e.getMessage(),e);
-        }
-    }
+			_lSessionsCounter = 0;
 
-    /**
-     * Update a session context.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Overwrites the new session context with the given ID in the storage.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <ul>
-     * 	<li><code>sSessionId != null</code></li>
-     * 	<li><code>htSessionContext != null</code></li>
-     * </ul>
-     * <br>
-     * <b>Postconditions:</b>
-     * <br>
-     * The given session is updated with the new context.
-     * <br>
-     * @param sSessionId The ID of the session.
-     * @param htSessionContext The new session context.
-     * @return True if updating succeeds, otherwise false.
-     */
-    public boolean updateSessionContext(String sSessionId,
-        Hashtable htSessionContext)
-    {
-        try
-        {
-            synchronized (_oSessionTable)
-            {
-                if (getSessionContext(sSessionId) != null)
-                {
-                    _oSessionTable.update(sSessionId, htSessionContext);
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(
-                Level.SEVERE, 
-                MODULE, "updateSessionContext()", "Exception: " + 
-                e.getMessage(),e);
-            return false;
-        }    
-        return true;
-    }
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully started");
+			return true;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "exception: " + e.getMessage(), e);
+		}
+		return false;
+	}
 
-    /**  
-     * Get the number of issued sessions since startup.      
-     * @return The number of issued sessions.
-     */
-    public long getSessionsCounter()
-    {
-        return _lSessionsCounter;
-    }
+	/**
+	 * Stop the <code>SessionManager</code>.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Destroys all current sessions.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * After this method is finished, no methods may be called 
+	 * in other threads.
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * The <code>SessionManager</code> has stopped.
+	 * <br>
+	 * 
+	 */
+	public void stop()
+	{
+		if (_oSessionTable != null)
+			_oSessionTable.destroy();
 
-    /**
-     * Get the session context of a session.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Retrieve the session context (session parameters) belonging to the given
-     * session ID.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * <code>sSessionId != null</code>
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @param sSessionId The ID of the session.
-     * @return The session context as <code>Hashtable</code>.
-     */
-    public Hashtable getSessionContext(String sSessionId)
-    {
-        Hashtable htResponse = null;
+		_systemLogger.log(Level.INFO, MODULE, "stop()", "Session manager stopped.");
+	}
 
-        try
-        {
-            htResponse = (Hashtable)_oSessionTable.get(sSessionId);
-            _systemLogger.log(Level.INFO, MODULE, "getSessionContext()", "SessionId="+sSessionId+", Context="+htResponse);            
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.WARNING, 
-                MODULE, "getSessionContext()", "Exception: " 
-                + e.getMessage());
-        }
+	/**
+	 * Create a session.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Adds the given session context with the given ID to the storage.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * none.
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <ul>
+	 * 	<li><code>sSessionId != null</code></li>
+	 * 	<li><code>htSessionContext != null</code></li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * The given session is stored.
+	 * <br>
+	 * @param sSessionId The id of the session. 
+	 * @param htSessionContext The contents of the session (context).
+	 * @return True if creation succeeds, otherwise false.
+	 */
+	public boolean createSession(String sSessionId, Hashtable htSessionContext)
+	{
+		String sMethod = "createSession()";
 
-        return htResponse;
-    }
+		try {
+			synchronized (_oSessionTable) {
+				if (_oSessionTable.containsKey(sSessionId)) {
+					return false;
+				}
+				try {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "New SessionId/Rid=" + sSessionId
+							+ ", htSessionContext=" + htSessionContext);
+					_oSessionTable.put(sSessionId, htSessionContext);
+				}
+				catch (ASelectStorageException e) {
+					if (e.getMessage().equals(Errors.ERROR_ASELECT_STORAGE_MAXIMUM_REACHED)) {
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Maximum number of sessions reached", e);
+						return false;
+					}
+					throw e;
+				}
+				_lSessionsCounter++;
+			}
+			return true;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Exception: " + e.getMessage(), e);
+		}
+		return false;
+	}
 
-    /**
-     * Retrieve all session contexts.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Retrieve all session contexts from the storage.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @return All session contexts in a <code>Hashtable</code>.
-     */
-    public Hashtable getSessionContexts()
-    {
-        Hashtable htResponse = null;
+	/**
+	 * Kill a session.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Removes the session with the given ID form the storage.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * <code>sSessionId != null</code>
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * The session is removed from storage.
+	 * <br>
+	 * @param sSessionId The ID of the session to be removed.
+	 */
+	public void killSession(String sSessionId)
+	{
+		try {
+			synchronized (_oSessionTable) {
+				_systemLogger.log(Level.INFO, MODULE, "killSession()", "Kill SessionId=" + sSessionId);
+				_oSessionTable.remove(sSessionId);
+			}
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, "killSession()", "Exception: " + e.getMessage(), e);
+		}
+	}
 
-        try
-        {
-            htResponse = _oSessionTable.getAll();
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(
-                Level.SEVERE, 
-                MODULE, "getSessionContexts()", "Exception: " + 
-                e.getMessage(),e);
-        }
+	/**
+	 * Update a session context. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Overwrites the new session context with the given ID in the storage. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <br>
+	 * <b>Preconditions:</b>
+	 * <ul>
+	 * <li><code>sSessionId != null</code></li>
+	 * <li><code>htSessionContext != null</code></li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * The given session is updated with the new context. <br>
+	 * 
+	 * @param sSessionId
+	 *            The ID of the session.
+	 * @param htSessionContext
+	 *            The new session context.
+	 * @return True if updating succeeds, otherwise false.
+	 */
+	public boolean updateSessionContext(String sSessionId, Hashtable htSessionContext)
+	{
+		try {
+			synchronized (_oSessionTable) {
+				if (getSessionContext(sSessionId) != null) {
+					_oSessionTable.update(sSessionId, htSessionContext);
+				}
+			}
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, "updateSessionContext()", "Exception: " + e.getMessage(), e);
+			return false;
+		}
+		return true;
+	}
 
-        return htResponse;
-    }
-    
-    /**
-     * Returns then session timeout.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Return the session timeout form the given session.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * <code>sSessionId != null</code>
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @param sSessionId The session ID.
-     * @return The expiration time of the session.
-     * @throws ASelectStorageException If retrieving session timeout fails.
-     */
-    public long getSessionTimeout(String sSessionId) throws ASelectStorageException
-    {
-        return _oSessionTable.getExpirationTime(sSessionId);
-    }
+	/**  
+	 * Get the number of issued sessions since startup.      
+	 * @return The number of issued sessions.
+	 */
+	public long getSessionsCounter()
+	{
+		return _lSessionsCounter;
+	}
 
-    /**
-     * Private constructor.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * retrieves a handle to the system logger.  
-     * 
-     */
-    private SessionManager ()
-    {
-        _systemLogger = ASelectAgentSystemLogger.getHandle();
-    }
+	/**
+	 * Get the session context of a session.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Retrieve the session context (session parameters) belonging to the given
+	 * session ID.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * <code>sSessionId != null</code>
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * @param sSessionId The ID of the session.
+	 * @return The session context as <code>Hashtable</code>.
+	 */
+	public Hashtable getSessionContext(String sSessionId)
+	{
+		Hashtable htResponse = null;
+
+		try {
+			htResponse = (Hashtable) _oSessionTable.get(sSessionId);
+			_systemLogger.log(Level.INFO, MODULE, "getSessionContext()", "SessionId=" + sSessionId + ", Context="
+					+ htResponse);
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, MODULE, "getSessionContext()", "Exception: " + e.getMessage());
+		}
+
+		return htResponse;
+	}
+
+	/**
+	 * Retrieve all session contexts.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Retrieve all session contexts from the storage.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * @return All session contexts in a <code>Hashtable</code>.
+	 */
+	public Hashtable getSessionContexts()
+	{
+		Hashtable htResponse = null;
+
+		try {
+			htResponse = _oSessionTable.getAll();
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, "getSessionContexts()", "Exception: " + e.getMessage(), e);
+		}
+		return htResponse;
+	}
+
+	/**
+	 * Returns then session timeout.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Return the session timeout form the given session.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * <code>sSessionId != null</code>
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * @param sSessionId The session ID.
+	 * @return The expiration time of the session.
+	 * @throws ASelectStorageException If retrieving session timeout fails.
+	 */
+	public long getSessionTimeout(String sSessionId)
+		throws ASelectStorageException
+	{
+		return _oSessionTable.getExpirationTime(sSessionId);
+	}
+
+	/**
+	 * Private constructor.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * retrieves a handle to the system logger.  
+	 * 
+	 */
+	private SessionManager() {
+		_systemLogger = ASelectAgentSystemLogger.getHandle();
+	}
 }
-

@@ -219,7 +219,6 @@ public class StorageManager
 
 		try {
 			String sConfiguredExpireTime = oConfigManager.getParam(oConfigSection, "expire");
-
 			_lExpireTime = (Long.parseLong(sConfiguredExpireTime.trim()) * 1000);
 		}
 		catch (ASelectConfigException e) {
@@ -231,9 +230,7 @@ public class StorageManager
 		if (_lExpireTime != -1) {
 			try {
 				String sConfiguredInterval = oConfigManager.getParam(oConfigSection, "interval");
-
 				lInterval = (Long.parseLong(sConfiguredInterval.trim()) * 1000);
-
 			}
 			catch (ASelectConfigException e) {
 				lInterval = 60000; // default 1 minute.
@@ -251,11 +248,8 @@ public class StorageManager
 					+ oStorageHandlerSection + " this=" + this.getClass() + " handler=" + _oStorageHandler.getClass());
 			_oStorageHandler.init(oStorageHandlerSection, oConfigManager, systemLogger, oSAMAgent);
 
-			/**
-			 * The cleaner will keep the storage clean.
-			 */
+			// The cleaner will keep the storage clean.
 			_oCleaner = new Cleaner();
-
 			_oCleaner.init(_lExpireTime, lInterval, systemLogger);
 			_oCleaner.interrupt();
 			_oCleaner.start();
