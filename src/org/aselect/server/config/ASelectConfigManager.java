@@ -59,7 +59,7 @@
  *
  * Revision 1.60  2005/09/07 13:30:24  erwin
  * - Improved cleanup of the attribute gatherer (bug #93)
- * - Removed unnesserary Hashtable in attribute gatherer (bug #94)
+ * - Removed unnesserary HashMap in attribute gatherer (bug #94)
  *
  * Revision 1.59  2005/05/10 08:51:46  martijn
  * fixed bug in the optionality of single_sign-on
@@ -246,7 +246,7 @@ import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -277,7 +277,8 @@ import org.aselect.system.utils.Utils;
  * @author Alfa & Ariss
  * 
  */
-public class ASelectConfigManager extends ConfigManager {
+public class ASelectConfigManager extends ConfigManager
+{
 	/**
 	 * The name of this module, that is used in the system logging.
 	 */
@@ -330,20 +331,17 @@ public class ASelectConfigManager extends ConfigManager {
 	 */
 	private String _sRedirectURL;
 
-	
 	/**
 	 * The federation URL is the external URL of the A-Select Server, which must
 	 * be used in auth requests
 	 */
 	private String _sFederationURL;
-	
-	
-	
+
 	/**
 	 * Contains the AuthSP keys that can be found in the local_authsp.keystore
 	 * and remote_authsp.keystore
 	 */
-	private Hashtable _htAuthspKeys = new Hashtable();
+	private HashMap _htAuthspKeys = new HashMap();
 
 	/**
 	 * Contains the error messages identified by error codes, that are
@@ -355,12 +353,12 @@ public class ASelectConfigManager extends ConfigManager {
 	 * Contains the Server private key (default siging key) and it's certificate
 	 * id.
 	 */
-	private Hashtable _htServerCrypto = new Hashtable();
+	private HashMap _htServerCrypto = new HashMap();
 
 	/**
 	 * Containing siging keys for privileged application
 	 */
-	private Hashtable _htPrivilegedPublicKeys = new Hashtable();
+	private HashMap _htPrivilegedPublicKeys = new HashMap();
 
 	/**
 	 * The A-Select login form template
@@ -416,7 +414,7 @@ public class ASelectConfigManager extends ConfigManager {
 	 * The domain name which is used to set A-Select cookies
 	 */
 	private String _sCookieDomain = null;
-	
+
 	// Additional security precaution
 	private String _sAddedSecurity = "";
 
@@ -443,7 +441,8 @@ public class ASelectConfigManager extends ConfigManager {
 	 * 
 	 * @return handle to the ASelectConfigManager
 	 */
-	public static ASelectConfigManager getHandle() {
+	public static ASelectConfigManager getHandle()
+	{
 		if (_oASelectConfigManager == null)
 			_oASelectConfigManager = new ASelectConfigManager();
 		return _oASelectConfigManager;
@@ -502,9 +501,10 @@ public class ASelectConfigManager extends ConfigManager {
 	 * @throws ASelectException
 	 *             If initialisation fails.
 	 */
-	public void init(String sWorkingDir, String sSQLDriver, String sSQLUser,
-			String sSQLPassword, String sSQLURL, String sSQLTable,
-			String sConfigIDName) throws ASelectException {
+	public void init(String sWorkingDir, String sSQLDriver, String sSQLUser, String sSQLPassword, String sSQLURL,
+			String sSQLTable, String sConfigIDName)
+		throws ASelectException
+	{
 		String sMethod = "init()";
 		StringBuffer sbInfo = null;
 
@@ -513,15 +513,14 @@ public class ASelectConfigManager extends ConfigManager {
 		_oASelectAuthenticationLogger = ASelectAuthenticationLogger.getHandle();
 
 		// read config
-		if (sSQLDriver != null || sSQLPassword != null || sSQLURL != null
-				|| sSQLTable != null) {
+		if (sSQLDriver != null || sSQLPassword != null || sSQLURL != null || sSQLTable != null) {
 			sbInfo = new StringBuffer("Reading config from database: ");
 			sbInfo.append(sSQLURL);
 			_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString());
 
-			super.init(sSQLDriver, sSQLUser, sSQLPassword, sSQLURL, sSQLTable,
-					sConfigIDName, _systemLogger);
-		} else {
+			super.init(sSQLDriver, sSQLUser, sSQLPassword, sSQLURL, sSQLTable, sConfigIDName, _systemLogger);
+		}
+		else {
 			StringBuffer sbConfigFile = new StringBuffer(sWorkingDir);
 
 			if (!sWorkingDir.endsWith(File.separator)) {
@@ -541,25 +540,20 @@ public class ASelectConfigManager extends ConfigManager {
 
 		try {
 			_oASelectConfigSection = this.getSection(null, "aselect");
-		} catch (ASelectConfigException e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod,
-					"Could not find aselect config section in config file", e);
+		}
+		catch (ASelectConfigException e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not find aselect config section in config file", e);
 			throw e;
 		}
 
 		// initialize system logger
 		Object oSysLogging = null;
 		try {
-			oSysLogging = getSection(_oASelectConfigSection, "logging",
-					"id=system");
-		} catch (Exception e) {
-			_systemLogger
-					.log(
-							Level.SEVERE,
-							MODULE,
-							sMethod,
-							"No valid 'logging' config section with id='system' found.",
-							e);
+			oSysLogging = getSection(_oASelectConfigSection, "logging", "id=system");
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod,
+					"No valid 'logging' config section with id='system' found.", e);
 
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
@@ -572,22 +566,16 @@ public class ASelectConfigManager extends ConfigManager {
 		// initialize authentication logger
 		Object oAuthLogging = null;
 		try {
-			oAuthLogging = getSection(_oASelectConfigSection, "logging",
-					"id=authentication");
-		} catch (Exception e) {
-			_systemLogger
-					.log(
-							Level.SEVERE,
-							MODULE,
-							sMethod,
-							"No valid 'logging' config section with id='authentication' found.",
-							e);
+			oAuthLogging = getSection(_oASelectConfigSection, "logging", "id=authentication");
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod,
+					"No valid 'logging' config section with id='authentication' found.", e);
 
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 		}
 		_oASelectAuthenticationLogger.init(oAuthLogging, sWorkingDir);
-		_systemLogger.log(Level.INFO, MODULE, sMethod,
-				"Successfully initialized ASelectAuthenticationLogger.");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully initialized ASelectAuthenticationLogger.");
 
 		// loading error message info
 		StringBuffer sbErrorFile = new StringBuffer(sWorkingDir);
@@ -601,24 +589,21 @@ public class ASelectConfigManager extends ConfigManager {
 
 		File fErrors = new File(sbErrorFile.toString());
 		if (!fErrors.exists()) {
-			StringBuffer sbError = new StringBuffer(
-					"No errors config file found: ");
+			StringBuffer sbError = new StringBuffer("No errors config file found: ");
 			sbError.append(sbErrorFile.toString());
-			_systemLogger
-					.log(Level.SEVERE, MODULE, sMethod, sbError.toString());
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString());
 			throw new ASelectConfigException(Errors.ERROR_ASELECT_NOT_FOUND);
 		}
 
 		try {
-			_propErrorMessages
-					.load(new FileInputStream(sbErrorFile.toString()));
-		} catch (FileNotFoundException eFNF) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"Error loading error messages", eFNF);
+			_propErrorMessages.load(new FileInputStream(sbErrorFile.toString()));
+		}
+		catch (FileNotFoundException eFNF) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error loading error messages", eFNF);
 			throw new ASelectException(Errors.ERROR_ASELECT_NOT_FOUND);
-		} catch (IOException eIO) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"Error loading error messages", eIO);
+		}
+		catch (IOException eIO) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error loading error messages", eIO);
 			throw new ASelectException(Errors.ERROR_ASELECT_IO);
 		}
 
@@ -626,10 +611,12 @@ public class ASelectConfigManager extends ConfigManager {
 		try {
 			_sRedirectURL = getParam(_oASelectConfigSection, "redirect_url");
 			new URL(_sRedirectURL);
-		} catch (ASelectConfigException e) {
+		}
+		catch (ASelectConfigException e) {
 			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-							"No configuration item 'redirect_url' defined, using default");
-		} catch (MalformedURLException e) {
+					"No configuration item 'redirect_url' defined, using default");
+		}
+		catch (MalformedURLException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"Configured configuration item 'redirect_url' isn't an URL: " + _sRedirectURL);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
@@ -639,16 +626,16 @@ public class ASelectConfigManager extends ConfigManager {
 		try {
 			_sFederationURL = getParam(_oASelectConfigSection, "federation_url");
 			new URL(_sFederationURL);
-		} catch (ASelectConfigException e) {
-			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-							"No configuration item 'federation_url' defined");
-		} catch (MalformedURLException e) {
+		}
+		catch (ASelectConfigException e) {
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod, "No configuration item 'federation_url' defined");
+		}
+		catch (MalformedURLException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"Configured configuration item 'federation_url' isn't an URL: " + _sFederationURL);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 
-		
 		sbInfo = new StringBuffer("Successfully loaded ");
 		sbInfo.append(_propErrorMessages.size());
 		sbInfo.append(" error messages from: ");
@@ -658,14 +645,13 @@ public class ASelectConfigManager extends ConfigManager {
 		// checking essentional config
 		checkEssentialConfig();
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod,
-				"Successfully parsed essential system configuration.");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully parsed essential system configuration.");
 
 		try {
 			ASelectSAMAgent.getHandle().init();
-		} catch (ASelectSAMException eSAM) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod,
-					"Can't initialize SAMAgent", eSAM);
+		}
+		catch (ASelectSAMException eSAM) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Can't initialize SAMAgent", eSAM);
 			throw eSAM;
 		}
 
@@ -676,12 +662,12 @@ public class ASelectConfigManager extends ConfigManager {
 		String sSingleSignOn = null;
 		try {
 			sSingleSignOn = getParam(_oASelectConfigSection, "single_sign_on");
-		} catch (ASelectConfigException e) {
-			_systemLogger.log(Level.CONFIG,	MODULE,	sMethod,
+		}
+		catch (ASelectConfigException e) {
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
 					"No 'single_sign_on' config item found, using default: single_sign_on = enabled", e);
 		}
-		_bSingleSignOn = (sSingleSignOn == null)
-				|| (sSingleSignOn.equalsIgnoreCase("true"));
+		_bSingleSignOn = (sSingleSignOn == null) || (sSingleSignOn.equalsIgnoreCase("true"));
 		if (!_bSingleSignOn) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Single sign-on is disabled");
 		}
@@ -690,9 +676,9 @@ public class ASelectConfigManager extends ConfigManager {
 		try {
 			_sAddedSecurity = getParam(_oASelectConfigSection, "added_security");
 		}
-		catch (ASelectConfigException e) {  // need not be present
+		catch (ASelectConfigException e) { // need not be present
 		}
-		
+
 		// In a redundant environment a domain cookie wil be set.
 		// This way, all A-Select servers in, for example:
 		// .aselect.domain.com, will receive the TGT cookie from the
@@ -719,44 +705,38 @@ public class ASelectConfigManager extends ConfigManager {
 		}
 		else {
 			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-				"No specific cookie domain configured, using the default domain");
+					"No specific cookie domain configured, using the default domain");
 		}
 
 		if (_htServerCrypto.size() > 0) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod,
-					"Successfully loaded default private key.");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded default private key.");
 
 			// load authsp settings
 			loadAuthSPSettings(sWorkingDir);
-			_systemLogger.log(Level.INFO, MODULE, sMethod,
-					"Successfully loaded AuthSP settings.");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded AuthSP settings.");
 
 			// load user db settings
 			try {
 				checkUDBSettings();
-				_systemLogger.log(Level.INFO, MODULE, sMethod,
-						"Successfully loaded UDB settings.");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded UDB settings.");
 				_bUDBEnabled = true;
-			} catch (ASelectException eAS) {
-				_systemLogger
-						.log(Level.CONFIG, MODULE, sMethod,
-								"No valid UDB settings found, resume starting with UDB disabled.");
+			}
+			catch (ASelectException eAS) {
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+						"No valid UDB settings found, resume starting with UDB disabled.");
 				_bUDBEnabled = false;
 			}
 		}
 
 		// loading html templates
 		loadHTMLTemplates(sWorkingDir);
-		_systemLogger.log(Level.INFO, MODULE, sMethod,
-				"Successfully loaded HTML templates");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded HTML templates");
 
 		// loading privileged application settings
 		loadPrivilegedSettings(sWorkingDir);
-		_systemLogger.log(Level.INFO, MODULE, sMethod,
-				"Successfully loaded privileged settings");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded privileged settings");
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod,
-				"Successfully initialized A-Select Server Config Manager");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully initialized A-Select Server Config Manager");
 	}
 
 	/**
@@ -765,7 +745,8 @@ public class ASelectConfigManager extends ConfigManager {
 	 * 
 	 * @return FALSE if single sign-on is disabled in the configuration
 	 */
-	public boolean isSingleSignOn() {
+	public boolean isSingleSignOn()
+	{
 		return _bSingleSignOn;
 	}
 
@@ -775,7 +756,8 @@ public class ASelectConfigManager extends ConfigManager {
 	 * 
 	 * @return FALSE if only cross A-Select is supported
 	 */
-	public boolean isUDBEnabled() {
+	public boolean isUDBEnabled()
+	{
 		return _bUDBEnabled;
 	}
 
@@ -787,7 +769,8 @@ public class ASelectConfigManager extends ConfigManager {
 	 *         containing the cookie domain that is configured including the '.'
 	 *         as prefix.
 	 */
-	public String getCookieDomain() {
+	public String getCookieDomain()
+	{
 		return _sCookieDomain;
 	}
 
@@ -809,7 +792,8 @@ public class ASelectConfigManager extends ConfigManager {
 	 * @return <code>String</code> containing the A-Select Server working dir.
 	 * 
 	 */
-	public String getWorkingdir() {
+	public String getWorkingdir()
+	{
 		return _sWorkingDir;
 	}
 
@@ -833,12 +817,13 @@ public class ASelectConfigManager extends ConfigManager {
 	 *         dir.
 	 * 
 	 */
-	public String getRedirectURL() {
+	public String getRedirectURL()
+	{
 		return _sRedirectURL;
 	}
 
-	
-	public String getFederationURL() {
+	public String getFederationURL()
+	{
 		return _sFederationURL;
 	}
 
@@ -854,9 +839,10 @@ public class ASelectConfigManager extends ConfigManager {
 	 * <br>
 	 * <b>Postconditions:</b> <br> - <br>
 	 * 
-	 * @return A <code>Hashtable</code> containing all AuthSP settings.
+	 * @return A <code>HashMap</code> containing all AuthSP settings.
 	 */
-	public Hashtable getAuthspSettings() {
+	public HashMap getAuthspSettings()
+	{
 		return _htAuthspKeys;
 	}
 
@@ -880,7 +866,8 @@ public class ASelectConfigManager extends ConfigManager {
 	 * @return The public key of a privieleged application indicated by it's
 	 *         alias.
 	 */
-	public PublicKey getPrivilegedPublicKey(String sAlias) {
+	public PublicKey getPrivilegedPublicKey(String sAlias)
+	{
 		return (PublicKey) _htPrivilegedPublicKeys.get(sAlias);
 	}
 
@@ -899,7 +886,8 @@ public class ASelectConfigManager extends ConfigManager {
 	 * 
 	 * @return The private key of this A-Select Server.
 	 */
-	public PrivateKey getDefaultPrivateKey() {
+	public PrivateKey getDefaultPrivateKey()
+	{
 		return (PrivateKey) _htServerCrypto.get("private_key");
 	}
 
@@ -918,9 +906,9 @@ public class ASelectConfigManager extends ConfigManager {
 	 * 
 	 * @return The certificate of this A-Select Server.
 	 */
-	public java.security.cert.X509Certificate getDefaultCertificate() {
-		return (java.security.cert.X509Certificate) _htServerCrypto
-				.get("signing_cert");
+	public java.security.cert.X509Certificate getDefaultCertificate()
+	{
+		return (java.security.cert.X509Certificate) _htServerCrypto.get("signing_cert");
 	}
 
 	/**
@@ -937,7 +925,8 @@ public class ASelectConfigManager extends ConfigManager {
 	 * 
 	 * @return a <code>String</code> representation of the certificate ID
 	 */
-	public String getDefaultCertId() {
+	public String getDefaultCertId()
+	{
 		return (String) _htServerCrypto.get("cert_id");
 	}
 
@@ -959,14 +948,16 @@ public class ASelectConfigManager extends ConfigManager {
 	 *            An error code as configured in the errors.conf file
 	 * @return A <code>String</code> representation of the error message
 	 */
-	public String getErrorMessage(String sErrorCode) {
+	public String getErrorMessage(String sErrorCode)
+	{
 		String sMessage = null;
 
 		try {
 			sMessage = _propErrorMessages.getProperty(sErrorCode).trim();
 			if (sMessage == null)
 				return sErrorCode;
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			// value was probably null so trim() function failed
 			return sErrorCode;
 		}
@@ -993,8 +984,9 @@ public class ASelectConfigManager extends ConfigManager {
 	 *            The id of the form that must be returned.
 	 * @return A <code>String</code> representation of the requested form.
 	 */
-	public String getForm(String sForm) {
-		_systemLogger.log(Level.INFO, "ASelectConfigManager", "getForm", "Get FORM '" + sForm +"'");
+	public String getForm(String sForm)
+	{
+		_systemLogger.log(Level.INFO, "ASelectConfigManager", "getForm", "Get FORM '" + sForm + "'");
 		if (sForm.equals("login"))
 			return _sLoginForm;
 
@@ -1043,8 +1035,9 @@ public class ASelectConfigManager extends ConfigManager {
 	 * @throws ASelectException
 	 *             if template could not be updated
 	 */
-	public String updateTemplate(String sTemplate, Hashtable htSessionContext)
-			throws ASelectException {
+	public String updateTemplate(String sTemplate, HashMap htSessionContext)
+		throws ASelectException
+	{
 		String sMethod = "updateTemplate()";
 		String sReturn = null;
 		String sFriendlyName = "";
@@ -1055,29 +1048,22 @@ public class ASelectConfigManager extends ConfigManager {
 			sReturn = sTemplate;
 
 			if (htSessionContext != null) {
-				String sLocalOrganization = (String) htSessionContext
-						.get("local_organization");
+				String sLocalOrganization = (String) htSessionContext.get("local_organization");
 				if (sLocalOrganization != null) {
-					Hashtable htOrgInfo = CrossASelectManager.getHandle()
-							.getLocalServerInfo(sLocalOrganization);
+					HashMap htOrgInfo = CrossASelectManager.getHandle().getLocalServerInfo(sLocalOrganization);
 					if (htOrgInfo != null) {
-						sFriendlyName = (String) htOrgInfo
-								.get(TAG_FRIENLDY_NAME);
-						sMaintainerEmail = (String) htOrgInfo
-								.get(TAG_MAINTAINER_EMAIL);
-						Boolean boolShowUrl = (Boolean) htOrgInfo
-								.get(TAG_SHOW_URL);
+						sFriendlyName = (String) htOrgInfo.get(TAG_FRIENLDY_NAME);
+						sMaintainerEmail = (String) htOrgInfo.get(TAG_MAINTAINER_EMAIL);
+						Boolean boolShowUrl = (Boolean) htOrgInfo.get(TAG_SHOW_URL);
 						if (boolShowUrl != null && boolShowUrl.booleanValue())
-							sUrl = (String) htSessionContext
-									.get("local_as_url");
+							sUrl = (String) htSessionContext.get("local_as_url");
 					}
-				} else {
+				}
+				else {
 					String sAppId = (String) htSessionContext.get("app_id");
 					if (sAppId != null) {
-						sFriendlyName = ApplicationManager.getHandle()
-								.getFriendlyName(sAppId);
-						sMaintainerEmail = ApplicationManager.getHandle()
-								.getMaintainerEmail(sAppId);
+						sFriendlyName = ApplicationManager.getHandle().getFriendlyName(sAppId);
+						sMaintainerEmail = ApplicationManager.getHandle().getMaintainerEmail(sAppId);
 						if (ApplicationManager.getHandle().isShowUrl(sAppId))
 							sUrl = (String) htSessionContext.get("app_url");
 					}
@@ -1086,20 +1072,18 @@ public class ASelectConfigManager extends ConfigManager {
 
 			if (sFriendlyName == null)
 				sFriendlyName = "";
-			sReturn = Utils.replaceString(sReturn, TAG_FRIENLDY_NAME,
-					sFriendlyName);
+			sReturn = Utils.replaceString(sReturn, TAG_FRIENLDY_NAME, sFriendlyName);
 
 			if (sMaintainerEmail == null)
 				sMaintainerEmail = "";
-			sReturn = Utils.replaceString(sReturn, TAG_MAINTAINER_EMAIL,
-					sMaintainerEmail);
+			sReturn = Utils.replaceString(sReturn, TAG_MAINTAINER_EMAIL, sMaintainerEmail);
 
 			if (sUrl == null)
 				sUrl = "";
 			sReturn = Utils.replaceString(sReturn, TAG_SHOW_URL, sUrl);
-		} catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod,
-					"Could not update template with optional parameters", e);
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not update template with optional parameters", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 
@@ -1149,25 +1133,22 @@ public class ASelectConfigManager extends ConfigManager {
 	 *             if loading fails.
 	 */
 	private void loadDefaultPrivateKey(String sWorkingDir)
-			throws ASelectException {
+		throws ASelectException
+	{
 		String sMethod = "loadDefaultPrivateKey()";
 		String sKeyStoreName = "aselect.keystore";
 		String sPassword = null;
 
 		try {
 			try {
-				sPassword = getParam(_oASelectConfigSection,
-						"keystore_password");
-			} catch (ASelectConfigException e) {
-				StringBuffer sbError = new StringBuffer(
-						"Missing keystore_password in config.xml\n");
+				sPassword = getParam(_oASelectConfigSection, "keystore_password");
+			}
+			catch (ASelectConfigException e) {
+				StringBuffer sbError = new StringBuffer("Missing keystore_password in config.xml\n");
 				sbError.append("\tAuthentication of users is disabled.\n");
-				sbError
-						.append("\tOnly cross authentication is possible through ");
-				sbError
-						.append("cross A-Select servers running on other organizations.");
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbError
-						.toString());
+				sbError.append("\tOnly cross authentication is possible through ");
+				sbError.append("cross A-Select servers running on other organizations.");
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbError.toString());
 				return;
 			}
 
@@ -1179,14 +1160,12 @@ public class ASelectConfigManager extends ConfigManager {
 			sbKeystoreLocation.append(File.separator);
 			sbKeystoreLocation.append(sKeyStoreName);
 			KeyStore ksASelect = KeyStore.getInstance("JKS");
-			ksASelect.load(new FileInputStream(sbKeystoreLocation.toString()),
-					null);
+			ksASelect.load(new FileInputStream(sbKeystoreLocation.toString()), null);
 
 			// convert String to char[]
 			char[] caPassword = sPassword.toCharArray();
 
-			PrivateKey oPrivateKey = (PrivateKey) ksASelect.getKey(sAlias,
-					caPassword);
+			PrivateKey oPrivateKey = (PrivateKey) ksASelect.getKey(sAlias, caPassword);
 
 			java.security.cert.X509Certificate x509Cert = (java.security.cert.X509Certificate) ksASelect
 					.getCertificate(sAlias);
@@ -1199,9 +1178,9 @@ public class ASelectConfigManager extends ConfigManager {
 			_htServerCrypto.put("signing_cert", x509Cert);
 			_htServerCrypto.put("private_key", oPrivateKey);
 			_htServerCrypto.put("cert_id", sCertFingerPrint);
-		} catch (Exception e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"Could not load my private key", e);
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not load my private key", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 	}
@@ -1226,7 +1205,9 @@ public class ASelectConfigManager extends ConfigManager {
 	 * @throws ASelectException
 	 *             id loading fails.
 	 */
-	private void loadAuthSPSettings(String sWorkingDir) throws ASelectException {
+	private void loadAuthSPSettings(String sWorkingDir)
+		throws ASelectException
+	{
 		String sMethod = "loadAuthSPSettings()";
 		Object oAuthSP = null;
 		Object oAuthSPsSection = null;
@@ -1235,23 +1216,23 @@ public class ASelectConfigManager extends ConfigManager {
 
 			try {
 				oAuthSPsSection = this.getSection(null, "authsps");
-			} catch (ASelectConfigException e) {
+			}
+			catch (ASelectConfigException e) {
 				// may happen if A-Select is only configured for Cross A-Select
 				// will be logged, because _htAuthspKeys.size() == 0
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"No valid 'authsps' config section found", e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'authsps' config section found", e);
 			}
 
 			if (oAuthSPsSection != null) {
 				// get first AuthSP
 				try {
 					oAuthSP = this.getSection(oAuthSPsSection, "authsp");
-				} catch (ASelectConfigException e) {
+				}
+				catch (ASelectConfigException e) {
 					// may happen if A-Select is only configured for Cross
 					// A-Select
 					// will be logged, because _htAuthspKeys.size() == 0
-					_systemLogger.log(Level.WARNING, MODULE, sMethod,
-							"No valid 'authsp' config section found", e);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'authsp' config section found", e);
 				}
 			}
 
@@ -1264,24 +1245,20 @@ public class ASelectConfigManager extends ConfigManager {
 			}
 			if (_htAuthspKeys.size() == 0) {
 
-				StringBuffer sbError = new StringBuffer(
-						"No authsp definitions found. AuthSP's disabled. ");
-				sbError
-						.append("Can be valid if A-Select Server is configured in Cross A-Select modus.");
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbError
-						.toString());
+				StringBuffer sbError = new StringBuffer("No authsp definitions found. AuthSP's disabled. ");
+				sbError.append("Can be valid if A-Select Server is configured in Cross A-Select modus.");
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbError.toString());
 			}
-		} catch (ASelectException eAC) {
+		}
+		catch (ASelectException eAC) {
 			throw eAC;
-		} catch (Exception e) {
-			StringBuffer sbError = new StringBuffer(
-					"Could not load AuthSP settings.");
+		}
+		catch (Exception e) {
+			StringBuffer sbError = new StringBuffer("Could not load AuthSP settings.");
 			sbError.append("AuthSP's disabled.");
-			sbError
-					.append("Can be valid if A-Select Server is configured in Cross A-Select modus");
+			sbError.append("Can be valid if A-Select Server is configured in Cross A-Select modus");
 
-			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-					sbError.toString(), e);
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbError.toString(), e);
 		}
 	}
 
@@ -1314,7 +1291,8 @@ public class ASelectConfigManager extends ConfigManager {
 	 *             If loading fails.
 	 */
 	private void loadAuthSPPublicKey(String sWorkingDir, Object oAuthSPSection)
-			throws ASelectException {
+		throws ASelectException
+	{
 		String sMethod = "loadAuthSPPublicKey()";
 
 		PublicKey pkAuthSP = null;
@@ -1336,8 +1314,7 @@ public class ASelectConfigManager extends ConfigManager {
 				sbError.append(" type=");
 				sbError.append(sAuthSPType);
 				sbError.append(" is illegal. Use 'local' or 'remote'.");
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError
-						.toString());
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString());
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 			}
 
@@ -1349,31 +1326,25 @@ public class ASelectConfigManager extends ConfigManager {
 			sbKeystoreFile.append(File.separator);
 			sbKeystoreFile.append(sAuthSPType).append("_authsp.keystore");
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Keystore="+sbKeystoreFile+" Alias="+sAlias);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Keystore=" + sbKeystoreFile + " Alias=" + sAlias);
 			fKeystore = new File(sbKeystoreFile.toString());
 			if (!fKeystore.exists()) {
-				StringBuffer sbError = new StringBuffer(
-						"Keystore doesn't exist: ");
+				StringBuffer sbError = new StringBuffer("Keystore doesn't exist: ");
 				sbError.append(sbKeystoreFile.toString());
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError
-						.toString());
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString());
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 			}
 
 			// load keystore
 			ksKeyStore = KeyStore.getInstance("JKS");
-			ksKeyStore.load(new FileInputStream(sbKeystoreFile.toString()),
-					null);
+			ksKeyStore.load(new FileInputStream(sbKeystoreFile.toString()), null);
 
 			// retrieve first certificate
-			x509Cert = (java.security.cert.X509Certificate) ksKeyStore
-					.getCertificate(sAlias);
+			x509Cert = (java.security.cert.X509Certificate) ksKeyStore.getCertificate(sAlias);
 			if (x509Cert == null) {
-				StringBuffer sbError = new StringBuffer(
-						"No public key found for alias: '");
+				StringBuffer sbError = new StringBuffer("No public key found for alias: '");
 				sbError.append(sAlias).append("'");
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError
-						.toString());
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString());
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 			}
 
@@ -1384,8 +1355,7 @@ public class ASelectConfigManager extends ConfigManager {
 			// check if there are more keys for the same alias (for example
 			// <alias>.1 or <alias>.2)
 			int iSequence = 1;
-			x509Cert = (java.security.cert.X509Certificate) ksKeyStore
-					.getCertificate(sAlias + iSequence);
+			x509Cert = (java.security.cert.X509Certificate) ksKeyStore.getCertificate(sAlias + iSequence);
 			while (x509Cert != null) {
 				pkAuthSP = x509Cert.getPublicKey();
 
@@ -1395,16 +1365,16 @@ public class ASelectConfigManager extends ConfigManager {
 				_htAuthspKeys.put(sbKey.toString(), pkAuthSP);
 
 				iSequence++;
-				x509Cert = (java.security.cert.X509Certificate) ksKeyStore
-						.getCertificate(sAlias + iSequence);
+				x509Cert = (java.security.cert.X509Certificate) ksKeyStore.getCertificate(sAlias + iSequence);
 			}
 
 			loadAuthSPSpecificPrivateKey(sWorkingDir, oAuthSPSection);
-		} catch (ASelectException eAS) {
+		}
+		catch (ASelectException eAS) {
 			throw eAS;
-		} catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod,
-					"Could not load AuthSP public key", e);
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not load AuthSP public key", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}
@@ -1440,8 +1410,9 @@ public class ASelectConfigManager extends ConfigManager {
 	 * @throws ASelectException
 	 *             If loading fails.
 	 */
-	private void loadAuthSPSpecificPrivateKey(String sWorkingDir,
-			Object oAuthSPConfig) throws ASelectException {
+	private void loadAuthSPSpecificPrivateKey(String sWorkingDir, Object oAuthSPConfig)
+		throws ASelectException
+	{
 		String sMethod = "loadAuthSPSpecificPrivateKey()";
 		String sAlias = null;
 		String sPassword = null;
@@ -1452,9 +1423,9 @@ public class ASelectConfigManager extends ConfigManager {
 			sAlias = sAlias.toLowerCase();
 
 			try {
-				sPassword = this.getParam(oAuthSPConfig,
-						"specific_key_password");
-			} catch (ASelectConfigException eAC) {
+				sPassword = this.getParam(oAuthSPConfig, "specific_key_password");
+			}
+			catch (ASelectConfigException eAC) {
 				return; // not mandatory
 			}
 
@@ -1468,22 +1439,18 @@ public class ASelectConfigManager extends ConfigManager {
 
 			File fKeystore = new File(sbKeystoreFile.toString());
 			if (!fKeystore.exists()) {
-				StringBuffer sbError = new StringBuffer(
-						"Keystore doesn't exist: ");
+				StringBuffer sbError = new StringBuffer("Keystore doesn't exist: ");
 				sbError.append(sbKeystoreFile.toString());
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError
-						.toString());
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString());
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 			}
 			// load keystore
 			KeyStore ksKeyStore = KeyStore.getInstance("JKS");
-			ksKeyStore.load(new FileInputStream(sbKeystoreFile.toString()),
-					null);
+			ksKeyStore.load(new FileInputStream(sbKeystoreFile.toString()), null);
 
 			char[] caPassword = sPassword.toCharArray();
 
-			PrivateKey pkPrivateKey = (PrivateKey) ksKeyStore.getKey(sAlias,
-					caPassword);
+			PrivateKey pkPrivateKey = (PrivateKey) ksKeyStore.getKey(sAlias, caPassword);
 
 			java.security.cert.X509Certificate x509Cert = (java.security.cert.X509Certificate) ksKeyStore
 					.getCertificate(sAlias);
@@ -1494,20 +1461,20 @@ public class ASelectConfigManager extends ConfigManager {
 			String sCertFingerPrint = Utils.toHexString(mdDigest.digest());
 
 			_htAuthspKeys.put(sAlias + ".specific_private_key", pkPrivateKey);
-			_htAuthspKeys.put(sAlias + ".specific_private_key.cert_id",
-					sCertFingerPrint);
-		} catch (ASelectConfigException e) {
+			_htAuthspKeys.put(sAlias + ".specific_private_key.cert_id", sCertFingerPrint);
+		}
+		catch (ASelectConfigException e) {
 			// no private key found for sAlias
 			return;
-		} catch (ASelectException eAS) {
+		}
+		catch (ASelectException eAS) {
 			throw eAS;
-		} catch (Exception e) {
-			StringBuffer sbError = new StringBuffer(
-					"could not load specific private key for alias '");
+		}
+		catch (Exception e) {
+			StringBuffer sbError = new StringBuffer("could not load specific private key for alias '");
 			sbError.append(sAlias);
 			sbError.append("'");
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod,
-					sbError.toString(), e);
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}
@@ -1544,7 +1511,8 @@ public class ASelectConfigManager extends ConfigManager {
 	 * @throws ASelectException
 	 *             If loading templates fails.
 	 */
-	public void loadHTMLTemplates(String sWorkingDir) throws ASelectException
+	public void loadHTMLTemplates(String sWorkingDir)
+		throws ASelectException
 	{
 		String sMethod = "loadHTMLTemplates()";
 
@@ -1569,11 +1537,12 @@ public class ASelectConfigManager extends ConfigManager {
 				_sPopupForm = loadHTMLTemplate(sWorkingDir, "popup.html");
 				_sDirectLoginForm = loadHTMLTemplate(sWorkingDir, "directlogin.html");
 			}
-		} catch (ASelectException eAS) {
+		}
+		catch (ASelectException eAS) {
 			throw eAS;
-		} catch (Exception e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"Error loading HTML templates", e);
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error loading HTML templates", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}
@@ -1608,18 +1577,18 @@ public class ASelectConfigManager extends ConfigManager {
 	 *             if loading fails.
 	 */
 	public String loadHTMLTemplate(String sWorkingDir, String sFileName)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sLine = null;
 		String sTemplate = "";
 		BufferedReader brIn = null;
 		String sMethod = "loadHTMLTemplate()";
-	
+
 		try {
 			StringBuffer sbFilePath = new StringBuffer(sWorkingDir);
-			sbFilePath.append(File.separator).append("conf").append(File.separator).
-						append("html").append(File.separator).append(sFileName);
-	
+			sbFilePath.append(File.separator).append("conf").append(File.separator).append("html").append(
+					File.separator).append(sFileName);
+
 			File fTemplate = new File(sbFilePath.toString());
 			if (!fTemplate.exists()) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Required template not found: "
@@ -1627,14 +1596,14 @@ public class ASelectConfigManager extends ConfigManager {
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "HTML " + sbFilePath);
-	
+
 			brIn = new BufferedReader(new InputStreamReader(new FileInputStream(fTemplate)));
 			while ((sLine = brIn.readLine()) != null) {
 				sTemplate += sLine + "\n";
 			}
 			sTemplate = Utils.replaceString(sTemplate, "[version]", Version.getVersion());
-			sTemplate = Utils.replaceString(sTemplate, "[organization_friendly]",
-						getParam(_oASelectConfigSection, "organization_friendly_name"));
+			sTemplate = Utils.replaceString(sTemplate, "[organization_friendly]", getParam(_oASelectConfigSection,
+					"organization_friendly_name"));
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -1681,10 +1650,11 @@ public class ASelectConfigManager extends ConfigManager {
 	 *             if loading fails.
 	 */
 	private void loadPrivilegedSettings(String sWorkingDir)
-			throws ASelectException {
+		throws ASelectException
+	{
 		String sMethod = "loadPrivilegedSettings()";
 
-		_htPrivilegedPublicKeys = new Hashtable();
+		_htPrivilegedPublicKeys = new HashMap();
 
 		try {
 			Object oApplicationsSection = getSection(null, "applications");
@@ -1692,28 +1662,31 @@ public class ASelectConfigManager extends ConfigManager {
 			Object oApplication = null;
 			try {
 				oApplication = getSection(oApplicationsSection, "application");
-			} catch (ASelectConfigException e) {
+			}
+			catch (ASelectConfigException e) {
 			}
 			while (oApplication != null) {
 				String sAppID = getParam(oApplication, "id");
 				String sCreateTGT = null;
 				try {
 					sCreateTGT = getParam(oApplication, "privileged");
-				} catch (ASelectConfigException e) {
+				}
+				catch (ASelectConfigException e) {
 				}
 				if (sCreateTGT != null && sCreateTGT.equalsIgnoreCase("true")) {
 					loadPrivilegedPublicKey(sWorkingDir, sAppID);
 				}
 				oApplication = getNextSection(oApplication);
 			}
-		} catch (ASelectConfigException e) {
-			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-					"No privileged applications configured", e);
-		} catch (ASelectException eAS) {
+		}
+		catch (ASelectConfigException e) {
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod, "No privileged applications configured", e);
+		}
+		catch (ASelectException eAS) {
 			throw eAS;
-		} catch (Exception e) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod,
-					"Error loading privileged settings", e);
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Error loading privileged settings", e);
 
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
@@ -1750,7 +1723,8 @@ public class ASelectConfigManager extends ConfigManager {
 	 *             If loading fails.
 	 */
 	private void loadPrivilegedPublicKey(String sWorkingDir, String sAlias)
-			throws ASelectException {
+		throws ASelectException
+	{
 		String sMethod = "loadPrivilegedPublicKey()";
 		try {
 			sAlias = sAlias.toLowerCase();
@@ -1771,13 +1745,12 @@ public class ASelectConfigManager extends ConfigManager {
 
 			PublicKey pkPrivileged = x509Privileged.getPublicKey();
 			_htPrivilegedPublicKeys.put(sAlias, pkPrivileged);
-		} catch (Exception e) {
-			StringBuffer sbError = new StringBuffer(
-					"Could not load public key of privileged application '");
+		}
+		catch (Exception e) {
+			StringBuffer sbError = new StringBuffer("Could not load public key of privileged application '");
 			sbError.append(sAlias);
 			sbError.append("'");
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError
-					.toString(), e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}
@@ -1801,58 +1774,55 @@ public class ASelectConfigManager extends ConfigManager {
 	 * @return TRUE if the minimum AuthSP configuration is available in the
 	 *         supplied config section.
 	 */
-	private boolean checkAuthSPConfig(Object oAuthSPSection) {
+	private boolean checkAuthSPConfig(Object oAuthSPSection)
+	{
 		String sID = null;
 		String sMethod = "checkAuthSPConfig()";
 
 		try {
 			sID = this.getParam(oAuthSPSection, "id");
-		} catch (ASelectConfigException eAC) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"Missing 'id' parameter in authSP section", eAC);
+		}
+		catch (ASelectConfigException eAC) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing 'id' parameter in authSP section", eAC);
 			return false;
 		}
 		try {
 			this.getParam(oAuthSPSection, "handler");
-		} catch (ASelectConfigException eAC) {
-			StringBuffer sbError = new StringBuffer(
-					"Missing 'handler' parameter in ");
+		}
+		catch (ASelectConfigException eAC) {
+			StringBuffer sbError = new StringBuffer("Missing 'handler' parameter in ");
 			sbError.append(sID);
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError
-					.toString(), eAC);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), eAC);
 			return false;
 		}
 
 		try {
 			this.getParam(oAuthSPSection, "level");
-		} catch (ASelectConfigException eAC) {
-			StringBuffer sbError = new StringBuffer(
-					"Missing 'level' parameter in ");
+		}
+		catch (ASelectConfigException eAC) {
+			StringBuffer sbError = new StringBuffer("Missing 'level' parameter in ");
 			sbError.append(sID);
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError
-					.toString(), eAC);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), eAC);
 			return false;
 		}
 
 		try {
 			this.getParam(oAuthSPSection, "friendly_name");
-		} catch (ASelectConfigException eAC) {
-			StringBuffer sbError = new StringBuffer(
-					"Missing 'friendly_name' parameter in ");
+		}
+		catch (ASelectConfigException eAC) {
+			StringBuffer sbError = new StringBuffer("Missing 'friendly_name' parameter in ");
 			sbError.append(sID);
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError
-					.toString(), eAC);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), eAC);
 			return false;
 		}
 
 		try {
 			this.getParam(oAuthSPSection, "type");
-		} catch (ASelectConfigException eAC) {
-			StringBuffer sbError = new StringBuffer(
-					"Missing 'type' parameter in ");
+		}
+		catch (ASelectConfigException eAC) {
+			StringBuffer sbError = new StringBuffer("Missing 'type' parameter in ");
 			sbError.append(sID);
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError
-					.toString(), eAC);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), eAC);
 			return false;
 		}
 		return true;
@@ -1879,7 +1849,9 @@ public class ASelectConfigManager extends ConfigManager {
 	 * @throws ASelectException
 	 *             if check fails.
 	 */
-	private void checkUDBSettings() throws ASelectException {
+	private void checkUDBSettings()
+		throws ASelectException
+	{
 		Object oUdbCfgSection = null;
 		String sConnectorID = null;
 		Object oUdbConnectorCfgSection = null;
@@ -1890,23 +1862,25 @@ public class ASelectConfigManager extends ConfigManager {
 
 		try {
 			oUdbCfgSection = this.getSection(null, "udb");
-		} catch (ASelectConfigException eAC) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"Could not retrieve 'udb' config section", eAC);
+		}
+		catch (ASelectConfigException eAC) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not retrieve 'udb' config section", eAC);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
 		}
 
 		try {
 			String sCrossFallbackEnabled = this.getParam(oUdbCfgSection, "cross_fallback");
 			_bCrossFallbackEnabled = sCrossFallbackEnabled.trim().equalsIgnoreCase("true");
-		} catch (ASelectConfigException eAC) {
+		}
+		catch (ASelectConfigException eAC) {
 			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
 					"Could not find 'cross_fallback' param in udb config section, so 'cross_fallback' disabled.", eAC);
 		}
 
 		try {
 			sConnectorID = this.getParam(oUdbCfgSection, "connector");
-		} catch (ASelectConfigException eAC) {
+		}
+		catch (ASelectConfigException eAC) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"Could not retrieve 'connector' config parameter in udb config section", eAC);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
@@ -1914,7 +1888,8 @@ public class ASelectConfigManager extends ConfigManager {
 
 		try {
 			oUdbConnectorCfgSection = this.getSection(oUdbCfgSection, "connector", "id=" + sConnectorID);
-		} catch (ASelectConfigException eAC) {
+		}
+		catch (ASelectConfigException eAC) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"Could not retrieve connector config parameter in udb config section", eAC);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
@@ -1922,7 +1897,8 @@ public class ASelectConfigManager extends ConfigManager {
 
 		try {
 			sConnectorClass = this.getParam(oUdbConnectorCfgSection, "class");
-		} catch (ASelectConfigException eAC) {
+		}
+		catch (ASelectConfigException eAC) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"Could not retrieve 'class' config parameter in udb connector config section", eAC);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
@@ -1931,7 +1907,8 @@ public class ASelectConfigManager extends ConfigManager {
 		try {
 			Class classConnector = Class.forName(sConnectorClass);
 			oUDBConnector = (IUDBConnector) classConnector.newInstance();
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"The configured udb connector class is not a valid UDBConnector class", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
@@ -1939,7 +1916,8 @@ public class ASelectConfigManager extends ConfigManager {
 
 		try {
 			oUDBConnector.init(oUdbConnectorCfgSection);
-		} catch (ASelectUDBException eAUDB) {
+		}
+		catch (ASelectUDBException eAUDB) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"Could not initialize UDB as configured in the udb resource", eAUDB);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAUDB);
@@ -1971,20 +1949,23 @@ public class ASelectConfigManager extends ConfigManager {
 	 * @throws ASelectException
 	 *             if check fails.
 	 */
-	private void checkEssentialConfig() throws ASelectException {
+	private void checkEssentialConfig()
+		throws ASelectException
+	{
 		String sMethod = "checkEssentialConfig()";
 
 		// check aselect config
 		try {
 			getParam(_oASelectConfigSection, "organization");
-		} catch (ASelectConfigException eAC) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"missing 'organization' parameter in configuration", eAC);
+		}
+		catch (ASelectConfigException eAC) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "missing 'organization' parameter in configuration", eAC);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
 		}
 		try {
 			getParam(_oASelectConfigSection, "organization_friendly_name");
-		} catch (ASelectConfigException eAC) {
+		}
+		catch (ASelectConfigException eAC) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"missing 'organization_friendly_name' parameter in configuration", eAC);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
@@ -1992,9 +1973,9 @@ public class ASelectConfigManager extends ConfigManager {
 
 		try {
 			getParam(_oASelectConfigSection, "server_id");
-		} catch (ASelectConfigException eAC) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"missing 'server_id' parameter in configuration", eAC);
+		}
+		catch (ASelectConfigException eAC) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "missing 'server_id' parameter in configuration", eAC);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
 		}
 
@@ -2002,7 +1983,8 @@ public class ASelectConfigManager extends ConfigManager {
 		Object oTemp = null;
 		try {
 			oTemp = getSection(null, "storagemanager", "id=session");
-		} catch (ASelectConfigException eAC) {
+		}
+		catch (ASelectConfigException eAC) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"missing 'storagemanager' section with id=session in configuration", eAC);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
@@ -2010,9 +1992,9 @@ public class ASelectConfigManager extends ConfigManager {
 
 		try {
 			getParam(oTemp, "max");
-		} catch (ASelectConfigException eAC) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"missing 'max' parameter in configuration", eAC);
+		}
+		catch (ASelectConfigException eAC) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "missing 'max' parameter in configuration", eAC);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
 		}
 
@@ -2045,7 +2027,8 @@ public class ASelectConfigManager extends ConfigManager {
 
 		try {
 			getParam(oTemp, "expire");
-		} catch (ASelectConfigException eAC) {
+		}
+		catch (ASelectConfigException eAC) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"missing 'expire' (in tgt section) parameter in configuration", eAC);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
@@ -2070,7 +2053,8 @@ public class ASelectConfigManager extends ConfigManager {
 	 * 
 	 * @return true if cross fallback is enabled and false if not.
 	 */
-	public boolean isCrossFallBackEnabled() {
+	public boolean isCrossFallBackEnabled()
+	{
 		return _bCrossFallbackEnabled;
 	}
 

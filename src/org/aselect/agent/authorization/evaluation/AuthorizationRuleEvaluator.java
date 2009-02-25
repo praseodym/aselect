@@ -44,7 +44,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Vector;
@@ -128,7 +128,7 @@ public class AuthorizationRuleEvaluator
 	 * 	for the given user attributes, otherwise false.
 	 * @throws ASelectAuthorizationException If evaluating fails.
 	 */
-	public boolean evaluate(Hashtable htAttributes, EvaluationTree tEvaluation)
+	public boolean evaluate(HashMap htAttributes, EvaluationTree tEvaluation)
 		throws ASelectAuthorizationException
 	{
 		final String sMethod = "evaluate()";
@@ -175,7 +175,7 @@ public class AuthorizationRuleEvaluator
 	 * 	<code>true</code> for the given user attributes, otherwise false.
 	 * @throws ASelectAuthorizationException If evaluating fails.
 	 */
-	private boolean evaluateSimple(Hashtable htAttributes, EvaluationTree tEvaluation)
+	private boolean evaluateSimple(HashMap htAttributes, EvaluationTree tEvaluation)
 		throws ASelectAuthorizationException
 	{
 		final String sMethod = "evaluateSimple()";
@@ -408,7 +408,7 @@ public class AuthorizationRuleEvaluator
 	 * 	<code>true</code> for the given user attributes, otherwise false.
 	 * @throws ASelectAuthorizationException If evaluating fails.
 	 */
-	private boolean evaluateLogic(Hashtable htAttributes, EvaluationTree tEvaluation)
+	private boolean evaluateLogic(HashMap htAttributes, EvaluationTree tEvaluation)
 		throws ASelectAuthorizationException
 	{
 		final String sMethod = "evaluateLogic()";

@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.URLEncoder;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -62,7 +62,7 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
     private String _sTemplate;
     private long _lTimeOffset;
     private Vector _vIdPs;
-    private Hashtable _htIdPs;
+    private HashMap _htIdPs;
 
     /**
      * Initializes the WAYF request handler.
@@ -194,7 +194,7 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
             }
             
             _vIdPs = new Vector();
-            _htIdPs = new Hashtable();
+            _htIdPs = new HashMap();
             while (oIdP != null)
             {
                 String sAlias = null;
@@ -221,7 +221,7 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
                     throw new ASelectException (Errors.ERROR_ASELECT_INIT_ERROR, e);
                 }
 
-                if (_htIdPs.contains(sAlias))
+                if (_htIdPs.containsValue(sAlias))
                 {
                     _systemLogger.log(Level.WARNING, MODULE, sMethod
                         , "Identity Provider alias isn't unique: " + sAlias);

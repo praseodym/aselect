@@ -35,7 +35,7 @@ import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -364,7 +364,7 @@ public class PKIAuthSP extends HttpServlet
                     throw new ASelectException(Errors.PKI_2FACTOR_NO_RETRIES_LEFT);
                 }
                 String sErrorMsg = "invalid password"; 
-                Hashtable htParams = new Hashtable();
+                HashMap htParams = new HashMap();
                 htParams.put("as_url", sAsUrl);
                 htParams.put("rid", sRid);
                 htParams.put("user_attribute", sUserAttributes);
@@ -429,7 +429,7 @@ public class PKIAuthSP extends HttpServlet
             //Two-Factor Authentication is enabled.
             if (sTFAuthSpName != null)
             {
-                Hashtable htParams = new Hashtable();
+                HashMap htParams = new HashMap();
                 htParams.put("as_url", sAsUrl);
                 htParams.put("rid", sRid);
                 htParams.put("user_attribute", sUserAttributes);
@@ -538,7 +538,7 @@ public class PKIAuthSP extends HttpServlet
             {
                 // Throws ASelectException when no trusted
                 // Certificate is found.
-                Hashtable htResult = _oPkiManager
+                HashMap htResult = _oPkiManager
                     .getTrustedCACertificate(oClientCert); 
 
                 sCaAlias = (String)htResult.get("caAlias");
@@ -933,7 +933,7 @@ public class PKIAuthSP extends HttpServlet
      */
     private void handleTFAuthenticationRequest(
         HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-        String sRid, Hashtable htSessionInfo) throws ASelectException
+        String sRid, HashMap htSessionInfo) throws ASelectException
     {
         String sMethod = "handleTFAuthenticationRequest()";
         StringBuffer sbTemp;
@@ -1047,7 +1047,7 @@ public class PKIAuthSP extends HttpServlet
             _systemLogger.log(Level.INFO, MODULE, sMethod, "Send:"+sbRequest);
             String sResponseString = send(sbRequest.toString());
 
-            Hashtable xResponse = Utils.convertCGIMessage(sResponseString);
+            HashMap xResponse = Utils.convertCGIMessage(sResponseString);
             String sResponseCode = ((String)xResponse.get("status"));
             if (sResponseCode == null)
             {

@@ -77,6 +77,7 @@
 package org.aselect.server.attributes.requestors.jndi;
 
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -133,8 +134,8 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	private String _sUserDN;
 	private String _sAltUserDN; // Bauke: attribute hack
 	private String _sBaseDN;
-	private Hashtable _htAttributes;
-	private Hashtable _htReMapAttributes;
+	private HashMap _htAttributes;
+	private HashMap _htReMapAttributes;
 	private boolean _bUseFullUid = false;
 	private boolean _bNumericalUid = false;
 
@@ -153,8 +154,8 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 		String sMethod = "init()";
 		Object oMain = null;
 
-		_htAttributes = new Hashtable();
-		_htReMapAttributes = new Hashtable();
+		_htAttributes = new HashMap();
+		_htReMapAttributes = new HashMap();
 
 		try {
 			try {
@@ -306,13 +307,13 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	 * If a '*' character is the first element of the supplied <code>Vector
 	 * </code>, then all attributes will be returned.
 	 * <br><br>
-	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(java.util.Hashtable, java.util.Vector)
+	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(java.util.HashMap, java.util.Vector)
 	 */
-	public Hashtable getAttributes(Hashtable htTGTContext, Vector vAttributes)
+	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes)
 		throws ASelectAttributesException
 	{
 		String sMethod = "getAttributes()";
-		Hashtable htResponse = new Hashtable();
+		HashMap htResponse = new HashMap();
 		DirContext oDirContext = null;
 		NamingEnumeration oSearchResults = null;
 		StringBuffer sbQuery = null;
@@ -331,7 +332,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 			if (_bNumericalUid) { // Uid must be treated as a number, so strip leading zeroes
 				sUID = sUID.replaceFirst("0*", "");
 			}
-			
+
 			if (sDigiDUid.equals("") && _sAuthSPUID != null) // Bauke: no DigiD uid
 			{
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "JNDIAttr use UDB too (no DigiD uid)");
@@ -633,7 +634,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	}
 
 	/**
-	 * Creates an <code>Hashtable</code> containing the JNDI environment variables.
+	 * Creates an <code>HashMap</code> containing the JNDI environment variables.
 	 * <br><br>
 	 * <b>Description:</b>
 	 * <br>
@@ -671,9 +672,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 		if (sUseSSL.equalsIgnoreCase("true")) {
 			htEnvironment.put(Context.SECURITY_PROTOCOL, "ssl");
 		}
-
 		htEnvironment.put(Context.PROVIDER_URL, sUrl);
-
 		return htEnvironment;
 	}
 }

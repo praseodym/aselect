@@ -118,7 +118,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.security.PublicKey;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -147,10 +147,10 @@ public class ApplicationManager
 {
 
 	// All 
-	private Hashtable _htApplications;
+	private HashMap _htApplications;
 
 	// 
-	private Hashtable _htSSOGroupedApplications;
+	private HashMap _htSSOGroupedApplications;
 
 	// Name of this module, used for logging
 	private static final String MODULE = "ApplicationManager";
@@ -233,7 +233,7 @@ public class ApplicationManager
 		String sMethod = "init()";
 		// FIXME: Double initialization of _oApplicationsConfigSection
 		Object _oApplicationsConfigSection;
-		_htApplications = new Hashtable();
+		_htApplications = new HashMap();
 		try {
 			_oASelectConfigManager = ASelectConfigManager.getHandle();
 			_systemLogger = ASelectSystemLogger.getHandle();
@@ -908,11 +908,11 @@ public class ApplicationManager
 	 * 	</sso_group>
 	 * </sso_groups>
 	 */
-	private Hashtable resolveSSOGroups()
+	private HashMap resolveSSOGroups()
 		throws ASelectException
 	{
 		String sMethod = "resolveSSOGroups()";
-		Hashtable htReturn = new Hashtable();
+		HashMap htReturn = new HashMap();
 		try {
 			Object oSSOGroups = null;
 			try {

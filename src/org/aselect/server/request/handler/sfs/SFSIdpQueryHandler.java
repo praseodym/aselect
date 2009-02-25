@@ -2,8 +2,8 @@ package org.aselect.server.request.handler.sfs;
 
 import java.io.PrintWriter;
 import java.net.URLEncoder;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -36,7 +36,7 @@ public class SFSIdpQueryHandler extends AbstractRequestHandler
     private final static String MODULE = "SFSIdpQueryHandler";
     private CrossASelectManager _crossASelectManager;
     private String _sMySharedSecret = null;
-    private Hashtable _htSFSOrganizations = null;
+    private HashMap _htSFSOrganizations = null;
     private String _sOrganizationId = null;
     
     /**
@@ -53,7 +53,7 @@ public class SFSIdpQueryHandler extends AbstractRequestHandler
 	{
 	    String sMethod = "init()";
 
-	    _htSFSOrganizations = new Hashtable();
+	    _htSFSOrganizations = new HashMap();
 		super.init(oServletConfig, oConfig);
 		try
 		{
@@ -163,7 +163,7 @@ public class SFSIdpQueryHandler extends AbstractRequestHandler
     {
         boolean bContinue = true;
         String sMethod = "process()";
-        Hashtable htResult = new Hashtable();
+        HashMap htResult = new HashMap();
         try
         {
         	StringBuffer sbResult = null;
@@ -188,27 +188,32 @@ public class SFSIdpQueryHandler extends AbstractRequestHandler
         		}
         		if (bContinue)
                 {
-            		Hashtable htRemoteServers = _crossASelectManager.getRemoteServers();
-            		Enumeration e = htRemoteServers.keys();
-                    while (e.hasMoreElements())
-                    {
-                        String sOldKey = (String)e.nextElement();
+            		HashMap htRemoteServers = _crossASelectManager.getRemoteServers();
+                    Set keys = htRemoteServers.keySet();
+        			for (Object s : keys) {
+        				String sOldKey = (String) s;
+            		//Enumeration e = htRemoteServers.keys();
+                    //while (e.hasMoreElements())
+                    //{
+                      //  String sOldKey = (String)e.nextElement();
                         String sOldValue = (String)htRemoteServers.get(sOldKey);
                     
-                        if (!htResult.contains(sOldValue)) {
+                        if (!htResult.containsValue(sOldValue)) {
                             String sDisplay = _crossASelectManager.getRemoteParam(sOldKey, "display");
                         	if ((sDisplay == null) || (sDisplay.equalsIgnoreCase("true"))) {
                         		htResult.put(sOldValue, sOldKey);
                         	}
                         } else
                             _systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to add '"+sOldValue+"', value already exists.");
-                    
                     }
 
-               		e = _htSFSOrganizations.keys();
-                    while (e.hasMoreElements())
-                    {
-                        String sFriendlyName = (String)e.nextElement();
+                    keys = _htSFSOrganizations.keySet();
+        			for (Object s : keys) {
+        				String sFriendlyName = (String) s;
+               		//e = _htSFSOrganizations.keys();
+                    //while (e.hasMoreElements())
+                    //{
+                        //String sFriendlyName = (String)e.nextElement();
                         String sOrganizationId = (String)_htSFSOrganizations.get(sFriendlyName);
                         htResult.put(sFriendlyName,sOrganizationId);
                     }

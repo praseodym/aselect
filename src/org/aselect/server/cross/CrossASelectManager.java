@@ -92,7 +92,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.security.PublicKey;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import org.aselect.server.config.ASelectConfigManager;
@@ -217,21 +217,21 @@ public class CrossASelectManager
     // Boolean indicating wether or not aselect server API calls should be signed (remote servers)
     private boolean _bUseRemoteSigning;
         
-    // Hashtable containing the public key (to check signatures) of each local aselect server
-    private Hashtable _htLocalServerPublicKeys = null;
+    // HashMap containing the public key (to check signatures) of each local aselect server
+    private HashMap _htLocalServerPublicKeys = null;
     
-    //Hashtable containing the forced_authenticate value of each local aselect server
-    private Hashtable _htForcedOrganisations = null;
+    //HashMap containing the forced_authenticate value of each local aselect server
+    private HashMap _htForcedOrganisations = null;
 
-    // Hashtable containing the friendly name of all Remote Server
+    // HashMap containing the friendly name of all Remote Server
     // indexed by the organization id
     // used by the ISelectorHandler
-    private Hashtable _htRemoteServers;
+    private HashMap _htRemoteServers;
     
     //The A-Select Server organization id
     private String _sMyOrg;
     
-    private Hashtable _htLocalServerInfo;
+    private HashMap _htLocalServerInfo;
     
     /**
      * Must be private, so it can not be used.
@@ -321,8 +321,8 @@ public class CrossASelectManager
         _bRemoteServersEnabled = false;
         _bCrossSelectorEnabled = false;
         _bLocalServersEnabled = false;
-        _htForcedOrganisations = new Hashtable();
-        _htLocalServerInfo = new Hashtable();
+        _htForcedOrganisations = new HashMap();
+        _htLocalServerInfo = new HashMap();
         
         Object oASelect = null;
         try
@@ -786,9 +786,9 @@ public class CrossASelectManager
      * <br><br>
      * <b>Description:</b>
      * <br>
-     * Function that will return a <code>Hashtable</code> containing
+     * Function that will return a <code>HashMap</code> containing
      * all 'friendly_name' values for the configured remote A-Select
-     * Servers. The <code>Hashtable</code> is indexed by the 'organization'
+     * Servers. The <code>HashMap</code> is indexed by the 'organization'
      * value of the remote A-Select Servers.<br>
      * <br><br>
      * <b>Concurrency issues:</b>
@@ -803,12 +803,12 @@ public class CrossASelectManager
      * <br>
      * -
      * <br>
-     * @return Hashtable containing all 'friendly_name' values for
+     * @return HashMap containing all 'friendly_name' values for
      * the configured remote A-Select Servers. The
-     * <code>Hashtable</code> is indexed by the 'organization'
+     * <code>HashMap</code> is indexed by the 'organization'
      * value of the remote A-Select Servers.<br>
      */
-    public Hashtable getRemoteServers()
+    public HashMap getRemoteServers()
     {
         return _htRemoteServers;
     }
@@ -818,7 +818,7 @@ public class CrossASelectManager
      * <br><br>
      * <b>Description:</b>
      * <br>
-     * Returns a <code>Hashtable</code> containing information that must be 
+     * Returns a <code>HashMap</code> containing information that must be 
      * showed in templates.<br/> The information is configured per <br/>
      * 'local_server'. 
      * <br><br>
@@ -836,13 +836,13 @@ public class CrossASelectManager
      * <br>
      * @param sLocalOrganization organization ID configured in the local_server 
      * config section
-     * @return Hashtable Containing optional local_server configuration
+     * @return HashMap Containing optional local_server configuration
      */
-    public Hashtable getLocalServerInfo(String sLocalOrganization)
+    public HashMap getLocalServerInfo(String sLocalOrganization)
     {
-        Hashtable htReturn = new Hashtable();
+        HashMap htReturn = new HashMap();
         if (_htLocalServerInfo != null && sLocalOrganization != null)
-            htReturn = (Hashtable)_htLocalServerInfo.get(sLocalOrganization);    
+            htReturn = (HashMap)_htLocalServerInfo.get(sLocalOrganization);    
         
         return htReturn;
     }
@@ -936,7 +936,7 @@ public class CrossASelectManager
             _htForcedOrganisations.put(sOrg.toLowerCase(), boolForced);
                         
             
-            Hashtable htServerInfo = new Hashtable();
+            HashMap htServerInfo = new HashMap();
             
             
             String sMaintainerEmail = null;
@@ -994,7 +994,7 @@ public class CrossASelectManager
         throws ASelectException
     {
         String sMethod = "loadRemoteServerSettings()";
-        _htRemoteServers = new Hashtable();
+        _htRemoteServers = new HashMap();
         try
         {
             _oRemoteConfigSection = _oASelectConfigManager.getSection(_oCrossConfigSection, "remote_servers");
@@ -1156,7 +1156,7 @@ public class CrossASelectManager
                 toString();
 
             // Initialize local servers signing-key table
-            _htLocalServerPublicKeys = new Hashtable();
+            _htLocalServerPublicKeys = new HashMap();
 
             // Enumerate applications and load their public key
             Object oLocalServer = null;

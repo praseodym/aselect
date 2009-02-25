@@ -12,7 +12,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -420,7 +420,7 @@ public class DBAuthSP extends ASelectHttpServlet
 			pwOut = servletResponse.getWriter();
 
 			String sQueryString = servletRequest.getQueryString();
-			Hashtable htServiceRequest = Utils.convertCGIMessage(sQueryString);
+			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString);
 
 			// check if the request is an API call
 			String sRequestName = (String) htServiceRequest.get("request");
@@ -580,7 +580,7 @@ public class DBAuthSP extends ASelectHttpServlet
 
 			if (sPassword.trim().length() < 1) // invalid password
 			{
-				Hashtable htServiceRequest = new Hashtable();
+				HashMap htServiceRequest = new HashMap();
 				htServiceRequest.put("my_url", sMyUrl);
 				htServiceRequest.put("as_url", sAsUrl);
 				htServiceRequest.put("uid", sUid);
@@ -649,7 +649,7 @@ public class DBAuthSP extends ASelectHttpServlet
 						int iRetriesDone = Integer.parseInt(sRetryCounter);
 						if (iRetriesDone < _iAllowedRetries) // try again
 						{
-							Hashtable htServiceRequest = new Hashtable();
+							HashMap htServiceRequest = new HashMap();
 							htServiceRequest.put("my_url", sMyUrl);
 							htServiceRequest.put("as_url", sAsUrl);
 							htServiceRequest.put("uid", sUid);
@@ -742,7 +742,7 @@ public class DBAuthSP extends ASelectHttpServlet
 	 * @param htServiceRequest
 	 *        The request parameters.
 	 */
-	private void showAuthenticateForm(PrintWriter pwOut, String sError, String sErrorMessage, Hashtable htServiceRequest)
+	private void showAuthenticateForm(PrintWriter pwOut, String sError, String sErrorMessage, HashMap htServiceRequest)
 	{
 		String sAuthenticateForm = new String(_sAuthenticateHtmlTemplate);
 		String sMyUrl = (String) htServiceRequest.get("my_url");
@@ -856,7 +856,7 @@ public class DBAuthSP extends ASelectHttpServlet
 	 * Processes an API request to this DB AuthSP.
 	 * 
 	 * @param htServiceRequest
-	 *        a <code>Hashtable</code> containing request parameters.
+	 *        a <code>HashMap</code> containing request parameters.
 	 * @param servletRequest
 	 *        The request.
 	 * @param servletResponse
@@ -864,11 +864,11 @@ public class DBAuthSP extends ASelectHttpServlet
 	 * @param pwOut
 	 *        The output.
 	 */
-	private void handleApiRequest(Hashtable htServiceRequest, HttpServletRequest servletRequest, PrintWriter pwOut, HttpServletResponse servletResponse)
+	private void handleApiRequest(HashMap htServiceRequest, HttpServletRequest servletRequest, PrintWriter pwOut, HttpServletResponse servletResponse)
 	{
 		String sMethod = "handleApiRequest()";
 		String sRid = (String) htServiceRequest.get("rid");
-		Hashtable htSessionContext = null;
+		HashMap htSessionContext = null;
 		// create response HashTable
 		StringBuffer sbResponse = new StringBuffer("&rid=");
 		// add rid to response
@@ -894,7 +894,7 @@ public class DBAuthSP extends ASelectHttpServlet
 				}
 				else
 				{
-					htSessionContext = new Hashtable();
+					htSessionContext = new HashMap();
 					_sessionManager.createSession(sRid, htSessionContext);
 					iAllowedRetries = _iAllowedRetries;
 				}
@@ -933,7 +933,7 @@ public class DBAuthSP extends ASelectHttpServlet
 		pwOut.write(sbResponse.toString());
 	}
 
-	private void handleAuthenticate(Hashtable htServiceRequest, HttpServletRequest servletRequest) throws ASelectException
+	private void handleAuthenticate(HashMap htServiceRequest, HttpServletRequest servletRequest) throws ASelectException
 	{
 		String sMethod = "handleAuthenticate()";
 		String sResultCode = null;

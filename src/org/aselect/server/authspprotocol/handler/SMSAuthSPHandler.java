@@ -11,7 +11,7 @@ package org.aselect.server.authspprotocol.handler;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import org.aselect.server.authspprotocol.IAuthSPProtocolHandler;
@@ -159,16 +159,16 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 	 * 
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#computeAuthenticationRequest(java.lang.String)
 	 */
-	public Hashtable computeAuthenticationRequest(String sRid)
+	public HashMap computeAuthenticationRequest(String sRid)
 	{
-		String sMethod = "computeAuthenticationRequest()";
+		String sMethod = "computeAuthenticationRequest";
 		StringBuffer sbBuffer = null;
-		Hashtable htResponse = new Hashtable();
+		HashMap htResponse = new HashMap();
 		htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "sRid=" + sRid);
 
 		try {
-			Hashtable htSessionContext = _sessionManager.getSessionContext(sRid);
+			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Context=" + htSessionContext);
 			if (htSessionContext == null) {
 				sbBuffer = new StringBuffer("Could not fetch session context for rid='");
@@ -176,26 +176,26 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
-			Hashtable htAllowedAuthsps = (Hashtable) (Hashtable) htSessionContext.get("allowed_user_authsps");
+			HashMap htAllowedAuthsps = (HashMap) (HashMap) htSessionContext.get("allowed_user_authsps");
 			if (htAllowedAuthsps == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Allowed_user_authsps missing in session context.");
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
 
-			String sUserId = (String) (String) htAllowedAuthsps.get(_sAuthsp);
+			String sUserId = (String)htAllowedAuthsps.get(_sAuthsp);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Allowed=" + htAllowedAuthsps + " sUserId=" + sUserId);
 			if (sUserId == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing SMS user attributes.");
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
-			sbBuffer = new StringBuffer((String) (String) htSessionContext.get("my_url"));
+			sbBuffer = new StringBuffer((String)htSessionContext.get("my_url"));
 			sbBuffer.append("?authsp=").append(_sAuthsp);
 			String sAsUrl = sbBuffer.toString();
-			String sCountry = (String) (String) htSessionContext.get("country");
+			String sCountry = (String)htSessionContext.get("country");
 			if (sCountry == null || sCountry.trim().length() < 1) {
 				sCountry = null;
 			}
-			String sLanguage = (String) (String) htSessionContext.get("language");
+			String sLanguage = (String)htSessionContext.get("language");
 			if (sLanguage == null || sLanguage.trim().length() < 1) {
 				sLanguage = null;
 			}
@@ -278,21 +278,22 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 	 * 	</tr>
 	 * </table>
 	 * 
-	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.Hashtable)
+	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.HashMap)
 	 */
-	public Hashtable verifyAuthenticationResponse(Hashtable htAuthspResponse)
+	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse)
 	{
-		String sMethod = "verifyAuthenticationResponse()";
+		String sMethod = "verifyAuthenticationResponse";
 		StringBuffer sbBuffer = null;
-		Hashtable htResponse = new Hashtable();
+		HashMap htResponse = new HashMap();
+		
 		htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
-		_systemLogger.log(Level.WARNING, MODULE, sMethod, "htAuthspRespone=" + htAuthspResponse);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "htAuthspRespone=" + htAuthspResponse);
 		try {
-			String sRid = (String) (String) htAuthspResponse.get("rid");
-			String sAsUrl = (String) (String) htAuthspResponse.get("my_url");
-			String sResultCode = (String) (String) htAuthspResponse.get("result_code");
-			String sAsId = (String) (String) htAuthspResponse.get("a-select-server");
-			String sSignature = (String) (String) htAuthspResponse.get("signature");
+			String sRid = (String)htAuthspResponse.get("rid");
+			String sAsUrl = (String)htAuthspResponse.get("my_url");
+			String sResultCode = (String)htAuthspResponse.get("result_code");
+			String sAsId = (String)htAuthspResponse.get("a-select-server");
+			String sSignature = (String)htAuthspResponse.get("signature");
 			if (sRid == null || sResultCode == null || sAsId == null || sSignature == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
 						"Incorrect AuthSP response: one or more parameters missing.");
@@ -312,18 +313,22 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "invalid signature in response from AuthSP:"+_sAuthsp);
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 			}
-			Hashtable htSessionContext = _sessionManager.getSessionContext(sRid);
+			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
 						"Incorrect AuthSP response: invalid Session (could be expired)");
-				throw new ASelectAuthSPException("0102");
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 			}
-			String sUserId = (String) (String) htSessionContext.get("user_id");
-			String sOrg = (String) (String) htSessionContext.get("organization");
+			
+			String sUserId = (String)htSessionContext.get("sel_uid");
+			if (sUserId == null) sUserId = (String)htSessionContext.get("user_id");
+			String sOrg = (String)htSessionContext.get("organization");
+			
+			// Log authentication
 			if (sResultCode.equalsIgnoreCase(ERROR_SMS_ACCESS_DENIED)) {
 				_authenticationLogger.log(new Object[] {
 					MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg,
-					(String) (String) htSessionContext.get("app_id"), "denied"
+					(String)htSessionContext.get("app_id"), "denied"
 				});
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);
 			}
@@ -335,16 +340,17 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 			}
 			_authenticationLogger.log(new Object[] {
 				MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg,
-				(String) (String) htSessionContext.get("app_id"), "granted"
+				(String)htSessionContext.get("app_id"), "granted"
 			});
 			htResponse.put("rid", sRid);
+			
+			// 20090223: Since we decided on the 'uid' here, pass it on as well
+			htResponse.put("uid", sUserId);
 
 			// Bauke: pass additional attribute
 			String sSmsPhone = (String) htSessionContext.get("sms_phone");
-			if (sSmsPhone != null)
-				htResponse.put("sms_phone", sSmsPhone);
+			if (sSmsPhone != null) htResponse.put("sms_phone", sSmsPhone);
 			htResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
-
 		}
 		catch (ASelectAuthSPException eAA) {
 			htResponse.put("result", eAA.getMessage());

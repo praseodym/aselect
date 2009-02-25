@@ -52,7 +52,7 @@
 package org.aselect.server.attributes.requestors.api;
 
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -100,7 +100,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 
 	/** All parameters that should be send */
 	private Vector _vTGTParameters;
-	private Hashtable _htConfigParameters;
+	private HashMap _htConfigParameters;
 
 	/** All attributes that can be retrieved */
 	private Vector _vAllAttributes;
@@ -199,7 +199,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 
 			//Get configured parameters
 			_vTGTParameters = new Vector();
-			_htConfigParameters = new Hashtable();
+			_htConfigParameters = new HashMap();
 			Object oParameterConfiguration = null;
 			try {
 				oParameterConfiguration = _configManager.getSection(oConfig, "parameters");
@@ -321,9 +321,9 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 	/**
 	 * Retrieve all, or the specified attributes.
 	 * <br><br>
-	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(Hashtable, Vector)
+	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(HashMap, Vector)
 	 */
-	public Hashtable getAttributes(Hashtable htTGTContext, Vector vAttributes)
+	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes)
 		throws ASelectAttributesException
 	{
 		final String sMethod = "getAttributes()";
@@ -334,7 +334,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 		String sURL = null;
 		String[] oaAttributes;
 
-		Hashtable htAttributes = new Hashtable();
+		HashMap htAttributes = new HashMap();
 		try {
 			if (!vAttributes.isEmpty()) //Attributes should be gathered.
 			{
@@ -348,8 +348,8 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 					throw new ASelectAttributesException(eSAM.getMessage());
 				}
 				//create request/response
-				Hashtable htRequest = new Hashtable();
-				Hashtable htResponse = new Hashtable();
+				HashMap htRequest = new HashMap();
+				HashMap htResponse = new HashMap();
 				//set TGT parameters
 				Enumeration e = _vTGTParameters.elements();
 				while (e.hasMoreElements()) {

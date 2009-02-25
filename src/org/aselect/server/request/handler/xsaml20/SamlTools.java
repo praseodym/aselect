@@ -8,7 +8,7 @@ import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -720,14 +720,14 @@ public class SamlTools
 	}
 	
 	//
-	// Create a new Hashtable based on an htSource
+	// Create a new HashMap based on an htSource
 	// If include is true only include the attributes mentioned in arrAttr
 	// Else take htSource, but exclude the attributes in arrAttr from the result.
 	//
-	public static Hashtable extractFromHashtable(String[] arrAttr, Hashtable<String, Object> htSource, boolean include)
+	public static HashMap extractFromHashtable(String[] arrAttr, HashMap<String, Object> htSource, boolean include)
 	{
 		Object oValue;
-		Hashtable<String, Object> htResult = new Hashtable<String, Object>();
+		HashMap<String, Object> htResult = new HashMap<String, Object>();
 		
 		if (!include) htResult.putAll(htSource);
 		for (int i=0; i < arrAttr.length; i++) {
@@ -742,7 +742,7 @@ public class SamlTools
 	
 	// Create a signed and base64 encoded Saml Token
 	// containing the attributes present in htAttributes.
-	public static String createAttributeToken(String sIssuer, String sTgt, Hashtable htAttributes)
+	public static String createAttributeToken(String sIssuer, String sTgt, HashMap htAttributes)
 	throws ASelectException
 	{
 		String sMethod = "createAttributeToken";

@@ -58,7 +58,7 @@
 
 package org.aselect.server.sam;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -99,7 +99,7 @@ public class SAMService extends SAMServiceServlet
     /**
      * Initialize method for this Servlet, that starts the initialize of the 
      * super class and loads all specific A-Select Server OID's to the <i>_htOIDs
-     * </i> <code>Hashtable</code>
+     * </i> <code>HashMap</code>
      * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
      */
     public void init(ServletConfig oServletConfig) throws ServletException
@@ -155,10 +155,10 @@ public class SAMService extends SAMServiceServlet
      * information.
      * @see org.aselect.system.sam.service.SAMServiceServlet#getSAMInfo()
      */
-    protected Hashtable getSAMInfo()
+    protected HashMap getSAMInfo()
     {
         String sMethod = "getSAMInfo()";
-        Hashtable htInfo = getCommonSAMInfo();
+        HashMap htInfo = getCommonSAMInfo();
         long lMaxSessions = 0;
         long lMaxTGT = 0;
         _bASelectOK = true; //default true
@@ -222,7 +222,7 @@ public class SAMService extends SAMServiceServlet
         SessionManager oSessionManager = SessionManager.getHandle();
         if (oSessionManager != null)
         {
-            Hashtable htSessionContexts = null;
+            HashMap htSessionContexts = null;
             try
             {
                 htSessionContexts = oSessionManager.getAll();
@@ -277,7 +277,7 @@ public class SAMService extends SAMServiceServlet
         oTGTManager = TGTManager.getHandle();
         if (oTGTManager != null)
         {
-            Hashtable htTGTContexts = null;
+            HashMap htTGTContexts = null;
             try
             {
                 htTGTContexts = oTGTManager.getAll();

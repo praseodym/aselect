@@ -16,7 +16,7 @@
 package org.aselect.server.request.handler.wsfed;
 
 import java.net.URLEncoder;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -158,7 +158,7 @@ public class ResourceSTS extends ProtoRequestHandler
 	        	checkSignature(sPwresult);
 	        }
 
-    		Hashtable htAttributes = extractAllAttributes(sPwresult);
+    		HashMap htAttributes = extractAllAttributes(sPwresult);
 			String sUid = (String)htAttributes.get("digid_uid");
 			if (sUid == null) sUid = (String)htAttributes.get("uid");
 			if (sUid == null) sUid = (String)htAttributes.get("cn");
@@ -191,7 +191,7 @@ public class ResourceSTS extends ProtoRequestHandler
 		}
 	}
 
-    public String serializeTheseAttributes(Hashtable htAttribs)
+    public String serializeTheseAttributes(HashMap htAttribs)
     throws ASelectException
     {
     	return "";

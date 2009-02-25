@@ -56,8 +56,8 @@
 package org.aselect.agent.handler;
 
 import java.net.Socket;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.logging.Level;
 
 import org.aselect.system.communication.client.IClientCommunicator;
@@ -82,114 +82,109 @@ import org.aselect.system.exception.ASelectCommunicationException;
  */
 public class TraceRequestHandler extends RequestHandler
 {
-    /**
-     * Create new instance. 
-     * <br><br>
-     * <b>Description: </b> 
-     * <br>
-     * Creates a new <code>TraceRequestHandler</code>.
-     * <br><br>
-     * <b>Concurrency issues: </b> 
-     * <br>
-     * Every request should have its own <code>TraceRequestHandler</code>.
-     * <br><br>
-     * <b>Preconditions: </b> 
-     * <br>
-     * none. 
-     * <br><br>
-     * <b>Postconditions: </b> 
-     * <br>
-     * The module name is set. 
-     * <br>
-     * 
-     * @param oSocket
-     *            The communication socket (incoming).
-     * @param oCommunicator
-     *            The communicator (outgoing).
-     * @param bAuthorization <code>true</code> if authorization is enabled, 
-     * 	otherwise <code>false</code>.
-     * @see RequestHandler#RequestHandler(Socket, IClientCommunicator, boolean)
-     */
-    public TraceRequestHandler (Socket oSocket,
-        IClientCommunicator oCommunicator, boolean bAuthorization)
-    {
-        super(oSocket, oCommunicator, bAuthorization);
-        MODULE = "TraceRequestHandler";
-    }
+	/**
+	 * Create new instance. 
+	 * <br><br>
+	 * <b>Description: </b> 
+	 * <br>
+	 * Creates a new <code>TraceRequestHandler</code>.
+	 * <br><br>
+	 * <b>Concurrency issues: </b> 
+	 * <br>
+	 * Every request should have its own <code>TraceRequestHandler</code>.
+	 * <br><br>
+	 * <b>Preconditions: </b> 
+	 * <br>
+	 * none. 
+	 * <br><br>
+	 * <b>Postconditions: </b> 
+	 * <br>
+	 * The module name is set. 
+	 * <br>
+	 * 
+	 * @param oSocket
+	 *            The communication socket (incoming).
+	 * @param oCommunicator
+	 *            The communicator (outgoing).
+	 * @param bAuthorization <code>true</code> if authorization is enabled, 
+	 * 	otherwise <code>false</code>.
+	 * @see RequestHandler#RequestHandler(Socket, IClientCommunicator, boolean)
+	 */
+	public TraceRequestHandler(Socket oSocket, IClientCommunicator oCommunicator, boolean bAuthorization) {
+		super(oSocket, oCommunicator, bAuthorization);
+		MODULE = "TraceRequestHandler";
+	}
 
-    /**
-     * Send a request to the A-Select Server.
-     * @see org.aselect.agent.handler.RequestHandler#sendRequestToASelectServer(java.lang.String, java.util.Hashtable)
-     */
-    protected Hashtable sendRequestToASelectServer(String sUrl, 
-        Hashtable htParamsTable)
-    {
-        String sMethod = "sendRequestToASelectServer()";
+	/**
+	 * Send a request to the A-Select Server.
+	 * @see org.aselect.agent.handler.RequestHandler#sendRequestToASelectServer(java.lang.String, java.util.HashMap)
+	 */
+	protected HashMap sendRequestToASelectServer(String sUrl, HashMap htParamsTable)
+	{
+		String sMethod = "sendRequestToASelectServer()";
 
-        _systemLogger.log(Level.FINE, MODULE, sMethod, "Sending API request");
-        _systemLogger.log(Level.FINE, MODULE, sMethod, "Destination : " + sUrl);
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "Sending API request");
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "Destination : " + sUrl);
 
-        _systemLogger.log(Level.FINE, MODULE, sMethod, "Parameters and values:\n"
-            + dumpHashtable(htParamsTable));
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "Parameters and values:\n" + dumpHashtable(htParamsTable));
 
-        Hashtable htReturnTable = new Hashtable();
-        try
-        {
-            htReturnTable = super.getClientCommunicator().sendMessage(
-                htParamsTable, sUrl);
-        }
-        catch (ASelectCommunicationException e)
-        {
-            StringBuffer sbError = new StringBuffer("error while sending request to A-Select Server at \"");
-            sbError.append(sUrl);
-            sbError.append("\"");
-            _systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
+		HashMap htReturnTable = new HashMap();
+		try {
+			htReturnTable = super.getClientCommunicator().sendMessage(htParamsTable, sUrl);
+		}
+		catch (ASelectCommunicationException e) {
+			StringBuffer sbError = new StringBuffer("error while sending request to A-Select Server at \"");
+			sbError.append(sUrl);
+			sbError.append("\"");
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
 
-            _sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
-            return htReturnTable;
-        }
-        if (!htReturnTable.isEmpty())
-        {
-            _systemLogger.log(Level.FINE, MODULE, sMethod, "Response parameters and values: "
-                + dumpHashtable(htReturnTable));
-        }
-        return htReturnTable;
-    }
+			_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
+			return htReturnTable;
+		}
+		if (!htReturnTable.isEmpty()) {
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "Response parameters and values: "
+					+ dumpHashtable(htReturnTable));
+		}
+		return htReturnTable;
+	}
 
-    /**
-     * Create a String representation of the table.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Creates a <code>String</code> containg all keys and values 
-     * from the <code>Hashtable</code>.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * none.
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * <code>htTable != null</code>
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * none.
-     * 
-     * @param htTable The table to be dumped.
-     * @return The formatted table as <code>String</code>.
-     */
-    private String dumpHashtable(Hashtable htTable)
-    {
-        String sDump = new String();
+	/**
+	 * Create a String representation of the table.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Creates a <code>String</code> containg all keys and values 
+	 * from the <code>HashMap</code>.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * none.
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * <code>htTable != null</code>
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * none.
+	 * 
+	 * @param htTable The table to be dumped.
+	 * @return The formatted table as <code>String</code>.
+	 */
+	private String dumpHashtable(HashMap htTable)
+	{
+		String sDump = new String();
 
-        Enumeration eKeys = htTable.keys();
-        String sKey;
-        while (eKeys.hasMoreElements())
-        {
-            sKey = (String)eKeys.nextElement();
-            sDump += ("\t" + sKey + "=" + (String)htTable.get(sKey) + "\n");
-        }
-        return sDump;
-    }
+		Set keys = htTable.keySet();
+		for (Object s : keys) {
+			String sKey = (String) s;
+			//Enumeration eKeys = htTable.keys();
+			//String sKey;
+			//while (eKeys.hasMoreElements())
+			//{
+			//sKey = (String)eKeys.nextElement();
+			sDump += ("\t" + sKey + "=" + (String) htTable.get(sKey) + "\n");
+		}
+		return sDump;
+	}
 }

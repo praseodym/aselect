@@ -77,10 +77,10 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Level;
 
 import javax.servlet.http.Cookie;
@@ -118,486 +118,427 @@ import org.aselect.system.utils.Utils;
  */
 public class IdpSelectorHandler implements ISelectorHandler
 {
-    // Name of this module, used for logging
-    private static final String  MODULE      = "IdpSelectorHandler";
+	// Name of this module, used for logging
+	private static final String MODULE = "IdpSelectorHandler";
 
-   
+	private CrossASelectManager _crossASelectManager;
+	private ASelectConfigManager _configManager;
+	private ASelectSystemLogger _systemLogger;
+	private RawCommunicator _oCommunicator;
 
-    private CrossASelectManager  _crossASelectManager;
-    private ASelectConfigManager _configManager;
-    private ASelectSystemLogger  _systemLogger;    
-    private RawCommunicator 	_oCommunicator;
-    
-    private String              _sMyServerId = null;
-    private String              _sFriendlyName = null;    
-    private String 				_sHTMLSelectForm = null;
-    private String    			_sIdPQueryServerId = null; 
-    private String    			_sIdPQueryServerResourceGroup = null;    
-    private String				_sIdPQueryServerRequest = null;
-    private String				_sIdPQueryServerSharedSecret = null;
-    
-    
-    private static final int COOKIE_AGE = 31536000; //TODO: Cookie is set to be about a years time(not counting leap years), should be configurable?(seconds, not leap years)
-    
-    private static final String _sHtmlTemplateName = "idpcrossselect.html";
+	private String _sMyServerId = null;
+	private String _sFriendlyName = null;
+	private String _sHTMLSelectForm = null;
+	private String _sIdPQueryServerId = null;
+	private String _sIdPQueryServerResourceGroup = null;
+	private String _sIdPQueryServerRequest = null;
+	private String _sIdPQueryServerSharedSecret = null;
 
-    /**
-     * Initialization of this Handler.
-     * Initializes global class-variables that are needed within the whole handler instance.<br>
-     * 
-     * <br>
-     * 
-     * @see org.aselect.server.cross.ISelectorHandler#init(java.lang.Object)
-     */
-    public void init(Object oHandlerConfig) throws ASelectException
-    {
-        String sMethod = "init()";
-        try
-        {
-            _crossASelectManager = CrossASelectManager.getHandle();
-            _configManager = ASelectConfigManager.getHandle();
-            _systemLogger = ASelectSystemLogger.getHandle();
-            
-            _oCommunicator = new RawCommunicator(_systemLogger);
+	private static final int COOKIE_AGE = 31536000; //TODO: Cookie is set to be about a years time(not counting leap years), should be configurable?(seconds, not leap years)
 
-            Object oASelectConfig = _configManager.getSection(null, "aselect");
-            _sMyServerId = _configManager.getParam(oASelectConfig, "server_id");
-            _sFriendlyName = _configManager.getParam(oASelectConfig, "organization_friendly_name");
+	private static final String _sHtmlTemplateName = "idpcrossselect.html";
 
-            Object oIpdQueryServerConfig = null;
-            try
-            {
-            	oIpdQueryServerConfig = _configManager.getSection(oHandlerConfig, "idp_query_server");
-            }
-            catch(ASelectConfigException e)
-            {
-            	_systemLogger.log(Level.CONFIG, MODULE, sMethod, "no section 'idp_query_server' found.");
-            	throw e;
-            }
-            try
-            {
-            	_sIdPQueryServerId = _configManager.getParam(oIpdQueryServerConfig, "id");
-            }
-            catch(ASelectConfigException e)
-            {
-            	_systemLogger.log(Level.CONFIG, MODULE, sMethod, "no param 'resourcegroup' found.");
-            	throw e;
-            }
-            try
-            {
-            	_sIdPQueryServerRequest = _configManager.getParam(oIpdQueryServerConfig, "request");
-            }
-            catch(ASelectConfigException e)
-            {
-            	_systemLogger.log(Level.CONFIG, MODULE, sMethod, "no param 'request' found.");
-            	throw e;
-            }
-            try
-            {
-            	_sIdPQueryServerSharedSecret = _configManager.getParam(oIpdQueryServerConfig, "shared_secret");
-            }
-            catch(ASelectConfigException e)
-            {
-                _systemLogger.log(Level.CONFIG, MODULE, sMethod, "no param 'shared_secret' found, using none.");
-            }
-            try
-            {
-            	getIdpQueryServerResourceGroup();
-            }
-            catch(ASelectException e)
-            {
-            	throw e;
-            }
-            
-            loadHTMLTemplates();
-        }
-        catch(ASelectException e)
-        {
-        	//Already handled.
-        	throw e;
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.SEVERE, MODULE, sMethod, 
-                "Could not initialize the default selector handler", e);
-            throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-        }
-    }
+	/**
+	 * Initialization of this Handler.
+	 * Initializes global class-variables that are needed within the whole handler instance.<br>
+	 * 
+	 * <br>
+	 * 
+	 * @see org.aselect.server.cross.ISelectorHandler#init(java.lang.Object)
+	 */
+	public void init(Object oHandlerConfig)
+		throws ASelectException
+	{
+		String sMethod = "init()";
+		try {
+			_crossASelectManager = CrossASelectManager.getHandle();
+			_configManager = ASelectConfigManager.getHandle();
+			_systemLogger = ASelectSystemLogger.getHandle();
 
-    /**
-     * Returns the remote A-Select Server. 
-     * This handler presents the user with a selection form that is used to determine the remote 
-     * organization and returns the selected organization to the A-Select sub system.
-     * <br>
-     * 
-     * @see org.aselect.server.cross.ISelectorHandler#getRemoteServerId(java.util.Hashtable,
-     *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
-     */
-    public Hashtable getRemoteServerId(Hashtable htServiceRequest,
-        HttpServletResponse servletResponse, PrintWriter pwOut)
-            throws ASelectException
-    {
-    	String sMethod = "IdpSelectorHandler.getRemoteServerId()";
-        Hashtable htReturn = null;
+			_oCommunicator = new RawCommunicator(_systemLogger);
 
-        String sRemoteOrg = (String)htServiceRequest.get("remote_organization");
-    	String sHomeIdpFriendlyName = (String)htServiceRequest.get("home_idp");
-    	String sHomeOrg = (String)htServiceRequest.get("home_organization");
-    	String sUid = (String)htServiceRequest.get("user_id");
-    	
-		_systemLogger.log(Level.FINER,MODULE,sMethod,"remote_organization: " + sRemoteOrg);
-		_systemLogger.log(Level.FINER,MODULE,sMethod,"home_idp: " + sHomeIdpFriendlyName);
-		_systemLogger.log(Level.FINER,MODULE,sMethod,"home_organization: " + sHomeOrg);
-		_systemLogger.log(Level.FINER,MODULE,sMethod,"user_id: " + sUid);
+			Object oASelectConfig = _configManager.getSection(null, "aselect");
+			_sMyServerId = _configManager.getParam(oASelectConfig, "server_id");
+			_sFriendlyName = _configManager.getParam(oASelectConfig, "organization_friendly_name");
 
-        if ((sRemoteOrg != null) && (!sRemoteOrg.equalsIgnoreCase("")))
-        {
-            htReturn = new Hashtable();
-        	htReturn.put("organization_id", sRemoteOrg);
-        	            
-            if ((sHomeOrg != null && (!sHomeOrg.equalsIgnoreCase(""))))
-            {
-            	htReturn.put("home_idp",sHomeOrg);
-            	if(sUid != null)
-            	{
-            		htReturn.put("user_id",sUid);
-            	}
-            }
-            return htReturn;
-        }
+			Object oIpdQueryServerConfig = null;
+			try {
+				oIpdQueryServerConfig = _configManager.getSection(oHandlerConfig, "idp_query_server");
+			}
+			catch (ASelectConfigException e) {
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod, "no section 'idp_query_server' found.");
+				throw e;
+			}
+			try {
+				_sIdPQueryServerId = _configManager.getParam(oIpdQueryServerConfig, "id");
+			}
+			catch (ASelectConfigException e) {
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod, "no param 'resourcegroup' found.");
+				throw e;
+			}
+			try {
+				_sIdPQueryServerRequest = _configManager.getParam(oIpdQueryServerConfig, "request");
+			}
+			catch (ASelectConfigException e) {
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod, "no param 'request' found.");
+				throw e;
+			}
+			try {
+				_sIdPQueryServerSharedSecret = _configManager.getParam(oIpdQueryServerConfig, "shared_secret");
+			}
+			catch (ASelectConfigException e) {
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod, "no param 'shared_secret' found, using none.");
+			}
+			try {
+				getIdpQueryServerResourceGroup();
+			}
+			catch (ASelectException e) {
+				throw e;
+			}
 
-        if (sUid != null)
-        {
-            htReturn = new Hashtable();
-            htReturn.put("user_id", sUid);
-            htReturn.put("organization_id", _sIdPQueryServerId);
-            return htReturn;
-        }
-        
-        if (sHomeIdpFriendlyName == null || sHomeIdpFriendlyName.equalsIgnoreCase(""))
-        {
-            Hashtable htServers = handleIdpApiCall();
-            String sDefaultIdp = (String)htServiceRequest.get("aselect_home_idp");
-            
-           	showSelectForm(htServiceRequest, pwOut, htServers, sDefaultIdp);
-        }
-        else
-        {
-            htReturn = new Hashtable();
-            Cookie oDefaultIdpCookie = new Cookie("aselect_home_idp", sHomeIdpFriendlyName);
-            oDefaultIdpCookie.setMaxAge(COOKIE_AGE);
-            servletResponse.addCookie(oDefaultIdpCookie);
-            
-            Hashtable htServers = handleIdpApiCall();
-            htReturn.put("organization_id", _sIdPQueryServerId);
-            String sHomeIdpOrgId = (String)htServers.get(sHomeIdpFriendlyName);
-            htReturn.put("home_idp",sHomeIdpOrgId);
-            if(sUid != null)
-            {
-            	htReturn.put("user_id",sUid);
-            }
-        }
-        return htReturn;
-    }
+			loadHTMLTemplates();
+		}
+		catch (ASelectException e) {
+			//Already handled.
+			throw e;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize the default selector handler", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+	}
 
-    private void showSelectForm(Hashtable htServiceRequest, PrintWriter pwOut,
-        Hashtable htServers, String sDefaultRemoteOrg)
-        throws ASelectException
-    {
-        String sMethod = "showSelectForm()";
-        try
-        {
-        	String sSelectForm = _sHTMLSelectForm;
-        	String sRemoteServerUrl = null;
-        	String sRid = (String)htServiceRequest.get("rid");
-        	String sMyUrl = (String)htServiceRequest.get("my_url");
-        	
-        	try
-        	{
-        		sRemoteServerUrl = getIdpQueryServerUrl();
-        	}
-        	catch(ASelectException e)
-        	{
-        		_systemLogger.log(Level.WARNING,MODULE,sMethod,"Error occured during retrieving IdpQueryUrl");
-        		throw e;
-        	}
-        	
-            String sUrl = new StringBuffer(sMyUrl).append("?request=error")
-            .append("&result_code=")
-            .append(Errors.ERROR_ASELECT_SERVER_CANCEL)
-            .append("&a-select-server=")
-            .append(_sMyServerId).append("&rid=")
-            .append((String)htServiceRequest.get("rid")).toString();
-        	
-        	sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
-            sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", sMyUrl);
-            sSelectForm = Utils.replaceString(sSelectForm, "[request]", "cross_login");   
-            sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", _sMyServerId);
-            sSelectForm = Utils.replaceString(sSelectForm, "[remote_server]",sRemoteServerUrl);            
-            sSelectForm = Utils.replaceString(sSelectForm, "[cancel]", sUrl);       
-            
-            sSelectForm = Utils.replaceString(sSelectForm,
-                    "[available_home_idps]", getRemoteServerHTML(htServers,sDefaultRemoteOrg));
-            
-            //Update template with the optional requestor information 
-            Hashtable htSession = SessionManager.getHandle().getSessionContext(sRid);
-            if (htSession != null)
-                sSelectForm = _configManager.updateTemplate(sSelectForm, htSession);
-            
-            pwOut.println(sSelectForm);
+	/**
+	 * Returns the remote A-Select Server. 
+	 * This handler presents the user with a selection form that is used to determine the remote 
+	 * organization and returns the selected organization to the A-Select sub system.
+	 * <br>
+	 * 
+	 * @see org.aselect.server.cross.ISelectorHandler#getRemoteServerId(java.util.HashMap,
+	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
+	 */
+	public HashMap getRemoteServerId(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+		throws ASelectException
+	{
+		String sMethod = "IdpSelectorHandler.getRemoteServerId()";
+		HashMap htReturn = null;
 
-        }
-        catch(ASelectException e)
-        {
-        	// Already logged.
-        	throw e;
-        }
-        catch(Exception e)
-        {
-        	_systemLogger.log(Level.SEVERE,MODULE,sMethod,"Unexpected runtime error occured.",e);
-        	throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-        }
-    }
+		String sRemoteOrg = (String) htServiceRequest.get("remote_organization");
+		String sHomeIdpFriendlyName = (String) htServiceRequest.get("home_idp");
+		String sHomeOrg = (String) htServiceRequest.get("home_organization");
+		String sUid = (String) htServiceRequest.get("user_id");
 
-    
-    private String getRemoteServerHTML(Hashtable htServers,String sDefaultRemoteOrg)
-    {
-    	String sMethod = "getRemoteServerHTML()";
-        String sResult = null;
-        String sFriendlyName = null;
-        
-        Enumeration enumServers = htServers.keys();
-        
-        ArrayList keyList = Collections.list(enumServers);
-        Collections.sort(keyList);
-        enumServers = Collections.enumeration(keyList);
-        
-        while (enumServers.hasMoreElements())
-        {
-            sFriendlyName = (String)enumServers.nextElement();
-            
-            if(sDefaultRemoteOrg != null && sDefaultRemoteOrg.equals(sFriendlyName))
-            {
-            	sResult += "<OPTION VALUE='" + sFriendlyName + "' selected=\"selected\">" + sFriendlyName +"</OPTION>\n";
-            }
-            else
-            {
-            	sResult += "<OPTION VALUE='" + sFriendlyName + "'>" + sFriendlyName + "</OPTION>\n";
-            }
-        }
-        _systemLogger.log(Level.FINER, MODULE, sMethod,"Leaving function.");
-        return sResult;
-    }
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "remote_organization: " + sRemoteOrg);
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "home_idp: " + sHomeIdpFriendlyName);
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "home_organization: " + sHomeOrg);
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "user_id: " + sUid);
 
-    /**
-     * Loads all HTML Templates needed.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * At initialization all HTML templates are loaded once.<br>
-     * @throws ASelectException
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * Run once at startup.
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * Manager and ISelectorHandler should be initialized.
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * Global Hashtable _htHtmlTemplates variabele contains the templates.
-     * <br>
-     * 
-     */
-    private void loadHTMLTemplates()
-        throws ASelectException
-    {
-        String sMethod = "loadHTMLTemplates()";
-        try
-        {
-                
-            String sWorkingdir = new StringBuffer(_configManager.getWorkingdir())
-                .append(File.separator).append("conf").append(File.separator)
-                .append("html").append(File.separator).toString();
-    
-            _sHTMLSelectForm = loadHTMLTemplate(sWorkingdir
-              +_sHtmlTemplateName);
-            
-            _sHTMLSelectForm = Utils.replaceString(_sHTMLSelectForm, "[version]", Version
-                .getVersion());
-            _sHTMLSelectForm = Utils.replaceString(_sHTMLSelectForm,
-                "[organization_friendly]", _sFriendlyName);
-        }
-        catch (ASelectException e)
-        {
-            throw e;
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Unexpected runtime error occurred :", e);
-            throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-        }
-         
-    }
+		if ((sRemoteOrg != null) && (!sRemoteOrg.equalsIgnoreCase(""))) {
+			htReturn = new HashMap();
+			htReturn.put("organization_id", sRemoteOrg);
 
-    private String loadHTMLTemplate(String sLocation)
-        throws ASelectException
-    {
-        String sTemplate = new String();
-        String sLine;
-        BufferedReader brIn = null;
-        String sMethod = "loadHTMLTemplate()";
-        try
-        {
-            brIn = new BufferedReader(
-                                    new InputStreamReader(
-                                        new FileInputStream(sLocation)));
-            while ((sLine = brIn.readLine()) != null)
-            {
-                sTemplate += sLine +"\n";
-            }
-        }
-        catch(Exception e)
-        {
-            StringBuffer sbError = new StringBuffer("Could not load '");
-            sbError.append(sLocation).append("'HTML template.");
-            _systemLogger.log(Level.WARNING, MODULE, sMethod,
-                sbError.toString(),e);
-            throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-        }
-        finally
-        {
-            try
-            {
-                brIn.close();
-            }
-            catch (Exception e)
-            {
-                StringBuffer sbError = new StringBuffer("Could not close '");
-                sbError.append(sLocation).append("' FileInputStream.");
-                _systemLogger.log(Level.WARNING, MODULE, sMethod,
-                    sbError.toString(),e);
-            }
-        }
-        return sTemplate;
-    }
-    private void getIdpQueryServerResourceGroup() throws ASelectException
-    {
-    	String sMethod = "getIdpQueryServerResourceGroup()";
-    	if(!_crossASelectManager.getRemoteServers().containsKey(_sIdPQueryServerId))
-    	{
-    		_systemLogger.log(Level.WARNING,MODULE,sMethod,
-    				"There's no 'organization' found within the remote_servers section with id: '"+_sIdPQueryServerId+"'");
-    		throw new ASelectException(Errors.ERROR_ASELECT_CONFIG_ERROR);
-    	}
-    	try
-    	{
-    		Object oCrossConfig = _configManager.getSection(null, "cross_aselect");
-    		Object oRemoteServersConfig = _configManager.getSection(oCrossConfig, "remote_servers");
-    		Object oRemoteServerConfig = _configManager.getSection(oRemoteServersConfig, "organization", "id="+_sIdPQueryServerId);
-    		_sIdPQueryServerResourceGroup = _configManager.getParam(oRemoteServerConfig, "resourcegroup");
-    	}
-    	catch(ASelectConfigException e)
-    	{
-    		_systemLogger.log(Level.WARNING,MODULE,sMethod,
-    				"Error occured by retrieving 'resourcegroup' of the remote organization with id: '"+_sIdPQueryServerId+"'");
-    		throw e;
-    	}
-        catch(Exception e)
-        {
-            _systemLogger.log(Level.SEVERE,MODULE,sMethod,"Unexpected runtime error occured.",e);
-            throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-        }
-  
-    }
-    
-    private String getIdpQueryServerUrl() throws ASelectException
-    {
-        String sMethod = "getUrl()";
-        String sUrl = null;
+			if ((sHomeOrg != null && (!sHomeOrg.equalsIgnoreCase("")))) {
+				htReturn.put("home_idp", sHomeOrg);
+				if (sUid != null) {
+					htReturn.put("user_id", sUid);
+				}
+			}
+			return htReturn;
+		}
 
-        SAMResource sRemoteServers = null;
-        try
-        {
-            try
-            {
-            	sRemoteServers = ASelectSAMAgent.getHandle()
-            		.getActiveResource(_sIdPQueryServerResourceGroup);
-	        }
-	        catch(ASelectSAMException e)
-	        {
-	            _systemLogger.log(Level.WARNING,MODULE, sMethod,
-	                "Error occured during retrieving active resource in resourcegroup: '"+_sIdPQueryServerResourceGroup+"'.");
-	            throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-	        }
-	        Object objAuthSPResource = sRemoteServers.getAttributes();
-	        try
-	        {
-	            sUrl = _configManager.getParam(objAuthSPResource, "url");
-	        }
-	        catch(ASelectConfigException e)
-	        {
-	            _systemLogger.log(Level.WARNING,MODULE, sMethod,
-	                "No resource retrieved for: '"+_sIdPQueryServerResourceGroup+"'.");
-	            throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-	        }
-        }
-        catch(ASelectException e)
-        {
-            throw e;
-        }
-        catch(Exception e)
-        {
-            _systemLogger.log(Level.WARNING,MODULE, sMethod,
-                "Exception occured",e);
-            throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-        }
-        return sUrl;
-    }
-    
-    private Hashtable handleIdpApiCall() throws ASelectException
-    {
-        String sMethod = "handleIdpApiCall()";
-        Hashtable htResult = null;
-        String sRemoteServerUrl = getIdpQueryServerUrl();
-        Hashtable htRequest = new Hashtable();
-        htRequest.put("request",_sIdPQueryServerRequest);
-        if(_sIdPQueryServerSharedSecret != null)
-            htRequest.put("shared_secret",_sIdPQueryServerSharedSecret);
-        
-        try
-        {           
-            htResult = _oCommunicator.sendMessage(htRequest, sRemoteServerUrl);             
-        }
-        catch (ASelectCommunicationException e)
-        {               
-            _systemLogger.log(Level.WARNING, MODULE, sMethod,"Error occured during communication");
-            throw new ASelectException(Errors.ERROR_ASELECT_IO);
-        }
-        String sResultCode = (String)htResult.get("result_code");
-        if((sResultCode == null) || !sResultCode.trim().equalsIgnoreCase(Errors.ERROR_ASELECT_SUCCESS))
-        {
-            _systemLogger.log(Level.WARNING,MODULE,sMethod,"Invalid result from remote A-Selectserver: "+sResultCode);
-            throw new ASelectException(Errors.ERROR_ASELECT_IO);
-        }
-        
-        String sEncodedCgiString = (String)htResult.get("result");
-        String sCgiString = null;
-        try
-        {
-            sCgiString = URLDecoder.decode(sEncodedCgiString,"UTF-8");
-        }
-        catch(UnsupportedEncodingException e)
-        {
-            _systemLogger.log(Level.WARNING,MODULE,sMethod,"");
-            throw new ASelectException(Errors.ERROR_ASELECT_IO);
-        }
-        
-        Hashtable htServers = Utils.convertCGIMessage(sCgiString);
-        
-        return htServers;
-    }
-    
+		if (sUid != null) {
+			htReturn = new HashMap();
+			htReturn.put("user_id", sUid);
+			htReturn.put("organization_id", _sIdPQueryServerId);
+			return htReturn;
+		}
+
+		if (sHomeIdpFriendlyName == null || sHomeIdpFriendlyName.equalsIgnoreCase("")) {
+			HashMap htServers = handleIdpApiCall();
+			String sDefaultIdp = (String) htServiceRequest.get("aselect_home_idp");
+
+			showSelectForm(htServiceRequest, pwOut, htServers, sDefaultIdp);
+		}
+		else {
+			htReturn = new HashMap();
+			Cookie oDefaultIdpCookie = new Cookie("aselect_home_idp", sHomeIdpFriendlyName);
+			oDefaultIdpCookie.setMaxAge(COOKIE_AGE);
+			servletResponse.addCookie(oDefaultIdpCookie);
+
+			HashMap htServers = handleIdpApiCall();
+			htReturn.put("organization_id", _sIdPQueryServerId);
+			String sHomeIdpOrgId = (String) htServers.get(sHomeIdpFriendlyName);
+			htReturn.put("home_idp", sHomeIdpOrgId);
+			if (sUid != null) {
+				htReturn.put("user_id", sUid);
+			}
+		}
+		return htReturn;
+	}
+
+	private void showSelectForm(HashMap htServiceRequest, PrintWriter pwOut, HashMap htServers, String sDefaultRemoteOrg)
+		throws ASelectException
+	{
+		String sMethod = "showSelectForm()";
+		try {
+			String sSelectForm = _sHTMLSelectForm;
+			String sRemoteServerUrl = null;
+			String sRid = (String) htServiceRequest.get("rid");
+			String sMyUrl = (String) htServiceRequest.get("my_url");
+
+			try {
+				sRemoteServerUrl = getIdpQueryServerUrl();
+			}
+			catch (ASelectException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error occured during retrieving IdpQueryUrl");
+				throw e;
+			}
+
+			String sUrl = new StringBuffer(sMyUrl).append("?request=error").append("&result_code=").append(
+					Errors.ERROR_ASELECT_SERVER_CANCEL).append("&a-select-server=").append(_sMyServerId)
+					.append("&rid=").append((String) htServiceRequest.get("rid")).toString();
+
+			sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
+			sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", sMyUrl);
+			sSelectForm = Utils.replaceString(sSelectForm, "[request]", "cross_login");
+			sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", _sMyServerId);
+			sSelectForm = Utils.replaceString(sSelectForm, "[remote_server]", sRemoteServerUrl);
+			sSelectForm = Utils.replaceString(sSelectForm, "[cancel]", sUrl);
+
+			sSelectForm = Utils.replaceString(sSelectForm, "[available_home_idps]", getRemoteServerHTML(htServers,
+					sDefaultRemoteOrg));
+
+			//Update template with the optional requestor information 
+			HashMap htSession = SessionManager.getHandle().getSessionContext(sRid);
+			if (htSession != null)
+				sSelectForm = _configManager.updateTemplate(sSelectForm, htSession);
+
+			pwOut.println(sSelectForm);
+
+		}
+		catch (ASelectException e) {
+			// Already logged.
+			throw e;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Unexpected runtime error occured.", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		}
+	}
+
+	private String getRemoteServerHTML(HashMap htServers, String sDefaultRemoteOrg)
+	{
+		String sMethod = "getRemoteServerHTML()";
+		String sResult = null;
+
+		//Enumeration enumServers = htServers.keys();
+		//ArrayList keyList = Collections.list(enumServers);
+		//Collections.sort(keyList);
+		//enumServers = Collections.enumeration(keyList);
+
+		Set<String> keys = htServers.keySet();
+		SortedSet sortedKeys = new TreeSet<String>(keys);
+		for (Object s : sortedKeys) {
+			String sFriendlyName = (String) s;
+			//while (enumServers.hasMoreElements())
+			//{
+			//    sFriendlyName = (String)enumServers.nextElement();
+
+			if (sDefaultRemoteOrg != null && sDefaultRemoteOrg.equals(sFriendlyName)) {
+				sResult += "<OPTION VALUE='" + sFriendlyName + "' selected=\"selected\">" + sFriendlyName
+						+ "</OPTION>\n";
+			}
+			else {
+				sResult += "<OPTION VALUE='" + sFriendlyName + "'>" + sFriendlyName + "</OPTION>\n";
+			}
+		}
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "Leaving function.");
+		return sResult;
+	}
+
+	/**
+	 * Loads all HTML Templates needed.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * At initialization all HTML templates are loaded once.<br>
+	 * @throws ASelectException
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * Run once at startup.
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * Manager and ISelectorHandler should be initialized.
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * Global HashMap _htHtmlTemplates variabele contains the templates.
+	 * <br>
+	 * 
+	 */
+	private void loadHTMLTemplates()
+		throws ASelectException
+	{
+		String sMethod = "loadHTMLTemplates()";
+		try {
+
+			String sWorkingdir = new StringBuffer(_configManager.getWorkingdir()).append(File.separator).append("conf")
+					.append(File.separator).append("html").append(File.separator).toString();
+
+			_sHTMLSelectForm = loadHTMLTemplate(sWorkingdir + _sHtmlTemplateName);
+
+			_sHTMLSelectForm = Utils.replaceString(_sHTMLSelectForm, "[version]", Version.getVersion());
+			_sHTMLSelectForm = Utils.replaceString(_sHTMLSelectForm, "[organization_friendly]", _sFriendlyName);
+		}
+		catch (ASelectException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Unexpected runtime error occurred :", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+		}
+
+	}
+
+	private String loadHTMLTemplate(String sLocation)
+		throws ASelectException
+	{
+		String sTemplate = new String();
+		String sLine;
+		BufferedReader brIn = null;
+		String sMethod = "loadHTMLTemplate()";
+		try {
+			brIn = new BufferedReader(new InputStreamReader(new FileInputStream(sLocation)));
+			while ((sLine = brIn.readLine()) != null) {
+				sTemplate += sLine + "\n";
+			}
+		}
+		catch (Exception e) {
+			StringBuffer sbError = new StringBuffer("Could not load '");
+			sbError.append(sLocation).append("'HTML template.");
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+		}
+		finally {
+			try {
+				brIn.close();
+			}
+			catch (Exception e) {
+				StringBuffer sbError = new StringBuffer("Could not close '");
+				sbError.append(sLocation).append("' FileInputStream.");
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
+			}
+		}
+		return sTemplate;
+	}
+
+	private void getIdpQueryServerResourceGroup()
+		throws ASelectException
+	{
+		String sMethod = "getIdpQueryServerResourceGroup()";
+		if (!_crossASelectManager.getRemoteServers().containsKey(_sIdPQueryServerId)) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"There's no 'organization' found within the remote_servers section with id: '" + _sIdPQueryServerId
+							+ "'");
+			throw new ASelectException(Errors.ERROR_ASELECT_CONFIG_ERROR);
+		}
+		try {
+			Object oCrossConfig = _configManager.getSection(null, "cross_aselect");
+			Object oRemoteServersConfig = _configManager.getSection(oCrossConfig, "remote_servers");
+			Object oRemoteServerConfig = _configManager.getSection(oRemoteServersConfig, "organization", "id="
+					+ _sIdPQueryServerId);
+			_sIdPQueryServerResourceGroup = _configManager.getParam(oRemoteServerConfig, "resourcegroup");
+		}
+		catch (ASelectConfigException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"Error occured by retrieving 'resourcegroup' of the remote organization with id: '"
+							+ _sIdPQueryServerId + "'");
+			throw e;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Unexpected runtime error occured.", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		}
+
+	}
+
+	private String getIdpQueryServerUrl()
+		throws ASelectException
+	{
+		String sMethod = "getUrl()";
+		String sUrl = null;
+
+		SAMResource sRemoteServers = null;
+		try {
+			try {
+				sRemoteServers = ASelectSAMAgent.getHandle().getActiveResource(_sIdPQueryServerResourceGroup);
+			}
+			catch (ASelectSAMException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"Error occured during retrieving active resource in resourcegroup: '"
+								+ _sIdPQueryServerResourceGroup + "'.");
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			}
+			Object objAuthSPResource = sRemoteServers.getAttributes();
+			try {
+				sUrl = _configManager.getParam(objAuthSPResource, "url");
+			}
+			catch (ASelectConfigException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No resource retrieved for: '"
+						+ _sIdPQueryServerResourceGroup + "'.");
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			}
+		}
+		catch (ASelectException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Exception occured", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		}
+		return sUrl;
+	}
+
+	private HashMap handleIdpApiCall()
+		throws ASelectException
+	{
+		String sMethod = "handleIdpApiCall()";
+		HashMap htResult = null;
+		String sRemoteServerUrl = getIdpQueryServerUrl();
+		HashMap htRequest = new HashMap();
+		htRequest.put("request", _sIdPQueryServerRequest);
+		if (_sIdPQueryServerSharedSecret != null)
+			htRequest.put("shared_secret", _sIdPQueryServerSharedSecret);
+
+		try {
+			htResult = _oCommunicator.sendMessage(htRequest, sRemoteServerUrl);
+		}
+		catch (ASelectCommunicationException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error occured during communication");
+			throw new ASelectException(Errors.ERROR_ASELECT_IO);
+		}
+		String sResultCode = (String) htResult.get("result_code");
+		if ((sResultCode == null) || !sResultCode.trim().equalsIgnoreCase(Errors.ERROR_ASELECT_SUCCESS)) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid result from remote A-Selectserver: "
+					+ sResultCode);
+			throw new ASelectException(Errors.ERROR_ASELECT_IO);
+		}
+
+		String sEncodedCgiString = (String) htResult.get("result");
+		String sCgiString = null;
+		try {
+			sCgiString = URLDecoder.decode(sEncodedCgiString, "UTF-8");
+		}
+		catch (UnsupportedEncodingException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "");
+			throw new ASelectException(Errors.ERROR_ASELECT_IO);
+		}
+
+		HashMap htServers = Utils.convertCGIMessage(sCgiString);
+
+		return htServers;
+	}
+
 }

@@ -67,7 +67,7 @@
 package org.aselect.agent.ticket;
 
 import java.security.SecureRandom;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import org.aselect.agent.config.ASelectAgentConfigManager;
@@ -264,7 +264,7 @@ public class TicketManager
 	 * @param htTicketContext The ccontext to be add.
 	 * @return The created ticket.
 	 */
-	public String createTicket(Hashtable htTicketContext)
+	public String createTicket(HashMap htTicketContext)
 	{
 		String sMethod = "createTicket()";
 		String sTicket = null;
@@ -325,7 +325,7 @@ public class TicketManager
 	 * @param sTicket The ticket to be updated.
 	 * @param htTicketContext The new ticket context.
 	 */
-	public void updateTicketContext(String sTicket, Hashtable htTicketContext)
+	public void updateTicketContext(String sTicket, HashMap htTicketContext)
 	{
 		String sMethod = "updateTicketContext()";
 
@@ -434,10 +434,10 @@ public class TicketManager
 	 * @param sTicket The ticket to retrieve.
 	 * @return The ticket context.
 	 */
-	public Hashtable getTicketContext(String sTicket)
+	public HashMap getTicketContext(String sTicket)
 	{
 		String sMethod = "getTicketContext()";
-		Hashtable htResponse = null;
+		HashMap htResponse = null;
 
 		if (sTicket == null || sTicket.equals(""))
 			return null;
@@ -445,7 +445,7 @@ public class TicketManager
 		try {
 			int len = sTicket.length();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get Ticket(" + sTicket.substring(0, (len < 30) ? len : 30));
-			htResponse = (Hashtable) _oTicketTable.get(sTicket);
+			htResponse = (HashMap) _oTicketTable.get(sTicket);
 		}
 		catch (Exception e) {
 			StringBuffer sbError = new StringBuffer("Ticket doesn't exist: ");
@@ -532,12 +532,12 @@ public class TicketManager
 	 * <br>
 	 * -
 	 * <br>
-	 * @return all Agent ticket contexts in a <code>Hashtable</code>.
+	 * @return all Agent ticket contexts in a <code>HashMap</code>.
 	 */
-	public Hashtable getTicketContexts()
+	public HashMap getTicketContexts()
 	{
 		String sMethod = "getTicketContexts()";
-		Hashtable xResponse = null;
+		HashMap xResponse = null;
 
 		try {
 			xResponse = _oTicketTable.getAll();

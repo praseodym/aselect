@@ -5,7 +5,7 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.net.URLEncoder;
 import java.security.PublicKey;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -247,7 +247,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler // RH, 20080602, n
 		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "IDP - NameID=" + sCred + " Remove SP=" + initiatingSP);
 
 		TGTManager tgtManager = TGTManager.getHandle();
-		Hashtable htTGTContext= (Hashtable)tgtManager.getTGT(sNameID);
+		HashMap htTGTContext= (HashMap)tgtManager.getTGT(sNameID);
 		if (htTGTContext == null) {
 			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "IDP - NameID=" + sCred + " TGT not found");
 			return;

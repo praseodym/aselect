@@ -56,7 +56,7 @@
 
 package org.aselect.system.storagemanager;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import org.aselect.server.log.ASelectSystemLogger;
@@ -73,7 +73,7 @@ import org.aselect.system.sam.agent.SAMAgent;
  * <br>
  * <b>Description: </b> <br>
  * The <code>StorageManager</code> is designed to store objects, like a
- * Hashtable, to some sort of physical storage. <br>
+ * HashMap, to some sort of physical storage. <br>
  * <br>
  * The StorageManager uses <code>StorageHandler</code> s to actual store the
  * objects. Objects can be stored for a limited amount of time. A Cleaner will
@@ -378,13 +378,13 @@ public class StorageManager
 	 * <b>Postconditions: </b> 
 	 * <br>-<br>
 	 * 
-	 * @return A <code>Hashtable</code> containing all stored object as
+	 * @return A <code>HashMap</code> containing all stored object as
 	 *         key/value.
 	 * @throws ASelectStorageException
 	 *             if retrieving fails.
 	 * @see IStorageHandler#getAll()
 	 */
-	public Hashtable getAll()
+	public HashMap getAll()
 		throws ASelectStorageException
 	{
 		return _oStorageHandler.getAll();
@@ -449,7 +449,7 @@ public class StorageManager
 	 * @see IStorageHandler#put(Object, Object, Long)
 	 */
 	public void put(Object oKey, Object oValue)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "put";
 		if (_oStorageHandler.isMaximum(_iMax))

@@ -95,8 +95,8 @@ package org.aselect.authspserver;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -134,506 +134,443 @@ import org.aselect.system.servlet.ASelectHttpServlet;
  */
 public class AuthSPServlet extends ASelectHttpServlet
 {
-    /**
-     * The name of the class, used for logging.
-     */
-    private final static String MODULE = "AuthSPServlet";
-    
-    /**
-     * id for configuration located in a database table
-     */
-    private final static String CONFIG_ID = "authspserver";
+	/**
+	 * The name of the class, used for logging.
+	 */
+	private final static String MODULE = "AuthSPServlet";
 
-    /**
-     * If set to FALSE, this servlet isn't restartable.
-     */
-    private boolean _bRestartable = false;
+	/**
+	 * id for configuration located in a database table
+	 */
+	private final static String CONFIG_ID = "authspserver";
 
-    /**
-     * The shared secret that is used to authorize the restart request
-     */
-    private String _sMySharedSecret = null;
+	/**
+	 * If set to FALSE, this servlet isn't restartable.
+	 */
+	private boolean _bRestartable = false;
 
-    /**
-     * Logger that is used for system logging
-     */
-    private AuthSPSystemLogger _systemLogger = null;
-    
-    /**
-     * Logger that is used for authentication logging
-     */
-    private AuthSPAuthenticationLogger _authenticationLogger = null;
-    
-    private AuthSPSessionManager _oAuthSPSessionManager = null;
+	/**
+	 * The shared secret that is used to authorize the restart request
+	 */
+	private String _sMySharedSecret = null;
 
-    /**
-     * Initializes the A-Select AuthSP Server.
-     * <ul>
-     * 	<li>Loads config from database or file</li>
-     * 	<li>Creates a system logger</li>
-     * 	<li>Checks if their is enough config to make the servlet restartable.</li>
-     * 	<li>Puts CryptoEngine, friendly_name and working_dir into 
-     * 		the servletcontext.
-     * 	</li>
-     * </ul>
-     * 
-     * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
-     */
-    public void init(ServletConfig oServletConfig) throws ServletException
-    {
-        String sMethod = "init()";        
+	/**
+	 * Logger that is used for system logging
+	 */
+	private AuthSPSystemLogger _systemLogger = null;
 
-        Object oAuthSPServerConfig = null;
-        String sWorkingDir = null;
-        
-        try
-        {
-            super.init(oServletConfig);
-            if (_systemLogger != null) //reinit
-                _systemLogger.closeHandlers();
-            else
-                _systemLogger = AuthSPSystemLogger.getHandle();
+	/**
+	 * Logger that is used for authentication logging
+	 */
+	private AuthSPAuthenticationLogger _authenticationLogger = null;
 
-            if (_authenticationLogger != null) //reinit
-                _authenticationLogger.closeHandlers();
-            else
-                _authenticationLogger = AuthSPAuthenticationLogger.getHandle();
-            
-            //reading all parameters from the servlet context
-            ServletContext oServletContext = oServletConfig.getServletContext();
-            sWorkingDir = oServletConfig.getInitParameter("working_dir");
-            if(sWorkingDir == null)
-	        {
-	        	_systemLogger.log(Level.WARNING, MODULE, sMethod, 
-		                "Could not retrieve 'working_dir' parameter from deployment descriptor.");
-		            throw new ASelectConfigException(
-		                Errors.ERROR_ASELECT_INIT_ERROR);
-	        }
+	private AuthSPSessionManager _oAuthSPSessionManager = null;
 
-            String sSqlDriver = oServletConfig.getInitParameter("sql_driver");
-            String sSqlURL = oServletConfig.getInitParameter("sql_url");
-            String sSqlUser = oServletConfig.getInitParameter("sql_user");
-            String sSqlPassword = oServletConfig
-                .getInitParameter("sql_password");
-            String sSqlTable = oServletConfig.getInitParameter("sql_table");
+	/**
+	 * Initializes the A-Select AuthSP Server.
+	 * <ul>
+	 * 	<li>Loads config from database or file</li>
+	 * 	<li>Creates a system logger</li>
+	 * 	<li>Checks if their is enough config to make the servlet restartable.</li>
+	 * 	<li>Puts CryptoEngine, friendly_name and working_dir into 
+	 * 		the servletcontext.
+	 * 	</li>
+	 * </ul>
+	 * 
+	 * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
+	 */
+	public void init(ServletConfig oServletConfig)
+		throws ServletException
+	{
+		String sMethod = "init()";
 
-            //prepare the working dir variable
-            if (!sWorkingDir.endsWith(File.separator))
-                sWorkingDir += File.separator;
-            sWorkingDir += "authspserver";
+		Object oAuthSPServerConfig = null;
+		String sWorkingDir = null;
 
-            File fWorkingDir = new File(sWorkingDir);
-            if (!fWorkingDir.exists())
-            {
-                StringBuffer sbFailed = new StringBuffer(
-                    "Could not access the working_dir as configured in web.xml: ");
-                sbFailed.append(sWorkingDir);
-                _systemLogger.log(Level.SEVERE, MODULE, sMethod, 
-                    sbFailed.toString());
-                
-                throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
-            }
+		try {
+			super.init(oServletConfig);
+			if (_systemLogger != null) //reinit
+				_systemLogger.closeHandlers();
+			else
+				_systemLogger = AuthSPSystemLogger.getHandle();
 
-            //initialize configmanager
-            AuthSPConfigManager oAuthSPConfigManager = AuthSPConfigManager
-                .getHandle();
+			if (_authenticationLogger != null) //reinit
+				_authenticationLogger.closeHandlers();
+			else
+				_authenticationLogger = AuthSPAuthenticationLogger.getHandle();
 
-            if (sSqlDriver != null || sSqlPassword != null || sSqlURL != null
-                || sSqlTable != null)
-            {
-                StringBuffer sbInfo = new StringBuffer("Reading config from database: ");
-                sbInfo.append(sSqlURL);
-                _systemLogger.log(Level.CONFIG, MODULE, sMethod, 
-                    sbInfo.toString());
+			//reading all parameters from the servlet context
+			ServletContext oServletContext = oServletConfig.getServletContext();
+			sWorkingDir = oServletConfig.getInitParameter("working_dir");
+			if (sWorkingDir == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"Could not retrieve 'working_dir' parameter from deployment descriptor.");
+				throw new ASelectConfigException(Errors.ERROR_ASELECT_INIT_ERROR);
+			}
 
-                oAuthSPConfigManager.init(sSqlDriver, sSqlUser, sSqlPassword,
-                    sSqlURL, sSqlTable, CONFIG_ID, _systemLogger);
-            }
-            else
-            {
-                StringBuffer sbConfigFile = new StringBuffer(sWorkingDir);
-                sbConfigFile.append(File.separator);
-                sbConfigFile.append("conf");
-                sbConfigFile.append(File.separator);
-                sbConfigFile.append("authsp.xml");
+			String sSqlDriver = oServletConfig.getInitParameter("sql_driver");
+			String sSqlURL = oServletConfig.getInitParameter("sql_url");
+			String sSqlUser = oServletConfig.getInitParameter("sql_user");
+			String sSqlPassword = oServletConfig.getInitParameter("sql_password");
+			String sSqlTable = oServletConfig.getInitParameter("sql_table");
 
-                File fConfigFile = new File(sbConfigFile.toString());
-                if (!fConfigFile.exists())
-                {
-                    StringBuffer sbFailed = new StringBuffer(
-                        "Could not access the config file: ");
-                    sbFailed.append(sbConfigFile);
-                    _systemLogger.log(Level.SEVERE, MODULE, sMethod, 
-                        sbFailed.toString());
-                    
-                    throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
-                }
+			//prepare the working dir variable
+			if (!sWorkingDir.endsWith(File.separator))
+				sWorkingDir += File.separator;
+			sWorkingDir += "authspserver";
 
-                StringBuffer sbInfo = new StringBuffer("Reading config from file: ");
-                sbInfo.append(sbConfigFile);
-                _systemLogger.log(Level.CONFIG, MODULE, sMethod
-                    , sbInfo.toString());
+			File fWorkingDir = new File(sWorkingDir);
+			if (!fWorkingDir.exists()) {
+				StringBuffer sbFailed = new StringBuffer("Could not access the working_dir as configured in web.xml: ");
+				sbFailed.append(sWorkingDir);
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbFailed.toString());
 
-                oAuthSPConfigManager.init(sbConfigFile.toString(), _systemLogger);
-            }
+				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
+			}
 
-            try
-            {
-                oAuthSPServerConfig = oAuthSPConfigManager.getSection(null,
-                    "authspserver");
-            }
-            catch (ASelectConfigException eAC)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-                    "No config section 'authspserver' found", eAC);
-                throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
-            }
-            
-            //initialize system logger
-            Object oSysLogging = null;
-            try
-            {
-                oSysLogging = oAuthSPConfigManager.getSection(oAuthSPServerConfig, 
-                    "logging", "id=system");
-            }
-            catch (ASelectConfigException eAC)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-                    "No valid 'logging' config section with id='system' found", eAC);
-                
-                throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
-            }
-            _systemLogger.init(oSysLogging, sWorkingDir);        
-            
-            StringBuffer sbInfo = new StringBuffer("Starting A-Select AuthSP Server ");
-            sbInfo.append(Version.getVersion());
-            _systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
-            
-            //initialize authentication logger
-            Object oAuthLogging = null;
-            try
-            {
-                oAuthLogging = oAuthSPConfigManager.getSection(oAuthSPServerConfig, "logging", "id=authentication");
-            }
-            catch (ASelectConfigException eAC)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-                    "No valid 'logging' config section with id='authentication' found", eAC);
-                throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
-            }
-            _authenticationLogger.init(oAuthLogging, sWorkingDir);
-            _systemLogger.log(Level.INFO, MODULE, sMethod ,
-                "Successfully initialized AuthSPAuthenticationLogger.");
-            
-            try
-            {
-                _sMySharedSecret = oAuthSPConfigManager.getParam(
-                    oAuthSPServerConfig, "shared_secret");
-                _bRestartable = (_sMySharedSecret != null);
+			//initialize configmanager
+			AuthSPConfigManager oAuthSPConfigManager = AuthSPConfigManager.getHandle();
 
-                if (!_bRestartable)
-                {
-                    _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-                        "Config item 'shared_secret' is empty");
-                    throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
-                }
-            }
-            catch (Exception e)
-            {
-                _systemLogger.log(Level.CONFIG, MODULE, sMethod, 
-                    "No 'shared_secret' configured, disabling servlet restart.");
-                _bRestartable = false;
-            }
+			if (sSqlDriver != null || sSqlPassword != null || sSqlURL != null || sSqlTable != null) {
+				StringBuffer sbInfo = new StringBuffer("Reading config from database: ");
+				sbInfo.append(sSqlURL);
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString());
 
-            //Remove the instances, if their already is one. 
-            //For restarting purposes.
-            if (oServletContext.getAttribute("CryptoEngine") != null)
-            {
-                oServletContext.removeAttribute("CryptoEngine");
-            }
-            
-            if (oServletContext.getAttribute("friendly_name") != null)
-            {
-                oServletContext.removeAttribute("friendly_name");
-            }
-            
-            if (oServletContext.getAttribute("SessionManager") != null)
-            {
-                oServletContext.removeAttribute("SessionManager");
-            }
-            
-            String sFriendlyName = null;
-            try
-            {
-	            sFriendlyName = oAuthSPConfigManager.getParam(
-	                oAuthSPServerConfig, "organization_friendly_name");
-            }
-            catch(ASelectConfigException eAC)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-                    "Could not retrieve 'organization_friendly_name' config parameter in authspserver config section", 
-                    eAC);
-                throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
-            }
+				oAuthSPConfigManager.init(sSqlDriver, sSqlUser, sSqlPassword, sSqlURL, sSqlTable, CONFIG_ID,
+						_systemLogger);
+			}
+			else {
+				StringBuffer sbConfigFile = new StringBuffer(sWorkingDir);
+				sbConfigFile.append(File.separator);
+				sbConfigFile.append("conf");
+				sbConfigFile.append(File.separator);
+				sbConfigFile.append("authsp.xml");
 
-            sFriendlyName = sFriendlyName.trim();
+				File fConfigFile = new File(sbConfigFile.toString());
+				if (!fConfigFile.exists()) {
+					StringBuffer sbFailed = new StringBuffer("Could not access the config file: ");
+					sbFailed.append(sbConfigFile);
+					_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbFailed.toString());
 
-            CryptoEngine oCryptoEngine = new CryptoEngine(sWorkingDir,
-                _systemLogger);
-	        _systemLogger.log(Level.INFO, MODULE, sMethod, 
-	            "CryptoEngine successfully initialized.");
+					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
+				}
 
-            oServletContext.setAttribute("CryptoEngine", oCryptoEngine);
-            _systemLogger.log(Level.INFO, MODULE, sMethod, 
-                "The CryptoEngine is set to the servlet context.");
+				StringBuffer sbInfo = new StringBuffer("Reading config from file: ");
+				sbInfo.append(sbConfigFile);
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString());
 
-            oServletContext.setAttribute("working_dir", sWorkingDir);
-            _systemLogger.log(Level.INFO, MODULE, sMethod, 
-                "The working_dir is set to the servlet context.");
+				oAuthSPConfigManager.init(sbConfigFile.toString(), _systemLogger);
+			}
 
-            oServletContext.setAttribute("friendly_name", sFriendlyName);
-            _systemLogger.log(Level.INFO, MODULE, sMethod, 
-                "The friendly_name is set to the servlet context.");
-            
-            //initializes the SAM Agent needed by the session manager configuration
-            AuthSPSAMAgent.getHandle().init();
-            
-            _oAuthSPSessionManager = AuthSPSessionManager.getHandle();
-            _oAuthSPSessionManager.init();
-            oServletContext.setAttribute("SessionManager", _oAuthSPSessionManager);
-            _systemLogger.log(Level.INFO, MODULE, sMethod, 
-                "The SessionManager is set to the servlet context.");
-            
-            _systemLogger.log(Level.INFO, MODULE, sMethod, 
-                "A-Select AuthSP Server is successfully initialized");
-        }
-        catch (ASelectException eAS)
-        {
-            _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initializing failed", eAS);
-            closeResources();
-            closeLoggers();
-            throw new ServletException("Initializing failed");
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initializing failed", e);
-            closeResources();
-            closeLoggers();
-            throw new ServletException("Initializing failed");
-        }
-    }
+			try {
+				oAuthSPServerConfig = oAuthSPConfigManager.getSection(null, "authspserver");
+			}
+			catch (ASelectConfigException eAC) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config section 'authspserver' found", eAC);
+				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
+			}
 
-    /**
-     * Returns a short description of the servlet.
-     * <br><br>
-     * @see javax.servlet.Servlet#getServletInfo()
-     */
-    public String getServletInfo()
-    {
-        return MODULE + " - loads AuthSP engine";
-    }
+			//initialize system logger
+			Object oSysLogging = null;
+			try {
+				oSysLogging = oAuthSPConfigManager.getSection(oAuthSPServerConfig, "logging", "id=system");
+			}
+			catch (ASelectConfigException eAC) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"No valid 'logging' config section with id='system' found", eAC);
 
-    /**
-     * If the servlet is restartable, the request=restart is supported in the 
-     * querystring.
-     * <br>
-     * <br>
-     * 
-     * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest,
-     *      javax.servlet.http.HttpServletResponse)
-     */
-    public void doGet(HttpServletRequest oHttpServletRequest,
-        HttpServletResponse oHttpServletResponse) throws ServletException
-    {
-    	_systemLogger.log(Level.INFO,MODULE, "AUTHSP GET {", ""+_bRestartable);
+				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
+			}
+			_systemLogger.init(oSysLogging, sWorkingDir);
 
-        if (_bRestartable)
-        {
-            //turn off caching
-            super.setDisableCachingHttpHeaders(oHttpServletRequest,
-                oHttpServletResponse);
+			StringBuffer sbInfo = new StringBuffer("Starting A-Select AuthSP Server ");
+			sbInfo.append(Version.getVersion());
+			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 
-            //handle request=restart
-            String sRequest = oHttpServletRequest.getParameter("request");
-            if (sRequest != null)
-            {
-            	_systemLogger.log(Level.INFO,MODULE, "GET ", ""+sRequest);
-            	
-                PrintWriter pwOut = null;
-                try
-                {
-                    pwOut = oHttpServletResponse.getWriter();
-                    if (sRequest.equals("restart"))
-                        handleRestartRequest(oHttpServletRequest, _sMySharedSecret,
-                            pwOut, _systemLogger);
-                }
-                catch (IOException e)
-                {
-                    throw new ServletException("Error sending response: "
-                        + e.getMessage());
-                }
-                finally{
-                    if(pwOut == null)
-                        pwOut.close();
-                }
-            }
-        }
-    	_systemLogger.log(Level.INFO,MODULE, "} AUTHSP GET", "");
-    }
+			//initialize authentication logger
+			Object oAuthLogging = null;
+			try {
+				oAuthLogging = oAuthSPConfigManager.getSection(oAuthSPServerConfig, "logging", "id=authentication");
+			}
+			catch (ASelectConfigException eAC) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"No valid 'logging' config section with id='authentication' found", eAC);
+				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
+			}
+			_authenticationLogger.init(oAuthLogging, sWorkingDir);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully initialized AuthSPAuthenticationLogger.");
 
-    /**
-     * Destroys the servlet and closes the <code>SystemLogger</code> handlers.
-     * <br>
-     * <br>
-     * 
-     * @see javax.servlet.Servlet#destroy()
-     */
-    public void destroy()
-    {
-        closeResources();
-        _systemLogger.log(Level.INFO,MODULE, "destroy()", 
-            "A-Select AuthSP Server stopped.");
-        closeLoggers();
-        super.destroy();
-    }
-    
-    /**
-     * Closes the AuthSP Server resources.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Closes the SAM agent and session manager if they aren't closed already. 
-     * <br><br>
-     * 
-     */
-    private void closeResources()
-    {
-        AuthSPSAMAgent.getHandle().destroy();
-        if(_oAuthSPSessionManager != null)
-        {
-            _oAuthSPSessionManager.destroy();
-            _oAuthSPSessionManager = null;
-        }
-    }
-    
-    /**
-     * Closes the Logging Handlers.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Closes the System and Authentication Loggers if they aren't already. 
-     * <br><br>
-     * 
-     */
-    private void closeLoggers()
-    {
-        if (_authenticationLogger != null)
-        {
-            _authenticationLogger.closeHandlers();
-            _authenticationLogger = null;
-        }
-        if(_systemLogger != null)
-        {
-            _systemLogger.closeHandlers();
-            _systemLogger = null;
-        }
-    }
+			try {
+				_sMySharedSecret = oAuthSPConfigManager.getParam(oAuthSPServerConfig, "shared_secret");
+				_bRestartable = (_sMySharedSecret != null);
 
-    /**
-     * The AuthSP server is not restartable by default.
-     * <br><br>
-     * the AuthSP server will process the "request=restart" and will restart 
-     * itself. After that the other restartable servlets in the context are 
-     * restarted.
-     * <br><br>
-     * This ensures that the AuthSP server is restarted before the AuthSP's.
-     * 
-     * @see org.aselect.system.servlet.ASelectHttpServlet#isRestartableServlet()
-     */
-    protected boolean isRestartableServlet()
-    {
-        return false;
-    }   
-    
-    /**
-     * First restarts this AuthSP Server and then the restartable 
-     * servlets in the context.
-     * 
-     * @see org.aselect.system.servlet.ASelectHttpServlet#restartServlets(org.aselect.system.logging.SystemLogger)
-     */
-    protected synchronized boolean restartServlets(SystemLogger logger)
-    {
-        String sMethod = "restartServlets()";
-        boolean bEndResult = true;
-        
-        try
-        {
-            StringBuffer sbResult = new StringBuffer("Restart: ");
-            ServletConfig oConfig = getServletConfig();
-           
-            //Set restart attribute
-            oConfig.getServletContext().setAttribute(
-                "restarting_servlets", "true");
-            //Get other restartable Servlets
-            Hashtable htRestartServlets = 
-                (Hashtable)oConfig.getServletContext().getAttribute(
-                    "restartable_servlets");
-                        
-            //restart the AuthSP Server itself
-            try
-            {
-                this.init(oConfig);
-            }
-            catch (Exception eX)
-            {
-                bEndResult = false;
-            }
-            sbResult.append(MODULE).append(" (");
-            sbResult.append(bEndResult ? "OK" : "Failed");
-            sbResult.append(")");
+				if (!_bRestartable) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Config item 'shared_secret' is empty");
+					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
+				}
+			}
+			catch (Exception e) {
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+						"No 'shared_secret' configured, disabling servlet restart.");
+				_bRestartable = false;
+			}
 
-            //restart the other restartable servlets.             
-	        if (bEndResult && htRestartServlets != null)
-	        {
-	            sbResult.append(", ");
-	            boolean bResult = true;
-	            for (Enumeration e = htRestartServlets.keys(); e.hasMoreElements();)
-	            {
-	                String sKey = (String)e.nextElement();
-	                ASelectHttpServlet servlet = 
-	                    (ASelectHttpServlet)htRestartServlets.get(sKey);	                
-	                try
-	                {
-	                    servlet.init(servlet.getServletConfig());
-	                }
-	                catch (Exception eX)
-	                {
-	                    bResult = false;
-	                }
-	                bEndResult &= bResult;
-	                sbResult.append(sKey).append(" (");
-	                sbResult.append(bResult ? "OK" : "Failed");
-	                sbResult.append(")");
-	                if (e.hasMoreElements())
-	                    sbResult.append(", ");
-	            }                
-	        }
-	        logger.log(Level.INFO, MODULE, sMethod, sbResult.toString());
-        }
-        catch (Exception e)
-        {
-            if (logger != null)
-                logger.log(Level.SEVERE, getModuleName(), sMethod, 
-                    "Restarting servlets failed", e);
-            else
-                System.err.println(getModuleName() + " " + sMethod
-                    + e.getMessage());
+			//Remove the instances, if their already is one. 
+			//For restarting purposes.
+			if (oServletContext.getAttribute("CryptoEngine") != null) {
+				oServletContext.removeAttribute("CryptoEngine");
+			}
 
-            bEndResult = false;
-        }
-        this.getServletConfig().getServletContext().removeAttribute(
-            "restarting_servlets");
-        return bEndResult;
-    }
-    
+			if (oServletContext.getAttribute("friendly_name") != null) {
+				oServletContext.removeAttribute("friendly_name");
+			}
+
+			if (oServletContext.getAttribute("SessionManager") != null) {
+				oServletContext.removeAttribute("SessionManager");
+			}
+
+			String sFriendlyName = null;
+			try {
+				sFriendlyName = oAuthSPConfigManager.getParam(oAuthSPServerConfig, "organization_friendly_name");
+			}
+			catch (ASelectConfigException eAC) {
+				_systemLogger
+						.log(
+								Level.WARNING,
+								MODULE,
+								sMethod,
+								"Could not retrieve 'organization_friendly_name' config parameter in authspserver config section",
+								eAC);
+				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
+			}
+
+			sFriendlyName = sFriendlyName.trim();
+
+			CryptoEngine oCryptoEngine = new CryptoEngine(sWorkingDir, _systemLogger);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "CryptoEngine successfully initialized.");
+
+			oServletContext.setAttribute("CryptoEngine", oCryptoEngine);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "The CryptoEngine is set to the servlet context.");
+
+			oServletContext.setAttribute("working_dir", sWorkingDir);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "The working_dir is set to the servlet context.");
+
+			oServletContext.setAttribute("friendly_name", sFriendlyName);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "The friendly_name is set to the servlet context.");
+
+			//initializes the SAM Agent needed by the session manager configuration
+			AuthSPSAMAgent.getHandle().init();
+
+			_oAuthSPSessionManager = AuthSPSessionManager.getHandle();
+			_oAuthSPSessionManager.init();
+			oServletContext.setAttribute("SessionManager", _oAuthSPSessionManager);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "The SessionManager is set to the servlet context.");
+
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "A-Select AuthSP Server is successfully initialized");
+		}
+		catch (ASelectException eAS) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initializing failed", eAS);
+			closeResources();
+			closeLoggers();
+			throw new ServletException("Initializing failed");
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initializing failed", e);
+			closeResources();
+			closeLoggers();
+			throw new ServletException("Initializing failed");
+		}
+	}
+
+	/**
+	 * Returns a short description of the servlet.
+	 * <br><br>
+	 * @see javax.servlet.Servlet#getServletInfo()
+	 */
+	public String getServletInfo()
+	{
+		return MODULE + " - loads AuthSP engine";
+	}
+
+	/**
+	 * If the servlet is restartable, the request=restart is supported in the 
+	 * querystring.
+	 * <br>
+	 * <br>
+	 * 
+	 * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest,
+	 *      javax.servlet.http.HttpServletResponse)
+	 */
+	public void doGet(HttpServletRequest oHttpServletRequest, HttpServletResponse oHttpServletResponse)
+		throws ServletException
+	{
+		_systemLogger.log(Level.INFO, MODULE, "AUTHSP GET {", "" + _bRestartable);
+
+		if (_bRestartable) {
+			//turn off caching
+			super.setDisableCachingHttpHeaders(oHttpServletRequest, oHttpServletResponse);
+
+			//handle request=restart
+			String sRequest = oHttpServletRequest.getParameter("request");
+			if (sRequest != null) {
+				_systemLogger.log(Level.INFO, MODULE, "GET ", "" + sRequest);
+
+				PrintWriter pwOut = null;
+				try {
+					pwOut = oHttpServletResponse.getWriter();
+					if (sRequest.equals("restart"))
+						handleRestartRequest(oHttpServletRequest, _sMySharedSecret, pwOut, _systemLogger);
+				}
+				catch (IOException e) {
+					throw new ServletException("Error sending response: " + e.getMessage());
+				}
+				finally {
+					if (pwOut == null)
+						pwOut.close();
+				}
+			}
+		}
+		_systemLogger.log(Level.INFO, MODULE, "} AUTHSP GET", "");
+	}
+
+	/**
+	 * Destroys the servlet and closes the <code>SystemLogger</code> handlers.
+	 * <br>
+	 * <br>
+	 * 
+	 * @see javax.servlet.Servlet#destroy()
+	 */
+	public void destroy()
+	{
+		closeResources();
+		_systemLogger.log(Level.INFO, MODULE, "destroy()", "A-Select AuthSP Server stopped.");
+		closeLoggers();
+		super.destroy();
+	}
+
+	/**
+	 * Closes the AuthSP Server resources.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Closes the SAM agent and session manager if they aren't closed already. 
+	 * <br><br>
+	 * 
+	 */
+	private void closeResources()
+	{
+		AuthSPSAMAgent.getHandle().destroy();
+		if (_oAuthSPSessionManager != null) {
+			_oAuthSPSessionManager.destroy();
+			_oAuthSPSessionManager = null;
+		}
+	}
+
+	/**
+	 * Closes the Logging Handlers.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Closes the System and Authentication Loggers if they aren't already. 
+	 * <br><br>
+	 * 
+	 */
+	private void closeLoggers()
+	{
+		if (_authenticationLogger != null) {
+			_authenticationLogger.closeHandlers();
+			_authenticationLogger = null;
+		}
+		if (_systemLogger != null) {
+			_systemLogger.closeHandlers();
+			_systemLogger = null;
+		}
+	}
+
+	/**
+	 * The AuthSP server is not restartable by default.
+	 * <br><br>
+	 * the AuthSP server will process the "request=restart" and will restart 
+	 * itself. After that the other restartable servlets in the context are 
+	 * restarted.
+	 * <br><br>
+	 * This ensures that the AuthSP server is restarted before the AuthSP's.
+	 * 
+	 * @see org.aselect.system.servlet.ASelectHttpServlet#isRestartableServlet()
+	 */
+	protected boolean isRestartableServlet()
+	{
+		return false;
+	}
+
+	/**
+	 * First restarts this AuthSP Server and then the restartable 
+	 * servlets in the context.
+	 * 
+	 * @see org.aselect.system.servlet.ASelectHttpServlet#restartServlets(org.aselect.system.logging.SystemLogger)
+	 */
+	protected synchronized boolean restartServlets(SystemLogger logger)
+	{
+		String sMethod = "restartServlets()";
+		boolean bEndResult = true;
+
+		try {
+			StringBuffer sbResult = new StringBuffer("Restart: ");
+			ServletConfig oConfig = getServletConfig();
+
+			//Set restart attribute
+			oConfig.getServletContext().setAttribute("restarting_servlets", "true");
+			//Get other restartable Servlets
+			HashMap htRestartServlets = (HashMap) oConfig.getServletContext().getAttribute("restartable_servlets");
+
+			//restart the AuthSP Server itself
+			try {
+				this.init(oConfig);
+			}
+			catch (Exception eX) {
+				bEndResult = false;
+			}
+			sbResult.append(MODULE).append(" (");
+			sbResult.append(bEndResult ? "OK" : "Failed");
+			sbResult.append(")");
+
+			//restart the other restartable servlets.             
+			if (bEndResult && htRestartServlets != null) {
+				boolean bResult = true;
+				Set keys = htRestartServlets.keySet();
+				for (Object s : keys) {
+					String sKey = (String) s;
+					//for (Enumeration e = htRestartServlets.keys(); e.hasMoreElements();)
+					//{
+					//    String sKey = (String)e.nextElement();
+					sbResult.append(", ");
+					ASelectHttpServlet servlet = (ASelectHttpServlet) htRestartServlets.get(sKey);
+					try {
+						servlet.init(servlet.getServletConfig());
+					}
+					catch (Exception eX) {
+						bResult = false;
+					}
+					bEndResult &= bResult;
+					sbResult.append(sKey).append(" (");
+					sbResult.append(bResult ? "OK" : "Failed");
+					sbResult.append(")");
+//					if (e.hasMoreElements())
+	//					sbResult.append(", ");
+				}
+			}
+			logger.log(Level.INFO, MODULE, sMethod, sbResult.toString());
+		}
+		catch (Exception e) {
+			if (logger != null)
+				logger.log(Level.SEVERE, getModuleName(), sMethod, "Restarting servlets failed", e);
+			else
+				System.err.println(getModuleName() + " " + sMethod + e.getMessage());
+
+			bEndResult = false;
+		}
+		this.getServletConfig().getServletContext().removeAttribute("restarting_servlets");
+		return bEndResult;
+	}
+
 }

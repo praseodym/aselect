@@ -78,7 +78,7 @@ package org.aselect.server.authspprotocol.handler;
 
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import org.aselect.server.authspprotocol.IAuthSPProtocolHandler;
@@ -170,393 +170,327 @@ import org.aselect.system.exception.ASelectConfigException;
  */
 public class Radius implements IAuthSPProtocolHandler
 {
-    private String _sAuthsp;
-    private String _sAuthspUrl;
-    private String _ASelectServerId;
+	private String _sAuthsp;
+	private String _sAuthspUrl;
+	private String _ASelectServerId;
 
-    private ASelectConfigManager _oConfigManager;
-    private SessionManager _oSessionManager;
-    private ASelectSystemLogger _oASelectSystemLogger;
-    private ASelectAuthenticationLogger _oASelectAuthenticationLogger;
-    private final static String MODULE = "Radius";
-    private final static String ERROR_RADIUS_NO_ERROR = "000";
-    private final static String ERROR_RADIUS_ACCESS_DENIED = "800";
+	private ASelectConfigManager _oConfigManager;
+	private SessionManager _oSessionManager;
+	private ASelectSystemLogger _oASelectSystemLogger;
+	private ASelectAuthenticationLogger _oASelectAuthenticationLogger;
+	private final static String MODULE = "Radius";
+	private final static String ERROR_RADIUS_NO_ERROR = "000";
+	private final static String ERROR_RADIUS_ACCESS_DENIED = "800";
 
-    /**
-     * Initializes the Radius AuthSP handler. <br>
-     * Resolves the following config items:
-     * <ul>
-     * <li>The AuthSP id</li>
-     * <li>The url to the authsp (from the resource)</li>
-     * <li>The server id from the A-Select main config</li>
-     * </ul>
-     * 
-     * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#init(java.lang.Object,
-     *      java.lang.Object)
-     */
-    public void init(Object authSPConfig, Object authSPResource)
-        throws ASelectAuthSPException
-    {
-        String sMethod = "init()";
-        Object oASelectConfig = null;
-        try
-         {
-             _oConfigManager = ASelectConfigManager.getHandle();
-             _oSessionManager = SessionManager.getHandle();
-             _oASelectAuthenticationLogger = ASelectAuthenticationLogger.getHandle();
-             _oASelectSystemLogger = ASelectSystemLogger.getHandle();
-        	try
-        	{
-            	_sAuthsp = _oConfigManager.getParam(authSPConfig, "id");
-        	}
-        	catch(ASelectConfigException e)
-        	{
-                _oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, 
-                    "No valid 'id' config item found in authsp section");
-                
-            	throw new ASelectAuthSPException(
-            	    Errors.ERROR_ASELECT_INTERNAL_ERROR);
-        	}
-        
-        	try
-        	{
-            	_sAuthspUrl = _oConfigManager.getParam(authSPResource, "url");
-        	}
-        	catch(ASelectConfigException e)
-        	{
-            	StringBuffer sbFailed = new StringBuffer(
-            	    "No valid 'url' config item found in resource section of authsp with id='");
-            	sbFailed.append(_sAuthsp);
-            	sbFailed.append("'");
-                _oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString());
-            	
-            	throw new ASelectAuthSPException(
-            	    Errors.ERROR_ASELECT_INTERNAL_ERROR);
-        	}	 
-        
-        	try
-        	{
-            	oASelectConfig =  _oConfigManager.getSection(null, "aselect");
-        	}
-        	catch(ASelectConfigException e)
-        	{
-                _oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, 
-                    "No main 'aselect' config section found", e);
-        	    
-            	throw new ASelectAuthSPException(
-            	    Errors.ERROR_ASELECT_INTERNAL_ERROR);
-        	}  
-        
-        	try
-        	{
-            	_ASelectServerId =  _oConfigManager.getParam(oASelectConfig, "server_id");
-        	}
-        	catch(ASelectConfigException e)
-        	{
-                _oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, 
-                    "No valid 'server_id' config item found in main 'aselect' section");
-                
-            	throw new ASelectAuthSPException(
-            	    Errors.ERROR_ASELECT_INTERNAL_ERROR);
-        	}
-    	}
-        catch(ASelectAuthSPException eAA)
-        {
-            _oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod,
-                "Could not initialize", eAA);
-            throw eAA;
-        }
-        catch(Exception e)
-        {
-            _oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, 
-                "Could not initialize due to internal error", e);            
-            throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-        }
-    }
+	/**
+	 * Initializes the Radius AuthSP handler. <br>
+	 * Resolves the following config items:
+	 * <ul>
+	 * <li>The AuthSP id</li>
+	 * <li>The url to the authsp (from the resource)</li>
+	 * <li>The server id from the A-Select main config</li>
+	 * </ul>
+	 * 
+	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#init(java.lang.Object,
+	 *      java.lang.Object)
+	 */
+	public void init(Object authSPConfig, Object authSPResource)
+		throws ASelectAuthSPException
+	{
+		String sMethod = "init()";
+		Object oASelectConfig = null;
+		try {
+			_oConfigManager = ASelectConfigManager.getHandle();
+			_oSessionManager = SessionManager.getHandle();
+			_oASelectAuthenticationLogger = ASelectAuthenticationLogger.getHandle();
+			_oASelectSystemLogger = ASelectSystemLogger.getHandle();
+			try {
+				_sAuthsp = _oConfigManager.getParam(authSPConfig, "id");
+			}
+			catch (ASelectConfigException e) {
+				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod,
+						"No valid 'id' config item found in authsp section");
 
-    /**
-     * Creates the Authentication Request for the Radius AuthSP, which will be send
-     * by redirecting the user.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * This method creates a hashtable with the follwing contents:
-     * <table border="1" cellspacing="0" cellpadding="3">
-     *  <tr>
-     *	<td style="" bgcolor="#EEEEFF"><b>key</b></td>
-     *	<td style="" bgcolor="#EEEEFF"><b>value</b></td>
-     *  </tr>  
-     *  <tr>
-     * 	<td>result</td>
-     *  <td>
-     * 		{@link Errors#ERROR_ASELECT_SUCCESS} or an error code 
-     * 		if creating the authentication request URL fails
-     * 	</td>
-     *  </tr>
-     *  <tr>
-     * 	<td>redirect_url</td>
-     * 	<td>
-     * 		The URL to the AuthSP including the protocol parameters as specified
-     * 		in the <a href="#outgoing">class description</a>.
-     * 	</td>
-     *  </tr>
-     * </table>
-     * 
-     * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#computeAuthenticationRequest(java.lang.String)
-     */
-    public Hashtable computeAuthenticationRequest(String sRid)
-    {
-        String sMethod = "computeAuthenticationRequest()";
-        StringBuffer sbTemp;
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			}
 
-        Hashtable htResponse = new Hashtable();
-        htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			try {
+				_sAuthspUrl = _oConfigManager.getParam(authSPResource, "url");
+			}
+			catch (ASelectConfigException e) {
+				StringBuffer sbFailed = new StringBuffer(
+						"No valid 'url' config item found in resource section of authsp with id='");
+				sbFailed.append(_sAuthsp);
+				sbFailed.append("'");
+				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString());
 
-        try
-        {
-            Hashtable htSessionContext = _oSessionManager
-                .getSessionContext(sRid);
-            if (htSessionContext == null)
-            {
-                sbTemp = new StringBuffer("could not fetch session context for rid=")
-               	.append(sRid);
-                _oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sbTemp.toString());
-                throw new ASelectAuthSPException(
-                    Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
-            }
-            Hashtable htAllowedAuthsps = (Hashtable)htSessionContext
-                .get("allowed_user_authsps");
-            if (htAllowedAuthsps == null)
-            {
-                _oASelectSystemLogger.log(Level.WARNING, 
-                    MODULE, sMethod, "allowed_user_authsps missing in session context");
-                throw new ASelectAuthSPException(
-                    Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
-            }
-            String sUserId = (String)htAllowedAuthsps.get(_sAuthsp);
-            if (sUserId == null)
-            {
-                _oASelectSystemLogger.log(Level.WARNING, 
-                    MODULE, sMethod, "missing radius user attributes ");
-                throw new ASelectAuthSPException(
-                    Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
-            }
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			}
 
-            sbTemp = new StringBuffer((String)htSessionContext.get("my_url"));
-            sbTemp.append("?authsp=").append(_sAuthsp);
-            String sAsUrl = sbTemp.toString();
+			try {
+				oASelectConfig = _oConfigManager.getSection(null, "aselect");
+			}
+			catch (ASelectConfigException e) {
+				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, "No main 'aselect' config section found", e);
 
-            String sCountry = (String)htSessionContext.get("country");
-            if (sCountry == null || sCountry.trim().length() < 1)
-            {
-            	sCountry = null;
-            }
-            
-            String sLanguage = (String)htSessionContext.get("language");
-            if (sLanguage == null || sLanguage.trim().length() < 1)
-            {
-            	sLanguage = null;
-            }
-           
-            StringBuffer sbSignature = new StringBuffer(sRid);
-            sbSignature.append(sAsUrl);
-            sbSignature.append(sUserId);
-            sbSignature.append(_ASelectServerId);
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			}
 
-            if (sCountry != null)
-                sbSignature.append(sCountry);
-            
-            if (sLanguage != null)
-                sbSignature.append(sLanguage);
-            
-            String sSignature;
-            sSignature = CryptoEngine.getHandle().generateSignature(_sAuthsp,
-                sbSignature.toString());
-            if (sSignature == null)
-            {	
-                sbTemp = new StringBuffer("Could not generate signature for authsp: ")
-                .append(_sAuthsp);
-                _oASelectSystemLogger.log(Level.WARNING, 
-                    MODULE, sMethod, sbTemp.toString());
+			try {
+				_ASelectServerId = _oConfigManager.getParam(oASelectConfig, "server_id");
+			}
+			catch (ASelectConfigException e) {
+				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod,
+						"No valid 'server_id' config item found in main 'aselect' section");
 
-                throw new ASelectAuthSPException(
-                    Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
-            }
-            
-            sSignature = URLEncoder.encode(sSignature, "UTF-8");
-            sUserId = URLEncoder.encode(sUserId, "UTF-8");
-            sAsUrl = URLEncoder.encode(sAsUrl, "UTF-8");
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			}
+		}
+		catch (ASelectAuthSPException eAA) {
+			_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize", eAA);
+			throw eAA;
+		}
+		catch (Exception e) {
+			_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize due to internal error", e);
+			throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+	}
 
-            StringBuffer sbRedirect = new StringBuffer(_sAuthspUrl);
-            sbRedirect.append("?as_url=").append(sAsUrl);
-            sbRedirect.append("&rid=").append(sRid);
-            sbRedirect.append("&uid=").append(sUserId);
-            sbRedirect.append("&a-select-server=").append(_ASelectServerId);
-            sbRedirect.append("&signature=").append(sSignature);
-            
-            if (sCountry != null)
-                sbRedirect.append("&country=").append(sCountry);
-            
-            if (sLanguage != null)
-                sbRedirect.append("&language=").append(sLanguage);
-                                    
-            htResponse.put("redirect_url", sbRedirect.toString());
-            htResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
-        }
-        catch(ASelectAuthSPException e)
-        {
-            htResponse.put("result", e.getMessage());
-        }
-        catch (Exception e)
-        {
-            _oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, "Internal error", e);
-            htResponse.put("result", 
-                Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
-        }
-        return htResponse;
-    }
+	/**
+	 * Creates the Authentication Request for the Radius AuthSP, which will be send
+	 * by redirecting the user.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * This method creates a hashtable with the follwing contents:
+	 * <table border="1" cellspacing="0" cellpadding="3">
+	 *  <tr>
+	 *	<td style="" bgcolor="#EEEEFF"><b>key</b></td>
+	 *	<td style="" bgcolor="#EEEEFF"><b>value</b></td>
+	 *  </tr>  
+	 *  <tr>
+	 * 	<td>result</td>
+	 *  <td>
+	 * 		{@link Errors#ERROR_ASELECT_SUCCESS} or an error code 
+	 * 		if creating the authentication request URL fails
+	 * 	</td>
+	 *  </tr>
+	 *  <tr>
+	 * 	<td>redirect_url</td>
+	 * 	<td>
+	 * 		The URL to the AuthSP including the protocol parameters as specified
+	 * 		in the <a href="#outgoing">class description</a>.
+	 * 	</td>
+	 *  </tr>
+	 * </table>
+	 * 
+	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#computeAuthenticationRequest(java.lang.String)
+	 */
+	public HashMap computeAuthenticationRequest(String sRid)
+	{
+		String sMethod = "computeAuthenticationRequest()";
+		StringBuffer sbTemp;
 
-    /**
-     * Checks the response from the Radius AuthSP.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * This method verifies the response from the AuthSP. The response 
-     * parameters are placed in <code>htAuthspResponse</code> and are 
-     * described in the <a href="#incoming">class description</a>.
-     * <br><br>
-     * This method creates a hashtable with the following contents:
-     * <table border="1" cellspacing="0" cellpadding="3">
-     * 	<tr>
-     *		<td style="" bgcolor="#EEEEFF"><b>key</b></td>
-     *		<td style="" bgcolor="#EEEEFF"><b>value</b></td>
-     * 	</tr>  
-     * 	<tr>
-     * 		<td>result</td>
-     *  	<td>
-     * 			{@link Errors#ERROR_ASELECT_SUCCESS} or an error code 
-     * 			if the authentication response was invalid or the user was 
-     * 			not authenticated.
-     * 		</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td>rid</td>
-     * 		<td>The A-Select request identifier of this authentication.</td>
-     * 	</tr>
-     * </table>
-     * 
-     * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.Hashtable)
-     */
-    public Hashtable verifyAuthenticationResponse(Hashtable htAuthspResponse)
-    {
-        String sMethod = "verifyAuthenticationResponse()";
-        StringBuffer sbTemp;
+		HashMap htResponse = new HashMap();
+		htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
 
-        Hashtable htResponse = new Hashtable();
-        htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		try {
+			HashMap htSessionContext = _oSessionManager.getSessionContext(sRid);
+			if (htSessionContext == null) {
+				sbTemp = new StringBuffer("could not fetch session context for rid=").append(sRid);
+				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sbTemp.toString());
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
+			}
+			HashMap htAllowedAuthsps = (HashMap) htSessionContext.get("allowed_user_authsps");
+			if (htAllowedAuthsps == null) {
+				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod,
+						"allowed_user_authsps missing in session context");
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
+			}
+			String sUserId = (String) htAllowedAuthsps.get(_sAuthsp);
+			if (sUserId == null) {
+				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, "missing radius user attributes ");
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
+			}
 
-        try
-        {
-            String sRid = (String)htAuthspResponse.get("rid");
-            String sAsUrl = (String)htAuthspResponse.get("my_url");
-            String sResultCode = (String)htAuthspResponse.get("result_code");
-            String sSignature = (String)htAuthspResponse.get("signature");
-            String sAsId = (String)htAuthspResponse.get("a-select-server");
+			sbTemp = new StringBuffer((String) htSessionContext.get("my_url"));
+			sbTemp.append("?authsp=").append(_sAuthsp);
+			String sAsUrl = sbTemp.toString();
 
-            if ((sRid == null) || (sResultCode == null) || 
-                (sAsId == null) || (sSignature == null))
-            {
-                _oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, 
-                    "Incorrect AuthSP response: one or more parameters missing.");
-                
-                throw new ASelectAuthSPException(
-                    Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
-            }
-            
-            //create complete as_url
-            sbTemp = new StringBuffer(sAsUrl);
-            sbTemp.append("?authsp=");
-            sbTemp.append(_sAuthsp);
-            sAsUrl = sbTemp.toString();
-            
-            
-            //validate signature
-            sSignature = URLDecoder.decode(sSignature, "UTF-8");
-            sbTemp = new StringBuffer(sRid);
-            sbTemp.append(sAsUrl);
-            sbTemp.append(sResultCode);
-            sbTemp.append(sAsId);
+			String sCountry = (String) htSessionContext.get("country");
+			if (sCountry == null || sCountry.trim().length() < 1) {
+				sCountry = null;
+			}
 
-            boolean bVerifies = false;
-            bVerifies = CryptoEngine.getHandle().verifySignature(_sAuthsp,
-                sbTemp.toString(), sSignature);
-            if (!bVerifies)
-            {
-                _oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, 
-                    "invalid signature in response from AuthSP:"+_sAuthsp);
-                
-                throw new ASelectAuthSPException(
-                    Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
-            }
+			String sLanguage = (String) htSessionContext.get("language");
+			if (sLanguage == null || sLanguage.trim().length() < 1) {
+				sLanguage = null;
+			}
 
-            Hashtable htSessionContext = _oSessionManager
-                .getSessionContext(sRid);
-            if(htSessionContext == null)
-            {
-                _oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, 
-                    "Incorrect AuthSP response: invalid Session (could be expired)");                
-                throw new ASelectAuthSPException(
-                    Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
-            }
-            String sUserId = (String)htSessionContext.get("user_id");
-            String sOrg = (String)htSessionContext.get("organization");
+			StringBuffer sbSignature = new StringBuffer(sRid);
+			sbSignature.append(sAsUrl);
+			sbSignature.append(sUserId);
+			sbSignature.append(_ASelectServerId);
 
-            if (sResultCode.equalsIgnoreCase(ERROR_RADIUS_ACCESS_DENIED))
-            {
-                _oASelectAuthenticationLogger.log( new Object[] {
-                					MODULE,
-									sUserId,
-									htAuthspResponse.get("client_ip"),
-									sOrg,
-									(String)htSessionContext.get("app_id"),
-									"denied"} );
+			if (sCountry != null)
+				sbSignature.append(sCountry);
 
-                throw new ASelectAuthSPException(
-                    Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);
+			if (sLanguage != null)
+				sbSignature.append(sLanguage);
 
-            }
-            else if (!sResultCode.equalsIgnoreCase(ERROR_RADIUS_NO_ERROR))
-            {
-                sbTemp = new StringBuffer("error from AuthSP: ");
-                sbTemp.append(sResultCode);
-                _oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sbTemp.toString());
-                throw new ASelectAuthSPException(
-                    Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
-            }
-            
-            _oASelectAuthenticationLogger.log(new Object[] {
-									MODULE,
-									sUserId,
-									htAuthspResponse.get("client_ip"),
-									sOrg,
-									(String)htSessionContext.get("app_id"),
-									"granted"} );
+			String sSignature;
+			sSignature = CryptoEngine.getHandle().generateSignature(_sAuthsp, sbSignature.toString());
+			if (sSignature == null) {
+				sbTemp = new StringBuffer("Could not generate signature for authsp: ").append(_sAuthsp);
+				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sbTemp.toString());
 
-            htResponse.put("rid", sRid);
-            htResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
-        }
-        catch(ASelectAuthSPException e)
-        {
-            htResponse.put("result", e.getMessage());
-        }
-        catch (Exception e)
-        {
-            _oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, 
-                "Internal error", e);
-            htResponse.put("result", 
-                Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
-        }
-        return htResponse;
-    }
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
+			}
+
+			sSignature = URLEncoder.encode(sSignature, "UTF-8");
+			sUserId = URLEncoder.encode(sUserId, "UTF-8");
+			sAsUrl = URLEncoder.encode(sAsUrl, "UTF-8");
+
+			StringBuffer sbRedirect = new StringBuffer(_sAuthspUrl);
+			sbRedirect.append("?as_url=").append(sAsUrl);
+			sbRedirect.append("&rid=").append(sRid);
+			sbRedirect.append("&uid=").append(sUserId);
+			sbRedirect.append("&a-select-server=").append(_ASelectServerId);
+			sbRedirect.append("&signature=").append(sSignature);
+
+			if (sCountry != null)
+				sbRedirect.append("&country=").append(sCountry);
+
+			if (sLanguage != null)
+				sbRedirect.append("&language=").append(sLanguage);
+
+			htResponse.put("redirect_url", sbRedirect.toString());
+			htResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
+		}
+		catch (ASelectAuthSPException e) {
+			htResponse.put("result", e.getMessage());
+		}
+		catch (Exception e) {
+			_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, "Internal error", e);
+			htResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
+		}
+		return htResponse;
+	}
+
+	/**
+	 * Checks the response from the Radius AuthSP.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * This method verifies the response from the AuthSP. The response 
+	 * parameters are placed in <code>htAuthspResponse</code> and are 
+	 * described in the <a href="#incoming">class description</a>.
+	 * <br><br>
+	 * This method creates a hashtable with the following contents:
+	 * <table border="1" cellspacing="0" cellpadding="3">
+	 * 	<tr>
+	 *		<td style="" bgcolor="#EEEEFF"><b>key</b></td>
+	 *		<td style="" bgcolor="#EEEEFF"><b>value</b></td>
+	 * 	</tr>  
+	 * 	<tr>
+	 * 		<td>result</td>
+	 *  	<td>
+	 * 			{@link Errors#ERROR_ASELECT_SUCCESS} or an error code 
+	 * 			if the authentication response was invalid or the user was 
+	 * 			not authenticated.
+	 * 		</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td>rid</td>
+	 * 		<td>The A-Select request identifier of this authentication.</td>
+	 * 	</tr>
+	 * </table>
+	 * 
+	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.HashMap)
+	 */
+	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse)
+	{
+		String sMethod = "verifyAuthenticationResponse()";
+		StringBuffer sbTemp;
+
+		HashMap htResponse = new HashMap();
+		htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
+
+		try {
+			String sRid = (String) htAuthspResponse.get("rid");
+			String sAsUrl = (String) htAuthspResponse.get("my_url");
+			String sResultCode = (String) htAuthspResponse.get("result_code");
+			String sSignature = (String) htAuthspResponse.get("signature");
+			String sAsId = (String) htAuthspResponse.get("a-select-server");
+
+			if ((sRid == null) || (sResultCode == null) || (sAsId == null) || (sSignature == null)) {
+				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod,
+						"Incorrect AuthSP response: one or more parameters missing.");
+
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
+			}
+
+			//create complete as_url
+			sbTemp = new StringBuffer(sAsUrl);
+			sbTemp.append("?authsp=");
+			sbTemp.append(_sAuthsp);
+			sAsUrl = sbTemp.toString();
+
+			//validate signature
+			sSignature = URLDecoder.decode(sSignature, "UTF-8");
+			sbTemp = new StringBuffer(sRid);
+			sbTemp.append(sAsUrl);
+			sbTemp.append(sResultCode);
+			sbTemp.append(sAsId);
+
+			boolean bVerifies = false;
+			bVerifies = CryptoEngine.getHandle().verifySignature(_sAuthsp, sbTemp.toString(), sSignature);
+			if (!bVerifies) {
+				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, "invalid signature in response from AuthSP:"
+						+ _sAuthsp);
+
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
+			}
+
+			HashMap htSessionContext = _oSessionManager.getSessionContext(sRid);
+			if (htSessionContext == null) {
+				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod,
+						"Incorrect AuthSP response: invalid Session (could be expired)");
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
+			}
+			String sUserId = (String) htSessionContext.get("user_id");
+			String sOrg = (String) htSessionContext.get("organization");
+
+			if (sResultCode.equalsIgnoreCase(ERROR_RADIUS_ACCESS_DENIED)) {
+				_oASelectAuthenticationLogger.log(new Object[] {
+					MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg,
+					(String) htSessionContext.get("app_id"), "denied"
+				});
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);
+
+			}
+			else if (!sResultCode.equalsIgnoreCase(ERROR_RADIUS_NO_ERROR)) {
+				sbTemp = new StringBuffer("error from AuthSP: ");
+				sbTemp.append(sResultCode);
+				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sbTemp.toString());
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
+			}
+
+			_oASelectAuthenticationLogger.log(new Object[] {
+				MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg,
+				(String) htSessionContext.get("app_id"), "granted"
+			});
+
+			htResponse.put("rid", sRid);
+			htResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
+		}
+		catch (ASelectAuthSPException e) {
+			htResponse.put("result", e.getMessage());
+		}
+		catch (Exception e) {
+			_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, "Internal error", e);
+			htResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
+		}
+		return htResponse;
+	}
 }
-

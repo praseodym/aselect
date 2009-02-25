@@ -93,7 +93,7 @@ import java.security.Provider;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Signature;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.TreeSet;
 import java.util.logging.Level;
@@ -129,7 +129,7 @@ public class CryptoEngine
 
     private static CryptoEngine _this;
 
-    private Hashtable _htAuthspSettings;
+    private HashMap _htAuthspSettings;
     private ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
     private ASelectSystemLogger _systemLogger;
     private PrivateKey _defaultPrivateKey;
@@ -223,7 +223,7 @@ public class CryptoEngine
             
             Object oCryptoProvider = null;
             
-            Hashtable htProviders = new Hashtable();
+            HashMap htProviders = new HashMap();
             if (oProvidersSection != null)
             {
                 try
@@ -792,7 +792,7 @@ public class CryptoEngine
         getHandle()._secureRandom.nextBytes(baRandom);
     }
     
-    private void readSignatureConfig(Object oCryptoSection, Hashtable htProviders)
+    private void readSignatureConfig(Object oCryptoSection, HashMap htProviders)
 		throws ASelectException
 	{
 	    String sMethod = "readSignatureConfig()";
@@ -868,7 +868,7 @@ public class CryptoEngine
 	    }
 	}
         
-    private void readEncryptionConfig(Object oCryptoSection, Hashtable htProviders)
+    private void readEncryptionConfig(Object oCryptoSection, HashMap htProviders)
 		throws ASelectException
 	{
 	    String sMethod = "readEncryptionConfig()";
@@ -944,7 +944,7 @@ public class CryptoEngine
         }
 	}
     
-    private void readRandomGeneratorConfig(Object oCryptoSection, Hashtable htProviders)
+    private void readRandomGeneratorConfig(Object oCryptoSection, HashMap htProviders)
 		throws ASelectException
 	{
 	    String sMethod = "readRandomGeneratorConfig()";
@@ -1051,7 +1051,7 @@ public class CryptoEngine
      * @param htRequest The request that should be signed.
      * @throws ASelectException If signing fails.
      */
-    public void signRequest(Hashtable htRequest)
+    public void signRequest(HashMap htRequest)
     throws ASelectException
     {
         try

@@ -16,7 +16,7 @@
 package org.aselect.server.request.handler.idff12;
 
 import java.net.URLEncoder;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -52,7 +52,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 	private String _sTemplate = null;
 	private AssertionSessionManager _oAssertionSessionManager;
 	private IClientCommunicator _oClientCommunicator;
-	private Hashtable _htApplications;
+	private HashMap _htApplications;
 	public String _sASelectServerID;
 	private String _sProviderId;
 	public String _sMyAppId;
@@ -77,11 +77,11 @@ public class Idff12_SSO extends ProtoRequestHandler
 			_sTemplate = readTemplateFromConfig(oConfig, "template");
 
 			_vIdPUrls = new Vector();  // Vector will contain 'url' key values
-		    _htIdPs = new Hashtable();  // contains url->id as a <key> -> <value> pair
+		    _htIdPs = new HashMap();  // contains url->id as a <key> -> <value> pair
 			getTableFromConfig(oConfig, _vIdPUrls, _htIdPs, "identity_providers", "idp", "url",/*->*/"id", true, true);
 
 			// Retrieve List of: ProviderId's <--> SP Assertion Consumer URL's
-			_htApplications = new Hashtable();
+			_htApplications = new HashMap();
 			Object oProviders = null;
 			try {
 				oProviders = _configManager.getSection(oConfig, "service_providers");
@@ -184,8 +184,8 @@ public class Idff12_SSO extends ProtoRequestHandler
 	throws ASelectException
 	{
 		String sMethod = "process()";
-		Hashtable htTgtContext = null;
-		Hashtable htIdffSession = null;
+		HashMap htTgtContext = null;
+		HashMap htIdffSession = null;
 		String sSerAttributes = null;
 		String sRid = null, sTgt = null;
 		String sUrlRid = request.getParameter("rid");
@@ -194,7 +194,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "SSO PATH="+sPathInfo+
 				" "+request.getMethod()+" "+ request.getQueryString());
 
-		Hashtable htCredentials = getASelectCredentials(request);
+		HashMap htCredentials = getASelectCredentials(request);
 		_systemLogger.log(Level.INFO, MODULE, sMethod,
 				"getAselectCredentials: sUrlRid=" + sUrlRid + " Credentials=" + htCredentials);
 
@@ -247,7 +247,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 			}
 		}
 		if (htIdffSession == null || !sPathInfo.endsWith(RETURN_SUFFIX)) {
-			htIdffSession = new Hashtable();
+			htIdffSession = new HashMap();
 			if (sProviderID != null) htIdffSession.put("libProviderID", sProviderID);
 			if (sRequestID != null) htIdffSession.put("libRequestID", sRequestID);
 			if (sRelayState != null) htIdffSession.put("libRelayState", sRelayState);
@@ -404,7 +404,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 		return new RequestState(null);
 	}
 
-	public String serializeTheseAttributes(Hashtable htAttribs)
+	public String serializeTheseAttributes(HashMap htAttribs)
 	throws ASelectException
 	{
 		String sMethod = "serializeTheseAttributes()";

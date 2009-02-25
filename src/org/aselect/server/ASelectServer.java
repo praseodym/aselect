@@ -52,7 +52,7 @@
  *
  * Revision 1.49  2005/09/07 13:30:24  erwin
  * - Improved cleanup of the attribute gatherer (bug #93)
- * - Removed unnesserary Hashtable in attribute gatherer (bug #94)
+ * - Removed unnesserary HashMap in attribute gatherer (bug #94)
  *
  * Revision 1.48  2005/09/07 10:03:01  erwin
  * pwOut for the restart request is now closed.

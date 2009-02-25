@@ -55,8 +55,8 @@
 
 package org.aselect.system.sam.agent;
 
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.logging.Level;
 
 import org.aselect.system.configmanager.ConfigManager;
@@ -91,7 +91,7 @@ public class SAMAgent
     /**
      * Contains the SAM ResourceGroups
      */
-    private Hashtable _htResourceGroups = null;
+    private HashMap _htResourceGroups = null;
     
     private SystemLogger _oSystemLogger;
 
@@ -107,7 +107,7 @@ public class SAMAgent
      * <b>Description:</b>
      * <br>
      * Loads all configured resources within the 'samagent' config section in the 
-     * <code>Hashtable</code> <i>_htResourceGroups</i>. 
+     * <code>HashMap</code> <i>_htResourceGroups</i>. 
      * <br><br>
      * <b>Concurrency issues:</b>
      * <br>
@@ -177,7 +177,7 @@ public class SAMAgent
             oSAMResourceGroup.init(oResourceGroupSection, oConfigManager, _oSystemLogger);
             oSAMResourceGroup.start();
 
-            _htResourceGroups = new Hashtable();
+            _htResourceGroups = new HashMap();
             _htResourceGroups.put(oConfigManager.getParam(oResourceGroupSection, "id"),
                 oSAMResourceGroup);
 
@@ -276,11 +276,13 @@ public class SAMAgent
         {
             try
             {
-	            Enumeration enumKeys = _htResourceGroups.keys();
-	
-	            while (enumKeys.hasMoreElements())
-	            {
-	                String sKey = (String)enumKeys.nextElement();
+    	        Set keys = _htResourceGroups.keySet();
+    			for (Object s : keys) {
+    				String sKey = (String) s;
+	            //Enumeration enumKeys = _htResourceGroups.keys();	
+	            //while (enumKeys.hasMoreElements())
+	            //{
+	              //  String sKey = (String)enumKeys.nextElement();
 	                SAMResourceGroup oSAMResourceGroup = (SAMResourceGroup)_htResourceGroups.get(sKey);
 	                oSAMResourceGroup.destroy();
 	                oSAMResourceGroup.interrupt();

@@ -36,7 +36,7 @@
 package org.aselect.server.authspprotocol;
 
 import java.io.PrintWriter;
-import java.util.Hashtable;
+import java.util.HashMap;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -107,7 +107,7 @@ public interface IAuthSPDirectLoginProtocolHandler
      * @param sServerId
      * @throws ASelectException
      */
-    public void handleDirectLoginRequest(Hashtable htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut, String sServerId) throws ASelectException;
+    public void handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut, String sServerId) throws ASelectException;
 
 }
 

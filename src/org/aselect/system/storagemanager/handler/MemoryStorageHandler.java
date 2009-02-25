@@ -52,8 +52,8 @@
 
 package org.aselect.system.storagemanager.handler;
 
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.logging.Level;
 
 import org.aselect.system.configmanager.ConfigManager;
@@ -68,15 +68,15 @@ import org.aselect.system.utils.Utils;
  * memory storage handler. <br>
  * <br>
  * <b>Description: </b> <br>
- * The MemoryStorageHandler uses a <code>Hashtable</code> for storing objects
+ * The MemoryStorageHandler uses a <code>HashMap</code> for storing objects
  * in memory. <br>
  * <br>
- * In the MemoryStorageHandler an additional Hashtable is created in which
+ * In the MemoryStorageHandler an additional HashMap is created in which
  * information about the stored record is kept: <code><pre>
  * 
- *  Hashtable htStorage { 
+ *  HashMap htStorage { 
  *  	key: Object xKey 
- *  	value: Hashtable htStorageContainer {
+ *  	value: HashMap htStorageContainer {
  *  		key: String &quot;timestamp&quot; value: Long xTimestamp
  *  		key: String &quot;contents&quot; value: Object xValue } 
  *  }
@@ -95,7 +95,7 @@ public class MemoryStorageHandler implements IStorageHandler
     public final static String MODULE = "MemoryStorageHandler";
     
     /** The actual storage */
-    private Hashtable _htStorage;
+    private HashMap _htStorage;
     
     /** The logger that is used for system entries */
     private SystemLogger _systemLogger;
@@ -107,7 +107,7 @@ public class MemoryStorageHandler implements IStorageHandler
      * Initalises the <code>MemoryStorageHandler</code>:
      * <ul>
      * 	<li>Set system logger</li>
-     * 	<li>create new storage <code>Hashtable</code></li>
+     * 	<li>create new storage <code>HashMap</code></li>
      * </ul>
      * <br>
      * <b>Concurrency issues: </b> 
@@ -133,7 +133,7 @@ public class MemoryStorageHandler implements IStorageHandler
         throws ASelectStorageException
     {
         _systemLogger = systemLogger;
-        _htStorage = new Hashtable(200);
+        _htStorage = new HashMap(200);
     }
 
     /**
@@ -149,7 +149,7 @@ public class MemoryStorageHandler implements IStorageHandler
         String sTxt = Utils.firstPartOf(oKey.toString(), 30);
         try {
             synchronized (_htStorage) {
-                Hashtable htStorageContainer = (Hashtable)_htStorage.get(oKey);
+                HashMap htStorageContainer = (HashMap)_htStorage.get(oKey);
                 oValue = htStorageContainer.get("contents");
                 _systemLogger.log(Level.INFO, MODULE, sMethod, "MSH get("+sTxt+") -->"+htStorageContainer);
             }
@@ -179,7 +179,7 @@ public class MemoryStorageHandler implements IStorageHandler
 
         try {
             synchronized (_htStorage) {
-                Hashtable htStorageContainer = (Hashtable)_htStorage.get(oKey);
+                HashMap htStorageContainer = (HashMap)_htStorage.get(oKey);
                 Long lValue = (Long)htStorageContainer.get("timestamp");
                 lTimestamp = lValue.longValue();
             }
@@ -214,18 +214,19 @@ public class MemoryStorageHandler implements IStorageHandler
      * Get all objects from memory table.
      * @see org.aselect.system.storagemanager.IStorageHandler#getAll()
      */
-    public Hashtable getAll() throws ASelectStorageException
+    public HashMap getAll() throws ASelectStorageException
     {
     	String sMethod = "getAll()";
-        Hashtable htReturnTable = new Hashtable();
+        HashMap htReturnTable = new HashMap();
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, " this="+/*this.getClass()+" "+*/this+" store="+_htStorage);
 
         synchronized (_htStorage) {
-            Enumeration eKeys = _htStorage.keys();
-            while (eKeys.hasMoreElements()) {
-                Object oKey = eKeys.nextElement();
-                
-                Hashtable xStorageContainer = (Hashtable)_htStorage.get(oKey);
+    		Set keys = _htStorage.keySet();
+    		for (Object oKey : keys) {
+//            Enumeration eKeys = _htStorage.keys();
+ //           while (eKeys.hasMoreElements()) {
+//                Object oKey = eKeys.nextElement();
+                HashMap xStorageContainer = (HashMap)_htStorage.get(oKey);
                 Object oValue = xStorageContainer.get("contents");
                 htReturnTable.put(oKey, oValue);
             }
@@ -244,7 +245,7 @@ public class MemoryStorageHandler implements IStorageHandler
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, this+" store="+_htStorage);
         _systemLogger.log(Level.INFO, MODULE, sMethod, "MSH put("+Utils.firstPartOf(oKey.toString(),30)+") ="+oValue.toString()+" TS="+lTimestamp);
         
-        Hashtable htStorageContainer = new Hashtable();
+        HashMap htStorageContainer = new HashMap();
         try {
             htStorageContainer.put("timestamp", lTimestamp);
             htStorageContainer.put("contents", oValue);
@@ -309,12 +310,13 @@ public class MemoryStorageHandler implements IStorageHandler
         
         _systemLogger.log(Level.INFO, MODULE, sMethod, " CleanupTime="+lTimestamp);
         synchronized (_htStorage) {
-            Enumeration eKeys = _htStorage.keys();
-            while (eKeys.hasMoreElements()) {
-                Object oKey = eKeys.nextElement();
-                
+    		Set keys = _htStorage.keySet();
+    		for (Object oKey : keys) {
+//            Enumeration eKeys = _htStorage.keys();
+//            while (eKeys.hasMoreElements()) {
+//                Object oKey = eKeys.nextElement();
                 countAll++;
-                Hashtable xStorageContainer = (Hashtable)_htStorage.get(oKey);
+                HashMap xStorageContainer = (HashMap)_htStorage.get(oKey);
                 Long lStorageTime = (Long)xStorageContainer.get("timestamp");
             	String sTxt = Utils.firstPartOf(oKey.toString(),30);
 
@@ -336,7 +338,7 @@ public class MemoryStorageHandler implements IStorageHandler
     }
 
     /**
-     * Clear the storage <code>Hashtable</code>.
+     * Clear the storage <code>HashMap</code>.
      * @see org.aselect.system.storagemanager.IStorageHandler#destroy()
      */
     public void destroy()
@@ -354,11 +356,11 @@ public class MemoryStorageHandler implements IStorageHandler
      */
     public boolean isMaximum(long lItemCount) throws ASelectStorageException
     {
-        return (_htStorage.size() == lItemCount);
+        return (_htStorage.size() >= lItemCount);
     }
         
     /**
-     * Checks if the supplied key already exists in the <code>Hashtable</code>
+     * Checks if the supplied key already exists in the <code>HashMap</code>
      * <br><br>
      * @see org.aselect.system.storagemanager.IStorageHandler#containsKey(java.lang.Object)
      */

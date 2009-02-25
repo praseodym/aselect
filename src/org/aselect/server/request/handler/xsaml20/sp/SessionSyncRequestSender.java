@@ -109,13 +109,13 @@ public class SessionSyncRequestSender
 	//
 	// Retrieve the Session Sync parameters from the "saml20_sp_session_sync" section
 	//
-	static public Hashtable getSessionSyncParameters(ASelectSystemLogger mySystemLogger)
+	static public HashMap getSessionSyncParameters(ASelectSystemLogger mySystemLogger)
 		throws ASelectException
 	{
 		String MODULE = "SessionSyncRequestSender";
 		String sMethod = "getSessionSyncParameters";
 		ASelectConfigManager myConfigManager = ASelectConfigManager.getHandle();
-		Hashtable htResult = new Hashtable();
+		HashMap htResult = new HashMap();
 		try {
 			Object oRequestsSection = myConfigManager.getSection(null, "requests");
 			Object oHandlersSection = myConfigManager.getSection(oRequestsSection, "handlers");
@@ -229,7 +229,7 @@ public class SessionSyncRequestSender
 		}
 		else credentials = argCredentials;
 		
-		Hashtable htTGTContext = _oTGTManager.getTGT(credentials);
+		HashMap htTGTContext = _oTGTManager.getTGT(credentials);
 		if (htTGTContext == null) {
 			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "Unknown TGT");
 			return Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT;
@@ -333,10 +333,10 @@ public class SessionSyncRequestSender
 		String _sMethod = "changeSessionTime";
 		try {
 			if (_oTGTManager.containsKey(credentials)) {
-				Hashtable tgtBeforeUpdate = (Hashtable) _oTGTManager.get(credentials);
+				HashMap tgtBeforeUpdate = (HashMap) _oTGTManager.get(credentials);
 				tgtBeforeUpdate.put("sessionsynctime", new Date().getTime());
 				_oTGTManager.update(credentials, tgtBeforeUpdate);
-				//Hashtable tgtAfterUpdate = (Hashtable) _oTGTManager.get(decodedcredentials);
+				//HashMap tgtAfterUpdate = (HashMap) _oTGTManager.get(decodedcredentials);
 			}
 			else {
 				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "There is no TGT with key " + credentials);
@@ -468,11 +468,11 @@ public class SessionSyncRequestSender
 		throws ASelectStorageException
 	{
 		String _sMethod = "getTimeStamp";
-		Hashtable htTGT = null;
+		HashMap htTGT = null;
 		Long setTime = 0L;
 		// get time from tgt manager
 		if (_oTGTManager.containsKey(credentials)) {
-			htTGT = (Hashtable) _oTGTManager.get(credentials);
+			htTGT = (HashMap) _oTGTManager.get(credentials);
 			setTime = (Long) htTGT.get("lastsync");
 			if (setTime == null) {
 				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "CIO - lastsync was not set!");
@@ -501,7 +501,7 @@ public class SessionSyncRequestSender
 			// get time from tgt manager
 			String decodedCredentials = decodeCredentials(credentials);
 			if (_oTGTManager.containsKey(decodedCredentials)) {
-				Hashtable hash = (Hashtable) _oTGTManager.get(decodedCredentials);
+				HashMap hash = (HashMap) _oTGTManager.get(decodedCredentials);
 				user = (String) hash.get("uid");
 				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "User = " + user);
 			}

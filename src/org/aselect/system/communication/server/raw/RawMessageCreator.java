@@ -63,8 +63,8 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -97,7 +97,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
     private static final String ENCODED_BRACES = "%5B%5D";
     
     /** Contains the input parameters. */
-    private Hashtable _htInputTable;
+    private HashMap _htInputTable;
 
     /** Contains the output message. */
     private StringBuffer _sbOutputMessage;
@@ -185,14 +185,14 @@ public class RawMessageCreator implements IMessageCreatorInterface
         if (sQueryString != null)
         {
             //parse string to _htInputTable
-            _htInputTable = new Hashtable();
+            _htInputTable = new HashMap();
             try
             {
                 _htInputTable = convertCGIMessage(sQueryString);
             }
             catch(ASelectCommunicationException e)
             {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, "Can't convert QueryString to Hashtable", e);
+                _systemLogger.log(Level.WARNING, MODULE, sMethod, "Can't convert QueryString to HashMap", e);
                 throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR, e); 
             }
             
@@ -204,7 +204,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
             else
             {
                 //query string couldn't be converted
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, "Can't convert QueryString to Hashtable, empty input message.");
+                _systemLogger.log(Level.WARNING, MODULE, sMethod, "Can't convert QueryString to HashMap, empty input message.");
                 throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
             }
         } else
@@ -416,7 +416,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
      * <br><br>
      * <b>Concurrency issues:</b>
      * <br>
-     * The used <code>Hashtable</code> is threadsafe.
+     * The used <code>HashMap</code> is threadsafe.
      * <br><br>
      * <b>Preconditions:</b>
      * <br>
@@ -427,17 +427,17 @@ public class RawMessageCreator implements IMessageCreatorInterface
      * -
      * <br>
      * @param sMessage A CGI request string.
-     * @return The name/value pairs of the request in a <code>Hashtable</code>.
+     * @return The name/value pairs of the request in a <code>HashMap</code>.
      * @throws ASelectCommunicationException if decoding of value fails or internal error occurs.
      */
-    public Hashtable convertCGIMessage(String sMessage) throws ASelectCommunicationException
+    public HashMap convertCGIMessage(String sMessage) throws ASelectCommunicationException
     {
         String sMethod = "convertCGIMessage()";
-        Hashtable htResponse = new Hashtable();
+        HashMap htResponse = new HashMap();
         String sToken, sKey, sValue;
         StringTokenizer oTokenizer = null;
         int iPos;
-        Hashtable htVectors = new Hashtable();
+        HashMap htVectors = new HashMap();
         
         try
         {
@@ -487,10 +487,13 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	
 	            if (!htVectors.isEmpty())
 	            {
-	                Enumeration enumVectors = htVectors.keys();
-	                while (enumVectors.hasMoreElements())
-	                {
-	                    String strArrName = (String) enumVectors.nextElement();
+	    	        Set keys = htVectors.keySet();
+	    			for (Object s : keys) {
+	    				String strArrName = (String) s;
+	                //Enumeration enumVectors = htVectors.keys();
+	                //while (enumVectors.hasMoreElements())
+	                //{
+	                  //  String strArrName = (String) enumVectors.nextElement();
 	                    Vector vTmp = (Vector) htVectors.get(strArrName);
 	                    String[] arrTemp = new String[vTmp.size()];
                         arrTemp = (String[]) vTmp.toArray(arrTemp);

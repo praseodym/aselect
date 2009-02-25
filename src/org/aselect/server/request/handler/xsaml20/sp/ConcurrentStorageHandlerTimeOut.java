@@ -2,8 +2,8 @@ package org.aselect.server.request.handler.xsaml20.sp;
 
 import java.security.PublicKey;
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.logging.Level;
 
 import org.aselect.server.request.handler.xsaml20.SoapLogoutRequestSender;
@@ -80,7 +80,7 @@ public class ConcurrentStorageHandlerTimeOut extends ConcurrentStorageHandler
 	throws ASelectStorageException
 	{
 		String _sMethod = "put";
-		Hashtable htValue = (Hashtable)oValue;
+		HashMap htValue = (HashMap)oValue;
 
 		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "MSHT "+this.getClass());
 		if (!_oTGTManager.containsKey(oKey) || htValue.get("createtime") == null) {
@@ -121,9 +121,9 @@ public class ConcurrentStorageHandlerTimeOut extends ConcurrentStorageHandler
 	{
 		String _sMethod = "determineTimeOut";
 
-		Hashtable allTgts = new Hashtable();
+		HashMap allTgts = new HashMap();
 		if (_oTGTManager != null) {
-			allTgts = (Hashtable) _oTGTManager.getAll();
+			allTgts = (HashMap) _oTGTManager.getAll();
 		}
 		if (allTgts == null)
 			return;
@@ -131,9 +131,12 @@ public class ConcurrentStorageHandlerTimeOut extends ConcurrentStorageHandler
 					" - TGT Count=" + allTgts.size());
 		
 		// For all TGT's
-		for (Enumeration<String> e = allTgts.keys(); e.hasMoreElements();) {
-			String key = e.nextElement();
-			Hashtable htTGTContext = (Hashtable) _oTGTManager.get(key);
+        Set keys = allTgts.keySet();
+		for (Object s : keys) {
+			String key = (String) s;
+//		for (Enumeration<String> e = allTgts.keys(); e.hasMoreElements();) {
+//			String key = e.nextElement();
+			HashMap htTGTContext = (HashMap) _oTGTManager.get(key);
 			String sNameID = (String)htTGTContext.get("name_id");
 			String sSync = (String)htTGTContext.get("sessionsynctime");
 			Long lastSync = Long.parseLong(sSync);
@@ -155,7 +158,7 @@ public class ConcurrentStorageHandlerTimeOut extends ConcurrentStorageHandler
 			// Check Session Sync
 			try {
 				//String errorCode = Errors.ERROR_ASELECT_SUCCESS;
-				Hashtable htResult = SessionSyncRequestSender.getSessionSyncParameters(_oSystemLogger);
+				HashMap htResult = SessionSyncRequestSender.getSessionSyncParameters(_oSystemLogger);
 				Long updateInterval = (Long)htResult.get("update_interval");
 				//String samlMessageType = (String)htResult.get("message_type");
 				//String federationUrl = (String)htResult.get("federation_url");

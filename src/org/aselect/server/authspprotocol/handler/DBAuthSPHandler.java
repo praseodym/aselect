@@ -3,7 +3,7 @@ package org.aselect.server.authspprotocol.handler;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import org.aselect.server.authspprotocol.IAuthSPProtocolHandler;
@@ -169,13 +169,13 @@ public class DBAuthSPHandler implements IAuthSPProtocolHandler {
      * 
      * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#computeAuthenticationRequest(java.lang.String)
      */
-	public Hashtable computeAuthenticationRequest(String sRid) {
+	public HashMap computeAuthenticationRequest(String sRid) {
 		String sMethod = "computeAuthenticationRequest()";
 		StringBuffer sbBuffer = null;
-		Hashtable htResponse = new Hashtable();
+		HashMap htResponse = new HashMap();
 		htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		try {
-			Hashtable htSessionContext = _sessionManager
+			HashMap htSessionContext = _sessionManager
 					.getSessionContext(sRid);
 			if (htSessionContext == null) {
 				sbBuffer = new StringBuffer(
@@ -185,7 +185,7 @@ public class DBAuthSPHandler implements IAuthSPProtocolHandler {
 						sbBuffer.toString());
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
-			Hashtable htAllowedAuthsps = (Hashtable) (Hashtable) htSessionContext
+			HashMap htAllowedAuthsps = (HashMap) (HashMap) htSessionContext
 					.get("allowed_user_authsps");
 			if (htAllowedAuthsps == null) {
 				_systemLogger.log(Level.WARNING, "DBAuthSPHandler", sMethod,
@@ -290,12 +290,12 @@ public class DBAuthSPHandler implements IAuthSPProtocolHandler {
      * 	</tr>
      * </table>
      * 
-     * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.Hashtable)
+     * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.HashMap)
      */
-	public Hashtable verifyAuthenticationResponse(Hashtable htAuthspResponse) {
+	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse) {
 		String sMethod = "verifyAuthenticationResponse()";
 		StringBuffer sbBuffer = null;
-		Hashtable htResponse = new Hashtable();
+		HashMap htResponse = new HashMap();
 		htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		try {
 			String sRid = (String) (String) htAuthspResponse.get("rid");
@@ -329,7 +329,7 @@ public class DBAuthSPHandler implements IAuthSPProtocolHandler {
 						"invalid signature in response from AuthSP:"+_sAuthsp);
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 			}
-			Hashtable htSessionContext = _sessionManager
+			HashMap htSessionContext = _sessionManager
 					.getSessionContext(sRid);
 			if (htSessionContext == null) {
 				_systemLogger

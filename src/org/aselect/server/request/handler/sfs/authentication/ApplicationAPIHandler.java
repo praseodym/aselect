@@ -216,7 +216,7 @@ package org.aselect.server.request.handler.sfs.authentication;
 
 import java.security.MessageDigest;
 import java.security.PublicKey;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -377,7 +377,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
         String sAppUrl = null;
         String sAppId = null;
         String sASelectServer = null;
-        Hashtable htSessionContext = null;
+        HashMap htSessionContext = null;
         String sUid = null;
         String sRemoteOrg = null;
         String sForcedLogon = null;
@@ -521,7 +521,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
         intMaxAppLevel = _applicationManager.getMaxLevel(sAppId);
 
         //Create Session
-        htSessionContext = new Hashtable();
+        htSessionContext = new HashMap();
         htSessionContext.put("app_id", sAppId);
         htSessionContext.put("app_url", sAppUrl);
         htSessionContext.put("level", intAppLevel);
@@ -728,7 +728,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
         }
 
         // check if the TGT exists
-        Hashtable htTGTContext = _oTGTManager.getTGT(sTGT);
+        HashMap htTGTContext = _oTGTManager.getTGT(sTGT);
         if (htTGTContext == null)
         {
             _systemLogger.log(Level.WARNING, 
@@ -780,7 +780,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
         String sMethod = "handleVerifyCredentialsRequest()";
 
         
-        Hashtable htTGTContext = null;
+        HashMap htTGTContext = null;
         String sRid = null;
         String sUid = null;
         String sResultCode  = null;
@@ -926,7 +926,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
         
         // Gather attributes
         AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
-        Hashtable htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
+        HashMap htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
         String sSerializedAttributes = serializeAttributes(htAttribs);
         
         try

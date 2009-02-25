@@ -28,7 +28,7 @@
  * redirecting the ipranges seperated by &
  *
  * Revision 1.5  2005/03/24 15:28:19  martijn
- * initialize Hashtable
+ * initialize HashMap
  *
  * Revision 1.4  2005/03/24 15:21:45  martijn
  * using array.size() instead of capacity
@@ -45,7 +45,7 @@ package org.aselect.server.authspprotocol.handler;
 
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -133,8 +133,8 @@ public class IP implements IAuthSPProtocolHandler
     private String _sAuthspUrl;
     private String _sASelectID;
     
-    private Hashtable _htIPRangesCGI;
-    private Hashtable _htIPRanges;
+    private HashMap _htIPRangesCGI;
+    private HashMap _htIPRanges;
 
     /**
      * Initializes the <code>IP</code> AuthSP handler.
@@ -157,8 +157,8 @@ public class IP implements IAuthSPProtocolHandler
     {
         String sMethod = "init()";
         
-        _htIPRanges = new Hashtable();
-        _htIPRangesCGI = new Hashtable();
+        _htIPRanges = new HashMap();
+        _htIPRangesCGI = new HashMap();
         
         try
         {
@@ -345,16 +345,16 @@ public class IP implements IAuthSPProtocolHandler
      * 
      * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#computeAuthenticationRequest(java.lang.String)
      */
-    public Hashtable computeAuthenticationRequest(String sRid)
+    public HashMap computeAuthenticationRequest(String sRid)
     {
         String sMethod = "computeAuthenticationRequest()";
         
-        Hashtable htResponse = new Hashtable();
+        HashMap htResponse = new HashMap();
         htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
 
         try
         {
-            Hashtable htSessionContext = _oSessionManager.getSessionContext(sRid);
+            HashMap htSessionContext = _oSessionManager.getSessionContext(sRid);
             if (htSessionContext == null)
             {
                 StringBuffer sbError = new StringBuffer("could not fetch session context for rid: ");
@@ -506,15 +506,15 @@ public class IP implements IAuthSPProtocolHandler
      * 	</tr>
      * </table>
      * 
-     * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.Hashtable)
+     * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.HashMap)
      */
-    public Hashtable verifyAuthenticationResponse(Hashtable htAuthSPResponse)
+    public HashMap verifyAuthenticationResponse(HashMap htAuthSPResponse)
     {
         String sMethod = "verifyAuthenticationResponse()";
         String sUserId = null;
         String sOrganization = null;
         String sAppID = null;
-        Hashtable htResponse = new Hashtable();
+        HashMap htResponse = new HashMap();
         htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
 
         try
@@ -552,7 +552,7 @@ public class IP implements IAuthSPProtocolHandler
                 
                 throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
             }
-            Hashtable htSessionContext = _oSessionManager.getSessionContext(sRid);
+            HashMap htSessionContext = _oSessionManager.getSessionContext(sRid);
             if (htSessionContext == null)
             {
                 StringBuffer sbError = new StringBuffer(

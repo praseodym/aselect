@@ -269,7 +269,7 @@
  * Fixed whole bunch of warnings
  *
  * Revision 1.12  2005/03/09 15:16:51  martijn
- * fixed bug in getAuthsps(): if the hashtable returned by the udbconnector doesn't contain a key=user_authsps with value=Hashtable, then a wrong error message was logged.
+ * fixed bug in getAuthsps(): if the hashtable returned by the udbconnector doesn't contain a key=user_authsps with value=HashMap, then a wrong error message was logged.
  *
  * Revision 1.11  2005/03/09 15:11:20  martijn
  * added fixme in getAuthsps()
@@ -297,14 +297,13 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.ServletException;
 import org.aselect.system.servlet.HtmlInfo;
 
 import org.aselect.server.application.ApplicationManager;
@@ -370,567 +369,549 @@ import org.aselect.system.utils.Utils;
  * Copyright Gemeente Den Haag (http://www.denhaag.nl) and UMC Nijmegen (http://www.umcn.nl)
  */
 public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
-{   
-    private Hashtable 			_htSessionContext;
-    private ApplicationManager _applicationManager;
-    private CrossASelectManager _crossASelectManager;
-    private AuthSPHandlerManager _authspHandlerManager;    
-    private CryptoEngine _cryptoEngine;
+{
+	private HashMap _htSessionContext;
+	private ApplicationManager _applicationManager;
+	private CrossASelectManager _crossASelectManager;
+	private AuthSPHandlerManager _authspHandlerManager;
+	private CryptoEngine _cryptoEngine;
 	private String _sConsentForm = null;
 
-    /**
-     * Constructor for ApplicationBrowserHandler.
-     * <br>
-     * @param servletRequest The request.
-     * @param servletResponse The response.
-     * @param sMyServerId The A-Select Server ID.
-     * @param sMyOrg The A-Select Server organisation.
-     */
-    public ApplicationBrowserHandler (HttpServletRequest servletRequest, 
-		HttpServletResponse servletResponse,
-		String sMyServerId, String sMyOrg)
-    {
-        super(servletRequest, servletResponse, sMyServerId, sMyOrg);
-        _sModule = "ApplicationBrowserHandler()";
-        _applicationManager = ApplicationManager.getHandle();
-        _authspHandlerManager = AuthSPHandlerManager.getHandle();
-        _crossASelectManager = CrossASelectManager.getHandle();
-        _cryptoEngine = CryptoEngine.getHandle();
-    }
+	/**
+	 * Constructor for ApplicationBrowserHandler.
+	 * <br>
+	 * @param servletRequest The request.
+	 * @param servletResponse The response.
+	 * @param sMyServerId The A-Select Server ID.
+	 * @param sMyOrg The A-Select Server organisation.
+	 */
+	public ApplicationBrowserHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
+			String sMyServerId, String sMyOrg) {
+		super(servletRequest, servletResponse, sMyServerId, sMyOrg);
+		_sModule = "ApplicationBrowserHandler()";
+		_applicationManager = ApplicationManager.getHandle();
+		_authspHandlerManager = AuthSPHandlerManager.getHandle();
+		_crossASelectManager = CrossASelectManager.getHandle();
+		_cryptoEngine = CryptoEngine.getHandle();
+	}
 
-    /**
-     * process application browser requests
-     * <br><br>
-     * @see org.aselect.server.request.handler.aselect.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.Hashtable, javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
-     */
-    public void processBrowserRequest(Hashtable htServiceRequest,
-        HttpServletResponse servletResponse, PrintWriter pwOut)
-    throws ASelectException
-    {
-        String sRequest;
-        String sRid;
-        String sMethod = "processBrowserRequest()";
-        
-        sRequest = (String) htServiceRequest.get("request");
-        _systemLogger.log(Level.INFO,_sModule,sMethod, "ApplBrowREQ sRequest="+sRequest+", htServiceRequest="+htServiceRequest);
-        if(sRequest == null)
-        {
-            // Show info page if nothing else to do
-            String sUrl = (String)htServiceRequest.get("my_url");
-	        _systemLogger.log(Level.INFO,_sModule,sMethod, "ApplBrowREQ sRequest==null sUrl="+sUrl);
-            
-            // Bauke: start htmlinfo
-            /*if (sUrl != null && sUrl.contains("htmlinfo")) {
-		        try {
-	            	HtmlInfo x = new HtmlInfo();
-	        		x.init();
-	    	        _systemLogger.log(Level.INFO,_sModule,sMethod, "handleHtmlInfo");
-	    	        x.handleHtmlInfo(_servletRequest, _servletResponse, _systemLogger, htServiceRequest);
-	    	        x.destroy();
-	    	        return;                
+	/**
+	 * process application browser requests
+	 * <br><br>
+	 * @see org.aselect.server.request.handler.aselect.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.HashMap, javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
+	 */
+	public void processBrowserRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+		throws ASelectException
+	{
+		String sRequest;
+		String sRid;
+		String sMethod = "processBrowserRequest()";
+
+		sRequest = (String) htServiceRequest.get("request");
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplBrowREQ sRequest=" + sRequest + ", htServiceRequest="
+				+ htServiceRequest);
+		if (sRequest == null) {
+			// Show info page if nothing else to do
+			String sUrl = (String) htServiceRequest.get("my_url");
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplBrowREQ sRequest==null sUrl=" + sUrl);
+
+			// Bauke: start htmlinfo
+			/*if (sUrl != null && sUrl.contains("htmlinfo")) {
+			 try {
+			 HtmlInfo x = new HtmlInfo();
+			 x.init();
+			 _systemLogger.log(Level.INFO,_sModule,sMethod, "handleHtmlInfo");
+			 x.handleHtmlInfo(_servletRequest, _servletResponse, _systemLogger, htServiceRequest);
+			 x.destroy();
+			 return;                
+			 }
+			 catch (ServletException e) {
+			 _systemLogger.log(Level.INFO,_sModule,sMethod, "Oops "+e);
+			 }
+			 }
+			 else*/
+			// Bauke: end htmlinfo
+			if (htServiceRequest.containsKey("aselect_credentials_uid"))
+				showUserInfo(htServiceRequest, _servletResponse);
+			else {
+				String sServerInfoForm = _configManager.getForm("serverinfo");
+				sServerInfoForm = Utils.replaceString(sServerInfoForm, "[message]", " ");
+				pwOut.println(sServerInfoForm);
+			}
+		}
+		else if (sRequest.equals("logout")) {
+			handleLogout(htServiceRequest, _servletResponse, pwOut);
+		}
+		else {
+			// Precondition
+			sRid = (String) htServiceRequest.get("rid");
+			if (sRid == null) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing RID parameter");
+				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+
+			// Precondition
+			// If a valid session is found, it will be valid during the whole
+			// servlet request handling.
+			_htSessionContext = _sessionManager.getSessionContext(sRid);
+			if (_htSessionContext == null) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid RID: " + sRid);
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+
+			// Bauke: tolk additions
+			// Bauke, 20080918 removed
+			/*_systemLogger.log(Level.INFO,_sModule,sMethod, "ApplBrowREQ htSessionContext="+_htSessionContext);
+			 String sAppl = (String)htServiceRequest.get("appl");
+			 String sCtx = (String)_htSessionContext.get("appl");
+			 if (sAppl != null) _htSessionContext.put("appl", sAppl);
+			 else if (sCtx != null) htServiceRequest.put("appl", sCtx);
+			 String sAppUrl = (String)_htSessionContext.get("app_url");
+			 if (sAppUrl != null) {
+			 htServiceRequest.put("app_url", sAppUrl);
+			 }*/
+
+			String sDirectAuthSP = (String) _htSessionContext.get("direct_authsp");
+
+			if (sDirectAuthSP != null && !(sRequest.indexOf("direct_login") >= 0)) {
+				_systemLogger
+						.log(Level.WARNING, _sModule, sMethod, "Probably tampered request with rid='" + sRid + "'");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+
+			if (sRequest.equals("login1")) {
+				handleLogin1(htServiceRequest, _servletResponse, pwOut);
+			}
+			else if (sRequest.equals("login2")) {
+				handleLogin2(htServiceRequest, _servletResponse, pwOut);
+			}
+			else if (sRequest.equals("login3")) {
+				handleLogin3(htServiceRequest, _servletResponse, pwOut);
+			}
+			else if (sRequest.equals("cross_login")) {
+				handleCrossLogin(htServiceRequest, _servletResponse, pwOut);
+			}
+			else if (sRequest.equals("login25")) {
+				handleLogin25(htServiceRequest, _servletResponse, pwOut);
+			}
+			// Bauke, 20080918 removed
+			/*else if (sRequest.equals("tolk_gotodigid")) {
+			 tolk.GoToDigiD x = new tolk.GoToDigiD();
+			 try {
+			 x.init();
+			 } catch (ServletException e) {
+			 }
+			 _systemLogger.log(Level.INFO,_sModule,sMethod, "handleTolkGoToDigiD, REQ="+htServiceRequest);
+			 x.handleTolkGoToDigiD(_servletRequest, _servletResponse, pwOut, htServiceRequest);
+			 x.destroy();
+			 }*/
+			else if (sRequest.equals("ip_login")) {
+				handleIPLogin1(htServiceRequest, _servletResponse, pwOut);
+			}
+			else if (sRequest.indexOf("direct_login") >= 0) {
+				handleDirectLogin(htServiceRequest, _servletResponse, pwOut);
+			}
+			else if (sRequest.equals("create_tgt")) {
+				handleCreateTGT(htServiceRequest, _servletResponse);
+			}
+			else {
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+		}
+	}
+
+	/**
+	 * Handles the <code>request=direct_login</code> requests.
+	 * 
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * All the requests which contains direct_login (e.g. direct_login1, direct_login2)
+	 * will be handled by this function and send to the direct authsp handler.  
+	 * <code>request=cross_login</code> instead.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * A session with a <code>rid</code> should be created first using:
+	 * <ul>
+	 * <li><code>ApplicationRequestHandler.handleAuthenticateRequest()</code>
+	 * </ul>
+	 * <code>htLoginRequest</code> should contain this <code>rid</code> parameter.
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * 
+	 * @param htServiceRequest HashMap containing request parameters
+	 * @param servletResponse Used to send (HTTP) information back to user
+	 * @param pwOut Used to write information back to the user (HTML)
+	 * @throws ASelectException
+	 */
+	private void handleDirectLogin(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+		throws ASelectException
+	{
+		String sMethod = "handleDirectLogin()";
+		String sRid = null;
+
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "DirectLogin");
+		try {
+			sRid = (String) htServiceRequest.get("rid");
+
+			// Bauke: line inserted: Only offer a single choice
+			// Bauke, 20080918: removed
+			//_htSessionContext.put("direct_authsp", "Ldap");  // Bauke: HACK tolk: directlogin used ldap only
+
+			String sAuthSPId = (String) _htSessionContext.get("direct_authsp");
+			if (sAuthSPId == null) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing 'direct_authsp' in session, rid='" + sRid + "'");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+			IAuthSPDirectLoginProtocolHandler oProtocolHandler = _authspHandlerManager
+					.getAuthSPDirectLoginProtocolHandler(sAuthSPId);
+
+			// check if user already has a tgt so that he/she doesnt need to
+			// be authenticated again            
+			if (_configManager.isSingleSignOn() && htServiceRequest.containsKey("aselect_credentials_tgt")
+					&& htServiceRequest.containsKey("aselect_credentials_uid")
+					&& htServiceRequest.containsKey("aselect_credentials_server_id")) {
+				String sTgt = (String) htServiceRequest.get("aselect_credentials_tgt");
+				String sUid = (String) htServiceRequest.get("aselect_credentials_uid");
+				String sServerId = (String) htServiceRequest.get("aselect_credentials_server_id");
+
+				// check if a request was done for an other user-id
+				String sForcedUid = (String) _htSessionContext.get("forced_uid");
+
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "DLOGIN sTgt=" + sTgt + "sUid=" + sUid + "sServerId="
+						+ sServerId + "sForcedUid=" + sForcedUid);
+				if (sForcedUid != null && !sUid.equals(sForcedUid)) //user_id does not match
+				{
+					_tgtManager.remove(sTgt);
 				}
-		        catch (ServletException e) {
-		        	_systemLogger.log(Level.INFO,_sModule,sMethod, "Oops "+e);
-	    	    }
-	        }
-	        else*/
-	        // Bauke: end htmlinfo
-	        	
-            if (htServiceRequest.containsKey("aselect_credentials_uid")) 
-                showUserInfo(htServiceRequest, _servletResponse);
-            else {
-    	        String sServerInfoForm = _configManager.getForm("serverinfo");
-                sServerInfoForm = Utils.replaceString(sServerInfoForm, "[message]", " ");
-                pwOut.println(sServerInfoForm);
-            }	        
-        }
-        else if (sRequest.equals("logout")) {
-            handleLogout(htServiceRequest, _servletResponse, pwOut);	            
-        }
-        else {
-	        // Precondition
-	        sRid = (String) htServiceRequest.get("rid");
-	        if (sRid == null)
-	        {
-	            _systemLogger.log(Level.WARNING,_sModule,sMethod, "Missing RID parameter");
-	            throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-	        }
-	
-	        // Precondition
-	        // If a valid session is found, it will be valid during the whole
-	        // servlet request handling.
-	        _htSessionContext = _sessionManager.getSessionContext(sRid);
-	        if (_htSessionContext == null)
-	        {
-	            _systemLogger.log(Level.WARNING,_sModule,sMethod, "Invalid RID: "+sRid);	            
-	            throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-	        }
-	        
-	        // Bauke: tolk additions
-	        // Bauke, 20080918 removed
-	        /*_systemLogger.log(Level.INFO,_sModule,sMethod, "ApplBrowREQ htSessionContext="+_htSessionContext);
-	        String sAppl = (String)htServiceRequest.get("appl");
-	        String sCtx = (String)_htSessionContext.get("appl");
-	        if (sAppl != null) _htSessionContext.put("appl", sAppl);
-	        else if (sCtx != null) htServiceRequest.put("appl", sCtx);
-	        String sAppUrl = (String)_htSessionContext.get("app_url");
-	        if (sAppUrl != null) {
-	        	htServiceRequest.put("app_url", sAppUrl);
-	        }*/
-
-	        String sDirectAuthSP = (String)_htSessionContext.get("direct_authsp");
- 
-            if(sDirectAuthSP != null && !(sRequest.indexOf("direct_login") >= 0))
-            {      
-                _systemLogger.log(Level.WARNING,_sModule,sMethod, "Probably tampered request with rid='"+sRid+"'");
-                throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST); 
-            }           
-	
-	        if (sRequest.equals("login1")) {
-	            handleLogin1(htServiceRequest, _servletResponse, pwOut);
-	        }
-	        else if (sRequest.equals("login2")) {
-	            handleLogin2(htServiceRequest, _servletResponse, pwOut);
-	        }
-	        else if (sRequest.equals("login3")) {
-	            handleLogin3(htServiceRequest, _servletResponse, pwOut);
-	        }
-	        else if (sRequest.equals("cross_login")) {
-	            handleCrossLogin(htServiceRequest, _servletResponse, pwOut);
-	        }
-	        else if (sRequest.equals("login25")) {
-	            handleLogin25(htServiceRequest, _servletResponse, pwOut);
-	        }
-	        // Bauke, 20080918 removed
-	        /*else if (sRequest.equals("tolk_gotodigid")) {
-	        	tolk.GoToDigiD x = new tolk.GoToDigiD();
-	        	try {
-					x.init();
-				} catch (ServletException e) {
-				}
-	            _systemLogger.log(Level.INFO,_sModule,sMethod, "handleTolkGoToDigiD, REQ="+htServiceRequest);
-	        	x.handleTolkGoToDigiD(_servletRequest, _servletResponse, pwOut, htServiceRequest);
-	        	x.destroy();
-	        }*/
-	        else if (sRequest.equals("ip_login")) {
-	            handleIPLogin1(htServiceRequest, _servletResponse, pwOut);
-	        }
-	        else if (sRequest.indexOf("direct_login") >= 0) {
-	            handleDirectLogin(htServiceRequest, _servletResponse, pwOut);
-	        }
-	        else if (sRequest.equals("create_tgt")) {
-	            handleCreateTGT(htServiceRequest, _servletResponse);	            
-	        }
-	        else {
-	            throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-	        }
-        }
-    }
-    
-    /**
-     * Handles the <code>request=direct_login</code> requests.
-     * 
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * All the requests which contains direct_login (e.g. direct_login1, direct_login2)
-     * will be handled by this function and send to the direct authsp handler.  
-     * <code>request=cross_login</code> instead.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * A session with a <code>rid</code> should be created first using:
-     * <ul>
-     * <li><code>ApplicationRequestHandler.handleAuthenticateRequest()</code>
-     * </ul>
-     * <code>htLoginRequest</code> should contain this <code>rid</code> parameter.
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * 
-     * @param htServiceRequest Hashtable containing request parameters
-     * @param servletResponse Used to send (HTTP) information back to user
-     * @param pwOut Used to write information back to the user (HTML)
-     * @throws ASelectException
-     */
-    private void handleDirectLogin(Hashtable htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-    throws ASelectException
-    {
-        String sMethod = "handleDirectLogin()";
-        String sRid = null;
-        
-        _systemLogger.log(Level.INFO, _sModule, sMethod, "DirectLogin");
-        try {            
-            sRid = (String)htServiceRequest.get("rid");
-            
-            // Bauke: line inserted: Only offer a single choice
-            // Bauke, 20080918: removed
-            //_htSessionContext.put("direct_authsp", "Ldap");  // Bauke: HACK tolk: directlogin used ldap only
-
-            String sAuthSPId = (String)_htSessionContext.get("direct_authsp");
-            if(sAuthSPId == null)
-            {
-                _systemLogger.log(Level.WARNING,_sModule,sMethod, "Probably tampered request with rid='"+sRid+"'");
-                throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-            }
-            IAuthSPDirectLoginProtocolHandler oProtocolHandler = _authspHandlerManager.getAuthSPDirectLoginProtocolHandler(sAuthSPId);
-            
-            // check if user already has a tgt so that he/she doesnt need to
-            // be authenticated again            
-            if (_configManager.isSingleSignOn()
-                && htServiceRequest.containsKey("aselect_credentials_tgt")
-                && htServiceRequest.containsKey("aselect_credentials_uid")
-                && htServiceRequest.containsKey("aselect_credentials_server_id"))
-            {
-                String sTgt = (String)htServiceRequest.get("aselect_credentials_tgt");
-                String sUid = (String)htServiceRequest.get("aselect_credentials_uid");
-                String sServerId = (String)htServiceRequest.get("aselect_credentials_server_id");
-
-                // check if a request was done for an other user-id
-    			String sForcedUid = (String)_htSessionContext.get("forced_uid");
-
-    			_systemLogger.log(Level.INFO,_sModule,sMethod, "DLOGIN sTgt="+sTgt+"sUid="+sUid+"sServerId="+sServerId+"sForcedUid="+sForcedUid);
-                if (sForcedUid != null && !sUid.equals(sForcedUid)) //user_id does not match
-                {
-                    _tgtManager.remove(sTgt);
-                }
-                else
-                {
-	                if (checkCredentials(sTgt, sUid, sServerId)) //valid credentials/level/SSO group
-	                {
-	                    Boolean boolForced = (Boolean)_htSessionContext.get("forced_authenticate");
-	                    if (!boolForced.booleanValue()) 
-	                    {
-	                        // valid tgt, no forced_authenticate
-		                    // redirect to application as user has already a valid tgt
-		                    String sRedirectUrl;
+				else {
+					if (checkCredentials(sTgt, sUid, sServerId)) //valid credentials/level/SSO group
+					{
+						Boolean boolForced = (Boolean) _htSessionContext.get("forced_authenticate");
+						if (!boolForced.booleanValue()) {
+							// valid tgt, no forced_authenticate
+							// redirect to application as user has already a valid tgt
+							String sRedirectUrl;
 							if (_htSessionContext.get("remote_session") == null) {
-							    sRedirectUrl = (String)_htSessionContext.get("app_url");
+								sRedirectUrl = (String) _htSessionContext.get("app_url");
 							}
 							else {
-							    sRedirectUrl = (String)_htSessionContext.get("local_as_url");
+								sRedirectUrl = (String) _htSessionContext.get("local_as_url");
 							}
-		                    // update TGT with app_id or local_organization
+							// update TGT with app_id or local_organization
 							// needed for attribute gathering in verify_tgt
-							Hashtable htTGTContext = _tgtManager.getTGT(sTgt);
-		
-		                    String sAppId = (String)_htSessionContext.get("app_id");
-		                    if ( sAppId != null)
-		                        htTGTContext.put("app_id", sAppId);
-		                    
-		                    String sLocalOrg = (String)_htSessionContext.get("local_organization");
-		                    if ( sLocalOrg != null)
-		                        htTGTContext.put("local_organization", sLocalOrg);
-		                        
-		                    htTGTContext.put("rid", sRid);
-		                    _tgtManager.updateTGT(sTgt, htTGTContext);
+							HashMap htTGTContext = _tgtManager.getTGT(sTgt);
+
+							String sAppId = (String) _htSessionContext.get("app_id");
+							if (sAppId != null)
+								htTGTContext.put("app_id", sAppId);
+
+							String sLocalOrg = (String) _htSessionContext.get("local_organization");
+							if (sLocalOrg != null)
+								htTGTContext.put("local_organization", sLocalOrg);
+
+							htTGTContext.put("rid", sRid);
+							_tgtManager.updateTGT(sTgt, htTGTContext);
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-							
-		                    _systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR "+sRedirectUrl);
-		                    
-				            oTGTIssuer.sendRedirect(sRedirectUrl, sTgt, sRid, servletResponse);
-				            _sessionManager.killSession(sRid);
-				            return;
-	                    }
-	                }
-	                // TGT found but not sufficient.
-	                // Authenicate with same user-id that was stored in TGT
-	                Hashtable htTGTContext = _tgtManager.getTGT(sTgt);
-	                
-	                // If TGT was issued in cross mode, the user now has to 
-	                // authenticate with a higher level in cross mode again
-	                String sTempOrg = (String)htTGTContext.get("proxy_organization");
-	                if (sTempOrg == null)
-	                    sTempOrg = (String)htTGTContext.get("organization");
-	                if (!sTempOrg.equals(_sMyOrg))
-	                {
-	                    _htSessionContext.put("forced_uid", sUid);
-	                    _htSessionContext.put("forced_organization", sTempOrg);
-	    			    handleCrossLogin(htServiceRequest, servletResponse, pwOut);
-	    			    return;
-	                }
-	                // User was originally authenticated at this A-Select Server
-	                // The userid is already known from the TGT
-	                htServiceRequest.put("user_id", sUid);
-	                //showDirectLoginForm(htServiceRequest,pwOut);
-	                oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId);
-				    return;
-	            }
-            }
-            // no TGT found or killed (other uid)
-			if( !_configManager.isUDBEnabled() || _htSessionContext.containsKey("forced_organization"))
-			{
-			    handleCrossLogin(htServiceRequest, servletResponse, pwOut);
-			    return;
+
+							_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRedirectUrl);
+
+							oTGTIssuer.sendRedirect(sRedirectUrl, sTgt, sRid, servletResponse);
+							_sessionManager.killSession(sRid);
+							return;
+						}
+					}
+					// TGT found but not sufficient.
+					// Authenicate with same user-id that was stored in TGT
+					HashMap htTGTContext = _tgtManager.getTGT(sTgt);
+
+					// If TGT was issued in cross mode, the user now has to 
+					// authenticate with a higher level in cross mode again
+					String sTempOrg = (String) htTGTContext.get("proxy_organization");
+					if (sTempOrg == null)
+						sTempOrg = (String) htTGTContext.get("organization");
+					if (!sTempOrg.equals(_sMyOrg)) {
+						_htSessionContext.put("forced_uid", sUid);
+						_htSessionContext.put("forced_organization", sTempOrg);
+						handleCrossLogin(htServiceRequest, servletResponse, pwOut);
+						return;
+					}
+					// User was originally authenticated at this A-Select Server
+					// The userid is already known from the TGT
+					htServiceRequest.put("user_id", sUid);
+					//showDirectLoginForm(htServiceRequest,pwOut);
+					oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId);
+					return;
+				}
 			}
-			String sForcedUid = (String)_htSessionContext.get("forced_uid");
-			if (sForcedUid != null)
-			{
-                htServiceRequest.put("user_id", sForcedUid);
-                //showDirectLoginForm(htServiceRequest,pwOut);
-                oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId);
-                return;
+			// no TGT found or killed (other uid)
+			if (!_configManager.isUDBEnabled() || _htSessionContext.containsKey("forced_organization")) {
+				handleCrossLogin(htServiceRequest, servletResponse, pwOut);
+				return;
 			}
-            oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId);
-        }
-        catch(ASelectException e)
-        {
-            throw e;
-        }
-        catch(Exception e)
-        {
-            _systemLogger.log(Level.WARNING, _sModule,sMethod, "Internal error: ", e);            
-            throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-        }
-    }
+			String sForcedUid = (String) _htSessionContext.get("forced_uid");
+			if (sForcedUid != null) {
+				htServiceRequest.put("user_id", sForcedUid);
+				//showDirectLoginForm(htServiceRequest,pwOut);
+				oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId);
+				return;
+			}
+			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId);
+		}
+		catch (ASelectException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error: ", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+	}
 
- 
-    /**
-     * Handles the <code>request=login1</code> request.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * First user request. If the user already has a valid TGT, the user is redirected back
-     * to the application (or the local A-Select Server in case of cross A-Select).<br>
-     * If no valid TGT is found, the user is presented an HTML page asking for a user name.
-     * The HTML page implements a HTML-form that will POST a <code>request=login2</code>.
-     * If the user is not from this organizatio, the HTML-form might POST a 
-     * <code>request=cross_login</code> instead.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * A session with a <code>rid</code> should be created first using:
-     * <ul>
-     * <li><code>ApplicationRequestHandler.handleAuthenticateRequest()</code>
-     * <li><code>ApplicationRequestHandler.handleCrossAuthenticateRequest()</code>
-     * </ul>
-     * <code>htLoginRequest</code> should contain this <code>rid</code> parameter.
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * 
-     * @param htServiceRequest Hashtable containing request parameters
-     * @param servletResponse Used to send (HTTP) information back to user
-     * @param pwOut Used to write information back to the user (HTML)
-     * @throws ASelectException
-     */
-    private void handleLogin1(Hashtable htServiceRequest,
-        HttpServletResponse servletResponse, PrintWriter pwOut)
-    throws ASelectException
-    {
-        String sMethod = "handleLogin1()";
-        String sRid = null;
-        StringBuffer sbUrl;
+	/**
+	 * Handles the <code>request=login1</code> request.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * First user request. If the user already has a valid TGT, the user is redirected back
+	 * to the application (or the local A-Select Server in case of cross A-Select).<br>
+	 * If no valid TGT is found, the user is presented an HTML page asking for a user name.
+	 * The HTML page implements a HTML-form that will POST a <code>request=login2</code>.
+	 * If the user is not from this organizatio, the HTML-form might POST a 
+	 * <code>request=cross_login</code> instead.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * A session with a <code>rid</code> should be created first using:
+	 * <ul>
+	 * <li><code>ApplicationRequestHandler.handleAuthenticateRequest()</code>
+	 * <li><code>ApplicationRequestHandler.handleCrossAuthenticateRequest()</code>
+	 * </ul>
+	 * <code>htLoginRequest</code> should contain this <code>rid</code> parameter.
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * 
+	 * @param htServiceRequest HashMap containing request parameters
+	 * @param servletResponse Used to send (HTTP) information back to user
+	 * @param pwOut Used to write information back to the user (HTML)
+	 * @throws ASelectException
+	 */
+	private void handleLogin1(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+		throws ASelectException
+	{
+		String sMethod = "handleLogin1()";
+		String sRid = null;
+		StringBuffer sbUrl;
 
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "Login1 SessionContext:"+
-							_htSessionContext+", ServiceRequest:"+htServiceRequest);
-        try {
-            sRid = (String)htServiceRequest.get("rid");
-            
-            // check if user already has a tgt so that he/she doesnt need to
-            // be authenticated again            
-            if (_configManager.isSingleSignOn()
-                && htServiceRequest.containsKey("aselect_credentials_tgt")
-                && htServiceRequest.containsKey("aselect_credentials_uid")
-                && htServiceRequest.containsKey("aselect_credentials_server_id"))
-            {
-                String sTgt = (String)htServiceRequest.get("aselect_credentials_tgt");
-                String sUid = (String)htServiceRequest.get("aselect_credentials_uid");
-                String sServerId = (String)htServiceRequest.get("aselect_credentials_server_id");
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "Login1 SessionContext:" + _htSessionContext
+				+ ", ServiceRequest:" + htServiceRequest);
+		try {
+			sRid = (String) htServiceRequest.get("rid");
 
-                // Check if a request was done for an other user-id
-    			String sForcedUid = (String)_htSessionContext.get("forced_uid");
-				_systemLogger.log(Level.INFO, _sModule, sMethod, "SSO branch uid="+sUid+" forced_uid="+sForcedUid);
-                if (sForcedUid != null && !sForcedUid.equals("saml20_user") &&
-                		!sForcedUid.equals("siam_user") && !sUid.equals(sForcedUid)) //user_id does not match
-                {
-                    _tgtManager.remove(sTgt);
-                }
-                else {
-	                if (checkCredentials(sTgt, sUid, sServerId)) //valid credentials/level/SSO group
-	                {
-	    				_systemLogger.log(Level.INFO, _sModule, sMethod, "CheckCred OK");
-	                    Boolean boolForced = (Boolean)_htSessionContext.get("forced_authenticate");
-	                    if (!boolForced.booleanValue()) 
-	                    {
-	                        // valid tgt, no forced_authenticate
-		                    // redirect to application as user has already a valid tgt
-		                    String sRedirectUrl;
+			// check if user already has a tgt so that he/she doesnt need to
+			// be authenticated again            
+			if (_configManager.isSingleSignOn() && htServiceRequest.containsKey("aselect_credentials_tgt")
+					&& htServiceRequest.containsKey("aselect_credentials_uid")
+					&& htServiceRequest.containsKey("aselect_credentials_server_id")) {
+				String sTgt = (String) htServiceRequest.get("aselect_credentials_tgt");
+				String sUid = (String) htServiceRequest.get("aselect_credentials_uid");
+				String sServerId = (String) htServiceRequest.get("aselect_credentials_server_id");
+
+				// Check if a request was done for an other user-id
+				String sForcedUid = (String) _htSessionContext.get("forced_uid");
+				_systemLogger
+						.log(Level.INFO, _sModule, sMethod, "SSO branch uid=" + sUid + " forced_uid=" + sForcedUid);
+				if (sForcedUid != null && !sForcedUid.equals("saml20_user") && !sForcedUid.equals("siam_user")
+						&& !sUid.equals(sForcedUid)) //user_id does not match
+				{
+					_tgtManager.remove(sTgt);
+				}
+				else {
+					if (checkCredentials(sTgt, sUid, sServerId)) //valid credentials/level/SSO group
+					{
+						_systemLogger.log(Level.INFO, _sModule, sMethod, "CheckCred OK");
+						Boolean boolForced = (Boolean) _htSessionContext.get("forced_authenticate");
+						if (!boolForced.booleanValue()) {
+							// valid tgt, no forced_authenticate
+							// redirect to application as user has already a valid tgt
+							String sRedirectUrl;
 							if (_htSessionContext.get("remote_session") == null) {
-							    sRedirectUrl = (String)_htSessionContext.get("app_url");
+								sRedirectUrl = (String) _htSessionContext.get("app_url");
 							}
 							else if (_htSessionContext.get("sp_assert_url") != null) {
 								// xsaml20 addition
-							    sRedirectUrl = (String)_htSessionContext.get("sp_assert_url");
+								sRedirectUrl = (String) _htSessionContext.get("sp_assert_url");
 							}
 							else {
-								sRedirectUrl = (String)_htSessionContext.get("local_as_url");
+								sRedirectUrl = (String) _htSessionContext.get("local_as_url");
 							}
-		                    // update TGT with app_id or local_organization
+							// update TGT with app_id or local_organization
 							// needed for attribute gathering in verify_tgt
-							Hashtable htTGTContext = _tgtManager.getTGT(sTgt);
-		
-		                    String sAppId = (String)_htSessionContext.get("app_id");
-		                    if ( sAppId != null)
-		                        htTGTContext.put("app_id", sAppId);
+							HashMap htTGTContext = _tgtManager.getTGT(sTgt);
 
-		                    String sLocalOrg = (String)_htSessionContext.get("local_organization");
-		                    if ( sLocalOrg != null)
-		                        htTGTContext.put("local_organization", sLocalOrg);
-		                        
-		                    htTGTContext.put("rid", sRid);
-		                    // Update SP rid as well: xsaml20
-		                    String spRid = (String)_htSessionContext.get("sp_rid");
-		                    if (spRid != null)
-			                    htTGTContext.put("sp_rid", spRid);
-		                    _systemLogger.log(Level.INFO, _sModule, sMethod, "UPD rid="+sRid+" sprid="+spRid);
-        
+							String sAppId = (String) _htSessionContext.get("app_id");
+							if (sAppId != null)
+								htTGTContext.put("app_id", sAppId);
+
+							String sLocalOrg = (String) _htSessionContext.get("local_organization");
+							if (sLocalOrg != null)
+								htTGTContext.put("local_organization", sLocalOrg);
+
+							htTGTContext.put("rid", sRid);
+							// Update SP rid as well: xsaml20
+							String spRid = (String) _htSessionContext.get("sp_rid");
+							if (spRid != null)
+								htTGTContext.put("sp_rid", spRid);
+							_systemLogger.log(Level.INFO, _sModule, sMethod, "UPD rid=" + sRid + " sprid=" + spRid);
+
 							// Add the SP to SSO administration - xsaml20
 							String spUrl = (String) _htSessionContext.get("sp_issuer");
 							if (spUrl != null) {
-								htTGTContext.put("sp_issuer", spUrl);  // save latest issuer
-								UserSsoSession ssoSession = (UserSsoSession)htTGTContext.get("sso_session");
+								htTGTContext.put("sp_issuer", spUrl); // save latest issuer
+								UserSsoSession ssoSession = (UserSsoSession) htTGTContext.get("sso_session");
 								if (ssoSession != null) {
 									ServiceProvider sp = new ServiceProvider(spUrl);
 									ssoSession.addServiceProvider(sp);
-					                _systemLogger.log(Level.INFO, _sModule, sMethod, "ADD SSO session "+ssoSession);
-					        		htTGTContext.put("sso_session", ssoSession);
+									_systemLogger.log(Level.INFO, _sModule, sMethod, "ADD SSO session " + ssoSession);
+									htTGTContext.put("sso_session", ssoSession);
 								}
 							}
-							
+
 							// Overwrite with the latest value of sp_assert_url,
 							// so the customer can reach his home-SP again.
-						    String sAssertUrl = (String)_htSessionContext.get("sp_assert_url");
-							if (sAssertUrl != null) htTGTContext.put("sp_assert_url", sAssertUrl);
-							
-		                    _tgtManager.updateTGT(sTgt, htTGTContext);
+							String sAssertUrl = (String) _htSessionContext.get("sp_assert_url");
+							if (sAssertUrl != null)
+								htTGTContext.put("sp_assert_url", sAssertUrl);
+
+							_tgtManager.updateTGT(sTgt, htTGTContext);
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 
-							_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR "+sRedirectUrl);
+							_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRedirectUrl);
 							oTGTIssuer.sendRedirect(sRedirectUrl, sTgt, sRid, servletResponse);
-				            _sessionManager.killSession(sRid);
-				            return;
-	                    }
-	                }
+							_sessionManager.killSession(sRid);
+							return;
+						}
+					}
 					_systemLogger.log(Level.INFO, _sModule, sMethod, "TGT found but not sufficient");
-	                // TGT found but not sufficient.
-					
+					// TGT found but not sufficient.
+
 					if (!handleUserConsent(htServiceRequest, servletResponse, pwOut, sRid))
-						return;  // Quit
-					
-	                // Authenicate with same user-id that was stored in TGT
-	                Hashtable htTGTContext = _tgtManager.getTGT(sTgt);
-	                
-	                // If TGT was issued in cross mode, the user now has to 
-	                // authenticate with a higher level in cross mode again
-	                String sTempOrg = (String)htTGTContext.get("proxy_organization");
-	                if (sTempOrg == null)
-	                    sTempOrg = (String)htTGTContext.get("organization");
-	                if (!sTempOrg.equals(_sMyOrg) &&
-	                	// 20090111, Bauke Added test:
-	        			_crossASelectManager.isCrossSelectorEnabled() && _configManager.isCrossFallBackEnabled())
-	                {
-	                    _htSessionContext.put("forced_uid", sUid);
-	                    _htSessionContext.put("forced_organization", sTempOrg);
-						_systemLogger.log(Level.INFO, _sModule, sMethod, "To CROSS MyOrg="+_sMyOrg+" != org="+sTempOrg);
-	    			    handleCrossLogin(htServiceRequest, servletResponse, pwOut);
-	    			    return;
-	                }
-	                // User was originally authenticated at this A-Select Server
-	                // The userid is already known from the TGT
-	                htServiceRequest.put("user_id", sUid);
-				    handleLogin2(htServiceRequest, servletResponse, pwOut);
-				    return;
-	            }
-            }
+						return; // Quit
+
+					// Authenicate with same user-id that was stored in TGT
+					HashMap htTGTContext = _tgtManager.getTGT(sTgt);
+
+					// If TGT was issued in cross mode, the user now has to 
+					// authenticate with a higher level in cross mode again
+					String sTempOrg = (String) htTGTContext.get("proxy_organization");
+					if (sTempOrg == null)
+						sTempOrg = (String) htTGTContext.get("organization");
+					if (!sTempOrg.equals(_sMyOrg) &&
+					// 20090111, Bauke Added test:
+							_crossASelectManager.isCrossSelectorEnabled() && _configManager.isCrossFallBackEnabled()) {
+						_htSessionContext.put("forced_uid", sUid);
+						_htSessionContext.put("forced_organization", sTempOrg);
+						_systemLogger.log(Level.INFO, _sModule, sMethod, "To CROSS MyOrg=" + _sMyOrg + " != org="
+								+ sTempOrg);
+						handleCrossLogin(htServiceRequest, servletResponse, pwOut);
+						return;
+					}
+					// User was originally authenticated at this A-Select Server
+					// The userid is already known from the TGT
+					htServiceRequest.put("user_id", sUid);
+					handleLogin2(htServiceRequest, servletResponse, pwOut);
+					return;
+				}
+			}
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "no TGT found or killed (other uid)");
 			if (!handleUserConsent(htServiceRequest, servletResponse, pwOut, sRid))
-				return;  // Quit
-			
+				return; // Quit
+
 			// 20090120, Bauke store Client IP and User Agent in the Session
 			SessionManager _oSessionManager = SessionManager.getHandle();
-	        Hashtable htSessionContext = _oSessionManager.getSessionContext(sRid);
-	        if (htSessionContext == null) {
-	            _systemLogger.log(Level.WARNING,_sModule,sMethod, "No session found for RID: "+sRid);	            
-	            throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-	        }
+			HashMap htSessionContext = _oSessionManager.getSessionContext(sRid);
+			if (htSessionContext == null) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "No session found for RID: " + sRid);
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
 			String sClientIp = (String) htServiceRequest.get("client_ip");
-			if (sClientIp != null) htSessionContext.put("client_ip", sClientIp);
+			if (sClientIp != null)
+				htSessionContext.put("client_ip", sClientIp);
 			String sUserAgent = (String) htServiceRequest.get("user_agent");
-			if (sUserAgent != null) htSessionContext.put("user_agent", sUserAgent);
+			if (sUserAgent != null)
+				htSessionContext.put("user_agent", sUserAgent);
 			_oSessionManager.update(sRid, htSessionContext);
-			
-            // no TGT found or killed (other uid)
-			if( !_configManager.isUDBEnabled() || _htSessionContext.containsKey("forced_organization"))
-			{
+
+			// no TGT found or killed (other uid)
+			if (!_configManager.isUDBEnabled() || _htSessionContext.containsKey("forced_organization")) {
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "To Cross 2");
-			    handleCrossLogin(htServiceRequest, servletResponse, pwOut);
-			    return;
+				handleCrossLogin(htServiceRequest, servletResponse, pwOut);
+				return;
 			}
-			String sForcedUid = (String)_htSessionContext.get("forced_uid");
-			String sForcedAuthsp = (String)_htSessionContext.get("forced_authsp");
-			if (sForcedUid != null || sForcedAuthsp != null)
-			{
-                if (sForcedUid != null) htServiceRequest.put("user_id", sForcedUid);
-                if (sForcedAuthsp != null) htServiceRequest.put("forced_authsp", sForcedAuthsp);
-                handleLogin2(htServiceRequest, servletResponse, pwOut);
-                return;
+			String sForcedUid = (String) _htSessionContext.get("forced_uid");
+			String sForcedAuthsp = (String) _htSessionContext.get("forced_authsp");
+			if (sForcedUid != null || sForcedAuthsp != null) {
+				if (sForcedUid != null)
+					htServiceRequest.put("user_id", sForcedUid);
+				if (sForcedAuthsp != null)
+					htServiceRequest.put("forced_authsp", sForcedAuthsp);
+				handleLogin2(htServiceRequest, servletResponse, pwOut);
+				return;
 			}
 
-            // Show login (user_id) form
+			// Show login (user_id) form
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "show LOGIN form");
-	        String sLoginForm = _configManager.getForm("login");
-            sLoginForm = Utils.replaceString(sLoginForm, "[rid]", sRid);
-            sLoginForm = Utils.replaceString(sLoginForm, "[aselect_url]",
-                (String)htServiceRequest.get("my_url"));
-            sLoginForm = Utils.replaceString(sLoginForm, "[a-select-server]", _sMyServerId);
-            sLoginForm = Utils.replaceString(sLoginForm, "[request]", "login2");
-            sLoginForm = Utils.replaceString(sLoginForm, "[cross_request]", "cross_login");
+			String sLoginForm = _configManager.getForm("login");
+			sLoginForm = Utils.replaceString(sLoginForm, "[rid]", sRid);
+			sLoginForm = Utils.replaceString(sLoginForm, "[aselect_url]", (String) htServiceRequest.get("my_url"));
+			sLoginForm = Utils.replaceString(sLoginForm, "[a-select-server]", _sMyServerId);
+			sLoginForm = Utils.replaceString(sLoginForm, "[request]", "login2");
+			sLoginForm = Utils.replaceString(sLoginForm, "[cross_request]", "cross_login");
 
-            sbUrl = new StringBuffer((String)htServiceRequest.get("my_url"))
-                .append("?request=error")
-                .append("&result_code=").append(Errors.ERROR_ASELECT_SERVER_CANCEL)
-                .append("&a-select-server=").append(_sMyServerId)
-                .append("&rid=").append(sRid);
-            sLoginForm = Utils.replaceString(sLoginForm, "[cancel]", sbUrl.toString());
-            
-            sLoginForm = _configManager.updateTemplate(sLoginForm, _htSessionContext);
-            pwOut.println(sLoginForm);
-        }
-        catch (ASelectException ae) {
-          throw ae;
-        }
-        catch (Exception e) {
+			sbUrl = new StringBuffer((String) htServiceRequest.get("my_url")).append("?request=error").append(
+					"&result_code=").append(Errors.ERROR_ASELECT_SERVER_CANCEL).append("&a-select-server=").append(
+					_sMyServerId).append("&rid=").append(sRid);
+			sLoginForm = Utils.replaceString(sLoginForm, "[cancel]", sbUrl.toString());
+
+			sLoginForm = _configManager.updateTemplate(sLoginForm, _htSessionContext);
+			pwOut.println(sLoginForm);
+		}
+		catch (ASelectException ae) {
+			throw ae;
+		}
+		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error.", e);
-            throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-        }
-    }
-    
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+	}
+
 	// Return: true when user consent is available, else false
 	//
-	private boolean handleUserConsent(Hashtable htServiceRequest, HttpServletResponse servletResponse,
-			PrintWriter pwOut, String sRid)
-	throws ASelectException
+	private boolean handleUserConsent(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut,
+			String sRid)
+		throws ASelectException
 	{
 		String COOKIE_NAME = "user_consent";
 
 		String sUserConsent = HandlerTools.getCookieValue(_servletRequest, COOKIE_NAME, _systemLogger);
-		_systemLogger.log(Level.INFO, _sModule, _sModule, "Consent="+sUserConsent);
+		_systemLogger.log(Level.INFO, _sModule, _sModule, "Consent=" + sUserConsent);
 		if (sUserConsent != null && sUserConsent.equals("true"))
 			return true;
-		
+
 		// Display the consent form
 		String sFriendlyName = "";
 		boolean bAskConsent = false;
@@ -942,17 +923,17 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				bAskConsent = true;
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, _sModule, _sModule, "Configuration error: "+e);
+			_systemLogger.log(Level.WARNING, _sModule, _sModule, "Configuration error: " + e);
 		}
-		if (!bAskConsent)  // no need to ask for consent
+		if (!bAskConsent) // no need to ask for consent
 			return true;
-		
+
 		// We need the user's consent to continue
-		String sReqConsent = (String)htServiceRequest.get("consent");
+		String sReqConsent = (String) htServiceRequest.get("consent");
 		if (sReqConsent != null && sReqConsent.equals("true")) {
 			// Remember the user's answer by setting a Consent Cookie
-	        String sCookieDomain = _configManager.getCookieDomain();
-			HandlerTools.putCookieValue(servletResponse, COOKIE_NAME, "true", sCookieDomain, 157680101, _systemLogger);  // some 5 years
+			String sCookieDomain = _configManager.getCookieDomain();
+			HandlerTools.putCookieValue(servletResponse, COOKIE_NAME, "true", sCookieDomain, 157680101, _systemLogger); // some 5 years
 			return true;
 		}
 		if (sReqConsent != null && sReqConsent.equals("false")) {
@@ -962,96 +943,97 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 		// Ask for consent by presenting the userconsent.html form
 		try {
-			_sConsentForm = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "userconsent.html");    
-		    _sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[version]", Version.getVersion());
-		    _sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[organization_friendly]", sFriendlyName);
-		    
-		    _sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[request]", "login1");
-		    _sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[rid]", sRid);
-		    _sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[a-select-server]", _sMyServerId);
-		    _sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[consent]", "true");
+			_sConsentForm = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "userconsent.html");
+			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[version]", Version
+					.getVersion());
+			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[organization_friendly]",
+					sFriendlyName);
 
-		    String sAsUrl = _configManager.getRedirectURL();
-		    _sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[aselect_url]", sAsUrl);
-		    StringBuffer sCancel = new StringBuffer(sAsUrl).append("?request=login1")
-		    		.append("&rid=").append(sRid).append("&a-select-server=").append(_sMyServerId)
-		    		.append("&consent=false");
-		    _sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[cancel]", sCancel.toString());
+			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[request]", "login1");
+			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[rid]", sRid);
+			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[a-select-server]",
+					_sMyServerId);
+			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[consent]", "true");
 
-		    servletResponse.setContentType("text/html");
+			String sAsUrl = _configManager.getRedirectURL();
+			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[aselect_url]", sAsUrl);
+			StringBuffer sCancel = new StringBuffer(sAsUrl).append("?request=login1").append("&rid=").append(sRid)
+					.append("&a-select-server=").append(_sMyServerId).append("&consent=false");
+			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[cancel]", sCancel.toString());
+
+			servletResponse.setContentType("text/html");
 			_systemLogger.log(Level.INFO, _sModule, _sModule, "Display ConsentForm");
-		    pwOut.println(_sConsentForm);
+			pwOut.println(_sConsentForm);
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, _sModule, _sModule, "Failed to display ConsentForm: ", e);
 		}
 		finally {
-            if (pwOut != null) {
-                pwOut.close();
-            }
+			if (pwOut != null) {
+				pwOut.close();
+			}
 		}
-		return false;  // means: Consent Form displayed, no consent available yet 
+		return false; // means: Consent Form displayed, no consent available yet 
 	}
 
-    /**
-     * Handles the <code>request=login2</code> request.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * The request created by the HTML page presented by the
-     * <code>handleLogin1</code> function, is verified here.<br>
-     * For the entered user-id a lookup is done in the user database to 
-     * determine all enabled AuthSP's for this user. For every AuthSP a
-     * verification is done if it matches the required level.<br>
-     * All valid AuthSP's are presnted to the user by means of a 'drop-down'
-     * list in a HTML page. This HTML page will POST a <code>request=login3</code>.<br>
-     * Depending on the A-Select configuration <code>always_show_select_form</code>
-     * the request can be parsed to <code>handleLogin3()</code> immediately if only one
-     * valid AuthSP is found.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @param htServiceRequest Hashtable containing request parameters
-     * @param servletResponse Used to send (HTTP) information back to user
-     * @param pwOut Used to write information back to the user (HTML)
-     * @throws ASelectException
-     */
-    private void handleLogin2(Hashtable htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-    throws ASelectException
-    {
-        String sRid = null;
-        String sUid = null;
-        String sAuthsp = null;
-        String sMethod = "handleLogin2()";
+	/**
+	 * Handles the <code>request=login2</code> request.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * The request created by the HTML page presented by the
+	 * <code>handleLogin1</code> function, is verified here.<br>
+	 * For the entered user-id a lookup is done in the user database to 
+	 * determine all enabled AuthSP's for this user. For every AuthSP a
+	 * verification is done if it matches the required level.<br>
+	 * All valid AuthSP's are presnted to the user by means of a 'drop-down'
+	 * list in a HTML page. This HTML page will POST a <code>request=login3</code>.<br>
+	 * Depending on the A-Select configuration <code>always_show_select_form</code>
+	 * the request can be parsed to <code>handleLogin3()</code> immediately if only one
+	 * valid AuthSP is found.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * @param htServiceRequest HashMap containing request parameters
+	 * @param servletResponse Used to send (HTTP) information back to user
+	 * @param pwOut Used to write information back to the user (HTML)
+	 * @throws ASelectException
+	 */
+	private void handleLogin2(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+		throws ASelectException
+	{
+		String sRid = null;
+		String sUid = null;
+		String sAuthsp = null;
+		String sMethod = "handleLogin2()";
 
-        StringBuffer sb;
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "Login2 "+htServiceRequest);
-        try
-        {
-            sRid = (String)htServiceRequest.get("rid");
-            Hashtable htSessionContext = _sessionManager.getSessionContext(sRid);
-            sAuthsp = (String)htSessionContext.get("forced_authsp");  // 20090111, Bauke from SessionContext not ServiceRequest
-            if (sAuthsp != null) {
-            	// Bauke 20080511: added
-            	// Redirect to the AuthSP's ISTS
-				String sAsUrl = _configManager.getRedirectURL();  // <redirect_url> in aselect.xml
-				sAsUrl = sAsUrl + "/"+sAuthsp+"?rid=" + sRid;  // e.g. saml20_ists
-				_systemLogger.log(Level.INFO, _sModule, sMethod, "Forced REDIR to "+sAsUrl);
+		StringBuffer sb;
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "Login2 " + htServiceRequest);
+		try {
+			sRid = (String) htServiceRequest.get("rid");
+			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+			sAuthsp = (String) htSessionContext.get("forced_authsp"); // 20090111, Bauke from SessionContext not ServiceRequest
+			if (sAuthsp != null) {
+				// Bauke 20080511: added
+				// Redirect to the AuthSP's ISTS
+				String sAsUrl = _configManager.getRedirectURL(); // <redirect_url> in aselect.xml
+				sAsUrl = sAsUrl + "/" + sAuthsp + "?rid=" + sRid; // e.g. saml20_ists
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "Forced REDIR to " + sAsUrl);
 				servletResponse.sendRedirect(sAsUrl);
-                return;
-            }
-            sUid = (String)htServiceRequest.get("user_id");
-            if (sUid == null) {
+				return;
+			}
+			sUid = (String) htServiceRequest.get("user_id");
+			if (sUid == null) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request, missing parmeter 'user_id'");
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
@@ -1078,40 +1060,45 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				throw e;
 			}
 
-            // Bauke: added shortcut when using "Verkeersplein" method
-            String sFixedAuthsp = (String)_htSessionContext.get("fixed_authsp");
-           	if (sFixedAuthsp != null) { 
-                _systemLogger.log(Level.INFO, _sModule, sMethod, "fixed_authsp="+sFixedAuthsp);
-                htServiceRequest.put("authsp", sFixedAuthsp);
-                // Also save entered uid & restore original user id
-               	String sUserId = (String)_htSessionContext.get("user_id");
-               	if (sUserId != null) {
-                	htServiceRequest.put("sel_uid", sUserId);
-                	_htSessionContext.put("sel_uid", sUserId);
-               	}
-               	String sFixedUid = (String)_htSessionContext.get("fixed_uid");
-                if (sFixedUid != null) {
-                    _systemLogger.log(Level.INFO, _sModule, sMethod, "Restore uid="+sFixedUid);
-                	htServiceRequest.put("user_id", sFixedUid);
-                	_htSessionContext.put("user_id", sFixedUid);
-                }
-                handleLogin3(htServiceRequest, servletResponse, pwOut);
-                return;
-            }
+			// Bauke: added shortcut when using "Verkeersplein" method
+			String sFixedAuthsp = (String) _htSessionContext.get("fixed_authsp");
+			if (sFixedAuthsp != null) {
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "fixed_authsp=" + sFixedAuthsp);
+				htServiceRequest.put("authsp", sFixedAuthsp);
+				// Also save entered uid as 'sel_uid'
+				String sUserId = (String) _htSessionContext.get("user_id");
+				if (sUserId != null) {
+					htServiceRequest.put("sel_uid", sUserId);
+					_htSessionContext.put("sel_uid", sUserId);
+				}
+				String sFixedUid = (String) _htSessionContext.get("fixed_uid");
+				if (sFixedUid != null) {
+					// From here on use the fixed_uid as 'user_id'
+					_systemLogger.log(Level.INFO, _sModule, sMethod, "Fixed user_id=" + sFixedUid);
+					htServiceRequest.put("user_id", sFixedUid);
+					_htSessionContext.put("user_id", sFixedUid);
+				}
+				handleLogin3(htServiceRequest, servletResponse, pwOut);
+				return;
+			}
 
-            // We now have the list of authsps that the user may use
-            // Show the selectform
-            Hashtable htAuthsps = (Hashtable)_htSessionContext.get("allowed_user_authsps");
-            // should the user be bothered with the selection form
-            // if it is only able to choose from 1 method?
-            _systemLogger.log(Level.INFO, _sModule, sMethod, "User="+sUid+" Authsps="+htAuthsps);
-            if (htAuthsps.size() == 1) {
+			// We now have the list of authsps that the user may use
+			// Show the selectform
+			HashMap htAuthsps = (HashMap) _htSessionContext.get("allowed_user_authsps");
+			// should the user be bothered with the selection form
+			// if it is only able to choose from 1 method?
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "User=" + sUid + " Authsps=" + htAuthsps);
+			if (htAuthsps.size() == 1) {
 				try {
 					String sFormShow = _configManager.getParam(_configManager.getSection(null, "authsps"),
 							"always_show_select_form");
 					if (sFormShow.equalsIgnoreCase("false")) {
 						// continue with login3
-						htServiceRequest.put("authsp", htAuthsps.keys().nextElement());
+						Set keys = htAuthsps.keySet();
+						for (Object s : keys) {
+							htServiceRequest.put("authsp", (String) s);
+							break;
+						}
 						handleLogin3(htServiceRequest, servletResponse, pwOut);
 						return;
 					}
@@ -1122,22 +1109,26 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				}
 			}
 
-            // end only 1 valid authsp
+			// end only 1 valid authsp
 
-            String sSelectForm = _configManager.getForm("select");
-            sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
-            sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", _sMyServerId);
-            sSelectForm = Utils.replaceString(sSelectForm, "[user_id]", sUid);
-            sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", (String)htServiceRequest.get("my_url"));
-            sSelectForm = Utils.replaceString(sSelectForm, "[request]", "login3");
+			String sSelectForm = _configManager.getForm("select");
+			sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
+			sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", _sMyServerId);
+			sSelectForm = Utils.replaceString(sSelectForm, "[user_id]", sUid);
+			sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", (String) htServiceRequest.get("my_url"));
+			sSelectForm = Utils.replaceString(sSelectForm, "[request]", "login3");
 
-            String sFriendlyName = "";
-            String sAuthspName = "";
-            Enumeration enumAuthspEnum = htAuthsps.keys();
-            sb = new StringBuffer();
-            while (enumAuthspEnum.hasMoreElements()) {
+			String sFriendlyName = "";
+			String sAuthspName = "";
+			sb = new StringBuffer();
+
+			Set keys = htAuthsps.keySet();
+			for (Object s : keys) {
+				sAuthspName = (String) s;
+				//          Enumeration enumAuthspEnum = htAuthsps.keys();
+				//          while (enumAuthspEnum.hasMoreElements()) {
 				try {
-					sAuthspName = (String) enumAuthspEnum.nextElement();
+					//sAuthspName = (String) enumAuthspEnum.nextElement();
 					Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"),
 							"authsp", "id=" + sAuthspName);
 					sFriendlyName = _configManager.getParam(authSPsection, "friendly_name");
@@ -1153,29 +1144,27 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					throw ace;
 				}
 			}
-            sSelectForm = Utils.replaceString(sSelectForm, "[allowed_user_authsps]", sb.toString());
-            
-            sb = new StringBuffer((String)htServiceRequest.get("my_url"))
-	            .append("?request=error")
-	            .append("&result_code=").append(Errors.ERROR_ASELECT_SERVER_CANCEL)
-	            .append("&a-select-server=").append(_sMyServerId)
-	            .append("&rid=").append(sRid);
-            
-            sSelectForm = Utils.replaceString(sSelectForm, "[cancel]", sb.toString());
-            sSelectForm = _configManager.updateTemplate(sSelectForm, _htSessionContext);
-            //_systemLogger.log(Level.FINER, _sModule, sMethod, "Form select=["+sSelectForm+"]");
-            pwOut.println(sSelectForm);
-        }
-        catch (ASelectException ae) {
+			sSelectForm = Utils.replaceString(sSelectForm, "[allowed_user_authsps]", sb.toString());
+
+			sb = new StringBuffer((String) htServiceRequest.get("my_url")).append("?request=error").append(
+					"&result_code=").append(Errors.ERROR_ASELECT_SERVER_CANCEL).append("&a-select-server=").append(
+					_sMyServerId).append("&rid=").append(sRid);
+
+			sSelectForm = Utils.replaceString(sSelectForm, "[cancel]", sb.toString());
+			sSelectForm = _configManager.updateTemplate(sSelectForm, _htSessionContext);
+			//_systemLogger.log(Level.FINER, _sModule, sMethod, "Form select=["+sSelectForm+"]");
+			pwOut.println(sSelectForm);
+		}
+		catch (ASelectException ae) {
 			throw ae;
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-    }
+	}
 
-    /**
+	/**
 	 * This methods handles the <code>request=login3</code> request. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
@@ -1197,41 +1186,35 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * <b>Postconditions:</b> <br> - <br>
 	 * 
 	 * @param htServiceRequest
-	 *            Hashtable containing request parameters
+	 *            HashMap containing request parameters
 	 * @param servletResponse
 	 *            Used to send (HTTP) information back to user
 	 * @param pwOut
 	 *            Used to write information back to the user (HTML)
 	 * @throws ASelectException
 	 */
-    private void handleLogin3(Hashtable htServiceRequest,
-        HttpServletResponse servletResponse, PrintWriter pwOut)
-    throws ASelectException
-    {
+	private void handleLogin3(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+	throws ASelectException
+	{
+		String sRid = null;
+		String sAuthsp = null;
+		String sMethod = "handleLogin3";
+		String sRedirectUrl = null;
+		String sPopup = null;
 
-        String sRid = null;
-        String sAuthsp = null;
-        String sMethod = "handleLogin3()";
-        String sRedirectUrl = null;
-        String sPopup = null;
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "Login3 " + htServiceRequest);
+		try {
+			sRid = (String) htServiceRequest.get("rid");
+			sAuthsp = (String) htServiceRequest.get("authsp");
+			if (sAuthsp == null) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request, missing parmeter 'authsp'");
+				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+			sRedirectUrl = startAuthentication(sRid, htServiceRequest);
 
-        _systemLogger.log(Level.INFO, _sModule, sMethod, "Login3 "+htServiceRequest);
-        try
-        {
-            sRid = (String)htServiceRequest.get("rid");
-            sAuthsp = (String)htServiceRequest.get("authsp");
-            if (sAuthsp == null)
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod,
-                    "Invalid request, missing parmeter 'authsp'");
-                throw new ASelectCommunicationException(
-                    Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-            }
-            sRedirectUrl = startAuthentication(sRid, htServiceRequest);
-
-            try {
-				Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"),
-						"authsp", "id=" + sAuthsp);
+			try {
+				Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp",
+						"id=" + sAuthsp);
 				try {
 					sPopup = _configManager.getParam(authSPsection, "popup");
 				}
@@ -1252,7 +1235,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				sPopupForm = _configManager.updateTemplate(sPopupForm, _htSessionContext);
 				pwOut.println(sPopupForm);
 				return;
-
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to retrieve config for AuthSPs.", e);
@@ -1262,18 +1244,17 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to redirect user.", e);
 				throw new ASelectException(Errors.ERROR_ASELECT_IO);
 			}
-        }
-        catch (ASelectException ae) {
+		}
+		catch (ASelectException ae) {
 			throw ae;
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error", e);
-
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-    }
+	}
 
-    /**
+	/**
 	 * This method handles the <code>request=cross_login</code> user request.
 	 * <br>
 	 * <br>
@@ -1293,7 +1274,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * <b>Postconditions:</b> <br> - <br>
 	 * 
 	 * @param htServiceRequest
-	 *            Hashtable containing request parameters
+	 *            HashMap containing request parameters
 	 * @param servletResponse
 	 *            Used to send (HTTP) information back to user
 	 * @param pwOut
@@ -1301,7 +1282,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *            <code>ISelectorHandler</code>
 	 * @throws ASelectException
 	 */
-    private void handleCrossLogin(Hashtable htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+	private void handleCrossLogin(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 		throws ASelectException
 	{
 		String sRemoteOrg = null;
@@ -1332,14 +1313,15 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			if (sRemoteOrg == null) {
 				if (!_crossASelectManager.isCrossSelectorEnabled()) {
-					_systemLogger.log(Level.WARNING, _sModule, sMethod,
-								"Dynamic 'cross_selector' is disabled, parameter 'remote_organization' is required but not found.");
+					_systemLogger
+							.log(Level.WARNING, _sModule, sMethod,
+									"Dynamic 'cross_selector' is disabled, parameter 'remote_organization' is required but not found.");
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_UNKNOWN_ORG);
 				}
 
 				// No optional parameter 'remote_organization found
 				// Determine the remote organization
-				Hashtable htIdentification;
+				HashMap htIdentification;
 
 				// some selector handlers may need the user_id if it is known
 				// already
@@ -1353,7 +1335,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							servletResponse, pwOut);
 				}
 				catch (ASelectException ace) {
-					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to retrieve the remote server id.", ace);
+					_systemLogger
+							.log(Level.WARNING, _sModule, sMethod, "Failed to retrieve the remote server id.", ace);
 					throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_UNKNOWN_ORG, ace);
 				}
 				if (htIdentification == null) {
@@ -1413,8 +1396,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			RawCommunicator oCommunicator = new RawCommunicator(_systemLogger); // Default = API communciation
 
-			Hashtable htRequestTable = new Hashtable();
-			Hashtable htResponseTable = new Hashtable();
+			HashMap htRequestTable = new HashMap();
+			HashMap htResponseTable = new HashMap();
 			htRequestTable.put("request", "authenticate");
 
 			Boolean boolForced = (Boolean) _htSessionContext.get("forced_authenticate");
@@ -1427,7 +1410,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			Integer intLevel = (Integer) _htSessionContext.get("level");
 			htRequestTable.put("required_level", intLevel.toString());
-			htRequestTable.put("level", intLevel);  // 20090111, Bauke added
+			htRequestTable.put("level", intLevel); // 20090111, Bauke added
 			htRequestTable.put("a-select-server", sRemoteServer);
 
 			if (sUid != null) {
@@ -1509,7 +1492,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 	}
 
-    /**
+	/**
 	 * This method handles the <code>request=ip_login</code> user request.
 	 * <br>
 	 * <br>
@@ -1528,7 +1511,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * <b>Postconditions:</b> <br> - <br>
 	 * 
 	 * @param htServiceRequest
-	 *            Hashtable containing request parameters
+	 *            HashMap containing request parameters
 	 * @param servletResponse
 	 *            Used to send (HTTP) information back to user
 	 * @param pwOut
@@ -1536,293 +1519,262 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @throws ASelectException
 	 *             TODO add support for cross and force_authenticate (martijn)
 	 */
-    private void handleIPLogin1(Hashtable htServiceRequest,
-        HttpServletResponse servletResponse, PrintWriter pwOut)
-    throws ASelectException
-    {
-        String sMethod = "handleIPLogin1()";
-        String sRid = null;
-        Integer intRequiredLevel = null;
-        String sLevel = null;
-        Hashtable htAllowedAuthsps = new Hashtable();
+	private void handleIPLogin1(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+		throws ASelectException
+	{
+		String sMethod = "handleIPLogin1()";
+		String sRid = null;
+		Integer intRequiredLevel = null;
+		String sLevel = null;
+		HashMap htAllowedAuthsps = new HashMap();
 
-        StringBuffer sb;
+		StringBuffer sb;
 
-        _systemLogger.log(Level.INFO, _sModule, sMethod, "IPLogin1");
-        try
-        {
-            sRid = (String)htServiceRequest.get("rid");
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "IPLogin1");
+		try {
+			sRid = (String) htServiceRequest.get("rid");
 
-            // check if user already has a tgt so that he/she doesnt need to
-            // be authenticated again
+			// check if user already has a tgt so that he/she doesnt need to
+			// be authenticated again
 
-            // TODO IP login is not used when a user already has a TGT (Peter)
-            // IP login is not used when a user already has a TGT. The origin
-            // ip-range will never be forced when already authenticated with an
-            // AuthSP with a higher level
-            if (_configManager.isSingleSignOn() 
-                && htServiceRequest.containsKey("aselect_credentials_tgt")
-                && htServiceRequest.containsKey("aselect_credentials_uid")
-                && htServiceRequest.containsKey("aselect_credentials_server_id"))
-            {
-                String sTgt = (String)htServiceRequest
-                    .get("aselect_credentials_tgt");
-                String sUid = (String)htServiceRequest
-                    .get("aselect_credentials_uid");
-                String sServerId = (String)htServiceRequest
-                    .get("aselect_credentials_server_id");
+			// TODO IP login is not used when a user already has a TGT (Peter)
+			// IP login is not used when a user already has a TGT. The origin
+			// ip-range will never be forced when already authenticated with an
+			// AuthSP with a higher level
+			if (_configManager.isSingleSignOn() && htServiceRequest.containsKey("aselect_credentials_tgt")
+					&& htServiceRequest.containsKey("aselect_credentials_uid")
+					&& htServiceRequest.containsKey("aselect_credentials_server_id")) {
+				String sTgt = (String) htServiceRequest.get("aselect_credentials_tgt");
+				String sUid = (String) htServiceRequest.get("aselect_credentials_uid");
+				String sServerId = (String) htServiceRequest.get("aselect_credentials_server_id");
 
-                // TODO Check if TGT already exists for user id (Peter)
-                // If a user_id was provided in the request
-                // we have to check here if the already existing
-                // TGT is for the same user-id
-                // see CVS
-                if (checkCredentials(sTgt, sUid, sServerId))
-                {
+				// TODO Check if TGT already exists for user id (Peter)
+				// If a user_id was provided in the request
+				// we have to check here if the already existing
+				// TGT is for the same user-id
+				// see CVS
+				if (checkCredentials(sTgt, sUid, sServerId)) {
 
-                    // redirect to application as user has already a valid tgt
-                    if (_htSessionContext.get("cross_authenticate") != null)
-                    {
-                        // redirect to application as user has already a valid
-                        // tgt
-                        if (_htSessionContext.get("cross_authenticate") != null)
-                        {
-                            // Cross A-Select does not implement
-                            // 'verify_credentials'
-                            // The TGT should be created now
-                            // TGTIssuer will redirect to local A-Select Server
+					// redirect to application as user has already a valid tgt
+					if (_htSessionContext.get("cross_authenticate") != null) {
+						// redirect to application as user has already a valid
+						// tgt
+						if (_htSessionContext.get("cross_authenticate") != null) {
+							// Cross A-Select does not implement
+							// 'verify_credentials'
+							// The TGT should be created now
+							// TGTIssuer will redirect to local A-Select Server
 
-                            // TODO Check if a new TGT must be created (Peter)  
-                            // A new TGT is created because the TGTIssuer
-                            // implements the redirect with a create signature.
-                            // It is not logical to create a new TGT.
-                            _htSessionContext.put("user_id", sUid);
-                            
-                            // RH, should be set through AbstractBrowserRequestHandler
-                            // but this seems to be the wrong one (AbstractBrowserRequestHandler sets the idp address)
-                            _systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip was "+ _htSessionContext.get("client_ip"));
-                            _htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr());
-                            _systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip is now "+ _htSessionContext.get("client_ip"));
+							// TODO Check if a new TGT must be created (Peter)  
+							// A new TGT is created because the TGTIssuer
+							// implements the redirect with a create signature.
+							// It is not logical to create a new TGT.
+							_htSessionContext.put("user_id", sUid);
 
-                            _sessionManager.createSession(sRid, _htSessionContext);
+							// RH, should be set through AbstractBrowserRequestHandler
+							// but this seems to be the wrong one (AbstractBrowserRequestHandler sets the idp address)
+							_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip was "
+									+ _htSessionContext.get("client_ip"));
+							_htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr());
+							_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip is now "
+									+ _htSessionContext.get("client_ip"));
 
-                            Hashtable htTgtContext = _tgtManager.getTGT(sTgt);
-                            String sAuthsp = (String)htTgtContext.get("authsp");
+							_sessionManager.createSession(sRid, _htSessionContext);
 
-                            // kill existing tgt
-                            _tgtManager.remove(sTgt);
+							HashMap htTgtContext = _tgtManager.getTGT(sTgt);
+							String sAuthsp = (String) htTgtContext.get("authsp");
 
-                            // issue new one but with the same lifetime as the
-                            // existing one
-                            Hashtable htAdditional = new Hashtable();
-                            //FIXME StorageManager can't update timestamp, this doesn't work. (Erwin, Peter)
-                            //htAdditional.put("tgt_exp_time", htTgtContext
-                            //.get("tgt_exp_time"));
+							// kill existing tgt
+							_tgtManager.remove(sTgt);
 
-                            TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
+							// issue new one but with the same lifetime as the
+							// existing one
+							HashMap htAdditional = new HashMap();
+							//FIXME StorageManager can't update timestamp, this doesn't work. (Erwin, Peter)
+							//htAdditional.put("tgt_exp_time", htTgtContext
+							//.get("tgt_exp_time"));
 
-                            oTGTIssuer.issueTGT(sRid, sAuthsp, htAdditional,
-                                servletResponse, null);
+							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 
-                            return;
-                        }
-                    }
+							oTGTIssuer.issueTGT(sRid, sAuthsp, htAdditional, servletResponse, null);
 
-                    try
-                    {
-                        String sRedirectUrl = (String)_htSessionContext
-                            .get("app_url");
-                        sRedirectUrl = URLDecoder.decode(sRedirectUrl, "UTF-8");
-                        sb = new StringBuffer(sRedirectUrl);
+							return;
+						}
+					}
 
-                        //check whether the application url contains cgi
-                        // parameters
-                        if (sRedirectUrl.indexOf("?") > 0)
-                        {
-                            sb.append("&");
-                        }
-                        else
-                        {
-                            sb.append("?");
-                        }
+					try {
+						String sRedirectUrl = (String) _htSessionContext.get("app_url");
+						sRedirectUrl = URLDecoder.decode(sRedirectUrl, "UTF-8");
+						sb = new StringBuffer(sRedirectUrl);
 
-                        sUid = URLEncoder.encode(sUid, "UTF-8");
-                        sUid = URLEncoder.encode(sUid, "UTF-8");
+						//check whether the application url contains cgi
+						// parameters
+						if (sRedirectUrl.indexOf("?") > 0) {
+							sb.append("&");
+						}
+						else {
+							sb.append("?");
+						}
 
-                        String sEncTgt = CryptoEngine.getHandle()
-                            .encryptTGT(Utils.stringToHex(sTgt));
+						sUid = URLEncoder.encode(sUid, "UTF-8");
+						sUid = URLEncoder.encode(sUid, "UTF-8");
 
-                        sb.append("aselect_credentials=").append(sEncTgt);
-                        sb.append("_").append(sUid).append("_");
-                        sb.append(sServerId);
-                        sb.append("&rid=").append(sRid);
+						String sEncTgt = CryptoEngine.getHandle().encryptTGT(Utils.stringToHex(sTgt));
 
-                        _sessionManager.killSession(sRid);
+						sb.append("aselect_credentials=").append(sEncTgt);
+						sb.append("_").append(sUid).append("_");
+						sb.append(sServerId);
+						sb.append("&rid=").append(sRid);
 
-                        _systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR "+sb);
-                        servletResponse.sendRedirect(sb.toString());
-                    }
-                    catch (UnsupportedEncodingException e)
-                    {
-                        _systemLogger.log(Level.WARNING, _sModule, sMethod,
-                            "Failed to encode user id.", e);
-                        throw new ASelectException(
-                            Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-                    }
-                    catch (IOException e)
-                    {
-                        _systemLogger.log(Level.WARNING, _sModule, sMethod,
-                            "Failed to redirect user.", e);
-                        throw new ASelectException(Errors.ERROR_ASELECT_IO, e);
-                    }
-                }
-            }
+						_sessionManager.killSession(sRid);
 
-            // get the required level of the application
-            intRequiredLevel = _applicationManager
-                .getRequiredLevel((String)_htSessionContext.get("app_id"));
+						_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sb);
+						servletResponse.sendRedirect(sb.toString());
+					}
+					catch (UnsupportedEncodingException e) {
+						_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to encode user id.", e);
+						throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+					}
+					catch (IOException e) {
+						_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to redirect user.", e);
+						throw new ASelectException(Errors.ERROR_ASELECT_IO, e);
+					}
+				}
+			}
 
-            //check if IP AuthSP is enabled
-            Object authSPsection = _configManager.getSection(_configManager
-                .getSection(null, "authsps"), "authsp", "id=Ip");
+			// get the required level of the application
+			intRequiredLevel = _applicationManager.getRequiredLevel((String) _htSessionContext.get("app_id"));
 
-            sLevel = _configManager.getParam(authSPsection, "level");
+			//check if IP AuthSP is enabled
+			Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp",
+					"id=Ip");
 
-            if (sLevel == null || Integer.parseInt(sLevel) < intRequiredLevel.intValue())
-            {
-                sb = new StringBuffer(sMethod);
-                sb.append("Could not perform IP authentication. Reason : ");
+			sLevel = _configManager.getParam(authSPsection, "level");
 
-                //log this error in system log
-                if (sLevel == null)
-                {
-                    sb.append("The IP AuthSP is not (properly) configured.");
-                }
-                else
-                {
-                    sb.append("The IP authsp security level is too low for application '"
-                            + (String)_htSessionContext.get("app_id") + "'.");
-                }
-                _systemLogger.log(Level.INFO, 
-                    			_sModule,
-                    			sMethod,
-                    			sb.toString());
+			if (sLevel == null || Integer.parseInt(sLevel) < intRequiredLevel.intValue()) {
+				sb = new StringBuffer(sMethod);
+				sb.append("Could not perform IP authentication. Reason : ");
 
-                throw new ASelectException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
-            }
-            htAllowedAuthsps.put("Ip", htServiceRequest.get("client_ip"));
-            _htSessionContext.put("allowed_user_authsps", htAllowedAuthsps);
-            _htSessionContext.put("user_id", htServiceRequest.get("client_ip"));
-            _sessionManager.createSession(sRid, _htSessionContext);
+				//log this error in system log
+				if (sLevel == null) {
+					sb.append("The IP AuthSP is not (properly) configured.");
+				}
+				else {
+					sb.append("The IP authsp security level is too low for application '"
+							+ (String) _htSessionContext.get("app_id") + "'.");
+				}
+				_systemLogger.log(Level.INFO, _sModule, sMethod, sb.toString());
 
-            //go for IP authsp
-            htServiceRequest.put("authsp", "Ip");
-            handleLogin3(htServiceRequest, servletResponse, pwOut);
-        }
-        catch (ASelectException e)
-        {
-          throw e;
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error", e);
-            throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-        }
-    }
+				throw new ASelectException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
+			}
+			htAllowedAuthsps.put("Ip", htServiceRequest.get("client_ip"));
+			_htSessionContext.put("allowed_user_authsps", htAllowedAuthsps);
+			_htSessionContext.put("user_id", htServiceRequest.get("client_ip"));
+			_sessionManager.createSession(sRid, _htSessionContext);
 
-    /**
-     * This method handles the <code>request=logout</code> user request.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * The request can be used to logout a user by destroying his/her TGT.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * Valid TGT
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * TGT is destroyed
-     * <br>
-     * @param htServiceRequest Hashtable containing request parameters
-     * @param servletResponse Used to send (HTTP) information back to user
-     * @param pwOut Used to write information back to the user (HTML)
-     * @throws ASelectException
-     */    
-    private void handleLogout(Hashtable htServiceRequest,
-        HttpServletResponse servletResponse, PrintWriter pwOut)
-    	throws ASelectException
-    {
-        String sMethod = "handleLogout()";
-        String sLoggedOutForm = _configManager.getForm("loggedout");
-
-        try {
-            String sTgt = (String)htServiceRequest.get("aselect_credentials_tgt");
-            Hashtable htTGTContext = _tgtManager.getTGT(sTgt);
-            
-            if (htTGTContext != null) {
-            	_tgtManager.remove(sTgt);
-            	
-            	String sCookieDomain = _configManager.getCookieDomain();
-            	HandlerTools.delCookieValue(servletResponse, "aselect_credentials", sCookieDomain, _systemLogger);
-
-/*                Cookie cKillCookie = new Cookie("aselect_credentials", "jimmmorrisonisalive");
-
-            	String sCookieDomain = _configManager.getCookieDomain();
-                if (sCookieDomain != null)
-                {
-                    cKillCookie.setDomain(sCookieDomain);
-                }
-                
-                _systemLogger.log(Level.INFO, _sModule, sMethod, "Delete Cookie="+cKillCookie.getName()+
-                		" Domain="+sCookieDomain+" Path="+cKillCookie.getPath());
-                servletResponse.addCookie(cKillCookie);
-*/
-                String sRemoteAsUrl = null;
-                String sRemoteOrg = null;
-                sRemoteOrg = (String)htTGTContext.get("proxy_organization");
-                if (sRemoteOrg == null)
-                    sRemoteOrg = (String)htTGTContext.get("organization");
-
-                if (!sRemoteOrg.equals(_sMyOrg)) {
-                    try {
-                        CrossASelectManager oCrossASelectManager = CrossASelectManager.getHandle();
-                        String sResourcegroup = oCrossASelectManager.getRemoteParam(sRemoteOrg, "resourcegroup");
-                        SAMResource oSAMResource = ASelectSAMAgent.getHandle()
-                            .getActiveResource(sResourcegroup);
-                        Object oRemoteServer = oSAMResource.getAttributes();
-                        sRemoteAsUrl = _configManager.getParam(oRemoteServer, "url");
-                    }
-                    catch(ASelectException ae) {
-                        _systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to read SAM.", ae);
-                        sRemoteAsUrl = null;
-                    }
-                }
-                _systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR "+sRemoteAsUrl+"," +
-                		" _sMyOrg="+_sMyOrg+", sRemoteOrg="+sRemoteOrg);
-                if (sRemoteAsUrl != null)
-                {
-                    servletResponse.sendRedirect(sRemoteAsUrl);
-                    return;
-                }
-            }
-            
-            sLoggedOutForm = _configManager.updateTemplate(sLoggedOutForm, htTGTContext);            
-            pwOut.println(sLoggedOutForm);
-            
-        }
-        catch (Exception e) {
+			//go for IP authsp
+			htServiceRequest.put("authsp", "Ip");
+			handleLogin3(htServiceRequest, servletResponse, pwOut);
+		}
+		catch (ASelectException e) {
+			throw e;
+		}
+		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-		}        
-    }
-    
-    /**
+		}
+	}
+
+	/**
+	 * This method handles the <code>request=logout</code> user request.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * The request can be used to logout a user by destroying his/her TGT.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * Valid TGT
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * TGT is destroyed
+	 * <br>
+	 * @param htServiceRequest HashMap containing request parameters
+	 * @param servletResponse Used to send (HTTP) information back to user
+	 * @param pwOut Used to write information back to the user (HTML)
+	 * @throws ASelectException
+	 */
+	private void handleLogout(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+		throws ASelectException
+	{
+		String sMethod = "handleLogout()";
+		String sLoggedOutForm = _configManager.getForm("loggedout");
+
+		try {
+			String sTgt = (String) htServiceRequest.get("aselect_credentials_tgt");
+			HashMap htTGTContext = _tgtManager.getTGT(sTgt);
+
+			if (htTGTContext != null) {
+				_tgtManager.remove(sTgt);
+
+				String sCookieDomain = _configManager.getCookieDomain();
+				HandlerTools.delCookieValue(servletResponse, "aselect_credentials", sCookieDomain, _systemLogger);
+
+				/*                Cookie cKillCookie = new Cookie("aselect_credentials", "jimmmorrisonisalive");
+
+				 String sCookieDomain = _configManager.getCookieDomain();
+				 if (sCookieDomain != null)
+				 {
+				 cKillCookie.setDomain(sCookieDomain);
+				 }
+				 
+				 _systemLogger.log(Level.INFO, _sModule, sMethod, "Delete Cookie="+cKillCookie.getName()+
+				 " Domain="+sCookieDomain+" Path="+cKillCookie.getPath());
+				 servletResponse.addCookie(cKillCookie);
+				 */
+				String sRemoteAsUrl = null;
+				String sRemoteOrg = null;
+				sRemoteOrg = (String) htTGTContext.get("proxy_organization");
+				if (sRemoteOrg == null)
+					sRemoteOrg = (String) htTGTContext.get("organization");
+
+				if (!sRemoteOrg.equals(_sMyOrg)) {
+					try {
+						CrossASelectManager oCrossASelectManager = CrossASelectManager.getHandle();
+						String sResourcegroup = oCrossASelectManager.getRemoteParam(sRemoteOrg, "resourcegroup");
+						SAMResource oSAMResource = ASelectSAMAgent.getHandle().getActiveResource(sResourcegroup);
+						Object oRemoteServer = oSAMResource.getAttributes();
+						sRemoteAsUrl = _configManager.getParam(oRemoteServer, "url");
+					}
+					catch (ASelectException ae) {
+						_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to read SAM.", ae);
+						sRemoteAsUrl = null;
+					}
+				}
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRemoteAsUrl + "," + " _sMyOrg=" + _sMyOrg
+						+ ", sRemoteOrg=" + sRemoteOrg);
+				if (sRemoteAsUrl != null) {
+					servletResponse.sendRedirect(sRemoteAsUrl);
+					return;
+				}
+			}
+
+			sLoggedOutForm = _configManager.updateTemplate(sLoggedOutForm, htTGTContext);
+			pwOut.println(sLoggedOutForm);
+
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+	}
+
+	/**
 	 * This method handles the <code>request=create_tgt</code> user request.
 	 * <br>
 	 * <br>
@@ -1842,135 +1794,114 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * A TGT wil be created <br>
 	 * 
 	 * @param htServiceRequest
-	 *            Hashtable containing request parameters
+	 *            HashMap containing request parameters
 	 * @param servletResponse
 	 *            Used to send (HTTP) information back to user
 	 * @throws ASelectException
-	 */ 
-    private void handleCreateTGT(Hashtable htServiceRequest,
-        HttpServletResponse servletResponse)
-    throws ASelectException
-    {
-        String sMethod = "handleCreateTGTRequest()";
-        AuthenticationLogger authenticationLogger = 
-            ASelectAuthenticationLogger.getHandle();
+	 */
+	private void handleCreateTGT(HashMap htServiceRequest, HttpServletResponse servletResponse)
+		throws ASelectException
+	{
+		String sMethod = "handleCreateTGTRequest()";
+		AuthenticationLogger authenticationLogger = ASelectAuthenticationLogger.getHandle();
 
-        _systemLogger.log(Level.INFO, _sModule, sMethod, "CreateTGTRequest");
-        try
-        {
-            //get output writer
-            // Read expected parameters
-            String sRid = (String)htServiceRequest.get("rid");
-            String sUID = (String)htServiceRequest.get("uid");
-            String sPrivilegedApplication = (String)htServiceRequest.get("app_id");
-            String sSignature = (String)htServiceRequest.get("signature");
-            String sAuthspLevel = (String)htServiceRequest.get("level");  // NOTE: String!!
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "CreateTGTRequest");
+		try {
+			//get output writer
+			// Read expected parameters
+			String sRid = (String) htServiceRequest.get("rid");
+			String sUID = (String) htServiceRequest.get("uid");
+			String sPrivilegedApplication = (String) htServiceRequest.get("app_id");
+			String sSignature = (String) htServiceRequest.get("signature");
+			String sAuthspLevel = (String) htServiceRequest.get("level"); // NOTE: String!!
 
-            // Verify parameters
-            if ((sRid == null) || (sUID == null) || (sPrivilegedApplication == null) || (sSignature == null)
+			// Verify parameters
+			if ((sRid == null) || (sUID == null) || (sPrivilegedApplication == null) || (sSignature == null)
 					|| (sAuthspLevel == null)) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod,
 						"Invalid request received: one or more parameters are missing.");
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
-            
-            // Verify signature
-            try
-            {
-                sSignature = URLDecoder.decode(sSignature, "UTF-8");
-                sUID = URLDecoder.decode(sUID, "UTF-8");
-            }
-            catch(UnsupportedEncodingException eUE) 
-            //Interne fout UTF-8 niet ondersteund
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Internal error: request could not be decoded",eUE);
-                throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-            }
-            
-            StringBuffer sbBuffer = new StringBuffer();
-            sbBuffer.append(sRid).append(sUID);
-            sbBuffer.append(sPrivilegedApplication).append(sAuthspLevel);
-            if (!CryptoEngine.getHandle().verifyPrivilegedSignature(
-                sPrivilegedApplication, sbBuffer.toString(), sSignature))
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Application:"+sPrivilegedApplication+" Invalid signature:"+sSignature);
-                throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-            }
-            
-            // Get session context
-            Hashtable htSessionContext = _sessionManager.getSessionContext(sRid);
-            if (htSessionContext == null)
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Invalid request received: invalid session.");
-                throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);       
-            }      
-            
-            //check authsp_level  
-            try
-            {
-                int iLevel = Integer.parseInt(sAuthspLevel);
-                if(iLevel < 0)
-                {
-                    _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                    "Invalid request received: invalid AuthSP level.");
-                    throw new ASelectException(
-                        Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST); 
-                }
-            }
-            catch(NumberFormatException eNF)
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Invalid request received: invalid AuthSP level.");
-                throw new ASelectException(
-                    Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST,eNF);   
-            }
-            
-            //check user ID
-            IUDBConnector oUDBConnector = null;
-            try
-            {
-                oUDBConnector = UDBConnectorFactory.getUDBConnector();
-            }
-            catch (ASelectException e)
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod,
-                    "Failed to connect with UDB.", e);
-                throw e;
-            }
 
-            if(!oUDBConnector.isUserEnabled(sUID))
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Invalid request received: Unknown UID.");
-                throw new ASelectException(
-                    Errors.ERROR_ASELECT_UDB_UNKNOWN_USER); 
-            }            
+			// Verify signature
+			try {
+				sSignature = URLDecoder.decode(sSignature, "UTF-8");
+				sUID = URLDecoder.decode(sUID, "UTF-8");
+			}
+			catch (UnsupportedEncodingException eUE)
+			//Interne fout UTF-8 niet ondersteund
+			{
+				_systemLogger
+						.log(Level.WARNING, _sModule, sMethod, "Internal error: request could not be decoded", eUE);
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			}
 
-            // Extend session context
-            htSessionContext.put("user_id", sUID);
-            htSessionContext.put("authsp", sPrivilegedApplication);
-            htSessionContext.put("authsp_level", sAuthspLevel);
-            
-            // Bauke: application requested must be passed on to the tolk
-            // Bauke, 20080918 removed
-            /*
-            String sAppl = (String)htServiceRequest.get("appl");
-            _systemLogger.log(Level.INFO, _sModule, sMethod, "UPDSES appl="+sAppl); 
-            htSessionContext.put("appl", sAppl);*/
+			StringBuffer sbBuffer = new StringBuffer();
+			sbBuffer.append(sRid).append(sUID);
+			sbBuffer.append(sPrivilegedApplication).append(sAuthspLevel);
+			if (!CryptoEngine.getHandle().verifyPrivilegedSignature(sPrivilegedApplication, sbBuffer.toString(),
+					sSignature)) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Application:" + sPrivilegedApplication
+						+ " Invalid signature:" + sSignature);
+				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
 
-            if (!_sessionManager.updateSession(sRid, htSessionContext))
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Invalid request received: could not update session.");
-                throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);  
-            }
-            // Log succesful authentication
+			// Get session context
+			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+			if (htSessionContext == null) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request received: invalid session.");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
+			}
+
+			//check authsp_level  
+			try {
+				int iLevel = Integer.parseInt(sAuthspLevel);
+				if (iLevel < 0) {
+					_systemLogger.log(Level.WARNING, _sModule, sMethod,
+							"Invalid request received: invalid AuthSP level.");
+					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+				}
+			}
+			catch (NumberFormatException eNF) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request received: invalid AuthSP level.");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST, eNF);
+			}
+
+			//check user ID
+			IUDBConnector oUDBConnector = null;
+			try {
+				oUDBConnector = UDBConnectorFactory.getUDBConnector();
+			}
+			catch (ASelectException e) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to connect with UDB.", e);
+				throw e;
+			}
+
+			if (!oUDBConnector.isUserEnabled(sUID)) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request received: Unknown UID.");
+				throw new ASelectException(Errors.ERROR_ASELECT_UDB_UNKNOWN_USER);
+			}
+
+			// Extend session context
+			htSessionContext.put("user_id", sUID);
+			htSessionContext.put("authsp", sPrivilegedApplication);
+			htSessionContext.put("authsp_level", sAuthspLevel);
+
+			// Bauke: application requested must be passed on to the tolk
+			// Bauke, 20080918 removed
+			/*
+			 String sAppl = (String)htServiceRequest.get("appl");
+			 _systemLogger.log(Level.INFO, _sModule, sMethod, "UPDSES appl="+sAppl); 
+			 htSessionContext.put("appl", sAppl);*/
+
+			if (!_sessionManager.updateSession(sRid, htSessionContext)) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod,
+						"Invalid request received: could not update session.");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
+			}
+			// Log succesful authentication
 			authenticationLogger.log(new Object[] {
-				"Login", sUID, (String) htServiceRequest.get("client_ip"), _sMyOrg,
-				sPrivilegedApplication, "granted"
+				"Login", sUID, (String) htServiceRequest.get("client_ip"), _sMyOrg, sPrivilegedApplication, "granted"
 			});
 
 			// Issue TGT
@@ -1985,8 +1916,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 	}
-    
-    /**
+
+	/**
 	 * Get the AuthSP servers. Private method that fetches the authentication
 	 * service providers from the user database of the A-Select Servers. The
 	 * user may have been registered or entitled to use several authentication
@@ -1999,12 +1930,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @param sUid
 	 * @throws ASelectException
 	 */
-    private void getAuthsps(String sRid, String sUid)
+	private void getAuthsps(String sRid, String sUid)
 		throws ASelectException
 	{
-		Hashtable htUserAuthsps = new Hashtable();
-		Hashtable htAllowedAuthsps = new Hashtable();
 		String sMethod = "getAuthsps";
+		HashMap htUserAuthsps = new HashMap();
 
 		try {
 			IUDBConnector oUDBConnector = null;
@@ -2016,42 +1946,42 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				throw e;
 			}
 
-			Hashtable htUserProfile;
-			htUserProfile = oUDBConnector.getUserProfile(sUid);
+			HashMap htUserProfile = oUDBConnector.getUserProfile(sUid);
 			if (!((String) htUserProfile.get("result_code")).equals(Errors.ERROR_ASELECT_SUCCESS)) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to get user profile.");
 				throw new ASelectException((String) htUserProfile.get("result_code"));
 			}
-			htUserAuthsps = (Hashtable) htUserProfile.get("user_authsps");
+			htUserAuthsps = (HashMap) htUserProfile.get("user_authsps");
 			if (htUserAuthsps == null) {
 				// should never happen
 				_systemLogger.log(Level.SEVERE, _sModule, sMethod, "INTERNAL ERROR");
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "uid=" + sUid + " profile=" + htUserProfile +
-					" user_authsps=" + htUserAuthsps+" SessionContext="+_htSessionContext);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "uid=" + sUid + " profile=" + htUserProfile
+					+ " user_authsps=" + htUserAuthsps + " SessionContext=" + _htSessionContext);
 
 			// which level is required for the application?
 			// 20090110, Bauke added required_level!
-			Integer intMaxLevel = (Integer)_htSessionContext.get("max_level"); // 'max_level' can be null
-			Integer intLevel = (Integer)_htSessionContext.get("level");
-			String sRequiredLevel = (String)_htSessionContext.get("required_level");
-			
-			Integer intRequiredLevel = (sRequiredLevel==null)? intLevel: Integer.valueOf(sRequiredLevel);
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "required_level=" + intRequiredLevel +
-					" level="+intLevel+" maxlevel="+intMaxLevel);
+			Integer intMaxLevel = (Integer) _htSessionContext.get("max_level"); // 'max_level' can be null
+			Integer intLevel = (Integer) _htSessionContext.get("level");
+			String sRequiredLevel = (String) _htSessionContext.get("required_level");
+
+			Integer intRequiredLevel = (sRequiredLevel == null) ? intLevel : Integer.valueOf(sRequiredLevel);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "required_level=" + intRequiredLevel + " level="
+					+ intLevel + " maxlevel=" + intMaxLevel);
 
 			// fetch the authsps that the user has registered for and
 			// satisfy the level for the current application
 			Vector vAllowedAuthSPs;
 			vAllowedAuthSPs = _authspHandlerManager.getConfiguredAuthSPs(intRequiredLevel, intMaxLevel);
 			// getAllowedAuthSPs(intRequiredLevel.intValue(), htUserAuthsps);
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "AllowedAuthSPs=" + vAllowedAuthSPs);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "Configured AuthSPs=" + vAllowedAuthSPs);
 			if (vAllowedAuthSPs == null) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "INTERNAL ERROR" + sUid);
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
 
+			HashMap htAllowedAuthsps = new HashMap();
 			for (int i = 0; i < vAllowedAuthSPs.size(); i++) {
 				String sAuthSP = (String) vAllowedAuthSPs.elementAt(i);
 				if (htUserAuthsps.containsKey(sAuthSP)) {
@@ -2087,7 +2017,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 	}
 
-    /**
+	/**
 	 * This method will instantiate the protocol handler for the selected
 	 * AuthSP. The protocol handler will compose a redirect url and return it.
 	 * This method will return this redirect url. Some AuthSP's will require a
@@ -2101,112 +2031,91 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @return The error code.
 	 * @throws ASelectException
 	 */
-    private String startAuthentication(String sRid, Hashtable htLoginRequest)
-        throws ASelectException
-    {
-        Hashtable htAllowedAuthsps;
-        String sAuthsp = null;
-        String sMethod = "startAuthentication()";
+	private String startAuthentication(String sRid, HashMap htLoginRequest)
+		throws ASelectException
+	{
+		String sMethod = "startAuthentication";
+		HashMap htAllowedAuthsps;
+		String sAuthsp = null;
 
-        sAuthsp = (String)htLoginRequest.get("authsp");
+		sAuthsp = (String) htLoginRequest.get("authsp");
 
-        htAllowedAuthsps = (Hashtable)_htSessionContext
-            .get("allowed_user_authsps");
-        if (htAllowedAuthsps == null)
-        {
-            _systemLogger.log(Level.WARNING, _sModule, sMethod,
-                "allowed_user_authsps not found in session context");
-            throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-        }
-        if (!htAllowedAuthsps.containsKey(sAuthsp))
-        {
-        	StringBuffer sbError = new StringBuffer(
-                "Invalid/unknown authsp id in request: ");
-            sbError.append(sAuthsp);
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                sbError.toString());
-            throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-        }
-        // _systemLogger.log(Level.INFO, _sModule, sMethod, "session="+_htSessionContext+" login="+htLoginRequest);
-        _htSessionContext.put("authsp", sAuthsp);
-        _htSessionContext.put("my_url", htLoginRequest.get("my_url"));
-        
-        // RH, should be set through AbstractBrowserRequestHandler
-        // but this seems to be the wrong one (AbstractBrowserRequestHandler sets the idp address on the idp)
-        _systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip was "+ _htSessionContext.get("client_ip"));
-        _htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr());
-        _systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip is now "+ _htSessionContext.get("client_ip"));
+		htAllowedAuthsps = (HashMap) _htSessionContext.get("allowed_user_authsps");
+		if (htAllowedAuthsps == null) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "allowed_user_authsps not found in session context");
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		}
+		if (!htAllowedAuthsps.containsKey(sAuthsp)) {
+			StringBuffer sbError = new StringBuffer("Invalid/unknown authsp id in request: ");
+			sbError.append(sAuthsp);
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, sbError.toString());
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+		// _systemLogger.log(Level.INFO, _sModule, sMethod, "session="+_htSessionContext+" login="+htLoginRequest);
+		_htSessionContext.put("authsp", sAuthsp);
+		_htSessionContext.put("my_url", htLoginRequest.get("my_url"));
 
-        if (!_sessionManager.createSession(sRid, _htSessionContext))
-        {
-            _systemLogger.log(Level.WARNING, _sModule, sMethod,
-                "could not update session context");
-            throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-        }
+		// RH, should be set through AbstractBrowserRequestHandler
+		// but this seems to be the wrong one (AbstractBrowserRequestHandler sets the idp address on the idp)
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip was "
+				+ _htSessionContext.get("client_ip") + ", set to " + get_servletRequest().getRemoteAddr());
+		_htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr());
 
-        // everything seems okay -> instantiate the protocol handler for
-        // the selected authsp and let it compute a signed authentication
-        // request
-        IAuthSPProtocolHandler oProtocolHandler;
+		if (!_sessionManager.createSession(sRid, _htSessionContext)) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "could not update session context");
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		}
 
-        try
-        {
-            Object oAuthSPsection = _configManager.getSection(_configManager
-                .getSection(null, "authsps"), "authsp", "id=" + sAuthsp);
+		// everything seems okay -> instantiate the protocol handler for
+		// the selected authsp and let it compute a signed authentication request
+		IAuthSPProtocolHandler oProtocolHandler;
+		try {
+			Object oAuthSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp",
+					"id=" + sAuthsp);
 
-            String sHandlerName = _configManager.getParam(oAuthSPsection,
-                "handler");
+			String sHandlerName = _configManager.getParam(oAuthSPsection, "handler");
 
-            Class oClass = Class.forName(sHandlerName);
-            oProtocolHandler = (IAuthSPProtocolHandler)oClass.newInstance();
+			Class oClass = Class.forName(sHandlerName);
+			oProtocolHandler = (IAuthSPProtocolHandler) oClass.newInstance();
 
-            //          get authsps config and retrieve active resource from SAMAgent
-            String strRG = _configManager.getParam(oAuthSPsection,
-                "resourcegroup");
-            SAMResource mySAMResource = ASelectSAMAgent.getHandle()
-                .getActiveResource(strRG);
-            Object objAuthSPResource = mySAMResource.getAttributes();
-            oProtocolHandler.init(oAuthSPsection, objAuthSPResource);
-        }
-        catch (ASelectConfigException e)
-        {
-            _systemLogger.log(Level.SEVERE, _sModule, sMethod,
-                "Failed to retrieve config for AuthSPs.", e);
-            throw new ASelectException(e.getMessage());
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.SEVERE, _sModule, sMethod,
-                "Failed to initialize handler AuthSPHandler.", e);
-            throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-        }
+			// Get authsps config and retrieve active resource from SAMAgent
+			String strRG = _configManager.getParam(oAuthSPsection, "resourcegroup");
+			SAMResource mySAMResource = ASelectSAMAgent.getHandle().getActiveResource(strRG);
+			Object objAuthSPResource = mySAMResource.getAttributes();
+			oProtocolHandler.init(oAuthSPsection, objAuthSPResource);
+		}
+		catch (ASelectConfigException e) {
+			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to retrieve config for AuthSPs.", e);
+			throw new ASelectException(e.getMessage());
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to initialize handler AuthSPHandler.", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		}
 
-        // let the protocol handler for the authsp do its work
-        Hashtable htResponse = oProtocolHandler
-            .computeAuthenticationRequest(sRid);
-        String sResultCode = (String)htResponse.get("result");
-        if (sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS))
-        {
-            return (String)htResponse.get("redirect_url");
-        }
-        _systemLogger.log(Level.WARNING, _sModule, sMethod,
-            "Failed to create redirect url.");
-        throw new ASelectException(sResultCode);
-    }
+		// let the protocol handler for the authsp do its work
+		HashMap htResponse = oProtocolHandler.computeAuthenticationRequest(sRid);
+		String sResultCode = (String) htResponse.get("result");
+		if (sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
+			return (String) htResponse.get("redirect_url");
+		}
+		_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to create redirect url.");
+		throw new ASelectException(sResultCode);
+	}
 
-    /**
-     * Private method to check whether the user's tgt is valid and satisfies the
-     * required level for the current application.
-     * <br>
-     * @param sTgt The ticket granting ticket.
-     * @param sUid The user ID.
-     * @param sServerId The server ID.
-     * @return True if credentials are valid, otherwise false.
-     */
-    private boolean checkCredentials(String sTgt, String sUid, String sServerId)
+	/**
+	 * Private method to check whether the user's tgt is valid and satisfies the
+	 * required level for the current application.
+	 * <br>
+	 * @param sTgt The ticket granting ticket.
+	 * @param sUid The user ID.
+	 * @param sServerId The server ID.
+	 * @return True if credentials are valid, otherwise false.
+	 */
+	private boolean checkCredentials(String sTgt, String sUid, String sServerId)
 	{
 		String sMethod = "checkCredentials()";
-		Hashtable htTGTContext;
+		HashMap htTGTContext;
 		String sTGTLevel;
 		Integer intRequiredLevel;
 
@@ -2214,11 +2123,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		if (htTGTContext == null) {
 			return false;
 		}
-
 		if (!((String) htTGTContext.get("uid")).equals(sUid)) {
 			return false;
 		}
-
 		if (!sServerId.equals(_sMyServerId)) {
 			return false;
 		}
@@ -2245,8 +2152,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		// so continue authenticate
 		return false;
 	}
-    
-    /**
+
+	/**
 	 * Show the user info contained in the TGT context of the user. Requires a
 	 * valid TGT. <br>
 	 * <br>
@@ -2255,7 +2162,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @param response
 	 * @throws ASelectException
 	 */
-    private void showUserInfo(Hashtable htServiceRequest, HttpServletResponse response)
+	private void showUserInfo(HashMap htServiceRequest, HttpServletResponse response)
 		throws ASelectException
 	{
 		String sMethod = "showUserInfo()";
@@ -2275,7 +2182,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[aselect_url]", sMyUrl);
 
 			String sTemp;
-			Hashtable htTGTContext = _tgtManager.getTGT(sTgt);
+			HashMap htTGTContext = _tgtManager.getTGT(sTgt);
 			try {
 				long lExpTime = _tgtManager.getExpirationTime(sTgt);
 				sTemp = new Date(lExpTime).toString();
@@ -2335,7 +2242,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to read SAM.", ae);
 				}
 				catch (Exception ae) { // Bauke: added
-					_systemLogger.log(Level.INFO, _sModule, sMethod, "Not a 'cross' organization: "+sTemp, ae);
+					_systemLogger.log(Level.INFO, _sModule, sMethod, "Not a 'cross' organization: " + sTemp, ae);
 				}
 			}
 			if (sRemoteAsUrl == null) {
@@ -2351,55 +2258,57 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Error writing output", eIO);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
-	} 
-    
-    // Bauke - Verkeersplein functionality added
-    //
-    private void handleLogin25(Hashtable htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-    throws ASelectException
-    {
-        String sMethod = "handleLogin25()";
-        String sRid = null;
-        String sAuthsp = null;
-        String sUid = null, sUserId = null, sForcedUid = null;
+	}
 
-        try {
-            sAuthsp = (String)htServiceRequest.get("authsp");
-            sRid = (String)htServiceRequest.get("rid");
-            sUid = (String)_htSessionContext.get("uid");
-            sUserId = (String)_htSessionContext.get("user_id");
-            sForcedUid = (String)_htSessionContext.get("forced_uid");
-            _systemLogger.log(Level.INFO, _sModule, sMethod, "Login25 uid="+sUid+" user_id="+sUserId+
-            				" forced_uid="+sForcedUid+" authsp="+sAuthsp);
-            if (sAuthsp == null) {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request, missing parmeter 'authsp'");
-                throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-            }
-           	if (sUid != null) _htSessionContext.remove("uid");  // forces the
-																// user to enter
-																// a user id
-           	if (sUserId != null) _htSessionContext.remove("user_id");
-           	if (sForcedUid != null) _htSessionContext.remove("forced_uid");
-           	_htSessionContext.put("fixed_authsp", sAuthsp);  // must be present
-           	if (sForcedUid != null) _htSessionContext.put("fixed_uid", sForcedUid);
-            
-            if (!_sessionManager.updateSession(sRid, _htSessionContext))
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request received: could not update session.");
-                throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);  
-            }
-           	
-           	_systemLogger.log(Level.INFO, _sModule, sMethod, "htSessionContext="+_htSessionContext);
-            handleLogin1(htServiceRequest, servletResponse, pwOut);
-        }
-        catch (ASelectException ae)
-        {
-          throw ae;
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error", e);
-           throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-        }
-    }
+	// Bauke - Verkeersplein functionality added
+	//
+	private void handleLogin25(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+		throws ASelectException
+	{
+		String sMethod = "handleLogin25()";
+		String sRid = null;
+		String sAuthsp = null;
+		String sUid = null, sUserId = null, sForcedUid = null;
+
+		try {
+			sAuthsp = (String) htServiceRequest.get("authsp");
+			sRid = (String) htServiceRequest.get("rid");
+			sUid = (String) _htSessionContext.get("uid");
+			sUserId = (String) _htSessionContext.get("user_id");
+			sForcedUid = (String) _htSessionContext.get("forced_uid");
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "Login25 uid=" + sUid + " user_id=" + sUserId
+					+ " forced_uid=" + sForcedUid + " authsp=" + sAuthsp);
+			if (sAuthsp == null) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request, missing parmeter 'authsp'");
+				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+			if (sUid != null)
+				_htSessionContext.remove("uid"); // forces the
+			// user to enter
+			// a user id
+			if (sUserId != null)
+				_htSessionContext.remove("user_id");
+			if (sForcedUid != null)
+				_htSessionContext.remove("forced_uid");
+			_htSessionContext.put("fixed_authsp", sAuthsp); // must be present
+			if (sForcedUid != null)
+				_htSessionContext.put("fixed_uid", sForcedUid);
+
+			if (!_sessionManager.updateSession(sRid, _htSessionContext)) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod,
+						"Invalid request received: could not update session.");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
+			}
+
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "htSessionContext=" + _htSessionContext);
+			handleLogin1(htServiceRequest, servletResponse, pwOut);
+		}
+		catch (ASelectException ae) {
+			throw ae;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+	}
 }

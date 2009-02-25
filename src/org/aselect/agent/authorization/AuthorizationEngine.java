@@ -1,14 +1,14 @@
 /*
-* Copyright (c) Stichting SURF. All rights reserved.
-* 
-* A-Select is a trademark registered by SURFnet bv.
-* 
-* This program is distributed under the A-Select license.
-* See the included LICENSE file for details.
-* 
-* If you did not receive a copy of the LICENSE 
-* please contact SURFnet bv. (http://www.surfnet.nl)
-*/
+ * Copyright (c) Stichting SURF. All rights reserved.
+ * 
+ * A-Select is a trademark registered by SURFnet bv.
+ * 
+ * This program is distributed under the A-Select license.
+ * See the included LICENSE file for details.
+ * 
+ * If you did not receive a copy of the LICENSE 
+ * please contact SURFnet bv. (http://www.surfnet.nl)
+ */
 
 /* 
  * $Id: AuthorizationEngine.java,v 1.10 2006/04/14 13:42:48 tom Exp $ 
@@ -51,8 +51,8 @@
 package org.aselect.agent.authorization;
 
 import java.io.StringReader;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -98,450 +98,410 @@ import org.aselect.system.utils.Utils;
  */
 public class AuthorizationEngine
 {
-    /** The module name. */
-    private final String MODULE = "AuthorizationEngine";
+	/** The module name. */
+	private final String MODULE = "AuthorizationEngine";
 
-    /**
-     * The type o f array for rules and URI's.
-     */
-    private final String[] ARRAY_TYPE = new String[0];
-    
-    /** The singleton instance. */
-    private static AuthorizationEngine _instance;
-    
-    /** The configuration manager */
-    private ConfigManager _configManager;
-    
-    /** The system logger */
-    private SystemLogger _systemLogger;
-    
-    /**
-     * Contains all evaluation trees.
-     */
-    private Hashtable _htEvaluationForrest;
-    
-    /**
-     * Can be used to evaluate the authorization rules.
-     */
-    private AuthorizationRuleEvaluator _oEvaluator;
+	/**
+	 * The type o f array for rules and URI's.
+	 */
+	private final String[] ARRAY_TYPE = new String[0];
 
-    // Agent will only allow access after the Filter rules have been sent
-    // Otherwise, when the Agent is started after the filter the rules are not enforced (Security Hole)
-    boolean _bNeedFilterRules = false;
-    
-    /**
-     * Get a static handle to the <code>AuthorizationEngine</code> instance.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Checks if a static instance exists, otherwise it is created. This 
-     * instance is returned.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * One instance of the <code>AuthorizationEngine</code> exists.
-     * 
-     * @return A static handle to the <code>AuthorizationEngine</code>.
-     */
-    public static AuthorizationEngine getHandle()
-    {    
-        if(_instance == null)
-            _instance = new AuthorizationEngine();
-         return _instance;
-    }
-    /**
-     * Initializes the <code>AuthorizationEngine</code>.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Read configuration settings and initializes the components.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * The instance variables and components are initialized.
-     * <br>
-     * @param oAuthorizationConfig The authorization configuration section.
-     * @param configManager The configuration manager.
-     * @param systemlogger The systemlogger.
-     * @return true if initialization succeeds, otherwise false.
-     */
-    public boolean init(Object oAuthorizationConfig, 
-        ConfigManager configManager, SystemLogger systemlogger)
-    {
-        final String sMethod = "init()";
-        Object oAuthorizationApplicationsSection = null;
-        Object oAuthorizationApplicationSection = null;
-        Object oRulesSection = null;
-        Object oRuleSection = null;
-        boolean bRet = false;
-        //set system components
-        _systemLogger = systemlogger;
-        _configManager = configManager;
-        _oEvaluator = new AuthorizationRuleEvaluator(_systemLogger);
-        
-        //create new forrest
-        _htEvaluationForrest = new Hashtable();        
-        
-        try
-        {
-            // Bauke: added
-            try {
-                Object _oAgentSection = _configManager.getSection(null, "agent");
-                String sTemp = _configManager.getParam(_oAgentSection, "need_filter_rules");
-                _systemLogger.log(Level.INFO, MODULE, sMethod, "need_filter_rules="+sTemp);
-                if (sTemp.equalsIgnoreCase("true")) {
-                    _bNeedFilterRules = true;
-                }
-            }
-            catch (ASelectConfigException e) {  // OK too
-                _systemLogger.log(Level.INFO, MODULE, sMethod, "Exception="+e);
-            }
-            //read evaluation trees from configuration and add to forrest
-            try
-            {
-                oAuthorizationApplicationsSection = _configManager.getSection(
-	                oAuthorizationConfig, "policies");
-            }
-            catch(ASelectConfigException e)
-            {
-                //policies section mey be omitted.
-            }
-            
-            if(oAuthorizationApplicationsSection != null)
-                
-	            try
-	            {
-		            //Get first policy
-	                oAuthorizationApplicationSection = _configManager.getSection(
-	                    oAuthorizationApplicationsSection, "policy");
-	            }
-	            catch(ASelectConfigException e)
-	            {
-	                //zero or more policies may be configured.
-	            }
-	            
-	            //For all policies
-	            while(oAuthorizationApplicationSection != null)
-	            {
-	                String sAppId = null;
-	                try
-	                {
-	                   sAppId = _configManager.getParam(
-	                        oAuthorizationApplicationSection, "app_id");                    
-	                }
-	                catch(ASelectConfigException e)
-	                {
-	                    _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-		                    "Invalid policy section: missing 'app_id' parameter", e);
-	                    throw e;
-	                }
-	                //Get first rule
-	                try
-	                {
-		                oRulesSection = _configManager.getSection(
-		                    oAuthorizationApplicationSection, "rules");
-		                oRuleSection = _configManager.getSection(
-		                    oRulesSection,"rule");
-		            }
-		            catch(ASelectConfigException e)
-		            {
-		                _systemLogger.log(Level.WARNING, MODULE, sMethod,  
-		                    "Missing or invalid authorization rules section", e);
-		                throw e;
-		            }
-		            
-		            Vector vRuleIDs = new Vector();
-		            Vector vRules = new Vector();
-		            Vector vURIs = new Vector();
-		            //For all rules
-		            while(oRuleSection != null)
-		            {
-		                String sRuleId = null;
-		                String sRuledata = null;
-		                String sURI = null;
-		                
-		                //Get mandatory ID parameter
-		                try
-		                {	                   
-		                    sRuleId = _configManager.getParam(
-		                        oRuleSection, "id"); 
-		                }
-		                catch(ASelectConfigException e)
-		                {
-		                    _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-			                    "Invalid authorization rule section: missing 'id' parameter", 
-			                    e);
-		                    throw e;
-		                }
-		                
-		                try
-		                {	                   
-		                    sRuledata = _configManager.getParam(
-		                        oRuleSection, "condition"); 
-		                }
-		                catch(ASelectConfigException e)
-		                {
-		                    _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-			                    "Invalid authorization rule section: missing 'condition' parameter", 
-			                    e);
-		                    throw e;
-		                }
-		                		                
-		                //get optional uri paramater
-		                try
-		                {
-		                    sURI = _configManager.getParam(
-		                        oRuleSection, "target"); 
-		                }
-		                catch(ASelectConfigException e)
-		                {
-		                    //No logging; data may be null
-		                } 
-		                //add id, rule and URI
-		                vRuleIDs.add(sRuleId);
-		                vRules.add(sRuledata);
-		                vURIs.add(sURI);	
-		                
-		                //next rule
-		                oRuleSection = _configManager.getNextSection(oRuleSection);
-		            }
-		            
-		            //add rules for the given application
-		            setAuthorizationRules(sAppId, (String[])vRuleIDs.toArray(ARRAY_TYPE),
-		                (String[])vRules.toArray(ARRAY_TYPE), (String[])vURIs.toArray(ARRAY_TYPE));
-	                
-	                //next application
-	                oAuthorizationApplicationSection = 
-	                    _configManager.getNextSection(oAuthorizationApplicationSection);
-	            }
-            
-            bRet = true;
-            _systemLogger.log(Level.INFO, 
-                MODULE, sMethod, "Successfully started");
-            
-        }
-        catch (ASelectConfigException e)
-        {
-           _systemLogger.log(Level.SEVERE, MODULE, sMethod , 
-               "Error in authorization configuration" ,e);
-            bRet = false;
-            
-        }   
-        catch(ASelectAuthorizationException e)
-        {
-            
-            _systemLogger.log(Level.SEVERE, MODULE, sMethod , 
-                "Error in authorization configuration: invalid authorization rule", e);
-            bRet = false;
-        }
-        return bRet;
-    }
-    
-    /**
-     * Set authorization rules for an application.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Adds a new authorization rule to the given application. 
-     * If the application allready contains rules, the rule is appended 
-     * to this application.
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <ul>
-     * 	<li><code>sAppId != null</code></li>
-     * 	<li><code>saRules != null</code></li>
-     * 	<li><code>saURIs != null</code></li>
-     * 	<li><code>saRules.length == saURIs.length</code></li>     * 	
-     * </ul>
-     * <br>
-     * <b>Postconditions:</b>
-     * <br>
-     * The rules are added to the given application 
-     * in the evaluation rules forrest.
-     * <br><br>
-     * @param sAppId The application ID.
-     * @param saIDs The rules ID's.
-     * @param saRules The authorization rules.
-     * @param saURIs The authorization rule URI's.
-     * @throws ASelectAuthorizationException If one or more of the supplied 
-     * 	rules are not valid authorization rules.
-     */
-    public synchronized void setAuthorizationRules(String sAppId, String[] saIDs, 
-        String[] saRules, String[] saURIs) 
-    throws ASelectAuthorizationException
-    {
-        final String sMethod = "addAuthorizationRule()";
-        String sId = null;
-        String sRule = null;
-        String sURI = null;
-        Hashtable htEvaluationTrees = new Hashtable();
-        
-        _systemLogger.log(Level.INFO, MODULE, sMethod, "sAppID="+sAppId+", Set "+saRules.length + " rule(s)");
-        try
-        {  
-	        for (int i=0; i < saRules.length; i++)
-	        {
-	            sRule = saRules[i];
-	            sURI = saURIs[i];
-	            sId = saIDs[i];
-	            _systemLogger.log(Level.INFO, MODULE, sMethod, "RULE="+sRule+" URI="+sURI + " Id="+sId);
-		        AuthorizationRuleScanner oScanner = 
-		            new AuthorizationRuleScanner(new StringReader(sRule));
-		        AuthorizationRuleParser oParser = 
-		            new AuthorizationRuleParser(oScanner, _systemLogger);	        
-	
-	            oParser.parse();
-	            EvaluationTree eTree = oParser.getEvaluationTree();
-	            AuthorizationRule oRule = new AuthorizationRule(sRule, sURI, eTree);
-                htEvaluationTrees.put(sId, oRule);	                        
-	        }
-	        _htEvaluationForrest.put(sAppId, htEvaluationTrees);	
-        }
-        catch (ASelectAuthorizationException e)
-        {
-            StringBuffer sb = new StringBuffer(
-                "Error parsing authorization rule : \"");
-            sb.append(sRule).append("\"");
-            _systemLogger.log(Level.WARNING, MODULE, sMethod, sb.toString(), e);
-            throw e;
-        }
-    }
-    
-    /**
-     * Check if a user is authorized.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Evaluates the rules of the given application by subtitution of the 
-     * given user attributrs and validating all rules.
-     * <br>
-     * The user is only authorized if all rules of the application apply.
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <ul>
-     * 	<li><code>sAppId != null</code></li>
-     * 	<li><code>htUserAttributes != null</code></li>
-     * </ul>
-     * <br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * @param sAppId The app_id of the application that 
-     * 	the user is authorized for.
-     * @param sURI The URI for which the user is authorized.
-     * @param htUserAttributes The user attributes.
-     * @return <code>true</code> if the user is authorized to use the given 
-     * 	application, otherwise <code>false</code>.
-     * @throws ASelectAuthorizationException If evalution of the rule fails.
-     */
-    public boolean isUserAuthorized(String sAppId, String sURI,
-        Hashtable htUserAttributes) throws ASelectAuthorizationException
-    {
-        final String sMethod = "isUserAuthorized()";
-        StringBuffer sb = null;
-        boolean bAuthorized = true;
-        //get all evaluation trees of the given application
-        Hashtable htEvaluationTrees = (Hashtable)_htEvaluationForrest
-            .get(sAppId);
+	/** The singleton instance. */
+	private static AuthorizationEngine _instance;
 
-        _systemLogger.log(Level.INFO, MODULE, sMethod, "sAppID="+sAppId+((_bNeedFilterRules)? " need_filter_rules": "")+", sURI="+sURI);
+	/** The configuration manager */
+	private ConfigManager _configManager;
 
-        if (htEvaluationTrees == null) //no evaluation trees
-        {
-        	//No rules so user is authorized, unless NeedFilterRules was set
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "No Rules -> " + ((_bNeedFilterRules)? "NOT OK (filter did not send them)": "OK"));
-            bAuthorized = !_bNeedFilterRules;  //true;
-        }
-        else
-        {
-            Enumeration eEvaluationTrees = htEvaluationTrees.keys();
-            while (eEvaluationTrees.hasMoreElements())
-            {
-                String sRuleId = (String)eEvaluationTrees.nextElement();
-                AuthorizationRule oRule = (AuthorizationRule)htEvaluationTrees.get(sRuleId);
-                EvaluationTree eTree = oRule.getEvaluationTree();
+	/** The system logger */
+	private SystemLogger _systemLogger;
 
-                String sURIMask = oRule.getURI();                
-                _systemLogger.log(Level.INFO, MODULE, sMethod, "sRuleId="+sRuleId+" sURIMask="+sURIMask+" sURI="+sURI);
-                
-                if (sURIMask == null || 
-                    (sURI != null && Utils.matchWildcardMask(sURI, sURIMask)))
-                //This URI obliges authorization
-                {
-                    try
-                    {
-                        _systemLogger.log(Level.INFO, MODULE, sMethod, "Need AUTH, tree="+eTree+" attr="+htUserAttributes);
-                        if (!_oEvaluator.evaluate(htUserAttributes, eTree))
-                        {
-                            bAuthorized = false;
-                            sb = new StringBuffer(
-                                "User attributes not sufficient for rule: '");
-                            sb.append(sRuleId).append("' ('");
-                            sb.append(oRule.getPlainTextRule()).append("').");
-                            _systemLogger.log(Level.WARNING, MODULE, sMethod,
-                                sb.toString());
-                        }
-                    }
-                    catch (ASelectAuthorizationException e)
-                    {
-                        sb = new StringBuffer(
-                            "Error evaluating authorization rule: '");
-                        sb.append(sRuleId).append("' ('");
-                        sb.append(oRule.getPlainTextRule()).append("')");
-                        _systemLogger.log(Level.WARNING, MODULE, sMethod, sb
-                            .toString(), e);
-                        throw e;
-                    }
-                }
-            }
-        }
-        _systemLogger.log(Level.INFO, MODULE, sMethod, (bAuthorized)? "OK": "NOT OK");
-        return bAuthorized;
-    }
-    
-    /**
-     * Retrieve a String represenattion of this <code>AuthorizationEngine</code>.
-     * @see java.lang.Object#toString()
-     */
-    public String toString()
-    {
-        StringBuffer sb = new StringBuffer();
-        Enumeration eApplications = _htEvaluationForrest.keys();        
-        while(eApplications.hasMoreElements())
-        {
-            String sAppId = (String)eApplications.nextElement();
-            sb.append(sAppId).append(": ");
-            Hashtable htRule = (Hashtable)_htEvaluationForrest.get(sAppId);
-            sb.append(htRule.keySet());            
-            sb.append("\n");
-        }
-        
-       return sb.toString(); 
-    }
-    
-    /**
-     * Private default constructor.    
-     */
-    private AuthorizationEngine()
-    {
-        
-    }
+	/**
+	 * Contains all evaluation trees.
+	 */
+	private HashMap _htEvaluationForrest;
+
+	/**
+	 * Can be used to evaluate the authorization rules.
+	 */
+	private AuthorizationRuleEvaluator _oEvaluator;
+
+	// Agent will only allow access after the Filter rules have been sent
+	// Otherwise, when the Agent is started after the filter the rules are not enforced (Security Hole)
+	boolean _bNeedFilterRules = false;
+
+	/**
+	 * Get a static handle to the <code>AuthorizationEngine</code> instance.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Checks if a static instance exists, otherwise it is created. This 
+	 * instance is returned.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * One instance of the <code>AuthorizationEngine</code> exists.
+	 * 
+	 * @return A static handle to the <code>AuthorizationEngine</code>.
+	 */
+	public static AuthorizationEngine getHandle()
+	{
+		if (_instance == null)
+			_instance = new AuthorizationEngine();
+		return _instance;
+	}
+
+	/**
+	 * Initializes the <code>AuthorizationEngine</code>.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Read configuration settings and initializes the components.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * The instance variables and components are initialized.
+	 * <br>
+	 * @param oAuthorizationConfig The authorization configuration section.
+	 * @param configManager The configuration manager.
+	 * @param systemlogger The systemlogger.
+	 * @return true if initialization succeeds, otherwise false.
+	 */
+	public boolean init(Object oAuthorizationConfig, ConfigManager configManager, SystemLogger systemlogger)
+	{
+		final String sMethod = "init()";
+		Object oAuthorizationApplicationsSection = null;
+		Object oAuthorizationApplicationSection = null;
+		Object oRulesSection = null;
+		Object oRuleSection = null;
+		boolean bRet = false;
+		//set system components
+		_systemLogger = systemlogger;
+		_configManager = configManager;
+		_oEvaluator = new AuthorizationRuleEvaluator(_systemLogger);
+
+		//create new forrest
+		_htEvaluationForrest = new HashMap();
+
+		try {
+			// Bauke: added
+			try {
+				Object _oAgentSection = _configManager.getSection(null, "agent");
+				String sTemp = _configManager.getParam(_oAgentSection, "need_filter_rules");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "need_filter_rules=" + sTemp);
+				if (sTemp.equalsIgnoreCase("true")) {
+					_bNeedFilterRules = true;
+				}
+			}
+			catch (ASelectConfigException e) { // OK too
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Exception=" + e);
+			}
+			//read evaluation trees from configuration and add to forrest
+			try {
+				oAuthorizationApplicationsSection = _configManager.getSection(oAuthorizationConfig, "policies");
+			}
+			catch (ASelectConfigException e) {
+				//policies section mey be omitted.
+			}
+
+			if (oAuthorizationApplicationsSection != null)
+
+				try {
+					//Get first policy
+					oAuthorizationApplicationSection = _configManager.getSection(oAuthorizationApplicationsSection,
+							"policy");
+				}
+				catch (ASelectConfigException e) {
+					//zero or more policies may be configured.
+				}
+
+			//For all policies
+			while (oAuthorizationApplicationSection != null) {
+				String sAppId = null;
+				try {
+					sAppId = _configManager.getParam(oAuthorizationApplicationSection, "app_id");
+				}
+				catch (ASelectConfigException e) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod,
+							"Invalid policy section: missing 'app_id' parameter", e);
+					throw e;
+				}
+				//Get first rule
+				try {
+					oRulesSection = _configManager.getSection(oAuthorizationApplicationSection, "rules");
+					oRuleSection = _configManager.getSection(oRulesSection, "rule");
+				}
+				catch (ASelectConfigException e) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing or invalid authorization rules section",
+							e);
+					throw e;
+				}
+
+				Vector vRuleIDs = new Vector();
+				Vector vRules = new Vector();
+				Vector vURIs = new Vector();
+				//For all rules
+				while (oRuleSection != null) {
+					String sRuleId = null;
+					String sRuledata = null;
+					String sURI = null;
+
+					//Get mandatory ID parameter
+					try {
+						sRuleId = _configManager.getParam(oRuleSection, "id");
+					}
+					catch (ASelectConfigException e) {
+						_systemLogger.log(Level.WARNING, MODULE, sMethod,
+								"Invalid authorization rule section: missing 'id' parameter", e);
+						throw e;
+					}
+
+					try {
+						sRuledata = _configManager.getParam(oRuleSection, "condition");
+					}
+					catch (ASelectConfigException e) {
+						_systemLogger.log(Level.WARNING, MODULE, sMethod,
+								"Invalid authorization rule section: missing 'condition' parameter", e);
+						throw e;
+					}
+
+					//get optional uri paramater
+					try {
+						sURI = _configManager.getParam(oRuleSection, "target");
+					}
+					catch (ASelectConfigException e) {
+						//No logging; data may be null
+					}
+					//add id, rule and URI
+					vRuleIDs.add(sRuleId);
+					vRules.add(sRuledata);
+					vURIs.add(sURI);
+
+					//next rule
+					oRuleSection = _configManager.getNextSection(oRuleSection);
+				}
+
+				//add rules for the given application
+				setAuthorizationRules(sAppId, (String[]) vRuleIDs.toArray(ARRAY_TYPE), (String[]) vRules
+						.toArray(ARRAY_TYPE), (String[]) vURIs.toArray(ARRAY_TYPE));
+
+				//next application
+				oAuthorizationApplicationSection = _configManager.getNextSection(oAuthorizationApplicationSection);
+			}
+
+			bRet = true;
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully started");
+
+		}
+		catch (ASelectConfigException e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Error in authorization configuration", e);
+			bRet = false;
+
+		}
+		catch (ASelectAuthorizationException e) {
+
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod,
+					"Error in authorization configuration: invalid authorization rule", e);
+			bRet = false;
+		}
+		return bRet;
+	}
+
+	/**
+	 * Set authorization rules for an application.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Adds a new authorization rule to the given application. 
+	 * If the application allready contains rules, the rule is appended 
+	 * to this application.
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <ul>
+	 * 	<li><code>sAppId != null</code></li>
+	 * 	<li><code>saRules != null</code></li>
+	 * 	<li><code>saURIs != null</code></li>
+	 * 	<li><code>saRules.length == saURIs.length</code></li>     * 	
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * The rules are added to the given application 
+	 * in the evaluation rules forrest.
+	 * <br><br>
+	 * @param sAppId The application ID.
+	 * @param saIDs The rules ID's.
+	 * @param saRules The authorization rules.
+	 * @param saURIs The authorization rule URI's.
+	 * @throws ASelectAuthorizationException If one or more of the supplied 
+	 * 	rules are not valid authorization rules.
+	 */
+	public synchronized void setAuthorizationRules(String sAppId, String[] saIDs, String[] saRules, String[] saURIs)
+		throws ASelectAuthorizationException
+	{
+		final String sMethod = "addAuthorizationRule()";
+		String sId = null;
+		String sRule = null;
+		String sURI = null;
+		HashMap htEvaluationTrees = new HashMap();
+
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "sAppID=" + sAppId + ", Set " + saRules.length + " rule(s)");
+		try {
+			for (int i = 0; i < saRules.length; i++) {
+				sRule = saRules[i];
+				sURI = saURIs[i];
+				sId = saIDs[i];
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "RULE=" + sRule + " URI=" + sURI + " Id=" + sId);
+				AuthorizationRuleScanner oScanner = new AuthorizationRuleScanner(new StringReader(sRule));
+				AuthorizationRuleParser oParser = new AuthorizationRuleParser(oScanner, _systemLogger);
+
+				oParser.parse();
+				EvaluationTree eTree = oParser.getEvaluationTree();
+				AuthorizationRule oRule = new AuthorizationRule(sRule, sURI, eTree);
+				htEvaluationTrees.put(sId, oRule);
+			}
+			_htEvaluationForrest.put(sAppId, htEvaluationTrees);
+		}
+		catch (ASelectAuthorizationException e) {
+			StringBuffer sb = new StringBuffer("Error parsing authorization rule : \"");
+			sb.append(sRule).append("\"");
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sb.toString(), e);
+			throw e;
+		}
+	}
+
+	/**
+	 * Check if a user is authorized.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Evaluates the rules of the given application by subtitution of the 
+	 * given user attributrs and validating all rules.
+	 * <br>
+	 * The user is only authorized if all rules of the application apply.
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <ul>
+	 * 	<li><code>sAppId != null</code></li>
+	 * 	<li><code>htUserAttributes != null</code></li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * @param sAppId The app_id of the application that 
+	 * 	the user is authorized for.
+	 * @param sURI The URI for which the user is authorized.
+	 * @param htUserAttributes The user attributes.
+	 * @return <code>true</code> if the user is authorized to use the given 
+	 * 	application, otherwise <code>false</code>.
+	 * @throws ASelectAuthorizationException If evalution of the rule fails.
+	 */
+	public boolean isUserAuthorized(String sAppId, String sURI, HashMap htUserAttributes)
+		throws ASelectAuthorizationException
+	{
+		final String sMethod = "isUserAuthorized()";
+		StringBuffer sb = null;
+		boolean bAuthorized = true;
+		//get all evaluation trees of the given application
+		HashMap htEvaluationTrees = (HashMap) _htEvaluationForrest.get(sAppId);
+
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "sAppID=" + sAppId
+				+ ((_bNeedFilterRules) ? " need_filter_rules" : "") + ", sURI=" + sURI);
+
+		if (htEvaluationTrees == null) //no evaluation trees
+		{
+			//No rules so user is authorized, unless NeedFilterRules was set
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "No Rules -> "
+					+ ((_bNeedFilterRules) ? "NOT OK (filter did not send them)" : "OK"));
+			bAuthorized = !_bNeedFilterRules; //true;
+		}
+		else {
+			Set keys = htEvaluationTrees.keySet();
+			for (Object s : keys) {
+				String sRuleId = (String) s;
+				//Enumeration eEvaluationTrees = htEvaluationTrees.keys();
+				//while (eEvaluationTrees.hasMoreElements())
+				//{
+				//String sRuleId = (String)eEvaluationTrees.nextElement();
+				AuthorizationRule oRule = (AuthorizationRule) htEvaluationTrees.get(sRuleId);
+				EvaluationTree eTree = oRule.getEvaluationTree();
+
+				String sURIMask = oRule.getURI();
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "sRuleId=" + sRuleId + " sURIMask=" + sURIMask
+						+ " sURI=" + sURI);
+
+				if (sURIMask == null || (sURI != null && Utils.matchWildcardMask(sURI, sURIMask)))
+				//This URI obliges authorization
+				{
+					try {
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "Need AUTH, tree=" + eTree + " attr="
+								+ htUserAttributes);
+						if (!_oEvaluator.evaluate(htUserAttributes, eTree)) {
+							bAuthorized = false;
+							sb = new StringBuffer("User attributes not sufficient for rule: '");
+							sb.append(sRuleId).append("' ('");
+							sb.append(oRule.getPlainTextRule()).append("').");
+							_systemLogger.log(Level.WARNING, MODULE, sMethod, sb.toString());
+						}
+					}
+					catch (ASelectAuthorizationException e) {
+						sb = new StringBuffer("Error evaluating authorization rule: '");
+						sb.append(sRuleId).append("' ('");
+						sb.append(oRule.getPlainTextRule()).append("')");
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, sb.toString(), e);
+						throw e;
+					}
+				}
+			}
+		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, (bAuthorized) ? "OK" : "NOT OK");
+		return bAuthorized;
+	}
+
+	/**
+	 * Retrieve a String represenattion of this <code>AuthorizationEngine</code>.
+	 * @see java.lang.Object#toString()
+	 */
+	public String toString()
+	{
+		StringBuffer sb = new StringBuffer();
+		Set keys = _htEvaluationForrest.keySet();
+		for (Object s : keys) {
+			String sAppId = (String) s;
+		//Enumeration eApplications = _htEvaluationForrest.keys();
+		//while (eApplications.hasMoreElements()) {
+			//String sAppId = (String) eApplications.nextElement();
+			sb.append(sAppId).append(": ");
+			HashMap htRule = (HashMap) _htEvaluationForrest.get(sAppId);
+			sb.append(htRule.keySet());
+			sb.append("\n");
+		}
+
+		return sb.toString();
+	}
+
+	/**
+	 * Private default constructor.    
+	 */
+	private AuthorizationEngine() {
+
+	}
 
 }

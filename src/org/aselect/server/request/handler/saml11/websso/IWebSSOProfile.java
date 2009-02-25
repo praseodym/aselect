@@ -15,7 +15,7 @@
  */
 package org.aselect.server.request.handler.saml11.websso;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -95,7 +95,7 @@ public interface IWebSSOProfile
      * @param sHost the host representation of the clients IP address
      * @throws ASelectException if processing fails
      */
-    public void process(Hashtable htInfo, HttpServletResponse response
+    public void process(HashMap htInfo, HttpServletResponse response
         , String sIP, String sHost) throws ASelectException;
     
     /**

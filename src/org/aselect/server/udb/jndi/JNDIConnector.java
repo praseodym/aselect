@@ -58,8 +58,9 @@
 
 package org.aselect.server.udb.jndi;
 
-import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Set;
 import java.util.logging.Level;
 
 import javax.naming.Context;
@@ -114,7 +115,7 @@ public class JNDIConnector implements IUDBConnector
     /**
      * Contains all AuthSPs configured in the A-Select Server configuration
      */
-    private Hashtable _htConfiguredAuthSPs;
+    private HashMap _htConfiguredAuthSPs;
     
     /**
      * Config item for base dn
@@ -151,7 +152,7 @@ public class JNDIConnector implements IUDBConnector
     public void init(Object oConfigSection) throws ASelectUDBException
     {
         String sMethod = "init()";
-        _htConfiguredAuthSPs = new Hashtable();
+        _htConfiguredAuthSPs = new HashMap();
         Object oAuthSPs = null;
         Object oAuthSP = null;
         String sAuthSPID = null;
@@ -240,7 +241,7 @@ public class JNDIConnector implements IUDBConnector
      * <td>Specifies an <code>Errors.NO_ERROR</code> for success
      * or an relevant A-Select Error.</td></tr>
      * <tr><td><code>user_authsps</code></td>
-     * <td>Hashtable containing the AuthSP's that the user is registered for.<br>
+     * <td>HashMap containing the AuthSP's that the user is registered for.<br>
      * Within this hashtable each AuthSP has an entry with the value of the
      * user attributes that specific AuthSP.</td></tr>
      * </table>
@@ -248,12 +249,12 @@ public class JNDIConnector implements IUDBConnector
      * <br><br>
      * @see org.aselect.server.udb.IUDBConnector#getUserProfile(java.lang.String)
      */
-    public Hashtable getUserProfile(String sUserId)
+    public HashMap getUserProfile(String sUserId)
     {
         String sMethod = "getUserProfile()";
         
         DirContext oDirContext = null;
-        Hashtable htResponse = new Hashtable();
+        HashMap htResponse = new HashMap();
         NamingEnumeration oSearchResults = null;
         String sAttribute = null;
         String sAttributeValue = null;
@@ -261,8 +262,8 @@ public class JNDIConnector implements IUDBConnector
         
         Attribute oAttribute = null;
         Attributes oAttributes = null;
-        Hashtable htUserAttributes = new Hashtable();
-        Hashtable htUserRecord = new Hashtable();
+        HashMap htUserAttributes = new HashMap();
+        HashMap htUserRecord = new HashMap();
         
         htResponse.put("result_code", Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
 
@@ -377,11 +378,13 @@ public class JNDIConnector implements IUDBConnector
             }
             
             //resolve all user attributes
-            String sAttributeName = null;
-            Enumeration enumAttributeKeys = htUserRecord.keys();
-            while (enumAttributeKeys.hasMoreElements())
-            {
-                sAttributeName = (String)enumAttributeKeys.nextElement();
+            Set keys = htUserRecord.keySet();
+			for (Object s : keys) {
+				String sAttributeName = (String) s;
+            //Enumeration enumAttributeKeys = htUserRecord.keys();
+            //while (enumAttributeKeys.hasMoreElements())
+            //{
+              //  sAttributeName = (String)enumAttributeKeys.nextElement();
                 sAttributeValue = (String)htUserRecord.get(sAttributeName);
                 
                 if (sAttributeName.startsWith("ASELECT") &&
@@ -726,7 +729,7 @@ public class JNDIConnector implements IUDBConnector
     }
 
     /**
-     * Creates an <code>Hashtable</code> containing the JNDI environment variables.
+     * Creates an <code>HashMap</code> containing the JNDI environment variables.
      * <br><br>
      * @param sDriver The JNDI driver that must be used
      * @param sPrincipal The principal dn
@@ -974,7 +977,7 @@ public class JNDIConnector implements IUDBConnector
      * <br><br>
      * @param sUserID The A-Select user id
      * @param sErrorCode The error code of the error that occured
-     * @param sMessage The authenitcation log message
+     * @param sMessage The authentication log message
      */
     private void logAuthentication(String sUserID, String sErrorCode, String sMessage)
     {

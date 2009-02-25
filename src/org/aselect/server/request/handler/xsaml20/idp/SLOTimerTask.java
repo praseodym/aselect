@@ -1,7 +1,7 @@
 package org.aselect.server.request.handler.xsaml20.idp;
 
 import java.security.PublicKey;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.TimerTask;
 import java.util.logging.Level;
@@ -61,7 +61,7 @@ public class SLOTimerTask extends TimerTask
 		// Check if there are any involved SPs left for this user
 //		try {
 		TGTManager tgtManager = TGTManager.getHandle();
-		Hashtable tgtContext = tgtManager.getTGT(tgtId);
+		HashMap tgtContext = tgtManager.getTGT(tgtId);
 		if (tgtContext == null) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "RUN END - requestId="+requestId+" NO TGT, no backchannel logout requiered");
 			return;

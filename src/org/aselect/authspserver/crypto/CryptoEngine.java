@@ -63,7 +63,7 @@ import java.security.Provider;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import org.aselect.authspserver.config.AuthSPConfigManager;
@@ -139,7 +139,7 @@ public class CryptoEngine
      * Contains all public keys of the A-Select Servers connected with this 
      * AuthSP Server.
      */
-    private Hashtable _htPublicKeys = null;
+    private HashMap _htPublicKeys = null;
 
     /**
      * The name of the algorithm used to generate/verify signatures
@@ -182,7 +182,7 @@ public class CryptoEngine
             AuthSPSystemLogger oAuthSPSystemLogger) throws ASelectException
     {
         _systemLogger = oAuthSPSystemLogger;
-        _htPublicKeys = new Hashtable();
+        _htPublicKeys = new HashMap();
         String sMethod = "CryptoEngine()";
         
         try
@@ -228,7 +228,7 @@ public class CryptoEngine
             
             Object oCryptoProvider = null;
             
-            Hashtable htProviders = new Hashtable();
+            HashMap htProviders = new HashMap();
             if (oProvidersSection != null)
             {
                 try
@@ -705,7 +705,7 @@ public class CryptoEngine
         }
     }    
     
-    private void readSignatureConfig(Object oCryptoSection, Hashtable htProviders)
+    private void readSignatureConfig(Object oCryptoSection, HashMap htProviders)
 		throws ASelectException
 	{
 	    String sMethod = "readSignatureConfig()";

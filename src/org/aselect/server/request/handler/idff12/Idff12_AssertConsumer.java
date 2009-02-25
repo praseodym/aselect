@@ -16,7 +16,7 @@
 package org.aselect.server.request.handler.idff12;
 
 import java.security.NoSuchAlgorithmException;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -67,7 +67,7 @@ public class Idff12_AssertConsumer extends SamlAssertionConsumer
             throw new ASelectException (Errors.ERROR_ASELECT_INIT_ERROR, e);
         }
         
-        _htIdPs = new Hashtable();
+        _htIdPs = new HashMap();
         while (oIdP != null)
         {
             String sIdP_ID = null;
@@ -96,7 +96,7 @@ public class Idff12_AssertConsumer extends SamlAssertionConsumer
                 throw new ASelectException (Errors.ERROR_ASELECT_INIT_ERROR);
             }
             
-            if (_htIdPs.contains(sIdP_URL)) {
+            if (_htIdPs.containsValue(sIdP_URL)) {
                 _systemLogger.log(Level.WARNING, MODULE, sMethod
                     , "Identity Provider URL isn't unique: " + sIdP_URL);
                 throw new ASelectException (Errors.ERROR_ASELECT_INIT_ERROR);

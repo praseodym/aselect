@@ -32,7 +32,7 @@
 package org.aselect.server.cross;
 
 import java.io.PrintWriter;
-import java.util.Hashtable;
+import java.util.HashMap;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -91,12 +91,12 @@ public interface ISelectorHandler
 	 * <br>
 	 * The HTML page should contain a form with <code>request=cross_login</code>.
 	 * <br>
-	 * If enough information is gathered, the function should return a Hashtable
+	 * If enough information is gathered, the function should return a HashMap
 	 * as described below.<br>
 	 * @param htServiceRequest
 	 * @param servletResponse
 	 * @param pwOut
-	 * @return Hashtable containing
+	 * @return HashMap containing
 	 * <ul>
 	 * <li> 'organization_id'
 	 * <li> 'user_id' (optional)
@@ -104,7 +104,7 @@ public interface ISelectorHandler
 	 * or <b>NULL</b>
 	 * @throws ASelectException
 	 */
-	public Hashtable getRemoteServerId(Hashtable htServiceRequest,
+	public HashMap getRemoteServerId(HashMap htServiceRequest,
 		HttpServletResponse servletResponse,
 		PrintWriter pwOut)throws ASelectException;
 

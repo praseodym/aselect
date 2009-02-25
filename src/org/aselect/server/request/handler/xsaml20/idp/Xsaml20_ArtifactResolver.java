@@ -1,18 +1,10 @@
 package org.aselect.server.request.handler.xsaml20.idp;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.PrintWriter;
 import java.io.StringReader;
-import java.net.URLEncoder;
 import java.security.PublicKey;
-import java.util.Arrays;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletInputStream;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilder;

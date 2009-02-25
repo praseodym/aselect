@@ -15,7 +15,7 @@
  */
 package org.aselect.server.request.handler;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
 import java.util.logging.Level;

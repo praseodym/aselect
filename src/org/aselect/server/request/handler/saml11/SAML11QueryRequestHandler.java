@@ -18,8 +18,10 @@ package org.aselect.server.request.handler.saml11;
 
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -81,7 +83,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
     private String _sASelectServerID;
     private String _sAttributeNamespace;
     private long _lAssertionExpireTime;
-    private Hashtable _htAuthenticationMethods;
+    private HashMap _htAuthenticationMethods;
     private TGTManager _oTGTManager;
     
     /**
@@ -235,7 +237,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
                 throw new ASelectException (Errors.ERROR_ASELECT_INIT_ERROR, e);
             }
             
-            _htAuthenticationMethods = new Hashtable();
+            _htAuthenticationMethods = new HashMap();
             while (oIdentifier != null)
             {
                 String sAuthSPID = null;
@@ -373,7 +375,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
             
             String sSAMLSessionID = SESSION_ID_PREFIX + sNameIdentifier;
             
-            Hashtable htSAMLSession = _oTGTManager.getTGT(sSAMLSessionID);
+            HashMap htSAMLSession = _oTGTManager.getTGT(sSAMLSessionID);
             if (htSAMLSession == null)
             {
                 _systemLogger.log(Level.WARNING, MODULE, sMethod, "No SAML session information found for name identifier: " + sNameIdentifier);
@@ -451,7 +453,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
     /**
      * Handles a SAML Authentication Query.
      * <br><br>
-     * @param htSAMLSession Hashtable containing SAML Session information
+     * @param htSAMLSession HashMap containing SAML Session information
      * @param oSAMLAuthenticationQuery SAML Subject Query object
      * @param sNameIdentifier A-Select User ID
      * @param lExpireTime SAML Authentication statement expiration time
@@ -460,7 +462,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
      * @return SAMLSubjectStatement that can be sent to the requestor
      * @throws SAMLException if internal error occurred
      */
-    private SAMLSubjectStatement handleAuthenticationQuery(Hashtable htSAMLSession
+    private SAMLSubjectStatement handleAuthenticationQuery(HashMap htSAMLSession
         , SAMLAuthenticationQuery oSAMLAuthenticationQuery
         , String sNameIdentifier
         , long lExpireTime
@@ -485,10 +487,13 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
             if (sAuthMethod != null)
             {
                 //check if user is authenticated with an AuthSP that has configured AuthMethod == sAuthMethod
-                Enumeration enumAuthSPIDs = _htAuthenticationMethods.keys();
-                while (enumAuthSPIDs.hasMoreElements() && sAuthSPID == null)
-                {
-                    String sConfiguredAuthSPID = (String)enumAuthSPIDs.nextElement();
+                Set keys = _htAuthenticationMethods.keySet();
+    			for (Object s : keys) {
+    				String sConfiguredAuthSPID = (String) s;
+                //Enumeration enumAuthSPIDs = _htAuthenticationMethods.keys();
+                //while (enumAuthSPIDs.hasMoreElements() && sAuthSPID == null)
+                //{
+                //    String sConfiguredAuthSPID = (String)enumAuthSPIDs.nextElement();
                     String sConfiguredAuthMethod = (String)_htAuthenticationMethods.get(sConfiguredAuthSPID);
                     if (sConfiguredAuthMethod.equals(sAuthMethod)
                         && vAuthSPs.contains(sConfiguredAuthSPID))
@@ -553,24 +558,24 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
     /**
      * Handles a SAML Attribute Query.
      * <br><br>
-     * @param htSAMLSession Hashtable containing SAML Session information
+     * @param htSAMLSession HashMap containing SAML Session information
      * @param oSAMLAttributeQuery SAML Subject Query object
      * @param sNameIdentifier A-Select User ID
      * @return SAMLSubjectStatement that can be sent to the requestor
      * @throws SAMLException if internal error occurred
      */
-    private SAMLSubjectStatement handleAttributeQuery(Hashtable htSAMLSession
+    private SAMLSubjectStatement handleAttributeQuery(HashMap htSAMLSession
         , SAMLAttributeQuery oSAMLAttributeQuery
         , String sNameIdentifier)
         throws SAMLException
     {
         String sMethod = "handleAttributeQuery()";
         SAMLAttributeStatement oSAMLAttributeStatement = null;
-        Hashtable htAppIDAttributes = null;
+        HashMap htAppIDAttributes = null;
         
         try
         {
-            Hashtable htAttributes = (Hashtable)htSAMLSession.get("attributes");
+            HashMap<String,Object> htAttributes = (HashMap)htSAMLSession.get("attributes");
             if (htAttributes == null)
             {
                 //no attributes found
@@ -581,7 +586,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
             String sResource = oSAMLAttributeQuery.getResource();
             if (sResource != null)
             {
-                if ((htAppIDAttributes = (Hashtable)htAttributes.get(sResource)) == null)
+                if ((htAppIDAttributes = (HashMap)htAttributes.get(sResource)) == null)
                 {
                     StringBuffer sbError = new StringBuffer("Unknown resource (");
                     sbError.append(sResource);
@@ -593,23 +598,29 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
             }
             else
             {
-                htAppIDAttributes = new Hashtable();
-                Enumeration enumAllAttributes = htAttributes.elements();
+                htAppIDAttributes = new HashMap();
+        		for (Map.Entry<String, Object> entry : htAttributes.entrySet()) {
+                    HashMap htAttribs = (HashMap)entry.getValue();
+                    htAppIDAttributes.putAll(htAttribs);
+        		}
+/*                Enumeration enumAllAttributes = htAttributes.elements();
                 while (enumAllAttributes.hasMoreElements())
                 {
-                    Hashtable htAttribs = (Hashtable)enumAllAttributes.nextElement();
+                    HashMap htAttribs = (HashMap)enumAllAttributes.nextElement();
                     htAppIDAttributes.putAll(htAttribs);
-                }
+                }*/
             }
             
             Vector vRequestedAttributes = new Vector();
             Iterator iterDesignators = oSAMLAttributeQuery.getDesignators();
             if (!iterDesignators.hasNext())
             {
-                Enumeration enumAppIDAttributes = htAppIDAttributes.keys();
-                while (enumAppIDAttributes.hasMoreElements())
-                {
-                    String sAttributeName = (String)enumAppIDAttributes.nextElement();
+                Set keys = htAppIDAttributes.keySet();
+    			for (Object s : keys) {
+    				String sAttributeName = (String) s;
+                //Enumeration enumAppIDAttributes = htAppIDAttributes.keys();
+                //while (enumAppIDAttributes.hasMoreElements()) {
+                    //String sAttributeName = (String)enumAppIDAttributes.nextElement();
                     Object oAttributeValue = htAppIDAttributes.get(sAttributeName);
                     SAMLAttribute oSAMLAttribute = createSAMLAttribute(sAttributeName, oAttributeValue); 
                     vRequestedAttributes.add(oSAMLAttribute);
@@ -674,13 +685,13 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
      * be returned in a SAML Response message. If the message is invalid, then 
      * SAMLDecision.DENY will be returned in a SAML Response message.
      * <br><br>
-     * @param htSAMLSession Hashtable containing SAML Session information
+     * @param htSAMLSession HashMap containing SAML Session information
      * @param oSAMLAuthorizationDecisionQuery SAML Subject Query object
      * @param sNameIdentifier A-Select User ID
      * @return SAMLSubjectStatement that can be sent to the requestor
      * @throws SAMLException if internal error occurred
      */
-    private SAMLSubjectStatement handleAuthorizationDecisionQuery(Hashtable htSAMLSession
+    private SAMLSubjectStatement handleAuthorizationDecisionQuery(HashMap htSAMLSession
         , SAMLAuthorizationDecisionQuery oSAMLAuthorizationDecisionQuery
         , String sNameIdentifier)
         throws SAMLException
@@ -691,7 +702,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
         try
         {
             
-            Hashtable htResources = (Hashtable)htSAMLSession.get("resources");
+            HashMap htResources = (HashMap)htSAMLSession.get("resources");
             if (htResources == null)
             {
                 _systemLogger.log(Level.WARNING, MODULE, sMethod, "No resources found for name identifier: " + sNameIdentifier);

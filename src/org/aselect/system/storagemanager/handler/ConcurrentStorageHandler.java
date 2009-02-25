@@ -1,7 +1,7 @@
 package org.aselect.system.storagemanager.handler;
 
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
@@ -17,15 +17,15 @@ import org.aselect.system.utils.Utils;
  * Concurrent Memory storage handler. <br>
  * <br>
  * <b>Description: </b> <br>
- * The ConcurrentStorageHandler uses a <code>Hashtable</code> for storing objects
+ * The ConcurrentStorageHandler uses a <code>HashMap</code> for storing objects
  * in memory. <br>
  * <br>
- * In the ConcurrentStorageHandler an additional Hashtable is created in which
+ * In the ConcurrentStorageHandler an additional HashMap is created in which
  * information about the stored record is kept: <code><pre>
  * 
- *  Hashtable htStorage { 
+ *  HashMap htStorage { 
  *  	key: Object xKey 
- *  	value: Hashtable htStorageContainer {
+ *  	value: HashMap htStorageContainer {
  *  		key: String &quot;timestamp&quot; value: Long xTimestamp
  *  		key: String &quot;contents&quot; value: Object xValue } 
  *  }
@@ -49,7 +49,7 @@ public class ConcurrentStorageHandler implements IStorageHandler
      * Initalises the <code>ConcurrentStorageHandler</code>:
      * <ul>
      * 	<li>Set system logger</li>
-     * 	<li>create new storage <code>Hashtable</code></li>
+     * 	<li>create new storage <code>HashMap</code></li>
      * </ul>
      * <br>
      * <b>Concurrency issues: </b> 
@@ -91,7 +91,7 @@ public class ConcurrentStorageHandler implements IStorageHandler
         String sTxt = Utils.firstPartOf(oKey.toString(), 30);
         try {
             //synchronized (_htStorage) {
-                Hashtable htStorageContainer = (Hashtable)_htStorage.get(oKey);
+                HashMap htStorageContainer = (HashMap)_htStorage.get(oKey);
                 oValue = htStorageContainer.get("contents");
                 _systemLogger.log(Level.INFO, MODULE, sMethod, "MSH get("+sTxt+") -->"+htStorageContainer);
             //}
@@ -121,7 +121,7 @@ public class ConcurrentStorageHandler implements IStorageHandler
 
         try {
             //synchronized (_htStorage) {
-                Hashtable htStorageContainer = (Hashtable)_htStorage.get(oKey);
+                HashMap htStorageContainer = (HashMap)_htStorage.get(oKey);
                 Long lValue = (Long)htStorageContainer.get("timestamp");
                 lTimestamp = lValue.longValue();
             //}
@@ -154,10 +154,10 @@ public class ConcurrentStorageHandler implements IStorageHandler
      * Get all objects from memory table.
      * @see org.aselect.system.storagemanager.IStorageHandler#getAll()
      */
-    public Hashtable getAll() throws ASelectStorageException
+    public HashMap getAll() throws ASelectStorageException
     {
     	String sMethod = "getAll()";
-        Hashtable htReturnTable = new Hashtable();
+        HashMap htReturnTable = new HashMap();
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, " this="+/*this.getClass()+" "+*/this+" store="+_htStorage);
 
         //synchronized (_htStorage) {
@@ -165,7 +165,7 @@ public class ConcurrentStorageHandler implements IStorageHandler
             while (eKeys.hasMoreElements()) {
                 Object oKey = eKeys.nextElement();
                 
-                Hashtable htStorageContainer = (Hashtable)_htStorage.get(oKey);
+                HashMap htStorageContainer = (HashMap)_htStorage.get(oKey);
                 Object oValue = htStorageContainer.get("contents");
                 htReturnTable.put(oKey, oValue);
             }
@@ -184,7 +184,7 @@ public class ConcurrentStorageHandler implements IStorageHandler
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, this+" store="+_htStorage);
         _systemLogger.log(Level.INFO, MODULE, sMethod, "MSH put("+Utils.firstPartOf(oKey.toString(),30)+") ="+oValue.toString()+" TS="+lTimestamp);
         
-        Hashtable htStorageContainer = new Hashtable();
+        HashMap htStorageContainer = new HashMap();
         try {
             htStorageContainer.put("timestamp", lTimestamp);
             htStorageContainer.put("contents", oValue);
@@ -254,7 +254,7 @@ public class ConcurrentStorageHandler implements IStorageHandler
                 Object oKey = eKeys.nextElement();
                 
                 countAll++;
-                Hashtable htStorageContainer = (Hashtable)_htStorage.get(oKey);
+                HashMap htStorageContainer = (HashMap)_htStorage.get(oKey);
                 Long lStorageTime = (Long)htStorageContainer.get("timestamp");
             	String sTxt = Utils.firstPartOf(oKey.toString(),30);
 
@@ -276,7 +276,7 @@ public class ConcurrentStorageHandler implements IStorageHandler
     }
 
     /**
-     * Clear the storage <code>Hashtable</code>.
+     * Clear the storage <code>HashMap</code>.
      * @see org.aselect.system.storagemanager.IStorageHandler#destroy()
      */
     public void destroy()
@@ -298,7 +298,7 @@ public class ConcurrentStorageHandler implements IStorageHandler
     }
         
     /**
-     * Checks if the supplied key already exists in the <code>Hashtable</code>
+     * Checks if the supplied key already exists in the <code>HashMap</code>
      * <br><br>
      * @see org.aselect.system.storagemanager.IStorageHandler#containsKey(java.lang.Object)
      */

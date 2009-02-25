@@ -41,7 +41,7 @@
 
 package org.aselect.system.storagemanager;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 
 import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.exception.ASelectStorageException;
@@ -175,10 +175,10 @@ public interface IStorageHandler
      * <br>
      * -
      * <br>
-     * @return A Hashtable containing all stored object as key/value.
+     * @return A HashMap containing all stored object as key/value.
      * @throws ASelectStorageException If retrieving fails.
      */
-    public Hashtable getAll() throws ASelectStorageException;
+    public HashMap getAll() throws ASelectStorageException;
 
     /**
      * Return stored object count.

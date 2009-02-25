@@ -17,7 +17,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -35,15 +36,16 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 	private String _sResourceGroup = null;
 	private String _sQuery;
 	private Vector _vTGTParameters;
-	private Hashtable _htConfigParameters;
-	private Hashtable _htReMapAttributes;
-	//static Hashtable _htReMapAttributes;
+	private HashMap _htConfigParameters;
+	private HashMap _htReMapAttributes;
+
+	// static HashMap _htReMapAttributes;
 
 	public void init(Object oConfig)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "init()";
-		_htReMapAttributes = new Hashtable();
+		_htReMapAttributes = new HashMap();
 
 		try {
 			try {
@@ -55,7 +57,7 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 			}
 
 			_vTGTParameters = new Vector();
-			_htConfigParameters = new Hashtable();
+			_htConfigParameters = new HashMap();
 			Object oParameterConfiguration = null;
 			try {
 				oParameterConfiguration = _configManager.getSection(oConfig, "parameters");
@@ -74,11 +76,11 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
 							"Could not retrieve one 'parameter' in 'parameters' configuration section", eAC);
 				}
-				while (oParameter != null) //for all parameters
+				while (oParameter != null) // for all parameters
 				{
 					try {
 						String sParameterName = _configManager.getParam(oParameter, "id");
-						//check if the parameter is a session parameter
+						// check if the parameter is a session parameter
 						boolean bSession = false;
 						try {
 							String sAttributeMapping = _configManager.getParam(oParameter, "session");
@@ -86,13 +88,13 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 								bSession = true;
 						}
 						catch (ASelectConfigException eAC) {
-							//bSession allready false
+							// bSession allready false
 						}
 
 						if (bSession)
 							_vTGTParameters.add(sParameterName);
 						else {
-							//retrieve value
+							// retrieve value
 							String sParameterValue = _configManager.getParam(oParameter, "value");
 							_htConfigParameters.put(sParameterName, sParameterValue);
 						}
@@ -172,15 +174,17 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 		}
 	}
 
-	public Hashtable getAttributes(Hashtable htTGTContext, Vector vAttributes)
+	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes)
 		throws ASelectAttributesException
 	{
-		//    	return null;
-		//	}
+		// return null;
+		// }
 		//    
-		//    static public Hashtable getAttributes2(Hashtable htTGTContext, Vector vAttributes, Connection oConnection, Vector _vTGTParameters, String _sQuery) throws ASelectAttributesException
-		//    {
-		Hashtable htAttributes = new Hashtable();
+		// static public HashMap getAttributes2(HashMap htTGTContext, Vector
+		// vAttributes, Connection oConnection, Vector _vTGTParameters, String
+		// _sQuery) throws ASelectAttributesException
+		// {
+		HashMap htAttributes = new HashMap();
 
 		String sMethod = "getAttributes()";
 		try {
@@ -228,9 +232,12 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 						htAttributes.put(sStatusKey, sStatusValue);
 					}
 				}
-				Hashtable htMapped = new Hashtable();
-				for (e = htAttributes.keys(); e.hasMoreElements();) {
-					String sStatusKey = (String) e.nextElement();
+				HashMap htMapped = new HashMap();
+				Set keys = htAttributes.keySet();
+				for (Object s : keys) {
+					String sStatusKey = (String) s;
+					// for (e = htAttributes.keys(); e.hasMoreElements();) {
+					// String sStatusKey = (String) e.nextElement();
 					Object sStatusValue = htAttributes.get(sStatusKey);
 					if (_htReMapAttributes.containsKey(sStatusKey)) {
 						sStatusKey = (String) _htReMapAttributes.get(sStatusKey);
@@ -260,7 +267,7 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 
 	public void destroy()
 	{
-		//Does nothing
+		// Does nothing
 	}
 
 	private Connection getConnection()
@@ -300,7 +307,7 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 		}
 
 		try {
-			//initialize driver
+			// initialize driver
 			Class.forName(sDriver);
 		}
 		catch (Exception e) {
@@ -359,19 +366,23 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 
 	public static void main(String[] args)
 	{
-		String url = "jdbc:mysql://localhost/aselect";
+		// String url = "jdbc:mysql://localhost/aselect";
 
-		String query = "SELECT name, value FROM TBL_ATTRIBUTES WHERE " + "( uid=? OR uid='*' ) AND"
-				+ "( organization=? OR organization='*' ) AND" + "( app_id=? OR app_id='*' ) AND"
-				+ "( authsp=? OR authsp='*' )";
+		// String query = "SELECT name, value FROM TBL_ATTRIBUTES WHERE " + "(
+		// uid=? OR uid='*' ) AND"
+		// + "( organization=? OR organization='*' ) AND" + "( app_id=? OR
+		// app_id='*' ) AND"
+		// + "( authsp=? OR authsp='*' )";
 
-		//    	_htReMapAttributes = new Hashtable();
-		//    	_htReMapAttributes.put("match", "urn:mace:attribute-def:nl.surffederatie:nlEduPersonHomeOrganization");
+		// _htReMapAttributes = new HashMap();
+		// _htReMapAttributes.put("match",
+		// "urn:mace:attribute-def:nl.surffederatie:nlEduPersonHomeOrganization");
 
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
-			Connection con = DriverManager.getConnection(url, "aselect_user", "changeit");
-			Hashtable tgtContext = new Hashtable();
+			// Connection con = DriverManager.getConnection(url, "aselect_user",
+			// "changeit");
+			HashMap tgtContext = new HashMap();
 			tgtContext.put("uid", "zandbelt");
 			tgtContext.put("organization", "SURFnetSG");
 			tgtContext.put("app_id", "federatiedemo");
@@ -381,11 +392,15 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 			parms.add("organization");
 			parms.add("app_id");
 			parms.add("authsp");
-			//Hashtable ht = getAttributes2(tgtContext , null, con, parms , query);
-			Hashtable ht = new Hashtable();
-			Enumeration e = ht.keys();
-			while (e.hasMoreElements()) {
-				String key = (String) e.nextElement();
+			// HashMap ht = getAttributes2(tgtContext , null, con, parms ,
+			// query);
+			HashMap ht = new HashMap();
+			Set keys = ht.keySet();
+			for (Object s : keys) {
+				String key = (String) s;
+				// Enumeration e = ht.keys();
+				// while (e.hasMoreElements()) {
+				// String key = (String) e.nextElement();
 				Object o = ht.get(key);
 				if (o instanceof String) {
 					System.out.println(" key: \"" + key + "\", value: \"" + o + "\"");

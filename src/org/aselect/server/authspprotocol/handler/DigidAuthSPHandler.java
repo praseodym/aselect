@@ -8,8 +8,8 @@ package org.aselect.server.authspprotocol.handler;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.logging.Level;
 
 import org.aselect.server.authspprotocol.IAuthSPProtocolHandler;
@@ -52,8 +52,8 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 	private String _sASelectAuthSPServerId;
 	private String _sDefaultBetrouwbaarheidsNiveau;
 
-	private Hashtable<String, String> _htBetrouwbaarheidsNiveaus;
-	private Hashtable<String, String> _htSharedSecrets;
+	private HashMap<String, String> _htBetrouwbaarheidsNiveaus;
+	private HashMap<String, String> _htSharedSecrets;
 
 	/**
 	 * Initializes the DigidAuthSPHandler. <br>
@@ -140,8 +140,8 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 						.log(Level.WARNING, MODULE, sMethod, "No config section 'betrouwbaarheidsniveau' found", e);
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
-			_htBetrouwbaarheidsNiveaus = new Hashtable<String, String>();
-			_htSharedSecrets = new Hashtable<String, String>();
+			_htBetrouwbaarheidsNiveaus = new HashMap<String, String>();
+			_htSharedSecrets = new HashMap<String, String>();
 
 			while (oBetrouwbaarheidsNiveau != null) {
 				loadBetrouwbaarheidsNiveau(oBetrouwbaarheidsNiveau);
@@ -237,16 +237,16 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#computeAuthenticationRequest(java.lang.String)
 	 */
 	@SuppressWarnings("unchecked")
-	public Hashtable computeAuthenticationRequest(String sRid)
+	public HashMap computeAuthenticationRequest(String sRid)
 	{
 		String sMethod = "computeAuthenticationRequest()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
 
-		Hashtable htMethodResponse = new Hashtable();
+		HashMap htMethodResponse = new HashMap();
 		htMethodResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
 
 		try {
-			Hashtable htSessionContext = _sessionManager.getSessionContext(sRid);
+			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
 				StringBuffer sbBuffer = new StringBuffer("Could not fetch session context for rid: ");
 				sbBuffer.append(sRid);
@@ -285,7 +285,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			String sASelectServerId = _sASelectAuthSPServerId;
 			String sASelectServerUrl = _sAuthSPUrl;
 
-			Hashtable htRequest = new Hashtable();
+			HashMap htRequest = new HashMap();
 			htRequest.put("request", "authenticate");
 			htRequest.put("app_id", sAppId);
 			htRequest.put("app_url", sAppUrl);
@@ -294,7 +294,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Send to DigiD="+sASelectServerUrl+" req="+hashtable2CGIMessage(htRequest));
 
-			Hashtable htResponse = null;
+			HashMap htResponse = null;
 			try {
 				htResponse = _oClientCommunicator.sendMessage(htRequest, sASelectServerUrl);
 			}
@@ -351,12 +351,12 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 	}
 
 	@SuppressWarnings("unchecked")
-	public Hashtable verifyAuthenticationResponse(Hashtable htResponse)
+	public HashMap verifyAuthenticationResponse(HashMap htResponse)
 	{
 		String sMethod = "verifyAuthenticationResponse()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
 
-		Hashtable<String, String> result = new Hashtable<String, String>();
+		HashMap<String, String> result = new HashMap<String, String>();
 		String resultCode = Errors.ERROR_ASELECT_INTERNAL_ERROR;
 
 		try {
@@ -373,7 +373,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			String sharedSecret = _htSharedSecrets.get(_sDefaultBetrouwbaarheidsNiveau);
 			SessionManager sessionManager = SessionManager.getHandle();
 			if (sessionManager.containsKey(sLocalRid)) {
-				Hashtable sessionContext = sessionManager.getSessionContext(sLocalRid);
+				HashMap sessionContext = sessionManager.getSessionContext(sLocalRid);
 				// 20090110, Bauke changed requested_betrouwbaarheidsniveau  to required_level
 				sReqLevel = (String) sessionContext.get("required_level");
 				Integer intLevel = (Integer)sessionContext.get("level");
@@ -383,7 +383,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 				sharedSecret = _htSharedSecrets.get(sReqLevel);
 			}
 
-			Hashtable reqParams = new Hashtable();
+			HashMap reqParams = new HashMap();
 			reqParams.put("request", "verify_credentials");
 			reqParams.put("a-select-server", _sASelectAuthSPServerId);
 			reqParams.put("rid", sDigidRid);
@@ -391,7 +391,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			reqParams.put("shared_secret", sharedSecret);
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "sendMessage to " + _sAuthSPUrl + " request=" + reqParams);
-			Hashtable response = null;
+			HashMap response = null;
 			try {
 				response = _oClientCommunicator.sendMessage(reqParams, _sAuthSPUrl);
 			}
@@ -463,15 +463,17 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 		return result;
 	}
 
-	private String hashtable2CGIMessage(Hashtable htInput)
+	private String hashtable2CGIMessage(HashMap htInput)
 		throws UnsupportedEncodingException
 	{
 		StringBuffer sbBuffer = new StringBuffer();
-		Enumeration enumKeys = htInput.keys();
-
-		boolean bStop = !enumKeys.hasMoreElements(); // more elements?
-		while (!bStop) {
-			String sKey = (String) enumKeys.nextElement();
+		Set keys = htInput.keySet();
+		for (Object s : keys) {
+			String sKey = (String) s;
+		//Enumeration enumKeys = htInput.keys();
+		//boolean bStop = !enumKeys.hasMoreElements(); // more elements?
+		//while (!bStop) {
+		//	String sKey = (String) enumKeys.nextElement();
 			Object oValue = htInput.get(sKey);
 			if (oValue instanceof String) {
 				sbBuffer.append(sKey);
@@ -492,15 +494,13 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 				}
 			}
 
-			if (enumKeys.hasMoreElements()) {
-				// Append extra '&' after every parameter.
-				sbBuffer.append("&");
-			}
-			else {
-				// No more parameters
-				bStop = true;
-			}
+			//if (enumKeys.hasMoreElements()) {
+			// Append extra '&' after every parameter.
+			sbBuffer.append("&");
+			//}
 		}
-		return sbBuffer.toString();
+		int len = sbBuffer.length();
+		return sbBuffer.substring(0, (len>0)? len-1: len);
+//		return sbBuffer.toString();
 	}
 }

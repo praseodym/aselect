@@ -57,7 +57,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -160,7 +160,7 @@ public class RegexSelectorHandler implements ISelectorHandler
 			}        	
         	while(oRegexConfig != null)
         	{
-    			Hashtable htPattern = new Hashtable();
+    			HashMap htPattern = new HashMap();
     			String sPattern = null; 
     			String sRemoteId = null;	
             	try
@@ -212,17 +212,17 @@ public class RegexSelectorHandler implements ISelectorHandler
      * the A-Select subsystem.
      * <br>
      * 
-     * @see org.aselect.server.cross.ISelectorHandler#getRemoteServerId(java.util.Hashtable,
+     * @see org.aselect.server.cross.ISelectorHandler#getRemoteServerId(java.util.HashMap,
      *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
      */
-    public Hashtable getRemoteServerId(Hashtable htServiceRequest,
+    public HashMap getRemoteServerId(HashMap htServiceRequest,
         HttpServletResponse servletResponse, PrintWriter pwOut) throws ASelectException
     {
     	String sMethod = "getRemoteServerId()";
     	int i = 0;
     	boolean matchFound = false;
     	String sRemoteId = null;
-        Hashtable htResult = null;
+        HashMap htResult = null;
         String sUsername = (String)htServiceRequest.get("user_id");
         if(sUsername == null)
     	{
@@ -233,13 +233,13 @@ public class RegexSelectorHandler implements ISelectorHandler
     	{
     		while(i < _vPatterns.size() && !matchFound)
     		{
-    			Hashtable htPattern = (Hashtable)_vPatterns.get(i);
+    			HashMap htPattern = (HashMap)_vPatterns.get(i);
     			Pattern oPattern = (Pattern)htPattern.get("pattern");
     			Matcher matcher = oPattern.matcher(sUsername);
     			matchFound = matcher.matches();
     			if(matchFound)
     			{
-    				htResult = new Hashtable();
+    				htResult = new HashMap();
     				sRemoteId = (String)htPattern.get("organization_id");
     				htResult.put("organization_id", sRemoteId);
     				htResult.put("user_id", sUsername);
@@ -320,7 +320,7 @@ public class RegexSelectorHandler implements ISelectorHandler
 	}
     
     //private function which shows the authentication form if no user_id was provided
-    private void showAuthenticationForm(Hashtable htServiceRequest, PrintWriter pwOut, String sErrorCode) throws ASelectException
+    private void showAuthenticationForm(HashMap htServiceRequest, PrintWriter pwOut, String sErrorCode) throws ASelectException
 	{
         String sMethod = "showAuthenticationForm";
         try
@@ -362,7 +362,7 @@ public class RegexSelectorHandler implements ISelectorHandler
         	sLoginForm = Utils.replaceString(sLoginForm, "[cross_request]",
             "cross_login");
             
-            Hashtable htSession = SessionManager.getHandle().getSessionContext(sRid);
+            HashMap htSession = SessionManager.getHandle().getSessionContext(sRid);
             if (htSession != null)
                 sLoginForm = _configManager.updateTemplate(sLoginForm, htSession);
                         

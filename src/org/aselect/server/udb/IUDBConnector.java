@@ -31,7 +31,7 @@
 
 package org.aselect.server.udb;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 
 import org.aselect.system.exception.ASelectUDBException;
 
@@ -99,7 +99,7 @@ public interface IUDBConnector
      * </tr>
      * <tr>
      * <td><code>user_authsps</code></td>
-     * <td>Hashtable containing the AuthSP's that the user is registered for.
+     * <td>HashMap containing the AuthSP's that the user is registered for.
      * <br>
      * The hashtable contains an entry for each AuthSP and the value of the user attributes belonging to it.</td>
      * </tr>
@@ -119,10 +119,10 @@ public interface IUDBConnector
      * <br>
      * @param sUserId containing the user id by which the user is known in the 
      * user database
-     * @return a <code>Hashtable</code> containing the user information (authsp 
+     * @return a <code>HashMap</code> containing the user information (authsp 
      * information and result code)
      */
-    public Hashtable getUserProfile(String sUserId);
+    public HashMap getUserProfile(String sUserId);
     
     /**
      * Check if the user is enabled for A-Select.

@@ -1,7 +1,7 @@
 package org.aselect.server.request.handler.xsaml20;
 
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.logging.Level;
 import javax.servlet.ServletConfig;
 
@@ -86,17 +86,20 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 	{
 		String sMethod = "removeByNameID";
 		TGTManager tgtManager = TGTManager.getHandle();
-		Hashtable allTgts = tgtManager.getAll();
+		HashMap allTgts = tgtManager.getAll();
 
 		// For all TGT's
 		int found = 0;
-		for (Enumeration<String> e = allTgts.keys(); e.hasMoreElements();) {
-			String key = e.nextElement();
-			Hashtable htTGTContext = (Hashtable) tgtManager.get(key);
+        Set keys = allTgts.keySet();
+		for (Object s : keys) {
+			String sKey = (String) s;
+		//for (Enumeration<String> e = allTgts.keys(); e.hasMoreElements();) {
+		//	String sKey = e.nextElement();
+			HashMap htTGTContext = (HashMap) tgtManager.get(sKey);
 			String tgtNameID = (String) htTGTContext.get("name_id");
 			if (sNameID.equals(tgtNameID)) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Remove TGT="+Utils.firstPartOf(key, 30));
-				tgtManager.remove(key);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Remove TGT="+Utils.firstPartOf(sKey, 30));
+				tgtManager.remove(sKey);
 				found = 1;
 				break;
 			}

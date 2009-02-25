@@ -85,7 +85,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import org.aselect.system.configmanager.ConfigManager;
@@ -435,7 +435,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#getCount()
 	 */
 	public long getCount()
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "getCount()";
 		long lCount = -1;
@@ -480,10 +480,10 @@ public class JDBCStorageHandler implements IStorageHandler
 	 * 
 	 * @see org.aselect.system.storagemanager.IStorageHandler#getAll()
 	 */
-	public Hashtable getAll()
+	public HashMap getAll()
 		throws ASelectStorageException
 	{
-		Hashtable htResponse = new Hashtable();
+		HashMap htResponse = new HashMap();
 		StringBuffer sbBuffer = null;
 		String sMethod = "getAll()";
 		PreparedStatement oStatement = null;
@@ -824,12 +824,10 @@ public class JDBCStorageHandler implements IStorageHandler
 			oStatement = oConnection.createStatement();
 			oResultSet = oStatement.executeQuery(sbQuery.toString());
 
-			if (oResultSet.next()) // record exists.
-			{
+			if (oResultSet.next()) { // record exists.
 				lMaximum = oResultSet.getLong(1);
 			}
-
-			if (lMaximum == lItemCount)
+			if (lMaximum >= lItemCount)
 				bReturn = true;
 		}
 		catch (SQLException e) {

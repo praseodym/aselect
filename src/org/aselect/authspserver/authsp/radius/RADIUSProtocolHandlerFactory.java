@@ -19,7 +19,7 @@
 
 package org.aselect.authspserver.authsp.radius;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import org.aselect.authspserver.config.AuthSPConfigManager;
@@ -51,7 +51,7 @@ public class RADIUSProtocolHandlerFactory
         
         try
         {
-            Hashtable htContext;
+            HashMap htContext;
             htContext = getContext(oConfig, sUid, oSystemLogger);
             if (htContext == null)
             {
@@ -83,10 +83,10 @@ public class RADIUSProtocolHandlerFactory
         return null;
     }
 
-    static Hashtable getContext(Object oConfig, String sUid,
+    static HashMap getContext(Object oConfig, String sUid,
         SystemLogger oSystemLogger)
     {
-        Hashtable htResponse = new Hashtable();
+        HashMap htResponse = new HashMap();
         StringBuffer sbTemp;
         String sMethod = "getContext()";
 

@@ -166,7 +166,7 @@
 package org.aselect.server.request.handler.aselect.authentication;
 
 import java.security.PublicKey;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -302,7 +302,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 		String sLocalASUrl = null;
 		String sLocalOrgId = null;
 		String sRequiredLevel = null;
-		Hashtable htSessionContext = null;
+		HashMap htSessionContext = null;
 		String sLevel = null;
 		String sUid = null;
 		String sLanguage = null;
@@ -384,7 +384,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 		}
 
 		// Create Session
-		htSessionContext = new Hashtable();
+		htSessionContext = new HashMap();
 		htSessionContext.put("local_organization", sLocalOrgId);
 		htSessionContext.put("remote_session", "true");
 		htSessionContext.put("local_as_url", sLocalASUrl);
@@ -467,7 +467,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 	{
 		String sMethod = "handleVerifyCredentialsRequest()";
 
-		Hashtable htTGTContext = null;
+		HashMap htTGTContext = null;
 		String sRid = null;
 		String sUid = null;
 		String sResultCode = null;
@@ -571,7 +571,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 
 		// Gather attributes
 		AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
-		Hashtable htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
+		HashMap htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
 		String sSerializedAttributes = serializeAttributes(htAttribs);
 
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED SerAttr=" + sSerializedAttributes);

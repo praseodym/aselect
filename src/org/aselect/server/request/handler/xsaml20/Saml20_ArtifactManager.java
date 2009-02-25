@@ -118,13 +118,13 @@ public class Saml20_ArtifactManager extends StorageManager
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "put done");
 		
 		// debug:
-		/*Hashtable htAll = super.getAll();
+		/*HashMap htAll = super.getAll();
         Enumeration eKeys = htAll.keys();
         while (eKeys.hasMoreElements())
         {
             Object oKey = eKeys.nextElement();
     		_systemLogger.log(Level.INFO, MODULE, sMethod, "key="+oKey);            
-            Hashtable xStorageContainer = (Hashtable)htAll.get(oKey);
+            HashMap xStorageContainer = (HashMap)htAll.get(oKey);
             Object oValue = xStorageContainer.get("contents");
     		_systemLogger.log(Level.INFO, MODULE, sMethod, "key="+oKey+" contents="+oValue.toString());            
         }*/
@@ -144,13 +144,13 @@ public class Saml20_ArtifactManager extends StorageManager
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "remove done");
 		
 		// debug:
-		/*Hashtable htAll = super.getAll();
+		/*HashMap htAll = super.getAll();
         Enumeration eKeys = htAll.keys();
         while (eKeys.hasMoreElements())
         {
             Object oKey = eKeys.nextElement();
     		_systemLogger.log(Level.INFO, MODULE, sMethod, "key="+oKey);            
-            Hashtable xStorageContainer = (Hashtable)htAll.get(oKey);
+            HashMap xStorageContainer = (HashMap)htAll.get(oKey);
             Object oValue = xStorageContainer.get("contents");
     		_systemLogger.log(Level.INFO, MODULE, sMethod, "key="+oKey+" contents="+oValue.toString());            
         }*/
@@ -176,12 +176,12 @@ public class Saml20_ArtifactManager extends StorageManager
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "get key="+key);
 		
 		// debug:
-		/*Hashtable htAll = super.getAll();
+		/*HashMap htAll = super.getAll();
         Enumeration eKeys = htAll.keys();
         while (eKeys.hasMoreElements())
         {
             Object oKey = eKeys.nextElement();
-            Hashtable xStorageContainer = (Hashtable)htAll.get(oKey);
+            HashMap xStorageContainer = (HashMap)htAll.get(oKey);
             Object oValue = xStorageContainer.get("contents");
     		_systemLogger.log(Level.INFO, MODULE, sMethod, "key="+oKey+" contents="+oValue);            
         }*/

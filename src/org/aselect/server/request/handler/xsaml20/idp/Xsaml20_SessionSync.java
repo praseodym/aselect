@@ -6,7 +6,7 @@ import java.io.StringReader;
 import java.net.URLEncoder;
 import java.security.PublicKey;
 import java.util.Date;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -228,7 +228,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 /*	private void changeTGTSessionTime(String decodedcredentials)
 		throws ASelectStorageException
 	{
-		Hashtable tgtBeforeUpdate = (Hashtable) _oTGTManager.get(decodedcredentials);
+		HashMap tgtBeforeUpdate = (HashMap) _oTGTManager.get(decodedcredentials);
 		_oTGTManager.update(decodedcredentials, tgtBeforeUpdate);
 	}*/
 
@@ -241,7 +241,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 		String _sMethod = "changeUpdateTimeSp";
 		_systemLogger.log(Level.INFO, MODULE, _sMethod, "TGT=" + tgtId);
 
-        Hashtable htTGTContext = _oTGTManager.getTGT(tgtId);
+        HashMap htTGTContext = _oTGTManager.getTGT(tgtId);
         if (htTGTContext == null) {
 			_systemLogger.log(Level.INFO, MODULE, _sMethod, "TGT not found SP=(" + serviceProviderUrl + ")");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_EXPIRED);
@@ -271,7 +271,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 			htTGTContext.put("sso_session", ssoSession);
 			
 			// Bauke: Also update the TGT Timestamp
-	        //Hashtable htTGTContext = _oTGTManager.getTGT(credentials);
+	        //HashMap htTGTContext = _oTGTManager.getTGT(credentials);
 	        //if (htTGTContext != null)
 	        _oTGTManager.updateTGT(tgtId, htTGTContext);
 			_systemLogger.log(Level.INFO, MODULE, _sMethod, "Time SP update after = " +

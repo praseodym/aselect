@@ -7,7 +7,7 @@ import java.net.URLDecoder;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -331,7 +331,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 							.getAuthnContext().getAuthnContextClassRef().getAuthnContextClassRef();
 					String sAuthSpLevel = SecurityLevel.convertAuthnContextClassRefURIToLevel(sAuthnContextClassRefURI, _systemLogger, MODULE);
 
-					Hashtable htRemoteAttributes = new Hashtable();
+					HashMap htRemoteAttributes = new HashMap();
 					htRemoteAttributes.put("name_id", sNameID);
 					// This is the quickest way to get "name_id" into the Context
 					
@@ -380,7 +380,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 				else {
 					// SLO
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Response was not successful: "+sStatusCode);
-					Hashtable htRemoteAttributes = new Hashtable();
+					HashMap htRemoteAttributes = new HashMap();
 					htRemoteAttributes.put("remote_rid", sRemoteRid);
 					htRemoteAttributes.put("local_rid", sLocalRid);
 					String sStatusMessage = samlResponse.getStatus().getStatusMessage().getMessage();
@@ -394,7 +394,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 					// 1. handleSSOResponse(htRemoteAttributes, request, response);  // Lets application display error
 					// 2. throw new ASelectException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);  // Standard server error
 					// 3. Show error page:
-					Hashtable htSessionContext = _oSessionManager.getSessionContext(sLocalRid);
+					HashMap htSessionContext = _oSessionManager.getSessionContext(sLocalRid);
 					if (htSessionContext == null) {
 						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unknown session in response from cross aselect server");
 						throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
@@ -421,7 +421,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "<--");
 	}
 
-	private void handleSSOResponse(Hashtable htRemoteAttributes, HttpServletRequest servletRequest,
+	private void handleSSOResponse(HashMap htRemoteAttributes, HttpServletRequest servletRequest,
 			HttpServletResponse servletResponse)
 	throws ASelectException
 	{
@@ -431,8 +431,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 		try {
 			String sRemoteRid = null;
 			String sLocalRid = null;
-			Hashtable htSessionContext;
-			Hashtable htServiceRequest = createServiceRequest(servletRequest);
+			HashMap htSessionContext;
+			HashMap htServiceRequest = createServiceRequest(servletRequest);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "htServiceRequest="+htServiceRequest);
 
 			sRemoteRid = (String) htRemoteAttributes.get("remote_rid");
@@ -501,25 +501,25 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 
 	/**
 	 * This function converts a <code>servletRequest</code> to a
-	 * <code>Hashtable</code> by extracting the parameters from the
+	 * <code>HashMap</code> by extracting the parameters from the
 	 * <code>servletRequest</code> and inserting them into a
-	 * <code>Hashtable</code>. <br>
+	 * <code>HashMap</code>. <br>
 	 * <br>
 	 * 
 	 * @param servletRequest
 	 *            Contains request parameters
-	 * @return Hashtable containing request parameters.
+	 * @return HashMap containing request parameters.
 	 */
 	@SuppressWarnings("unchecked")
-	private Hashtable createServiceRequest(HttpServletRequest servletRequest)
+	private HashMap createServiceRequest(HttpServletRequest servletRequest)
 	{
 		// Extract parameters into htServiceRequest
-		Hashtable htServiceRequest = null;
+		HashMap htServiceRequest = null;
 		if (servletRequest.getMethod().equalsIgnoreCase("GET")) {
 			htServiceRequest = Utils.convertCGIMessage(servletRequest.getQueryString());
 		}
 		else {
-			htServiceRequest = new Hashtable();
+			htServiceRequest = new HashMap();
 			String sParameter, sValue;
 			Enumeration eParameters = servletRequest.getParameterNames();
 			while (eParameters.hasMoreElements()) {
@@ -536,7 +536,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 		//htServiceRequest.put("client_ip", servletRequest.getRemoteAddr());
 		//String sAgent = servletRequest.getHeader("User-Agent");
 		//if (sAgent != null) htServiceRequest.put("user_agent", sAgent);
-		Hashtable htCredentials = getASelectCredentials(servletRequest);
+		HashMap htCredentials = getASelectCredentials(servletRequest);
 		if (htCredentials != null) {
 			htServiceRequest.put("aselect_credentials_tgt", htCredentials.get("aselect_credentials_tgt"));
 			htServiceRequest.put("aselect_credentials_uid", htCredentials.get("aselect_credentials_uid"));
@@ -551,7 +551,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 	 * <br>
 	 * <b>Description:</b> <br>
 	 * Reads the A-Select credentials from a Cookie and put them into a
-	 * <code>Hashtable</code>. <br>
+	 * <code>HashMap</code>. <br>
 	 * <br>
 	 * <b>Concurrency issues:</b> <br> - <br>
 	 * <br>
@@ -562,13 +562,13 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 	 * 
 	 * @param servletRequest
 	 *            The Request which should contain the Cookie.
-	 * @return The A-Select credentials in a <code>Hashtable</code>.
+	 * @return The A-Select credentials in a <code>HashMap</code>.
 	 */
 	@SuppressWarnings("unchecked")
-	protected Hashtable getASelectCredentials(HttpServletRequest servletRequest)
+	protected HashMap getASelectCredentials(HttpServletRequest servletRequest)
 	{
 		String sMethod = "getASelectCredentials";
-		Hashtable htCredentials = new Hashtable();
+		HashMap htCredentials = new HashMap();
 
 		// check for credentials that might be present
 /*		Cookie[] aCookies = servletRequest.getCookies();
@@ -595,7 +595,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 			return null;
 		}
 
-/*		Hashtable sCredentialsParams = Utils.convertCGIMessage(sCredentialsCookie);
+/*		HashMap sCredentialsParams = Utils.convertCGIMessage(sCredentialsCookie);
 		if (sCredentialsParams == null) {
 			return null;
 		}
@@ -609,7 +609,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 			return null;
 		}
 */
-		Hashtable htTGTContext = null;
+		HashMap htTGTContext = null;
 		htTGTContext = _tgtManager.getTGT(sTgt);
 /*		try {
 			if (_tgtManager.containsKey(sTgt)) {

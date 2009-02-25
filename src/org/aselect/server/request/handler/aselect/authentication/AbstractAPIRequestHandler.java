@@ -79,7 +79,8 @@ package org.aselect.server.request.handler.aselect.authentication;
 
 import java.net.URLEncoder;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -299,11 +300,11 @@ public abstract class AbstractAPIRequestHandler implements IRequestHandler
 	 * <li>The end result is base64 encoded.
 	 * </ul>
 	 * <br>
-	 * @param htAttributes Hashtable containing all attributes
+	 * @param htAttributes HashMap containing all attributes
 	 * @return Serialized representation of the attributes
 	 * @throws ASelectException If serialization fails.
 	 */
-	protected String serializeAttributes(Hashtable htAttributes)
+	protected String serializeAttributes(HashMap<String,Object> htAttributes)
 	throws ASelectException
 	{
 		final String sMethod = "serializeAttributes()";
@@ -311,8 +312,11 @@ public abstract class AbstractAPIRequestHandler implements IRequestHandler
 			if (htAttributes == null || htAttributes.isEmpty())
 				return null;
 			StringBuffer sb = new StringBuffer();
-			for (Enumeration e = htAttributes.keys(); e.hasMoreElements();) {
-				String sKey = (String) e.nextElement();
+			Set keys = htAttributes.keySet();
+			for (Object s : keys) {
+				String sKey = (String) s;
+//			for (Enumeration e = htAttributes.key(); e.hasMoreElements();) {
+//				String sKey = (String) e.nextElement();
 				Object oValue = htAttributes.get(sKey);
 
 				if (oValue instanceof Vector) {//it's a multivalue attribute
@@ -339,12 +343,12 @@ public abstract class AbstractAPIRequestHandler implements IRequestHandler
 					sb.append("=");
 					sb.append(URLEncoder.encode(sValue, "UTF-8"));
 				}
-
-				if (e.hasMoreElements())
-					sb.append("&");
+				//if (e.hasMoreElements())
+				sb.append("&");
 			}
+			int len = sb.length();
 			BASE64Encoder b64enc = new BASE64Encoder();
-			return b64enc.encode(sb.toString().getBytes("UTF-8"));
+			return b64enc.encode(sb.substring(0,len-1).getBytes("UTF-8"));
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not serialize attributes", e);

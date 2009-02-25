@@ -6,7 +6,7 @@ import java.io.StringReader;
 import java.net.URLEncoder;
 import java.security.PublicKey;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;

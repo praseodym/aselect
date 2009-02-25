@@ -46,8 +46,8 @@
 package org.aselect.agent.admin;
 
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.logging.Level;
 
 import javax.swing.table.AbstractTableModel;
@@ -59,8 +59,8 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectStorageException;
 
 /**
- * Monitors the pending authentication sessions of the A-Select Agent. 
- * <br><br>
+ * Monitors the pending authentication sessions of the A-Select Agent. <br>
+ * <br>
  * <b>Description: </b> <br>
  * This method monitors the pending authentication sessions of the A-Select
  * Agent. This class implements Runnable in which it periodically checks the
@@ -71,192 +71,190 @@ import org.aselect.system.exception.ASelectStorageException;
  * None. <br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class SessionMonitorModel extends AbstractTableModel implements Runnable
 {
-    private Thread _runner;
-    private String[] _sessionsStrings;
-    private String[] _headersStrings = 
-    	{"Rid", "On A-Select Server", "Expires at", "For Application", "Type"};
+	private Thread _runner;
+	private String[] _sessionsStrings;
+	private String[] _headersStrings = {
+		"Rid", "On A-Select Server", "Expires at", "For Application", "Type"
+	};
 
-    private int _iCheckInterval;
-    private Hashtable _sessionContexts;
-    private SessionManager _sessionManager;
-    private ASelectAgentConfigManager _configManager;
-    private boolean _active;
+	private int _iCheckInterval;
+	private HashMap _sessionContexts;
+	private SessionManager _sessionManager;
+	private ASelectAgentConfigManager _configManager;
+	private boolean _active;
 
-    /** The MODULE name. */
-    public static final String MODULE = "SessionMonitorModel";
+	/** The MODULE name. */
+	public static final String MODULE = "SessionMonitorModel";
 
-    /**
-     * Initializes the class. 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * This method initalizes the class by initializing variables and starting
-     * the runner thread for monitoring. <br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * None. <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * None. <br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * None. <br>
-     * 
-     * @param iCheckInterval
-     *            the monitoring interval (in seconds) to wait for updating the
-     *            sessions information.
-     * 
-     * @throws ASelectConfigException
-     *             on error.
-     */
-    public SessionMonitorModel (int iCheckInterval)
-        throws ASelectConfigException
-    {
-        _sessionManager = SessionManager.getHandle();
-        _configManager = ASelectAgentConfigManager.getHandle();
-        _active = false;
+	/**
+	 * Initializes the class. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * This method initalizes the class by initializing variables and starting
+	 * the runner thread for monitoring. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * None. <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * None. <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * None. <br>
+	 * 
+	 * @param iCheckInterval
+	 *            the monitoring interval (in seconds) to wait for updating the
+	 *            sessions information.
+	 * @throws ASelectConfigException
+	 *             on error.
+	 */
+	public SessionMonitorModel(int iCheckInterval)
+	throws ASelectConfigException
+	{
+		_sessionManager = SessionManager.getHandle();
+		_configManager = ASelectAgentConfigManager.getHandle();
+		_active = false;
 
-        _iCheckInterval = iCheckInterval;
+		_iCheckInterval = iCheckInterval;
 
-        Object oStorageMngrSection = _configManager.getSection(null, 
-            "storagemanager", "id=session");
-        String sMaxSession = _configManager.getParam(oStorageMngrSection, "max");
-        Integer intMaxSessions = Integer.valueOf(sMaxSession);
+		Object oStorageMngrSection = _configManager.getSection(null, "storagemanager", "id=session");
+		String sMaxSession = _configManager.getParam(oStorageMngrSection, "max");
+		Integer intMaxSessions = Integer.valueOf(sMaxSession);
 
-        _sessionsStrings = new String[intMaxSessions.intValue()];
-        
-        getAgentStatus();
+		_sessionsStrings = new String[intMaxSessions.intValue()];
 
-        _active = true;
-        _runner = new Thread(this);
-        _runner.start();
+		getAgentStatus();
 
-        fireTableDataChanged();
-    }
+		_active = true;
+		_runner = new Thread(this);
+		_runner.start();
 
-    /**
-     * Stops monitoring.
-     */
-    public void stop()
-    {
-        _active = false;
-        _runner.interrupt();
-    }
+		fireTableDataChanged();
+	}
 
-    /**
-     * @return the number of pending sessions.
-     */
-    public long getSessionsCounter()
-    {
-        return _sessionManager.getSessionsCounter();
-    }
+	/**
+	 * Stops monitoring.
+	 */
+	public void stop()
+	{
+		_active = false;
+		_runner.interrupt();
+	}
 
-    /**
-     * Returns the number of rows. 
-     * @see javax.swing.table.TableModel#getRowCount()
-     */
-    public int getRowCount()
-    {
-        return _sessionContexts.size();
-    }
+	/**
+	 * @return the number of pending sessions.
+	 */
+	public long getSessionsCounter()
+	{
+		return _sessionManager.getSessionsCounter();
+	}
 
-    /**
-     * Returns the number of columns. 
-     * @see javax.swing.table.TableModel#getColumnCount()
-     */
-    public int getColumnCount()
-    {
-        return _headersStrings.length;
-    }
+	/**
+	 * Returns the number of rows.
+	 * 
+	 * @see javax.swing.table.TableModel#getRowCount()
+	 */
+	public int getRowCount()
+	{
+		return _sessionContexts.size();
+	}
 
-    /**
-     * Returns the value of an information items in this model. 
-     * @see javax.swing.table.TableModel#getValueAt(int, int)
-     * @return the String representation of the item.
-     */
-    public Object getValueAt(int iRow, int iColumn)
-    {
-        String sSession = _sessionsStrings[iRow];
-        Hashtable xSessionContext = (Hashtable)_sessionContexts.get(sSession);
+	/**
+	 * Returns the number of columns.
+	 * 
+	 * @see javax.swing.table.TableModel#getColumnCount()
+	 */
+	public int getColumnCount()
+	{
+		return _headersStrings.length;
+	}
 
-        if (iColumn == 0)
-            return (String)xSessionContext.get("rid");
-        if (iColumn == 1)
-            return (String)xSessionContext.get("a-select-server");
-        if (iColumn == 2)
-        {
-            long lTimestamp = 0;
-            try
-            {
-                lTimestamp = _sessionManager.getSessionTimeout(sSession);
-                return new Date(lTimestamp).toString();
-            }
-            catch (ASelectStorageException e)
-            {
-               return "unknown"; 
-            }            
-        }
-        if (iColumn == 3)
-            return (String)xSessionContext.get("app_id");
-        if (iColumn == 4)
-            return (String)xSessionContext.get("user_type");
+	/**
+	 * Returns the value of an information items in this model.
+	 * 
+	 * @see javax.swing.table.TableModel#getValueAt(int, int)
+	 * @return the String representation of the item.
+	 */
+	public Object getValueAt(int iRow, int iColumn)
+	{
+		String sSession = _sessionsStrings[iRow];
+		HashMap xSessionContext = (HashMap) _sessionContexts.get(sSession);
 
-        return null;
-    }
+		if (iColumn == 0)
+			return (String) xSessionContext.get("rid");
+		if (iColumn == 1)
+			return (String) xSessionContext.get("a-select-server");
+		if (iColumn == 2) {
+			long lTimestamp = 0;
+			try {
+				lTimestamp = _sessionManager.getSessionTimeout(sSession);
+				return new Date(lTimestamp).toString();
+			}
+			catch (ASelectStorageException e) {
+				return "unknown";
+			}
+		}
+		if (iColumn == 3)
+			return (String) xSessionContext.get("app_id");
+		if (iColumn == 4)
+			return (String) xSessionContext.get("user_type");
 
-    /**
-     * Returns the column name. 
-     * @see javax.swing.table.TableModel#getColumnName(int)
-     */
-    public String getColumnName(int iIndex)
-    {
-        return _headersStrings[iIndex];
-    }
+		return null;
+	}
 
-    /**
-     * Perfoms the Gui update.
-     * <br><br>
-     * Loops and upon wakeup (monitoring interval), fetches the pending sessions
-     * information from the SessionManger. 
-     * 
-     * @see java.lang.Runnable#run()
-     */
-    public void run()
-    {
-        String sMethod = "run()";
-        
-        while (_active)
-        {
-            try
-            {
-                Thread.sleep(_iCheckInterval * 1000);
-                getAgentStatus();
-                fireTableDataChanged();
-            }
-            catch (Exception x)
-            {}
-        }
-        ASelectAgentSystemLogger.getHandle()
-            .log(Level.INFO, MODULE, sMethod, "SessionMonitorModel stopped.");
-    }
+	/**
+	 * Returns the column name.
+	 * 
+	 * @see javax.swing.table.TableModel#getColumnName(int)
+	 */
+	public String getColumnName(int iIndex)
+	{
+		return _headersStrings[iIndex];
+	}
 
-    /**
-     * Fetches the SessionContexts from the SessionManager.
-     */
-    private void getAgentStatus()
-    {
-        _sessionContexts = _sessionManager.getSessionContexts();
+	/**
+	 * Perfoms the Gui update. <br>
+	 * <br>
+	 * Loops and upon wakeup (monitoring interval), fetches the pending sessions
+	 * information from the SessionManger.
+	 * 
+	 * @see java.lang.Runnable#run()
+	 */
+	public void run()
+	{
+		String sMethod = "run()";
 
-        int i = 0;
-        Enumeration xSessionContextsEnum = _sessionContexts.keys();
-        while (xSessionContextsEnum.hasMoreElements())
-        {
-            _sessionsStrings[i++] = (String)xSessionContextsEnum.nextElement();
-        }
-    }
+		while (_active) {
+			try {
+				Thread.sleep(_iCheckInterval * 1000);
+				getAgentStatus();
+				fireTableDataChanged();
+			}
+			catch (Exception x) {
+			}
+		}
+		ASelectAgentSystemLogger.getHandle().log(Level.INFO, MODULE, sMethod, "SessionMonitorModel stopped.");
+	}
+
+	/**
+	 * Fetches the SessionContexts from the SessionManager.
+	 */
+	private void getAgentStatus()
+	{
+		_sessionContexts = _sessionManager.getSessionContexts();
+
+		int i = 0;
+		Set keys = _sessionContexts.keySet();
+		for (Object s : keys) {
+			_sessionsStrings[i++] = (String) s;
+		}
+		/*
+		 * Enumeration xSessionContextsEnum = _sessionContexts.keys(); while
+		 * (xSessionContextsEnum.hasMoreElements()) { _sessionsStrings[i++] =
+		 * (String)xSessionContextsEnum.nextElement(); }
+		 */
+	}
 }
-

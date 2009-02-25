@@ -57,7 +57,7 @@ package org.aselect.server.udb.sasdb;
 
 import java.text.StringCharacterIterator;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -108,7 +108,7 @@ public class SASDBConnector implements IUDBConnector
     /**
      * The configured filters that must match the user id
      */
-    private Hashtable _htFilters;
+    private HashMap _htFilters;
     
     /**
      * The configured SASDB authsps 
@@ -244,7 +244,7 @@ public class SASDBConnector implements IUDBConnector
 	        }
 		        
 	        //reading filters
-	        _htFilters = new Hashtable();
+	        _htFilters = new HashMap();
 	        
 	        try
 	        {
@@ -419,19 +419,19 @@ public class SASDBConnector implements IUDBConnector
 	 * <br>
 	 * @see org.aselect.server.udb.IUDBConnector#getUserProfile(java.lang.String)
 	 */
-	public Hashtable getUserProfile(String sUserId)
+	public HashMap getUserProfile(String sUserId)
 	{
 	    String sMethod = "getUserProfile()";
 	    
-	    Hashtable htResponse = new Hashtable();
-		Hashtable htUserAttributes = new Hashtable();
+	    HashMap htResponse = new HashMap();
+		HashMap htUserAttributes = new HashMap();
 		
 		try
 		{
 			// Try to find the user in the "normal" UDB first
 	    	if (_oIUDBConnector != null)
 	    	{
-	    	    Hashtable htUDBStorageProfile = _oIUDBConnector.getUserProfile(sUserId);
+	    	    HashMap htUDBStorageProfile = _oIUDBConnector.getUserProfile(sUserId);
 	    	    String sErrorCode = (String)htUDBStorageProfile.get("result_code");
 	            if (sErrorCode.equals(Errors.ERROR_ASELECT_SUCCESS))
 	            {
@@ -523,7 +523,7 @@ public class SASDBConnector implements IUDBConnector
     {
 	    String sMethod = "getUserAttributes()";
 	    
-	    //Hashtable htResponse = new Hashtable();
+	    //HashMap htResponse = new HashMap();
 		String sUserAttribute = null;
 		
 		try

@@ -63,7 +63,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.ProtocolException;
 import java.net.Socket;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.StringTokenizer;
 
 /**
@@ -72,7 +72,7 @@ import java.util.StringTokenizer;
  * <b>Description: </b> 
  * <br>
  * The <code>TCPProtocolRequest</code> reads headers and other information
- * from an input stream and places this information in a Hashtable. The headers
+ * from an input stream and places this information in a HashMap. The headers
  * can be retrieved by calling the getProperty() method. 
  * <br>
  * <br>
@@ -93,10 +93,10 @@ import java.util.StringTokenizer;
 public class TCPProtocolRequest implements IProtocolRequest
 {
     /** The request headers */
-    private Hashtable    _htHeaders;
+    private HashMap    _htHeaders;
 
     /** Other request properties */
-    private Hashtable    _htProperties;
+    private HashMap    _htProperties;
 
     /** Contains the real data. */
     private InputStream  _isInput;
@@ -132,8 +132,8 @@ public class TCPProtocolRequest implements IProtocolRequest
      */
     public TCPProtocolRequest (Socket oRequestSocket) throws IOException
     {
-        _htHeaders = new Hashtable();
-        _htProperties = new Hashtable();
+        _htHeaders = new HashMap();
+        _htProperties = new HashMap();
         _sbInputBuffer = new StringBuffer();
         _isInput = oRequestSocket.getInputStream();
         readRequest(oRequestSocket);

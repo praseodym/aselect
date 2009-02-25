@@ -60,8 +60,8 @@
 package org.aselect.server.admin;
 
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.logging.Level;
 
 import javax.swing.table.AbstractTableModel;
@@ -89,350 +89,324 @@ import org.aselect.system.exception.ASelectStorageException;
  */
 public class SessionMonitorModel extends AbstractTableModel implements Runnable
 {
-    /**
-     * The module name.
-     */
-    public static final String MODULE = "SessionMonitorModel";
-    
-    /**
-     * Main thread.
-     */
-    private Thread _oRunnerThread;
+	/**
+	 * The module name.
+	 */
+	public static final String MODULE = "SessionMonitorModel";
 
-    /**
-     * String array containing sessions.
-     */
-    private String[] _saSessions;
+	/**
+	 * Main thread.
+	 */
+	private Thread _oRunnerThread;
 
-    /**
-     * String array containing all the headers used in the Monitor.
-     */
-    private String[] _saHeaders = {"User", "For Application",
-        "Expires at", "AuthSP", "Type"};
+	/**
+	 * String array containing sessions.
+	 */
+	private String[] _saSessions;
 
-    /**
-     * Interval for checking for new information.
-     */
-    private int _iCheckInterval;
+	/**
+	 * String array containing all the headers used in the Monitor.
+	 */
+	private String[] _saHeaders = {
+		"User", "For Application", "Expires at", "AuthSP", "Type"
+	};
 
-    /**
-     * Hashtable containing all session contexts.
-     */
-    private Hashtable _htSessionContexts;
+	/**
+	 * Interval for checking for new information.
+	 */
+	private int _iCheckInterval;
 
-    /**
-     * A-Select Session Manager.
-     */
-    private SessionManager _oSessionManager = SessionManager.getHandle();
+	/**
+	 * HashMap containing all session contexts.
+	 */
+	private HashMap _htSessionContexts;
 
-    /**
-     * Main A-Select Config Manager.
-     */
-    private ASelectConfigManager _oConfigManager = ASelectConfigManager.getHandle();
+	/**
+	 * A-Select Session Manager.
+	 */
+	private SessionManager _oSessionManager = SessionManager.getHandle();
 
-    /**
-     * Used to check if the SessionModel is active or not.
-     */
-    private boolean _bActive = false;
+	/**
+	 * Main A-Select Config Manager.
+	 */
+	private ASelectConfigManager _oConfigManager = ASelectConfigManager.getHandle();
 
-    /**
-     * SessionMonitorModel constructor.
-     * 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * Initializes the SessionMonitorModel. 
-     * <br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * none <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * iCheckInterval > 0 <br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * The Main RunnerThread is running. <br>
-     * 
-     * @param iCheckInterval
-     *            Interval used to check for new information.
-     */
-    public SessionMonitorModel (int iCheckInterval)
-    {
-        this._iCheckInterval = iCheckInterval;
-        
-        Integer intMaxSessions = null;
-        try
-        {
-            Object oStorageMngrSection = _oConfigManager.getSection(null, "storagemanager", "id=session");
-            String sMaxSessions = _oConfigManager.getParam(oStorageMngrSection, "max");
-            intMaxSessions = Integer.valueOf(sMaxSessions);
-        }
-        catch (ASelectConfigException e)
-        {
-            ASelectSystemLogger
-                .getHandle()
-                .log(
-                    Level.SEVERE,MODULE,"SessionMonitorModel()",
-                    "No valid 'max' config item in storage handler with id='session'",
-                    e);
-            intMaxSessions = Integer.valueOf("100");
-        }
-        _saSessions = new String[intMaxSessions.intValue()];
+	/**
+	 * Used to check if the SessionModel is active or not.
+	 */
+	private boolean _bActive = false;
 
-        getServerStatus();
+	/**
+	 * SessionMonitorModel constructor.
+	 * 
+	 * <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Initializes the SessionMonitorModel. 
+	 * <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * none <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * iCheckInterval > 0 <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * The Main RunnerThread is running. <br>
+	 * 
+	 * @param iCheckInterval
+	 *            Interval used to check for new information.
+	 */
+	public SessionMonitorModel(int iCheckInterval) {
+		this._iCheckInterval = iCheckInterval;
 
-        _bActive = true;
-        _oRunnerThread = new Thread(this);
-        _oRunnerThread.start();
-        fireTableDataChanged();
-    }
+		Integer intMaxSessions = null;
+		try {
+			Object oStorageMngrSection = _oConfigManager.getSection(null, "storagemanager", "id=session");
+			String sMaxSessions = _oConfigManager.getParam(oStorageMngrSection, "max");
+			intMaxSessions = Integer.valueOf(sMaxSessions);
+		}
+		catch (ASelectConfigException e) {
+			ASelectSystemLogger.getHandle().log(Level.SEVERE, MODULE, "SessionMonitorModel()",
+					"No valid 'max' config item in storage handler with id='session'", e);
+			intMaxSessions = Integer.valueOf("100");
+		}
+		_saSessions = new String[intMaxSessions.intValue()];
 
-    /**
-     * This functions stops the SessionMonitor.
-     * 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * _bActive is set to false and the current thread is interupted. <br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * none <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * none <br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * none <br>
-     *  
-     */
-    public void stop()
-    {
-        _bActive = false;
-       _oRunnerThread.interrupt();
-    }
+		getServerStatus();
 
-    /**
-     * Returns the session count.
-     * 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * This function calls _oSessionManager.getSessionsCounter() to retrieve the
-     * session count. <br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * none <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * none <br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * none <br>
-     * 
-     * @return <code>long</code> containing session count.
-     */
-    public long getSessionsCounter()
-    {
-        return _oSessionManager.getCounter();
-    }
+		_bActive = true;
+		_oRunnerThread = new Thread(this);
+		_oRunnerThread.start();
+		fireTableDataChanged();
+	}
 
-    /**
-     * Returns the current row count. <br>
-     * <br>
-     * 
-     * @see javax.swing.table.TableModel#getRowCount()
-     */
-    public int getRowCount()
-    {
-        return _htSessionContexts.size();
-    }
+	/**
+	 * This functions stops the SessionMonitor.
+	 * 
+	 * <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * _bActive is set to false and the current thread is interupted. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * none <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * none <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * none <br>
+	 *  
+	 */
+	public void stop()
+	{
+		_bActive = false;
+		_oRunnerThread.interrupt();
+	}
 
-    /**
-     * Returns the current column count. <br>
-     * <br>
-     * 
-     * @see javax.swing.table.TableModel#getColumnCount()
-     */
-    public int getColumnCount()
-    {
-        return _saHeaders.length;
-    }
+	/**
+	 * Returns the session count.
+	 * 
+	 * <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * This function calls _oSessionManager.getSessionsCounter() to retrieve the
+	 * session count. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * none <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * none <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * none <br>
+	 * 
+	 * @return <code>long</code> containing session count.
+	 */
+	public long getSessionsCounter()
+	{
+		return _oSessionManager.getCounter();
+	}
 
-    /**
-     * Returns the current value at a specific row and column. <br>
-     * <br>
-     * 
-     * @see javax.swing.table.TableModel#getValueAt(int, int)
-     */
-    public Object getValueAt(int iRow, int iColumn)
-    {
-        String sSession = _saSessions[iRow];
-        Hashtable htSessionContext = (Hashtable)_htSessionContexts
-            .get(sSession);
-        String sItem, sItem1, sItem2;
-        StringBuffer sbBuffer;
+	/**
+	 * Returns the current row count. <br>
+	 * <br>
+	 * 
+	 * @see javax.swing.table.TableModel#getRowCount()
+	 */
+	public int getRowCount()
+	{
+		return _htSessionContexts.size();
+	}
 
-        if (iColumn == 0)
-        {
-            sItem = (String)htSessionContext.get("user_id");
-            if (sItem == null)
-                return "[unknown]";
-            
-            return sItem;
-        }
-        if (iColumn == 1)
-        {
-            sItem1 = (String)htSessionContext.get("remote_session");
-            sItem2 = (String)htSessionContext.get("local_organization");
-            if (sItem1 != null && sItem2 != null)
-            {
-                sbBuffer = new StringBuffer();
-                sbBuffer.append("[unknown] at ");
-                sbBuffer.append(sItem2);
-                sItem = sbBuffer.toString();
-                return sItem;
-            }
-            sItem1 = (String)htSessionContext.get("app_id");
-            sItem2 = (String)htSessionContext.get("app_url");
+	/**
+	 * Returns the current column count. <br>
+	 * <br>
+	 * 
+	 * @see javax.swing.table.TableModel#getColumnCount()
+	 */
+	public int getColumnCount()
+	{
+		return _saHeaders.length;
+	}
 
-            if (sItem1 == null)
-            {
-                sItem = "[unknown] at ";
-            }
-            else
-            {
-                sItem = sItem1;
-            }
+	/**
+	 * Returns the current value at a specific row and column. <br>
+	 * <br>
+	 * 
+	 * @see javax.swing.table.TableModel#getValueAt(int, int)
+	 */
+	public Object getValueAt(int iRow, int iColumn)
+	{
+		String sSession = _saSessions[iRow];
+		HashMap htSessionContext = (HashMap) _htSessionContexts.get(sSession);
+		String sItem, sItem1, sItem2;
+		StringBuffer sbBuffer;
 
-            if (sItem2 == null)
-            {
-                sbBuffer = new StringBuffer(sItem);
-                sbBuffer.append("[unknown]");
-                sItem = sbBuffer.toString();
-            }
-            else
-            {
-                sbBuffer = new StringBuffer(sItem);
-                sbBuffer.append(" (at ");
-                sbBuffer.append(sItem2);
-                sbBuffer.append(")");
-                sItem = sbBuffer.toString();
+		if (iColumn == 0) {
+			sItem = (String) htSessionContext.get("user_id");
+			if (sItem == null)
+				return "[unknown]";
 
-            }
-            return sItem;
-        }
-        if (iColumn == 2)
-        {
-            long lTimestamp = 0;
-            try
-            {
-                lTimestamp = _oSessionManager.getExpirationTime(sSession);
-                return new Date(lTimestamp).toString();
-            }
-            catch (ASelectStorageException e)
-            {
-               return "unknown"; 
-            }            
-        }
-        if (iColumn == 3)
-        {
-            sItem = (String)htSessionContext.get("authsp");
-            if (sItem == null)
-            {
-                return "Not chosen yet";
-            }
-            
-            return sItem;
-        }
-        if (iColumn == 4)
-        {
-            sItem = (String)htSessionContext.get("remote_organization");
-            if (sItem == null)
-            {
-                return "Local";
-            }
-            return "Cross (at " + sItem + ")";
-        }
-        if (iColumn == 5)
-        {
-            return sSession;
-        }
+			return sItem;
+		}
+		if (iColumn == 1) {
+			sItem1 = (String) htSessionContext.get("remote_session");
+			sItem2 = (String) htSessionContext.get("local_organization");
+			if (sItem1 != null && sItem2 != null) {
+				sbBuffer = new StringBuffer();
+				sbBuffer.append("[unknown] at ");
+				sbBuffer.append(sItem2);
+				sItem = sbBuffer.toString();
+				return sItem;
+			}
+			sItem1 = (String) htSessionContext.get("app_id");
+			sItem2 = (String) htSessionContext.get("app_url");
 
-        return null;
-    }
+			if (sItem1 == null) {
+				sItem = "[unknown] at ";
+			}
+			else {
+				sItem = sItem1;
+			}
 
-    /**
-     * Returns the name of the column based on iIndex. <br>
-     * <br>
-     * 
-     * @see javax.swing.table.TableModel#getColumnName(int)
-     */
-    public String getColumnName(int iIndex)
-    {
-        return _saHeaders[iIndex];
-    }
+			if (sItem2 == null) {
+				sbBuffer = new StringBuffer(sItem);
+				sbBuffer.append("[unknown]");
+				sItem = sbBuffer.toString();
+			}
+			else {
+				sbBuffer = new StringBuffer(sItem);
+				sbBuffer.append(" (at ");
+				sbBuffer.append(sItem2);
+				sbBuffer.append(")");
+				sItem = sbBuffer.toString();
 
-    /**
-     * Main run function for the Runner Thread. <br>
-     * <br>
-     * 
-     * @see java.lang.Runnable#run()
-     */
-    public void run()
-    {
-        while (_bActive)
-        {
-            try
-            {
-                Thread.sleep(_iCheckInterval * 1000);
-                getServerStatus();
-                fireTableDataChanged();
-            }
-            catch (Exception e)
-            {}
-        }
-        ASelectSystemLogger.getHandle().log(Level.INFO, MODULE, "run()",
-            "SessionMonitorModel stopped");
-    }
+			}
+			return sItem;
+		}
+		if (iColumn == 2) {
+			long lTimestamp = 0;
+			try {
+				lTimestamp = _oSessionManager.getExpirationTime(sSession);
+				return new Date(lTimestamp).toString();
+			}
+			catch (ASelectStorageException e) {
+				return "unknown";
+			}
+		}
+		if (iColumn == 3) {
+			sItem = (String) htSessionContext.get("authsp");
+			if (sItem == null) {
+				return "Not chosen yet";
+			}
 
-    /**
-     * Retrieve the current A-Select Session information.
-     * 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * This function retrieves the session context using
-     * _oSessionManager.getSessionContexts() and copies the session information
-     * into the local session array _saSessions. <br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * none <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * _oSessionManager must be intialized. <br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * _saSessions now contains the latest session information. <br>
-     *  
-     */
-    private void getServerStatus()
-    {
-        try
-        {
-            _htSessionContexts = _oSessionManager.getAll();
-            
-	        int i = 0;
-	        Enumeration enumSessionContexts = _htSessionContexts.keys();
-	        while (enumSessionContexts.hasMoreElements())
-	        {
-	            _saSessions[i++] = (String)enumSessionContexts.nextElement();
-	        }
-        }
-        catch (Exception e)
-        {
-            ASelectSystemLogger.getHandle().log(Level.WARNING, MODULE
-                , "getServerStatus()", "No session contexts available");
-        }
-    }
+			return sItem;
+		}
+		if (iColumn == 4) {
+			sItem = (String) htSessionContext.get("remote_organization");
+			if (sItem == null) {
+				return "Local";
+			}
+			return "Cross (at " + sItem + ")";
+		}
+		if (iColumn == 5) {
+			return sSession;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the name of the column based on iIndex. <br>
+	 * <br>
+	 * 
+	 * @see javax.swing.table.TableModel#getColumnName(int)
+	 */
+	public String getColumnName(int iIndex)
+	{
+		return _saHeaders[iIndex];
+	}
+
+	/**
+	 * Main run function for the Runner Thread. <br>
+	 * <br>
+	 * 
+	 * @see java.lang.Runnable#run()
+	 */
+	public void run()
+	{
+		while (_bActive) {
+			try {
+				Thread.sleep(_iCheckInterval * 1000);
+				getServerStatus();
+				fireTableDataChanged();
+			}
+			catch (Exception e) {
+			}
+		}
+		ASelectSystemLogger.getHandle().log(Level.INFO, MODULE, "run()", "SessionMonitorModel stopped");
+	}
+
+	/**
+	 * Retrieve the current A-Select Session information.
+	 * 
+	 * <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * This function retrieves the session context using
+	 * _oSessionManager.getSessionContexts() and copies the session information
+	 * into the local session array _saSessions. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * none <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * _oSessionManager must be intialized. <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * _saSessions now contains the latest session information. <br>
+	 *  
+	 */
+	private void getServerStatus()
+	{
+		try {
+			_htSessionContexts = _oSessionManager.getAll();
+
+			int i = 0;
+			Set keys = _htSessionContexts.keySet();
+			for (Object s : keys) {
+				//Enumeration enumSessionContexts = _htSessionContexts.keys();
+				//while (enumSessionContexts.hasMoreElements())
+				//{
+				_saSessions[i++] = (String) s;
+			}
+		}
+		catch (Exception e) {
+			ASelectSystemLogger.getHandle().log(Level.WARNING, MODULE, "getServerStatus()",
+					"No session contexts available");
+		}
+	}
 }
-

@@ -10,7 +10,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -179,7 +179,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 			}
 			catch (ASelectConfigException eAC) {
 				sbTemp = new StringBuffer("No valid 'authsp' config section found with id='");
-				sbTemp.append(sConfigID);
+				sbTemp.append(sConfigID).append("'");
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbTemp.toString(), eAC);
 				throw new ASelectException(Errors.ERROR_SMS_INTERNAL_ERROR);
 			}
@@ -360,7 +360,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 			pwOut = servletResponse.getWriter();
 
 			String sQueryString = servletRequest.getQueryString();
-			Hashtable htServiceRequest = Utils.convertCGIMessage(sQueryString);
+			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "GET htServiceRequest=" + htServiceRequest);
 
 			// check if the request is an API call
@@ -521,7 +521,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 
 			if (sPassword.trim().length() < 1) // invalid password, retry
 			{
-				Hashtable htServiceRequest = new Hashtable();
+				HashMap htServiceRequest = new HashMap();
 				htServiceRequest.put("my_url", sMyUrl);
 				htServiceRequest.put("as_url", sAsUrl);
 				htServiceRequest.put("uid", sUid);
@@ -569,7 +569,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 					int iRetriesDone = Integer.parseInt(sRetryCounter);
 					if (iRetriesDone < _iAllowedRetries) // try again
 					{
-						Hashtable htServiceRequest = new Hashtable();
+						HashMap htServiceRequest = new HashMap();
 						htServiceRequest.put("my_url", sMyUrl);
 						htServiceRequest.put("as_url", sAsUrl);
 						htServiceRequest.put("uid", sUid);
@@ -658,7 +658,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 	 * @param htServiceRequest
 	 *            The request parameters.
 	 */
-	private void showAuthenticateForm(PrintWriter pwOut, String sError, String sErrorMessage, Hashtable htServiceRequest)
+	private void showAuthenticateForm(PrintWriter pwOut, String sError, String sErrorMessage, HashMap htServiceRequest)
 	{
 		String sMethod = "showAuthenticateForm";
 		String sAuthenticateForm = new String(_sAuthenticateHtmlTemplate);

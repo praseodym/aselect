@@ -7,7 +7,7 @@ package org.aselect.system.servlet;
 
 import java.io.*;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.*;
@@ -31,7 +31,7 @@ public class HtmlInfo extends HttpServlet
 	}
 	
 	public void handleHtmlInfo(HttpServletRequest request, HttpServletResponse response,
-		    ASelectSystemLogger systemLogger, Hashtable htServiceRequest)
+		    ASelectSystemLogger systemLogger, HashMap htServiceRequest)
 	{
 		try {
 			doGet(request, response, systemLogger);

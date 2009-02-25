@@ -32,7 +32,7 @@
 
 package org.aselect.server.authspprotocol;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 
 import org.aselect.system.exception.ASelectAuthSPException;
 
@@ -104,13 +104,13 @@ public interface IAuthSPProtocolHandler
      * @param sRid
      * 			Needed parameter in the redirect URL. Can also be used
      * to retrieve session information from the <code>SessionManager</code>.
-     * @return <code>Hashtable</code> containing at least:
+     * @return <code>HashMap</code> containing at least:
      * <ul>
      * 	<li><code>result</code></li>
      * 	<li><code>redirect_url</code></li>
      * </ul>
      */
-    public Hashtable computeAuthenticationRequest(String sRid);
+    public HashMap computeAuthenticationRequest(String sRid);
     
     /**
      * Verification of an AuthSP specific response.
@@ -119,7 +119,7 @@ public interface IAuthSPProtocolHandler
      * <br>
      * AuthSP redirects user back to <code>ASelectServer</code>
      * which will parse the response parameters in a <code>
-     * Hashtable</code> to this function.
+     * HashMap</code> to this function.
      * The AuthSP handler should verify the AuthSP specific parameters.
      * <br><br>
      * The AuthSP handler should verify the response from an AuthSP In the
@@ -139,16 +139,16 @@ public interface IAuthSPProtocolHandler
      * -
      * <br>
      * @param htResponse
-     * 			<code>Hashtable</code> containing all parameters that were
+     * 			<code>HashMap</code> containing all parameters that were
      * 			received from the AuthSP. It should contain at least:
      * <ul>
      * <li><code>rid</code>
      * </ul>
-     * @return <code>Hashtable</code> containing at least:
+     * @return <code>HashMap</code> containing at least:
      * <ul>
      * <li><code>result</code>
      * <li><code>rid</code>
      * </ul>
      */
-    public Hashtable verifyAuthenticationResponse(Hashtable htResponse);
+    public HashMap verifyAuthenticationResponse(HashMap htResponse);
 }

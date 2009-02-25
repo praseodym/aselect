@@ -2,9 +2,9 @@ package org.aselect.server.request.handler.xsaml20.idp;
 
 import java.security.PublicKey;
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 
 import org.aselect.server.request.handler.xsaml20.ServiceProvider;
@@ -96,7 +96,7 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 		throws ASelectStorageException
 	{
 		String _sMethod = "put";
-		Hashtable htValue = (Hashtable)oValue;
+		HashMap htValue = (HashMap)oValue;
 
 		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "MSHT "+this.getClass());
 		if (!_oTGTManager.containsKey(oKey) || htValue.get("createtime") == null) {
@@ -138,7 +138,7 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 		long now = new Date().getTime();
 		_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "IDPTO now="+now);
 
-		Hashtable allTgts = new Hashtable();
+		HashMap allTgts = new HashMap();
 		try {
 			if (_oTGTManager != null) {
 				allTgts = _oTGTManager.getAll();
@@ -148,10 +148,13 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 			_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "IDPTO - TGT Count=" + allTgts.size());
 
 			// For all TGT's
-			for (Enumeration<String> e = allTgts.keys(); e.hasMoreElements();) {
-				String key = e.nextElement();
+	        Set keys = allTgts.keySet();
+			for (Object s : keys) {
+				String key = (String) s;
+//			for (Enumeration<String> e = allTgts.keys(); e.hasMoreElements();) {
+//				String key = e.nextElement();
 				// Get TGT
-				Hashtable htTGTContext = (Hashtable) _oTGTManager.get(key);
+				HashMap htTGTContext = (HashMap) _oTGTManager.get(key);
 				String sKey = (key.length() > 30) ? key.substring(0, 30) + "..." : key;
 				String sNameID = (String) htTGTContext.get("name_id");
 		        Long lExpInterval = _oTGTManager.getExpirationTime(key) - _oTGTManager.getTimestamp(key);

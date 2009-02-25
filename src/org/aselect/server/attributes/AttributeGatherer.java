@@ -48,7 +48,7 @@
  *
  * Revision 1.20  2005/09/07 13:30:24  erwin
  * - Improved cleanup of the attribute gatherer (bug #93)
- * - Removed unnesserary Hashtable in attribute gatherer (bug #94)
+ * - Removed unnesserary HashMap in attribute gatherer (bug #94)
  *
  * Revision 1.19  2005/04/27 14:54:39  erwin
  * Fixed problem with restart update
@@ -113,7 +113,9 @@ package org.aselect.server.attributes;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -130,28 +132,22 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
 /**
- * Gather and filter user attributes.
- * <br><br>
- * <b>Description:</b>
+ * Gather and filter user attributes. <br>
  * <br>
- * This class gathers user attributes after succesful authentication
- * using one or more configured AttributeRequestors. It also filters
- * out attributes based on the Attribute Release Policy.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * <b>Description:</b> <br>
+ * This class gathers user attributes after succesful authentication using one
+ * or more configured AttributeRequestors. It also filters out attributes based
+ * on the Attribute Release Policy. <br>
  * <br>
- * None
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * None <br>
  * 
- * 
- * 14-11-2007 - Changes:
- * - DigiD Gateway integration, pass attributes
- * - PKI attributes Subject DN and Issuer DN also split in smaller pieces
- * - Attribute added specifying which handler performed authentication
- * 
- * @author Bauke Hiemstra - www.anoigo.nl
- * Copyright Gemeente Den Haag (http://www.denhaag.nl) and UMC Nijmegen (http://www.umcn.nl)
+ * @author Alfa & Ariss 14-11-2007 - Changes: - DigiD Gateway integration, pass
+ *         attributes - PKI attributes Subject DN and Issuer DN also split in
+ *         smaller pieces - Attribute added specifying which handler performed
+ *         authentication
+ * @author Bauke Hiemstra - www.anoigo.nl Copyright Gemeente Den Haag
+ *         (http://www.denhaag.nl) and UMC Nijmegen (http://www.umcn.nl)
  */
 public class AttributeGatherer
 {
@@ -163,54 +159,51 @@ public class AttributeGatherer
 	private ASelectSystemLogger _systemLogger;
 
 	/**
-	 * Contains all requestor objects as requestor-id=requestor-hashtable
-	 * Where requestor-hastable consists of "object"=requestor-object, "uid-source"=uid source 
+	 * Contains all requestor objects as requestor-id=requestor-hashtable Where
+	 * requestor-hastable consists of "object"=requestor-object,
+	 * "uid-source"=uid source
 	 */
-	private Hashtable _htRequestors;
+	private HashMap<String, Object> _htRequestors;
 
 	/**
-	 * Contains the set of release policies: key=policy-ID, value=mapping-hashtable.
-	 * The mapping-hashtable consists of key=requestor-ID, value=vector of attributes.
+	 * Contains the set of release policies: key=policy-ID,
+	 * value=mapping-hashtable. The mapping-hashtable consists of
+	 * key=requestor-ID, value=vector of attributes.
 	 */
 
-	private Hashtable _htReleasePolicies;
+	private HashMap _htReleasePolicies;
 
 	/**
-	 * Contains the set of release policies that merges attributes if they already exist
+	 * Contains the set of release policies that merges attributes if they
+	 * already exist
 	 */
-	private Hashtable _htDuplicatePolicies;
+	private HashMap _htDuplicatePolicies;
 
 	/**
-	 * Use Vector for determining order of policies	
+	 * Use Vector for determining order of policies
 	 */
 
 	private Vector _vReleasePolicies;
 
 	/**
-	 * The "id" of the default release policy 
+	 * The "id" of the default release policy
 	 */
 	private String _sDefaultReleasePolicy;
 
 	/**
-	 * Is used to acquire an instance of the AttributeGatherer.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Is used to acquire an instance of the AttributeGatherer. <br>
 	 * <br>
-	 * Creates a new static <code>AttributeGatherer</code> instance if it's not 
-	 * instantiated yet. The static instance is returned.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Creates a new static <code>AttributeGatherer</code> instance if it's
+	 * not instantiated yet. The static instance is returned. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br> - <br>
 	 * <br>
-	 * One <code>AttributeGatherer</code> instance exists.
-	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * One <code>AttributeGatherer</code> instance exists. <br>
+	 * 
 	 * @return Sattic handle to the <code>AttributeGatherer</code>.
 	 */
 	public static AttributeGatherer getHandle()
@@ -221,18 +214,18 @@ public class AttributeGatherer
 	}
 
 	/**
-	 * Initialize the Attribute Gatherer.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Initialize the Attribute Gatherer. <br>
 	 * <br>
-	 * Initializes the attribute gatherer by reading and validating
-	 * the attributes configuration.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Initializes the attribute gatherer by reading and validating the
+	 * attributes configuration. <br>
 	 * <br>
-	 * none
-	 * <br><br>
-	 * @throws ASelectException If initialization fails.
+	 * <b>Concurrency issues:</b> <br>
+	 * none <br>
+	 * <br>
+	 * 
+	 * @throws ASelectException
+	 *             If initialization fails.
 	 */
 	public void init()
 		throws ASelectException
@@ -247,7 +240,7 @@ public class AttributeGatherer
 		_htReleasePolicies = null;
 		_vReleasePolicies = null;
 		_sDefaultReleasePolicy = null; // 1.5.4
-		_htDuplicatePolicies = new Hashtable(); // 1.5.4
+		_htDuplicatePolicies = new HashMap(); // 1.5.4
 
 		_configManager = ASelectConfigManager.getHandle();
 		_systemLogger = ASelectSystemLogger.getHandle();
@@ -265,7 +258,7 @@ public class AttributeGatherer
 
 				oRequestorsSection = _configManager.getSection(oAttributeGatheringConfig,
 						sConfigItem = "attribute_requestors");
-				_htRequestors = new Hashtable();
+				_htRequestors = new HashMap();
 				Object oRequestorConfig = null;
 				try {
 					oRequestorConfig = _configManager.getSection(oRequestorsSection, "requestor");
@@ -322,7 +315,7 @@ public class AttributeGatherer
 				}
 
 				Object oReleasePolicyConfig = null;
-				_htReleasePolicies = new Hashtable();
+				_htReleasePolicies = new HashMap();
 				_vReleasePolicies = new Vector();
 				try {
 					oReleasePolicyConfig = _configManager.getSection(oReleasePoliciesSection, "release_policy");
@@ -338,7 +331,7 @@ public class AttributeGatherer
 						throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 					}
 					Object oAttribute = _configManager.getSection(oReleasePolicyConfig, sConfigItem = "attribute");
-					Hashtable htAttributes = new Hashtable();
+					HashMap htAttributes = new HashMap();
 					while (oAttribute != null) {
 						String sAttribute = _configManager.getParam(oAttribute, sConfigItem = "id");
 						String sRequestor = _configManager.getParam(oAttribute, sConfigItem = "requestor");
@@ -393,51 +386,47 @@ public class AttributeGatherer
 	}
 
 	/**
-	 * Gather all attributes for the given user.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Gather all attributes for the given user. <br>
 	 * <br>
+	 * <b>Description:</b> <br>
 	 * Performs the following steps:
 	 * <ul>
-	 * 	<li>Determine the release policy</li>
-	 * 	<li>Use the configured attribute requestors to gather attributes</li>
-	 * 	<li>Merge the returned attributes</li>
+	 * <li>Determine the release policy</li>
+	 * <li>Use the configured attribute requestors to gather attributes</li>
+	 * <li>Merge the returned attributes</li>
 	 * </ul>
 	 * <br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Concurrency issues:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Preconditions:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Postconditions:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * @param htTGTContext The TGT context.
-	 * @return A <code>Hashtable</code> containing all gathered attributes.
-	 * @throws ASelectException If attribute gathering fails.
+	 * 
+	 * @param htTGTContext
+	 *            The TGT context.
+	 * @return A <code>HashMap</code> containing all gathered attributes.
+	 * @throws ASelectException
+	 *             If attribute gathering fails.
 	 */
-	public Hashtable gatherAttributes(Hashtable htTGTContext)
-	throws ASelectException
+	public HashMap gatherAttributes(HashMap htTGTContext)
+		throws ASelectException
 	{
 		final String sMethod = "gatherAttributes()";
-		Hashtable<String, Object> htAttributes = new Hashtable<String, Object>();
+		HashMap<String, Object> htAttributes = new HashMap<String, Object>();
 		String sArpTarget = null;
 		boolean bFound = false;
 
 		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER _htReleasePolicies=" + _htReleasePolicies
 				+ ", TGTContext=" + htTGTContext);
 
-		//Release policies available?
+		// Release policies available?
 		if (_vReleasePolicies == null)
 			return null;
 		if (_htReleasePolicies == null)
 			return null;
 
-		//Get user ID
+		// Get user ID
 		String sUID = (String) htTGTContext.get("uid");
 		sArpTarget = (String) htTGTContext.get("arp_target"); // added 1.5.4
 
@@ -462,9 +451,9 @@ public class AttributeGatherer
 
 		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER sUID=" + sUID + ", sLocalOrg=" + sLocalOrg);
 		if (sLocalOrg != null) {
-			//use specific attribute policy, 1.5.4
-			//Enumeration enumPolicies = _htReleasePolicies.keys();
-			//while (enumPolicies.hasMoreElements() && !bFound)
+			// use specific attribute policy, 1.5.4
+			// Enumeration enumPolicies = _htReleasePolicies.keys();
+			// while (enumPolicies.hasMoreElements() && !bFound)
 			if (sArpTarget != null) {
 				Enumeration enumPolicies = _vReleasePolicies.elements();
 				while (enumPolicies.hasMoreElements() && !bFound) {
@@ -479,29 +468,34 @@ public class AttributeGatherer
 				sReleasePolicy = CrossASelectManager.getHandle().getOptionalLocalParam(sLocalOrg, "attribute_policy");
 			}
 		}
-		else { //use application attribute release policy
+		else { // use application attribute release policy
 			sReleasePolicy = ApplicationManager.getHandle().getAttributePolicy(sAppID);
 		}
 
-		if (sReleasePolicy == null) { //use default policy  
+		if (sReleasePolicy == null) { // use default policy
 			sReleasePolicy = _sDefaultReleasePolicy;
 		}
 		if (sReleasePolicy == null) { // No release policy -> no attributes
 			return htAttributes;
 		}
 
-		Hashtable htReleasePolicy = (Hashtable) _htReleasePolicies.get(sReleasePolicy);
+		HashMap htReleasePolicy = (HashMap) _htReleasePolicies.get(sReleasePolicy);
 		if (htReleasePolicy == null) {
 			// Unknown release policy -> log warning; no attributes
 			StringBuffer sb = new StringBuffer("Unknown release policy '").append(sReleasePolicy).append(
 					"' configured for application '").append(sAppID).append("'");
 			_systemLogger.log(Level.WARNING, _MODULE, sMethod, sb.toString());
 		}
-		else { // Use the configured attribute requestors to gather attributes        
+		else { // Use the configured attribute requestors to gather attributes
 			try {
-				for (Enumeration e = htReleasePolicy.keys(); e.hasMoreElements();) {
+				Set keys = htReleasePolicy.keySet();
+				for (Object s : keys) {
+					String sRequestorID = (String) s;
+					// for (Enumeration e = htReleasePolicy.keys();
+					// e.hasMoreElements();)
+					// {
 					// Obtain next AR and invoke it
-					String sRequestorID = (String) e.nextElement();
+					// String sRequestorID = (String) e.nextElement();
 					Vector vAttributes = (Vector) htReleasePolicy.get(sRequestorID);
 					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER Requestor=" + sRequestorID);
 
@@ -512,7 +506,7 @@ public class AttributeGatherer
 						throw new Exception(sb.toString());
 					}
 
-					Hashtable htAttrsFromAR = null;
+					HashMap htAttrsFromAR = null;
 					try {
 						htAttrsFromAR = attributeRequestor.getAttributes(htTGTContext, vAttributes);
 					}
@@ -529,8 +523,12 @@ public class AttributeGatherer
 						// Remove unwanted attributes (those not in our policy)
 						htAttrsFromAR = filterAttributes(htAttrsFromAR, vAttributes);
 
-						for (Enumeration e2 = htAttrsFromAR.keys(); e2.hasMoreElements();) {
-							String sKey = (String) e2.nextElement();
+						Set keys1 = htAttrsFromAR.keySet();
+						for (Object s1 : keys1) {
+							String sKey = (String) s1;
+							// for (Enumeration e2 = htAttrsFromAR.keys();
+							// e2.hasMoreElements();) {
+							// String sKey = (String) e2.nextElement();
 							if (htAttributes.containsKey(sKey)) {
 								String sDuplicateOption = (String) _htDuplicatePolicies.get(sReleasePolicy);
 
@@ -579,9 +577,11 @@ public class AttributeGatherer
 									else {
 										// unknown option: no action
 										_systemLogger.log(Level.WARNING, _MODULE, sMethod,
-												"Unknown attribute policy \"duplicate\" option: \"" + sDuplicateOption + "\"!");
+												"Unknown attribute policy \"duplicate\" option: \"" + sDuplicateOption
+														+ "\"!");
 									}
-								} // else: backwards compatibility: no action, end of 1.5.4
+								} // else: backwards compatibility: no action,
+									// end of 1.5.4
 							}
 							else
 								htAttributes.put(sKey, htAttrsFromAR.get(sKey));
@@ -598,31 +598,41 @@ public class AttributeGatherer
 		// Bauke: Pass Digid Attributes
 		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Add additional attributes");
 		String fld = (String) htTGTContext.get("uid");
-		if (fld != null) htAttributes.put("uid", fld);
+		if (fld != null)
+			htAttributes.put("uid", fld);
 
 		fld = (String) htTGTContext.get("digid_uid");
-		if (fld != null) htAttributes.put("digid_uid", fld);
+		if (fld != null)
+			htAttributes.put("digid_uid", fld);
 		fld = (String) htTGTContext.get("digid_betrouwbaarheidsniveau");
-		if (fld != null) htAttributes.put("digid_betrouwbaarheidsniveau", fld);
+		if (fld != null)
+			htAttributes.put("digid_betrouwbaarheidsniveau", fld);
 		fld = (String) htTGTContext.get("sel_uid");
-		if (fld != null) htAttributes.put("sel_uid", fld);
+		if (fld != null)
+			htAttributes.put("sel_uid", fld);
 
 		// Bauke: added additional attributes
 		String sAuthsp = (String) htTGTContext.get("authsp");
-		if (sAuthsp != null) htAttributes.put("sel_authsp", sAuthsp);
+		if (sAuthsp != null)
+			htAttributes.put("sel_authsp", sAuthsp);
 		String sAuthspLevel = (String) htTGTContext.get("authsp_level");
-		if (sAuthsp != null) htAttributes.put("authsp_level", sAuthspLevel);
-		if (sAuthsp != null) htAttributes.put("sel_level", sAuthspLevel);
+		if (sAuthsp != null)
+			htAttributes.put("authsp_level", sAuthspLevel);
+		if (sAuthsp != null)
+			htAttributes.put("sel_level", sAuthspLevel);
 		String sClientIp = (String) htTGTContext.get("client_ip");
-		if (sClientIp != null) htAttributes.put("client_ip", sClientIp);
+		if (sClientIp != null)
+			htAttributes.put("client_ip", sClientIp);
 		String sUserAgent = (String) htTGTContext.get("user_agent");
-		if (sUserAgent != null) htAttributes.put("user_agent", sUserAgent);
+		if (sUserAgent != null)
+			htAttributes.put("user_agent", sUserAgent);
 
 		String sSubjectDN = (String) htTGTContext.get("pki_subject_dn");
 		String sToken;
 		int idx;
 		if (sSubjectDN != null) {
-			// Subject: C=NL, O=Test-academisch ziekenhuis, CN=Agnes. Testzorgverlener-14, SERIALNUMBER=000001788, T=Cardioloog
+			// Subject: C=NL, O=Test-academisch ziekenhuis, CN=Agnes.
+			// Testzorgverlener-14, SERIALNUMBER=000001788, T=Cardioloog
 			htAttributes.put("pki_subject_dn", sSubjectDN);
 			StringTokenizer st = new StringTokenizer(sSubjectDN, ",");
 			_systemLogger.log(Level.INFO, _MODULE, sMethod, "Tokens=" + st.countTokens() + " sSubjectDN=" + sSubjectDN);
@@ -642,7 +652,8 @@ public class AttributeGatherer
 				sToken = st.nextToken(); // C=NL
 				idx = sToken.indexOf('=');
 				if (idx > 0)
-					htAttributes.put("pki_issuer_" + sToken.substring(0, idx).trim().toLowerCase(), sToken.substring(idx + 1));
+					htAttributes.put("pki_issuer_" + sToken.substring(0, idx).trim().toLowerCase(), sToken
+							.substring(idx + 1));
 			}
 		}
 
@@ -654,7 +665,8 @@ public class AttributeGatherer
 			for (int fldnr = 1; st.hasMoreTokens(); fldnr++) {
 				sToken = st.nextToken(); // 01.001
 				String sFld = "pki_subject_id" + Integer.toString(fldnr);
-				//_systemLogger.log(Level.INFO, _MODULE, sMethod, "Field="+sFld+" Token="+sToken);
+				// _systemLogger.log(Level.INFO, _MODULE, sMethod,
+				// "Field="+sFld+" Token="+sToken);
 				htAttributes.put(sFld, sToken);
 			}
 		}
@@ -666,7 +678,8 @@ public class AttributeGatherer
 
 		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Add handler");
 		try {
-			Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp", "id=" + sAuthsp);
+			Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp",
+					"id=" + sAuthsp);
 			String sHandler = _configManager.getParam(authSPsection, "handler");
 			int iDot = sHandler.lastIndexOf(".");
 			sHandler = sHandler.substring(iDot + 1, sHandler.length());
@@ -685,22 +698,19 @@ public class AttributeGatherer
 
 	/**
 	 * Destroys the objects in this class that need to be destroyed carefully.
-	 * <br><br>
-	 * <b>Description:</b>
 	 * <br>
-	 * Calls the destroy of the attribute requestors in the 
-	 * <code>_htRequestors</code> Hashtable. 
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Description:</b> <br>
+	 * Calls the destroy of the attribute requestors in the
+	 * <code>_htRequestors</code> HashMap. <br>
 	 * <br>
-	 * The <code>_htRequestors</code> contains attribute requestors that aren't destroyed
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Concurrency issues:</b> <br> - <br>
 	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * The <code>_htRequestors</code> contains attribute requestors that
+	 * aren't destroyed <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
 	 * All attribute requestors in <code>_htRequestors</code> are destroyed.
 	 * <br>
 	 */
@@ -709,11 +719,16 @@ public class AttributeGatherer
 		String sMethod = "destroy()";
 		try {
 			if (_htRequestors != null) {
-				Enumeration enumRequestors = _htRequestors.elements();
-				while (enumRequestors.hasMoreElements()) {
-					IAttributeRequestor oAttributeRequestor = (IAttributeRequestor) enumRequestors.nextElement();
+				for (Map.Entry<String, Object> entry : _htRequestors.entrySet()) {
+					IAttributeRequestor oAttributeRequestor = (IAttributeRequestor) entry.getValue();
 					oAttributeRequestor.destroy();
 				}
+				/*
+				 * Enumeration enumRequestors = _htRequestors.elements(); while
+				 * (enumRequestors.hasMoreElements()) { IAttributeRequestor
+				 * oAttributeRequestor = (IAttributeRequestor)
+				 * enumRequestors.nextElement(); oAttributeRequestor.destroy(); }
+				 */
 			}
 		}
 		catch (Exception e) {
@@ -725,19 +740,24 @@ public class AttributeGatherer
 	private AttributeGatherer() {
 	}
 
-	//Filter the attributes
-	private Hashtable filterAttributes(Hashtable htAttributes, Vector vRequestedAttributes)
+	// Filter the attributes
+	private HashMap filterAttributes(HashMap htAttributes, Vector vRequestedAttributes)
 	{
 		if (htAttributes == null || vRequestedAttributes == null)
 			return htAttributes;
-		Hashtable htFiltered = new Hashtable();
-		for (Enumeration enumRetrievedAttributes = htAttributes.keys(); enumRetrievedAttributes.hasMoreElements();) {
-			String sKey = (String) enumRetrievedAttributes.nextElement();
+		HashMap htFiltered = new HashMap();
+		
+		Set keys = htAttributes.keySet();
+		for (Object s : keys) {
+			String sKey = (String) s;
+			// for (Enumeration enumRetrievedAttributes = htAttributes.keys();
+			// enumRetrievedAttributes.hasMoreElements();) {
+			// String sKey = (String) enumRetrievedAttributes.nextElement();
 			for (Enumeration enumRequestedAttributes = vRequestedAttributes.elements(); enumRequestedAttributes
 					.hasMoreElements();) {
 				String sRequestedAttribute = (String) enumRequestedAttributes.nextElement();
 				if (Utils.matchWildcardMask(sKey, sRequestedAttribute)) {
-					//The value can be a String or a Vector
+					// The value can be a String or a Vector
 					Object oValue = htAttributes.get(sKey);
 					if (oValue != null)
 						htFiltered.put(sKey, oValue);

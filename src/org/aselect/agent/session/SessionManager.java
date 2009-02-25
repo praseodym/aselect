@@ -48,7 +48,7 @@
 package org.aselect.agent.session;
 
 import java.security.SecureRandom;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import org.aselect.agent.config.ASelectAgentConfigManager;
@@ -245,7 +245,7 @@ public class SessionManager
 	 * @param htSessionContext The contents of the session (context).
 	 * @return True if creation succeeds, otherwise false.
 	 */
-	public boolean createSession(String sSessionId, Hashtable htSessionContext)
+	public boolean createSession(String sSessionId, HashMap htSessionContext)
 	{
 		String sMethod = "createSession()";
 
@@ -333,7 +333,7 @@ public class SessionManager
 	 *            The new session context.
 	 * @return True if updating succeeds, otherwise false.
 	 */
-	public boolean updateSessionContext(String sSessionId, Hashtable htSessionContext)
+	public boolean updateSessionContext(String sSessionId, HashMap htSessionContext)
 	{
 		try {
 			synchronized (_oSessionTable) {
@@ -379,14 +379,14 @@ public class SessionManager
 	 * -
 	 * <br>
 	 * @param sSessionId The ID of the session.
-	 * @return The session context as <code>Hashtable</code>.
+	 * @return The session context as <code>HashMap</code>.
 	 */
-	public Hashtable getSessionContext(String sSessionId)
+	public HashMap getSessionContext(String sSessionId)
 	{
-		Hashtable htResponse = null;
+		HashMap htResponse = null;
 
 		try {
-			htResponse = (Hashtable) _oSessionTable.get(sSessionId);
+			htResponse = (HashMap) _oSessionTable.get(sSessionId);
 			_systemLogger.log(Level.INFO, MODULE, "getSessionContext()", "SessionId=" + sSessionId + ", Context="
 					+ htResponse);
 		}
@@ -416,11 +416,11 @@ public class SessionManager
 	 * <br>
 	 * -
 	 * <br>
-	 * @return All session contexts in a <code>Hashtable</code>.
+	 * @return All session contexts in a <code>HashMap</code>.
 	 */
-	public Hashtable getSessionContexts()
+	public HashMap getSessionContexts()
 	{
-		Hashtable htResponse = null;
+		HashMap htResponse = null;
 
 		try {
 			htResponse = _oSessionTable.getAll();

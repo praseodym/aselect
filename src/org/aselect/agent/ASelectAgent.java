@@ -115,7 +115,7 @@ import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import org.aselect.agent.admin.AdminMonitor;
@@ -832,7 +832,7 @@ public class ASelectAgent
 					PrintStream osOutput = new PrintStream(oSocket.getOutputStream());
 
 					String sRequestString = isInput.readLine();
-					Hashtable htParameters = Utils.convertCGIMessage(sRequestString);
+					HashMap htParameters = Utils.convertCGIMessage(sRequestString);
 					String sRequest = (String) htParameters.get("request");
 					if (sRequest.equalsIgnoreCase("stop")) {
 						destroy();

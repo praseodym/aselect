@@ -194,7 +194,7 @@ import java.security.Provider;
 import java.security.Signature;
 import java.text.DateFormat;
 import java.util.Date;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.TreeSet;
 import java.util.Vector;
@@ -554,14 +554,14 @@ public class RequestHandler extends Thread
 	 * to the A-Select server.
 	 * @param sUrl The A-Select Server URL.
 	 * @param htParamsTable The parameters to send to A-Select.
-	 * @return The return parameters in a <code>Hashtable</code>.
+	 * @return The return parameters in a <code>HashMap</code>.
 	 */
-	protected Hashtable sendRequestToASelectServer(String sUrl, Hashtable htParamsTable)
+	protected HashMap sendRequestToASelectServer(String sUrl, HashMap htParamsTable)
 	{
 		String sMethod = "sendRequestToASelectServer()";
 
 		//send message
-		Hashtable htReturnTable = new Hashtable();
+		HashMap htReturnTable = new HashMap();
 		try {
 			htReturnTable = _clientCommunicator.sendMessage(htParamsTable, sUrl);
 		}
@@ -770,7 +770,7 @@ public class RequestHandler extends Thread
 					+ sRemoteOrg);
 
 			// send an authenticate request to the A-Select Server
-			Hashtable htRequest = new Hashtable();
+			HashMap htRequest = new HashMap();
 			htRequest.put("request", "authenticate");
 			// Bauke: added htmlEncode to prevent cross-site scripting
 			htRequest.put("app_url", Tools.htmlEncode(sAppUrl));
@@ -804,7 +804,7 @@ public class RequestHandler extends Thread
 				sLanguage = null;
 			}
 
-			Hashtable htResponseParameters = sendToASelectServer(htRequest);
+			HashMap htResponseParameters = sendToASelectServer(htRequest);
 			if (htResponseParameters.isEmpty()) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not reach A-Select Server.");
 				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
@@ -848,7 +848,7 @@ public class RequestHandler extends Thread
 			}
 
 			// create a session
-			Hashtable htSessionContext = new Hashtable();
+			HashMap htSessionContext = new HashMap();
 			htSessionContext.put("rid", sRid);
 			htSessionContext.put("a-select-server", sAsId);
 			htSessionContext.put("user_type", "Local");
@@ -1097,7 +1097,7 @@ public class RequestHandler extends Thread
 				sRid = oInputMessage.getParam("rid");
 				sCredentials = oInputMessage.getParam("aselect_credentials");
 
-				Hashtable htSessionContext = _sessionManager.getSessionContext(sRid);
+				HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 				if (htSessionContext == null) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid session");
 					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_SESSION_EXPIRED);
@@ -1125,14 +1125,14 @@ public class RequestHandler extends Thread
 					+ sSamlAttributes);
 
 			// send the verify credentials request to the A-Select Server
-			Hashtable htRequest = new Hashtable();
+			HashMap htRequest = new HashMap();
 			htRequest.put("request", "verify_credentials");
 			htRequest.put("rid", sRid);
 			htRequest.put("aselect_credentials", sCredentials);
 			if (sSamlAttributes != null)
 				htRequest.put("saml_attributes", sSamlAttributes);
 
-			Hashtable htResponseParameters = sendToASelectServer(htRequest);
+			HashMap htResponseParameters = sendToASelectServer(htRequest);
 
 			if (htResponseParameters.isEmpty()) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not reach A-Select Server.");
@@ -1214,7 +1214,7 @@ public class RequestHandler extends Thread
 
 			// all parameters are there; create a ticket for this user and
 			// store it in a ticket context
-			Hashtable htTicketContext = new Hashtable();
+			HashMap htTicketContext = new HashMap();
 			htTicketContext.put("uid", sUID);
 			htTicketContext.put("organization", sOrg);
 			htTicketContext.put("authsp_level", sAL);
@@ -1441,7 +1441,7 @@ public class RequestHandler extends Thread
 					+ ", request_uri=" + sRequestURI + ", ip=" + sIP);
 
 			//get the ticket context
-			Hashtable htTicketContext = _ticketManager.getTicketContext(sTicket);
+			HashMap htTicketContext = _ticketManager.getTicketContext(sTicket);
 			if (htTicketContext == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request: unknown ticket.");
 				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_UNKNOWN_TICKET);
@@ -1487,7 +1487,7 @@ public class RequestHandler extends Thread
 				//get app_id
 				String sAppId = (String) htTicketContext.get("app_id");
 				//get user attributes
-				Hashtable htUserAttributes = deserializeAttributes((String) htTicketContext.get("attributes"));
+				HashMap htUserAttributes = deserializeAttributes((String) htTicketContext.get("attributes"));
 
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET attr=" + htUserAttributes);
 
@@ -1518,14 +1518,14 @@ public class RequestHandler extends Thread
 			if (_bSendUpgrade_tgt) {
 				String sCryptedCredentials = (String) htTicketContext.get("crypted_credentials");
 				String sAselectServer = (String) htTicketContext.get("a-select-server");
-				Hashtable htRequest = new Hashtable();
+				HashMap htRequest = new HashMap();
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET upgrade_tgt");
 				htRequest.put("request", "upgrade_tgt");
 				htRequest.put("a-select-server", sAselectServer);
 				//htRequest.put("rid",sRid);
 				htRequest.put("crypted_credentials", sCryptedCredentials);
 
-				Hashtable htResponseParameters = sendToASelectServer(htRequest);
+				HashMap htResponseParameters = sendToASelectServer(htRequest);
 				if (htResponseParameters.isEmpty()) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not reach A-Select Server.");
 					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
@@ -1740,7 +1740,7 @@ public class RequestHandler extends Thread
 					+ sTicket);
 
 			//get the ticket context
-			Hashtable htTicketContext = _ticketManager.getTicketContext(sTicket);
+			HashMap htTicketContext = _ticketManager.getTicketContext(sTicket);
 			if (htTicketContext == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request: unknown ticket.");
 				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_UNKNOWN_TICKET);
@@ -2061,10 +2061,10 @@ public class RequestHandler extends Thread
 	 * @param htParams the request parameters.
 	 * @return The response parameters.
 	 */
-	private Hashtable sendToASelectServer(Hashtable htParams)
+	private HashMap sendToASelectServer(HashMap htParams)
 	{
 		String sMethod = "sendToASelectServer()";
-		Hashtable htResponse = new Hashtable();
+		HashMap htResponse = new HashMap();
 
 		ASelectAgentSAMAgent oSAMAgent = ASelectAgentSAMAgent.getHandle();
 		try {
@@ -2099,7 +2099,7 @@ public class RequestHandler extends Thread
 	 * @param htRequest The request parameters.
 	 * @throws Exception If signing fails.
 	 */
-	private void signRequest(Hashtable htRequest)
+	private void signRequest(HashMap htRequest)
 		throws Exception
 	{
 		if (!_configManager.isSigningEnabled())
@@ -2136,16 +2136,16 @@ public class RequestHandler extends Thread
 	}
 
 	/**
-	 * Deserialize attributes and convertion to a <code>Hashtable</code>.
+	 * Deserialize attributes and convertion to a <code>HashMap</code>.
 	 * @param sSerializedAttributes the serialized attributes.
-	 * @return The deserialized attributes (key,value in <code>Hashtable</code>)
+	 * @return The deserialized attributes (key,value in <code>HashMap</code>)
 	 * @throws ASelectException If URLDecode fails
 	 */
-	protected Hashtable deserializeAttributes(String sSerializedAttributes)
+	protected HashMap deserializeAttributes(String sSerializedAttributes)
 		throws ASelectException
 	{
 		String sMethod = "deSerializeAttributes()";
-		Hashtable htAttributes = new Hashtable();
+		HashMap htAttributes = new HashMap();
 		if (sSerializedAttributes != null) //Attributes available
 		{
 			try {

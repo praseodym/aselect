@@ -39,7 +39,7 @@
  */
 package org.aselect.server.attributes.requestors;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 
 import org.aselect.system.exception.ASelectAttributesException;
@@ -109,7 +109,7 @@ public interface IAttributeRequestor
      * @return The retrieved attributes.
      * @throws ASelectAttributesException If gathering fails.
      */
-    public Hashtable getAttributes(Hashtable htTGTContext, Vector vAttributes)
+    public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes)
     	throws ASelectAttributesException;
     
     /**

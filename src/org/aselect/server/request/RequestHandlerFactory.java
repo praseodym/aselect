@@ -17,7 +17,8 @@
 package org.aselect.server.request;
 
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -56,7 +57,7 @@ public class RequestHandlerFactory
     private static RequestHandlerFactory _oRequestHandlerFactory;
     private ASelectSystemLogger _systemLogger;
     private ASelectConfigManager _configManager;
-    private Hashtable _htRequestHandlers;
+    private HashMap<String,Object> _htRequestHandlers;
     private Vector _vRequestHandlers; //keeps the sequence intact
     private boolean firstRun = true;
       
@@ -69,7 +70,7 @@ public class RequestHandlerFactory
      * <li>Reads the handler configurations</li>
      * <li>Creates IRequestHandler objects</li>
      * <li>Initializes the IRequestHandler objects</li>
-     * <li>Stores the objects in a Hashtable</li>
+     * <li>Stores the objects in a HashMap</li>
      * </ul>
      * <br><br>
      * <b>Concurrency issues:</b>
@@ -131,7 +132,7 @@ public class RequestHandlerFactory
                 throw e;
             }
             
-            _htRequestHandlers = new Hashtable();
+            _htRequestHandlers = new HashMap();
             _vRequestHandlers = new Vector();
             while (oHandler != null)
             {
@@ -341,12 +342,16 @@ public class RequestHandlerFactory
         if (_vRequestHandlers != null)
             _vRequestHandlers.clear();
         
-        Enumeration enumHandlers = _htRequestHandlers.elements();
+        for (Map.Entry<String,Object> entry : _htRequestHandlers.entrySet()) {
+            IRequestHandler oRequestHandler = (IRequestHandler)entry.getValue();
+            oRequestHandler.destroy();
+        }
+/*        Enumeration enumHandlers = _htRequestHandlers.elements();
         while (enumHandlers.hasMoreElements())
         {
             IRequestHandler oRequestHandler = (IRequestHandler)enumHandlers.nextElement();
             oRequestHandler.destroy();
-        }
+        }*/
     }
 
     /**

@@ -60,7 +60,7 @@ package org.aselect.server.udb.flatfile;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -201,13 +201,13 @@ public class FlatFileConnector implements IUDBConnector
 	 * <br><br>
 	 * @see org.aselect.server.udb.IUDBConnector#getUserProfile(java.lang.String)
 	 */
-	public Hashtable getUserProfile(String sUserId)
+	public HashMap getUserProfile(String sUserId)
 	{
 		String sMethod = "getUserProfile()";
 
 		_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "user=" + sUserId);
-		Hashtable htResponse = new Hashtable();
-		Hashtable htUserAttributes = new Hashtable();
+		HashMap htResponse = new HashMap();
+		HashMap htUserAttributes = new HashMap();
 		Object oAuthSPsSection = null;
 		Object oAuthSP = null;
 		String sAuthSPID = null;

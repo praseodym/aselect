@@ -44,6 +44,7 @@
  */
 package org.aselect.authspserver.authsp.ldap;
 
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.logging.Level;
 

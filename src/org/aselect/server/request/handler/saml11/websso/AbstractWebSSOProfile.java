@@ -19,7 +19,8 @@ package org.aselect.server.request.handler.saml11.websso;
 import java.net.URLDecoder;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -150,9 +151,9 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
     }
     
     /**
-     * @see org.aselect.server.request.handler.saml11.websso.IWebSSOProfile#process(java.util.Hashtable, javax.servlet.http.HttpServletResponse, java.lang.String, java.lang.String)
+     * @see org.aselect.server.request.handler.saml11.websso.IWebSSOProfile#process(java.util.HashMap, javax.servlet.http.HttpServletResponse, java.lang.String, java.lang.String)
      */
-    abstract public void process(Hashtable htInfo, HttpServletResponse response
+    abstract public void process(HashMap htInfo, HttpServletResponse response
         , String sIP, String sHost) throws ASelectException;
     
     /**
@@ -202,7 +203,7 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
      * <br>
      * @param sUid the A-Select user id of the requestor
      * @param sProviderId the providerId that is requested
-     * @param htInfo Hashtable containing user information
+     * @param htInfo HashMap containing user information
      * @param sIP the client IP address
      * @param sHost the Host representation of the client IP address
      * @param sConfirmationMethod the SAML Confirmation Method that must be used 
@@ -211,7 +212,7 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
      * @throws ASelectException if creation fails
      */
     protected SAMLAssertion createSAMLAssertion(String sUid, String sProviderId
-        , Hashtable htInfo, String sIP, String sHost, String sConfirmationMethod, String sIdp) 
+        , HashMap htInfo, String sIP, String sHost, String sConfirmationMethod, String sIdp) 
         throws ASelectException
     {
         String sMethod = "createSAMLAssertion()";
@@ -220,7 +221,7 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
         SAMLAuthenticationStatement oSAMLAuthenticationStatement = null;
         Date dCurrent = new Date();
         Vector vSAMLStatements = new Vector();
-        Hashtable htAttributes = null;
+        HashMap htAttributes = null;
         try
         {
             String sAuthSPID = (String)htInfo.get("authsp");
@@ -291,25 +292,25 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
      * and the following information:<br/>
      * <table border='1'>
      * <tr><th>key</th><th>value</th></tr>
-     * <tr><td>resources</td><td><b><i>resources Hashtable</b></i></td></tr>
+     * <tr><td>resources</td><td><b><i>resources HashMap</b></i></td></tr>
      * <tr><td>authsps</td><td>authsp_id</td></tr>
-     * <tr><td>attributes</td><td><b><i>attributes / application Hashtable</b>
+     * <tr><td>attributes</td><td><b><i>attributes / application HashMap</b>
      * </i></td></tr>
      * </table>
      * <br/>
-     * <b><i>resources Hashtable</b></i>
+     * <b><i>resources HashMap</b></i>
      * <table border='1'>
      * <tr><th>key</th><th>value</th></tr>
      * <tr><td>providerId</td><td>app_id</td></tr>
      * </table>
      * <br/>
-     * <b><i>attributes / application Hashtable</b></i>
+     * <b><i>attributes / application HashMap</b></i>
      * <table border='1'>
      * <tr><th>key</th><th>value</th></tr>
-     * <tr><td>app_id</td><td><b><i>attributes Hashtable</b></i></td></tr>
+     * <tr><td>app_id</td><td><b><i>attributes HashMap</b></i></td></tr>
      * </table>
      * <br/>
-     * <b><i>attributes Hashtable</b></i>
+     * <b><i>attributes HashMap</b></i>
      * <table border='1'>
      * <tr><th>key</th><th>value</th></tr>
      * <tr><td>attribute name</td><td>attribute value</td></tr>
@@ -331,14 +332,14 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
      * @param sProviderId requested providerId
      * @param sAppID A-Select app_id
      * @param sAuthSPID A-Select authsp_id 
-     * @param htAttributes Hashtable containing the user attributes
+     * @param htAttributes HashMap containing the user attributes
      * @throws ASelectException if session information could not be stored
      */
     private void storeSessionInformation(String sUid
         , String sProviderId
         , String sAppID
         , String sAuthSPID
-        , Hashtable htAttributes) 
+        , HashMap htAttributes) 
         throws ASelectException
     {
         String sMethod = "storeAttributesSession()";
@@ -346,13 +347,13 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
         {
             String sSAMLID = SESSION_ID_PREFIX + sUid;
             
-            Hashtable htSAMLTGT = null;
+            HashMap htSAMLTGT = null;
             if(!_oTGTManager.containsKey(sSAMLID))
             {
-                htSAMLTGT = new Hashtable();
+                htSAMLTGT = new HashMap();
                 if (sProviderId != null && sAppID != null)
                 {
-                    Hashtable htResources = new Hashtable();
+                    HashMap htResources = new HashMap();
                     htResources.put(sProviderId, sAppID);
                     htSAMLTGT.put("resources", htResources);
                 }
@@ -369,7 +370,7 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
                     //store authentication information in session
                     //put attribute collection in TGTManager with id=saml11_[A-Select_username]
                     
-                    Hashtable htAttribs = new Hashtable();
+                    HashMap htAttribs = new HashMap();
                     htAttribs.put(sProviderId, htAttributes);
                     htSAMLTGT.put("attributes", htAttribs);
                 }
@@ -381,7 +382,7 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
                 
                 if (sProviderId != null && sAppID != null)
                 {
-                    Hashtable htResources = (Hashtable)htSAMLTGT.get("resources");
+                    HashMap htResources = (HashMap)htSAMLTGT.get("resources");
                     htResources.put(sProviderId, sAppID);
                     htSAMLTGT.put("resources", htResources);
                 }
@@ -395,11 +396,11 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
                 
                 if (sProviderId != null && htAttributes != null)
                 {
-                    Hashtable htAttribs = (Hashtable)htSAMLTGT.get("attributes");
+                    HashMap htAttribs = (HashMap)htSAMLTGT.get("attributes");
                     if (htAttribs != null)
                     {
-                        Hashtable htAppIDAttribs = null;
-                        if ((htAppIDAttribs = (Hashtable)htAttribs.get(sProviderId)) == null)
+                        HashMap htAppIDAttribs = null;
+                        if ((htAppIDAttribs = (HashMap)htAttribs.get(sProviderId)) == null)
                         {
                             htAttribs.put(sProviderId, htAttributes);
                         }
@@ -493,14 +494,14 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
      * Generates a SAML 1.1 Attribute statement
      * <br><br>
      * @param sUid A-Select user id
-     * @param htAttributes Hashtable containing attributes with 
+     * @param htAttributes HashMap containing attributes with 
      * key=[attribute name] value=[attribute value] 
      * @return the created SAMLAttributeStatement
      * @throws ASelectException if generation fails
      */
     private SAMLAttributeStatement generateSAMLAttributeStatement(
         String sUid, 
-        Hashtable htAttributes) 
+        HashMap htAttributes) 
         throws ASelectException
     {
         String sMethod = "generateSAMLAttributeStatement()";
@@ -508,10 +509,13 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
         try
         {
             Vector vAttributes = new Vector();
-            Enumeration enumAttributeNames = htAttributes.keys();
-            while(enumAttributeNames.hasMoreElements())
-            {
-                String sKey = (String)enumAttributeNames.nextElement();
+            Set keys = htAttributes.keySet();
+			for (Object s : keys) {
+				String sKey = (String) s;
+            //Enumeration enumAttributeNames = htAttributes.keys();
+            //while(enumAttributeNames.hasMoreElements())
+            //{
+              //  String sKey = (String)enumAttributeNames.nextElement();
                 Object oValue = htAttributes.get(sKey);
                 SAMLAttribute oSAMLAttribute = createSAMLAttribute(sKey, oValue);
                 vAttributes.add(oSAMLAttribute);
@@ -535,19 +539,19 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
     
     
     /**
-     * Deserialize attributes and convertion to a <code>Hashtable</code>.
+     * Deserialize attributes and convertion to a <code>HashMap</code>.
      * <br/>
      * Conatins support for multivalue attributes, with name of type <code>
      * String</code> and value of type <code>Vector</code>.
      * @param sSerializedAttributes the serialized attributes.
-     * @return The deserialized attributes (key,value in <code>Hashtable</code>)
+     * @return The deserialized attributes (key,value in <code>HashMap</code>)
      * @throws ASelectException If URLDecode fails
      */
-    private Hashtable deserializeAttributes(String sSerializedAttributes) 
+    private HashMap deserializeAttributes(String sSerializedAttributes) 
         throws ASelectException
     {
         String sMethod = "deSerializeAttributes()";
-        Hashtable htAttributes = new Hashtable();
+        HashMap htAttributes = new HashMap();
         if(sSerializedAttributes != null) //Attributes available
         {
             try

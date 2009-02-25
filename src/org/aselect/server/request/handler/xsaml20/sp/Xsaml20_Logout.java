@@ -2,7 +2,7 @@ package org.aselect.server.request.handler.xsaml20.sp;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -169,7 +169,7 @@ public class Xsaml20_Logout extends Saml20_BaseHandler  // RH, 20080602, n
 	            }
 			}
 		}
-		Hashtable htTGTContext = _oTGTManager.getTGT(sTGT);
+		HashMap htTGTContext = _oTGTManager.getTGT(sTGT);
 
 		// check if request should be signed
 		// RH, 20080701, sn

@@ -141,7 +141,7 @@
 package org.aselect.server.tgt;
 
 import java.net.URLEncoder;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -254,7 +254,7 @@ public class TGTIssuer
      * <br>
      * @param sRid The request id (session key)
      * @param sAuthSP The AuthSP which the used to authenticate 
-     * @param htRemoteAttributes <code>Hashtable</code> containing additional TGT 
+     * @param htRemoteAttributes <code>HashMap</code> containing additional TGT 
      * information
      * @param oHttpServletResponse The servlet response that is used to redirect 
      * to
@@ -262,7 +262,7 @@ public class TGTIssuer
      * cookie at the user (can be null if not present)
      * @throws ASelectException if an error page must be shown
      */
-    public void issueCrossTGT(String sRid, String sAuthSP, Hashtable htRemoteAttributes,
+    public void issueCrossTGT(String sRid, String sAuthSP, HashMap htRemoteAttributes,
         HttpServletResponse oHttpServletResponse, String sOldTGT)
     		throws ASelectException
     {
@@ -276,7 +276,7 @@ public class TGTIssuer
         
         try
         {
-            Hashtable htSessionContext = _sessionManager.getSessionContext(sRid);
+            HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
             if (htSessionContext == null)
             {
                 StringBuffer sbFailed = new StringBuffer("No session found, session expired: ");
@@ -325,7 +325,7 @@ public class TGTIssuer
 
                 sAppId = sbAppID.toString();
             }
-            Hashtable htTGTContext = new Hashtable();
+            HashMap htTGTContext = new HashMap();
             
             // Bauke: copy DigiD data to the context
             // Prefix the field with "digid_" so the filter can recognize them
@@ -378,13 +378,13 @@ public class TGTIssuer
             String sRelayState = (String)htSessionContext.get("RelayState");
             if (sRelayState != null) htTGTContext.put("RelayState", sRelayState);
             
-            Hashtable htOldTGTContext = null;
+            HashMap htOldTGTContext = null;
             if (sOldTGT != null)
             {
                 htOldTGTContext = _tgtManager.getTGT(sOldTGT);
                 if (htOldTGTContext != null)
                 {
-                    Hashtable htUpdate = verifyTGT(htOldTGTContext, htTGTContext);
+                    HashMap htUpdate = verifyTGT(htOldTGTContext, htTGTContext);
                     if (!htUpdate.isEmpty())
                         htTGTContext.putAll(htUpdate);
 
@@ -457,7 +457,7 @@ public class TGTIssuer
      * <br>
      * @param sRid The request id (session key)
      * @param sAuthSP The AuthSP which the used to authenticate 
-     * @param htAdditional <code>Hashtable</code> containing additional TGT 
+     * @param htAdditional <code>HashMap</code> containing additional TGT 
      * information
      * @param oHttpServletResponse The servlet response that is used to redirect 
      * to
@@ -465,7 +465,7 @@ public class TGTIssuer
      * cookie at the user (can be null if not exists)
      * @throws ASelectException if an error page must be shown
      */
-    public void issueTGT(String sRid, String sAuthSP, Hashtable htAdditional,
+    public void issueTGT(String sRid, String sAuthSP, HashMap htAdditional,
         HttpServletResponse oHttpServletResponse, String sOldTGT)
     		throws ASelectException
     {
@@ -474,7 +474,7 @@ public class TGTIssuer
         String sArpTarget = null;  // added 1.5.4
         
         try {
-            Hashtable htSessionContext = _sessionManager.getSessionContext(sRid);
+            HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
             if (htSessionContext == null) {
                 _systemLogger.log(Level.WARNING, MODULE, sMethod, "No session found, session expired: "+sRid);
                 throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
@@ -508,7 +508,7 @@ public class TGTIssuer
             
             String sUserId = (String)htSessionContext.get("user_id");
             String sOrganization = (String)htSessionContext.get("organization");
-            Hashtable htAllowedAuthsps = (Hashtable)htSessionContext.get("allowed_user_authsps");
+            HashMap htAllowedAuthsps = (HashMap)htSessionContext.get("allowed_user_authsps");
             Integer intAppLevel = (Integer)htSessionContext.get("level");
             Vector vSSOGroups = (Vector)htSessionContext.get("sso_groups");
             sLevel = (_authSPHandlerManager.getLevel(sAuthSP)).toString();
@@ -527,7 +527,7 @@ public class TGTIssuer
             String sEncodedUserId = URLEncoder.encode(sUserId, "UTF-8");
             sEncodedUserId = URLEncoder.encode(sEncodedUserId, "UTF-8");
 
-            Hashtable htTGTContext = new Hashtable();
+            HashMap htTGTContext = new HashMap();
             htTGTContext.put("uid", sUserId);
             htTGTContext.put("organization", sOrganization);
             htTGTContext.put("authsp_level", sLevel);
@@ -552,13 +552,13 @@ public class TGTIssuer
             String sSelectUid = (String)htSessionContext.get("sel_uid");
             if (sSelectUid != null) htTGTContext.put("sel_uid", sSelectUid);
 
-            Hashtable htOldTGTContext = null;
+            HashMap htOldTGTContext = null;
             String sTgt = null;
             UserSsoSession ssoSession = null;
             if (sOldTGT != null) {
                 htOldTGTContext = _tgtManager.getTGT(sOldTGT);
                 if (htOldTGTContext != null) {
-                    Hashtable htUpdate = verifyTGT(htOldTGTContext, htTGTContext);
+                    HashMap htUpdate = verifyTGT(htOldTGTContext, htTGTContext);
                     if (!htUpdate.isEmpty())
                         htTGTContext.putAll(htUpdate);
 
@@ -691,7 +691,7 @@ public class TGTIssuer
             sessionManager = SessionManager.getHandle();
             TGTManager oTGTManager = TGTManager.getHandle();
 
-            Hashtable htSessionContext = sessionManager.getSessionContext(sRid);
+            HashMap htSessionContext = sessionManager.getSessionContext(sRid);
             if (htSessionContext == null)
             {
                 StringBuffer sbFailed = new StringBuffer("No session found, session expired: ");
@@ -710,7 +710,7 @@ public class TGTIssuer
                 sAppUrl = sLocalASUrl;
             }
 
-            Hashtable htTGTContext = new Hashtable();
+            HashMap htTGTContext = new HashMap();
 
             // Error TGT only contains rid and result_code
             String sAppId = (String)htSessionContext.get("app_id");
@@ -842,9 +842,9 @@ public class TGTIssuer
      * verifies the following items: 
      * - app_level 
      */
-    private Hashtable verifyTGT(Hashtable htOldTGTContext, Hashtable htNewTGTContext)
+    private HashMap verifyTGT(HashMap htOldTGTContext, HashMap htNewTGTContext)
     {
-        Hashtable htReturn = new Hashtable();
+        HashMap htReturn = new HashMap();
         // check if the user already has a ticket
         // only if the application requires forced this is useful
         

@@ -108,7 +108,7 @@ package org.aselect.server.request.handler.sfs.authentication;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
@@ -177,9 +177,9 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
     /**
      * process a-select browser requests
      * <br><br>
-     * @see org.aselect.server.request.handler.sfs.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.Hashtable, javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
+     * @see org.aselect.server.request.handler.sfs.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.HashMap, javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
      */
-    public void processBrowserRequest(Hashtable htServiceRequest,
+    public void processBrowserRequest(HashMap htServiceRequest,
         HttpServletResponse servletResponse, PrintWriter pwOut)
     throws ASelectException
     {
@@ -204,7 +204,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
      * @param servletResponse
      * @throws ASelectException
      */
-    private void handleCrossAuthenticateResponse(Hashtable htServiceRequest,
+    private void handleCrossAuthenticateResponse(HashMap htServiceRequest,
         HttpServletResponse servletResponse)
         	throws ASelectException
     {
@@ -215,7 +215,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
             String sRemoteRid = null;
             String sLocalRid = null;
             String sCredentials = null;
-            Hashtable htSessionContext;
+            HashMap htSessionContext;
             
             // check parameters
             sRemoteRid = (String)htServiceRequest.get("rid");
@@ -248,7 +248,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
             String sRemoteOrg = (String)htSessionContext.get("remote_organization");
 
             // verify the credentials at the remote server
-            Hashtable htRemoteAttributes =  verifyRemoteCredentials(sCredentials, sRemoteRid, sRemoteOrg);
+            HashMap htRemoteAttributes =  verifyRemoteCredentials(sCredentials, sRemoteRid, sRemoteOrg);
 
             // for authentication logging
             String sOrg = (String)htRemoteAttributes.get("organization");
@@ -331,7 +331,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 	    }
     }
     
-	static private Hashtable _htSFSOrganizations = null;
+	static private HashMap _htSFSOrganizations = null;
 	
     static public String getSFSRelay(String sOrg) throws ASelectConfigException {
     	String sMethod = "getSFSRelay()";
@@ -351,7 +351,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 					"No extra sfs configuration found, skipping.");
 			}
 		
-			_htSFSOrganizations = new Hashtable();
+			_htSFSOrganizations = new HashMap();
 			if (oSfsConfig != null) {
 				try {
 					Object oIdpCfg = null;
@@ -407,10 +407,10 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
      * @param sCredentials
      * @param sRemoteRid
      * @param sRemoteOrg
-     * @return Hashtable
+     * @return HashMap
      * @throws ASelectException
      */
-    private Hashtable verifyRemoteCredentials(String sCredentials, String sRemoteRid, String sRemoteOrg)
+    private HashMap verifyRemoteCredentials(String sCredentials, String sRemoteRid, String sRemoteOrg)
         	throws ASelectException
     {
         String sMethod = "verifyRemoteCredentials()";
@@ -453,8 +453,8 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
             throw ace;
         }
         RawCommunicator oCommunicator = new RawCommunicator(_systemLogger); //Default = API communciation
-        Hashtable htRequestTable = new Hashtable();
-        Hashtable htResponseTable = new Hashtable();
+        HashMap htRequestTable = new HashMap();
+        HashMap htResponseTable = new HashMap();
         htRequestTable.put("request", "verify_credentials");
         htRequestTable.put("rid", sRemoteRid);
         htRequestTable.put("aselect_credentials", sCredentials);
@@ -507,7 +507,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
             sbWarning.append("' returned error: ");
             sbWarning.append(sResultCode);
             _systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString());
-            Hashtable htTicketContext = new Hashtable();
+            HashMap htTicketContext = new HashMap();
             htTicketContext.put("result_code", sResultCode);
 
             if (sUID != null)
@@ -586,7 +586,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 
         // all parameters are there; create a ticket for this user and
         // store it in a ticket context
-        Hashtable htTicketContext = new Hashtable();
+        HashMap htTicketContext = new HashMap();
         htTicketContext.put("uid", sUID);
         htTicketContext.put("organization", sOrg);
         htTicketContext.put("authsp_level", sAL);

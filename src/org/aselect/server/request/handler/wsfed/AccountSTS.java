@@ -15,7 +15,7 @@
  */
 package org.aselect.server.request.handler.wsfed;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -54,10 +54,10 @@ public class AccountSTS extends ProtoRequestHandler
 	private String _sNameIdFormat;
 	// Removed 20080423: private String _sDefaultWreply;
 	private String _sCookieDomain;
-    protected Hashtable _htSecLevels;
-    protected Hashtable _htSP_LoginReturn;
-    protected Hashtable _htSP_LogoutReturn;
-    //protected Hashtable _htSP_ErrorUrl;
+    protected HashMap _htSecLevels;
+    protected HashMap _htSP_LoginReturn;
+    protected HashMap _htSP_LogoutReturn;
+    //protected HashMap _htSP_ErrorUrl;
 
 	protected String getSessionIdPrefix() { return SESSION_ID_PREFIX; }
     protected boolean useConfigToCreateSamlBuilder() { return true; }
@@ -84,20 +84,20 @@ public class AccountSTS extends ProtoRequestHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Cookie domain is: " + _sCookieDomain);
 
 			_vIdPUrls = new Vector();  // Vector will contain 'url' key values
-		    _htIdPs = new Hashtable();  // contains url->id
+		    _htIdPs = new HashMap();  // contains url->id
 			getTableFromConfig(oConfig, _vIdPUrls, _htIdPs, "identity_providers", "idp", "url",/*->*/"id",
 					true/*mandatory*/, true/*unique values*/);
 
-		    _htSecLevels = new Hashtable();  // contains level -> urn
+		    _htSecLevels = new HashMap();  // contains level -> urn
 			getTableFromConfig(oConfig, null, _htSecLevels, "authentication_method", "security", "level",/*->*/"uri",
 					false/*mandatory*/, false/*unique values*/);
 
 			// We just parse the config multiple times, since it's only done once
-		    _htSP_LoginReturn = new Hashtable();
+		    _htSP_LoginReturn = new HashMap();
 			getTableFromConfig(oConfig, null, _htSP_LoginReturn, "service_providers", "sp",
 					"uri",/*->*/"login_return_url", false/*mandatory*/, false/*unique values*/);
 
-		    _htSP_LogoutReturn = new Hashtable();
+		    _htSP_LogoutReturn = new HashMap();
 			getTableFromConfig(oConfig, null, _htSP_LogoutReturn, "service_providers", "sp",
 					"uri",/*->*/"logout_return_url", false/*mandatory*/, false/*unique values*/);
 			
@@ -161,25 +161,25 @@ public class AccountSTS extends ProtoRequestHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "wsfed_ap PATH="+request.getPathInfo()+
 						" "+request.getMethod()+" "+ request.getQueryString());
 		
-		Hashtable htSessionData = new Hashtable();
+		HashMap htSessionData = new HashMap();
 		if (sPwtrealm != null) htSessionData.put("wtrealm", sPwtrealm);
 		if (sPwreply != null) htSessionData.put("wreply", sPwreply);
 		if (sPwctx != null) htSessionData.put("wctx", sPwctx);
 
 		// Look for a possible TGT
-//    	Hashtable htCredentialsParams = getCredentialsFromCookie(request);
+//    	HashMap htCredentialsParams = getCredentialsFromCookie(request);
 	    // Bauke 20081209: getCredentialsFromCookie now returns a string
     	String sTgt = getCredentialsFromCookie(request);
         //if (htCredentialsParams != null) {
         //	String sTgt = (String)htCredentialsParams.get("tgt");
         if (sTgt != null) {
-        	Hashtable htTGTContext = getContextFromTgt(sTgt, true);  // Check expiration
+        	HashMap htTGTContext = getContextFromTgt(sTgt, true);  // Check expiration
         	if (htTGTContext != null) {  // Valid TGT context found
                 // Update TGT timestamp
         		_oTGTManager.updateTGT(sTgt, htTGTContext);
                 // Return to the caller
         		String sUid = (String)htTGTContext.get("uid");
-         		Hashtable htAllAttributes = getAttributesFromTgtAndGatherer(htTGTContext);
+         		HashMap htAllAttributes = getAttributesFromTgtAndGatherer(htTGTContext);
         		return postRequestorToken(request, response, sUid, htSessionData, htAllAttributes);
         	}
         }
@@ -190,7 +190,7 @@ public class AccountSTS extends ProtoRequestHandler
 		
 		// TODO Would be a lot more efficient if this request would simply call
 		//      the handleAuthenticateRequest() method in the ApplicationAPIHandler
-		Hashtable htResponse = performAuthenticateRequest(sASelectURL, sPathInfo, RETURN_SUFFIX,
+		HashMap htResponse = performAuthenticateRequest(sASelectURL, sPathInfo, RETURN_SUFFIX,
 									_sMyAppId, false/*don't check signature*/, _oClientCommunicator);
 		String sRid = (String)htResponse.get("rid");
 		
@@ -230,8 +230,8 @@ public class AccountSTS extends ProtoRequestHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "sPwa="+sPwa+" wresult="+sPwresult+" sUrlRid="+sUrlRid);		
 		String sUid = null;
 		String sTgt = null;
-		Hashtable htCredentials = null;
-		Hashtable htAttributes = null;
+		HashMap htCredentials = null;
+		HashMap htAttributes = null;
 		try {
 			if (sPwa != null && !sPwa.equals("")) {
 				// From Resource Partner, get attributes from resource token
@@ -273,7 +273,7 @@ public class AccountSTS extends ProtoRequestHandler
 				createContextAndIssueTGT(response, null, _sASelectServerID, _sASelectOrganization, _sMyAppId, sTgt, htAttributes);
 	    		
 	    		// Create Token and POST it to the caller
-				Hashtable htSessionData = retrieveSessionDataFromRid(request, SESSION_ID_PREFIX);
+				HashMap htSessionData = retrieveSessionDataFromRid(request, SESSION_ID_PREFIX);
 				if (htSessionData == null)
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
 	    		return postRequestorToken(request, response, sUid, htSessionData, htAttributes);
@@ -291,7 +291,7 @@ public class AccountSTS extends ProtoRequestHandler
 	}
 
 	private RequestState postRequestorToken(HttpServletRequest request, HttpServletResponse response,
-			String sUid, Hashtable htSessionData, Hashtable htAttributes)
+			String sUid, HashMap htSessionData, HashMap htAttributes)
 	throws ASelectException
 	{
 		String sMethod = "postRequestorToken()";
@@ -340,7 +340,7 @@ public class AccountSTS extends ProtoRequestHandler
 		}
 	}
 
-	public String serializeTheseAttributes(Hashtable htAttribs)
+	public String serializeTheseAttributes(HashMap htAttribs)
 	throws ASelectException
 	{
 		String sMethod = "serializeTheseAttributes()";
@@ -355,14 +355,14 @@ public class AccountSTS extends ProtoRequestHandler
 		String sMethod = "processSignout()";
 
 		// First look for a possible TGT
-    	//Hashtable htCredentialsParams = getCredentialsFromCookie(request);
+    	//HashMap htCredentialsParams = getCredentialsFromCookie(request);
 	    // Bauke 20081209: getCredentialsFromCookie now returns a string
     	String sTgt = getCredentialsFromCookie(request);
     	String sWtRealm = null;
         //if (htCredentialsParams != null) {
         //	String sTgt = (String)htCredentialsParams.get("tgt");
         if (sTgt != null) {
-        	Hashtable htTGTContext = getContextFromTgt(sTgt, false);  // Don't check expiration
+        	HashMap htTGTContext = getContextFromTgt(sTgt, false);  // Don't check expiration
         	if (htTGTContext != null) {  // Valid TGT context found
         		sWtRealm = (String)htTGTContext.get("wtrealm");
         	}

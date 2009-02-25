@@ -68,7 +68,7 @@ import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Level;
 
@@ -169,12 +169,12 @@ public class SOAP12Communicator implements IClientCommunicator
      * @throws ASelectCommunicationException
      *             If suplied URL is invalid.
      * @see org.aselect.system.communication.client.IClientCommunicator#sendMessage(
-     * java.util.Hashtable,java.lang.String)
+     * java.util.HashMap,java.lang.String)
      */
-    public Hashtable sendMessage(Hashtable htParameters, String sTarget)
+    public HashMap sendMessage(HashMap htParameters, String sTarget)
         throws ASelectCommunicationException
     {
-        Hashtable htResult = new Hashtable();
+        HashMap htResult = new HashMap();
         String sMessage = null;
         String sResponse = null;
         Element elBody = null;
@@ -209,7 +209,7 @@ public class SOAP12Communicator implements IClientCommunicator
     public String sendStringMessage(String soapMessage, String sTarget)
     throws ASelectCommunicationException
     {
-        Hashtable htResult = new Hashtable();
+        HashMap htResult = new HashMap();
         String sMessage = null;
         String sResponse = null;
         Element elBody = null;
@@ -247,7 +247,7 @@ public class SOAP12Communicator implements IClientCommunicator
      * Creates a correct SOAP 1.2 message containing the given parameters. <br>
      * <br>
      * <b>Concurrency issues: </b> <br>
-     * The used {@link java.util.Hashtable}is synchronized. <br>
+     * The used {@link java.util.HashMap}is synchronized. <br>
      * <br>
      * <b>Preconditions: </b>
      * <ul>
@@ -259,13 +259,13 @@ public class SOAP12Communicator implements IClientCommunicator
      * <b>Postconditions: </b> <br>-<br>
      * 
      * @param htParameters
-     *            A <CODE>Hashtable</CODE> containing the paramaters to add to
+     *            A <CODE>HashMap</CODE> containing the paramaters to add to
      *            the SOAP message.
      * @param sTargetUrl
      *            The URL of the server.
      * @return <CODE>String</CODE> containing the created SOAP message
      */
-    private String createMessage(Hashtable htParameters, String sTargetUrl)
+    private String createMessage(HashMap htParameters, String sTargetUrl)
     {
         String sMethod = "createMessage";
         StringBuffer sbMessage = new StringBuffer();
@@ -322,7 +322,7 @@ public class SOAP12Communicator implements IClientCommunicator
                 else
                 {
                     _systemLogger.log(Level.INFO, MODULE, sMethod,
-                        "Unknown object found in Hashtable");
+                        "Unknown object found in HashMap");
                 }
             }
 
@@ -547,16 +547,16 @@ public class SOAP12Communicator implements IClientCommunicator
     }
 
     /**
-     * Converts the xml body to a Hashtable object. 
+     * Converts the xml body to a HashMap object. 
      * <br><br>
      * <b>Description: </b> <br>
-     * Converts the xml body <code>Element</code> to a Hashtable object. <br>
+     * Converts the xml body <code>Element</code> to a HashMap object. <br>
      * <br>
      * <b>Concurrency issues: </b>
      * <ul>
      * <li><code>elBody</code> is not threadsafe and this method should be
      * called sequential when using the same <code>elBody</code> object.</li>
-     * <li>The returned <code>Hashtable</code> is threadsafe.</li>
+     * <li>The returned <code>HashMap</code> is threadsafe.</li>
      * </ul>
      * <br>
      * <br>
@@ -573,15 +573,15 @@ public class SOAP12Communicator implements IClientCommunicator
      *            message
      * @param sURI
      *            the Namespace URI of the body.
-     * @return An <CODE>Hashtable</CODE> containing the response params.
+     * @return An <CODE>HashMap</CODE> containing the response params.
      * @throws ASelectCommunicationException
      *             If conversion fails.
      */
-    private Hashtable xmlBody2Hashtable(Element elBody, String sURI)
+    private HashMap xmlBody2Hashtable(Element elBody, String sURI)
         throws ASelectCommunicationException
     {
         String sMethod = "xmlBody2Hashtable";
-        Hashtable htReturn = new Hashtable();
+        HashMap htReturn = new HashMap();
         if (elBody != null)
         {
             String sKey = null;
@@ -611,7 +611,7 @@ public class SOAP12Communicator implements IClientCommunicator
                                 sKey = nlNodes.item(xI).getLocalName();
                                 //get value of text node
                                 sValue = nlTemp.item(0).getNodeValue();
-                                //add to Hashtable
+                                //add to HashMap
                                 htReturn.put(sKey, sValue);
                             }
                         }
@@ -625,7 +625,7 @@ public class SOAP12Communicator implements IClientCommunicator
                                 //localname = tagname without namespace prefix
                                 sKey = elCurrent.getLocalName();
 
-                                //add to Hashtable
+                                //add to HashMap
                                 htReturn.put(sKey, sa);
                             }
                         }

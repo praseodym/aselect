@@ -2,7 +2,7 @@ package org.aselect.server.request.handler.xsaml20;
 
 import java.security.PublicKey;
 import java.util.Date;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -474,7 +474,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 		
 		String sNameID = logoutRequest.getNameID().getValue();
 		TGTManager tgtManager = TGTManager.getHandle();
-		Hashtable<String, Object> htTGTContext = tgtManager.getTGT(sNameID);
+		HashMap<String, Object> htTGTContext = tgtManager.getTGT(sNameID);
 		
 		// TODO: if one or more sessionindexes are mentioned in the logout request
 		//       only logout the ones mentioned!!

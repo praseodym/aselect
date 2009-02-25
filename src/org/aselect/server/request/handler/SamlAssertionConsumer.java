@@ -19,7 +19,7 @@
  */
 package org.aselect.server.request.handler;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -55,7 +55,7 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
     protected String _sMyOrg;
     protected String _sMyAppId;
     protected String _sArtifactUrl = null;
-    protected Hashtable _htIdPs = null;
+    protected HashMap _htIdPs = null;
     protected boolean _bCheckSigning = false;
 
     //
@@ -205,7 +205,7 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
 	        {
 		        // Create Response for the Browser (set cookie and redirect)
 	        	// From: ApplicationAPIHandler.handleAuthenticateRequest()
-	            Hashtable htSessionContext = new Hashtable();
+	            HashMap htSessionContext = new HashMap();
 	            _systemLogger.log(Level.INFO, MODULE, sMethod, "sAppId="+_sMyAppId+ " sTarget="+sRedirectUrl+" _sMyOrg="+_sMyOrg);
 	            htSessionContext.put("app_id", _sMyAppId);
 	            htSessionContext.put("app_url", sRedirectUrl);
@@ -224,7 +224,7 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
 	            _systemLogger.log(Level.INFO, MODULE, sMethod, "SessionId="+sSessionId);
 	            
 	            // Add serialized attributes to the TgtContext
-	            Hashtable htAttributes = extractUidAndAttributes(sAssertion);
+	            HashMap htAttributes = extractUidAndAttributes(sAssertion);
 				
 	            // Create a TGT
 				createContextAndIssueTGT(response, sSessionId, _sMyServerId, _sMyOrg, _sMyAppId, null, htAttributes);
@@ -243,7 +243,7 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
         return new RequestState(null);
     }
 
-    public String serializeTheseAttributes(Hashtable htAttribs)
+    public String serializeTheseAttributes(HashMap htAttribs)
     throws ASelectException
     {
     	return "";

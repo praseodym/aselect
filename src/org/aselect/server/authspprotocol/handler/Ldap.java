@@ -75,7 +75,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletResponse;
@@ -155,752 +155,652 @@ import org.aselect.system.utils.Utils;
  */
 public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolHandler
 {
-    private final String MODULE ="Ldap";
-    
-    /** The configuration. */
-    private ASelectConfigManager _configManager;
-    /** The session manager. */
-    private SessionManager _sessionManager;
-    
-    private AuthSPHandlerManager _authSPHandlerManager;
-    
-    /** The system logger.*/
-    private ASelectSystemLogger _systemLogger;
-    
-    /** The Auythentication logger. */
-    private ASelectAuthenticationLogger _authenticationLogger;
-    
-    /** The AuthSP name. */
-    private String _sAuthsp;
-    /** The AuthSP URL. */
-    private String _sAuthspUrl;
-    
-    /** AuthSP success code */ 
-    private final static String ERROR_LDAP_OK = "000";
-    
-    /** AuthsP access denied error. */
-    private final static String ERROR_LDAP_ACCESS_DENIED = "800";
-    
-    private final static String ERROR_LDAP_INVALID_CREDENTIALS = "400";
-    
-    /** Prefix in errors.conf for LDAP specific errors */
-    private final static String ERROR_LDAP_PREFIX = "LDAP"; 
-           
+	private final String MODULE = "Ldap";
 
-    /**
-     * Initializes the <code>Ldap</code> AuthSP handler.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Performs the following steps:
-     * <ul>
-     * 	<li>Retrieve handles to required managers and loggers</li>
-     * 	<li>Retrieve AuthSP ID from configuration</li>
-     * 	<li>Retrieve AuthSP URL from configuration</li>
-     * </ul>
-     * <br>
-     * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#init(java.lang.Object, java.lang.Object)
-     */
-    public void init(Object oAuthSPConfig, Object oAuthSPResource)
-        throws ASelectAuthSPException
-    {
-        final String sMethod = "init()";
-        _configManager = ASelectConfigManager.getHandle();
-        _sessionManager = SessionManager.getHandle();
-        _authenticationLogger = ASelectAuthenticationLogger.getHandle();
-        _systemLogger = ASelectSystemLogger.getHandle();
-        try
-        {
-            try
-            {
-                _sAuthsp = _configManager.getParam(oAuthSPConfig, "id");
-            }
-            catch(ASelectConfigException eAC)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-                    "Parameter 'id' not found in Ldap AuthSP configuration", eAC);
-                throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INIT_ERROR,eAC);
-            }
-            try
-            {
-                _sAuthspUrl = _configManager.getParam(oAuthSPResource, "url");
-	        }
-	        catch(ASelectConfigException eAC)
-	        {
-	            _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-	                "Parameter 'url' not found in Ldap AuthSP configuration", eAC);
-	            throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INIT_ERROR,eAC);
-	        }
-        }
-        catch (ASelectAuthSPException eAA)
-        {
-            _systemLogger.log(Level.SEVERE, MODULE, sMethod, 
-                "Initialisation failed due to configuration error", eAA);
-            throw eAA;
-        }
-        catch(Exception e)
-        {
-            _systemLogger.log(Level.SEVERE, MODULE, sMethod, 
-                "Initialisation failed due to internal error", e);
-            throw new ASelectAuthSPException(
-                Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-        }
-    }
-    
-    /**
-     * new init function.
-     * <br><br>
-     * @see org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler#init(java.lang.String)
-     */
-    public void init(String sAuthSPId) throws ASelectAuthSPException
-    {
-	    final String sMethod = "init()";
-	    _configManager = ASelectConfigManager.getHandle();
-	    _sessionManager = SessionManager.getHandle();
-	    _authenticationLogger = ASelectAuthenticationLogger.getHandle();
-	    _systemLogger = ASelectSystemLogger.getHandle();
-	    _authSPHandlerManager = AuthSPHandlerManager.getHandle();
-	    try
-	    {
-	        _sAuthsp = sAuthSPId;
-	        try
-	        {
-	            _sAuthspUrl = _authSPHandlerManager.getUrl(sAuthSPId);
-	        }
-	        catch(ASelectException e)
-	        {
-	            _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-	                "No parameter 'url' retrieved", e);
-	            throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INIT_ERROR,e);
-	        }
-	    }
-	    catch (ASelectAuthSPException eAA)
-	    {
-	        _systemLogger.log(Level.SEVERE, MODULE, sMethod, 
-	            "Initialisation failed due to configuration error", eAA);
-	        throw eAA;
-	    }
-	    catch(Exception e)
-	    {
-	        _systemLogger.log(Level.SEVERE, MODULE, sMethod, 
-	            "Initialisation failed due to internal error", e);
-	        throw new ASelectAuthSPException(
-	            Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-	    }
+	/** The configuration. */
+	private ASelectConfigManager _configManager;
+	/** The session manager. */
+	private SessionManager _sessionManager;
+
+	private AuthSPHandlerManager _authSPHandlerManager;
+
+	/** The system logger.*/
+	private ASelectSystemLogger _systemLogger;
+
+	/** The Auythentication logger. */
+	private ASelectAuthenticationLogger _authenticationLogger;
+
+	/** The AuthSP name. */
+	private String _sAuthsp;
+	/** The AuthSP URL. */
+	private String _sAuthspUrl;
+
+	/** AuthSP success code */
+	private final static String ERROR_LDAP_OK = "000";
+
+	/** AuthsP access denied error. */
+	private final static String ERROR_LDAP_ACCESS_DENIED = "800";
+
+	private final static String ERROR_LDAP_INVALID_CREDENTIALS = "400";
+
+	/** Prefix in errors.conf for LDAP specific errors */
+	private final static String ERROR_LDAP_PREFIX = "LDAP";
+
+	/**
+	 * Initializes the <code>Ldap</code> AuthSP handler.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Performs the following steps:
+	 * <ul>
+	 * 	<li>Retrieve handles to required managers and loggers</li>
+	 * 	<li>Retrieve AuthSP ID from configuration</li>
+	 * 	<li>Retrieve AuthSP URL from configuration</li>
+	 * </ul>
+	 * <br>
+	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#init(java.lang.Object, java.lang.Object)
+	 */
+	public void init(Object oAuthSPConfig, Object oAuthSPResource)
+		throws ASelectAuthSPException
+	{
+		final String sMethod = "init()";
+		_configManager = ASelectConfigManager.getHandle();
+		_sessionManager = SessionManager.getHandle();
+		_authenticationLogger = ASelectAuthenticationLogger.getHandle();
+		_systemLogger = ASelectSystemLogger.getHandle();
+		try {
+			try {
+				_sAuthsp = _configManager.getParam(oAuthSPConfig, "id");
+			}
+			catch (ASelectConfigException eAC) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"Parameter 'id' not found in Ldap AuthSP configuration", eAC);
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
+			}
+			try {
+				_sAuthspUrl = _configManager.getParam(oAuthSPResource, "url");
+			}
+			catch (ASelectConfigException eAC) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"Parameter 'url' not found in Ldap AuthSP configuration", eAC);
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
+			}
+		}
+		catch (ASelectAuthSPException eAA) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initialisation failed due to configuration error", eAA);
+			throw eAA;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initialisation failed due to internal error", e);
+			throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
 	}
 
-    /**
-     * Creates the authentication request URL.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * This method creates a hashtable with the follwing contents:
-     * <table border="1" cellspacing="0" cellpadding="3">
-     * <tr>
-     *	<td style="" bgcolor="#EEEEFF"><b>key</b></td>
-     *	<td style="" bgcolor="#EEEEFF"><b>value</b></td>
-     * </tr>  
-     * <tr>
-     * 	<td>result</td>
-     *  <td>
-     * 		{@link Errors#ERROR_ASELECT_SUCCESS} or an error code 
-     * 		if creating the authentication request URL fails
-     * 	</td>
-     * </tr>
-     * <tr>
-     * 	<td>redirect_url</td>
-     * 	<td>
-     * 		The URL to the AuthSP including the protocol parameters as specified
-     * 		if the <a href="#outgoing">class description</a>.
-     * </td>
-     * </tr>
-     * </table>
-     * 
-     * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#computeAuthenticationRequest(java.lang.String)
-     */
-    public Hashtable computeAuthenticationRequest(String sRid)
-    {
-        String sMethod = "computeAuthenticationRequest()";
-        StringBuffer sbBuffer = null;
+	/**
+	 * new init function.
+	 * <br><br>
+	 * @see org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler#init(java.lang.String)
+	 */
+	public void init(String sAuthSPId)
+		throws ASelectAuthSPException
+	{
+		final String sMethod = "init()";
+		_configManager = ASelectConfigManager.getHandle();
+		_sessionManager = SessionManager.getHandle();
+		_authenticationLogger = ASelectAuthenticationLogger.getHandle();
+		_systemLogger = ASelectSystemLogger.getHandle();
+		_authSPHandlerManager = AuthSPHandlerManager.getHandle();
+		try {
+			_sAuthsp = sAuthSPId;
+			try {
+				_sAuthspUrl = _authSPHandlerManager.getUrl(sAuthSPId);
+			}
+			catch (ASelectException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No parameter 'url' retrieved", e);
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			}
+		}
+		catch (ASelectAuthSPException eAA) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initialisation failed due to configuration error", eAA);
+			throw eAA;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initialisation failed due to internal error", e);
+			throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+	}
 
-        Hashtable htResponse = new Hashtable();
-        htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
+	/**
+	 * Creates the authentication request URL.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * This method creates a hashtable with the follwing contents:
+	 * <table border="1" cellspacing="0" cellpadding="3">
+	 * <tr>
+	 *	<td style="" bgcolor="#EEEEFF"><b>key</b></td>
+	 *	<td style="" bgcolor="#EEEEFF"><b>value</b></td>
+	 * </tr>  
+	 * <tr>
+	 * 	<td>result</td>
+	 *  <td>
+	 * 		{@link Errors#ERROR_ASELECT_SUCCESS} or an error code 
+	 * 		if creating the authentication request URL fails
+	 * 	</td>
+	 * </tr>
+	 * <tr>
+	 * 	<td>redirect_url</td>
+	 * 	<td>
+	 * 		The URL to the AuthSP including the protocol parameters as specified
+	 * 		if the <a href="#outgoing">class description</a>.
+	 * </td>
+	 * </tr>
+	 * </table>
+	 * 
+	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#computeAuthenticationRequest(java.lang.String)
+	 */
+	public HashMap computeAuthenticationRequest(String sRid)
+	{
+		String sMethod = "computeAuthenticationRequest";
+		StringBuffer sbBuffer = null;
 
-        try
-        {
-            Hashtable htSessionContext = _sessionManager.getSessionContext(sRid);
-            if (htSessionContext == null)
-            {
-                sbBuffer = new StringBuffer(
-                    "Could not fetch session context for rid='");
-                sbBuffer.append(sRid).append("'.");
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
-                throw new ASelectAuthSPException(
-                    Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
-            }
-            Hashtable htAllowedAuthsps = (Hashtable)htSessionContext
-                .get("allowed_user_authsps");
-            if (htAllowedAuthsps == null)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod,
-                    "Allowed_user_authsps missing in session context.");
-                throw new ASelectAuthSPException(
-                    Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
-            }
-            String sUserId = (String)htAllowedAuthsps.get(_sAuthsp);
-            if (sUserId == null)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-                    "Missing ldap user attributes.");
-                throw new ASelectAuthSPException(
-                    Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
-            }
+		HashMap htResponse = new HashMap();
+		htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
 
-            sbBuffer = new StringBuffer((String)htSessionContext.get("my_url"));
-            sbBuffer.append("?authsp=").append(_sAuthsp);
-            String sAsUrl = sbBuffer.toString();
+		try {
+			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+			if (htSessionContext == null) {
+				sbBuffer = new StringBuffer("Could not fetch session context for rid='");
+				sbBuffer.append(sRid).append("'.");
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
+			}
+			HashMap htAllowedAuthsps = (HashMap) htSessionContext.get("allowed_user_authsps");
+			if (htAllowedAuthsps == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Allowed_user_authsps missing in session context.");
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
+			}
+			String sUserId = (String)htAllowedAuthsps.get(_sAuthsp);
+			if (sUserId == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing ldap user attributes.");
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Using userid "+sUserId);
 
-            String sCountry = (String)htSessionContext.get("country");
-            if (sCountry == null || sCountry.trim().length() < 1)
-            {
-            	sCountry = null;
-            }
-            
-            String sLanguage = (String)htSessionContext.get("language");
-            if (sLanguage == null || sLanguage.trim().length() < 1)
-            {
-            	sLanguage = null;
-            }
-            
-            String sServerId = _configManager.getParam(_configManager
-                .getSection(null, "aselect"), "server_id");
+			sbBuffer = new StringBuffer((String) htSessionContext.get("my_url"));
+			sbBuffer.append("?authsp=").append(_sAuthsp);
+			String sAsUrl = sbBuffer.toString();
 
-            StringBuffer sbSignature = new StringBuffer(sRid);
-            sbSignature.append(sAsUrl);
-            sbSignature.append(sUserId);
-            sbSignature.append(sServerId);
+			String sCountry = (String) htSessionContext.get("country");
+			if (sCountry == null || sCountry.trim().length() < 1) {
+				sCountry = null;
+			}
 
-            if (sCountry != null)
-                sbSignature.append(sCountry);
-            
-            if (sLanguage != null)
-                sbSignature.append(sLanguage);
-            
-            String sSignature = CryptoEngine.getHandle().generateSignature(
-                _sAuthsp, sbSignature.toString());
-            if (sSignature == null)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-	                "Could not sign Ldap AuthSP request.");
-	            throw new ASelectAuthSPException(
-	                Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
-            }
-            sSignature = URLEncoder.encode(sSignature, "UTF-8");
-            sUserId = URLEncoder.encode(sUserId, "UTF-8");
-            sAsUrl = URLEncoder.encode(sAsUrl, "UTF-8");
+			String sLanguage = (String) htSessionContext.get("language");
+			if (sLanguage == null || sLanguage.trim().length() < 1) {
+				sLanguage = null;
+			}
 
-            StringBuffer sbRedirect = new StringBuffer(_sAuthspUrl);
-            sbRedirect.append("?as_url=").append(sAsUrl);
-            sbRedirect.append("&rid=").append(sRid);
-            sbRedirect.append("&uid=").append(sUserId);
-            sbRedirect.append("&a-select-server=").append(sServerId);
+			String sServerId = _configManager.getParam(_configManager.getSection(null, "aselect"), "server_id");
 
-            if (sCountry != null)
-                sbRedirect.append("&country=").append(sCountry);
-            
-            if (sLanguage != null)
-                sbRedirect.append("&language=").append(sLanguage);
-            
-            sbRedirect.append("&signature=").append(sSignature);
-            
-            htResponse.put("redirect_url", sbRedirect.toString());
-            htResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
-        }        
-        catch (ASelectAuthSPException eAA)
-        {
-            //allready logged
-            htResponse.put("result", eAA.getMessage());
-        }
-        catch(Exception e)
-        {
-            _systemLogger.log(Level.SEVERE, MODULE, sMethod,
-                "Could not compute authentication request due to internal error",
-                e);
-            
-            htResponse.put("result", 
-                Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
-        }
-        return htResponse;
-    }
+			StringBuffer sbSignature = new StringBuffer(sRid);
+			sbSignature.append(sAsUrl);
+			sbSignature.append(sUserId);
+			sbSignature.append(sServerId);
 
-    /**
-     * Verifies the response from the AuthSP.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * This method verifies the response from the AuthSP. The response 
-     * parameters are placed in <code>htAuthspResponse</code> and are 
-     * described in the <a href="#incoming">class description</a>.
-     * <br><br>
-     * This method creates a hashtable with the following contents:
-     * <table border="1" cellspacing="0" cellpadding="3">
-     * 	<tr>
-     *		<td style="" bgcolor="#EEEEFF"><b>key</b></td>
-     *		<td style="" bgcolor="#EEEEFF"><b>value</b></td>
-     * 	</tr>  
-     * 	<tr>
-     * 		<td>result</td>
-     *  	<td>
-     * 			{@link Errors#ERROR_ASELECT_SUCCESS} or an error code 
-     * 			if the authentication response was invalid or the user was 
-     * 			not authenticated.
-     * 		</td>
-     * 	</tr>
-     * 	<tr>
-     * 		<td>rid</td>
-     * 		<td>The A-Select request identifier of this authentication.</td>
-     * 	</tr>
-     * </table>
-     * 
-     * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.Hashtable)
-     */
-    public Hashtable verifyAuthenticationResponse(Hashtable htAuthspResponse)
-    {
-        String sMethod = "verifyAuthenticationResponse()";
-        StringBuffer sbBuffer = null;
+			if (sCountry != null)
+				sbSignature.append(sCountry);
 
-        Hashtable htResponse = new Hashtable();
-        htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			if (sLanguage != null)
+				sbSignature.append(sLanguage);
 
-        try
-        {
-            //retrieve request parameters
-            String sRid = (String)htAuthspResponse.get("rid");
-            String sAsUrl = (String)htAuthspResponse.get("my_url");
-            String sResultCode = (String)htAuthspResponse.get("result_code");
-            String sAsId = (String)htAuthspResponse.get("a-select-server");
-            String sSignature = (String)htAuthspResponse.get("signature");
-            //validate request
-            if ((sRid == null) || (sResultCode == null) || 
-                (sAsId == null) || (sSignature == null))
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-                    "Incorrect AuthSP response: one or more parameters missing.");
-                throw new ASelectAuthSPException(
-                    Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);                
-            }
-            
-            //create complete as_url
-            sbBuffer = new StringBuffer(sAsUrl);
-            sbBuffer.append("?authsp=");
-            sbBuffer.append(_sAuthsp);
-            sAsUrl = sbBuffer.toString();
-            
-            //validate signature
-            sSignature = URLDecoder.decode(sSignature, "UTF-8");
-            StringBuffer sbSignature = new StringBuffer(sRid);
-            sbSignature.append(sAsUrl);
-            sbSignature.append(sResultCode);
-            sbSignature.append(sAsId);
+			String sSignature = CryptoEngine.getHandle().generateSignature(_sAuthsp, sbSignature.toString());
+			if (sSignature == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not sign Ldap AuthSP request.");
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
+			}
+			sSignature = URLEncoder.encode(sSignature, "UTF-8");
+			sUserId = URLEncoder.encode(sUserId, "UTF-8");
+			sAsUrl = URLEncoder.encode(sAsUrl, "UTF-8");
 
-            boolean bVerifies = CryptoEngine.getHandle().verifySignature(_sAuthsp,
-                sbSignature.toString(), sSignature);
-            if (!bVerifies)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod,
-                    "invalid signature in response from AuthSP:"+_sAuthsp);
-                throw new ASelectAuthSPException(
-                    Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
-            }
+			StringBuffer sbRedirect = new StringBuffer(_sAuthspUrl);
+			sbRedirect.append("?as_url=").append(sAsUrl);
+			sbRedirect.append("&rid=").append(sRid);
+			sbRedirect.append("&uid=").append(sUserId);
+			sbRedirect.append("&a-select-server=").append(sServerId);
 
-            //get parameters from session
-            Hashtable htSessionContext = _sessionManager.getSessionContext(sRid);
-            if(htSessionContext == null)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-                    "Incorrect AuthSP response: invalid Session (could be expired)");                
-                throw new ASelectAuthSPException(
-                    Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
-            }
-            String sUserId = (String)htSessionContext.get("user_id");
-            String sOrg = (String)htSessionContext.get("organization");          
+			if (sCountry != null)
+				sbRedirect.append("&country=").append(sCountry);
 
-            //check why the user was not authenticated successfully
-            if (sResultCode.equalsIgnoreCase(ERROR_LDAP_ACCESS_DENIED)) //access denied
-            {            
-                //only log to authentication log
-                _authenticationLogger.log(new Object[] {
-					MODULE,
-					sUserId,
-					htAuthspResponse.get("client_ip"),
-					sOrg,
-					(String)htSessionContext.get("app_id"),
-					"denied"});
-                throw new ASelectAuthSPException(
-                    Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);
-               
-            }
-            
-            if(!sResultCode.equalsIgnoreCase(ERROR_LDAP_OK)) //other error
-            {
-                StringBuffer sbError = new StringBuffer(
-                    "AuthSP returned errorcode: ");
-	            sbError.append(sResultCode);
-	            _systemLogger.log(Level.WARNING, MODULE,
-					sMethod, sbError.toString());	                        
-	            throw new ASelectAuthSPException(
-	                Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
-            }
-            
-            //everything OK -> log to authentication logger
-            _authenticationLogger.log(new Object[] {
-				MODULE,
-				sUserId,
-				htAuthspResponse.get("client_ip"),
-				sOrg,
-				(String)htSessionContext.get("app_id"),
-				"granted"});
-            //set response
-            htResponse.put("rid", sRid);
-            htResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
-        }
-        catch (ASelectAuthSPException eAA) //Error occurred
-        {
-            //allready logged
-            htResponse.put("result", eAA.getMessage());
-        }
-        catch(UnsupportedEncodingException eUE) //Error while decoding signature
-        {
-            _systemLogger.log(Level.SEVERE, 
-				MODULE,
-				sMethod,
-				"Could not decode signature",eUE);
-            htResponse.put("result", 
-                Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
-        }
-        catch (Exception e) //internal error
-        {
-            _systemLogger.log(Level.SEVERE, 
-				MODULE,
-				sMethod,
-				"Could not verify authentication response due to internal error", 
-				e);
-            htResponse.put("result", 
-                Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
-            
-        }
-        return htResponse;
-    }
+			if (sLanguage != null)
+				sbRedirect.append("&language=").append(sLanguage);
 
-    /**
-     * handles all the incoming direct login requests for the LDAP AuthSP 
-     * <br><br>
-     * @see org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler#handleDirectLoginRequest(java.util.Hashtable, javax.servlet.http.HttpServletResponse, java.io.PrintWriter, java.lang.String)
-     */
-    public void handleDirectLoginRequest(Hashtable htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut, String sServerId) throws ASelectException
-    {
-        String sMethod = "handleDirectLoginRequest()";
-        String sRequest = (String)htServiceRequest.get("request");
-        if(sRequest.equalsIgnoreCase("direct_login1"))
-        {
-            handleDirectLogin1(htServiceRequest, pwOut, sServerId);
-        }
-        else if(sRequest.equalsIgnoreCase("direct_login2"))
-        {
-            handleDirectLogin2(htServiceRequest, servletResponse, pwOut, sServerId);
-        }
-        else
-        {
-            _systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request :'"+sRequest+"'");
-            throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-        }
-        
-    }
-    
-    /**
-     * Handles the directlogin1 request for the LDAP AuthSP.      
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Handles the <code>directlogin1</code> request for the LDAP AuthSP.
-     * Shows the Direct Login Form where users can submit their username and password.
-     *  <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @param htServiceRequest
-     * @param pwOut
-     * @param sServerId
-     * @throws ASelectException
-     */
-    private void handleDirectLogin1(Hashtable htServiceRequest, PrintWriter pwOut, String sServerId) throws ASelectException
-    {
-        // show direct login form
-        try
-        {
-            showDirectLoginForm(htServiceRequest,pwOut, sServerId);
-        }
-        catch(ASelectException e)
-        {
-            throw e;
-        }
-    }
-    
-    /**
-     * Handles directlogin2 request for the LDAP AuthSP.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Handles the <code>directlogin2</code> request for the LDAP AuthSP.
-     * Verifies the request coming from the direct login form and does an API call to the
-     * LDAP AuthSP to verify the submitted username and password.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @param htServiceRequest
-     * @param servletResponse
-     * @param pwOut
-     * @param sServerId
-     * @throws ASelectException
-     */
-    private void handleDirectLogin2(Hashtable htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut, String sServerId) throws ASelectException
-    {
-        String sMethod = "handleDirectLogin2()";
-        try
-        {
- 	        String sRid = null;
-	        String sUid = null;
-	        String sPassword = null;
-	
-	        sRid = (String)htServiceRequest.get("rid");
-	        sUid = (String)htServiceRequest.get("user_id");
-	        sPassword = (String)htServiceRequest.get("password");
-            if (sRid == null)
-            {
-                    _systemLogger.log(Level.WARNING, MODULE, sMethod,
-                        "Invalid request, missing parmeter 'rid'");
-                    throw new ASelectCommunicationException(
-                        Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-            }
-	        if (sUid == null)
-	        {
-	                _systemLogger.log(Level.WARNING, MODULE, sMethod,
-	                    "Invalid request, missing parmeter 'user_id'");
-	                throw new ASelectCommunicationException(
-	                    Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-	        }
-	        if (sPassword == null)
-	        {
-	                _systemLogger.log(Level.WARNING, MODULE, sMethod,
-	                    "Invalid request, missing parmeter 'password'");
-	                throw new ASelectCommunicationException(
-	                    Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-	        }
-	
-	        Hashtable htSessionContext = _sessionManager.getSessionContext(sRid);
-            //check if session is valid and not expired
-            if(htSessionContext == null)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod,
-                "Invalid session");
-                throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
-            }           
-	        String sAuthSPId = (String)htSessionContext.get("direct_authsp");
-            if(sAuthSPId == null)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod,
-                "parameter 'direct_authsp' not found in session");
-                throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
-            }
-	        String sAuthSPUrl = _authSPHandlerManager.getUrl(sAuthSPId);
-	        Integer intAuthSPLevel = _authSPHandlerManager.getLevel(sAuthSPId);
-	        String sResponse = null;
-	        try
-	        {        
-	            StringBuffer sbRequest = new StringBuffer(sAuthSPUrl);
-	            sbRequest.append("?request=authenticate");
-	            sbRequest.append("&rid=").append(URLEncoder.encode(sRid,"UTF-8"));
-	            sbRequest.append("&user=").append(URLEncoder.encode(sUid,"UTF-8"));
-	            sbRequest.append("&password=").append(URLEncoder.encode(sPassword,"UTF-8"));
-	            _systemLogger.log(Level.INFO, MODULE, sMethod,"To AUTHSP: " +sbRequest);
-	            URL oServer = new URL(sbRequest.toString());
-	        	BufferedReader oInputReader = new BufferedReader(new InputStreamReader(
-	        	    oServer.openStream()), 16000);
-	        	sResponse = oInputReader.readLine();
-	            _systemLogger.log(Level.INFO, MODULE, sMethod,"From AUTHSP: " +sResponse);
-	        	oInputReader.close();
-	        }
-	        catch(IOException e)
-	        {
-	            _systemLogger.log(Level.WARNING, MODULE, sMethod,
-	                "Invalid/No response from DirectAuthSP: '"+sAuthSPId+"'",e);
-                throw new ASelectException(Errors.ERROR_ASELECT_IO);
-	        }
-	        Hashtable htResponse = Utils.convertCGIMessage(sResponse);
-	        String sResponseCode = ((String)htResponse.get("status"));
-	        if (sResponseCode == null)
-	        {
-	            _systemLogger.log(Level.WARNING, MODULE, sMethod,"Invalid response from Direct AuthSP: '"+sAuthSPId+"'.");
-                throw new ASelectException(Errors.ERROR_ASELECT_IO);
-	        }
-	        else if(sResponseCode.equals(ERROR_LDAP_OK)) //authentication succeeded
-	        {
-	            TGTIssuer tgtIssuer = new TGTIssuer(sServerId);
-	            String sOldTGT = (String)htServiceRequest.get("aselect_credentials_tgt");
-	            htSessionContext.put("user_id", sUid);
-	            htSessionContext.put("authsp_level", intAuthSPLevel.toString());
-	            _sessionManager.updateSession(sRid, htSessionContext);  // store too (545)
-	            tgtIssuer.issueTGT(sRid, sAuthSPId, null, servletResponse, sOldTGT);
-	        }
-	        else if(sResponseCode.equals(ERROR_LDAP_ACCESS_DENIED))
-	        {
-               String sErrorTemplate = _configManager.getForm("error");
-               sErrorTemplate = Utils.replaceString(sErrorTemplate, "[error]",ERROR_LDAP_ACCESS_DENIED);
-               String sErrorMessage = _configManager.getErrorMessage(ERROR_LDAP_PREFIX+ERROR_LDAP_ACCESS_DENIED   );
-               sErrorTemplate = Utils.replaceString(sErrorTemplate, "[error_message]", sErrorMessage);
-               sErrorTemplate = _configManager.updateTemplate(sErrorTemplate, htSessionContext);
-	           pwOut.println(sErrorTemplate);
-	        }
-            else
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod,
-                        "Error response received: '"+sResponse+"' from DirectAuthSP: '"+sAuthSPId+"'.");
-                String sErrorMessage = _configManager.getErrorMessage(ERROR_LDAP_PREFIX+ERROR_LDAP_INVALID_CREDENTIALS);
-                htServiceRequest.put("error_message",sErrorMessage);
-                showDirectLoginForm(htServiceRequest,pwOut, sServerId);                
-            }
-        }
-        catch(ASelectException e)
-        {
-            throw e;
-        }
-        catch(Exception e)
-        {
-            _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Exception occured",e);
-            throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-        }
-    }
-    
-    /**
-     * Prints the direct Login form.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * 
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @param htServiceRequest
-     * @param pwOut
-     * @param sServerId
-     * @throws ASelectException
-     */
-    private void showDirectLoginForm(Hashtable htServiceRequest, PrintWriter pwOut, String sServerId)
-        throws ASelectException
-    {
-    String sMethod = "showDirectLoginForm()";
-    try
-    {
+			sbRedirect.append("&signature=").append(sSignature);
 
-        String sDirectLoginForm = _configManager.getForm("direct_login");
-        if(sDirectLoginForm == null)
-        {
-            _systemLogger.log(Level.WARNING, MODULE, sMethod, "template file 'directlogin.html' not found");
-            throw new ASelectException(Errors.ERROR_ASELECT_NOT_FOUND);
-        }
-        String sRid = (String)htServiceRequest.get("rid");
-        if(sRid == null)
-        {
-            _systemLogger.log(Level.WARNING, MODULE, sMethod, "no parameter 'rid' found in request");
-            throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-        }
-        Hashtable htSessionContext = _sessionManager.getSessionContext(sRid);
-        if (htSessionContext == null)
-        {
-        	_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not fetch session context for rid='"+sRid+"'");
-        	throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
-        }
-        String sMyUrl = (String)htServiceRequest.get("my_url");
-        if(sMyUrl == null)
-        {
-            _systemLogger.log(Level.WARNING, MODULE, sMethod, "no parameter 'my_url' found in request");
-            throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-        }
+			htResponse.put("redirect_url", sbRedirect.toString());
+			htResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
+		}
+		catch (ASelectAuthSPException eAA) {
+			//allready logged
+			htResponse.put("result", eAA.getMessage());
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod,
+					"Could not compute authentication request due to internal error", e);
 
-        String sErrorMessage = (String)htServiceRequest.get("error_message");
-        if(sErrorMessage == null)
-        {
-            sErrorMessage = "";
-        }
-        _systemLogger.log(Level.INFO, MODULE, sMethod, "FORM direct_login, sServerId="+sServerId);
-        
-		sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[rid]", sRid);
-        sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[aselect_url]",
-            (String)htServiceRequest.get("my_url"));
-        sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[a-select-server]",
-            sServerId);
-        sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[request]", "direct_login2");
-        sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[cross_request]", "cross_login");
-        
-        String sUid = (String)htServiceRequest.get("user_id");
-        if(sUid != null)
-            sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[user_name]", sUid);
-        else
-            sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[user_name]", "");
-        
-        sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[error_message]", sErrorMessage);
-        
-        StringBuffer sbUrl = new StringBuffer(sMyUrl)
-            .append("?request=error")
-            .append("&result_code=").append(Errors.ERROR_ASELECT_SERVER_CANCEL)
-            .append("&a-select-server=").append(sServerId)
-            .append("&rid=").append(sRid);
-        sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[cancel]", sbUrl.toString());
-        
-        sDirectLoginForm = _configManager.updateTemplate(sDirectLoginForm, htSessionContext);
-        
-        pwOut.println(sDirectLoginForm);
-    }
-    catch (ASelectException e)
-    {
-        _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not show direct login page", e);
-        throw e;
-    }
-    catch (Exception e)
-    {
-        _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not show direct login page", e);
-        throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-    }
+			htResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
+		}
+		return htResponse;
+	}
+
+	/**
+	 * Verifies the response from the AuthSP.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * This method verifies the response from the AuthSP. The response 
+	 * parameters are placed in <code>htAuthspResponse</code> and are 
+	 * described in the <a href="#incoming">class description</a>.
+	 * <br><br>
+	 * This method creates a hashtable with the following contents:
+	 * <table border="1" cellspacing="0" cellpadding="3">
+	 * 	<tr>
+	 *		<td style="" bgcolor="#EEEEFF"><b>key</b></td>
+	 *		<td style="" bgcolor="#EEEEFF"><b>value</b></td>
+	 * 	</tr>  
+	 * 	<tr>
+	 * 		<td>result</td>
+	 *  	<td>
+	 * 			{@link Errors#ERROR_ASELECT_SUCCESS} or an error code 
+	 * 			if the authentication response was invalid or the user was 
+	 * 			not authenticated.
+	 * 		</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td>rid</td>
+	 * 		<td>The A-Select request identifier of this authentication.</td>
+	 * 	</tr>
+	 * </table>
+	 * 
+	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.HashMap)
+	 */
+	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse)
+	{
+		String sMethod = "verifyAuthenticationResponse()";
+		StringBuffer sbBuffer = null;
+
+		HashMap htResponse = new HashMap();
+		htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
+
+		try {
+			//retrieve request parameters
+			String sRid = (String) htAuthspResponse.get("rid");
+			String sAsUrl = (String) htAuthspResponse.get("my_url");
+			String sResultCode = (String) htAuthspResponse.get("result_code");
+			String sAsId = (String) htAuthspResponse.get("a-select-server");
+			String sSignature = (String) htAuthspResponse.get("signature");
+			//validate request
+			if ((sRid == null) || (sResultCode == null) || (sAsId == null) || (sSignature == null)) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"Incorrect AuthSP response: one or more parameters missing.");
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
+			}
+
+			//create complete as_url
+			sbBuffer = new StringBuffer(sAsUrl);
+			sbBuffer.append("?authsp=");
+			sbBuffer.append(_sAuthsp);
+			sAsUrl = sbBuffer.toString();
+
+			//validate signature
+			sSignature = URLDecoder.decode(sSignature, "UTF-8");
+			StringBuffer sbSignature = new StringBuffer(sRid);
+			sbSignature.append(sAsUrl);
+			sbSignature.append(sResultCode);
+			sbSignature.append(sAsId);
+
+			boolean bVerifies = CryptoEngine.getHandle().verifySignature(_sAuthsp, sbSignature.toString(), sSignature);
+			if (!bVerifies) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "invalid signature in response from AuthSP:"
+						+ _sAuthsp);
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
+			}
+
+			//get parameters from session
+			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+			if (htSessionContext == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"Incorrect AuthSP response: invalid Session (could be expired)");
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
+			}
+			String sUserId = (String) htSessionContext.get("user_id");
+			String sOrg = (String) htSessionContext.get("organization");
+
+			//check why the user was not authenticated successfully
+			if (sResultCode.equalsIgnoreCase(ERROR_LDAP_ACCESS_DENIED)) //access denied
+			{
+				//only log to authentication log
+				_authenticationLogger.log(new Object[] {
+					MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg, (String) htSessionContext.get("app_id"),
+					"denied"
+				});
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);
+
+			}
+
+			if (!sResultCode.equalsIgnoreCase(ERROR_LDAP_OK)) //other error
+			{
+				StringBuffer sbError = new StringBuffer("AuthSP returned errorcode: ");
+				sbError.append(sResultCode);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
+			}
+
+			//everything OK -> log to authentication logger
+			_authenticationLogger.log(new Object[] {
+				MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg, (String) htSessionContext.get("app_id"),
+				"granted"
+			});
+			//set response
+			htResponse.put("rid", sRid);
+			htResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
+		}
+		catch (ASelectAuthSPException eAA) //Error occurred
+		{
+			//allready logged
+			htResponse.put("result", eAA.getMessage());
+		}
+		catch (UnsupportedEncodingException eUE) //Error while decoding signature
+		{
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not decode signature", eUE);
+			htResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
+		}
+		catch (Exception e) //internal error
+		{
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod,
+					"Could not verify authentication response due to internal error", e);
+			htResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
+
+		}
+		return htResponse;
+	}
+
+	/**
+	 * handles all the incoming direct login requests for the LDAP AuthSP 
+	 * <br><br>
+	 * @see org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler#handleDirectLoginRequest(java.util.HashMap, javax.servlet.http.HttpServletResponse, java.io.PrintWriter, java.lang.String)
+	 */
+	public void handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse,
+			PrintWriter pwOut, String sServerId)
+		throws ASelectException
+	{
+		String sMethod = "handleDirectLoginRequest()";
+		String sRequest = (String) htServiceRequest.get("request");
+		if (sRequest.equalsIgnoreCase("direct_login1")) {
+			handleDirectLogin1(htServiceRequest, pwOut, sServerId);
+		}
+		else if (sRequest.equalsIgnoreCase("direct_login2")) {
+			handleDirectLogin2(htServiceRequest, servletResponse, pwOut, sServerId);
+		}
+		else {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request :'" + sRequest + "'");
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+
+	}
+
+	/**
+	 * Handles the directlogin1 request for the LDAP AuthSP.      
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Handles the <code>directlogin1</code> request for the LDAP AuthSP.
+	 * Shows the Direct Login Form where users can submit their username and password.
+	 *  <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * @param htServiceRequest
+	 * @param pwOut
+	 * @param sServerId
+	 * @throws ASelectException
+	 */
+	private void handleDirectLogin1(HashMap htServiceRequest, PrintWriter pwOut, String sServerId)
+		throws ASelectException
+	{
+		// show direct login form
+		try {
+			showDirectLoginForm(htServiceRequest, pwOut, sServerId);
+		}
+		catch (ASelectException e) {
+			throw e;
+		}
+	}
+
+	/**
+	 * Handles directlogin2 request for the LDAP AuthSP.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Handles the <code>directlogin2</code> request for the LDAP AuthSP.
+	 * Verifies the request coming from the direct login form and does an API call to the
+	 * LDAP AuthSP to verify the submitted username and password.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * @param htServiceRequest
+	 * @param servletResponse
+	 * @param pwOut
+	 * @param sServerId
+	 * @throws ASelectException
+	 */
+	private void handleDirectLogin2(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut,
+			String sServerId)
+		throws ASelectException
+	{
+		String sMethod = "handleDirectLogin2()";
+		try {
+			String sRid = null;
+			String sUid = null;
+			String sPassword = null;
+
+			sRid = (String) htServiceRequest.get("rid");
+			sUid = (String) htServiceRequest.get("user_id");
+			sPassword = (String) htServiceRequest.get("password");
+			if (sRid == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request, missing parmeter 'rid'");
+				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+			if (sUid == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request, missing parmeter 'user_id'");
+				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+			if (sPassword == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request, missing parmeter 'password'");
+				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+
+			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+			//check if session is valid and not expired
+			if (htSessionContext == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid session");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
+			}
+			String sAuthSPId = (String) htSessionContext.get("direct_authsp");  // must be set in configuration
+			if (sAuthSPId == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "parameter 'direct_authsp' not found in session");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
+			}
+			String sAuthSPUrl = _authSPHandlerManager.getUrl(sAuthSPId);
+			Integer intAuthSPLevel = _authSPHandlerManager.getLevel(sAuthSPId);
+			String sResponse = null;
+			try {
+				StringBuffer sbRequest = new StringBuffer(sAuthSPUrl);
+				sbRequest.append("?request=authenticate");
+				sbRequest.append("&rid=").append(URLEncoder.encode(sRid, "UTF-8"));
+				sbRequest.append("&user=").append(URLEncoder.encode(sUid, "UTF-8"));
+				sbRequest.append("&password=").append(URLEncoder.encode(sPassword, "UTF-8"));
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "To AUTHSP: " + sbRequest);
+				URL oServer = new URL(sbRequest.toString());
+				BufferedReader oInputReader = new BufferedReader(new InputStreamReader(oServer.openStream()), 16000);
+				sResponse = oInputReader.readLine();
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "From AUTHSP: " + sResponse);
+				oInputReader.close();
+			}
+			catch (IOException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid/No response from DirectAuthSP: '"+sAuthSPId+"'", e);
+				throw new ASelectException(Errors.ERROR_ASELECT_IO);
+			}
+			HashMap htResponse = Utils.convertCGIMessage(sResponse);
+			String sResponseCode = ((String) htResponse.get("status"));
+			if (sResponseCode == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid response from Direct AuthSP: '"+sAuthSPId+"'.");
+				throw new ASelectException(Errors.ERROR_ASELECT_IO);
+			}
+			else if (sResponseCode.equals(ERROR_LDAP_OK)) //authentication succeeded
+			{
+				TGTIssuer tgtIssuer = new TGTIssuer(sServerId);
+				String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
+				htSessionContext.put("user_id", sUid);
+				htSessionContext.put("authsp_level", intAuthSPLevel.toString());
+				_sessionManager.updateSession(sRid, htSessionContext); // store too (545)
+				tgtIssuer.issueTGT(sRid, sAuthSPId, null, servletResponse, sOldTGT);
+			}
+			else if (sResponseCode.equals(ERROR_LDAP_ACCESS_DENIED)) {
+				String sErrorTemplate = _configManager.getForm("error");
+				sErrorTemplate = Utils.replaceString(sErrorTemplate, "[error]", ERROR_LDAP_ACCESS_DENIED);
+				String sErrorMessage = _configManager.getErrorMessage(ERROR_LDAP_PREFIX + ERROR_LDAP_ACCESS_DENIED);
+				sErrorTemplate = Utils.replaceString(sErrorTemplate, "[error_message]", sErrorMessage);
+				sErrorTemplate = _configManager.updateTemplate(sErrorTemplate, htSessionContext);
+				pwOut.println(sErrorTemplate);
+			}
+			else {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error response received: '" + sResponse
+						+ "' from DirectAuthSP: '" + sAuthSPId + "'.");
+				String sErrorMessage = _configManager.getErrorMessage(ERROR_LDAP_PREFIX
+						+ ERROR_LDAP_INVALID_CREDENTIALS);
+				htServiceRequest.put("error_message", sErrorMessage);
+				showDirectLoginForm(htServiceRequest, pwOut, sServerId);
+			}
+		}
+		catch (ASelectException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Exception occured", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		}
+	}
+
+	/**
+	 * Prints the direct Login form.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * 
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * @param htServiceRequest
+	 * @param pwOut
+	 * @param sServerId
+	 * @throws ASelectException
+	 */
+	private void showDirectLoginForm(HashMap htServiceRequest, PrintWriter pwOut, String sServerId)
+		throws ASelectException
+	{
+		String sMethod = "showDirectLoginForm()";
+		try {
+
+			String sDirectLoginForm = _configManager.getForm("direct_login");
+			if (sDirectLoginForm == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "template file 'directlogin.html' not found");
+				throw new ASelectException(Errors.ERROR_ASELECT_NOT_FOUND);
+			}
+			String sRid = (String) htServiceRequest.get("rid");
+			if (sRid == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "no parameter 'rid' found in request");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+			if (htSessionContext == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not fetch session context for rid='" + sRid
+						+ "'");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
+			}
+			String sMyUrl = (String) htServiceRequest.get("my_url");
+			if (sMyUrl == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "no parameter 'my_url' found in request");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+
+			String sErrorMessage = (String) htServiceRequest.get("error_message");
+			if (sErrorMessage == null) {
+				sErrorMessage = "";
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM direct_login, sServerId=" + sServerId);
+
+			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[rid]", sRid);
+			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[aselect_url]", (String) htServiceRequest
+					.get("my_url"));
+			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[a-select-server]", sServerId);
+			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[request]", "direct_login2");
+			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[cross_request]", "cross_login");
+
+			String sUid = (String) htServiceRequest.get("user_id");
+			if (sUid != null)
+				sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[user_name]", sUid);
+			else
+				sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[user_name]", "");
+
+			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[error_message]", sErrorMessage);
+
+			StringBuffer sbUrl = new StringBuffer(sMyUrl).append("?request=error").append("&result_code=").append(
+					Errors.ERROR_ASELECT_SERVER_CANCEL).append("&a-select-server=").append(sServerId).append("&rid=")
+					.append(sRid);
+			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[cancel]", sbUrl.toString());
+
+			sDirectLoginForm = _configManager.updateTemplate(sDirectLoginForm, htSessionContext);
+
+			pwOut.println(sDirectLoginForm);
+		}
+		catch (ASelectException e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not show direct login page", e);
+			throw e;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not show direct login page", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+	}
+
 }
-    
-}
-

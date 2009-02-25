@@ -86,7 +86,6 @@ public class LDAPCertificateHandler implements ICertificateHandler
 	public void init(AuthSPSystemLogger oSystemLogger, Object oBackendConfig) throws ASelectException
 	{
 	    String sMethod = "init()";
-	    StringBuffer sbTemp;
 	    _oConfigManager = AuthSPConfigManager.getHandle();
 		_systemLogger = oSystemLogger;
         try

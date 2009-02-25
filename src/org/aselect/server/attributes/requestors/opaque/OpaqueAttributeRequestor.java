@@ -44,7 +44,7 @@ package org.aselect.server.attributes.requestors.opaque;
 
 import java.security.MessageDigest;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -78,9 +78,9 @@ public class OpaqueAttributeRequestor extends GenericAttributeRequestor
     /**
      * Retrieve attributes from opaquehandler.
      * <br><br>
-     * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(java.util.Hashtable, java.util.Vector)
+     * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(java.util.HashMap, java.util.Vector)
      */
-    public Hashtable getAttributes(Hashtable htTGTContext, Vector vAttributes) throws ASelectAttributesException
+    public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes) throws ASelectAttributesException
     {
         final String sMethod = "getAttributes()";
         _systemLogger.log(Level.INFO, MODULE, sMethod, "vAttributes="+vAttributes+ " htTGTContext="+htTGTContext);
@@ -92,7 +92,7 @@ public class OpaqueAttributeRequestor extends GenericAttributeRequestor
             if (vAttributes == null)
                 return null;
             
-	        Hashtable htAttrs = new Hashtable();
+	        HashMap htAttrs = new HashMap();
             for (Enumeration e = vAttributes.elements();
             	e.hasMoreElements(); )
             {
@@ -101,7 +101,7 @@ public class OpaqueAttributeRequestor extends GenericAttributeRequestor
 		        md.update(sUID.getBytes("UTF-8"));
 		        String sHandle = Utils.toHexString(md.digest());
 		        
-		        // Return result in a Hashtable
+		        // Return result in a HashMap
 		        htAttrs.put(e.nextElement(), sHandle);
             }
 		    return htAttrs;

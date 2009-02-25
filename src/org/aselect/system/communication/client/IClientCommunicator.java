@@ -37,7 +37,7 @@
 
 package org.aselect.system.communication.client;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 
 import org.aselect.system.exception.ASelectCommunicationException;
 
@@ -68,7 +68,7 @@ public interface IClientCommunicator
      * <br><br>
      * <b>Concurrency issues:</b>
      * <br>
-     * The returned {@link java.util.Hashtable} is synchronized.
+     * The returned {@link java.util.HashMap} is synchronized.
      * <br><br>
      * <b>Preconditions: </b> <br>
      * <ul>
@@ -79,16 +79,16 @@ public interface IClientCommunicator
      * <br>
      * <b>Postconditions: </b> <br>
      * The
-     * <code>Hashtable<code> which is returned contains A-Select response parameters.
+     * <code>HashMap<code> which is returned contains A-Select response parameters.
      * <br>
      * @param htParameters The API call request parameters 
-     * 				(<code>Hashtable</code> with name/value pairs)
+     * 				(<code>HashMap</code> with name/value pairs)
      * @param sTarget A <CODE>String</CODE> containing the target URL
      * @return The response parameters of the API call in 
-     * 				a <code>Hashtable</code>
+     * 				a <code>HashMap</code>
      * @throws ASelectCommunicationException If communication fails.
      */
-    public Hashtable sendMessage(Hashtable htParameters, String sTarget)
+    public HashMap sendMessage(HashMap htParameters, String sTarget)
     throws ASelectCommunicationException;
     
     // Bauke: Added

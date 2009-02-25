@@ -15,7 +15,7 @@
  */
 package org.aselect.server.request.handler.saml11.websso.profile;
 import java.net.URLEncoder;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletResponse;
@@ -218,9 +218,9 @@ public class BrowserArtifact extends AbstractWebSSOProfile
      * <br>
      * -
      * <br><br>
-     * @see org.aselect.server.request.handler.saml11.websso.IWebSSOProfile#process(java.util.Hashtable, javax.servlet.http.HttpServletResponse, java.lang.String, java.lang.String)
+     * @see org.aselect.server.request.handler.saml11.websso.IWebSSOProfile#process(java.util.HashMap, javax.servlet.http.HttpServletResponse, java.lang.String, java.lang.String)
      */
-    public void process(Hashtable htInfo, HttpServletResponse response
+    public void process(HashMap htInfo, HttpServletResponse response
         , String sIP, String sHost) throws ASelectException
     {
         String sMethod = "process()";
@@ -235,7 +235,7 @@ public class BrowserArtifact extends AbstractWebSSOProfile
     		    throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
             }
             //TODO this is also done in the SAML11RequestHandler.process() (Martijn)
-            Hashtable htSession = _oSessionManager.getSessionContext(SESSION_ID_PREFIX + sRID);
+            HashMap htSession = _oSessionManager.getSessionContext(SESSION_ID_PREFIX + sRID);
             if (htSession == null)
             {
                 _systemLogger.log(Level.WARNING, MODULE, sMethod

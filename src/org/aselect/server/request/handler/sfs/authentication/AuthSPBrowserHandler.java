@@ -83,7 +83,7 @@
 package org.aselect.server.request.handler.sfs.authentication;
 
 import java.io.PrintWriter;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
@@ -140,9 +140,9 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
     /**
      * process authsp browser requests
      * <br><br>
-     * @see org.aselect.server.request.handler.sfs.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.Hashtable, javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
+     * @see org.aselect.server.request.handler.sfs.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.HashMap, javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
      */
-    public void processBrowserRequest(Hashtable htServiceRequest,
+    public void processBrowserRequest(HashMap htServiceRequest,
         HttpServletResponse servletResponse, PrintWriter pwOut)
     throws ASelectException
     {
@@ -166,11 +166,11 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
     /**
      * This function handles the AuthSP response and calls the correct AuthSP handler.
      * <br><br>
-     * @param htServiceRequest Hashtable containing request parameters
+     * @param htServiceRequest HashMap containing request parameters
      * @param servletResponse Used to send (HTTP) information back to the user
      * @throws ASelectException
      */
-    private void handleAuthSPResponse(Hashtable htServiceRequest, 
+    private void handleAuthSPResponse(HashMap htServiceRequest, 
         HttpServletResponse servletResponse)
     throws ASelectException
     {
@@ -235,7 +235,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
             }
 
             // let the AuthSP protocol handler verify the response from the AuthSP
-            Hashtable htResponse = oProtocolHandler
+            HashMap htResponse = oProtocolHandler
                 .verifyAuthenticationResponse(htServiceRequest);
 
             String sResultCode = (String)htResponse.get("result");
@@ -281,11 +281,11 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
      * to the application. The application will receive the error
      * code specified in the API call.
      * <br><br>
-     * @param htServiceRequest Hashtable containing request parameters
+     * @param htServiceRequest HashMap containing request parameters
      * @param servletResponse Used to send (HTTP) information back to the user
      * @throws ASelectException
      */
-    private void handleError(Hashtable htServiceRequest,
+    private void handleError(HashMap htServiceRequest,
         HttpServletResponse servletResponse)
     throws ASelectException
     {
@@ -331,7 +331,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
             }
 
             // Get session context
-            Hashtable htSessionContext = _sessionManager.getSessionContext(sRid);
+            HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
             if (htSessionContext == null)
             {
                 _systemLogger.log(Level.WARNING, _sModule, sMethod, 

@@ -62,7 +62,7 @@
  */
 package org.aselect.authspserver.authsp.ldap;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import org.aselect.authspserver.config.AuthSPConfigManager;
@@ -133,7 +133,7 @@ public class LDAPProtocolHandlerFactory
        
         try
         {
-            Hashtable htContext = getContext(oConfig, sUid, systemLogger);             
+            HashMap htContext = getContext(oConfig, sUid, systemLogger);             
             if(htContext == null)
             {
                 systemLogger.log(Level.WARNING, MODULE, sMethod, 
@@ -216,14 +216,14 @@ public class LDAPProtocolHandlerFactory
      * @param oConfig the configuration to be used.
      * @param sUid The LDAp user ID.
      * @param oSystemLogger The logger for system entries.
-     * @return A <code>Hashtable</code> with the context.
+     * @return A <code>HashMap</code> with the context.
      * @throws ASelectException If retrieving fails.
      */
-    public static Hashtable getContext(Object oConfig, 
+    public static HashMap getContext(Object oConfig, 
                                 String sUid, SystemLogger oSystemLogger) 
     throws ASelectException
     {
-        Hashtable htResponse = new Hashtable();
+        HashMap htResponse = new HashMap();
         StringBuffer sbTemp = null;
         String sMethod = "getContext()";
         String sTemp = null;

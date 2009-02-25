@@ -84,7 +84,7 @@ import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.Provider;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import org.aselect.agent.log.ASelectAgentSystemLogger;
@@ -154,7 +154,7 @@ public class ASelectAgentConfigManager extends ConfigManager
     /**
      * The attribute forwarding rules
      */
-    private Hashtable _htAttributeForwarding = null;
+    private HashMap _htAttributeForwarding = null;
     
     /**
      * returns a static ASelectAgentConfigManager handle to this singleton.
@@ -233,7 +233,7 @@ public class ASelectAgentConfigManager extends ConfigManager
      * <b>Description: </b> 
      * <br>
      * Returns the attribute forwarding rules for <code>sAppId</code>
-     * in a <code>Hashtable</code>. It returns:
+     * in a <code>HashMap</code>. It returns:
      * <ul>
      * <li>send_once: Boolean indicating whether to send once
      * (during verify_credentials reply) or always (during verify_ticket
@@ -243,14 +243,14 @@ public class ASelectAgentConfigManager extends ConfigManager
      * <li>attributes: A String Array containing the attribute masks.
      * </ul>
      * @param sAppId 
-     * @return Hashtable The forwarding rules, or <code>null</code> when
+     * @return HashMap The forwarding rules, or <code>null</code> when
      * no rules where found.
      */
-    public Hashtable getAttributeForwardingRule(String sAppId)
+    public HashMap getAttributeForwardingRule(String sAppId)
     {
-        Hashtable htRules = (Hashtable)_htAttributeForwarding.get(sAppId);
+        HashMap htRules = (HashMap)_htAttributeForwarding.get(sAppId);
         if (htRules == null)
-            htRules = (Hashtable)_htAttributeForwarding.get("*");
+            htRules = (HashMap)_htAttributeForwarding.get("*");
         return htRules;
     }
     
@@ -304,7 +304,7 @@ public class ASelectAgentConfigManager extends ConfigManager
         
         Object oCryptoProvider = null;
         
-        Hashtable htProviders = new Hashtable();
+        HashMap htProviders = new HashMap();
         if (oProvidersSection != null)
         {
             try
@@ -434,7 +434,7 @@ public class ASelectAgentConfigManager extends ConfigManager
         }
     }
     
-    private void readSignatureConfig(Object oCryptoSection, Hashtable htProviders)
+    private void readSignatureConfig(Object oCryptoSection, HashMap htProviders)
 		throws ASelectException
 	{
 	    String sMethod = "readSignatureConfig()";

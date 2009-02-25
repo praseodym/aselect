@@ -53,8 +53,8 @@
 package org.aselect.server.admin;
 
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.logging.Level;
 
 import javax.swing.table.AbstractTableModel;
@@ -81,291 +81,280 @@ import org.aselect.system.exception.ASelectStorageException;
  */
 public class TGTMonitorModel extends AbstractTableModel implements Runnable
 {
-    /**
-     * The module name.
-     */
-    public static final String MODULE = "TGTMonitorModel";
-    
-    /**
-     *  Main thread.
-     */
-    private Thread               _oRunnerThread;
+	/**
+	 * The module name.
+	 */
+	public static final String MODULE = "TGTMonitorModel";
 
-    /**
-     * String array containing TGTs.
-     */
-    private String[]             _saTGTs;
+	/**
+	 *  Main thread.
+	 */
+	private Thread _oRunnerThread;
 
-    /**
-     * String array containing all the headers used in the Monitor.
-     */
-    private String[]             _saHeaders       = {"Issued to", "From Organization",
-        "TGT Expires at", "AuthSP Used", "TGT Level", "For Application"};
+	/**
+	 * String array containing TGTs.
+	 */
+	private String[] _saTGTs;
 
-    /**
-     * Interval for checking for new information.
-     */
-    private int                  _iCheckInterval;
+	/**
+	 * String array containing all the headers used in the Monitor.
+	 */
+	private String[] _saHeaders = {
+		"Issued to", "From Organization", "TGT Expires at", "AuthSP Used", "TGT Level", "For Application"
+	};
 
-    /**
-     * Hashtable containing all session contexts.
-     */
-    private Hashtable            _htTGTContexts;
+	/**
+	 * Interval for checking for new information.
+	 */
+	private int _iCheckInterval;
 
-    /**
-     * A-Select TGT Manager.
-     */
-    private TGTManager           _oTGTManager    = TGTManager.getHandle();
+	/**
+	 * HashMap containing all session contexts.
+	 */
+	private HashMap _htTGTContexts;
 
-    /**
-     * Main A-Select Config Manager.
-     */
-    private ASelectConfigManager _oConfigManager = ASelectConfigManager.getHandle();
+	/**
+	 * A-Select TGT Manager.
+	 */
+	private TGTManager _oTGTManager = TGTManager.getHandle();
 
-    /**
-     * Used to check if the SessionModel is active or not.
-     */
-    private boolean              _bActive        = false;
+	/**
+	 * Main A-Select Config Manager.
+	 */
+	private ASelectConfigManager _oConfigManager = ASelectConfigManager.getHandle();
 
-    /**
-     * SessionMonitorModel constructor.
-     * 
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Initializes the SessionMonitorModel.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * none
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * iCheckInterval > 0.
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * The Main RunnerThread is running. <br>
-     * @param iCheckInterval
-     * 					Interval used to check for new information.
-     */
-    public TGTMonitorModel (int iCheckInterval)
-    {
-        this._iCheckInterval = iCheckInterval;
-        String sMaxTgt = null;
-        Integer intMaxTGT = null;
-        try
-        {
-            Object oStorageMngrSection = _oConfigManager.getSection(null, "storagemanager", "id=tgt");
-            sMaxTgt = _oConfigManager.getParam(oStorageMngrSection, "max");
-            intMaxTGT = Integer.valueOf(sMaxTgt);
-        }
-        catch (ASelectConfigException e)
-        {
-            ASelectSystemLogger.getHandle().log(Level.SEVERE, MODULE, 
-                "TGTMonitorModel()", 
-                "No valid 'max' config item found in 'storagemanager' config section with id='tgt'",
-                e);
-            
-            intMaxTGT = Integer.valueOf("100");
-        }
-        
-        _saTGTs = new String[intMaxTGT.intValue()];
+	/**
+	 * Used to check if the SessionModel is active or not.
+	 */
+	private boolean _bActive = false;
 
-        getServerStatus();
+	/**
+	 * SessionMonitorModel constructor.
+	 * 
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Initializes the SessionMonitorModel.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * none
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * iCheckInterval > 0.
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * The Main RunnerThread is running. <br>
+	 * @param iCheckInterval
+	 * 					Interval used to check for new information.
+	 */
+	public TGTMonitorModel(int iCheckInterval) {
+		this._iCheckInterval = iCheckInterval;
+		String sMaxTgt = null;
+		Integer intMaxTGT = null;
+		try {
+			Object oStorageMngrSection = _oConfigManager.getSection(null, "storagemanager", "id=tgt");
+			sMaxTgt = _oConfigManager.getParam(oStorageMngrSection, "max");
+			intMaxTGT = Integer.valueOf(sMaxTgt);
+		}
+		catch (ASelectConfigException e) {
+			ASelectSystemLogger.getHandle().log(Level.SEVERE, MODULE, "TGTMonitorModel()",
+					"No valid 'max' config item found in 'storagemanager' config section with id='tgt'", e);
 
-        _bActive = true;
-        _oRunnerThread = new Thread(this);
-        _oRunnerThread.start();
-        fireTableDataChanged();
-    }
+			intMaxTGT = Integer.valueOf("100");
+		}
 
-    /**
-     * This functions stops the TGTMonitor.
-     * 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * _bActive is set to false and the current thread is interupted. <br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * none <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * none <br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * none <br>
-     *  
-     */
-    public void stop()
-    {
-        _bActive = false;
-        _oRunnerThread.interrupt();
-    }
+		_saTGTs = new String[intMaxTGT.intValue()];
 
-    /**
-     * Returns the TGT count.
-     * 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * This function calls _oTGTManager.getTGTCounter() to retrieve the
-     * TGT count. 
-     * <br><br>
-     * <b>Concurrency issues: </b> <br>
-     * none <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * none <br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * none <br>
-     * 
-     * @return <code>long</code> containing TGT count.
-     */    
-    public long getTGTCounter()
-    {
-        return _oTGTManager.getTGTCounter();
-    }
+		getServerStatus();
 
-    /**
-     * Returns the current row count. <br>
-     * <br>
-     * 
-     * @see javax.swing.table.TableModel#getRowCount()
-     */
-    public int getRowCount()
-    {
-        return _htTGTContexts.size();
-    }
-    
-    /**
-     * Returns the current column count. <br>
-     * <br>
-     * 
-     * @see javax.swing.table.TableModel#getColumnCount()
-     */
-    public int getColumnCount()
-    {
-        return _saHeaders.length;
-    }
+		_bActive = true;
+		_oRunnerThread = new Thread(this);
+		_oRunnerThread.start();
+		fireTableDataChanged();
+	}
 
-    /**
-     * Returns the current value at a specific row and column. <br>
-     * <br>
-     * 
-     * @see javax.swing.table.TableModel#getValueAt(int, int)
-     */    
-    public Object getValueAt(int iRow, int iColumn)
-    {
-        String sTGT = _saTGTs[iRow];
-        Hashtable htTGTContext = (Hashtable)_htTGTContexts.get(sTGT);
+	/**
+	 * This functions stops the TGTMonitor.
+	 * 
+	 * <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * _bActive is set to false and the current thread is interupted. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * none <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * none <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * none <br>
+	 *  
+	 */
+	public void stop()
+	{
+		_bActive = false;
+		_oRunnerThread.interrupt();
+	}
 
-        if (iColumn == 0)
-            return (String)htTGTContext.get("uid");
-        if (iColumn == 1)
-        {
-            String sProxy = (String)htTGTContext.get("proxy_organization");
-            if (sProxy == null)
-                return (String)htTGTContext.get("organization");
-            return (String)htTGTContext.get("organization")+"@"+sProxy;
-        }
-        if (iColumn == 2)
-        {
-            try
-            {
-                long lTimeout = _oTGTManager.getExpirationTime(sTGT);
-                return (new Date(lTimeout)).toString();
-            }
-            catch (ASelectStorageException e)
-            {
-               return "unknown";
-            }             
-        }
-        if (iColumn == 3)
-            return (String)htTGTContext.get("authsp");
-        if (iColumn == 4)
-            return (String)htTGTContext.get("authsp_level");
-        if (iColumn == 5)
-            return (String)htTGTContext.get("app_id");
-        if (iColumn == 6)
-            return sTGT;
+	/**
+	 * Returns the TGT count.
+	 * 
+	 * <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * This function calls _oTGTManager.getTGTCounter() to retrieve the
+	 * TGT count. 
+	 * <br><br>
+	 * <b>Concurrency issues: </b> <br>
+	 * none <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * none <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * none <br>
+	 * 
+	 * @return <code>long</code> containing TGT count.
+	 */
+	public long getTGTCounter()
+	{
+		return _oTGTManager.getTGTCounter();
+	}
 
-        return null;
-    }
+	/**
+	 * Returns the current row count. <br>
+	 * <br>
+	 * 
+	 * @see javax.swing.table.TableModel#getRowCount()
+	 */
+	public int getRowCount()
+	{
+		return _htTGTContexts.size();
+	}
 
-    /**
-     * Returns the name of the column based on iIndex. <br>
-     * <br>
-     * 
-     * @see javax.swing.table.TableModel#getColumnName(int)
-     */    
-    public String getColumnName(int xIndex)
-    {
-        return _saHeaders[xIndex];
-    }
+	/**
+	 * Returns the current column count. <br>
+	 * <br>
+	 * 
+	 * @see javax.swing.table.TableModel#getColumnCount()
+	 */
+	public int getColumnCount()
+	{
+		return _saHeaders.length;
+	}
 
-    /**
-     * Main run function for the Runner Thread. <br>
-     * <br>
-     * 
-     * @see java.lang.Runnable#run()
-     */    
-    public void run()
-    {
-        while (_bActive)
-        {
-            try
-            {
-                Thread.sleep(_iCheckInterval * 1000);
-                getServerStatus();
-                fireTableDataChanged();
-            }
-            catch (Exception x)
-            {}
-        }
-        ASelectSystemLogger.getHandle().log(Level.INFO, MODULE, "run()",
-            "TGT Monitor model stopped");
-    }
-    
-    /**
-     * Retrieve the current A-Select TGT information.
-     * 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * This function retrieves the TGT context using
-     * _oTGTManager.getTGTContexts() and copies the TGT information
-     * into the local TGT array _saTGTs. <br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * none <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * _oTGTManager must be intialized. <br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * _saTGTs now contains the latest TGT information. <br>
-     *  
-     */
-    private void getServerStatus()
-    {
-        try
-        {
-	        _htTGTContexts = _oTGTManager.getAll();
-	
-	        int i = 0;
-	        Enumeration _enumTGTContexts = _htTGTContexts.keys();
-	        while (_enumTGTContexts.hasMoreElements())
-	        {
-	            _saTGTs[i++] = (String)_enumTGTContexts.nextElement();
-	        }
-	    }
-	    catch (Exception e)
-	    {
-	        ASelectSystemLogger.getHandle().log(Level.WARNING, MODULE
-	            , "getServerStatus()", "No session contexts available");
-	    }
-    }
+	/**
+	 * Returns the current value at a specific row and column. <br>
+	 * <br>
+	 * 
+	 * @see javax.swing.table.TableModel#getValueAt(int, int)
+	 */
+	public Object getValueAt(int iRow, int iColumn)
+	{
+		String sTGT = _saTGTs[iRow];
+		HashMap htTGTContext = (HashMap) _htTGTContexts.get(sTGT);
+
+		if (iColumn == 0)
+			return (String) htTGTContext.get("uid");
+		if (iColumn == 1) {
+			String sProxy = (String) htTGTContext.get("proxy_organization");
+			if (sProxy == null)
+				return (String) htTGTContext.get("organization");
+			return (String) htTGTContext.get("organization") + "@" + sProxy;
+		}
+		if (iColumn == 2) {
+			try {
+				long lTimeout = _oTGTManager.getExpirationTime(sTGT);
+				return (new Date(lTimeout)).toString();
+			}
+			catch (ASelectStorageException e) {
+				return "unknown";
+			}
+		}
+		if (iColumn == 3)
+			return (String) htTGTContext.get("authsp");
+		if (iColumn == 4)
+			return (String) htTGTContext.get("authsp_level");
+		if (iColumn == 5)
+			return (String) htTGTContext.get("app_id");
+		if (iColumn == 6)
+			return sTGT;
+
+		return null;
+	}
+
+	/**
+	 * Returns the name of the column based on iIndex. <br>
+	 * <br>
+	 * 
+	 * @see javax.swing.table.TableModel#getColumnName(int)
+	 */
+	public String getColumnName(int xIndex)
+	{
+		return _saHeaders[xIndex];
+	}
+
+	/**
+	 * Main run function for the Runner Thread. <br>
+	 * <br>
+	 * 
+	 * @see java.lang.Runnable#run()
+	 */
+	public void run()
+	{
+		while (_bActive) {
+			try {
+				Thread.sleep(_iCheckInterval * 1000);
+				getServerStatus();
+				fireTableDataChanged();
+			}
+			catch (Exception x) {
+			}
+		}
+		ASelectSystemLogger.getHandle().log(Level.INFO, MODULE, "run()", "TGT Monitor model stopped");
+	}
+
+	/**
+	 * Retrieve the current A-Select TGT information.
+	 * 
+	 * <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * This function retrieves the TGT context using
+	 * _oTGTManager.getTGTContexts() and copies the TGT information
+	 * into the local TGT array _saTGTs. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * none <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * _oTGTManager must be intialized. <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * _saTGTs now contains the latest TGT information. <br>
+	 *  
+	 */
+	private void getServerStatus()
+	{
+		try {
+			_htTGTContexts = _oTGTManager.getAll();
+
+			int i = 0;
+			Set keys = _htTGTContexts.keySet();
+			for (Object s : keys) {
+				//Enumeration _enumTGTContexts = _htTGTContexts.keys();
+				//while (_enumTGTContexts.hasMoreElements())
+				//{
+				_saTGTs[i++] = (String) s;
+			}
+		}
+		catch (Exception e) {
+			ASelectSystemLogger.getHandle().log(Level.WARNING, MODULE, "getServerStatus()",
+					"No session contexts available");
+		}
+	}
 }

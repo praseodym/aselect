@@ -99,8 +99,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -122,338 +122,312 @@ import org.aselect.system.logging.SystemLogger;
 public class RawCommunicator implements IClientCommunicator
 {
 
-    /** The Logger for this RAWCommunicator */
-    private SystemLogger        _systemLogger;
+	/** The Logger for this RAWCommunicator */
+	private SystemLogger _systemLogger;
 
-    /** "[]" barces UTF-8 encoded. */
-    private static final String ENCODED_BRACES = "%5B%5D";
+	/** "[]" barces UTF-8 encoded. */
+	private static final String ENCODED_BRACES = "%5B%5D";
 
-    private final String MODULE = "RawCommunicator";
-    
-    /**
-     * Creates a new <code>RawCommunicator</code>.
-     * <br><br>
-     * <b>Preconditions: </b> <br>
-     * <code>systemLogger</code> should be initialized. <br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * <code>_systemLogger</code> is set with <code> systemLogger</code>.
-     * <br>
-     * 
-     * @param systemLogger
-     *            the <code>logger</code> to log system information.
-     */
-    public RawCommunicator (SystemLogger systemLogger)
-    {
-        _systemLogger = systemLogger;
-    }
+	private final String MODULE = "RawCommunicator";
 
-    /**
-     * Sends a raw api call to the A-Select Server. 
-     * <br><br>
-     * <b>Description: </b> <br>
-     * Executes the following steps:
-     * <ul>
-     * <li>Create empty return Hashtable</li>
-     * <li>Convert paramaters to CGI message string</li>
-     * <li>Send request to A-Select server</li>
-     * <li>Convert response to Hashtable</li>
-     * </ul>
-     * <br>
-     * @throws ASelectCommunicationException If sending fails.
-     * @see org.aselect.system.communication.client.IClientCommunicator#sendMessage(java.util.Hashtable,
-     *      java.lang.String)
-     */
-    public Hashtable sendMessage(Hashtable parameters, String target) throws ASelectCommunicationException
-    {
-        //create empty return Hashtable
-        Hashtable htReturn = new Hashtable();
-        try
-        {
-            //convert paramaters to CGI message string.
-            String sRequest = hashtable2CGIMessage(parameters);
-            //Send request to A-Select server
-            String sResponse = sendRequestToASelectServer(target, sRequest);
-            //convert response to Hashtable
-            if (sResponse != null)
-                htReturn = convertCGIMessage(sResponse);
-        }
-        catch(UnsupportedEncodingException eUE)
-        {
-            _systemLogger.log(Level.WARNING, MODULE, "sendMessage()", 
-                "Could not URL encode/decode one or more values", eUE);
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_INTERNAL_ERROR);
-        }
-        return htReturn;
-    }
-    
-    // Bauke: added
-    public String sendStringMessage(String soapMessage, String sTarget)
-    throws ASelectCommunicationException
-    {
-    	return null;
-    }
+	/**
+	 * Creates a new <code>RawCommunicator</code>.
+	 * <br><br>
+	 * <b>Preconditions: </b> <br>
+	 * <code>systemLogger</code> should be initialized. <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * <code>_systemLogger</code> is set with <code> systemLogger</code>.
+	 * <br>
+	 * 
+	 * @param systemLogger
+	 *            the <code>logger</code> to log system information.
+	 */
+	public RawCommunicator(SystemLogger systemLogger) {
+		_systemLogger = systemLogger;
+	}
 
-    /**
-     * Send the request to the A-Select server. 
-     * <br><br>
-     * <b>Description: </b> <br>
-     * Executes the following steps:
-     * <ul>
-     * <li>Builds a URL with request parameters</li>
-     * <li>Opens a connection to the server</li>
-     * <li>Recieves response from the server</li>
-     * </ul>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * <ul>
-     * <li><code>sUrl</code> is a valid URL
-     * <li><code>sParams</code> is a non empty <code>String</code></li>
-     * </ul>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * The return <code>String</code> contains the server response. <br>
-     * 
-     * @param sUrl
-     *            The URL of the A-Select server.
-     * @param sParams
-     *            The parameters to be send as CGIMessage.
-     * @return The response from the A-Select server.
-     * @throws ASelectCommunicationException 
-     * 		If communication with <code>sUrl</code> fails.
-     */
-    private String sendRequestToASelectServer(String sUrl, String sParams) throws ASelectCommunicationException
-    {
-        String sInputLine = "";
-        URL urlASelectServer = null;
-        BufferedReader brInput = null;
-        String sMethod = "sendRequestToASelectServer()";
-        StringBuffer sbBuffer = new StringBuffer();
+	/**
+	 * Sends a raw api call to the A-Select Server. 
+	 * <br><br>
+	 * <b>Description: </b> <br>
+	 * Executes the following steps:
+	 * <ul>
+	 * <li>Create empty return HashMap</li>
+	 * <li>Convert paramaters to CGI message string</li>
+	 * <li>Send request to A-Select server</li>
+	 * <li>Convert response to HashMap</li>
+	 * </ul>
+	 * <br>
+	 * @throws ASelectCommunicationException If sending fails.
+	 * @see org.aselect.system.communication.client.IClientCommunicator#sendMessage(java.util.HashMap,
+	 *      java.lang.String)
+	 */
+	public HashMap sendMessage(HashMap parameters, String target)
+		throws ASelectCommunicationException
+	{
+		//create empty return HashMap
+		HashMap htReturn = new HashMap();
+		try {
+			//convert paramaters to CGI message string.
+			String sRequest = hashtable2CGIMessage(parameters);
+			//Send request to A-Select server
+			String sResponse = sendRequestToASelectServer(target, sRequest);
+			//convert response to HashMap
+			if (sResponse != null)
+				htReturn = convertCGIMessage(sResponse);
+		}
+		catch (UnsupportedEncodingException eUE) {
+			_systemLogger.log(Level.WARNING, MODULE, "sendMessage()", "Could not URL encode/decode one or more values",eUE);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		}
+		return htReturn;
+	}
 
-        sbBuffer = new StringBuffer(sUrl);
-        sbBuffer.append("?");
-        sbBuffer.append(sParams);
-        _systemLogger.log(Level.INFO, MODULE, sMethod, "URL="+sbBuffer.toString());
-        try
-        {
-            urlASelectServer = new URL(sbBuffer.toString());
-            brInput = new BufferedReader(new InputStreamReader(urlASelectServer
-                .openStream()), 16000);
-            sInputLine = brInput.readLine();
-            brInput.close();
-            
-            if(sInputLine != null)
-                sInputLine = sInputLine.trim();
-        }
-        catch (MalformedURLException eMU) //Invalid URL
-        {
-            sbBuffer = new StringBuffer("Invalid URL: \"");
-            sbBuffer.append(sUrl);
-            sbBuffer.append("\" errorcode: ");
-            sbBuffer.append(Errors.ERROR_ASELECT_USE_ERROR);
-            _systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString(), eMU);
-            throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR,eMU);
-        }
-        catch (IOException eIO) //Error communicating with A-Select Server
-        {
-            sbBuffer = new StringBuffer("Error communicating with A-Select Server: \"");
-            sbBuffer.append(sUrl);
-            sbBuffer.append("\" errorcode: ");
-            sbBuffer.append(Errors.ERROR_ASELECT_IO);
-            _systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString(), eIO);
-            throw new ASelectCommunicationException(Errors.ERROR_ASELECT_IO,eIO); 
-        }
+	// Bauke: added
+	public String sendStringMessage(String soapMessage, String sTarget)
+	throws ASelectCommunicationException
+	{
+		return null;
+	}
 
-        return sInputLine;
-    }
+	/**
+	 * Send the request to the A-Select server. 
+	 * <br><br>
+	 * <b>Description: </b> <br>
+	 * Executes the following steps:
+	 * <ul>
+	 * <li>Builds a URL with request parameters</li>
+	 * <li>Opens a connection to the server</li>
+	 * <li>Recieves response from the server</li>
+	 * </ul>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * <ul>
+	 * <li><code>sUrl</code> is a valid URL
+	 * <li><code>sParams</code> is a non empty <code>String</code></li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * The return <code>String</code> contains the server response. <br>
+	 * 
+	 * @param sUrl
+	 *            The URL of the A-Select server.
+	 * @param sParams
+	 *            The parameters to be send as CGIMessage.
+	 * @return The response from the A-Select server.
+	 * @throws ASelectCommunicationException 
+	 * 		If communication with <code>sUrl</code> fails.
+	 */
+	private String sendRequestToASelectServer(String sUrl, String sParams)
+		throws ASelectCommunicationException
+	{
+		String sInputLine = "";
+		URL urlASelectServer = null;
+		BufferedReader brInput = null;
+		String sMethod = "sendRequestToASelectServer()";
+		StringBuffer sbBuffer = new StringBuffer();
 
-    /**
-     * Convert <code>Hashtable</code> to CGI message string. 
-     * <br><br>
-     * <b>Description: </b> <br>
-     * Creates a CGI syntax message from the key/value pairs in the input
-     * <code>Hashtable</code>.<br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * The used {@link java.util.Hashtable}objects are synchronized. <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * <code>htInput</code> should be a Hashtable containing valid parameters.
-     * <br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * The return <code>String</code> contains the parameters in CGI syntax.
-     * <br>
-     * 
-     * @param htInput
-     *            The <code>Hashtable</code> to be converted.
-     * @return CGI message containg all parameters in <code>htInput</code>.
-     * @throws UnsupportedEncodingException If URL encoding fails.
-     */
-    private static String hashtable2CGIMessage(Hashtable htInput) throws UnsupportedEncodingException
-    {
-        StringBuffer sbBuffer = new StringBuffer();
-        Enumeration enumKeys = htInput.keys();
+		sbBuffer = new StringBuffer(sUrl);
+		sbBuffer.append("?");
+		sbBuffer.append(sParams);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "URL=" + sbBuffer.toString());
+		try {
+			urlASelectServer = new URL(sbBuffer.toString());
+			brInput = new BufferedReader(new InputStreamReader(urlASelectServer.openStream()), 16000);
+			sInputLine = brInput.readLine();
+			brInput.close();
 
-        boolean bStop = !enumKeys.hasMoreElements(); //more elements?
-        while (!bStop)
-        {
-            String sKey = (String)enumKeys.nextElement();
-            Object oValue = htInput.get(sKey);
-            if (oValue instanceof String)
-            {
-                sbBuffer.append(sKey);
-                sbBuffer.append("=");
-                //URL encode value
-                String sValue = URLEncoder.encode((String)oValue,"UTF-8");
-                sbBuffer.append(sValue);
-            }
-            else if (oValue instanceof String[])
-            {
-                String[] strArr = (String[])oValue;
-                for (int i = 0; i < strArr.length; i++)
-                {
-                    sbBuffer.append(sKey).append(ENCODED_BRACES);
-                    sbBuffer.append("=");
-                    String sValue = URLEncoder.encode(strArr[i],"UTF-8");
-                    sbBuffer.append(sValue);
-                    if(i < strArr.length-1)
-                        sbBuffer.append("&");
-                }
-            }
+			if (sInputLine != null)
+				sInputLine = sInputLine.trim();
+		}
+		catch (MalformedURLException eMU) //Invalid URL
+		{
+			sbBuffer = new StringBuffer("Invalid URL: \"");
+			sbBuffer.append(sUrl);
+			sbBuffer.append("\" errorcode: ");
+			sbBuffer.append(Errors.ERROR_ASELECT_USE_ERROR);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString(), eMU);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR, eMU);
+		}
+		catch (IOException eIO) //Error communicating with A-Select Server
+		{
+			sbBuffer = new StringBuffer("Error communicating with A-Select Server: \"");
+			sbBuffer.append(sUrl);
+			sbBuffer.append("\" errorcode: ");
+			sbBuffer.append(Errors.ERROR_ASELECT_IO);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString(), eIO);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_IO, eIO);
+		}
 
-            if (enumKeys.hasMoreElements())
-            {
-                //Append extra '&' after every parameter.
-                sbBuffer.append("&");
-            }
-            else
-            {
-                //No more parameters
-                bStop = true;
-            }
-        }
-        return sbBuffer.toString();
-    }
+		return sInputLine;
+	}
 
-    /**
-     * Convert a CGI message string into a <code>Hashtable</code>.
-     * <br><br>
-     * <b>Description: </b> <br>
-     * This method will convert a CGI request string (
-     * <code>key=value&key=value</code> etc. ) into a hashtable for much
-     * easier processing. <br>
-     * The <code>Hashtable</code> will contain:
-     * <ul>
-     * <li>key = The parameter name</li>
-     * <li>value = The parameter value</li>
-     * </ul>
-     * <i>Note: The key names are all converted to lowercase. </i> <br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * The returned {@link java.util.Hashtable}is synchronized. <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * <code>sMessage</code> must contain a valid CGI message. <br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * The returned <code>Hashtable</code> contains all the key/value pairs of
-     * the CGI message. <br>
-     * 
-     * @param sMessage
-     *            The CGI message to be converted.
-     * @return A <code>Hashtable</code> containing the parameters from the CGI
-     *         message
-     * @throws UnsupportedEncodingException If URL decoding fails.
-     */
-    public Hashtable convertCGIMessage(String sMessage) throws UnsupportedEncodingException
-    {
-        String sToken, sKey, sValue;
-        StringTokenizer sTokenizer = null;
-        int iPos;
-        Hashtable xResponse = new Hashtable();
-        Hashtable tblVectors = new Hashtable();
+	/**
+	 * Convert <code>HashMap</code> to CGI message string. 
+	 * <br><br>
+	 * <b>Description: </b> <br>
+	 * Creates a CGI syntax message from the key/value pairs in the input
+	 * <code>HashMap</code>.<br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * The used {@link java.util.HashMap}objects are synchronized. <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * <code>htInput</code> should be a HashMap containing valid parameters.
+	 * <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * The return <code>String</code> contains the parameters in CGI syntax.
+	 * <br>
+	 * 
+	 * @param htInput
+	 *            The <code>HashMap</code> to be converted.
+	 * @return CGI message containg all parameters in <code>htInput</code>.
+	 * @throws UnsupportedEncodingException If URL encoding fails.
+	 */
+	private static String hashtable2CGIMessage(HashMap htInput)
+		throws UnsupportedEncodingException
+	{
+		StringBuffer sbBuffer = new StringBuffer();
 
-        if (sMessage != null)
-        {
-            sTokenizer = new StringTokenizer(sMessage, "&");
+		Set keys = htInput.keySet();
+		for (Object s : keys) {
+			String sKey = (String) s;
+			//        Enumeration enumKeys = htInput.keys();
 
-            while (sTokenizer.hasMoreElements())
-            {
-                sToken = (String)sTokenizer.nextElement();
-                if (!sToken.trim().equals(""))
-                {
-                    iPos = sToken.indexOf('=');
-                    if (iPos != -1)
-                    {
-                        sKey = sToken.substring(0, iPos);
-                        try
-                        {
-                            sValue = sToken.substring(iPos + 1);
-                        }
-                        catch (Exception e)
-                        {
-                            sValue = "";
-                        }
-                        if (sKey != null && sValue != null)
-                        {
-                            //URL decode
-                            sValue = URLDecoder.decode(sValue, "UTF-8");
-                            if (sKey.endsWith(ENCODED_BRACES))
-                            {
-                                sKey = sKey.substring(0, sKey
-                                    .lastIndexOf(ENCODED_BRACES));
-                                Vector vTemp = null;
-                                if (tblVectors.containsKey(sKey))
-                                {
-                                    vTemp = (Vector)tblVectors.get(sKey);
-                                    vTemp.add(sValue);
-                                }
-                                else
-                                {
-                                    vTemp = new Vector();
-                                    vTemp.add(sValue);
-                                }
-                                tblVectors.put(sKey, vTemp);
-                            }
-                            else
-                            {                                
-                                xResponse.put(sKey, sValue);
-                            }
-                        }
-                    }
-                }
-            }
+			//boolean bStop = !enumKeys.hasMoreElements(); //more elements?
+			//while (!bStop)
+			//{
+			//  String sKey = (String)enumKeys.nextElement();
+			Object oValue = htInput.get(sKey);
+			if (oValue instanceof String) {
+				sbBuffer.append(sKey);
+				sbBuffer.append("=");
+				//URL encode value
+				String sValue = URLEncoder.encode((String) oValue, "UTF-8");
+				sbBuffer.append(sValue);
+			}
+			else if (oValue instanceof String[]) {
+				String[] strArr = (String[]) oValue;
+				for (int i = 0; i < strArr.length; i++) {
+					sbBuffer.append(sKey).append(ENCODED_BRACES);
+					sbBuffer.append("=");
+					String sValue = URLEncoder.encode(strArr[i], "UTF-8");
+					sbBuffer.append(sValue);
+					if (i < strArr.length - 1)
+						sbBuffer.append("&");
+				}
+			}
+//			if (enumKeys.hasMoreElements()) {
+			//Append extra '&' after every parameter.
+			sbBuffer.append("&");
+//			}
+		}
+		int len = sbBuffer.length();
+		return sbBuffer.substring(0, (len>0)? len-1: len);
+	}
 
-            if (!tblVectors.isEmpty())
-            {
-                Enumeration keysEnum = tblVectors.keys();
-                while (keysEnum.hasMoreElements())
-                {
-                    String sArrName = (String)keysEnum.nextElement();
-                    Vector vTmp = (Vector)tblVectors.get(sArrName);
-                    String[] arrTemp = new String[vTmp.size()];
+	/**
+	 * Convert a CGI message string into a <code>HashMap</code>.
+	 * <br><br>
+	 * <b>Description: </b> <br>
+	 * This method will convert a CGI request string (
+	 * <code>key=value&key=value</code> etc. ) into a hashtable for much
+	 * easier processing. <br>
+	 * The <code>HashMap</code> will contain:
+	 * <ul>
+	 * <li>key = The parameter name</li>
+	 * <li>value = The parameter value</li>
+	 * </ul>
+	 * <i>Note: The key names are all converted to lowercase. </i> <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * The returned {@link java.util.HashMap}is synchronized. <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * <code>sMessage</code> must contain a valid CGI message. <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * The returned <code>HashMap</code> contains all the key/value pairs of
+	 * the CGI message. <br>
+	 * 
+	 * @param sMessage
+	 *            The CGI message to be converted.
+	 * @return A <code>HashMap</code> containing the parameters from the CGI
+	 *         message
+	 * @throws UnsupportedEncodingException If URL decoding fails.
+	 */
+	public HashMap convertCGIMessage(String sMessage)
+		throws UnsupportedEncodingException
+	{
+		String sToken, sKey, sValue;
+		StringTokenizer sTokenizer = null;
+		int iPos;
+		HashMap xResponse = new HashMap();
+		HashMap tblVectors = new HashMap();
 
-                    try
-                    {
-                        arrTemp = (String[])vTmp.toArray(arrTemp);
-                    }
-                    catch (Exception e)
-                    {
-                        _systemLogger
-                            .log(
-                                Level.WARNING,
-                                MODULE,
-                                "convertCGIMessage()",
-                                "Could not convert Vector to array",
-                                e);
-                    }
+		if (sMessage != null) {
+			sTokenizer = new StringTokenizer(sMessage, "&");
 
-                    xResponse.put(sArrName, arrTemp);
-                }
-            }
-        }
-        return xResponse;
-    }
+			while (sTokenizer.hasMoreElements()) {
+				sToken = (String) sTokenizer.nextElement();
+				if (!sToken.trim().equals("")) {
+					iPos = sToken.indexOf('=');
+					if (iPos != -1) {
+						sKey = sToken.substring(0, iPos);
+						try {
+							sValue = sToken.substring(iPos + 1);
+						}
+						catch (Exception e) {
+							sValue = "";
+						}
+						if (sKey != null && sValue != null) {
+							//URL decode
+							sValue = URLDecoder.decode(sValue, "UTF-8");
+							if (sKey.endsWith(ENCODED_BRACES)) {
+								sKey = sKey.substring(0, sKey.lastIndexOf(ENCODED_BRACES));
+								Vector vTemp = null;
+								if (tblVectors.containsKey(sKey)) {
+									vTemp = (Vector) tblVectors.get(sKey);
+									vTemp.add(sValue);
+								}
+								else {
+									vTemp = new Vector();
+									vTemp.add(sValue);
+								}
+								tblVectors.put(sKey, vTemp);
+							}
+							else {
+								xResponse.put(sKey, sValue);
+							}
+						}
+					}
+				}
+			}
+
+			if (!tblVectors.isEmpty()) {
+		        Set keys = tblVectors.keySet();
+				for (Object s : keys) {
+					String sArrName = (String) s;
+				//Enumeration keysEnum = tblVectors.keys();
+				//while (keysEnum.hasMoreElements()) {
+					//String sArrName = (String) keysEnum.nextElement();
+					Vector vTmp = (Vector) tblVectors.get(sArrName);
+					String[] arrTemp = new String[vTmp.size()];
+
+					try {
+						arrTemp = (String[]) vTmp.toArray(arrTemp);
+					}
+					catch (Exception e) {
+						_systemLogger.log(Level.WARNING, MODULE, "convertCGIMessage()",
+								"Could not convert Vector to array", e);
+					}
+
+					xResponse.put(sArrName, arrTemp);
+				}
+			}
+		}
+		return xResponse;
+	}
 }

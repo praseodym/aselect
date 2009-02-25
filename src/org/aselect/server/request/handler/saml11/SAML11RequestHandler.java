@@ -17,7 +17,8 @@
 package org.aselect.server.request.handler.saml11;
 
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -58,8 +59,8 @@ public class SAML11RequestHandler extends AbstractRequestHandler
     private final static String SESSION_ID_PREFIX = "saml11_";
     private IClientCommunicator _oClientCommunicator;
     private String _sDefaultWebSSOProfile;
-    private Hashtable _htWebSSOProfiles;
-    private Hashtable _htApplications;
+    private HashMap<String,Object> _htWebSSOProfiles;
+    private HashMap _htApplications;
     private AssertionSessionManager _oAssertionSessionManager;
 
 
@@ -261,7 +262,7 @@ public class SAML11RequestHandler extends AbstractRequestHandler
 			    throw new ASelectException (Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
             
-            _htWebSSOProfiles = new Hashtable();
+            _htWebSSOProfiles = new HashMap();
             while (oProfile != null)
             {
                 String sClass = null;
@@ -325,7 +326,7 @@ public class SAML11RequestHandler extends AbstractRequestHandler
 			    throw new ASelectException (Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 	        
-	        _htApplications = new Hashtable();
+	        _htApplications = new HashMap();
             while (oApplication != null)
             {
                 String sID = null;
@@ -459,7 +460,7 @@ public class SAML11RequestHandler extends AbstractRequestHandler
     		    throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
     		}
             
-            Hashtable htResponse = handleVerifyCredentials(sCredentials, sRid, request);
+            HashMap htResponse = handleVerifyCredentials(sCredentials, sRid, request);
             if (htResponse.isEmpty())
             {
                 _systemLogger.log(Level.WARNING, MODULE, sMethod
@@ -468,7 +469,7 @@ public class SAML11RequestHandler extends AbstractRequestHandler
             }
             
             //retrieve session
-            Hashtable htAuthSession = _oSessionManager.getSessionContext(SESSION_ID_PREFIX + sRid);
+            HashMap htAuthSession = _oSessionManager.getSessionContext(SESSION_ID_PREFIX + sRid);
             if (htAuthSession == null)
             {
                 StringBuffer sbError = new StringBuffer("No SAML session found with id: ");
@@ -517,7 +518,7 @@ public class SAML11RequestHandler extends AbstractRequestHandler
     
     /**
      * Destroys all WebSSO profiles available in the <code>_htWebSSOProfiles
-     * </code> Hashtable and destroys the Assertion Session Manager singleton.
+     * </code> HashMap and destroys the Assertion Session Manager singleton.
      * <br><br>
      * @see org.aselect.server.request.handler.IRequestHandler#destroy()
      */
@@ -525,12 +526,16 @@ public class SAML11RequestHandler extends AbstractRequestHandler
     {
         if (_htWebSSOProfiles != null)
         {
-	        Enumeration enumProfiles = _htWebSSOProfiles.elements();
+    		for (Map.Entry<String, Object> entry : _htWebSSOProfiles.entrySet()) {
+	            IWebSSOProfile oWebSSOProfile = (IWebSSOProfile)entry.getValue();
+	            oWebSSOProfile.destroy();
+    		}
+/*	        Enumeration enumProfiles = _htWebSSOProfiles.elements();
 	        while (enumProfiles.hasMoreElements())
 	        {
 	            IWebSSOProfile oWebSSOProfile = (IWebSSOProfile)enumProfiles.nextElement();
 	            oWebSSOProfile.destroy();
-	        }
+	        }*/
         }   
         
         if (_oAssertionSessionManager != null)
@@ -543,17 +548,17 @@ public class SAML11RequestHandler extends AbstractRequestHandler
      * @param sCredentials the A-Select credentials
      * @param sRid the A-Select rid
      * @param request the HttpServletRequest containing the request
-     * @return Hashtable containing the verify_credentials results
+     * @return HashMap containing the verify_credentials results
      * @throws ASelectException if communication fails
      */
-    private Hashtable handleVerifyCredentials(String sCredentials
+    private HashMap handleVerifyCredentials(String sCredentials
         , String sRid
         , HttpServletRequest request)
     	throws ASelectException
     {
         String sMethod = "handleVerifyCredentials()";
-        Hashtable htRequest = new Hashtable();
-        Hashtable htResponse = new Hashtable();
+        HashMap htRequest = new HashMap();
+        HashMap htResponse = new HashMap();
         try
         {
             String sASelectID = request.getParameter("a-select-server");

@@ -3,7 +3,7 @@ package org.aselect.server.request.handler.xsaml20.sp;
 import java.security.PrivateKey;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -142,7 +142,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler // RH, 20080606, n
 	        }
 
 	        // Find the associated session context
-	        Hashtable htSessionContext = _oSessionManager.getSessionContext(sRid);
+	        HashMap htSessionContext = _oSessionManager.getSessionContext(sRid);
 	        if (htSessionContext == null) {
 	            _systemLogger.log(Level.WARNING,MODULE,sMethod, "No session found for RID: "+sRid);	            
 	            throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
@@ -151,7 +151,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler // RH, 20080606, n
 			/* 20090113, Bauke TRY TO SKIP THIS CODE, "remote_organization" will not be set
 			CrossASelectManager oCrossASelectManager = CrossASelectManager.getHandle();
 			// Gets from organization key/value = id/friendforced_ly_name
-			Hashtable htRemoteServers = oCrossASelectManager.getRemoteServers();
+			HashMap htRemoteServers = oCrossASelectManager.getRemoteServers();
 			Enumeration enRemoteOrganizationIds = htRemoteServers.keys();
 			String sRemoteOrganization = (String) enRemoteOrganizationIds.nextElement();
 

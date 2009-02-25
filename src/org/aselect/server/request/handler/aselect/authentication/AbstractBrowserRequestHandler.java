@@ -88,7 +88,7 @@ package org.aselect.server.request.handler.aselect.authentication;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.http.Cookie;
@@ -195,7 +195,7 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
     {
         String sMethod = "processRequest()";
         PrintWriter pwOut = null; 
-        Hashtable htServiceRequest = null;
+        HashMap htServiceRequest = null;
         try
         {
             _systemLogger.log(Level.INFO,_sModule,sMethod, "AbstBrowREQ");
@@ -266,7 +266,7 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
      * @throws ASelectException If processing fails and no response 
      * is send to the client.
      */
-    abstract protected void processBrowserRequest(Hashtable htServiceRequest,
+    abstract protected void processBrowserRequest(HashMap htServiceRequest,
             HttpServletResponse servletResponse, PrintWriter pwOut) 
     throws ASelectException;
     
@@ -278,7 +278,7 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
      * @param htServiceRequest 
      * @param pwOut
      */
-    protected void showErrorPage(String sErrorCode, Hashtable htServiceRequest, PrintWriter pwOut)
+    protected void showErrorPage(String sErrorCode, HashMap htServiceRequest, PrintWriter pwOut)
     {
         String sMethod = "showErrorPage";
     	_systemLogger.log(Level.INFO, _sModule, sMethod, "FORM[error] "+sErrorCode+":"+
@@ -293,7 +293,7 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
             if (sRid != null)
                 sErrorForm = _configManager.updateTemplate(sErrorForm, _sessionManager.getSessionContext(sRid));
             
-            Hashtable htSession = null;
+            HashMap htSession = null;
             if (sRid != null)
                 htSession = SessionManager.getHandle().getSessionContext(sRid);
 
@@ -313,7 +313,7 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
      * <b>Description:</b>
      * <br>
      * Reads the A-Select credentials from a Cookie and put them into a 
-     * <code>Hashtable</code>.
+     * <code>HashMap</code>.
      * <br><br>
      * <b>Concurrency issues:</b>
      * <br>
@@ -328,12 +328,12 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
      * -
      * <br>
      * @param servletRequest The Request which should contain the Cookie.
-     * @return The A-Slect credentials in a <code>Hashtable</code>.
+     * @return The A-Slect credentials in a <code>HashMap</code>.
      */
-    protected Hashtable getASelectCredentials(HttpServletRequest servletRequest)
+    protected HashMap getASelectCredentials(HttpServletRequest servletRequest)
     {
         String sMethod = "getASelectCredentials()";
-    	Hashtable htCredentials = new Hashtable();
+    	HashMap htCredentials = new HashMap();
 
        // check for credentials that might be present
     	// Bauke 20080618, we only store the tgt value from now on
@@ -342,7 +342,7 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
             return null;
         }
 
-/*        Hashtable sCredentialsParams = Utils.convertCGIMessage(sCredentialsCookie);
+/*        HashMap sCredentialsParams = Utils.convertCGIMessage(sCredentialsCookie);
         if (sCredentialsParams == null) {
             return null;
         }
@@ -358,7 +358,7 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
             return null;
         }
 */
-        Hashtable htTGTContext = _tgtManager.getTGT(sTgt);
+        HashMap htTGTContext = _tgtManager.getTGT(sTgt);
         if (htTGTContext == null) {
             return null;
         }
@@ -378,16 +378,16 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
     
   
     /**
-     * This function converts a <code>servletRequest</code> to a <code>Hashtable</code> by extracting the parameters
-     * from the <code>servletRequest</code> and inserting them into a <code>Hashtable</code>.
+     * This function converts a <code>servletRequest</code> to a <code>HashMap</code> by extracting the parameters
+     * from the <code>servletRequest</code> and inserting them into a <code>HashMap</code>.
      * <br><br>
      * @param servletRequest Contains request parameters
-     * @return Hashtable containing request parameters.
+     * @return HashMap containing request parameters.
      */
-    private Hashtable createServiceRequest(HttpServletRequest servletRequest)
+    private HashMap createServiceRequest(HttpServletRequest servletRequest)
     {
 	    // Extract parameters into htServiceRequest
-        Hashtable htServiceRequest = null;
+        HashMap htServiceRequest = null;
         if (servletRequest.getMethod().equalsIgnoreCase("GET"))
         {
             htServiceRequest = Utils.convertCGIMessage(
@@ -395,7 +395,7 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
         }
         else
         {
-            htServiceRequest = new Hashtable();
+            htServiceRequest = new HashMap();
             String sParameter, sValue;
 	        Enumeration eParameters = servletRequest.getParameterNames();
 	        while (eParameters.hasMoreElements())
@@ -414,7 +414,7 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 	    if (sClientIp != null) htServiceRequest.put("client_ip", servletRequest.getRemoteAddr());
 		String sAgent = servletRequest.getHeader("User-Agent");
 		if (sAgent != null) htServiceRequest.put("user_agent", sAgent);
-	    Hashtable htCredentials = getASelectCredentials(servletRequest);
+	    HashMap htCredentials = getASelectCredentials(servletRequest);
 	    if (htCredentials != null)
 	    {
 	        htServiceRequest.put("aselect_credentials_tgt", htCredentials.get("aselect_credentials_tgt"));

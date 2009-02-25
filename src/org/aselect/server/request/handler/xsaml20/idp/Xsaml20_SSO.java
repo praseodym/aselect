@@ -2,7 +2,7 @@ package org.aselect.server.request.handler.xsaml20.idp;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
@@ -142,7 +142,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			
 			// Start an authenticate request
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "performAuthenticateRequest " + sAppId);
-			Hashtable htResponse = performAuthenticateRequest(_sASelectServerUrl, 
+			HashMap htResponse = performAuthenticateRequest(_sASelectServerUrl, 
 					httpRequest.getPathInfo(), RETURN_SUFFIX, sAppId, true /*check sig*/, _oClientCommunicator);
 
 			String sASelectServerUrl = (String) htResponse.get("as_url");
@@ -150,7 +150,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Supplied rid="+sIDPRid+" response="+htResponse);
 
 			// The new sessionhttpRequest
-			Hashtable htSession = _oSessionManager.getSessionContext(sIDPRid);
+			HashMap htSession = _oSessionManager.getSessionContext(sIDPRid);
 			if (sRelayState != null)
 				htSession.put("RelayState", sRelayState);
 			htSession.put("sp_rid", sSPRid);
@@ -280,8 +280,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	throws ASelectException
 	{
 		String sMethod = "processReturn()";
-        Hashtable htTGTContext = null;
-        Hashtable htSessionContext = null;
+        HashMap htTGTContext = null;
+        HashMap htSessionContext = null;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
 		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Handle return from the AuthSP");
 		
@@ -338,8 +338,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	// no Assertion, just <Status>
 	//
 	@SuppressWarnings("unchecked")
-	private void sendSAMLArtifactRedirect(String sAppUrl, String sRid, Hashtable htSessionContext,
-				String sTgt, Hashtable htTGTContext, HttpServletResponse oHttpServletResponse, String sRelayState)
+	private void sendSAMLArtifactRedirect(String sAppUrl, String sRid, HashMap htSessionContext,
+				String sTgt, HashMap htTGTContext, HttpServletResponse oHttpServletResponse, String sRelayState)
 	throws ASelectException
 	{
 		String sMethod = "sendSAMLArtifactRedirect";

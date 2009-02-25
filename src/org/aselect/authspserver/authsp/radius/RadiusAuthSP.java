@@ -101,7 +101,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -396,7 +396,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
             setDisableCachingHttpHeaders(servletRequest, servletResponse);
             
             sQueryString = servletRequest.getQueryString();
-            Hashtable htServiceRequest = Utils.convertCGIMessage(sQueryString);
+            HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString);
             String sMyUrl = servletRequest.getRequestURL().toString();
             htServiceRequest.put("my_url", sMyUrl);
 
@@ -561,7 +561,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
             sPassword = sPassword.trim();
             if (sPassword.length() < 1)
             {
-                Hashtable htServiceRequest = new Hashtable();
+                HashMap htServiceRequest = new HashMap();
                 htServiceRequest.put("my_url", sMyUrl);
                 htServiceRequest.put("rid", sRid);
                 htServiceRequest.put("a-select-server", sAsId);
@@ -629,7 +629,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
                 
                 if (iRetriesDone < _iAllowedRetries)
                 {
-                    Hashtable htServiceRequest = new Hashtable();
+                    HashMap htServiceRequest = new HashMap();
                     htServiceRequest.put("my_url", sMyUrl);
                     htServiceRequest.put("as_url", sAsUrl);
                     htServiceRequest.put("uid", sUid);
@@ -743,7 +743,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
      * @param htServiceRequest Incoming servlet request
      */
     private void showAuthenticateForm(PrintWriter pwOutput, String sError,
-        String sErrorMessage, Hashtable htServiceRequest)
+        String sErrorMessage, HashMap htServiceRequest)
     {
         String sAuthenticateForm = new String(_sAuthenticateHtmlTemplate);
         String sMyUrl = (String)htServiceRequest.get("my_url");

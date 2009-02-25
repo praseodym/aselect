@@ -55,8 +55,8 @@
 
 package org.aselect.system.sam.agent;
 
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -88,349 +88,326 @@ import org.aselect.system.logging.SystemLogger;
  */
 public class SAMResourceGroup extends Thread
 {
-    /**
-     * The name of the class, used for logging.
-     */
-    private final static String MODULE = "SAMResourceGroup";
-    
-    /**
-     * Used for stopping the <code>Thread</code>.
-     */
-    private boolean _bRunThread;
+	/**
+	 * The name of the class, used for logging.
+	 */
+	private final static String MODULE = "SAMResourceGroup";
 
-    /**
-     * All resources that are configured inside a resourcegroup
-     */
-    private Hashtable _htResources;
+	/**
+	 * Used for stopping the <code>Thread</code>.
+	 */
+	private boolean _bRunThread;
 
-    /**
-     * List of resources from a resourcegroup that are active
-     */
-    private Vector _vActive;
+	/**
+	 * All resources that are configured inside a resourcegroup
+	 */
+	private HashMap _htResources;
 
-    /**
-     * The logger that logs system errors
-     */
-    private SystemLogger _oSystemLogger;
+	/**
+	 * List of resources from a resourcegroup that are active
+	 */
+	private Vector _vActive;
 
-    /**
-     * Default status update check time, used as interval for checking resources 
-     * in a resourcegroup.
-     */
-    private final long DEFAULT_UPDATE_INTERVAL = 50;
-    
-    /**
-     * The interval which is used to check all resources within a resourcegroup
-     */
-    private long _lInterval;
+	/**
+	 * The logger that logs system errors
+	 */
+	private SystemLogger _oSystemLogger;
 
-    /**
-     * This function is to initialize the SAMAgent.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Reads all resources configured inside a resourcegroup from the 
-     * configuration and initializes them.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * - oConfigSection != null<br>
-     * - oConfigManager != null<br>
-     * - oSystemLogger != null<br>
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @param oConfigSection The section within the configuration file in which 
-     * the parameters for this SAMResourceGroup can be found.
-     * @param oConfigManager The ConfigManager used to retrieve the config from.
-     * @param oSystemLogger The logger used for system logging
-     * @throws ASelectSAMException if initialization fails.
-     */
-    public void init(Object oConfigSection, ConfigManager oConfigManager,
-            SystemLogger oSystemLogger) throws ASelectSAMException
-    {
-        StringBuffer sbError = new StringBuffer(MODULE);
-        String sMethod = "init()";
-        
-        _htResources = new Hashtable();
-        _vActive = new Vector();
-        _oSystemLogger = oSystemLogger;
+	/**
+	 * Default status update check time, used as interval for checking resources 
+	 * in a resourcegroup.
+	 */
+	private final long DEFAULT_UPDATE_INTERVAL = 50;
 
-        Object oResourceSection = null;
-        String sResourceGroupID = null;
-        try
-        {
-            
-            try
-            {
-                sResourceGroupID = oConfigManager.getParam(oConfigSection, "id");
-            }
-            catch (Exception e)
-            {               
-                sbError.append(
-                    "Could not find config item 'id' in config section 'resourcegroup'.");
-                _oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
-                throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-            }
-            
-            try
-            {
-                _lInterval = new Long(oConfigManager.getParam(oConfigSection,
-                    "interval")).longValue();
-            }
-            catch (Exception e)
-            {
-                
-                //the interval is not configured, using the default interval time
-                _lInterval = DEFAULT_UPDATE_INTERVAL;
-                
-                StringBuffer sbWarning = new StringBuffer(sbError.toString());
-                sbWarning.append(
-                    "Could not find config item 'interval' in config section 'resourcegroup' with id=");
-                sbWarning.append(sResourceGroupID);
-                sbWarning.append(". Setting interval to default value: '");
-                sbWarning.append(DEFAULT_UPDATE_INTERVAL);
-                sbWarning.append("'");
-                _oSystemLogger.log(Level.CONFIG, MODULE, sMethod, sbWarning.toString(), e);
-            }
-            
-            try
-            {
-                oResourceSection = oConfigManager.getSection(oConfigSection,
-                    "resource");
-            }
-            catch (Exception e)
-            {
-                sbError.append(
-                    "Could not find config section 'resource' in config section 'resourcegroup' with id=");
-                sbError.append(sResourceGroupID);
-                _oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
-                throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-            }
+	/**
+	 * The interval which is used to check all resources within a resourcegroup
+	 */
+	private long _lInterval;
 
-            SAMResource oSAMResource = new SAMResource();
-            oSAMResource.init(oResourceSection, oConfigManager, oSystemLogger);
+	/**
+	 * This function is to initialize the SAMAgent.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Reads all resources configured inside a resourcegroup from the 
+	 * configuration and initializes them.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * - oConfigSection != null<br>
+	 * - oConfigManager != null<br>
+	 * - oSystemLogger != null<br>
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * @param oConfigSection The section within the configuration file in which 
+	 * the parameters for this SAMResourceGroup can be found.
+	 * @param oConfigManager The ConfigManager used to retrieve the config from.
+	 * @param oSystemLogger The logger used for system logging
+	 * @throws ASelectSAMException if initialization fails.
+	 */
+	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger oSystemLogger)
+		throws ASelectSAMException
+	{
+		StringBuffer sbError = new StringBuffer(MODULE);
+		String sMethod = "init()";
 
-            String sResourceId = null; 
-            
-            try
-            {
-                sResourceId = oConfigManager.getParam(oResourceSection, "id");
-            }
-            catch (Exception e)
-            {
-                sbError.append("Could not find config item 'id' in section 'resource'.");
-                _oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
-                throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-            }
-            
-            _htResources.put(sResourceId, oSAMResource);
+		_htResources = new HashMap();
+		_vActive = new Vector();
+		_oSystemLogger = oSystemLogger;
 
-            while ((oResourceSection = oConfigManager
-                    .getNextSection(oResourceSection)) != null)
-            {
-                oSAMResource = new SAMResource();
-                oSAMResource.init(oResourceSection, oConfigManager,
-                        _oSystemLogger);
+		Object oResourceSection = null;
+		String sResourceGroupID = null;
+		try {
 
-                try
-                {
-                    sResourceId = oConfigManager.getParam(oResourceSection, "id");
-                }
-                catch (Exception e)
-                {
-                    sbError.append("Could not find config item 'id' in section 'resource'.");
-                    _oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
-                    throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-                }    
-                
-                _htResources.put(sResourceId, oSAMResource);
-            }
+			try {
+				sResourceGroupID = oConfigManager.getParam(oConfigSection, "id");
+			}
+			catch (Exception e) {
+				sbError.append("Could not find config item 'id' in config section 'resourcegroup'.");
+				_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
+				throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			}
 
-            updateStatus();
-            
-            _bRunThread = true;
-        } 
-        catch (ASelectSAMException e)
-        {
-            throw e;
-        } 
-        catch (Exception e)
-        {
-            sbError.append("Could not initialize: ");
-            sbError.append(e.getMessage());
-            _oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
-            throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-        }        
-    }
+			try {
+				_lInterval = new Long(oConfigManager.getParam(oConfigSection, "interval")).longValue();
+			}
+			catch (Exception e) {
 
-    /**
-     * Gets a active resource from this group.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Returns the first active resource (the active resource with the highest 
-     * priority)
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * - The class variable <i>_vActive</i> may not be <code>null</code><br>
-     * - All objects inside the class variable <i>_vActive</i> must be <code>
-     * SAMResource</code> objects.
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @return The SAMResource object of an active resource.
-     * @throws ASelectSAMException If no active resource was found.
-     */
-    public SAMResource getActiveResource() throws ASelectSAMException
-    {
-        StringBuffer sbError = new StringBuffer(MODULE);
-        String sMethod = "getActiveResource()";
-        
-        if (_vActive.isEmpty())
-        {
-            sbError.append("There were no resources found to be active.");
-            _oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
-            throw new ASelectSAMException(Errors.ERROR_ASELECT_SAM_NO_RESOURCE_ACTIVE);
-        }
+				//the interval is not configured, using the default interval time
+				_lInterval = DEFAULT_UPDATE_INTERVAL;
 
-        return (SAMResource) _vActive.firstElement();
-    }
+				StringBuffer sbWarning = new StringBuffer(sbError.toString());
+				sbWarning.append("Could not find config item 'interval' in config section 'resourcegroup' with id=");
+				sbWarning.append(sResourceGroupID);
+				sbWarning.append(". Setting interval to default value: '");
+				sbWarning.append(DEFAULT_UPDATE_INTERVAL);
+				sbWarning.append("'");
+				_oSystemLogger.log(Level.CONFIG, MODULE, sMethod, sbWarning.toString(), e);
+			}
 
-    /**
-     * Returns a <code>SAMResource</code> specified by it's id.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Returns a <code>SAMResource</code> specified by it's key as it contains 
-     * in the class variable <i>_htResources</i>.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * - sKey may not be <code>null</code><br>
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @param sKey The id of the resource that will be returned
-     * @return The <code>SAMResource</code> object that is specified by <i>sKey</i>
-     * @throws ASelectSAMException if no resource is found
-     * @deprecated Use getActiveResource instead
-     */
-    public SAMResource getResource(String sKey) throws ASelectSAMException
-    {
-        StringBuffer sbError = new StringBuffer(MODULE);
-        String sMethod = "getResource()";
-        
-        SAMResource oSAMResource = null;
+			try {
+				oResourceSection = oConfigManager.getSection(oConfigSection, "resource");
+			}
+			catch (Exception e) {
+				sbError.append("Could not find config section 'resource' in config section 'resourcegroup' with id=");
+				sbError.append(sResourceGroupID);
+				_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
+				throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			}
 
-        try
-        {
-            oSAMResource = (SAMResource) _htResources.get(sKey);
-        } 
-        catch (Exception e)
-        {
-            sbError.append("There is no resource associated with the supplied key: '");
-            sbError.append(sKey);
-            sbError.append("'.");
-            _oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
-            
-            throw new ASelectSAMException(Errors.ERROR_ASELECT_SAM_UNAVALABLE, e);
-            
-        }
+			SAMResource oSAMResource = new SAMResource();
+			oSAMResource.init(oResourceSection, oConfigManager, oSystemLogger);
 
-        if (oSAMResource == null)
-        {
-            sbError.append("There is no resource associated with the supplied key: '");
-            sbError.append(sKey);
-            sbError.append("'");            
-            _oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
-            
-            throw new ASelectSAMException(Errors.ERROR_ASELECT_SAM_UNAVALABLE);
-        }
+			String sResourceId = null;
 
-        return oSAMResource;
-    }
+			try {
+				sResourceId = oConfigManager.getParam(oResourceSection, "id");
+			}
+			catch (Exception e) {
+				sbError.append("Could not find config item 'id' in section 'resource'.");
+				_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
+				throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			}
 
-    /**
-     * Default methode to start the update status <code>Thread</code>
-     * <br><br>
-     * @see java.lang.Thread#run()
-     */
-    public void run()
-    {
-        while (_bRunThread)
-        {
-            try
-            {
-                updateStatus();
-                sleep(_lInterval);
-            } 
-            catch (Exception e) {}
-        }
-    }
+			_htResources.put(sResourceId, oSAMResource);
 
-    /**
-     * Destroys this resourcegroup (SAMResourceGroup) and all resources (SAMResource)
-     * within this group.
-     * <br><br>
-     * @see java.lang.Thread#destroy()
-     */
-    public void destroy()
-    {
-        Enumeration enumKeys = _htResources.keys();
+			while ((oResourceSection = oConfigManager.getNextSection(oResourceSection)) != null) {
+				oSAMResource = new SAMResource();
+				oSAMResource.init(oResourceSection, oConfigManager, _oSystemLogger);
 
-        while (enumKeys.hasMoreElements())
-        {
-            String sKey = (String) enumKeys.nextElement();
-            SAMResource oSAMResource = (SAMResource) _htResources.get(sKey);
-            oSAMResource.destroy();
-        }
+				try {
+					sResourceId = oConfigManager.getParam(oResourceSection, "id");
+				}
+				catch (Exception e) {
+					sbError.append("Could not find config item 'id' in section 'resource'.");
+					_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
+					throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+				}
 
-        _bRunThread = false;
-    }
-    
-    /**
-     * Makes a pass along all SAMResources within this group and updates the
-     * Vector of active SAMResources.
-     * 
-     * Every status update verifies the status of the resources in the 
-     * configurated order. The first configured resource has the highest priority.
-     */
-    private void updateStatus()
-    {
-        Vector vLive = new Vector();
+				_htResources.put(sResourceId, oSAMResource);
+			}
 
-        Enumeration enumKeys = _htResources.keys();
-        while (enumKeys.hasMoreElements())
-        {
-            String sKey = (String) enumKeys.nextElement();
-            SAMResource oSAMResource = (SAMResource) _htResources.get(sKey);
+			updateStatus();
 
-            if (oSAMResource.live())
-            {
-                vLive.add(oSAMResource);
-            }
-        }
-        _vActive = vLive;
-    }
+			_bRunThread = true;
+		}
+		catch (ASelectSAMException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			sbError.append("Could not initialize: ");
+			sbError.append(e.getMessage());
+			_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
+			throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+		}
+	}
+
+	/**
+	 * Gets a active resource from this group.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Returns the first active resource (the active resource with the highest 
+	 * priority)
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * - The class variable <i>_vActive</i> may not be <code>null</code><br>
+	 * - All objects inside the class variable <i>_vActive</i> must be <code>
+	 * SAMResource</code> objects.
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * @return The SAMResource object of an active resource.
+	 * @throws ASelectSAMException If no active resource was found.
+	 */
+	public SAMResource getActiveResource()
+		throws ASelectSAMException
+	{
+		StringBuffer sbError = new StringBuffer(MODULE);
+		String sMethod = "getActiveResource()";
+
+		if (_vActive.isEmpty()) {
+			sbError.append("There were no resources found to be active.");
+			_oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
+			throw new ASelectSAMException(Errors.ERROR_ASELECT_SAM_NO_RESOURCE_ACTIVE);
+		}
+
+		return (SAMResource) _vActive.firstElement();
+	}
+
+	/**
+	 * Returns a <code>SAMResource</code> specified by it's id.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Returns a <code>SAMResource</code> specified by it's key as it contains 
+	 * in the class variable <i>_htResources</i>.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * - sKey may not be <code>null</code><br>
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * @param sKey The id of the resource that will be returned
+	 * @return The <code>SAMResource</code> object that is specified by <i>sKey</i>
+	 * @throws ASelectSAMException if no resource is found
+	 * @deprecated Use getActiveResource instead
+	 */
+	public SAMResource getResource(String sKey)
+		throws ASelectSAMException
+	{
+		StringBuffer sbError = new StringBuffer(MODULE);
+		String sMethod = "getResource()";
+
+		SAMResource oSAMResource = null;
+
+		try {
+			oSAMResource = (SAMResource) _htResources.get(sKey);
+		}
+		catch (Exception e) {
+			sbError.append("There is no resource associated with the supplied key: '");
+			sbError.append(sKey);
+			sbError.append("'.");
+			_oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
+
+			throw new ASelectSAMException(Errors.ERROR_ASELECT_SAM_UNAVALABLE, e);
+
+		}
+
+		if (oSAMResource == null) {
+			sbError.append("There is no resource associated with the supplied key: '");
+			sbError.append(sKey);
+			sbError.append("'");
+			_oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
+
+			throw new ASelectSAMException(Errors.ERROR_ASELECT_SAM_UNAVALABLE);
+		}
+
+		return oSAMResource;
+	}
+
+	/**
+	 * Default methode to start the update status <code>Thread</code>
+	 * <br><br>
+	 * @see java.lang.Thread#run()
+	 */
+	public void run()
+	{
+		while (_bRunThread) {
+			try {
+				updateStatus();
+				sleep(_lInterval);
+			}
+			catch (Exception e) {
+			}
+		}
+	}
+
+	/**
+	 * Destroys this resourcegroup (SAMResourceGroup) and all resources (SAMResource)
+	 * within this group.
+	 * <br><br>
+	 * @see java.lang.Thread#destroy()
+	 */
+	public void destroy()
+	{
+		Set keys = _htResources.keySet();
+		for (Object s : keys) {
+			String sKey = (String) s;
+			//Enumeration enumKeys = _htResources.keys();
+			//while (enumKeys.hasMoreElements())
+			//{
+			//  String sKey = (String) enumKeys.nextElement();
+			SAMResource oSAMResource = (SAMResource) _htResources.get(sKey);
+			oSAMResource.destroy();
+		}
+		_bRunThread = false;
+	}
+
+	/**
+	 * Makes a pass along all SAMResources within this group and updates the
+	 * Vector of active SAMResources.
+	 * 
+	 * Every status update verifies the status of the resources in the 
+	 * configurated order. The first configured resource has the highest priority.
+	 */
+	private void updateStatus()
+	{
+		Vector vLive = new Vector();
+
+        Set keys = _htResources.keySet();
+		for (Object s : keys) {
+			String sKey = (String) s;
+//		Enumeration enumKeys = _htResources.keys();
+		//while (enumKeys.hasMoreElements()) {
+			//String sKey = (String) enumKeys.nextElement();
+			SAMResource oSAMResource = (SAMResource) _htResources.get(sKey);
+
+			if (oSAMResource.live()) {
+				vLive.add(oSAMResource);
+			}
+		}
+		_vActive = vLive;
+	}
 }
-

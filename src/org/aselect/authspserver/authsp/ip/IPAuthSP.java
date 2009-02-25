@@ -75,7 +75,7 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -116,7 +116,7 @@ public class IPAuthSP extends ASelectHttpServlet
     private AuthSPConfigManager _oAuthSPConfigManager;
     
     private Properties _propErrorMessages;
-    private Hashtable _htIPRanges;
+    private HashMap _htIPRanges;
     
     private String _sWorkingDir;
     private String _sErrorHTMLTemplate;
@@ -231,7 +231,7 @@ public class IPAuthSP extends ASelectHttpServlet
                 throw new ASelectException(Errors.ERROR_IP_INTERNAL_ERROR, e);
             }
                         
-            _htIPRanges = new Hashtable();
+            _htIPRanges = new HashMap();
             Object oIPRanges = null;
             try
             {
@@ -394,7 +394,7 @@ public class IPAuthSP extends ASelectHttpServlet
             pwOut = servletResponse.getWriter();
             
             sQueryString = servletRequest.getQueryString();
-            Hashtable htServiceRequest = Utils.convertCGIMessage(sQueryString);
+            HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString);
             String sMyUrl = servletRequest.getRequestURL().toString();
             htServiceRequest.put("my_url", sMyUrl);
 
@@ -532,7 +532,7 @@ public class IPAuthSP extends ASelectHttpServlet
      * @param sIpClient
      * @return an error code or ERROR_IP_SUCCESS
      */
-    private String checkIP(Hashtable htIpRanges, String sIpClient)
+    private String checkIP(HashMap htIpRanges, String sIpClient)
     {
         String sMethod = "checkIP()";
 

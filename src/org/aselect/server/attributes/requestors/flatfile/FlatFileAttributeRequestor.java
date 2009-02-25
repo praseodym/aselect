@@ -16,7 +16,7 @@
 package org.aselect.server.attributes.requestors.flatfile;
 
 import java.io.File;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -46,7 +46,7 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 {
 	private final static String MODULE = "FlatFileAttributeRequestor";
 	private ConfigManager _oFlatFileManager;
-	private Hashtable _htGlobalAttributes;
+	private HashMap _htGlobalAttributes;
 
 	/**
 	 * Initialize the <code>OpaqueAttributeRequestor</code>.
@@ -138,12 +138,12 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 	/**
 	 * Retrieve attributes from flatfilehandler.
 	 * <br><br>
-	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(java.util.Hashtable, java.util.Vector)
+	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(java.util.HashMap, java.util.Vector)
 	 */
-	public Hashtable getAttributes(Hashtable htTGTContext, Vector vAttributes)
+	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes)
 		throws ASelectAttributesException
 	{
-		Hashtable htReturn = new Hashtable();
+		HashMap htReturn = new HashMap();
 		String sMethod = "getAttributes()";
 
 		try {
@@ -198,11 +198,11 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 		//Does nothing
 	}
 
-	private Hashtable readAttributes(Object oAttribute)
+	private HashMap readAttributes(Object oAttribute)
 		throws ASelectException
 	{
 		String sMethod = "readAttributes()";
-		Hashtable htReturn = new Hashtable();
+		HashMap htReturn = new HashMap();
 		_systemLogger.log(Level.WARNING, MODULE, sMethod, "Read");
 		try {
 			while (oAttribute != null) {

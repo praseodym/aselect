@@ -16,7 +16,7 @@
 
 package org.aselect.server.request.handler.shibboleth;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -63,7 +63,7 @@ public class ShibbolethAuthenticationProfile extends AbstractRequestHandler
     private final static String SESSION_ID_PREFIX = "saml11_";
     
     private IClientCommunicator _oClientCommunicator;
-    private Hashtable _htApplications;
+    private HashMap _htApplications;
     private String _sASelectServerID;
     private String _sResponseURI;
     private long _lTimeOffset;
@@ -164,7 +164,7 @@ public class ShibbolethAuthenticationProfile extends AbstractRequestHandler
                 throw new ASelectException (Errors.ERROR_ASELECT_INIT_ERROR);
             }
             
-            _htApplications = new Hashtable();
+            _htApplications = new HashMap();
             
             Object oProviders = null;
             try
@@ -303,7 +303,7 @@ public class ShibbolethAuthenticationProfile extends AbstractRequestHandler
     public RequestState process(HttpServletRequest request, HttpServletResponse response) throws ASelectException
     {
         String sMethod = "process()";
-        Hashtable htSession = new Hashtable();
+        HashMap htSession = new HashMap();
         try
         {
 	        String sProviderId = request.getParameter("providerId"); //application ID
@@ -395,7 +395,7 @@ public class ShibbolethAuthenticationProfile extends AbstractRequestHandler
 			
 			sbUrl.append(_sResponseURI);
 			
-			Hashtable htRequest = new Hashtable();
+			HashMap htRequest = new HashMap();
 			htRequest.put("request", "authenticate");
 			htRequest.put("app_id", sApplicationID);
 			htRequest.put("app_url", sbUrl.toString());
@@ -420,7 +420,7 @@ public class ShibbolethAuthenticationProfile extends AbstractRequestHandler
 				CryptoEngine.getHandle().signRequest(htRequest);
 			}
 
-            Hashtable htResponse = null;
+            HashMap htResponse = null;
             
             try
             {

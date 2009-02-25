@@ -66,7 +66,7 @@
 
 package org.aselect.server.request.handler.sfs.authentication;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
@@ -183,7 +183,7 @@ public class AuthSPAPIHandler extends AbstractAPIRequestHandler
         String sSessionId = null;
         String sSignature = null;
         String sAuthSP = null;
-        Hashtable htSessionContext;
+        HashMap htSessionContext;
         String sMethod = "handleKillSessionRequest()";
 
         try

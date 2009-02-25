@@ -48,8 +48,8 @@
 package org.aselect.agent.admin;
 
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.logging.Level;
 
 import javax.swing.table.AbstractTableModel;
@@ -79,201 +79,195 @@ import org.aselect.system.exception.ASelectStorageException;
  */
 public class TicketMonitorModel extends AbstractTableModel implements Runnable
 {
-    private Thread _runner;
-    private String[] _ticketsStrings;
-    private String[] _headersStrings = 
-    	{"Issued to", "From Organization",
-        "By A-Select Server", "Issued at", "Expires at", "AuthSP Used", "Level"};
+	private Thread _runner;
+	private String[] _ticketsStrings;
+	private String[] _headersStrings = {
+		"Issued to", "From Organization", "By A-Select Server", "Issued at", "Expires at", "AuthSP Used", "Level"
+	};
 
-    private int _iCheckInterval;
-    private Hashtable _ticketContexts;
-    private TicketManager _ticketManager;
-    private ASelectAgentConfigManager _configManager;
-    private boolean _active;
+	private int _iCheckInterval;
+	private HashMap _ticketContexts;
+	private TicketManager _ticketManager;
+	private ASelectAgentConfigManager _configManager;
+	private boolean _active;
 
-    /** The MODULE name. */
-    public static final String MODULE = "TicketMonitorModel";
+	/** The MODULE name. */
+	public static final String MODULE = "TicketMonitorModel";
 
-    /**
-     * Initializes the class. 
-     * <br><br>
-     * <b>Description: </b> <br>
-     * This method initalizes the class by initializing variables and starting
-     * the runner thread for monitoring. <br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * None. <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * None. <br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * None. <br>
-     * 
-     * @param iCheckInterval
-     *            the monitoring interval (in seconds) to wait for updating the
-     *            ticket information.
-     * 
-     * @throws ASelectConfigException
-     * on configuration error. @ throws NumberFormatException on non-parseable
-     *             <code>max_tickets</code> config item.
-     * @throws NumberFormatException If 'max_tickets' parameter is incorrect.
-     */
-    public TicketMonitorModel (int iCheckInterval)
-        throws NumberFormatException, ASelectConfigException
-    {
-        _ticketManager = TicketManager.getHandle();
-        _configManager = ASelectAgentConfigManager.getHandle();
+	/**
+	 * Initializes the class. 
+	 * <br><br>
+	 * <b>Description: </b> <br>
+	 * This method initalizes the class by initializing variables and starting
+	 * the runner thread for monitoring. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * None. <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * None. <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * None. <br>
+	 * 
+	 * @param iCheckInterval
+	 *            the monitoring interval (in seconds) to wait for updating the
+	 *            ticket information.
+	 * 
+	 * @throws ASelectConfigException
+	 * on configuration error. @ throws NumberFormatException on non-parseable
+	 *             <code>max_tickets</code> config item.
+	 * @throws NumberFormatException If 'max_tickets' parameter is incorrect.
+	 */
+	public TicketMonitorModel(int iCheckInterval)
+		throws NumberFormatException, ASelectConfigException {
+		_ticketManager = TicketManager.getHandle();
+		_configManager = ASelectAgentConfigManager.getHandle();
 
-        _iCheckInterval = iCheckInterval;
+		_iCheckInterval = iCheckInterval;
 
-        Object oStorageMngrSection = _configManager.getSection(null, "storagemanager", "id=ticket");
-        String sMaxTickets = _configManager.getParam(oStorageMngrSection, "max");
-        Integer intMaxTickets = Integer.valueOf(sMaxTickets);
-        
-        _ticketsStrings = new String[intMaxTickets.intValue()];
+		Object oStorageMngrSection = _configManager.getSection(null, "storagemanager", "id=ticket");
+		String sMaxTickets = _configManager.getParam(oStorageMngrSection, "max");
+		Integer intMaxTickets = Integer.valueOf(sMaxTickets);
 
-        getAgentStatus();
+		_ticketsStrings = new String[intMaxTickets.intValue()];
 
-        _active = true;
-        _runner = new Thread(this);
-        _runner.start();
-        fireTableDataChanged();
-    }
+		getAgentStatus();
 
-    /**
-     * Stops monitoring.
-     */
-    public void stop()
-    {
-        _active = false;
-        _runner.interrupt();
-    }
+		_active = true;
+		_runner = new Thread(this);
+		_runner.start();
+		fireTableDataChanged();
+	}
 
-    /**
-     * @return the number of issued tickets.
-     */
-    public long getTicketsCounter()
-    {
-        return _ticketManager.getTicketsCounter();
-    }
+	/**
+	 * Stops monitoring.
+	 */
+	public void stop()
+	{
+		_active = false;
+		_runner.interrupt();
+	}
 
-    /**
-     * Returns the number of rows.
-     * @see javax.swing.table.TableModel#getRowCount()
-     */
-    public int getRowCount()
-    {
-        return _ticketContexts.size();
-    }
+	/**
+	 * @return the number of issued tickets.
+	 */
+	public long getTicketsCounter()
+	{
+		return _ticketManager.getTicketsCounter();
+	}
 
-    /**
-     * Returns the number of columns. 
-     * @see javax.swing.table.TableModel#getColumnCount()
-     */
-    public int getColumnCount()
-    {
-        return _headersStrings.length;
-    }
+	/**
+	 * Returns the number of rows.
+	 * @see javax.swing.table.TableModel#getRowCount()
+	 */
+	public int getRowCount()
+	{
+		return _ticketContexts.size();
+	}
 
-    /**
-     * Returns the value of an information items in this model. 
-     * 
-     * @see javax.swing.table.TableModel#getValueAt(int, int)
-     * @return the String representation of the item.
-     */
-    public Object getValueAt(int iRow, int iColumn)
-    {
-        String sTicket = _ticketsStrings[iRow];
-        Hashtable htTicketContext = (Hashtable)_ticketContexts.get(sTicket);
+	/**
+	 * Returns the number of columns. 
+	 * @see javax.swing.table.TableModel#getColumnCount()
+	 */
+	public int getColumnCount()
+	{
+		return _headersStrings.length;
+	}
 
-        if (iColumn == 0)
-            return (String)htTicketContext.get("uid");
-        if (iColumn == 1)
-            return (String)htTicketContext.get("organization");
-        if (iColumn == 2)
-            return (String)htTicketContext.get("a-select-server");
-        if (iColumn == 3)
-        {
-            try
-            {
-                long lTimestamp = _ticketManager.getTicketStartTime(sTicket);
-                return new Date(lTimestamp).toString();
-            }
-            catch (ASelectStorageException e)
-            {
-                return "unknown"; 
-            }            
-        }
-        if (iColumn == 4)
-        {
-            try
-            {
-                long lTimestamp = _ticketManager.getTicketTimeout(sTicket);
-                return new Date(lTimestamp).toString();
-            }
-            catch (ASelectStorageException e)
-            {
-                return "unknown"; 
-            }
-            
-        }
-        if (iColumn == 5)
-            return (String)htTicketContext.get("authsp");
-        if (iColumn == 6)
-            return (String)htTicketContext.get("authsp_level");
-        if (iColumn == 7)
-            return sTicket;
+	/**
+	 * Returns the value of an information items in this model. 
+	 * 
+	 * @see javax.swing.table.TableModel#getValueAt(int, int)
+	 * @return the String representation of the item.
+	 */
+	public Object getValueAt(int iRow, int iColumn)
+	{
+		String sTicket = _ticketsStrings[iRow];
+		HashMap htTicketContext = (HashMap) _ticketContexts.get(sTicket);
 
-        return null;
-    }
+		if (iColumn == 0)
+			return (String) htTicketContext.get("uid");
+		if (iColumn == 1)
+			return (String) htTicketContext.get("organization");
+		if (iColumn == 2)
+			return (String) htTicketContext.get("a-select-server");
+		if (iColumn == 3) {
+			try {
+				long lTimestamp = _ticketManager.getTicketStartTime(sTicket);
+				return new Date(lTimestamp).toString();
+			}
+			catch (ASelectStorageException e) {
+				return "unknown";
+			}
+		}
+		if (iColumn == 4) {
+			try {
+				long lTimestamp = _ticketManager.getTicketTimeout(sTicket);
+				return new Date(lTimestamp).toString();
+			}
+			catch (ASelectStorageException e) {
+				return "unknown";
+			}
 
-    /**
-     * Returns the colum nname. 
-     * @see javax.swing.table.TableModel#getColumnName(int)
-     */
-    public String getColumnName(int xIndex)
-    {
-        return _headersStrings[xIndex];
-    }
+		}
+		if (iColumn == 5)
+			return (String) htTicketContext.get("authsp");
+		if (iColumn == 6)
+			return (String) htTicketContext.get("authsp_level");
+		if (iColumn == 7)
+			return sTicket;
 
-    /**
-     * Loops and upon wakeup (monitoring interval), fetches the ticket
-     * information from the TicketManager. 
-     * 
-     * @see java.lang.Runnable#run()
-     */
-    public void run()
-    {
-        String sMethod = "run()";
-        
-        while (_active)
-        {
-            try
-            {
-                Thread.sleep(_iCheckInterval * 1000);
-                getAgentStatus();
-                fireTableDataChanged();
-            }
-            catch (Exception x)
-            {}
-        }
-        ASelectAgentSystemLogger.getHandle()
-            .log(Level.INFO, MODULE, sMethod, "TicketMonitorModel stopped.");
-    }
+		return null;
+	}
 
-    /**
-     * Fetches the TicketContexts from the SessionManager.
-     */
-    private void getAgentStatus()
-    {
-        _ticketContexts = _ticketManager.getTicketContexts();
+	/**
+	 * Returns the colum nname. 
+	 * @see javax.swing.table.TableModel#getColumnName(int)
+	 */
+	public String getColumnName(int xIndex)
+	{
+		return _headersStrings[xIndex];
+	}
 
-        int i = 0;
-        Enumeration xTicketContextsEnum = _ticketContexts.keys();
-        while (xTicketContextsEnum.hasMoreElements())
-        {
-            _ticketsStrings[i++] = (String)xTicketContextsEnum.nextElement();
-        }
-    }
+	/**
+	 * Loops and upon wakeup (monitoring interval), fetches the ticket
+	 * information from the TicketManager. 
+	 * 
+	 * @see java.lang.Runnable#run()
+	 */
+	public void run()
+	{
+		String sMethod = "run()";
+
+		while (_active) {
+			try {
+				Thread.sleep(_iCheckInterval * 1000);
+				getAgentStatus();
+				fireTableDataChanged();
+			}
+			catch (Exception x) {
+			}
+		}
+		ASelectAgentSystemLogger.getHandle().log(Level.INFO, MODULE, sMethod, "TicketMonitorModel stopped.");
+	}
+
+	/**
+	 * Fetches the TicketContexts from the SessionManager.
+	 */
+	private void getAgentStatus()
+	{
+		_ticketContexts = _ticketManager.getTicketContexts();
+
+		int i = 0;
+		Set keys = _ticketContexts.keySet();
+		for (Object s : keys) {
+			_ticketsStrings[i++] = (String) s;
+		}
+		/*        Set xTicketContextsEnum = _ticketContexts.keySet();
+		 while (xTicketContextsEnum.hasMoreElements())
+		 {
+		 _ticketsStrings[i++] = (String)xTicketContextsEnum.nextElement();
+		 }*/
+	}
 }

@@ -1,14 +1,8 @@
 package org.aselect.server.request.handler.xsaml20;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.logging.Level;
 
 import org.aselect.server.log.ASelectSystemLogger;

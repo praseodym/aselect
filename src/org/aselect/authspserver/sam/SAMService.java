@@ -40,7 +40,7 @@
 
 package org.aselect.authspserver.sam;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -76,7 +76,7 @@ public class SAMService extends SAMServiceServlet
     /**
      * Initialize method for this Servlet, that starts the initialize of the 
      * super class and loads all specific A-Select Server OID's to the <i>_htOIDs
-     * </i> <code>Hashtable</code>
+     * </i> <code>HashMap</code>
      * <br><br>
      * @see org.aselect.system.sam.service.SAMServiceServlet#init(javax.servlet.ServletConfig)
      */
@@ -108,9 +108,9 @@ public class SAMService extends SAMServiceServlet
      * <br>
      * @see org.aselect.system.sam.service.SAMServiceServlet#getSAMInfo()
      */
-    protected Hashtable getSAMInfo()
+    protected HashMap getSAMInfo()
     {
-        Hashtable hInfo = getCommonSAMInfo();
+        HashMap hInfo = getCommonSAMInfo();
 
         return hInfo;
     }

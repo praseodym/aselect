@@ -17,29 +17,23 @@
  */
 package org.aselect.server.request.handler;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.security.KeyStore;
 import java.security.PublicKey;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -88,7 +82,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	protected String _sServerUrl;
 
     protected Vector _vIdPUrls;
-    protected Hashtable _htIdPs;
+    protected HashMap _htIdPs;
 
     public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
@@ -118,7 +112,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	}
 
     // To be overridden
-    public String serializeTheseAttributes(Hashtable htAttribs)
+    public String serializeTheseAttributes(HashMap htAttribs)
     throws ASelectException
     {
         _systemLogger.log(Level.INFO, MODULE, "serializeTheseAttributes()", "No OVERRIDE for this method!!");
@@ -150,7 +144,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
     //
     // Bauke 20081209: getCredentialsFromCookie now returns a string
     //
-    protected Hashtable getASelectCredentials(HttpServletRequest servletRequest)
+    protected HashMap getASelectCredentials(HttpServletRequest servletRequest)
     throws ASelectException
     {
     	String sMethod = "getAselectCredentials";
@@ -168,7 +162,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
         //if (!sServerId.equals(_sASelectServerID))
         //    return null;
         
-        Hashtable htTGTContext = getContextFromTgt(sTgt, true);  // Check expiration
+        HashMap htTGTContext = getContextFromTgt(sTgt, true);  // Check expiration
         if (htTGTContext == null)
             return null;
         String sUserId = (String)htTGTContext.get("uid");
@@ -188,11 +182,11 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
         _systemLogger.log(Level.INFO, MODULE, sMethod, "Attributes for sUserId="+ sUserId+" rid="+sRid);
         
         // Gather attributes, but also use the attributes from the ticket context
-        Hashtable htAllAttributes = getAttributesFromTgtAndGatherer(htTGTContext);
+        HashMap htAllAttributes = getAttributesFromTgtAndGatherer(htTGTContext);
 
         // And assemble the credentials
         _systemLogger.log(Level.INFO, MODULE, sMethod, "Credentials for sUserId="+ sUserId+" rid="+sRid);
-    	Hashtable htCredentials = new Hashtable();
+    	HashMap htCredentials = new HashMap();
         //htCredentials.put("aselect_credentials", sCredentialsCookie);  // not crypted
         htCredentials.put("rid", sRid);
         htCredentials.put("uid", sUserId);
@@ -232,7 +226,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
         return htCredentials;
     }
 
-	public Hashtable getAttributesFromTgtAndGatherer(Hashtable htTGTContext)
+	public HashMap getAttributesFromTgtAndGatherer(HashMap htTGTContext)
 	throws ASelectException
 	{
 		String sMethod = "getAttributesFromTgtAndGatherer()";
@@ -241,29 +235,32 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
             _systemLogger.log(Level.SEVERE, MODULE, sMethod, "_saml11Builder not set");
             throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
         }
-        Hashtable htCtxAttribs = _saml11Builder.deserializeAttributes(sCtxAttribs);
+        HashMap htCtxAttribs = _saml11Builder.deserializeAttributes(sCtxAttribs);
         _systemLogger.log(Level.INFO, MODULE, sMethod, "Attributes from TGTContext="+htCtxAttribs);
         
         AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
-        Hashtable htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
-        if (htAttribs == null) htAttribs = new Hashtable();
+        HashMap htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
+        if (htAttribs == null) htAttribs = new HashMap();
         _systemLogger.log(Level.INFO, MODULE, sMethod, "Attributes after Gathering="+htAttribs);  // can be empty
         
         // Copy the gathered attributes over the ticket context attributes
-        Enumeration eAttr = htAttribs.keys();
-        while (eAttr.hasMoreElements()) {
-        	String sKey = (String)eAttr.nextElement();
+		Set keys = htAttribs.keySet();
+		for (Object s : keys) {
+			String sKey = (String) s;
+        //Enumeration eAttr = htAttribs.keys();
+        //while (eAttr.hasMoreElements()) {
+        	//String sKey = (String)eAttr.nextElement();
         	htCtxAttribs.put(sKey, htAttribs.get(sKey));
         }
         return htCtxAttribs;
 	}
 
-	public Hashtable getContextFromTgt(String sTgt, boolean checkExpiration)
+	public HashMap getContextFromTgt(String sTgt, boolean checkExpiration)
 	throws ASelectException
 	{
 		String sMethod = "getContextFromTgt()";
 		TGTManager _tgtManager = TGTManager.getHandle();
-        Hashtable htTGTContext = _tgtManager.getTGT(sTgt);
+        HashMap htTGTContext = _tgtManager.getTGT(sTgt);
         _systemLogger.log(Level.INFO, MODULE, sMethod, "TGTContext="+ htTGTContext);
         if (htTGTContext == null)
             return null;
@@ -299,7 +296,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
         
         _systemLogger.log(Level.INFO, MODULE, sMethod, "sCredentialsCookie="+sCredentialsCookie);
         /* Bauke,  20081209: Cookie only contains tgt-value
-        Hashtable htCredentialsParams = Utils.convertCGIMessage(sCredentialsCookie);
+        HashMap htCredentialsParams = Utils.convertCGIMessage(sCredentialsCookie);
         _systemLogger.log(Level.INFO, MODULE, sMethod, "CredentialsParams="+htCredentialsParams);
         return htCredentialsParams; */
         return sCredentialsCookie;
@@ -382,7 +379,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	            <security level=30 urn="urn:oasis:names:tc:SAML:1.0:cm:smartcard">
 	    </authentication_method>
 	 */
-	protected void getTableFromConfig(Object oConfig, Vector vAllKeys, Hashtable htAllKeys_Values,
+	protected void getTableFromConfig(Object oConfig, Vector vAllKeys, HashMap htAllKeys_Values,
 			String sMainSection, String sSubSection, String sKeyName, String sValueName,
 			boolean mandatory, boolean uniqueValues)
 	throws ASelectException, ASelectConfigException
@@ -436,7 +433,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 
 	        if (uniqueValues) {
 		        // Also check for unique values
-		        if (htAllKeys_Values.contains(sValue)) {
+		        if (htAllKeys_Values.containsValue(sValue)) {
 		            _systemLogger.log(Level.WARNING, MODULE, sMethod, "Provider '"+sValueName+"' isn't unique: " + sValue);
 		            throw new ASelectException (Errors.ERROR_ASELECT_INIT_ERROR);
 		        }
@@ -455,7 +452,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 * @param htSessionContext
 	 * @param pwOut
 	 */
-    protected void showErrorPage(String sErrorCode, Hashtable htSessionContext, PrintWriter pwOut)
+    protected void showErrorPage(String sErrorCode, HashMap htSessionContext, PrintWriter pwOut)
     {
         String sMethod = "showErrorPage()";
     	_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM[error] "+sErrorCode+":"+
@@ -567,21 +564,21 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		return sStartURL + sContextPath + request.getServletPath();
 	}
 
-	protected Hashtable performAuthenticateRequest(String sASelectURL, String sPathInfo,
+	protected HashMap performAuthenticateRequest(String sASelectURL, String sPathInfo,
 			String sReturnSuffix, String sAppId, boolean checkSignature, IClientCommunicator iClientComm)
 	throws ASelectException
 	{
 		String sMethod = "performAuthenticateRequest()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "AUTHN { "+sASelectURL+" - "+sPathInfo+" - "+sReturnSuffix);
 
-		Hashtable htRequest = new Hashtable();
+		HashMap htRequest = new HashMap();
 		htRequest.put("request", "authenticate");
 		htRequest.put("app_id", sAppId);
 		htRequest.put("app_url", sASelectURL + sPathInfo + sReturnSuffix); // My return address
 		htRequest.put("a-select-server", _sASelectServerID);
 		htRequest.put("check-signature", Boolean.toString(checkSignature));
 	
-		Hashtable htResponse = null;
+		HashMap htResponse = null;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "htRequest=" + htRequest);
 		try {
 			htResponse = iClientComm.sendMessage(htRequest, sASelectURL);
@@ -640,7 +637,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	    }
 	}
 
-	protected void storeSessionDataWithRid(HttpServletResponse response, Hashtable htSessionMoreData,
+	protected void storeSessionDataWithRid(HttpServletResponse response, HashMap htSessionMoreData,
 					String sPrefix, String sRid)
 	{
 		String sMethod = "storeRidSessionData()";
@@ -658,7 +655,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		
 		// Bauke 20081209 Update the session instead of always creating a new one
 		// This will also give you the "client_ip" Remy.
-		Hashtable htSessionData = _oSessionManager.getSessionContext(sPrefix + sRid);
+		HashMap htSessionData = _oSessionManager.getSessionContext(sPrefix + sRid);
 		if (htSessionData == null)
 			_oSessionManager.createSession(sPrefix + sRid, htSessionMoreData);
 		else {
@@ -672,7 +669,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		HandlerTools.putCookieValue(response, sPrefix+"rid", sRid, sCookieDomain, -1, _systemLogger);
 	}
 
-	protected Hashtable retrieveSessionDataFromRid(HttpServletRequest request, String sPrefix)
+	protected HashMap retrieveSessionDataFromRid(HttpServletRequest request, String sPrefix)
 	{
 		String sMethod = "retrieveRidSessionData()";
 		
@@ -682,7 +679,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			return null;
 		}
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Find session:"+ sPrefix + sRidCookie);
-		Hashtable htSessionData = _oSessionManager.getSessionContext(sPrefix + sRidCookie);
+		HashMap htSessionData = _oSessionManager.getSessionContext(sPrefix + sRidCookie);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "htSessionData="+ htSessionData);
 		
 		htSessionData.put("session_rid", sRidCookie);  // in case we need it
@@ -732,9 +729,9 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 
 	// The policy to extract Uid and Attributes from an Assertion
 	//
-	protected Hashtable extractUidAndAttributes(String sAssertion)
+	protected HashMap extractUidAndAttributes(String sAssertion)
 	{
-		Hashtable htAttributes = extractAllAttributes(sAssertion);
+		HashMap htAttributes = extractAllAttributes(sAssertion);
 		String sUid = (String)htAttributes.get("digid_uid");
 		if (sUid == null) sUid = (String)htAttributes.get("uid");
 		if (sUid == null) sUid = (String)htAttributes.get("cn");
@@ -760,13 +757,13 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		return sResult;
 	}
 
-	protected Hashtable extractAllAttributes(String sAssertion)
+	protected HashMap extractAllAttributes(String sAssertion)
 	{
 		final String ATTRNAME = "AttributeName=";
 		final String ATTRVALUE = "AttributeValue>";
 		final String ATTRVALUE2 = "saml:AttributeValue>";
 		String sMethod = "extractAllAttributes";
-		Hashtable htResult = new Hashtable();
+		HashMap htResult = new HashMap();
 		int nIdx, nEnd;
 		String sAttrName, sAttrValue;
 		int aNameLen = ATTRNAME.length();
@@ -808,7 +805,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	}
 
 	public void createContextAndIssueTGT(HttpServletResponse response, String sRid /* can be null */,
-					String sServerId, String sOrg, String sAppId, String sTgt, Hashtable htAttributes)
+					String sServerId, String sOrg, String sAppId, String sTgt, HashMap htAttributes)
 	throws ASelectException
 	{
 		String sMethod = "createContextAndIssueTGT()";
@@ -830,7 +827,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		htAttributes.put("betrouwbaarheidsniveau", sSecLevel);
 	
 		// TODO following code should go to tgt.TGTIssuer, RH 20080617
-		Hashtable htTGTContext = new Hashtable();
+		HashMap htTGTContext = new HashMap();
         if (_saml11Builder == null) {
             _systemLogger.log(Level.SEVERE, MODULE, sMethod, "_saml11Builder not set");
             throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
@@ -877,7 +874,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	}
 
 	protected String createRequestorToken(HttpServletRequest request, String sProviderId, String sUid,
-						String sNameIdFormat, String sAudience, Hashtable htAttributes, String sSubjConf)
+						String sNameIdFormat, String sAudience, HashMap htAttributes, String sSubjConf)
 	throws ASelectException, SAMLException
 	{
 		String sMethod = "createRequestorToken";
@@ -1193,5 +1190,4 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	public void destroy()
 	{
 	}	
-	
 }

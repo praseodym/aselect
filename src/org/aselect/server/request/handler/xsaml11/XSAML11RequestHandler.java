@@ -16,7 +16,7 @@
 package org.aselect.server.request.handler.xsaml11;
 
 import java.net.URLEncoder;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -139,7 +139,7 @@ public class XSAML11RequestHandler extends ProtoRequestHandler
         _systemLogger.log(Level.INFO,MODULE,sMethod, "XSaml11 request="+request);
         try
         {
-            Hashtable htResponse = getASelectCredentials(request);
+            HashMap htResponse = getASelectCredentials(request);
             if (htResponse == null) {
                 _systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot get Aselect credentials (not logged in?)");
         		    throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);            
@@ -235,7 +235,7 @@ public class XSAML11RequestHandler extends ProtoRequestHandler
         }
     }
     
-    public String serializeTheseAttributes(Hashtable htAttribs)
+    public String serializeTheseAttributes(HashMap htAttribs)
     throws ASelectException
     {
         String sMethod = "serializeTheseAttributes()";

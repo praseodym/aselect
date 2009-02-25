@@ -32,8 +32,8 @@
 package org.aselect.server.attributes.requestors.tgt;
 
 import java.net.URLDecoder;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -50,7 +50,7 @@ import org.aselect.system.utils.Base64;
  * <b>Description:</b><br>
  * An Attribute requestor which retrieves the remote_attributes parameter 
  * from a TGT context. The value of this parameter is decoded and converted 
- * to a <code>Hashtable</code>.
+ * to a <code>HashMap</code>.
  * <br><br>
  * <b>Concurrency issues:</b>
  * <br>
@@ -63,8 +63,8 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
 {
     /** The module name. */
     private final String MODULE = "TGTAttributeRequestor";
-    protected Hashtable _htReMapAttributes;
-    protected Hashtable _htDuplicate;
+    protected HashMap _htReMapAttributes;
+    protected HashMap _htDuplicate;
    
     /**
      * Initialize the <code>TGTAttributeRequestor</code>
@@ -76,8 +76,8 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
     {
 		String sMethod = "init()";
 
-		_htReMapAttributes = new Hashtable();
-		_htDuplicate = new Hashtable();
+		_htReMapAttributes = new HashMap();
+		_htDuplicate = new HashMap();
 
 		Object oAttributes = null;
 		try {
@@ -144,14 +144,14 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
 	 * <br>
 	 * <br>
 	 * 
-	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(java.util.Hashtable,
+	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(java.util.HashMap,
 	 *      java.util.Vector)
 	 */
-    public Hashtable getAttributes(Hashtable htTGTContext, Vector vAttributes) 
+    public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes) 
     throws ASelectAttributesException
     {
         String sMethod = "getAttributes()";
-        Hashtable htAttributes = new Hashtable();       
+        HashMap htAttributes = new HashMap();       
         
         try {
 			String sSerializedRemoteAttributes = (String) htTGTContext.get("remote_attributes");
@@ -162,9 +162,12 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
 			else {
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "No 'remote_attributes' found in TGT.");
 			}
-			Hashtable htMapped = new Hashtable();
-			for (Enumeration e = htAttributes.keys(); e.hasMoreElements();) {
-				String oldName = (String) e.nextElement();
+			HashMap htMapped = new HashMap();
+			Set keys = htAttributes.keySet();
+			for (Object s : keys) {
+				String oldName = (String) s;
+			//for (Enumeration e = htAttributes.keys(); e.hasMoreElements();) {
+			//	String oldName = (String) e.nextElement();
 				String newName = oldName;
 				Object value = htAttributes.get(oldName);
 				if (_htReMapAttributes.containsKey(oldName)) {
@@ -196,19 +199,19 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
     }
     
     /**
-	 * Deserialize attributes and convertion to a <code>Hashtable</code>.
+	 * Deserialize attributes and convertion to a <code>HashMap</code>.
 	 * 
 	 * @param sSerializedAttributes
 	 *            the serialized attributes.
-	 * @return The deserialized attributes (key,value in <code>Hashtable</code>)
+	 * @return The deserialized attributes (key,value in <code>HashMap</code>)
 	 * @throws ASelectException
 	 *             If URLDecode fails
 	 */
-    private Hashtable deserializeAttributes(String sSerializedAttributes) 
+    private HashMap deserializeAttributes(String sSerializedAttributes) 
         throws ASelectException
     {
         String sMethod = "deSerializeAttributes()";
-        Hashtable htAttributes = new Hashtable();
+        HashMap htAttributes = new HashMap();
         if (sSerializedAttributes != null) { //Attributes available
             try {
                 //base64 decode

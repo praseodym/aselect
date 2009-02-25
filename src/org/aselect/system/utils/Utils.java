@@ -60,14 +60,10 @@ package org.aselect.system.utils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.text.SimpleDateFormat;
 import java.text.StringCharacterIterator;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.TimeZone;
-import java.util.logging.Level;
 
 /**
  * Static class that implements generic, widely used utility methods. <br>
@@ -80,419 +76,385 @@ import java.util.logging.Level;
  * None. <br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class Utils
 {
-    /**
-     * Static char array for quickly converting bytes to hex-strings.
-     */
-    private static final char[] _hexChars = {'0', '1', '2', '3', '4', '5', '6',
-        '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
-    
-    /** "[]" barces UTF-8 encoded. */
-    private static final String ENCODED_BRACES = "%5B%5D";
+	/**
+	 * Static char array for quickly converting bytes to hex-strings.
+	 */
+	private static final char[] _hexChars = {
+		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
+	};
 
-    /**
-     * Returns an int from 0 to 15 corresponding to the specified hex digit.
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * For input 'A' this method returns 10 etc. Input is <u>case-insensitive
-     * </u>. <br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * None. <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * Only hexadecimal characters [0..f] or [0..F] are processed. <br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * None. <br>
-     * 
-     * @param ch
-     *            Input hexadecimal character.
-     * @return int representing ch.
-     * 
-     * @throws IllegalArgumentException
-     *             on non-hexadecimal characters.
-     */
-    public static int fromDigit(char ch)
-    {
-        if (ch >= '0' && ch <= '9')
-            return ch - '0';
-        if (ch >= 'A' && ch <= 'F')
-            return ch - 'A' + 10;
-        if (ch >= 'a' && ch <= 'f')
-            return ch - 'a' + 10;
-
-        throw new IllegalArgumentException("invalid hex digit '" + ch + "'");
-    }
-
-    /**
-     * Outputs a hex-string respresentation of a byte array. <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * This method returns the hexadecimal String representation of a byte
-     * array. <br>
-     * <br>
-     * Example: <br>
-     * For input <code>[0x13, 0x2f, 0x98, 0x76]</code>, this method returns a
-     * String object containing <code>"132F9876"</code>.<br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * None. <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * None. <br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * None. <br>
-     * 
-     * @param xBytes
-     *            Source byte array.
-     * 
-     * @return a String object respresenting <code>xBytes</code> in
-     *         hexadecimal format.
-     */
-    public static String toHexString(byte[] xBytes)
-    {
-        int xLength = xBytes.length;
-        char[] xBuffer = new char[xLength * 2];
-
-        for (int i = 0, j = 0, k; i < xLength;)
-        {
-            k = xBytes[i++];
-            xBuffer[j++] = _hexChars[(k >>> 4) & 0x0F];
-            xBuffer[j++] = _hexChars[k & 0x0F];
-        }
-        return new String(xBuffer);
-    }
-
-    /**
-     * Returns a byte array corresponding to a hexadecimal String. <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * Example: <br>
-     * For input <code>"132F9876"</code>, this method returns an array
-     * containing <code>[0x13, 0x2f, 0x98, 0x76]</code>.<br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * None. <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * The <code>xHexString</code> must be a hexadecimal String. <br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * None. <br>
-     * 
-     * @param xHexString
-     *            String containing a hexadecimal string.
-     * 
-     * @return a byte array containing the converted hexadecimal values.
-     * 
-     * @throws IllegalArgumentException
-     *             on non-hexadecimal characters.
-     */
-    public static byte[] stringToHex(String xHexString)
-    {
-        int len = xHexString.length();
-
-        byte[] buf = new byte[((len + 1) / 2)];
-
-        int i = 0, j = 0;
-        if ((len % 2) == 1)
-            buf[j++] = (byte)fromDigit(xHexString.charAt(i++));
-
-        while (i < len)
-        {
-            buf[j++] = (byte)((fromDigit(xHexString.charAt(i++)) << 4) | fromDigit(xHexString
-                .charAt(i++)));
-        }
-        return buf;
-    }
-
-    /**
-     * Prefixes a String with another String until a specified length is
-     * reached. <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * Example: <br>
-     * <br>
-     * <code>
-     * String xVar = "873";<br>
-     * xVar = prefixString("0", xVar, 5);<br>
-     * System.out.println(xVar);<br><br>
-     * </code> This will print <br>
-     * <br>
-     * <code>
-     * 00873
-     * </code><br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * None. <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * <code>xPrefix</code> may not be null. <br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * None. <br>
-     * 
-     * @param xPrefix
-     *            character to prefix xString with.
-     * 
-     * @param xString
-     *            input String.
-     * 
-     * @param xEndlength
-     *            length of desired output String.
-     * @return String containing the output String.
-     */
-    public static String prefixString(String xPrefix, String xString,
-        int xEndlength)
-    {
-        String xResult;
-
-        xResult = xString;
-        while (xResult.length() < xEndlength)
-        {
-            xResult = xPrefix + xResult;
-        }
-        return xResult;
-    }
-
-    /**
-     * Replaces all occurences of a string in a source string. <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * Trivial. <br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * None. <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * None. <br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * None. <br>
-     * 
-     * @param xSrc
-     *            The source string.
-     * 
-     * @param xString
-     *            The string that is to be replaced.
-     * 
-     * @param xReplaceString
-     *            The string that replaces xString.
-     * 
-     * @return A String containing all occurences of xString replaced by
-     *         xReplaceString.
-     */
-    public static String replaceString(String xSrc, String xString,
-        String xReplaceString)
-    {
-        StringBuffer xBuffer = new StringBuffer(xSrc);
-        int xStart, xEnd;
-
-        while (xBuffer.indexOf(xString) != -1)
-        {
-            xStart = xBuffer.indexOf(xString);
-            xEnd = xStart + xString.length();
-            xBuffer = xBuffer.delete(xStart, xEnd);
-            xBuffer = xBuffer.insert(xStart, xReplaceString);
-        }
-        return xBuffer.toString();
-    }
-
-    /**
-     * Converts a CGI-based String to a hashtable. <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * This methods converts a CGI-based String containing
-     * <code>key=value&key=value</code> to a hashtable containing the keys and
-     * corresponding values. <br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * None. <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * CGI-based input String (<code>xMessage</code>).<br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * All keys in the returned hashtable are converted to lowercase. <br>
-     * 
-     * @param xMessage
-     *            CGI-based input String.
-     * @return Hashtable containg the keys and corresponding values.
-     */
-    public static Hashtable convertCGIMessage(String xMessage)
-    {
-        String xToken, xKey, xValue;
-        StringTokenizer xST = null;
-        int iPos;
-        Hashtable xResponse = new Hashtable();
-
-        if (xMessage != null)
-        {
-            xST = new StringTokenizer(xMessage, "&");
-
-            while (xST.hasMoreElements())
-            {
-                xToken = (String)xST.nextElement();
-                if (!xToken.trim().equals(""))
-                {
-                    iPos = xToken.indexOf('=');
-                    if (iPos != -1)
-                    {
-                        xKey = xToken.substring(0, iPos);
-
-                        try
-                        {
-                            xValue = xToken.substring(iPos + 1);
-                        }
-                        catch (Exception e)
-                        {
-                            xValue = "";
-                        }
-
-                        if (xKey != null && xValue != null)
-                        {
-                            xResponse.put(xKey, xValue);
-                        }
-                    }
-                }
-            }
-        }
-        return xResponse;
-    }
-    
-    /**
-     * Convert <code>Hashtable</code> to CGI message string. 
-     * <br><br>
-     * <b>Description: </b> <br>
-     * Creates a CGI syntax message from the key/value pairs in the input
-     * <code>Hashtable</code>.<br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * The used {@link java.util.Hashtable}objects are synchronized. <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * <code>htInput</code> should be a Hashtable containing valid parameters.
-     * <br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * The return <code>String</code> contains the parameters in CGI syntax.
-     * <br>
-     * 
-     * @param htInput
-     *            The <code>Hashtable</code> to be converted.
-     * @return CGI message containg all parameters in <code>htInput</code>.
-     * @throws UnsupportedEncodingException If URL encoding fails.
-     */
-    public static String hashtable2CGIMessage(Hashtable htInput) throws UnsupportedEncodingException
-    {
-        StringBuffer sbBuffer = new StringBuffer();
-        Enumeration enumKeys = htInput.keys();
-
-        boolean bStop = !enumKeys.hasMoreElements(); //more elements?
-        while (!bStop)
-        {
-            String sKey = (String)enumKeys.nextElement();
-            Object oValue = htInput.get(sKey);
-            if (oValue instanceof String)
-            {
-                sbBuffer.append(sKey);
-                sbBuffer.append("=");
-                //URL encode value
-                String sValue = URLEncoder.encode((String)oValue,"UTF-8");
-                sbBuffer.append(sValue);
-            }
-            else if (oValue instanceof String[])
-            {
-                String[] strArr = (String[])oValue;
-                for (int i = 0; i < strArr.length; i++)
-                {
-                    sbBuffer.append(sKey).append(ENCODED_BRACES);
-                    sbBuffer.append("=");
-                    String sValue = URLEncoder.encode(strArr[i],"UTF-8");
-                    sbBuffer.append(sValue);
-                    if(i < strArr.length-1)
-                        sbBuffer.append("&");
-                }
-            }
-
-            if (enumKeys.hasMoreElements())
-            {
-                //Append extra '&' after every parameter.
-                sbBuffer.append("&");
-            }
-            else
-            {
-                //No more parameters
-                bStop = true;
-            }
-        }
-        return sbBuffer.toString();
-    }
+	/** "[]" barces UTF-8 encoded. */
+	private static final String ENCODED_BRACES = "%5B%5D";
 
 	/**
-	 * Compare a string against another string that may contain wildcards.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns an int from 0 to 15 corresponding to the specified hex digit.
 	 * <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * For input 'A' this method returns 10 etc. Input is <u>case-insensitive
+	 * </u>. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * None. <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * Only hexadecimal characters [0..f] or [0..F] are processed. <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * None. <br>
+	 * 
+	 * @param ch
+	 *            Input hexadecimal character.
+	 * @return int representing ch.
+	 * @throws IllegalArgumentException
+	 *             on non-hexadecimal characters.
+	 */
+	public static int fromDigit(char ch)
+	{
+		if (ch >= '0' && ch <= '9')
+			return ch - '0';
+		if (ch >= 'A' && ch <= 'F')
+			return ch - 'A' + 10;
+		if (ch >= 'a' && ch <= 'f')
+			return ch - 'a' + 10;
+
+		throw new IllegalArgumentException("invalid hex digit '" + ch + "'");
+	}
+
+	/**
+	 * Outputs a hex-string respresentation of a byte array. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * This method returns the hexadecimal String representation of a byte
+	 * array. <br>
+	 * <br>
+	 * Example: <br>
+	 * For input <code>[0x13, 0x2f, 0x98, 0x76]</code>, this method returns a
+	 * String object containing <code>"132F9876"</code>.<br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * None. <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * None. <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * None. <br>
+	 * 
+	 * @param xBytes
+	 *            Source byte array.
+	 * @return a String object respresenting <code>xBytes</code> in
+	 *         hexadecimal format.
+	 */
+	public static String toHexString(byte[] xBytes)
+	{
+		int xLength = xBytes.length;
+		char[] xBuffer = new char[xLength * 2];
+
+		for (int i = 0, j = 0, k; i < xLength;) {
+			k = xBytes[i++];
+			xBuffer[j++] = _hexChars[(k >>> 4) & 0x0F];
+			xBuffer[j++] = _hexChars[k & 0x0F];
+		}
+		return new String(xBuffer);
+	}
+
+	/**
+	 * Returns a byte array corresponding to a hexadecimal String. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Example: <br>
+	 * For input <code>"132F9876"</code>, this method returns an array
+	 * containing <code>[0x13, 0x2f, 0x98, 0x76]</code>.<br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * None. <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * The <code>xHexString</code> must be a hexadecimal String. <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * None. <br>
+	 * 
+	 * @param xHexString
+	 *            String containing a hexadecimal string.
+	 * @return a byte array containing the converted hexadecimal values.
+	 * @throws IllegalArgumentException
+	 *             on non-hexadecimal characters.
+	 */
+	public static byte[] stringToHex(String xHexString)
+	{
+		int len = xHexString.length();
+
+		byte[] buf = new byte[((len + 1) / 2)];
+
+		int i = 0, j = 0;
+		if ((len % 2) == 1)
+			buf[j++] = (byte) fromDigit(xHexString.charAt(i++));
+
+		while (i < len) {
+			buf[j++] = (byte) ((fromDigit(xHexString.charAt(i++)) << 4) | fromDigit(xHexString.charAt(i++)));
+		}
+		return buf;
+	}
+
+	/**
+	 * Prefixes a String with another String until a specified length is
+	 * reached. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Example: <br>
+	 * <br>
+	 * <code>
+	 * String xVar = "873";<br>
+	 * xVar = prefixString("0", xVar, 5);<br>
+	 * System.out.println(xVar);<br><br>
+	 * </code> This will print <br>
+	 * <br>
+	 * <code>
+	 * 00873
+	 * </code><br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * None. <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * <code>xPrefix</code> may not be null. <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * None. <br>
+	 * 
+	 * @param xPrefix
+	 *            character to prefix xString with.
+	 * @param xString
+	 *            input String.
+	 * @param xEndlength
+	 *            length of desired output String.
+	 * @return String containing the output String.
+	 */
+	public static String prefixString(String xPrefix, String xString, int xEndlength)
+	{
+		String xResult;
+
+		xResult = xString;
+		while (xResult.length() < xEndlength) {
+			xResult = xPrefix + xResult;
+		}
+		return xResult;
+	}
+
+	/**
+	 * Replaces all occurences of a string in a source string. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Trivial. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * None. <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * None. <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * None. <br>
+	 * 
+	 * @param xSrc
+	 *            The source string.
+	 * @param xString
+	 *            The string that is to be replaced.
+	 * @param xReplaceString
+	 *            The string that replaces xString.
+	 * @return A String containing all occurences of xString replaced by
+	 *         xReplaceString.
+	 */
+	public static String replaceString(String xSrc, String xString, String xReplaceString)
+	{
+		StringBuffer xBuffer = new StringBuffer(xSrc);
+		int xStart, xEnd;
+
+		while (xBuffer.indexOf(xString) != -1) {
+			xStart = xBuffer.indexOf(xString);
+			xEnd = xStart + xString.length();
+			xBuffer = xBuffer.delete(xStart, xEnd);
+			xBuffer = xBuffer.insert(xStart, xReplaceString);
+		}
+		return xBuffer.toString();
+	}
+
+	/**
+	 * Converts a CGI-based String to a hashtable. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * This methods converts a CGI-based String containing
+	 * <code>key=value&key=value</code> to a hashtable containing the keys and
+	 * corresponding values. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * None. <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * CGI-based input String (<code>xMessage</code>).<br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * All keys in the returned hashtable are converted to lowercase. <br>
+	 * 
+	 * @param xMessage
+	 *            CGI-based input String.
+	 * @return HashMap containg the keys and corresponding values.
+	 */
+	public static HashMap convertCGIMessage(String xMessage)
+	{
+		String xToken, xKey, xValue;
+		StringTokenizer xST = null;
+		int iPos;
+		HashMap xResponse = new HashMap();
+
+		if (xMessage != null) {
+			xST = new StringTokenizer(xMessage, "&");
+
+			while (xST.hasMoreElements()) {
+				xToken = (String) xST.nextElement();
+				if (!xToken.trim().equals("")) {
+					iPos = xToken.indexOf('=');
+					if (iPos != -1) {
+						xKey = xToken.substring(0, iPos);
+
+						try {
+							xValue = xToken.substring(iPos + 1);
+						}
+						catch (Exception e) {
+							xValue = "";
+						}
+
+						if (xKey != null && xValue != null) {
+							xResponse.put(xKey, xValue);
+						}
+					}
+				}
+			}
+		}
+		return xResponse;
+	}
+
+	/**
+	 * Convert <code>HashMap</code> to CGI message string. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Creates a CGI syntax message from the key/value pairs in the input
+	 * <code>HashMap</code>.<br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * The used {@link java.util.HashMap}objects are synchronized. <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * <code>htInput</code> should be a HashMap containing valid parameters.
+	 * <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * The return <code>String</code> contains the parameters in CGI syntax.
+	 * <br>
+	 * 
+	 * @param htInput
+	 *            The <code>HashMap</code> to be converted.
+	 * @return CGI message containg all parameters in <code>htInput</code>.
+	 * @throws UnsupportedEncodingException
+	 *             If URL encoding fails.
+	 */
+	public static String hashtable2CGIMessage(HashMap htInput)
+		throws UnsupportedEncodingException
+	{
+		StringBuffer sbBuffer = new StringBuffer();
+		Set keys = htInput.keySet();
+		for (Object s : keys) {
+			String sKey = (String) s;
+			// Enumeration enumKeys = htInput.keys();
+			// boolean bStop = !enumKeys.hasMoreElements(); //more elements?
+			// while (!bStop)
+			// {
+			// String sKey = (String)enumKeys.nextElement();
+			Object oValue = htInput.get(sKey);
+			if (oValue instanceof String) {
+				sbBuffer.append(sKey);
+				sbBuffer.append("=");
+				// URL encode value
+				String sValue = URLEncoder.encode((String) oValue, "UTF-8");
+				sbBuffer.append(sValue);
+			}
+			else if (oValue instanceof String[]) {
+				String[] strArr = (String[]) oValue;
+				for (int i = 0; i < strArr.length; i++) {
+					sbBuffer.append(sKey).append(ENCODED_BRACES);
+					sbBuffer.append("=");
+					String sValue = URLEncoder.encode(strArr[i], "UTF-8");
+					sbBuffer.append(sValue);
+					if (i < strArr.length - 1)
+						sbBuffer.append("&");
+				}
+			}
+			//if (enumKeys.hasMoreElements()) {
+			// Append extra '&' after every parameter.
+			sbBuffer.append("&");
+			//}
+		}
+		int len = sbBuffer.length();
+		return sbBuffer.substring(0, (len>0)? len-1: len);
+	}
+
+	/**
+	 * Compare a string against another string that may contain wildcards. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
 	 * Compares string <code>s</code> against <code>sMask</code>, where
-	 * <code>sMask</code> may contain wildcards (* and ?).
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <code>sMask</code> may contain wildcards (* and ?). <br>
 	 * <br>
-	 * None
-	 * <br><br>
-	 * @param s The string to compare against <code>sMask</code>.
-	 * @param sMask The mask to compare against. May contain wildcards.
+	 * <b>Concurrency issues:</b> <br>
+	 * None <br>
+	 * <br>
+	 * 
+	 * @param s
+	 *            The string to compare against <code>sMask</code>.
+	 * @param sMask
+	 *            The mask to compare against. May contain wildcards.
 	 * @return <code>true</code> if they match, <code>false</code> otherwise
 	 */
 	public static boolean matchWildcardMask(String s, String sMask)
 	{
-	    //check empty string
-	    if(s.length() == 0)
-	    {
-	        if(sMask.length() == 0 || sMask.equals("*") || sMask.equals("?"))
-	            return true;
-	        return false;
-	    }
-	    
+		// check empty string
+		if (s.length() == 0) {
+			if (sMask.length() == 0 || sMask.equals("*") || sMask.equals("?"))
+				return true;
+			return false;
+		}
+
 		char ch;
 		int i = 0;
-		StringCharacterIterator iter =
-			new StringCharacterIterator(sMask);
-		
-		for (ch = iter.first(); ch != StringCharacterIterator.DONE &&
-			i < s.length(); ch = iter.next() )
-		{
+		StringCharacterIterator iter = new StringCharacterIterator(sMask);
+
+		for (ch = iter.first(); ch != StringCharacterIterator.DONE && i < s.length(); ch = iter.next()) {
 			if (ch == '?')
 				i++;
-			else if (ch == '*')
-			{
-				int j = iter.getIndex()+1;
+			else if (ch == '*') {
+				int j = iter.getIndex() + 1;
 				if (j >= sMask.length())
 					return true;
 				String xSubFilter = sMask.substring(j);
-				while (i < s.length())
-				{
-					if (matchWildcardMask(s.substring(i),
-							xSubFilter)) return true;
+				while (i < s.length()) {
+					if (matchWildcardMask(s.substring(i), xSubFilter))
+						return true;
 					i++;
 				}
 				return false;
 			}
-			else if (ch == s.charAt(i))
-			{
+			else if (ch == s.charAt(i)) {
 				i++;
-			}		
-			else 
+			}
+			else
 				return false;
 		}
-		
+
 		return (i == s.length());
 	}
 
@@ -502,6 +464,6 @@ public class Utils
 		if (sValue == null)
 			return "null";
 		int len = sValue.length();
-		return (len <= max)? sValue: sValue.substring(0, max)+"...";
+		return (len <= max) ? sValue : sValue.substring(0, max) + "...";
 	}
 }

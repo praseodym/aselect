@@ -40,7 +40,7 @@
 
 package org.aselect.system.sam.agent.polling;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import org.aselect.system.communication.client.IClientCommunicator;
@@ -154,7 +154,7 @@ public class SAMAPIPollingMethod implements ISAMPollingMethod
 
         try
         {
-            Hashtable htResponse = communicate();
+            HashMap htResponse = communicate();
 
             String sOperational = (String)htResponse
                 .get(OID_OPERATIONAL);
@@ -193,17 +193,17 @@ public class SAMAPIPollingMethod implements ISAMPollingMethod
      * <br>
      * -
      * <br>
-     * @return a <code>Hashtable</code> containing all requested SAM OID's with 
+     * @return a <code>HashMap</code> containing all requested SAM OID's with 
      * it's values.
      * @throws ASelectSAMException if no response can be retrieved
      */
-    private Hashtable communicate() throws ASelectSAMException
+    private HashMap communicate() throws ASelectSAMException
     {
         String sMethod = "communicate()";
         StringBuffer sbError = new StringBuffer();
         
-        Hashtable htRequest = new Hashtable();
-        Hashtable htResponse = new Hashtable();
+        HashMap htRequest = new HashMap();
+        HashMap htResponse = new HashMap();
         String[] saArray = new String[1];
         String sStatusKeyValue = null;
         String sStatusKey = null;
@@ -216,7 +216,7 @@ public class SAMAPIPollingMethod implements ISAMPollingMethod
 
         try
         {
-            Hashtable htCCResponse = _oClientCommunicator.sendMessage(htRequest,
+            HashMap htCCResponse = _oClientCommunicator.sendMessage(htRequest,
                 _sUrl);
 
             String saStatus[] = (String[])htCCResponse.get("get");

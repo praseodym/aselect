@@ -43,7 +43,7 @@ package org.aselect.system.communication.server;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 
 /**
@@ -53,7 +53,7 @@ import java.util.Iterator;
  * <br>
  * Protocol information (e.g. headers) can be set by calling the
  * <code>setProperty()</code> method. The properties are placed in a
- * <code>Hashtable</code>. When the <code>getOutputStream()</code> method
+ * <code>HashMap</code>. When the <code>getOutputStream()</code> method
  * is called the headers will first be written to the <code>OutputStream</code>
  * of the socket. 
  * <br><br>
@@ -76,7 +76,7 @@ public class TCPProtocolResponse implements IProtocolResponse
     /**
      * Contain all protocol headers.
      */
-    private Hashtable _htHeaders;
+    private HashMap _htHeaders;
 
     /**
      * The wrapped socket.
@@ -129,7 +129,7 @@ public class TCPProtocolResponse implements IProtocolResponse
         _oSocket = oResponseSocket;
         _sProtocolName = sProtocolName;
         _sStatusCode = null;
-        _htHeaders = new Hashtable();
+        _htHeaders = new HashMap();
     }
 
     /**
@@ -224,7 +224,7 @@ public class TCPProtocolResponse implements IProtocolResponse
                 //write \r\n as the end of the headers
                 osOutput.write("\r\n".getBytes());
                 //clear headers
-                _htHeaders = new Hashtable();
+                _htHeaders = new HashMap();
             }
         }
         else

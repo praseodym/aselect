@@ -196,7 +196,7 @@ package org.aselect.server.request.handler.aselect.authentication;
 
 import java.security.MessageDigest;
 import java.security.PublicKey;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -380,7 +380,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		String sAppUrl = null;
 		String sAppId = null;
 		String sASelectServer = null;
-		Hashtable htSessionContext = null;
+		HashMap htSessionContext = null;
 		String sUid = null;
 		String sAuthsp = null;
 		String sRemoteOrg = null;
@@ -485,7 +485,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		intMaxAppLevel = _applicationManager.getMaxLevel(sAppId);
 
 		// Create Session
-		htSessionContext = new Hashtable();
+		htSessionContext = new HashMap();
 		htSessionContext.put("app_id", sAppId);
 		htSessionContext.put("app_url", sAppUrl);
 		htSessionContext.put("level", intAppLevel);  // NOTE: Integer put
@@ -690,7 +690,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
         }
 
         // check if the TGT exists
-        Hashtable htTGTContext = _oTGTManager.getTGT(sTGT);
+        HashMap htTGTContext = _oTGTManager.getTGT(sTGT);
         if (htTGTContext == null)
         {
             _systemLogger.log(Level.WARNING, 
@@ -763,7 +763,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
         }
 
         // check if the TGT exists
-        Hashtable htTGTContext = _oTGTManager.getTGT(sTGT);
+        HashMap htTGTContext = _oTGTManager.getTGT(sTGT);
         if (htTGTContext == null)
         {
             _systemLogger.log(Level.WARNING, _sModule, sMethod, "Unknown TGT");            
@@ -781,7 +781,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
         _systemLogger.log(Level.INFO, _sModule, sMethod, "Upgrade TICKET context="+htTGTContext);
 
         // Send Session Sync to the Federation
-		Hashtable htResult = SessionSyncRequestSender.getSessionSyncParameters(_systemLogger);
+		HashMap htResult = SessionSyncRequestSender.getSessionSyncParameters(_systemLogger);
 		if (htResult.isEmpty()) {
 	        // Update the ticket granting ticket
 	        _oTGTManager.updateTGT(sTGT, htTGTContext);
@@ -841,7 +841,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	throws ASelectException
 	{
 		String sMethod = "handleVerifyCredentialsRequest()";
-		Hashtable htTGTContext = null;
+		HashMap htTGTContext = null;
 		String sRid = null;
 		String sUid = null;
 		String sResultCode = null;
@@ -959,12 +959,12 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 
 		// Gather attributes
 		AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
-		Hashtable<String,Object> htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
+		HashMap<String,Object> htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
 		String sToken = null;
 		if (sSamlAttributes != null) {
 			// Comma seperated list of attribute names was given
 			String[] arrAttrNames = sSamlAttributes.split(",");
-			Hashtable htSelectedAttr = SamlTools.extractFromHashtable(arrAttrNames, htAttribs, true/*include*/);
+			HashMap htSelectedAttr = SamlTools.extractFromHashtable(arrAttrNames, htAttribs, true/*include*/);
 			
 			// Also include the original IdP token
 			String sRemoteToken = (String)htTGTContext.get("saml_remote_token");

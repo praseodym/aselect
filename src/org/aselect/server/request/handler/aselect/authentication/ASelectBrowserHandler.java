@@ -102,7 +102,7 @@ package org.aselect.server.request.handler.aselect.authentication;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
@@ -178,9 +178,9 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
     /**
      * process a-select browser requests
      * <br><br>
-     * @see org.aselect.server.request.handler.aselect.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.Hashtable, javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
+     * @see org.aselect.server.request.handler.aselect.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.HashMap, javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
      */
-    public void processBrowserRequest(Hashtable htServiceRequest,
+    public void processBrowserRequest(HashMap htServiceRequest,
         HttpServletResponse servletResponse, PrintWriter pwOut)
     throws ASelectException
     {
@@ -205,7 +205,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
      * @param servletResponse
      * @throws ASelectException
      */
-    private void handleCrossAuthenticateResponse(Hashtable htServiceRequest,
+    private void handleCrossAuthenticateResponse(HashMap htServiceRequest,
         HttpServletResponse servletResponse, PrintWriter pwOut)  // Bauke: pwOut added
         	throws ASelectException
     {
@@ -214,7 +214,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
         //String sRequest = (String)htServiceRequest.get("request");
         // Bauke: DigiD Gateway integration
         // Bauke 20080918, removed
-        /*Hashtable htTolkResponse = null;
+        /*HashMap htTolkResponse = null;
         if (sRequest != null && sRequest.equals("tolk_fromdigid"))
         {
         	tolk.FromDigiD x = new tolk.FromDigiD();
@@ -248,7 +248,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
             String sRemoteRid = null;
             String sLocalRid = null;
             String sCredentials = null;
-            Hashtable htSessionContext;
+            HashMap htSessionContext;
             
             // check parameters
             sRemoteRid = (String)htServiceRequest.get("rid");
@@ -285,7 +285,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 
             // Retrieve backchannel data from the Remote Organization
             // Bauke 20080918, removed
-            Hashtable htRemoteAttributes;
+            HashMap htRemoteAttributes;
             /*if (sRequest != null && sRequest.equals("tolk_fromdigid"))
             {
             	if (sRemoteOrg == null)
@@ -411,10 +411,10 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
      * @param sCredentials
      * @param sRemoteRid
      * @param sRemoteOrg
-     * @return Hashtable
+     * @return HashMap
      * @throws ASelectException
      */
-    private Hashtable verifyRemoteCredentials(String sCredentials, String sRemoteRid, String sRemoteOrg)
+    private HashMap verifyRemoteCredentials(String sCredentials, String sRemoteRid, String sRemoteOrg)
         	throws ASelectException
     {
         String sMethod = "verifyRemoteCredentials()";
@@ -446,8 +446,8 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
             throw ace;
         }
         RawCommunicator oCommunicator = new RawCommunicator(_systemLogger); //Default = API communciation
-        Hashtable htRequestTable = new Hashtable();
-        Hashtable htResponseTable = new Hashtable();
+        HashMap htRequestTable = new HashMap();
+        HashMap htResponseTable = new HashMap();
         htRequestTable.put("request", "verify_credentials");
         htRequestTable.put("rid", sRemoteRid);
         htRequestTable.put("aselect_credentials", sCredentials);
@@ -505,7 +505,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
             sbWarning.append("' returned error: ");
             sbWarning.append(sResultCode);
             _systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString());
-            Hashtable htTicketContext = new Hashtable();
+            HashMap htTicketContext = new HashMap();
             htTicketContext.put("result_code", sResultCode);
 
             if (sUID != null)
@@ -584,7 +584,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 
         // all parameters are there; create a ticket for this user and
         // store it in a ticket context
-        Hashtable htTicketContext = new Hashtable();
+        HashMap htTicketContext = new HashMap();
         htTicketContext.put("uid", sUID);
         htTicketContext.put("organization", sOrg);
         htTicketContext.put("authsp_level", sAL);

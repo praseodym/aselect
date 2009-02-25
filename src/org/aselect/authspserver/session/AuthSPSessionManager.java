@@ -37,7 +37,7 @@
 
 package org.aselect.authspserver.session;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import org.aselect.authspserver.config.AuthSPConfigManager;
@@ -180,10 +180,10 @@ public class AuthSPSessionManager extends StorageManager
      * The given session is stored.
      * <br>
      * @param sRid The RID that is used as session ID
-     * @param htContext The session context parameters in a <code>Hashtable</code>.
+     * @param htContext The session context parameters in a <code>HashMap</code>.
      * @throws ASelectException if the session could not be created or already exists
      */
-    public void createSession(String sRid, Hashtable htContext) throws ASelectException
+    public void createSession(String sRid, HashMap htContext) throws ASelectException
     {
         String sMethod = "createSession()";
         try
@@ -242,11 +242,11 @@ public class AuthSPSessionManager extends StorageManager
      * The given session is updated with the new context.
      * <br>
      * @param sRid The ID of the session
-     * @param htExtendedContext <code>Hashtable</code> of the parameters in the 
+     * @param htExtendedContext <code>HashMap</code> of the parameters in the 
      * session context that should be overwritten
      * @throws ASelectException if the session could not be updated
      */
-    public void updateSession(String sRid, Hashtable htExtendedContext) 
+    public void updateSession(String sRid, HashMap htExtendedContext) 
         throws ASelectException
     {
         String sMethod = "updateSession()";
@@ -259,7 +259,7 @@ public class AuthSPSessionManager extends StorageManager
                 throw new ASelectException(Errors.ERROR_ASELECT_SERVER_BUSY);
             }
             
-            Hashtable htOldContext = (Hashtable)get(sRid);
+            HashMap htOldContext = (HashMap)get(sRid);
             htOldContext.putAll(htExtendedContext);
             update(sRid, htOldContext);
         }
@@ -297,16 +297,16 @@ public class AuthSPSessionManager extends StorageManager
      * -
      * <br>
      * @param sRid The ID of the session.
-     * @return Hashtable Containing the context of the session.
+     * @return HashMap Containing the context of the session.
      * @throws ASelectException if the session oculd not be resolved.
      */
-    public Hashtable getSessionContext(String sRid) throws ASelectException
+    public HashMap getSessionContext(String sRid) throws ASelectException
     {
         String sMethod = "getSessionContext()";
-        Hashtable htContext = null;
+        HashMap htContext = null;
         try
         {
-            htContext = (Hashtable)get(sRid);
+            htContext = (HashMap)get(sRid);
         }
         catch (ASelectStorageException e)
         {

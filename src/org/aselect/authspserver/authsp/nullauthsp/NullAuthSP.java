@@ -96,7 +96,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Properties;
 import java.util.logging.Level;
 
@@ -375,7 +375,7 @@ public class NullAuthSP extends ASelectHttpServlet
         try
         {
             sQueryString = servletRequest.getQueryString();
-            Hashtable htServiceRequest = Utils.convertCGIMessage(sQueryString);
+            HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString);
             String sMyUrl = servletRequest.getRequestURL().toString();
             htServiceRequest.put("my_url", sMyUrl);
 

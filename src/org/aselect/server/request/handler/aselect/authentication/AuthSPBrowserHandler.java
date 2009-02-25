@@ -77,7 +77,7 @@
 package org.aselect.server.request.handler.aselect.authentication;
 
 import java.io.PrintWriter;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
@@ -137,10 +137,10 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	 * process authsp browser requests <br>
 	 * <br>
 	 * 
-	 * @see org.aselect.server.request.handler.aselect.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.Hashtable,
+	 * @see org.aselect.server.request.handler.aselect.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.HashMap,
 	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
 	 */
-    public void processBrowserRequest(Hashtable htServiceRequest,
+    public void processBrowserRequest(HashMap htServiceRequest,
     					HttpServletResponse servletResponse, PrintWriter pwOut)
     throws ASelectException
     {
@@ -163,12 +163,12 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	 * <br>
 	 * 
 	 * @param htServiceRequest
-	 *            Hashtable containing request parameters
+	 *            HashMap containing request parameters
 	 * @param servletResponse
 	 *            Used to send (HTTP) information back to the user
 	 * @throws ASelectException
 	 */
-    private void handleAuthSPResponse(Hashtable htServiceRequest, HttpServletResponse servletResponse)
+    private void handleAuthSPResponse(HashMap htServiceRequest, HttpServletResponse servletResponse)
     throws ASelectException
     {
 		String sMethod = "handleAuthSPResponse()";
@@ -223,12 +223,12 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
             // Let the AuthSP protocol handler verify the response from the AuthSP
             // htResponse will contain the result data
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "To AUTHSP, Request=" + htServiceRequest);
-            Hashtable htResponse = oProtocolHandler.verifyAuthenticationResponse(htServiceRequest);
+            HashMap htResponse = oProtocolHandler.verifyAuthenticationResponse(htServiceRequest);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "From AUTHSP, Response=" + htResponse);
 
             String sResultCode = (String)htResponse.get("result");
             String sRid = (String) htResponse.get("rid");  // this is our own rid
-			Hashtable htSessionContext = _sessionManager.getSessionContext(sRid);
+			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Session not found, expired? rid="+sRid);
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
@@ -251,9 +251,9 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			
 			// Some AuthSP's will return the authenticated userid as well (e.g. DigiD)
 			// If they do, we'll have to copy it to our own Context
-            Hashtable htAdditional = new Hashtable();
+            HashMap htAdditional = new HashMap();
 			String sUid = (String)htResponse.get("uid");
-			if (sUid != null) {  // Saml20 code
+			if (sUid != null) {  // For all AuthSP's that can set the user id (and thereby replace the 'siam_user' value)
 				htSessionContext.put("user_id", sUid);
 				String sSecLevel = (String)htResponse.get("betrouwbaarheidsniveau");
 				// 20090110, Bauke: changed assigned_betrouwbaarheidsniveau to assigned_level,
@@ -300,12 +300,12 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	 * <br>
 	 * 
 	 * @param htServiceRequest
-	 *            Hashtable containing request parameters
+	 *            HashMap containing request parameters
 	 * @param servletResponse
 	 *            Used to send (HTTP) information back to the user
 	 * @throws ASelectException
 	 */
-    private void handleError(Hashtable htServiceRequest,
+    private void handleError(HashMap htServiceRequest,
         HttpServletResponse servletResponse)
     throws ASelectException
     {
@@ -351,7 +351,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
             }
 
             // Get session context
-            Hashtable htSessionContext = _sessionManager.getSessionContext(sRid);
+            HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
             if (htSessionContext == null)
             {
                 _systemLogger.log(Level.WARNING, _sModule, sMethod, 
