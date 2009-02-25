@@ -134,15 +134,14 @@ public class HandlerTools
 			return _configManager.getParam(oConfig, sParam);  // is not null
 		}
 		catch (ASelectConfigException e) {
-			if (!bMandatory) {
+			if (!bMandatory)
 				return null;
-			}
-			_systemLogger.log(Level.WARNING, MODULE, "getSimpleParam", "No config item '"+sParam+"' found", e);
+			_systemLogger.log(Level.WARNING, MODULE, "getSimpleParam", "Config item '"+sParam+"' not found", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}
 
-	public static String getParamFromSection(Object oConfig, String sSection, String sParam)
+	public static String getParamFromSection(Object oConfig, String sSection, String sParam, boolean bMandatory)
 	throws ASelectConfigException
 	{
 		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
@@ -152,10 +151,17 @@ public class HandlerTools
 			return _configManager.getParam(oSection, sParam);
 		}
 		catch (ASelectConfigException e) {
+			if (!bMandatory)
+				return null;
 			_systemLogger.log(Level.WARNING, MODULE, "getParamFromSection",
 					"Could not retrieve '"+sParam+"' parameter in '"+sSection+"' section", e);
 			throw e;
 		}
 	}
 
+	public static String getParamFromSection(Object oConfig, String sSection, String sParam)
+	throws ASelectConfigException
+	{
+		return getParamFromSection(oConfig, sSection, sParam, true);
+	}
 }

@@ -548,8 +548,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sRid = (String) htServiceRequest.get("rid");
 			String sAuthSPId = (String) _htSessionContext.get("direct_authsp");
 			if (sAuthSPId == null) {
-				_systemLogger
-						.log(Level.WARNING, _sModule, sMethod, "Probably tampered request with rid='" + sRid + "'");
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing 'direct_authsp' in session, rid='" + sRid + "'");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 			IAuthSPDirectLoginProtocolHandler oProtocolHandler = _authspHandlerManager
@@ -651,14 +650,12 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId);
 				return;
 			}
-
 			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId);
 
 			//Store changed session, for JDBC Storage Handler
 			if (!_sessionManager.createSession(sRid, _htSessionContext)) {
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
 			}
-
 		}
 		catch (ASelectException e) {
 			throw e;

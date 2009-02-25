@@ -405,7 +405,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	{
 		String sRequest;
 		String sRid;
-		String sMethod = "processBrowserRequest()";
+		String sMethod = "processBrowserRequest";
 
 		sRequest = (String) htServiceRequest.get("request");
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplBrowREQ sRequest=" + sRequest + ", htServiceRequest="
@@ -474,8 +474,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			String sDirectAuthSP = (String) _htSessionContext.get("direct_authsp");
 
 			if (sDirectAuthSP != null && !(sRequest.indexOf("direct_login") >= 0)) {
-				_systemLogger
-						.log(Level.WARNING, _sModule, sMethod, "Probably tampered request with rid='" + sRid + "'");
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "'direct_authsp' found, but not a 'direct_login' request, rid='" + sRid + "'");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 
@@ -560,7 +559,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "DirectLogin");
 		try {
-			sRid = (String) htServiceRequest.get("rid");
+			sRid = (String)htServiceRequest.get("rid");
 
 			// Bauke: line inserted: Only offer a single choice
 			// Bauke, 20080918: removed
@@ -568,7 +567,12 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			String sAuthSPId = (String) _htSessionContext.get("direct_authsp");
 			if (sAuthSPId == null) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing 'direct_authsp' in session, rid='" + sRid + "'");
+				sAuthSPId = (String)htServiceRequest.get("authsp");
+				if (sAuthSPId != null)
+					_htSessionContext.put("direct_authsp", sAuthSPId);
+			}
+			if (sAuthSPId == null) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing 'direct_authsp' in session and request, rid='" + sRid + "'");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 			IAuthSPDirectLoginProtocolHandler oProtocolHandler = _authspHandlerManager
@@ -657,12 +661,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				handleCrossLogin(htServiceRequest, servletResponse, pwOut);
 				return;
 			}
-			String sForcedUid = (String) _htSessionContext.get("forced_uid");
+			String sForcedUid = (String)_htSessionContext.get("forced_uid");
 			if (sForcedUid != null) {
 				htServiceRequest.put("user_id", sForcedUid);
 				//showDirectLoginForm(htServiceRequest,pwOut);
-				oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId);
-				return;
 			}
 			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId);
 		}

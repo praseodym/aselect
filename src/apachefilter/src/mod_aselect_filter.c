@@ -205,15 +205,13 @@ int aselect_filter_upload_all_rules(PASELECT_FILTER_CONFIG pConfig, server_rec *
 	    pApp->pcLocation,
 	    pApp->bEnabled ? "" : "(disabled)",
 	    pApp->bForcedLogon ? "(forced logon)" : "");
-	ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, 
-	    pServer, pcMessage);
+	ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, pcMessage);
 	if (aselect_filter_upload_authz_rules(pConfig, pServer, pPool, pApp))
 	{
 	    ap_snprintf(pcMessage, sizeof(pcMessage), 
 		"ASELECT_FILTER:: registered %d authZ rules for %s",
 		pApp->iRuleCount, pApp->pcAppId);
-	    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, 
-		pServer, pcMessage);
+	    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, pcMessage);
 	}
 	else
 	    return 0; // not ok

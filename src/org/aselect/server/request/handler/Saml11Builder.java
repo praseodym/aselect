@@ -231,7 +231,7 @@ public class Saml11Builder
 					vAttributes.add(oSAMLAttribute);
 			}
 			// Make ADFS happy?
-			oSAMLAttribute = createSAMLAttribute("group", "ClaimAppMapping", "http://schemas.xmlsoap.org/claims");
+			oSAMLAttribute = createSAMLAttribute("Group", "ClaimAppMapping", "http://schemas.xmlsoap.org/claims");
 			vAttributes.add(oSAMLAttribute);
 
 			SAMLNameIdentifier oSAMLNameIdentifier = new SAMLNameIdentifier(sUid,

@@ -329,8 +329,7 @@ public class TGTManager extends StorageManager
 		HashMap htContext = null;
 		int len = sTGT.length();
 		try {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "getTGT(" + sTGT.substring(0, (len < 30) ? len : 30)
-					+ "...)");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "getTGT("+sTGT.substring(0, (len<30)? len: 30)+"...)");
 			htContext = (HashMap) get(sTGT);
 		}
 		catch (ASelectStorageException e) {

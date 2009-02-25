@@ -53,6 +53,7 @@ public class AccountSTS extends ProtoRequestHandler
 	private String _sProviderId;
 	private String _sNameIdFormat;
 	// Removed 20080423: private String _sDefaultWreply;
+	private String _sUserDomain;
 	private String _sCookieDomain;
     protected HashMap _htSecLevels;
     protected HashMap _htSP_LoginReturn;
@@ -73,6 +74,8 @@ public class AccountSTS extends ProtoRequestHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "specific init processing");
 
 			_oClientCommunicator = initClientCommunicator(oConfig);
+			_sUserDomain = HandlerTools.getParamFromSection(null, "aselect", "user_domain", false);
+			if (_sUserDomain == null) _sUserDomain = "digid.nl";
 			_sMyAppId = HandlerTools.getParamFromSection(oConfig, "application", "id");
 			_sIstsUrl = HandlerTools.getSimpleParam(oConfig, "ists_url", true);
 			_sProviderId = HandlerTools.getSimpleParam(oConfig, "provider_id", true);
@@ -313,7 +316,7 @@ public class AccountSTS extends ProtoRequestHandler
 				if (urn != null)
 					sSubjConf = urn;  // default when not found
 			}
-			String sRequestorToken = createRequestorToken(request, _sProviderId, sUid, _sNameIdFormat,
+			String sRequestorToken = createRequestorToken(request, _sProviderId, sUid, _sUserDomain, _sNameIdFormat,
 															sAudience, htAttributes, sSubjConf);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Token OUT: RequestorToken wresult=" + sRequestorToken);
 	
@@ -355,7 +358,7 @@ public class AccountSTS extends ProtoRequestHandler
 		String sMethod = "processSignout()";
 
 		// First look for a possible TGT
-    	//HashMap htCredentialsParams = getCredentialsFromCookie(request);
+    	// HashMap htCredentialsParams = getCredentialsFromCookie(request);
 	    // Bauke 20081209: getCredentialsFromCookie now returns a string
     	String sTgt = getCredentialsFromCookie(request);
     	String sWtRealm = null;
@@ -365,8 +368,8 @@ public class AccountSTS extends ProtoRequestHandler
         	HashMap htTGTContext = getContextFromTgt(sTgt, false);  // Don't check expiration
         	if (htTGTContext != null) {  // Valid TGT context found
         		sWtRealm = (String)htTGTContext.get("wtrealm");
+           		_oTGTManager.remove(sTgt);
         	}
-       		_oTGTManager.remove(sTgt);
         }
         _systemLogger.log(Level.INFO, MODULE, sMethod, "wtrealm="+sWtRealm);
         // Remove the TGT cookie

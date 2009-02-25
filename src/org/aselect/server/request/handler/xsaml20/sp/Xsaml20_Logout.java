@@ -52,8 +52,8 @@ public class Xsaml20_Logout extends Saml20_BaseHandler  // RH, 20080602, n
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		super.init(oServletConfig, oConfig);
 		String sMethod = "init";
+		super.init(oServletConfig, oConfig);
 		_oTGTManager = TGTManager.getHandle();
 //		_applicationManager = ApplicationManager.getHandle();
 
@@ -93,9 +93,10 @@ public class Xsaml20_Logout extends Saml20_BaseHandler  // RH, 20080602, n
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 
 		String paramRequest = request.getParameter("request");
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "request="+paramRequest);
 		if ("kill_tgt".equals(paramRequest)) {
 			handleKillTGTRequest(request, response);
 		}
@@ -119,7 +120,7 @@ public class Xsaml20_Logout extends Saml20_BaseHandler  // RH, 20080602, n
 	private void handleKillTGTRequest(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "handleKillTGTRequest()";
+		String sMethod = "handleKillTGTRequest";
 
 		// get mandatory parameters
 		String sEncTGT = request.getParameter("tgt_blob");
@@ -193,11 +194,6 @@ public class Xsaml20_Logout extends Saml20_BaseHandler  // RH, 20080602, n
         String sCookieDomain = _configManager.getCookieDomain();
         HandlerTools.delCookieValue(response, "aselect_credentials", sCookieDomain, _systemLogger);
 
-		//Cookie cookie = new Cookie("aselect_credentials", "no you cannot see me");
-		//cookie.setMaxAge(0);
-		//_systemLogger.log(Level.INFO, _sModule, sMethod, "Delete Cookie=" + "aselect_credentials");
-		//response.addCookie(cookie);
-
 		// now send a saml LogoutRequest to the federation idp
 		LogoutRequestSender logoutRequestSender = new LogoutRequestSender();
 		String sNameID = (String) htTGTContext.get("name_id");
@@ -207,49 +203,10 @@ public class Xsaml20_Logout extends Saml20_BaseHandler  // RH, 20080602, n
 		String url = metadataManager.getLocation(_sFederationUrl, SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME,
 				SAMLConstants.SAML2_REDIRECT_BINDING_URI);
 
-		logoutRequestSender.sendLogoutRequest(url, _sReturnUrl, sNameID, request, response, "urn:oasis:names:tc:SAML:2.0:logout:user");
+		if (url != null) {
+			logoutRequestSender.sendLogoutRequest(url, _sReturnUrl, sNameID, request, response, "urn:oasis:names:tc:SAML:2.0:logout:user");
+		}
 	}
-
-	/**
-	 * Verify the application signing signature. <br>
-	 * <br>
-	 * 
-	 * @param request
-	 *            The input message.
-	 * @param sData
-	 *            The data to validate upon.
-	 * @param sAppId
-	 *            The application ID.
-	 * @throws ASelectException
-	 *             If signature is invalid.
-	 */
-/*	private void verifyApplicationSignature(HttpServletRequest request, String sData, String sAppId)
-	throws ASelectException
-	{
-		String sMethod = "verifyApplicationSignature()";
-
-		String sSignature = request.getParameter("signature");
-		if (sSignature == null || request.equals("")) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing required 'signature' parameter");
-			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-		}
-
-		PublicKey pk = null;
-
-		try {
-			pk = _applicationManager.getSigningKey(sAppId);
-		}
-		catch (ASelectException e) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid application ID: \"" + sAppId
-					+ "\". Could not find signing key for application.", e);
-			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-		}
-
-		if (!_cryptoEngine.verifyApplicationSignature(pk, sData, sSignature)) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid signature");
-			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-		}
-	}*/
 
 	public void destroy()
 	{

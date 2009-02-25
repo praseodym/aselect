@@ -131,7 +131,7 @@ public abstract class AbstractMetaDataManager
 		String metadataURL = null;
 		ChainingMetadataProvider myMetadataProvider = new ChainingMetadataProvider();
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "SSODescriptors=" + SSODescriptors); // +" entityDescriptors=" + entityDescriptors);
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "SSODescriptors=" + SSODescriptors); // +" entityDescriptors=" + entityDescriptors);
 		if (entityId == null)
 			return;
 		if (SSODescriptors.containsKey(entityId)) {

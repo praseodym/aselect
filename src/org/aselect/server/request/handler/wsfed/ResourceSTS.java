@@ -39,6 +39,7 @@ public class ResourceSTS extends ProtoRequestHandler
 	public final static String MODULE = "ResourceSTS";
 	private final static String RETURN_SUFFIX = "_return";
 	private final static String SESSION_ID_PREFIX = "";  // 20081125 "wsfed_";
+	private String _sUserDomain;
 	private String _sProviderId;
 	private String _sNameIdFormat;
 	private String _sPostTemplate;
@@ -55,6 +56,8 @@ public class ResourceSTS extends ProtoRequestHandler
 			super.init(oServletConfig, oConfig);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Specific init processing");
 
+			_sUserDomain = HandlerTools.getParamFromSection(null, "aselect", "user_domain", false);
+			if (_sUserDomain == null) _sUserDomain = "digid.nl";
 			_sProviderId = HandlerTools.getSimpleParam(oConfig, "provider_id", true);
 			_sNameIdFormat = HandlerTools.getSimpleParam(oConfig, "nameid_format", true);
 			_sPostTemplate = readTemplateFromConfig(oConfig, "post_template");
@@ -174,7 +177,7 @@ public class ResourceSTS extends ProtoRequestHandler
 			String sAudience = null; // "urn:federation:treyresearch";
 			//String sNameIdFormat = "http://schemas.xmlsoap.org/claims/UPN";
 			//String sProviderId = "http://www.anoigo.nl/wsfed_sp.xml";
-			String sRequestorToken = createRequestorToken(request, _sProviderId, sUid, _sNameIdFormat,
+			String sRequestorToken = createRequestorToken(request, _sProviderId, sUid, _sUserDomain, _sNameIdFormat,
 					sAudience, htAttributes, null);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Token OUT: RequestorToken=" + sRequestorToken);
 			

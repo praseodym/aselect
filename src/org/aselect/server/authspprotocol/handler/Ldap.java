@@ -647,7 +647,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			}
 			String sAuthSPId = (String) htSessionContext.get("direct_authsp");  // must be set in configuration
 			if (sAuthSPId == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "parameter 'direct_authsp' not found in session");
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Parameter 'direct_authsp' not found in session");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
 			}
 			String sAuthSPUrl = _authSPHandlerManager.getUrl(sAuthSPId);
@@ -696,8 +696,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			else {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error response received: '" + sResponse
 						+ "' from DirectAuthSP: '" + sAuthSPId + "'.");
-				String sErrorMessage = _configManager.getErrorMessage(ERROR_LDAP_PREFIX
-						+ ERROR_LDAP_INVALID_CREDENTIALS);
+				String sErrorMessage = _configManager.getErrorMessage(ERROR_LDAP_PREFIX	+ ERROR_LDAP_INVALID_CREDENTIALS);
 				htServiceRequest.put("error_message", sErrorMessage);
 				showDirectLoginForm(htServiceRequest, pwOut, sServerId);
 			}
@@ -753,8 +752,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			}
 			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not fetch session context for rid='" + sRid
-						+ "'");
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not fetch session context for rid='"+sRid+"'");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
 			}
 			String sMyUrl = (String) htServiceRequest.get("my_url");
@@ -770,8 +768,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM direct_login, sServerId=" + sServerId);
 
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[rid]", sRid);
-			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[aselect_url]", (String) htServiceRequest
-					.get("my_url"));
+			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[aselect_url]", (String) htServiceRequest.get("my_url"));
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[a-select-server]", sServerId);
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[request]", "direct_login2");
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[cross_request]", "cross_login");
@@ -784,13 +781,11 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[error_message]", sErrorMessage);
 
-			StringBuffer sbUrl = new StringBuffer(sMyUrl).append("?request=error").append("&result_code=").append(
-					Errors.ERROR_ASELECT_SERVER_CANCEL).append("&a-select-server=").append(sServerId).append("&rid=")
-					.append(sRid);
+			StringBuffer sbUrl = new StringBuffer(sMyUrl).append("?request=error").append("&result_code=").
+					append(Errors.ERROR_ASELECT_SERVER_CANCEL).append("&a-select-server=").
+					append(sServerId).append("&rid=").append(sRid);
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[cancel]", sbUrl.toString());
-
 			sDirectLoginForm = _configManager.updateTemplate(sDirectLoginForm, htSessionContext);
-
 			pwOut.println(sDirectLoginForm);
 		}
 		catch (ASelectException e) {

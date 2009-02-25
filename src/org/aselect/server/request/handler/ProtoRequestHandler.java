@@ -260,8 +260,10 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	{
 		String sMethod = "getContextFromTgt()";
 		TGTManager _tgtManager = TGTManager.getHandle();
+		
+		int len = sTgt.length();
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "getTGT("+sTgt.substring(0, (len<30)? len: 30)+"...)");
         HashMap htTGTContext = _tgtManager.getTGT(sTgt);
-        _systemLogger.log(Level.INFO, MODULE, sMethod, "TGTContext="+ htTGTContext);
         if (htTGTContext == null)
             return null;
         
@@ -874,7 +876,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	}
 
 	protected String createRequestorToken(HttpServletRequest request, String sProviderId, String sUid,
-						String sNameIdFormat, String sAudience, HashMap htAttributes, String sSubjConf)
+		String sUserDomain, String sNameIdFormat, String sAudience, HashMap htAttributes, String sSubjConf)
 	throws ASelectException, SAMLException
 	{
 		String sMethod = "createRequestorToken";
@@ -889,8 +891,9 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
             _systemLogger.log(Level.SEVERE, MODULE, sMethod, "_saml11Builder not set");
             throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
         }
-        if (sUid.indexOf('@') < 0)
-        	sUid += "@digid.nl";
+        if (sUid.indexOf('@') < 0) {
+        	sUid += ((sUserDomain.startsWith("@"))? "": "@") + sUserDomain;
+        }
         SAMLAssertion oSAMLAssertion = _saml11Builder.createMySAMLAssertion(sProviderId,
 				sUid, sNameIdFormat, sIP, sHost, sSubjConf, sAudience, htAttributes);
 		_systemLogger.log(Level.INFO,MODULE,sMethod, "oSAMLAssertion="+oSAMLAssertion);
