@@ -426,7 +426,6 @@ public class Radius implements IAuthSPProtocolHandler
 			if ((sRid == null) || (sResultCode == null) || (sAsId == null) || (sSignature == null)) {
 				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod,
 						"Incorrect AuthSP response: one or more parameters missing.");
-
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 			}
 
@@ -467,7 +466,6 @@ public class Radius implements IAuthSPProtocolHandler
 					(String) htSessionContext.get("app_id"), "denied"
 				});
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);
-
 			}
 			else if (!sResultCode.equalsIgnoreCase(ERROR_RADIUS_NO_ERROR)) {
 				sbTemp = new StringBuffer("error from AuthSP: ");

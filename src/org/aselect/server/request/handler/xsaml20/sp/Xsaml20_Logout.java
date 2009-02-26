@@ -150,8 +150,7 @@ public class Xsaml20_Logout extends Saml20_BaseHandler  // RH, 20080602, n
 		if (!_oTGTManager.containsKey(sTGT)) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unknown TGT");
 			PrintWriter pwOut = null;
-			try {
-				// already logged out?
+			try { // already logged out?
 				//String url = _sLogoutPage + "?result_code=" + Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT;
 				//response.sendRedirect(url);
 				

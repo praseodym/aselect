@@ -54,10 +54,9 @@ public class LogoutRequestSender
 			HttpServletResponse response, String reason)
 		throws ASelectException
 	{
-		String sMethod = "sendLogoutRequest()";
+		String sMethod = "sendLogoutRequest";
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Send LogoutRequest to: " + serviceProviderUrl);
-
 		XMLObjectBuilderFactory builderFactory = Configuration.getBuilderFactory();
 
 		//LogoutRequestBuilder logoutRequestBuilder = new LogoutRequestBuilder();

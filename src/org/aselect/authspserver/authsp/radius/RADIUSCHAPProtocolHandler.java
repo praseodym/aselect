@@ -77,284 +77,245 @@ import org.aselect.system.utils.Utils;
  */
 public class RADIUSCHAPProtocolHandler extends AbstractRADIUSProtocolHandler
 {
-    private byte           _bIdentifier;
-    private byte[]         _baRandom;
-    private DatagramSocket _listenSocket = null;
-    private int				_iSocketTimeout = 10000;  // (154)
-    private String         _sErrorCode;
-    private final String 	MODULE = "RADIUSPAPProtocolHandler";
-    
-    /**
-     * .
-     * <br>
-     * <br>
-     * @see org.aselect.authspserver.authsp.radius.IRADIUSProtocolHandler#authenticate(java.lang.String)
-     */
-    public String authenticate(String sPassword)
-    {
-        String sMethod = "authenticate()";
-        _sErrorCode = Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER;
+	private byte _bIdentifier;
+	private byte[] _baRandom;
+	private DatagramSocket _listenSocket = null;
+	private int _iSocketTimeout = 10000; // (154)
+	private String _sErrorCode;
+	private final String MODULE = "RADIUSPAPProtocolHandler";
 
-        try
-        {
-            DatagramPacket oRADIUSPacket;
-            byte[] baRadiusPacketBuffer = new byte[MAX_RADIUS_PACKET_SIZE];
-            _baRandom = new byte[16];
+	/**
+	 * .
+	 * <br>
+	 * <br>
+	 * @see org.aselect.authspserver.authsp.radius.IRADIUSProtocolHandler#authenticate(java.lang.String)
+	 */
+	public String authenticate(String sPassword)
+	{
+		String sMethod = "authenticate()";
+		_sErrorCode = Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER;
 
-            if (!_bFullUid)
-            {
-                int iIndex = _sUid.indexOf('@');
-                if (iIndex > 0)
-                    _sUid = _sUid.substring(0, iIndex);
-            }
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "CHAPP uid="+_sUid);
+		try {
+			DatagramPacket oRADIUSPacket;
+			byte[] baRadiusPacketBuffer = new byte[MAX_RADIUS_PACKET_SIZE];
+			_baRandom = new byte[16];
 
-            _listenSocket = new DatagramSocket();
-            oRADIUSPacket = new DatagramPacket(baRadiusPacketBuffer,
-                baRadiusPacketBuffer.length);
+			if (!_bFullUid) {
+				int iIndex = _sUid.indexOf('@');
+				if (iIndex > 0)
+					_sUid = _sUid.substring(0, iIndex);
+			}
 
-            composeRequest(sPassword, oRADIUSPacket);
-            if (_sErrorCode != Errors.ERROR_RADIUS_SUCCESS)
-            {
-                try
-                {
-                    _listenSocket.close();
-                }
-                catch (Exception e)
-                {
-                    _systemLogger.log(Level.SEVERE, MODULE, sMethod,
-                        "exception while closing connection with "
-                        + "RADIUS server at " + _sRadiusServer + ": " , e);
-                }
-                return _sErrorCode;
-            }
+			_listenSocket = new DatagramSocket();
+			oRADIUSPacket = new DatagramPacket(baRadiusPacketBuffer, baRadiusPacketBuffer.length);
 
-            _listenSocket.setSoTimeout(_iSocketTimeout);  // added timeout (154)
-            _listenSocket.send(oRADIUSPacket);
-            _listenSocket.receive(oRADIUSPacket);
+			composeRequest(sPassword, oRADIUSPacket);
+			if (_sErrorCode != Errors.ERROR_RADIUS_SUCCESS) {
+				try {
+					_listenSocket.close();
+				}
+				catch (Exception e) {
+					_systemLogger.log(Level.SEVERE, MODULE, sMethod, "exception while closing connection with "
+							+ "RADIUS server at " + _sRadiusServer + ": ", e);
+				}
+				return _sErrorCode;
+			}
+			_listenSocket.setSoTimeout(_iSocketTimeout); // added timeout (154)
+			_listenSocket.send(oRADIUSPacket);
+			_listenSocket.receive(oRADIUSPacket);
+			handleResponse(oRADIUSPacket);
 
-            handleResponse(oRADIUSPacket);
+			try {
+				_listenSocket.close();
+			}
+			catch (Exception e) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "exception while closing connection with "
+						+ "RADIUS server at " + _sRadiusServer + ": ", e);
+			}
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "error in Radius communication", e); // (154)
+			try {
+				_listenSocket.close();
+			}
+			catch (Exception e2) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "exception while closing connection with RADIUS "
+						+ " server at " + _sRadiusServer + ": ", e2);
+			}
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "exception while authenticating user " + _sUid
+					+ " with with RADIUS " + "server at " + _sRadiusServer + ": ", e);
+			_sErrorCode = Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER;
+		}
 
-            try
-            {
-                _listenSocket.close();
-            }
-            catch (Exception e)
-            {
-                _systemLogger.log(Level.SEVERE, MODULE, sMethod,
-                    "exception while closing connection with "
-                    + "RADIUS server at " + _sRadiusServer + ": ", e);
-            }
-        }
-        catch (Exception e)
-        {
-        	_systemLogger.log(Level.WARNING, MODULE, sMethod, "error in Radius communication", e);  // (154)
-            try
-            {
-                _listenSocket.close();
-            }
-            catch (Exception e2)
-            {
-                _systemLogger.log(Level.SEVERE, MODULE, sMethod,
-                    "exception while closing connection with RADIUS "
-                    + " server at " + _sRadiusServer + ": ", e2);
-            }
-            _systemLogger.log(Level.SEVERE, MODULE, sMethod,
-                "exception while authenticating user " + _sUid
-                + " with with RADIUS " + "server at " + _sRadiusServer + ": ",
-                e);
-            _sErrorCode = Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER;
-        }
+		return _sErrorCode;
+	}
 
-        return _sErrorCode;
-    }
-    
-    /**
-     * This methods composes a RADIUS <code>access-request</code> packet
-     * and sends it to the RADIUS Server.
-     * <br><br>
-     * @param sPassword
-     * @param oRADIUSPacket
-     */
-    public void composeRequest(String sPassword, DatagramPacket oRADIUSPacket)
-    throws Exception
-    {
-        String sMethod = "composeRequest()";
-        _sErrorCode = Errors.ERROR_RADIUS_INTERNAL_ERROR;
+	/**
+	 * This methods composes a RADIUS <code>access-request</code> packet
+	 * and sends it to the RADIUS Server.
+	 * <br><br>
+	 * @param sPassword
+	 * @param oRADIUSPacket
+	 */
+	public void composeRequest(String sPassword, DatagramPacket oRADIUSPacket)
+		throws Exception
+	{
+		String sMethod = "composeRequest()";
+		_sErrorCode = Errors.ERROR_RADIUS_INTERNAL_ERROR;
 
-        try
-        {
-            Random randomGenerator;
-            byte[] baTempBuffer;
-            byte[] baChallenge = new byte[16];
-            byte[] baOutputBuffer;
-            byte bChapID = 0;
-            int iIndex = 0;
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "uid="+_sUid);
+		try {
+			Random randomGenerator;
+			byte[] baTempBuffer;
+			byte[] baChallenge = new byte[16];
+			byte[] baOutputBuffer;
+			byte bChapID = 0;
+			int iIndex = 0;
 
-            MessageDigest md5Object = MessageDigest.getInstance("MD5");
+			MessageDigest md5Object = MessageDigest.getInstance("MD5");
 
-            oRADIUSPacket.setAddress(InetAddress.getByName(_sRadiusServer));
-            oRADIUSPacket.setPort(_iPort);
+			oRADIUSPacket.setAddress(InetAddress.getByName(_sRadiusServer));
+			oRADIUSPacket.setPort(_iPort);
 
-            randomGenerator = new Random();
-            randomGenerator.nextBytes(_baRandom);
-            _bIdentifier = (byte)randomGenerator.nextInt();
+			randomGenerator = new Random();
+			randomGenerator.nextBytes(_baRandom);
+			_bIdentifier = (byte) randomGenerator.nextInt();
 
-            // Generate the challenge
-            randomGenerator.nextBytes(baChallenge);
+			// Generate the challenge
+			randomGenerator.nextBytes(baChallenge);
 
-            // Calculate response
-            md5Object.update(bChapID); // CHAP ID
-            md5Object.update(sPassword.getBytes()); // password
-            md5Object.update(baChallenge); // challenge
-            byte[] xResponse = md5Object.digest();
+			// Calculate response
+			md5Object.update(bChapID); // CHAP ID
+			md5Object.update(sPassword.getBytes()); // password
+			md5Object.update(baChallenge); // challenge
+			byte[] xResponse = md5Object.digest();
 
-            baOutputBuffer = oRADIUSPacket.getData();
-            baOutputBuffer[iIndex++] = ACCESS_REQUEST;
-            baOutputBuffer[iIndex++] = _bIdentifier;
-            baOutputBuffer[iIndex++] = 0; // hibyte length
-            baOutputBuffer[iIndex++] = 0; // lobyte length
-            // 16 bytes random ; aka authenticator
-            System.arraycopy(_baRandom, 0, baOutputBuffer, iIndex,
-                _baRandom.length);
-            iIndex += _baRandom.length;
+			baOutputBuffer = oRADIUSPacket.getData();
+			baOutputBuffer[iIndex++] = ACCESS_REQUEST;
+			baOutputBuffer[iIndex++] = _bIdentifier;
+			baOutputBuffer[iIndex++] = 0; // hibyte length
+			baOutputBuffer[iIndex++] = 0; // lobyte length
+			// 16 bytes random ; aka authenticator
+			System.arraycopy(_baRandom, 0, baOutputBuffer, iIndex, _baRandom.length);
+			iIndex += _baRandom.length;
 
-            baOutputBuffer[iIndex++] = RADIUS_ATTRIBUTE_TYPE_USER_NAME;
-            baOutputBuffer[iIndex++] = (byte)(_sUid.length() + 2);
-            baTempBuffer = _sUid.getBytes();
-            System.arraycopy(baTempBuffer, 0, baOutputBuffer, iIndex, _sUid
-                .length());
-            iIndex += _sUid.length();
+			baOutputBuffer[iIndex++] = RADIUS_ATTRIBUTE_TYPE_USER_NAME;
+			baOutputBuffer[iIndex++] = (byte) (_sUid.length() + 2);
+			baTempBuffer = _sUid.getBytes();
+			System.arraycopy(baTempBuffer, 0, baOutputBuffer, iIndex, _sUid.length());
+			iIndex += _sUid.length();
 
-            // Build CHAP-Password
-            baOutputBuffer[iIndex++] = RADIUS_ATTRIBUTE_TYPE_CHAP_PASSWORD;
-            baOutputBuffer[iIndex++] = (byte)(16 + 3); // length
-            baOutputBuffer[iIndex++] = bChapID; // CHAP ID
-            // response
-            System.arraycopy(xResponse, 0, baOutputBuffer, iIndex, 16);
-            iIndex += 16;
+			// Build CHAP-Password
+			baOutputBuffer[iIndex++] = RADIUS_ATTRIBUTE_TYPE_CHAP_PASSWORD;
+			baOutputBuffer[iIndex++] = (byte) (16 + 3); // length
+			baOutputBuffer[iIndex++] = bChapID; // CHAP ID
+			// response
+			System.arraycopy(xResponse, 0, baOutputBuffer, iIndex, 16);
+			iIndex += 16;
 
-            // Build CHAP-Challenge
-            baOutputBuffer[iIndex++] = RADIUS_ATTRIBUTE_TYPE_CHAP_CHALLENGE;
-            baOutputBuffer[iIndex++] = (byte)(16 + 2); // length
-            // challenge
-            System.arraycopy(baChallenge, 0, baOutputBuffer, iIndex, 16);
-            iIndex += 16;
+			// Build CHAP-Challenge
+			baOutputBuffer[iIndex++] = RADIUS_ATTRIBUTE_TYPE_CHAP_CHALLENGE;
+			baOutputBuffer[iIndex++] = (byte) (16 + 2); // length
+			// challenge
+			System.arraycopy(baChallenge, 0, baOutputBuffer, iIndex, 16);
+			iIndex += 16;
 
-            baOutputBuffer[2] = (byte)(iIndex >> 8);
-            baOutputBuffer[3] = (byte)(iIndex & 0x00ff);
+			baOutputBuffer[2] = (byte) (iIndex >> 8);
+			baOutputBuffer[3] = (byte) (iIndex & 0x00ff);
 
-            oRADIUSPacket.setData(baOutputBuffer);
-            _sErrorCode = Errors.ERROR_RADIUS_SUCCESS;
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.SEVERE, MODULE, sMethod, "INTERNAL ERROR", e);
-            throw e;
-        }
-    }
+			oRADIUSPacket.setData(baOutputBuffer);
+			_sErrorCode = Errors.ERROR_RADIUS_SUCCESS;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "INTERNAL ERROR", e);
+			throw e;
+		}
+	}
 
-    /**
-     * This methods handles the response comming from the 
-     * Radius Server.
-     * @param oRADIUSPacket
-     */
-    public void handleResponse(DatagramPacket oRADIUSPacket)
-    {
-        byte[] baAuthenticator;
-        byte[] baAttributes;
-        byte[] baHash;
-        int iLength;
-        int iReponseBufferIndex;
+	/**
+	 * This methods handles the response comming from the 
+	 * Radius Server.
+	 * @param oRADIUSPacket
+	 */
+	public void handleResponse(DatagramPacket oRADIUSPacket)
+	{
+		byte[] baAuthenticator;
+		byte[] baAttributes;
+		byte[] baHash;
+		int iLength;
+		int iReponseBufferIndex;
 
-        String sMethod = "handleResponse()";
-        _sErrorCode = Errors.ERROR_RADIUS_INTERNAL_ERROR;
+		String sMethod = "handleResponse()";
+		_sErrorCode = Errors.ERROR_RADIUS_INTERNAL_ERROR;
 
-        try
-        {
-            byte[] baResponseBuffer = oRADIUSPacket.getData();
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "uid="+_sUid);
+		try {
+			byte[] baResponseBuffer = oRADIUSPacket.getData();
 
-            // check code
-            iReponseBufferIndex = 0;
-            if (baResponseBuffer[iReponseBufferIndex++] != ACCESS_ACCEPT)
-            {
-                StringBuffer sbFine = new StringBuffer("RADIUS returned ACCESS DENIED for user: ");
-			    sbFine.append(_sUid);
-			    _systemLogger.log(Level.FINE, MODULE, sMethod, 
-			        sbFine.toString());
-			    
-                _sErrorCode = Errors.ERROR_RADIUS_ACCESS_DENIED;
-                return;
-            }
-            // check identifier
-            if (baResponseBuffer[iReponseBufferIndex++] != _bIdentifier)
-            {
-                StringBuffer sbFine = new StringBuffer("RADIUS Identifier mismatch for user: ");
-			    sbFine.append(_sUid);
-			    _systemLogger.log(Level.FINE, MODULE, sMethod, 
-			        sbFine.toString());
-			    
-                _sErrorCode = Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER;
-                return;
-            }
+			// check code
+			iReponseBufferIndex = 0;
+			if (baResponseBuffer[iReponseBufferIndex++] != ACCESS_ACCEPT) {
+				StringBuffer sbFine = new StringBuffer("RADIUS returned ACCESS DENIED for user: ");
+				sbFine.append(_sUid);
+				_systemLogger.log(Level.FINE, MODULE, sMethod, sbFine.toString());
+				_sErrorCode = Errors.ERROR_RADIUS_ACCESS_DENIED;
+				return;
+			}
+			// check identifier
+			if (baResponseBuffer[iReponseBufferIndex++] != _bIdentifier) {
+				StringBuffer sbFine = new StringBuffer("RADIUS Identifier mismatch for user: ");
+				sbFine.append(_sUid);
+				_systemLogger.log(Level.FINE, MODULE, sMethod, sbFine.toString());
+				_sErrorCode = Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER;
+				return;
+			}
 
-            // length
-            iLength = ((baResponseBuffer[2] & 255) * 256)
-                + (baResponseBuffer[3] & 255);
+			// length
+			iLength = ((baResponseBuffer[2] & 255) * 256) + (baResponseBuffer[3] & 255);
 
-            // skip length
-            iReponseBufferIndex += 2;
+			// skip length
+			iReponseBufferIndex += 2;
 
-            // copy authenticator field
-            baAuthenticator = new byte[16];
-            System.arraycopy(baResponseBuffer, iReponseBufferIndex, baAuthenticator, 0, 16);
+			// copy authenticator field
+			baAuthenticator = new byte[16];
+			System.arraycopy(baResponseBuffer, iReponseBufferIndex, baAuthenticator, 0, 16);
 
-            // copy attributes field
-            // attributeslength = totallength - header - authenticatorlength
-            baAttributes = new byte[iLength - 4 - 16];
-            System.arraycopy(baResponseBuffer, 20, baAttributes, 0,
-                baAttributes.length);
+			// copy attributes field
+			// attributeslength = totallength - header - authenticatorlength
+			baAttributes = new byte[iLength - 4 - 16];
+			System.arraycopy(baResponseBuffer, 20, baAttributes, 0, baAttributes.length);
 
-            // verify authenticity
-            MessageDigest md5Object = MessageDigest.getInstance("MD5");
-            md5Object.update(ACCESS_ACCEPT);
-            md5Object.update(_bIdentifier);
-            md5Object.update(baResponseBuffer[2]);
-            md5Object.update(baResponseBuffer[3]);
-            md5Object.update(_baRandom);
-            md5Object.update(baAttributes);
-            md5Object.update(_sSharedSecret.getBytes());
-            baHash = md5Object.digest();
+			// verify authenticity
+			MessageDigest md5Object = MessageDigest.getInstance("MD5");
+			md5Object.update(ACCESS_ACCEPT);
+			md5Object.update(_bIdentifier);
+			md5Object.update(baResponseBuffer[2]);
+			md5Object.update(baResponseBuffer[3]);
+			md5Object.update(_baRandom);
+			md5Object.update(baAttributes);
+			md5Object.update(_sSharedSecret.getBytes());
+			baHash = md5Object.digest();
 
-            for (int i = 0; i < 16; i++)
-            {
-                if (baAuthenticator[i] != baHash[i])
-                {
-                    StringBuffer sbTemp = new StringBuffer("RADIUS Authenticator mismatchnServer\r\n"); 
-                    sbTemp.append("Authenticator: ");
-                    sbTemp.append(Utils.toHexString(baAuthenticator));
-                    sbTemp.append("\r\n Computed Authenticator: ");
-                    sbTemp.append(Utils.toHexString(baHash));
-                    
-                    _systemLogger.log(Level.FINE, MODULE, sMethod, sbTemp.toString());
-                    
-                    _systemLogger.log(Level.WARNING, MODULE, sMethod, "RADIUS Authenticator mismatch");
-                    
-                    _sErrorCode = Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER;
-                    
-                    return;
-                }
-            }
-            _sErrorCode = Errors.ERROR_RADIUS_SUCCESS;
-        }
-        catch (Exception e)
-        {
-        	_systemLogger.log(Level.SEVERE, 
-				MODULE, 
-				sMethod, 
-				"INTERNAL ERROR", 
-				e);
-        	
-            _sErrorCode = Errors.ERROR_RADIUS_INTERNAL_ERROR;
-        }
-    }
+			for (int i = 0; i < 16; i++) {
+				if (baAuthenticator[i] != baHash[i]) {
+					StringBuffer sbTemp = new StringBuffer("RADIUS Authenticator mismatchnServer\r\n");
+					sbTemp.append("Authenticator: ");
+					sbTemp.append(Utils.toHexString(baAuthenticator));
+					sbTemp.append("\r\n Computed Authenticator: ");
+					sbTemp.append(Utils.toHexString(baHash));
+
+					_systemLogger.log(Level.FINE, MODULE, sMethod, sbTemp.toString());
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "RADIUS Authenticator mismatch");
+					_sErrorCode = Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER;
+					return;
+				}
+			}
+			_sErrorCode = Errors.ERROR_RADIUS_SUCCESS;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "INTERNAL ERROR", e);
+			_sErrorCode = Errors.ERROR_RADIUS_INTERNAL_ERROR;
+		}
+	}
 }

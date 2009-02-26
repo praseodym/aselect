@@ -461,8 +461,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 
 			boolean bVerifies = CryptoEngine.getHandle().verifySignature(_sAuthsp, sbSignature.toString(), sSignature);
 			if (!bVerifies) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "invalid signature in response from AuthSP:"
-						+ _sAuthsp);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "invalid signature in response from AuthSP:" + _sAuthsp);
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 			}
 
@@ -477,19 +476,16 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			String sOrg = (String) htSessionContext.get("organization");
 
 			//check why the user was not authenticated successfully
-			if (sResultCode.equalsIgnoreCase(ERROR_LDAP_ACCESS_DENIED)) //access denied
-			{
+			if (sResultCode.equalsIgnoreCase(ERROR_LDAP_ACCESS_DENIED)) {  //access denied
 				//only log to authentication log
 				_authenticationLogger.log(new Object[] {
-					MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg, (String) htSessionContext.get("app_id"),
-					"denied"
+						MODULE, sUserId, htAuthspResponse.get("client_ip"),
+						sOrg, (String) htSessionContext.get("app_id"), "denied"
 				});
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);
-
 			}
 
-			if (!sResultCode.equalsIgnoreCase(ERROR_LDAP_OK)) //other error
-			{
+			if (!sResultCode.equalsIgnoreCase(ERROR_LDAP_OK)) {  //other error
 				StringBuffer sbError = new StringBuffer("AuthSP returned errorcode: ");
 				sbError.append(sResultCode);
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
@@ -498,8 +494,8 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 
 			//everything OK -> log to authentication logger
 			_authenticationLogger.log(new Object[] {
-				MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg, (String) htSessionContext.get("app_id"),
-				"granted"
+					MODULE, sUserId, htAuthspResponse.get("client_ip"),
+					sOrg, (String) htSessionContext.get("app_id"), "granted"
 			});
 			//set response
 			htResponse.put("rid", sRid);
@@ -670,8 +666,10 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid/No response from DirectAuthSP: '"+sAuthSPId+"'", e);
 				throw new ASelectException(Errors.ERROR_ASELECT_IO);
 			}
+			
 			HashMap htResponse = Utils.convertCGIMessage(sResponse);
 			String sResponseCode = ((String) htResponse.get("status"));
+			String sOrg = (String) htSessionContext.get("organization");
 			if (sResponseCode == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid response from Direct AuthSP: '"+sAuthSPId+"'.");
 				throw new ASelectException(Errors.ERROR_ASELECT_IO);
@@ -684,8 +682,18 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				htSessionContext.put("authsp_level", intAuthSPLevel.toString());
 				_sessionManager.updateSession(sRid, htSessionContext); // store too (545)
 				tgtIssuer.issueTGT(sRid, sAuthSPId, null, servletResponse, sOldTGT);
+				
+				_authenticationLogger.log(new Object[] {
+						MODULE, sUid, (String)htSessionContext.get("client_ip"), sOrg,
+						(String)htSessionContext.get("app_id"), "granted"
+				});
 			}
 			else if (sResponseCode.equals(ERROR_LDAP_ACCESS_DENIED)) {
+				_authenticationLogger.log(new Object[] {
+						MODULE, sUid, (String)htSessionContext.get("client_ip"),
+						sOrg, (String)htSessionContext.get("app_id"), "denied"
+				});
+
 				String sErrorTemplate = _configManager.getForm("error");
 				sErrorTemplate = Utils.replaceString(sErrorTemplate, "[error]", ERROR_LDAP_ACCESS_DENIED);
 				String sErrorMessage = _configManager.getErrorMessage(ERROR_LDAP_PREFIX + ERROR_LDAP_ACCESS_DENIED);
