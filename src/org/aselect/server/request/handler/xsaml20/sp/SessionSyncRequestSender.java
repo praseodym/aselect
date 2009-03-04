@@ -62,32 +62,35 @@ public class SessionSyncRequestSender
 	private String _sSamlMessageType;
 
 	private ASelectSystemLogger _oSystemLogger;
-	private String MODULE = "SessionSyncRequestSender";
+	private final String MODULE = "SessionSyncRequestSender";
 	private PublicKey _pkey = null;
 	private Long _maxNotBefore = null; 	// TODO, this should be handled (passed) more elegantly, for now we just pass the values
 	private Long _maxNotOnOrAfter = null; 	// TODO, this should be handled (passed) more elegantly, for now we just pass the values
 	private boolean _checkValidityInterval = false;
 
+	private static HashMap htSessionSyncParameters = null;
 	
 	// For backward compatibility
 	public SessionSyncRequestSender(ASelectSystemLogger systemLogger, String redirectUrl,
-			long updateInterval, String samlMessageType, String federationUrl) {
+			long updateInterval, String samlMessageType, String federationUrl)
+	{
 		this(systemLogger, redirectUrl,
 				updateInterval, samlMessageType, federationUrl, null);
 	}
 
 	// For backward compatibility
 	public SessionSyncRequestSender(ASelectSystemLogger systemLogger, String redirectUrl,
-			long updateInterval, String samlMessageType, String federationUrl, PublicKey pkey) {
+			long updateInterval, String samlMessageType, String federationUrl, PublicKey pkey)
+	{
 		this(systemLogger, redirectUrl,
 				updateInterval, samlMessageType, federationUrl, pkey, null, null, false);
 	}
 	
 	public SessionSyncRequestSender(ASelectSystemLogger systemLogger, String redirectUrl,
-			long updateInterval, String samlMessageType, String federationUrl, PublicKey pkey, Long maxNotBefore, Long maxNotOnOrAfter, boolean checkValidityInterval) {
-
-		String MODULE = "SessionSyncRequestSender";
-		String sMethod = "constructor";
+			long updateInterval, String samlMessageType, String federationUrl, PublicKey pkey,
+			Long maxNotBefore, Long maxNotOnOrAfter, boolean checkValidityInterval)
+	{
+		String sMethod = "SessionSyncRequestSender";
 
 		_oSystemLogger = systemLogger;
 		_sRedirectUrl = redirectUrl;
@@ -99,28 +102,31 @@ public class SessionSyncRequestSender
 		_maxNotBefore = maxNotBefore;
 		_maxNotOnOrAfter = maxNotOnOrAfter;
 		_checkValidityInterval = checkValidityInterval;
-		_oSystemLogger.log(Level.INFO, MODULE, sMethod, "_pkey:" + getPkey());
-		_oSystemLogger.log(Level.INFO, MODULE, sMethod, "_maxNotBefore:" + get_maxNotBefore());
-		_oSystemLogger.log(Level.INFO, MODULE, sMethod, "_maxNotOnOrAfter:" + get_maxNotOnOrAfter());
-		_oSystemLogger.log(Level.INFO, MODULE, sMethod, "_checkValidityInterval:" + is_checkValidityInterval());
-		
+		_oSystemLogger.log(Level.INFO, MODULE, sMethod, "_pkey:" + getPkey()+" _maxNotBefore:" + get_maxNotBefore()+
+				"_maxNotOnOrAfter:" + get_maxNotOnOrAfter()+"_checkValidityInterval:" + is_checkValidityInterval());
 	}
 
 	//
 	// Retrieve the Session Sync parameters from the "saml20_sp_session_sync" section
 	//
 	static public HashMap getSessionSyncParameters(ASelectSystemLogger mySystemLogger)
-		throws ASelectException
+	throws ASelectException
 	{
 		String MODULE = "SessionSyncRequestSender";
 		String sMethod = "getSessionSyncParameters";
 		ASelectConfigManager myConfigManager = ASelectConfigManager.getHandle();
-		HashMap htResult = new HashMap();
+		if (htSessionSyncParameters != null)
+			return htSessionSyncParameters;
+
 		try {
 			Object oRequestsSection = myConfigManager.getSection(null, "requests");
 			Object oHandlersSection = myConfigManager.getSection(oRequestsSection, "handlers");
 
 			Object oHandler = myConfigManager.getSection(oHandlersSection, "handler");
+			
+			// 20090304, Bauke: cache the results in htSessionSyncParameters
+			// Not present yet, so get the parameters
+			HashMap htResult = new HashMap();
 			for ( ; oHandler != null; ) {
 				try {
 					String sId = myConfigManager.getParam(oHandler, "id");
@@ -193,7 +199,7 @@ public class SessionSyncRequestSender
 							mySystemLogger.log(Level.WARNING, MODULE, sMethod,
 									"No (valid) config item  'max_notonorafter' in 'handler' section", e);
 						}
-
+						htSessionSyncParameters = htResult;
 					}
 				}
 				catch (ASelectConfigException e) {
@@ -208,7 +214,7 @@ public class SessionSyncRequestSender
 					"No config item 'handler' found in 'aselect' section", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
-		return htResult;
+		return htSessionSyncParameters;
 	}
 
 	// Bauke: rewritten
@@ -514,7 +520,6 @@ public class SessionSyncRequestSender
 */
 	public void destroy()
 	{
-
 	}
 
 	/*
@@ -587,7 +592,7 @@ public class SessionSyncRequestSender
 		boolean saml = false;
 		
 		try {
-			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Send message="+message+" for "+sNameID);
+			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Send message for "+sNameID);
 			// Send/Receive the SOAP message
 			sResponse = URLDecoder.decode(soapmanager.sendSOAP(message, _sFederationUrl), "UTF-8");
 

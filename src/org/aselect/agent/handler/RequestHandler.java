@@ -1872,7 +1872,7 @@ public class RequestHandler extends Thread
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "VerCRED sTicket=" + sTicket);
 
 			if (!_ticketManager.killTicket(sTicket)) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "could not kill ticket");
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not kill ticket");
 				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_UNKNOWN_TICKET);
 				return;
 			}

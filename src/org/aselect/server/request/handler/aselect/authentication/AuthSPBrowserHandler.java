@@ -93,57 +93,46 @@ import org.aselect.system.logging.AuthenticationLogger;
 import org.aselect.system.sam.agent.SAMResource;
 
 /**
- * This class handles cross-authentication requests coming
- * from a remote A-Select Server, except for the
- * <code>cross_login</code> request. 
- * It must be used as follows:
- * <br>
- * For each new incoming request, create a new 
- * <code>CrossASelectHandler</code> object and call either
- * the <code>handleCrossAuthenticateRequest()</code> or
- * the <code>handleCrossAuthenticateResponse()</code>, as
- * appropriate. 
- * <code>CrossASelectHandler</code> objects cannot be reused
- * due to concurrency issues. 
-
- * <br>
- * @author Alfa & Ariss
+ * This class handles cross-authentication requests coming from a remote A-Select Server, except for the
+ * <code>cross_login</code> request. It must be used as follows: <br>
+ * For each new incoming request, create a new <code>CrossASelectHandler</code> object and call either the
+ * <code>handleCrossAuthenticateRequest()</code> or the <code>handleCrossAuthenticateResponse()</code>, as
+ * appropriate. <code>CrossASelectHandler</code> objects cannot be reused due to concurrency issues. <br>
  * 
- * 
- * 14-11-2007 - Changes:
- * - Transfer PKI attributes Subject DN and Issuer DN to the context
- * 
- * @author Bauke Hiemstra - www.anoigo.nl
- * Copyright UMC Nijmegen (http://www.umcn.nl)
- * 
+ * @author Alfa & Ariss 14-11-2007 - Changes: - Transfer PKI attributes Subject DN and Issuer DN to the context
+ * @author Bauke Hiemstra - www.anoigo.nl Copyright UMC Nijmegen (http://www.umcn.nl)
  */
 public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 {
-    /**
-     * Constructor for AuthSPBrowserHandler.
-     * <br>
-     * @param servletRequest The request.
-     * @param servletResponse The response.
-     * @param sMyServerId The A-Select Server ID.
-     * @param sMyOrg The A-Select Server organisation.
-     */
-    public AuthSPBrowserHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-						String sMyServerId, String sMyOrg) {
+	/**
+	 * Constructor for AuthSPBrowserHandler. <br>
+	 * 
+	 * @param servletRequest
+	 *            The request.
+	 * @param servletResponse
+	 *            The response.
+	 * @param sMyServerId
+	 *            The A-Select Server ID.
+	 * @param sMyOrg
+	 *            The A-Select Server organisation.
+	 */
+	public AuthSPBrowserHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
+	String sMyServerId, String sMyOrg)
+	{
 		super(servletRequest, servletResponse, sMyServerId, sMyOrg);
 		_sModule = "AuthSPBrowserHandler";
 	}
-    
-    /**
+
+	/**
 	 * process authsp browser requests <br>
 	 * <br>
 	 * 
 	 * @see org.aselect.server.request.handler.aselect.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.HashMap,
 	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
 	 */
-    public void processBrowserRequest(HashMap htServiceRequest,
-    					HttpServletResponse servletResponse, PrintWriter pwOut)
-    throws ASelectException
-    {
+	public void processBrowserRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+		throws ASelectException
+	{
 		String sRequest = (String) htServiceRequest.get("request");
 
 		if (sRequest == null && _servletRequest.getParameter("authsp") != null) {
@@ -157,9 +146,8 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 		}
 	}
 
-    /**
-	 * This function handles the AuthSP response and calls the correct AuthSP
-	 * handler. <br>
+	/**
+	 * This function handles the AuthSP response and calls the correct AuthSP handler. <br>
 	 * <br>
 	 * 
 	 * @param htServiceRequest
@@ -168,9 +156,9 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	 *            Used to send (HTTP) information back to the user
 	 * @throws ASelectException
 	 */
-    private void handleAuthSPResponse(HashMap htServiceRequest, HttpServletResponse servletResponse)
-    throws ASelectException
-    {
+	private void handleAuthSPResponse(HashMap htServiceRequest, HttpServletResponse servletResponse)
+	throws ASelectException
+	{
 		String sMethod = "handleAuthSPResponse()";
 		String sHandlerName = null;
 		Object authSPsection = null;
@@ -180,7 +168,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 
 			try {
 				authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"),
-						"authsp", "id="	+ sAsp);
+						"authsp", "id=" + sAsp);
 			}
 			catch (ASelectException eA) {
 				// Invalid AuthSP received
@@ -215,88 +203,97 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			catch (Exception e) {
 				StringBuffer sbMessage = new StringBuffer("could not instantiate ");
 				sbMessage.append(sHandlerName);
-
 				_systemLogger.log(Level.SEVERE, _sModule, sMethod, sbMessage.toString(), e);
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
 
-            // Let the AuthSP protocol handler verify the response from the AuthSP
-            // htResponse will contain the result data
+			// Let the AuthSP protocol handler verify the response from the AuthSP
+			// htResponse will contain the result data
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "To AUTHSP, Request=" + htServiceRequest);
-            HashMap htResponse = oProtocolHandler.verifyAuthenticationResponse(htServiceRequest);
+			HashMap htResponse = oProtocolHandler.verifyAuthenticationResponse(htServiceRequest);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "From AUTHSP, Response=" + htResponse);
 
-            String sResultCode = (String)htResponse.get("result");
-            String sRid = (String) htResponse.get("rid");  // this is our own rid
+			String sResultCode = (String) htResponse.get("result");
+			String sRid = (String) htResponse.get("rid"); // this is our own rid
 			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Session not found, expired? rid="+sRid);
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Session not found, expired? rid=" + sRid);
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 			}
 
 			// Saml20: Any errors must be reported back to the SP (so no Exception throwing in that case)
-            String sIssuer = (String)htSessionContext.get("sp_issuer");
-			if (sIssuer == null && !(sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)))
-            {
+			String sIssuer = (String) htSessionContext.get("sp_issuer");
+			if (sIssuer == null && !(sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS))) {
 				// Session can be killed. The user could not be authenticated.
-                _systemLogger.log(Level.WARNING, _sModule, sMethod, "Error in response from authsp: " + sResultCode);     
-                _sessionManager.killSession(sRid);
-                throw new ASelectException(sResultCode);
-            }
-            // The user was authenticated successfully, or sp_issuer was present
-            if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
-            	htSessionContext.put("result_code", sResultCode);  // must be used by the tgt issuer
-				_sessionManager.updateSession(sRid, htSessionContext);
-            }
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Error in response from authsp: " + sResultCode);
+				_sessionManager.killSession(sRid);
+				throw new ASelectException(sResultCode);
+			}
 			
+			// The user was authenticated successfully, or sp_issuer was present
+			if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
+				htSessionContext.put("result_code", sResultCode); // must be used by the tgt issuer
+				_sessionManager.updateSession(sRid, htSessionContext);
+			}
+
 			// Some AuthSP's will return the authenticated userid as well (e.g. DigiD)
 			// If they do, we'll have to copy it to our own Context
-            HashMap htAdditional = new HashMap();
-			String sUid = (String)htResponse.get("uid");
-			if (sUid != null) {  // For all AuthSP's that can set the user id (and thereby replace the 'siam_user' value)
+			HashMap htAdditional = new HashMap();
+			String sUid = (String) htResponse.get("uid");
+			if (sUid != null) { // For all AuthSP's that can set the user id
+				// (and thereby replace the 'siam_user' value)
 				htSessionContext.put("user_id", sUid);
-				String sSecLevel = (String)htResponse.get("betrouwbaarheidsniveau");
+				String sSecLevel = (String) htResponse.get("betrouwbaarheidsniveau");
 				// 20090110, Bauke: changed assigned_betrouwbaarheidsniveau to assigned_level,
-				// seem to be not used anymore!
-				if (sSecLevel != null) htSessionContext.put("assigned_level", sSecLevel);
+				// seem not to be used anymore!
+				if (sSecLevel != null)
+					htSessionContext.put("assigned_level", sSecLevel);
 				_sessionManager.updateSession(sRid, htSessionContext);
 
-				if (sSecLevel != null) htAdditional.put("betrouwbaarheidsniveau", sSecLevel);
-				String sAssertUrl = (String)htSessionContext.get("sp_assert_url");
-	            if (sAssertUrl != null) htAdditional.put("sp_assert_url", sAssertUrl);  // saml20 addition
-				String sSPRid = (String)htSessionContext.get("sp_rid");
-	            if (sAssertUrl != null) htAdditional.put("sp_rid", sSPRid);  // saml20 addition
+				if (sSecLevel != null)
+					htAdditional.put("betrouwbaarheidsniveau", sSecLevel);
+				String sAssertUrl = (String) htSessionContext.get("sp_assert_url");
+				if (sAssertUrl != null)
+					htAdditional.put("sp_assert_url", sAssertUrl); // saml20
+				// addition
+				String sSPRid = (String) htSessionContext.get("sp_rid");
+				if (sAssertUrl != null)
+					htAdditional.put("sp_rid", sSPRid); // saml20 addition
 			}
 
 			// Bauke: transfer PKI attributes to the Context
-            String sSubjectDN = (String)htResponse.get("pki_subject_dn");
-			if (sSubjectDN != null) htAdditional.put("pki_subject_dn", sSubjectDN);
-            String sIssuerDN = (String)htResponse.get("pki_issuer_dn");
-			if (sIssuerDN != null) htAdditional.put("pki_issuer_dn", sIssuerDN);
-            String sSubjectId = (String)htResponse.get("pki_subject_id");
-			if (sSubjectId != null) htAdditional.put("pki_subject_id", sSubjectId);
-            String sSmsPhone = (String)htResponse.get("sms_phone");
-			if (sSmsPhone != null) htAdditional.put("sms_phone", sSmsPhone);
-            
-            TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-            String sOldTGT = (String)htServiceRequest.get("aselect_credentials_tgt");
-			String sCred = (String)htServiceRequest.get("aselect_credentials");
-			if (sCred != null) htAdditional.put("asp_credentials", sCred);
-            tgtIssuer.issueTGT(sRid, sAsp, htAdditional, servletResponse, sOldTGT);
-        }
-        catch (ASelectException e) {
+			String sSubjectDN = (String) htResponse.get("pki_subject_dn");
+			if (sSubjectDN != null)
+				htAdditional.put("pki_subject_dn", sSubjectDN);
+			String sIssuerDN = (String) htResponse.get("pki_issuer_dn");
+			if (sIssuerDN != null)
+				htAdditional.put("pki_issuer_dn", sIssuerDN);
+			String sSubjectId = (String) htResponse.get("pki_subject_id");
+			if (sSubjectId != null)
+				htAdditional.put("pki_subject_id", sSubjectId);
+			String sSmsPhone = (String) htResponse.get("sms_phone");
+			if (sSmsPhone != null)
+				htAdditional.put("sms_phone", sSmsPhone);
+
+			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
+			String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
+			String sCred = (String) htServiceRequest.get("aselect_credentials");
+			if (sCred != null)
+				htAdditional.put("asp_credentials", sCred);
+			tgtIssuer.issueTGT(sRid, sAsp, htAdditional, servletResponse, sOldTGT);
+		}
+		catch (ASelectException e) {
 			throw e;
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error.", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-    }
-    
-    /**
-	 * Abort an authentication attempt and redirect the user back to the
-	 * application. The application will receive the error code specified in the
-	 * API call. <br>
+	}
+
+	/**
+	 * Abort an authentication attempt and redirect the user back to the application. The application will receive the
+	 * error code specified in the API call. <br>
 	 * <br>
 	 * 
 	 * @param htServiceRequest
@@ -305,92 +302,69 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	 *            Used to send (HTTP) information back to the user
 	 * @throws ASelectException
 	 */
-    private void handleError(HashMap htServiceRequest,
-        HttpServletResponse servletResponse)
-    throws ASelectException
-    {
-        String sMethod = "handleError()";
-        AuthenticationLogger authenticationLogger = 
-            ASelectAuthenticationLogger.getHandle();
+	private void handleError(HashMap htServiceRequest, HttpServletResponse servletResponse)
+	throws ASelectException
+	{
+		String sMethod = "handleError()";
+		AuthenticationLogger authenticationLogger = ASelectAuthenticationLogger.getHandle();
 
-        try
-        {
-            // Get parameter "rid"
-            String sRid = (String)htServiceRequest.get("rid");
-            if (sRid == null)
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                    "Invalid request: parameter 'rid' is missing.");
-                throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-            }
+		try {
+			// Get parameter "rid"
+			String sRid = (String) htServiceRequest.get("rid");
+			if (sRid == null) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request: parameter 'rid' is missing.");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
 
-            // Get parameter "result_code"
-            String sResultCode = (String)htServiceRequest.get("result_code");
-            if (sResultCode == null) //result_code missing
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Invalid request: Parameter 'result_code' is missing.");
-                throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-            }
-            if (sResultCode.length() != 4) //result_code invalid
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Invalid request: Parameter 'result_code' is not valid.");
-                throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-            }
-            
-            try
-            {
-                Integer.parseInt(sResultCode);
-            }
-            catch(NumberFormatException eNF) //result_code not a number
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Invalid request: Parameter 'result_code' is not a number.");
-                throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-            }
+			// Get parameter "result_code"
+			String sResultCode = (String) htServiceRequest.get("result_code");
+			if (sResultCode == null) // result_code missing
+			{
+				_systemLogger.log(Level.WARNING, _sModule, sMethod,
+						"Invalid request: Parameter 'result_code' is missing.");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+			if (sResultCode.length() != 4) // result_code invalid
+			{
+				_systemLogger.log(Level.WARNING, _sModule, sMethod,
+						"Invalid request: Parameter 'result_code' is not valid.");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
 
-            // Get session context
-            HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
-            if (htSessionContext == null)
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Invalid request: invalid or unknown session.");
-                throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
-            }
+			try {
+				Integer.parseInt(sResultCode);
+			}
+			catch (NumberFormatException eNF) // result_code not a number
+			{
+				_systemLogger.log(Level.WARNING, _sModule, sMethod,
+						"Invalid request: Parameter 'result_code' is not a number.");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
 
-            // Log cancel request
-            String sAppId = (String)htSessionContext.get("app_id");
-            String sUserId = (String)htSessionContext.get("user_id");
-            authenticationLogger.log(new Object[] {
-                						"Login", 
-                						sUserId,
-                						(String)htServiceRequest.get("client_ip"),
-                						_sMyOrg,
-                						sAppId,
-                						"denied",
-                						sResultCode});
+			// Get session context
+			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+			if (htSessionContext == null) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request: invalid or unknown session.");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
+			}
 
-            // Issue TGT
-            TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-            tgtIssuer.issueErrorTGT(sRid, sResultCode, servletResponse);
-        }
-        catch (ASelectException ae)
-        {
-          throw ae;
-        }
-        catch (Exception e)
-        {
-            _systemLogger
-            .log(
-                Level.WARNING,
-                _sModule,
-                sMethod,
-                "Internal error.",
-                e);
-            
-            throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-        }
-    }
+			// Log cancel request
+			String sAppId = (String) htSessionContext.get("app_id");
+			String sUserId = (String) htSessionContext.get("user_id");
+			authenticationLogger.log(new Object[] {
+				"Login", sUserId, (String) htServiceRequest.get("client_ip"), _sMyOrg, sAppId, "denied", sResultCode
+			});
+
+			// Issue TGT
+			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
+			tgtIssuer.issueErrorTGT(sRid, sResultCode, servletResponse);
+		}
+		catch (ASelectException ae) {
+			throw ae;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error.", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+	}
 }
-

@@ -692,18 +692,20 @@ public class StorageManager
 					long lCurrentTimestamp = System.currentTimeMillis();
 					Long lCleanupTimestamp = new Long(lCurrentTimestamp - _lExpireTime);
 
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Go cleanup");
 					_oStorageHandler.cleanup(lCleanupTimestamp);
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Cleaned-up");
 				}
 				catch (ASelectStorageException eAS) {
 					//                    _systemLogger.log(Level.INFO, MODULE, sMethod,
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "The storage cleanup failed.", eAS);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "The storage cleanup failed", eAS);
 				}
 				catch (InterruptedException eI) {
 					//Do nothing if interrupted
 				}
 				catch (Exception e) {
 					//                    _systemLogger.log(Level.INFO, MODULE, sMethod,
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "The cleaner could not do her work properly.", e);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "The cleaner could not do her work properly", e);
 				}
 			}
 			_systemLogger.log(Level.FINE, MODULE, sMethod, "The cleaner has stopped: " + this.getClass());

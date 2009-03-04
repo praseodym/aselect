@@ -1714,7 +1714,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	private void handleLogout(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 		throws ASelectException
 	{
-		String sMethod = "handleLogout()";
+		String sMethod = "handleLogout";
 		String sLoggedOutForm = _configManager.getForm("loggedout");
 
 		try {
@@ -1727,18 +1727,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				String sCookieDomain = _configManager.getCookieDomain();
 				HandlerTools.delCookieValue(servletResponse, "aselect_credentials", sCookieDomain, _systemLogger);
 
-				/*                Cookie cKillCookie = new Cookie("aselect_credentials", "jimmmorrisonisalive");
-
-				 String sCookieDomain = _configManager.getCookieDomain();
-				 if (sCookieDomain != null)
-				 {
-				 cKillCookie.setDomain(sCookieDomain);
-				 }
-				 
-				 _systemLogger.log(Level.INFO, _sModule, sMethod, "Delete Cookie="+cKillCookie.getName()+
-				 " Domain="+sCookieDomain+" Path="+cKillCookie.getPath());
-				 servletResponse.addCookie(cKillCookie);
-				 */
 				String sRemoteAsUrl = null;
 				String sRemoteOrg = null;
 				sRemoteOrg = (String) htTGTContext.get("proxy_organization");
@@ -1765,7 +1753,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					return;
 				}
 			}
-
 			sLoggedOutForm = _configManager.updateTemplate(sLoggedOutForm, htTGTContext);
 			pwOut.println(sLoggedOutForm);
 

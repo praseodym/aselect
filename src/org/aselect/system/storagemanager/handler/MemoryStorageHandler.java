@@ -243,7 +243,7 @@ public class MemoryStorageHandler implements IStorageHandler
     {
         String sMethod = "put";
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, this+" store="+_htStorage);
-        _systemLogger.log(Level.INFO, MODULE, sMethod, "MSH put("+Utils.firstPartOf(oKey.toString(),30)+") ="+oValue.toString()+" TS="+lTimestamp);
+        _systemLogger.log(Level.INFO, MODULE, sMethod, "MSH put("+Utils.firstPartOf(oKey.toString(),30)+") ="+oValue.toString()+" timestamp="+lTimestamp);
         
         HashMap htStorageContainer = new HashMap();
         try {
@@ -303,12 +303,13 @@ public class MemoryStorageHandler implements IStorageHandler
      * Removes the objects from memory table that have been expired.
      * @see org.aselect.system.storagemanager.IStorageHandler#cleanup(java.lang.Long)
      */
-    public void cleanup(Long lTimestamp) throws ASelectStorageException
+    public void cleanup(Long lTimestamp)
+    throws ASelectStorageException
     {
         String sMethod = "cleanup()";
         int countAll = 0, countRemoved = 0;
         
-        _systemLogger.log(Level.INFO, MODULE, sMethod, " CleanupTime="+lTimestamp);
+        _systemLogger.log(Level.FINER, MODULE, sMethod, " CleanupTime="+lTimestamp);
         synchronized (_htStorage) {
     		Set keys = _htStorage.keySet();
     		for (Object oKey : keys) {
@@ -316,9 +317,11 @@ public class MemoryStorageHandler implements IStorageHandler
 //            while (eKeys.hasMoreElements()) {
 //                Object oKey = eKeys.nextElement();
                 countAll++;
+            	String sTxt = Utils.firstPartOf(oKey.toString(),30);
+                _systemLogger.log(Level.INFO, MODULE, sMethod, " Get="+sTxt);
                 HashMap xStorageContainer = (HashMap)_htStorage.get(oKey);
                 Long lStorageTime = (Long)xStorageContainer.get("timestamp");
-            	String sTxt = Utils.firstPartOf(oKey.toString(),30);
+                _systemLogger.log(Level.INFO, MODULE, sMethod, " timestamp="+lStorageTime);
 
                 if (lTimestamp.longValue() >= lStorageTime.longValue()) {
                     _htStorage.remove(oKey);
@@ -333,7 +336,7 @@ public class MemoryStorageHandler implements IStorageHandler
             }
         }
         int countLeft = countAll - countRemoved;
-        _systemLogger.log(Level.INFO, MODULE, sMethod, " CleanupTime="+lTimestamp+" total was "+countAll+
+        _systemLogger.log(Level.FINER, MODULE, sMethod, " CleanupTime="+lTimestamp+" total was "+countAll+
         		" removed "+countRemoved+" left "+countLeft);
     }
 

@@ -259,7 +259,6 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
     private ApplicationManager _applicationManager;
     private AuthSPHandlerManager _authSPManagerManager;
     private CryptoEngine _cryptoEngine;
-
     private MetaDataManagerSp _metadataManager;
 	protected String _sServerUrl;
 
@@ -989,7 +988,9 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			oOutputMessage.setParam("asp", sAuthSP);
 			oOutputMessage.setParam("authsp_level", sAuthSPLevel);
 			oOutputMessage.setParam("authsp", sAuthSP);
-
+			// 20090303, added for DigiD-ization
+			oOutputMessage.setParam("betrouwbaarheidsniveau", sAuthSPLevel);
+			
 			if (_applicationManager.isUseOpaqueUid(sAppId)) {
 				// the returned user ID must contain an opaque value
 				MessageDigest oMessageDigest = null;

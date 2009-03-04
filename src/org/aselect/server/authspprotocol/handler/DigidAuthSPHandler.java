@@ -69,7 +69,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 	public void init(Object oAuthSPConfig, Object oAuthSPResource)
 		throws ASelectAuthSPException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		try {
 			_systemLogger = ASelectSystemLogger.getHandle();
@@ -90,17 +90,14 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 				_sAuthSPUrl = _configManager.getParam(oAuthSPResource, "url");
 			}
 			catch (Exception e) {
-				StringBuffer sbFailed = new StringBuffer(
-						"No valid 'url' config item found in resource section of authsp with id='");
-				sbFailed.append(_sAuthSPId);
-				sbFailed.append("'");
+				StringBuffer sbFailed = new StringBuffer("No valid 'url' config item found in resource section of authsp with id='");
+				sbFailed.append(_sAuthSPId).append("'");
 				throw new ASelectAuthSPException(sbFailed.toString(), e);
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "AuthSPUrl=" + _sAuthSPUrl);
 
 			try {
-				_sDefaultBetrouwbaarheidsNiveau = _configManager.getParam(oAuthSPConfig,
-						"default_betrouwbaarheidsniveau");
+				_sDefaultBetrouwbaarheidsNiveau = _configManager.getParam(oAuthSPConfig, "default_betrouwbaarheidsniveau");
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
@@ -126,8 +123,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 				oBetrouwbaarheidsNiveaus = _configManager.getSection(oAuthSPConfig, "betrouwbaarheidsniveaus");
 			}
 			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config section 'betrouwbaarheidsniveaus' found",
-						e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config section 'betrouwbaarheidsniveaus' found", e);
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -354,7 +350,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 	public HashMap verifyAuthenticationResponse(HashMap htResponse)
 	{
 		String sMethod = "verifyAuthenticationResponse()";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
 
 		HashMap<String, String> result = new HashMap<String, String>();
 		String resultCode = Errors.ERROR_ASELECT_INTERNAL_ERROR;
@@ -422,8 +418,9 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			Integer reqLevel = -1, digidLevel = -1;
 			if (sBetrouwbaarheidsniveau != null) {
 				digidLevel = Integer.parseInt(sBetrouwbaarheidsniveau);
-				reqLevel = SecurityLevel.getIntBetrouwbaarheidsNiveauFromBN(sReqLevel);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "digidLevel="+digidLevel+" reqLevel="+sReqLevel+":"+reqLevel);
+				reqLevel = Integer.parseInt(sReqLevel);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "digidLevel="+digidLevel+
+						" reqLevel="+sReqLevel+":"+reqLevel);
 				if (digidLevel < reqLevel) {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "DIGID LEVEL NOT HIGH ENOUGH (config error)");
 					throw new ASelectException(Errors.ERROR_ASELECT_CONFIG_ERROR);

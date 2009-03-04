@@ -84,15 +84,11 @@ package org.aselect.system.logging;
 
 import java.io.File;
 import java.util.Date;
-import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
-import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Level;
 
-import org.apache.log4j.Appender;
 import org.apache.log4j.Logger;
-import org.apache.log4j.Priority;
 
 import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;

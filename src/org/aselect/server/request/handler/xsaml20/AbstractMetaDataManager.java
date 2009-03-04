@@ -57,7 +57,7 @@ public abstract class AbstractMetaDataManager
 	protected ConcurrentHashMap<String, String> metadataSPs = new ConcurrentHashMap<String, String>();
 
 	protected void init()
-		throws ASelectException
+	throws ASelectException
 	{
 		_configManager = ASelectConfigManager.getHandle();
 		_systemLogger = ASelectSystemLogger.getHandle();
@@ -71,7 +71,7 @@ public abstract class AbstractMetaDataManager
 	 * @throws ASelectException
 	 */
 	protected void getMetaDataProviderfromList()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getMetaDataProviderfromList()";
 

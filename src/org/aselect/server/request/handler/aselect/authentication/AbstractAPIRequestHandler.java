@@ -214,8 +214,7 @@ public abstract class AbstractAPIRequestHandler implements IRequestHandler
 
 				try {
 					String sServerId = null;
-
-					_systemLogger.log(Level.INFO, _sModule, sMethod, "get a-select-server");
+					
 					try {
 						sServerId = inputMessage.getParam("a-select-server");
 					}
@@ -224,15 +223,14 @@ public abstract class AbstractAPIRequestHandler implements IRequestHandler
 								"Missing required parameter \"a-select-server\"");
 						throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 					}
-
-					_systemLogger.log(Level.INFO, _sModule, sMethod, "a-select-server="+sServerId);
+					_systemLogger.log(Level.FINER, _sModule, sMethod, "a-select-server="+sServerId);
 					if (!sServerId.equals(_sMyServerId)) {
 						_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid \"a-select-server\" parameter: "
 								+ sServerId);
 						throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_ID_MISMATCH);
 					}
 
-					_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstApiREQ processAPIRequest");
+					_systemLogger.log(Level.FINER, _sModule, sMethod, "AbstApiREQ processAPIRequest");
 					processAPIRequest(protocolRequest, inputMessage, outputMessage);
 				}
 				catch (ASelectException ace) {
@@ -360,5 +358,4 @@ public abstract class AbstractAPIRequestHandler implements IRequestHandler
 	{
 		return _servletRequest;
 	}
-
 }

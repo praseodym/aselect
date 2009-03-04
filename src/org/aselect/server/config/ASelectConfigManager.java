@@ -1086,7 +1086,6 @@ public class ASelectConfigManager extends ConfigManager
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not update template with optional parameters", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-
 		return sReturn;
 	}
 

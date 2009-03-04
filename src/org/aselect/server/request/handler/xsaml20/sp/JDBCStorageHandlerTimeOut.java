@@ -132,6 +132,18 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			return;
 		_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO _serverUrl=" + _serverUrl +
 					" - TGT Count=" + allTgts.size());
+		Long updateInterval = -1L;
+		try {
+			HashMap htResult = SessionSyncRequestSender.getSessionSyncParameters(_oSystemLogger);
+			updateInterval = (Long)htResult.get("update_interval");
+			if (updateInterval == null) {
+				_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "No 'update_interval' available");
+				updateInterval = -1L;
+			}
+		}
+		catch (ASelectException ase) {
+			throw new ASelectStorageException(ase.toString());
+		}
 		
 		// For all TGT's
         Set keys = allTgts.keySet();
@@ -159,16 +171,16 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			}
 
 			// Check Session Sync
-			try {
+//			try {
 				//String errorCode = Errors.ERROR_ASELECT_SUCCESS;
-				HashMap htResult = SessionSyncRequestSender.getSessionSyncParameters(_oSystemLogger);
-				Long updateInterval = (Long)htResult.get("update_interval");
+				//HashMap htResult = SessionSyncRequestSender.getSessionSyncParameters(_oSystemLogger);
+				//Long updateInterval = (Long)htResult.get("update_interval");
 				//String samlMessageType = (String)htResult.get("message_type");
 				//String federationUrl = (String)htResult.get("federation_url");
 				
 				// Since the last Session Sync also update the TGT's timestamp
 				// also skip a few seconds after lastSync
-				if (timeStamp > lastSync+10 && now >= lastSync + updateInterval) {
+				if (updateInterval > 0 && timeStamp > lastSync+10 && now >= lastSync + updateInterval) {
 					// Perform a Session Sync to the Federation
 					_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO Skip this SessionSync");
 					//SessionSyncRequestSender ss_req = new SessionSyncRequestSender(_oSystemLogger,
@@ -179,10 +191,10 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 					//	throw new ASelectStorageException(errorCode);
 					//}
 				}
-			}
-			catch (ASelectException ase) {
-				throw new ASelectStorageException(ase.toString());
-			}
+//			}
+//			catch (ASelectException ase) {
+//				throw new ASelectStorageException(ase.toString());
+//			}
 		}
 	}
 

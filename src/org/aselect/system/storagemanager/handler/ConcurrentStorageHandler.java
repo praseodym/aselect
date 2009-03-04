@@ -247,7 +247,7 @@ public class ConcurrentStorageHandler implements IStorageHandler
         String sMethod = "cleanup()";
         int countAll = 0, countRemoved = 0;
         
-        _systemLogger.log(Level.INFO, MODULE, sMethod, " CleanupTime="+lTimestamp);
+        _systemLogger.log(Level.FINER, MODULE, sMethod, " CleanupTime="+lTimestamp);
         //synchronized (_htStorage) {
             Enumeration eKeys = _htStorage.keys();
             while (eKeys.hasMoreElements()) {
@@ -271,7 +271,7 @@ public class ConcurrentStorageHandler implements IStorageHandler
             }
         //}
         int countLeft = countAll - countRemoved;
-        _systemLogger.log(Level.INFO, MODULE, sMethod, " CleanupTime="+lTimestamp+" total was "+countAll+
+        _systemLogger.log(Level.FINER, MODULE, sMethod, " CleanupTime="+lTimestamp+" total was "+countAll+
         		" removed "+countRemoved+" left "+countLeft);
     }
 
