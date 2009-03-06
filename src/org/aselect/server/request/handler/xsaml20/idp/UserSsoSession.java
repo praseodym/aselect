@@ -3,9 +3,8 @@ package org.aselect.server.request.handler.xsaml20.idp;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 
-import org.aselect.server.log.ASelectSystemLogger;
+//import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.handler.xsaml20.ServiceProvider;
 
 public class UserSsoSession implements Serializable
@@ -29,7 +28,7 @@ public class UserSsoSession implements Serializable
 
 	public UserSsoSession(String userId, String tgtId)
 	{
-		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
+		//ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
 		this.userId = userId;
 		this.tgtId = tgtId;
 		this.serviceProviders = new ArrayList<ServiceProvider>();
@@ -40,10 +39,10 @@ public class UserSsoSession implements Serializable
 		String sTgtId = (tgtId.length() > 30) ? tgtId.substring(0, 30) + "..." : tgtId;
 		String sCred = (aspCredentials.length() > 30) ? aspCredentials.substring(0, 30) + "..." : aspCredentials;
 		String result = "{userId=" + userId + ", tgtId=" + sTgtId + ", aspCred=" + sCred + ", logoutInit="
-				+ logoutInitiator;
+				+ logoutInitiator + " sps=";
 
 		for (ServiceProvider sp : serviceProviders) {
-			result += " {url=" + sp.getServiceProviderUrl() + ", sync=" + sp.getLastSessionSync() + "}";
+			result += " {url=" + sp.getServiceProviderUrl() + ", lastsync=" + sp.getLastSessionSync() + "}";
 		}
 		result += "}";
 		return result;

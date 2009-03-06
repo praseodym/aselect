@@ -64,7 +64,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
-import java.util.Enumeration;
 
 /**
  * The request hendler factory for the A-Select Server.

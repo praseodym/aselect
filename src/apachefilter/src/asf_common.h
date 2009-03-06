@@ -275,7 +275,7 @@ int         aselect_filter_gen_authcomplete_redirect(pool *pPool, request_rec *p
 int         aselect_filter_gen_top_redirect(pool *pPool, request_rec *pRequest, char *pcASUrl, char *pcASelectServer, char *pcRID);
 int         aselect_filter_verify_directory(pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcUri);
 char *      aselect_filter_get_cookie(pool *pPool, table *headers_in, char *pcAttribute );
-int         aselect_filter_gen_barhtml(pool *pPool, request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig, char *pcASelectAppUrl);
+int         aselect_filter_show_barhtml(pool *pPool, request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig, char *pcASelectAppUrl);
 char *      aselect_filter_base64_decode(pool *pPool, const char *pszValue);
 char *aselect_filter_base64_encode(pool *pPool, const char *pszValue);
 char *filter_action_text(ASELECT_FILTER_ACTION action);

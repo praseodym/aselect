@@ -27,9 +27,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.RequestState;
-import org.aselect.server.request.handler.saml11.common.AssertionSessionManager;
 import org.aselect.server.session.SessionManager;
 import org.aselect.system.communication.client.soap11.SOAP11Communicator;
 import org.aselect.system.error.Errors;
@@ -47,8 +45,8 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
 {
     final static String MODULE = "SamlAssertionConsumer";
     private SessionManager _sessionManager;
-    private SAMLBinding _oSAMLBinding;
-    private AssertionSessionManager _oAssertionSessionManager;
+    //private SAMLBinding _oSAMLBinding;
+    //private AssertionSessionManager _oAssertionSessionManager;
     private SOAP11Communicator _communicator;
 
     protected String _sMyServerId;
@@ -68,9 +66,9 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
             _systemLogger.log(Level.WARNING, MODULE, sMethod, "Specific initialization"); 
 	        
 	        _sessionManager = SessionManager.getHandle();
-	        _oAssertionSessionManager = AssertionSessionManager.getHandle();
-	        _oSAMLBinding = SAMLBindingFactory.getInstance(SAMLBinding.SOAP);
-			String sCheckSigning = HandlerTools.getSimpleParam(oConfig, "check_signing", false);
+	        //_oAssertionSessionManager = AssertionSessionManager.getHandle();
+	        //_oSAMLBinding = SAMLBindingFactory.getInstance(SAMLBinding.SOAP);
+			String sCheckSigning = Utils.getSimpleParam(oConfig, "check_signing", false);
 			if (sCheckSigning != null && sCheckSigning.equals("true"))
 				_bCheckSigning = true;
 	
@@ -140,7 +138,6 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
     {
         String sMethod = "process()";        
         String sSessionId = null;
-        String sTgt = null;
         String sRedirectUrl = getRedirectUrl(request);
         String sArtifact = request.getParameter("SAMLart");
         String sArtifactUrl;
@@ -250,7 +247,7 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
     }
     
     // NOT USED
-	private String getAttrFromSaml(String sName, String sAssertion)
+/*	private String getAttrFromSaml(String sName, String sAssertion)
 	{
 		String sMethod = "getAttrFromSaml";
 		int nIdx = sAssertion.indexOf("AttributeName=\""+sName+"\"");
@@ -262,5 +259,5 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
 		    return null;
 		}
 		return sUserId;
-	}
+	}*/
 }

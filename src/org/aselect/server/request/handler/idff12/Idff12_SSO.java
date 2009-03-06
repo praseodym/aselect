@@ -70,10 +70,10 @@ public class Idff12_SSO extends ProtoRequestHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Idff12_SSO.init()");
 
 			_oClientCommunicator = initClientCommunicator(oConfig);
-			_sProviderId = HandlerTools.getSimpleParam(oConfig, "provider_id", true);
-			_sIstsUrl = HandlerTools.getSimpleParam(oConfig, "ists_url", true);
+			_sProviderId = Utils.getSimpleParam(oConfig, "provider_id", true);
+			_sIstsUrl = Utils.getSimpleParam(oConfig, "ists_url", true);
 
-			_sMyAppId = HandlerTools.getParamFromSection(oConfig, "application", "id");
+			_sMyAppId = Utils.getParamFromSection(oConfig, "application", "id");
 			_sTemplate = readTemplateFromConfig(oConfig, "template");
 
 			_vIdPUrls = new Vector();  // Vector will contain 'url' key values

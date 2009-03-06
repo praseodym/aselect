@@ -16,8 +16,6 @@ import org.aselect.server.authspprotocol.IAuthSPProtocolHandler;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectAuthenticationLogger;
 import org.aselect.server.log.ASelectSystemLogger;
-import org.aselect.server.request.HandlerTools;
-import org.aselect.server.request.handler.xsaml20.SecurityLevel;
 import org.aselect.server.session.SessionManager;
 import org.aselect.system.communication.client.IClientCommunicator;
 import org.aselect.system.communication.client.raw.RawCommunicator;
@@ -26,6 +24,7 @@ import org.aselect.system.exception.ASelectAuthSPException;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.Utils;
 
 /**
  * The DigidAuthSPHandler. <br>
@@ -276,7 +275,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			}
 
 			//String sAppUrl = (String) htSessionContext.get("my_url") + "?local_rid=" + sRid + "&authsp=" + _sAuthSPId;
-			String _sServerUrl = HandlerTools.getParamFromSection(null, "aselect", "redirect_url");
+			String _sServerUrl = Utils.getParamFromSection(null, "aselect", "redirect_url");
 			String sAppUrl = _sServerUrl + "?local_rid=" + sRid + "&authsp=" + _sAuthSPId;
 			String sASelectServerId = _sASelectAuthSPServerId;
 			String sASelectServerUrl = _sAuthSPUrl;

@@ -1,17 +1,10 @@
 package org.aselect.server.request.handler.xsaml20.sp;
 
-import java.io.BufferedInputStream;
-import java.io.PrintWriter;
 import java.io.StringReader;
-import java.net.URLEncoder;
 import java.security.PublicKey;
-import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletInputStream;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilder;
@@ -21,12 +14,9 @@ import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.xsaml20.SoapManager;
 import org.aselect.server.request.handler.xsaml20.Saml20_BaseHandler;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
-import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.utils.Tools;
-import org.aselect.system.utils.Utils;
 import org.opensaml.Configuration;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.core.LogoutRequest;
@@ -49,7 +39,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 {
 	private final static String MODULE = "Xsaml20_SLO_Soap";
 	private static final String LOGOUTREQUEST = "LogoutRequest";
-	private static final String CONTENT_TYPE = "text/xml; charset=utf-8";
+	//private static final String CONTENT_TYPE = "text/xml; charset=utf-8";
 	private static final String SOAP_TYPE = "text/xml";
 
 	/**

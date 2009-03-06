@@ -92,9 +92,9 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			super.init(oServletConfig, oConfig);
 
 			_tgtManager = TGTManager.getHandle();
-			_sServerUrl = HandlerTools.getParamFromSection(null, "aselect", "redirect_url");
-			_sASelectServerID = HandlerTools.getParamFromSection(null, "aselect", "server_id");
-			_sASelectOrganization = HandlerTools.getParamFromSection(null, "aselect", "organization");
+			_sServerUrl = Utils.getParamFromSection(null, "aselect", "redirect_url");
+			_sASelectServerID = Utils.getParamFromSection(null, "aselect", "server_id");
+			_sASelectOrganization = Utils.getParamFromSection(null, "aselect", "organization");
 
   			// Initialize assertion building, if needed
 	        if (useConfigToCreateSamlBuilder())
@@ -603,7 +603,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	protected IClientCommunicator initClientCommunicator(Object oConfig)
 	throws ASelectException
 	{
-		String sClientCommunicator = HandlerTools.getSimpleParam(oConfig, "clientcommunicator", true);
+		String sClientCommunicator = Utils.getSimpleParam(oConfig, "clientcommunicator", true);
 		if (sClientCommunicator.equalsIgnoreCase("soap11")) {
 			return new SOAP11Communicator("ASelect", _systemLogger);
 		}
@@ -694,7 +694,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		String sMethod = "createSAML11Builder()";
 		
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "sPrefix="+sPrefix);
-		String sSendStatement = HandlerTools.getParamFromSection(oConfig, "attribute", "send_statement");
+		String sSendStatement = Utils.getParamFromSection(oConfig, "attribute", "send_statement");
 		if (!sSendStatement.equalsIgnoreCase("true") &&	!sSendStatement.equalsIgnoreCase("false")) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"Config item 'send_statement' in 'attribute' section must be 'true' or 'false'");
@@ -702,8 +702,8 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		}
 		boolean bSendAttributeStatement = new Boolean(sSendStatement).booleanValue();
 	
-		String sAttrNameSpace = HandlerTools.getParamFromSection(oConfig, "attribute", "namespace");		
-		String sAssertionExpireTime = HandlerTools.getParamFromSection(oConfig, "assertion", "expire");
+		String sAttrNameSpace = Utils.getParamFromSection(oConfig, "attribute", "namespace");		
+		String sAssertionExpireTime = Utils.getParamFromSection(oConfig, "assertion", "expire");
 		long lExpire = 0;
 		try {
 			lExpire = Long.parseLong(sAssertionExpireTime);

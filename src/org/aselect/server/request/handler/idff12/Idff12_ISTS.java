@@ -22,7 +22,6 @@ import java.util.TimeZone;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -64,13 +63,13 @@ public class Idff12_ISTS extends ProtoRequestHandler
 	        throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 	    }
 	       
-		_sProviderId = HandlerTools.getSimpleParam(oConfig, "provider_id", true);
-		_sOracleGlitch = HandlerTools.getSimpleParam(oConfig, "oracle_glitch", false);
+		_sProviderId = Utils.getSimpleParam(oConfig, "provider_id", true);
+		_sOracleGlitch = Utils.getSimpleParam(oConfig, "oracle_glitch", false);
 		if (_sOracleGlitch != null)
     		_systemLogger.log(Level.INFO, MODULE, sMethod, "oracle_glitch=" + _sOracleGlitch);
         	
 		_sCookieDomain = _configManager.getCookieDomain();
-		//_sCookieDomain = HandlerTools.getParamFromSection(oConfig, "cookie", "domain");
+		//_sCookieDomain = Utils.getParamFromSection(oConfig, "cookie", "domain");
 		//if (!_sCookieDomain.startsWith("."))
 		//	_sCookieDomain = "." + _sCookieDomain;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Cookie domain is: " + _sCookieDomain);

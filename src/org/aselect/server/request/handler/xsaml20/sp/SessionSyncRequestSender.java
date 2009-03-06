@@ -12,7 +12,6 @@ import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
-import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.server.request.handler.xsaml20.SoapManager;
 import org.aselect.server.tgt.TGTManager;
@@ -121,19 +120,20 @@ public class SessionSyncRequestSender
 		try {
 			Object oRequestsSection = myConfigManager.getSection(null, "requests");
 			Object oHandlersSection = myConfigManager.getSection(oRequestsSection, "handlers");
-
 			Object oHandler = myConfigManager.getSection(oHandlersSection, "handler");
 			
 			// 20090304, Bauke: cache the results in htSessionSyncParameters
 			// Not present yet, so get the parameters
-			HashMap htResult = new HashMap();
+			htSessionSyncParameters = new HashMap();
+			mySystemLogger.log(Level.INFO, MODULE, sMethod, "Scan handlers");
 			for ( ; oHandler != null; ) {
 				try {
 					String sId = myConfigManager.getParam(oHandler, "id");
+					mySystemLogger.log(Level.INFO, MODULE, sMethod, "Handler "+sId);
 					if (sId.equals("saml20_sp_session_sync")) {
 						try {
 							String federationUrl = myConfigManager.getParam(oHandler, "federation_url");
-							htResult.put("federation_url", federationUrl);
+							htSessionSyncParameters.put("federation_url", federationUrl);
 						}
 						catch (ASelectConfigException e) {
 							mySystemLogger.log(Level.WARNING, MODULE, sMethod,
@@ -144,9 +144,8 @@ public class SessionSyncRequestSender
 							String _sUpdateInterval = myConfigManager.getParam(oHandler, "update_interval");
 							Long updateInterval = Long.parseLong(_sUpdateInterval);
 							updateInterval = updateInterval * 1000;
-							mySystemLogger.log(Level.INFO, MODULE, sMethod, "Update interval on SP = "
-									+ updateInterval);
-							htResult.put("update_interval", updateInterval);
+							mySystemLogger.log(Level.INFO, MODULE, sMethod, "Update interval on SP = " + updateInterval);
+							htSessionSyncParameters.put("update_interval", updateInterval);
 						}
 						catch (ASelectConfigException e) {
 							mySystemLogger.log(Level.WARNING, MODULE, sMethod,
@@ -156,7 +155,7 @@ public class SessionSyncRequestSender
 
 						try {
 							String samlMessageType = myConfigManager.getParam(oHandler, "message_type");
-							htResult.put("message_type", samlMessageType);
+							htSessionSyncParameters.put("message_type", samlMessageType);
 						}
 						catch (ASelectConfigException e) {
 							mySystemLogger.log(Level.WARNING, MODULE, sMethod,
@@ -165,26 +164,26 @@ public class SessionSyncRequestSender
 						}
 						try {
 							String verify_signature = myConfigManager.getParam(oHandler, "verify_signature");
-							htResult.put("verify_signature", verify_signature);
+							htSessionSyncParameters.put("verify_signature", verify_signature);
 						}
 						catch (ASelectConfigException e) {
 							mySystemLogger.log(Level.WARNING, MODULE, sMethod,
 									"No config item 'verify_signature' in 'handler' section", e);
-							htResult.put("verify_signature", "false");
+							htSessionSyncParameters.put("verify_signature", "false");
 						}
 						try {
 							String verify_interval = myConfigManager.getParam(oHandler, "verify_interval");
-							htResult.put("verify_interval", verify_interval);
+							htSessionSyncParameters.put("verify_interval", verify_interval);
 						}
 						catch (ASelectConfigException e) {
 							mySystemLogger.log(Level.WARNING, MODULE, sMethod,
 									"No config item  'verify_interval' in 'handler' section", e);
-							htResult.put("verify_interval", "false");
+							htSessionSyncParameters.put("verify_interval", "false");
 						}
 						try {
 							String max_notbefore = myConfigManager.getParam(oHandler, "max_notbefore");
 							max_notbefore = (new Long( Long.parseLong(max_notbefore) * 1000)).toString();
-							htResult.put("max_notbefore", max_notbefore);
+							htSessionSyncParameters.put("max_notbefore", max_notbefore);
 						}
 						catch (ASelectConfigException e) {
 							mySystemLogger.log(Level.WARNING, MODULE, sMethod,
@@ -193,13 +192,12 @@ public class SessionSyncRequestSender
 						try {
 							String max_notonorafter = myConfigManager.getParam(oHandler, "max_notonorafter");
 							max_notonorafter = (new Long( Long.parseLong(max_notonorafter) * 1000)).toString();
-							htResult.put("max_notonorafter", max_notonorafter);
+							htSessionSyncParameters.put("max_notonorafter", max_notonorafter);
 						}
 						catch (ASelectConfigException e) {
 							mySystemLogger.log(Level.WARNING, MODULE, sMethod,
 									"No (valid) config item  'max_notonorafter' in 'handler' section", e);
 						}
-						htSessionSyncParameters = htResult;
 					}
 				}
 				catch (ASelectConfigException e) {
@@ -220,7 +218,7 @@ public class SessionSyncRequestSender
 	// Bauke: rewritten
 	// Returns: ERROR_ASELECT_SUCCESS or error code upon failure
 	//
-	public String synchronizeSession(String argCredentials, boolean credsAreCoded, boolean upgradeTgt)
+	public String synchronizeSession(String argCredentials, boolean credsAreCoded, boolean updateTgt)
 	{
 		String _sMethod = "synchronizeSession";
 		String errorCode = Errors.ERROR_ASELECT_SUCCESS;
@@ -241,8 +239,8 @@ public class SessionSyncRequestSender
 			return Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT;
 		}
 		
-		if (upgradeTgt) {
-			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Upgrade TICKET context=" + htTGTContext);
+		if (updateTgt) {
+			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Update TICKET context=" + htTGTContext);
 			_oTGTManager.updateTGT(credentials, htTGTContext);
 		}
 
@@ -295,66 +293,6 @@ public class SessionSyncRequestSender
 		return errorCode;
 	}
 
-	/*
-	 * Methode kijkt wanneer de laatste update naar de federatie idp is
-	 * gestuurd. Is dit langer dan 5 minuten geleden dan is de return value
-	 * true. Als er een update korter dan 5 min. geleden is verstuurd dan is de
-	 * return value false.
-	 * 
-	 * Always updates the tgt timestamp.
-	 */
-/*	private boolean needToSendUpdate(String credentials, long updateInterval)
-		throws ASelectStorageException
-	{
-		String _sMethod = "needToSendUpdate";
-		boolean update = false;
-
-		// get timestamp and update time
-		Long timestamp = this.getTimeStamp(credentials);
-		Long now = new Date().getTime();
-		Long timeLow = now - updateInterval;
-
-		// Do we need to send update?
-		if (timestamp >= timeLow && timestamp <= now) {
-			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "time between " + timeLow + " timeLow("
-					+ this.getReadableDate(timeLow) + ")" + " and " + now + " now(" + this.getReadableDate(now)
-					+ ")" + " = TGT (" + timestamp + ")" + "(" + this.getReadableDate(timestamp) + ")");
-			update = false;
-		}
-		else {
-			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "time NOT between " + timeLow + " timeLow("
-					+ this.getReadableDate(timeLow) + ")" + " and " + now + " now(" + this.getReadableDate(now)
-					+ ")" + "= TGT (" + timestamp + ")" + "(" + this.getReadableDate(timestamp) + ")");
-			changeSessionTime(credentials);
-			update = true;
-		}
-		return update;
-	}
-*/
-	/*
-	 * Methode werkt de lokale sessie tijd bij.
-	 */
-/*	private void changeSessionTime(String credentials)
-	{
-		String _sMethod = "changeSessionTime";
-		try {
-			if (_oTGTManager.containsKey(credentials)) {
-				HashMap tgtBeforeUpdate = (HashMap) _oTGTManager.get(credentials);
-				tgtBeforeUpdate.put("sessionsynctime", new Date().getTime());
-				_oTGTManager.update(credentials, tgtBeforeUpdate);
-				//HashMap tgtAfterUpdate = (HashMap) _oTGTManager.get(decodedcredentials);
-			}
-			else {
-				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "There is no TGT with key " + credentials);
-			}
-		}
-		catch (ASelectStorageException asse) {
-			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "SP (" + _sRedirectUrl
-					+ ")- failed too change the session time", asse);
-			asse.printStackTrace();
-		}
-	}
-*/
 	/*
 	 * Methode bouwt een SAML message. En verstuurt deze naar de federatie.
 	 * 
@@ -616,7 +554,6 @@ public class SessionSyncRequestSender
 				else {
 					_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "RESPONSE contains deny (IDP has not processed update correct)");
 					String samlNameID = getNameIdFromSAMLResponse(sResponse);
-					//killTgt(uidSaml);
 					_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Kill tgt for " + samlNameID);
 					tgtmanager.remove(credentials);
 					return false;

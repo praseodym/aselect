@@ -196,7 +196,6 @@ import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectAuthenticationLogger;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.RequestHandlerFactory;
-import org.aselect.server.request.handler.ProtoRequestHandler;
 import org.aselect.server.sam.ASelectSAMAgent;
 import org.aselect.server.session.SessionManager;
 import org.aselect.server.tgt.TGTManager;

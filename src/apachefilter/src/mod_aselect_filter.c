@@ -970,21 +970,23 @@ aselect_filter_handler(request_rec *pRequest)
                             // must show the the aselect_bar
                             //
                             if ((pcASelectAppURL = aselect_filter_get_param(pPool, pRequest->args, "aselect_app_url=", "&", TRUE)))
-                                iRet = aselect_filter_gen_barhtml(pPool, pRequest, pConfig, pcASelectAppURL);
+                                iRet = aselect_filter_show_barhtml(pPool, pRequest, pConfig, pcASelectAppURL);
                             else
-                                iRet = aselect_filter_gen_barhtml(pPool, pRequest, pConfig, pConfig->pCurrentApp->pcLocation);
+                                iRet = aselect_filter_show_barhtml(pPool, pRequest, pConfig, pConfig->pCurrentApp->pcLocation);
                         }
                         else if (strstr(pcRequest, "aselect_generate_bar"))
                         {
                             // return the bar html content
 			    char *pcLogoutHTML = pConfig->pcLogoutTemplate;
 
+			    TRACE1("aselect_generate_bar, logout loc=%s", pConfig->pCurrentApp->pcLocation);
                             pRequest->content_type = "text/html";
                             ap_send_http_header(pRequest);
 
 			    // Bauke 20080928: added configurable Logout Bar
-			    while (pcLogoutHTML && (strstr(pcLogoutHTML, "[action]") != NULL))
-			    pcLogoutHTML = aselect_filter_replace_tag(pPool, "[action]", pConfig->pCurrentApp->pcLocation, pcLogoutHTML);
+			    while (pcLogoutHTML && (strstr(pcLogoutHTML, "[action]") != NULL)) {
+				pcLogoutHTML = aselect_filter_replace_tag(pPool, "[action]", pConfig->pCurrentApp->pcLocation, pcLogoutHTML);
+			    }
 
 			    ap_rprintf(pRequest, "%s\n", (pcLogoutHTML)? pcLogoutHTML: "");
                             // OLD ap_rprintf(pRequest, ASELECT_LOGOUT_BAR, pConfig->pCurrentApp->pcLocation);

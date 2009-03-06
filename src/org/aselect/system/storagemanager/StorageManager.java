@@ -59,7 +59,6 @@ package org.aselect.system.storagemanager;
 import java.util.HashMap;
 import java.util.logging.Level;
 
-import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;

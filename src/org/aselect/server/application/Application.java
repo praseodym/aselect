@@ -75,6 +75,11 @@ public class Application
     private boolean _bDirectAuthSPPrefered;
     private PublicKey _oSigningKey;
     private Vector _vSSOGroups;
+    
+    private String _shared_secret;
+    private String _forced_uid;
+    private String _forced_authsp;
+    private String _level_name;
    
     /**
      * Contructor which contains the default parameters for an Application
@@ -112,7 +117,6 @@ public class Application
         _bSigningRequired = false;
         _bForcedAuthenticate = false;
         _oSigningKey = null;
-        
         _bUseOpaqueUId = false;
         _bShowUrl = false;
         _sFriendlyName = null;
@@ -318,4 +322,44 @@ public class Application
     {
         _sMaintainerEmail = maintainerEmail;
     }
+
+	public String getForcedAuthsp()
+	{
+		return _forced_authsp;
+	}
+
+	public void setForcedAuthsp(String _forced_authsp)
+	{
+		this._forced_authsp = _forced_authsp;
+	}
+
+	public String getForcedUid()
+	{
+		return _forced_uid;
+	}
+
+	public void setForcedUid(String _forced_uid)
+	{
+		this._forced_uid = _forced_uid;
+	}
+
+	public String getLevelName()
+	{
+		return _level_name;
+	}
+
+	public void setLevelName(String _level_name)
+	{
+		this._level_name = _level_name;
+	}
+
+	public String getSharedSecret()
+	{
+		return _shared_secret;
+	}
+
+	public void setSharedSecret(String _shared_secret)
+	{
+		this._shared_secret = _shared_secret;
+	}
 }

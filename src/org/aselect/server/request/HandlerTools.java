@@ -8,9 +8,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectSystemLogger;
-import org.aselect.system.error.Errors;
-import org.aselect.system.exception.ASelectConfigException;
-import org.aselect.system.exception.ASelectException;
 
 public class HandlerTools
 {
@@ -123,45 +120,5 @@ public class HandlerTools
 	    	logger.log(Level.INFO, MODULE, sMethod, "Cookie "+aCookies[i].getName()+"="+aCookies[i].getValue()+
 	        		", Path="+aCookies[i].getPath()+", Domain="+aCookies[i].getDomain()+", Age="+aCookies[i].getMaxAge());
 	    }
-	}
-	
-	public static String getSimpleParam(Object oConfig, String sParam, boolean bMandatory)
-	throws ASelectException
-	{
-		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
-		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
-		try {
-			return _configManager.getParam(oConfig, sParam);  // is not null
-		}
-		catch (ASelectConfigException e) {
-			if (!bMandatory)
-				return null;
-			_systemLogger.log(Level.WARNING, MODULE, "getSimpleParam", "Config item '"+sParam+"' not found", e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-		}
-	}
-
-	public static String getParamFromSection(Object oConfig, String sSection, String sParam, boolean bMandatory)
-	throws ASelectConfigException
-	{
-		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
-		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
-		try {
-			Object oSection = _configManager.getSection(oConfig, sSection);
-			return _configManager.getParam(oSection, sParam);
-		}
-		catch (ASelectConfigException e) {
-			if (!bMandatory)
-				return null;
-			_systemLogger.log(Level.WARNING, MODULE, "getParamFromSection",
-					"Could not retrieve '"+sParam+"' parameter in '"+sSection+"' section", e);
-			throw e;
-		}
-	}
-
-	public static String getParamFromSection(Object oConfig, String sSection, String sParam)
-	throws ASelectConfigException
-	{
-		return getParamFromSection(oConfig, sSection, sParam, true);
 	}
 }

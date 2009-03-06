@@ -1,10 +1,6 @@
 package org.aselect.server.request.handler.xsaml20.sp;
 
-import java.io.IOException;
 import java.io.StringReader;
-import java.io.StringWriter;
-import java.net.URLDecoder;
-import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -18,8 +14,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.xml.serialize.OutputFormat;
-import org.apache.xml.serialize.XMLSerializer;
 import org.aselect.server.log.ASelectAuthenticationLogger;
 import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.RequestState;
@@ -32,13 +26,11 @@ import org.aselect.server.tgt.TGTIssuer;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.utils.BASE64Encoder;
 import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
 import org.opensaml.Configuration;
 import org.opensaml.common.SAMLObjectBuilder;
 import org.opensaml.common.SAMLVersion;
-import org.opensaml.common.impl.SecureRandomIdentifierGenerator;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.core.*;
 import org.opensaml.saml2.metadata.ArtifactResolutionService;
@@ -116,11 +108,11 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 //		}
 		// RH, 20080602, eo, is done by Saml20_BaseHandler now        
 
-		_sMyServerId = HandlerTools.getParamFromSection(null, "aselect", "server_id");
-		_sFederationUrl = HandlerTools.getParamFromSection(null, "aselect", "federation_url");
-		_sRedirectUrl = HandlerTools.getParamFromSection(null, "aselect", "redirect_url"); // We use as Issuer in the send SAML message
+		_sMyServerId = Utils.getParamFromSection(null, "aselect", "server_id");
+		_sFederationUrl = Utils.getParamFromSection(null, "aselect", "federation_url");
+		_sRedirectUrl = Utils.getParamFromSection(null, "aselect", "redirect_url"); // We use as Issuer in the send SAML message
 
-		String sLocalityAddressRequired = HandlerTools.getSimpleParam(oHandlerConfig,
+		String sLocalityAddressRequired = Utils.getSimpleParam(oHandlerConfig,
 				"locality_address_required", false);
 		//		if (sVerifySignature != null && sVerifySignature.equalsIgnoreCase("false")) {
 		//			_bVerifySignature = false;

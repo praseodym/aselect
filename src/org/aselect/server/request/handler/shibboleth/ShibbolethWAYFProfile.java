@@ -28,7 +28,6 @@ import java.util.Vector;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 

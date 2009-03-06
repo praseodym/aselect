@@ -227,7 +227,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		String sBindingName = SAMLConstants.SAML2_ARTIFACT_BINDING_URI;
 
 		try {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta");
+			//_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta");
 			MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
 			sAssertionConsumerServiceURL = metadataManager.getLocation(sEntityId, sElementName, sBindingName);
 		}
@@ -235,7 +235,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			// Getting it from metadata is not succeeded so see if it is in the message
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage());
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta1 OK "+sAssertionConsumerServiceURL);
+		//_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta1 OK "+sAssertionConsumerServiceURL);
 		if (sAssertionConsumerServiceURL == null) {
 			if (elementName.equals(AUTHNREQUEST)) {
 				AuthnRequest authnRequest = (AuthnRequest) samlMessage;
@@ -243,7 +243,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				sAssertionConsumerServiceURL = authnRequest.getAssertionConsumerServiceURL();
 			}
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Return "+sAssertionConsumerServiceURL);
+		//_systemLogger.log(Level.INFO, MODULE, sMethod, "Return "+sAssertionConsumerServiceURL);
 		return sAssertionConsumerServiceURL;
 	}
 

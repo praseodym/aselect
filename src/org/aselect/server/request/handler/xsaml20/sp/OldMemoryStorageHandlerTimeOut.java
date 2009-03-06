@@ -16,16 +16,16 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMAgent;
-import org.aselect.system.storagemanager.handler.MemoryStorageHandler;
+import org.aselect.system.storagemanager.handler.OldMemoryStorageHandler;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
 /*
  * NOTE: Code is identical to JDBCStorageHandlerTimeOut (except for class-names of course)
  */
-public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
+public class OldMemoryStorageHandlerTimeOut extends OldMemoryStorageHandler
 {
-	private final static String MODULE = "MemoryStorageHandlerTimeOut";
+	private final static String MODULE = "OldMemoryStorageHandlerTimeOut";
 	private TGTManager _oTGTManager;
 	private ConfigManager _oConfigManager;
 	private ASelectSystemLogger _oSystemLogger;

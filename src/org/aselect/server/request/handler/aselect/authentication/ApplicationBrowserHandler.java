@@ -304,7 +304,7 @@ import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.aselect.system.servlet.HtmlInfo;
+//import org.aselect.system.servlet.HtmlInfo;
 
 import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler;
@@ -919,10 +919,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		boolean bAskConsent = false;
 		try {
 			Object aselect = _configManager.getSection(null, "aselect");
-			sFriendlyName = HandlerTools.getSimpleParam(aselect, "organization_friendly_name", false);
-			String sAskConsent = HandlerTools.getSimpleParam(aselect, "request_consent", false);
+			sFriendlyName = Utils.getSimpleParam(aselect, "organization_friendly_name", false);
+			String sAskConsent = Utils.getSimpleParam(aselect, "request_consent", false);
 			if (sAskConsent != null && sAskConsent.equals("true"))
 				bAskConsent = true;
+			_systemLogger.log(Level.INFO, _sModule, _sModule, "request_consent="+bAskConsent);
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, _sModule, _sModule, "Configuration error: " + e);

@@ -20,6 +20,9 @@ import org.aselect.system.storagemanager.handler.ConcurrentStorageHandler;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
+/*
+ * NOTE: Code differs from the idp-version.
+ */
 public class ConcurrentStorageHandlerTimeOut extends ConcurrentStorageHandler
 {
 	private final static String MODULE = "ConcurrentStorageHandlerTimeOut";

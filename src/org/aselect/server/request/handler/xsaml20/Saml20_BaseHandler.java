@@ -5,7 +5,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import javax.servlet.ServletConfig;
 
-import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.handler.ProtoRequestHandler;
 import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
@@ -58,22 +57,22 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 		}
 
 		//		_bVerifySignature = true;
-		String sVerifySignature = HandlerTools.getSimpleParam(oHandlerConfig, "verify_signature", false);
+		String sVerifySignature = Utils.getSimpleParam(oHandlerConfig, "verify_signature", false);
 		//		if (sVerifySignature != null && sVerifySignature.equalsIgnoreCase("false")) {
 		//			_bVerifySignature = false;
 		if ("true".equalsIgnoreCase(sVerifySignature)) {
 			set_bVerifySignature(true);
 		}
-		String sIntervalInterval = HandlerTools.getSimpleParam(oHandlerConfig, "verify_interval", false);
+		String sIntervalInterval = Utils.getSimpleParam(oHandlerConfig, "verify_interval", false);
 		if ("true".equalsIgnoreCase(sIntervalInterval)) {
 			set_b_VerifyInterval(true);
 		}
 
-		String sMaxNotBefore = HandlerTools.getSimpleParam(oHandlerConfig, "max_notbefore", false);
+		String sMaxNotBefore = Utils.getSimpleParam(oHandlerConfig, "max_notbefore", false);
 		if (sMaxNotBefore != null) {
 			setMaxNotBefore(new Long( Long.parseLong(sMaxNotBefore) * 1000));
 		}
-		String sMaxNotOnOrAfter = HandlerTools.getSimpleParam(oHandlerConfig, "max_notonorafter", false);
+		String sMaxNotOnOrAfter = Utils.getSimpleParam(oHandlerConfig, "max_notonorafter", false);
 		if (sMaxNotOnOrAfter != null) {
 			setMaxNotOnOrAfter(new Long( Long.parseLong(sMaxNotOnOrAfter) * 1000) );
 		}

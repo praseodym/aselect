@@ -855,12 +855,11 @@ aselect_filter_get_cookie(pool *pPool, table *headers_in, char *pcAttribute)
 
 
 int
-aselect_filter_gen_barhtml(pool *pPool, request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig, char *pcASelectAppURL)
+aselect_filter_show_barhtml(pool *pPool, request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig, char *pcASelectAppURL)
 {
     table   *headers_out = pRequest->headers_out;
 
-    TRACE("aselect_filter_gen_barhtml()");
-
+    TRACE2("aselect_filter_show_barhtml: loc=%s url=%s", pConfig->pCurrentApp->pcLocation, pcASelectAppURL);
     pRequest->content_type = "text/html";
     aselect_filter_add_nocache_headers(headers_out);
 

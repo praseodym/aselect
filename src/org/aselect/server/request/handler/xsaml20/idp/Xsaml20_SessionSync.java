@@ -3,7 +3,6 @@ package org.aselect.server.request.handler.xsaml20.idp;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
-import java.net.URLEncoder;
 import java.security.PublicKey;
 import java.util.Date;
 import java.util.HashMap;
@@ -12,7 +11,6 @@ import java.util.List;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilder;
@@ -66,7 +64,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 	private TGTManager _oTGTManager = TGTManager.getHandle();
 	private final static String MODULE = "Xsaml20_SessionSync";
 	private static final String AUTHZDECISIONQUERY = "AuthzDecisionQuery";
-	private static final String CONTENT_TYPE = "text/xml; charset=utf-8";
+	//private static final String CONTENT_TYPE = "text/xml; charset=utf-8";
 
 
 	/**
@@ -106,7 +104,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 			String docReceived = readHttpPostData(request);
 			String sNameID = null;
 			String sp = null;
-			String credentials = null;
+			//String credentials = null;
 
 			boolean samlMessage = determineMessageType(docReceived);
 			if (samlMessage) {
@@ -160,7 +158,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 				_systemLogger.log(Level.INFO, MODULE, _sMethod, "XACML NameID === " + sNameID + " XACML sp ===" + sp);
 			}
 
-			credentials = sNameID;			
+			//credentials = sNameID;			
 			try {
 				if (sNameID != null && sp != null) {
 					// Update update time for sp

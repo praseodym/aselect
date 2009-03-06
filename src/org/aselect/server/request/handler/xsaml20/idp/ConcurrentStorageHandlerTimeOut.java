@@ -22,8 +22,7 @@ import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
 /*
- * NOTE: Code is identical to MemoryStorageHandlerTimeOut (except for class-names of course)
- *       Though it is different from the sp-version.
+ * NOTE: Code differs from the sp-version.
  */
 public class ConcurrentStorageHandlerTimeOut extends ConcurrentStorageHandler
 {

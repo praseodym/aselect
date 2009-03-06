@@ -13,12 +13,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
-import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.ProtoRequestHandler;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.Utils;
 import org.opensaml.Configuration;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.xml.XMLObjectBuilderFactory;
@@ -82,11 +82,11 @@ public class Saml20_Metadata extends ProtoRequestHandler
             	// redirect_url will be used as entityIdIdp in metadata
                 setEntityIdIdp(_configManager.getParam(oASelect, "redirect_url"));
                 
-        		String sValidUntil = HandlerTools.getSimpleParam(oConfig, "valid_until", false);
+        		String sValidUntil = Utils.getSimpleParam(oConfig, "valid_until", false);
         		if (sValidUntil != null) {
         			setValidUntil(new Long( Long.parseLong(sValidUntil) * 1000));
         		}
-        		String sCacheDuration = HandlerTools.getSimpleParam(oConfig, "cache_duration", false);
+        		String sCacheDuration = Utils.getSimpleParam(oConfig, "cache_duration", false);
         		if (sCacheDuration != null) {
         			setCacheDuration(new Long( Long.parseLong(sValidUntil) * 1000));
         		}

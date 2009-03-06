@@ -74,13 +74,13 @@ public class AccountSTS extends ProtoRequestHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "specific init processing");
 
 			_oClientCommunicator = initClientCommunicator(oConfig);
-			_sUserDomain = HandlerTools.getParamFromSection(null, "aselect", "user_domain", false);
+			_sUserDomain = Utils.getParamFromSection(null, "aselect", "user_domain", false);
 			if (_sUserDomain == null) _sUserDomain = "digid.nl";
-			_sMyAppId = HandlerTools.getParamFromSection(oConfig, "application", "id");
-			_sIstsUrl = HandlerTools.getSimpleParam(oConfig, "ists_url", true);
-			_sProviderId = HandlerTools.getSimpleParam(oConfig, "provider_id", true);
-			_sNameIdFormat = HandlerTools.getSimpleParam(oConfig, "nameid_format", true);
-			//_sDefaultWreply = HandlerTools.getSimpleParam(oConfig, "default_wreply", true);
+			_sMyAppId = Utils.getParamFromSection(oConfig, "application", "id");
+			_sIstsUrl = Utils.getSimpleParam(oConfig, "ists_url", true);
+			_sProviderId = Utils.getSimpleParam(oConfig, "provider_id", true);
+			_sNameIdFormat = Utils.getSimpleParam(oConfig, "nameid_format", true);
+			//_sDefaultWreply = Utils.getSimpleParam(oConfig, "default_wreply", true);
 			_sTemplate = readTemplateFromConfig(oConfig, "template");
 
 			_sCookieDomain = _configManager.getCookieDomain();
@@ -138,7 +138,7 @@ public class AccountSTS extends ProtoRequestHandler
 		String sPwa = request.getParameter("wa");  // action
 		String sPwreply = request.getParameter("wreply");  // response redirect URL, nog given by ADFS!
 		String sPwctx = request.getParameter("wctx");  // context value, pass unchanged
-		String sPwct = request.getParameter("wct");  // current time
+		//String sPwct = request.getParameter("wct");  // current time
 		String sPwtrealm = request.getParameter("wtrealm");  // requesting realm (resource accessed)
 		String sPwhr = request.getParameter("whr");  // requestor's home realm (account partner's client realm)
 		

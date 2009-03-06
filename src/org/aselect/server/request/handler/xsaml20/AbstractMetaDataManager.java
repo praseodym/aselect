@@ -321,10 +321,10 @@ public abstract class AbstractMetaDataManager
 				Element domDescriptor = marshallDescriptor(descriptor);
 				NodeList nodeList = domDescriptor.getChildNodes();				
 				
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Try "+nodeList.getLength()+" entries");
+				//_systemLogger.log(Level.INFO, MODULE, sMethod, "Try "+nodeList.getLength()+" entries");
 				for (int i = 0; i < nodeList.getLength(); i++) {
 					Node childNode = nodeList.item(i);
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Node "+childNode.getLocalName());
+					//_systemLogger.log(Level.INFO, MODULE, sMethod, "Node "+childNode.getLocalName());
 					if (elementName.equals(childNode.getLocalName())) {
 						NamedNodeMap nodeMap = childNode.getAttributes();
 						String bindingMDValue = nodeMap.getNamedItem("Binding").getNodeValue();

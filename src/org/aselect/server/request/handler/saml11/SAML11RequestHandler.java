@@ -16,7 +16,6 @@
 
 package org.aselect.server.request.handler.saml11;
 
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;

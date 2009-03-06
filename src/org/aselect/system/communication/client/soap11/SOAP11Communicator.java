@@ -79,12 +79,10 @@
 
 package org.aselect.system.communication.client.soap11;
 
-import java.io.DataInputStream;
 import java.io.PrintStream;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Level;
@@ -226,10 +224,7 @@ public class SOAP11Communicator implements IClientCommunicator
     public String sendStringMessage(String soapMessage, String sTarget)
     throws ASelectCommunicationException
     {
-        HashMap htResult = new HashMap();
-        String sMessage = null;
         String sResponse = null;
-        Element elBody = null;
         String sMethod = "sendStringMessage()";
         
         //Create a new message

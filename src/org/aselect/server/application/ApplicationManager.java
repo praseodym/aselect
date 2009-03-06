@@ -127,26 +127,23 @@ import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.Utils;
 
 /**
- * The application manager for the A-Select Server.
- * <br><br>
+ * The application manager for the A-Select Server. <br>
+ * <br>
  * <b>Description:</b><br>
- * A singleton application manager, containing the application configuration.
- * It loads several application settings in memory during initialization.   
- * <br><br>
- * <b>Concurrency issues:</b>
+ * A singleton application manager, containing the application configuration. It loads several application settings in
+ * memory during initialization. <br>
  * <br>
- * The class is a singleton, so the same class is used in all the classes of 
- * the A-Select Server.
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * The class is a singleton, so the same class is used in all the classes of the A-Select Server. <br>
  * 
+ * @author Alfa & Ariss
  */
 public class ApplicationManager
 {
-
-	// All 
+	// All
 	private HashMap _htApplications;
 
 	// 
@@ -167,7 +164,7 @@ public class ApplicationManager
 	// Boolean indicating wether or not application API calls must be signed
 	private boolean _bRequireSigning;
 
-	//Location of applications.keystore when signing is required.
+	// Location of applications.keystore when signing is required.
 	private String _sApplicationsKeystoreName = null;
 
 	// Do I know applications?
@@ -176,25 +173,18 @@ public class ApplicationManager
 	private Object _oApplicationsConfigSection = null;
 
 	/**
-	 * Must be used to get an ApplicationManager instance.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Must be used to get an ApplicationManager instance. <br>
 	 * <br>
-	 * Creates a new <code>ApplicationManager</code> instance if it's still <code>null</code>.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Creates a new <code>ApplicationManager</code> instance if it's still <code>null</code>. <br>
 	 * <br>
-	 * Always the same instance of the application manager is returned, because it's a
-	 * singleton.
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * Always the same instance of the application manager is returned, because it's a singleton. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br>
+	 * <b>Postconditions:</b> <br> - <br>
+	 * 
 	 * @return A static handle to the <code>ApplicationManager</code>.
 	 */
 	public static ApplicationManager getHandle()
@@ -206,29 +196,22 @@ public class ApplicationManager
 	}
 
 	/**
-	 * Initialization of the ApplicationManager singleton
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Initialization of the ApplicationManager singleton <br>
 	 * <br>
-	 * Must be successfully run once, before it can be used.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Must be successfully run once, before it can be used. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br> - <br>
 	 * <br>
-	 * - Singleton <code>ASelectConfigManager</code> should be initialized.<BR>
-	 * - At least one application should be configured.
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br> - Singleton <code>ASelectConfigManager</code> should be initialized.<BR> - At
+	 * least one application should be configured. <br>
 	 * <br>
-	 * -
-	 * <br>
+	 * <b>Postconditions:</b> <br> - <br>
+	 * 
 	 * @throws ASelectException
 	 */
 	public void init()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		// FIXME: Double initialization of _oApplicationsConfigSection
@@ -245,16 +228,13 @@ public class ApplicationManager
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod, "No 'applications' section found in A-Select config", eAC);
 				return;
 			}
-
 			try {
-				String sRequireSigning = _oASelectConfigManager
-						.getParam(_oApplicationsConfigSection, "require_signing");
+				String sRequireSigning = _oASelectConfigManager.getParam(_oApplicationsConfigSection, "require_signing");
 				_bRequireSigning = new Boolean(sRequireSigning).booleanValue();
 			}
 			catch (ASelectConfigException eAC) {
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No 'require_signing' parameter found in section 'applications', using default value 'false'",
-						eAC);
+						"No 'require_signing' parameter found in section 'applications', using default value 'false'", eAC);
 			}
 
 			if (_bRequireSigning) {
@@ -263,105 +243,116 @@ public class ApplicationManager
 						File.separator).append("applications.keystore").toString();
 			}
 			Object oApplication = null;
-			try {
-				// for testing purposes: check if at least one application is
-				// defined
+			try { // for testing purposes: check if at least one application is defined
 				oApplication = _oASelectConfigManager.getSection(_oApplicationsConfigSection, "application");
 			}
 			catch (ASelectConfigException eAC) {
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No 'application' section found in 'applications' section", eAC);
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod, "No 'application' section found in 'applications' section", eAC);
 				return;
 			}
 
+			// Read config data for all applications
 			while (oApplication != null) {
 				String sAppId = null;
 				Integer intLevel = null;
 				Integer intMaxLevel = null;
 				boolean bForced = false;
-				String sFriendlyName = null;
-				String sMaintainerEmail = null;
 				boolean bShowUrl = false;
 				boolean bUseOpaqueId = false;
 				Application application = new Application();
-				String sAttributePolicy = null;
-
-				try {
+				
+				/*try {
 					sAppId = _oASelectConfigManager.getParam(oApplication, "id");
 				}
 				catch (ASelectConfigException e) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod,
 							"No valid 'id' parameter found in section 'application'", e);
 					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-				}
-
-				try {
+				}*/
+				/*try {
 					intLevel = new Integer(_oASelectConfigManager.getParam(oApplication, "level"));
 				}
 				catch (ASelectConfigException e) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod,
 							"No valid 'level' parameter found in section 'application'", e);
 					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-				}
-				try {
+				}*/
+				/*try {
 					intMaxLevel = new Integer(_oASelectConfigManager.getParam(oApplication, "max_level"));
 				}
 				catch (ASelectConfigException e) {
 					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
 							"No optional 'max_level' parameter found in section 'application'", e);
-				}
-
-				try {
+				}*/
+				/*try {
 					String sForced = _oASelectConfigManager.getParam(oApplication, "forced_authenticate");
 					bForced = new Boolean(sForced).booleanValue();
 				}
 				catch (ASelectConfigException e) {
-					_systemLogger.log(Level.CONFIG, MODULE,
-						sMethod, "No 'forced_authenticate' parameter found in section 'applications', set 'forced_authenticate' to default value 'false'", e);
-				}
-
-				try {
+					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+							"No 'forced_authenticate' parameter found in section 'applications',"
+									+ " set 'forced_authenticate' to default value 'false'", e);
+				}*/
+				/*try {
 					sFriendlyName = _oASelectConfigManager.getParam(oApplication, "friendly_name");
-
 				}
 				catch (ASelectConfigException e) {
 					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
 							"No optional 'friendly_name' parameter found in section 'applications'", e);
-				}
-
-				try {
+				}*/
+				/*try {
 					sMaintainerEmail = _oASelectConfigManager.getParam(oApplication, "maintainer_email");
 				}
 				catch (ASelectConfigException e) {
 					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
 							"No optional 'maintainer_email' parameter found in section 'applications'", e);
-				}
-
-				try {
+				}*/
+				/*try {
 					String sShowUrl = _oASelectConfigManager.getParam(oApplication, "show_url");
 					bShowUrl = new Boolean(sShowUrl).booleanValue();
 				}
 				catch (ASelectConfigException e) {
-					_systemLogger.log(Level.CONFIG, MODULE,
-						sMethod, "No valid 'show_url' parameter found in section 'applications', set 'show_url' to default value 'false'", e);
-				}
-
-				try {
+					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+							"No valid 'show_url' parameter found in section 'applications',"
+									+ " set 'show_url' to default value 'false'", e);
+				}*/
+				/*try {
 					String sUseOpaqueUid = _oASelectConfigManager.getParam(oApplication, "use_opaque_uid");
 					bUseOpaqueId = new Boolean(sUseOpaqueUid).booleanValue();
 				}
 				catch (ASelectConfigException e) {
-					_systemLogger.log(Level.CONFIG, MODULE,
-						sMethod, "No valid 'use_opaque_uid' parameter found in section 'applications', set 'use_opaque_uid'to default value 'false'", e);
-				}
-
-				try {
+					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+							"No valid 'use_opaque_uid' parameter found in section 'applications',"
+									+ " set 'use_opaque_uid'to default value 'false'", e);
+				}*/
+				/*try {
 					sAttributePolicy = _oASelectConfigManager.getParam(oApplication, "attribute_policy");
 				}
 				catch (ASelectConfigException e) {
 					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-							"No valid 'attribute_policy' parameter found in section 'applications', not using an attribute policy for application with id: '" + sAppId, e);
-				}
+							"No valid 'attribute_policy' parameter found in section 'applications',"
+									+ " not using an attribute policy for application with id: '" + sAppId, e);
+				}*/
+				sAppId = Utils.getSimpleParam(oApplication, "id", true);
+				String sLevel = Utils.getSimpleParam(oApplication, "level", true);
+				intLevel = new Integer(sLevel);
+
+				String sMax = Utils.getSimpleParam(oApplication, "max_level", false);
+				if (sMax != null) intMaxLevel = new Integer(sMax);
+				String sForced = Utils.getSimpleParam(oApplication, "forced_authenticate", false);
+				if (sForced != null) bForced = new Boolean(sForced).booleanValue();
+				String sFriendlyName = Utils.getSimpleParam(oApplication, "friendly_name", false);
+				String sMaintainerEmail = Utils.getSimpleParam(oApplication, "maintainer_email", false);
+				String sShowUrl = Utils.getSimpleParam(oApplication, "show_url", false);
+				if (sShowUrl != null) bShowUrl = new Boolean(sShowUrl).booleanValue();
+				String sUseOpaqueUid = Utils.getSimpleParam(oApplication, "use_opaque_uid", false);
+				if (sUseOpaqueUid != null) bUseOpaqueId = new Boolean(sUseOpaqueUid).booleanValue();
+				String sAttributePolicy = Utils.getSimpleParam(oApplication, "attribute_policy", false);
+
+				String sSharedSecret = Utils.getSimpleParam(oApplication, "shared_secret", false);
+				String sForcedUid = Utils.getSimpleParam(oApplication, "forced_uid", false);
+				String sForcedAuthsp = Utils.getSimpleParam(oApplication, "forced_authsp", false);
+				String sLevelName = Utils.getSimpleParam(oApplication, "level_name", false);
 
 				// required params
 				application.setId(sAppId);
@@ -375,6 +366,12 @@ public class ApplicationManager
 				application.setUseOpaqueUId(bUseOpaqueId);
 				application.setShowUrl(bShowUrl);
 				application.setAttributePolicy(sAttributePolicy);
+
+				// 20090305, Bauke added for DigiD-ization
+				application.setSharedSecret(sSharedSecret);
+				application.setForcedUid(sForcedUid);
+				application.setForcedAuthsp(sForcedAuthsp);
+				application.setLevelName(sLevelName);
 
 				if (_bRequireSigning) {
 					application.setSigningKey(loadPublicKeyFromKeystore(sAppId));
@@ -406,7 +403,8 @@ public class ApplicationManager
 	}
 
 	/**
-	 * @param sAppId the Id of the application
+	 * @param sAppId
+	 *            the Id of the application
 	 * @return true if the application exists.
 	 */
 	public boolean isApplication(String sAppId)
@@ -423,26 +421,19 @@ public class ApplicationManager
 	}
 
 	/**
-	 * Returns the required level for an application. 
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns the required level for an application. <br>
 	 * <br>
-	 * Returns the configured required level for the application.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns the configured required level for the application. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sAppId 
-	 * 			<code>String</code> containing an application id.
+	 * <b>Postconditions:</b> <br> - <br>
+	 * 
+	 * @param sAppId
+	 *            <code>String</code> containing an application id.
 	 * @return String containing the level. <code>null</code> if no level was found.
 	 * @throws ASelectException
 	 */
@@ -454,26 +445,19 @@ public class ApplicationManager
 	}
 
 	/**
-	 * Returns the maximum level for an application. 
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns the maximum level for an application. <br>
 	 * <br>
-	 * Returns the configured maximum level for the application.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns the configured maximum level for the application. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sAppId 
-	 * 			<code>String</code> containing an application id.
+	 * <b>Postconditions:</b> <br> - <br>
+	 * 
+	 * @param sAppId
+	 *            <code>String</code> containing an application id.
 	 * @return String containing the level. <code>null</code> if no level was found.
 	 * @throws ASelectException
 	 */
@@ -486,9 +470,12 @@ public class ApplicationManager
 
 	/**
 	 * Retrieve a signing key.
-	 * @param sAppId The application ID.
+	 * 
+	 * @param sAppId
+	 *            The application ID.
 	 * @return The signing key of the given application ID.
-	 * @throws ASelectException If retrieving fails.
+	 * @throws ASelectException
+	 *             If retrieving fails.
 	 */
 	public PublicKey getSigningKey(String sAppId)
 		throws ASelectException
@@ -498,8 +485,8 @@ public class ApplicationManager
 	}
 
 	/**
-	 * @param sAppId The application id that will be checked for enabled forced 
-	 * authentication
+	 * @param sAppId
+	 *            The application id that will be checked for enabled forced authentication
 	 * @return true if forced_authenticate="true", otherwise false.
 	 * @throws ASelectException
 	 */
@@ -511,26 +498,19 @@ public class ApplicationManager
 	}
 
 	/**
-	 * Returns the attribute policy for an application. 
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns the attribute policy for an application. <br>
 	 * <br>
-	 * Returns the configured attribute policy for the application.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns the configured attribute policy for the application. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sAppId 
-	 * 			<code>String</code> containing an application id.
+	 * <b>Postconditions:</b> <br> - <br>
+	 * 
+	 * @param sAppId
+	 *            <code>String</code> containing an application id.
 	 * @return String containing the level. <code>null</code> if no level was found.
 	 * @throws ASelectException
 	 */
@@ -542,26 +522,19 @@ public class ApplicationManager
 	}
 
 	/**
-	 * Returns the Friendly Name for an application. 
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns the Friendly Name for an application. <br>
 	 * <br>
-	 * Returns the configured Friendly Name for the application.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns the configured Friendly Name for the application. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sAppId 
-	 * 			<code>String</code> containing an application id.
+	 * <b>Postconditions:</b> <br> - <br>
+	 * 
+	 * @param sAppId
+	 *            <code>String</code> containing an application id.
 	 * @return String containing the friendly name. <code>null</code> if no friendly name was found.
 	 * @throws ASelectException
 	 */
@@ -573,26 +546,19 @@ public class ApplicationManager
 	}
 
 	/**
-	 * Returns the maintainer email address for an application. 
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns the maintainer email address for an application. <br>
 	 * <br>
-	 * Returns the configured maintainer email address for the application.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns the configured maintainer email address for the application. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sAppId 
-	 * 			<code>String</code> containing an application id.
+	 * <b>Postconditions:</b> <br> - <br>
+	 * 
+	 * @param sAppId
+	 *            <code>String</code> containing an application id.
 	 * @return String containing the maintainer email address. <code>null</code> if no level was found.
 	 * @throws ASelectException
 	 */
@@ -604,27 +570,20 @@ public class ApplicationManager
 	}
 
 	/**
-	 * Returns if an opaque uid must be used for an application. 
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns if an opaque uid must be used for an application. <br>
 	 * <br>
-	 * Returns true if an opaque uid must be used for an application
-	 * and false if the 'normal' A-Select uid must be used.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns true if an opaque uid must be used for an application and false if the 'normal' A-Select uid must be
+	 * used. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sAppId 
-	 * 			<code>String</code> containing an application id.
+	 * <b>Postconditions:</b> <br> - <br>
+	 * 
+	 * @param sAppId
+	 *            <code>String</code> containing an application id.
 	 * @return true or false.
 	 * @throws ASelectException
 	 */
@@ -636,26 +595,19 @@ public class ApplicationManager
 	}
 
 	/**
-	 * Returns if the app url must be shown or not 
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns if the app url must be shown or not <br>
 	 * <br>
-	 * Returns true if app url must be shown and false if not.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns true if app url must be shown and false if not. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sAppId 
-	 * 			<code>String</code> containing an application id.
+	 * <b>Postconditions:</b> <br> - <br>
+	 * 
+	 * @param sAppId
+	 *            <code>String</code> containing an application id.
 	 * @return true or false.
 	 * @throws ASelectException
 	 */
@@ -667,31 +619,24 @@ public class ApplicationManager
 	}
 
 	/**
-	 * Returns a all configured single sign-on groups for the supplied <i>
-	 * sAppID</i>.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns a all configured single sign-on groups for the supplied <i> sAppID</i>. <br>
 	 * <br>
-	 * Returns a <code>Vector</code> containing all configured single sign-on 
-	 * groups for the supplied app_id. If now groups is configured the default
-	 * group "0" is returned.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns a <code>Vector</code> containing all configured single sign-on groups for the supplied app_id. If now
+	 * groups is configured the default group "0" is returned. <br>
 	 * <br>
+	 * <b>Concurrency issues:</b> <br>
 	 * <li><i>sAppID</i> may not be <code>null</code></li>
 	 * <li><i>_htSSOGroupedApplications</i> may not be <code>null</code></li>
-	 * <br><br>
-	 * <b>Preconditions:</b>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
 	 * <br>
-	 * -
+	 * <b>Preconditions:</b> <br> - <br>
 	 * <br>
-	 * @param sAppId The single sign-on groups in which this app id is contained
-	 * @return <code>null</code> if the supplied app id isn't configured in a 
-	 * single sign-on group
+	 * <b>Postconditions:</b> <br> - <br>
+	 * 
+	 * @param sAppId
+	 *            The single sign-on groups in which this app id is contained
+	 * @return <code>null</code> if the supplied app id isn't configured in a single sign-on group
 	 */
 	public Vector getSSOGroups(String sAppId)
 	{
@@ -707,33 +652,26 @@ public class ApplicationManager
 	}
 
 	/**
-	 * Verifies if one of the supplied single sign-on groups contains in the 
-	 * existing TGT
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Verifies if one of the supplied single sign-on groups contains in the existing TGT <br>
 	 * <br>
-	 * Verifies if one sso_group that exists in the <i>vValidSSOGroups</i> 
-	 * correspond with one sso_group in the <i>vOldSSOGroups</i>
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Verifies if one sso_group that exists in the <i>vValidSSOGroups</i> correspond with one sso_group in the
+	 * <i>vOldSSOGroups</i> <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br> - <br>
 	 * <br>
+	 * <b>Preconditions:</b> <br>
 	 * <li><i>vValidSSOGroups</i> may not be <code>null</code></li>
 	 * <li><i>vOldSSOGroups</i> may not be <code>null</code></li>
-	 * <br><br>
-	 * <b>Postconditions:</b>
 	 * <br>
-	 * -
 	 * <br>
-	 * @param vValidSSOGroups <code>Vector</code> containing the sso_group id's 
-	 * of the current application
-	 * @param vOldSSOGroups <code>Vector</code> containing the sso_group id's 
-	 * that are known in the TGT
-	 * @return TRUE if one sso_group from <i>vValidSSOGroups</i> contains in 
-	 * the <i>vOldSSOGroups</i>
+	 * <b>Postconditions:</b> <br> - <br>
+	 * 
+	 * @param vValidSSOGroups
+	 *            <code>Vector</code> containing the sso_group id's of the current application
+	 * @param vOldSSOGroups
+	 *            <code>Vector</code> containing the sso_group id's that are known in the TGT
+	 * @return TRUE if one sso_group from <i>vValidSSOGroups</i> contains in the <i>vOldSSOGroups</i>
 	 */
 	public boolean isValidSSOGroup(Vector vValidSSOGroups, Vector vOldSSOGroups)
 	{
@@ -756,30 +694,22 @@ public class ApplicationManager
 	}
 
 	/**
-	 * Returns the requested parameter for an application. 
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns the requested parameter for an application. <br>
 	 * <br>
-	 * Returns the configured value of the parameter asked for.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns the configured value of the parameter asked for. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br>
+	 * <b>Postconditions:</b> <br> - <br>
+	 * 
 	 * @param sAppId
-	 * 			<code>String</code> containing an application id.
+	 *            <code>String</code> containing an application id.
 	 * @param sName
-	 * 			<code>String</code> containing the parameter name asked for.
-	 * @return String containing the paramtere value asked for,
-	 * or <code>null</code>	if the attribute was not found.
+	 *            <code>String</code> containing the parameter name asked for.
+	 * @return String containing the paramtere value asked for, or <code>null</code> if the attribute was not found.
 	 */
 	public String getParam(String sAppId, String sName)
 	{
@@ -817,33 +747,24 @@ public class ApplicationManager
 	}
 
 	/**
-	 * Returns the requested optional parameter for an application. 
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns the requested optional parameter for an application. <br>
 	 * <br>
-	 * Returns the configured value of the parameter asked for, or
-	 * <code>null</code> if the attribute is not present. Unlike
-	 * the {@link #getParam(String, String)} method, this method does not
-	 * complain about missing parameters in the system log.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns the configured value of the parameter asked for, or <code>null</code> if the attribute is not present.
+	 * Unlike the {@link #getParam(String, String)} method, this method does not complain about missing parameters in
+	 * the system log. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br> - <br>
 	 * <br>
-	 * -
-	 * <br>
+	 * <b>Postconditions:</b> <br> - <br>
+	 * 
 	 * @param sAppId
-	 * 			<code>String</code> containing an application id.
+	 *            <code>String</code> containing an application id.
 	 * @param sName
-	 * 			<code>String</code> containing the parameter name asked for.
-	 * @return String containing the parameter value asked for,
-	 * or <code>null</code> if the attribute was not found.
+	 *            <code>String</code> containing the parameter name asked for.
+	 * @return String containing the parameter value asked for, or <code>null</code> if the attribute was not found.
 	 * @throws ASelectException
 	 */
 	public String getOptionalParam(String sAppId, String sName)
@@ -877,9 +798,9 @@ public class ApplicationManager
 		return sReturn;
 	}
 
-	//private function which get the Application with sAppId from htApplications
-	private Application getApplication(String sAppId)
-		throws ASelectException
+	// private function which get the Application with sAppId from htApplications
+	public Application getApplication(String sAppId)
+	throws ASelectException
 	{
 		String sMethod = "getApplication()";
 		Application oApplication = (Application) _htApplications.get(sAppId);
@@ -891,22 +812,9 @@ public class ApplicationManager
 	}
 
 	/*
-	 * loads the single sign-on groups configuration, like:
-	 * 
-	 * <sso_groups>
-	 * 	<sso_group id="1">
-	 * 		<application id="app1"/>
-	 * 		<application id="app2"/>
-	 * 	</sso_group>
-	 * 	<sso_group id="2">
-	 * 		<application id="app1"/>
-	 * 		<application id="app3"/>
-	 * 	</sso_group>
-	 * 	<sso_group id="3">
-	 * 		<application id="app1"/>
-	 * 		<application id="app4"/>
-	 * 	</sso_group>
-	 * </sso_groups>
+	 * loads the single sign-on groups configuration, like: <sso_groups> <sso_group id="1"> <application id="app1"/>
+	 * <application id="app2"/> </sso_group> <sso_group id="2"> <application id="app1"/> <application id="app3"/>
+	 * </sso_group> <sso_group id="3"> <application id="app1"/> <application id="app4"/> </sso_group> </sso_groups>
 	 */
 	private HashMap resolveSSOGroups()
 		throws ASelectException

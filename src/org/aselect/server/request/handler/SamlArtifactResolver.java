@@ -15,18 +15,15 @@
  */
 package org.aselect.server.request.handler;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.xml.security.signature.XMLSignature;
-import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.saml11.common.AssertionSessionManager;
 import org.aselect.system.error.Errors;

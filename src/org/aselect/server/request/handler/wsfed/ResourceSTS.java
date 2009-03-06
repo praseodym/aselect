@@ -23,12 +23,12 @@ import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.*;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Tools;
+import org.aselect.system.utils.Utils;
 import org.opensaml.*;
 
 //
@@ -56,12 +56,12 @@ public class ResourceSTS extends ProtoRequestHandler
 			super.init(oServletConfig, oConfig);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Specific init processing");
 
-			_sUserDomain = HandlerTools.getParamFromSection(null, "aselect", "user_domain", false);
+			_sUserDomain = Utils.getParamFromSection(null, "aselect", "user_domain", false);
 			if (_sUserDomain == null) _sUserDomain = "digid.nl";
-			_sProviderId = HandlerTools.getSimpleParam(oConfig, "provider_id", true);
-			_sNameIdFormat = HandlerTools.getSimpleParam(oConfig, "nameid_format", true);
+			_sProviderId = Utils.getSimpleParam(oConfig, "provider_id", true);
+			_sNameIdFormat = Utils.getSimpleParam(oConfig, "nameid_format", true);
 			_sPostTemplate = readTemplateFromConfig(oConfig, "post_template");
-			String sCheckSigning = HandlerTools.getSimpleParam(oConfig, "check_signing", false);
+			String sCheckSigning = Utils.getSimpleParam(oConfig, "check_signing", false);
 			if (sCheckSigning != null && sCheckSigning.equals("true"))
 				_bCheckSigning = true;
 	    }
@@ -92,7 +92,7 @@ public class ResourceSTS extends ProtoRequestHandler
     	String sPwa = request.getParameter("wa");
     	String sPwreply = request.getParameter("wreply");  // protected resource
     	String sPwctx = request.getParameter("wctx");  // pass context unchanged
-    	String sPwct = request.getParameter("wct");  // TODO: check
+    	//String sPwct = request.getParameter("wct");  // TODO: check
     	String sPwtrealm = request.getParameter("wtrealm");  // requestor's home realm
 
     	// Redirect to Requestor's IP/STS (Account Partner)
@@ -148,7 +148,7 @@ public class ResourceSTS extends ProtoRequestHandler
 	throws ASelectException
 	{
 		String sMethod = "processReturn()";
-    	String sPwa = request.getParameter("wa");
+    	//String sPwa = request.getParameter("wa");
     	String sPwresult = request.getParameter("wresult");
     	String sPwctx = request.getParameter("wctx");  // POST to this URL (the protected resource)
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Token IN: RequestorToken wresult=" + sPwresult + ", ReplyTo wctx="+sPwctx);

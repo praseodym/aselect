@@ -11,10 +11,10 @@
  */
 
 /* 
- * $Id: MemoryStorageHandler.java,v 1.13 2006/05/03 09:31:06 tom Exp $ 
+ * $Id: OldMemoryStorageHandler.java,v 1.13 2006/05/03 09:31:06 tom Exp $ 
  * 
  * Changelog:
- * $Log: MemoryStorageHandler.java,v $
+ * $Log: OldMemoryStorageHandler.java,v $
  * Revision 1.13  2006/05/03 09:31:06  tom
  * Removed Javadoc version
  *
@@ -68,10 +68,10 @@ import org.aselect.system.utils.Utils;
  * memory storage handler. <br>
  * <br>
  * <b>Description: </b> <br>
- * The MemoryStorageHandler uses a <code>HashMap</code> for storing objects
+ * The OldMemoryStorageHandler uses a <code>HashMap</code> for storing objects
  * in memory. <br>
  * <br>
- * In the MemoryStorageHandler an additional HashMap is created in which
+ * In the OldMemoryStorageHandler an additional HashMap is created in which
  * information about the stored record is kept: <code><pre>
  * 
  *  HashMap htStorage { 
@@ -89,10 +89,10 @@ import org.aselect.system.utils.Utils;
  * @author Alfa & Ariss
  * 
  */
-public class MemoryStorageHandler implements IStorageHandler
+public class OldMemoryStorageHandler implements IStorageHandler
 {
     /** The module name. */
-    public final static String MODULE = "MemoryStorageHandler";
+    public final static String MODULE = "OldMemoryStorageHandler";
     
     /** The actual storage */
     private HashMap _htStorage;
@@ -101,10 +101,10 @@ public class MemoryStorageHandler implements IStorageHandler
     private SystemLogger _systemLogger;
 
     /**
-     * Initialize the <code>MemoryStorageHandler</code>.
+     * Initialize the <code>OldMemoryStorageHandler</code>.
      * <br><br>
      * <b>Description: </b>
-     * Initalises the <code>MemoryStorageHandler</code>:
+     * Initalises the <code>OldMemoryStorageHandler</code>:
      * <ul>
      * 	<li>Set system logger</li>
      * 	<li>create new storage <code>HashMap</code></li>
@@ -185,7 +185,7 @@ public class MemoryStorageHandler implements IStorageHandler
             }
         }
         catch (NullPointerException eNP) {
-            StringBuffer sb = new StringBuffer("MemoryStorageHandler.getTimestamp() -> ");
+            StringBuffer sb = new StringBuffer("OldMemoryStorageHandler.getTimestamp() -> ");
             sb.append("Empty (null) key-object was supplied");
             _systemLogger.log(Level.FINE, MODULE, sMethod, "Empty (null) key-object was supplied.");
             throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_RETRIEVE,eNP);

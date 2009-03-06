@@ -69,8 +69,6 @@
  */
 package org.aselect.server.request.handler.aselect.authentication;
 
-import java.util.logging.Level;
-
 import javax.servlet.http.HttpServletRequest;
 
 /**

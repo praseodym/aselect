@@ -30,12 +30,11 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
-import org.aselect.system.utils.Utils;
 import org.opensaml.SAMLAssertion;
 import org.opensaml.SAMLSubject;
 import org.opensaml.artifact.SAMLArtifact;
 import org.opensaml.artifact.SAMLArtifactType0001;
-import org.opensaml.artifact.SAMLArtifactType0002;
+//import org.opensaml.artifact.SAMLArtifactType0002;
 import org.opensaml.artifact.Util;
 
 //

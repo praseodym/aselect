@@ -14,6 +14,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.Audit;
+import org.aselect.system.utils.Utils;
 import org.opensaml.common.SignableSAMLObject;
 import org.opensaml.saml2.core.Issuer;
 import org.opensaml.saml2.core.LogoutRequest;
@@ -47,7 +48,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 
 		super.init(oServletConfig, oConfig);
 
-		String sTryRedirect = HandlerTools.getSimpleParam(oConfig, "try_redirect_logout_first", false);
+		String sTryRedirect = Utils.getSimpleParam(oConfig, "try_redirect_logout_first", false);
 		if (sTryRedirect != null && !sTryRedirect.equals("true"))
 			_bTryRedirectLogoutFirst = false;
 

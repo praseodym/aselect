@@ -27,7 +27,6 @@ import java.util.TimeZone;
 import java.util.logging.Level;
 
 import org.aselect.server.log.ASelectSystemLogger;
-import org.aselect.server.request.HandlerTools;
 import org.w3c.dom.*;
 
 //

@@ -1,17 +1,12 @@
 package org.aselect.server.request.handler.xsaml20.idp;
 
-import java.io.BufferedInputStream;
-import java.io.PrintWriter;
 import java.io.StringReader;
-import java.net.URLEncoder;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletInputStream;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilder;
@@ -52,7 +47,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler // RH, 20080602, n
 {
 	private final static String MODULE = "Xsaml20_SLO_Soap";
 	private static final String SOAP_TYPE = "text/xml";
-	private static final String CONTENT_TYPE = "text/xml; charset=utf-8";
+	//private static final String CONTENT_TYPE = "text/xml; charset=utf-8";
 	private SystemLogger _oSystemLogger = _systemLogger;
 	private String _sRedirectUrl;
 	private static final String LOGOUTREQUEST = "LogoutRequest";

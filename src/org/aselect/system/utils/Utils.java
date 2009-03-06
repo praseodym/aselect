@@ -64,6 +64,13 @@ import java.text.StringCharacterIterator;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.logging.Level;
+
+import org.aselect.server.config.ASelectConfigManager;
+import org.aselect.server.log.ASelectSystemLogger;
+import org.aselect.system.error.Errors;
+import org.aselect.system.exception.ASelectConfigException;
+import org.aselect.system.exception.ASelectException;
 
 /**
  * Static class that implements generic, widely used utility methods. <br>
@@ -88,6 +95,8 @@ public class Utils
 
 	/** "[]" barces UTF-8 encoded. */
 	private static final String ENCODED_BRACES = "%5B%5D";
+	
+	private static final String MODULE = "Utils";
 
 	/**
 	 * Returns an int from 0 to 15 corresponding to the specified hex digit.
@@ -465,5 +474,45 @@ public class Utils
 			return "null";
 		int len = sValue.length();
 		return (len <= max) ? sValue : sValue.substring(0, max) + "...";
+	}
+	
+	public static String getSimpleParam(Object oConfig, String sParam, boolean bMandatory)
+	throws ASelectException
+	{
+		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
+		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
+		try {
+			return _configManager.getParam(oConfig, sParam);  // is not null
+		}
+		catch (ASelectConfigException e) {
+			if (!bMandatory)
+				return null;
+			_systemLogger.log(Level.WARNING, MODULE, "getSimpleParam", "Config item '"+sParam+"' not found", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+		}
+	}
+
+	public static String getParamFromSection(Object oConfig, String sSection, String sParam, boolean bMandatory)
+	throws ASelectConfigException
+	{
+		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
+		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
+		try {
+			Object oSection = _configManager.getSection(oConfig, sSection);
+			return _configManager.getParam(oSection, sParam);
+		}
+		catch (ASelectConfigException e) {
+			if (!bMandatory)
+				return null;
+			_systemLogger.log(Level.WARNING, MODULE, "getParamFromSection",
+					"Could not retrieve '"+sParam+"' parameter in '"+sSection+"' section", e);
+			throw e;
+		}
+	}
+
+	public static String getParamFromSection(Object oConfig, String sSection, String sParam)
+	throws ASelectConfigException
+	{
+		return getParamFromSection(oConfig, sSection, sParam, true);
 	}
 }
