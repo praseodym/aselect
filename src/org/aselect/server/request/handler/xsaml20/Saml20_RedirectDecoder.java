@@ -30,14 +30,16 @@ public class Saml20_RedirectDecoder extends HTTPRedirectDeflateDecoder
 		_systemLogger.log(Level.INFO, MODULE, "compareEndpointURIs", "Dest="+messageDestination+" Recv="+receiverEndpoint);;
 	    try {
 	        new URL(messageDestination);
-	    } catch (MalformedURLException e) {
+	    }
+	    catch (MalformedURLException e) {
 	    	_systemLogger.log(Level.INFO, "Message destination URL was malformed in destination check: "+e.getMessage());
 	        throw new MessageDecodingException("Message destination URL was malformed in destination check");
 	    }
 	
 	    try {
 	        new URL(receiverEndpoint);
-	    } catch (MalformedURLException e) {
+	    }
+	    catch (MalformedURLException e) {
 	    	_systemLogger.log(Level.INFO, "Recipient endpoint URL was malformed in destination check: "+e.getMessage());
 	        throw new MessageDecodingException("Recipient endpoint URL was malformed in destination check");
 	    }

@@ -298,6 +298,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -310,6 +311,7 @@ import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler;
 import org.aselect.server.authspprotocol.IAuthSPProtocolHandler;
 import org.aselect.server.authspprotocol.handler.AuthSPHandlerManager;
+import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.config.Version;
 import org.aselect.server.cross.CrossASelectManager;
 import org.aselect.server.crypto.CryptoEngine;
@@ -715,7 +717,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	private void handleLogin1(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 		throws ASelectException
 	{
-		String sMethod = "handleLogin1()";
+		String sMethod = "handleLogin1";
 		String sRid = null;
 		StringBuffer sbUrl;
 
@@ -735,8 +737,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 				// Check if a request was done for an other user-id
 				String sForcedUid = (String) _htSessionContext.get("forced_uid");
-				_systemLogger
-						.log(Level.INFO, _sModule, sMethod, "SSO branch uid=" + sUid + " forced_uid=" + sForcedUid);
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "SSO branch uid=" + sUid + " forced_uid=" + sForcedUid);
 				if (sForcedUid != null && !sForcedUid.equals("saml20_user") && !sForcedUid.equals("siam_user")
 						&& !sUid.equals(sForcedUid)) //user_id does not match
 				{
@@ -799,11 +800,16 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							if (sAssertUrl != null)
 								htTGTContext.put("sp_assert_url", sAssertUrl);
 
-							_tgtManager.updateTGT(sTgt, htTGTContext);
-							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-
+							_tgtManager.updateTGT(sTgt, htTGTContext);							
 							_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRedirectUrl);
-							oTGTIssuer.sendRedirect(sRedirectUrl, sTgt, sRid, servletResponse);
+
+							// 20090313, Bauke: add info screen for the user, shows SP's already logged in
+							if (1==1)
+								showSessionInfo(htServiceRequest, servletResponse, pwOut, sRedirectUrl, sTgt, htTGTContext, spUrl);
+							else {
+								TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
+								oTGTIssuer.sendRedirect(sRedirectUrl, sTgt, sRid, servletResponse);
+							}
 							_sessionManager.killSession(sRid);
 							return;
 						}
@@ -884,12 +890,12 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sLoginForm = Utils.replaceString(sLoginForm, "[request]", "login2");
 			sLoginForm = Utils.replaceString(sLoginForm, "[cross_request]", "cross_login");
 
-			sbUrl = new StringBuffer((String) htServiceRequest.get("my_url")).append("?request=error").append(
-					"&result_code=").append(Errors.ERROR_ASELECT_SERVER_CANCEL).append("&a-select-server=").append(
-					_sMyServerId).append("&rid=").append(sRid);
+			sbUrl = new StringBuffer((String) htServiceRequest.get("my_url")).append("?request=error")
+					.append("&result_code=").append(Errors.ERROR_ASELECT_SERVER_CANCEL).append("&a-select-server=")
+					.append(_sMyServerId).append("&rid=").append(sRid);
 			sLoginForm = Utils.replaceString(sLoginForm, "[cancel]", sbUrl.toString());
-
 			sLoginForm = _configManager.updateTemplate(sLoginForm, _htSessionContext);
+			servletResponse.setContentType("text/html");
 			pwOut.println(sLoginForm);
 		}
 		catch (ASelectException ae) {
@@ -900,17 +906,79 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 	}
+	
+	private void showSessionInfo(HashMap htServiceRequest, HttpServletResponse servletResponse,
+			PrintWriter pwOut, String sRedirectUrl, String sTgt, HashMap htTGTContext, String spUrl)
+	throws ASelectException
+	{
+		final String sMethod = "showSessionInfo";
+		long now = new Date().getTime();
+		
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "redirect url="+sRedirectUrl);
+        String sInfoForm = _configManager.getForm("session_info");
+		sInfoForm = Utils.replaceString(sInfoForm, "[aselect_url]", sRedirectUrl);
+		sInfoForm = Utils.replaceString(sInfoForm, "[a-select-server]", _sMyServerId);
+		//sInfoForm = Utils.replaceString(sInfoForm, "[rid]", sRid);
 
-	// Return: true when user consent is available, else false
+		String sEncryptedTgt = (sTgt == null)? "": _cryptoEngine.encryptTGT(Utils.stringToHex(sTgt));
+		sInfoForm = Utils.replaceString(sInfoForm, "[aselect_credentials]", sEncryptedTgt);
+
+		String sCreateTime = (String)htTGTContext.get("createtime");
+		long lCreateTime = 0;
+		try {
+			lCreateTime = Long.parseLong(sCreateTime);
+		}
+		catch (Exception exc) {
+			_systemLogger.log(Level.FINER, _sModule, sMethod, "CreateTime was not set");
+		}
+		
+		ASelectConfigManager oConfigManager = ASelectConfigManager.getHandle();
+        Object oTicketSection = oConfigManager.getSection(null, "storagemanager", "id=tgt");
+		String sTimeOut = Utils.getSimpleParam(oTicketSection, "timeout", false);
+		if (sTimeOut != null) {
+			long timeOutTime = Long.parseLong(sTimeOut);
+			timeOutTime = timeOutTime * 1000;
+			long minutesToGo = (lCreateTime + timeOutTime - now) / 1000;
+			if (minutesToGo < 0) minutesToGo = 0;
+			long hoursToGo = minutesToGo / 60;
+			minutesToGo -= 60 * hoursToGo;
+			sInfoForm = Utils.replaceString(sInfoForm, "[hours_left]", Long.toString(hoursToGo));
+			sInfoForm = Utils.replaceString(sInfoForm, "[minutes_left]", String.format("%02d", minutesToGo));
+		}
+		String sFriendlyName = ApplicationManager.getHandle().getFriendlyName(spUrl);
+		sInfoForm = Utils.replaceString(sInfoForm, "[current_sp]", sFriendlyName);
+
+		String sOtherSPs = "";
+		UserSsoSession ssoSession = (UserSsoSession) htTGTContext.get("sso_session");
+		if (ssoSession != null) {
+			List<ServiceProvider> spList = ssoSession.getServiceProviders();
+			for (ServiceProvider sp : spList) {
+				String sOtherUrl = sp.getServiceProviderUrl();
+				if (!spUrl.equals(sOtherUrl)) {
+					sFriendlyName = ApplicationManager.getHandle().getFriendlyName(sOtherUrl);
+					sOtherSPs += sOtherUrl + "<br/>";
+				}
+			}
+		}
+		sInfoForm = Utils.replaceString(sInfoForm, "[other_sps]", sOtherSPs);
+		
+		sInfoForm = _configManager.updateTemplate(sInfoForm, _htSessionContext);
+		servletResponse.setContentType("text/html");
+		pwOut.println(sInfoForm);
+		pwOut.close();
+	}
+
+	// Return: true when user consent is already available, else false
 	//
-	private boolean handleUserConsent(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut,
-			String sRid)
-		throws ASelectException
+	private boolean handleUserConsent(HashMap htServiceRequest, HttpServletResponse servletResponse,
+			PrintWriter pwOut, String sRid)
+	throws ASelectException
 	{
 		String COOKIE_NAME = "user_consent";
+		final String sMethod = "handleUserConsent";
 
 		String sUserConsent = HandlerTools.getCookieValue(_servletRequest, COOKIE_NAME, _systemLogger);
-		_systemLogger.log(Level.INFO, _sModule, _sModule, "Consent=" + sUserConsent);
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "Consent=" + sUserConsent);
 		if (sUserConsent != null && sUserConsent.equals("true"))
 			return true;
 
@@ -923,10 +991,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			String sAskConsent = Utils.getSimpleParam(aselect, "request_consent", false);
 			if (sAskConsent != null && sAskConsent.equals("true"))
 				bAskConsent = true;
-			_systemLogger.log(Level.INFO, _sModule, _sModule, "request_consent="+bAskConsent);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "request_consent="+bAskConsent);
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, _sModule, _sModule, "Configuration error: " + e);
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Configuration error: " + e);
 		}
 		if (!bAskConsent) // no need to ask for consent
 			return true;
@@ -947,15 +1015,12 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		// Ask for consent by presenting the userconsent.html form
 		try {
 			_sConsentForm = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "userconsent.html");
-			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[version]", Version
-					.getVersion());
-			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[organization_friendly]",
-					sFriendlyName);
+			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[version]", Version.getVersion());
+			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[organization_friendly]", sFriendlyName);
 
 			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[request]", "login1");
 			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[rid]", sRid);
-			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[a-select-server]",
-					_sMyServerId);
+			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[a-select-server]", _sMyServerId);
 			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[consent]", "true");
 
 			String sAsUrl = _configManager.getRedirectURL();
@@ -965,11 +1030,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[cancel]", sCancel.toString());
 
 			servletResponse.setContentType("text/html");
-			_systemLogger.log(Level.INFO, _sModule, _sModule, "Display ConsentForm");
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "Display ConsentForm");
 			pwOut.println(_sConsentForm);
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, _sModule, _sModule, "Failed to display ConsentForm: ", e);
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to display ConsentForm: ", e);
 		}
 		finally {
 			if (pwOut != null) {
@@ -1598,9 +1663,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							//.get("tgt_exp_time"));
 
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-
 							oTGTIssuer.issueTGT(sRid, sAuthsp, htAdditional, servletResponse, null);
-
 							return;
 						}
 					}

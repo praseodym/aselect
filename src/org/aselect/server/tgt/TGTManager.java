@@ -330,7 +330,7 @@ public class TGTManager extends StorageManager
 		int len = sTGT.length();
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "getTGT("+sTGT.substring(0, (len<30)? len: 30)+"...)");
-			htContext = (HashMap) get(sTGT);
+			htContext = (HashMap)get(sTGT);
 		}
 		catch (ASelectStorageException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No TGT context found with id: "

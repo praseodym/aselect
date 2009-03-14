@@ -182,7 +182,7 @@ typedef apr_table_t     table;
 #define ASELECT_FILTER_ASAGENT_ERROR_TICKET_EXPIRED         0x010a  // The Application Ticket has expired
 #define ASELECT_FILTER_ASAGENT_ERROR_UNKNOWN_TICKET         0x010b  // The Application Ticket is unknown
 #define ASELECT_FILTER_ASAGENT_ERROR_AS_UNREACHABLE         0x010c  // The A-Select Agent could not reach the A-Select Server
-#define ASELECT_FILTER_ASAGENT_ERROR_TICKET_MAX_REACHED     0x010d  // Too much users have a ticket
+#define ASELECT_FILTER_ASAGENT_ERROR_TICKET_MAX_REACHED     0x010d  // Too many users have a ticket
 #define ASELECT_FILTER_ASAGENT_ERROR_CORRUPT_ATTRIBUTES     0x010e  // User attributes are corrupted
 #define ASELECT_FILTER_ASAGENT_ERROR_INVALID_REQUEST        0x0130  // Invalid request
 

@@ -243,7 +243,7 @@ public class ApplicationManager
 						File.separator).append("applications.keystore").toString();
 			}
 			Object oApplication = null;
-			try { // for testing purposes: check if at least one application is defined
+			try { // Check if at least one application is defined
 				oApplication = _oASelectConfigManager.getSection(_oApplicationsConfigSection, "application");
 			}
 			catch (ASelectConfigException eAC) {
@@ -253,12 +253,6 @@ public class ApplicationManager
 
 			// Read config data for all applications
 			while (oApplication != null) {
-				String sAppId = null;
-				Integer intLevel = null;
-				Integer intMaxLevel = null;
-				boolean bForced = false;
-				boolean bShowUrl = false;
-				boolean bUseOpaqueId = false;
 				Application application = new Application();
 				
 				/*try {
@@ -333,18 +327,24 @@ public class ApplicationManager
 							"No valid 'attribute_policy' parameter found in section 'applications',"
 									+ " not using an attribute policy for application with id: '" + sAppId, e);
 				}*/
-				sAppId = Utils.getSimpleParam(oApplication, "id", true);
+				
+				String sAppId = Utils.getSimpleParam(oApplication, "id", true);
+				Integer intLevel = null;
 				String sLevel = Utils.getSimpleParam(oApplication, "level", true);
 				intLevel = new Integer(sLevel);
 
+				Integer intMaxLevel = null;
 				String sMax = Utils.getSimpleParam(oApplication, "max_level", false);
 				if (sMax != null) intMaxLevel = new Integer(sMax);
+				boolean bForced = false;
 				String sForced = Utils.getSimpleParam(oApplication, "forced_authenticate", false);
 				if (sForced != null) bForced = new Boolean(sForced).booleanValue();
 				String sFriendlyName = Utils.getSimpleParam(oApplication, "friendly_name", false);
 				String sMaintainerEmail = Utils.getSimpleParam(oApplication, "maintainer_email", false);
+				boolean bShowUrl = false;
 				String sShowUrl = Utils.getSimpleParam(oApplication, "show_url", false);
 				if (sShowUrl != null) bShowUrl = new Boolean(sShowUrl).booleanValue();
+				boolean bUseOpaqueId = false;
 				String sUseOpaqueUid = Utils.getSimpleParam(oApplication, "use_opaque_uid", false);
 				if (sUseOpaqueUid != null) bUseOpaqueId = new Boolean(sUseOpaqueUid).booleanValue();
 				String sAttributePolicy = Utils.getSimpleParam(oApplication, "attribute_policy", false);
@@ -353,6 +353,9 @@ public class ApplicationManager
 				String sForcedUid = Utils.getSimpleParam(oApplication, "forced_uid", false);
 				String sForcedAuthsp = Utils.getSimpleParam(oApplication, "forced_authsp", false);
 				String sLevelName = Utils.getSimpleParam(oApplication, "level_name", false);
+				boolean bDoUrlEncode = true;
+				String sDoUrlEncode = Utils.getSimpleParam(oApplication, "use_url_encoding", false);
+				if (sDoUrlEncode != null) bDoUrlEncode = new Boolean(sDoUrlEncode).booleanValue();
 
 				// required params
 				application.setId(sAppId);
@@ -372,6 +375,7 @@ public class ApplicationManager
 				application.setForcedUid(sForcedUid);
 				application.setForcedAuthsp(sForcedAuthsp);
 				application.setLevelName(sLevelName);
+				application.setDoUrlEncode(bDoUrlEncode);
 
 				if (_bRequireSigning) {
 					application.setSigningKey(loadPublicKeyFromKeystore(sAppId));

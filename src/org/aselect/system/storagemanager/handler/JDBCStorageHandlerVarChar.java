@@ -26,19 +26,23 @@ public class JDBCStorageHandlerVarChar extends JDBCStorageHandler
 		Object oRet = null;
 		PreparedStatement oStatement = null;
 		ResultSet oResultSet = null;
-		int iKey = oKey.hashCode();
+		//int iKey = oKey.hashCode();
 
 		try {
 			StringBuffer sbBuffer = new StringBuffer();
 			sbBuffer.append("SELECT ").append(_sContextValue).append(" ");
 			sbBuffer.append("FROM ").append(_sTableName).append(" ");
-			sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?");
+			// sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?");  // old
+			sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?");  // new
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
-			_systemLogger.log(Level.FINER, MODULE, sMethod, "Looking for hashkey -> " + iKey);
-
+			
 			Connection oConnection = getConnection();
 			oStatement = oConnection.prepareStatement(sbBuffer.toString());
-			oStatement.setInt(1, iKey);
+
+			// 20090212, Bauke: use oKey as key to the table instead of the hashvalue 
+			//oStatement.setInt(1, iKey);  // old
+			byte[] baKey = encode(oKey);  // new
+			oStatement.setBytes(1, baKey);  //new
 			oResultSet = oStatement.executeQuery();
 
 			if (oResultSet.next()) {  // record exists.
@@ -102,7 +106,7 @@ public class JDBCStorageHandlerVarChar extends JDBCStorageHandler
 		PreparedStatement oStatement = null;
 		ResultSet oResultSet = null;
 		try {
-			int iKey = oKey.hashCode();
+			int iKey = 0;  // oKey.hashCode();
 			Timestamp oTimestamp = new Timestamp(lTimestamp.longValue());
 			byte[] baKey = encode(oKey);
 			byte[] baValue = encode(oValue);
@@ -110,24 +114,25 @@ public class JDBCStorageHandlerVarChar extends JDBCStorageHandler
 			StringBuffer sbBuffer = new StringBuffer();
 			sbBuffer.append("SELECT ").append(_sContextTimestamp).append(" ");
 			sbBuffer.append("FROM ").append(_sTableName).append(" ");
-			sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?");
+			//sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?");  // old
+			sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?");  // new
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
 
 			Connection oConnection = getConnection();
 			oStatement = oConnection.prepareStatement(sbBuffer.toString());
-			oStatement.setInt(1, iKey);
-			_systemLogger.log(Level.FINER, MODULE, sMethod, "Looking for hashkey -> " + iKey);
+
+			// oStatement.setInt(1, iKey);  // old
+			oStatement.setBytes(1, baKey);  //new
 			oResultSet = oStatement.executeQuery();
 
 			if (oResultSet.next()) {  // record exists.
 				sbBuffer = new StringBuffer();
 				sbBuffer.append("UPDATE ").append(_sTableName).append(" ");
-//                sbBuffer.append("SET ").append(_sContextValue).append(" = ?, ")
-				sbBuffer.append("SET ").append(_sContextValue).append(" = ? , ").append(_sContextTimestamp).append(
-						" = ? ");
-				sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?");
+				sbBuffer.append("SET ").append(_sContextValue).append(" = ? , ").
+							append(_sContextTimestamp).append(" = ? ");
+				//sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?");  // old
+				sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?");  // new
 				_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
-				_systemLogger.log(Level.FINER, MODULE, sMethod, "Updating for hashkey -> " + iKey);
 
 				try { // added 1.5.4
 					oStatement.close();
@@ -150,7 +155,6 @@ public class JDBCStorageHandlerVarChar extends JDBCStorageHandler
 //                sbBuffer.append("VALUES (?,?,?,?)");
 				sbBuffer.append("VALUES (?,?,?,?,?)");
 				_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
-				_systemLogger.log(Level.FINER, MODULE, sMethod, "Inserting hashkey -> " + iKey);
 
 				try { // added 1.5.4
 					oStatement.close();
@@ -167,7 +171,6 @@ public class JDBCStorageHandlerVarChar extends JDBCStorageHandler
 				BASE64Encoder b64e = new BASE64Encoder();
 				oStatement.setString(5, b64e.encode(baValue));
 			}
-			// oStatement.executeUpdate();
 			int rowsAffected = oStatement.executeUpdate();
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "Rows affected -> " + rowsAffected);
 		}

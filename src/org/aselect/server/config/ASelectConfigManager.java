@@ -395,6 +395,8 @@ public class ASelectConfigManager extends ConfigManager
 	 */
 	private String _sUserInfoForm;
 
+	private String _sSessionInfoForm;
+
 	/**
 	 * The A-Select logged out form template
 	 */
@@ -1002,8 +1004,11 @@ public class ASelectConfigManager extends ConfigManager
 		if (sForm.equals("popup"))
 			return _sPopupForm;
 
-		if (sForm.equals("serverinfo"))
+		if (sForm.equals("server_info"))
 			return _sServerInfoForm;
+
+		if (sForm.equals("session_info"))
+			return _sSessionInfoForm;
 
 		if (sForm.equals("error"))
 			return _sErrorForm;
@@ -1516,6 +1521,7 @@ public class ASelectConfigManager extends ConfigManager
 		String sMethod = "loadHTMLTemplates()";
 
 		try {
+			/* Looks Silly?
 			_sLoginForm = new String();
 			_sErrorForm = new String();
 			_sSelectForm = new String();
@@ -1524,11 +1530,12 @@ public class ASelectConfigManager extends ConfigManager
 			_sUserInfoForm = new String();
 			_sLoggedOutForm = new String();
 			_sDirectLoginForm = new String();
-
+			 */
 			_sServerInfoForm = loadHTMLTemplate(sWorkingDir, "serverinfo.html");
 			_sUserInfoForm = loadHTMLTemplate(sWorkingDir, "userinfo.html");
 			_sLoggedOutForm = loadHTMLTemplate(sWorkingDir, "loggedout.html");
 			_sErrorForm = loadHTMLTemplate(sWorkingDir, "error.html");
+			_sSessionInfoForm = loadHTMLTemplate(sWorkingDir, "session_info.html");
 
 			if (_htServerCrypto.size() > 0) {
 				_sLoginForm = loadHTMLTemplate(sWorkingDir, "login.html");

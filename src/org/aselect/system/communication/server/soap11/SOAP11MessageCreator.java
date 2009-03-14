@@ -116,938 +116,862 @@ import org.w3c.dom.Text;
  */
 public class SOAP11MessageCreator implements IMessageCreatorInterface
 {
-    /** name of this module, used for logging */
-    private static final String MODULE = "SOAP11MessageCreator";
-    
-    /** The logger for system log entries. */
-    private SystemLogger      _systemLogger;
+	/** name of this module, used for logging */
+	private static final String MODULE = "SOAP11MessageCreator";
 
-    /* Input message buffers */
-    /** The complete input message. */
-    private Document          _oInputMessage;
+	/** The logger for system log entries. */
+	private SystemLogger _systemLogger;
 
-    /** The input message its body. */
-    private Element           _elInputBody;
+	/* Input message buffers */
+	/** The complete input message. */
+	private Document _oInputMessage;
 
-    /** The input message its RPC body. */
-    private Element           _elInputRPCBody;
+	/** The input message its body. */
+	private Element _elInputBody;
 
-    /* Output message buffers */
-    /** The complete output message */
-    private Document          _oOutputMessage;
+	/** The input message its RPC body. */
+	private Element _elInputRPCBody;
 
-    /** The output message its body. */
-    private Element           _elOutputBody;
+	/* Output message buffers */
+	/** The complete output message */
+	private Document _oOutputMessage;
 
-    /** The output message its RPC body. */
-    private Element           _elOutputRPCBody;
+	/** The output message its body. */
+	private Element _elOutputBody;
 
-    /* protocol buffers */
-    /** The request protocol information */
-    private IProtocolRequest  _oRequest;
+	/** The output message its RPC body. */
+	private Element _elOutputRPCBody;
 
-    /** The response protocol information */
-    private IProtocolResponse _oResponse;
+	/* protocol buffers */
+	/** The request protocol information */
+	private IProtocolRequest _oRequest;
 
-    /* SOAP variables */
-    /** SOAP 1.1 URI. */
-    private String            _sInputMessageSchema;
+	/** The response protocol information */
+	private IProtocolResponse _oResponse;
 
-    /** SOAP 1.1 RPC method URI */
-    private String            _sMethodEnv;
+	/* SOAP variables */
+	/** SOAP 1.1 URI. */
+	private String _sInputMessageSchema;
 
-    /** SOAP 1.1 RPC method name. */
-    private String            _sMethodName;
+	/** SOAP 1.1 RPC method URI */
+	private String _sMethodEnv;
 
-    /**
-     * Creates a new instance. 
-     * <br><br>
-     * <b>Description: </b> <br>
-     * Creates a new <code>SOAP11MessageCreator</code> with the given values.
-     * All other instance variables are initalized with default values. <br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>-<br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * <ul>
-     * <li><code>sMethodEnv</code> should be a valid URI.</li>
-     * <li><code>sMethodName</code> should be a non empty <code>String</code>.
-     * </li>
-     * <li><code>systemLogger</code> should be initialized.</li>
-     * </ul>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * All instance variables are initialized. <br>
-     * 
-     * @param sMethodEnv
-     *            The method environment URI for the RPC body.
-     * @param sMethodName
-     *            the method name for the RPC body.
-     * @param systemLogger
-     *            The logger that is used to log system entries.
-     */
-    public SOAP11MessageCreator (String sMethodEnv, String sMethodName,
-        SystemLogger systemLogger)
-    {
+	/** SOAP 1.1 RPC method name. */
+	private String _sMethodName;
 
-        _sMethodEnv = sMethodEnv;
-        _sMethodName = sMethodName;
+	/**
+	 * Creates a new instance. 
+	 * <br><br>
+	 * <b>Description: </b> <br>
+	 * Creates a new <code>SOAP11MessageCreator</code> with the given values.
+	 * All other instance variables are initalized with default values. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * <ul>
+	 * <li><code>sMethodEnv</code> should be a valid URI.</li>
+	 * <li><code>sMethodName</code> should be a non empty <code>String</code>.
+	 * </li>
+	 * <li><code>systemLogger</code> should be initialized.</li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * All instance variables are initialized. <br>
+	 * 
+	 * @param sMethodEnv
+	 *            The method environment URI for the RPC body.
+	 * @param sMethodName
+	 *            the method name for the RPC body.
+	 * @param systemLogger
+	 *            The logger that is used to log system entries.
+	 */
+	public SOAP11MessageCreator(String sMethodEnv, String sMethodName, SystemLogger systemLogger)
+	{
+		_sMethodEnv = sMethodEnv;
+		_sMethodName = sMethodName;
 
-        _systemLogger = systemLogger;
-        _oInputMessage = null;
-        _elInputBody = null;
-        _elInputRPCBody = null;
-        _sInputMessageSchema = SOAPConstants.URI_SOAP11_ENV;
+		_systemLogger = systemLogger;
+		_oInputMessage = null;
+		_elInputBody = null;
+		_elInputRPCBody = null;
+		_sInputMessageSchema = SOAPConstants.URI_SOAP11_ENV;
 
-        _oOutputMessage = null;
-        _elOutputBody = null;
-        _elOutputRPCBody = null;
-    }
+		_oOutputMessage = null;
+		_elOutputBody = null;
+		_elOutputRPCBody = null;
+	}
 
-    /**
-     * Initializes the <code>SOAP11MessageCreator</code>.
-     * <br><br>
-     * <i>note: A Fault message will be send imediately to the sender</i>
-     * <br>
-     * 
-     * @see org.aselect.system.communication.server.IMessageCreatorInterface#init(org.aselect.system.communication.server.IProtocolRequest,
-     *      org.aselect.system.communication.server.IProtocolResponse)
-     */
-    public boolean init(IProtocolRequest oRequest, IProtocolResponse oResponse)
-        throws ASelectCommunicationException
-    {
-        
-        StringBuffer sbBuffer = null;
-        String sMethod = "init()";
-        
-        //set class variabeles
-        _oRequest = oRequest;
-        _oResponse = oResponse;
+	/**
+	 * Initializes the <code>SOAP11MessageCreator</code>.
+	 * <br><br>
+	 * <i>note: A Fault message will be send imediately to the sender</i>
+	 * <br>
+	 * 
+	 * @see org.aselect.system.communication.server.IMessageCreatorInterface#init(org.aselect.system.communication.server.IProtocolRequest,
+	 *      org.aselect.system.communication.server.IProtocolResponse)
+	 */
+	public boolean init(IProtocolRequest oRequest, IProtocolResponse oResponse)
+		throws ASelectCommunicationException
+	{
 
-        //Parse input Message
-        try
-        {
-            _oInputMessage = createInputMessage();
-        }
-        catch (ASOAPException eAS) //SOAP Fault handling
-        {
-            int iCode = eAS.getCode();
-            String sReason = eAS.getReason();
-            String sDetail = eAS.getMessage();
-            String sCodeString = "";
-            switch (iCode)
-            {
-                case ASOAPException.VERSION_MISMATCH: //version mismatch
-                {
-                    sCodeString = SOAPConstants.ERR_VERSION_MISMATCH;
-                    break;
-                }
-                case ASOAPException.MUST_UNDERSTAND: //Must understand
-                {
-                    sCodeString = SOAPConstants.ERR_MUST_UNDERSTAND;
-                    break;
-                }
-                case ASOAPException.CLIENT: //Bad request received
-                {
-                    sCodeString = SOAPConstants.ERR_CLIENT;
-                    break;
-                }
-                case ASOAPException.SERVER: //Internal Server error
-                {
-                    sCodeString = SOAPConstants.ERR_SERVER;
-                    break;
-                }
-                default: //Server error
-                {
-                    sCodeString = SOAPConstants.ERR_SERVER;
-                    break;
-                }
-            }
-            //log error
-            sbBuffer = new StringBuffer("Could not parse inputmessage, cause: ");
-            sbBuffer.append(Errors.ERROR_ASELECT_USE_ERROR);
-            _systemLogger.log(Level.WARNING, 
-                MODULE, sMethod, sbBuffer.toString());
-             //log additional info
-            _systemLogger.log(Level.FINE, 
-                MODULE, sMethod, "Received SOAP inputmessage:\n"
-                + _oRequest.getMessage());
-            
-            //set HTTP response code
-            oResponse
-                .setProperty("Status", "" + SOAPConstants.ERR_RESPONSECODE);
-            //create default output message
-            _oOutputMessage = createOutputMessage();
-            //if error, then create fault tag and append it to the body
-            _elOutputBody
-                .appendChild(createFault(sCodeString, sReason, sDetail));
-            //a Fault message will be send imediately to the sender
-            send();
-                       
-          
-            _systemLogger.log(Level.WARNING, 
-                MODULE, sMethod, "SOAP fault sent: " + sCodeString
-                + ", " + sReason + ", " + sDetail);
-                       
+		StringBuffer sbBuffer = null;
+		String sMethod = "init()";
 
-            throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
-        }
-        //create default output message
-        _oOutputMessage = createOutputMessage();
+		//set class variabeles
+		_oRequest = oRequest;
+		_oResponse = oResponse;
 
-        //the fault tag cannot be created anymore, so outputRPCBody must be
-        // added.
-        //create and add RPC body element with namespace
-        _elOutputRPCBody = _oOutputMessage.createElementNS(_sMethodEnv,
-            SOAPConstants.NS_PREFIX_RPC + ":" + _sMethodName + "Response");
-        _elOutputBody.appendChild(_elOutputRPCBody);
-        return true;
-    }
+		//Parse input Message
+		try {
+			_oInputMessage = createInputMessage();
+		}
+		catch (ASOAPException eAS) //SOAP Fault handling
+		{
+			int iCode = eAS.getCode();
+			String sReason = eAS.getReason();
+			String sDetail = eAS.getMessage();
+			String sCodeString = "";
+			switch (iCode) {
+			case ASOAPException.VERSION_MISMATCH: //version mismatch
+			{
+				sCodeString = SOAPConstants.ERR_VERSION_MISMATCH;
+				break;
+			}
+			case ASOAPException.MUST_UNDERSTAND: //Must understand
+			{
+				sCodeString = SOAPConstants.ERR_MUST_UNDERSTAND;
+				break;
+			}
+			case ASOAPException.CLIENT: //Bad request received
+			{
+				sCodeString = SOAPConstants.ERR_CLIENT;
+				break;
+			}
+			case ASOAPException.SERVER: //Internal Server error
+			{
+				sCodeString = SOAPConstants.ERR_SERVER;
+				break;
+			}
+			default: //Server error
+			{
+				sCodeString = SOAPConstants.ERR_SERVER;
+				break;
+			}
+			}
+			//log error
+			sbBuffer = new StringBuffer("Could not parse inputmessage, cause: ");
+			sbBuffer.append(Errors.ERROR_ASELECT_USE_ERROR);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
+			//log additional info
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "Received SOAP inputmessage:\n" + _oRequest.getMessage());
 
-    /**
-     * Returns a Parameter from the input SOAP message.
-     * 
-     * @see org.aselect.system.communication.server.IInputMessage#getParam(java.lang.String)
-     */
-    public String getParam(String sName) throws ASelectCommunicationException
-    {
-        String sMethod = "getParam()";
-        //_systemLogger.log(Level.INFO, MODULE, sMethod, "param:"+sName);
-        if (_oInputMessage == null)
-        {
-            _systemLogger.log(Level.WARNING, MODULE, sMethod, "No input message available, cause: "
+			//set HTTP response code
+			oResponse.setProperty("Status", "" + SOAPConstants.ERR_RESPONSECODE);
+			//create default output message
+			_oOutputMessage = createOutputMessage();
+			//if error, then create fault tag and append it to the body
+			_elOutputBody.appendChild(createFault(sCodeString, sReason, sDetail));
+			//a Fault message will be send imediately to the sender
+			send();
+
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "SOAP fault sent: " + sCodeString + ", " + sReason + ", "
+					+ sDetail);
+
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
+		}
+		//create default output message
+		_oOutputMessage = createOutputMessage();
+
+		//the fault tag cannot be created anymore, so outputRPCBody must be
+		// added.
+		//create and add RPC body element with namespace
+		_elOutputRPCBody = _oOutputMessage.createElementNS(_sMethodEnv, SOAPConstants.NS_PREFIX_RPC + ":"
+				+ _sMethodName + "Response");
+		_elOutputBody.appendChild(_elOutputRPCBody);
+		return true;
+	}
+
+	/**
+	 * Returns a Parameter from the input SOAP message.
+	 * 
+	 * @see org.aselect.system.communication.server.IInputMessage#getParam(java.lang.String)
+	 */
+	public String getParam(String sName)
+		throws ASelectCommunicationException
+	{
+		String sMethod = "getParam()";
+		//_systemLogger.log(Level.INFO, MODULE, sMethod, "param:"+sName);
+		if (_oInputMessage == null) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No input message available, cause: "
 					+ Errors.ERROR_ASELECT_USE_ERROR);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
-        }
+		}
 
-        // get parameters with [name] from RPC SOAP body
-        NodeList nlParams = _elInputRPCBody.getElementsByTagNameNS(_sMethodEnv,
-            sName);
-        String sValue = "";
-        if (nlParams.getLength() == 1) //exactly 1 param found with this name
-        {
-            //get all text nodes
-            Element elParam = (Element)nlParams.item(0);
-            NodeList nlValues = elParam.getChildNodes();
-            for (int c = 0; c < nlValues.getLength(); c++)
-            {
-                Node nValue = nlValues.item(c);
-                if (nValue.getNodeType() == Node.TEXT_NODE)
-                {
-                    Text oText = (Text)nValue;
-                    String sAdd = oText.getData();
-                    if (!sAdd.equals(""))
-                        sValue += sAdd;
-                }
-                else
-                //not a TextNode inside parameter
-                {
-                    StringBuffer sb = new StringBuffer("Invalid parameter in input message: ");
-                    sb.append(nValue.getNodeName());
-                    sb.append(", cause: ");
-                    sb.append(Errors.ERROR_ASELECT_USE_ERROR);
-                    _systemLogger.log(Level.WARNING, 
-                        MODULE, sMethod, sb.toString());
-                    throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
-                }
-            }
-        }
-        else
-        //no Param found or more then one
-        {
-            StringBuffer sb = new StringBuffer();
-            sb.append(nlParams.getLength());
-            sb.append(" number of parameters in input message with name ");
-            sb.append(sName);
-            sb.append(", cause: ");
-            sb.append(Errors.ERROR_ASELECT_USE_ERROR);
-            _systemLogger.log(Level.FINE, 
-                MODULE, sMethod, sb.toString());
-            throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
-        }
-        return sValue.trim();
-    }
+		// get parameters with [name] from RPC SOAP body
+		NodeList nlParams = _elInputRPCBody.getElementsByTagNameNS(_sMethodEnv, sName);
+		String sValue = "";
+		if (nlParams.getLength() == 1) //exactly 1 param found with this name
+		{
+			//get all text nodes
+			Element elParam = (Element) nlParams.item(0);
+			NodeList nlValues = elParam.getChildNodes();
+			for (int c = 0; c < nlValues.getLength(); c++) {
+				Node nValue = nlValues.item(c);
+				if (nValue.getNodeType() == Node.TEXT_NODE) {
+					Text oText = (Text) nValue;
+					String sAdd = oText.getData();
+					if (!sAdd.equals(""))
+						sValue += sAdd;
+				}
+				else
+				//not a TextNode inside parameter
+				{
+					StringBuffer sb = new StringBuffer("Invalid parameter in input message: ");
+					sb.append(nValue.getNodeName());
+					sb.append(", cause: ");
+					sb.append(Errors.ERROR_ASELECT_USE_ERROR);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, sb.toString());
+					throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
+				}
+			}
+		}
+		else
+		//no Param found or more then one
+		{
+			StringBuffer sb = new StringBuffer();
+			sb.append(nlParams.getLength());
+			sb.append(" number of parameters in input message with name ");
+			sb.append(sName);
+			sb.append(", cause: ");
+			sb.append(Errors.ERROR_ASELECT_USE_ERROR);
+			_systemLogger.log(Level.FINE, MODULE, sMethod, sb.toString());
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
+		}
+		return sValue.trim();
+	}
 
-    /**
-     * Get array Parameter values from this SOAP 1.1 message.
-     * 
-     * @see org.aselect.system.communication.server.IInputMessage#getArray(java.lang.String)
-     */
-    public String[] getArray(String sName) throws ASelectCommunicationException
-    {
-        String sMethod = "getArray()";
-        if (_oInputMessage == null)
-        {
-            _systemLogger.log(Level.WARNING, 
-                MODULE, sMethod,  
-                "No input message available, cause: " + 
-                Errors.ERROR_ASELECT_USE_ERROR);
-            throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
-        }
+	/**
+	 * Get array Parameter values from this SOAP 1.1 message.
+	 * 
+	 * @see org.aselect.system.communication.server.IInputMessage#getArray(java.lang.String)
+	 */
+	public String[] getArray(String sName)
+		throws ASelectCommunicationException
+	{
+		String sMethod = "getArray()";
+		if (_oInputMessage == null) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No input message available, cause: "
+					+ Errors.ERROR_ASELECT_USE_ERROR);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
+		}
 
-        String[] sa = null;
-        //get parameters with [name] from RPC SOAP body
-        NodeList nlParams = _elInputRPCBody.getElementsByTagNameNS(_sMethodEnv,
-            sName);
-        if (nlParams.getLength() == 1) //exactly 1 param found with this name
-        {
-            //resolve the array from the first occurence of the param tag
-            sa = resolveArray((Element)nlParams.item(0));
-        }
-        else
-        {
-            StringBuffer sb = new StringBuffer("SOAP Message contains multiple params with the same name: ");
-            sb.append(sName);
-            sb.append(", cause: ");
-            sb.append(Errors.ERROR_ASELECT_USE_ERROR);
-            _systemLogger.log(Level.FINE, 
-                MODULE, sMethod, sb.toString());
-            throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR); 
-        }
-        return sa;
-    }
+		String[] sa = null;
+		//get parameters with [name] from RPC SOAP body
+		NodeList nlParams = _elInputRPCBody.getElementsByTagNameNS(_sMethodEnv, sName);
+		if (nlParams.getLength() == 1) //exactly 1 param found with this name
+		{
+			//resolve the array from the first occurence of the param tag
+			sa = resolveArray((Element) nlParams.item(0));
+		}
+		else {
+			StringBuffer sb = new StringBuffer("SOAP Message contains multiple params with the same name: ");
+			sb.append(sName);
+			sb.append(", cause: ");
+			sb.append(Errors.ERROR_ASELECT_USE_ERROR);
+			_systemLogger.log(Level.FINE, MODULE, sMethod, sb.toString());
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
+		}
+		return sa;
+	}
+	
+	// 20090310, Bauke: Added to support applications using the DigiD protocol to connect to the server
+	// That protocol does not URL encode it's parameters
+	public boolean setParam(String sName, String sValue, boolean doUrlEncode)
+	throws ASelectCommunicationException
+	{
+		return setParam(sName, sValue);
+	}
 
-    /**
-     * Sets a parameter in the SOAP output message. 
-     * 
-     * @see org.aselect.system.communication.server.IOutputMessage#setParam(java.lang.String,
-     *      java.lang.String)
-     */
-    public boolean setParam(String sName, String sValue)
-        throws ASelectCommunicationException
-    {
-        String sMethod = "setParam()";
-        if (_oOutputMessage == null)
-        {
-            _systemLogger.log(Level.WARNING, 
-                MODULE, sMethod,  
-                "No output message available, cause: " + 
-                Errors.ERROR_ASELECT_USE_ERROR);
-            throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
-        }
+	/**
+	 * Sets a parameter in the SOAP output message. 
+	 * 
+	 * @see org.aselect.system.communication.server.IOutputMessage#setParam(java.lang.String,
+	 *      java.lang.String)
+	 */
+	public boolean setParam(String sName, String sValue)
+		throws ASelectCommunicationException
+	{
+		String sMethod = "setParam()";
+		if (_oOutputMessage == null) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No output message available, cause: "
+					+ Errors.ERROR_ASELECT_USE_ERROR);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
+		}
 
-        //create parameter value
-        Text xParamValue = _oOutputMessage.createTextNode(sValue);
+		//create parameter value
+		Text xParamValue = _oOutputMessage.createTextNode(sValue);
 
-        NodeList xParams = _elOutputRPCBody.getElementsByTagNameNS(_sMethodEnv,
-            sName);
-        if (xParams.getLength() != 1) //not a parameter with this name yet
-        {
-            //create parameter name
-            Element xParamName = _oOutputMessage.createElementNS(_sMethodEnv,
-                SOAPConstants.NS_PREFIX_RPC + ":" + sName);
-            //add value and name to message
-            xParamName.appendChild(xParamValue);
-            _elOutputRPCBody.appendChild(xParamName);
-        }
-        else
-        //update paramater with new value
-        {
-            _systemLogger.log(Level.INFO, 
-                MODULE, sMethod, "Updating parameter: " + sName);
-            Element xParamName = (Element)xParams.item(0);
-            Node xOldValue = xParamName.getFirstChild();
-            xParamName.replaceChild(xParamValue, xOldValue);
-        }
-        return true;
-    }
+		NodeList xParams = _elOutputRPCBody.getElementsByTagNameNS(_sMethodEnv, sName);
+		if (xParams.getLength() != 1) //not a parameter with this name yet
+		{
+			//create parameter name
+			Element xParamName = _oOutputMessage
+					.createElementNS(_sMethodEnv, SOAPConstants.NS_PREFIX_RPC + ":" + sName);
+			//add value and name to message
+			xParamName.appendChild(xParamValue);
+			_elOutputRPCBody.appendChild(xParamName);
+		}
+		else { //update paramater with new value
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Updating parameter: " + sName);
+			Element xParamName = (Element) xParams.item(0);
+			Node xOldValue = xParamName.getFirstChild();
+			xParamName.replaceChild(xParamValue, xOldValue);
+		}
+		return true;
+	}
 
-    /**
-     * Sets an array parameter in the SOAP output message. 
-     * 
-     * @see org.aselect.system.communication.server.IOutputMessage#setParam(java.lang.String,
-     *      java.lang.String[])
-     */
-    public boolean setParam(String sName, String[] saValue)
-        throws ASelectCommunicationException
-    {
-        String sMethod = "setParam()";
-        if (_oOutputMessage == null)
-        {
-            _systemLogger.log(Level.WARNING, 
-                MODULE, sMethod,  
-                "No output message available, cause: " + 
-                Errors.ERROR_ASELECT_USE_ERROR);
-            throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
-        }
+	/**
+	 * Sets an array parameter in the SOAP output message. 
+	 * 
+	 * @see org.aselect.system.communication.server.IOutputMessage#setParam(java.lang.String,
+	 *      java.lang.String[])
+	 */
+	public boolean setParam(String sName, String[] saValue)
+		throws ASelectCommunicationException
+	{
+		String sMethod = "setParam()";
+		if (_oOutputMessage == null) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No output message available, cause: "
+					+ Errors.ERROR_ASELECT_USE_ERROR);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
+		}
 
-        //convert array to xml tags
-        Element tmpElement = arrayToXML(sName, saValue);
+		//convert array to xml tags
+		Element tmpElement = arrayToXML(sName, saValue);
 
-        NodeList xParams = _elOutputRPCBody.getElementsByTagNameNS(
-            SOAPConstants.URI_SOAP11_ENC, sName);
-        if (xParams.getLength() != 1)//new tag
-        {
-            //append to outputRPCBody
-            _elOutputRPCBody.appendChild(tmpElement);
-        }
-        else
-        //existing tag
-        {
-            //replace existing tag with new tag
-            _elOutputRPCBody.replaceChild(tmpElement, xParams.item(0));
-        }
-        return true;
-    }
+		NodeList xParams = _elOutputRPCBody.getElementsByTagNameNS(SOAPConstants.URI_SOAP11_ENC, sName);
+		if (xParams.getLength() != 1)//new tag
+		{
+			//append to outputRPCBody
+			_elOutputRPCBody.appendChild(tmpElement);
+		}
+		else
+		//existing tag
+		{
+			//replace existing tag with new tag
+			_elOutputRPCBody.replaceChild(tmpElement, xParams.item(0));
+		}
+		return true;
+	}
 
-    /**
-     * Sends the output message. 
-     * <br><br>
-     * <b>Description: </b> <br>
-     * Performs the following steps:
-     * <ul>
-     * <li>creates an output format which uses new lines and tabs</li>
-     * <li>Uses a {@link org.apache.xml.serialize.XMLSerializer }to serialize
-     * the message.</li>
-     * <li>reset output and input message</li>
-     * </ul>
-     * 
-     * @see org.aselect.system.communication.server.IOutputMessage#send()
-     */
-    public boolean send() throws ASelectCommunicationException
-    {
-        String sMethod = "send()";
-        if (_oOutputMessage == null)
-        {
-            _systemLogger.log(Level.WARNING, 
-                MODULE, sMethod,  
-                "Message is already sent, there is no output message, cause: " + 
-                Errors.ERROR_ASELECT_USE_ERROR);
-            throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
-        }
-        try
-        {
-            //create output format which uses new lines and tabs
-            OutputFormat oFormat = new OutputFormat(_oOutputMessage);
-            oFormat.setLineSeparator(LineSeparator.Web);
-            oFormat.setIndenting(true);
-            oFormat.setLineWidth(80);
-            //Create serializer
-            XMLSerializer oSerializer = new XMLSerializer(_oResponse
-                .getOutputStream(), oFormat);
-            oSerializer.setNamespaces(true);
-            //serialize outputmessage to outputstream
-            oSerializer.serialize(_oOutputMessage.getDocumentElement());
+	/**
+	 * Sends the output message. 
+	 * <br><br>
+	 * <b>Description: </b> <br>
+	 * Performs the following steps:
+	 * <ul>
+	 * <li>creates an output format which uses new lines and tabs</li>
+	 * <li>Uses a {@link org.apache.xml.serialize.XMLSerializer }to serialize
+	 * the message.</li>
+	 * <li>reset output and input message</li>
+	 * </ul>
+	 * 
+	 * @see org.aselect.system.communication.server.IOutputMessage#send()
+	 */
+	public boolean send()
+		throws ASelectCommunicationException
+	{
+		String sMethod = "send()";
+		if (_oOutputMessage == null) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"Message is already sent, there is no output message, cause: " + Errors.ERROR_ASELECT_USE_ERROR);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
+		}
+		try {
+			//create output format which uses new lines and tabs
+			OutputFormat oFormat = new OutputFormat(_oOutputMessage);
+			oFormat.setLineSeparator(LineSeparator.Web);
+			oFormat.setIndenting(true);
+			oFormat.setLineWidth(80);
+			//Create serializer
+			XMLSerializer oSerializer = new XMLSerializer(_oResponse.getOutputStream(), oFormat);
+			oSerializer.setNamespaces(true);
+			//serialize outputmessage to outputstream
+			oSerializer.serialize(_oOutputMessage.getDocumentElement());
 
-            //clear output and input message
-            _oOutputMessage = null;
-            _elOutputBody = null;
-            _elOutputRPCBody = null;
-            //_elOutputHeader = null;
-            _oInputMessage = null;
+			//clear output and input message
+			_oOutputMessage = null;
+			_elOutputBody = null;
+			_elOutputRPCBody = null;
+			//_elOutputHeader = null;
+			_oInputMessage = null;
 
-            return true;
-        }
-        catch (IOException eIO)
-        //I/O error while serializing, should not occur
-        {
-            StringBuffer sbBuffer = new StringBuffer("DOM object could not be serialized: ");
-            sbBuffer.append(eIO.getMessage());
-            sbBuffer.append(", cause: ");
-            sbBuffer.append(Errors.ERROR_ASELECT_IO);
-            _systemLogger.log(Level.WARNING, 
-                MODULE, sMethod, sbBuffer.toString(), eIO);
-            throw new ASelectCommunicationException(Errors.ERROR_ASELECT_IO,eIO); 
-        }
-    }
+			return true;
+		}
+		catch (IOException eIO)
+		//I/O error while serializing, should not occur
+		{
+			StringBuffer sbBuffer = new StringBuffer("DOM object could not be serialized: ");
+			sbBuffer.append(eIO.getMessage());
+			sbBuffer.append(", cause: ");
+			sbBuffer.append(Errors.ERROR_ASELECT_IO);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString(), eIO);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_IO, eIO);
+		}
+	}
 
-    /*
-     * Private creation helper methods
-     */
+	/*
+	 * Private creation helper methods
+	 */
 
-    /**
-     * Convert array to xml tags. 
-     * <br><br>
-     * <b>Description: </b> 
-     * <br>
-     * Converts the strings in the array into a parameter with the given name as
-     * XML <code>Element</code>.<br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * The returned <code>Element</code> is not threadsafe. <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * <ul>
-     * <li><code>sTagName</code> should be valid XML tagname.</li>
-     * <li><code>sa</code> should contain one or more valid tag values</li>
-     * </ul>
-     * <br>
-     * <b>Postconditions: </b> <br>-<br>
-     * 
-     * @param sTagName
-     *            The tagname of the array parameter.
-     * @param sa
-     *            the array parameter values.
-     * @return An XML object containg the created array parameter.
-     */
-    private Element arrayToXML(String sTagName, String[] sa)
-    {
-        Element resultElement = _oOutputMessage.createElementNS(_sMethodEnv,
-            SOAPConstants.NS_PREFIX_RPC + ":" + sTagName);
+	/**
+	 * Convert array to xml tags. 
+	 * <br><br>
+	 * <b>Description: </b> 
+	 * <br>
+	 * Converts the strings in the array into a parameter with the given name as
+	 * XML <code>Element</code>.<br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * The returned <code>Element</code> is not threadsafe. <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * <ul>
+	 * <li><code>sTagName</code> should be valid XML tagname.</li>
+	 * <li><code>sa</code> should contain one or more valid tag values</li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions: </b> <br>-<br>
+	 * 
+	 * @param sTagName
+	 *            The tagname of the array parameter.
+	 * @param sa
+	 *            the array parameter values.
+	 * @return An XML object containg the created array parameter.
+	 */
+	private Element arrayToXML(String sTagName, String[] sa)
+	{
+		Element resultElement = _oOutputMessage.createElementNS(_sMethodEnv, SOAPConstants.NS_PREFIX_RPC + ":"
+				+ sTagName);
 
-        resultElement.setAttributeNS(_sMethodEnv, "arrayType", "xsd:string["
-            + sa.length + "]");
+		resultElement.setAttributeNS(_sMethodEnv, "arrayType", "xsd:string[" + sa.length + "]");
 
-        //create item tags for every array item
-        for (int i = 0; i < sa.length; i++)
-        {
-            //create item tag (ELEMENT_NODE)
-            Element tmpElement = _oOutputMessage.createElementNS(_sMethodEnv,
-                SOAPConstants.NS_PREFIX_RPC + ":item");
-            //create value tag (TEXT_NODE)
-            Text tmpTextNode = _oOutputMessage.createTextNode(sa[i]);
-            tmpElement.appendChild(tmpTextNode);
-            resultElement.appendChild(tmpElement);
-        }
+		//create item tags for every array item
+		for (int i = 0; i < sa.length; i++) {
+			//create item tag (ELEMENT_NODE)
+			Element tmpElement = _oOutputMessage.createElementNS(_sMethodEnv, SOAPConstants.NS_PREFIX_RPC + ":item");
+			//create value tag (TEXT_NODE)
+			Text tmpTextNode = _oOutputMessage.createTextNode(sa[i]);
+			tmpElement.appendChild(tmpTextNode);
+			resultElement.appendChild(tmpElement);
+		}
 
-        return resultElement;
-    }
+		return resultElement;
+	}
 
-    /**
-     * Convert a array parameter to a <code>String</code> array. 
-     * <br><br>
-     * <b>Description: </b> <br>
-     * Converts the XML parameter data to an array of strings. <br>
-     * Performs the following steps:
-     * <ul>
-     * 	<li>Parse "arrayType"</li>
-     * 	<li>Get number of parameter values</li>
-     * 	<li>Get the array item tags defined inside the array tag</li>
-     * 	<li>For all child elements:
-     * 		<ul>
-     * 			<li><code>if node type == ELEMENT_NODE</code> retrieve value of text
-     * 			node</li>
-     * 			<li>Add value to return array</li>
-     * 		</ul>
-     * 	</li>
-     * </ul>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * <code>elParam</code> is not threadsafe. <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * <code>elParam</code> should contain an array parameter. <br>
-     * <br>
-     * <b>Postconditions: </b> <br>-<br>
-     * 
-     * @param elParam
-     *            The <code>Element</code> contaning the parameter as XML
-     *            data.
-     * @return An array of parameter values.
-     * @throws ASelectCommunicationException
-     *             If resolving fails.
-     */
-    private String[] resolveArray(Element elParam)
-        throws ASelectCommunicationException
-    {
-        String sMethod = "resolveArray()";
-        String[] saReturn = null;
-        String sArrayLength = null;
+	/**
+	 * Convert a array parameter to a <code>String</code> array. 
+	 * <br><br>
+	 * <b>Description: </b> <br>
+	 * Converts the XML parameter data to an array of strings. <br>
+	 * Performs the following steps:
+	 * <ul>
+	 * 	<li>Parse "arrayType"</li>
+	 * 	<li>Get number of parameter values</li>
+	 * 	<li>Get the array item tags defined inside the array tag</li>
+	 * 	<li>For all child elements:
+	 * 		<ul>
+	 * 			<li><code>if node type == ELEMENT_NODE</code> retrieve value of text
+	 * 			node</li>
+	 * 			<li>Add value to return array</li>
+	 * 		</ul>
+	 * 	</li>
+	 * </ul>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * <code>elParam</code> is not threadsafe. <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * <code>elParam</code> should contain an array parameter. <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>-<br>
+	 * 
+	 * @param elParam
+	 *            The <code>Element</code> contaning the parameter as XML
+	 *            data.
+	 * @return An array of parameter values.
+	 * @throws ASelectCommunicationException
+	 *             If resolving fails.
+	 */
+	private String[] resolveArray(Element elParam)
+		throws ASelectCommunicationException
+	{
+		String sMethod = "resolveArray()";
+		String[] saReturn = null;
+		String sArrayLength = null;
 
-        //parse array type
-        NamedNodeMap oNodes = elParam.getAttributes();
-        for (int attrI = 0; attrI < oNodes.getLength(); attrI++)
-        {
-            Node nAttr = oNodes.item(0);
-            if (nAttr.getLocalName().equalsIgnoreCase("arrayType"))
-            {
-                sArrayLength = (String)nAttr.getNodeValue().subSequence(
-                    nAttr.getNodeValue().lastIndexOf("[") + 1,
-                    nAttr.getNodeValue().lastIndexOf("]"));
-            }
-        }
-        try
-        {
-            int iArrayMax = new Integer(sArrayLength).intValue();
-            int iArrayIndex = 0;
-            saReturn = new String[iArrayMax];
+		//parse array type
+		NamedNodeMap oNodes = elParam.getAttributes();
+		for (int attrI = 0; attrI < oNodes.getLength(); attrI++) {
+			Node nAttr = oNodes.item(0);
+			if (nAttr.getLocalName().equalsIgnoreCase("arrayType")) {
+				sArrayLength = (String) nAttr.getNodeValue().subSequence(nAttr.getNodeValue().lastIndexOf("[") + 1,
+						nAttr.getNodeValue().lastIndexOf("]"));
+			}
+		}
+		try {
+			int iArrayMax = new Integer(sArrayLength).intValue();
+			int iArrayIndex = 0;
+			saReturn = new String[iArrayMax];
 
-            //get the array item tags defined inside the array tag
-            NodeList nlItems = elParam.getChildNodes();
-            for (int i = 0; i < nlItems.getLength(); i++)
-            {
-                //check if node type == ELEMENT_NODE
-                if (nlItems.item(i).getNodeType() == Node.ELEMENT_NODE)
-                {
-                    Node tmpNode = nlItems.item(i).getFirstChild();
-                    if (tmpNode.getNodeType() == Node.TEXT_NODE)
-                    {
-                        //get value of text node
-                        if (iArrayIndex < iArrayMax)
-                            saReturn[iArrayIndex++] = tmpNode.getNodeValue();
-                    }
-                }
-            }
-            if (saReturn == null)
-            {
-                StringBuffer sbBuffer = new StringBuffer("Could not resolve array. Resolved array length: ");
-                sbBuffer.append(sArrayLength);
-                sbBuffer.append(", cause: ");
-                sbBuffer.append(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-                _systemLogger.log(Level.WARNING, 
-                    MODULE, sMethod, sbBuffer.toString());
-                throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-            }
-        }
-        catch (NumberFormatException eNF)
-        {
-            
-            StringBuffer sbBuffer = new StringBuffer("Error during resolving array (invalid 'arraySize'): ");
-            sbBuffer.append(eNF.getMessage());
-            sbBuffer.append(", cause: ");
-            sbBuffer.append(Errors.ERROR_ASELECT_PARSE_ERROR);
-            _systemLogger.log(Level.WARNING, 
-                MODULE, sMethod, sbBuffer.toString(), eNF);
-            throw new ASelectCommunicationException(Errors.ERROR_ASELECT_PARSE_ERROR, eNF);                              
-        }
+			//get the array item tags defined inside the array tag
+			NodeList nlItems = elParam.getChildNodes();
+			for (int i = 0; i < nlItems.getLength(); i++) {
+				//check if node type == ELEMENT_NODE
+				if (nlItems.item(i).getNodeType() == Node.ELEMENT_NODE) {
+					Node tmpNode = nlItems.item(i).getFirstChild();
+					if (tmpNode.getNodeType() == Node.TEXT_NODE) {
+						//get value of text node
+						if (iArrayIndex < iArrayMax)
+							saReturn[iArrayIndex++] = tmpNode.getNodeValue();
+					}
+				}
+			}
+			if (saReturn == null) {
+				StringBuffer sbBuffer = new StringBuffer("Could not resolve array. Resolved array length: ");
+				sbBuffer.append(sArrayLength);
+				sbBuffer.append(", cause: ");
+				sbBuffer.append(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
+				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			}
+		}
+		catch (NumberFormatException eNF) {
 
-        return saReturn;
-    }
+			StringBuffer sbBuffer = new StringBuffer("Error during resolving array (invalid 'arraySize'): ");
+			sbBuffer.append(eNF.getMessage());
+			sbBuffer.append(", cause: ");
+			sbBuffer.append(Errors.ERROR_ASELECT_PARSE_ERROR);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString(), eNF);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_PARSE_ERROR, eNF);
+		}
 
-    /**
-     * Creates an input message from the input. 
-     * <br><br>
-     * <b>Description: </b> <br>
-     * This method parses the request data and creates an XML
-     * <code>Document</code> containing all parameters in the SOAP 1.1
-     * message. <br>
-     * <br>
-     * Parse and validation errors are logged and an <code>ASOAPException</code>
-     * is thrown. <b>Concurrency issues: </b> <br>
-     * The returned <code>Document</code> is not threadsafe. <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * This method should be called in the initializing stage of the
-     * <code>SOAP11MessageCreator</code>.<br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * The input message instance variables contain input message XML data. <br>
-     * <br>
-     * <i>note: _oInputMessage is not set </i> <br>
-     * 
-     * @return The parsed and validated input message.
-     * @throws ASOAPException
-     *             If parsing or validation fails.
-     */
-    private Document createInputMessage() throws ASOAPException
-    {
-        String sMethod = "createInputMessage()";
-        Document oInputMessage = null;
-        try
-        {
-            //create DocumentBuilderFactory to parse SOAP message.
-            DocumentBuilderFactory oDbf = DocumentBuilderFactory.newInstance();
-            oDbf.setNamespaceAware(true);
+		return saReturn;
+	}
 
-            //SOAP 1.1 SCHEMA VALIDATING default disabled because of
-            // performance issues
-            //			xDbf.setValidating(true);
-            //			xDbf.setAttribute("http://java.sun.com/xml/jaxp/properties/schemaLanguage",
-            //							 "http://www.w3.org/2001/XMLSchema");
-            //			xDbf.setAttribute("http://java.sun.com/xml/jaxp/properties/schemaSource",
-            //							 System.getProperty("user.dir") +
-            //							 File.separator +
-            //							 "soap-envelope.xsd");
+	/**
+	 * Creates an input message from the input. 
+	 * <br><br>
+	 * <b>Description: </b> <br>
+	 * This method parses the request data and creates an XML
+	 * <code>Document</code> containing all parameters in the SOAP 1.1
+	 * message. <br>
+	 * <br>
+	 * Parse and validation errors are logged and an <code>ASOAPException</code>
+	 * is thrown. <b>Concurrency issues: </b> <br>
+	 * The returned <code>Document</code> is not threadsafe. <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * This method should be called in the initializing stage of the
+	 * <code>SOAP11MessageCreator</code>.<br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * The input message instance variables contain input message XML data. <br>
+	 * <br>
+	 * <i>note: _oInputMessage is not set </i> <br>
+	 * 
+	 * @return The parsed and validated input message.
+	 * @throws ASOAPException
+	 *             If parsing or validation fails.
+	 */
+	private Document createInputMessage()
+		throws ASOAPException
+	{
+		String sMethod = "createInputMessage()";
+		Document oInputMessage = null;
+		try {
+			//create DocumentBuilderFactory to parse SOAP message.
+			DocumentBuilderFactory oDbf = DocumentBuilderFactory.newInstance();
+			oDbf.setNamespaceAware(true);
 
-            //Create parser
-            DocumentBuilder oParser = oDbf.newDocumentBuilder();
-            //set SOAP12 error handler which throws all errors.
-            oParser.setErrorHandler(new SOAP11ErrorHandler());
-            //parse
-            oInputMessage = oParser.parse(_oRequest.getInputStream());
-        }
-        catch (org.xml.sax.SAXParseException xSPE) //Invalid XML
-        {
-            _systemLogger.log(Level.WARNING,
-                MODULE, sMethod, "Bad request, could not parse request.", xSPE);
-            throw new ASOAPException(ASOAPException.CLIENT, "Bad request", xSPE
-                .getMessage());
-        }
-        catch (org.xml.sax.SAXException xSE) //Invalid XML
-        {
-            _systemLogger.log(Level.WARNING,
-                MODULE, sMethod, "Bad request, could not parse request.", xSE);
-            throw new ASOAPException(ASOAPException.CLIENT, "Bad request", xSE
-                .getMessage());
-        }
-        catch (java.io.IOException xIOE) //Invalid inputstream (i/o error)
-        {
-            _systemLogger.log(Level.WARNING,
-                MODULE, sMethod, "Internal server error, could not open soap request.", xIOE);
-            throw new ASOAPException(ASOAPException.SERVER,
-                "Internal server error", xIOE.getMessage());
-        }
-        catch (ParserConfigurationException xPCE)
-        {
-            _systemLogger.log(Level.SEVERE, 
-                MODULE, sMethod, "Internal server error", xPCE);
-            throw new ASOAPException(ASOAPException.SERVER,
-                "Internal server error", xPCE.getMessage());
-        }
+			//SOAP 1.1 SCHEMA VALIDATING default disabled because of
+			// performance issues
+			//			xDbf.setValidating(true);
+			//			xDbf.setAttribute("http://java.sun.com/xml/jaxp/properties/schemaLanguage",
+			//							 "http://www.w3.org/2001/XMLSchema");
+			//			xDbf.setAttribute("http://java.sun.com/xml/jaxp/properties/schemaSource",
+			//							 System.getProperty("user.dir") +
+			//							 File.separator +
+			//							 "soap-envelope.xsd");
 
-        //retrieve root element
-        Element elRoot = oInputMessage.getDocumentElement();
+			//Create parser
+			DocumentBuilder oParser = oDbf.newDocumentBuilder();
+			//set SOAP12 error handler which throws all errors.
+			oParser.setErrorHandler(new SOAP11ErrorHandler());
+			//parse
+			oInputMessage = oParser.parse(_oRequest.getInputStream());
+		}
+		catch (org.xml.sax.SAXParseException xSPE) //Invalid XML
+		{
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Bad request, could not parse request.", xSPE);
+			throw new ASOAPException(ASOAPException.CLIENT, "Bad request", xSPE.getMessage());
+		}
+		catch (org.xml.sax.SAXException xSE) //Invalid XML
+		{
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Bad request, could not parse request.", xSE);
+			throw new ASOAPException(ASOAPException.CLIENT, "Bad request", xSE.getMessage());
+		}
+		catch (java.io.IOException xIOE) //Invalid inputstream (i/o error)
+		{
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Internal server error, could not open soap request.",
+					xIOE);
+			throw new ASOAPException(ASOAPException.SERVER, "Internal server error", xIOE.getMessage());
+		}
+		catch (ParserConfigurationException xPCE) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Internal server error", xPCE);
+			throw new ASOAPException(ASOAPException.SERVER, "Internal server error", xPCE.getMessage());
+		}
 
-        //check envelope tag name
-        String xEnvelopeName = elRoot.getLocalName();
-        if (!xEnvelopeName.equals(SOAPConstants.ELEM_ENVELOPE)) //invalid
-        // envelop
-        {
-            _systemLogger.log(Level.WARNING,
-                MODULE, sMethod, "Version Mismatch, invalid envelope tag name.");
-            String xDetail = null; //no detail for VerionMismatch
-            throw new ASOAPException(ASOAPException.VERSION_MISMATCH,
-                "Version Mismatch", xDetail);
-        }
-        //validate Body tag
-        String nameSpace = elRoot.getNamespaceURI();
-        if (nameSpace != null) //if encoding schema is specified, then use it.
-        {
-            _sInputMessageSchema = nameSpace;
-            _elInputBody = getChildElementNS(elRoot, SOAPConstants.ELEM_BODY,
-                _sInputMessageSchema);
-        }
-        else
-        //no namespace is used
-        {
-            _elInputBody = getChildElement(elRoot, SOAPConstants.ELEM_BODY);
-        }
-        if (_elInputBody == null)
-        {
-            _systemLogger
-                .log(Level.INFO, 
-                    MODULE, sMethod, "Bad request, No Body element found.");
-            throw new ASOAPException(ASOAPException.CLIENT, "Bad request",
-                "SOAP message must contain mandatory Body element.");
-        }
-        //retrieve RPCBody
-        _elInputRPCBody = getChildElementNS(_elInputBody, _sMethodName,
-            _sMethodEnv);
-        if (_elInputRPCBody == null)
-        {
-            _systemLogger.log(Level.INFO,
-                MODULE, sMethod, "Bad request, No correct RPC Body found while looking for: "
-                    + _sMethodName);
-            throw new ASOAPException(ASOAPException.CLIENT, "Bad request",
-                "Unsupported request received, invalid RPC body.");
-        }
-        return oInputMessage;
-    }
+		//retrieve root element
+		Element elRoot = oInputMessage.getDocumentElement();
 
-    /**
-     * creates an empty SOAP output message. 
-     * <br><br>
-     * <b>Description: </b> <br>
-     * Creates a new <code>Document</code> with a empty RPC body. <br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * The returned <code>Document</code> is not threadsafe. <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * This method should be called in the initializing stage of the
-     * <code>SOAP11MessageCreator</code>.<br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * <code>_elOutputBody</code> contains an empty SOAP body. <br>
-     * 
-     * @return An empty SOAP response message.
-     */
-    private Document createOutputMessage()
-    {
-        //set Content type of response
-        _oResponse.setProperty("Content-Type", SOAPConstants.CONTENT_TYPE);
-        //Create IOutputMessage
-        Document oOutputMessage = new DocumentImpl();
-        //create envelope
-        Element elEnvelope = oOutputMessage.createElementNS(
-            _sInputMessageSchema, SOAPConstants.NS_PREFIX_SOAP_ENV + ":"
-                + SOAPConstants.ELEM_ENVELOPE);
+		//check envelope tag name
+		String xEnvelopeName = elRoot.getLocalName();
+		if (!xEnvelopeName.equals(SOAPConstants.ELEM_ENVELOPE)) //invalid
+		// envelop
+		{
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Version Mismatch, invalid envelope tag name.");
+			String xDetail = null; //no detail for VerionMismatch
+			throw new ASOAPException(ASOAPException.VERSION_MISMATCH, "Version Mismatch", xDetail);
+		}
+		//validate Body tag
+		String nameSpace = elRoot.getNamespaceURI();
+		if (nameSpace != null) //if encoding schema is specified, then use it.
+		{
+			_sInputMessageSchema = nameSpace;
+			_elInputBody = getChildElementNS(elRoot, SOAPConstants.ELEM_BODY, _sInputMessageSchema);
+		}
+		else
+		//no namespace is used
+		{
+			_elInputBody = getChildElement(elRoot, SOAPConstants.ELEM_BODY);
+		}
+		if (_elInputBody == null) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Bad request, No Body element found.");
+			throw new ASOAPException(ASOAPException.CLIENT, "Bad request",
+					"SOAP message must contain mandatory Body element.");
+		}
+		//retrieve RPCBody
+		_elInputRPCBody = getChildElementNS(_elInputBody, _sMethodName, _sMethodEnv);
+		if (_elInputRPCBody == null) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Bad request, No correct RPC Body found while looking for: "
+					+ _sMethodName);
+			throw new ASOAPException(ASOAPException.CLIENT, "Bad request",
+					"Unsupported request received, invalid RPC body.");
+		}
+		return oInputMessage;
+	}
 
-        elEnvelope.setAttributeNS(_sInputMessageSchema,
-            SOAPConstants.NS_PREFIX_SOAP_ENV + ":"
-                + SOAPConstants.ATTR_ENCODING_STYLE,
-            SOAPConstants.URI_SOAP11_ENC);
+	/**
+	 * creates an empty SOAP output message. 
+	 * <br><br>
+	 * <b>Description: </b> <br>
+	 * Creates a new <code>Document</code> with a empty RPC body. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * The returned <code>Document</code> is not threadsafe. <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * This method should be called in the initializing stage of the
+	 * <code>SOAP11MessageCreator</code>.<br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * <code>_elOutputBody</code> contains an empty SOAP body. <br>
+	 * 
+	 * @return An empty SOAP response message.
+	 */
+	private Document createOutputMessage()
+	{
+		//set Content type of response
+		_oResponse.setProperty("Content-Type", SOAPConstants.CONTENT_TYPE);
+		//Create IOutputMessage
+		Document oOutputMessage = new DocumentImpl();
+		//create envelope
+		Element elEnvelope = oOutputMessage.createElementNS(_sInputMessageSchema, SOAPConstants.NS_PREFIX_SOAP_ENV
+				+ ":" + SOAPConstants.ELEM_ENVELOPE);
 
-        //add envelope
-        oOutputMessage.appendChild(elEnvelope);
-        //create Body
-        _elOutputBody = oOutputMessage.createElementNS(_sInputMessageSchema,
-            SOAPConstants.NS_PREFIX_SOAP_ENV + ":" + SOAPConstants.ELEM_BODY);
-        //add body
-        elEnvelope.appendChild(_elOutputBody);
+		elEnvelope.setAttributeNS(_sInputMessageSchema, SOAPConstants.NS_PREFIX_SOAP_ENV + ":"
+				+ SOAPConstants.ATTR_ENCODING_STYLE, SOAPConstants.URI_SOAP11_ENC);
 
-        return oOutputMessage;
-    }
+		//add envelope
+		oOutputMessage.appendChild(elEnvelope);
+		//create Body
+		_elOutputBody = oOutputMessage.createElementNS(_sInputMessageSchema, SOAPConstants.NS_PREFIX_SOAP_ENV + ":"
+				+ SOAPConstants.ELEM_BODY);
+		//add body
+		elEnvelope.appendChild(_elOutputBody);
 
-    /**
-     * Create a SOAP 1.1 Fault in the ouput message. 
-     * <br><br>
-     * <b>Description: </b> <br>
-     * Creates a SOAP 1.1 fault tag in the output message. <br>
-     * <br>
-     * <i>For more info see: <a
-     * href='http://www.w3.org/TR/2003/REC-soap12-part0-20030624/#L11549'
-     * target='_new'>SOAP fault handling </a> </i> <br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * the returned <code>Element</code> is not threadsafe. <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * <ul>
-     * 	<li><code>sFaultString</code> should be a valid SOAP 1.1 fault code.
-     * 	<li><code>sReasonString</code> should be a valid SOAP 1.1 fault
-     * 		reason.
-     * 	<li><code>sDetailString</code> should contain additional information.
-     * </ul>
-     * <br>
-     * <br>
-     * <b>Postconditions: </b> 
-     * <br>-<br>
-     * 
-     * @param sFaultString
-     *            The SOAP fault code as <code>String</code>.
-     * @param sReasonString
-     *            The SOAP fault reason contents.
-     * @param sDetailString
-     *            The SOAP fault detail contents.
-     * @return The created Fault.
-     */
-    private Element createFault(String sFaultString, String sReasonString,
-        String sDetailString)
-    {
-        //create Fault
-        Element elFault = _oOutputMessage.createElementNS(_sInputMessageSchema,
-            SOAPConstants.NS_PREFIX_SOAP_ENV + ":" + SOAPConstants.ELEM_FAULT);
+		return oOutputMessage;
+	}
 
-        //create Code
-        Element elCode = _oOutputMessage.createElementNS(_sInputMessageSchema,
-            SOAPConstants.NS_PREFIX_SOAP_ENV + ":"
-                + SOAPConstants.ELEM_FAULT_CODE);
-        //add Code
-        elFault.appendChild(elCode);
+	/**
+	 * Create a SOAP 1.1 Fault in the ouput message. 
+	 * <br><br>
+	 * <b>Description: </b> <br>
+	 * Creates a SOAP 1.1 fault tag in the output message. <br>
+	 * <br>
+	 * <i>For more info see: <a
+	 * href='http://www.w3.org/TR/2003/REC-soap12-part0-20030624/#L11549'
+	 * target='_new'>SOAP fault handling </a> </i> <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * the returned <code>Element</code> is not threadsafe. <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * <ul>
+	 * 	<li><code>sFaultString</code> should be a valid SOAP 1.1 fault code.
+	 * 	<li><code>sReasonString</code> should be a valid SOAP 1.1 fault
+	 * 		reason.
+	 * 	<li><code>sDetailString</code> should contain additional information.
+	 * </ul>
+	 * <br>
+	 * <br>
+	 * <b>Postconditions: </b> 
+	 * <br>-<br>
+	 * 
+	 * @param sFaultString
+	 *            The SOAP fault code as <code>String</code>.
+	 * @param sReasonString
+	 *            The SOAP fault reason contents.
+	 * @param sDetailString
+	 *            The SOAP fault detail contents.
+	 * @return The created Fault.
+	 */
+	private Element createFault(String sFaultString, String sReasonString, String sDetailString)
+	{
+		//create Fault
+		Element elFault = _oOutputMessage.createElementNS(_sInputMessageSchema, SOAPConstants.NS_PREFIX_SOAP_ENV + ":"
+				+ SOAPConstants.ELEM_FAULT);
 
-        //Create Code value
-        Element elValue = _oOutputMessage.createElementNS(_sInputMessageSchema,
-            SOAPConstants.NS_PREFIX_SOAP_ENV + ":"
-                + SOAPConstants.ELEM_FAULT_CODE_VALUE);
-        //add text to value
-        Text oValueText = _oOutputMessage
-            .createTextNode(SOAPConstants.NS_PREFIX_SOAP_ENV + ":"
-                + sFaultString);
-        elValue.appendChild(oValueText);
+		//create Code
+		Element elCode = _oOutputMessage.createElementNS(_sInputMessageSchema, SOAPConstants.NS_PREFIX_SOAP_ENV + ":"
+				+ SOAPConstants.ELEM_FAULT_CODE);
+		//add Code
+		elFault.appendChild(elCode);
 
-        //add Value to code
-        elCode.appendChild(elValue);
+		//Create Code value
+		Element elValue = _oOutputMessage.createElementNS(_sInputMessageSchema, SOAPConstants.NS_PREFIX_SOAP_ENV + ":"
+				+ SOAPConstants.ELEM_FAULT_CODE_VALUE);
+		//add text to value
+		Text oValueText = _oOutputMessage.createTextNode(SOAPConstants.NS_PREFIX_SOAP_ENV + ":" + sFaultString);
+		elValue.appendChild(oValueText);
 
-        //Create reason
-        Element elReason = _oOutputMessage.createElementNS(
-            _sInputMessageSchema, SOAPConstants.NS_PREFIX_SOAP_ENV + ":"
-                + SOAPConstants.ELEM_FAULT_REASON);
-        //add reason
-        elFault.appendChild(elReason);
+		//add Value to code
+		elCode.appendChild(elValue);
 
-        //create reason contents
-        Element elReasonContent = _oOutputMessage.createElementNS(
-            _sInputMessageSchema, SOAPConstants.NS_PREFIX_SOAP_ENV + ":Text");
-        elReasonContent.setAttribute("xml:lang", SOAPConstants.XML_LANG);
-        Text oReasonText = _oOutputMessage.createTextNode(sReasonString);
-        elReasonContent.appendChild(oReasonText);
+		//Create reason
+		Element elReason = _oOutputMessage.createElementNS(_sInputMessageSchema, SOAPConstants.NS_PREFIX_SOAP_ENV + ":"
+				+ SOAPConstants.ELEM_FAULT_REASON);
+		//add reason
+		elFault.appendChild(elReason);
 
-        //add reason contents
-        elReason.appendChild(elReasonContent);
+		//create reason contents
+		Element elReasonContent = _oOutputMessage.createElementNS(_sInputMessageSchema,
+				SOAPConstants.NS_PREFIX_SOAP_ENV + ":Text");
+		elReasonContent.setAttribute("xml:lang", SOAPConstants.XML_LANG);
+		Text oReasonText = _oOutputMessage.createTextNode(sReasonString);
+		elReasonContent.appendChild(oReasonText);
 
-        //create detail if applicable
-        if (sDetailString != null)
-        {
-            //create deatil
-            Element elDetail = _oOutputMessage.createElementNS(
-                _sInputMessageSchema, SOAPConstants.NS_PREFIX_SOAP_ENV + ":"
-                    + SOAPConstants.ELEM_FAULT_DETAIL);
-            //add detail
-            elFault.appendChild(elDetail);
+		//add reason contents
+		elReason.appendChild(elReasonContent);
 
-            //add text to detail
-            Text oDetailText = _oOutputMessage.createTextNode(sDetailString);
-            elDetail.appendChild(oDetailText);
-        }
-        return elFault;
-    }
+		//create detail if applicable
+		if (sDetailString != null) {
+			//create deatil
+			Element elDetail = _oOutputMessage.createElementNS(_sInputMessageSchema, SOAPConstants.NS_PREFIX_SOAP_ENV
+					+ ":" + SOAPConstants.ELEM_FAULT_DETAIL);
+			//add detail
+			elFault.appendChild(elDetail);
 
-    /**
-     * Get XML child element. 
-     * <br><br>
-     * <b>Description: </b> <br>
-     * Get the child element with the given tagname from <code>elParent</code>.
-     * <br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * The returned <code>Element</code> is not threadsafe. <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * <ul>
-     * <li><code>elParent</code> should be a valid XML DOM
-     * <code>Element</code>.</li>
-     * <li><code>sTagname</code> should be a vaild tag name.</li>
-     * </ul>
-     * <br>
-     * <b>Postconditions: </b> 
-     * <br>-<br>
-     * 
-     * @param elParent
-     *            The root element from which the child element is extracted.
-     * @param sTagname
-     *            The tag name of the child element.
-     * @return The <code>Element</code> if found, otherwise <code>null</code>.
-     */
-    private Element getChildElement(Element elParent, String sTagname)
-    {
-        NodeList xList = elParent.getElementsByTagName(sTagname);
-        if (xList.getLength() == 1)
-        {
-            return (Element)xList.item(0);
-        }
-        return null;
-    }
+			//add text to detail
+			Text oDetailText = _oOutputMessage.createTextNode(sDetailString);
+			elDetail.appendChild(oDetailText);
+		}
+		return elFault;
+	}
 
-    /**
-     * Get XML child element with namespace. 
-     * <br><br>
-     * <b>Description: </b> <br>
-     * Get the child element with the given tagname and namespace URI from
-     * <code>elParent</code>.<br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * The returned <code>Element</code> is not threadsafe. <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * <ul>
-     * 	<li><code>elParent</code> should be a valid XML DOM
-     * 		<code>Element</code>.</li>
-     * 	<li><code>sTagname</code> should be a vaild tag name.</li>
-     * 	<li><code>sNamespaceURI</code> should contain a valid URI.</li>
-     * </ul>
-     * <br>
-     * <br>
-     * <b>Postconditions: </b> <br>-<br>
-     * 
-     * @param elParent
-     *            The root element from which the child element is extracted.
-     * @param sTagname
-     *            The tag name of the child element.
-     * @param sNamespaceURI
-     *            The namespace URI of the child element.
-     * @return The <code>Element</code> if found, otherwise <code>null</code>.
-     */
-    private Element getChildElementNS(Element elParent, String sTagname,
-        String sNamespaceURI)
-    {
-        NodeList nlChilds = elParent.getElementsByTagNameNS(sNamespaceURI,
-            sTagname);
-        if (nlChilds.getLength() == 1)
-        {
-            return (Element)nlChilds.item(0);
-        }
-        return null;
-    }
+	/**
+	 * Get XML child element. 
+	 * <br><br>
+	 * <b>Description: </b> <br>
+	 * Get the child element with the given tagname from <code>elParent</code>.
+	 * <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * The returned <code>Element</code> is not threadsafe. <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * <ul>
+	 * <li><code>elParent</code> should be a valid XML DOM
+	 * <code>Element</code>.</li>
+	 * <li><code>sTagname</code> should be a vaild tag name.</li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions: </b> 
+	 * <br>-<br>
+	 * 
+	 * @param elParent
+	 *            The root element from which the child element is extracted.
+	 * @param sTagname
+	 *            The tag name of the child element.
+	 * @return The <code>Element</code> if found, otherwise <code>null</code>.
+	 */
+	private Element getChildElement(Element elParent, String sTagname)
+	{
+		NodeList xList = elParent.getElementsByTagName(sTagname);
+		if (xList.getLength() == 1) {
+			return (Element) xList.item(0);
+		}
+		return null;
+	}
+
+	/**
+	 * Get XML child element with namespace. 
+	 * <br><br>
+	 * <b>Description: </b> <br>
+	 * Get the child element with the given tagname and namespace URI from
+	 * <code>elParent</code>.<br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * The returned <code>Element</code> is not threadsafe. <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * <ul>
+	 * 	<li><code>elParent</code> should be a valid XML DOM
+	 * 		<code>Element</code>.</li>
+	 * 	<li><code>sTagname</code> should be a vaild tag name.</li>
+	 * 	<li><code>sNamespaceURI</code> should contain a valid URI.</li>
+	 * </ul>
+	 * <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>-<br>
+	 * 
+	 * @param elParent
+	 *            The root element from which the child element is extracted.
+	 * @param sTagname
+	 *            The tag name of the child element.
+	 * @param sNamespaceURI
+	 *            The namespace URI of the child element.
+	 * @return The <code>Element</code> if found, otherwise <code>null</code>.
+	 */
+	private Element getChildElementNS(Element elParent, String sTagname, String sNamespaceURI)
+	{
+		NodeList nlChilds = elParent.getElementsByTagNameNS(sNamespaceURI, sTagname);
+		if (nlChilds.getLength() == 1) {
+			return (Element) nlChilds.item(0);
+		}
+		return null;
+	}
 
 }

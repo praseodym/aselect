@@ -582,7 +582,11 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		try {
 			String sAsURL = sbAsUrl.toString();
 			oOutputMessage.setParam("rid", sSessionId);
-			oOutputMessage.setParam("as_url", sAsURL);
+			if (aApp.isDoUrlEncode())
+				oOutputMessage.setParam("as_url", sAsURL);
+			else
+				oOutputMessage.setParam("as_url", sAsURL, false);  // only for DigiD protocol: do not url-encode
+			
 			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
 		}
 		catch (ASelectCommunicationException eAC) {

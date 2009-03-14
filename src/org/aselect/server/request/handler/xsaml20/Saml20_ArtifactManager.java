@@ -203,9 +203,7 @@ public class Saml20_ArtifactManager extends StorageManager
 		builder = dbFactory.newDocumentBuilder();
 		samlResponse = builder.parse(inputSource);
 		dom = samlResponse.getDocumentElement();
-		
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "get dom="+dom);
-
 		
 		XMLObject xmlObject = null;
 		try {

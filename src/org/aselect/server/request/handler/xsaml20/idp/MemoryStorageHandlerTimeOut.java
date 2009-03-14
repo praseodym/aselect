@@ -17,16 +17,16 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMAgent;
-import org.aselect.system.storagemanager.handler.ConcurrentStorageHandler;
+import org.aselect.system.storagemanager.handler.MemoryStorageHandler;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
 /*
  * NOTE: Code differs from the sp-version.
  */
-public class ConcurrentStorageHandlerTimeOut extends ConcurrentStorageHandler
+public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 {
-	private final static String MODULE = "ConcurrentStorageHandlerTimeOut";
+	private final static String MODULE = "MemoryStorageHandlerTimeOut";
 	private TGTManager _oTGTManager;
 	private SystemLogger _oSystemLogger;
 	private String timeOut;
@@ -67,7 +67,7 @@ public class ConcurrentStorageHandlerTimeOut extends ConcurrentStorageHandler
 			timeOut = oConfigManager.getParam(oTicketSection, "timeout");
 			timeOutTime = Long.parseLong(timeOut);
 			timeOutTime = timeOutTime * 1000;
-			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "Timeout time on IDP = " + timeOutTime);
+			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "Absolute timeout on IDP = " + timeOutTime);
 		}
 		catch (ASelectConfigException e) {
 			systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'timeout' found", e);
@@ -165,7 +165,8 @@ public class ConcurrentStorageHandlerTimeOut extends ConcurrentStorageHandler
 				long lCreateTime = 0;
 				try {
 					lCreateTime = Long.parseLong(sCreateTime);
-				} catch (Exception exc) {
+				}
+				catch (Exception exc) {
 					_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "CreateTime was not set");
 				}
 				boolean danishLogout = (now >= lCreateTime + timeOutTime);

@@ -1,7 +1,7 @@
 //
 //Module:	HtmlInfo.java
 //
-//Author:	Bauke Hiemstra, b.hiemstra@proline.nl
+//Author:	Bauke Hiemstra, bauke.hiemstra@anoigo.nl
 //
 package org.aselect.system.servlet;
 
@@ -56,7 +56,7 @@ public class HtmlInfo extends HttpServlet
 		String url = request.getRequestURI();
 		systemLogger.log(Level.INFO, _sModule, sMethod, "path=" + path + ", uri=" + url);
 		
-		response.setHeader("Pragma", "no-cache"); // Don't let iChain cache anything
+		response.setHeader("Pragma", "no-cache");
 		response.setContentType("text/html");
 
 		PrintWriter htmlpage;

@@ -80,6 +80,7 @@ public class Application
     private String _forced_uid;
     private String _forced_authsp;
     private String _level_name;
+    private boolean _doUrlEncode;
    
     /**
      * Contructor which contains the default parameters for an Application
@@ -361,5 +362,15 @@ public class Application
 	public void setSharedSecret(String _shared_secret)
 	{
 		this._shared_secret = _shared_secret;
+	}
+
+	public boolean isDoUrlEncode()
+	{
+		return _doUrlEncode;
+	}
+
+	public void setDoUrlEncode(boolean urlEncode)
+	{
+		_doUrlEncode = urlEncode;
 	}
 }

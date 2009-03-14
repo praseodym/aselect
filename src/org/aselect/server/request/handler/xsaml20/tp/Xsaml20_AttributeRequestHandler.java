@@ -36,7 +36,6 @@ import org.aselect.system.utils.BASE64Decoder;
 import org.opensaml.saml2.core.Assertion;
 import org.opensaml.saml2.core.AttributeStatement;
 import org.opensaml.xml.Configuration;
-import org.opensaml.xml.XMLObjectBuilderFactory;
 import org.opensaml.xml.io.Unmarshaller;
 import org.opensaml.xml.io.UnmarshallerFactory;
 import org.opensaml.xml.io.UnmarshallingException;
@@ -86,11 +85,11 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler {
 	private static final String TGT_NAMEID_KEY = "name_id"; // Is hard-coded in TGTManger
 
     private final static String MODULE = "tp.Xsaml20_AttributeRequestHandler";
-	private XMLObjectBuilderFactory _oBuilderFactory;
+	//private XMLObjectBuilderFactory _oBuilderFactory;
 	
 	private String encoding = null; // encoding stype we want to receive in the response
 	private String samlrequest = null; // samltype we want returned (e.g. "attributestatement")
-	private String createtgt = null; // "true" or "false"
+	//private String createtgt = null; // "true" or "false"
 	private String urlencoding = null; // "true" or "false"
 
 
@@ -111,7 +110,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler {
 	    }
         _systemLogger.log(Level.INFO, MODULE, sMethod, "TokenRequest");
 	    
-		_oBuilderFactory = Configuration.getBuilderFactory();
+		//_oBuilderFactory = Configuration.getBuilderFactory();
 
 	}
 
@@ -137,7 +136,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Requested encoding: "+encoding+" not supported");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
-		createtgt = request.getParameter(PARM_NAME_CREATETGT);
+		//createtgt = request.getParameter(PARM_NAME_CREATETGT);
 		
 		try {
 			// TODO, verify signature, get CN, decrypt if necessary etc.
@@ -192,7 +191,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler {
             
             if (PARM_VALUE_ATRRIBUTESTATEMENT.equalsIgnoreCase(samlrequest)) {
             	
-				String issuer = _sServerUrl;
+				//String issuer = _sServerUrl;
 				// TODO marshall the SAML message here to an assertion
 				// TODO get the subject form the saml message to retrieve the TGT
 	//			Assertion ass = createAttributeStatementAssertion(parms, issuer, subject, "true".equalsIgnoreCase(sign));

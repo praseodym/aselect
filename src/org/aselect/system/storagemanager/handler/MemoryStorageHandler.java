@@ -17,10 +17,10 @@ import org.aselect.system.utils.Utils;
  * Concurrent Memory storage handler. <br>
  * <br>
  * <b>Description: </b> <br>
- * The ConcurrentStorageHandler uses a <code>HashMap</code> for storing objects
+ * The MemoryStorageHandler uses a <code>HashMap</code> for storing objects
  * in memory. <br>
  * <br>
- * In the ConcurrentStorageHandler an additional HashMap is created in which
+ * In the MemoryStorageHandler an additional HashMap is created in which
  * information about the stored record is kept: <code><pre>
  * 
  *  HashMap htStorage { 
@@ -31,10 +31,10 @@ import org.aselect.system.utils.Utils;
  *  }
  * 
  */
-public class ConcurrentStorageHandler implements IStorageHandler
+public class MemoryStorageHandler implements IStorageHandler
 {
     /** The module name. */
-    public final static String MODULE = "ConcurrentStorageHandler";
+    public final static String MODULE = "MemoryStorageHandler";
     
     /** The actual storage */
     private ConcurrentHashMap _htStorage;
@@ -43,10 +43,10 @@ public class ConcurrentStorageHandler implements IStorageHandler
     private SystemLogger _systemLogger;
 
     /**
-     * Initialize the <code>ConcurrentStorageHandler</code>.
+     * Initialize the <code>MemoryStorageHandler</code>.
      * <br><br>
      * <b>Description: </b>
-     * Initalises the <code>ConcurrentStorageHandler</code>:
+     * Initalises the <code>MemoryStorageHandler</code>:
      * <ul>
      * 	<li>Set system logger</li>
      * 	<li>create new storage <code>HashMap</code></li>
