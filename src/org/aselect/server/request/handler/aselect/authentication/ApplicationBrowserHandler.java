@@ -285,8 +285,6 @@
  *
  * Revision 1.3  2005/03/08 09:51:53  remco
  * javadoc added
- *
- *
  */
 
 package org.aselect.server.request.handler.aselect.authentication;
@@ -388,9 +386,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @param sMyOrg The A-Select Server organisation.
 	 */
 	public ApplicationBrowserHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-			String sMyServerId, String sMyOrg) {
+			String sMyServerId, String sMyOrg)
+	{
 		super(servletRequest, servletResponse, sMyServerId, sMyOrg);
-		_sModule = "ApplicationBrowserHandler()";
+		_sModule = "ApplicationBrowserHandler";
+		_systemLogger.log(Level.INFO, _sModule, "ApplicationBrowserHandler", "== create ==");
 		_applicationManager = ApplicationManager.getHandle();
 		_authspHandlerManager = AuthSPHandlerManager.getHandle();
 		_crossASelectManager = CrossASelectManager.getHandle();
@@ -804,13 +804,15 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRedirectUrl);
 
 							// 20090313, Bauke: add info screen for the user, shows SP's already logged in
-							if (1==1)
-								showSessionInfo(htServiceRequest, servletResponse, pwOut, sRedirectUrl, sTgt, htTGTContext, spUrl);
+							ASelectConfigManager configManager = ASelectConfigManager.getHandle();
+							if (spUrl != null && configManager.getUserInfoSettings().contains("session"))
+								showSessionInfo(htServiceRequest, servletResponse, pwOut, sRedirectUrl,
+												sTgt, htTGTContext, sRid, spUrl);
 							else {
 								TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 								oTGTIssuer.sendRedirect(sRedirectUrl, sTgt, sRid, servletResponse);
+								_sessionManager.killSession(sRid);
 							}
-							_sessionManager.killSession(sRid);
 							return;
 						}
 					}
@@ -829,7 +831,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					if (sTempOrg == null)
 						sTempOrg = (String) htTGTContext.get("organization");
 					if (!sTempOrg.equals(_sMyOrg) &&
-					// 20090111, Bauke Added test:
+							// 20090111, Bauke Added test:
 							_crossASelectManager.isCrossSelectorEnabled() && _configManager.isCrossFallBackEnabled()) {
 						_htSessionContext.put("forced_uid", sUid);
 						_htSessionContext.put("forced_organization", sTempOrg);
@@ -907,18 +909,18 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 	}
 	
-	private void showSessionInfo(HashMap htServiceRequest, HttpServletResponse servletResponse,
-			PrintWriter pwOut, String sRedirectUrl, String sTgt, HashMap htTGTContext, String spUrl)
+	private void showSessionInfo(HashMap htServiceRequest, HttpServletResponse servletResponse,	PrintWriter pwOut,
+						String sRedirectUrl, String sTgt, HashMap htTGTContext, String sRid, String spUrl)
 	throws ASelectException
 	{
 		final String sMethod = "showSessionInfo";
 		long now = new Date().getTime();
 		
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "redirect url="+sRedirectUrl);
-        String sInfoForm = _configManager.getForm("session_info");
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "redirect url="+sRedirectUrl);    
+		String sInfoForm = _configManager.getForm("session_info");
 		sInfoForm = Utils.replaceString(sInfoForm, "[aselect_url]", sRedirectUrl);
 		sInfoForm = Utils.replaceString(sInfoForm, "[a-select-server]", _sMyServerId);
-		//sInfoForm = Utils.replaceString(sInfoForm, "[rid]", sRid);
+		sInfoForm = Utils.replaceString(sInfoForm, "[rid]", sRid);
 
 		String sEncryptedTgt = (sTgt == null)? "": _cryptoEngine.encryptTGT(Utils.stringToHex(sTgt));
 		sInfoForm = Utils.replaceString(sInfoForm, "[aselect_credentials]", sEncryptedTgt);
@@ -929,7 +931,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			lCreateTime = Long.parseLong(sCreateTime);
 		}
 		catch (Exception exc) {
-			_systemLogger.log(Level.FINER, _sModule, sMethod, "CreateTime was not set");
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "CreateTime was not set");
 		}
 		
 		ASelectConfigManager oConfigManager = ASelectConfigManager.getHandle();
@@ -938,7 +940,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		if (sTimeOut != null) {
 			long timeOutTime = Long.parseLong(sTimeOut);
 			timeOutTime = timeOutTime * 1000;
-			long minutesToGo = (lCreateTime + timeOutTime - now) / 1000;
+			long secondsToGo = (lCreateTime + timeOutTime - now) / 1000;
+			long minutesToGo = secondsToGo / 60;
 			if (minutesToGo < 0) minutesToGo = 0;
 			long hoursToGo = minutesToGo / 60;
 			minutesToGo -= 60 * hoursToGo;
@@ -956,16 +959,14 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				String sOtherUrl = sp.getServiceProviderUrl();
 				if (!spUrl.equals(sOtherUrl)) {
 					sFriendlyName = ApplicationManager.getHandle().getFriendlyName(sOtherUrl);
-					sOtherSPs += sOtherUrl + "<br/>";
+					sOtherSPs += sFriendlyName + "<br/>";
 				}
 			}
 		}
 		sInfoForm = Utils.replaceString(sInfoForm, "[other_sps]", sOtherSPs);
-		
 		sInfoForm = _configManager.updateTemplate(sInfoForm, _htSessionContext);
 		servletResponse.setContentType("text/html");
 		pwOut.println(sInfoForm);
-		pwOut.close();
 	}
 
 	// Return: true when user consent is already available, else false
@@ -977,34 +978,36 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		String COOKIE_NAME = "user_consent";
 		final String sMethod = "handleUserConsent";
 
-		String sUserConsent = HandlerTools.getCookieValue(_servletRequest, COOKIE_NAME, _systemLogger);
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "Consent=" + sUserConsent);
-		if (sUserConsent != null && sUserConsent.equals("true"))
+		ASelectConfigManager configManager = ASelectConfigManager.getHandle();
+		String sUserInfo = configManager.getUserInfoSettings();
+		if (!sUserInfo.contains("consent"))  // No "consent" or "save_consent"
 			return true;
-
-		// Display the consent form
-		String sFriendlyName = "";
-		boolean bAskConsent = false;
-		try {
-			Object aselect = _configManager.getSection(null, "aselect");
-			sFriendlyName = Utils.getSimpleParam(aselect, "organization_friendly_name", false);
-			String sAskConsent = Utils.getSimpleParam(aselect, "request_consent", false);
-			if (sAskConsent != null && sAskConsent.equals("true"))
-				bAskConsent = true;
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "request_consent="+bAskConsent);
+		
+		Boolean setConsentCookie = sUserInfo.contains("save_consent");
+		if (setConsentCookie) {
+			String sUserConsent = HandlerTools.getCookieValue(_servletRequest, COOKIE_NAME, _systemLogger);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "user_consent=" + sUserConsent);
+			if (sUserConsent != null && sUserConsent.equals("true"))
+				return true;
 		}
-		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Configuration error: " + e);
-		}
-		if (!bAskConsent) // no need to ask for consent
-			return true;
+		// "consent" or "save_consent" is present
+			
+		//boolean bAskConsent = false;
+		//String sAskConsent = Utils.getSimpleParam(aselect, "request_consent", false);
+		//if (sAskConsent != null && sAskConsent.equals("true"))
+		//	bAskConsent = true;
+		//_systemLogger.log(Level.INFO, _sModule, sMethod, "request_consent="+bAskConsent);
+		//if (!bAskConsent) // no need to ask for consent
+		//	return true;
 
 		// We need the user's consent to continue
 		String sReqConsent = (String) htServiceRequest.get("consent");
-		if (sReqConsent != null && sReqConsent.equals("true")) {
-			// Remember the user's answer by setting a Consent Cookie
-			String sCookieDomain = _configManager.getCookieDomain();
-			HandlerTools.putCookieValue(servletResponse, COOKIE_NAME, "true", sCookieDomain, 157680101, _systemLogger); // some 5 years
+		if (sReqConsent != null && sReqConsent.equals("true")) {  // new consent given
+			if (setConsentCookie) {
+				// Remember the user's answer by setting a Consent Cookie
+				String sCookieDomain = _configManager.getCookieDomain();
+				HandlerTools.putCookieValue(servletResponse, COOKIE_NAME, "true", sCookieDomain, 157680101, _systemLogger); // some 5 years
+			}
 			return true;
 		}
 		if (sReqConsent != null && sReqConsent.equals("false")) {
@@ -1012,22 +1015,30 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_CANCEL);
 		}
 
+		// Display the consent form
+		String sFriendlyName = "";
+		try {
+			Object aselect = _configManager.getSection(null, "aselect");
+			sFriendlyName = Utils.getSimpleParam(aselect, "organization_friendly_name", false);
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Configuration error: " + e);
+		}
 		// Ask for consent by presenting the userconsent.html form
 		try {
 			_sConsentForm = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "userconsent.html");
-			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[version]", Version.getVersion());
-			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[organization_friendly]", sFriendlyName);
-
-			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[request]", "login1");
-			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[rid]", sRid);
-			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[a-select-server]", _sMyServerId);
-			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[consent]", "true");
+			_sConsentForm = Utils.replaceString(_sConsentForm, "[version]", Version.getVersion());
+			_sConsentForm = Utils.replaceString(_sConsentForm, "[organization_friendly]", sFriendlyName);
+			_sConsentForm = Utils.replaceString(_sConsentForm, "[request]", "login1");
+			_sConsentForm = Utils.replaceString(_sConsentForm, "[rid]", sRid);
+			_sConsentForm = Utils.replaceString(_sConsentForm, "[a-select-server]", _sMyServerId);
+			_sConsentForm = Utils.replaceString(_sConsentForm, "[consent]", "true");
 
 			String sAsUrl = _configManager.getRedirectURL();
-			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[aselect_url]", sAsUrl);
+			_sConsentForm = Utils.replaceString(_sConsentForm, "[aselect_url]", sAsUrl);
 			StringBuffer sCancel = new StringBuffer(sAsUrl).append("?request=login1").append("&rid=").append(sRid)
 					.append("&a-select-server=").append(_sMyServerId).append("&consent=false");
-			_sConsentForm = org.aselect.system.utils.Utils.replaceString(_sConsentForm, "[cancel]", sCancel.toString());
+			_sConsentForm = Utils.replaceString(_sConsentForm, "[cancel]", sCancel.toString());
 
 			servletResponse.setContentType("text/html");
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "Display ConsentForm");

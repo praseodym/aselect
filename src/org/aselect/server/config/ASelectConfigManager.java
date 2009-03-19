@@ -397,6 +397,8 @@ public class ASelectConfigManager extends ConfigManager
 
 	private String _sSessionInfoForm;
 
+	private String _sLogoutInfoForm;
+
 	/**
 	 * The A-Select logged out form template
 	 */
@@ -419,6 +421,10 @@ public class ASelectConfigManager extends ConfigManager
 
 	// Additional security precaution
 	private String _sAddedSecurity = "";
+	
+	// <user_info>consent,save_consent,session,logout</user_info>
+	// use either "consent" or "save_consent"
+	private String _sUserInfoSettings = "";
 
 	/**
 	 * Check if CrossFallback is enabled when user not is found in local
@@ -519,7 +525,6 @@ public class ASelectConfigManager extends ConfigManager
 			sbInfo = new StringBuffer("Reading config from database: ");
 			sbInfo.append(sSQLURL);
 			_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString());
-
 			super.init(sSQLDriver, sSQLUser, sSQLPassword, sSQLURL, sSQLTable, sConfigIDName, _systemLogger);
 		}
 		else {
@@ -528,7 +533,6 @@ public class ASelectConfigManager extends ConfigManager
 			if (!sWorkingDir.endsWith(File.separator)) {
 				sbConfigFile.append(File.separator);
 			}
-
 			sbConfigFile.append("conf");
 			sbConfigFile.append(File.separator);
 			sbConfigFile.append("aselect.xml");
@@ -536,7 +540,6 @@ public class ASelectConfigManager extends ConfigManager
 			sbInfo = new StringBuffer("Reading config from file: ");
 			sbInfo.append(sbConfigFile.toString());
 			_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString());
-
 			super.init(sbConfigFile.toString(), _systemLogger);
 		}
 
@@ -556,7 +559,6 @@ public class ASelectConfigManager extends ConfigManager
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod,
 					"No valid 'logging' config section with id='system' found.", e);
-
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 		_systemLogger.init(oSysLogging, sWorkingDir);
@@ -573,7 +575,6 @@ public class ASelectConfigManager extends ConfigManager
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod,
 					"No valid 'logging' config section with id='authentication' found.", e);
-
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 		}
 		_oASelectAuthenticationLogger.init(oAuthLogging, sWorkingDir);
@@ -675,11 +676,15 @@ public class ASelectConfigManager extends ConfigManager
 		}
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Single sign-on is enabled");
 
-		try {
-			_sAddedSecurity = getParam(_oASelectConfigSection, "added_security");
-		}
-		catch (ASelectConfigException e) { // need not be present
-		}
+		//try {
+		//	_sAddedSecurity = getParam(_oASelectConfigSection, "added_security");
+		//}
+		//catch (ASelectConfigException e) { // need not be present
+		//}
+		_sAddedSecurity = Utils.getSimpleParam(_oASelectConfigSection, "added_security", false);
+		if (_sAddedSecurity == null) _sAddedSecurity = "";
+		_sUserInfoSettings = Utils.getSimpleParam(_oASelectConfigSection, "user_info", false);
+		if (_sUserInfoSettings == null) _sUserInfoSettings = "";
 
 		// In a redundant environment a domain cookie wil be set.
 		// This way, all A-Select servers in, for example:
@@ -737,7 +742,6 @@ public class ASelectConfigManager extends ConfigManager
 		// loading privileged application settings
 		loadPrivilegedSettings(sWorkingDir);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded privileged settings");
-
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully initialized A-Select Server Config Manager");
 	}
 
@@ -1006,6 +1010,9 @@ public class ASelectConfigManager extends ConfigManager
 
 		if (sForm.equals("server_info"))
 			return _sServerInfoForm;
+
+		if (sForm.equals("logout_info"))
+			return _sLogoutInfoForm;
 
 		if (sForm.equals("session_info"))
 			return _sSessionInfoForm;
@@ -1367,7 +1374,6 @@ public class ASelectConfigManager extends ConfigManager
 				sbKey.append(iSequence);
 				sbKey.append(".public_key");
 				_htAuthspKeys.put(sbKey.toString(), pkAuthSP);
-
 				iSequence++;
 				x509Cert = (java.security.cert.X509Certificate) ksKeyStore.getCertificate(sAlias + iSequence);
 			}
@@ -1521,21 +1527,12 @@ public class ASelectConfigManager extends ConfigManager
 		String sMethod = "loadHTMLTemplates()";
 
 		try {
-			/* Looks Silly?
-			_sLoginForm = new String();
-			_sErrorForm = new String();
-			_sSelectForm = new String();
-			_sPopupForm = new String();
-			_sServerInfoForm = new String();
-			_sUserInfoForm = new String();
-			_sLoggedOutForm = new String();
-			_sDirectLoginForm = new String();
-			 */
 			_sServerInfoForm = loadHTMLTemplate(sWorkingDir, "serverinfo.html");
 			_sUserInfoForm = loadHTMLTemplate(sWorkingDir, "userinfo.html");
 			_sLoggedOutForm = loadHTMLTemplate(sWorkingDir, "loggedout.html");
 			_sErrorForm = loadHTMLTemplate(sWorkingDir, "error.html");
 			_sSessionInfoForm = loadHTMLTemplate(sWorkingDir, "session_info.html");
+			_sLogoutInfoForm = loadHTMLTemplate(sWorkingDir, "logout_info.html");
 
 			if (_htServerCrypto.size() > 0) {
 				_sLoginForm = loadHTMLTemplate(sWorkingDir, "login.html");
@@ -2067,5 +2064,10 @@ public class ASelectConfigManager extends ConfigManager
 	public String getAddedSecurity()
 	{
 		return _sAddedSecurity;
+	}
+
+	public String getUserInfoSettings()
+	{
+		return _sUserInfoSettings;
 	}
 }

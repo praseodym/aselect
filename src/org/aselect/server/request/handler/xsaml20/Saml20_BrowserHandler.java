@@ -467,14 +467,16 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	//
 	protected void logoutNextSessionSP(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
 						LogoutRequest logoutRequest, String initiatingSP,
-						boolean tryRedirectLogoutFirst, int redirectLogoutTimeout)
+						boolean tryRedirectLogoutFirst, int redirectLogoutTimeout, HashMap htTGTContext)
 	throws ASelectException, ASelectStorageException
 	{
 		String sMethod = "logoutNextSessionSP";
+		TGTManager tgtManager = TGTManager.getHandle();
 		
 		String sNameID = logoutRequest.getNameID().getValue();
-		TGTManager tgtManager = TGTManager.getHandle();
-		HashMap<String, Object> htTGTContext = tgtManager.getTGT(sNameID);
+		if (htTGTContext == null) {  // caller did not get the TGT yet
+			htTGTContext = tgtManager.getTGT(sNameID);
+		}
 		
 		// TODO: if one or more sessionindexes are mentioned in the logout request
 		//       only logout the ones mentioned!!

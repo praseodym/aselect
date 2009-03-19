@@ -156,21 +156,18 @@ public class SamlTools
 			signingAlgo = "SHA1withDSA";
 		}
 
+		// The signature was set on the complete query string, except the Signature parameter
 		try {
-			// De te verifieren data is de gehele query string minus het
-			// 'Signature' deel.
-
 			String sQuery = httpRequest.getQueryString();
 			StringTokenizer tokenizer = new StringTokenizer(sQuery, "&");
 			String sData = "";
 			while (tokenizer.hasMoreTokens()) {
 				String s = tokenizer.nextToken();
-				if (!s.startsWith("Signature=")) {
+				if (!s.startsWith("Signature=") && !s.startsWith("consent=")) {
 					sData += s + "&";
 				}
 			}
-			sData = sData.substring(0, sData.length() - 1); // Delete the
-			// last '&'
+			sData = sData.substring(0, sData.length() - 1); // Delete the last '&'
 
 			signature = java.security.Signature.getInstance(signingAlgo);
 			// TODO this uses SAML11, should be SAML20

@@ -322,6 +322,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	        // And off you go!
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Redirecting with artifact to: "+ sAssertUrl);
 			sendSAMLArtifactRedirect(sAssertUrl, sRid, htSessionContext, sTgt, htTGTContext, httpResponse, sRelayState);
+			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Return from  AuthSP handled");
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -330,7 +331,6 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Return from  AuthSP handled");
 	}
 
 	//
@@ -488,6 +488,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				assertion.getAttributeStatements().add(attributeStatement);
 			}
 
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "set result");
 			SAMLObjectBuilder<StatusCode> statusCodeBuilder = (SAMLObjectBuilder<StatusCode>) builderFactory
 					.getBuilder(StatusCode.DEFAULT_ELEMENT_NAME);
 			StatusCode statusCode = statusCodeBuilder.buildObject();
@@ -528,18 +529,16 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			}
 
 			Saml20_ArtifactManager artifactManager = Saml20_ArtifactManager.getTheArtifactManager();
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "buildArtifact serverir;="+_sASelectServerUrl+" rid="+sRid);
 			String sArtifact = artifactManager.buildArtifact(response, _sASelectServerUrl, sRid);
 
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "sendArtifact "+sArtifact);
 			artifactManager.sendArtifact(sArtifact, response, sAppUrl, oHttpServletResponse, sRelayState);
-			// TODO, shouldn't we remove the artifact from storage here?
-			//	or maybe in artifactManager.sendArtifact itself
-
 		}
 		catch (IOException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"There is a problem with sending the redirect message to : '" + sRedirectUrl + "'", e);
+					"Redirect to : '" + sRedirectUrl + "' failed", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}
-	
 }

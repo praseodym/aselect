@@ -262,7 +262,7 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 //		String uid = originalLogoutRequest.getNameID().getValue();
 		
         logoutNextSessionSP(httpRequest, httpResponse, originalLogoutRequest, null,
-					_bTryRedirectLogoutFirst, _iRedirectLogoutTimeout);
+					_bTryRedirectLogoutFirst, _iRedirectLogoutTimeout, null);
 
 /*		SSOSessionManager sessionManager = SSOSessionManager.getHandle();
 		UserSsoSession ssoSession = sessionManager.getSsoSession(uid);

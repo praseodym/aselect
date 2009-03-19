@@ -74,6 +74,7 @@ public class Saml20_ArtifactManager extends StorageManager
 	{
 		String sMethod = "sendArtifact()";
 
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Store");
 		putArtifactInStorage(sArtifact, samlObject);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Encode");
 		String uencArtifact = URLEncoder.encode(sArtifact, "UTF-8");

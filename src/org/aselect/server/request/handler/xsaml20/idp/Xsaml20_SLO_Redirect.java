@@ -1,15 +1,22 @@
 package org.aselect.server.request.handler.xsaml20.idp;
 
 import java.io.PrintWriter;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.server.application.ApplicationManager;
+import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.handler.xsaml20.Saml20_BrowserHandler;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
+import org.aselect.server.request.handler.xsaml20.ServiceProvider;
+import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
@@ -77,51 +84,45 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request received === Path="+ pathInfo);
 
 		try {
-			LogoutRequest logoutRequest = (LogoutRequest) samlMessage;
+			LogoutRequest logoutRequest = (LogoutRequest)samlMessage;
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "received SAMLRequest: \n"
 							+ XMLHelper.prettyPrintXML(logoutRequest.getDOM()));
 
+			PrintWriter pwOut = httpResponse.getWriter();
 			Response errorResponse = validateLogoutRequest(logoutRequest, httpRequest);
 			if (errorResponse != null) {
 				String errorMessage = "Something wrong in SAML communication";
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, errorMessage);
-				PrintWriter pwOut = httpResponse.getWriter();
 				pwOut.write(errorMessage);
 				return;
 			}
-
 			// Now the message is OK
-			String initiatingSP = logoutRequest.getIssuer().getValue();
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "SAMLRequest="+httpRequest.getParameter("SAMLRequest"));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "SigAlg="+httpRequest.getParameter("SigAlg"));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signature="+httpRequest.getParameter("Signature"));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Destination="+logoutRequest.getDestination());
+			String sConsent = httpRequest.getParameter("consent");
+			String sInitiatingSP = logoutRequest.getIssuer().getValue();
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "consent="+sConsent+" SP="+sInitiatingSP);
 
-/*			// retrieve the sso session for this user
-			SSOSessionManager ssoSessionManager = SSOSessionManager.getHandle();
-			UserSsoSession ssoSession = ssoSessionManager.getSsoSession(uid);
-
-			// Remove initiating SP
-			ssoSession.removeServiceProvider(initiatingSP);
-			// Store the initiating SP as initiatingSP for future reference
-			ssoSession.setLogoutInitiator(initiatingSP);
-			// overwrite the session (needed for database storage)
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Removed initiatingSP="+initiatingSP+
-					" new session="+ssoSession);
-			ssoSessionManager.putSsoSession(ssoSession);
-
-			// Remove the TGT, extract ID from session
+			String sNameID = logoutRequest.getNameID().getValue();
 			TGTManager tgtManager = TGTManager.getHandle();
-			String tgtId = ssoSession.getTgtId();
-
-			if (tgtManager.containsKey(tgtId)) {
-				tgtManager.remove(tgtId);
-			}*/
-			
+			HashMap htTGTContext = (HashMap)tgtManager.getTGT(sNameID);
+			ASelectConfigManager configManager = ASelectConfigManager.getHandle();
+			if (!"true".equals(sConsent) && configManager.getUserInfoSettings().contains("logout")) {
+				showLogoutInfo(httpRequest, httpResponse, pwOut, sInitiatingSP, logoutRequest.getDestination(), htTGTContext);
+				return;
+			}
+	
 			// Delete the IdP client cookie
 	        String sCookieDomain = _configManager.getCookieDomain();
 	        HandlerTools.delCookieValue(httpResponse, "aselect_credentials", sCookieDomain, _systemLogger);
 			// NOTE: cookie GOES, TGT STAYS in admin!!
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Removed cookie for domain: "+sCookieDomain);
 			
-	        logoutNextSessionSP(httpRequest, httpResponse, logoutRequest, initiatingSP,
-						_bTryRedirectLogoutFirst, _iRedirectLogoutTimeout);
+	        logoutNextSessionSP(httpRequest, httpResponse, logoutRequest, sInitiatingSP,
+						_bTryRedirectLogoutFirst, _iRedirectLogoutTimeout, htTGTContext);
+			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request handled " + pathInfo);
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -130,7 +131,45 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request handled " + pathInfo);
+	}
+	
+	private void showLogoutInfo(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
+			PrintWriter pwOut, String sInitiatingSP, String sRedirectUrl, HashMap htTGTContext)
+	throws ASelectException
+	{
+		final String sMethod = "showLogoutInfo";
+		long now = new Date().getTime();
+		
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "redirect_url="+sRedirectUrl);
+		String sInfoForm = _configManager.getForm("logout_info");
+		sInfoForm = Utils.replaceString(sInfoForm, "[aselect_url]", sRedirectUrl);
+		sInfoForm = Utils.replaceString(sInfoForm, "[SAMLRequest]", httpRequest.getParameter("SAMLRequest"));
+		sInfoForm = Utils.replaceString(sInfoForm, "[SigAlg]", httpRequest.getParameter("SigAlg"));
+		sInfoForm = Utils.replaceString(sInfoForm, "[Signature]", httpRequest.getParameter("Signature"));
+		sInfoForm = Utils.replaceString(sInfoForm, "[consent]", "true");
+
+		String sFriendlyName = ApplicationManager.getHandle().getFriendlyName(sInitiatingSP);
+		sInfoForm = Utils.replaceString(sInfoForm, "[current_sp]", sFriendlyName);
+
+		String sOtherSPs = "";
+		UserSsoSession ssoSession = (UserSsoSession) htTGTContext.get("sso_session");
+		if (ssoSession != null) {
+			List<ServiceProvider> spList = ssoSession.getServiceProviders();
+			for (ServiceProvider sp : spList) {
+				String sOtherUrl = sp.getServiceProviderUrl();
+				if (!sInitiatingSP.equals(sOtherUrl)) {
+					sFriendlyName = ApplicationManager.getHandle().getFriendlyName(sOtherUrl);
+					sOtherSPs += sFriendlyName + "<br/>";
+				}
+			}
+		}
+		sInfoForm = Utils.replaceString(sInfoForm, "[other_sps]", sOtherSPs);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "display form");
+		
+		//sInfoForm = _configManager.updateTemplate(sInfoForm, _htSessionContext);
+		httpResponse.setContentType("text/html");
+		pwOut.println(sInfoForm);
+		pwOut.close();
 	}
 
 	private Response validateLogoutRequest(LogoutRequest logoutRequest, HttpServletRequest httpRequest)
