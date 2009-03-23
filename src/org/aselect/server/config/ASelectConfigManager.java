@@ -1008,7 +1008,7 @@ public class ASelectConfigManager extends ConfigManager
 		if (sForm.equals("popup"))
 			return _sPopupForm;
 
-		if (sForm.equals("server_info"))
+		if (sForm.equals("serverinfo"))
 			return _sServerInfoForm;
 
 		if (sForm.equals("logout_info"))

@@ -438,6 +438,16 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			else {
 				String sServerInfoForm = _configManager.getForm("serverinfo");
 				sServerInfoForm = Utils.replaceString(sServerInfoForm, "[message]", " ");
+
+				try {
+					Object aselect = _configManager.getSection(null, "aselect");
+					String sFriendlyName = Utils.getSimpleParam(aselect, "organization_friendly_name", false);
+					sServerInfoForm = Utils.replaceString(sServerInfoForm, "[organization_friendly]", sFriendlyName);
+				}
+				catch (Exception e) {
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Configuration error: " + e);
+				}
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Serverinfo ["+sServerInfoForm+"]");
 				pwOut.println(sServerInfoForm);
 			}
 		}
@@ -949,6 +959,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sInfoForm = Utils.replaceString(sInfoForm, "[minutes_left]", String.format("%02d", minutesToGo));
 		}
 		String sFriendlyName = ApplicationManager.getHandle().getFriendlyName(spUrl);
+		if (sFriendlyName == null)
+			sFriendlyName = spUrl;
 		sInfoForm = Utils.replaceString(sInfoForm, "[current_sp]", sFriendlyName);
 
 		String sOtherSPs = "";
@@ -959,6 +971,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				String sOtherUrl = sp.getServiceProviderUrl();
 				if (!spUrl.equals(sOtherUrl)) {
 					sFriendlyName = ApplicationManager.getHandle().getFriendlyName(sOtherUrl);
+					if (sFriendlyName == null)
+						sFriendlyName = sOtherUrl;
 					sOtherSPs += sFriendlyName + "<br/>";
 				}
 			}

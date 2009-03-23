@@ -149,6 +149,8 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 		sInfoForm = Utils.replaceString(sInfoForm, "[consent]", "true");
 
 		String sFriendlyName = ApplicationManager.getHandle().getFriendlyName(sInitiatingSP);
+		if (sFriendlyName == null)
+			sFriendlyName = sInitiatingSP;
 		sInfoForm = Utils.replaceString(sInfoForm, "[current_sp]", sFriendlyName);
 
 		String sOtherSPs = "";
@@ -159,6 +161,8 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 				String sOtherUrl = sp.getServiceProviderUrl();
 				if (!sInitiatingSP.equals(sOtherUrl)) {
 					sFriendlyName = ApplicationManager.getHandle().getFriendlyName(sOtherUrl);
+					if (sFriendlyName == null)
+						sFriendlyName = sOtherUrl;
 					sOtherSPs += sFriendlyName + "<br/>";
 				}
 			}
