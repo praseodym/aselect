@@ -21,11 +21,12 @@ public class HandlerTools
 		String sMethod = "putCookieValue";
 		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
 		String addedSecurity = _configManager.getAddedSecurity();
+		String sCookiePath = _configManager.getCookiePath();
 		
 		String sValue = sCookieName+"="+sCookieValue;
 		if (sCookieDomain != null)
 			sValue += "; Domain="+sCookieDomain;
-		sValue += "; Version=1; Path=/aselectserver/server";
+		sValue += "; Version=1; Path=" + sCookiePath;  // was: "/aselectserver/server";
 		// if (iAge != -1) sValue += "; expires=<date>"
 		// format: Wdy, DD-Mon-YYYY HH:MM:SS GMT, e.g.: Fri, 31-Dec-2010, 23:59:59 GMT
 
@@ -46,28 +47,32 @@ public class HandlerTools
 		String sMethod = "putCookieValue";
 		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
 		String addedSecurity = _configManager.getAddedSecurity();
+		String sCookiePath = _configManager.getCookiePath();
 		
-		Cookie oCookie = new Cookie(sCookieName, sCookieValue);  // does not work +"; HttpOnly");
+		Cookie cookie = new Cookie(sCookieName, sCookieValue);  // does not work +"; HttpOnly");
 		if (sCookieDomain != null)
-			oCookie.setDomain(sCookieDomain);
-		oCookie.setPath("/aselectserver/server");
-		oCookie.setVersion(1);
-		if (iAge != -1) oCookie.setMaxAge(iAge);
+			cookie.setDomain(sCookieDomain);
+		cookie.setPath(sCookiePath);  // was: "/aselectserver/server");
+		cookie.setVersion(1);
+		if (iAge != -1) cookie.setMaxAge(iAge);
 		
 		if (addedSecurity != null && addedSecurity.contains("cookies"))
-			oCookie.setSecure(true);
+			cookie.setSecure(true);
 	    
 		logger.log(Level.INFO, MODULE, sMethod, "Add Cookie: "+sCookieName+" Value="+sCookieValue+
-	    		" Domain="+oCookie.getDomain()+" Path="+oCookie.getPath()+" Age="+iAge);
-		response.addCookie(oCookie);
+	    		" Domain="+cookie.getDomain()+" Path="+cookie.getPath()+" Age="+iAge);
+		response.addCookie(cookie);
 	}
 
 	public static void delCookieValue(HttpServletResponse response, String sCookieName, String sCookieDomain, ASelectSystemLogger logger)
 	{
 		String sMethod = "delCookieValue";
+		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
+		String sCookiePath = _configManager.getCookiePath();
+
 		Cookie cookie = new Cookie(sCookieName, "i am invisible");
 		if (sCookieDomain != null) cookie.setDomain(sCookieDomain);
-		cookie.setPath("/aselectserver/server");
+		cookie.setPath(sCookiePath);  // was: "/aselectserver/server");
 		cookie.setMaxAge(0);
 		logger.log(Level.INFO, MODULE, sMethod, "Delete Cookie="+sCookieName+" Domain="+sCookieDomain);
 		response.addCookie(cookie);

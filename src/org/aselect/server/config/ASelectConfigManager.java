@@ -419,6 +419,8 @@ public class ASelectConfigManager extends ConfigManager
 	 */
 	private String _sCookieDomain = null;
 
+	private String _sCookiePath = null;
+
 	// Additional security precaution
 	private String _sAddedSecurity = "";
 	
@@ -681,6 +683,10 @@ public class ASelectConfigManager extends ConfigManager
 		//}
 		//catch (ASelectConfigException e) { // need not be present
 		//}
+		_sCookiePath = Utils.getSimpleParam(_oASelectConfigSection, "cookie_path", false);
+		if (_sCookiePath == null) _sCookiePath = "/aselectserver/server";
+		if (!_sCookiePath.startsWith("/"))
+			_sCookiePath = "/" + _sCookiePath;
 		_sAddedSecurity = Utils.getSimpleParam(_oASelectConfigSection, "added_security", false);
 		if (_sAddedSecurity == null) _sAddedSecurity = "";
 		_sUserInfoSettings = Utils.getSimpleParam(_oASelectConfigSection, "user_info", false);
@@ -2059,6 +2065,11 @@ public class ASelectConfigManager extends ConfigManager
 	public boolean isCrossFallBackEnabled()
 	{
 		return _bCrossFallbackEnabled;
+	}
+
+	public String getCookiePath()
+	{
+		return _sCookiePath;
 	}
 
 	public String getAddedSecurity()
