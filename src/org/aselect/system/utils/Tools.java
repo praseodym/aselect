@@ -26,7 +26,13 @@ import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.logging.Level;
 
-import org.aselect.server.log.ASelectSystemLogger;
+import org.aselect.system.communication.client.IClientCommunicator;
+import org.aselect.system.communication.client.raw.RawCommunicator;
+import org.aselect.system.communication.client.soap11.SOAP11Communicator;
+import org.aselect.system.communication.client.soap12.SOAP12Communicator;
+import org.aselect.system.error.Errors;
+import org.aselect.system.exception.ASelectException;
+import org.aselect.system.logging.SystemLogger;
 import org.w3c.dom.*;
 
 //
@@ -36,8 +42,7 @@ public class Tools
     final static String MODULE = "Tools";
     protected final static String DEFAULT_CHARSET = "UTF8";
 
-	
-    // Bauke: added
+	// Bauke: added
 	// if 'getContent' extract the content within the tags, otherwise extract with tags included
 	// <searchFor xxx      >contents              </searchFor>
 	// ^begin               ^cntBegin             ^cntEnd     ^end
@@ -119,7 +124,7 @@ public class Tools
 		return buffer.toString();
 	}
 
-    public static void addAttributeToElement(Node baseNode, ASelectSystemLogger logger,
+    public static void addAttributeToElement(Node baseNode, SystemLogger logger,
     		String sName, String sAttr, String sValue)
     {
     	String sMethod = "changeNode";
@@ -147,7 +152,7 @@ public class Tools
     }
 
     // debugging use:
-    public static void visitNode(Element previousNode, Element visitNode, ASelectSystemLogger logger)
+    public static void visitNode(Element previousNode, Element visitNode, SystemLogger logger)
     {
     	String sMethod = "visitNode";
         if (previousNode != null) {
@@ -232,6 +237,23 @@ public class Tools
 	
 	public static String stream2string(InputStream is) throws IOException {
 		return stream2string(is, DEFAULT_CHARSET, true);
+	}
+
+	public static IClientCommunicator initClientCommunicator(Object oConfig, SystemLogger _systemLogger)
+	throws ASelectException
+	{
+		String sClientCommunicator = Utils.getSimpleParam(oConfig, "clientcommunicator", false);
+		if (sClientCommunicator == null || sClientCommunicator.equalsIgnoreCase("raw")) {
+			return new RawCommunicator(_systemLogger);
+		}
+		else if (sClientCommunicator.equalsIgnoreCase("soap11")) {
+			return new SOAP11Communicator("ASelect", _systemLogger);
+		}
+		else if (sClientCommunicator.equalsIgnoreCase("soap12")) {
+			return new SOAP12Communicator("ASelect", _systemLogger);
+		}
+		_systemLogger.log( Level.WARNING, MODULE, "initClientCommunicator", "Invalid 'clientcommunicator' value");
+		throw new ASelectException(Errors.ERROR_ASELECT_CONFIG_ERROR);
 	}
 
 }

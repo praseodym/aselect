@@ -149,7 +149,7 @@ public class SessionSyncRequestSender
 						}
 						catch (ASelectConfigException e) {
 							mySystemLogger.log(Level.WARNING, MODULE, sMethod,
-									"No config item 'updateinterval' found in 'handler' section", e);
+									"No config item 'update_interval' found in 'handler' section", e);
 							throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 						}
 

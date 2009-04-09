@@ -206,18 +206,15 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler  // RH, 2008060
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
 			}
-
-			
 			String sInResponseTo = artifactResolve.getID(); // Is required in SAMLsyntax
-			// String sDestination = request.getRequestURL().toString();
-			String sDestination = "Destination unknown";
-			// RH, 20080602, sn
-			// resolveIssuer is not used any further
-//			Issuer resolveIssuer = artifactResolve.getIssuer();
-//			if (resolveIssuer != null) {
-//				sDestination = resolveIssuer.getValue();
-//			}
-			// RH, 20080602, en
+
+			// 20090409, Bauke: If back-channel communication is used Destination is optional
+			//   If we ever want to set it, look for the Recipient attribute contained
+			//   in the subject confirmation
+			//   (tgt:"sp_assert_url" equals the location where the artifact was sent to).
+			//   The issuer (artifactResolve.getIssuer()) cannot be used for this purpose!
+			//
+			String sDestination = null;
 
 			ArtifactResponse artifactResponse = null;
 			if (sReceivedArtifact == null || "".equals(sReceivedArtifact)) {
@@ -228,8 +225,6 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler  // RH, 2008060
 			}
 			else {
 				Saml20_ArtifactManager artifactManager = Saml20_ArtifactManager.getTheArtifactManager();
-//				StatusResponseType samlResponse = (StatusResponseType) artifactManager
-//				.getArtifactFromStorage(sReceivedArtifact);
 				Response samlResponse = (Response) artifactManager.getArtifactFromStorage(sReceivedArtifact);
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "samlResponse retrieved from storage:\n" + XMLHelper.nodeToString(samlResponse.getDOM()));
 
@@ -259,14 +254,14 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler  // RH, 2008060
 				artifactResponse.setInResponseTo(sInResponseTo);
 				artifactResponse.setVersion(SAMLVersion.VERSION_20);
 				artifactResponse.setIssueInstant(new DateTime());
-				artifactResponse.setDestination(sDestination);
+				if (sDestination != null)
+					artifactResponse.setDestination(sDestination);
 				artifactResponse.setStatus(status);
 				artifactResponse.setIssuer(issuer);
 				artifactResponse.setMessage(samlResponse);
 			}
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the artifactResponse >======" );
-//			artifactResponse = (ArtifactResponse)sign(artifactResponse);
 			artifactResponse = (ArtifactResponse)SamlTools.sign(artifactResponse);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the artifactResponse ======<" );
 			Envelope envelope = new SoapManager().buildSOAPMessage(artifactResponse);
@@ -275,18 +270,7 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler  // RH, 2008060
 			//		+ XMLHelper.prettyPrintXML(envelopeElem));
 
 			// Bauke: added, it's considered polite to tell the other side what we are sending
-//			_systemLogger.log(Level.INFO, MODULE, sMethod, "Send: ContentType: "+CONTENT_TYPE);
-			// Remy: 20081113: Move this code to HandlerTools for uniformity
 			SamlTools.sendSOAPResponse(response, XMLHelper.nodeToString(envelopeElem));
-			// RH, 20081113, so
-//			response.setContentType(CONTENT_TYPE);			
-//			ServletOutputStream sos = response.getOutputStream();
-//			sos.print(XMLHelper.nodeToString(envelopeElem));
-//			sos.println("\r\n\r\n");
-//			sos.close();
-			// RH, 20081113, eo
-			
-
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Internal error", e);
@@ -372,7 +356,8 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler  // RH, 2008060
 		artifactResponse.setInResponseTo(sInResponseTo);
 		artifactResponse.setVersion(SAMLVersion.VERSION_20);
 		artifactResponse.setIssueInstant(new DateTime());
-		artifactResponse.setDestination(sDestination);
+		if (sDestination != null)
+			artifactResponse.setDestination(sDestination);
 		artifactResponse.setMessage(status);
 		return null;
 	}

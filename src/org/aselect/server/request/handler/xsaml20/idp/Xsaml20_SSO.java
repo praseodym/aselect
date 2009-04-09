@@ -166,7 +166,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "'forced_authenticate' in htSession set to: " + bForcedLogon);
 			}
 
-			// The betrouwbaarheidsniveau is stored in the sessiecontext
+			// The betrouwbaarheidsniveau is stored in the session context
 			RequestedAuthnContext requestedAuthnContext = authnRequest.getRequestedAuthnContext();
 			String sBetrouwbaarheidsNiveau = SecurityLevel.getBetrouwbaarheidsNiveau(requestedAuthnContext, _systemLogger);
 			if (sBetrouwbaarheidsNiveau.equals(SecurityLevel.BN_NOT_FOUND)) {

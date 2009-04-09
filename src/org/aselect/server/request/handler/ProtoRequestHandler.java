@@ -1022,6 +1022,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	throws ASelectException
 	{
 	    String sMethod = "loadPublicKeyFromKeystore";
+	    _systemLogger.log(Level.INFO, MODULE, sMethod, "Loading public key "+sAlias+" from "+sKeystoreName);
 	    try {
 	        sAlias = sAlias.toLowerCase();
 	        KeyStore ksJKS = KeyStore.getInstance("JKS");

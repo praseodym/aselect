@@ -923,6 +923,7 @@ public class ApplicationManager
 		throws ASelectException
 	{
 		String sMethod = "loadPublicKeyFromKeystore()";
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Load public key "+sAlias+" from "+_sApplicationsKeystoreName);
 		try {
 			sAlias = sAlias.toLowerCase();
 			KeyStore ksJKS = KeyStore.getInstance("JKS");
@@ -934,7 +935,7 @@ public class ApplicationManager
 			return x509Privileged.getPublicKey();
 		}
 		catch (Exception e) {
-			StringBuffer sbError = new StringBuffer("could not load public key of application '");
+			StringBuffer sbError = new StringBuffer("Could not load public key of application '");
 			sbError.append(sAlias);
 			sbError.append("'");
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
