@@ -283,7 +283,7 @@ public class SessionSyncRequestSender
 			// If successful, update the ticket granting ticket (timestamp will be set to "now")
 			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Update TGT timestamp="+now);
 			htTGTContext.put("sessionsynctime", Long.toString(now));
-			// Setting the value below prevents the Timestamp update
+			// Setting the value below prevents the regular Timestamp update
 			htTGTContext.put("updatetimestamp", "no");
 			_oTGTManager.updateTGT(credentials, htTGTContext);
 		}
@@ -530,7 +530,7 @@ public class SessionSyncRequestSender
 		boolean saml = false;
 		
 		try {
-			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Send message for "+sNameID);
+			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Send message for "+sNameID+" message="+message);
 			// Send/Receive the SOAP message
 			sResponse = URLDecoder.decode(soapmanager.sendSOAP(message, _sFederationUrl), "UTF-8");
 

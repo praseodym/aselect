@@ -117,11 +117,11 @@ public class DBAuthSP extends ASelectHttpServlet
 
 	// password/query properties
 	private String _sQuery;
-	
+
 	private String _sColumn;
 
 	private boolean _bEncrypedPassword;
-	
+
 	/**
 	 * Initialization of the DB AuthSP. <br>
 	 * <br>
@@ -151,12 +151,12 @@ public class DBAuthSP extends ASelectHttpServlet
 	 * 
 	 * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
 	 */
-	public void init(ServletConfig oConfig) throws ServletException
+	public void init(ServletConfig oConfig)
+		throws ServletException
 	{
 		String sMethod = "init()";
 		StringBuffer sbTemp = null;
-		try
-		{
+		try {
 			// super init
 			super.init(oConfig);
 			// retrieve managers and loggers
@@ -173,8 +173,7 @@ public class DBAuthSP extends ASelectHttpServlet
 			// Retrieve crypto engine from servlet context.
 			ServletContext oContext = oConfig.getServletContext();
 			_cryptoEngine = (CryptoEngine) oContext.getAttribute("CryptoEngine");
-			if (_cryptoEngine == null)
-			{
+			if (_cryptoEngine == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No CryptoEngine found in servlet context.");
 				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR);
 			}
@@ -182,8 +181,7 @@ public class DBAuthSP extends ASelectHttpServlet
 
 			// Retrieve friendly name
 			_sFriendlyName = (String) oContext.getAttribute("friendly_name");
-			if (_sFriendlyName == null)
-			{
+			if (_sFriendlyName == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'friendly_name' found in servlet context.");
 				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR);
 			}
@@ -191,8 +189,7 @@ public class DBAuthSP extends ASelectHttpServlet
 
 			// Retrieve working directory
 			_sWorkingDir = (String) oContext.getAttribute("working_dir");
-			if (_sWorkingDir == null)
-			{
+			if (_sWorkingDir == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No working_dir found in servlet context.");
 				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR);
 			}
@@ -200,17 +197,14 @@ public class DBAuthSP extends ASelectHttpServlet
 
 			// Retrieve configuration
 			String sConfigID = oConfig.getInitParameter("config_id");
-			if (sConfigID == null)
-			{
+			if (sConfigID == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'config_id' found as init-parameter in web.xml.");
 				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR);
 			}
-			try
-			{
+			try {
 				_oAuthSpConfig = _configManager.getSection(null, "authsp", "id=" + sConfigID);
 			}
-			catch (ASelectConfigException eAC)
-			{
+			catch (ASelectConfigException eAC) {
 				sbTemp = new StringBuffer("No valid 'authsp' config section found with id='");
 				sbTemp.append(sConfigID);
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbTemp.toString(), eAC);
@@ -228,8 +222,7 @@ public class DBAuthSP extends ASelectHttpServlet
 			sbErrorsConfig.append(File.separator);
 			sbErrorsConfig.append("errors.conf");
 			File fErrorsConfig = new File(sbErrorsConfig.toString());
-			if (!fErrorsConfig.exists())
-			{
+			if (!fErrorsConfig.exists()) {
 				StringBuffer sbFailed = new StringBuffer("The error configuration file does not exist: \"");
 				sbFailed.append(sbErrorsConfig.toString()).append("\".");
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString());
@@ -244,42 +237,42 @@ public class DBAuthSP extends ASelectHttpServlet
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 
 			// Load HTML templates.
-			_sErrorHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "error.html", sConfigID, _sFriendlyName, VERSION);
+			_sErrorHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "error.html", sConfigID,
+					_sFriendlyName, VERSION);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'error.html' template.");
-			_sAuthenticateHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "authenticate.html", sConfigID, _sFriendlyName, VERSION);
+			_sAuthenticateHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "authenticate.html", sConfigID,
+					_sFriendlyName, VERSION);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'authenticate.html' template.");
 
 			// get allowed retries
-			try
-			{
+			try {
 				String sAllowedRetries = _configManager.getParam(_oAuthSpConfig, "allowed_retries");
 				_iAllowedRetries = Integer.parseInt(sAllowedRetries);
 			}
-			catch (ASelectConfigException eAC)
-			{
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'allowed_retries' parameter found in configuration", eAC);
+			catch (ASelectConfigException eAC) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"No 'allowed_retries' parameter found in configuration", eAC);
 				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, eAC);
 			}
-			catch (NumberFormatException eNF)
-			{
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid 'allowed_retries' parameter found in configuration", eNF);
+			catch (NumberFormatException eNF) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"Invalid 'allowed_retries' parameter found in configuration", eNF);
 				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, eNF);
 			}
 
 			// get failure handling
-			try
-			{
+			try {
 				_sFailureHandling = _configManager.getParam(_oAuthSpConfig, "failure_handling");
 			}
-			catch (ASelectConfigException eAC)
-			{
+			catch (ASelectConfigException eAC) {
 				_sFailureHandling = DEFAULT_FAILUREHANDLING;
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod, "No 'failure_handling' parameter found in configuration, using default: aselect", eAC);
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+						"No 'failure_handling' parameter found in configuration, using default: aselect", eAC);
 			}
 
-			if (!_sFailureHandling.equalsIgnoreCase("aselect") && !_sFailureHandling.equalsIgnoreCase("local"))
-			{
-				StringBuffer sbWarning = new StringBuffer("Invalid 'failure_handling' parameter found in configuration: '");
+			if (!_sFailureHandling.equalsIgnoreCase("aselect") && !_sFailureHandling.equalsIgnoreCase("local")) {
+				StringBuffer sbWarning = new StringBuffer(
+						"Invalid 'failure_handling' parameter found in configuration: '");
 				sbWarning.append(_sFailureHandling);
 				sbWarning.append("', using default: aselect");
 
@@ -289,22 +282,18 @@ public class DBAuthSP extends ASelectHttpServlet
 			}
 
 			// get driver
-			try
-			{
+			try {
 				_sDriver = _configManager.getParam(_oAuthSpConfig, "driver");
 			}
-			catch (ASelectConfigException eAC)
-			{
+			catch (ASelectConfigException eAC) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'driver' parameter found in configuration", eAC);
 				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, eAC);
 			}
-			try
-			{
+			try {
 				// initialize driver
 				Class.forName(_sDriver);
 			}
-			catch (Exception e)
-			{
+			catch (Exception e) {
 				StringBuffer sbFailed = new StringBuffer("Can't initialize driver: ");
 				sbFailed.append(_sDriver);
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
@@ -312,83 +301,73 @@ public class DBAuthSP extends ASelectHttpServlet
 			}
 
 			// get url
-			try
-			{
+			try {
 				_sUrl = _configManager.getParam(_oAuthSpConfig, "url");
 			}
-			catch (Exception e)
-			{
+			catch (Exception e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'url' found", e);
 				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
 			}
 
 			// get user
-			try
-			{
+			try {
 				_sUserName = _configManager.getParam(_oAuthSpConfig, "user");
 			}
-			catch (Exception e)
-			{
+			catch (Exception e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'username' found", e);
 				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
 			}
 
 			// get password
-			try
-			{
+			try {
 				_sUserPassword = _configManager.getParam(_oAuthSpConfig, "password");
 			}
-			catch (Exception e)
-			{
+			catch (Exception e) {
 				_sUserPassword = "";
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No or empty config item 'password' found, using empty password. Don't use this in a live production environment.", e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+								"No or empty config item 'password' found, using empty password. Don't use this in a live production environment.",
+								e);
 				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
 			}
 
 			// get password query
-			try
-			{
+			try {
 				_sQuery = _configManager.getParam(_oAuthSpConfig, "query");
 			}
-			catch (ASelectConfigException eAC)
-			{
+			catch (ASelectConfigException eAC) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'query' parameter found in configuration", eAC);
 				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, eAC);
 			}
-			
+
 			// get password column name
-			try
-			{
+			try {
 				_sColumn = _configManager.getParam(_oAuthSpConfig, "column");
 			}
-			catch (ASelectConfigException eAC)
-			{
+			catch (ASelectConfigException eAC) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'column' parameter found in configuration", eAC);
 				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, eAC);
 			}
-			
-			try
-			{
+
+			try {
 				String sEncryptedPassword = _configManager.getParam(_oAuthSpConfig, "encrypted");
 				_bEncrypedPassword = Boolean.parseBoolean(sEncryptedPassword);
 			}
-			catch (ASelectConfigException eAC)
-			{
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'encrypted' parameter found in configuration, taking default: " + DEFAULT_ENCRYPTION, eAC);
+			catch (ASelectConfigException eAC) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"No 'encrypted' parameter found in configuration, taking default: " + DEFAULT_ENCRYPTION, eAC);
 				_bEncrypedPassword = DEFAULT_ENCRYPTION;
 			}
-			catch (Exception e)
-			{
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not parse pasword encryption setting, taking default: " + DEFAULT_ENCRYPTION, e);
+			catch (Exception e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"Could not parse pasword encryption setting, taking default: " + DEFAULT_ENCRYPTION, e);
 				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
 			}
-			
+
 			sbInfo = new StringBuffer("Successfully started ");
 			sbInfo.append(VERSION).append(".");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 		}
-		catch (Exception e)
-		{
+		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initializing failed", e);
 			throw new ServletException("Initializing failed");
 		}
@@ -409,13 +388,13 @@ public class DBAuthSP extends ASelectHttpServlet
 	 *      javax.servlet.http.HttpServletRequest,
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
-	protected void doGet(HttpServletRequest servletRequest, HttpServletResponse servletResponse) throws java.io.IOException
+	protected void doGet(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
+		throws java.io.IOException
 	{
 		String sMethod = "doGet()";
 		PrintWriter pwOut = null;
 
-		try
-		{
+		try {
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 			pwOut = servletResponse.getWriter();
 
@@ -441,23 +420,21 @@ public class DBAuthSP extends ASelectHttpServlet
 				String sSignature = (String) htServiceRequest.get("signature");
 
 				// if ((sRid == null) || (sUid == null) || (sAsId == null))
-				if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sAsId == null) || (sSignature == null))
-				{
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: one or more mandatory parameters missing.");
+				if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sAsId == null) || (sSignature == null)) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod,
+							"Invalid request received: one or more mandatory parameters missing.");
 					throw new ASelectException(Errors.ERROR_DB_INVALID_REQUEST);
 				}
 
 				// optional country code
 				String sCountry = (String) htServiceRequest.get("country");
-				if (sCountry == null || sCountry.trim().length() < 1)
-				{
+				if (sCountry == null || sCountry.trim().length() < 1) {
 					sCountry = null;
 				}
 
 				// optional language code
 				String sLanguage = (String) htServiceRequest.get("language");
-				if (sLanguage == null || sLanguage.trim().length() < 1)
-				{
+				if (sLanguage == null || sLanguage.trim().length() < 1) {
 					sLanguage = null;
 				}
 
@@ -473,11 +450,12 @@ public class DBAuthSP extends ASelectHttpServlet
 				sbSignature.append(sUid);
 				sbSignature.append(sAsId);
 				// optional country code
-				if (sCountry != null) sbSignature.append(sCountry);
+				if (sCountry != null)
+					sbSignature.append(sCountry);
 				// optional language code
-				if (sLanguage != null) sbSignature.append(sLanguage);
-				if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), sSignature))
-				{
+				if (sLanguage != null)
+					sbSignature.append(sLanguage);
+				if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), sSignature)) {
 					StringBuffer sbWarning = new StringBuffer("Invalid signature from A-Select Server '");
 					sbWarning.append(sAsId);
 					sbWarning.append("' for user: ");
@@ -489,35 +467,31 @@ public class DBAuthSP extends ASelectHttpServlet
 				htServiceRequest.put("uid", sUid);
 				htServiceRequest.put("retry_counter", "1");
 
-				if (sCountry != null) htServiceRequest.put("country", sCountry);
-				if (sLanguage != null) htServiceRequest.put("language", sLanguage);
+				if (sCountry != null)
+					htServiceRequest.put("country", sCountry);
+				if (sLanguage != null)
+					htServiceRequest.put("language", sLanguage);
 
 				showAuthenticateForm(pwOut, " ", " ", htServiceRequest);
 			}
 		}
-		catch (ASelectException eAS)
-		{
+		catch (ASelectException eAS) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Sending error to client", eAS);
 			handleResult(servletRequest, servletResponse, pwOut, eAS.getMessage());
 		}
-		catch (IOException eIO)
-		{
+		catch (IOException eIO) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error sending response", eIO);
-			if (!servletResponse.isCommitted())
-			{
+			if (!servletResponse.isCommitted()) {
 				// send response if no headers have been written
 				servletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
 		}
-		catch (Exception e)
-		{
+		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process request due to internal error", e);
 			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_COULD_NOT_AUTHENTICATE_USER);
 		}
-		finally
-		{
-			if (pwOut != null)
-			{
+		finally {
+			if (pwOut != null) {
 				pwOut.close();
 				pwOut = null;
 			}
@@ -533,7 +507,8 @@ public class DBAuthSP extends ASelectHttpServlet
 	 * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest,
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
-	protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse) throws java.io.IOException
+	protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
+		throws java.io.IOException
 	{
 		String sMethod = "doPost()";
 		PrintWriter pwOut = null;
@@ -543,8 +518,7 @@ public class DBAuthSP extends ASelectHttpServlet
 		PreparedStatement oStatement = null;
 		ResultSet oResultSet = null;
 
-		try
-		{
+		try {
 			servletResponse.setContentType("text/html");
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 			pwOut = servletResponse.getWriter();
@@ -558,23 +532,22 @@ public class DBAuthSP extends ASelectHttpServlet
 			String sSignature = servletRequest.getParameter("signature");
 			String sRetryCounter = servletRequest.getParameter("retry_counter");
 
-			if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sPassword == null) || (sAsId == null) || (sRetryCounter == null) || (sSignature == null))
-			{
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: one or more mandatory parameters missing.");
+			if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sPassword == null) || (sAsId == null)
+					|| (sRetryCounter == null) || (sSignature == null)) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"Invalid request received: one or more mandatory parameters missing.");
 				throw new ASelectException(Errors.ERROR_DB_INVALID_REQUEST);
 			}
 
 			// optional country code
 			String sCountry = servletRequest.getParameter("country");
-			if (sCountry == null || sCountry.trim().length() < 1)
-			{
+			if (sCountry == null || sCountry.trim().length() < 1) {
 				sCountry = null;
 			}
 
 			// optional language code
 			String sLanguage = servletRequest.getParameter("language");
-			if (sLanguage == null || sLanguage.trim().length() < 1)
-			{
+			if (sLanguage == null || sLanguage.trim().length() < 1) {
 				sLanguage = null;
 			}
 
@@ -588,22 +561,26 @@ public class DBAuthSP extends ASelectHttpServlet
 				htServiceRequest.put("a-select-server", sAsId);
 				htServiceRequest.put("retry_counter", sRetryCounter);
 				htServiceRequest.put("signature", sSignature);
-				if (sCountry != null) htServiceRequest.put("country", sCountry);
-				if (sLanguage != null) htServiceRequest.put("language", sLanguage);
+				if (sCountry != null)
+					htServiceRequest.put("country", sCountry);
+				if (sLanguage != null)
+					htServiceRequest.put("language", sLanguage);
 				// show authentication form once again with warning message
-				showAuthenticateForm(pwOut, Errors.ERROR_DB_INVALID_PASSWORD, _configManager.getErrorMessage(Errors.ERROR_DB_INVALID_PASSWORD, _oErrorProperties), htServiceRequest);
+				showAuthenticateForm(pwOut, Errors.ERROR_DB_INVALID_PASSWORD, _configManager.getErrorMessage(
+						Errors.ERROR_DB_INVALID_PASSWORD, _oErrorProperties), htServiceRequest);
 			}
-			else
-			{
+			else {
 				// generate signature
 				StringBuffer sbSignature = new StringBuffer(sRid);
 				sbSignature.append(sAsUrl);
 				sbSignature.append(sUid);
 				sbSignature.append(sAsId);
-				if (sCountry != null) sbSignature.append(sCountry);
-				if (sLanguage != null) sbSignature.append(sLanguage);
-				if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), URLDecoder.decode(sSignature, "UTF-8")))
-				{
+				if (sCountry != null)
+					sbSignature.append(sCountry);
+				if (sLanguage != null)
+					sbSignature.append(sLanguage);
+				if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), URLDecoder
+						.decode(sSignature, "UTF-8"))) {
 					StringBuffer sbWarning = new StringBuffer("Invalid signature from A-Select Server '");
 					sbWarning.append(sAsId);
 					sbWarning.append("' for user: ");
@@ -614,38 +591,37 @@ public class DBAuthSP extends ASelectHttpServlet
 
 				// authenticate user
 				oConnection = getConnection();
-				
-				try
-				{
+
+				try {
 					oStatement = oConnection.prepareStatement(_sQuery);
 					oStatement.setString(1, sUid);
 					oResultSet = oStatement.executeQuery();
 				}
-				catch (Exception e)
-				{
-					_authenticationLogger.log("SEVERE", MODULE, sMethod, "Could not execute query: " + _sQuery, e.getMessage());
+				catch (Exception e) {
+					_authenticationLogger.log("SEVERE", MODULE, sMethod, "Could not execute query: " + _sQuery, e
+							.getMessage());
 					throw new ASelectException(Errors.ERROR_DB_COULD_NOT_REACH_DB_SERVER, e);
 				}
 
-				if (oResultSet.next())
-				{
+				if (oResultSet.next()) {
 					boolean matches = false;
-					try
-					{
+					try {
 						String sPwd = oResultSet.getString(_sColumn);
-						matches = _bEncrypedPassword ?  MD5Crypt.matches(sPwd, sPassword) : sPwd.equals(sPassword);
+						matches = _bEncrypedPassword ? MD5Crypt.matches(sPwd, sPassword) : sPwd.equals(sPassword);
 					}
-					catch (Exception e)
-					{
+					catch (Exception e) {
 						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not compare with database field: ", e);
 						throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
 					}
 
 					if (matches) {
-						_authenticationLogger.log(new Object[] { MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "granted" });
+						_authenticationLogger.log(new Object[] {
+							MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "granted"
+						});
 						handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_SUCCESS);
-					} else {
-						
+					}
+					else {
+
 						int iRetriesDone = Integer.parseInt(sRetryCounter);
 						if (iRetriesDone < _iAllowedRetries) // try again
 						{
@@ -657,45 +633,50 @@ public class DBAuthSP extends ASelectHttpServlet
 							htServiceRequest.put("a-select-server", sAsId);
 							htServiceRequest.put("retry_counter", String.valueOf(iRetriesDone + 1));
 							htServiceRequest.put("signature", sSignature);
-							if (sCountry != null) htServiceRequest.put("country", sCountry);
-							if (sLanguage != null) htServiceRequest.put("language", sLanguage);
+							if (sCountry != null)
+								htServiceRequest.put("country", sCountry);
+							if (sLanguage != null)
+								htServiceRequest.put("language", sLanguage);
 							// show authentication form once again with warning
 							// message
-							showAuthenticateForm(pwOut, Errors.ERROR_DB_INVALID_PASSWORD, _configManager.getErrorMessage(Errors.ERROR_DB_INVALID_PASSWORD, _oErrorProperties), htServiceRequest);
+							showAuthenticateForm(pwOut, Errors.ERROR_DB_INVALID_PASSWORD, _configManager
+									.getErrorMessage(Errors.ERROR_DB_INVALID_PASSWORD, _oErrorProperties),
+									htServiceRequest);
 						}
-						else
-						{
+						else {
 							// authenticate failed
-							_authenticationLogger.log(new Object[] { MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied" });
+							_authenticationLogger.log(new Object[] {
+								MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied"
+							});
 							handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_INVALID_PASSWORD);
-						}									
+						}
 					}
 				}
 				else
 				// other error
 				{
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error authenticating user, cause: " + Errors.ERROR_DB_COULD_NOT_REACH_DB_SERVER);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error authenticating user, cause: "
+							+ Errors.ERROR_DB_COULD_NOT_REACH_DB_SERVER);
 					handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_COULD_NOT_REACH_DB_SERVER);
 				}
 			}
 		}
-		catch (ASelectException eAS)
-		{
+		catch (ASelectException eAS) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Sending error to client", eAS);
 			handleResult(servletRequest, servletResponse, pwOut, eAS.getMessage());
 		}
 		catch (IOException eIO) // could not send response
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error sending response", eIO);
-			if (!servletResponse.isCommitted())
-			{
+			if (!servletResponse.isCommitted()) {
 				// send response if no headers have been written
 				servletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
 		}
 		catch (NumberFormatException eNF) // error parsing retry_counter
 		{
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: The retry counter parameter is invalid.");
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"Invalid request received: The retry counter parameter is invalid.");
 			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_INVALID_REQUEST);
 		}
 		catch (Exception e) // internal error
@@ -703,25 +684,25 @@ public class DBAuthSP extends ASelectHttpServlet
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process request due to internal error", e);
 			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_COULD_NOT_AUTHENTICATE_USER);
 		}
-		finally
-		{
-			try
-			{
+		finally {
+			try {
 				if (oResultSet != null)
 					oResultSet.close();
-			
+
 				if (oStatement != null)
 					oStatement.close();
-			
+
 				if (oConnection != null)
 					oConnection.close();
-			
-				if (pwOut != null)
-				{
+
+				if (pwOut != null) {
 					pwOut.close();
 					pwOut = null;
 				}
-			} catch (Exception e) {};
+			}
+			catch (Exception e) {
+			}
+			;
 		}
 	}
 
@@ -766,47 +747,42 @@ public class DBAuthSP extends ASelectHttpServlet
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[retry_counter]", sRetryCounter);
 
 		// optional country code
-		if (sCountry != null)
-		{
+		if (sCountry != null) {
 			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[country]", sCountry);
 		}
-		else
-		{
+		else {
 			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[country]", "");
 		}
 
 		// optional language code
-		if (sLanguage != null)
-		{
+		if (sLanguage != null) {
 			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", sLanguage);
 		}
-		else
-		{
+		else {
 			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", "");
 		}
 
 		pwOut.println(sAuthenticateForm);
 	}
 
-	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse, PrintWriter pwOut, String sResultCode)
+	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
+			PrintWriter pwOut, String sResultCode)
 	{
 		String sMethod = "handleResult()";
 		StringBuffer sbTemp = null;
 
-		try
-		{
+		try {
 			if (_sFailureHandling.equalsIgnoreCase("aselect") || sResultCode.equals(Errors.ERROR_DB_SUCCESS))
 			// A-Select handles error or success
 			{
 				String sRid = servletRequest.getParameter("rid");
 				String sAsUrl = servletRequest.getParameter("as_url");
 				String sAsId = servletRequest.getParameter("a-select-server");
-				if (sRid == null || sAsUrl == null || sAsId == null)
-				{
-					showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode, _oErrorProperties));
+				if (sRid == null || sAsUrl == null || sAsId == null) {
+					showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
+							_oErrorProperties));
 				}
-				else
-				{
+				else {
 
 					sbTemp = new StringBuffer(sRid);
 					sbTemp.append(sAsUrl).append(sResultCode);
@@ -821,8 +797,7 @@ public class DBAuthSP extends ASelectHttpServlet
 					sbTemp.append("&a-select-server=").append(sAsId);
 					sbTemp.append("&signature=").append(sSignature);
 
-					try
-					{
+					try {
 						servletResponse.sendRedirect(sbTemp.toString());
 					}
 					catch (IOException eIO) // could not send redirect
@@ -836,19 +811,22 @@ public class DBAuthSP extends ASelectHttpServlet
 			else
 			// Local error handling
 			{
-				showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode, _oErrorProperties));
+				showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
+						_oErrorProperties));
 			}
 		}
 		catch (ASelectException eAS) // could not generate signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate DB AuthSP signature", eAS);
-			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_DB_COULD_NOT_AUTHENTICATE_USER, _configManager.getErrorMessage(sResultCode, _oErrorProperties));
+			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_DB_COULD_NOT_AUTHENTICATE_USER, _configManager
+					.getErrorMessage(sResultCode, _oErrorProperties));
 		}
 		catch (UnsupportedEncodingException eUE) // could not encode
 		// signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode DB AuthSP signature", eUE);
-			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_DB_COULD_NOT_AUTHENTICATE_USER, _configManager.getErrorMessage(sResultCode, _oErrorProperties));
+			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_DB_COULD_NOT_AUTHENTICATE_USER, _configManager
+					.getErrorMessage(sResultCode, _oErrorProperties));
 		}
 	}
 
@@ -864,7 +842,8 @@ public class DBAuthSP extends ASelectHttpServlet
 	 * @param pwOut
 	 *        The output.
 	 */
-	private void handleApiRequest(HashMap htServiceRequest, HttpServletRequest servletRequest, PrintWriter pwOut, HttpServletResponse servletResponse)
+	private void handleApiRequest(HashMap htServiceRequest, HttpServletRequest servletRequest, PrintWriter pwOut,
+			HttpServletResponse servletResponse)
 	{
 		String sMethod = "handleApiRequest()";
 		String sRid = (String) htServiceRequest.get("rid");
@@ -874,26 +853,21 @@ public class DBAuthSP extends ASelectHttpServlet
 		// add rid to response
 		sbResponse.append(sRid);
 		int iAllowedRetries = 0;
-		try
-		{
+		try {
 			if (htServiceRequest.get("request").equals("authenticate"))
 			// authenticate request
 			{
-				if (_sessionManager.containsKey(sRid))
-				{
+				if (_sessionManager.containsKey(sRid)) {
 					htSessionContext = _sessionManager.getSessionContext(sRid);
-					try
-					{
+					try {
 						iAllowedRetries = ((Integer) htSessionContext.get("allowed_retries")).intValue();
 					}
-					catch (ClassCastException e)
-					{
+					catch (ClassCastException e) {
 						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to cast to Integer.", e);
 						throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR);
 					}
 				}
-				else
-				{
+				else {
 					htSessionContext = new HashMap();
 					_sessionManager.createSession(sRid, htSessionContext);
 					iAllowedRetries = _iAllowedRetries;
@@ -901,9 +875,8 @@ public class DBAuthSP extends ASelectHttpServlet
 				iAllowedRetries--;
 				Integer intAllowedRetries = new Integer(iAllowedRetries);
 				htSessionContext.put("allowed_retries", intAllowedRetries);
-                _sessionManager.updateSession(sRid, htSessionContext);
-				if (iAllowedRetries < 0)
-				{
+				_sessionManager.updateSession(sRid, htSessionContext);
+				if (iAllowedRetries < 0) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No login retries left for rid: '" + sRid + "'");
 					throw new ASelectException(Errors.ERROR_DB_ACCESS_DENIED);
 				}
@@ -913,14 +886,12 @@ public class DBAuthSP extends ASelectHttpServlet
 				sbResponse.append("=").append(Errors.ERROR_DB_SUCCESS);
 				_sessionManager.remove(sRid);
 			}
-			else
-			{
+			else {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid API request received.");
 				throw new ASelectException(Errors.ERROR_DB_INVALID_REQUEST);
 			}
 		}
-		catch (ASelectException eAS)
-		{
+		catch (ASelectException eAS) {
 
 			// Allready logged
 			sbResponse.append("&").append(RESULT_CODE);
@@ -933,16 +904,17 @@ public class DBAuthSP extends ASelectHttpServlet
 		pwOut.write(sbResponse.toString());
 	}
 
-	private void handleAuthenticate(HashMap htServiceRequest, HttpServletRequest servletRequest) throws ASelectException
+	private void handleAuthenticate(HashMap htServiceRequest, HttpServletRequest servletRequest)
+		throws ASelectException
 	{
 		String sMethod = "handleAuthenticate()";
 		String sResultCode = null;
 		String sUid = (String) htServiceRequest.get("uid");
 		String sPassword = (String) servletRequest.getParameter("password");
 		String sAsID = (String) htServiceRequest.get("a-select-server");
-		if ((sUid == null) || (sPassword == null))
-		{
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: one or more mandatory parameters missing.");
+		if ((sUid == null) || (sPassword == null)) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"Invalid request received: one or more mandatory parameters missing.");
 			throw new ASelectException(Errors.ERROR_DB_INVALID_REQUEST);
 		}
 
@@ -950,49 +922,51 @@ public class DBAuthSP extends ASelectHttpServlet
 		Connection oConnection = getConnection();
 		PreparedStatement oStatement;
 		ResultSet oResultSet;
-		try
-		{
+		try {
 			oStatement = oConnection.prepareStatement(_sQuery);
 			oStatement.setString(1, sUid);
 			oResultSet = oStatement.executeQuery();
 			sResultCode = (oResultSet.next()) ? (Errors.ERROR_DB_SUCCESS) : Errors.ERROR_DB_INTERNAL_ERROR;
 		}
-		catch (Exception e)
-		{
+		catch (Exception e) {
 			_authenticationLogger.log("SEVERE", MODULE, sMethod, "Could not execute query: " + _sQuery, e.getMessage());
 			throw new ASelectException(Errors.ERROR_DB_COULD_NOT_REACH_DB_SERVER, e);
 		}
-		if (sResultCode.equals(Errors.ERROR_DB_SUCCESS))
-		{
+		if (sResultCode.equals(Errors.ERROR_DB_SUCCESS)) {
 			boolean matches = false;
-			try
-			{
-				
+			try {
+
 				String sPwd = oResultSet.getString(_sColumn);
-				
+
 				if (_bEncrypedPassword) {
 					matches = MD5Crypt.matches(sPwd, sPassword);
-				} else {
+				}
+				else {
 					matches = sPwd.equals(sPassword);
 				}
 			}
-			catch (Exception e)
-			{
+			catch (Exception e) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could parse result: " + oResultSet);
 				throw new ASelectException(Errors.ERROR_DB_COULD_NOT_REACH_DB_SERVER, e);
 			}
 
 			if (matches) {
-				_authenticationLogger.log(new Object[] { MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "granted" });
-			} else {
-				_authenticationLogger.log(new Object[] { MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "denied" });
+				_authenticationLogger.log(new Object[] {
+					MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "granted"
+				});
+			}
+			else {
+				_authenticationLogger.log(new Object[] {
+					MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "denied"
+				});
 				throw new ASelectException(Errors.ERROR_DB_INVALID_PASSWORD);
 			}
 		}
-		else
-		{
+		else {
 			// no results for uid
-			_authenticationLogger.log(new Object[] { MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "denied" });
+			_authenticationLogger.log(new Object[] {
+				MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "denied"
+			});
 			throw new ASelectException(sResultCode);
 		}
 	}
@@ -1006,31 +980,28 @@ public class DBAuthSP extends ASelectHttpServlet
 	 * @throws ASelectException
 	 *         if the connection could not be opened
 	 */
-	private Connection getConnection() throws ASelectException
+	private Connection getConnection()
+		throws ASelectException
 	{
 		String sMethod = "getConnection()";
 
 		Connection oConnection = null;
 
-		try
-		{
+		try {
 			// initialize driver
 			Class.forName(_sDriver);
 		}
-		catch (Exception e)
-		{
+		catch (Exception e) {
 			StringBuffer sbFailed = new StringBuffer("Can't initialize driver: ");
 			sbFailed.append(_sDriver);
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
 			throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
 		}
 
-		try
-		{
+		try {
 			oConnection = DriverManager.getConnection(_sUrl, _sUserName, _sUserPassword);
 		}
-		catch (SQLException e)
-		{
+		catch (SQLException e) {
 			StringBuffer sbFailed = new StringBuffer("Could not open connection to: ");
 			sbFailed.append(_sUrl);
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);

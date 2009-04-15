@@ -760,7 +760,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			// Note: we should do this earlier, but we don't have an app_id until now
 			String sAppId = (String) htTGTContext.get("app_id");
 			StringBuffer sbData = new StringBuffer(sASelectServer).append(sEncTGT);
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "sbData=" + sbData);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "Signing required, sbData=" + sbData);
 			verifyApplicationSignature(oInputMessage, sbData.toString(), sAppId);
 		}
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "Upgrade TICKET context=" + htTGTContext);

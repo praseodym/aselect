@@ -155,7 +155,6 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 //				String key = e.nextElement();
 				// Get TGT
 				HashMap htTGTContext = (HashMap) _oTGTManager.get(key);
-				String sKey = (key.length() > 30) ? key.substring(0, 30) + "..." : key;
 				String sNameID = (String) htTGTContext.get("name_id");
 		        Long lExpInterval = _oTGTManager.getExpirationTime(key) - _oTGTManager.getTimestamp(key);
 		        
@@ -167,7 +166,8 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 				long lCreateTime = 0;
 				try {
 					lCreateTime = Long.parseLong(sCreateTime);
-				} catch (Exception exc) {
+				}
+				catch (Exception exc) {
 					_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "CreateTime was not set");
 				}
 				boolean danishLogout = (now >= lCreateTime + timeOutTime);
@@ -176,6 +176,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 				_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "ExpInt="+lExpInterval+
 						" Timeout="+timeOutTime+" Create="+(lCreateTime-now) +
 						" Danish="+danishLogout+" Initiator="+sso.getLogoutInitiator());
+				String sKey = (key.length() > 30) ? key.substring(0, 30) + "..." : key;
 				for (ServiceProvider sp : spList) {
 					_oSystemLogger.log(Level.FINER, MODULE, _sMethod, " IDPTO - NameID=" + sNameID +
 							" key=" + sKey + " LastSessionSync=" + (sp.getLastSessionSync()-now));

@@ -22,7 +22,8 @@ import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
 /*
- * NOTE: Code differs from the sp-version.
+ * NOTE: Code is identical to MemoryStorageHandlerTimeOut (except for class-names of course).
+ *       Though it is different from the sp-version.
  */
 public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 {
@@ -150,8 +151,8 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 	        Set keys = allTgts.keySet();
 			for (Object s : keys) {
 				String key = (String) s;
-			//for (Enumeration<String> e = allTgts.keys(); e.hasMoreElements();) {
-			//	String key = e.nextElement();
+//			for (Enumeration<String> e = allTgts.keys(); e.hasMoreElements();) {
+//				String key = e.nextElement();
 				// Get TGT
 				HashMap htTGTContext = (HashMap) _oTGTManager.get(key);
 				String sNameID = (String) htTGTContext.get("name_id");

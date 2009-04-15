@@ -61,7 +61,7 @@ public class Version
     /**
      * The main release version of this A-Select AuthSP Server
      */
-    private final static String RELEASE = "1.7";
+    private final static String RELEASE = "1.8";
 
     /**
      * The service pack version of this A-Select AuthSP Server
