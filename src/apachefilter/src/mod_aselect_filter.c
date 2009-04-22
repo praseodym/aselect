@@ -935,7 +935,6 @@ aselect_filter_handler(request_rec *pRequest)
             iAction = ASELECT_FILTER_ACTION_AUTH_USER;
         }
     }
-
     TRACE3("==== 3. Action iError=%d iAction=%s, iRet=%d", iError, filter_action_text(iAction), iRet);
 
     //
@@ -954,7 +953,7 @@ aselect_filter_handler(request_rec *pRequest)
                 //
                 // User was granted access
                 //
-                TRACE("Action: ASELECT_FILTER_ACTION_ACCESS_GRANTED");
+                TRACE1("Action: ASELECT_FILTER_ACTION_ACCESS_GRANTED, args=%s", pRequest->args);
 
                 //
                 // check for requests such as show_aselect_bar and kill_ticket
@@ -1059,35 +1058,22 @@ aselect_filter_handler(request_rec *pRequest)
                                         ap_psprintf(pPool, "ASELECT_FILTER::aselect_filter_kill_ticket FAILED: %d", iError));
                                 }
                             }
-                            else
-                            {
-                                //
-                                // Could not find ticket to kill
-                                //
+                            else { // Could not find ticket to kill
                                 iError = ASELECT_FILTER_ERROR_NO_SUCH_COOKIE;
                                 TRACE1("aselect_filter_get_cookie(aselectticket) FAILED: %d", iError);
                                 ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
                                     ap_psprintf(pPool, "ASELECT_FILTER::aselect_filter_get_cookie(aselectticket) FAILED: %d", iError));
                             }
                         }
-                        else
-                        {
-                            //
-                            // Nothing interesting in the request=param, so continue as normal
-                            //
+                        else { // Nothing interesting in the request=param, so continue as normal
                             iRet = DECLINED;
                         }
                     }
-                    else
-                    {
-                        //
-                        // No arguments we are intereste in, so continue as normal
-                        //
+                    else { // No arguments we are intereste in, so continue as normal
                         iRet = DECLINED;
                     }
                 }
-                else
-                {
+                else {
                     iRet = DECLINED;
                 }
 
@@ -1154,20 +1140,19 @@ aselect_filter_handler(request_rec *pRequest)
                             {
                                 iRet = aselect_filter_gen_top_redirect(pPool, pRequest, pcASUrl, pcASelectServer, pcRID);
                             }
-                            else{
+                            else {
                                 iError = ASELECT_FILTER_ERROR_AGENT_RESPONSE;
                             }
                         }
-                        else{
+                        else {
                             iError = ASELECT_FILTER_ERROR_AGENT_RESPONSE;
                         }
                     }
-                    else{
+                    else {
                         iError = ASELECT_FILTER_ERROR_AGENT_RESPONSE;
                     }
                 }
-                else
-                {
+                else {
                     TRACE1("aselect_filter_auth_user FAILED (%d)", iError);
                     ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
                         ap_psprintf(pPool, "ASELECT_FILTER::aselect_filter_auth_user FAILED (%d)", iError));
@@ -1247,12 +1232,8 @@ aselect_filter_handler(request_rec *pRequest)
                 TRACE("Action: ACCESS_DENIED");
 
             default:
-
-                //
-                // Access is denied or unknown action
-                // ACCESS DENIED
-                //
-            break;
+                // Access is denied or unknown action: ACCESS DENIED
+		break;
         }
     }
 
@@ -1262,9 +1243,11 @@ aselect_filter_handler(request_rec *pRequest)
     }
 
     // Bauke: added
-    if (iError == ASELECT_FILTER_ERROR_OK && iAction == ASELECT_FILTER_ACTION_ACCESS_GRANTED && (/*!pConfig->bUseCookie ||*/
-	    strchr(pConfig->pcPassAttributes,'q')!=0 || strchr(pConfig->pcPassAttributes,'h')!=0 || strchr(pConfig->pcPassAttributes,'t')!=0) ) {
-	iError = passAttributesInUrl(iError, pcAttributes, pPool, pRequest, pConfig, pcTicketIn, pcUIDIn, pcOrganizationIn, headers_in);
+    if (iError == ASELECT_FILTER_ERROR_OK && iAction == ASELECT_FILTER_ACTION_ACCESS_GRANTED) { /*!pConfig->bUseCookie ||*/
+	if (strchr(pConfig->pcPassAttributes,'q')!=0 || strchr(pConfig->pcPassAttributes,'h')!=0 || strchr(pConfig->pcPassAttributes,'t')!=0) {
+	    iError = passAttributesInUrl(iError, pcAttributes, pPool, pRequest, pConfig, pcTicketIn, pcUIDIn, pcOrganizationIn, headers_in);
+	}
+	//iRet = DONE;
     }
 
     TRACE3("==== 4. Finish iError=%d iAction=%s, iRet=%d", iError, filter_action_text(iAction), iRet);
@@ -1272,7 +1255,7 @@ aselect_filter_handler(request_rec *pRequest)
     // Cleanup
     //
     ap_destroy_pool(pPool);
-    TRACE1("==== 5. Returning %d", iRet);
+    TRACE2("==== 5. Returning %d: %s", iRet, (iRet==DECLINED)? "DECLINED": (iRet==DONE)? "DONE": (iRet==FORBIDDEN)? "FORBIDDEN": "?");
 
     return iRet;
 }
@@ -1464,7 +1447,7 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 		    TRACE("No attributes in response");
 		    //pRequest->args = "";
 		}
-		TRACE1("PassAttributes=%d", pConfig->pcPassAttributes);
+		TRACE1("PassAttributes=%s", pConfig->pcPassAttributes);
 		if (strchr(pConfig->pcPassAttributes,'q')!=0) {
 		    // Add the new args in front of the original ones
 		    if (pRequest->args && pRequest->args[0])

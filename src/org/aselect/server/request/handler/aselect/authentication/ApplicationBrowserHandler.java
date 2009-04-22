@@ -2361,9 +2361,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 			if (sUid != null)
-				_htSessionContext.remove("uid"); // forces the
-			// user to enter
-			// a user id
+				_htSessionContext.remove("uid"); // forces the user to enter a user id
 			if (sUserId != null)
 				_htSessionContext.remove("user_id");
 			if (sForcedUid != null)
@@ -2377,7 +2375,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						"Invalid request received: could not update session.");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
 			}
-
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "htSessionContext=" + _htSessionContext);
 			handleLogin1(htServiceRequest, servletResponse, pwOut);
 		}

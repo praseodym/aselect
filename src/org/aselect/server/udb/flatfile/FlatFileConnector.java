@@ -138,7 +138,6 @@ public class FlatFileConnector implements IUDBConnector
 			catch (ASelectConfigException e) {
 				_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod,
 						"No 'resourcegroup' config item found in udb 'connector' config section.", e);
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -150,10 +149,8 @@ public class FlatFileConnector implements IUDBConnector
 				StringBuffer sbFailed = new StringBuffer("No active resource found in udb resourcegroup: ");
 				sbFailed.append(sUDBResourceGroup);
 				_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbFailed.toString(), e);
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
-
 			Object oResourceConfig = oSAMResource.getAttributes();
 
 			try {
@@ -162,7 +159,6 @@ public class FlatFileConnector implements IUDBConnector
 			catch (Exception e) {
 				_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod,
 						"No config item 'file' found in flatfile resource.", e);
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -184,7 +180,6 @@ public class FlatFileConnector implements IUDBConnector
 			StringBuffer sbBuffer = new StringBuffer("Could not initialize the flatfile UDB connector: ");
 			sbBuffer.append(e.getMessage());
 			_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), e);
-
 			throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}
@@ -223,7 +218,6 @@ public class FlatFileConnector implements IUDBConnector
 
 			if (!_propFlatFile.containsKey(sbAccountEnabled.toString())) {
 				logAuthentication(sUID, Errors.ERROR_ASELECT_UDB_UNKNOWN_USER, "denied");
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_UNKNOWN_USER);
 			}
 
@@ -231,7 +225,6 @@ public class FlatFileConnector implements IUDBConnector
 			String sAcountEnabled = (String) _propFlatFile.get(sbAccountEnabled.toString());
 			if (!sAcountEnabled.equalsIgnoreCase("true")) {
 				logAuthentication(sUID, Errors.ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED, "denied");
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED);
 			}
 
@@ -240,7 +233,6 @@ public class FlatFileConnector implements IUDBConnector
 			}
 			catch (Exception e) {
 				_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, "Config section 'authsps' not found.");
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
 
@@ -250,11 +242,10 @@ public class FlatFileConnector implements IUDBConnector
 			catch (Exception e) {
 				_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod,
 						"Not even one config section 'authsp' found in config section 'authsps'.");
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
 
-			//Loop through all availlable authsp's
+			// Loop through all available authsp's
 			while (oAuthSP != null) {
 				try {
 					sAuthSPID = _oASelectConfigManager.getParam(oAuthSP, "id");
@@ -262,7 +253,6 @@ public class FlatFileConnector implements IUDBConnector
 				catch (Exception e) {
 					_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod,
 							"No config item 'id' found in 'authsp' config section.");
-
 					throw new ASelectUDBException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 				}
 
@@ -287,7 +277,6 @@ public class FlatFileConnector implements IUDBConnector
 						sAttributesValue = "";
 					htUserAttributes.put(sAuthSPID, sAttributesValue);
 				}
-
 				oAuthSP = _oASelectConfigManager.getNextSection(oAuthSP);
 			}
 
@@ -295,7 +284,6 @@ public class FlatFileConnector implements IUDBConnector
 				StringBuffer sbBuffer = new StringBuffer("No user attributes found for user: ");
 				sbBuffer.append(sUID);
 				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
 			}
 
@@ -312,10 +300,8 @@ public class FlatFileConnector implements IUDBConnector
 			sbBuffer.append(e.getMessage());
 
 			_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), e);
-
 			htResponse.put("result_code", Errors.ERROR_ASELECT_UDB_INTERNAL);
 		}
-
 		return htResponse;
 	}
 

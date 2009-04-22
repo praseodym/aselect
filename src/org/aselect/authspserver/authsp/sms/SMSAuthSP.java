@@ -733,6 +733,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 					sbTemp.append("&signature=").append(sSignature);
 
 					try {
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT "+sbTemp);
 						servletResponse.sendRedirect(sbTemp.toString());
 					}
 					catch (IOException eIO) // could not send redirect

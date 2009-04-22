@@ -137,7 +137,6 @@ public class NoUDBConnector implements IUDBConnector
 			catch (ASelectConfigException e) {
 				_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod,
 						"No 'resourcegroup' config item found in udb 'connector' config section.", e);
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -149,7 +148,6 @@ public class NoUDBConnector implements IUDBConnector
 				StringBuffer sbFailed = new StringBuffer("No active resource found in udb resourcegroup: ");
 				sbFailed.append(sUDBResourceGroup);
 				_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbFailed.toString(), e);
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 		}
@@ -160,7 +158,6 @@ public class NoUDBConnector implements IUDBConnector
 			StringBuffer sbBuffer = new StringBuffer("Could not initialize the noUDB connector: ");
 			sbBuffer.append(e.getMessage());
 			_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), e);
-
 			throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}
@@ -195,7 +192,6 @@ public class NoUDBConnector implements IUDBConnector
 			}
 			catch (Exception e) {
 				_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, "Config section 'authsps' not found.");
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
 
@@ -205,7 +201,6 @@ public class NoUDBConnector implements IUDBConnector
 			catch (Exception e) {
 				_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod,
 						"Not even one config section 'authsp' found in config section 'authsps'.");
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
 
@@ -217,10 +212,9 @@ public class NoUDBConnector implements IUDBConnector
 				catch (Exception e) {
 					_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod,
 							"No config item 'id' found in 'authsp' config section.");
-
 					throw new ASelectUDBException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 				}
-				htUserAttributes.put(sAuthSPID, sUserId == null ? "" : sUserId);
+				htUserAttributes.put(sAuthSPID, "");  // 20090422, Bauke: sUserId == null ? "" : sUserId);
 				oAuthSP = _oASelectConfigManager.getNextSection(oAuthSP);
 			}
 
@@ -228,10 +222,8 @@ public class NoUDBConnector implements IUDBConnector
 				StringBuffer sbBuffer = new StringBuffer("No user attributes found for user: ");
 				sbBuffer.append(sUserId);
 				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
 			}
-
 			htResponse.put("user_authsps", htUserAttributes);
 			htResponse.put("result_code", Errors.ERROR_ASELECT_SUCCESS);
 		}
@@ -243,12 +235,9 @@ public class NoUDBConnector implements IUDBConnector
 			sbBuffer.append(sUserId);
 			sbBuffer.append(": ");
 			sbBuffer.append(e.getMessage());
-
 			_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), e);
-
 			htResponse.put("result_code", Errors.ERROR_ASELECT_UDB_INTERNAL);
 		}
-
 		return htResponse;
 	}
 
