@@ -131,7 +131,7 @@ public class ConfigManager
 			_oSystemLogger = oSystemLogger;
 			File fConfig = new File(sConfigFile);
 
-			if (fConfig != null && fConfig.exists()) {//only start initializing when config file exists
+			if (fConfig != null && fConfig.exists()) {  // only start initializing when config file exists
 				_oConfigHandler = resolveConfigHandler(fConfig);
 				if (_oConfigHandler != null)
 					_oConfigHandler.init(fConfig);

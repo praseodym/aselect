@@ -141,7 +141,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			}
 			
 			// Start an authenticate request
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "performAuthenticateRequest " + sAppId);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "performAuthenticateRequest AppId=" + sAppId);
 			HashMap htResponse = performAuthenticateRequest(_sASelectServerUrl, 
 					httpRequest.getPathInfo(), RETURN_SUFFIX, sAppId, true /*check sig*/, _oClientCommunicator);
 
@@ -170,7 +170,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			RequestedAuthnContext requestedAuthnContext = authnRequest.getRequestedAuthnContext();
 			String sBetrouwbaarheidsNiveau = SecurityLevel.getBetrouwbaarheidsNiveau(requestedAuthnContext, _systemLogger);
 			if (sBetrouwbaarheidsNiveau.equals(SecurityLevel.BN_NOT_FOUND)) {
-				// We've got a security level but isn't present in the configuration
+				// We've got a security level but is not known
 				String sStatusMessage = "The requested AuthnContext isn't present in the configuration";
 				errorResponse = errorResponse(sSPRid, sAssertionConsumerServiceURL,
 								StatusCode.NO_AUTHN_CONTEXT_URI, sStatusMessage);
@@ -243,7 +243,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				sAssertionConsumerServiceURL = authnRequest.getAssertionConsumerServiceURL();
 			}
 		}
-		//_systemLogger.log(Level.INFO, MODULE, sMethod, "Return "+sAssertionConsumerServiceURL);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Return "+sAssertionConsumerServiceURL);
 		return sAssertionConsumerServiceURL;
 	}
 

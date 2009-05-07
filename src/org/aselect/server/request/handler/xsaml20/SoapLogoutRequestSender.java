@@ -126,11 +126,13 @@ public class SoapLogoutRequestSender
 			if (pkey != null) { // if there is a key supplied by the calling class, check it
 				if (SamlTools.checkSignature(logoutResponse, pkey )) {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "logoutResponse was signed OK");
-				} else {
+				}
+				else {
 					_systemLogger.log(Level.SEVERE, MODULE, sMethod, "logoutResponse was NOT signed OK");
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
-			} else {
+			}
+			else {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "no signature verification required on logoutResponse");
 			}
 			StatusCode statusCode = logoutResponse.getStatus().getStatusCode();
@@ -143,7 +145,7 @@ public class SoapLogoutRequestSender
 			}
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "The encoding 'UTF-8' is not supported", e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Backchannel logout failed", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 	}

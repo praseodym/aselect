@@ -92,9 +92,9 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			super.init(oServletConfig, oConfig);
 
 			_tgtManager = TGTManager.getHandle();
-			_sServerUrl = Utils.getParamFromSection(null, "aselect", "redirect_url");
-			_sASelectServerID = Utils.getParamFromSection(null, "aselect", "server_id");
-			_sASelectOrganization = Utils.getParamFromSection(null, "aselect", "organization");
+			_sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url");
+			_sASelectServerID = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id");
+			_sASelectOrganization = ASelectConfigManager.getParamFromSection(null, "aselect", "organization");
 
   			// Initialize assertion building, if needed
 	        if (useConfigToCreateSamlBuilder())
@@ -578,7 +578,9 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		htRequest.put("app_id", sAppId);
 		htRequest.put("app_url", sASelectURL + sPathInfo + sReturnSuffix); // My return address
 		htRequest.put("a-select-server", _sASelectServerID);
-		htRequest.put("check-signature", Boolean.toString(checkSignature));
+		htRequest.put("check-signature", "false");  // Boolean.toString(checkSignature));
+		// 20090423, Bauke: check-signature set to false, needs signature otherwise
+		// TODO: add signature when checkSignature is true
 	
 		HashMap htResponse = null;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "htRequest=" + htRequest);
@@ -603,7 +605,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	protected IClientCommunicator initClientCommunicator(Object oConfig)
 	throws ASelectException
 	{
-		String sClientCommunicator = Utils.getSimpleParam(oConfig, "clientcommunicator", true);
+		String sClientCommunicator = ASelectConfigManager.getSimpleParam(oConfig, "clientcommunicator", true);
 		if (sClientCommunicator.equalsIgnoreCase("soap11")) {
 			return new SOAP11Communicator("ASelect", _systemLogger);
 		}
@@ -694,7 +696,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		String sMethod = "createSAML11Builder()";
 		
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "sPrefix="+sPrefix);
-		String sSendStatement = Utils.getParamFromSection(oConfig, "attribute", "send_statement");
+		String sSendStatement = ASelectConfigManager.getParamFromSection(oConfig, "attribute", "send_statement");
 		if (!sSendStatement.equalsIgnoreCase("true") &&	!sSendStatement.equalsIgnoreCase("false")) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"Config item 'send_statement' in 'attribute' section must be 'true' or 'false'");
@@ -702,8 +704,8 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		}
 		boolean bSendAttributeStatement = new Boolean(sSendStatement).booleanValue();
 	
-		String sAttrNameSpace = Utils.getParamFromSection(oConfig, "attribute", "namespace");		
-		String sAssertionExpireTime = Utils.getParamFromSection(oConfig, "assertion", "expire");
+		String sAttrNameSpace = ASelectConfigManager.getParamFromSection(oConfig, "attribute", "namespace");		
+		String sAssertionExpireTime = ASelectConfigManager.getParamFromSection(oConfig, "assertion", "expire");
 		long lExpire = 0;
 		try {
 			lExpire = Long.parseLong(sAssertionExpireTime);

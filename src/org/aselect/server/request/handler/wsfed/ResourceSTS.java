@@ -23,12 +23,12 @@ import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.*;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Tools;
-import org.aselect.system.utils.Utils;
 import org.opensaml.*;
 
 //
@@ -56,12 +56,12 @@ public class ResourceSTS extends ProtoRequestHandler
 			super.init(oServletConfig, oConfig);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Specific init processing");
 
-			_sUserDomain = Utils.getParamFromSection(null, "aselect", "user_domain", false);
+			_sUserDomain = ASelectConfigManager.getParamFromSection(null, "aselect", "user_domain", false);
 			if (_sUserDomain == null) _sUserDomain = "digid.nl";
-			_sProviderId = Utils.getSimpleParam(oConfig, "provider_id", true);
-			_sNameIdFormat = Utils.getSimpleParam(oConfig, "nameid_format", true);
+			_sProviderId = ASelectConfigManager.getSimpleParam(oConfig, "provider_id", true);
+			_sNameIdFormat = ASelectConfigManager.getSimpleParam(oConfig, "nameid_format", true);
 			_sPostTemplate = readTemplateFromConfig(oConfig, "post_template");
-			String sCheckSigning = Utils.getSimpleParam(oConfig, "check_signing", false);
+			String sCheckSigning = ASelectConfigManager.getSimpleParam(oConfig, "check_signing", false);
 			if (sCheckSigning != null && sCheckSigning.equals("true"))
 				_bCheckSigning = true;
 	    }

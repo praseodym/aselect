@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectAuthenticationLogger;
 import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.RequestState;
@@ -108,11 +109,11 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 //		}
 		// RH, 20080602, eo, is done by Saml20_BaseHandler now        
 
-		_sMyServerId = Utils.getParamFromSection(null, "aselect", "server_id");
-		_sFederationUrl = Utils.getParamFromSection(null, "aselect", "federation_url");
-		_sRedirectUrl = Utils.getParamFromSection(null, "aselect", "redirect_url"); // We use as Issuer in the send SAML message
+		_sMyServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id");
+		_sFederationUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "federation_url");
+		_sRedirectUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url"); // We use as Issuer in the send SAML message
 
-		String sLocalityAddressRequired = Utils.getSimpleParam(oHandlerConfig,
+		String sLocalityAddressRequired = ASelectConfigManager.getSimpleParam(oHandlerConfig,
 				"locality_address_required", false);
 		//		if (sVerifySignature != null && sVerifySignature.equalsIgnoreCase("false")) {
 		//			_bVerifySignature = false;

@@ -276,7 +276,7 @@ public class ASelectAgent
 			sbInfo.append(" succesfully started.");
 			System.out.println(sbInfo.toString());
 
-			oASelectAgentSystemLogger.log(Level.INFO, MODULE, "main()", sbInfo.toString());
+			oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 		}
 		catch (Exception e) {
 			sbInfo.append(" failed to start.");
@@ -318,20 +318,18 @@ public class ASelectAgent
 	 * @throws ASelectException if initialization was unsuccessful.
 	 */
 	public void init()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
-			_sWorkingDir = System.getProperty("user.dir");
-
 			//create logger
 			_oASelectAgentSystemLogger = ASelectAgentSystemLogger.getHandle();
 
 			// get handle to the ASelectAgentConfigManager and initialize it
 			ASelectAgentConfigManager _oASelectAgentConfigManager = ASelectAgentConfigManager.getHandle();
 
+			_sWorkingDir = System.getProperty("user.dir");
 			_oASelectAgentConfigManager.init(_sWorkingDir);
-
 			_oAgentSection = _oASelectAgentConfigManager.getSection(null, "agent");
 
 			// System properties must be set first!
@@ -357,7 +355,6 @@ public class ASelectAgent
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 			_oASelectAgentSystemLogger.init(oSysLogging, _sWorkingDir);
-
 			_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "Starting A-Select Agent");
 
 			// initialize SAMAgent
@@ -460,7 +457,6 @@ public class ASelectAgent
 		String sMethod = "destroy()";
 
 		_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "Stopping all components.");
-
 		try {
 			_bActive = false;
 			//if thread waits ->interrupt and close socket
@@ -483,7 +479,7 @@ public class ASelectAgent
 			TicketManager.getHandle().stop();
 			SessionManager.getHandle().stop();
 
-			_oASelectAgentSystemLogger.log(Level.INFO, MODULE, "destroy()", "A-Select Agent stopped.");
+			_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "A-Select Agent stopped.");
 			_oASelectAgentSystemLogger.closeHandlers();
 		}
 		catch (Exception e) {
@@ -548,7 +544,7 @@ public class ASelectAgent
 	 *             if the services could not be started.
 	 */
 	public void startServices()
-		throws Exception
+	throws Exception
 	{
 		String sMethod = "startServices()";
 		// try to allocate the listening ports on localhost.
@@ -690,7 +686,7 @@ public class ASelectAgent
 	 * service requests from applications. 
 	 * <br><br>
 	 * The APIServiceHandler keeps looping in its <code>run()</code> method
-	 * until the A-Select Agent shutsdown (<code>_active == false</code>).
+	 * until the A-Select Agent shuts down (<code>_active == false</code>).
 	 * <br><br>
 	 * Upon each connection a <code>RequestHandler</code> is started 
 	 * which does the actual handling of the API request. 
@@ -732,8 +728,7 @@ public class ASelectAgent
 					_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "StartD T=" + System.currentTimeMillis() + " "+stamp+" port="+port);
 				}
 				catch (Exception e) {
-					if (_bActive) //only log if active
-					{
+					if (_bActive) {  //only log if active
 						_oASelectAgentSystemLogger.log(Level.WARNING, MODULE, sMethod, "Exception occurred", e);
 					}
 				}
@@ -832,6 +827,7 @@ public class ASelectAgent
 					PrintStream osOutput = new PrintStream(oSocket.getOutputStream());
 
 					String sRequestString = isInput.readLine();
+					_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, sRequestString);
 					HashMap htParameters = Utils.convertCGIMessage(sRequestString);
 					String sRequest = (String) htParameters.get("request");
 					if (sRequest.equalsIgnoreCase("stop")) {

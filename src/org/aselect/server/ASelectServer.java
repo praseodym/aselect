@@ -236,425 +236,365 @@ import org.aselect.system.servlet.ASelectHttpServlet;
  */
 public class ASelectServer extends ASelectHttpServlet
 {
-    /**
-     * The module name.
-     */
-    public final static String MODULE = "ASelectServer";
-    private ASelectConfigManager _configManager;
-    private SessionManager _sessionManager;
-    private ApplicationManager _applicationManager;
-    private AuthSPHandlerManager _authspHandlerManager;
-    private CrossASelectManager _crossASelectManager;
-    private ASelectAuthenticationLogger _authenticationLogger;
-    private ASelectSystemLogger _systemLogger;
-    private AttributeGatherer _oAttributeGatherer;
-    private TGTManager _tgtManager;
-    private CryptoEngine _cryptoEngine;
-    private AdminMonitor _adminMonitor = null;
-    private RequestHandlerFactory _oRequestHandlerFactory;
-    
-    /**
-     * Initialize the A-Select Server. This method is invoked:
-     * <ul>
-     * <li>by Tomcat when the servlet is instantiated, or
-     * <li>by the A-Select Server itself when it restarts in response to
-     * a <code>request=restart</code>. 
-     * </ul>
-     * The second case is actually a <b>re-</b>initialization, i.e. the
-     * servlet is no longer in its initial state and care must be taken
-     * not to allocate resources twice.
-     *  
-     * @param oServletConfig
-     * @throws ServletException
-     */
-    public void init(ServletConfig oServletConfig) throws ServletException
-    {
-        String sMethod = "init()";        
-        //Initialize Configuration
-        try
-        {            
-            super.init(oServletConfig);
-            
-		     //Create loggers
-            if (_systemLogger != null) // restart
-            {
-                //close de filehandlers
-                _systemLogger.closeHandlers();
-            }
-            else
-            {
-                //Create a System logger which logs to System.err
-                //after initializing the configmanager, the systemlogger is
-                //initialized and will log to the logfile
-                _systemLogger = ASelectSystemLogger.getHandle();
-            }
+	/**
+	 * The module name.
+	 */
+	public final static String MODULE = "ASelectServer";
+	private ASelectConfigManager _configManager;
+	private SessionManager _sessionManager;
+	private ApplicationManager _applicationManager;
+	private AuthSPHandlerManager _authspHandlerManager;
+	private CrossASelectManager _crossASelectManager;
+	private ASelectAuthenticationLogger _authenticationLogger;
+	private ASelectSystemLogger _systemLogger;
+	private AttributeGatherer _oAttributeGatherer;
+	private TGTManager _tgtManager;
+	private CryptoEngine _cryptoEngine;
+	private AdminMonitor _adminMonitor = null;
+	private RequestHandlerFactory _oRequestHandlerFactory;
 
-            if (_authenticationLogger != null) //reinit
-                _authenticationLogger.closeHandlers();
-            else
-                _authenticationLogger = ASelectAuthenticationLogger.getHandle();
+	/**
+	 * Initialize the A-Select Server. This method is invoked:
+	 * <ul>
+	 * <li>by Tomcat when the servlet is instantiated, or
+	 * <li>by the A-Select Server itself when it restarts in response to
+	 * a <code>request=restart</code>. 
+	 * </ul>
+	 * The second case is actually a <b>re-</b>initialization, i.e. the
+	 * servlet is no longer in its initial state and care must be taken
+	 * not to allocate resources twice.
+	 *  
+	 * @param oServletConfig
+	 * @throws ServletException
+	 */
+	public void init(ServletConfig oServletConfig)
+		throws ServletException
+	{
+		String sMethod = "init()";
+		//Initialize Configuration
+		try {
+			super.init(oServletConfig);
 
-            
-            String strWorkingDir = oServletConfig.getInitParameter("working_dir");
+			//Create loggers
+			if (_systemLogger != null) // restart
+			{
+				//close de filehandlers
+				_systemLogger.closeHandlers();
+			}
+			else {
+				//Create a System logger which logs to System.err
+				//after initializing the configmanager, the systemlogger is
+				//initialized and will log to the logfile
+				_systemLogger = ASelectSystemLogger.getHandle();
+			}
 
-            if(strWorkingDir == null)
-	        {
-	        	_systemLogger.log(Level.WARNING, MODULE, sMethod, 
-		                "Could not retrieve 'working_dir' parameter from deployment descriptor.");
-		            throw new ASelectConfigException(
-		                Errors.ERROR_ASELECT_INIT_ERROR);
-	        }
-            if (!strWorkingDir.endsWith(File.separator))
-            {
-                strWorkingDir += File.separator;
-            }
-            strWorkingDir += "aselectserver";
+			if (_authenticationLogger != null) //reinit
+				_authenticationLogger.closeHandlers();
+			else
+				_authenticationLogger = ASelectAuthenticationLogger.getHandle();
 
-            String sqlDriver = oServletConfig.getInitParameter("sql_driver");
-            String sqlURL = oServletConfig.getInitParameter("sql_url");
-            String sqlUser = oServletConfig.getInitParameter("sql_user");
-            String sqlPassword = oServletConfig.getInitParameter("sql_password");
-            String sqlTable = oServletConfig.getInitParameter("sql_table");
+			String strWorkingDir = oServletConfig.getInitParameter("working_dir");
 
-            _configManager = ASelectConfigManager.getHandle();
-            _configManager.init(strWorkingDir, sqlDriver, sqlUser, sqlPassword,
-                sqlURL, sqlTable, MODULE);
-        }
-        catch (ASelectException eAS)
-        {          
-            _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initializing failed", eAS);
-            closeLoggers();
-            throw new ServletException("Initializing failed");
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initializing failed", e);
-            closeLoggers();
-            throw new ServletException("Initializing failed");
-        }
+			if (strWorkingDir == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"Could not retrieve 'working_dir' parameter from deployment descriptor.");
+				throw new ASelectConfigException(Errors.ERROR_ASELECT_INIT_ERROR);
+			}
+			if (!strWorkingDir.endsWith(File.separator)) {
+				strWorkingDir += File.separator;
+			}
+			strWorkingDir += "aselectserver";
 
-        //Get default configuration sections
-        Object _oASelectConfig = null;
-        try
-        {
-            try
-            {
-                _oASelectConfig = _configManager.getSection(null, 
-                    "aselect");
-            }
-            catch(ASelectConfigException eAC)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-                    "Could not find aselect config section in config file", eAC);
-                throw eAC;
-            }
-		    
-		    Object oRequests = null;
-		    try
-	        {
-		        oRequests = _configManager.getSection(null, "requests");
-		    }
-		    catch(ASelectConfigException e)
-		    {
-		        _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-	                "No config section 'requests' found", e);
-		    }
-		    
-		    try
-		    {
-		        _oRequestHandlerFactory = RequestHandlerFactory.getHandle();
-		        _oRequestHandlerFactory.init(oServletConfig, oRequests);
-		    }
-		    catch (ASelectException e)
-		    {
-		        _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-	                "Can't initialize RequestHandlerFactory", e);
-	            throw e;
-		    }
-		    
+			String sqlDriver = oServletConfig.getInitParameter("sql_driver");
+			String sqlURL = oServletConfig.getInitParameter("sql_url");
+			String sqlUser = oServletConfig.getInitParameter("sql_user");
+			String sqlPassword = oServletConfig.getInitParameter("sql_password");
+			String sqlTable = oServletConfig.getInitParameter("sql_table");
+
+			_configManager = ASelectConfigManager.getHandle();
+			_configManager.init(strWorkingDir, sqlDriver, sqlUser, sqlPassword, sqlURL, sqlTable, MODULE);
+		}
+		catch (ASelectException eAS) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initializing failed", eAS);
+			closeLoggers();
+			throw new ServletException("Initializing failed");
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initializing failed", e);
+			closeLoggers();
+			throw new ServletException("Initializing failed");
+		}
+
+		//Get default configuration sections
+		Object _oASelectConfig = null;
+		try {
+			try {
+				_oASelectConfig = _configManager.getSection(null, "aselect");
+			}
+			catch (ASelectConfigException eAC) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"Could not find aselect config section in config file", eAC);
+				throw eAC;
+			}
+
+			Object oRequests = null;
+			try {
+				oRequests = _configManager.getSection(null, "requests");
+			}
+			catch (ASelectConfigException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config section 'requests' found", e);
+			}
+
+			try {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "RequestHandlers...");
+				_oRequestHandlerFactory = RequestHandlerFactory.getHandle();
+				_oRequestHandlerFactory.init(oServletConfig, oRequests);
+			}
+			catch (ASelectException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Can't initialize RequestHandlerFactory", e);
+				throw e;
+			}
+
 			//Initialize other components    
-			try
-            {
-                //Create and initialize our attribute gatherer object
-                _oAttributeGatherer = AttributeGatherer.getHandle();
-                _oAttributeGatherer.init();
-            }
-            catch (ASelectException e)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-	                "Can't initialize AttributeGatherer", e);
-	            throw e;
-            }
-            
-	        try
-	        {
-	            _sessionManager = SessionManager.getHandle();
-	            _sessionManager.init();
-	        }
-	        catch (ASelectConfigException eAC)
-	        {
-	            _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-	                "Can't initialize SessionManager", eAC);
-	            throw eAC;
-	        }
-	
-	        try
-	        {
-	            _tgtManager = TGTManager.getHandle();
-	            _tgtManager.init();
-	        }
-	        catch (ASelectConfigException eAC)
-	        {
-	            _systemLogger.log(Level.SEVERE, MODULE, sMethod, 
-	                "Can't initialize TicketManager", eAC);
-	            throw eAC;
-	        }
-	
-	        try
-	        {
-	            _applicationManager = ApplicationManager.getHandle();
-	            _applicationManager.init();
-	        }
-	        catch (ASelectConfigException eAC)
-	        {
-	            _systemLogger.log(Level.SEVERE, MODULE, sMethod, 
-	                "Can't initialize ApplicationManager", eAC);
-	            throw eAC;
-	        }
-	        
-	        try
-	        {
-	        	_crossASelectManager = CrossASelectManager.getHandle();
-	        	_crossASelectManager.init();
-	        }
-	        catch (ASelectConfigException eAC)
-	        {
-	            _systemLogger.log(Level.SEVERE, MODULE, sMethod, 
-	                "Can't initialize CrossASelectManager", eAC);
-	            throw eAC;
-	        }
-	        
-	        try
-	        {
-	        	_authspHandlerManager = AuthSPHandlerManager.getHandle();
-	        	_authspHandlerManager.init();
-	        }
-	        catch (ASelectConfigException eAC)
-	        {
-	            _systemLogger.log(Level.SEVERE, MODULE, sMethod, 
-	                "Can't initialize AuthSPHandlerManager", eAC);
-	            throw eAC;
-	        }
-	        	
-	        try
-	        {
-	            _cryptoEngine = CryptoEngine.getHandle();
-	            _cryptoEngine.init();
-	        }
-	        catch (ASelectConfigException eAC)
-	        {
-	            _systemLogger.log(Level.SEVERE, MODULE, sMethod, 
-	                "Can't initialize CryptoEngine", eAC);
-	            throw eAC;
-	        }
-	
-	        try
-	        {
-	            String sTemp = _configManager.getParam(_oASelectConfig,
-                "admin_gui");
-	            if (sTemp.equalsIgnoreCase("true"))
-	            {
-	                if(_adminMonitor == null)
-	                {	                  
-		                _adminMonitor = new AdminMonitor();
-		                _adminMonitor.start(5);
-		            }
-	                else
-		            {
-		                _adminMonitor.stop();
-		                _adminMonitor.start(5);
-		            }
-	            }
-	        }
-	        catch (ASelectConfigException eAC)
-	        {
-	            _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-	                "admin_gui option not found in config file", eAC);
-	        }
-	        catch (Exception e)
-	        {
-	            _systemLogger.log(Level.WARNING, 
-	                MODULE, sMethod, "Can't start AdminMonitor", e);
-	            throw e;
-	        }
-	        _systemLogger.log(Level.INFO, MODULE, sMethod, 
-	            "Successfully started A-Select server.");
-        }
-        catch(ASelectException eAS)
-        {
-            String sErrorMessage = _configManager.getErrorMessage(
-                eAS.getMessage());
-            _systemLogger.log(Level.SEVERE, MODULE, sMethod, sErrorMessage,eAS);
-            
-            closeResources();  
-            closeLoggers();
-            throw new ServletException(sErrorMessage);
-        }
-        catch(Exception e)
-        {
-            String sErrorMessage = _configManager.getErrorMessage(
-                Errors.ERROR_ASELECT_INTERNAL_ERROR);
-            _systemLogger.log(Level.SEVERE, MODULE, sMethod, sErrorMessage,e);
-            
-            closeResources();  
-            closeLoggers();           
-            throw new ServletException(sErrorMessage);            
-        }
-    }
+			try {
+				//Create and initialize our attribute gatherer object
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "AttributeGatherer...");
+				_oAttributeGatherer = AttributeGatherer.getHandle();
+				_oAttributeGatherer.init();
+			}
+			catch (ASelectException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Can't initialize AttributeGatherer", e);
+				throw e;
+			}
 
-    /**
-     * Free resources, stop worker threads, and generally
-     * shutdown the A-Select Server. This method is invoked
-     * by Tomcat when the servlet is removed or Tomcat itself
-     * shuts down. 
-     * 
-     * @see javax.servlet.Servlet#destroy()
-     */
-    public void destroy()
-    {
-        //Close resources
-        closeResources();
-               
-        // Close loggers
-        _systemLogger.log(Level.INFO,MODULE, "destroy()", "A-Select server stopped.");
-        closeLoggers();
-                
-        super.destroy();
-    }
+			try {
+				_sessionManager = SessionManager.getHandle();
+				_sessionManager.init();
+			}
+			catch (ASelectConfigException eAC) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Can't initialize SessionManager", eAC);
+				throw eAC;
+			}
 
-    /**
-     * Entry point for all incoming requests (GET and POST).
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * This method is responsible for the initial processing of
-     * all incoming requests. In most cases the <code>RequestHandlerFactory</code>
-     * is called to create the appropriate requesthandler. 
-     * (see the <code>requesthandler</code> package for more information).
-     * <br><br>
-     * @param request The <code>HttpServletRequest</code> object
-     * @param response The <code>HttpServletResponse</code> object
-     * @throws ServletException if processing went wrong
-     * @throws IOException if no error could be sent to the HttpServletResponse
-     */
-    protected void service(HttpServletRequest request,
-        HttpServletResponse response) throws ServletException,
-        IOException
-    {
-       
-        String sMethod = "service()";
-        try
-        {
-	        // Prevent caching
-	        setDisableCachingHttpHeaders(request, response);
-	
-	        //If we're currently restarting, then halt all processing
-	        if (isRestartInProgress())
-	        {
-	            response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-	            return;
-	        }	        
-	        
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "SERVICE {"+" T="+System.currentTimeMillis()+
-            		" "+request.getMethod()+" Query: "+request.getQueryString());
-            //ProtoRequestHandler.logCookies(request, _systemLogger);
-            _systemLogger.log(Level.INFO, MODULE, sMethod, request.getRemoteHost()+" / "+
-            					request.getRequestURL()+" / "+ request.getRemoteAddr());
-            _oRequestHandlerFactory.process(request, response);
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "} SERVICE"+" T="+System.currentTimeMillis()+"\n====");
-        }
-        catch(ASelectException e)
-        {
-            _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-            	"} SERVICE"+" T="+System.currentTimeMillis()+" Error while processing request: "+e+"\n====");
-            if(!response.isCommitted()) 
-            {
-                //send response if no headers have been written
-                if(e.getMessage().equals(Errors.ERROR_ASELECT_INTERNAL_ERROR))
-                    response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                else
-                    response.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            }
-        }  
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.SEVERE, MODULE, sMethod, 
-            	"} SERVICE"+" T="+System.currentTimeMillis()+" Internal error: "+e+"\n====");
-            if(!response.isCommitted()) 
-            {
-                //send response if no headers have been written
-                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            }                
-        }
-    }
- 
-    /**
-     * The A-Select server is restartable.
-     * <br><br>
-     * @see org.aselect.system.servlet.ASelectHttpServlet#isRestartableServlet()
-     */
-    protected boolean isRestartableServlet()
-    {
-        return true;
-    }
-    
-    /**
-     * Close the admin monitor and other components . 
-     */
-    private void closeResources()
-    {
-        //stop the Gui if applicable
-        if (_adminMonitor != null)
-        {
-            _adminMonitor.stop();
-            try
-            {
-                _adminMonitor.dispose();                
-            }
-            catch(Exception e)
-            {
-                //ignore interrupted errors while disposing
-            }
-        }
-        //Stop attribute gatherer
-        if (_oAttributeGatherer != null)
-            _oAttributeGatherer.destroy();
-            
-        //Stop request handler factory
-        if (_oRequestHandlerFactory != null)
-            _oRequestHandlerFactory.destroy();
-        
-        // Stop & destroy components that perform cleanup
-        ASelectSAMAgent.getHandle().destroy();
-        if (_tgtManager != null) _tgtManager.destroy();
-        _sessionManager.destroy();
-        _cryptoEngine.stop(); 
-    }
-    
-    /**
-     * Close the system logger and the authentication logger. 
-     */
-    private void closeLoggers(){
-        if (_authenticationLogger != null){
-            _authenticationLogger.closeHandlers();
-            _authenticationLogger = null;
-        }
-        if(_systemLogger != null){
-            _systemLogger.closeHandlers();
-            _systemLogger = null;
-        }
-    }
-    
-    
+			try {
+				_tgtManager = TGTManager.getHandle();
+				_tgtManager.init();
+			}
+			catch (ASelectConfigException eAC) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Can't initialize TicketManager", eAC);
+				throw eAC;
+			}
+
+			try {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "ApplicationManager...");
+				_applicationManager = ApplicationManager.getHandle();
+				_applicationManager.init();
+			}
+			catch (ASelectConfigException eAC) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Can't initialize ApplicationManager", eAC);
+				throw eAC;
+			}
+
+			try {
+				_crossASelectManager = CrossASelectManager.getHandle();
+				_crossASelectManager.init();
+			}
+			catch (ASelectConfigException eAC) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Can't initialize CrossASelectManager", eAC);
+				throw eAC;
+			}
+
+			try {
+				_authspHandlerManager = AuthSPHandlerManager.getHandle();
+				_authspHandlerManager.init();
+			}
+			catch (ASelectConfigException eAC) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Can't initialize AuthSPHandlerManager", eAC);
+				throw eAC;
+			}
+
+			try {
+				_cryptoEngine = CryptoEngine.getHandle();
+				_cryptoEngine.init();
+			}
+			catch (ASelectConfigException eAC) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Can't initialize CryptoEngine", eAC);
+				throw eAC;
+			}
+
+			try {
+				String sTemp = _configManager.getParam(_oASelectConfig, "admin_gui");
+				if (sTemp.equalsIgnoreCase("true")) {
+					if (_adminMonitor == null) {
+						_adminMonitor = new AdminMonitor();
+						_adminMonitor.start(5);
+					}
+					else {
+						_adminMonitor.stop();
+						_adminMonitor.start(5);
+					}
+				}
+			}
+			catch (ASelectConfigException eAC) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "admin_gui option not found in config file", eAC);
+			}
+			catch (Exception e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Can't start AdminMonitor", e);
+				throw e;
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully started A-Select server.");
+		}
+		catch (ASelectException eAS) {
+			String sErrorMessage = _configManager.getErrorMessage(eAS.getMessage());
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sErrorMessage, eAS);
+
+			closeResources();
+			closeLoggers();
+			throw new ServletException(sErrorMessage);
+		}
+		catch (Exception e) {
+			String sErrorMessage = _configManager.getErrorMessage(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sErrorMessage, e);
+
+			closeResources();
+			closeLoggers();
+			throw new ServletException(sErrorMessage);
+		}
+	}
+
+	/**
+	 * Free resources, stop worker threads, and generally
+	 * shutdown the A-Select Server. This method is invoked
+	 * by Tomcat when the servlet is removed or Tomcat itself
+	 * shuts down. 
+	 * 
+	 * @see javax.servlet.Servlet#destroy()
+	 */
+	public void destroy()
+	{
+		//Close resources
+		closeResources();
+
+		// Close loggers
+		_systemLogger.log(Level.INFO, MODULE, "destroy()", "A-Select server stopped.");
+		closeLoggers();
+
+		super.destroy();
+	}
+
+	/**
+	 * Entry point for all incoming requests (GET and POST).
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * This method is responsible for the initial processing of
+	 * all incoming requests. In most cases the <code>RequestHandlerFactory</code>
+	 * is called to create the appropriate requesthandler. 
+	 * (see the <code>requesthandler</code> package for more information).
+	 * <br><br>
+	 * @param request The <code>HttpServletRequest</code> object
+	 * @param response The <code>HttpServletResponse</code> object
+	 * @throws ServletException if processing went wrong
+	 * @throws IOException if no error could be sent to the HttpServletResponse
+	 */
+	protected void service(HttpServletRequest request, HttpServletResponse response)
+		throws ServletException, IOException
+	{
+
+		String sMethod = "service()";
+		try {
+			// Prevent caching
+			setDisableCachingHttpHeaders(request, response);
+
+			//If we're currently restarting, then halt all processing
+			if (isRestartInProgress()) {
+				response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+				return;
+			}
+
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "SERVICE {" + " T=" + System.currentTimeMillis() + " "
+					+ request.getMethod() + " Query: " + request.getQueryString());
+			//ProtoRequestHandler.logCookies(request, _systemLogger);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, request.getRemoteHost() + " / " + request.getRequestURL()
+					+ " / " + request.getRemoteAddr());
+			_oRequestHandlerFactory.process(request, response);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "} SERVICE" + " T=" + System.currentTimeMillis() + "\n====");
+		}
+		catch (ASelectException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "} SERVICE" + " T=" + System.currentTimeMillis()
+					+ " Error while processing request: " + e + "\n====");
+			if (!response.isCommitted()) {
+				//send response if no headers have been written
+				if (e.getMessage().equals(Errors.ERROR_ASELECT_INTERNAL_ERROR))
+					response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+				else
+					response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+			}
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "} SERVICE" + " T=" + System.currentTimeMillis()
+					+ " Internal error: " + e + "\n====");
+			if (!response.isCommitted()) {
+				//send response if no headers have been written
+				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			}
+		}
+	}
+
+	/**
+	 * The A-Select server is restartable.
+	 * <br><br>
+	 * @see org.aselect.system.servlet.ASelectHttpServlet#isRestartableServlet()
+	 */
+	protected boolean isRestartableServlet()
+	{
+		return true;
+	}
+
+	/**
+	 * Close the admin monitor and other components . 
+	 */
+	private void closeResources()
+	{
+		//stop the Gui if applicable
+		if (_adminMonitor != null) {
+			_adminMonitor.stop();
+			try {
+				_adminMonitor.dispose();
+			}
+			catch (Exception e) {
+				//ignore interrupted errors while disposing
+			}
+		}
+		//Stop attribute gatherer
+		if (_oAttributeGatherer != null)
+			_oAttributeGatherer.destroy();
+
+		//Stop request handler factory
+		if (_oRequestHandlerFactory != null)
+			_oRequestHandlerFactory.destroy();
+
+		// Stop & destroy components that perform cleanup
+		ASelectSAMAgent.getHandle().destroy();
+		if (_tgtManager != null)
+			_tgtManager.destroy();
+		_sessionManager.destroy();
+		_cryptoEngine.stop();
+	}
+
+	/**
+	 * Close the system logger and the authentication logger. 
+	 */
+	private void closeLoggers()
+	{
+		if (_authenticationLogger != null) {
+			_authenticationLogger.closeHandlers();
+			_authenticationLogger = null;
+		}
+		if (_systemLogger != null) {
+			_systemLogger.closeHandlers();
+			_systemLogger = null;
+		}
+	}
+
 }
-

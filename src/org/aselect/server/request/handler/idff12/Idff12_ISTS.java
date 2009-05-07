@@ -25,6 +25,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.RequestState;
@@ -63,8 +64,8 @@ public class Idff12_ISTS extends ProtoRequestHandler
 	        throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 	    }
 	       
-		_sProviderId = Utils.getSimpleParam(oConfig, "provider_id", true);
-		_sOracleGlitch = Utils.getSimpleParam(oConfig, "oracle_glitch", false);
+		_sProviderId = ASelectConfigManager.getSimpleParam(oConfig, "provider_id", true);
+		_sOracleGlitch = ASelectConfigManager.getSimpleParam(oConfig, "oracle_glitch", false);
 		if (_sOracleGlitch != null)
     		_systemLogger.log(Level.INFO, MODULE, sMethod, "oracle_glitch=" + _sOracleGlitch);
         	

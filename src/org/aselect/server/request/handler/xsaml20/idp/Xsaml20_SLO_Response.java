@@ -6,13 +6,13 @@ import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.request.handler.xsaml20.Saml20_BrowserHandler;
 import org.aselect.server.request.handler.xsaml20.SamlHistoryManager;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.utils.Utils;
 import org.opensaml.common.SignableSAMLObject;
 import org.opensaml.saml2.core.Issuer;
 import org.opensaml.saml2.core.LogoutRequest;
@@ -82,7 +82,7 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 		if (sVerifySignature != null && sVerifySignature.equalsIgnoreCase("false")) {
 			_bVerifySignature = false;
 		}*/
-		String sTryRedirect = Utils.getSimpleParam(oConfig, "try_redirect_logout_first", false);
+		String sTryRedirect = ASelectConfigManager.getSimpleParam(oConfig, "try_redirect_logout_first", false);
 		if (sTryRedirect != null && !sTryRedirect.equals("true"))
 			_bTryRedirectLogoutFirst = false;
 

@@ -20,11 +20,14 @@ public class SystemLogger implements ISystemLogger {
         	if (className == null) className = DEFAULTSYSTEMLOGGER;
         	_logger = (ISystemLogger) Class.forName(className).newInstance();
         	System.out.println("Using systemlogger:" + className);
-		} catch (InstantiationException e) {
+		}
+        catch (InstantiationException e) {
 			System.err.println(Errors.ERROR_ASELECT_INIT_ERROR + ":" + e);
-		} catch (IllegalAccessException e) {
+		}
+        catch (IllegalAccessException e) {
 			System.err.println(Errors.ERROR_ASELECT_INIT_ERROR + ":" + e);
-		} catch (ClassNotFoundException e) {
+		}
+        catch (ClassNotFoundException e) {
 			System.err.println(Errors.ERROR_ASELECT_INIT_ERROR + ":" + e);
 		}
 	}
@@ -34,33 +37,38 @@ public class SystemLogger implements ISystemLogger {
 	}
 
 	public void init(String logFileNamePrefix, String loggerNamespace,
-			ConfigManager configManager, Object logTargetConfig,
-			String workingDir) throws ASelectException {
+			ConfigManager configManager, Object logTargetConfig, String workingDir)
+	throws ASelectException
+	{
 		_logger.init(logFileNamePrefix, loggerNamespace, configManager, logTargetConfig, workingDir);
 	}
 
-	public boolean isDebug() {
+	public boolean isDebug()
+	{
 		return _logger.isDebug();
 	}
 
-	public void log(Level level, String message) {
+	public void log(Level level, String message)
+	{
 		_logger.log(level, message);
 	}
 
-	public void log(Level level, String message, Throwable cause) {
+	public void log(Level level, String message, Throwable cause)
+	{
 		_logger.log(level, message, cause);
 	}
 
-	public void log(Level level, String module, String method, String message) {
+	public void log(Level level, String module, String method, String message)
+	{
 		_logger.log(level, module, method, message);
 	}
 
-	public void log(Level level, String module, String method, String message,
-			Throwable cause) {
+	public void log(Level level, String module, String method, String message, Throwable cause)
+	{
 		_logger.log(level, module, method, message, cause);
-
 	}
-	public void setLevel(Level level) {
+	public void setLevel(Level level)
+	{
 		_logger.setLevel(level);
 	}
 }

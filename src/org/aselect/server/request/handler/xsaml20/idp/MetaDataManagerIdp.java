@@ -88,28 +88,33 @@ public class MetaDataManagerIdp extends AbstractMetaDataManager
 	/**
 	 * 
 	 * This method reads the aslect.xml and puts all meta_data xml file
-	 * pathnames to the List metaDataUrls
+	 * pathnames in the metaDataUrls List
 	 */
 	protected void addMetaDataURLToList(Object application)
 	{
 		String sMethod = "addMetaDataURLToList()";
 		String sId = null;
-
-		if (application == null) {
-			return;
-		}
 		Element metadata = null;
+
+		if (application == null)
+			return;
+
 		try {
-			metadata = (Element) _configManager.getSection(application, "meta_data");
 			sId = _configManager.getParam(application, "id");
-			if (metadata != null) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "metadata="+sId+"<>"+metadata.getFirstChild().getTextContent());
-				metadataSPs.put(sId, metadata.getFirstChild().getTextContent());
-			}
 		}
 		catch (ASelectConfigException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"No config section 'meta_data' found or parameter 'id' is missing", e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Application 'id' is missing", e);
+			return;
+		}
+		try {
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "id="+sId);
+			metadata = (Element) _configManager.getSection(application, "meta_data");
+		}
+		catch (ASelectConfigException e) {  // ignore
+		}
+		if (metadata != null) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "metadata="+sId+"<>"+metadata.getFirstChild().getTextContent());
+			metadataSPs.put(sId, metadata.getFirstChild().getTextContent());
 		}
 	}
 }

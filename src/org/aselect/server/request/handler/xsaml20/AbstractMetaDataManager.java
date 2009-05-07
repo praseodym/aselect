@@ -37,6 +37,7 @@ import org.opensaml.xml.security.credential.UsageType;
 // import org.opensaml.xml.signature.KeyInfoHelper; // RH 20080529, o
 import org.opensaml.xml.signature.X509Certificate;
 import org.opensaml.xml.signature.X509Data;
+import org.opensaml.xml.util.XMLHelper;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -310,12 +311,14 @@ public abstract class AbstractMetaDataManager
 		String sMethod = "getMDNodevalue "+Thread.currentThread().getId();
 		String location = null;
 
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId="+entityId+" binding="+bindingName+" attr="+attrName);
 		if (entityId == null)
 			return null;
 		checkMetadataProvider(entityId);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta checked for "+entityId);
 		SSODescriptor descriptor = SSODescriptors.get(entityId);
 		
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "descriptor="+descriptor);
 		if (descriptor != null) {
 			try {
 				Element domDescriptor = marshallDescriptor(descriptor);
@@ -324,7 +327,7 @@ public abstract class AbstractMetaDataManager
 				//_systemLogger.log(Level.INFO, MODULE, sMethod, "Try "+nodeList.getLength()+" entries");
 				for (int i = 0; i < nodeList.getLength(); i++) {
 					Node childNode = nodeList.item(i);
-					//_systemLogger.log(Level.INFO, MODULE, sMethod, "Node "+childNode.getLocalName());
+					_systemLogger.log(Level.FINE, MODULE, sMethod, "Node "+childNode.getLocalName());
 					if (elementName.equals(childNode.getLocalName())) {
 						NamedNodeMap nodeMap = childNode.getAttributes();
 						String bindingMDValue = nodeMap.getNamedItem("Binding").getNodeValue();
@@ -370,6 +373,7 @@ public abstract class AbstractMetaDataManager
 		Marshaller marshaller = marshallerFactory.getMarshaller(descriptor);
 		
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Marshall "+descriptor);
+		//_systemLogger.log(Level.INFO, MODULE, sMethod, XMLHelper.prettyPrintXML(descriptor.getDOM()));
 		Element domDescriptor = marshaller.marshall(descriptor, parser.newDocument());
 		return domDescriptor;
 	}

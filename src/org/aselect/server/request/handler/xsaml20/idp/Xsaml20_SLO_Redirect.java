@@ -55,7 +55,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 
 		super.init(oServletConfig, oConfig);
 
-		String sTryRedirect = Utils.getSimpleParam(oConfig, "try_redirect_logout_first", false);
+		String sTryRedirect = ASelectConfigManager.getSimpleParam(oConfig, "try_redirect_logout_first", false);
 		if (sTryRedirect != null && !sTryRedirect.equals("true"))
 			_bTryRedirectLogoutFirst = false;
 

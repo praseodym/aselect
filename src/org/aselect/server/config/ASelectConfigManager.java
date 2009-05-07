@@ -683,13 +683,13 @@ public class ASelectConfigManager extends ConfigManager
 		//}
 		//catch (ASelectConfigException e) { // need not be present
 		//}
-		_sCookiePath = Utils.getSimpleParam(_oASelectConfigSection, "cookie_path", false);
+		_sCookiePath = ASelectConfigManager.getSimpleParam(_oASelectConfigSection, "cookie_path", false);
 		if (_sCookiePath == null) _sCookiePath = "/aselectserver/server";
 		if (!_sCookiePath.startsWith("/"))
 			_sCookiePath = "/" + _sCookiePath;
-		_sAddedSecurity = Utils.getSimpleParam(_oASelectConfigSection, "added_security", false);
+		_sAddedSecurity = ASelectConfigManager.getSimpleParam(_oASelectConfigSection, "added_security", false);
 		if (_sAddedSecurity == null) _sAddedSecurity = "";
-		_sUserInfoSettings = Utils.getSimpleParam(_oASelectConfigSection, "user_info", false);
+		_sUserInfoSettings = ASelectConfigManager.getSimpleParam(_oASelectConfigSection, "user_info", false);
 		if (_sUserInfoSettings == null) _sUserInfoSettings = "";
 
 		// In a redundant environment a domain cookie wil be set.
@@ -2080,5 +2080,26 @@ public class ASelectConfigManager extends ConfigManager
 	public String getUserInfoSettings()
 	{
 		return _sUserInfoSettings;
+	}
+
+	public static String getParamFromSection(Object oConfig, String sSection, String sParam)
+	throws ASelectConfigException
+	{
+		return getParamFromSection(oConfig, sSection, sParam, true);
+	}
+
+	public static String getParamFromSection(Object oConfig, String sSection, String sParam, boolean bMandatory)
+	throws ASelectConfigException
+	{
+		return Utils.getParamFromSection(getHandle(), ASelectSystemLogger.getHandle(),
+									oConfig, sSection, sParam, bMandatory);
+	}
+
+	// Terse version for ASelect
+	public static String getSimpleParam(Object oConfig, String sParam, boolean bMandatory)
+	throws ASelectException
+	{
+		return Utils.getSimpleParam(getHandle(), ASelectSystemLogger.getHandle(),
+								oConfig, sParam, bMandatory);
 	}
 }

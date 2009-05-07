@@ -24,6 +24,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.*;
@@ -70,10 +71,10 @@ public class Idff12_SSO extends ProtoRequestHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Idff12_SSO.init()");
 
 			_oClientCommunicator = initClientCommunicator(oConfig);
-			_sProviderId = Utils.getSimpleParam(oConfig, "provider_id", true);
-			_sIstsUrl = Utils.getSimpleParam(oConfig, "ists_url", true);
+			_sProviderId = ASelectConfigManager.getSimpleParam(oConfig, "provider_id", true);
+			_sIstsUrl = ASelectConfigManager.getSimpleParam(oConfig, "ists_url", true);
 
-			_sMyAppId = Utils.getParamFromSection(oConfig, "application", "id");
+			_sMyAppId = ASelectConfigManager.getParamFromSection(oConfig, "application", "id");
 			_sTemplate = readTemplateFromConfig(oConfig, "template");
 
 			_vIdPUrls = new Vector();  // Vector will contain 'url' key values

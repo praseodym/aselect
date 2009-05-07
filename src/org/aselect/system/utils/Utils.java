@@ -66,11 +66,11 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 
-import org.aselect.server.config.ASelectConfigManager;
-import org.aselect.server.log.ASelectSystemLogger;
+import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.logging.SystemLogger;
 
 /**
  * Static class that implements generic, widely used utility methods. <br>
@@ -476,43 +476,35 @@ public class Utils
 		return (len <= max) ? sValue : sValue.substring(0, max) + "...";
 	}
 	
-	public static String getSimpleParam(Object oConfig, String sParam, boolean bMandatory)
+	public static String getSimpleParam(ConfigManager oConfMgr, SystemLogger oSysLog,
+						Object oConfig, String sParam, boolean bMandatory)
 	throws ASelectException
 	{
-		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
-		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
 		try {
-			return _configManager.getParam(oConfig, sParam);  // is not null
+			return oConfMgr.getParam(oConfig, sParam);  // is not null
 		}
 		catch (ASelectConfigException e) {
 			if (!bMandatory)
 				return null;
-			_systemLogger.log(Level.WARNING, MODULE, "getSimpleParam", "Config item '"+sParam+"' not found", e);
+			oSysLog.log(Level.WARNING, MODULE, "getSimpleParam", "Config item '"+sParam+"' not found", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}
 
-	public static String getParamFromSection(Object oConfig, String sSection, String sParam, boolean bMandatory)
+	public static String getParamFromSection(ConfigManager oConfMgr, SystemLogger oSysLog,
+						Object oConfig, String sSection, String sParam, boolean bMandatory)
 	throws ASelectConfigException
 	{
-		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
-		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
 		try {
-			Object oSection = _configManager.getSection(oConfig, sSection);
-			return _configManager.getParam(oSection, sParam);
+			Object oSection = oConfMgr.getSection(oConfig, sSection);
+			return oConfMgr.getParam(oSection, sParam);
 		}
 		catch (ASelectConfigException e) {
 			if (!bMandatory)
 				return null;
-			_systemLogger.log(Level.WARNING, MODULE, "getParamFromSection",
+			oSysLog.log(Level.WARNING, MODULE, "getParamFromSection",
 					"Could not retrieve '"+sParam+"' parameter in '"+sSection+"' section", e);
 			throw e;
 		}
-	}
-
-	public static String getParamFromSection(Object oConfig, String sSection, String sParam)
-	throws ASelectConfigException
-	{
-		return getParamFromSection(oConfig, sSection, sParam, true);
 	}
 }

@@ -390,7 +390,7 @@ public class RequestHandler extends Thread
 		try {
 			// create protocol requests
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "RUN stt T="+ System.currentTimeMillis()+" socket=" + _socket + " port=" + port);
-			TCPProtocolRequest oTCPProtocolRequest = new TCPProtocolRequest(_socket);
+			TCPProtocolRequest oTCPProtocolRequest = new TCPProtocolRequest(_socket, _systemLogger);
 			TCPProtocolResponse oTCPProtocolResponse = new TCPProtocolResponse(_socket, oTCPProtocolRequest
 					.getProtocolName());
 
@@ -445,16 +445,13 @@ public class RequestHandler extends Thread
 			sbError.append("\"");
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
 		}
-		finally
-		// Close socket
-		{
+		finally {  // Close socket
 			if (_socket != null) {
 				try {
 					_socket.close();
 					_socket = null;
 				}
-				catch (IOException eIO) //closing failed
-				{
+				catch (IOException eIO) {  //closing failed
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error closing socket.", eIO);
 				}
 			}
@@ -503,12 +500,10 @@ public class RequestHandler extends Thread
 			IOutputMessage oOutputMessage = oCommunicator.getOutputMessage();
 
 			String sRequest = null;
-
 			try {
 				sRequest = oInputMessage.getParam("request");
 			}
 			catch (Exception eX) { //sRequest is allready null
-
 			}
 
 			if (sRequest == null) {

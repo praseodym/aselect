@@ -39,7 +39,7 @@ public class SecurityLevel
 	final private static int HOOG = 30;  //4;
 	final private static int MAX = 999;  //5;
 
-	public final static String BN_EMPTY = "empty";
+	//public final static String BN_EMPTY = "empty";  // no longer 20090501
 	public final static String BN_NUL = "5";
 	public final static String BN_LAAG = "10";
 	public final static String BN_MIDDEN = "20";
@@ -191,7 +191,9 @@ public class SecurityLevel
 			return sMatchedBetrouwheidsNiveau;
 
 		}
-		return BN_EMPTY;
+		// 20090501, Bauke: Since the <RequestedAuthnContext> element is optional,
+		// we return the lowest known level here. (no restriction on the level is required)
+		return BN_NUL;  // BN_EMPTY;
 	}
 
 	private static int getIntBetrouwbaarheidsNiveau(String sCurrentAuthnContextClassRef)

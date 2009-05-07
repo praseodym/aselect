@@ -441,7 +441,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 				try {
 					Object aselect = _configManager.getSection(null, "aselect");
-					String sFriendlyName = Utils.getSimpleParam(aselect, "organization_friendly_name", false);
+					String sFriendlyName = ASelectConfigManager.getSimpleParam(aselect, "organization_friendly_name", false);
 					sServerInfoForm = Utils.replaceString(sServerInfoForm, "[organization_friendly]", sFriendlyName);
 				}
 				catch (Exception e) {
@@ -946,7 +946,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		
 		ASelectConfigManager oConfigManager = ASelectConfigManager.getHandle();
         Object oTicketSection = oConfigManager.getSection(null, "storagemanager", "id=tgt");
-		String sTimeOut = Utils.getSimpleParam(oTicketSection, "timeout", false);
+		String sTimeOut = ASelectConfigManager.getSimpleParam(oTicketSection, "timeout", false);
 		if (sTimeOut != null) {
 			long timeOutTime = Long.parseLong(sTimeOut);
 			timeOutTime = timeOutTime * 1000;
@@ -1033,7 +1033,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		String sFriendlyName = "";
 		try {
 			Object aselect = _configManager.getSection(null, "aselect");
-			sFriendlyName = Utils.getSimpleParam(aselect, "organization_friendly_name", false);
+			sFriendlyName = ASelectConfigManager.getSimpleParam(aselect, "organization_friendly_name", false);
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Configuration error: " + e);

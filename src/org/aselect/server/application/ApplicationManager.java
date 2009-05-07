@@ -127,7 +127,6 @@ import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.utils.Utils;
 
 /**
  * The application manager for the A-Select Server. <br>
@@ -328,33 +327,33 @@ public class ApplicationManager
 									+ " not using an attribute policy for application with id: '" + sAppId, e);
 				}*/
 				
-				String sAppId = Utils.getSimpleParam(oApplication, "id", true);
+				String sAppId = ASelectConfigManager.getSimpleParam(oApplication, "id", true);
 				Integer intLevel = null;
-				String sLevel = Utils.getSimpleParam(oApplication, "level", true);
+				String sLevel = ASelectConfigManager.getSimpleParam(oApplication, "level", true);
 				intLevel = new Integer(sLevel);
 
 				Integer intMaxLevel = null;
-				String sMax = Utils.getSimpleParam(oApplication, "max_level", false);
+				String sMax = ASelectConfigManager.getSimpleParam(oApplication, "max_level", false);
 				if (sMax != null) intMaxLevel = new Integer(sMax);
 				boolean bForced = false;
-				String sForced = Utils.getSimpleParam(oApplication, "forced_authenticate", false);
+				String sForced = ASelectConfigManager.getSimpleParam(oApplication, "forced_authenticate", false);
 				if (sForced != null) bForced = new Boolean(sForced).booleanValue();
-				String sFriendlyName = Utils.getSimpleParam(oApplication, "friendly_name", false);
-				String sMaintainerEmail = Utils.getSimpleParam(oApplication, "maintainer_email", false);
+				String sFriendlyName = ASelectConfigManager.getSimpleParam(oApplication, "friendly_name", false);
+				String sMaintainerEmail = ASelectConfigManager.getSimpleParam(oApplication, "maintainer_email", false);
 				boolean bShowUrl = false;
-				String sShowUrl = Utils.getSimpleParam(oApplication, "show_url", false);
+				String sShowUrl = ASelectConfigManager.getSimpleParam(oApplication, "show_url", false);
 				if (sShowUrl != null) bShowUrl = new Boolean(sShowUrl).booleanValue();
 				boolean bUseOpaqueId = false;
-				String sUseOpaqueUid = Utils.getSimpleParam(oApplication, "use_opaque_uid", false);
+				String sUseOpaqueUid = ASelectConfigManager.getSimpleParam(oApplication, "use_opaque_uid", false);
 				if (sUseOpaqueUid != null) bUseOpaqueId = new Boolean(sUseOpaqueUid).booleanValue();
-				String sAttributePolicy = Utils.getSimpleParam(oApplication, "attribute_policy", false);
+				String sAttributePolicy = ASelectConfigManager.getSimpleParam(oApplication, "attribute_policy", false);
 
-				String sSharedSecret = Utils.getSimpleParam(oApplication, "shared_secret", false);
-				String sForcedUid = Utils.getSimpleParam(oApplication, "forced_uid", false);
-				String sForcedAuthsp = Utils.getSimpleParam(oApplication, "forced_authsp", false);
-				String sLevelName = Utils.getSimpleParam(oApplication, "level_name", false);
+				String sSharedSecret = ASelectConfigManager.getSimpleParam(oApplication, "shared_secret", false);
+				String sForcedUid = ASelectConfigManager.getSimpleParam(oApplication, "forced_uid", false);
+				String sForcedAuthsp = ASelectConfigManager.getSimpleParam(oApplication, "forced_authsp", false);
+				String sLevelName = ASelectConfigManager.getSimpleParam(oApplication, "level_name", false);
 				boolean bDoUrlEncode = true;
-				String sDoUrlEncode = Utils.getSimpleParam(oApplication, "use_url_encoding", false);
+				String sDoUrlEncode = ASelectConfigManager.getSimpleParam(oApplication, "use_url_encoding", false);
 				if (sDoUrlEncode != null) bDoUrlEncode = new Boolean(sDoUrlEncode).booleanValue();
 
 				// required params

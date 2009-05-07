@@ -252,7 +252,7 @@ public class OldMemoryStorageHandlerTimeOut extends OldMemoryStorageHandler
 			requestSender.sendSoapLogoutRequest(url, _serverUrl, sNameID, "urn:oasis:names:tc:SAML:2.0:logout:sp-timeout", pkey);
 		}
 		catch (ASelectException e) {
-			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "IDP - exception trying too send logout request", e);
+			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "IDP - exception trying to send logout request", e);
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 	}

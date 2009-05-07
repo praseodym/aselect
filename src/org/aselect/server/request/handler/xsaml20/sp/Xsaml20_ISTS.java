@@ -8,6 +8,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.xsaml20.Saml20_BaseHandler;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
@@ -15,7 +16,6 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.common.SAMLObjectBuilder;
@@ -75,11 +75,11 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler // RH, 20080606, n
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 
-		_sServerId = Utils.getParamFromSection(null, "aselect", "server_id");
+		_sServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id");
 		//*from main:*/ _sFederationUrl = Utils.getParamFromSection(null, "aselect", "federation_url");
 		// Default Federation URL when not given by the caller
 		/*from handler:*/
-		_sFederationUrl = Utils.getSimpleParam(oConfig, "federation_url", true);
+		_sFederationUrl = ASelectConfigManager.getSimpleParam(oConfig, "federation_url", true);
 
 		levelMap = new HashMap<String, String>();
 		Object oSecurity = null;

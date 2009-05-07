@@ -26,6 +26,7 @@ import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.logging.Level;
 
+import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.system.communication.client.IClientCommunicator;
 import org.aselect.system.communication.client.raw.RawCommunicator;
 import org.aselect.system.communication.client.soap11.SOAP11Communicator;
@@ -242,7 +243,7 @@ public class Tools
 	public static IClientCommunicator initClientCommunicator(Object oConfig, SystemLogger _systemLogger)
 	throws ASelectException
 	{
-		String sClientCommunicator = Utils.getSimpleParam(oConfig, "clientcommunicator", false);
+		String sClientCommunicator = ASelectConfigManager.getSimpleParam(oConfig, "clientcommunicator", false);
 		if (sClientCommunicator == null || sClientCommunicator.equalsIgnoreCase("raw")) {
 			return new RawCommunicator(_systemLogger);
 		}

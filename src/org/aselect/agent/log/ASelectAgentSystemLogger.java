@@ -47,150 +47,136 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
 
 /**
- * Implements the System logger for the A-Select Agent package.
- * <br><br>
+ * Implements the System logger for the A-Select Agent package. <br>
+ * <br>
  * <b>Description:</b><br>
- * Implements the System logger for the A-Select Agent package as 
- * a single pattern.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * Implements the System logger for the A-Select Agent package as a single pattern. <br>
  * <br>
- * -
- * <br>
+ * <b>Concurrency issues:</b> <br> - <br>
+ * 
  * @author Alfa & Ariss
  */
 public class ASelectAgentSystemLogger extends SystemLogger
 {
-    /**
-     * The name of this module, that is used in the system logging.
-     */
-    private static final String MODULE = "ASelectAgentSystemLogger";
-    
-    /** static instance */
+	/**
+	 * The name of this module, that is used in the system logging.
+	 */
+	private static final String MODULE = "ASelectAgentSystemLogger";
+
+	/** static instance */
 	private static ASelectAgentSystemLogger _oASelectAgentSystemLogger;
-	
+
 	/**
 	 * @return A static handle to the A-Select Agent system logger.
 	 */
 	public static ASelectAgentSystemLogger getHandle()
 	{
-		if (_oASelectAgentSystemLogger == null) 
-		    _oASelectAgentSystemLogger = new ASelectAgentSystemLogger();
-		
+		if (_oASelectAgentSystemLogger == null)
+			_oASelectAgentSystemLogger = new ASelectAgentSystemLogger();
+
 		return _oASelectAgentSystemLogger;
 	}
-	
-    /**
-     * Initializes the Authentication Logger.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * <li>Reads the 'target' config section</li>
-     * <li>Calls the init of the <i>_oASelectAuthenticationLogger</i></li>
-     * <li>Reads the 'target' config section</li>
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * <li>The <i>ASelectSystemLogger</i> must be initialized.</li>
-     * <li>The <i>ASelectConfigManager</i> must be initialized.</li>
-     * <li>The <i>oSysLogging</i> may not be <code>NULL</code>.</li>
-     * <li>The <i>sWorkingDir</i> may not be <code>NULL</code>.</li>
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * An initialized <i>_oASelectAuthenticationLogger</i>.
-     * <br>
-     * @param oSysLogging The logger config section with id='system'
-     * @param sWorkingDir The A-Select working dir
-     * @throws ASelectException if initialization went wrong
-     */
-    public void init(Object oSysLogging, String sWorkingDir) throws ASelectException
-    {
-        String sMethod = "init()";
-        
-        Level levelSysLog = null;
-        String sSysLogTarget = null;
-        Object oSysLogTarget = null;
-        ASelectAgentSystemLogger oASelectAgentSystemLogger = null;
-        ASelectAgentConfigManager oASelectAgentConfigManager = null;
-        try
-        {
-            try
-            {
-                oASelectAgentSystemLogger = ASelectAgentSystemLogger.getHandle();
-                oASelectAgentConfigManager = ASelectAgentConfigManager.getHandle();
- 
-                try
-		        {
-		            String sSysLogLevel = oASelectAgentConfigManager.getParam(oSysLogging, "level");
-		            levelSysLog = Level.parse(sSysLogLevel);
-		        }
-		        catch (Exception e)
-		        {
-		            levelSysLog = Level.CONFIG;
-		            oASelectAgentSystemLogger.log(Level.CONFIG, MODULE, sMethod,
-		                "No valid config item: 'level' in config section 'logging' with id='system' found, using default level: CONFIG", e);
-		        }
-		        
-                try
-                {
-                    sSysLogTarget = oASelectAgentConfigManager.getParam(oSysLogging, 
-                        "target");
-                }
-                catch (Exception e)
-                {
-                    sSysLogTarget = null;
 
-                    StringBuffer sbInfo = new StringBuffer(
-                        "No valid config item: 'target' in config section 'logging' with id='system' found.");
-                    oASelectAgentSystemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString(), e);
-                    throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-                }
+	/**
+	 * Initializes the Authentication Logger. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * <li>Reads the 'target' config section</li>
+	 * <li>Calls the init of the <i>_oASelectAuthenticationLogger</i></li>
+	 * <li>Reads the 'target' config section</li>
+	 * <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * <li>The <i>ASelectSystemLogger</i> must be initialized.</li>
+	 * <li>The <i>ASelectConfigManager</i> must be initialized.</li>
+	 * <li>The <i>oSysLogging</i> may not be <code>NULL</code>.</li>
+	 * <li>The <i>sWorkingDir</i> may not be <code>NULL</code>.</li>
+	 * <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * An initialized <i>_oASelectAuthenticationLogger</i>. <br>
+	 * 
+	 * @param oSysLogging
+	 *            The logger config section with id='system'
+	 * @param sWorkingDir
+	 *            The A-Select working dir
+	 * @throws ASelectException
+	 *             if initialization went wrong
+	 */
+	public void init(Object oSysLogging, String sWorkingDir)
+	throws ASelectException
+	{
+		String sMethod = "init()";
 
-                try
-                {
-                    oSysLogTarget = oASelectAgentConfigManager.getSection(
-                        oSysLogging, "target", "id=" + sSysLogTarget);
-                }
-                catch (Exception e)
-                {
-                    oSysLogTarget = null;
+		Level levelSysLog = null;
+		String sSysLogTarget = null;
+		Object oSysLogTarget = null;
+		ASelectAgentSystemLogger oASelectAgentSystemLogger = null;
+		ASelectAgentConfigManager oASelectAgentConfigManager = null;
+		try {
+			try {
+				oASelectAgentSystemLogger = ASelectAgentSystemLogger.getHandle();
+				oASelectAgentConfigManager = ASelectAgentConfigManager.getHandle();
 
-                    StringBuffer sbInfo = new StringBuffer("No valid config section: 'target' with id='");
-                    sbInfo.append(sSysLogTarget);
-                    sbInfo.append("' in config section 'logging' with id='system' found");
-                    oASelectAgentSystemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString(), e);
-                    throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-                }
-            }
-            catch (Exception e)
-            {
-                oASelectAgentSystemLogger.log(Level.CONFIG, MODULE, sMethod, 
-                    "No valid config section 'logging' with id='system' found, using default logging settings", e);
-            }
+				try {
+					String sSysLogLevel = oASelectAgentConfigManager.getParam(oSysLogging, "level");
+					levelSysLog = Level.parse(sSysLogLevel);
+				}
+				catch (Exception e) {
+					levelSysLog = Level.CONFIG;
+					oASelectAgentSystemLogger.log(Level.CONFIG, MODULE, sMethod,
+							"No valid config item: 'level' in config section 'logging'"
+									+ " with id='system' found, using default level: CONFIG", e);
+				}
 
-            _oASelectAgentSystemLogger.init("system", 
-                "org.aselect.agent.log.ASelectAgentSystemLogger", 
-                oASelectAgentConfigManager, oSysLogTarget, sWorkingDir);
-            
-            _oASelectAgentSystemLogger.setLevel(levelSysLog);
-        }
-        catch (ASelectException e)
-        {
-            throw e;
-        }
-        catch (Exception e)
-        {
-            oASelectAgentSystemLogger.log(Level.SEVERE, MODULE, sMethod, 
-                "Could not initialize A-Select Agent System Logger.", e);
-            throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-        }
-    }
-    
-    /** private default constructor (singleton) */
-	private ASelectAgentSystemLogger() {}
+				try {
+					sSysLogTarget = oASelectAgentConfigManager.getParam(oSysLogging, "target");
+				}
+				catch (Exception e) {
+					sSysLogTarget = null;
+
+					StringBuffer sbInfo = new StringBuffer(
+							"No valid config item: 'target' in config section 'logging' with id='system' found.");
+					oASelectAgentSystemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString(), e);
+					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+				}
+
+				try {
+					oSysLogTarget = oASelectAgentConfigManager.getSection(oSysLogging, "target", "id=" + sSysLogTarget);
+				}
+				catch (Exception e) {
+					oSysLogTarget = null;
+
+					StringBuffer sbInfo = new StringBuffer("No valid config section: 'target' with id='");
+					sbInfo.append(sSysLogTarget);
+					sbInfo.append("' in config section 'logging' with id='system' found");
+					oASelectAgentSystemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString(), e);
+					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+				}
+			}
+			catch (Exception e) {
+				oASelectAgentSystemLogger.log(Level.CONFIG, MODULE, sMethod,
+						"No valid config section 'logging' with id='system' found, using default logging settings", e);
+			}
+
+			_oASelectAgentSystemLogger.init("system", "org.aselect.agent.log.ASelectAgentSystemLogger",
+					oASelectAgentConfigManager, oSysLogTarget, sWorkingDir);
+
+			_oASelectAgentSystemLogger.setLevel(levelSysLog);
+		}
+		catch (ASelectException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			oASelectAgentSystemLogger.log(Level.SEVERE, MODULE, sMethod,
+					"Could not initialize A-Select Agent System Logger.", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+		}
+	}
+
+	/** private default constructor (singleton) */
+	private ASelectAgentSystemLogger() {
+	}
 }

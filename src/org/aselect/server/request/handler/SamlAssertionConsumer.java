@@ -27,6 +27,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.session.SessionManager;
 import org.aselect.system.communication.client.soap11.SOAP11Communicator;
@@ -68,7 +69,7 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
 	        _sessionManager = SessionManager.getHandle();
 	        //_oAssertionSessionManager = AssertionSessionManager.getHandle();
 	        //_oSAMLBinding = SAMLBindingFactory.getInstance(SAMLBinding.SOAP);
-			String sCheckSigning = Utils.getSimpleParam(oConfig, "check_signing", false);
+			String sCheckSigning = ASelectConfigManager.getSimpleParam(oConfig, "check_signing", false);
 			if (sCheckSigning != null && sCheckSigning.equals("true"))
 				_bCheckSigning = true;
 	

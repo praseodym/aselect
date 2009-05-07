@@ -295,7 +295,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		_cryptoEngine = CryptoEngine.getHandle();
 
 		try {
-			_sServerUrl = Utils.getParamFromSection(null, "aselect", "redirect_url");
+			_sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url");
 		}
 		catch (ASelectConfigException e) {
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_CONFIG_ERROR, e);
@@ -387,8 +387,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		String sLanguage = null;
 
 		if (!_applicationManager.hasApplicationsConfigured()) {
-			_systemLogger
-					.log(Level.WARNING, _sModule, sMethod, "Invalid request since no applications are configured.");
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request since no applications are configured.");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
 
@@ -777,7 +776,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			long updateInterval = (Long) htResult.get("update_interval");
 			String _sSamlMessageType = (String) htResult.get("message_type");
 			String _sFederationUrl = (String) htResult.get("federation_url");
-			String _sServerUrl = Utils.getParamFromSection(null, "aselect", "redirect_url");
+			String _sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url");
 
 			String verify_signature = (String) htResult.get("verify_signature");
 			PublicKey pKey = null;
