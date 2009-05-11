@@ -678,11 +678,6 @@ public class ASelectConfigManager extends ConfigManager
 		}
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Single sign-on is enabled");
 
-		//try {
-		//	_sAddedSecurity = getParam(_oASelectConfigSection, "added_security");
-		//}
-		//catch (ASelectConfigException e) { // need not be present
-		//}
 		_sCookiePath = ASelectConfigManager.getSimpleParam(_oASelectConfigSection, "cookie_path", false);
 		if (_sCookiePath == null) _sCookiePath = "/aselectserver/server";
 		if (!_sCookiePath.startsWith("/"))
@@ -2080,12 +2075,6 @@ public class ASelectConfigManager extends ConfigManager
 	public String getUserInfoSettings()
 	{
 		return _sUserInfoSettings;
-	}
-
-	public static String getParamFromSection(Object oConfig, String sSection, String sParam)
-	throws ASelectConfigException
-	{
-		return getParamFromSection(oConfig, sSection, sParam, true);
 	}
 
 	public static String getParamFromSection(Object oConfig, String sSection, String sParam, boolean bMandatory)

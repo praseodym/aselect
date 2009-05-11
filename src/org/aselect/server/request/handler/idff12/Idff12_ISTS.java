@@ -70,9 +70,6 @@ public class Idff12_ISTS extends ProtoRequestHandler
     		_systemLogger.log(Level.INFO, MODULE, sMethod, "oracle_glitch=" + _sOracleGlitch);
         	
 		_sCookieDomain = _configManager.getCookieDomain();
-		//_sCookieDomain = Utils.getParamFromSection(oConfig, "cookie", "domain");
-		//if (!_sCookieDomain.startsWith("."))
-		//	_sCookieDomain = "." + _sCookieDomain;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Cookie domain is: " + _sCookieDomain);
 	}
 

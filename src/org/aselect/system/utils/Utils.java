@@ -476,25 +476,63 @@ public class Utils
 		return (len <= max) ? sValue : sValue.substring(0, max) + "...";
 	}
 	
+	// Get 'sParam' within the 'oConfig' section
+	// This can be the value of an attribute or the contents of a 'sParam' tag
+	// Examples:
+	// Get attribute value: (oApplication, "id", true)
+	// Get tag value (need not be present): (oApplication, "friendly_name", false)
+	//
 	public static String getSimpleParam(ConfigManager oConfMgr, SystemLogger oSysLog,
 						Object oConfig, String sParam, boolean bMandatory)
 	throws ASelectException
 	{
+		final String sMethod = "getSimpleParam";
 		try {
 			return oConfMgr.getParam(oConfig, sParam);  // is not null
 		}
 		catch (ASelectConfigException e) {
 			if (!bMandatory)
 				return null;
-			oSysLog.log(Level.WARNING, MODULE, "getSimpleParam", "Config item '"+sParam+"' not found", e);
+			oSysLog.log(Level.WARNING, MODULE, sMethod, "Config item '"+sParam+"' not found", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}
+	
+	// Find the 'sParam' section within the 'oConfig' section
+	// 'oConfig' can be null to get one of the top level sections
+	// Example: (null, "truemonitor");
+	public static Object getSimpleSection(ConfigManager oConfMgr, SystemLogger oSysLog,
+			Object oConfig, String sParam, boolean bMandatory)
+	throws ASelectConfigException
+	{
+		final String sMethod = "getSimpleSection";
+		Object oSection = null;
+		
+		oSysLog.log(Level.INFO, MODULE, sMethod, "Param="+sParam+" cfg="+oConfMgr);
+		try {
+			oSection = oConfMgr.getSection(oConfig, sParam);
+		}
+		catch (ASelectConfigException e) {
+			if (!bMandatory)
+				return null;
+			oSysLog.log(Level.SEVERE, MODULE, sMethod, "Cannot find "+sParam+" section in config file", e);
+			throw e;
+		}
+		return oSection;
+	}
 
+	// Get 'sParam' within a node of the 'oConfig' section.
+	// The name of the node must match the 'sSection' given.
+	// If oConfig is null the global section is used.
+	// Examples:
+	// Get attribute value: (oConfig, "application", "id")
+	// Get tag value: (null, "aselect", "redirect_url")
+	//
 	public static String getParamFromSection(ConfigManager oConfMgr, SystemLogger oSysLog,
 						Object oConfig, String sSection, String sParam, boolean bMandatory)
 	throws ASelectConfigException
 	{
+		final String sMethod = "getParamFromSection";
 		try {
 			Object oSection = oConfMgr.getSection(oConfig, sSection);
 			return oConfMgr.getParam(oSection, sParam);
@@ -502,9 +540,30 @@ public class Utils
 		catch (ASelectConfigException e) {
 			if (!bMandatory)
 				return null;
-			oSysLog.log(Level.WARNING, MODULE, "getParamFromSection",
-					"Could not retrieve '"+sParam+"' parameter in '"+sSection+"' section", e);
+			oSysLog.log(Level.WARNING, MODULE, sMethod,	"Could not retrieve '"+sParam+"' parameter in '"+sSection+"' section", e);
 			throw e;
 		}
+	}
+	
+	// Find section with given attribute name and value.
+	// If oConfig is null the global section is used.
+	// Example: (oConfig, "logging", "id=system")
+	public static Object getSectionFromSection(ConfigManager oConfMgr, SystemLogger oSysLog,
+			Object oConfig, String sParam, String sValue, boolean bMandatory)
+	throws ASelectConfigException
+	{
+		final String sMethod = "getSectionFromSection";
+		Object oLogSection = null;
+		
+		try {
+			oLogSection = oConfMgr.getSection(oConfig, sParam, sValue);
+		}
+		catch (Exception e) {
+			if (!bMandatory)
+				return null;
+			oSysLog.log(Level.SEVERE, MODULE, sMethod, "No valid "+sParam+" section with "+sValue+" found", e);
+			throw new ASelectConfigException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+		}
+		return oLogSection;
 	}
 }

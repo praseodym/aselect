@@ -74,7 +74,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 			_sProviderId = ASelectConfigManager.getSimpleParam(oConfig, "provider_id", true);
 			_sIstsUrl = ASelectConfigManager.getSimpleParam(oConfig, "ists_url", true);
 
-			_sMyAppId = ASelectConfigManager.getParamFromSection(oConfig, "application", "id");
+			_sMyAppId = ASelectConfigManager.getParamFromSection(oConfig, "application", "id", true);
 			_sTemplate = readTemplateFromConfig(oConfig, "template");
 
 			_vIdPUrls = new Vector();  // Vector will contain 'url' key values

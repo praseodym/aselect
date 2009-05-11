@@ -77,7 +77,7 @@ public class AccountSTS extends ProtoRequestHandler
 			_oClientCommunicator = initClientCommunicator(oConfig);
 			_sUserDomain = ASelectConfigManager.getParamFromSection(null, "aselect", "user_domain", false);
 			if (_sUserDomain == null) _sUserDomain = "digid.nl";
-			_sMyAppId = ASelectConfigManager.getParamFromSection(oConfig, "application", "id");
+			_sMyAppId = ASelectConfigManager.getParamFromSection(oConfig, "application", "id", true);
 			_sIstsUrl = ASelectConfigManager.getSimpleParam(oConfig, "ists_url", true);
 			_sProviderId = ASelectConfigManager.getSimpleParam(oConfig, "provider_id", true);
 			_sNameIdFormat = ASelectConfigManager.getSimpleParam(oConfig, "nameid_format", true);

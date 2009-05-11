@@ -277,7 +277,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			}
 
 			//String sAppUrl = (String) htSessionContext.get("my_url") + "?local_rid=" + sRid + "&authsp=" + _sAuthSPId;
-			String _sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url");
+			String _sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true);
 			String sAppUrl = _sServerUrl + "?local_rid=" + sRid + "&authsp=" + _sAuthSPId;
 			String sASelectServerId = _sASelectAuthSPServerId;
 			String sASelectServerUrl = _sAuthSPUrl;

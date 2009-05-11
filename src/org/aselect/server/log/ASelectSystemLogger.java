@@ -66,180 +66,164 @@ import org.aselect.system.logging.SystemLogger;
  */
 public class ASelectSystemLogger extends SystemLogger
 {
-    /**
-     * The name of this module, that is used in the system logging.
-     */
-    private static final String MODULE = "ASelectSystemLogger";
-    
-    // Needed to make this class a singleton.
-    private static ASelectSystemLogger _oASelectSystemLogger;
+	/**
+	 * The name of this module, that is used in the system logging.
+	 */
+	private static final String MODULE = "ASelectSystemLogger";
 
-    /**
-     * Must be used to get an ASelectSystemLogger instance.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Creates a new <code>ASelectSystemLogger</code> instance if it's still <code>null</code>.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * Always the same instance of the system logger is returned, because it's a
-     * singleton.
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @return handle to the ASelectAuthenticationLogger
-     */
-    public static ASelectSystemLogger getHandle()
-    {
-        if (_oASelectSystemLogger == null)
-        {
-            _oASelectSystemLogger = new ASelectSystemLogger();
-        }
-        return _oASelectSystemLogger;
-    }
-    
-    /**
-     * Initializes the System Logger.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * <li>Reads the 'target' config section</li>
-     * <li>Calls the init of the <i>_oASelectSystemLogger</i></li>
-     * <li>Reads the 'target' config section</li>
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * <li>The <i>ASelectSystemLogger</i> must be initialized.</li>
-     * <li>The <i>ASelectConfigManager</i> must be initialized.</li>
-     * <li>The <i>oSysLogging</i> may not be <code>NULL</code>.</li>
-     * <li>The <i>sWorkingDir</i> may not be <code>NULL</code>.</li>
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * An initialized <i>_oASelectSystemLogger</i>.
-     * <br>
-     * @param oSysLogging The logger config section with id='system'
-     * @param sWorkingDir The A-Select working dir
-     * @throws ASelectException if initialization went wrong
-     */
-    public void init(Object oSysLogging, String sWorkingDir) throws ASelectException
-    {
-        String sMethod = "init()";
-        
-        Level levelSysLog = null;
-        String sSysLogTarget = null;
-        Object oSysLogTarget = null;
-        ASelectSystemLogger oASelectSystemLogger = null;
-        ASelectConfigManager oASelectConfigManager = null;
-        try
-        {
-            try
-            {
-                oASelectSystemLogger = ASelectSystemLogger.getHandle();
-                oASelectConfigManager = ASelectConfigManager.getHandle();
- 
-                try
-		        {
-		            String sSysLogLevel = oASelectConfigManager.getParam(oSysLogging, "level");
-//		            levelSysLog = Level.parse(sSysLogLevel);
-		            levelSysLog = Audit.parse(sSysLogLevel);
-		        }
-		        catch (Exception e)
-		        {
-		            levelSysLog = Level.CONFIG;
-		            oASelectSystemLogger.log(Level.CONFIG, MODULE, sMethod,
-		                "No valid config item: 'level' in config section 'logging' with id='system' found, using default level: CONFIG", e);
-		        }
-		        
-                try
-                {
-                    sSysLogTarget = oASelectConfigManager.getParam(oSysLogging, 
-                        "target");
-                }
-                catch (Exception e)
-                {
-                    sSysLogTarget = null;
+	// Needed to make this class a singleton.
+	private static ASelectSystemLogger _oASelectSystemLogger;
 
-                    StringBuffer sbInfo = new StringBuffer(
-                        "No valid config item: 'target' in config section 'logging' with id='system' found.");
-                    oASelectSystemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString(), e);
-                    throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-                }
+	/**
+	 * Must be used to get an ASelectSystemLogger instance.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Creates a new <code>ASelectSystemLogger</code> instance if it's still <code>null</code>.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * Always the same instance of the system logger is returned, because it's a
+	 * singleton.
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * @return handle to the ASelectAuthenticationLogger
+	 */
+	public static ASelectSystemLogger getHandle()
+	{
+		if (_oASelectSystemLogger == null) {
+			_oASelectSystemLogger = new ASelectSystemLogger();
+		}
+		return _oASelectSystemLogger;
+	}
 
-                try
-                {
-                    oSysLogTarget = oASelectConfigManager.getSection(
-                        oSysLogging, "target", "id=" + sSysLogTarget);
-                }
-                catch (Exception e)
-                {
-                    oSysLogTarget = null;
+	/**
+	 * Initializes the System Logger.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * <li>Reads the 'target' config section</li>
+	 * <li>Calls the init of the <i>_oASelectSystemLogger</i></li>
+	 * <li>Reads the 'target' config section</li>
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * <li>The <i>ASelectSystemLogger</i> must be initialized.</li>
+	 * <li>The <i>ASelectConfigManager</i> must be initialized.</li>
+	 * <li>The <i>oSysLogging</i> may not be <code>NULL</code>.</li>
+	 * <li>The <i>sWorkingDir</i> may not be <code>NULL</code>.</li>
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * An initialized <i>_oASelectSystemLogger</i>.
+	 * <br>
+	 * @param oSysLogging The logger config section with id='system'
+	 * @param sWorkingDir The A-Select working dir
+	 * @throws ASelectException if initialization went wrong
+	 */
+	public void init(Object oSysLogging, String sWorkingDir)
+		throws ASelectException
+	{
+		String sMethod = "init()";
 
-                    StringBuffer sbInfo = new StringBuffer("No valid config section: 'target' with id='");
-                    sbInfo.append(sSysLogTarget);
-                    sbInfo.append("' in config section 'logging' with id='system' found");
-                    oASelectSystemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString(), e);
-                    throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-                }
-            }
-            catch (Exception e)
-            {
-                oASelectSystemLogger.log(Level.CONFIG, MODULE, sMethod, 
-                    "No valid config section 'logging' with id='system' found, using default logging settings", e);
-            }
+		Level levelSysLog = null;
+		String sSysLogTarget = null;
+		Object oSysLogTarget = null;
+		ASelectSystemLogger oASelectSystemLogger = null;
+		ASelectConfigManager oASelectConfigManager = null;
+		try {
+			try {
+				oASelectSystemLogger = ASelectSystemLogger.getHandle();
+				oASelectConfigManager = ASelectConfigManager.getHandle();
 
-            _oASelectSystemLogger.init("system", 
-                "org.aselect.server.log.ASelectSystemLogger", 
-                oASelectConfigManager, oSysLogTarget, sWorkingDir);
-            
-            _oASelectSystemLogger.setLevel(levelSysLog);
-        }
-        catch (ASelectException e)
-        {
-            throw e;
-        }
-        catch (Exception e)
-        {
-            oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, 
-                "Could not initialize A-Select System Logger.", e);
-            throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-        }
+				try {
+					String sSysLogLevel = oASelectConfigManager.getParam(oSysLogging, "level");
+					//		            levelSysLog = Level.parse(sSysLogLevel);
+					levelSysLog = Audit.parse(sSysLogLevel);
+				}
+				catch (Exception e) {
+					levelSysLog = Level.CONFIG;
+					oASelectSystemLogger.log(Level.CONFIG, MODULE, sMethod,
+							"No valid config item: 'level' in config section 'logging'"
+									+ " with id='system' found, using default level: CONFIG", e);
+				}
 
-    }
+				try {
+					sSysLogTarget = oASelectConfigManager.getParam(oSysLogging, "target");
+				}
+				catch (Exception e) {
+					sSysLogTarget = null;
 
-    /**
-     * Must be private, so it can not be used.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Must be private because getHandle() must be used to retrieve an instance. 
-     * This is done for singleton purposes.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * 
-     */
-    private ASelectSystemLogger ()
-    {}
+					StringBuffer sbInfo = new StringBuffer(
+							"No valid config item: 'target' in config section 'logging' with id='system' found.");
+					oASelectSystemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString(), e);
+					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+				}
+
+				try {
+					oSysLogTarget = oASelectConfigManager.getSection(oSysLogging, "target", "id=" + sSysLogTarget);
+				}
+				catch (Exception e) {
+					oSysLogTarget = null;
+
+					StringBuffer sbInfo = new StringBuffer("No valid config section: 'target' with id='");
+					sbInfo.append(sSysLogTarget);
+					sbInfo.append("' in config section 'logging' with id='system' found");
+					oASelectSystemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString(), e);
+					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+				}
+			}
+			catch (Exception e) {
+				oASelectSystemLogger.log(Level.CONFIG, MODULE, sMethod,
+						"No valid config section 'logging' with id='system' found, using default logging settings", e);
+			}
+
+			_oASelectSystemLogger.init("system", "org.aselect.server.log.ASelectSystemLogger", oASelectConfigManager,
+					oSysLogTarget, sWorkingDir);
+			_oASelectSystemLogger.setLevel(levelSysLog);
+		}
+		catch (ASelectException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize A-Select System Logger.", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+		}
+	}
+
+	/**
+	 * Must be private, so it can not be used.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Must be private because getHandle() must be used to retrieve an instance. 
+	 * This is done for singleton purposes.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * 
+	 */
+	private ASelectSystemLogger() {
+	}
 }

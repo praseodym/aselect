@@ -295,7 +295,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		_cryptoEngine = CryptoEngine.getHandle();
 
 		try {
-			_sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url");
+			_sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true);
 		}
 		catch (ASelectConfigException e) {
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_CONFIG_ERROR, e);
@@ -776,7 +776,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			long updateInterval = (Long) htResult.get("update_interval");
 			String _sSamlMessageType = (String) htResult.get("message_type");
 			String _sFederationUrl = (String) htResult.get("federation_url");
-			String _sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url");
+			String _sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true);
 
 			String verify_signature = (String) htResult.get("verify_signature");
 			PublicKey pKey = null;
