@@ -50,26 +50,7 @@ public class TrueMonitorConfigManager extends ConfigManager
 		StringBuffer sb = new StringBuffer(_sWorkingDir).append(File.separator).append("truemonitor.xml");
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "xml="+sb);
 		super.init(sb.toString(), _systemLogger);
-		
-		// Get our main section
-		Object oMainSection = getSimpleSection(null, "truemonitor", true);
-
-		// Initialize the system logger
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Init SystemLogger");
-		Object oLogSection = getSectionFromSection(oMainSection, "logging", "id=system", true);
-		String sLogLevel = getSimpleParam(oLogSection, "level", true);
-		Level logLevel = Level.parse(sLogLevel);
-		String sLogTarget = getSimpleParam(oLogSection, "target", true);
-		Object oLogTarget = getSectionFromSection(oLogSection, "target", "id=" + sLogTarget, true);
-
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Go logTarget="+oLogTarget);
-		_systemLogger.init("system", "org.aselect.truemonitor.TrueMonitorSystemLogger",
-							getHandle(), oLogTarget, _sWorkingDir);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
-		_systemLogger.setLevel(logLevel);
-
-		// First line that will go to the log file
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Starting True Monitor");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "done");
 	}
 
 	// Convenience function

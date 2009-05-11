@@ -23,7 +23,7 @@ public class TrueMonitor
 
 		try {
 			oTrueMonitor = new TrueMonitor();
-			oTrueMonitor.init();
+			oTrueMonitor.initialize();
 			oTrueMonitor.startServices();
 
 			System.out.println("Successfully started" + MODULE);
@@ -40,10 +40,10 @@ public class TrueMonitor
 		}
 	}
 	
-	public void init()
+	public void initialize()
 	throws ASelectException
 	{
-		String sMethod = "init";
+		String sMethod = "initialize";
 		_oTrueMonitorLogger = TrueMonitorSystemLogger.getHandle();
 		
 		// Get handle to the ConfigManager and initialize it
@@ -52,6 +52,15 @@ public class TrueMonitor
 		
 		TrueMonitorConfigManager _oConfigManager = TrueMonitorConfigManager.getHandle();
 		_oConfigManager.init(sWorkingDir);
+		
+		// Get our main section
+		Object oMainSection = _oConfigManager.getSimpleSection(null, "truemonitor", true);
+
+		// Initialize the system logger
+		_oTrueMonitorLogger.log(Level.INFO, MODULE, sMethod, "Init SystemLogger");
+		Object oLogSection = _oConfigManager.getSectionFromSection(oMainSection, "logging", "id=system", true);
+		_oTrueMonitorLogger.init(_oConfigManager, oLogSection, sWorkingDir);
+		_oTrueMonitorLogger.log(Level.INFO, MODULE, sMethod, "Starting True Monitor 1");
 		// Logging goes to the system logfile now
 	}
 	
