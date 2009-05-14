@@ -518,7 +518,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			Response response = responseBuilder.buildObject();
 
 			response.setInResponseTo(sSPRid);
-			response.setID(sRid);
+			
+			response.setID("_"+sRid);  // 20090512, Bauke: must be NCNAME format
 			response.setIssueInstant(tStamp);
 			
 			response.setVersion(SAMLVersion.VERSION_20);

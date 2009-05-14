@@ -500,7 +500,7 @@ public class Utils
 	
 	// Find the 'sParam' section within the 'oConfig' section
 	// 'oConfig' can be null to get one of the top level sections
-	// Example: (null, "truemonitor");
+	// Example: (null, "aselect");
 	public static Object getSimpleSection(ConfigManager oConfMgr, SystemLogger oSysLog,
 			Object oConfig, String sParam, boolean bMandatory)
 	throws ASelectConfigException
