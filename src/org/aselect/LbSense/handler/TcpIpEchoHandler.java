@@ -18,14 +18,14 @@ import org.aselect.system.communication.server.IOutputMessage;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.lbsense.ISenseHandler;
-import org.aselect.lbsense.TrueMonitorConfigManager;
-import org.aselect.lbsense.TrueMonitorSystemLogger;
+import org.aselect.lbsense.LbSenseConfigManager;
+import org.aselect.lbsense.LbSenseSystemLogger;
 
 public class TcpIpEchoHandler implements ISenseHandler
 {
 	public final static String MODULE = "TcpIpEchoHandler";
 
-	private TrueMonitorSystemLogger _oTrueMonitorLogger = TrueMonitorSystemLogger.getHandle();
+	private LbSenseSystemLogger _oLbSenseLogger = LbSenseSystemLogger.getHandle();
 	private ServerSocket _oServiceSocket = null;
 	boolean _bActive = true;
 
@@ -35,25 +35,25 @@ public class TcpIpEchoHandler implements ISenseHandler
 		String sMethod = "initialize";
 		int iPort = -1;
 		
-		TrueMonitorConfigManager _oConfigManager = TrueMonitorConfigManager.getHandle();
+		LbSenseConfigManager _oConfigManager = LbSenseConfigManager.getHandle();
 
 		String sServicePort = _oConfigManager.getSimpleParam(oConfigHandler, "serviceport", true);
-		_oTrueMonitorLogger.log(Level.INFO, MODULE, sMethod, "sServicePort="+sServicePort);
+		_oLbSenseLogger.log(Level.INFO, MODULE, sMethod, "sServicePort="+sServicePort);
 		try {
 			iPort = Integer.parseInt(sServicePort);
 		}
 		catch (NumberFormatException e) {
-			_oTrueMonitorLogger.log(Level.WARNING, MODULE, sMethod, "Bad <serviceport> value");
+			_oLbSenseLogger.log(Level.WARNING, MODULE, sMethod, "Bad <serviceport> value");
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 
 		// try to allocate the listening ports on localhost.
 		try {
 			_oServiceSocket = new ServerSocket(iPort, 50, InetAddress.getByName("127.0.0.1"));
-			_oTrueMonitorLogger.log(Level.INFO, MODULE, sMethod, "Socket=" + _oServiceSocket + " for "+InetAddress.getByName("127.0.0.1"));
+			_oLbSenseLogger.log(Level.INFO, MODULE, sMethod, "Socket=" + _oServiceSocket + " for "+InetAddress.getByName("127.0.0.1"));
 		}
 		catch (Exception e) {
-			_oTrueMonitorLogger.log(Level.WARNING, MODULE, sMethod, "Cannot create serversocket on port "+sServicePort);
+			_oLbSenseLogger.log(Level.WARNING, MODULE, sMethod, "Cannot create serversocket on port "+sServicePort);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}
@@ -66,15 +66,15 @@ public class TcpIpEchoHandler implements ISenseHandler
 		BufferedWriter oOutWriter = null;
 		Socket oSocket = null;
 
-		_oTrueMonitorLogger.log(Level.INFO, MODULE, sMethod, MODULE+" started on port: " + _oServiceSocket.getLocalPort());
+		_oLbSenseLogger.log(Level.INFO, MODULE, sMethod, MODULE+" started on port: " + _oServiceSocket.getLocalPort());
 		while (_bActive) {
 			try {
 				long now = System.currentTimeMillis();
 				long stamp = now % 1000000;
-				_oTrueMonitorLogger.log(Level.INFO, MODULE, sMethod, "Waiting  T=" + now + " "+stamp);
+				_oLbSenseLogger.log(Level.INFO, MODULE, sMethod, "Waiting  T=" + now + " "+stamp);
 				oSocket = _oServiceSocket.accept();
 				int port = oSocket.getPort();
-				_oTrueMonitorLogger.log(Level.INFO, MODULE, sMethod, "Accepted T=" + System.currentTimeMillis() + " "+stamp+" port="+port);
+				_oLbSenseLogger.log(Level.INFO, MODULE, sMethod, "Accepted T=" + System.currentTimeMillis() + " "+stamp+" port="+port);
 
 				oSocket.setSoTimeout(4000);
 				InputStream isInput = oSocket.getInputStream();
@@ -83,30 +83,32 @@ public class TcpIpEchoHandler implements ISenseHandler
 				oOutWriter = new BufferedWriter(new OutputStreamWriter(osOutput));
 				do {
 					sRequestLine = oInReader.readLine();
-					_oTrueMonitorLogger.log(Level.INFO, MODULE, sMethod, sRequestLine);
-					oOutWriter.write(sRequestLine+"\r\n");
-				} while(sRequestLine!=null && !"".equals(sRequestLine));
+					_oLbSenseLogger.log(Level.INFO, MODULE, sMethod, sRequestLine);
+					oOutWriter.write(sRequestLine + "\r\n");
+				}
+				while (sRequestLine != null && !"".equals(sRequestLine));
 				
-				_oTrueMonitorLogger.log(Level.INFO, MODULE, sMethod, "Close");
-				oSocket.close();
+				_oLbSenseLogger.log(Level.INFO, MODULE, sMethod, "Ready");
 			}
 			catch (IOException e) {
-				_oTrueMonitorLogger.log(Level.WARNING, MODULE, sMethod, "I/O exception occurred", e);
+				_oLbSenseLogger.log(Level.WARNING, MODULE, sMethod, "I/O exception occurred", e);
 			}
 			catch (Exception e) {
-				_oTrueMonitorLogger.log(Level.WARNING, MODULE, sMethod, "Exception occurred", e);
+				_oLbSenseLogger.log(Level.WARNING, MODULE, sMethod, "Exception occurred", e);
 			}
 			finally {
 				try {
+					if (oOutWriter != null)
+						oOutWriter.close();  // flushes the output to the client
 					if (oSocket != null) {
-						_oTrueMonitorLogger.log(Level.INFO, MODULE, sMethod, "Close");
+						_oLbSenseLogger.log(Level.INFO, MODULE, sMethod, "Close");
 						oSocket.close();
 					}
 				}
 				catch (Exception e) { }
 			}
 		}
-		_oTrueMonitorLogger.log(Level.INFO, MODULE, sMethod, MODULE+" stopped");
+		_oLbSenseLogger.log(Level.INFO, MODULE, sMethod, MODULE+" stopped");
 	}
 	
 	void processRequest(Communicator xCommunicator, int port)
@@ -118,7 +120,7 @@ public class TcpIpEchoHandler implements ISenseHandler
 		String sRequest = null;
 		try {
 			sRequest = oInputMessage.getParam("request");
-			_oTrueMonitorLogger.log(Level.INFO, MODULE, sMethod, "Request="+sRequest);
+			_oLbSenseLogger.log(Level.INFO, MODULE, sMethod, "Request="+sRequest);
 			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
 		}
 		catch (Exception eX) {
