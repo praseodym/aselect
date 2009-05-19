@@ -20,8 +20,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.logging.Level;
@@ -255,6 +258,39 @@ public class Tools
 		}
 		_systemLogger.log( Level.WARNING, MODULE, "initClientCommunicator", "Invalid 'clientcommunicator' value");
 		throw new ASelectException(Errors.ERROR_ASELECT_CONFIG_ERROR);
+	}
+	
+	// Convert an URL parameter string to a HashMap containing key, value pairs
+	//
+	public static HashMap<String,String> getUrlAttributes(String sText, SystemLogger oSystemLogger)
+	{
+		String sMethod = "getAttributes";
+		String sKey = "";
+		String sValue = "";
+		HashMap<String,String> htAttributes = new HashMap<String,String>();
+
+		// Split the 'sText' string
+		String[] saAttrs = sText.split("&");
+		for (int i = 0; i < saAttrs.length; i++) {
+			int iEqualSign = saAttrs[i].indexOf("=");
+	
+			try {
+				if (iEqualSign > 0) {
+					sKey = URLDecoder.decode(saAttrs[i].substring(0, iEqualSign), "UTF-8");
+					sValue = URLDecoder.decode(saAttrs[i].substring(iEqualSign + 1), "UTF-8");
+				}
+				else {
+					sKey = URLDecoder.decode(saAttrs[i], "UTF-8");
+					sValue = "";
+				}
+				htAttributes.put(sKey, sValue);
+			}
+			catch (UnsupportedEncodingException e) {
+				// just skip this attribute
+				oSystemLogger.log(Level.WARNING, MODULE, sMethod, "["+sText+"]", e);
+			}
+		}
+		return htAttributes;
 	}
 
 }

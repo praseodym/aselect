@@ -497,6 +497,21 @@ public class Utils
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}
+	public static int getSimpleIntParam(ConfigManager oConfMgr, SystemLogger oSysLog,
+			Object oConfig, String sParam, boolean bMandatory)
+	throws ASelectException
+	{
+		final String sMethod = "getSimpleIntParam";
+		String sValue = getSimpleParam(oConfMgr, oSysLog, oConfig, sParam, bMandatory);
+		
+		try {
+			return Integer.parseInt(sValue);
+		}
+		catch (NumberFormatException e) {
+			oSysLog.log(Level.WARNING, MODULE, sMethod, "Value of <"+sParam+"> is not an integer");
+			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+		}
+	}
 	
 	// Find the 'sParam' section within the 'oConfig' section
 	// 'oConfig' can be null to get one of the top level sections

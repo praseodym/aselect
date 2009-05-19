@@ -1,17 +1,19 @@
 package org.aselect.lbsensor;
 
+import java.util.HashMap;
 import java.util.logging.Level;
 
+import org.aselect.lbsensor.handler.SensorStore;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 
 public class LbSensor
 {
 	public final static String MODULE = "LbSensor";
+	private static HashMap<String, SensorStore> _hmStores = new HashMap<String, SensorStore>();
 	
 	private static LbSensorSystemLogger _oLbSensorLogger;
-	
-	LbSensorConfigManager _oConfigManager = null;
+	private LbSensorConfigManager _oConfigManager = null;
 	
 	public static void main(String[] sArgs)
 	{
@@ -25,11 +27,11 @@ public class LbSensor
 			oLbSensor.startServices();
 
 			System.out.println("Successfully started" + MODULE);
-			oLbSensorLogger.log(Level.SEVERE, MODULE, sMethod, "Successfully started" + MODULE);
+			oLbSensorLogger.log(Level.SEVERE, MODULE, sMethod, "Successfully started LB Sensor");
 		}
 		catch (Exception e) {
 			System.out.println("Failed to start" + MODULE + ", exception="+e);
-			oLbSensorLogger.log(Level.SEVERE, MODULE, sMethod, "Failed to start " + MODULE, e);
+			oLbSensorLogger.log(Level.SEVERE, MODULE, sMethod, "Failed to start LB Sensor", e);
 
 			if (oLbSensor != null)
 				oLbSensor.destroy();
@@ -58,7 +60,7 @@ public class LbSensor
 		Object oLogSection = _oConfigManager.getSectionFromSection(oMainSection, "logging", "id=system", true);
 		_oLbSensorLogger.init(_oConfigManager, oLogSection, sWorkingDir);
 		// Logging goes to the system logfile now
-		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Starting True Monitor");
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Starting LB Sensor");
 	}
 	
 	public void startServices()
@@ -86,13 +88,23 @@ public class LbSensor
                 throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
             }
             
-            oSenseHandler.initialize(oConfigHandler);
+            oSenseHandler.initialize(oConfigHandler, sId);
     		Thread _tMyServiceHandler = new Thread(oSenseHandler);
-			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "run handler");
+    		
+    		// The data store must be accessible by other ISensorHandler threads
+    		_hmStores.put(sId, oSenseHandler.getMyStore());
+			
+    		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "run handler: "+sId);
     		_tMyServiceHandler.start();  // don't use run() here!
+    		
     		oConfigHandler = _oConfigManager.getNextSection(oConfigHandler);
 			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "handler="+oConfigHandler);
 		}
+	}
+	
+	public static SensorStore getSensorStore(String sId)
+	{
+		return (_hmStores != null)? _hmStores.get(sId): null;
 	}
 	
 	public void destroy()

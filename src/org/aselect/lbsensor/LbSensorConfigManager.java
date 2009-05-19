@@ -77,6 +77,14 @@ public class LbSensorConfigManager extends ConfigManager
 	}
 
 	// Convenience function
+	public int getSimpleIntParam(Object oConfig, String sParam, boolean bMandatory)
+	throws ASelectException
+	{
+		return Utils.getSimpleIntParam(getHandle(), LbSensorSystemLogger.getHandle(),
+								oConfig, sParam, bMandatory);
+	}
+
+	// Convenience function
 	public Object getSectionFromSection(Object oConfig, String sParam, String sValue, boolean bMandatory)
 	throws ASelectConfigException
 	{

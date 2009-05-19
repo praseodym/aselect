@@ -21,21 +21,25 @@ import org.aselect.lbsensor.ISensorHandler;
 import org.aselect.lbsensor.LbSensorConfigManager;
 import org.aselect.lbsensor.LbSensorSystemLogger;
 
-public class TcpIpEchoHandler implements ISensorHandler
+public class BasicSensorHandler implements ISensorHandler
 {
-	public final static String MODULE = "TcpIpEchoHandler";
+	public final static String MODULE = "BasicSensorHandler";
 
-	private LbSensorSystemLogger _oLbSensorLogger = LbSensorSystemLogger.getHandle();
+	protected LbSensorConfigManager _oConfigManager = LbSensorConfigManager.getHandle();
+	protected LbSensorSystemLogger _oLbSensorLogger = LbSensorSystemLogger.getHandle();
+	protected SensorStore _myStore = null;  // Storage to calculate the running average data
+
+	private String _sMyId = null;
 	private ServerSocket _oServiceSocket = null;
-	boolean _bActive = true;
-
-	public void initialize(Object oConfigHandler)
+	private boolean _bActive = true;
+	
+	public void initialize(Object oConfigHandler, String sId)
 	throws ASelectException
 	{
 		String sMethod = "initialize";
 		int iPort = -1;
 		
-		LbSensorConfigManager _oConfigManager = LbSensorConfigManager.getHandle();
+		_sMyId = sId;
 
 		String sServicePort = _oConfigManager.getSimpleParam(oConfigHandler, "serviceport", true);
 		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "sServicePort="+sServicePort);
@@ -56,42 +60,72 @@ public class TcpIpEchoHandler implements ISensorHandler
 			_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "Cannot create serversocket on port "+sServicePort);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
+		_myStore = new SensorStore(10, 30);  // 10 intervals of 30 seconds
+	}
+	
+	public SensorStore getMyStore()
+	{
+		return _myStore;
 	}
 	
 	public void run()
 	{
 		String sMethod = "run";
-		String sRequestLine;
+		StringBuffer sRequestLine = new StringBuffer();
+		int n = -1;
 		BufferedReader oInReader = null;
 		BufferedWriter oOutWriter = null;
 		Socket oSocket = null;
 
-		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, MODULE+" started on port: " + _oServiceSocket.getLocalPort());
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "["+sRequestLine.toString()+"]");
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, MODULE + " started on port: " + _oServiceSocket.getLocalPort());
 		while (_bActive) {
 			try {
 				long now = System.currentTimeMillis();
 				long stamp = now % 1000000;
-				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Waiting  T=" + now + " "+stamp);
+				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Waiting. T=" + now + " "+stamp);
 				oSocket = _oServiceSocket.accept();
 				int port = oSocket.getPort();
 				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Accepted T=" + System.currentTimeMillis() + " "+stamp+" port="+port);
 
-				oSocket.setSoTimeout(4000);
+				oSocket.setSoTimeout(4000);  // timeout for read actions
 				InputStream isInput = oSocket.getInputStream();
 		        OutputStream osOutput = oSocket.getOutputStream();
 				oInReader = new BufferedReader(new InputStreamReader(isInput));
 				oOutWriter = new BufferedWriter(new OutputStreamWriter(osOutput));
-				do {
-					sRequestLine = oInReader.readLine();
-					_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, sRequestLine);
-					oOutWriter.write(sRequestLine + "\r\n");
+
+				while ((n = oInReader.read()) != -1) {
+					char c = (char)n;
+					sRequestLine.append(c);
+					if (sRequestLine.toString().indexOf("\r\n") >= 0) {
+						// We have a complete line
+						int len = sRequestLine.length();
+						sRequestLine.setLength(len-2);
+						try {
+							processLine(oOutWriter, sRequestLine.toString(), _sMyId);
+						}
+						catch (Exception e) {  // continue anyway
+						}
+						sRequestLine.setLength(0);
+					}
+					echoCharToStream(oOutWriter, c);
 				}
-				while (sRequestLine != null && !"".equals(sRequestLine));
-				
+				if (sRequestLine.length() > 0) {
+					processLine(oOutWriter, sRequestLine.toString(), _sMyId);
+				}
 				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Ready");
 			}
 			catch (IOException e) {
 				_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "I/O exception occurred", e);
+				// The last line of a POST request will probably land here
+				if (sRequestLine.length() > 0) {
+					try {
+						processLine(oOutWriter, sRequestLine.toString(), _sMyId);
+					}
+					catch (IOException e1) {
+						_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "Exception occurred", e1);
+					}
+				}
 			}
 			catch (Exception e) {
 				_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "Exception occurred", e);
@@ -108,10 +142,32 @@ public class TcpIpEchoHandler implements ISensorHandler
 				catch (Exception e) { }
 			}
 		}
-		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, MODULE+" stopped");
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, MODULE + " stopped");
+	}
+
+	// Allow this thread to be stopped
+	public void stopThread()
+	{
+		_bActive = false;
 	}
 	
-	void processRequest(Communicator xCommunicator, int port)
+	// default line processing
+	protected void processLine(BufferedWriter oOutWriter, String line, String sId)
+	throws IOException
+	{
+		String sMethod = "processLine";
+		
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, sId+" ["+line+"]");
+	}
+
+	// Override if no echoing is needed
+	protected void echoCharToStream(BufferedWriter oOutWriter, char c)
+	throws IOException
+	{
+		oOutWriter.write(c);	
+	}
+	
+	protected void processRequest(Communicator xCommunicator, int port)
 	{
 		String sMethod = "processRequest";
 		IInputMessage oInputMessage = xCommunicator.getInputMessage();
