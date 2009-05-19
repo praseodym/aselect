@@ -41,13 +41,13 @@ public class BasicSensorHandler implements ISensorHandler
 		
 		_sMyId = sId;
 
-		String sServicePort = _oConfigManager.getSimpleParam(oConfigHandler, "serviceport", true);
-		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "sServicePort="+sServicePort);
+		String sListenPort = _oConfigManager.getSimpleParam(oConfigHandler, "listen_port", true);
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "sListenPort="+sListenPort);
 		try {
-			iPort = Integer.parseInt(sServicePort);
+			iPort = Integer.parseInt(sListenPort);
 		}
 		catch (NumberFormatException e) {
-			_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "Bad <serviceport> value");
+			_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "Bad <listen_port> value");
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 
@@ -57,7 +57,7 @@ public class BasicSensorHandler implements ISensorHandler
 			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Socket=" + _oServiceSocket + " for "+InetAddress.getByName("127.0.0.1"));
 		}
 		catch (Exception e) {
-			_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "Cannot create serversocket on port "+sServicePort);
+			_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "Cannot create serversocket on port "+sListenPort);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 		_myStore = new SensorStore(10, 30);  // 10 intervals of 30 seconds
