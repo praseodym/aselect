@@ -28,8 +28,8 @@ public class BasicSensorHandler implements ISensorHandler
 	protected LbSensorConfigManager _oConfigManager = LbSensorConfigManager.getHandle();
 	protected LbSensorSystemLogger _oLbSensorLogger = LbSensorSystemLogger.getHandle();
 	protected SensorStore _myStore = null;  // Storage to calculate the running average data
-
-	private String _sMyId = null;
+	protected String _sMyId = null;
+	
 	private ServerSocket _oServiceSocket = null;
 	private boolean _bActive = true;
 	
@@ -38,29 +38,28 @@ public class BasicSensorHandler implements ISensorHandler
 	{
 		String sMethod = "initialize";
 		int iPort = -1;
+		int iIntCount, iIntLength;
 		
 		_sMyId = sId;
 
-		String sListenPort = _oConfigManager.getSimpleParam(oConfigHandler, "listen_port", true);
-		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "sListenPort="+sListenPort);
-		try {
-			iPort = Integer.parseInt(sListenPort);
-		}
-		catch (NumberFormatException e) {
-			_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "Bad <listen_port> value");
-			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-		}
+		iPort = _oConfigManager.getSimpleIntParam(oConfigHandler, "listen_port", true);
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Port="+iPort);
 
 		// try to allocate the listening ports on localhost.
 		try {
 			_oServiceSocket = new ServerSocket(iPort, 50, InetAddress.getByName("127.0.0.1"));
-			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Socket=" + _oServiceSocket + " for "+InetAddress.getByName("127.0.0.1"));
+			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Socket=" + _oServiceSocket +
+								" for "+InetAddress.getByName("127.0.0.1"));
 		}
 		catch (Exception e) {
-			_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "Cannot create serversocket on port "+sListenPort);
+			_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "Cannot create serversocket on port "+iPort);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
-		_myStore = new SensorStore(10, 30);  // 10 intervals of 30 seconds
+		iIntCount = _oConfigManager.getSimpleIntParam(oConfigHandler, "nr_of_intervals", false);
+		if (iIntCount < 0) iIntCount = 8;  // intervals
+		iIntLength = _oConfigManager.getSimpleIntParam(oConfigHandler, "interval_length", false);
+		if (iIntLength < 0) iIntLength = 30;  // seconds
+		_myStore = new SensorStore(iIntCount, iIntLength);
 	}
 	
 	public SensorStore getMyStore()

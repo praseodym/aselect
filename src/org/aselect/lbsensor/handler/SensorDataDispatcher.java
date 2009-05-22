@@ -26,7 +26,9 @@ public class SensorDataDispatcher extends BasicSensorHandler
 		
 		super.initialize(oConfigHandler, sId);
 		
-		_iAcceptLimit = _oConfigManager.getSimpleIntParam(oConfigHandler, "accept_limit", true);
+		_iAcceptLimit = _oConfigManager.getSimpleIntParam(oConfigHandler, "accept_limit", false);
+		if (_iAcceptLimit < 0)
+			_iAcceptLimit = 0;  // disables the feature
 		_sStoreHandlerId = _oConfigManager.getSimpleParam(oConfigHandler, "store_handler_id", true);
 		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "accept_limit="+_iAcceptLimit+" store_handler_id="+_sStoreHandlerId);
 	}
@@ -78,7 +80,6 @@ public class SensorDataDispatcher extends BasicSensorHandler
 	}
 
 	// Called for each incoming character
-	//
 	protected void echoCharToStream(BufferedWriter oOutWriter, char c)
 	throws IOException
 	{

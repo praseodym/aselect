@@ -505,9 +505,15 @@ public class Utils
 		String sValue = getSimpleParam(oConfMgr, oSysLog, oConfig, sParam, bMandatory);
 		
 		try {
-			return Integer.parseInt(sValue);
+			if (sValue != null)
+				return Integer.parseInt(sValue);
+			if (!bMandatory)
+				return -1;
+			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 		}
 		catch (NumberFormatException e) {
+			if (!bMandatory)
+				return -1;
 			oSysLog.log(Level.WARNING, MODULE, sMethod, "Value of <"+sParam+"> is not an integer");
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}

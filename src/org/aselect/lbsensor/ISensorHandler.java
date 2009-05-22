@@ -8,5 +8,5 @@ public interface ISensorHandler extends Runnable
 	void initialize(Object oConfigHandler, String sId)
 	throws ASelectException;
 
-	SensorStore getMyStore();
+	abstract SensorStore getMyStore();
 }

@@ -11,16 +11,14 @@ import org.aselect.lbsensor.*;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Tools;
 
-public class SensorDataReceiver extends BasicSensorHandler
+public class HttpSensor extends BasicSensorHandler
 {
-	public final static String MODULE = "SensorDataReceiver";
+	public final static String MODULE = "HttpSensor";
 
 	protected long _iPollingInterval = 0;
 	protected Timer _pollingTimer;
 
 	private String _sUrl;
-	private int _iPort;
-	private String _sRequest;
 	
 	public void initialize(Object oConfigHandler, String sId)
 	throws ASelectException
@@ -33,10 +31,9 @@ public class SensorDataReceiver extends BasicSensorHandler
 		_iPollingInterval *= 1000;  // milliseconds
 
 		_sUrl = _oConfigManager.getSimpleParam(oConfigHandler, "server_url", true);
-
 		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "polling_interval="+_iPollingInterval);
 		
-		DataPoller poller = new DataPoller(_sUrl);
+		HttpPoller poller = new HttpPoller(_sMyId, _sUrl);
 		_pollingTimer = new Timer();
 		_pollingTimer.schedule(poller, _iPollingInterval, _iPollingInterval);
 	}
@@ -74,7 +71,7 @@ public class SensorDataReceiver extends BasicSensorHandler
 						_pollingTimer.cancel();
 
 						_pollingTimer = new Timer();
-						TimerTask poller = new DataPoller(_sUrl);
+						TimerTask poller = new HttpPoller(_sMyId, _sUrl);
 						_pollingTimer.schedule(poller, _iPollingInterval, _iPollingInterval);
 					}
 					catch (NumberFormatException e) {
@@ -86,7 +83,6 @@ public class SensorDataReceiver extends BasicSensorHandler
 	}
 
 	// Called for each incoming character
-	//
 	protected void echoCharToStream(BufferedWriter oOutWriter, char c)
 	throws IOException
 	{

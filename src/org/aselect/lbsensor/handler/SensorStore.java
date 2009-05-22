@@ -27,7 +27,7 @@ public class SensorStore
 		String sMethod = "addData";
 		long now = System.currentTimeMillis() / 1000;  // seconds
 
-		_serverIsUp = true;  // the server is definitely up
+		setServerUp(true);  // the server is definitely up
 		if (now - lLastNow > iIntervalLength) {
 			// Shift the data right
 			for (int i = iaCount.length-1; i > 0; i--) {
@@ -62,6 +62,7 @@ public class SensorStore
 	public long getAverage()
 	{
 		String sMethod = "getAverage";
+		String sAvgList = "";
 		long lAverage = 0;
 		long lCount = 0;
 		long lResult;
@@ -69,9 +70,11 @@ public class SensorStore
 		for (int i = 0; i < iaCount.length; i++) {
 			lAverage += iaValues[i];
 			lCount += iaCount[i];
+			sAvgList += " ["+i+"]"+lAverage+"/"+lCount;
 		}
 		lResult = (!_serverIsUp)? -1: (lCount == 0)? 0: lAverage / lCount;
-		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Average="+lAverage+" / cnt="+lCount+" = "+lResult);
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Values="+sAvgList);
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "up="+_serverIsUp+" average="+lAverage+" / cnt="+lCount+" --> "+lResult);
 		return lResult;
 	}
 }
