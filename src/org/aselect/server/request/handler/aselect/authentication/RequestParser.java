@@ -96,273 +96,244 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class RequestParser
 {
-    private String _sMethod = null;
-    private String _sRequest = null;
-    private int _iRequestType = REQTYPE_UNKNOWN;
-    private int _iRequestOrigin = ORIGIN_UNKNOWN;
-    private int _iRequestProtocol = PROTOCOL_UNKNOWN;
+	private String _sMethod = null;
+	private String _sRequest = null;
+	private int _iRequestType = REQTYPE_UNKNOWN;
+	private int _iRequestOrigin = ORIGIN_UNKNOWN;
+	private int _iRequestProtocol = PROTOCOL_UNKNOWN;
 
-    /**
-     * Unknown request type
-     */
-    public static final int REQTYPE_UNKNOWN = -1;
-    /**
-     * API call (server to server communication)
-     */
-    public static final int REQTYPE_API_CALL = 0;
-    /**
-     * Request via browser (client to server communication)
-     */
-    public static final int REQTYPE_BROWSER = 1;
-    
-    /**
-     * Unknown origin
-     */
-    public static final int ORIGIN_UNKNOWN = -1;
-    /**
-     * Request originated from an application (or the Agent)
-     */
-    public static final int ORIGIN_APPLICATION = 0;
-    /**
-     * Request originated from an AuthSP (or application acting as an AuthSP)
-     */
-    public static final int ORIGIN_AUTHSP = 1;
-    /**
-     * Request originated from another A-Select Server (cross)
-     */
-    public static final int ORIGIN_ASELECTSERVER = 2;
-    /**
-     * Request originated directly from the user, or is a redirect from the application to the logout page
-     */
-    public static final int ORIGIN_USER = 3;
-        
-    /**
-     * Unknown protocol
-     */
-    public static final int PROTOCOL_UNKNOWN = -1;
-    /**
-     * CGI protocol
-     */
-    public static final int PROTOCOL_CGI = 0;
-    /**
-     * Soap 1.1 Protocol
-     */
-    public static final int PROTOCOL_SOAP11 = 1;
-    /**
-     * Soap 1.2 Protocol
-     */
-    public static final int PROTOCOL_SOAP12 = 2;
-    
-    /**
-     * Constructor.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Constructs a <code>RequestParser</code> object from a
-     * <code>HttpServletRequest</code> object. 
-     * <br><br>
-     * @param request
-     */
-    public RequestParser(HttpServletRequest request)
-    {
-        parseRequest(request);
-    }
-    
-    /**
-     * Retrieve the request type (one of REQTYPE_xxx).
-     * <br><br>
-     * @return the request type (REQTYPE_xxx).
-     */
-    public int getRequestType()
-    {
-        return _iRequestType;
-    }
+	/**
+	 * Unknown request type
+	 */
+	public static final int REQTYPE_UNKNOWN = -1;
+	/**
+	 * API call (server to server communication)
+	 */
+	public static final int REQTYPE_API_CALL = 0;
+	/**
+	 * Request via browser (client to server communication)
+	 */
+	public static final int REQTYPE_BROWSER = 1;
 
-    /**
-     * Retrieve the origin of the request (one of ORIGIN_xxx).
-     * <br><br>
-     * @return the request origin (ORIGIN_xxx).
-     */
-    public int getRequestOrigin()
-    {
-        return _iRequestOrigin;
-    }
-    
-    /**
-     * Retrieve protocol used to send the request (one of PROTOCOL_xxx).
-     * <br><br>
-     * @return the request protocol (PROTOCOL_xxx).
-     */
-    public int getRequestProtocol()
-    {
-        return _iRequestProtocol;
-    }
-    
-    /**
-     * Retrieve the value of the <code>request</code> parameter. If the 
-     * <code>request</code> parameter is not present, an empty string 
-     * (not <code>null</code>!) is returned.
-     * <br><br>
-     * @return The value of the <code>request</code> parameter as a 
-     * <code>String</code>
-     */
-    public String getRequest()
-    {
-        return _sRequest;
-    }
+	/**
+	 * Unknown origin
+	 */
+	public static final int ORIGIN_UNKNOWN = -1;
+	/**
+	 * Request originated from an application (or the Agent)
+	 */
+	public static final int ORIGIN_APPLICATION = 0;
+	/**
+	 * Request originated from an AuthSP (or application acting as an AuthSP)
+	 */
+	public static final int ORIGIN_AUTHSP = 1;
+	/**
+	 * Request originated from another A-Select Server (cross)
+	 */
+	public static final int ORIGIN_ASELECTSERVER = 2;
+	/**
+	 * Request originated directly from the user, or is a redirect from the application to the logout page
+	 */
+	public static final int ORIGIN_USER = 3;
 
-    
-    /**
-     * Determine the request type, origin, and protocol 
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * This method parses the request to the point that it can
-     * determine the type (API call or user/browser request),
-     * origin (user, authsp, application, or remote a-select server),
-     * and the protocol (CGI or SOAP 1.1/1.2). The A-Select Server
-     * will route the request through its request handlers based
-     * on the output of this method. Therefore, this method must be
-     * able to recognize <i>all</i> types of requests that can arrive
-     * at the A-Select Server and classify them correctly.
-     * <br>
-     * After parsing a request, you can use the <code>getX()</code> methods
-     * to determine the request type.
-     * <br>
-     * @param request The incoming <code>HttpServletRequest</code>
-     */
-    private void parseRequest(HttpServletRequest request)
-    {
-        _sMethod = request.getMethod();
-        
-        if (_sMethod.equalsIgnoreCase("GET"))
-        {            
-            _iRequestProtocol = PROTOCOL_CGI;
-            _sRequest = request.getParameter("request");
-            if (_sRequest == null)
-            {
-                if (request.getParameter("authsp") != null)
-                    _iRequestOrigin = ORIGIN_AUTHSP;
-                else if (request.getParameter("aselect_credentials") != null)
-                    _iRequestOrigin = ORIGIN_ASELECTSERVER;
-                else 
-                    // Unknown GET request, which shows the info or logout page
-                    _iRequestOrigin = ORIGIN_USER;
-                _iRequestType = REQTYPE_BROWSER;
-            }
-            else
-            {
-                // API call from application (or cross A-Select Server)?
-                if (_sRequest.equals("verify_credentials") ||
-                		_sRequest.equals("authenticate") || _sRequest.equals("upgrade_tgt")) 
-                {
-                    if (request.getParameter("local_organization") != null)
-                        _iRequestOrigin = ORIGIN_ASELECTSERVER;
-                    else
-                        _iRequestOrigin = ORIGIN_APPLICATION;
-                    
-                    _iRequestType = REQTYPE_API_CALL;
-                }
-                // Bauke, 20080918 removed
-                /*else
-                if (_sRequest.equals("tolk_fromdigid"))
-                {
-                    _iRequestOrigin = ORIGIN_ASELECTSERVER;
-                    _iRequestType = REQTYPE_BROWSER;
-                }*/
-                // API call from application (or Agent)?
-                if (_sRequest.equals("kill_tgt") ||
-                    _sRequest.equals("get_app_level"))
-                {
-                    _iRequestOrigin = ORIGIN_APPLICATION;
-                    _iRequestType = REQTYPE_API_CALL;
-                }
-                else
-                // Redirect from application?
-             	if (_sRequest.equals("login1"))
-                {
-                    _iRequestOrigin = ORIGIN_APPLICATION;
-                    _iRequestType = REQTYPE_BROWSER;
-                }
-                else
-            	if (_sRequest.equals("cross_login"))
-                {
-                    _iRequestOrigin = ORIGIN_APPLICATION;
-                    _iRequestType = REQTYPE_BROWSER;
-                }
-            	else
-             	if (_sRequest.equals("direct_login1"))
-                {
-                    _iRequestOrigin = ORIGIN_APPLICATION;
-                    _iRequestType = REQTYPE_BROWSER;
-                }
-            	else
-                 	if (_sRequest.equals("direct_login2"))
-                    {
-                        _iRequestOrigin = ORIGIN_APPLICATION;
-                        _iRequestType = REQTYPE_BROWSER;
-                    }
-                else
-                if (_sRequest.equals("error"))                    
-                {
-                    _iRequestOrigin = ORIGIN_AUTHSP;
-                    _iRequestType = REQTYPE_BROWSER;
-                }
-                else
-                if(_sRequest.equals("create_tgt"))
-                {
-                    _iRequestOrigin = ORIGIN_APPLICATION;
-                    _iRequestType = REQTYPE_BROWSER;
-                }
-                else
-                // API call from an AuthSP?
-                if (_sRequest.equals("kill_session"))
-                {
-                    _iRequestOrigin = ORIGIN_AUTHSP;
-                    _iRequestType = REQTYPE_API_CALL;
-                }
-            }
-        }
-        else 
-        if (_sMethod.equalsIgnoreCase("POST"))
-        {
-            // Process HTTP POST request
-            String xContentType = request.getContentType();
-            if (xContentType.indexOf("text/xml") > -1)
-            {
-                // SOAP11 request
-                _iRequestType = REQTYPE_API_CALL;
-                _iRequestOrigin = ORIGIN_APPLICATION;
-                _iRequestProtocol = PROTOCOL_SOAP11;
-            }
-            else if (xContentType.indexOf("application/soap+xml") > -1)
-            {
-                // SOAP11 request
-                _iRequestType = REQTYPE_API_CALL;
-                _iRequestOrigin = ORIGIN_APPLICATION;
-                _iRequestProtocol = PROTOCOL_SOAP12;
-            }
-            else
-            {
-                _sRequest = request.getParameter("request");
-                // Is this a POST (via browser) from an AuthSP?
-                if (_sRequest != null && _sRequest.indexOf("login") > -1)
-                    _iRequestOrigin = ORIGIN_USER;
-                else
-                if (request.getParameter("authsp") != null)
-                {
-                    _iRequestOrigin = ORIGIN_AUTHSP;
-                }
-                else
-                // The user submitted a form
-                    _iRequestOrigin = ORIGIN_USER;
-                _iRequestType = REQTYPE_BROWSER;
-                _iRequestProtocol = PROTOCOL_CGI;
-            }
-        }
-        
-        // We do this to prevent NullPointerExceptions
-        if (_sRequest == null)
-            _sRequest = "";
-    }
+	/**
+	 * Unknown protocol
+	 */
+	public static final int PROTOCOL_UNKNOWN = -1;
+	/**
+	 * CGI protocol
+	 */
+	public static final int PROTOCOL_CGI = 0;
+	/**
+	 * Soap 1.1 Protocol
+	 */
+	public static final int PROTOCOL_SOAP11 = 1;
+	/**
+	 * Soap 1.2 Protocol
+	 */
+	public static final int PROTOCOL_SOAP12 = 2;
+
+	/**
+	 * Constructor.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Constructs a <code>RequestParser</code> object from a
+	 * <code>HttpServletRequest</code> object. 
+	 * <br><br>
+	 * @param request
+	 */
+	public RequestParser(HttpServletRequest request) {
+		parseRequest(request);
+	}
+
+	/**
+	 * Retrieve the request type (one of REQTYPE_xxx).
+	 * <br><br>
+	 * @return the request type (REQTYPE_xxx).
+	 */
+	public int getRequestType()
+	{
+		return _iRequestType;
+	}
+
+	/**
+	 * Retrieve the origin of the request (one of ORIGIN_xxx).
+	 * <br><br>
+	 * @return the request origin (ORIGIN_xxx).
+	 */
+	public int getRequestOrigin()
+	{
+		return _iRequestOrigin;
+	}
+
+	/**
+	 * Retrieve protocol used to send the request (one of PROTOCOL_xxx).
+	 * <br><br>
+	 * @return the request protocol (PROTOCOL_xxx).
+	 */
+	public int getRequestProtocol()
+	{
+		return _iRequestProtocol;
+	}
+
+	/**
+	 * Retrieve the value of the <code>request</code> parameter. If the 
+	 * <code>request</code> parameter is not present, an empty string 
+	 * (not <code>null</code>!) is returned.
+	 * <br><br>
+	 * @return The value of the <code>request</code> parameter as a 
+	 * <code>String</code>
+	 */
+	public String getRequest()
+	{
+		return _sRequest;
+	}
+
+	/**
+	 * Determine the request type, origin, and protocol 
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * This method parses the request to the point that it can
+	 * determine the type (API call or user/browser request),
+	 * origin (user, authsp, application, or remote a-select server),
+	 * and the protocol (CGI or SOAP 1.1/1.2). The A-Select Server
+	 * will route the request through its request handlers based
+	 * on the output of this method. Therefore, this method must be
+	 * able to recognize <i>all</i> types of requests that can arrive
+	 * at the A-Select Server and classify them correctly.
+	 * <br>
+	 * After parsing a request, you can use the <code>getX()</code> methods
+	 * to determine the request type.
+	 * <br>
+	 * @param request The incoming <code>HttpServletRequest</code>
+	 */
+	private void parseRequest(HttpServletRequest request)
+	{
+		_sMethod = request.getMethod();
+
+		if (_sMethod.equalsIgnoreCase("GET")) {
+			_iRequestProtocol = PROTOCOL_CGI;
+			_sRequest = request.getParameter("request");
+			if (_sRequest == null) {
+				if (request.getParameter("authsp") != null)
+					_iRequestOrigin = ORIGIN_AUTHSP;
+				else if (request.getParameter("aselect_credentials") != null)
+					_iRequestOrigin = ORIGIN_ASELECTSERVER;
+				else
+					// Unknown GET request, which shows the info or logout page
+					_iRequestOrigin = ORIGIN_USER;
+				_iRequestType = REQTYPE_BROWSER;
+			}
+			else {
+				// API call from application (or cross A-Select Server)?
+				if (_sRequest.equals("verify_credentials") || _sRequest.equals("authenticate")
+						|| _sRequest.equals("upgrade_tgt")) {
+					if (request.getParameter("local_organization") != null)
+						_iRequestOrigin = ORIGIN_ASELECTSERVER;
+					else
+						_iRequestOrigin = ORIGIN_APPLICATION;
+
+					_iRequestType = REQTYPE_API_CALL;
+				}
+				// 20090522, Bauke added: lets another process determine alive-ness of the server
+				if (_sRequest.equals("alive")) {
+					_iRequestOrigin = ORIGIN_APPLICATION;  // actually any client
+					_iRequestType = REQTYPE_BROWSER;
+				}
+				// API call from application (or Agent)?
+				if (_sRequest.equals("kill_tgt") || _sRequest.equals("get_app_level")) {
+					_iRequestOrigin = ORIGIN_APPLICATION;
+					_iRequestType = REQTYPE_API_CALL;
+				}
+				else
+				// Redirect from application?
+				if (_sRequest.equals("login1")) {
+					_iRequestOrigin = ORIGIN_APPLICATION;
+					_iRequestType = REQTYPE_BROWSER;
+				}
+				else if (_sRequest.equals("cross_login")) {
+					_iRequestOrigin = ORIGIN_APPLICATION;
+					_iRequestType = REQTYPE_BROWSER;
+				}
+				else if (_sRequest.equals("direct_login1")) {
+					_iRequestOrigin = ORIGIN_APPLICATION;
+					_iRequestType = REQTYPE_BROWSER;
+				}
+				else if (_sRequest.equals("direct_login2")) {
+					_iRequestOrigin = ORIGIN_APPLICATION;
+					_iRequestType = REQTYPE_BROWSER;
+				}
+				else if (_sRequest.equals("error")) {
+					_iRequestOrigin = ORIGIN_AUTHSP;
+					_iRequestType = REQTYPE_BROWSER;
+				}
+				else if (_sRequest.equals("create_tgt")) {
+					_iRequestOrigin = ORIGIN_APPLICATION;
+					_iRequestType = REQTYPE_BROWSER;
+				}
+				else
+				// API call from an AuthSP?
+				if (_sRequest.equals("kill_session")) {
+					_iRequestOrigin = ORIGIN_AUTHSP;
+					_iRequestType = REQTYPE_API_CALL;
+				}
+			}
+		}
+		else if (_sMethod.equalsIgnoreCase("POST")) {
+			// Process HTTP POST request
+			String xContentType = request.getContentType();
+			if (xContentType.indexOf("text/xml") > -1) {
+				// SOAP11 request
+				_iRequestType = REQTYPE_API_CALL;
+				_iRequestOrigin = ORIGIN_APPLICATION;
+				_iRequestProtocol = PROTOCOL_SOAP11;
+			}
+			else if (xContentType.indexOf("application/soap+xml") > -1) {
+				// SOAP11 request
+				_iRequestType = REQTYPE_API_CALL;
+				_iRequestOrigin = ORIGIN_APPLICATION;
+				_iRequestProtocol = PROTOCOL_SOAP12;
+			}
+			else {
+				_sRequest = request.getParameter("request");
+				// Is this a POST (via browser) from an AuthSP?
+				if (_sRequest != null && _sRequest.indexOf("login") > -1)
+					_iRequestOrigin = ORIGIN_USER;
+				else if (request.getParameter("authsp") != null) {
+					_iRequestOrigin = ORIGIN_AUTHSP;
+				}
+				else
+					// The user submitted a form
+					_iRequestOrigin = ORIGIN_USER;
+				_iRequestType = REQTYPE_BROWSER;
+				_iRequestProtocol = PROTOCOL_CGI;
+			}
+		}
+
+		// We do this to prevent NullPointerExceptions
+		if (_sRequest == null)
+			_sRequest = "";
+	}
 }

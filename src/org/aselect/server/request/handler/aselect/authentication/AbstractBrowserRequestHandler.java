@@ -204,20 +204,15 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 			String sRequest = (String) htServiceRequest.get("request");
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ htServiceRequest=" + htServiceRequest);
 
-			// only check a-select-server if request == null
-			if (sRequest != null) {
+			// only check a-select-server if request != null
+			if (sRequest != null && !sRequest.equals("alive")) {
 				String sServerId = (String) htServiceRequest.get("a-select-server");
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ _sMyServerId=" + _sMyServerId
 						+ ", sServerId=" + sServerId);
 				if (sServerId == null) {
-					_systemLogger.log(Level.WARNING, _sModule, sMethod,
-							"Missing required parameter \"a-select-server\"");
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing required parameter \"a-select-server\"");
 					throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
-				// Bauke: skip check for tolk_fromdigid
-				// Bauke, removed 20080918
-				//else if (!sRequest.equals("tolk_fromdigid") && 
-				//		!sServerId.equals(_sMyServerId))
 				else if (!sServerId.equals(_sMyServerId)) {
 					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid \"a-select-server\" parameter: "
 							+ sServerId);
@@ -232,12 +227,10 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 		}
 		catch (IOException ioe) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "IO Exception", ioe);
-
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_IO, ioe);
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Internal error", e);
-
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 		finally {

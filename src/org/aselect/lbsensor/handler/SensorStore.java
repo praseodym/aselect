@@ -9,14 +9,16 @@ public class SensorStore
 	public final static String MODULE = "SensorStore";
 
 	protected LbSensorSystemLogger _oLbSensorLogger = LbSensorSystemLogger.getHandle();
+	private String _sId;
 	private boolean _serverIsUp = false;
 	private long[] iaCount;
 	private long[] iaValues;
 	private int iIntervalLength;
 	private long lLastNow = -1;
 	
-	public SensorStore(int iIntervals, int iLength)
+	public SensorStore(String sId, int iIntervals, int iLength)
 	{
+		_sId = sId;
 		iaCount = new long[iIntervals];  // initialized to 0
 		iaValues = new long[iIntervals];
 		iIntervalLength = iLength;
@@ -25,6 +27,7 @@ public class SensorStore
 	public void addData(long lValue)
 	{
 		String sMethod = "addData";
+		String sAvgList = "";
 		long now = System.currentTimeMillis() / 1000;  // seconds
 
 		setServerUp(true);  // the server is definitely up
@@ -42,8 +45,9 @@ public class SensorStore
 		iaCount[0]++;
 
 		for (int i = 0; i < iaCount.length; i++) {
-			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "["+i+"] cnt="+iaCount[i]+" sum="+iaValues[i]);
+			sAvgList += " ["+i+"]"+iaValues[i]+"/"+iaCount[i];
 		}
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, _sId+": new values="+sAvgList);
 	}
 	
 	//
@@ -70,10 +74,10 @@ public class SensorStore
 		for (int i = 0; i < iaCount.length; i++) {
 			lAverage += iaValues[i];
 			lCount += iaCount[i];
-			sAvgList += " ["+i+"]"+lAverage+"/"+lCount;
+			sAvgList += " ["+i+"]"+iaValues[i]+"/"+iaCount[i];
 		}
 		lResult = (!_serverIsUp)? -1: (lCount == 0)? 0: lAverage / lCount;
-		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Values="+sAvgList);
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, _sId+": current values="+sAvgList);
 		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "up="+_serverIsUp+" average="+lAverage+" / cnt="+lCount+" --> "+lResult);
 		return lResult;
 	}

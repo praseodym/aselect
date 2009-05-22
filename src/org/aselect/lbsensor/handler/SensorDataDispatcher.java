@@ -39,8 +39,7 @@ public class SensorDataDispatcher extends BasicSensorHandler
 	{
 		String sMethod = "processLine";
 		
-		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "["+sLine+"]");
-		//oOutWriter.write(sLine+"$\r\n");
+		//_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "["+sLine+"]");
 		if (sLine.startsWith("GET ")) {
 			// GET /?request=retrieve HTTP/1.1
 			int i = 4;

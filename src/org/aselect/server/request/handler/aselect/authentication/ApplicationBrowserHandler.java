@@ -410,29 +410,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		String sMethod = "processBrowserRequest";
 
 		sRequest = (String) htServiceRequest.get("request");
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplBrowREQ sRequest=" + sRequest + ", htServiceRequest="
-				+ htServiceRequest);
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplBrowREQ sRequest=" + sRequest +
+				", htServiceRequest=" + htServiceRequest);
 		if (sRequest == null) {
 			// Show info page if nothing else to do
 			String sUrl = (String) htServiceRequest.get("my_url");
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplBrowREQ sRequest==null sUrl=" + sUrl);
 
-			// Bauke: start htmlinfo
-			/*if (sUrl != null && sUrl.contains("htmlinfo")) {
-			 try {
-			 HtmlInfo x = new HtmlInfo();
-			 x.init();
-			 _systemLogger.log(Level.INFO,_sModule,sMethod, "handleHtmlInfo");
-			 x.handleHtmlInfo(_servletRequest, _servletResponse, _systemLogger, htServiceRequest);
-			 x.destroy();
-			 return;                
-			 }
-			 catch (ServletException e) {
-			 _systemLogger.log(Level.INFO,_sModule,sMethod, "Oops "+e);
-			 }
-			 }
-			 else*/
-			// Bauke: end htmlinfo
 			if (htServiceRequest.containsKey("aselect_credentials_uid"))
 				showUserInfo(htServiceRequest, _servletResponse);
 			else {
@@ -453,6 +437,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 		else if (sRequest.equals("logout")) {
 			handleLogout(htServiceRequest, _servletResponse, pwOut);
+		}
+		else if (sRequest.equals("alive")) {
+			pwOut.println("<html><body>Server is ALIVE</body></html>");
 		}
 		else {
 			// Precondition

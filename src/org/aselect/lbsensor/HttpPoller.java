@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -20,18 +19,20 @@ public class HttpPoller extends TimerTask
 	protected LbSensorSystemLogger _oLbSensorLogger = LbSensorSystemLogger.getHandle();
 	private String _sUrl;
 	private String _sSensorStoreId = null;
+	private String _sSignOfLife;
 
-	public HttpPoller(String sSensorStoreId, String sUrl)
+	public HttpPoller(String sSensorStoreId, String sUrl, String sSignOfLife)
 	{
 		_sSensorStoreId = sSensorStoreId;
 		_sUrl = sUrl;
+		_sSignOfLife = sSignOfLife;
 	}
 	
 	public void run()
 	{
 		String sMethod = "run";
 		String sLine;
-		int iCnt = 0, iErr = 0;
+		boolean bOk;
 		BufferedReader oInReader = null; 
 		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "ACTION: "+_sSensorStoreId);
 		
@@ -44,16 +45,21 @@ public class HttpPoller extends TimerTask
 			serverConn.setReadTimeout(4000);  // timeout for read actions
 			InputStream isInput = serverConn.getInputStream();
 			
+			bOk = false;
 			if (isInput != null) {
 				oInReader = new BufferedReader(new InputStreamReader(isInput));
-				for (iCnt = 0; (sLine = oInReader.readLine()) != null; iCnt++) {
+				for ( ; (sLine = oInReader.readLine()) != null; ) {
 					_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "["+sLine+"]");				
+					if (sLine.contains(_sSignOfLife))
+						bOk = true;
 				}
 				oInReader.close();
 			}
-			oSensorStore.setServerUp(iCnt > 0);
+			oSensorStore.setServerUp(bOk);
+			if (!bOk)
+				_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "Server DOWN for "+_sSensorStoreId);
 			
-			InputStream isError = ((HttpURLConnection)serverConn).getErrorStream();
+			/*InputStream isError = ((HttpURLConnection)serverConn).getErrorStream();
 			if (isError != null) {
 				oInReader = new BufferedReader(new InputStreamReader(isError));
 				for (iErr = 0; (sLine = oInReader.readLine()) != null; iErr++) {
@@ -61,8 +67,8 @@ public class HttpPoller extends TimerTask
 				}
 				oInReader.close();
 			}
-			
-			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "cnt="+iCnt+" err="+iErr);				
+			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "cnt="+iCnt+" err="+iErr);
+			*/				
 		}
 		catch (MalformedURLException e) {
 			_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "Bad <server_url> value: "+_sUrl, e);				

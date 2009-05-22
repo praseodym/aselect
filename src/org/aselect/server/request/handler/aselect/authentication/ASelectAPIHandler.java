@@ -207,43 +207,40 @@ import org.aselect.system.utils.Utils;
  */
 public class ASelectAPIHandler extends AbstractAPIRequestHandler
 {
-    private SessionManager _sessionManager;
-    private CrossASelectManager _crossASelectManager;
-    private ASelectConfigManager _configManager;
-    private TGTManager _tgtManager;
-    private CryptoEngine _cryptoEngine;
+	private SessionManager _sessionManager;
+	private CrossASelectManager _crossASelectManager;
+	private ASelectConfigManager _configManager;
+	private TGTManager _tgtManager;
+	private CryptoEngine _cryptoEngine;
 
-    /**
-     * Create a new instance.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Calls {@link AbstractAPIRequestHandler#AbstractAPIRequestHandler(
-     * RequestParser, HttpServletRequest, HttpServletResponse, String, String)}
-     * and handles are obtained to relevant managers.
-     * <br><br>
-     * @param reqParser The request parser to be used.
-     * @param servletRequest The request.
-     * @param servletResponse The response.
-     * @param sMyServerId The A-Select Server ID.
-     * @param sMyOrg The A-Select Server organisation.
-     * @throws ASelectCommunicationException If communication fails.
-     */
-    public ASelectAPIHandler (RequestParser reqParser, 
-		HttpServletRequest servletRequest, 
-		HttpServletResponse servletResponse,
-		String sMyServerId, 
-		String sMyOrg) throws ASelectCommunicationException
-    {
-        super(reqParser, servletRequest, servletResponse, sMyServerId,sMyOrg);
+	/**
+	 * Create a new instance.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Calls {@link AbstractAPIRequestHandler#AbstractAPIRequestHandler(
+	 * RequestParser, HttpServletRequest, HttpServletResponse, String, String)}
+	 * and handles are obtained to relevant managers.
+	 * <br><br>
+	 * @param reqParser The request parser to be used.
+	 * @param servletRequest The request.
+	 * @param servletResponse The response.
+	 * @param sMyServerId The A-Select Server ID.
+	 * @param sMyOrg The A-Select Server organisation.
+	 * @throws ASelectCommunicationException If communication fails.
+	 */
+	public ASelectAPIHandler(RequestParser reqParser, HttpServletRequest servletRequest,
+			HttpServletResponse servletResponse, String sMyServerId, String sMyOrg)
+		throws ASelectCommunicationException {
+		super(reqParser, servletRequest, servletResponse, sMyServerId, sMyOrg);
 
-        _sModule = "ASelectAPIHandler";
-        _sessionManager = SessionManager.getHandle();
-        _crossASelectManager = CrossASelectManager.getHandle();
-        _configManager = ASelectConfigManager.getHandle();
-        _tgtManager = TGTManager.getHandle();
-        _cryptoEngine = CryptoEngine.getHandle();
-    }
+		_sModule = "ASelectAPIHandler";
+		_sessionManager = SessionManager.getHandle();
+		_crossASelectManager = CrossASelectManager.getHandle();
+		_configManager = ASelectConfigManager.getHandle();
+		_tgtManager = TGTManager.getHandle();
+		_cryptoEngine = CryptoEngine.getHandle();
+	}
 
 	/**
 	 * Processes all incoming application API calls.
@@ -251,50 +248,39 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 	 * @see org.aselect.server.request.handler.aselect.authentication.AbstractAPIRequestHandler#processAPIRequest(
 	 * org.aselect.system.communication.server.IProtocolRequest, org.aselect.system.communication.server.IInputMessage, 
 	 * org.aselect.system.communication.server.IOutputMessage)
-	 */    
-	protected void processAPIRequest(IProtocolRequest oProtocolRequest,
-		IInputMessage oInputMessage, 
-		IOutputMessage oOutputMessage) 
-	throws ASelectException
+	 */
+	protected void processAPIRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
+			IOutputMessage oOutputMessage)
+		throws ASelectException
 	{
-	    String sMethod = "processAPIRequest()";
+		String sMethod = "processAPIRequest()";
+		String sRequest = oInputMessage.getParam("request");
 
-        String sRequest = oInputMessage.getParam("request");
-        
-        _systemLogger.log(Level.INFO, _sModule, sMethod, "AselApiREQ "+sRequest);
-        
-        if (sRequest.equals("authenticate")) 
-        {
-            handleAuthenticateRequest(oProtocolRequest, oInputMessage,
-                oOutputMessage);
-        }
-        else if (sRequest.equals("verify_credentials"))
-        {
-            handleVerifyCredentialsRequest(oInputMessage,
-                oOutputMessage);
-        }
-        else
-        {
-            _systemLogger.log(Level.WARNING, _sModule, sMethod,
-                "Unsupported API Call: " + sRequest);
-            
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-        }
-    }
-    
-    /**
-     * This method handles the <code>request=authenticate</code> request. 
-     * <br>
-     * 
-     * @param oProtocolRequest The request protocol properties.
-     * @param oInputMessage The input message.
-     * @param oOutputMessage The output message.
-     * @throws ASelectException If proccessing fails.
-     */
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "AselApiREQ " + sRequest);
+		if (sRequest.equals("authenticate")) {
+			handleAuthenticateRequest(oProtocolRequest, oInputMessage, oOutputMessage);
+		}
+		else if (sRequest.equals("verify_credentials")) {
+			handleVerifyCredentialsRequest(oInputMessage, oOutputMessage);
+		}
+		else {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unsupported API Call: " + sRequest);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+	}
+
+	/**
+	 * This method handles the <code>request=authenticate</code> request. 
+	 * <br>
+	 * 
+	 * @param oProtocolRequest The request protocol properties.
+	 * @param oInputMessage The input message.
+	 * @param oOutputMessage The output message.
+	 * @throws ASelectException If proccessing fails.
+	 */
 	private void handleAuthenticateRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
 			IOutputMessage oOutputMessage)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "handleAuthenticateRequest()";
 		String sSessionId = null;
@@ -322,7 +308,8 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 			sLocalOrgId = oInputMessage.getParam("local_organization");
 			sRequiredLevel = oInputMessage.getParam("required_level");
 			sLevel = oInputMessage.getParam("level");
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "On Input: required_level="+sRequiredLevel+" level="+sLevel);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "On Input: required_level=" + sRequiredLevel + " level="
+					+ sLevel);
 			sASelectServer = oInputMessage.getParam("a-select-server");
 		}
 		catch (ASelectCommunicationException eAC) {
@@ -379,7 +366,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 
 		sLevel = _crossASelectManager.getLocalParam(sLocalOrgId, "level");
 		if (sLevel != null && Integer.parseInt(sLevel) > Integer.parseInt(sRequiredLevel)) {
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "required_level updated to cross level: "+sLevel);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "required_level updated to cross level: " + sLevel);
 			sRequiredLevel = sLevel;
 		}
 
@@ -450,7 +437,8 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR, eAC);
 		}
 	}
-    /**
+
+	/**
 	 * This method handles the <code>request=verify_credentials</code>
 	 * request. If the tgt of the user is valid, then this method returns the
 	 * information of the user to the local server. <br>
@@ -462,7 +450,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 	 * @throws ASelectException
 	 *             If proccessing fails.
 	 */
-    private void handleVerifyCredentialsRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
+	private void handleVerifyCredentialsRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
 		throws ASelectException
 	{
 		String sMethod = "handleVerifyCredentialsRequest()";

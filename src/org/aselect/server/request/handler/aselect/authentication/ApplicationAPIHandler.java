@@ -282,7 +282,8 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 */
 	public ApplicationAPIHandler(RequestParser reqParser, HttpServletRequest servletRequest,
 			HttpServletResponse servletResponse, String sMyServerId, String sMyOrg)
-		throws ASelectCommunicationException {
+	throws ASelectCommunicationException
+	{
 		super(reqParser, servletRequest, servletResponse, sMyServerId, sMyOrg);
 
 		//set variables and get handles
@@ -347,6 +348,9 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			handleKillTGTRequest(oInputMessage, oOutputMessage);
 		}
 		else if (sAPIRequest.equals("upgrade_tgt")) {
+			handleUpgradeTGTRequest(oInputMessage, oOutputMessage);
+		}
+		else if (sAPIRequest.equals("alive")) {
 			handleUpgradeTGTRequest(oInputMessage, oOutputMessage);
 		}
 		else {

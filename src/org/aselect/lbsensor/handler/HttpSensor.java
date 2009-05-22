@@ -19,6 +19,7 @@ public class HttpSensor extends BasicSensorHandler
 	protected Timer _pollingTimer;
 
 	private String _sUrl;
+	private String _sSignOfLife;
 	
 	public void initialize(Object oConfigHandler, String sId)
 	throws ASelectException
@@ -29,11 +30,12 @@ public class HttpSensor extends BasicSensorHandler
 		
 		_iPollingInterval = _oConfigManager.getSimpleIntParam(oConfigHandler, "polling_interval", true);
 		_iPollingInterval *= 1000;  // milliseconds
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "polling_interval="+_iPollingInterval);
 
 		_sUrl = _oConfigManager.getSimpleParam(oConfigHandler, "server_url", true);
-		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "polling_interval="+_iPollingInterval);
+		_sSignOfLife = _oConfigManager.getSimpleParam(oConfigHandler, "sign_of_life", true);
 		
-		HttpPoller poller = new HttpPoller(_sMyId, _sUrl);
+		HttpPoller poller = new HttpPoller(_sMyId, _sUrl, _sSignOfLife);
 		_pollingTimer = new Timer();
 		_pollingTimer.schedule(poller, _iPollingInterval, _iPollingInterval);
 	}
@@ -71,7 +73,7 @@ public class HttpSensor extends BasicSensorHandler
 						_pollingTimer.cancel();
 
 						_pollingTimer = new Timer();
-						TimerTask poller = new HttpPoller(_sMyId, _sUrl);
+						TimerTask poller = new HttpPoller(_sMyId, _sUrl, _sSignOfLife);
 						_pollingTimer.schedule(poller, _iPollingInterval, _iPollingInterval);
 					}
 					catch (NumberFormatException e) {

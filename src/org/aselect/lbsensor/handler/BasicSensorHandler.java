@@ -59,7 +59,7 @@ public class BasicSensorHandler implements ISensorHandler
 		if (iIntCount < 0) iIntCount = 8;  // intervals
 		iIntLength = _oConfigManager.getSimpleIntParam(oConfigHandler, "interval_length", false);
 		if (iIntLength < 0) iIntLength = 30;  // seconds
-		_myStore = new SensorStore(iIntCount, iIntLength);
+		_myStore = new SensorStore(_sMyId, iIntCount, iIntLength);
 	}
 	
 	public SensorStore getMyStore()
@@ -115,7 +115,8 @@ public class BasicSensorHandler implements ISensorHandler
 				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Ready");
 			}
 			catch (IOException e) {
-				_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "I/O exception occurred", e);
+				if (!"Read timed out".equals(e.getMessage()))
+					_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "I/O exception occurred", e);
 				// The last line of a POST request will probably land here
 				if (sRequestLine.length() > 0) {
 					try {
@@ -134,7 +135,6 @@ public class BasicSensorHandler implements ISensorHandler
 					if (oOutWriter != null)
 						oOutWriter.close();  // flushes the output to the client
 					if (oSocket != null) {
-						_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Close");
 						oSocket.close();
 					}
 				}
