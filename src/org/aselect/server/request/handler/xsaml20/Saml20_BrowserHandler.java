@@ -568,16 +568,16 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_PARSE_ERROR);
 		}
 
-		// Pass RelayState
-		if (sRelayState != null) {
-			String sStart = (logoutResponseLocation.contains("?"))? "&": "?";
-			logoutResponseLocation += sStart+"RelayState="+sRelayState;
-		}
+		// Pass RelayState, 20090604, Bauke passed RelayState to sendLogoutResponse
+		//if (sRelayState != null) {
+		//	String sStart = (logoutResponseLocation.contains("?"))? "&": "?";
+		//	logoutResponseLocation += sStart+"RelayState="+sRelayState;
+		//}
 		String statusCode = StatusCode.SUCCESS_URI;
 		LogoutResponseSender sender = new LogoutResponseSender();
 		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">> Sending logoutresponse to: "+ logoutResponseLocation);
 		sender.sendLogoutResponse(logoutResponseLocation, _sASelectServerUrl, statusCode,
-							logoutRequest.getID(), httpRequest, httpResponse);		
+							logoutRequest.getID(), sRelayState, httpRequest, httpResponse);		
 	}
 
 	public void destroy()

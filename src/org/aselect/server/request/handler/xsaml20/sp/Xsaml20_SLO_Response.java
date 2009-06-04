@@ -46,8 +46,7 @@ import org.xml.sax.InputSource;
 // Accept LogoutResponse
 // Either Soap or Redirect
 //
-// public class Xsaml20_SLO_Response extends ProtoRequestHandler // RH, 20080602, o
-public class Xsaml20_SLO_Response extends Saml20_BaseHandler // RH, 20080602, n
+public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 {
 	private static final String MODULE = "Xsaml20_SLO_Response";
 	private static final String SOAP_TYPE = "text/xml";
@@ -125,7 +124,7 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler // RH, 20080602, n
 			handleRedirectLogoutResponse(request, response);
 		}
 		else if (request.getContentType() != null && request.getContentType().startsWith(SOAP_TYPE)) {
-			// its a logoutrequest in SOAP
+			// It's a Soap logoutrequest
 			handleSOAPLogoutResponse(request, response);
 		}
 		else {

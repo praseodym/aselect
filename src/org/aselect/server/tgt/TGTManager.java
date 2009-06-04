@@ -243,8 +243,7 @@ public class TGTManager extends StorageManager
 				sTGT = Utils.toHexString(baTGT);
 			}
 
-			String sTxt = (sTGT.length() > 30) ? sTGT.substring(0, 30) + "..." : sTGT;
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "New TGT=" + sTxt);  // + ", Context=" + htTGTContext);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "New TGT=" + Utils.firstPartOf(sTGT, 30));
 			String sNameID = (String) htTGTContext.get("name_id");
 			if (sNameID == null)
 				htTGTContext.put("name_id", sTGT);
@@ -302,16 +301,13 @@ public class TGTManager extends StorageManager
 		boolean bReturn = false;
 		if (getTGT(sTGT) != null) {
 			try {
-				int len = sTGT.length();
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "updateTGT("+sTGT.substring(0, (len < 30)? len: 30)+"...)");  //, TGTContext=" + htTGTContext);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "updateTGT("+Utils.firstPartOf(sTGT, 30)+")");
 				update(sTGT, htTGTContext);
 				bReturn = true;
 			}
 			catch (Exception e) {
 				bReturn = false;
-				StringBuffer sbError = new StringBuffer("Could not update context of TGT: ");
-				sbError.append(sTGT);
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not update TGT", e);
 			}
 		}
 		return bReturn;
@@ -327,14 +323,13 @@ public class TGTManager extends StorageManager
 	{
 		String sMethod = "getTGT";
 		HashMap htContext = null;
-		int len = sTGT.length();
+
 		try {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "getTGT("+sTGT.substring(0, (len<30)? len: 30)+"...)");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "getTGT("+Utils.firstPartOf(sTGT, 30)+")");
 			htContext = (HashMap)get(sTGT);
 		}
 		catch (ASelectStorageException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No TGT context found with id: "
-					+ sTGT.substring(0, (len < 30) ? len : 30) + "..., ", e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "TGT not found");
 		}
 		return htContext;
 	}

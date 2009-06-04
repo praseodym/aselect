@@ -219,7 +219,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BaseHandler
 		}
 		LogoutResponseSender sender = new LogoutResponseSender();
 		sender.sendLogoutResponse(logoutResponseLocation, myEntityId, statusCode,
-							logoutRequest.getID(), httpRequest, httpResponse);
+							logoutRequest.getID(), null, httpRequest, httpResponse);
 	}
 
 	public void destroy()

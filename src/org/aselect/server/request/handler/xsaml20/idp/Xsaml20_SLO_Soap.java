@@ -25,6 +25,7 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.utils.Tools;
+import org.aselect.system.utils.Utils;
 import org.opensaml.Configuration;
 import org.opensaml.saml2.core.LogoutRequest;
 import org.opensaml.saml2.core.LogoutResponse;
@@ -42,8 +43,7 @@ import org.xml.sax.InputSource;
 // IdP Soap Logout Request Handler
 // Handles request from the SP using Soap
 //
-//public class Xsaml20_SLO_Soap extends ProtoRequestHandler // RH, 20080602, o
-public class Xsaml20_SLO_Soap extends Saml20_BaseHandler // RH, 20080602, n
+public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 {
 	private final static String MODULE = "Xsaml20_SLO_Soap";
 	private static final String SOAP_TYPE = "text/xml";
@@ -130,9 +130,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler // RH, 20080602, n
 			String sReceivedSoap = sb.toString();
 			*/
 			String sReceivedSoap = Tools.stream2string(request.getInputStream()); // RH, 20080715, n
-			
-//			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "Received: " + sb);
-			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "Received: " + sReceivedSoap); // RH, 20080715, n
+			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "Received: " + sReceivedSoap);
 			
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 			dbFactory.setNamespaceAware(true);
@@ -238,7 +236,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler // RH, 20080602, n
 		throws ASelectException
 	{
 		String _sMethod = "removeSessionFromFederation";
-		String sCred = (sNameID.length() > 30) ? sNameID.substring(0, 30) + "..." : sNameID;
+		String sCred = Utils.firstPartOf(sNameID, 30);
 		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "IDP - NameID=" + sCred + " Remove SP=" + initiatingSP);
 
 		TGTManager tgtManager = TGTManager.getHandle();

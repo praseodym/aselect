@@ -558,13 +558,14 @@ public class SamlTools
 	throws ASelectException
 	{
 		String sMethod = "buildLogoutResponse()";
+		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
+		
 		XMLObjectBuilderFactory builderFactory = Configuration.getBuilderFactory();
 		SAMLObjectBuilder<LogoutResponse> logoutResponseBuilder = (SAMLObjectBuilder<LogoutResponse>) builderFactory
 				.getBuilder(LogoutResponse.DEFAULT_ELEMENT_NAME);
 		LogoutResponse logoutResponse = logoutResponseBuilder.buildObject();
 
 		// Mandatory fields:
-		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
 		String random;
 		try {
 			random = SamlTools.generateIdentifier(systemLogger, MODULE);
@@ -600,7 +601,7 @@ public class SamlTools
 		try {
 			Node node = marshaller.marshall(logoutResponse);
 			String msg = XMLHelper.prettyPrintXML(node);
-			systemLogger.log(Level.INFO, MODULE, sMethod, "built message: \n" + msg);
+			systemLogger.log(Level.INFO, MODULE, sMethod, "Built message: " + msg);
 		}
 		catch (MarshallingException e) {
 			systemLogger.log(Level.WARNING, MODULE, sMethod, "Exception marhalling message: " + e.getMessage());

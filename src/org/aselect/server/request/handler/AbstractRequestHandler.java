@@ -43,108 +43,106 @@ import org.aselect.system.exception.ASelectException;
  */
 public abstract class AbstractRequestHandler implements IRequestHandler
 {
-    protected ASelectSystemLogger _systemLogger;
-    protected ASelectConfigManager _configManager;
-    protected SessionManager _oSessionManager;
-    protected ServletConfig _oServletConfig;
-    
-    private final static String MODULE = "AbstractRequestHandler";
-    private String _sID;
-    private Pattern _pTarget;
+	protected ASelectSystemLogger _systemLogger;
+	protected ASelectConfigManager _configManager;
+	protected SessionManager _oSessionManager;
+	protected ServletConfig _oServletConfig;
 
-    /**
-     * Initializes the default functionality for a RequestHandler.
-     * <br/><br/>
-     * <b>Description:</b><br>
-     * <li>Reads the configuration</li>
-     * <li>Verifies if the configured 'target' is a regular expression</li>
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br><br>
-     * Reads the following configuration:<br/><br/>
-     * &lt;handler id='[id]' class='[class]' target='[target]'&gt;<br/>
-     * ...<br>
-     * &lt;/handler
-     * <br><br>
-     * <li><b>id</b> - Unique ID of the handler</li>
-     * <li><b>class</b> - Class name of the handler, must implement the 
-     * <code>IRequestHandler</code> interface</li>
-     * <li><b>target</b> - The regular expression of URLs that will be handled 
-     * by this request handler</li>
-     * <br><br>
-     * @see org.aselect.server.request.handler.IRequestHandler#init(javax.servlet.ServletConfig, java.lang.Object)
-     */
-    public void init(ServletConfig oServletConfig, Object oConfig)
-    throws ASelectException
-    {
-        String sMethod = "init()";
-        try
-        {
-            _systemLogger = ASelectSystemLogger.getHandle();
-            _configManager = ASelectConfigManager.getHandle();
-            _oSessionManager = SessionManager.getHandle();
-            _oServletConfig = oServletConfig;
-            
-            try {
-                _sID = _configManager.getParam(oConfig, "id");
-            }
-            catch (ASelectConfigException e) {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod
-                    , "No config item 'id' in 'handler' section found", e);
-                throw new ASelectException (Errors.ERROR_ASELECT_INIT_ERROR, e);
-            }
-            
-            String sTarget = null;
-            try {
-                sTarget = _configManager.getParam(oConfig, "target");
-            }
-            catch (ASelectConfigException e) {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod
-                    , "No config item 'target' in 'handler' section found", e);
-                throw new ASelectException (Errors.ERROR_ASELECT_INIT_ERROR, e);
-            }
-            
-            try {
-                _pTarget = Pattern.compile(sTarget);
-            }
-            catch (Exception e) {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod
-                    , "Not a valid pattern: " + sTarget, e);
-                throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-            }
+	private final static String MODULE = "AbstractRequestHandler";
+	private String _sID;
+	private Pattern _pTarget;
 
-        }
-        catch (ASelectException e) {
-            throw e;
-        }
-        catch (Exception e) {
-            _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize", e);
-            throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-        }
-    }
-    
-    /**
-     * Returns the handler ID as <code>String</code>.
-     * <br><br>
-     * @see org.aselect.server.request.handler.IRequestHandler#getID()
-     */
-    public String getID()
-    {
-        return _sID;
-    }
-    
-    /**
-     * Returns the configured target as <code>Pattern</code> object.
-     * <br><br>
-     * @see org.aselect.server.request.handler.IRequestHandler#getPattern()
-     */
-    public Pattern getPattern()
-    {
-        return _pTarget;
-    } 
+	/**
+	 * Initializes the default functionality for a RequestHandler.
+	 * <br/><br/>
+	 * <b>Description:</b><br>
+	 * <li>Reads the configuration</li>
+	 * <li>Verifies if the configured 'target' is a regular expression</li>
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br><br>
+	 * Reads the following configuration:<br/><br/>
+	 * &lt;handler id='[id]' class='[class]' target='[target]'&gt;<br/>
+	 * ...<br>
+	 * &lt;/handler
+	 * <br><br>
+	 * <li><b>id</b> - Unique ID of the handler</li>
+	 * <li><b>class</b> - Class name of the handler, must implement the 
+	 * <code>IRequestHandler</code> interface</li>
+	 * <li><b>target</b> - The regular expression of URLs that will be handled 
+	 * by this request handler</li>
+	 * <br><br>
+	 * @see org.aselect.server.request.handler.IRequestHandler#init(javax.servlet.ServletConfig, java.lang.Object)
+	 */
+	public void init(ServletConfig oServletConfig, Object oConfig)
+		throws ASelectException
+	{
+		String sMethod = "init()";
+		try {
+			_systemLogger = ASelectSystemLogger.getHandle();
+			_configManager = ASelectConfigManager.getHandle();
+			_oSessionManager = SessionManager.getHandle();
+			_oServletConfig = oServletConfig;
+
+			try {
+				_sID = _configManager.getParam(oConfig, "id");
+			}
+			catch (ASelectConfigException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'id' in 'handler' section found", e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "id="+_sID);
+
+			String sTarget = null;
+			try {
+				sTarget = _configManager.getParam(oConfig, "target");
+			}
+			catch (ASelectConfigException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'target' in 'handler' section found",
+						e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			}
+
+			try {
+				_pTarget = Pattern.compile(sTarget);
+			}
+			catch (Exception e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Not a valid pattern: " + sTarget, e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			}
+
+		}
+		catch (ASelectException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+	}
+
+	/**
+	 * Returns the handler ID as <code>String</code>.
+	 * <br><br>
+	 * @see org.aselect.server.request.handler.IRequestHandler#getID()
+	 */
+	public String getID()
+	{
+		return _sID;
+	}
+
+	/**
+	 * Returns the configured target as <code>Pattern</code> object.
+	 * <br><br>
+	 * @see org.aselect.server.request.handler.IRequestHandler#getPattern()
+	 */
+	public Pattern getPattern()
+	{
+		return _pTarget;
+	}
 
 }

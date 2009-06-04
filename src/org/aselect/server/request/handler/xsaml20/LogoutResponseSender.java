@@ -58,11 +58,11 @@ public class LogoutResponseSender
 	 */
 	@SuppressWarnings("unchecked")
 	public void sendLogoutResponse(String logoutResponseLocation, String issuer, String statusCode,
-			String inResponseTo, HttpServletRequest request, HttpServletResponse response)
+			String inResponseTo, String sRelayState, HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
 		String sMethod = "sendLogoutResponse()";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Send LogoutResponse to: " + logoutResponseLocation);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Send LogoutResponse to: "+logoutResponseLocation+" RelayState="+sRelayState);
 
 		LogoutResponse logoutResponse = SamlTools.buildLogoutResponse(issuer, statusCode, inResponseTo);
 
@@ -74,8 +74,7 @@ public class LogoutResponseSender
 		String sAppUrl = request.getRequestURL().toString();
 		samlEndpoint.setResponseLocation(sAppUrl);
 
-//		HttpServletResponseAdapter outTransport = new HttpServletResponseAdapter(response); // RH 20080529, o
-		HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response, logoutResponseLocation); // RH 20080529, n
+		HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response, logoutResponseLocation);
 		// RH 20081113, set appropriate headers
 		outTransport.setHeader("Pragma", "no-cache");
 		outTransport.setHeader("Cache-Control", "no-cache, no-store");
@@ -84,10 +83,12 @@ public class LogoutResponseSender
 		messageContext.setOutboundMessageTransport(outTransport);
 		messageContext.setOutboundSAMLMessage(logoutResponse);
 		messageContext.setPeerEntityEndpoint(samlEndpoint);
-		// 20081109: messageContext.setRelayState("relay");
+		// 20090604, Bauke: moved RelayState setting from caller to here
+		if (sRelayState != null) {
+			messageContext.setRelayState(sRelayState);
+		}
 
 		BasicX509Credential credential = new BasicX509Credential();
-
 		credential.setPrivateKey(privateKey);
 		messageContext.setOutboundSAMLMessageSigningCredential(credential);
 
@@ -102,7 +103,6 @@ public class LogoutResponseSender
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 		String msg = XMLHelper.prettyPrintXML(node);
-
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "About to send: \n" + msg);
 
 		// store it in de history

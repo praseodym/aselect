@@ -394,7 +394,6 @@ public class ApplicationManager
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Error during initializing", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-
 	}
 
 	/**

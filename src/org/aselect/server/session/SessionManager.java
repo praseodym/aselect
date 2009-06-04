@@ -275,15 +275,14 @@ public class SessionManager extends StorageManager
 
 			CryptoEngine.nextRandomBytes(baRandomBytes);
 			sSessionId = Utils.toHexString(baRandomBytes);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "sSessionId=" + sSessionId);
 			while (containsKey(sSessionId)) {
 				CryptoEngine.nextRandomBytes(baRandomBytes);
 				sSessionId = Utils.toHexString(baRandomBytes);
-				_systemLogger.log(Level.FINEST, MODULE, sMethod, "sSessionId=" + sSessionId);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Generated new sSessionId=" + sSessionId);
 			}
 
 			Tools.initializeSensorData(_systemLogger, htSessionContext);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "New SessionId=" + sSessionId);  // + ", htSessionContext="+htSessionContext);
+			//_systemLogger.log(Level.INFO, MODULE, sMethod, "New SessionId=" + sSessionId);  // + ", htSessionContext="+htSessionContext);
 			put(sSessionId, htSessionContext);  // always insert
 			_lSessionsCounter++;
 		}

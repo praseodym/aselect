@@ -616,11 +616,10 @@ public class ASelectConfigManager extends ConfigManager
 		// read redirect URL
 		try {
 			_sRedirectURL = getParam(_oASelectConfigSection, "redirect_url");
-			new URL(_sRedirectURL);
+			new URL(_sRedirectURL);  // checks correctness
 		}
 		catch (ASelectConfigException e) {
-			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-					"No configuration item 'redirect_url' defined, using default");
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod, "No configuration item 'redirect_url' defined, using default");
 		}
 		catch (MalformedURLException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,

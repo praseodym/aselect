@@ -35,7 +35,7 @@ public class SoapLogoutResponseSender
 			String inResponseTo)
 	throws ASelectException
 	{
-		String sMethod = "sendLogoutResponse";
+		String sMethod = "sendSoapLogoutResponse";
 		LogoutResponse logoutResponse = SamlTools.buildLogoutResponse(issuerUrl, statusCodeValue, inResponseTo);
 
 		// Always sign the LogoutResponse
