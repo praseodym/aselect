@@ -39,7 +39,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.xerces.parsers.DOMParser;
 import org.apache.xml.security.signature.XMLSignature;
+import org.aselect.server.application.Application;
+import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.attributes.AttributeGatherer;
+import org.aselect.server.authspprotocol.handler.AuthSPHandlerManager;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectSystemLogger;
@@ -52,11 +55,16 @@ import org.aselect.system.communication.client.IClientCommunicator;
 import org.aselect.system.communication.client.raw.RawCommunicator;
 import org.aselect.system.communication.client.soap11.SOAP11Communicator;
 import org.aselect.system.communication.client.soap12.SOAP12Communicator;
+import org.aselect.system.communication.server.IInputMessage;
+import org.aselect.system.communication.server.IOutputMessage;
+import org.aselect.system.communication.server.IProtocolRequest;
+import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
+import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 import org.opensaml.SAMLAssertion;
@@ -601,23 +609,262 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "} AUTHN htResponse=" + htResponse);
 		return htResponse;
 	}
+	
+	private void xxHandleAuthenticateRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
+			IOutputMessage oOutputMessage)
+	throws ASelectException
+	{
+		AuthSPHandlerManager _authSPManagerManager = AuthSPHandlerManager.getHandle();
+		SessionManager _sessionManager = SessionManager.getHandle();
+		ApplicationManager _applicationManager = ApplicationManager.getHandle();
 
+		String sMethod = "handleAuthenticateRequest()";
+		String sSessionId = null;
+		Integer intAppLevel = null;
+		Integer intMaxAppLevel = null;
+		String sAppUrl = null;
+		String sAppId = null;
+		String sASelectServer = null;
+		HashMap htSessionContext = null;
+		String sUid = null;
+		String sAuthsp = null;
+		String sRemoteOrg = null;
+		String sForcedLogon = null;
+		String sCountry = null;
+		String sLanguage = null;
+
+		if (!_applicationManager.hasApplicationsConfigured()) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request since no applications are configured.");
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+
+		try {
+			sAppId = oInputMessage.getParam("app_id");
+			sAppUrl = oInputMessage.getParam("app_url");
+			sASelectServer = oInputMessage.getParam("a-select-server");
+		}
+		catch (ASelectCommunicationException eAC) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing required parameters", eAC);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+		try {
+			sUid = oInputMessage.getParam("uid");
+		}
+		catch (ASelectCommunicationException eAC) {		}
+		try {
+			sAuthsp = oInputMessage.getParam("authsp");
+		}
+		catch (ASelectCommunicationException eAC) {		}
+		try {
+			sRemoteOrg = oInputMessage.getParam("remote_organization");
+		}			//_systemLogger.log(Level.FINE, MODULE, sMethod, "No optional 'check-signature' parameter found.", e);
+
+		catch (ASelectCommunicationException eAC) {		}
+		try {
+			sCountry = oInputMessage.getParam("country");
+		}
+		catch (ASelectCommunicationException e) {		}
+		try {
+			sLanguage = oInputMessage.getParam("language");
+		}
+		catch (ASelectCommunicationException e) {		}
+		Boolean boolForced = false;
+		try {
+			sForcedLogon = oInputMessage.getParam("forced_logon");
+			boolForced = new Boolean(sForcedLogon);
+		}
+		catch (ASelectCommunicationException e) {		}
+		Boolean bCheckSignature = true;
+		try {
+			String sCheckSignature = oInputMessage.getParam("check-signature");
+			bCheckSignature = Boolean.valueOf(sCheckSignature);
+		}
+		catch (ASelectCommunicationException e) {		}
+
+		// check if request should be signed
+		if (_applicationManager.isSigningRequired() && bCheckSignature) {
+			// check signature
+			// NOTE: add sbData items sorted!
+			StringBuffer sbData = new StringBuffer(sASelectServer);
+			sbData.append(sAppId).append(sAppUrl);
+			if (sAuthsp != null)
+				sbData.append(sAuthsp);
+			if (sCountry != null)
+				sbData.append(sCountry);
+			if (sForcedLogon != null)
+				sbData.append(sForcedLogon);
+			if (sLanguage != null)
+				sbData.append(sLanguage);
+			if (sRemoteOrg != null)
+				sbData.append(sRemoteOrg);
+			if (sUid != null)
+				sbData.append(sUid);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "sbData=" + sbData);
+			xxVerifyApplicationSignature(oInputMessage, sbData.toString(), sAppId);
+		}
+
+		// check if application is registered
+		if (!_applicationManager.isApplication(sAppId)) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unknown application ID");
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_UNKNOWN_APP);
+		}
+		intAppLevel = _applicationManager.getRequiredLevel(sAppId);
+		if (intAppLevel == null) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No level specified for application with ID: '"
+					+ sAppId + "'");
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_APP_LEVEL);
+		}
+		intMaxAppLevel = _applicationManager.getMaxLevel(sAppId);
+
+		// 20090305, Bauke: Accept DigiD protocol
+		Application aApp = _applicationManager.getApplication(sAppId);
+		String sSharedSecret = aApp.getSharedSecret();
+		if (sSharedSecret != null) {
+			String sArg = oInputMessage.getParam("shared_secret");
+			if (sArg == null || !sSharedSecret.equals(sArg)) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Shared secret for app '" + sAppId
+						+ "' does not match or is missing");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+		}
+
+		// 20090305, Bauke: The <application> itself can also set forced_uid / forced_authsp if so configured
+		if (sAuthsp == null) {
+			sAuthsp = aApp.getForcedAuthsp();
+		}
+		if (sUid == null) {
+			sUid = aApp.getForcedUid();
+		}
+
+		// Create Session
+		htSessionContext = new HashMap();
+		htSessionContext.put("app_id", sAppId);
+		htSessionContext.put("app_url", sAppUrl);
+		htSessionContext.put("level", intAppLevel); // NOTE: Integer put
+		if (intMaxAppLevel != null)
+			htSessionContext.put("max_level", intMaxAppLevel);
+		htSessionContext.put("organization", _configManager.getSimpleParam(null, "organization", true));
+
+		// Organization and uid are stored in the session context with a temporary identifier.
+		// This because the values are not validated yet.
+		// After validation, these values can be set as 'user_id' and 'remote_organization'.
+		//
+		// Bauke 20080511: added "forced_authsp" to influence AuthSP choice
+		if (sRemoteOrg != null)
+			htSessionContext.put("forced_organization", sRemoteOrg);
+		if (sUid != null)
+			htSessionContext.put("forced_uid", sUid);
+		if (sAuthsp != null)
+			htSessionContext.put("forced_authsp", sAuthsp);
+
+		// need to check if the request must be handled as a forced
+		// authentication
+		if (!boolForced.booleanValue() && _applicationManager.isForcedAuthenticateEnabled(sAppId)) {
+			boolForced = new Boolean(true);
+		}
+		htSessionContext.put("forced_authenticate", boolForced);
+
+		// check single sign-on groups
+		if (_configManager.isSingleSignOn()) {
+			Vector vSSOGroups = _applicationManager.getSSOGroups(sAppId);
+			if (vSSOGroups != null)
+				htSessionContext.put("sso_groups", vSSOGroups);
+		}
+
+		if (sCountry != null && sCountry.trim().length() > 0)
+			htSessionContext.put("country", sCountry);
+		if (sLanguage != null && sLanguage.trim().length() > 0)
+			htSessionContext.put("language", sLanguage);
+
+		// We only want to set the client_ip on application browserrequests (see ApplicationBrwoserHandler)
+		// Bauke 20081217: Therefore the lines below should go!
+		//htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr()); // RH, 20080716, n // RH, 20080719, o
+		//String sAgent = get_servletRequest().getHeader("User-Agent");
+		//if (sAgent != null) htSessionContext.put("user_agent", sAgent);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "CTX htSessionContext=" + htSessionContext);
+
+		sSessionId = _sessionManager.createSession(htSessionContext);
+		if (sSessionId == null) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to create session");
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
+		}
+
+		StringBuffer sbAsUrl = new StringBuffer();
+		String sAsUrl = _configManager.getRedirectURL();
+		if (sAsUrl != null)
+			sbAsUrl.append(sAsUrl);
+		else
+			sbAsUrl.append(oProtocolRequest.getTarget());
+
+		Vector vAuthSPs = _authSPManagerManager.getConfiguredAuthSPs(intAppLevel, intMaxAppLevel);
+
+		// Authentication OK
+		if (vAuthSPs.size() == 1 && _authSPManagerManager.isDirectAuthSP((String) vAuthSPs.get(0))) {
+			// A-Select will show username and password box in one page.
+			sbAsUrl.append("?request=direct_login1");
+			htSessionContext.put("direct_authsp", vAuthSPs.get(0));
+		}
+		else {
+			sbAsUrl.append("?request=login1");
+		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "OUT sbAsUrl=" + sbAsUrl + ", rid=" + sSessionId);
+
+		try {
+			String sAsURL = sbAsUrl.toString();
+			oOutputMessage.setParam("rid", sSessionId);
+			if (aApp.isDoUrlEncode())
+				oOutputMessage.setParam("as_url", sAsURL);
+			else
+				oOutputMessage.setParam("as_url", sAsURL, false);  // only for DigiD protocol: do not url-encode
+			
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
+		}
+		catch (ASelectCommunicationException eAC) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not set response parameter", eAC);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR, eAC);
+		}
+	}
+	
+	private void xxVerifyApplicationSignature(IInputMessage oInputMessage, String sData, String sAppId)
+	throws ASelectException
+	{
+		String sMethod = "verifyApplicationSignature()";
+		ApplicationManager _applicationManager = ApplicationManager.getHandle();
+		CryptoEngine _cryptoEngine = CryptoEngine.getHandle();
+		
+		String sSignature = null;
+		try {
+			sSignature = oInputMessage.getParam("signature");
+		}
+		catch (ASelectCommunicationException eAC) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing required 'signature' parameter", eAC);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+	
+		PublicKey pk = null;
+		try {
+			pk = _applicationManager.getSigningKey(sAppId);
+		}
+		catch (ASelectException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid application ID: \"" + sAppId
+					+ "\". Could not find signing key for application.", e);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+	
+		if (!_cryptoEngine.verifyApplicationSignature(pk, sData, sSignature))
+		// throws ERROR_ASELECT_INTERNAL_ERROR
+		{
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Application:" + sAppId + " Invalid signature:"
+					+ sSignature + " Key=" + pk);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+	}
+
+	// Convenience method
 	protected IClientCommunicator initClientCommunicator(Object oConfig)
 	throws ASelectException
 	{
-		String sClientCommunicator = ASelectConfigManager.getSimpleParam(oConfig, "clientcommunicator", true);
-		if (sClientCommunicator.equalsIgnoreCase("soap11")) {
-			return new SOAP11Communicator("ASelect", _systemLogger);
-		}
-		else if (sClientCommunicator.equalsIgnoreCase("soap12")) {
-			return new SOAP12Communicator("ASelect", _systemLogger);
-		}
-		else if (sClientCommunicator.equalsIgnoreCase("raw")) {
-			return new RawCommunicator(_systemLogger);
-		}
-		_systemLogger.log( Level.WARNING, MODULE, "initClientCommunicator", "Invalid 'clientcommunicator' value");
-		throw new ASelectException(Errors.ERROR_ASELECT_CONFIG_ERROR);
-
+		return Tools.initClientCommunicator(ASelectConfigManager.getHandle(), _systemLogger, oConfig);
 	}
 
 	public String decryptCredentials(String encrypted)
@@ -661,7 +908,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		// This will also give you the "client_ip" Remy.
 		HashMap htSessionData = _oSessionManager.getSessionContext(sPrefix + sRid);
 		if (htSessionData == null)
-			_oSessionManager.createSession(sPrefix + sRid, htSessionMoreData);
+			_oSessionManager.writeSession(sPrefix + sRid, htSessionMoreData);
 		else {
 			htSessionData.putAll(htSessionMoreData);
 			_systemLogger.log(Level.INFO, MODULE, sMethod,"Update Session:"+htSessionData);
@@ -813,8 +1060,8 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	throws ASelectException
 	{
 		String sMethod = "createContextAndIssueTGT()";
-	
 	    SessionManager _sessionManager = SessionManager.getHandle(); // RH, 20080617, n
+	    HashMap htSession = null;
 	    
 		// Extract uid and security level
 		String sUserId = (String)htAttributes.get("digid_uid");
@@ -847,23 +1094,29 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		htTGTContext.put("app_level", "2");
 //		if (sRid != null) htTGTContext.put("rid", sRid); // RH, 20080617, o
 		// RH, 20080617, sn
+		long lNow = -1;
 		if (sRid != null) {
 			htTGTContext.put("rid", sRid);
-			htTGTContext.put("client_ip", _sessionManager.getSessionContext(sRid).get("client_ip"));
-			String sAgent = (String)_sessionManager.getSessionContext(sRid).get("user_agent");
-			if (sAgent != null) htTGTContext.put("user_agent", sAgent);
+			htSession = _sessionManager.getSessionContext(sRid);
+			if (htSession != null) {
+				Utils.copyHashmapValue("client_ip", htTGTContext, htSession);
+				Utils.copyHashmapValue("user_agent", htTGTContext, htSession);
+			}
 		}
 		// RH, 20080617, en
 	    
-		if (sTgt == null)
+		if (sTgt == null) {
 			sTgt = _tgtManager.createTGT(htTGTContext);
-		else
+		}
+		else {
 			_tgtManager.updateTGT(sTgt, htTGTContext);
+		}
 		
 		// We don't need the session any more
-//	    SessionManager _sessionManager = SessionManager.getHandle(); // RH, 20080617, o
-		if (sRid != null)  // Bauke, 20081209 added
-			_sessionManager.killSession(sRid);      
+		if (sRid != null) {  // Bauke, 20081209 added
+			Tools.calculateAndReportSensorData(ASelectConfigManager.getHandle(), _systemLogger, htSession);
+			_sessionManager.killSession(sRid);
+		}
 
 		// No effect, cross functionality??:
 		//htTGTContext.put("aselect_credentials_tgt", sTgt);

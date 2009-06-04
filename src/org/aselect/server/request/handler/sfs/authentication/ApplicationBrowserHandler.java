@@ -416,7 +416,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @param sMyOrg The A-Select Server organisation.
 	 */
 	public ApplicationBrowserHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-			String sMyServerId, String sMyOrg) {
+			String sMyServerId, String sMyOrg)
+	{
 		super(servletRequest, servletResponse, sMyServerId, sMyOrg);
 		_sModule = "ApplicationBrowserHandler()";
 		_applicationManager = ApplicationManager.getHandle();
@@ -439,7 +440,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		String sMethod = "processBrowserRequest()";
 
 		sRequest = (String) htServiceRequest.get("request");
-
 		if (sRequest == null) {
 			// show info page if nothing to do
 			if (htServiceRequest.containsKey("aselect_credentials_uid"))
@@ -458,7 +458,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sRid = (String) htServiceRequest.get("rid");
 			if (sRid == null) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing RID parameter");
-
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 
@@ -466,19 +465,17 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// If a valid session is found, it will be valid during the whole
 			// servlet request handling.
 			_htSessionContext = _sessionManager.getSessionContext(sRid);
-
 			if (_htSessionContext == null) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid RID: " + sRid);
-
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
+
 			String sDirectAuthSP = (String) _htSessionContext.get("direct_authsp");
-
 			if (sDirectAuthSP != null && !(sRequest.indexOf("direct_login") >= 0)) {
-				_systemLogger
-						.log(Level.WARNING, _sModule, sMethod, "Probably tampered request with rid='" + sRid + "'");
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Probably tampered request with rid='" + sRid + "'");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
+			// Not a direct_authsp chosen OR it's a direct_login request
 
 			if (sRequest.equals("login1")) {
 				handleLogin1(htServiceRequest, _servletResponse, pwOut);
@@ -653,7 +650,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId);
 
 			//Store changed session, for JDBC Storage Handler
-			if (!_sessionManager.createSession(sRid, _htSessionContext)) {
+			if (!_sessionManager.writeSession(sRid, _htSessionContext)) {
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
 			}
 		}
@@ -1035,7 +1032,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 		String sRid = null;
 		String sAuthsp = null;
-		String sMethod = "handleL ogin3()";
+		String sMethod = "handleLogin3";
 		String sRedirectUrl = null;
 		String sPopup = null;
 
@@ -1326,7 +1323,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			 */
 
 			//Store changed session, for JDBC Storage Handler
-			if (!_sessionManager.createSession(sLocalRid, _htSessionContext)) {
+			if (!_sessionManager.writeSession(sLocalRid, _htSessionContext)) {
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
 			}
 
@@ -1478,7 +1475,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							// implements the redirect with a create signature.
 							// It is not logical to create a new TGT.
 							_htSessionContext.put("user_id", sUid);
-							_sessionManager.createSession(sRid, _htSessionContext);
+							_sessionManager.writeSession(sRid, _htSessionContext);
 
 							HashMap htTgtContext = _tgtManager.getTGT(sTgt);
 							String sAuthsp = (String) htTgtContext.get("authsp");
@@ -1567,7 +1564,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			htAllowedAuthsps.put("Ip", htServiceRequest.get("client_ip"));
 			_htSessionContext.put("allowed_user_authsps", htAllowedAuthsps);
 			_htSessionContext.put("user_id", htServiceRequest.get("client_ip"));
-			_sessionManager.createSession(sRid, _htSessionContext);
+			_sessionManager.writeSession(sRid, _htSessionContext);
 
 			//go for IP authsp
 			htServiceRequest.put("authsp", "Ip");
@@ -1897,7 +1894,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_htSessionContext.put("allowed_user_authsps", htAllowedAuthsps);
 			_htSessionContext.put("user_id", sUid);
 
-			if (!_sessionManager.createSession(sRid, _htSessionContext)) {
+			if (!_sessionManager.writeSession(sRid, _htSessionContext)) {
 				// logged in sessionmanager
 				throw new ASelectException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
 			}
@@ -1946,16 +1943,14 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 		_htSessionContext.put("authsp", sAuthsp);
 		_htSessionContext.put("my_url", htLoginRequest.get("my_url"));
-		if (!_sessionManager.createSession(sRid, _htSessionContext)) {
+		if (!_sessionManager.writeSession(sRid, _htSessionContext)) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "could not update session context");
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 
 		// everything seems okay -> instantiate the protocol handler for
-		// the selected authsp and let it compute a signed authentication
-		// request
+		// the selected authsp and let it compute a signed authentication request
 		IAuthSPProtocolHandler oProtocolHandler;
-
 		try {
 			Object oAuthSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp",
 					"id=" + sAuthsp);
@@ -1965,7 +1960,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			Class oClass = Class.forName(sHandlerName);
 			oProtocolHandler = (IAuthSPProtocolHandler) oClass.newInstance();
 
-			//          get authsps config and retrieve active resource from SAMAgent
+			// get authsps config and retrieve active resource from SAMAgent
 			String strRG = _configManager.getParam(oAuthSPsection, "resourcegroup");
 			SAMResource mySAMResource = ASelectSAMAgent.getHandle().getActiveResource(strRG);
 			Object objAuthSPResource = mySAMResource.getAttributes();

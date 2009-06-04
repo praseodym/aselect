@@ -42,7 +42,7 @@ public class HttpPoller extends TimerTask
 			URL serverUrl = new URL(_sUrl);
 			URLConnection serverConn = serverUrl.openConnection();
 			serverConn.connect();
-			serverConn.setReadTimeout(4000);  // timeout for read actions
+			serverConn.setReadTimeout(4000);  // timeout for read actions (in milliseconds)
 			InputStream isInput = serverConn.getInputStream();
 			
 			bOk = false;

@@ -229,7 +229,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler // RH, 20080606, n
 			messageContext.setOutboundMessageTransport(outTransport);
 			messageContext.setOutboundSAMLMessage(authnRequest);
 			messageContext.setPeerEntityEndpoint(samlEndpoint);
-			messageContext.setRelayState("federation_url="+sFederationUrl);  // if nothing else
+			//messageContext.setRelayState("federation_url="+sFederationUrl);  // 20090526: we're not using RelayState here
 	
 			BasicX509Credential credential = new BasicX509Credential();
 			PrivateKey key = _configManager.getDefaultPrivateKey();

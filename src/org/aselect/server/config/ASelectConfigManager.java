@@ -262,6 +262,7 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.exception.ASelectUDBException;
+import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.utils.Utils;
 
 /**
@@ -2077,18 +2078,27 @@ public class ASelectConfigManager extends ConfigManager
 		return _sUserInfoSettings;
 	}
 
+	// Convenience function
 	public static String getParamFromSection(Object oConfig, String sSection, String sParam, boolean bMandatory)
 	throws ASelectConfigException
 	{
 		return Utils.getParamFromSection(getHandle(), ASelectSystemLogger.getHandle(),
-									oConfig, sSection, sParam, bMandatory);
+								oConfig, sSection, sParam, bMandatory);
 	}
 
-	// Terse version for ASelect
+	// Convenience function
 	public static String getSimpleParam(Object oConfig, String sParam, boolean bMandatory)
 	throws ASelectException
 	{
 		return Utils.getSimpleParam(getHandle(), ASelectSystemLogger.getHandle(),
+								oConfig, sParam, bMandatory);
+	}
+
+	// Convenience function
+	public static Object getSimpleSection(Object oConfig, String sParam, boolean bMandatory)
+	throws ASelectException
+	{
+		return Utils.getSimpleSection(getHandle(), ASelectSystemLogger.getHandle(),
 								oConfig, sParam, bMandatory);
 	}
 }

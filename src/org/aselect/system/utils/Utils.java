@@ -476,6 +476,15 @@ public class Utils
 		return (len <= max) ? sValue : sValue.substring(0, max) + "...";
 	}
 	
+	public static void copyHashmapValue(String sName, HashMap<String,Object> hmTo, HashMap<String,Object> hmFrom)
+	{
+		if (hmFrom == null | hmTo == null)
+			return;
+		Object oValue = hmFrom.get(sName);
+		if (oValue != null)
+			hmTo.put(sName, (Object)oValue);
+	}
+
 	// Get 'sParam' within the 'oConfig' section
 	// This can be the value of an attribute or the contents of a 'sParam' tag
 	// Examples:

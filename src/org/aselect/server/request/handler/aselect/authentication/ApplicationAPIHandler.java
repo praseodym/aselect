@@ -408,31 +408,31 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			sUid = oInputMessage.getParam("uid");
 		}
 		catch (ASelectCommunicationException eAC) {
-			_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'uid' parameter found.", eAC);
+			//_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'uid' parameter found.", eAC);
 		}
 		try {
 			sAuthsp = oInputMessage.getParam("authsp");
 		}
 		catch (ASelectCommunicationException eAC) {
-			_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'authsp' parameter found.", eAC);
+			//_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'authsp' parameter found.", eAC);
 		}
 		try {
 			sRemoteOrg = oInputMessage.getParam("remote_organization");
 		}
 		catch (ASelectCommunicationException eAC) {
-			_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'remote_organization' parameter found.", eAC);
+			//_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'remote_organization' parameter found.", eAC);
 		}
 		try {
 			sCountry = oInputMessage.getParam("country");
 		}
 		catch (ASelectCommunicationException e) {
-			_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'country' parameter found.", e);
+			//_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'country' parameter found.", e);
 		}
 		try {
 			sLanguage = oInputMessage.getParam("language");
 		}
 		catch (ASelectCommunicationException e) {
-			_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'language' parameter found.", e);
+			//_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'language' parameter found.", e);
 		}
 		Boolean boolForced = null;
 		try {
@@ -441,7 +441,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 		catch (ASelectCommunicationException e) {
 			boolForced = new Boolean(false);
-			_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'forced_logon' parameter found.", e);
+			//_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'forced_logon' parameter found.", e);
 		}
 		Boolean bCheckSignature = true;
 		try {
@@ -449,7 +449,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			bCheckSignature = Boolean.valueOf(sCheckSignature);
 		}
 		catch (ASelectCommunicationException e) {
-			_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'check-signature' parameter found.", e);
+			//_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'check-signature' parameter found.", e);
 		}
 
 		// check if request should be signed
@@ -516,11 +516,9 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			htSessionContext.put("max_level", intMaxAppLevel);
 		htSessionContext.put("organization", _sMyOrg);
 
-		// organization and uid are stored in the session context with a
-		// temporary identifier.
+		// Organization and uid are stored in the session context with a temporary identifier.
 		// This because the values are not validated yet.
-		// After validation, these values can be set as
-		// 'user_id' and 'remote_organization'.
+		// After validation, these values can be set as 'user_id' and 'remote_organization'.
 		//
 		// Bauke 20080511: added "forced_authsp" to influence AuthSP choice
 		if (sRemoteOrg != null)

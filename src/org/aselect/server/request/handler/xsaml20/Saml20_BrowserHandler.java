@@ -287,6 +287,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			httpResponse.setHeader("Cache-Control", "no-cache");
 			httpResponse.addHeader("Cache-Control", "no-store");
 			handleSpecificSaml20Request(httpRequest, httpResponse, samlMessage);
+			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">> SAMLMessage handled");
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -295,7 +296,6 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">> SAMLMessage handled");
 	}
 
 	/**
@@ -471,6 +471,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	throws ASelectException, ASelectStorageException
 	{
 		String sMethod = "logoutNextSessionSP";
+		String sRelayState = null;
 		TGTManager tgtManager = TGTManager.getHandle();
 		
 		String sNameID = logoutRequest.getNameID().getValue();
@@ -548,6 +549,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 				return;  // stop further execution
 			}
 			// No SP's left (except the initiating SP), there goes the TGT
+			sRelayState = (String)htTGTContext.get("RelayState");
 			tgtManager.remove(sNameID);
 		}
 
@@ -561,7 +563,16 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			logoutResponseLocation = metadataManager.getLocation(initiatingSP,
 					SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME, SAMLConstants.SAML2_REDIRECT_BINDING_URI);
 		}
+		if (logoutResponseLocation == null) {
+			_systemLogger.log(Audit.WARNING, MODULE, sMethod, "No logout ResponseLocation in metadata for "+initiatingSP);
+			throw new ASelectException(Errors.ERROR_ASELECT_PARSE_ERROR);
+		}
 
+		// Pass RelayState
+		if (sRelayState != null) {
+			String sStart = (logoutResponseLocation.contains("?"))? "&": "?";
+			logoutResponseLocation += sStart+"RelayState="+sRelayState;
+		}
 		String statusCode = StatusCode.SUCCESS_URI;
 		LogoutResponseSender sender = new LogoutResponseSender();
 		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">> Sending logoutresponse to: "+ logoutResponseLocation);

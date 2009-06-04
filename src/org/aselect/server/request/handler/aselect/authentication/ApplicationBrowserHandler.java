@@ -330,7 +330,9 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.AuthenticationLogger;
+import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMResource;
+import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
 /**
@@ -458,20 +460,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 
-			// Bauke: tolk additions
-			// Bauke, 20080918 removed
-			/*_systemLogger.log(Level.INFO,_sModule,sMethod, "ApplBrowREQ htSessionContext="+_htSessionContext);
-			 String sAppl = (String)htServiceRequest.get("appl");
-			 String sCtx = (String)_htSessionContext.get("appl");
-			 if (sAppl != null) _htSessionContext.put("appl", sAppl);
-			 else if (sCtx != null) htServiceRequest.put("appl", sCtx);
-			 String sAppUrl = (String)_htSessionContext.get("app_url");
-			 if (sAppUrl != null) {
-			 htServiceRequest.put("app_url", sAppUrl);
-			 }*/
-
 			String sDirectAuthSP = (String) _htSessionContext.get("direct_authsp");
-
 			if (sDirectAuthSP != null && !(sRequest.indexOf("direct_login") >= 0)) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "'direct_authsp' found, but not a 'direct_login' request, rid='" + sRid + "'");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
@@ -492,17 +481,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			else if (sRequest.equals("login25")) {
 				handleLogin25(htServiceRequest, _servletResponse, pwOut);
 			}
-			// Bauke, 20080918 removed
-			/*else if (sRequest.equals("tolk_gotodigid")) {
-			 tolk.GoToDigiD x = new tolk.GoToDigiD();
-			 try {
-			 x.init();
-			 } catch (ServletException e) {
-			 }
-			 _systemLogger.log(Level.INFO,_sModule,sMethod, "handleTolkGoToDigiD, REQ="+htServiceRequest);
-			 x.handleTolkGoToDigiD(_servletRequest, _servletResponse, pwOut, htServiceRequest);
-			 x.destroy();
-			 }*/
 			else if (sRequest.equals("ip_login")) {
 				handleIPLogin1(htServiceRequest, _servletResponse, pwOut);
 			}
@@ -559,11 +537,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "DirectLogin");
 		try {
 			sRid = (String)htServiceRequest.get("rid");
-
-			// Bauke: line inserted: Only offer a single choice
-			// Bauke, 20080918: removed
-			//_htSessionContext.put("direct_authsp", "Ldap");  // Bauke: HACK tolk: directlogin used ldap only
-
 			String sAuthSPId = (String) _htSessionContext.get("direct_authsp");
 			if (sAuthSPId == null) {
 				sAuthSPId = (String)htServiceRequest.get("authsp");
@@ -577,8 +550,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			IAuthSPDirectLoginProtocolHandler oProtocolHandler = _authspHandlerManager
 					.getAuthSPDirectLoginProtocolHandler(sAuthSPId);
 
-			// check if user already has a tgt so that he/she doesnt need to
-			// be authenticated again            
+			// check if user already has a tgt so that he/she doesnt need to be authenticated again            
 			if (_configManager.isSingleSignOn() && htServiceRequest.containsKey("aselect_credentials_tgt")
 					&& htServiceRequest.containsKey("aselect_credentials_uid")
 					&& htServiceRequest.containsKey("aselect_credentials_server_id")) {
@@ -1640,14 +1612,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						// redirect to application as user has already a valid
 						// tgt
 						if (_htSessionContext.get("cross_authenticate") != null) {
-							// Cross A-Select does not implement
-							// 'verify_credentials'
-							// The TGT should be created now
-							// TGTIssuer will redirect to local A-Select Server
+							// Cross A-Select does not implement 'verify_credentials'
+							// The TGT should be created now, TGTIssuer will redirect to local A-Select Server
 
-							// TODO Check if a new TGT must be created (Peter)  
-							// A new TGT is created because the TGTIssuer
-							// implements the redirect with a create signature.
+							// TODO Check if a new TGT must be created (Peter)
+							// A new TGT is created because the TGTIssuer implements the redirect with a create signature.
 							// It is not logical to create a new TGT.
 							_htSessionContext.put("user_id", sUid);
 
@@ -1659,7 +1628,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip is now "
 									+ _htSessionContext.get("client_ip"));
 
-							_sessionManager.createSession(sRid, _htSessionContext);
+							_sessionManager.writeSession(sRid, _htSessionContext);
 
 							HashMap htTgtContext = _tgtManager.getTGT(sTgt);
 							String sAuthsp = (String) htTgtContext.get("authsp");
@@ -1667,12 +1636,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							// kill existing tgt
 							_tgtManager.remove(sTgt);
 
-							// issue new one but with the same lifetime as the
-							// existing one
+							// issue new one but with the same lifetime as the existing one
 							HashMap htAdditional = new HashMap();
 							//FIXME StorageManager can't update timestamp, this doesn't work. (Erwin, Peter)
-							//htAdditional.put("tgt_exp_time", htTgtContext
-							//.get("tgt_exp_time"));
+							//htAdditional.put("tgt_exp_time", htTgtContext.get("tgt_exp_time"));
 
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 							oTGTIssuer.issueTGT(sRid, sAuthsp, htAdditional, servletResponse, null);
@@ -1685,8 +1652,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						sRedirectUrl = URLDecoder.decode(sRedirectUrl, "UTF-8");
 						sb = new StringBuffer(sRedirectUrl);
 
-						//check whether the application url contains cgi
-						// parameters
+						//check whether the application url contains cgi parameters
 						if (sRedirectUrl.indexOf("?") > 0) {
 							sb.append("&");
 						}
@@ -1698,7 +1664,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						sUid = URLEncoder.encode(sUid, "UTF-8");
 
 						String sEncTgt = CryptoEngine.getHandle().encryptTGT(Utils.stringToHex(sTgt));
-
 						sb.append("aselect_credentials=").append(sEncTgt);
 						sb.append("_").append(sUid).append("_");
 						sb.append(sServerId);
@@ -1748,7 +1713,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			htAllowedAuthsps.put("Ip", htServiceRequest.get("client_ip"));
 			_htSessionContext.put("allowed_user_authsps", htAllowedAuthsps);
 			_htSessionContext.put("user_id", htServiceRequest.get("client_ip"));
-			_sessionManager.createSession(sRid, _htSessionContext);
+			_sessionManager.writeSession(sRid, _htSessionContext);
 
 			//go for IP authsp
 			htServiceRequest.put("authsp", "Ip");
@@ -1893,11 +1858,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				sSignature = URLDecoder.decode(sSignature, "UTF-8");
 				sUID = URLDecoder.decode(sUID, "UTF-8");
 			}
-			catch (UnsupportedEncodingException eUE)
-			//Interne fout UTF-8 niet ondersteund
-			{
-				_systemLogger
-						.log(Level.WARNING, _sModule, sMethod, "Internal error: request could not be decoded", eUE);
+			catch (UnsupportedEncodingException eUE) {  //Interne fout UTF-8 niet ondersteund
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error: request could not be decoded", eUE);
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
 
@@ -1951,13 +1913,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			htSessionContext.put("user_id", sUID);
 			htSessionContext.put("authsp", sPrivilegedApplication);
 			htSessionContext.put("authsp_level", sAuthspLevel);
-
-			// Bauke: application requested must be passed on to the tolk
-			// Bauke, 20080918 removed
-			/*
-			 String sAppl = (String)htServiceRequest.get("appl");
-			 _systemLogger.log(Level.INFO, _sModule, sMethod, "UPDSES appl="+sAppl); 
-			 htSessionContext.put("appl", sAppl);*/
 
 			if (!_sessionManager.updateSession(sRid, htSessionContext)) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod,
@@ -2071,7 +2026,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip is now "
 					+ _htSessionContext.get("client_ip"));
 
-			if (!_sessionManager.createSession(sRid, _htSessionContext)) {
+			if (!_sessionManager.writeSession(sRid, _htSessionContext)) {
 				// logged in sessionmanager
 				throw new ASelectException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
 			}
@@ -2126,8 +2081,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				+ _htSessionContext.get("client_ip") + ", set to " + get_servletRequest().getRemoteAddr());
 		_htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr());
 
-		if (!_sessionManager.createSession(sRid, _htSessionContext)) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "could not update session context");
+		Tools.pauseSensorData(_systemLogger, _htSessionContext);
+		if (!_sessionManager.writeSession(sRid, _htSessionContext)) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not write session context");
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 

@@ -451,7 +451,7 @@ public class ShibbolethAuthenticationProfile extends AbstractRequestHandler
             htSession.put("client_ip", request.getRemoteAddr());
             _systemLogger.log(Level.INFO, MODULE, sMethod, "htSession client_ip is now "+ htSession.get("client_ip"));
 			
-			_oSessionManager.createSession(SESSION_ID_PREFIX + sRid, htSession);
+			_oSessionManager.writeSession(SESSION_ID_PREFIX + sRid, htSession);
 				
             //redirect with A-Select request=login1
 			StringBuffer sbURL = new StringBuffer(sASelectURL);

@@ -177,34 +177,23 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 			SAMLObjectBuilder<ArtifactResolve> artifactResolveBuilder = (SAMLObjectBuilder<ArtifactResolve>) _oBuilderFactory
 					.getBuilder(ArtifactResolve.DEFAULT_ELEMENT_NAME);
 			ArtifactResolve artifactResolve = artifactResolveBuilder.buildObject();
-			// RH, 20081107, use SamlTools now
-//			SecureRandomIdentifierGenerator idGenerator = null;
-//			try {
-//				idGenerator = new SecureRandomIdentifierGenerator();
-//			}
-//			catch (NoSuchAlgorithmException e) {
-//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "The SHA1PRNG algorithm is not supported by the JVM",	e);
-//				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-//			}
-			// TODO, add '_' to this ID to make it saml NCName compliant
-//			artifactResolve.setID(idGenerator.generateIdentifier());
-//			artifactResolve.setID("_" + idGenerator.generateIdentifier());
+
 			// RH, 20081107, use SamlTools
 			artifactResolve.setID(SamlTools.generateIdentifier(_systemLogger, MODULE));
 			artifactResolve.setVersion(SAMLVersion.VERSION_20);
 			artifactResolve.setIssueInstant(new DateTime());
+			
 			// We decided that the other side could retrieve public key from metadata
 			// by looking up the issuer as an entityID in the metadata
 			// So we MUST supply an Issuer (which otherwise would be optional (by SAML standards))
 			SAMLObjectBuilder<Issuer> assertionIssuerBuilder = (SAMLObjectBuilder<Issuer>) _oBuilderFactory
-			.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
+											.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
 			Issuer assertionIssuer = assertionIssuerBuilder.buildObject();
 			assertionIssuer.setFormat(NameIDType.ENTITY);
 			assertionIssuer.setValue(_sRedirectUrl);
 			artifactResolve.setIssuer(assertionIssuer);
-			
-			
 			artifactResolve.setArtifact(artifact);
+			
 			// Do some logging for testing
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the artifactResolve >======" );
 			artifactResolve = (ArtifactResolve)sign(artifactResolve);

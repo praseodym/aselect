@@ -91,6 +91,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.AuthenticationLogger;
 import org.aselect.system.sam.agent.SAMResource;
+import org.aselect.system.utils.Tools;
 
 /**
  * This class handles cross-authentication requests coming from a remote A-Select Server, except for the
@@ -230,6 +231,11 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 				throw new ASelectException(sResultCode);
 			}
 			
+			// User interaction is finished, resume the stopwatch
+			// Could be done before the verifyAuthenticationResponse() above,
+			// but at that point we did not have the Rid yet
+			Tools.resumeSensorData(_systemLogger, htSessionContext);
+			
 			// The user was authenticated successfully, or sp_issuer was present
 			if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
 				htSessionContext.put("result_code", sResultCode); // must be used by the tgt issuer
@@ -245,7 +251,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 				htSessionContext.put("user_id", sUid);
 				String sSecLevel = (String) htResponse.get("betrouwbaarheidsniveau");
 				// 20090110, Bauke: changed assigned_betrouwbaarheidsniveau to assigned_level,
-				// seem not to be used anymore!
+				// seems not to be used anymore!
 				if (sSecLevel != null)
 					htSessionContext.put("assigned_level", sSecLevel);
 				_sessionManager.updateSession(sRid, htSessionContext);

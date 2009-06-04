@@ -502,14 +502,14 @@ public class SamlTools
 	/**
 	 * Build Logout Request
 	 * <br>
-	 * @param serviceProviderUrl String with SP url.
+	 * @param sServiceProviderUrl String with SP url.
 	 * @param user String with user id.
 	 * @param issuerUrl String with Issuer url.
 	 * @param reason String with logout reason.
 	 * @throws ASelectException If building logout request fails.
 	 */
 	@SuppressWarnings("unchecked")
-	public static LogoutRequest buildLogoutRequest(String serviceProviderUrl, String sNameID, String issuerUrl, String reason)
+	public static LogoutRequest buildLogoutRequest(String sServiceProviderUrl, String sNameID, String issuerUrl, String reason)
 		throws ASelectException
 	{
 		String sMethod = "buildLogoutRequest()";
@@ -529,12 +529,13 @@ public class SamlTools
 		SAMLObjectBuilder<NameID> nameIdBuilder = (SAMLObjectBuilder<NameID>) builderFactory
 				.getBuilder(NameID.DEFAULT_ELEMENT_NAME);
 		NameID nameId = nameIdBuilder.buildObject();
+		nameId.setFormat(NameIDType.TRANSIENT);
 		nameId.setValue(sNameID);
 		logoutRequest.setNameID(nameId);
 
 		// optionele velden
 		logoutRequest.setReason(reason);
-		logoutRequest.setDestination(serviceProviderUrl);
+		logoutRequest.setDestination(sServiceProviderUrl);
 
 		SAMLObjectBuilder<Issuer> issuerBuilder = (SAMLObjectBuilder<Issuer>) builderFactory
 				.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
@@ -679,7 +680,9 @@ public class SamlTools
 	// Wrapper class for transition from our "old" "trunk" jars to 
 	// release version of opensaml/2.1.0, openws/1.1.0, xmltooling/1.0.1
 	// Catches old org.opensaml.xml.signature.KeyInfoHelper.getCertificate()
-	public static java.security.cert.X509Certificate getCertificate(X509Certificate cert) throws CertificateException {
+	public static java.security.cert.X509Certificate getCertificate(X509Certificate cert)
+	throws CertificateException
+	{
 		// for old libs
 //		return org.opensaml.xml.signature.KeyInfoHelper.getCertificate(cert);
 		// for new libs
@@ -689,7 +692,8 @@ public class SamlTools
 	// Wrapper class for transition from our "old" "trunk" jars to 
 	// release version of opensaml/2.1.0, openws/1.1.0, xmltooling/1.0.1
 	// Catches old HttpServletResponseAdapter(HttpServletResponse response) constructor
-	public static HttpServletResponseAdapter createHttpServletResponseAdapter(HttpServletResponse response, String remoteURL) {
+	public static HttpServletResponseAdapter createHttpServletResponseAdapter(HttpServletResponse response, String remoteURL)
+	{
 		// for old libs
 //		return new HttpServletResponseAdapter(response);
 		// for new libs

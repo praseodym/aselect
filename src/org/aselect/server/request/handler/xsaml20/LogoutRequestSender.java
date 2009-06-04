@@ -43,44 +43,42 @@ public class LogoutRequestSender
 	/**
 	 * Sends a LogoutRequest
 	 * 
-	 * @param serviceProviderUrl
+	 * @param sServiceProviderUrl
 	 * @param sNameID
 	 * @param request
 	 * @param response
 	 * @throws ASelectException
 	 */
 	@SuppressWarnings("unchecked")
-	public void sendLogoutRequest(String serviceProviderUrl, String issuerUrl, String sNameID, HttpServletRequest request,
+	public void sendLogoutRequest(String sServiceProviderUrl, String sIssuerUrl, String sNameID, HttpServletRequest request,
 			HttpServletResponse response, String reason)
 		throws ASelectException
 	{
 		String sMethod = "sendLogoutRequest";
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Send LogoutRequest to: " + serviceProviderUrl);
+		//sServiceProviderUrl += ((sServiceProviderUrl.indexOf('?')>=0)? "&": "?") +"RelayState=relay_url_value";  // test
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Send LogoutRequest to: " + sServiceProviderUrl);
 		XMLObjectBuilderFactory builderFactory = Configuration.getBuilderFactory();
 
 		//LogoutRequestBuilder logoutRequestBuilder = new LogoutRequestBuilder();
-		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(serviceProviderUrl, sNameID, issuerUrl, reason);
+		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(sServiceProviderUrl, sNameID, sIssuerUrl, reason);
 		// TODO setValidityInterval with only NotOnOrAfter, but we need this from calling object (from aselect.xml)
 		SAMLObjectBuilder<Endpoint> endpointBuilder = (SAMLObjectBuilder<Endpoint>) builderFactory
-				.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);
+											.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);
 		Endpoint samlEndpoint = endpointBuilder.buildObject();
 		// samlEndpoint.setBinding(HTTPPostEncoder.BINDING_URI);
-		samlEndpoint.setLocation(serviceProviderUrl);
+		samlEndpoint.setLocation(sServiceProviderUrl);
 		String sAppUrl = request.getRequestURL().toString();
 		samlEndpoint.setResponseLocation(sAppUrl);
 
-//		HttpServletResponseAdapter outTransport = new HttpServletResponseAdapter(response); // RH 20080529, o
-		HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response, serviceProviderUrl); // RH 20080529, n
-		
+		HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response, sServiceProviderUrl);
 		BasicSAMLMessageContext messageContext = new BasicSAMLMessageContext();
 		messageContext.setOutboundMessageTransport(outTransport);
 		messageContext.setOutboundSAMLMessage(logoutRequest);
 		messageContext.setPeerEntityEndpoint(samlEndpoint);
-		// 20081109: messageContext.setRelayState("relay");
+		//messageContext.setRelayState("relay_this_value");  // test
 
 		BasicX509Credential credential = new BasicX509Credential();
-
 		credential.setPrivateKey(privateKey);
 		messageContext.setOutboundSAMLMessageSigningCredential(credential);
 

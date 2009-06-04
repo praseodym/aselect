@@ -18,7 +18,6 @@ import org.aselect.server.log.ASelectAuthenticationLogger;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.session.SessionManager;
 import org.aselect.system.communication.client.IClientCommunicator;
-import org.aselect.system.communication.client.raw.RawCommunicator;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAuthSPException;
 import org.aselect.system.exception.ASelectCommunicationException;
@@ -117,7 +116,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			// Presuming : always use the RawCommunicator
 //			_oClientCommunicator = new RawCommunicator(_systemLogger);
 			// 20090407, Bauke: no longer presuming
-			_oClientCommunicator = Tools.initClientCommunicator(oAuthSPConfig, _systemLogger);
+			_oClientCommunicator = Tools.initClientCommunicator(ASelectConfigManager.getHandle(), _systemLogger, oAuthSPConfig);
 
 			Object oBetrouwbaarheidsNiveaus = null;
 			try {

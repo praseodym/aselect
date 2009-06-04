@@ -129,74 +129,36 @@ public class SessionSyncRequestSender
 			for ( ; oHandler != null; ) {
 				try {
 					String sId = myConfigManager.getParam(oHandler, "id");
-					mySystemLogger.log(Level.INFO, MODULE, sMethod, "Handler "+sId);
+					//mySystemLogger.log(Level.INFO, MODULE, sMethod, "Handler "+sId);
 					if (sId.equals("saml20_sp_session_sync")) {
-						try {
-							String federationUrl = myConfigManager.getParam(oHandler, "federation_url");
-							htSessionSyncParameters.put("federation_url", federationUrl);
-						}
-						catch (ASelectConfigException e) {
-							mySystemLogger.log(Level.WARNING, MODULE, sMethod,
-									"No config item 'federation_url' found in 'handler' section", e);
-							throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-						}
-						try {
-							String _sUpdateInterval = myConfigManager.getParam(oHandler, "update_interval");
-							Long updateInterval = Long.parseLong(_sUpdateInterval);
-							updateInterval = updateInterval * 1000;
-							mySystemLogger.log(Level.INFO, MODULE, sMethod, "Update interval on SP = " + updateInterval);
-							htSessionSyncParameters.put("update_interval", updateInterval);
-						}
-						catch (ASelectConfigException e) {
-							mySystemLogger.log(Level.WARNING, MODULE, sMethod,
-									"No config item 'update_interval' found in 'handler' section", e);
-							throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-						}
+						String sFederationUrl = ASelectConfigManager.getSimpleParam(oHandler, "federation_url", true);
+						htSessionSyncParameters.put("federation_url", sFederationUrl);
 
-						try {
-							String samlMessageType = myConfigManager.getParam(oHandler, "message_type");
-							htSessionSyncParameters.put("message_type", samlMessageType);
-						}
-						catch (ASelectConfigException e) {
-							mySystemLogger.log(Level.WARNING, MODULE, sMethod,
-									"No config item 'message_type' found in 'handler' section", e);
-							throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-						}
-						try {
-							String verify_signature = myConfigManager.getParam(oHandler, "verify_signature");
-							htSessionSyncParameters.put("verify_signature", verify_signature);
-						}
-						catch (ASelectConfigException e) {
-							mySystemLogger.log(Level.WARNING, MODULE, sMethod,
-									"No config item 'verify_signature' in 'handler' section", e);
-							htSessionSyncParameters.put("verify_signature", "false");
-						}
-						try {
-							String verify_interval = myConfigManager.getParam(oHandler, "verify_interval");
-							htSessionSyncParameters.put("verify_interval", verify_interval);
-						}
-						catch (ASelectConfigException e) {
-							mySystemLogger.log(Level.WARNING, MODULE, sMethod,
-									"No config item  'verify_interval' in 'handler' section", e);
-							htSessionSyncParameters.put("verify_interval", "false");
-						}
-						try {
-							String max_notbefore = myConfigManager.getParam(oHandler, "max_notbefore");
+						String _sUpdateInterval = ASelectConfigManager.getSimpleParam(oHandler, "update_interval", true);
+						Long updateInterval = Long.parseLong(_sUpdateInterval);
+						updateInterval = updateInterval * 1000;
+						mySystemLogger.log(Level.INFO, MODULE, sMethod, "Update interval on SP = " + updateInterval);
+						htSessionSyncParameters.put("update_interval", updateInterval);
+
+						String samlMessageType = ASelectConfigManager.getSimpleParam(oHandler, "message_type", true);
+						htSessionSyncParameters.put("message_type", samlMessageType);
+
+						String verify_signature = ASelectConfigManager.getSimpleParam(oHandler, "verify_signature", false);
+						htSessionSyncParameters.put("verify_signature", (verify_signature==null)? "false": verify_signature);
+						
+						String verify_interval = ASelectConfigManager.getSimpleParam(oHandler, "verify_interval", false);
+						htSessionSyncParameters.put("verify_interval", (verify_interval==null)? "false": verify_interval);
+
+						String max_notbefore = ASelectConfigManager.getSimpleParam(oHandler, "max_notbefore", false);
+						if (max_notbefore != null) {
 							max_notbefore = (new Long( Long.parseLong(max_notbefore) * 1000)).toString();
 							htSessionSyncParameters.put("max_notbefore", max_notbefore);
 						}
-						catch (ASelectConfigException e) {
-							mySystemLogger.log(Level.WARNING, MODULE, sMethod,
-									"No (valid) config item  'max_notbefore' in 'handler' section", e);
-						}
-						try {
-							String max_notonorafter = myConfigManager.getParam(oHandler, "max_notonorafter");
+
+						String max_notonorafter = ASelectConfigManager.getSimpleParam(oHandler, "max_notonorafter", false);
+						if (max_notonorafter != null) {
 							max_notonorafter = (new Long( Long.parseLong(max_notonorafter) * 1000)).toString();
 							htSessionSyncParameters.put("max_notonorafter", max_notonorafter);
-						}
-						catch (ASelectConfigException e) {
-							mySystemLogger.log(Level.WARNING, MODULE, sMethod,
-									"No (valid) config item  'max_notonorafter' in 'handler' section", e);
 						}
 					}
 				}

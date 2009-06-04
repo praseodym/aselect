@@ -45,7 +45,7 @@ import org.w3c.dom.NodeList;
 
 public abstract class AbstractMetaDataManager
 {
-	protected final String MODULE = "MetaDataManagerIdp";
+	protected final String MODULE = "AbstractMetaDataManager";
 	protected final String sFederationIdpKeyword = "federation-idp";
 	protected String protocolSupportEnumeration = SAMLConstants.SAML20P_NS; // "urn:oasis:names:tc:SAML:2.0:protocol"
 	protected ASelectConfigManager _configManager;
@@ -184,17 +184,6 @@ public abstract class AbstractMetaDataManager
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity "+entityId+" not found");
 			out.println("Entity "+entityId+" not found");
 		}
-		
-		/*if (!entityDescriptors.containsKey(entityId)) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity "+entityId+" not found.");
-			remove--;
-		}
-		else
-			entityDescriptors.remove(entityId);
-		
-		if (remove != 0) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity "+entityId+" removed.");
-		}*/
 	}
 
 	/**
@@ -315,10 +304,10 @@ public abstract class AbstractMetaDataManager
 		if (entityId == null)
 			return null;
 		checkMetadataProvider(entityId);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta checked for "+entityId);
+		//_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta checked for "+entityId);
 		SSODescriptor descriptor = SSODescriptors.get(entityId);
 		
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "descriptor="+descriptor);
+		//_systemLogger.log(Level.INFO, MODULE, sMethod, "descriptor="+descriptor);
 		if (descriptor != null) {
 			try {
 				Element domDescriptor = marshallDescriptor(descriptor);
@@ -327,7 +316,7 @@ public abstract class AbstractMetaDataManager
 				//_systemLogger.log(Level.INFO, MODULE, sMethod, "Try "+nodeList.getLength()+" entries");
 				for (int i = 0; i < nodeList.getLength(); i++) {
 					Node childNode = nodeList.item(i);
-					_systemLogger.log(Level.FINE, MODULE, sMethod, "Node "+childNode.getLocalName());
+					//_systemLogger.log(Level.FINE, MODULE, sMethod, "Node "+childNode.getLocalName());
 					if (elementName.equals(childNode.getLocalName())) {
 						NamedNodeMap nodeMap = childNode.getAttributes();
 						String bindingMDValue = nodeMap.getNamedItem("Binding").getNodeValue();

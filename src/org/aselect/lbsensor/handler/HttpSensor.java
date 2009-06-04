@@ -46,7 +46,7 @@ public class HttpSensor extends BasicSensorHandler
 	{
 		String sMethod = "processLine";
 		
-		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "["+sLine+"]");
+		//_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "["+sLine+"]");
 		oOutWriter.write(sLine+"$\r\n");
 		if (sLine.startsWith("GET ")) {
 			// GET /?request=store&data=12345 HTTP/1.1

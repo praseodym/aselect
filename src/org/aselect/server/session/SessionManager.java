@@ -83,6 +83,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.storagemanager.StorageManager;
+import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
 /**
@@ -281,8 +282,9 @@ public class SessionManager extends StorageManager
 				_systemLogger.log(Level.FINEST, MODULE, sMethod, "sSessionId=" + sSessionId);
 			}
 
+			Tools.initializeSensorData(_systemLogger, htSessionContext);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "New SessionId=" + sSessionId);  // + ", htSessionContext="+htSessionContext);
-			put(sSessionId, htSessionContext);
+			put(sSessionId, htSessionContext);  // always insert
 			_lSessionsCounter++;
 		}
 		catch (ASelectStorageException e) {
@@ -290,7 +292,6 @@ public class SessionManager extends StorageManager
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Maximum number of sessions reached", e);
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_BUSY, e);
 			}
-
 			throw e;
 		}
 		catch (ASelectException e) {
@@ -332,17 +333,17 @@ public class SessionManager extends StorageManager
 	 * @param htSessionContext The new session context.
 	 * @return True if updating succeeds, otherwise false.
 	 */
-	public boolean createSession(String sSessionId, HashMap htSessionContext)
+	public boolean writeSession(String sSessionId, HashMap htSessionContext)
 	{
-		String sMethod = "createSession";
+		String sMethod = "writeSession";
 		boolean bReturn = false;
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SessionId=" + sSessionId);
-			put(sSessionId, htSessionContext);
+			put(sSessionId, htSessionContext);  // insert or update
 			bReturn = true;
 		}
 		catch (ASelectStorageException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not update session: " + sSessionId, e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not write session: " + sSessionId, e);
 		}
 		return bReturn;
 	}
@@ -418,7 +419,7 @@ public class SessionManager extends StorageManager
 		HashMap htContext = null;
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SessionId=" + sSessionId);  // + ", Context=" + htContext);
-			htContext = (HashMap) get(sSessionId);
+			htContext = (HashMap)get(sSessionId);
 		}
 		catch (ASelectStorageException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not find context for session with id: "
@@ -453,10 +454,9 @@ public class SessionManager extends StorageManager
 		String sMethod = "killSession";
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SessionId=" + sSessionId);
-			//Retrieve session start time (timestamp) and calculate 
-			//last processing time
+			// Retrieve session start time (timestamp) and calculate last processing time
 			_lProcessTime = System.currentTimeMillis() - getTimestamp(sSessionId);
-			//remove session
+			// Remove session
 			remove(sSessionId);
 		}
 		catch (ASelectStorageException e) {
@@ -501,7 +501,7 @@ public class SessionManager extends StorageManager
 	 * <br>
 	 * The storage manager is created.
 	 */
-	private SessionManager() {
+	private SessionManager()
+	{
 	}
-
 }

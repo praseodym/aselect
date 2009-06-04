@@ -106,16 +106,7 @@ public class Idff12_ISTS extends ProtoRequestHandler
         try {
         	// Store the current choice in a cookie
         	HandlerTools.putCookieValue(response, COOKIENAME, sIdPUrl, _sCookieDomain, -1, _systemLogger);
-/*            Cookie oWAYFCookie = new Cookie(COOKIENAME, sIdPUrl);
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "Add Cookie: "+COOKIENAME+" Value="+sIdPUrl+
-            		" CookieDomain="+_sCookieDomain);
-            
-            if (_sCookieDomain != null)
-                oWAYFCookie.setDomain(_sCookieDomain);
-            response.addCookie(oWAYFCookie);
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "Cookie("+COOKIENAME+") added");
-*/                        
-            //add a '?' char after the selected IdP URL
+            // Add a '?' char after the selected IdP URL
             if (!sIdPUrl.endsWith("?"))
                 sIdPUrl = sIdPUrl + "?";
             

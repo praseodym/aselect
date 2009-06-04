@@ -31,12 +31,14 @@ public class HtmlInfo extends HttpServlet
 	}
 	
 	public void handleHtmlInfo(HttpServletRequest request, HttpServletResponse response,
-		    ASelectSystemLogger systemLogger, HashMap htServiceRequest)
+			ASelectSystemLogger systemLogger, HashMap htServiceRequest)
 	{
 		try {
 			doGet(request, response, systemLogger);
-		} catch (ServletException e) {
-		} catch (IOException e) {
+		}
+		catch (ServletException e) {
+		}
+		catch (IOException e) {
 		}
 	}
 

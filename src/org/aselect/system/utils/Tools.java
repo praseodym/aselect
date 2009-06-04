@@ -34,6 +34,7 @@ import org.aselect.system.communication.client.IClientCommunicator;
 import org.aselect.system.communication.client.raw.RawCommunicator;
 import org.aselect.system.communication.client.soap11.SOAP11Communicator;
 import org.aselect.system.communication.client.soap12.SOAP12Communicator;
+import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
@@ -243,21 +244,114 @@ public class Tools
 		return stream2string(is, DEFAULT_CHARSET, true);
 	}
 
-	public static IClientCommunicator initClientCommunicator(Object oConfig, SystemLogger _systemLogger)
+	public static IClientCommunicator initClientCommunicator(ConfigManager oCfgMgr, SystemLogger oSysLog, Object oConfig)
 	throws ASelectException
 	{
-		String sClientCommunicator = ASelectConfigManager.getSimpleParam(oConfig, "clientcommunicator", false);
+		String sClientCommunicator = Utils.getSimpleParam(oCfgMgr, oSysLog, oConfig, "clientcommunicator", false);
 		if (sClientCommunicator == null || sClientCommunicator.equalsIgnoreCase("raw")) {
-			return new RawCommunicator(_systemLogger);
+			return new RawCommunicator(oSysLog);
 		}
 		else if (sClientCommunicator.equalsIgnoreCase("soap11")) {
-			return new SOAP11Communicator("ASelect", _systemLogger);
+			return new SOAP11Communicator("ASelect", oSysLog);
 		}
 		else if (sClientCommunicator.equalsIgnoreCase("soap12")) {
-			return new SOAP12Communicator("ASelect", _systemLogger);
+			return new SOAP12Communicator("ASelect", oSysLog);
 		}
-		_systemLogger.log( Level.WARNING, MODULE, "initClientCommunicator", "Invalid 'clientcommunicator' value");
+		oSysLog.log( Level.WARNING, MODULE, "initClientCommunicator", "Invalid 'clientcommunicator' value");
 		throw new ASelectException(Errors.ERROR_ASELECT_CONFIG_ERROR);
+	}
+
+	public static void initializeSensorData(SystemLogger oSysLog, HashMap<String,String> htSessionContext)
+	{
+		String sMethod = "initializeSensorData";
+		long now = System.currentTimeMillis();
+		
+		oSysLog.log(Level.INFO, MODULE, sMethod, "now="+now);
+		htSessionContext.put("first_contact", Long.toString(now));  // seconds
+		htSessionContext.put("time_spent", "0");  // seconds
+	}
+
+	public static void pauseSensorData(SystemLogger oSysLog, HashMap<String,String> htSessionContext)
+	{
+		String sMethod = "pauseSensorData";
+		long now = System.currentTimeMillis();
+		
+		oSysLog.log(Level.INFO, MODULE, sMethod, "now="+now);
+		htSessionContext.put("pause_contact", Long.toString(now));  // seconds
+	}
+
+	public static void resumeSensorData(SystemLogger oSysLog, HashMap<String,String> htSessionContext)
+	{
+		String sMethod = "resumeSensorData";
+		long now = System.currentTimeMillis();
+		
+		oSysLog.log(Level.INFO, MODULE, sMethod, "now="+now);
+		String sPause = (String)htSessionContext.get("pause_contact");  // seconds
+		String sSpent = (String)htSessionContext.get("time_spent");  // seconds
+		if (sPause != null) {
+			try {
+				long lPause = Long.parseLong(sPause);
+				long lSpent = (sSpent != null)? Long.parseLong(sSpent): 0;
+				lSpent += now - lPause;
+				oSysLog.log(Level.INFO, MODULE, sMethod, "pause="+lSpent);
+				htSessionContext.put("time_spent", Long.toString(lSpent));  // seconds
+				htSessionContext.remove("pause_contact");
+			}
+			catch(Exception e) {
+				oSysLog.log(Level.INFO, MODULE, sMethod, "Sensor calculation failed", e);
+			}
+		}
+	}
+
+	public static void calculateAndReportSensorData(ConfigManager oConfMgr, SystemLogger oSysLog, HashMap htSession)
+	{
+		String sMethod = "calculateAndReportSensorData";
+		long lNow;
+		
+		String sNow = (String)htSession.get("first_contact");  // seconds
+		String sSpent = (String)htSession.get("time_spent");  // seconds
+		oSysLog.log(Level.INFO, MODULE, sMethod, "now="+sNow+" spent="+sSpent);
+		if (sNow != null) {
+			try {
+				lNow = Long.parseLong(sNow);
+				long now = System.currentTimeMillis();
+				long lTotalSpent = now - lNow;
+				if (sSpent != null) {
+					long lSpent = Long.parseLong(sSpent);
+					lTotalSpent -= lSpent;
+				}
+				Object oConfig = Utils.getSimpleSection(oConfMgr, oSysLog, null, "aselect", true);
+				Tools.reportUsageToSensor(oConfMgr, oSysLog, oConfig, Long.toString(lTotalSpent));
+			}
+			catch(Exception e) {
+				oSysLog.log(Level.INFO, MODULE, sMethod, "Sensor report failed", e);
+			}
+		}
+	}
+	
+	private static void reportUsageToSensor(ConfigManager oConfMgr, SystemLogger oSysLog, Object oConfig, String sData)
+	throws ASelectException
+	{
+		String sMethod = "reportUsageToSensor";
+		IClientCommunicator oClientCommunicator;
+		
+		Object oSensorSection = Utils.getSimpleSection(oConfMgr, oSysLog, oConfig, "lbsensor", true);
+		oClientCommunicator = Tools.initClientCommunicator(oConfMgr, oSysLog, oSensorSection);
+		String sSensorUrl = Utils.getSimpleParam(oConfMgr, oSysLog, oSensorSection, "sensor_url", true);
+		
+		HashMap htResponse = null;
+		HashMap<String,String> htRequest = new HashMap<String,String>();
+		htRequest.put("request", "store");
+		htRequest.put("data", sData);
+		oSysLog.log(Level.INFO, MODULE, sMethod, "Send LB Sensor: "+sData);
+		try {
+			htResponse = oClientCommunicator.sendMessage(htRequest, sSensorUrl);
+		}
+		catch (Exception e) {
+			oSysLog.log(Level.WARNING, MODULE, sMethod, "Could not contact LB Sensor at: "+sSensorUrl);
+			throw new ASelectException(Errors.ERROR_ASELECT_IO);
+		}
+		oSysLog.log(Level.INFO, MODULE, sMethod, "Result=" + htResponse);
 	}
 	
 	// Convert an URL parameter string to a HashMap containing key, value pairs

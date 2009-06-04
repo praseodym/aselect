@@ -303,7 +303,6 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	        }
 
 	        String sAssertUrl = null;
-	        String sRelayState = null;
 	        if (htTGTContext != null)
 	        	sAssertUrl = (String)htTGTContext.get("sp_assert_url");
 	        if (sAssertUrl == null && htSessionContext != null)
@@ -313,10 +312,10 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	            throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
 	        }
 	        
-	        // Actually, if RelayState was given, it should be available in the Session Context.
-	        if (htTGTContext != null)
-	        	sRelayState = (String)htTGTContext.get("RelayState");
-	        if (sRelayState == null && htSessionContext != null)
+	        // 20090603, Bauke: Only take RelayState from the session (not from TgT)
+	        // If RelayState was given, it must be available in the Session Context.
+	        String sRelayState = null;
+	        if (htSessionContext != null)
 	        	sRelayState = (String)htSessionContext.get("RelayState");
 	        
 	        // And off you go!
@@ -447,7 +446,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				SAMLObjectBuilder<SubjectConfirmation> subjectConfirmationBuilder = (SAMLObjectBuilder<SubjectConfirmation>) builderFactory
 						.getBuilder(SubjectConfirmation.DEFAULT_ELEMENT_NAME);
 				SubjectConfirmation subjectConfirmation = subjectConfirmationBuilder.buildObject();
-				// TODO is deze constante ergens vandaan te halen?
+				// The following constant is not present in the saml2 library
 				subjectConfirmation.setMethod("urn:oasis:names:tc:SAML:2.0:cm:bearer");
 				subjectConfirmation.setSubjectConfirmationData(subjectConfirmationData);
 	
@@ -455,9 +454,11 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 						.getBuilder(NameID.DEFAULT_ELEMENT_NAME);
 				NameID nameID = nameIDBuilder.buildObject();
 				nameID.setFormat(NameIDType.TRANSIENT);  // was PERSISTENT
-				nameID.setNameQualifier(_sASelectServerUrl);
+				// 20090602, Bauke Saml-core-2.0, section 2.2.2: SHOULD be omitted:
+				//nameID.setNameQualifier(_sASelectServerUrl);
 				nameID.setValue(sTgt); // back to TgT sUid);  ///*sTgt);  // REPLACES: */ (String)htTGTContext.get("uid"));
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "nameID="+Utils.firstPartOf(nameID.getValue(), 30));
+				
 				SAMLObjectBuilder<Subject> subjectBuilder = (SAMLObjectBuilder<Subject>) builderFactory
 						.getBuilder(Subject.DEFAULT_ELEMENT_NAME);
 				Subject subject = subjectBuilder.buildObject();
@@ -530,7 +531,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			}
 
 			Saml20_ArtifactManager artifactManager = Saml20_ArtifactManager.getTheArtifactManager();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "buildArtifact serverir;="+_sASelectServerUrl+" rid="+sRid);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "buildArtifact serverUrl="+_sASelectServerUrl+" rid="+sRid);
 			String sArtifact = artifactManager.buildArtifact(response, _sASelectServerUrl, sRid);
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "sendArtifact "+sArtifact);

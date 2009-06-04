@@ -108,8 +108,16 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 			String sNameID = logoutRequest.getNameID().getValue();
 			TGTManager tgtManager = TGTManager.getHandle();
 			HashMap htTGTContext = (HashMap)tgtManager.getTGT(sNameID);
+			
+			// 20090525, Bauke: also save RelayState in the TGT for the logout response
+			String sRelayState = httpRequest.getParameter("RelayState");  // is null if missing
+			if (sRelayState != null)
+				htTGTContext.put("RelayState", sRelayState);
+			
 			ASelectConfigManager configManager = ASelectConfigManager.getHandle();
 			if (!"true".equals(sConsent) && configManager.getUserInfoSettings().contains("logout")) {
+				if (sRelayState != null)  // save RelayState in the TGT
+					tgtManager.updateTGT(sNameID, htTGTContext);
 				showLogoutInfo(httpRequest, httpResponse, pwOut, sInitiatingSP, logoutRequest.getDestination(), htTGTContext);
 				return;
 			}
@@ -120,6 +128,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 			// NOTE: cookie GOES, TGT STAYS in admin!!
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Removed cookie for domain: "+sCookieDomain);
 			
+			// Will save TGT (including the RelayState) as well
 	        logoutNextSessionSP(httpRequest, httpResponse, logoutRequest, sInitiatingSP,
 						_bTryRedirectLogoutFirst, _iRedirectLogoutTimeout, htTGTContext);
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request handled " + pathInfo);

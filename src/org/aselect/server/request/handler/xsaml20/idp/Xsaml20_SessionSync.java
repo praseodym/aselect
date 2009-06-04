@@ -66,7 +66,6 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 	private static final String AUTHZDECISIONQUERY = "AuthzDecisionQuery";
 	//private static final String CONTENT_TYPE = "text/xml; charset=utf-8";
 
-
 	/**
 	 * Init for Xsaml20_SessionSync. <br>
 	 * 
