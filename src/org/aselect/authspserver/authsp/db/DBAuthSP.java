@@ -920,8 +920,8 @@ public class DBAuthSP extends ASelectHttpServlet
 
 		// authenticate user
 		Connection oConnection = getConnection();
-		PreparedStatement oStatement;
-		ResultSet oResultSet;
+		PreparedStatement oStatement = null;
+		ResultSet oResultSet = null;
 		try {
 			oStatement = oConnection.prepareStatement(_sQuery);
 			oStatement.setString(1, sUid);
@@ -930,6 +930,26 @@ public class DBAuthSP extends ASelectHttpServlet
 		}
 		catch (Exception e) {
 			_authenticationLogger.log("SEVERE", MODULE, sMethod, "Could not execute query: " + _sQuery, e.getMessage());
+			// RH, 20090605, sn
+			try {
+				oResultSet.close();
+			}
+			catch (SQLException e1) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Could not close resultset");
+			}
+			try {
+				oStatement.close();
+			}
+			catch (SQLException e1) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Could not close statement");
+			}
+			try {
+				oConnection.close();
+			}
+			catch (SQLException e1) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Could not close connection");
+			}
+			// RH, 20090605, en
 			throw new ASelectException(Errors.ERROR_DB_COULD_NOT_REACH_DB_SERVER, e);
 		}
 		if (sResultCode.equals(Errors.ERROR_DB_SUCCESS)) {
@@ -949,6 +969,28 @@ public class DBAuthSP extends ASelectHttpServlet
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could parse result: " + oResultSet);
 				throw new ASelectException(Errors.ERROR_DB_COULD_NOT_REACH_DB_SERVER, e);
 			}
+			// RH, 20090605, sn
+			finally {
+				try {
+					oResultSet.close();
+				}
+				catch (SQLException e1) {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Could not close resultset");
+				}
+				try {
+					oStatement.close();
+				}
+				catch (SQLException e1) {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Could not close statement");
+				}
+				try {
+					oConnection.close();
+				}
+				catch (SQLException e1) {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Could not close connection");
+				}
+			}
+			// RH, 20090605, sn
 
 			if (matches) {
 				_authenticationLogger.log(new Object[] {

@@ -371,16 +371,38 @@ public class JDBCConnector implements IUDBConnector
 			htResponse.put("result_code", Errors.ERROR_ASELECT_UDB_INTERNAL);
 		}
 		finally {
-			try {
-				if (oResultSet != null)
-					oResultSet.close();
-				if (oStatement != null)
-					oStatement.close();
-				if (oConnection != null)
-					oConnection.close();
-			}
-			catch (Exception e) {
-			}
+//			try { // RH, 20090605, sn
+				if (oResultSet != null) {
+					try {
+						oResultSet.close();
+					}
+					catch (SQLException e) {
+						_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "Could not close resultset");
+					}
+					oResultSet = null;
+				}
+				if (oStatement != null) {
+					try {
+						oStatement.close();
+					}
+					catch (SQLException e) {
+						_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "Could not close statement");
+					}
+					oStatement = null;
+				}
+				if (oConnection != null) {
+					try {
+						oConnection.close();
+					}
+					catch (SQLException e) {
+						_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "Could not close connection");
+					}
+					oConnection = null;
+				}
+//			}
+//			catch (Exception e) {
+//			} // RH, 20090605, en
+				
 		}
 		return htResponse;
 	}

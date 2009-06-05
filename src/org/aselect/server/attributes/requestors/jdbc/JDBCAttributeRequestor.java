@@ -185,11 +185,13 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 		// _sQuery) throws ASelectAttributesException
 		// {
 		HashMap htAttributes = new HashMap();
+		Connection oConnection = null;  // RH, 20090605, n
 
 		String sMethod = "getAttributes()";
 		try {
 
-			Connection oConnection = getConnection();
+//			Connection oConnection = getConnection();   // RH, 20090605, o 
+			oConnection = getConnection();  // RH, 20090605, n
 			PreparedStatement oStatement = oConnection.prepareStatement(_sQuery);
 			ResultSet oResultSet = null;
 
@@ -251,17 +253,41 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, ex);
 			}
 			finally {
-				if (oResultSet != null)
-					oResultSet.close();
-				if (oStatement != null)
-					oStatement.close();
+				try {// RH, 20090605, n
+					if (oResultSet != null)
+						oResultSet.close();
+					}
+				catch (Exception e2) {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Could not close resultset");
+				}
+				oResultSet = null; // RH, 20090605, n
+				try {// RH, 20090605, n
+					if (oStatement != null)
+						oStatement.close();
+					}
+				catch (Exception e2) {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Could not close statement");
+				}
+				oStatement = null; // RH, 20090605, n
 			}
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to resolve attributes", e);
 			throw new ASelectAttributesException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
+		// RH, 20090605, sn
+		finally {
+			try {
+				if (oConnection != null)
+						oConnection.close();
+			}
+			catch (SQLException e) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Could not close connection");
+			}
+			oConnection = null;
 
+		}
+		// RH, 20090605, en
 		return htAttributes;
 	}
 
