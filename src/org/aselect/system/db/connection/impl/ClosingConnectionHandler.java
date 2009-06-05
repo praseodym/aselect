@@ -53,7 +53,6 @@ public class ClosingConnectionHandler extends AbstractConnectionHandler
 		String sURL = null;
 		
 		Connection _oActiveConnection = null;
-		int i=1;
 		try {
 			if (_oActiveResource == null || !_oActiveResource.live()) {
 				_oActiveResource = _oSAMAgent.getActiveResource(_sResourceGroup);

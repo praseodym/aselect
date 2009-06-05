@@ -330,7 +330,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.AuthenticationLogger;
-import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMResource;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;

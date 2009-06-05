@@ -81,7 +81,6 @@ public class FileCRLHandler implements ICRLHandler
 		FileInputStream oFileInputStream = null;
 		CRL crl = null;
 		
-		StringBuffer sbTemp = null;
 		try 
 		{
 		    oCertificateFactory = CertificateFactory.getInstance("X509");

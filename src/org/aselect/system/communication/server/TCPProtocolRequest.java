@@ -67,7 +67,6 @@ import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 
-import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.logging.SystemLogger;
 
 /**

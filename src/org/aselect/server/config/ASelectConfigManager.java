@@ -262,7 +262,6 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.exception.ASelectUDBException;
-import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.utils.Utils;
 
 /**

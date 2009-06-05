@@ -1,7 +1,6 @@
 package org.aselect.server.request.handler.xsaml20.idp;
 
 import java.io.PrintWriter;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
@@ -147,7 +146,6 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 	throws ASelectException
 	{
 		final String sMethod = "showLogoutInfo";
-		long now = new Date().getTime();
 		
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "redirect_url="+sRedirectUrl);
 		String sInfoForm = _configManager.getForm("logout_info");

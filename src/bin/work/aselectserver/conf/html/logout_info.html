@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
-    <title>Info | [organization_friendly]</title>
+    <title>Info | [version] - [organization_friendly]</title>
     <link rel="stylesheet" type="text/css" href="style/aselect.css" >
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 </head>
@@ -16,22 +16,31 @@
 	    <td align="right"><p class="itemHead">[organization_friendly]</p></td>
 	</tr>
 	<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
+	<tr>
+	    <td>&nbsp;</td>
+	    <td>
+		<p class="itemHead">[version]</p>
+	    </td>
+	</tr>
 	<tr><td>&nbsp;</td><td>&nbsp;</td></tr>
 	<tr>
 	    <td>&nbsp;</td>
 	    <td>
 		<p class="itemHead">A-Select Authentication</p>
-		Access to this application or resource requires authentication.<br>
+		You requested to logout from organization: [current_sp].<br>
 		<br>
-		To proceed you must give your consent by pressing the OK button.<br>
+		You will also be logged out from the following organizations:<br>
 		<br>
-		<form action="[aselect_url]" method="post" name="login">
-		    <input type="hidden" name="request" value="[request]">
-		    <input type="hidden" name="rid" value="[rid]">
-		    <input type="hidden" name="a-select-server" value="[a-select-server]">
+		<div>[other_sps]</div>
+		<br>
+		To proceed press the OK button.<br>
+		<br>
+		<form action="[aselect_url]" method="GET" name="logout_form">
+		    <input type="hidden" name="SAMLRequest" value="[SAMLRequest]">
+		    <input type="hidden" name="SigAlg" value="[SigAlg]">
+		    <input type="hidden" name="Signature" value="[Signature]">
 		    <input type="hidden" name="consent" value="[consent]">
 		    <input type="submit" value=" OK ">&nbsp;&nbsp;
-		    <input type="button" value=" Cancel " onclick="window.location='[cancel]'; return true;">
 		</form>
 	    </td>
 	</tr>

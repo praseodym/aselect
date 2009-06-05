@@ -114,7 +114,6 @@ public class PKIAuthSP extends HttpServlet
     public void init(ServletConfig oServletConfig) throws ServletException
     {
         String sMethod = "init()";
-        StringBuffer sbTemp = null;
         try
 		{
 	       	super.init(oServletConfig);
@@ -398,7 +397,6 @@ public class PKIAuthSP extends HttpServlet
         HttpServletResponse servletResponse) throws ServletException
     {
         String sMethod = "doGet()";
-        StringBuffer sbTemp;
         try
         {
             String sAsUrl = servletRequest.getParameter("as_url");
@@ -678,7 +676,6 @@ public class PKIAuthSP extends HttpServlet
         X509Certificate oClientCert) throws ASelectException
     {
         String sMethod = "validateBinaryBlob()";
-        StringBuffer sbTemp = null;
         boolean bFound = false;
         KeyStore oCertificates = null;
         ICertificateHandler oCertificateHandler = new LDAPCertificateHandler();

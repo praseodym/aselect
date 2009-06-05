@@ -1032,7 +1032,6 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		htTGTContext.put("app_level", "2");
 //		if (sRid != null) htTGTContext.put("rid", sRid); // RH, 20080617, o
 		// RH, 20080617, sn
-		long lNow = -1;
 		if (sRid != null) {
 			htTGTContext.put("rid", sRid);
 			htSession = _sessionManager.getSessionContext(sRid);
