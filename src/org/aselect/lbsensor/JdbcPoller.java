@@ -36,6 +36,12 @@ public class JdbcPoller extends TimerTask
 		int iCnt = 0;
 		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "ACTION: "+_sSensorStoreId);
 		
+		// RH, 20090609, sn
+		ResultSet jdbcResult = null;
+		Statement jdbcStm = null;
+		Connection jdbcConn = null;
+		// RH, 20090609, sn
+		
 		// Poll the data supplier, is it still running?
 		SensorStore oSensorStore = LbSensor.getSensorStore(_sSensorStoreId);
 		if (oSensorStore == null) {
@@ -45,9 +51,16 @@ public class JdbcPoller extends TimerTask
 		try {
 			Class.forName(_sDriver);  // Initialize the driver
 			long tNow = System.currentTimeMillis();
-			Connection jdbcConn = DriverManager.getConnection(_sUrl, _sUser, _sPassword);
-			Statement jdbcStm = jdbcConn.createStatement();
-			ResultSet jdbcResult = jdbcStm.executeQuery(_sQuery);
+			// RH, 20090609, so
+//			Connection jdbcConn = DriverManager.getConnection(_sUrl, _sUser, _sPassword);
+//			Statement jdbcStm = jdbcConn.createStatement();
+//			ResultSet jdbcResult = jdbcStm.executeQuery(_sQuery);
+			// RH, 20090609, eo
+			// RH, 20090609, sn
+			jdbcConn = DriverManager.getConnection(_sUrl, _sUser, _sPassword);
+			jdbcStm = jdbcConn.createStatement();
+			jdbcResult = jdbcStm.executeQuery(_sQuery);
+			// RH, 20090609, en
 			if (jdbcResult.next()) {
 				iCnt++;
 				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Result="+jdbcResult.getString(1));				
@@ -66,5 +79,36 @@ public class JdbcPoller extends TimerTask
 			_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "Cannot connect to "+_sUrl, e);				
 			oSensorStore.setServerUp(false);			
 		}
+		// RH, 20090605, sn
+		finally {
+			try {
+				if (jdbcResult != null) {
+					jdbcResult.close();
+					jdbcResult = null;
+				}
+			}
+			catch (SQLException e) {
+				_oLbSensorLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resultset.", e);
+			}
+			try { // If we're using a statement pool, be sure to return the statement to the pool
+				if (jdbcStm != null) {
+					jdbcStm.close();
+					jdbcStm = null;
+				}
+			}
+			catch (SQLException e) {
+				_oLbSensorLogger.log(Level.FINE, MODULE, sMethod, "Could not close database statment.", e);
+			}
+			try { // If we're using a connection pool, be sure to return the connection to the pool
+				if (jdbcConn != null) {
+					jdbcConn.close();
+					jdbcConn = null;
+				}
+			}
+			catch (SQLException e) {
+				_oLbSensorLogger.log(Level.FINE, MODULE, sMethod, "Could not close database connection.", e);
+			}
+		}
+		// RH, 20090605, en		
 	}
 }
