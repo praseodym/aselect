@@ -89,6 +89,7 @@ import java.util.HashMap;
 import java.util.logging.Level;
 
 import org.aselect.system.configmanager.ConfigManager;
+import org.aselect.system.db.connection.IConnectionHandler;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectSAMException;
@@ -117,13 +118,17 @@ import org.aselect.system.storagemanager.IStorageHandler;
  */
 public class JDBCStorageHandler implements IStorageHandler
 {
-	protected static final char BACKTICK = '`';
+	private static final String DEFAULT_CONNECTION_HANDLER = "org.aselect.system.db.connection.impl.NonClosingConnectionHandler";
+//	private static final String DEFAULT_CONNECTION_HANDLER = "org.aselect.system.db.connection.impl.ClosingConnectionHandler";
+	protected static final String DEFAULTIDENTIFIERQUOTE = "\""; // use double-quote as default
+	protected String identifierQuote = DEFAULTIDENTIFIERQUOTE;
+	
 
 	/** name of this module, used for logging */
 	protected static final String MODULE = "JDBCStorageHandler";
 
 	/** The database connection.  */
-	protected Connection _oActiveConnection;
+//	protected Connection _oActiveConnection;
 
 	/** The active SAM resource. */
 	protected SAMResource _oActiveResource;
@@ -155,6 +160,9 @@ public class JDBCStorageHandler implements IStorageHandler
 	/** The SAM agent. */
 	protected SAMAgent _oSAMAgent;
 
+	protected IConnectionHandler _oConnectionHandler;
+	protected Class cClass;
+	
 	/**
 	 * Initialize the <code>JDBCStorageHandler</code>.
 	 * <br><br>
@@ -201,12 +209,39 @@ public class JDBCStorageHandler implements IStorageHandler
 
 			try {
 				_sResourceGroup = oConfigManager.getParam(oConfigSection, "resourcegroup");
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Found resourcegroup: " + _sResourceGroup);
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'resourcegroup' section found", e);
 				throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
+			if (_oActiveResource == null || !_oActiveResource.live())
+					_oActiveResource = _oSAMAgent.getActiveResource(_sResourceGroup);
+			Object oResourceConfigSection = _oActiveResource.getAttributes();
+			try {
+				String _connHandler = _oConfigManager.getParam(oResourceConfigSection, "connectionhandler");
+				systemLogger.log(Level.INFO, MODULE, sMethod, "Found connectionhandler: " + _connHandler);
+//				cClass = Class.forName(_oConfigManager.getParam(oResourceConfigSection, "connectionhandler"));
+				cClass = Class.forName(_connHandler);
+			}
+			catch (ASelectConfigException ace) {
+				systemLogger.log(Level.WARNING, MODULE, sMethod, "'class' for connectionhandler  is missing in the configuration file, using default");
+				cClass = Class.forName(DEFAULT_CONNECTION_HANDLER);
+			}
+			
+			_oConnectionHandler = (IConnectionHandler) cClass.newInstance();
+			systemLogger.log(Level.INFO, MODULE, sMethod, "Using connectionhandler: " + _oConnectionHandler.getClass().getCanonicalName());
+			_oConnectionHandler.Init(_oConfigManager, _systemLogger, _oSAMAgent, _sResourceGroup);
 
+			
+			  // RH, 20090604, sn
+			// This also prepares the connection
+			String intentifierQuoteString = getConnection().getMetaData().getIdentifierQuoteString();  // RH, 20090604, n
+			// getIdentifierQuoteString() returns " " (space) if quoting is unsupported
+			if (intentifierQuoteString != null) identifierQuote = intentifierQuoteString.trim();
+			// TODO, allow for forcing identifierQuote from config
+			  // RH, 20090604, sn
+			
 			try {
 				oTableSection = oConfigManager.getSection(oConfigSection, "table");
 			}
@@ -216,7 +251,7 @@ public class JDBCStorageHandler implements IStorageHandler
 			}
 
 			try {
-				_sTableName = BACKTICK + oConfigManager.getParam(oTableSection, "name") + BACKTICK;
+				_sTableName = identifierQuote + oConfigManager.getParam(oTableSection, "name") + identifierQuote;
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
@@ -225,7 +260,7 @@ public class JDBCStorageHandler implements IStorageHandler
 			}
 
 			try {
-				_sContextKeyHash = BACKTICK + oConfigManager.getParam(oTableSection, "hash") + BACKTICK;
+				_sContextKeyHash = identifierQuote + oConfigManager.getParam(oTableSection, "hash") + identifierQuote;
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
@@ -234,7 +269,7 @@ public class JDBCStorageHandler implements IStorageHandler
 			}
 
 			try {
-				_sContextTimestamp = BACKTICK + oConfigManager.getParam(oTableSection, "timestamp") + BACKTICK;
+				_sContextTimestamp = identifierQuote + oConfigManager.getParam(oTableSection, "timestamp") + identifierQuote;
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
@@ -243,7 +278,7 @@ public class JDBCStorageHandler implements IStorageHandler
 			}
 
 			try {
-				_sContextKey = BACKTICK + oConfigManager.getParam(oTableSection, "key") + BACKTICK;
+				_sContextKey = identifierQuote + oConfigManager.getParam(oTableSection, "key") + identifierQuote;
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
@@ -252,14 +287,14 @@ public class JDBCStorageHandler implements IStorageHandler
 			}
 
 			try {
-				_sContextValue = BACKTICK + oConfigManager.getParam(oTableSection, "value") + BACKTICK;
+				_sContextValue = identifierQuote + oConfigManager.getParam(oTableSection, "value") + identifierQuote;
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
 						"No valid 'value' config item in 'table' section found", e);
 				throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
-			getConnection();
+			// getConnection();  // RH, 20090604, o
 		}
 		catch (ASelectStorageException e) {
 			throw e;
@@ -279,6 +314,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	{
 		String sMethod = "get()";
 		Object oRet = null;
+		Connection oConnection = null;   // RH, 20090604, n
 		PreparedStatement oStatement = null;
 		ResultSet oResultSet = null;
 
@@ -292,7 +328,8 @@ public class JDBCStorageHandler implements IStorageHandler
 			sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?");  // new
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
 
-			Connection oConnection = getConnection();
+			// Connection oConnection = getConnection();  // RH, 20090604, o
+			oConnection = getConnection();  // RH, 20090604, n
 			oStatement = oConnection.prepareStatement(sbBuffer.toString());
 			
 			// 20090212, Bauke: use oKey as key to the table instead of the hashvalue 
@@ -302,7 +339,9 @@ public class JDBCStorageHandler implements IStorageHandler
 			oResultSet = oStatement.executeQuery();
 
 			if (oResultSet.next()) {  // record exists.
-				oRet = decode(oResultSet.getBytes(_sContextValue.replace(BACKTICK, ' ').trim()));
+				
+//				oRet = decode(oResultSet.getBytes(_sContextValue.replace(identifierQuote, " ").trim())); // o
+				oRet = decode(oResultSet.getBytes(_sContextValue.substring(identifierQuote.length(), _sContextValue.length() - identifierQuote.length())));
 				_systemLogger.log(Level.FINER, MODULE, sMethod, "result=" + oRet);
 			}
 			else {
@@ -338,6 +377,9 @@ public class JDBCStorageHandler implements IStorageHandler
 			catch (SQLException e) {
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resource.", e);
 			}
+			finally { // RH, 20090604, sn
+				_oConnectionHandler.releaseConnection(oConnection);
+			} // RH, 20090604, en
 		}
 		if (oRet == null) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "The supplied key is not mapped to any value",
@@ -358,6 +400,7 @@ public class JDBCStorageHandler implements IStorageHandler
 		String sMethod = "getTimestamp()";
 		long lRet = 0;
 		PreparedStatement oStatement = null;
+		Connection oConnection = null; // RH, 20090604, n 
 		ResultSet oResultSet = null;
 		StringBuffer sbQuery = new StringBuffer();
 		
@@ -370,7 +413,8 @@ public class JDBCStorageHandler implements IStorageHandler
 			sbQuery.append("WHERE ").append(_sContextKey).append(" = ?");  // new
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbQuery + " -> " + iKey + " key=" + oKey);
 
-			Connection oConnection = getConnection();
+//			Connection oConnection = getConnection(); // RH, 20090604, o
+			oConnection = getConnection(); // RH, 20090604, n
 			oStatement = oConnection.prepareStatement(sbQuery.toString());
 			// oStatement.setInt(1, iKey);  // old
 			byte[] baKey = encode(oKey);  // new
@@ -419,6 +463,10 @@ public class JDBCStorageHandler implements IStorageHandler
 			catch (SQLException e) {
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resource.", e);
 			}
+			finally { // RH, 20090604, sn
+				_oConnectionHandler.releaseConnection(oConnection);
+			} // RH, 20090604, en
+
 		}
 		if (lRet == 0) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "The supplied key is not mapped to any value",
@@ -438,6 +486,7 @@ public class JDBCStorageHandler implements IStorageHandler
 		String sMethod = "getCount()";
 		long lCount = -1;
 		StringBuffer sbBuffer = null;
+		Connection oConnection = null; // RH, 20090604, n
 		PreparedStatement oStatement = null;
 		ResultSet oResultSet = null;
 
@@ -446,7 +495,8 @@ public class JDBCStorageHandler implements IStorageHandler
 			sbBuffer.append("SELECT COUNT(*) ");
 			sbBuffer.append("FROM ").append(_sTableName);
 
-			Connection oConnection = getConnection();
+			// Connection oConnection = getConnection();  // RH, 20090604, o
+			oConnection = getConnection(); // RH, 20090604, n
 			oStatement = oConnection.prepareStatement(sbBuffer.toString());
 			oResultSet = oStatement.executeQuery();
 
@@ -469,6 +519,10 @@ public class JDBCStorageHandler implements IStorageHandler
 			catch (SQLException e) {
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resource.", e);
 			}
+			finally { // RH, 20090604, sn
+				_oConnectionHandler.releaseConnection(oConnection);
+			} // RH, 20090604, en
+
 		}
 		return lCount;
 	}
@@ -484,6 +538,7 @@ public class JDBCStorageHandler implements IStorageHandler
 		HashMap htResponse = new HashMap();
 		StringBuffer sbBuffer = null;
 		String sMethod = "getAll()";
+		Connection oConnection = null; // RH, 20090604, n
 		PreparedStatement oStatement = null;
 		ResultSet oResultSet = null;
 
@@ -493,13 +548,17 @@ public class JDBCStorageHandler implements IStorageHandler
 			sbBuffer.append("FROM ").append(_sTableName);
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer);
 
-			Connection oConnection = getConnection();
+			// Connection oConnection = getConnection();  // RH, 20090604, o
+			oConnection = getConnection(); // RH, 20090604, n
 			oStatement = oConnection.prepareStatement(sbBuffer.toString());
 			oResultSet = oStatement.executeQuery();
 
 			while (oResultSet.next()) {
-				Object oKey = decode(oResultSet.getBytes(_sContextKey.replace(BACKTICK, ' ').trim()));
-				Object oValue = decode(oResultSet.getBytes(_sContextValue.replace(BACKTICK, ' ').trim()));
+				
+//				Object oKey = decode(oResultSet.getBytes(_sContextKey.replace(identifierQuote, ' ').trim())); // o
+//				Object oValue = decode(oResultSet.getBytes(_sContextValue.replace(identifierQuote, ' ').trim())); // o
+				Object oKey = decode(oResultSet.getBytes(_sContextKey.substring(identifierQuote.length(), _sContextKey.length() - identifierQuote.length())));
+				Object oValue = decode(oResultSet.getBytes(_sContextValue.substring(identifierQuote.length(), _sContextValue.length() - identifierQuote.length())));
 
 				htResponse.put(oKey, oValue);
 			}
@@ -527,6 +586,9 @@ public class JDBCStorageHandler implements IStorageHandler
 			catch (SQLException e) {
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resource.", e);
 			}
+			finally { // RH, 20090604, sn
+				_oConnectionHandler.releaseConnection(oConnection);
+			} // RH, 20090604, en
 		}
 		return htResponse;
 	}
@@ -541,6 +603,7 @@ public class JDBCStorageHandler implements IStorageHandler
 		throws ASelectStorageException
 	{
 		String sMethod = "put()";
+		Connection oConnection = null; // RH, 20090604, n
 		PreparedStatement oStatement = null;
 		ResultSet oResultSet = null;
 		
@@ -557,7 +620,8 @@ public class JDBCStorageHandler implements IStorageHandler
 			sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?");  // new
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
 
-			Connection oConnection = getConnection();
+			// Connection oConnection = getConnection();  // RH, 20090604, o
+			oConnection = getConnection(); // RH, 20090604, n
 			oStatement = oConnection.prepareStatement(sbBuffer.toString());
 			// oStatement.setInt(1, iKey);  // old
 			oStatement.setBytes(1, baKey);  //new
@@ -636,6 +700,9 @@ public class JDBCStorageHandler implements IStorageHandler
 			catch (SQLException e) {
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resource", e);
 			}
+			finally { // RH, 20090604, sn
+				_oConnectionHandler.releaseConnection(oConnection);
+			} // RH, 20090604, en
 		}
 	}
 
@@ -649,6 +716,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	{
 		String sMethod = "remove()";
 		StringBuffer sbBuffer = null;
+		Connection oConnection = null; // RH, 20090604, n
 		PreparedStatement oStatement = null;
 		int iKey = 0;  // oKey.hashCode();
 		_systemLogger.log(Level.FINER, MODULE, sMethod, " -> " + iKey + " key=" + oKey);
@@ -660,14 +728,18 @@ public class JDBCStorageHandler implements IStorageHandler
 			sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?");  // new
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + iKey + " key=" + oKey);
 
-			Connection oConnection = null;
-			try {
-				oConnection = getConnection();
-			}
-			catch (ASelectStorageException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not connect", e);
-				throw e;
-			}
+			//   // RH, 20090604, so
+//			Connection oConnection = null;
+//			try {
+//				oConnection = getConnection();
+//			}
+//			catch (ASelectStorageException e) {
+//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not connect", e);
+//				throw e;
+//			}
+			  // RH, 20090604, eo
+			oConnection = getConnection(); // RH, 20090604, n
+			
 			oStatement = oConnection.prepareStatement(sbBuffer.toString());
 			// oStatement.setInt(1, iKey);  // old
 			byte[] baKey = encode(oKey);  // new
@@ -697,6 +769,9 @@ public class JDBCStorageHandler implements IStorageHandler
 			catch (SQLException e) {
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resource.", e);
 			}
+			finally { // RH, 20090604, sn
+				_oConnectionHandler.releaseConnection(oConnection);
+			} // RH, 20090604, en
 		}
 	}
 
@@ -710,13 +785,15 @@ public class JDBCStorageHandler implements IStorageHandler
 	{
 		String sMethod = "removeAll()";
 		StringBuffer sbBuffer = null;
+		Connection oConnection = null; // RH, 20090604, n
 		PreparedStatement oStatement = null;
 		try {
 			sbBuffer = new StringBuffer();
 			sbBuffer.append("DELETE FROM ").append(_sTableName);
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer);
 
-			Connection oConnection = getConnection();
+			// Connection oConnection = getConnection();  // RH, 20090604, o
+			oConnection = getConnection(); // RH, 20090604, n
 			oStatement = oConnection.prepareStatement(sbBuffer.toString());
 			oStatement.executeUpdate();
 		}
@@ -739,6 +816,9 @@ public class JDBCStorageHandler implements IStorageHandler
 			catch (SQLException e) {
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resource", e);
 			}
+			finally { // RH, 20090604, sn
+				_oConnectionHandler.releaseConnection(oConnection);
+			} // RH, 20090604, en
 		}
 	}
 
@@ -752,6 +832,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	{
 		String sMethod = "cleanup()";
 		StringBuffer sbBuffer = null;
+		Connection oConnection = null; // RH, 20090604, n
 		PreparedStatement oStatement = null;
 		try {
 			Timestamp oTimestamp = new Timestamp(lTimestamp.longValue());
@@ -761,7 +842,8 @@ public class JDBCStorageHandler implements IStorageHandler
 			sbBuffer.append("WHERE ").append(_sContextTimestamp).append(" <= ?");
 			_systemLogger.log(Level.FINEST, MODULE, sMethod, "sql=" + sbBuffer + " -> " + lTimestamp); // RH, 20090127, n
 
-			Connection oConnection = getConnection();
+			// Connection oConnection = getConnection();  // RH, 20090604, o
+			oConnection = getConnection(); // RH, 20090604, n
 			oStatement = oConnection.prepareStatement(sbBuffer.toString());
 			oStatement.setTimestamp(1, oTimestamp);
 			oStatement.executeUpdate();
@@ -780,6 +862,9 @@ public class JDBCStorageHandler implements IStorageHandler
 			catch (SQLException e) {
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resource.", e);
 			}
+			finally { // RH, 20090604, sn
+				_oConnectionHandler.releaseConnection(oConnection);
+			} // RH, 20090604, en
 		}
 	}
 
@@ -789,15 +874,15 @@ public class JDBCStorageHandler implements IStorageHandler
 	 */
 	public void destroy()
 	{
-		try {
-			if (_oActiveConnection != null) {
-				_oActiveConnection.close();
-				_oActiveConnection = null;
-			}
-		}
-		catch (Exception e) {  // Only log to system logger.
-			_systemLogger.log(Level.FINE, MODULE, "destroy()", "An error occured while trying to destroy the module", e);
-		}
+//		try {
+//			if (_oActiveConnection != null) {
+//				_oActiveConnection.close();
+//				_oActiveConnection = null;
+//			}
+//		}
+//		catch (Exception e) {  // Only log to system logger.
+//			_systemLogger.log(Level.FINE, MODULE, "destroy()", "An error occured while trying to destroy the module", e);
+//		}
 	}
 
 	/**
@@ -814,11 +899,13 @@ public class JDBCStorageHandler implements IStorageHandler
 		StringBuffer sbQuery = new StringBuffer("SELECT count(*) FROM ");
 		sbQuery.append(_sTableName);
 		long lMaximum = -1;
+		Connection oConnection = null; // RH, 20090604, n
 		Statement oStatement = null;
 		ResultSet oResultSet = null;
 
 		try {
-			Connection oConnection = getConnection();
+			// Connection oConnection = getConnection();  // RH, 20090604, o
+			oConnection = getConnection(); // RH, 20090604, n
 			oStatement = oConnection.createStatement();
 			oResultSet = oStatement.executeQuery(sbQuery.toString());
 
@@ -848,6 +935,9 @@ public class JDBCStorageHandler implements IStorageHandler
 			catch (SQLException e) {
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resource.", e);
 			}
+			finally { // RH, 20090604, sn
+				_oConnectionHandler.releaseConnection(oConnection);
+			} // RH, 20090604, en
 		}
 		return bReturn;
 	}
@@ -862,6 +952,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	{
 		String sMethod = "containsKey()";
 		boolean bReturn = false;
+		Connection oConnection = null; // RH, 20090604, n
 		PreparedStatement oStatement = null;
 		ResultSet oResultSet = null;
 		int iKey = 0;  // oKey.hashCode();
@@ -876,7 +967,8 @@ public class JDBCStorageHandler implements IStorageHandler
 		_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbQuery + " -> " + iKey + " key=" + oKey);
 
 		try {
-			Connection oConnection = getConnection();
+			// Connection oConnection = getConnection();  // RH, 20090604, o
+			oConnection = getConnection(); // RH, 20090604, n
 			oStatement = oConnection.prepareStatement(sbQuery.toString());
 			// oStatement.setInt(1, iKey);  // old
 			byte[] baKey = encode(oKey);  // new
@@ -911,6 +1003,9 @@ public class JDBCStorageHandler implements IStorageHandler
 			catch (SQLException e) {
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resource.", e);
 			}
+			finally { // RH, 20090604, sn
+				_oConnectionHandler.releaseConnection(oConnection);
+			} // RH, 20090604, en
 		}
 		return bReturn;
 	}
@@ -939,14 +1034,21 @@ public class JDBCStorageHandler implements IStorageHandler
 	 *             If connecting fails.
 	 */
 	//    private Connection getConnection() throws ASelectStorageException
+	// Keep this method for backward compatibility with other/extending classes 
 	protected Connection getConnection()
 		throws ASelectStorageException
 	{
+		
+		return _oConnectionHandler.getConnection();
+		/*
 		String sMethod = "getConnection()";
 		String sPassword = null;
 		String sJDBCDriver = null;
 		String sUsername = null;
 		String sURL = null;
+		
+		Connection _oActiveConnection = null;
+		int i=1;
 		try {
 			if (_oActiveResource == null || !_oActiveResource.live()) {
 				_oActiveResource = _oSAMAgent.getActiveResource(_sResourceGroup);
@@ -997,6 +1099,7 @@ public class JDBCStorageHandler implements IStorageHandler
 
 				try {
 					_oActiveConnection = DriverManager.getConnection(sURL, sUsername, sPassword);
+
 				}
 				catch (Exception e) {
 					StringBuffer sbFailed = new StringBuffer("Could not create a connection with: ");
@@ -1008,7 +1111,8 @@ public class JDBCStorageHandler implements IStorageHandler
 				}
 			}
 
-			if (_oActiveConnection.isClosed()) {
+			// if (_oActiveConnection.isClosed()) {
+			if (_oActiveConnection == null) {
 				Object oConfigSection = _oActiveResource.getAttributes();
 
 				try {
@@ -1062,6 +1166,7 @@ public class JDBCStorageHandler implements IStorageHandler
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_CONNECTION_FAILURE, e);
 		}
 		return _oActiveConnection;
+		*/
 	}
 
 	/**

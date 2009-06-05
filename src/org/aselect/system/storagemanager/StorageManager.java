@@ -85,6 +85,9 @@ import org.aselect.system.sam.agent.SAMAgent;
  */
 public class StorageManager
 {
+	private static final int I_UNLIMITED = -1;
+	private static final String STRING_UNLIMITED = "-1";
+
 	/** The module name. */
 	public static final String MODULE = "StorageManager";
 
@@ -170,9 +173,13 @@ public class StorageManager
 			sMax = oConfigManager.getParam(oConfigSection, "max");
 		}
 		catch (ASelectConfigException e) {
+			// Allow for "unlimited" storage by setting sMax to -1
+			// Also Change "put" method to allow for value -1
 			systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"No valid 'max' config item found in storagemanager config section", e);
-			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INIT, e);
+//					"No valid 'max' config item found in storagemanager config section", e); // RH, 20090529, o
+					"No 'max' config item found in storagemanager config section, using unlimited", e); // RH, 20090529, n
+			sMax = STRING_UNLIMITED;
+//			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INIT, e);  // RH, 20090529, o
 		}
 
 		try {
@@ -180,7 +187,9 @@ public class StorageManager
 		}
 		catch (Exception e) {
 			systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"'max' config item in storagemanager config section is not a long: " + sMax, e);
+					// formally _iMax this is not a long but an Integer
+//					"'max' config item in storagemanager config section is not a long: " + sMax, e);// RH, 20090529, o
+					"'max' config item in storagemanager config section is not an integer: " + sMax, e);// RH, 20090529, n
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INIT, e);
 		}
 
@@ -221,12 +230,12 @@ public class StorageManager
 			_lExpireTime = (Long.parseLong(sConfiguredExpireTime.trim()) * 1000);
 		}
 		catch (ASelectConfigException e) {
-			_lExpireTime = -1;
+			_lExpireTime = I_UNLIMITED;
 			systemLogger.log(Level.CONFIG, MODULE, sMethod, "'expire' config item not specified. Cleaning disabled.");
 		}
 
 		long lInterval = 0;
-		if (_lExpireTime != -1) {
+		if (_lExpireTime != I_UNLIMITED) {
 			try {
 				String sConfiguredInterval = oConfigManager.getParam(oConfigSection, "interval");
 				lInterval = (Long.parseLong(sConfiguredInterval.trim()) * 1000);
@@ -451,7 +460,9 @@ public class StorageManager
 	throws ASelectStorageException
 	{
 		String sMethod = "put";
-		if (_oStorageHandler.isMaximum(_iMax))
+		// Allow for "unlimited" storage
+//		if (_oStorageHandler.isMaximum(_iMax)) // RH, 20090529, o
+		if (_iMax != I_UNLIMITED && _oStorageHandler.isMaximum(_iMax)) // RH, 20090529, n
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_MAXIMUM_REACHED);
 
 		//_oSystemLogger.log(Level.INFO, MODULE, sMethod, " this="+this.getClass()+" handler="+_oStorageHandler.getClass());

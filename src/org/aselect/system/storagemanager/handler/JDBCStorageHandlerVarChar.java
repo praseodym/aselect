@@ -48,7 +48,9 @@ public class JDBCStorageHandlerVarChar extends JDBCStorageHandler
 			if (oResultSet.next()) {  // record exists.
 //                oRet = decode(oResultSet.getBytes(_sContextValue.replace(BACKTICK, ' ').trim()));
 				BASE64Decoder b64e = new BASE64Decoder();
-				oRet = decode(b64e.decodeBuffer(oResultSet.getString(_sContextValue.replace(BACKTICK, ' ').trim())));
+//				oRet = decode(b64e.decodeBuffer(oResultSet.getString(_sContextValue.replace(BACKTICK, ' ').trim())));
+//				oRet = decode(b64e.decodeBuffer(oResultSet.getString(_sContextValue.replace(identifierQuote, ' ').trim())));
+				oRet = decode(b64e.decodeBuffer(_sContextValue.substring(identifierQuote.length(), _sContextValue.length() - identifierQuote.length())));
 				_systemLogger.log(Level.FINER, MODULE, sMethod, "result=" + oRet);
 			}
 			else {
@@ -105,6 +107,7 @@ public class JDBCStorageHandlerVarChar extends JDBCStorageHandler
 		String sMethod = "put()";
 		PreparedStatement oStatement = null;
 		ResultSet oResultSet = null;
+		Connection oConnection = null;   // RH, 20090605, n
 		try {
 			int iKey = 0;  // oKey.hashCode();
 			Timestamp oTimestamp = new Timestamp(lTimestamp.longValue());
@@ -118,7 +121,8 @@ public class JDBCStorageHandlerVarChar extends JDBCStorageHandler
 			sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?");  // new
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
 
-			Connection oConnection = getConnection();
+			// Connection oConnection = getConnection();  // RH, 20090605, o
+			oConnection = getConnection();  // RH, 20090605, n
 			oStatement = oConnection.prepareStatement(sbBuffer.toString());
 
 			// oStatement.setInt(1, iKey);  // old
@@ -194,6 +198,10 @@ public class JDBCStorageHandlerVarChar extends JDBCStorageHandler
 			catch (SQLException e) {
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resource", e);
 			}
+			finally { // RH, 20090604, sn
+				_oConnectionHandler.releaseConnection(oConnection);
+			} // RH, 20090604, en
+
 		}
 	}
 }
