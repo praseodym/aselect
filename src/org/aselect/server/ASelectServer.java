@@ -221,7 +221,7 @@ import org.aselect.system.servlet.ASelectHttpServlet;
  * <li>Otherwise, the A-Select Server uses a {@link RequestHandlerFactory} 
  * to determine the type and origin (application, authsp, remote a-select server,
  * or the user) of the request and delegates further processing to
- * the appropriate IRequestHandler implementation.
+ * the appropriate IAuthnRequestHandler implementation.
  * </ul>
  * <br><br>  
  * <b>Concurrency issues:</b>

@@ -191,7 +191,6 @@
  * ApplicationRequestHandler and ApplicationAPIRequestHandler are now merged
  *
  */
-
 package org.aselect.server.request.handler.aselect.authentication;
 
 import java.security.MessageDigest;
@@ -255,7 +254,6 @@ import org.aselect.system.utils.Utils;
 public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 {
 	//The managers and engine
-	private ASelectConfigManager _configManager;
 	private TGTManager _oTGTManager;
 	private SessionManager _sessionManager;
 	private ApplicationManager _applicationManager;
@@ -371,224 +369,37 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 * @throws ASelectException
 	 *             If proccessing fails.
 	 */
+	// 20090606, Bauke: functionality moved to BaseRequestHandler
 	private void handleAuthenticateRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
 			IOutputMessage oOutputMessage)
 		throws ASelectException
 	{
 		String sMethod = "handleAuthenticateRequest()";
-		String sSessionId = null;
-		Integer intAppLevel = null;
-		Integer intMaxAppLevel = null;
-		String sAppUrl = null;
-		String sAppId = null;
-		String sASelectServer = null;
-		HashMap htSessionContext = null;
-		String sUid = null;
-		String sAuthsp = null;
-		String sRemoteOrg = null;
-		String sForcedLogon = null;
-		String sCountry = null;
-		String sLanguage = null;
 
-		if (!_applicationManager.hasApplicationsConfigured()) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request since no applications are configured.");
-			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-		}
+		HashMap<String, String> hmRequest = new HashMap<String, String>();
+		Utils.copyMsgValueToHashmap("app_id", hmRequest, oInputMessage);
+		Utils.copyMsgValueToHashmap("app_url", hmRequest, oInputMessage);
+		Utils.copyMsgValueToHashmap("a-select-server", hmRequest, oInputMessage);
+		Utils.copyMsgValueToHashmap("uid", hmRequest, oInputMessage);
+		Utils.copyMsgValueToHashmap("authsp", hmRequest, oInputMessage);
+		Utils.copyMsgValueToHashmap("remote_organization", hmRequest, oInputMessage);
+		Utils.copyMsgValueToHashmap("country", hmRequest, oInputMessage);
+		Utils.copyMsgValueToHashmap("language", hmRequest, oInputMessage);
+		Utils.copyMsgValueToHashmap("forced_logon", hmRequest, oInputMessage);
+		Utils.copyMsgValueToHashmap("check-signature", hmRequest, oInputMessage);
+		Utils.copyMsgValueToHashmap("shared_secret", hmRequest, oInputMessage);
 
-		try {
-			sAppId = oInputMessage.getParam("app_id");
-			sAppUrl = oInputMessage.getParam("app_url");
-			sASelectServer = oInputMessage.getParam("a-select-server");
-		}
-		catch (ASelectCommunicationException eAC) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing required parameters", eAC);
-			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-		}
-		try {
-			sUid = oInputMessage.getParam("uid");
-		}
-		catch (ASelectCommunicationException eAC) {
-			//_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'uid' parameter found.", eAC);
-		}
-		try {
-			sAuthsp = oInputMessage.getParam("authsp");
-		}
-		catch (ASelectCommunicationException eAC) {
-			//_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'authsp' parameter found.", eAC);
-		}
-		try {
-			sRemoteOrg = oInputMessage.getParam("remote_organization");
-		}
-		catch (ASelectCommunicationException eAC) {
-			//_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'remote_organization' parameter found.", eAC);
-		}
-		try {
-			sCountry = oInputMessage.getParam("country");
-		}
-		catch (ASelectCommunicationException e) {
-			//_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'country' parameter found.", e);
-		}
-		try {
-			sLanguage = oInputMessage.getParam("language");
-		}
-		catch (ASelectCommunicationException e) {
-			//_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'language' parameter found.", e);
-		}
-		Boolean boolForced = null;
-		try {
-			sForcedLogon = oInputMessage.getParam("forced_logon");
-			boolForced = new Boolean(sForcedLogon);
-		}
-		catch (ASelectCommunicationException e) {
-			boolForced = new Boolean(false);
-			//_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'forced_logon' parameter found.", e);
-		}
-		Boolean bCheckSignature = true;
-		try {
-			String sCheckSignature = oInputMessage.getParam("check-signature");
-			bCheckSignature = Boolean.valueOf(sCheckSignature);
-		}
-		catch (ASelectCommunicationException e) {
-			//_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'check-signature' parameter found.", e);
-		}
-
-		// check if request should be signed
-		if (_applicationManager.isSigningRequired() && bCheckSignature) {
-			// check signature
-			// NOTE: add sbData items sorted!
-			StringBuffer sbData = new StringBuffer(sASelectServer);
-			sbData.append(sAppId).append(sAppUrl);
-			if (sAuthsp != null)
-				sbData.append(sAuthsp);
-			if (sCountry != null)
-				sbData.append(sCountry);
-			if (sForcedLogon != null)
-				sbData.append(sForcedLogon);
-			if (sLanguage != null)
-				sbData.append(sLanguage);
-			if (sRemoteOrg != null)
-				sbData.append(sRemoteOrg);
-			if (sUid != null)
-				sbData.append(sUid);
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "sbData=" + sbData);
-			verifyApplicationSignature(oInputMessage, sbData.toString(), sAppId);
-		}
-
-		// check if application is registered
-		if (!_applicationManager.isApplication(sAppId)) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unknown application ID");
-			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_UNKNOWN_APP);
-		}
-		intAppLevel = _applicationManager.getRequiredLevel(sAppId);
-		if (intAppLevel == null) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "No level specified for application with ID: '"
-					+ sAppId + "'");
-			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_APP_LEVEL);
-		}
-		intMaxAppLevel = _applicationManager.getMaxLevel(sAppId);
-
-		// 20090305, Bauke: Accept DigiD protocol
-		Application aApp = _applicationManager.getApplication(sAppId);
-		String sSharedSecret = aApp.getSharedSecret();
-		if (sSharedSecret != null) {
-			String sArg = oInputMessage.getParam("shared_secret");
-			if (sArg == null || !sSharedSecret.equals(sArg)) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Shared secret for app '" + sAppId
-						+ "' does not match or is missing");
-				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-			}
-		}
-
-		// 20090305, Bauke: The <application> itself can also set forced_uid / forced_authsp if so configured
-		if (sAuthsp == null) {
-			sAuthsp = aApp.getForcedAuthsp();
-		}
-		if (sUid == null) {
-			sUid = aApp.getForcedUid();
-		}
-
-		// Create Session
-		htSessionContext = new HashMap();
-		htSessionContext.put("app_id", sAppId);
-		htSessionContext.put("app_url", sAppUrl);
-		htSessionContext.put("level", intAppLevel); // NOTE: Integer put
-		if (intMaxAppLevel != null)
-			htSessionContext.put("max_level", intMaxAppLevel);
-		htSessionContext.put("organization", _sMyOrg);
-
-		// Organization and uid are stored in the session context with a temporary identifier.
-		// This because the values are not validated yet.
-		// After validation, these values can be set as 'user_id' and 'remote_organization'.
-		//
-		// Bauke 20080511: added "forced_authsp" to influence AuthSP choice
-		if (sRemoteOrg != null)
-			htSessionContext.put("forced_organization", sRemoteOrg);
-		if (sUid != null)
-			htSessionContext.put("forced_uid", sUid);
-		if (sAuthsp != null)
-			htSessionContext.put("forced_authsp", sAuthsp);
-
-		// need to check if the request must be handled as a forced
-		// authentication
-		if (!boolForced.booleanValue() && _applicationManager.isForcedAuthenticateEnabled(sAppId)) {
-			boolForced = new Boolean(true);
-		}
-		htSessionContext.put("forced_authenticate", boolForced);
-
-		// check single sign-on groups
-		if (_configManager.isSingleSignOn()) {
-			Vector vSSOGroups = _applicationManager.getSSOGroups(sAppId);
-			if (vSSOGroups != null)
-				htSessionContext.put("sso_groups", vSSOGroups);
-		}
-
-		if (sCountry != null && sCountry.trim().length() > 0)
-			htSessionContext.put("country", sCountry);
-		if (sLanguage != null && sLanguage.trim().length() > 0)
-			htSessionContext.put("language", sLanguage);
-
-		// We only want to set the client_ip on application browserrequests (see ApplicationBrwoserHandler)
-		// Bauke 20081217: Therefore the lines below should go!
-		//htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr()); // RH, 20080716, n // RH, 20080719, o
-		//String sAgent = get_servletRequest().getHeader("User-Agent");
-		//if (sAgent != null) htSessionContext.put("user_agent", sAgent);
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "CTX htSessionContext=" + htSessionContext);
-
-		sSessionId = _sessionManager.createSession(htSessionContext);
-		if (sSessionId == null) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unable to create session");
-			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
-		}
-
-		StringBuffer sbAsUrl = new StringBuffer();
-		String sAsUrl = _configManager.getRedirectURL();
-		if (sAsUrl != null)
-			sbAsUrl.append(sAsUrl);
-		else
-			sbAsUrl.append(oProtocolRequest.getTarget());
-
-		Vector vAuthSPs = _authSPManagerManager.getConfiguredAuthSPs(intAppLevel, intMaxAppLevel);
-
-		// Authentication OK
-		if (vAuthSPs.size() == 1 && _authSPManagerManager.isDirectAuthSP((String) vAuthSPs.get(0))) {
-			// A-Select will show username and password box in one page.
-			sbAsUrl.append("?request=direct_login1");
-			htSessionContext.put("direct_authsp", vAuthSPs.get(0));
-		}
-		else {
-			sbAsUrl.append("?request=login1");
-		}
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "OUT sbAsUrl=" + sbAsUrl + ", rid=" + sSessionId);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmRequest=" + hmRequest);
+		HashMap<String,String> hmResponse = handleAuthenticateAndCreateSession(hmRequest, null);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmResponse=" + hmResponse);
 
 		try {
-			String sAsURL = sbAsUrl.toString();
-			oOutputMessage.setParam("rid", sSessionId);
-			if (aApp.isDoUrlEncode())
-				oOutputMessage.setParam("as_url", sAsURL);
-			else
-				oOutputMessage.setParam("as_url", sAsURL, false);  // only for DigiD protocol: do not url-encode
-			
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
+			String sValue = hmResponse.get("rid");
+			if (sValue != null) oOutputMessage.setParam("rid", sValue);
+			sValue = hmResponse.get("as_url");
+			if (sValue != null) oOutputMessage.setParam("as_url", sValue);
+			sValue = hmResponse.get("result_code");
+			if (sValue != null) oOutputMessage.setParam("result_code", sValue);
 		}
 		catch (ASelectCommunicationException eAC) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not set response parameter", eAC);

@@ -75,7 +75,7 @@ import org.aselect.system.exception.ASelectCommunicationException;
  * The request hendler factory for the A-Select Server.
  * <br><br>
  * <b>Description:</b><br>
- * A singleton factory, which can be used to create <code>IRequestHandler</code>
+ * A singleton factory, which can be used to create <code>IAuthnRequestHandler</code>
  * implementations. The factory uses a {@link RequestParser} to determine 
  * the type of request handler and constructs this type of handler.   
  * <br><br>

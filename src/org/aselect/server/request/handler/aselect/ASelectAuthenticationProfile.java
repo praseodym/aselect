@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.AbstractRequestHandler;
-import org.aselect.server.request.handler.aselect.authentication.IRequestHandler;
+import org.aselect.server.request.handler.aselect.authentication.IAuthnRequestHandler;
 import org.aselect.server.request.handler.aselect.authentication.RequestHandlerFactory;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
@@ -131,7 +131,7 @@ public class ASelectAuthenticationProfile extends AbstractRequestHandler
 		try {
 			//create the appropriate handler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "HANDLER request=" + request.getParameter("request"));
-			IRequestHandler iHandler = _oRequestHandlerFactory.createRequestHandler(request, response);
+			IAuthnRequestHandler iHandler = _oRequestHandlerFactory.createRequestHandler(request, response);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "PROCESS " + iHandler.getClass());
 			iHandler.processRequest();
 		}

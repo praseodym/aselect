@@ -209,7 +209,6 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 {
 	private SessionManager _sessionManager;
 	private CrossASelectManager _crossASelectManager;
-	private ASelectConfigManager _configManager;
 	private TGTManager _tgtManager;
 	private CryptoEngine _cryptoEngine;
 

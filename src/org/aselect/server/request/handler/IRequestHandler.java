@@ -11,7 +11,7 @@
  */
 
 /* 
- * $Id: IRequestHandler.java,v 1.3 2006/04/26 12:18:32 tom Exp $ 
+ * $Id: IAuthnRequestHandler.java,v 1.3 2006/04/26 12:18:32 tom Exp $ 
  */
 
 package org.aselect.server.request.handler;

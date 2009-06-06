@@ -191,9 +191,8 @@ public class AccountSTS extends ProtoRequestHandler
 		// Start an authenticate request
 		String sASelectURL = _sServerUrl;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Start Authenticate");
-		
-		// TODO Would be a lot more efficient if this request would simply call
-		//      the handleAuthenticateRequest() method in the ApplicationAPIHandler
+
+		// 20090606, Bauke: No longer implemented as external call
 		HashMap htResponse = performAuthenticateRequest(sASelectURL, sPathInfo, RETURN_SUFFIX,
 									_sMyAppId, false/*don't check signature*/, _oClientCommunicator);
 		String sRid = (String)htResponse.get("rid");

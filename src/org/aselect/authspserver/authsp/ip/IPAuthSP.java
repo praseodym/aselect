@@ -107,7 +107,7 @@ import org.aselect.system.utils.Utils;
 public class IPAuthSP extends ASelectHttpServlet
 {
     private final static String MODULE = "IPAuthSP";
-    private final static String VERSION = "A-Select IP AuthSP 1.8";
+    private final static String VERSION = "A-Select IP AuthSP "+"1.9";
     private final static String DEFAULT_FAILUREHANDLING = "aselect";
     
     private CryptoEngine _oCryptoEngine;

@@ -66,8 +66,10 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 
+import org.aselect.system.communication.server.IInputMessage;
 import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
+import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
@@ -483,6 +485,16 @@ public class Utils
 		Object oValue = hmFrom.get(sName);
 		if (oValue != null)
 			hmTo.put(sName, (Object)oValue);
+	}
+	
+	public static void copyMsgValueToHashmap(String sName, HashMap<String,String> hmTo, IInputMessage imFrom)
+	throws ASelectCommunicationException
+	{
+		if (imFrom == null | hmTo == null)
+			return;
+		String sValue = imFrom.getParam(sName);
+		if (sValue != null)
+			hmTo.put(sName, sValue);
 	}
 
 	// Get 'sParam' within the 'oConfig' section

@@ -160,7 +160,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	private final static String DEFAULT_FAILUREHANDLING = "aselect";
 
 	/** The version. */
-	public static final String VERSION = "A-Select LDAP AuthSP 1.8";
+	public static final String VERSION = "A-Select LDAP AuthSP "+"1.9";
 
 	/** The logger that logs system information. */
 	private AuthSPSystemLogger _systemLogger;

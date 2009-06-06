@@ -61,7 +61,7 @@ public class Version
     /**
      * The main release version of this A-Select AuthSP Server
      */
-    private final static String RELEASE = "1.8";
+    private final static String VERSION = "1.9";
 
     /**
      * The service pack version of this A-Select AuthSP Server
@@ -96,7 +96,7 @@ public class Version
      */
     public static String getVersion()
     {
-        StringBuffer sbVersion = new StringBuffer(RELEASE);
+        StringBuffer sbVersion = new StringBuffer(VERSION);
         sbVersion.append(getSP());
         sbVersion.append(getPatch());
         return  sbVersion.toString();

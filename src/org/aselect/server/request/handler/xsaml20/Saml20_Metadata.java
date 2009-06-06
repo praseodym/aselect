@@ -36,14 +36,25 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	private Long validUntil = null; 	// validity period after now() of metadata (seconds)
 	private Long cacheDuration = null; 	// advised period (in seconds) for peer to keep metadata in cache
 
-	private String singleSignOnServiceTarget = "";
-	private String artifactResolverTarget = "";
+	// SP
 	private String assertionConsumerTarget = "";
 
 	private String spSloHttpLocation = null;
 	private String spSloHttpResponse = null;
 	private String spSloSoapLocation = null;
 	private String spSloSoapResponse = null;
+	
+	// IdP
+	private String idpSsoUrl = "";
+	private String idpArtifactResolverUrl = "";
+	private String idpSloSoapRequestUrl = "";
+	private String idpSloSoapResponseUrl = "";
+	private String idpSloHttpRequestUrl = "";
+	private String idpSloHttpResponseUrl = "";
+	private String idpSyncUrl = "";
+
+	private String singleSignOnServiceTarget = "";
+	private String artifactResolverTarget = "";
 	private String idpSloSoapLocation = null;
 	private String idpSloSoapResponse = null;
 	private String idpSloHttpLocation = null;
@@ -60,7 +71,6 @@ public class Saml20_Metadata extends ProtoRequestHandler
 
 	protected XMLObjectBuilderFactory _oBuilderFactory;  // RH, 20080722, n
 
-	
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
@@ -377,5 +387,75 @@ public class Saml20_Metadata extends ProtoRequestHandler
 
 	public synchronized void setCacheDuration(Long cacheDuration) {
 		this.cacheDuration = cacheDuration;
+	}
+
+	public String getIdpArtifactResolverUrl()
+	{
+		return idpArtifactResolverUrl;
+	}
+
+	public void setIdpArtifactResolverUrl(String idpArtifactResolverUrl)
+	{
+		this.idpArtifactResolverUrl = idpArtifactResolverUrl;
+	}
+
+	public String getIdpSloHttpRequestUrl()
+	{
+		return idpSloHttpRequestUrl;
+	}
+
+	public void setIdpSloHttpRequestUrl(String idpSloHttpUrl)
+	{
+		this.idpSloHttpRequestUrl = idpSloHttpUrl;
+	}
+
+	public String getIdpSloSoapRequestUrl()
+	{
+		return idpSloSoapRequestUrl;
+	}
+
+	public void setIdpSloSoapRequestUrl(String idpSloSoapUrl)
+	{
+		this.idpSloSoapRequestUrl = idpSloSoapUrl;
+	}
+
+	public String getIdpSsoUrl()
+	{
+		return idpSsoUrl;
+	}
+
+	public void setIdpSsoUrl(String idpSsoUrl)
+	{
+		this.idpSsoUrl = idpSsoUrl;
+	}
+
+	public String getIdpSyncUrl()
+	{
+		return idpSyncUrl;
+	}
+
+	public void setIdpSyncUrl(String idpSyncUrl)
+	{
+		this.idpSyncUrl = idpSyncUrl;
+	}
+
+	public String getIdpSloHttpResponseUrl()
+	{
+		return idpSloHttpResponseUrl;
+	}
+
+	public void setIdpSloHttpResponseUrl(String idpSloHttpResponseUrl)
+	{
+		this.idpSloHttpResponseUrl = idpSloHttpResponseUrl;
+	}
+
+	public String getIdpSloSoapResponseUrl()
+	{
+		return idpSloSoapResponseUrl;
+	}
+
+	public void setIdpSloSoapResponseUrl(String idpSloSoapResponseUrl)
+	{
+		this.idpSloSoapResponseUrl = idpSloSoapResponseUrl;
 	}
 }

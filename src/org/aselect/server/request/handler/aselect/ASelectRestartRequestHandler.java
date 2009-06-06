@@ -45,9 +45,8 @@ import org.aselect.system.servlet.ASelectHttpServlet;
  */
 public class ASelectRestartRequestHandler extends AbstractRequestHandler
 {
-	private String _sMySharedSecret = null;
-
 	private final static String MODULE = "ASelectRestartRequestHandler";
+	private String _sMySharedSecret = null;
 
 	/**
 	 * Initializes the Restart request handler.

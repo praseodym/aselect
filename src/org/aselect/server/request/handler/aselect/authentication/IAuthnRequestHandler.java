@@ -11,10 +11,10 @@
  */
 
 /* 
- * $Id: IRequestHandler.java,v 1.2 2006/05/03 10:10:18 tom Exp $ 
+ * $Id: IAuthnRequestHandler.java,v 1.2 2006/05/03 10:10:18 tom Exp $ 
  * 
  * Changelog:
- * $Log: IRequestHandler.java,v $
+ * $Log: IAuthnRequestHandler.java,v $
  * Revision 1.2  2006/05/03 10:10:18  tom
  * Removed Javadoc version
  *
@@ -59,7 +59,8 @@ import org.aselect.system.exception.ASelectException;
  * @author Alfa & Ariss
  * 
  */
-public interface IRequestHandler
+// 20090606, Bauke changed name from IRequestHandler to avoid confusion
+public interface IAuthnRequestHandler
 {
     /**
      * Main processRequest function called when a handler is to process a request.

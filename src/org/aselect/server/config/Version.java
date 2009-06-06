@@ -76,7 +76,7 @@ public class Version
     /**
      * The main release version of this A-Select Server
      */
-    private final static String RELEASE = "1.8";
+    private final static String VERSION = "1.9";
 
     /**
      * The service pack version of this A-Select Server
@@ -112,7 +112,7 @@ public class Version
     public static String getVersion()
     {
         StringBuffer sbVersion = new StringBuffer(COMPONENT);
-        sbVersion.append(RELEASE);
+        sbVersion.append(VERSION);
         sbVersion.append(getSP());
         sbVersion.append(getPatch());
         return  sbVersion.toString();
@@ -141,7 +141,7 @@ public class Version
      */
     public static String getRelease()
     {
-        return  RELEASE;
+        return  VERSION;
     }
 
     /**

@@ -68,8 +68,8 @@ public class RequestHandlerFactory
 	 * <br>
 	 * <ul>
 	 * <li>Reads the handler configurations</li>
-	 * <li>Creates IRequestHandler objects</li>
-	 * <li>Initializes the IRequestHandler objects</li>
+	 * <li>Creates IAuthnRequestHandler objects</li>
+	 * <li>Initializes the IAuthnRequestHandler objects</li>
 	 * <li>Stores the objects in a HashMap</li>
 	 * </ul>
 	 * <br><br>
@@ -147,7 +147,7 @@ public class RequestHandlerFactory
 					oRequestHandler = (IRequestHandler) cRequestHandler.newInstance();
 				}
 				catch (Exception e) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Not a correct 'IRequestHandler' class: "
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Not a correct 'IAuthnRequestHandler' class: "
 							+ sClass, e);
 					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 				}
@@ -157,7 +157,7 @@ public class RequestHandlerFactory
 				}
 				catch (ASelectException e) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod,
-							"Could not initialize IRequestHandler Object from class: " + sClass);
+							"Could not initialize IAuthnRequestHandler Object from class: " + sClass);
 					throw e;
 				}
 
@@ -333,7 +333,7 @@ public class RequestHandlerFactory
 		/*        Enumeration enumHandlers = _htRequestHandlers.elements();
 		 while (enumHandlers.hasMoreElements())
 		 {
-		 IRequestHandler oRequestHandler = (IRequestHandler)enumHandlers.nextElement();
+		 IAuthnRequestHandler oRequestHandler = (IAuthnRequestHandler)enumHandlers.nextElement();
 		 oRequestHandler.destroy();
 		 }*/
 	}

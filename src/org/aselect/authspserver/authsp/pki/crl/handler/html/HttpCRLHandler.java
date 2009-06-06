@@ -84,7 +84,6 @@ public class HttpCRLHandler implements ICRLHandler
 		CertificateFactory cf = null;
 		InputStream oConnectionInputStream = null;
 		CRL crl = null;
-		StringBuffer sbTemp = null;
 		try 
 		{
 			cf = CertificateFactory.getInstance("X509");

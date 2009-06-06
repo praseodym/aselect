@@ -88,6 +88,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.log.ASelectSystemLogger;
+import org.aselect.server.request.handler.BasicRequestHandler;
 import org.aselect.system.communication.server.Communicator;
 import org.aselect.system.communication.server.IInputMessage;
 import org.aselect.system.communication.server.IMessageCreatorInterface;
@@ -120,7 +121,9 @@ import org.aselect.system.utils.BASE64Encoder;
  * @author Alfa & Ariss
  * 
  */
-public abstract class AbstractAPIRequestHandler implements IRequestHandler
+public abstract class AbstractAPIRequestHandler
+	extends BasicRequestHandler
+	implements IAuthnRequestHandler
 {
 	/** The module name. Can be overwritten in sub classes */
 	protected String _sModule = "AbstractAPIRequestHandler";
@@ -128,8 +131,7 @@ public abstract class AbstractAPIRequestHandler implements IRequestHandler
 	/** The message creator. */
 	private IMessageCreatorInterface _messageCreator = null;
 
-	/** The system logger. */
-	protected ASelectSystemLogger _systemLogger;
+	/** The system logger is in BaseRequestHandler */
 
 	private HttpServletRequest _servletRequest;
 	private HttpServletResponse _servletResponse;

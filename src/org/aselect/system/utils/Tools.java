@@ -334,7 +334,9 @@ public class Tools
 		String sMethod = "reportUsageToSensor";
 		IClientCommunicator oClientCommunicator;
 		
-		Object oSensorSection = Utils.getSimpleSection(oConfMgr, oSysLog, oConfig, "lbsensor", true);
+		Object oSensorSection = Utils.getSimpleSection(oConfMgr, oSysLog, oConfig, "lbsensor", false);
+		if (oSensorSection == null)
+			return;
 		oClientCommunicator = Tools.initClientCommunicator(oConfMgr, oSysLog, oSensorSection);
 		String sSensorUrl = Utils.getSimpleParam(oConfMgr, oSysLog, oSensorSection, "sensor_url", true);
 		

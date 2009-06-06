@@ -139,7 +139,7 @@ public class NullAuthSP extends ASelectHttpServlet
     /**
      * The Null AuthSP version string 
      */
-    private static String VERSION = "A-Select Null AuthSP 1.8";
+    private static String VERSION = "A-Select Null AuthSP "+"1.9";
     
     /**
      * The logger that logs authentication information

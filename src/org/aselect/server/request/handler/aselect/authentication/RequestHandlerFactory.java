@@ -69,7 +69,7 @@ import org.aselect.system.exception.ASelectCommunicationException;
  * The request hendler factory for the A-Select Server.
  * <br><br>
  * <b>Description:</b><br>
- * A singleton factory, which can be used to create <code>IRequestHandler</code>
+ * A singleton factory, which can be used to create <code>IAuthnRequestHandler</code>
  * implementations. The factory uses a {@link RequestParser} to determine 
  * the type of request handler and constructs this type of handler.   
  * <br><br>
@@ -185,12 +185,12 @@ public class RequestHandlerFactory
 	 * @throws ASelectCommunicationException 
 	 * 	If communication failed and no response was sent to the client yet.
 	 */
-	public IRequestHandler createRequestHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
+	public IAuthnRequestHandler createRequestHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 		throws ASelectCommunicationException
 	{
 		String sMethod = "createRequestHandler()";
 
-		IRequestHandler oRequestHandler = null;
+		IAuthnRequestHandler oRequestHandler = null;
 
 		// Process all other requests
 		RequestParser reqParser = new RequestParser(servletRequest);

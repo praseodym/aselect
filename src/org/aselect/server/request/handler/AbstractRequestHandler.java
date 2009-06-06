@@ -41,10 +41,8 @@ import org.aselect.system.exception.ASelectException;
  * @author Alfa & Ariss
  * 
  */
-public abstract class AbstractRequestHandler implements IRequestHandler
+public abstract class AbstractRequestHandler extends BasicRequestHandler implements IRequestHandler
 {
-	protected ASelectSystemLogger _systemLogger;
-	protected ASelectConfigManager _configManager;
 	protected SessionManager _oSessionManager;
 	protected ServletConfig _oServletConfig;
 
@@ -72,7 +70,7 @@ public abstract class AbstractRequestHandler implements IRequestHandler
 	 * <br><br>
 	 * <li><b>id</b> - Unique ID of the handler</li>
 	 * <li><b>class</b> - Class name of the handler, must implement the 
-	 * <code>IRequestHandler</code> interface</li>
+	 * <code>IAuthnRequestHandler</code> interface</li>
 	 * <li><b>target</b> - The regular expression of URLs that will be handled 
 	 * by this request handler</li>
 	 * <br><br>

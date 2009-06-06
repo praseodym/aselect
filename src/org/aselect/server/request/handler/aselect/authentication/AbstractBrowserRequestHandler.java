@@ -98,6 +98,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.HandlerTools;
+import org.aselect.server.request.handler.BasicRequestHandler;
 import org.aselect.server.session.SessionManager;
 import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
@@ -129,17 +130,16 @@ import org.aselect.system.utils.Utils;
  * Copyright Gemeente Den Haag (http://www.denhaag.nl) and UMC Nijmegen (http://www.umcn.nl)
  * 
  */
-public abstract class AbstractBrowserRequestHandler implements IRequestHandler
+public abstract class AbstractBrowserRequestHandler
+	extends BasicRequestHandler
+	implements IAuthnRequestHandler
 {
 	/** The module name. Can be overwritten in sub classes */
 	protected String _sModule = "AbstractBrowserRequestHandler";
 
-	/** The system logger. */
-	protected ASelectSystemLogger _systemLogger;
-
-	/** The configuration. */
-	protected ASelectConfigManager _configManager;
-
+	/** The system logger is in BasicRequestHandler */
+	/** The configuration Manager is in BasicRequestManager */
+	
 	/** The session manager. */
 	protected SessionManager _sessionManager;
 
@@ -187,7 +187,7 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 	/**
 	 * This function processes browser requests
 	 * <br><br>
-	 * @see org.aselect.server.request.handler.aselect.authentication.IRequestHandler#processRequest()
+	 * @see org.aselect.server.request.handler.aselect.authentication.IAuthnRequestHandler#processRequest()
 	 */
 	public void processRequest()
 	throws ASelectException

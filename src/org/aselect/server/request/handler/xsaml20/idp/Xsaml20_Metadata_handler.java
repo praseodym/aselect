@@ -7,6 +7,7 @@ import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
 import org.opensaml.Configuration;
 import org.opensaml.common.SAMLObjectBuilder;
@@ -47,13 +48,14 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 	throws ASelectException
 	{
 		String sMethod = "aselectReader()";
+		String sRedirectUrl = getRedirectURL();
 	
 		Object oRequest = null;
 		Object oHandlers = null;
 		Object oHandler = null;
 		super.aselectReader();
 	
-		setSingleSignOnServiceTarget(getRedirectURL()); // We use redirect_url (for now)
+		setSingleSignOnServiceTarget("saml20_sso"); // Preliminary default
 		try {
 			oRequest = _configManager.getSection(null, "requests");
 			oHandlers = _configManager.getSection(oRequest, "handlers");
@@ -68,32 +70,39 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 						continue;
 					}
 					String sTarget = _configManager.getParam(oHandler, "target");
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "id="+sId+" target="+sTarget);
+					String sLocalUrl = Utils.getSimpleParam(_configManager, _systemLogger, oHandler, "local_url", false);
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "id="+sId+" target="+sTarget+"local_url="+sLocalUrl);
 					sTarget = sTarget.replace("\\", "");
 					sTarget = sTarget.replace(".*", "");
 
-					if (sId.equals("saml20_artifactresolver")) {
-						setArtifactResolverTarget(sTarget);
-					}
-					else if (sId.equals("saml20_sso")) {
+					if (sId.equals("saml20_sso")) {
 						setSingleSignOnServiceTarget(sTarget);
+						setIdpSsoUrl((sLocalUrl!=null)? sLocalUrl: sRedirectUrl);
+					}
+					else if (sId.equals("saml20_artifactresolver")) {
+						setArtifactResolverTarget(sTarget);
+						setIdpArtifactResolverUrl(((sLocalUrl!=null)? sLocalUrl: sRedirectUrl));
 					}
 					else if (sId.equals("saml20_idp_slo_http_request")) {
 						setIdpSloHttpLocation(sTarget);
+						setIdpSloHttpRequestUrl(((sLocalUrl!=null)? sLocalUrl: sRedirectUrl));
 					}
 					else if (sId.equals("saml20_idp_slo_http_response")) {
 						setIdpSloHttpResponse(sTarget);
+						setIdpSloHttpResponseUrl(((sLocalUrl!=null)? sLocalUrl: sRedirectUrl));
 					}
 					else if (sId.equals("saml20_idp_slo_soap_request")) {
 						setIdpSloSoapLocation(sTarget);
+						setIdpSloSoapRequestUrl(((sLocalUrl!=null)? sLocalUrl: sRedirectUrl));
 					}
 					else if (sId.equals("saml20_idp_slo_soap_response")) {
 						setIdpSloSoapResponse(sTarget);
+						setIdpSloSoapResponseUrl(((sLocalUrl!=null)? sLocalUrl: sRedirectUrl));
 					}
 					else if (sId.equals("saml20_idp_session_sync")) {
 						setIdpSSSoapLocation(sTarget);
+						setIdpSyncUrl(((sLocalUrl!=null)? sLocalUrl: sRedirectUrl));
 					}
-
 				}
 				catch (ASelectConfigException e) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config next section 'handler' found", e);
@@ -113,49 +122,9 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 	{
 		String sMethod = "createMetaDataXML()";
 		String xmlMDRequest = null;
-		
 		DateTime tStamp = new DateTime();
-
-/*
-		// TODO, this should be done by a transformer (using xslt)
-		String xmlMDRequest = "<?xml version=\"1.0\"?>"
-				+ "<m:EntityDescriptor xmlns:m=\"urn:oasis:names:tc:SAML:2.0:metadata\" entityID=\""
-				+ getEntityIdIdp() + "\">"
-				+ "	<m:IDPSSODescriptor WantAuthnRequestsSigned=\"true\"  protocolSupportEnumeration=\"urn:oasis:names:tc:SAML:2.0:protocol\">\n";
-		
-		xmlMDRequest += "<m:KeyDescriptor use=\"signing\">" + "<ds:KeyInfo xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\">"
-				+ "<ds:X509Data>" + "<ds:X509Certificate>" + getSigningCertificate() + "</ds:X509Certificate>"
-				+ "</ds:X509Data>" + "</ds:KeyInfo>" + "</m:KeyDescriptor>\n";
-		
-		if (getSingleSignOnServiceTarget() != null)
-			xmlMDRequest += "<m:SingleSignOnService Binding=\"" + singleSignOnServiceBindingConstantREDIRECT + "\""
-					+ " Location=\"" + getRedirectURL()+getSingleSignOnServiceTarget()
-					+ "\">" + "</m:SingleSignOnService>\n";
-		
-		if (getArtifactResolverTarget() != null)
-			xmlMDRequest += "<m:ArtifactResolutionService Binding=\"" + artifactResolutionServiceBindingConstantSOAP + "\"" 
-					+ " Location=\"" + getRedirectURL()+getArtifactResolverTarget() + "\"" 
-					+ " index=\"0\" isDefault=\"true\">" + "</m:ArtifactResolutionService>\n";
-		
-		if (getIdpSloHttpLocation() != null) {
-			xmlMDRequest += "<m:SingleLogoutService Binding=\"" + singleLogoutServiceBindingConstantREDIRECT + "\""
-							+ " Location=\"" + getRedirectURL()+getIdpSloHttpLocation();
-			if (getIdpSloHttpResponse() != null)
-				xmlMDRequest += "\" ResponseLocation=\"" + getRedirectURL()+getIdpSloHttpResponse();
-			xmlMDRequest +=	"\"></m:SingleLogoutService>\n";
-		}
-
-		if (getIdpSloSoapLocation() != null) {				
-			xmlMDRequest += "<m:SingleLogoutService Binding=\"" + singleLogoutServiceBindingConstantSOAP + "\""
-					+ " Location=\"" + getRedirectURL()+getIdpSloSoapLocation();
-			if (getIdpSloSoapResponse() != null)
-				xmlMDRequest += "\" ResponseLocation=\"" + getRedirectURL()+getIdpSloSoapResponse();
-			xmlMDRequest += "\">" + "</m:SingleLogoutService>\n";
-		}
-		
-		xmlMDRequest += "</m:IDPSSODescriptor>" + "</m:EntityDescriptor>\n";
-*/	
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Starting to build metadata");
+
 		// Create the EntityDescriptor
 		SAMLObjectBuilder<EntityDescriptor> entityDescriptorBuilder = (SAMLObjectBuilder<EntityDescriptor>) _oBuilderFactory
 		.getBuilder(EntityDescriptor.DEFAULT_ELEMENT_NAME);
@@ -196,26 +165,26 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 		
 		// Create the IDPSSODescriptor
 		SAMLObjectBuilder<IDPSSODescriptor> ssoDescriptorBuilder = (SAMLObjectBuilder<IDPSSODescriptor>) _oBuilderFactory
-		.getBuilder(IDPSSODescriptor.DEFAULT_ELEMENT_NAME);
+						.getBuilder(IDPSSODescriptor.DEFAULT_ELEMENT_NAME);
 		IDPSSODescriptor ssoDescriptor = ssoDescriptorBuilder.buildObject();
 
 		// Create the SingleSignOnService
 		if (getSingleSignOnServiceTarget() != null) {
 			SAMLObjectBuilder<SingleSignOnService> ssoServiceBuilder = (SAMLObjectBuilder<SingleSignOnService>) _oBuilderFactory
-			.getBuilder(SingleSignOnService.DEFAULT_ELEMENT_NAME);
+							.getBuilder(SingleSignOnService.DEFAULT_ELEMENT_NAME);
 			SingleSignOnService ssoService = ssoServiceBuilder.buildObject();
 			ssoService.setBinding(singleSignOnServiceBindingConstantREDIRECT);
-			ssoService.setLocation(getRedirectURL()+getSingleSignOnServiceTarget());
+			ssoService.setLocation(getIdpSsoUrl()+getSingleSignOnServiceTarget());
 			ssoDescriptor.getSingleSignOnServices().add(ssoService);
 		}
 
 		// Create the ArtifactResolutionService
 		if (getArtifactResolverTarget() != null) {
 			SAMLObjectBuilder<ArtifactResolutionService> artResolutionSeviceBuilder = (SAMLObjectBuilder<ArtifactResolutionService>) _oBuilderFactory
-			.getBuilder(ArtifactResolutionService.DEFAULT_ELEMENT_NAME);
+							.getBuilder(ArtifactResolutionService.DEFAULT_ELEMENT_NAME);
 			ArtifactResolutionService artResolutionService = artResolutionSeviceBuilder.buildObject();
 			artResolutionService.setBinding(artifactResolutionServiceBindingConstantSOAP);
-			artResolutionService.setLocation(getRedirectURL()+getArtifactResolverTarget());
+			artResolutionService.setLocation(getIdpArtifactResolverUrl()+getArtifactResolverTarget());
 			artResolutionService.setIsDefault(true);
 			artResolutionService.setIndex(0);
 			ssoDescriptor.getArtifactResolutionServices().add(artResolutionService);
@@ -224,42 +193,39 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 		// Create the SingleLogoutService HTTP
 		if (getIdpSloHttpLocation() != null) {
 			SAMLObjectBuilder<SingleLogoutService> sloHttpServiceBuilder = (SAMLObjectBuilder<SingleLogoutService>) _oBuilderFactory
-			.getBuilder(SingleLogoutService.DEFAULT_ELEMENT_NAME);
+							.getBuilder(SingleLogoutService.DEFAULT_ELEMENT_NAME);
 			SingleLogoutService sloHttpService = sloHttpServiceBuilder.buildObject();
 			sloHttpService.setBinding(singleLogoutServiceBindingConstantREDIRECT);
-			sloHttpService.setLocation(getRedirectURL()+getIdpSloHttpLocation());
+			sloHttpService.setLocation(getIdpSloHttpRequestUrl()+getIdpSloHttpLocation());
 			if (getIdpSloHttpResponse() != null)
-				sloHttpService.setResponseLocation(getRedirectURL()+getIdpSloHttpResponse());
-
+				sloHttpService.setResponseLocation(getIdpSloHttpResponseUrl()+getIdpSloHttpResponse());
 			ssoDescriptor.getSingleLogoutServices().add(sloHttpService);
 		}
 
 		// Create the SingleLogoutService SOAP
 		if (getIdpSloSoapLocation() != null) {
 			SAMLObjectBuilder<SingleLogoutService> sloSoaperviceBuilder = (SAMLObjectBuilder<SingleLogoutService>) _oBuilderFactory
-			.getBuilder(SingleLogoutService.DEFAULT_ELEMENT_NAME);
+							.getBuilder(SingleLogoutService.DEFAULT_ELEMENT_NAME);
 			SingleLogoutService sloSoapService = sloSoaperviceBuilder.buildObject();
 			sloSoapService.setBinding(singleLogoutServiceBindingConstantSOAP);
-			sloSoapService.setLocation(getRedirectURL()+getIdpSloSoapLocation());
+			sloSoapService.setLocation(getIdpSloSoapRequestUrl()+getIdpSloSoapLocation());
 			if (getIdpSloSoapResponse() != null)
-				sloSoapService.setResponseLocation(getRedirectURL()+getIdpSloSoapResponse());
-
+				sloSoapService.setResponseLocation(getIdpSloSoapResponseUrl()+getIdpSloSoapResponse());
 			ssoDescriptor.getSingleLogoutServices().add(sloSoapService);
 		}
 
-
 		// Create the PDPDescriptor>
 		SAMLObjectBuilder<PDPDescriptor> pdpDescriptorBuilder = (SAMLObjectBuilder<PDPDescriptor>) _oBuilderFactory
-		.getBuilder(PDPDescriptor.DEFAULT_ELEMENT_NAME);
+						.getBuilder(PDPDescriptor.DEFAULT_ELEMENT_NAME);
 		PDPDescriptor pdpDescriptor = pdpDescriptorBuilder.buildObject();
 
 		// Create the AuthDecisionQuery target
 		if (getIdpSSSoapLocation() != null) {
 			SAMLObjectBuilder<AuthzService> adqSoaperviceBuilder = (SAMLObjectBuilder<AuthzService>) _oBuilderFactory
-			.getBuilder(AuthzService.DEFAULT_ELEMENT_NAME);
+							.getBuilder(AuthzService.DEFAULT_ELEMENT_NAME);
 			AuthzService adqSoapService = adqSoaperviceBuilder.buildObject();
 			adqSoapService.setBinding(authzServiceBindingConstantSOAP);
-			adqSoapService.setLocation(getRedirectURL()+getIdpSSSoapLocation());
+			adqSoapService.setLocation(getIdpSyncUrl()+getIdpSSSoapLocation());
 			pdpDescriptor.getAuthzServices().add(adqSoapService);
 		}
 
@@ -275,7 +241,6 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 		entityDescriptor.getRoleDescriptors().add(pdpDescriptor);
 
 		entityDescriptor = (EntityDescriptor)SamlTools.sign(entityDescriptor);
-		
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Just built the entityDescriptor");
 		
 		// Marshall to the Node
@@ -291,26 +256,23 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not marshall metadata",	e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
-
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Just marshalled into metadata node");
 
 		xmlMDRequest = XMLHelper.nodeToString(node);
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, "xmlMDRequest: " + xmlMDRequest);
-		return xmlMDRequest;
-		
+		return xmlMDRequest;		
 	}
-
 	
 	// Create the KeyDescriptor
 	// TODO, this should probably be a utility in SAMLTools
 	private KeyDescriptor createKeyDescriptor(String signingCertificate) {
 		SAMLObjectBuilder<KeyDescriptor> keyDescriptorBuilder = (SAMLObjectBuilder<KeyDescriptor>) _oBuilderFactory
-		.getBuilder(KeyDescriptor.DEFAULT_ELEMENT_NAME);
+						.getBuilder(KeyDescriptor.DEFAULT_ELEMENT_NAME);
 		KeyDescriptor keyDescriptor = keyDescriptorBuilder.buildObject();
 		keyDescriptor.setUse(org.opensaml.xml.security.credential.UsageType.SIGNING);
 		
 		XMLSignatureBuilder<KeyInfo> keyInfoBuilder = (XMLSignatureBuilder<KeyInfo>) _oBuilderFactory
-		.getBuilder(KeyInfo.DEFAULT_ELEMENT_NAME);
+						.getBuilder(KeyInfo.DEFAULT_ELEMENT_NAME);
 		KeyInfo keyInfo = keyInfoBuilder.buildObject();
 	
 		X509CertificateBuilder x509CertificateBuilder = (X509CertificateBuilder) _oBuilderFactory

@@ -18,6 +18,7 @@ public class SensorDataDispatcher extends BasicSensorHandler
 
 	protected String _sStoreHandlerId = null;
 	protected int _iAcceptLimit = 0;
+	protected int _iDownLimit = 0;
 	
 	public void initialize(Object oConfigHandler, String sId)
 	throws ASelectException
@@ -29,8 +30,11 @@ public class SensorDataDispatcher extends BasicSensorHandler
 		_iAcceptLimit = _oConfigManager.getSimpleIntParam(oConfigHandler, "accept_limit", false);
 		if (_iAcceptLimit < 0)
 			_iAcceptLimit = 0;  // disables the feature
+		_iDownLimit = _oConfigManager.getSimpleIntParam(oConfigHandler, "down_limit", false);
+		if (_iDownLimit < 0)
+			_iDownLimit = 0;  // disables the feature
 		_sStoreHandlerId = _oConfigManager.getSimpleParam(oConfigHandler, "store_handler_id", true);
-		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "accept_limit="+_iAcceptLimit+" store_handler_id="+_sStoreHandlerId);
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "accept_limit="+_iAcceptLimit+" down_limit="+_iDownLimit+" store_handler_id="+_sStoreHandlerId);
 	}
 	
 	// Line processing
@@ -52,16 +56,17 @@ public class SensorDataDispatcher extends BasicSensorHandler
 
 			HashMap<String,String> hmAttribs = Tools.getUrlAttributes(sLine, _oLbSensorLogger);
 			String sReq = hmAttribs.get("request");
-			if ("retrieve".equals(sReq)) {
+			if (sReq == null || "retrieve".equals(sReq)) {
 				// Respond with 200 (OK) 503 (Service Unavailable) 404 (Not found)
 				SensorStore myStore = LbSensor.getSensorStore(_sStoreHandlerId);
 				if (myStore == null) {  // bad config
-					_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "No SensorStore found wit id="+_sStoreHandlerId);
+					_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "No SensorStore found for id="+_sStoreHandlerId);
 					return;
 				}
 				long lAverage = myStore.getAverage();
-				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "AVG: "+lAverage+" limit="+_iAcceptLimit);
+				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "AVG: "+lAverage+" accept="+_iAcceptLimit+" down="+_iDownLimit);
 				writeHtmlResponse(oOutWriter, lAverage, (lAverage<0)? STATUS_UNAVAILABLE:
+							(_iDownLimit!=0 && lAverage>_iDownLimit)? STATUS_UNAVAILABLE: 
 							(_iAcceptLimit!=0 && lAverage>_iAcceptLimit)? STATUS_ONHOLD: STATUS_OK);
 			}
 		}

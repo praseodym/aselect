@@ -11,10 +11,10 @@
  */
 
 /* 
- * $Id: IRequestHandler.java,v 1.1.2.1 2007/03/05 11:35:04 maarten Exp $ 
+ * $Id: IAuthnRequestHandler.java,v 1.1.2.1 2007/03/05 11:35:04 maarten Exp $ 
  * 
  * Changelog:
- * $Log: IRequestHandler.java,v $
+ * $Log: IAuthnRequestHandler.java,v $
  * Revision 1.1.2.1  2007/03/05 11:35:04  maarten
  * SFS Request Handlers
  *
