@@ -404,7 +404,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @see org.aselect.server.request.handler.aselect.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.HashMap, javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
 	 */
 	public void processBrowserRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sRequest;
 		String sRid;
@@ -683,7 +683,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @throws ASelectException
 	 */
 	private void handleLogin1(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleLogin1";
 		String sRid = null;
@@ -788,7 +788,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					// TGT found but not sufficient.
 
 					if (!handleUserConsent(htServiceRequest, servletResponse, pwOut, sRid))
-						return; // Quit
+						return; // No consent, Quit
 
 					// Authenicate with same user-id that was stored in TGT
 					HashMap htTGTContext = _tgtManager.getTGT(sTgt);
@@ -798,13 +798,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					String sTempOrg = (String) htTGTContext.get("proxy_organization");
 					if (sTempOrg == null)
 						sTempOrg = (String) htTGTContext.get("organization");
-					if (!sTempOrg.equals(_sMyOrg) &&
-							// 20090111, Bauke Added test:
+					if (!sTempOrg.equals(_sMyOrg) && // 20090111, Bauke Added test below:
 							_crossASelectManager.isCrossSelectorEnabled() && _configManager.isCrossFallBackEnabled()) {
 						_htSessionContext.put("forced_uid", sUid);
 						_htSessionContext.put("forced_organization", sTempOrg);
-						_systemLogger.log(Level.INFO, _sModule, sMethod, "To CROSS MyOrg=" + _sMyOrg + " != org="
-								+ sTempOrg);
+						_systemLogger.log(Level.INFO, _sModule, sMethod, "To CROSS MyOrg="+_sMyOrg+" != org="+sTempOrg);
 						handleCrossLogin(htServiceRequest, servletResponse, pwOut);
 						return;
 					}
@@ -820,19 +818,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				return; // Quit
 
 			// 20090120, Bauke store Client IP and User Agent in the Session
-			SessionManager _oSessionManager = SessionManager.getHandle();
-			HashMap htSessionContext = _oSessionManager.getSessionContext(sRid);
-			if (htSessionContext == null) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "No session found for RID: " + sRid);
-				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-			}
-			String sClientIp = (String) htServiceRequest.get("client_ip");
-			if (sClientIp != null)
-				htSessionContext.put("client_ip", sClientIp);
-			String sUserAgent = (String) htServiceRequest.get("user_agent");
-			if (sUserAgent != null)
-				htSessionContext.put("user_agent", sUserAgent);
-			_oSessionManager.update(sRid, htSessionContext);
+			// Note the current session is available through _htSessionContext			
+			Utils.copyHashmapValue("client_ip", _htSessionContext, htServiceRequest);
+			Utils.copyHashmapValue("user_agent", _htSessionContext, htServiceRequest);
+			// TODO: could be handleUserConsent() also saved the session, should be optimized
+			_sessionManager.update(sRid, _htSessionContext);  // Will also update SensorData changed in handleUserConsent()
 
 			// no TGT found or killed (other uid)
 			if (!_configManager.isUDBEnabled() || _htSessionContext.containsKey("forced_organization")) {
@@ -843,10 +833,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			String sForcedUid = (String) _htSessionContext.get("forced_uid");
 			String sForcedAuthsp = (String) _htSessionContext.get("forced_authsp");
 			if (sForcedUid != null || sForcedAuthsp != null) {
-				if (sForcedUid != null)
-					htServiceRequest.put("user_id", sForcedUid);
-				if (sForcedAuthsp != null)
-					htServiceRequest.put("forced_authsp", sForcedAuthsp);
+				if (sForcedUid != null) htServiceRequest.put("user_id", sForcedUid);
+				if (sForcedAuthsp != null) htServiceRequest.put("forced_authsp", sForcedAuthsp);
 				handleLogin2(htServiceRequest, servletResponse, pwOut);
 				return;
 			}
@@ -974,7 +962,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 		// We need the user's consent to continue
 		String sReqConsent = (String) htServiceRequest.get("consent");
-		if (sReqConsent != null && sReqConsent.equals("true")) {  // new consent given
+		if ("true".equals(sReqConsent) || "false".equals(sReqConsent)) {
+			Tools.resumeSensorData(_systemLogger, _htSessionContext);
+			_sessionManager.update(sRid, _htSessionContext);  // Write session
+		}
+		if ("true".equals(sReqConsent)) {  // new consent given
 			if (setConsentCookie) {
 				// Remember the user's answer by setting a Consent Cookie
 				String sCookieDomain = _configManager.getCookieDomain();
@@ -982,12 +974,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 			return true;
 		}
-		if (sReqConsent != null && sReqConsent.equals("false")) {
-			// User did not give his consent
+		if ("false".equals(sReqConsent)) {  // User did not give his consent
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_CANCEL);
 		}
 
 		// Display the consent form
+		Tools.pauseSensorData(_systemLogger, _htSessionContext);
+		_sessionManager.update(sRid, _htSessionContext);  // Write session
 		String sFriendlyName = "";
 		try {
 			Object aselect = _configManager.getSection(null, "aselect");

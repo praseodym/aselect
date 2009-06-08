@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Ant-Version: Apache Ant 1.6.5
+Created-By: 1.4.2_07-b05 (Sun Microsystems Inc.)
 Main-Class: org.aselect.agent.ASelectAgent
 Class-Path: org.aselect.system.jar mysql-connector-java-5.1.7-bin.jar 
  cryptix-jce-provider.jar xercesImpl.jar xmlParserAPIs.jar
- commons-dbcp-1.2.2.jar commons-pool-1.4.jar
-Created-By: 1.4.2_07-b05 (Sun Microsystems Inc.)
+ commons-dbcp-1.2.2.jar commons-pool-1.4.jar .

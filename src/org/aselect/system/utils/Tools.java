@@ -265,7 +265,7 @@ public class Tools
 		String sMethod = "initializeSensorData";
 		long now = System.currentTimeMillis();
 		
-		oSysLog.log(Level.INFO, MODULE, sMethod, "now="+now);
+		oSysLog.log(Level.INFO, MODULE, sMethod, "init now="+now);
 		htSessionContext.put("first_contact", Long.toString(now));  // seconds
 		htSessionContext.put("time_spent", "0");  // seconds
 	}
@@ -275,7 +275,7 @@ public class Tools
 		String sMethod = "pauseSensorData";
 		long now = System.currentTimeMillis();
 		
-		oSysLog.log(Level.INFO, MODULE, sMethod, "now="+now);
+		oSysLog.log(Level.INFO, MODULE, sMethod, "pause now="+now);
 		htSessionContext.put("pause_contact", Long.toString(now));  // seconds
 	}
 
@@ -284,16 +284,16 @@ public class Tools
 		String sMethod = "resumeSensorData";
 		long now = System.currentTimeMillis();
 		
-		oSysLog.log(Level.INFO, MODULE, sMethod, "now="+now);
+		oSysLog.log(Level.INFO, MODULE, sMethod, "resume now="+now);
 		String sPause = (String)htSessionContext.get("pause_contact");  // seconds
 		String sSpent = (String)htSessionContext.get("time_spent");  // seconds
 		if (sPause != null) {
 			try {
 				long lPause = Long.parseLong(sPause);
 				long lSpent = (sSpent != null)? Long.parseLong(sSpent): 0;
-				lSpent += now - lPause;
-				oSysLog.log(Level.INFO, MODULE, sMethod, "pause="+lSpent);
-				htSessionContext.put("time_spent", Long.toString(lSpent));  // seconds
+				long lSpentNew = lSpent + now - lPause;
+				oSysLog.log(Level.INFO, MODULE, sMethod, "spent="+lSpent+"->"+lSpentNew);
+				htSessionContext.put("time_spent", Long.toString(lSpentNew));  // seconds
 				htSessionContext.remove("pause_contact");
 			}
 			catch(Exception e) {
@@ -305,16 +305,16 @@ public class Tools
 	public static void calculateAndReportSensorData(ConfigManager oConfMgr, SystemLogger oSysLog, HashMap htSession)
 	{
 		String sMethod = "calculateAndReportSensorData";
-		long lNow;
+		long lFirst;
 		
-		String sNow = (String)htSession.get("first_contact");  // seconds
+		String sFirst = (String)htSession.get("first_contact");  // seconds
 		String sSpent = (String)htSession.get("time_spent");  // seconds
-		oSysLog.log(Level.INFO, MODULE, sMethod, "now="+sNow+" spent="+sSpent);
-		if (sNow != null) {
+		if (sFirst != null) {
 			try {
-				lNow = Long.parseLong(sNow);
+				lFirst = Long.parseLong(sFirst);
 				long now = System.currentTimeMillis();
-				long lTotalSpent = now - lNow;
+				long lTotalSpent = now - lFirst;
+				oSysLog.log(Level.INFO, MODULE, sMethod, "now="+now+" first="+sFirst+" spent="+sSpent);
 				if (sSpent != null) {
 					long lSpent = Long.parseLong(sSpent);
 					lTotalSpent -= lSpent;

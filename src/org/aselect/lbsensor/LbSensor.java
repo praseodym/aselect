@@ -60,7 +60,7 @@ public class LbSensor
 		Object oLogSection = _oConfigManager.getSectionFromSection(oMainSection, "logging", "id=system", true);
 		_oLbSensorLogger.init(_oConfigManager, oLogSection, sWorkingDir);
 		// Logging goes to the system logfile now
-		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Starting LB Sensor");
+		_oLbSensorLogger.log(Level.SEVERE, MODULE, sMethod, "Starting LB Sensor");
 	}
 	
 	public void startServices()
@@ -94,7 +94,7 @@ public class LbSensor
     		// The data store must be accessible by other ISensorHandler threads
     		_hmStores.put(sId, oSenseHandler.getMyStore());
 			
-    		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "run handler: "+sId);
+    		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Start handler: "+sId);
     		_tMyServiceHandler.start();  // don't use run() here!
     		
     		oConfigHandler = _oConfigManager.getNextSection(oConfigHandler);

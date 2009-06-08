@@ -37,7 +37,8 @@ public class HttpSensor extends BasicSensorHandler
 		
 		HttpPoller poller = new HttpPoller(_sMyId, _sUrl, _sSignOfLife);
 		_pollingTimer = new Timer();
-		_pollingTimer.schedule(poller, _iPollingInterval, _iPollingInterval);
+		_pollingTimer.schedule(poller, 0, _iPollingInterval);
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "scheduled");
 	}
 
 	// Line processing

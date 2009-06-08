@@ -36,7 +36,8 @@ public class JdbcSensor extends BasicSensorHandler
 		
 		JdbcPoller poller = new JdbcPoller(_sMyId, _sDriver, _sUrl, _sUser, _sPassword, _sQuery);
 		_pollingTimer = new Timer();
-		_pollingTimer.schedule(poller, _iPollingInterval, _iPollingInterval);
+		_pollingTimer.schedule(poller, 0, _iPollingInterval);
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "scheduled");
 	}
 
 	// Line processing

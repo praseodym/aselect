@@ -488,13 +488,14 @@ public class Utils
 	}
 	
 	public static void copyMsgValueToHashmap(String sName, HashMap<String,String> hmTo, IInputMessage imFrom)
-	throws ASelectCommunicationException
 	{
 		if (imFrom == null | hmTo == null)
 			return;
-		String sValue = imFrom.getParam(sName);
-		if (sValue != null)
-			hmTo.put(sName, sValue);
+		try {
+			String sValue = imFrom.getParam(sName);
+			if (sValue != null)
+				hmTo.put(sName, sValue);
+		} catch(Exception e) { }
 	}
 
 	// Get 'sParam' within the 'oConfig' section
