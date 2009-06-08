@@ -387,6 +387,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		Utils.copyMsgValueToHashmap("language", hmRequest, oInputMessage);
 		Utils.copyMsgValueToHashmap("forced_logon", hmRequest, oInputMessage);
 		Utils.copyMsgValueToHashmap("check-signature", hmRequest, oInputMessage);
+		Utils.copyMsgValueToHashmap("signature", hmRequest, oInputMessage);
 		Utils.copyMsgValueToHashmap("shared_secret", hmRequest, oInputMessage);
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmRequest=" + hmRequest);

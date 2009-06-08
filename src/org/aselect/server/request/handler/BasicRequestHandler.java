@@ -17,7 +17,7 @@ import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
 
 //
-// The mother of all RequestHandlers
+// The mother of all RequestHandlers ...
 //
 public abstract class BasicRequestHandler
 {
@@ -30,7 +30,6 @@ public abstract class BasicRequestHandler
 	// But also slightly different versions were found in ASelectAPIHandler and the 'sfs' handlers
 	// TODO: merge
 	protected HashMap<String, String> handleAuthenticateAndCreateSession(HashMap<String,String> hmInput, String sUrlTarget)
-			/*IProtocolRequest oProtocolRequest, IInputMessage oInputMessage, IOutputMessage oOutputMessage*/
 	throws ASelectException
 	{
 		String sMethod = "handleAuthenticateAndCreateSession()";
