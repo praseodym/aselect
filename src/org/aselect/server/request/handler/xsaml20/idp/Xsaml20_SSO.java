@@ -131,8 +131,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			String sIssuer = authnRequest.getIssuer().getValue();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "==== SPRid="+sSPRid+" RelayState="+sRelayState);
 
-			boolean bForcedLogon = authnRequest.isForceAuthn();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "ForceAuthn = " + bForcedLogon);
+			boolean bForcedAuthn = authnRequest.isForceAuthn();
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "ForceAuthn = " + bForcedAuthn);
 
 			String sAssertionConsumerServiceURL = getAssertionConsumerServiceURL(samlMessage);
 			if (sAssertionConsumerServiceURL == null) {
@@ -159,11 +159,12 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			htSession.put("forced_uid", "saml20_user");
 			
 			// RH, 20081117, strictly speaking forced_logon != forced_authenticate
-			// 	but this is used throughout all code
-			if (bForcedLogon) {
-				htSession.put("forced_authenticate", new Boolean(bForcedLogon));
-//				htSession.put("forced_logon", new Boolean(bForcedLogon));
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "'forced_authenticate' in htSession set to: " + bForcedLogon);
+			// 20090613, Bauke: 'forced_login' is used as API parameter (a String value)
+			//           'forced_authenticate' is used in the Session (a Boolean value),
+			//           the meaning of both is the identical
+			if (bForcedAuthn) {
+				htSession.put("forced_authenticate", new Boolean(bForcedAuthn));
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "'forced_authenticate' in htSession set to: " + bForcedAuthn);
 			}
 
 			// The betrouwbaarheidsniveau is stored in the session context
@@ -194,7 +195,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			StringBuffer sbURL = new StringBuffer(sASelectServerUrl);
 			sbURL.append("&rid=").append(sIDPRid);
 			sbURL.append("&a-select-server=").append(_sASelectServerID);
-			if (bForcedLogon) sbURL.append("&forced_logon=").append(bForcedLogon);
+			if (bForcedAuthn) sbURL.append("&forced_logon=").append(bForcedAuthn);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sbURL.toString());
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Challenge for credentials, redirect to:"  + sbURL.toString());
 			httpResponse.sendRedirect(sbURL.toString());

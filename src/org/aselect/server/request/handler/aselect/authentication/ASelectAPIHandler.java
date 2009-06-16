@@ -307,8 +307,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 			sLocalOrgId = oInputMessage.getParam("local_organization");
 			sRequiredLevel = oInputMessage.getParam("required_level");
 			sLevel = oInputMessage.getParam("level");
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "On Input: required_level=" + sRequiredLevel + " level="
-					+ sLevel);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "On Input: required_level=" + sRequiredLevel + " level=" + sLevel);
 			sASelectServer = oInputMessage.getParam("a-select-server");
 		}
 		catch (ASelectCommunicationException eAC) {
@@ -337,29 +336,36 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 		}
 
 		// check if the request must be handled as a forced authentication
-		Boolean boolForced = null;
+		Boolean boolForcedAuthn = new Boolean(false);
 		String sForcedLogon = null;
 		try {
 			sForcedLogon = oInputMessage.getParam("forced_logon");
-			boolForced = new Boolean(sForcedLogon);
+			boolForcedAuthn = new Boolean(sForcedLogon);
 		}
-		catch (ASelectCommunicationException e) {
-			boolForced = new Boolean(false);
-			_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'forced_logon' parameter found.", e);
+		catch (ASelectCommunicationException e) { }
+		
+		// 20090613, Bauke: accept forced_authenticate as well
+		// NOTE: API's accept the String 'forced_logon' (and now also 'forced_authenticate'),
+		//       the session stores a Boolean called 'forced_authenticate'
+		String sForcedAuthn = null;
+		try {
+			sForcedAuthn = oInputMessage.getParam("forced_authenticate");
+		}
+		catch (ASelectCommunicationException eAC) {}
+		
+		if (!boolForcedAuthn && sForcedAuthn!=null) {
+			boolForcedAuthn = new Boolean(sForcedAuthn);
 		}
 
 		// TODO include other optional parameters as well (remco)
 		if (_crossASelectManager.isLocalSigningRequired()) {
 			StringBuffer sbData = new StringBuffer(sASelectServer);
-			if (sCountry != null)
-				sbData.append(sCountry);
-			if (sForcedLogon != null)
-				sbData.append(sForcedLogon);
-			if (sLanguage != null)
-				sbData.append(sLanguage);
+			if (sCountry != null) sbData.append(sCountry);
+			if (sForcedLogon != null) sbData.append(sForcedLogon);
+			if (sForcedAuthn != null) sbData.append(sForcedAuthn);
+			if (sLanguage != null) sbData.append(sLanguage);
 			sbData.append(sLocalASUrl).append(sLocalOrgId).append(sRequiredLevel);
-			if (sUid != null)
-				sbData.append(sUid);
+			if (sUid != null) sbData.append(sUid);
 			verifyLocalASelectServerSignature(oInputMessage, sbData.toString(), sLocalOrgId);
 		}
 
@@ -389,10 +395,10 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 
 		// need to check if the request must be handled as a forced
 		// authentication
-		if (!boolForced.booleanValue() && _crossASelectManager.isForcedAuthenticateEnabled(sLocalOrgId)) {
-			boolForced = new Boolean(true);
+		if (!boolForcedAuthn.booleanValue() && _crossASelectManager.isForcedAuthenticateEnabled(sLocalOrgId)) {
+			boolForcedAuthn = new Boolean(true);
 		}
-		htSessionContext.put("forced_authenticate", boolForced);
+		htSessionContext.put("forced_authenticate", boolForcedAuthn);  // NOTE: Boolean object
 
 		// RH, 20080619, for now we only set the client_ip if it's an
 		// application browserrequests (ApplicationBrowserHandler)

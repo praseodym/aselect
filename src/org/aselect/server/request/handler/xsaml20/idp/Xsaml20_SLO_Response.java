@@ -107,7 +107,7 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 		LogoutRequest originalLogoutRequest = (LogoutRequest) oXml;
 //		String uid = originalLogoutRequest.getNameID().getValue();
 		
-        logoutNextSessionSP(httpRequest, httpResponse, originalLogoutRequest, null,
+        logoutNextSessionSP(httpRequest, httpResponse, originalLogoutRequest, null, null,
 					_bTryRedirectLogoutFirst, _iRedirectLogoutTimeout, null);
 	}
     

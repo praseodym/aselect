@@ -506,11 +506,14 @@ public class TGTIssuer
 				//It is a "priviliged authsp" -> get level from context
 				sLevel = ((Integer) htSessionContext.get("authsp_level")).toString();
 			}
+			Boolean bForcedAuthn = (Boolean)htSessionContext.get("forced_authenticate");
 
 			//TODO Check if double encode is needed (Martijn)
 			String sEncodedUserId = URLEncoder.encode(sUserId, "UTF-8");
 			sEncodedUserId = URLEncoder.encode(sEncodedUserId, "UTF-8");
 
+			String sTgt = null;
+if (!bForcedAuthn) {
 			HashMap htTGTContext = new HashMap();
 			htTGTContext.put("uid", sUserId);
 			htTGTContext.put("organization", sOrganization);
@@ -536,7 +539,6 @@ public class TGTIssuer
 			Utils.copyHashmapValue("sel_uid", htTGTContext, htSessionContext);
 
 			HashMap htOldTGTContext = null;
-			String sTgt = null;
 			UserSsoSession ssoSession = null;
 			if (sOldTGT != null) {
 				htOldTGTContext = _tgtManager.getTGT(sOldTGT);
@@ -583,7 +585,7 @@ public class TGTIssuer
 			Utils.copyHashmapValue("RelayState", htTGTContext, htSessionContext);
 			Utils.copyHashmapValue("user_agent", htTGTContext, htSessionContext);
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Store Context " + htTGTContext);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Store TGT " + htTGTContext);
 			if (htOldTGTContext == null) { // Create a new TGT
 				// must set "name_id" to the sTgt value
 				sTgt = _tgtManager.createTGT(htTGTContext);
@@ -596,12 +598,15 @@ public class TGTIssuer
 				sTgt = sOldTGT;
 				_tgtManager.updateTGT(sOldTGT, htTGTContext);
 			}
-
+}
 			// A tgt was just issued, report sensor data
 			Tools.calculateAndReportSensorData(_configManager, _systemLogger, htSessionContext);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
 			sendRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse);
-			_sessionManager.killSession(sRid);
+			
+			if (!bForcedAuthn) {
+				_sessionManager.killSession(sRid);
+			}
 		}
 		catch (ASelectException e) {
 			StringBuffer sbError = new StringBuffer("Issue TGT for request '");

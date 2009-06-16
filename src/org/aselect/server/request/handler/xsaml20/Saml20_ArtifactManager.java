@@ -133,6 +133,7 @@ public class Saml20_ArtifactManager extends StorageManager
 
 	
 	// We want an XMLObject removed
+	// NOT USED 20090616
 	private void removeArtifactFromStorage(Object key)  // RH, 2008113, n
 	throws ASelectStorageException
 	{

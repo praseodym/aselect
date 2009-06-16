@@ -569,7 +569,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				else {
 					if (checkCredentials(sTgt, sUid, sServerId)) //valid credentials/level/SSO group
 					{
-						Boolean boolForced = (Boolean) _htSessionContext.get("forced_authenticate");
+						Boolean boolForced = (Boolean)_htSessionContext.get("forced_authenticate");
+						_systemLogger.log(Level.INFO, _sModule, sMethod, "CheckCred OK forced="+boolForced);
 						if (!boolForced.booleanValue()) {
 							// valid tgt, no forced_authenticate
 							// redirect to application as user has already a valid tgt
@@ -714,8 +715,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				else {
 					if (checkCredentials(sTgt, sUid, sServerId)) //valid credentials/level/SSO group
 					{
-						_systemLogger.log(Level.INFO, _sModule, sMethod, "CheckCred OK");
 						Boolean boolForced = (Boolean) _htSessionContext.get("forced_authenticate");
+						_systemLogger.log(Level.INFO, _sModule, sMethod, "CheckCred OK forced="+boolForced);
 						if (!boolForced.booleanValue()) {
 							// valid tgt, no forced_authenticate
 							// redirect to application as user has already a valid tgt
@@ -1072,7 +1073,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				// Redirect to the AuthSP's ISTS
 				String sAsUrl = _configManager.getRedirectURL(); // <redirect_url> in aselect.xml
 				sAsUrl = sAsUrl + "/" + sAuthsp + "?rid=" + sRid; // e.g. saml20_ists
-				_systemLogger.log(Level.INFO, _sModule, sMethod, "Forced REDIR to " + sAsUrl);
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR to "+sAsUrl+" forced_authsp="+sAuthsp);
 				servletResponse.sendRedirect(sAsUrl);
 				return;
 			}
@@ -1444,8 +1445,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			HashMap htResponseTable = new HashMap();
 			htRequestTable.put("request", "authenticate");
 
-			Boolean boolForced = (Boolean) _htSessionContext.get("forced_authenticate");
-			htRequestTable.put("forced_logon", boolForced.toString());
+			Boolean boolForced = (Boolean)_htSessionContext.get("forced_authenticate");  // a Boolean
+			htRequestTable.put("forced_logon", boolForced.toString());  // and this is a String!
 			htRequestTable.put("local_as_url", sbMyAppUrl.toString());
 
 			Object oASelectConfig = _configManager.getSection(null, "aselect");
@@ -1477,11 +1478,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			htResponseTable = oCommunicator.sendMessage(htRequestTable, sRemoteAsUrl);
 			if (htResponseTable.isEmpty()) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not reach remote A-Select Server: "
-						+ sRemoteAsUrl);
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not reach remote A-Select Server: " + sRemoteAsUrl);
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
-
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "XLOGIN htResponseTable=" + htResponseTable);
 
 			String sResultCode = (String) htResponseTable.get("result_code");

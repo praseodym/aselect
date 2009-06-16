@@ -54,14 +54,18 @@ public abstract class BasicRequestHandler
 		String sRemoteOrg = hmInput.get("remote_organization");
 		String sCountry = hmInput.get("country");
 		String sLanguage = hmInput.get("language");
-		Boolean boolForced = false;
+		
+		// Acccept both 'forced_logon' and 'forced_authenticate' (preferred)
+		Boolean boolForcedAuthn = false;
+		String sForcedAuthn = hmInput.get("forced_authenticate");
+		if (sForcedAuthn != null) boolForcedAuthn = new Boolean(sForcedAuthn);
+		
 		String sForcedLogon = hmInput.get("forced_logon");
-		if (sForcedLogon != null)
-			boolForced = new Boolean(sForcedLogon);
+		if (sForcedLogon != null) boolForcedAuthn = new Boolean(sForcedLogon);		
+		
 		Boolean bCheckSignature = true;
 		String sCheckSignature = hmInput.get("check-signature");
-		if (sCheckSignature != null)
-			bCheckSignature = Boolean.valueOf(sCheckSignature);
+		if (sCheckSignature != null) bCheckSignature = Boolean.valueOf(sCheckSignature);
 
 		// check if request should be signed
 		if (_applicationManager.isSigningRequired() && bCheckSignature) {
@@ -77,6 +81,7 @@ public abstract class BasicRequestHandler
 			if (sAuthsp != null) sbData.append(sAuthsp);
 			if (sCountry != null) sbData.append(sCountry);
 			if (sForcedLogon != null) sbData.append(sForcedLogon);
+			if (sForcedAuthn != null) sbData.append(sForcedAuthn);
 			if (sLanguage != null) sbData.append(sLanguage);
 			if (sRemoteOrg != null) sbData.append(sRemoteOrg);
 			if (sUid != null) sbData.append(sUid);
@@ -136,12 +141,11 @@ public abstract class BasicRequestHandler
 		if (sUid != null) htSessionContext.put("forced_uid", sUid);
 		if (sAuthsp != null) htSessionContext.put("forced_authsp", sAuthsp);
 
-		// need to check if the request must be handled as a forced
-		// authentication
-		if (!boolForced.booleanValue() && _applicationManager.isForcedAuthenticateEnabled(sAppId)) {
-			boolForced = new Boolean(true);
+		// need to check if the request must be handled as a forced authentication
+		if (!boolForcedAuthn.booleanValue() && _applicationManager.isForcedAuthenticateEnabled(sAppId)) {
+			boolForcedAuthn = new Boolean(true);
 		}
-		htSessionContext.put("forced_authenticate", boolForced);
+		htSessionContext.put("forced_authenticate", boolForcedAuthn);  // NOTE: the Boolean object, not a string
 
 		// check single sign-on groups
 		if (_configManager.isSingleSignOn()) {

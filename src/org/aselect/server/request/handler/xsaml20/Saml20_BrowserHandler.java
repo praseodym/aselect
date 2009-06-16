@@ -128,7 +128,6 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 //		}
 		// RH, 20080602, eo, is done by Saml20_BaseHandler now        
 
-		
 		_oBuilderFactory = Configuration.getBuilderFactory();
 
 		Object oASelect = null;
@@ -466,7 +465,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	// Get the next SP session from the TgT and send it a Logout request
 	//
 	protected void logoutNextSessionSP(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
-						LogoutRequest logoutRequest, String initiatingSP,
+						LogoutRequest logoutRequest, String initiatingSP, String initiatingID, 
 						boolean tryRedirectLogoutFirst, int redirectLogoutTimeout, HashMap htTGTContext)
 	throws ASelectException, ASelectStorageException
 	{
@@ -492,12 +491,16 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			else {  // retrieve from the session
 				initiatingSP = sso.getLogoutInitiator();
 			}
+			if (initiatingID != null)
+				sso.setLogoutInitiatingID(initiatingID);
+			else
+				initiatingID = sso.getLogoutInitiatingID();
 			
 			// Send a LogoutRequest to another SP
 			for (ServiceProvider sp : spList) {
 				String serviceProvider = sp.getServiceProviderUrl();
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "initiatingSP="+initiatingSP+
-						" thisSP="+serviceProvider+" session="+sso);
+						" initiatingID="+initiatingID+" thisSP="+serviceProvider+" session="+sso);
 				
 				if (initiatingSP != null && serviceProvider.equals(initiatingSP)) {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "SKIP "+initiatingSP);
@@ -568,7 +571,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_PARSE_ERROR);
 		}
 
-		// Pass RelayState, 20090604, Bauke passed RelayState to sendLogoutResponse
+		// 20090604, Bauke passed RelayState to sendLogoutResponse
 		//if (sRelayState != null) {
 		//	String sStart = (logoutResponseLocation.contains("?"))? "&": "?";
 		//	logoutResponseLocation += sStart+"RelayState="+sRelayState;
@@ -577,7 +580,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 		LogoutResponseSender sender = new LogoutResponseSender();
 		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">> Sending logoutresponse to: "+ logoutResponseLocation);
 		sender.sendLogoutResponse(logoutResponseLocation, _sASelectServerUrl, statusCode,
-							logoutRequest.getID(), sRelayState, httpRequest, httpResponse);		
+							initiatingID, sRelayState, httpRequest, httpResponse);		
 	}
 
 	public void destroy()

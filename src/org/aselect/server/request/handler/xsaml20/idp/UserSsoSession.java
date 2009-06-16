@@ -20,6 +20,9 @@ public class UserSsoSession implements Serializable
 	// The service provider that initiated the logout
 	private String logoutInitiator = "";
 
+	// The service provider that initiated the logout
+	private String logoutInitiatingID = "";
+
 	// the service providers that are involved in this SSO session
 	private List<ServiceProvider> serviceProviders;
 
@@ -123,5 +126,15 @@ public class UserSsoSession implements Serializable
 	public void setLogoutInitiator(String logoutInitiator)
 	{
 		this.logoutInitiator = logoutInitiator;
+	}
+
+	public String getLogoutInitiatingID()
+	{
+		return logoutInitiatingID;
+	}
+
+	public void setLogoutInitiatingID(String logoutInitiatingID)
+	{
+		this.logoutInitiatingID = logoutInitiatingID;
 	}
 }
