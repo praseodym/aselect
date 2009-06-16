@@ -10,6 +10,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
+
+import org.apache.commons.httpclient.protocol.DefaultProtocolSocketFactory;
+import org.apache.commons.httpclient.protocol.ProtocolSocketFactory;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
@@ -43,6 +46,11 @@ import org.w3c.dom.NodeList;
 
 public abstract class AbstractMetaDataManager
 {
+	// RH, 20090616
+	// Forward proxy can now be enabled by setting java system properties "http.proxyPort" en "http.proxyPort"
+	private static final String HTTP_PROXY_PORT = "http.proxyPort";
+	private static final String HTTP_PROXY_HOST = "http.proxyHost";
+	private static final String DEFAULT_PROXY_PORT = "8080"; // RH, 20090615, n
 	protected final String MODULE = "AbstractMetaDataManager";
 	protected final String sFederationIdpKeyword = "federation-idp";
 	protected String protocolSupportEnumeration = SAMLConstants.SAML20P_NS; // "urn:oasis:names:tc:SAML:2.0:protocol"
@@ -104,13 +112,33 @@ public abstract class AbstractMetaDataManager
 
 	protected void urlSystemProvider(ChainingMetadataProvider myMetadataProvider, String sMethod, BasicParserPool ppMgr, String metadataURL)
 	{
+		
 		HTTPMetadataProvider urlProvider;
 		try {
-			urlProvider = new HTTPMetadataProvider(metadataURL, 1000 * 5);
+			   // RH, 20090615, sn
+			// opensaml2 does not (yet) support usage of proxy
+			// use the wrapper class ProxyHTTPMetadataProvider if the SYstemproperty is set
+			String proxyHost = System.getProperty(HTTP_PROXY_HOST);
+			 if (proxyHost != null) {
+				 String sPort = System.getProperty(HTTP_PROXY_PORT);
+				 if (sPort == null) {
+						_systemLogger.log(Level.WARNING, MODULE, sMethod,
+								"No proxyPort defined, using default port");
+						sPort = DEFAULT_PROXY_PORT;
+				 }
+					_systemLogger.log(Level.FINE, MODULE, sMethod,
+							"Using proxy: " + proxyHost + " on port: " + sPort);
+					 int proxyPort = Integer.parseInt(sPort);
+				 urlProvider = new ProxyHTTPMetadataProvider(metadataURL, 1000 * 5, proxyHost, proxyPort);
+			 } else { 			   // RH, 20090615, en
+					urlProvider = new HTTPMetadataProvider(metadataURL, 1000 * 5);
+			 }   // RH, 20090615, n
 
 			urlProvider.setParserPool(ppMgr);
 			urlProvider.initialize();
+			
 			myMetadataProvider.addMetadataProvider(urlProvider);
+			
 		}
 		catch (MetadataProviderException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
