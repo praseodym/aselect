@@ -264,10 +264,10 @@ public class MemoryStorageHandler implements IStorageHandler
                     _systemLogger.log(Level.FINEST, MODULE, sMethod, "MSH Key="+sTxt+
                     		" TimeStamp="+lStorageTime+" Left="+(lStorageTime-lTimestamp)+" removed");
                 }
-                else {
-                    _systemLogger.log(Level.FINEST, MODULE, sMethod, "MSH Key="+sTxt+
-                    		" TimeStamp="+lStorageTime+" Left="+(lStorageTime-lTimestamp));
-                }
+                //else {
+                //    _systemLogger.log(Level.FINEST, MODULE, sMethod, "MSH Key="+sTxt+
+                //    		" TimeStamp="+lStorageTime+" Left="+(lStorageTime-lTimestamp));
+                //}
             }
         //}
         int countLeft = countAll - countRemoved;

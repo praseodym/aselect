@@ -485,12 +485,12 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 		if (htTGTContext != null) {
 			UserSsoSession sso = (UserSsoSession)htTGTContext.get("sso_session");
 			List<ServiceProvider> spList = sso.getServiceProviders();
-			if (initiatingSP != null) {  // store in the Tgt-session
+			
+			if (initiatingSP != null)  // store in the Tgt-session
 				sso.setLogoutInitiator(initiatingSP);
-			}
-			else {  // retrieve from the session
+			else  // retrieve from the session
 				initiatingSP = sso.getLogoutInitiator();
-			}
+
 			if (initiatingID != null)
 				sso.setLogoutInitiatingID(initiatingID);
 			else

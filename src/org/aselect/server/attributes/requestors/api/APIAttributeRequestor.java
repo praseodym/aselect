@@ -338,7 +338,6 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 		try {
 			if (!vAttributes.isEmpty()) //Attributes should be gathered.
 			{
-
 				//get connection
 				try {
 					sURL = getConnection();

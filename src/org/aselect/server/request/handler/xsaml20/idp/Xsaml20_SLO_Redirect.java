@@ -128,8 +128,8 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 			
 			// Will save TGT (including the RelayState) as well
 			// 20090616, Bauke: save ID of initiator for the logout response
-			String sInitiatingID = logoutRequest.getID();
-	        logoutNextSessionSP(httpRequest, httpResponse, logoutRequest, sInitiatingSP, sInitiatingID,
+			String sRequestID = logoutRequest.getID();
+	        logoutNextSessionSP(httpRequest, httpResponse, logoutRequest, sInitiatingSP, sRequestID,
 						_bTryRedirectLogoutFirst, _iRedirectLogoutTimeout, htTGTContext);
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request handled " + pathInfo);
 		}

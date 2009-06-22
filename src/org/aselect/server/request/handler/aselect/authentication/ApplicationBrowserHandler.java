@@ -695,8 +695,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		try {
 			sRid = (String) htServiceRequest.get("rid");
 
-			// check if user already has a tgt so that he/she doesnt need to
-			// be authenticated again            
+			// Check if user already has a tgt so that he/she doesnt need to be authenticated again            
 			if (_configManager.isSingleSignOn() && htServiceRequest.containsKey("aselect_credentials_tgt")
 					&& htServiceRequest.containsKey("aselect_credentials_uid")
 					&& htServiceRequest.containsKey("aselect_credentials_server_id")) {
@@ -704,7 +703,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				String sUid = (String) htServiceRequest.get("aselect_credentials_uid");
 				String sServerId = (String) htServiceRequest.get("aselect_credentials_server_id");
 
-				// Check if a request was done for an other user-id
+				// Check if a request was done for a different user-id
 				String sForcedUid = (String) _htSessionContext.get("forced_uid");
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "SSO branch uid=" + sUid + " forced_uid=" + sForcedUid);
 				if (sForcedUid != null && !sForcedUid.equals("saml20_user") && !sForcedUid.equals("siam_user")

@@ -13,6 +13,8 @@ import org.aselect.server.request.handler.xsaml20.Saml20_BrowserHandler;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.server.request.handler.xsaml20.SecurityLevel;
 import org.aselect.server.request.handler.xsaml20.Saml20_ArtifactManager;
+import org.aselect.server.session.SessionManager;
+import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.Audit;
@@ -312,7 +314,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	    		_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Return Url \"sp_assert_url\" is missing");
 	            throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
 	        }
-	        
+
 	        // 20090603, Bauke: Only take RelayState from the session (not from TgT)
 	        // If RelayState was given, it must be available in the Session Context.
 	        String sRelayState = null;
@@ -323,6 +325,17 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Redirecting with artifact to: "+ sAssertUrl);
 			sendSAMLArtifactRedirect(sAssertUrl, sRid, htSessionContext, sTgt, htTGTContext, httpResponse, sRelayState);
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Return from  AuthSP handled");
+
+			// Cleanup for a forced_authenticate session
+			Boolean bForcedAuthn = (Boolean)htTGTContext.get("forced_authenticate");
+			if (bForcedAuthn && htTGTContext != null) {
+				TGTManager tgtManager = TGTManager.getHandle();
+				tgtManager.remove(sTgt);
+			}
+			if (bForcedAuthn && htSessionContext != null) {
+				SessionManager sessionManager = SessionManager.getHandle();
+				sessionManager.killSession(sRid);
+			}
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -490,7 +503,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				assertion.getAttributeStatements().add(attributeStatement);
 			}
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "set result");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Set StatusCode");
 			SAMLObjectBuilder<StatusCode> statusCodeBuilder = (SAMLObjectBuilder<StatusCode>) builderFactory
 					.getBuilder(StatusCode.DEFAULT_ELEMENT_NAME);
 			StatusCode statusCode = statusCodeBuilder.buildObject();

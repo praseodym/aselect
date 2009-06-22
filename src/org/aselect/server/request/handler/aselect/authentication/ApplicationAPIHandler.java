@@ -834,6 +834,10 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR, eAC);
 		}
 
+		// 20090622, Bauke: when we would have removed the ticket when forced_authenticate is in effect
+		// the following upgrade_tgt will fail and force a new authenication. Also note that
+		// the login1 request will not use the TgT for SSO when "forced_authenticate" is true.
+		
 		// Kill TGT if single sign-on is disabled
 		if (!_configManager.isSingleSignOn())
 			_oTGTManager.remove(sTGT);

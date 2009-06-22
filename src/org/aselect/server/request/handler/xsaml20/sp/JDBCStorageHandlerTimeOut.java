@@ -21,6 +21,7 @@ import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
 /*
+ * NOTE: Code differs from the idp-version.
  * NOTE: Code is identical to MemoryStorageHandlerTimeOut (except for class-names of course)
  */
 public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
@@ -37,7 +38,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger systemLogger, SAMAgent oSAMAgent)
 	throws ASelectStorageException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		super.init(oConfigSection, oConfigManager, systemLogger, oSAMAgent);
 		_oSystemLogger = (ASelectSystemLogger)systemLogger;
@@ -155,6 +156,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			String sNameID = (String)htTGTContext.get("name_id");
 			String sSync = (String)htTGTContext.get("sessionsynctime");
 			Long lastSync = Long.parseLong(sSync);
+			Boolean bForcedAuthn = (Boolean)htTGTContext.get("forced_authenticate");
 			Long expireTime = _oTGTManager.getExpirationTime(key);
 			Long timeStamp = _oTGTManager.getTimestamp(key);
 			Long now = new Date().getTime();
@@ -165,9 +167,12 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			
 			// Check Ticket Expiration
 			if (now >= expireTime) {
-				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SPTO Remove TGT and send Logout, Key=" + sKey);
+				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SPTO Remove TGT (and send Logout), Key=" + sKey + " forced="+bForcedAuthn);
 				_oTGTManager.remove(key);
-				sendLogoutToFederation(sNameID);
+
+				// 20090622, Bauke, if forced_authenticate, the IdP does not have a ticket
+				if (!bForcedAuthn)
+					sendLogoutToFederation(sNameID);
 			}
 
 			// Check Session Sync

@@ -318,7 +318,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 				// We regain control at:
 				// https://my.idp.nl/aselectserver/server?local_rid=4A83AB89E64B6A20&authsp=DigidAuthSP&
 				//   rid=120127592091747E2EEBC3F0AA366&a-select-server=digidasdemo1&aselect_credentials=7C664...
-				}
+			}
 
 			sASelectServerUrl = (String) htResponse.get("as_url");
 			String sDigidRid = (String) htResponse.get("rid");

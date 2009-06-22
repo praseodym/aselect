@@ -154,7 +154,7 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "No user in attribute flatfile with id: " + sUserId);
 				return htReturn;
 			}
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Get uid=" + sUserId);
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "Get uid=" + sUserId);
 
 			Object oUser = null;
 			try {

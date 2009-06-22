@@ -369,8 +369,14 @@ public class TGTIssuer
 			Utils.copyHashmapValue("RelayState", htTGTContext, htSessionContext);
 			Utils.copyHashmapValue("user_agent", htTGTContext, htSessionContext);
 
+			// 20090617, Bauke:forced_authenticate specials
+			Boolean bForcedAuthn = (Boolean)htSessionContext.get("forced_authenticate");
+			if (bForcedAuthn)
+				htTGTContext.put("forced_authenticate", bForcedAuthn);
+
+			// 20090617, Bauke: not for forced_authenticate
 			HashMap htOldTGTContext = null;
-			if (sOldTGT != null) {
+			if (!bForcedAuthn && sOldTGT != null) {
 				htOldTGTContext = _tgtManager.getTGT(sOldTGT);
 				if (htOldTGTContext != null) {
 					HashMap htUpdate = verifyTGT(htOldTGTContext, htTGTContext);
@@ -387,8 +393,9 @@ public class TGTIssuer
 			if (htOldTGTContext == null) {
 				sTgt = _tgtManager.createTGT(htTGTContext);
 				
-				// Vreate cookie if single sign-on is enabled
-				if (_configManager.isSingleSignOn())
+				// Create cookie if single sign-on is enabled
+				// 20090617, Bauke: not for forced_authenticate
+				if (!bForcedAuthn && _configManager.isSingleSignOn())
 					setASelectCookie(sTgt, sUserId, oHttpServletResponse);
 			}
 			
@@ -450,9 +457,8 @@ public class TGTIssuer
 	 * cookie at the user (can be null if not exists)
 	 * @throws ASelectException if an error page must be shown
 	 */
-	public void issueTGT(String sRid, String sAuthSP, HashMap htAdditional, HttpServletResponse oHttpServletResponse,
-			String sOldTGT)
-		throws ASelectException
+	public void issueTGT(String sRid, String sAuthSP, HashMap htAdditional, HttpServletResponse oHttpServletResponse, String sOldTGT)
+	throws ASelectException
 	{
 		String sMethod = "issueTGT()";
 		String sLevel = null;
@@ -506,14 +512,7 @@ public class TGTIssuer
 				//It is a "priviliged authsp" -> get level from context
 				sLevel = ((Integer) htSessionContext.get("authsp_level")).toString();
 			}
-			Boolean bForcedAuthn = (Boolean)htSessionContext.get("forced_authenticate");
 
-			//TODO Check if double encode is needed (Martijn)
-			String sEncodedUserId = URLEncoder.encode(sUserId, "UTF-8");
-			sEncodedUserId = URLEncoder.encode(sEncodedUserId, "UTF-8");
-
-			String sTgt = null;
-if (!bForcedAuthn) {
 			HashMap htTGTContext = new HashMap();
 			htTGTContext.put("uid", sUserId);
 			htTGTContext.put("organization", sOrganization);
@@ -538,9 +537,15 @@ if (!bForcedAuthn) {
 			// Bauke: copy from rid context
 			Utils.copyHashmapValue("sel_uid", htTGTContext, htSessionContext);
 
+			// 20090617, Bauke:forced_authenticate specials
+			Boolean bForcedAuthn = (Boolean)htSessionContext.get("forced_authenticate");
+			if (bForcedAuthn)
+				htTGTContext.put("forced_authenticate", bForcedAuthn);
+
 			HashMap htOldTGTContext = null;
 			UserSsoSession ssoSession = null;
-			if (sOldTGT != null) {
+			// 20090617, Bauke: not for forced_authenticate
+			if (!bForcedAuthn && sOldTGT != null) {
 				htOldTGTContext = _tgtManager.getTGT(sOldTGT);
 				if (htOldTGTContext != null) {
 					HashMap htUpdate = verifyTGT(htOldTGTContext, htTGTContext);
@@ -586,27 +591,27 @@ if (!bForcedAuthn) {
 			Utils.copyHashmapValue("user_agent", htTGTContext, htSessionContext);
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Store TGT " + htTGTContext);
-			if (htOldTGTContext == null) { // Create a new TGT
-				// must set "name_id" to the sTgt value
+			String sTgt = null;
+			if (htOldTGTContext == null) {
+				// Create a new TGT, must set "name_id" to the sTgt value
 				sTgt = _tgtManager.createTGT(htTGTContext);
 
 				// Create cookie if single sign-on is enabled
-				if (_configManager.isSingleSignOn())
+				// 20090617, Bauke: not for forced_authenticate
+				if (!bForcedAuthn && _configManager.isSingleSignOn())
 					setASelectCookie(sTgt, sUserId, oHttpServletResponse);
 			}
 			else { // Update the old TGT
 				sTgt = sOldTGT;
 				_tgtManager.updateTGT(sOldTGT, htTGTContext);
 			}
-}
+
 			// A tgt was just issued, report sensor data
 			Tools.calculateAndReportSensorData(_configManager, _systemLogger, htSessionContext);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
 			sendRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse);
 			
-			if (!bForcedAuthn) {
-				_sessionManager.killSession(sRid);
-			}
+			_sessionManager.killSession(sRid);
 		}
 		catch (ASelectException e) {
 			StringBuffer sbError = new StringBuffer("Issue TGT for request '");

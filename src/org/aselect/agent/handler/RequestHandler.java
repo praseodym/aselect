@@ -587,7 +587,7 @@ public class RequestHandler extends Thread
 	 * </tr>
 	 * <tr>
 	 * 	<td><code>request</code></td>
-	 * 	<td>Should contain <code>authenticate</code> or <code>forced_authenticate
+	 * 	<td>Should contain <code>authenticate</code>
 	 * </code>.</td>
 	 * </tr>
 	 * <tr>
@@ -699,7 +699,6 @@ public class RequestHandler extends Thread
 			String sAppId = null;
 			String sUid = null;
 			String sAuthsp = null;
-			String sForcedLogon = null;
 			String sRemoteOrg = null;
 
 			try {
@@ -743,12 +742,21 @@ public class RequestHandler extends Thread
 			catch (ASelectCommunicationException eAC) {
 				sAuthsp = null;
 			}
+			
+			String sForcedLogon = null;
 			try {
+				// API accepts the 'forced_logon' String parameter to the 'authenticate' request.
+				// Internally a Boolean object 'forced_authenticate' is used to represent the same thing
 				sForcedLogon = oInputMessage.getParam("forced_logon");
 			}
-			catch (ASelectCommunicationException eAC) {
-				_systemLogger.log(Level.FINE, MODULE, sMethod, "No optional parameter 'forced_logon' found.");
+			catch (ASelectCommunicationException eAC) {}
+			
+			// 20090613, Bauke: accept forced_authenticate as well
+			if (sForcedLogon==null) {
+				try { sForcedLogon = oInputMessage.getParam("forced_authenticate");	}
+				catch (ASelectCommunicationException eAC) {}
 			}
+			
 			try {
 				sRemoteOrg = oInputMessage.getParam("remote_organization");
 				if (sRemoteOrg.length() == 0) {
@@ -770,14 +778,11 @@ public class RequestHandler extends Thread
 			// Bauke: added htmlEncode to prevent cross-site scripting
 			htRequest.put("app_url", Tools.htmlEncode(sAppUrl));
 			htRequest.put("app_id", sAppId);
-			if (sUid != null)
-				htRequest.put("uid", sUid);
-			if (sAuthsp != null)
-				htRequest.put("authsp", sAuthsp);
-			if (sRemoteOrg != null)
-				htRequest.put("remote_organization", sRemoteOrg);
+			if (sUid != null) htRequest.put("uid", sUid);
+			if (sAuthsp != null) htRequest.put("authsp", sAuthsp);
+			if (sRemoteOrg != null) htRequest.put("remote_organization", sRemoteOrg);
 			if (sForcedLogon != null)
-				htRequest.put("forced_logon", sForcedLogon);
+				htRequest.put("forced_logon", sForcedLogon);  // To Server API, change to forced_authenticate later!!
 
 			String sCountry = null;
 			try {
