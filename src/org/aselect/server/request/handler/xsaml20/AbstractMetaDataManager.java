@@ -326,26 +326,27 @@ public abstract class AbstractMetaDataManager
 		String sMethod = "getMDNodevalue "+Thread.currentThread().getId();
 		String location = null;
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId="+entityId+" binding="+bindingName+" attr="+attrName);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId="+entityId+" elementName="+elementName+
+				" binding="+bindingName+" attr="+attrName);
 		if (entityId == null)
 			return null;
 		checkMetadataProvider(entityId);
-		//_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta checked for "+entityId);
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "Meta checked for "+entityId);
 		SSODescriptor descriptor = SSODescriptors.get(entityId);
 		
-		//_systemLogger.log(Level.INFO, MODULE, sMethod, "descriptor="+descriptor);
 		if (descriptor != null) {
 			try {
 				Element domDescriptor = marshallDescriptor(descriptor);
 				NodeList nodeList = domDescriptor.getChildNodes();				
 				
-				//_systemLogger.log(Level.INFO, MODULE, sMethod, "Try "+nodeList.getLength()+" entries");
+				//_systemLogger.log(Level.FINE, MODULE, sMethod, "Try "+nodeList.getLength()+" entries");
 				for (int i = 0; i < nodeList.getLength(); i++) {
 					Node childNode = nodeList.item(i);
 					//_systemLogger.log(Level.FINE, MODULE, sMethod, "Node "+childNode.getLocalName());
 					if (elementName.equals(childNode.getLocalName())) {
 						NamedNodeMap nodeMap = childNode.getAttributes();
 						String bindingMDValue = nodeMap.getNamedItem("Binding").getNodeValue();
+						//_systemLogger.log(Level.FINE, MODULE, sMethod, "Binding "+bindingMDValue);
 						if (bindingMDValue.equals(bindingName)) {
 							Node node = nodeMap.getNamedItem(attrName);
 							if (node != null) {

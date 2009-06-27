@@ -286,6 +286,8 @@ public class Utils
 		StringBuffer xBuffer = new StringBuffer(xSrc);
 		int xStart, xEnd;
 
+		if (xReplaceString == null)
+			return xSrc;
 		while (xBuffer.indexOf(xString) != -1) {
 			xStart = xBuffer.indexOf(xString);
 			xEnd = xStart + xString.length();

@@ -1416,8 +1416,8 @@ public class RequestHandler extends Thread
 				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
 				return;
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET uid=" + sUid + ", org=" + sOrg + ", ticket="
-					+ sTicket);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET uid=" + sUid +
+					", org=" + sOrg + ", ticket=" + sTicket);
 
 			//Get optional parameters
 			// Parameter "attributes_hash" and 'request_uri' are not required
@@ -1511,7 +1511,7 @@ public class RequestHandler extends Thread
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET OK");
 			}
 
-			// Bauke: added, upgrade ticket so it will live longer and prosper
+			// Bauke: added, upgrade ticket so it will live longer and prosper some more
 			// must also be send to the server, to keep the user's session alive accross different applications
 			// START NEW CODE
 			boolean _bSendUpgrade_tgt = true;
@@ -1549,7 +1549,7 @@ public class RequestHandler extends Thread
 			// END NEW CODE
 
 			_ticketManager.updateTicketContext(sTicket, htTicketContext);
-			//Ticket OK, create response message
+			// Ticket OK, create response message
 			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
 		}
 		catch (NumberFormatException eNF) {

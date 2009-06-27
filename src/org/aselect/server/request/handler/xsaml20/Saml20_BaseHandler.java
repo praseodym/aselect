@@ -23,7 +23,7 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 
 	// RH, 20080602
 	// We (Bauke and I) decided that default should be NOT to verify
-	// SAML2 says it SHOULD be singed
+	// SAML2 says it SHOULD be signed, therefore it's advisable to activate it in the configuration
 	private boolean _bVerifySignature = false;
 	private boolean _bVerifyInterval = false; // Checking of Saml2 NotBefore and NotOnOrAfter 	
 	private Long maxNotBefore = null; 	// relaxation period before NotBefore, validity period will be extended with this value (seconds)
@@ -57,10 +57,7 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 
-		//		_bVerifySignature = true;
 		String sVerifySignature = ASelectConfigManager.getSimpleParam(oHandlerConfig, "verify_signature", false);
-		//		if (sVerifySignature != null && sVerifySignature.equalsIgnoreCase("false")) {
-		//			_bVerifySignature = false;
 		if ("true".equalsIgnoreCase(sVerifySignature)) {
 			set_bVerifySignature(true);
 		}

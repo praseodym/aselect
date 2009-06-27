@@ -1122,7 +1122,7 @@ public class ASelectConfigManager extends ConfigManager
 	 * Load the default private siging key for the A-Select Server. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Loads the private siging key that is stored in the aselect.keystore in
+	 * Loads the private signing key that is stored in the aselect.keystore in
 	 * the A-Select Server configuration. The key must be stored in the keystore
 	 * with the same ID as the A-Select Server id. <br>
 	 * <br>

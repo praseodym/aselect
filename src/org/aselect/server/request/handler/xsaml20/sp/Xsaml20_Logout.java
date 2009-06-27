@@ -23,15 +23,12 @@ import org.aselect.system.utils.Utils;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
-//public class Xsaml20_Logout extends ProtoRequestHandler  // RH, 20080602, o
-public class Xsaml20_Logout extends Saml20_BaseHandler  // RH, 20080602, n
+public class Xsaml20_Logout extends Saml20_BaseHandler
 {
 	private final static String _sModule = "Xsaml20_Logout";
 
 	// The managers and engine
 	private TGTManager _oTGTManager;
-//	private ApplicationManager _applicationManager;
-//	private CryptoEngine _cryptoEngine;
 
 	private String _sFederationUrl; // the url to send the saml request to
 	private String _sReturnUrl;
@@ -55,27 +52,16 @@ public class Xsaml20_Logout extends Saml20_BaseHandler  // RH, 20080602, n
 		String sMethod = "init";
 		super.init(oServletConfig, oConfig);
 		_oTGTManager = TGTManager.getHandle();
-//		_applicationManager = ApplicationManager.getHandle();
 
 		Object aselect = _configManager.getSection(null, "aselect");
 		_sFederationUrl = _configManager.getParam(aselect, "federation_url");
 		_sReturnUrl = _configManager.getParam(aselect, "redirect_url");
 		_sFriendlyName = _configManager.getParam(aselect, "organization_friendly_name");
 
-
 	    _sLogoutResultPage = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "logoutresult.html");    
 	    _sLogoutResultPage = org.aselect.system.utils.Utils.replaceString(_sLogoutResultPage, "[version]", Version.getVersion());
 	    // Was: [organization_friendly_name], replaced 20081104
 	    _sLogoutResultPage = org.aselect.system.utils.Utils.replaceString(_sLogoutResultPage, "[organization_friendly]", _sFriendlyName);
-
-	    /*try {
-			_sLogoutPage = _configManager.getParam(aselect, "logout_page");
-		}
-		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod,
-					"No config item 'logout_page' found in 'aselect' section", e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-		}*/
 	}
 
 	/**
@@ -135,38 +121,47 @@ public class Xsaml20_Logout extends Saml20_BaseHandler  // RH, 20080602, n
 			byte[] baTgtBlobBytes = CryptoEngine.getHandle().decryptTGT(sEncTGT);
 			sTGT = Utils.toHexString(baTgtBlobBytes);
 		}
-		catch (ASelectException eAC) // decrypt failed
-		{
+		catch (ASelectException eAC) {  // decrypt failed
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not decrypt TGT", eAC);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID, eAC);
 		}
-		catch (IllegalArgumentException eIA) // HEX conversion fails
-		{
+		catch (IllegalArgumentException eIA) {  // HEX conversion fails
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not decrypt TGT", eIA);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID, eIA);
 		}
 
-		// check if the TGT exists
+		// Check if the TGT exists
+		String sLogoutReturnUrl = request.getParameter("logout_return_url");
 		if (!_oTGTManager.containsKey(sTGT)) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unknown TGT");
-			PrintWriter pwOut = null;
-			try { // already logged out?
-				//String url = _sLogoutPage + "?result_code=" + Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT;
-				//response.sendRedirect(url);
-				
-				String sHtmlPage = Utils.replaceString(_sLogoutResultPage, "[result_code]", Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT);
-				pwOut = response.getWriter();
-			    response.setContentType("text/html");
-	            pwOut.println(sHtmlPage);
-				return;
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unknown TGT / Already logged out");
+			if (!"".equals(sLogoutReturnUrl)) {
+				// Redirect to the url in sRelayState
+				String sAmpQuest = (sLogoutReturnUrl.indexOf('?') >= 0) ? "&": "?"; 
+				String url = sLogoutReturnUrl + sAmpQuest + "result_code=" + Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT;
+				try {
+					response.sendRedirect(url);
+				}
+				catch (IOException e) {
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, e.getMessage(), e);
+				}
 			}
-			catch (IOException e) {
-				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-			}
-			finally {
-	            if (pwOut != null) {
-	                pwOut.close();
-	            }
+			else {
+				PrintWriter pwOut = null;
+				try {					
+					String sHtmlPage = Utils.replaceString(_sLogoutResultPage, "[result_code]", Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT);
+					pwOut = response.getWriter();
+				    response.setContentType("text/html");
+		            pwOut.println(sHtmlPage);
+					return;
+				}
+				catch (IOException e) {
+					throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+				}
+				finally {
+		            if (pwOut != null) {
+		                pwOut.close();
+		            }
+				}
 			}
 		}
 		HashMap htTGTContext = _oTGTManager.getTGT(sTGT);
@@ -174,7 +169,7 @@ public class Xsaml20_Logout extends Saml20_BaseHandler  // RH, 20080602, n
 		// check if request should be signed
 		// RH, 20080701, sn
 		// This request comes from browser or the idp.
-		// We now that the tgt if it exists is encrypted
+		// We know that the tgt if it exists is encrypted
 		// Can we be sure it is signed? Can we be sure it is there?
 		// TODO sort things out here
 		// RH, 20080701, en
@@ -203,7 +198,8 @@ public class Xsaml20_Logout extends Saml20_BaseHandler  // RH, 20080602, n
 				SAMLConstants.SAML2_REDIRECT_BINDING_URI);
 
 		if (url != null) {
-			logoutRequestSender.sendLogoutRequest(url, _sReturnUrl, sNameID, request, response, "urn:oasis:names:tc:SAML:2.0:logout:user");
+			logoutRequestSender.sendLogoutRequest(url, _sReturnUrl/*issuer*/, sNameID,
+						request, response, "urn:oasis:names:tc:SAML:2.0:logout:user", sLogoutReturnUrl);
 		}
 	}
 

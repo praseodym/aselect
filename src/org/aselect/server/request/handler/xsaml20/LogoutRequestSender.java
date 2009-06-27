@@ -51,12 +51,11 @@ public class LogoutRequestSender
 	 */
 	@SuppressWarnings("unchecked")
 	public void sendLogoutRequest(String sServiceProviderUrl, String sIssuerUrl, String sNameID, HttpServletRequest request,
-			HttpServletResponse response, String reason)
+			HttpServletResponse response, String reason, String sLogoutReturnUrl)
 		throws ASelectException
 	{
 		String sMethod = "sendLogoutRequest";
 
-		//sServiceProviderUrl += ((sServiceProviderUrl.indexOf('?')>=0)? "&": "?") +"RelayState=relay_url_value";  // test
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Send LogoutRequest to: " + sServiceProviderUrl);
 		XMLObjectBuilderFactory builderFactory = Configuration.getBuilderFactory();
 
@@ -72,11 +71,18 @@ public class LogoutRequestSender
 		samlEndpoint.setResponseLocation(sAppUrl);
 
 		HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response, sServiceProviderUrl);
+		// 20090627, Bauke: need headers too
+		outTransport.setHeader("Pragma", "no-cache");
+		outTransport.setHeader("Cache-Control", "no-cache, no-store");
+
 		BasicSAMLMessageContext messageContext = new BasicSAMLMessageContext();
 		messageContext.setOutboundMessageTransport(outTransport);
 		messageContext.setOutboundSAMLMessage(logoutRequest);
 		messageContext.setPeerEntityEndpoint(samlEndpoint);
-		//messageContext.setRelayState("relay_this_value");  // test
+		
+		// 20090627, Bauke: pass return url, will be used by the Logout Response handler
+		if (!"".equals(sLogoutReturnUrl))
+			messageContext.setRelayState(sLogoutReturnUrl);
 
 		BasicX509Credential credential = new BasicX509Credential();
 		credential.setPrivateKey(privateKey);

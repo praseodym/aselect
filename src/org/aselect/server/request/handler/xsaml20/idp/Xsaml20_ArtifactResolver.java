@@ -266,8 +266,8 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler  // RH, 2008060
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the artifactResponse ======<" );
 			Envelope envelope = new SoapManager().buildSOAPMessage(artifactResponse);
 			Element envelopeElem = SamlTools.marshallMessage(envelope);
-			//_systemLogger.log(Level.INFO, MODULE, sMethod, "Writing SOAP message to response:\n"
-			//		+ XMLHelper.prettyPrintXML(envelopeElem));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Writing SOAP message:\n"+XMLHelper.nodeToString(envelopeElem));
+			// XMLHelper.prettyPrintXML(envelopeElem));
 
 			// Bauke: added, it's considered polite to tell the other side what we are sending
 			SamlTools.sendSOAPResponse(response, XMLHelper.nodeToString(envelopeElem));

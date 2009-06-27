@@ -534,7 +534,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 					LogoutRequestSender sender = new LogoutRequestSender();
 					_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">> Sending logoutrequest to: "+ url);
 					sender.sendLogoutRequest(url, _sASelectServerUrl, sNameID, httpRequest, httpResponse,
-							"urn:oasis:names:tc:SAML:2.0:logout:user");  // was "federation initiated redirect logout"
+							"urn:oasis:names:tc:SAML:2.0:logout:user", null);  // was "federation initiated redirect logout"
 				}
 				else {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "TIMER logout for SP="+serviceProvider);

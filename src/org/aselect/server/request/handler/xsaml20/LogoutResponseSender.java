@@ -83,6 +83,7 @@ public class LogoutResponseSender
 		messageContext.setOutboundMessageTransport(outTransport);
 		messageContext.setOutboundSAMLMessage(logoutResponse);
 		messageContext.setPeerEntityEndpoint(samlEndpoint);
+		
 		// 20090604, Bauke: moved RelayState setting from caller to here
 		if (sRelayState != null) {
 			messageContext.setRelayState(sRelayState);
@@ -103,7 +104,7 @@ public class LogoutResponseSender
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 		String msg = XMLHelper.prettyPrintXML(node);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "About to send: \n" + msg);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "About to send:\n" + msg);
 
 		// store it in de history
 		SamlHistoryManager history = SamlHistoryManager.getHandle();

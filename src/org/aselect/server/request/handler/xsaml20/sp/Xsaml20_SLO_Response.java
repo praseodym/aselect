@@ -240,22 +240,34 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
         //sLoggedOutForm = _configManager.updateTemplate(sLoggedOutForm, htTGTContext);
         //pwOut.println(sLoggedOutForm);
 
-		PrintWriter pwOut = null;
-		try {
-			//String url = _sLogoutPage + "?result_code=" + resultCode;
-			//httpResponse.sendRedirect(url);
-			String sHtmlPage = Utils.replaceString(_sLogoutResultPage, "[result_code]", resultCode);
-			pwOut = httpResponse.getWriter();
-		    httpResponse.setContentType("text/html");
-            pwOut.println(sHtmlPage);
+		String sRelayState = httpRequest.getParameter("RelayState");
+		if (!"".equals(sRelayState)) {
+			// Redirect to the url in sRelayState
+			String sAmpQuest = (sRelayState.indexOf('?') >= 0) ? "&": "?"; 
+			String url = sRelayState + sAmpQuest + "result_code=" + resultCode;
+			try {
+				httpResponse.sendRedirect(url);
+			}
+			catch (IOException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
+			}
 		}
-		catch (IOException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
-		}
-		finally {
-            if (pwOut != null) {
-                pwOut.close();
-            }
+		else {
+			PrintWriter pwOut = null;
+			try {
+				String sHtmlPage = Utils.replaceString(_sLogoutResultPage, "[result_code]", resultCode);
+				pwOut = httpResponse.getWriter();
+			    httpResponse.setContentType("text/html");
+	            pwOut.println(sHtmlPage);
+			}
+			catch (IOException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
+			}
+			finally {
+	            if (pwOut != null) {
+	                pwOut.close();
+	            }
+			}
 		}
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Logout Succeeded");
 	}

@@ -325,9 +325,9 @@ public class SessionSyncRequestSender
 		authz.setIssuer(issuer);
 
 		// Sign the sessionsync
-		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Sign the artifactResponse >======" );
+		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Sign the sessionSync >======" );
 		authz = (AuthzDecisionQuery)SamlTools.sign(authz);
-		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Signed the artifactResponse ======<" );
+		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Signed the sessionSync ======<" );
 
 		SAMLObject saml = authz;
 		SoapManager soapmanager = new SoapManager();
@@ -342,8 +342,7 @@ public class SessionSyncRequestSender
 			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "MessageEncodingException!", e);
 			e.printStackTrace();
 		}
-		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Writing SOAP message to response:\n"
-				+ XMLHelper.prettyPrintXML(envelopeElem));
+		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Writing SOAP message:\n"+XMLHelper.nodeToString(envelopeElem));
 		return sendMessageToFederation(XMLHelper.nodeToString(envelopeElem), sNameID, credentials);
 	}
 
@@ -423,10 +422,12 @@ public class SessionSyncRequestSender
 	}
 
 	/*
-	 * Build a XACML message En verstuur deze naar de federatie.
+	 * Build a XACML message and send it to the federation.
+	 * NOTE: no signing takes place
 	 */
 	private boolean sendXACMLMessageToFederation(String user, String credentials)
 	{
+		String _sMethod = "sendXACMLMessageToFederation";
 		String action = "GET";
 		String var1 = "urn:oasis:names:tc:xacml:1.0:subject:subject-id";
 		String var2 = "urn:oasis:names:tc:xacml:1.0:data-type:rfc822Name";
@@ -476,6 +477,7 @@ public class SessionSyncRequestSender
 				+ "</Action>"
 				+ "</Request>"
 				+ "</soap:Body>" + "</soap:Envelope>";
+		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Send message: "+xacmlRequest);
 		return sendMessageToFederation(xacmlRequest, user, credentials);
 	}
 
@@ -492,10 +494,10 @@ public class SessionSyncRequestSender
 		boolean saml = false;
 		
 		try {
-			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Send message for "+sNameID+" message="+message);
+			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Send message for "+sNameID);
 			// Send/Receive the SOAP message
-			sResponse = URLDecoder.decode(soapmanager.sendSOAP(message, _sFederationUrl), "UTF-8");
-
+			sResponse = soapmanager.sendSOAP(message, _sFederationUrl);
+			// 20090624: don't: sResponse = URLDecoder.decode(soapmanager.sendSOAP(message, _sFederationUrl), "UTF-8");
 			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Received response from IDP: " + sResponse);
 			try {
 				saml = determineMessageType(sResponse);
@@ -509,12 +511,11 @@ public class SessionSyncRequestSender
 			if (saml) {
 				tgtKilled = handleSAMLResponse(sResponse);
 				if (tgtKilled == true) {
-					_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "RESPONSE is correct no need to kill tgt "
-							+ sResponse);
+					_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "RESPONSE is correct no need to kill tgt");
 					return true;
 				}
 				else {
-					_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "RESPONSE contains deny (IDP has not processed update correct)");
+					_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "RESPONSE not correct)");
 					String samlNameID = getNameIdFromSAMLResponse(sResponse);
 					_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Kill tgt for " + samlNameID);
 					tgtmanager.remove(credentials);
@@ -524,13 +525,11 @@ public class SessionSyncRequestSender
 			else {
 				tgtKilled = handleXACMLResponse(sResponse);
 				if (tgtKilled == true) {
-					_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "RESPONSE is correct no need to kill tgt "
-							+ sResponse);
+					_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "RESPONSE is correct no need to kill tgt");
 					return true;
 				}
 				else {
 					_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "RESPONSE contains deny (IDP has not processed update correct)");
-					//killTgt(user);
 					_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Kill tgt for " + sNameID);
 					tgtmanager.remove(credentials);
 					return false;
@@ -609,6 +608,7 @@ public class SessionSyncRequestSender
 				AuthzDecisionStatement authz = (AuthzDecisionStatement) authzLijst.get(0);
 				DecisionTypeEnumeration decision = authz.getDecision();
 				if (decision.toString().equals("Deny")) {
+					_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "SAML message contains \"Deny\"");
 					updateWasSucces = false;
 				}
 			}

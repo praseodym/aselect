@@ -58,8 +58,7 @@ import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-//public class Xsaml20_SessionSync extends ProtoRequestHandler // RH, 20080603, o
-public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
+public class Xsaml20_SessionSync extends Saml20_BaseHandler
 {
 	private TGTManager _oTGTManager = TGTManager.getHandle();
 	private final static String MODULE = "Xsaml20_SessionSync";
@@ -113,10 +112,9 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 				sp = getServiceProviderFromSAML(authzDecisionQuery);
 				_systemLogger.log(Level.INFO, MODULE, _sMethod, "SAML NameID === " + sNameID + " SAML sp ===" + sp);
 
-				_systemLogger.log(Level.INFO, MODULE, _sMethod, "Do artifactResolve signature verification=" + is_bVerifySignature());
+				_systemLogger.log(Level.INFO, MODULE, _sMethod, "Signature verification=" + is_bVerifySignature());
 				if (is_bVerifySignature()) {
-					// check signature of artifactResolve here
-					// We get the public key from the metadata
+					// Check signature. We get the public key from the metadata
 					// Therefore we need a valid Issuer to lookup the entityID in the metadata
 					// We get the metadataURL from aselect.xml so we consider this safe and authentic
 					if (sp == null || "".equals(sp)) {
@@ -130,9 +128,10 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 					}
 					if (checkSignature(authzDecisionQuery, pkey )) {
-						_systemLogger.log(Level.INFO, MODULE, _sMethod, "artifactResolve was signed OK");
-					} else {
-						_systemLogger.log(Level.SEVERE, MODULE, _sMethod, "artifactResolve was NOT signed OK");
+						_systemLogger.log(Level.INFO, MODULE, _sMethod, "Message was signed OK");
+					}
+					else {
+						_systemLogger.log(Level.SEVERE, MODULE, _sMethod, "Message was NOT signed OK");
 						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 					}
 				}
@@ -143,7 +142,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 											//	we wan't them all to be valid
 						SubjectConfirmation sc = (SubjectConfirmation)itr.next();
 						if ( !SamlTools.checkValidityInterval(sc.getSubjectConfirmationData()) ) {
-							_systemLogger.log(Level.SEVERE, MODULE, _sMethod, "one of the SubjectConfirmationData intervals was NOT valid");
+							_systemLogger.log(Level.SEVERE, MODULE, _sMethod, "One of the SubjectConfirmationData intervals was NOT valid");
 							throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 						}
 					}
@@ -305,26 +304,17 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 		Element envelopeElem = null;
 		try {
 			envelopeElem = SamlTools.marshallMessage(envelope);
+			_systemLogger.log(Level.INFO, MODULE, _sMethod, "Send SAML response:\n"+XMLHelper.nodeToString(envelopeElem));
+			// XMLHelper.prettyPrintXML(envelopeElem));
 		}
 		catch (MessageEncodingException e) {
 			_systemLogger.log(Level.WARNING, MODULE, _sMethod, "marshall message failed", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
-		_systemLogger.log(Level.INFO, MODULE, _sMethod, "Send SAML response: "
-				+ XMLHelper.prettyPrintXML(envelopeElem));
 		
 		try {  // Bauke 20081112: used same code for all Soap messages
-//			_systemLogger.log(Level.INFO, MODULE, _sMethod, "Send: ContentType: "+CONTENT_TYPE);
 			// Remy: 20081113: Move this code to HandlerTools for uniformity
 			SamlTools.sendSOAPResponse(response, XMLHelper.nodeToString(envelopeElem));
-			// RH, 20081113, so
-//			response.setContentType(CONTENT_TYPE);			
-//			ServletOutputStream sos = response.getOutputStream();
-//			sos.print(XMLHelper.nodeToString(envelopeElem));
-//			sos.println("\r\n\r\n");
-//			sos.close();
-			// RH, 20081113, eo
-
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, MODULE, _sMethod, "Failed to send response", e);
@@ -430,11 +420,9 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 		throws ASelectException
 	{
 		String _sMethod = "handleSAMLRequest";
-		_systemLogger.log(Level.INFO, MODULE, _sMethod, "Process SAML message");
+		_systemLogger.log(Level.INFO, MODULE, _sMethod, "Process SAML message:\n" + docReceived);
 		AuthzDecisionQuery authzDecisionQuery = null;
 		try {
-			_systemLogger.log(Level.INFO, MODULE, _sMethod, "Received update: " + docReceived);
-
 			// Build XML Document
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 			dbFactory.setNamespaceAware(true);
@@ -442,17 +430,16 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 			StringReader stringReader = new StringReader(docReceived);
 			InputSource inputSource = new InputSource(stringReader);
 			Document docReceivedSoap = builder.parse(inputSource);
-
 			_systemLogger.log(Level.INFO, MODULE, _sMethod, "docReceivedSOAP = " + docReceivedSoap);
 
 			// Get AuthzDecision obj
 			Element elementReceivedSoap = docReceivedSoap.getDocumentElement();
-			Node eltArtifactResolve = SamlTools.getNode(elementReceivedSoap, AUTHZDECISIONQUERY);
+			Node eltAuthzDecision = SamlTools.getNode(elementReceivedSoap, AUTHZDECISIONQUERY);
 
 			// Unmarshall to the SAMLmessage
 			UnmarshallerFactory factory = Configuration.getUnmarshallerFactory();
-			Unmarshaller unmarshaller = factory.getUnmarshaller((Element) eltArtifactResolve);
-			authzDecisionQuery = (AuthzDecisionQuery) unmarshaller.unmarshall((Element) eltArtifactResolve);
+			Unmarshaller unmarshaller = factory.getUnmarshaller((Element) eltAuthzDecision);
+			authzDecisionQuery = (AuthzDecisionQuery) unmarshaller.unmarshall((Element) eltAuthzDecision);
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, MODULE, _sMethod, "Failed too process SAML message", e);

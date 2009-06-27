@@ -420,6 +420,7 @@ public class SamlTools
     	
 		String sMethod = "sign(SignableSAMLObject obj)";
 		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
+		
 	    _systemLogger.log(Level.INFO,MODULE,sMethod, "obj->"+obj);
         if (!obj.isSigned()) {
     	    ASelectConfigManager _oASelectConfigManager = ASelectConfigManager.getHandle();
@@ -434,7 +435,7 @@ public class SamlTools
     		else {
     			signingAlgo = SignatureConstants.ALGO_ID_SIGNATURE_ECDSA_SHA1;
     		}
-    	    _systemLogger.log(Level.INFO,MODULE,sMethod, "using signingAlgo="+signingAlgo);
+    	    _systemLogger.log(Level.INFO,MODULE,sMethod, "using algorithm: "+signingAlgo);
     		BasicCredential credential = new BasicCredential();
     		credential.setPrivateKey(privKey);
             signature.setSigningCredential(credential);
@@ -444,14 +445,15 @@ public class SamlTools
             obj.setSignature(signature);
         	try {
     		    Configuration.getMarshallerFactory().getMarshaller(obj).marshall(obj);
-    		} catch (MarshallingException e) {
+    		}
+        	catch (MarshallingException e) {
     	        _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Cannot marshall object for signature", e);
     	        throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
     		}
-    	
-            try {
+    	    try {
             	Signer.signObject(signature);
-            } catch (SignatureException e) {
+            }
+            catch (SignatureException e) {
     	        _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Cannot sign the object", e);
     	        throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
             }
@@ -646,7 +648,7 @@ public class SamlTools
 						"Unable to marshall message, no marshaller registered for message object: "+message.getElementQName());
 			}
 			Element messageElem = marshaller.marshall(message);
-			systemLogger.log(Level.INFO, MODULE, sMethod, "Marshalled message into DOM:\n"+XMLHelper.nodeToString(messageElem));
+			//systemLogger.log(Level.INFO, MODULE, sMethod, "Marshalled message into DOM:\n"+XMLHelper.nodeToString(messageElem));
 
 			return messageElem;
 		}

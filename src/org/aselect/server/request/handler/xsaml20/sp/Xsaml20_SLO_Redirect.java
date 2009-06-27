@@ -146,8 +146,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BaseHandler
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Signature is correct.");
 			}
 
-			// now the signature is OK and the message can be processed further
-			
+			// The signature is OK and the message can be processed
 			if (elementName.equals(LOGOUTREQUEST)) {
 				LogoutRequest logoutRequest = (LogoutRequest) samlMessage;
 				// now check the validity of the supplied time interval (if present)
@@ -204,7 +203,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BaseHandler
         String sCookieDomain = _configManager.getCookieDomain();
         HandlerTools.delCookieValue(httpResponse, "aselect_credentials", sCookieDomain, _systemLogger);
 
-		// Redirect the user back to the  federation-idp LogoutService with a LogoutResponse
+		// Redirect the user to the  federation-idp LogoutService with a LogoutResponse
 		String issuer = logoutRequest.getIssuer().getValue();
 		String statusCode = StatusCode.SUCCESS_URI;
 		String myEntityId = _sServerUrl;

@@ -229,20 +229,50 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		String sElementName = AssertionConsumerService.DEFAULT_ELEMENT_LOCAL_NAME;
 		String sBindingName = SAMLConstants.SAML2_ARTIFACT_BINDING_URI;
 
+		//_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta");
+		MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
+		try {  // TEST
+			sAssertionConsumerServiceURL = metadataManager.getLocation("https://www.sp.com:9443/sps/IBM-Overheid/saml20",
+					"AssertionConsumerService", "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Location="+sAssertionConsumerServiceURL);
+		} catch (ASelectException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to get location: "+e.getMessage());
+		}
+		try {  // TEST
+			sAssertionConsumerServiceURL = metadataManager.getLocation("https://portal.sunlabs.nl:444/opensso",
+					"AssertionConsumerService", "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Location="+sAssertionConsumerServiceURL);
+		} catch (ASelectException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to get location: "+e.getMessage());
+		}
+		try {  // TEST
+			sAssertionConsumerServiceURL = metadataManager.getLocation("https://siam.s-hertogenbosch.nl/aselectserver/server",
+					"AssertionConsumerService", "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Location="+sAssertionConsumerServiceURL);
+		} catch (ASelectException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to get location: "+e.getMessage());
+		}
+		try {  // TEST
+			sAssertionConsumerServiceURL = metadataManager.getLocation("http://fed.amsterdamlaan.net/fed/sp",
+					"AssertionConsumerService", "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Location="+sAssertionConsumerServiceURL);
+		} catch (ASelectException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to get location: "+e.getMessage());
+		}
+		
 		try {
-			//_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta");
-			MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
 			sAssertionConsumerServiceURL = metadataManager.getLocation(sEntityId, sElementName, sBindingName);
 		}
 		catch (ASelectException e) {
-			// Getting it from metadata is not succeeded so see if it is in the message
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage());
+			// Metadata retrieval failed so get it from the message
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to get location: "+e.getMessage());
 		}
+
 		//_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta1 OK "+sAssertionConsumerServiceURL);
 		if (sAssertionConsumerServiceURL == null) {
 			if (elementName.equals(AUTHNREQUEST)) {
 				AuthnRequest authnRequest = (AuthnRequest) samlMessage;
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "get from AuthnRequest");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Get Location from AuthnRequest");
 				sAssertionConsumerServiceURL = authnRequest.getAssertionConsumerServiceURL();
 			}
 		}

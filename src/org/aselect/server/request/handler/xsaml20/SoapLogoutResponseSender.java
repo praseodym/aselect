@@ -51,8 +51,8 @@ public class SoapLogoutResponseSender
 		Element envelopeElem = null;
 		try {
 			envelopeElem = SamlTools.marshallMessage(envelope);
-			String msg = XMLHelper.prettyPrintXML(envelopeElem);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sending message: " + msg);
+			//String msg = XMLHelper.prettyPrintXML(envelopeElem);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sending message:\n"+XMLHelper.nodeToString(envelopeElem));
 		}
 		catch (MessageEncodingException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);

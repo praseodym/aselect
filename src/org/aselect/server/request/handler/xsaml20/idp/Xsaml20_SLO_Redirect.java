@@ -152,6 +152,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 		String sInfoForm = _configManager.getForm("logout_info");
 		sInfoForm = Utils.replaceString(sInfoForm, "[aselect_url]", sRedirectUrl);
 		sInfoForm = Utils.replaceString(sInfoForm, "[SAMLRequest]", httpRequest.getParameter("SAMLRequest"));
+		sInfoForm = Utils.replaceString(sInfoForm, "[RelayState]", httpRequest.getParameter("RelayState"));
 		sInfoForm = Utils.replaceString(sInfoForm, "[SigAlg]", httpRequest.getParameter("SigAlg"));
 		sInfoForm = Utils.replaceString(sInfoForm, "[Signature]", httpRequest.getParameter("Signature"));
 		sInfoForm = Utils.replaceString(sInfoForm, "[consent]", "true");

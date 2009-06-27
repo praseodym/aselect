@@ -92,8 +92,7 @@ public class SoapLogoutRequestSender
 		Element envelopeElem = null;
 		try {
 			envelopeElem = SamlTools.marshallMessage(envelope);
-			//String msg = XMLHelper.prettyPrintXML(envelopeElem);
-			//_systemLogger.log(Level.INFO, MODULE, sMethod, "sending message: " + msg);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sending message:\n"+XMLHelper.nodeToString(envelopeElem));
 		}
 		catch (MessageEncodingException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Exception during marshallling of envelope");

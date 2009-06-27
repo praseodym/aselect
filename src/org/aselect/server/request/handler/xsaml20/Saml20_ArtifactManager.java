@@ -90,19 +90,16 @@ public class Saml20_ArtifactManager extends StorageManager
 		
 	}
 
-//	private void putArtifactInStorage(Object key, SAMLObject samlObject) // RH, 20080715, o
 	// We want an XMLObject out
 	// So we should put an XMLObject in
-	private void putArtifactInStorage(Object key, XMLObject samlObject)  // RH, 20080715, n
+	private void putArtifactInStorage(Object key, XMLObject samlObject)
 	throws ASelectStorageException
 	{
 		String sMethod = "putArtifactInStorage";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "key="+key);
 
 		Element dom = samlObject.getDOM();
-//		if (samlObject.getDOM() == null) {
-		if (dom == null) {
-			// object was not marshalled
+		if (dom == null) {  // object was not marshalled
 			try {
 				dom = SamlTools.marshallMessage(samlObject);
 			}
@@ -115,7 +112,6 @@ public class Saml20_ArtifactManager extends StorageManager
 		
 		// Save as string because these SAML XMLObjects don't want to serialize very well
 		super.put(key, XMLHelper.nodeToString(dom));
-//		super.put(key, dom);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "put done");
 		
 		// debug:
