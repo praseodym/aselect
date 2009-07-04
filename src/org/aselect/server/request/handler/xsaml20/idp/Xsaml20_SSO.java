@@ -320,6 +320,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		
 		try {
 			// We have to return to the calling SP using a SAML Artifact
+			// If a TgT is present the session has been deleted
 	        String sRid = (String) httpRequest.getParameter("rid");
 			String sTgt = (String) httpRequest.getParameter("aselect_credentials");
 			if (sTgt != null && !sTgt.equals("")) {
@@ -329,7 +330,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			else {
 				htSessionContext = _oSessionManager.getSessionContext(sRid);
 			}
-	        // One of them must be available
+
+			// One of them must be available
 	        if (htTGTContext == null && htSessionContext == null) {
 	        	_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Neither TGT context nor Session context are available");
 	        	throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
@@ -350,6 +352,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	        String sRelayState = null;
 	        if (htSessionContext != null)
 	        	sRelayState = (String)htSessionContext.get("RelayState");
+	        else
+	        	sRelayState = (String)htTGTContext.get("RelayState");
 	        
 	        // And off you go!
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Redirecting with artifact to: "+ sAssertUrl);

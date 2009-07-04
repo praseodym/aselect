@@ -526,6 +526,9 @@ public class RequestHandler extends Thread
 				else if (sRequest.equals("kill_ticket")) {
 					processKillTicketRequest(oInputMessage, oOutputMessage);
 				}
+				else if (sRequest.equals("kill_tgt")) {
+					processKillTgtRequest(oInputMessage, oOutputMessage);
+				}
 				else if (sRequest.equals("attributes")) {
 					processAttributesRequest(oInputMessage, oOutputMessage);
 				}
@@ -1877,6 +1880,43 @@ public class RequestHandler extends Thread
 				return;
 			}
 
+			//set response parameters
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
+		}
+		catch (ASelectCommunicationException eAC) {
+			//mandatory parameter missing
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received.", eAC);
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+			return;
+		}
+		catch (Exception e) {
+			sbBuffer = new StringBuffer("Exception while processing request: \"");
+			sbBuffer.append(e.getMessage());
+			sbBuffer.append("\"");
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), e);
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+		}
+	}
+	
+	// "tgt_blob" "a-select-server" "signature"
+	// Optional: "logout_return_url"
+	private void processKillTgtRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
+	throws ASelectCommunicationException
+	{
+		String sMethod = "processKillTgtRequest()";
+		StringBuffer sbBuffer = new StringBuffer();
+		String sTicket = null;
+		try {
+			//Get parameters
+			sTicket = oInputMessage.getParam("ticket"); //mandatory              
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "VerCRED sTicket=" + sTicket);
+	
+			if (!_ticketManager.killTicket(sTicket)) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not kill ticket");
+				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_UNKNOWN_TICKET);
+				return;
+			}
+	
 			//set response parameters
 			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
 		}

@@ -581,9 +581,7 @@ public class TGTIssuer
 
 			// RH, 20080619, sn
 			// We will now only put the client_ip in the TGT if there is a non-zero value present in the sessioncontext
-			String sClientIP = (String) htSessionContext.get("client_ip");
-			if (sClientIP != null && !"".equals(sClientIP))
-				htTGTContext.put("client_ip", sClientIP);
+			Utils.copyHashmapValue("client_ip", htTGTContext, htSessionContext);
 			// RH, 20080619, en
 
 			// Bauke 20081110 copy RelayState to the TgT

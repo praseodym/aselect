@@ -797,7 +797,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		return htResult;
 	}
 
-	public void createContextAndIssueTGT(HttpServletResponse response, String sRid /* can be null */,
+	public String createContextAndIssueTGT(HttpServletResponse response, String sRid /* can be null */,
 					String sServerId, String sOrg, String sAppId, String sTgt, HashMap htAttributes)
 	throws ASelectException
 	{
@@ -869,6 +869,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
             TGTIssuer tgtIssuer = new TGTIssuer(sServerId);
 		    tgtIssuer.setASelectCookie(sTgt, sUserId, response);
 		}
+		return sTgt;
 	}
 
 	protected String createRequestorToken(HttpServletRequest request, String sProviderId, String sUid,

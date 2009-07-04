@@ -50,6 +50,7 @@ public class AccountSTS extends ProtoRequestHandler
 	private String _sTemplate = null;
 	private String _sPostTemplate = null;
 	private String _sMyAppId;
+	private String _sPassTransientId;
 	private String _sIstsUrl;
 	private String _sProviderId;
 	private String _sNameIdFormat;
@@ -78,6 +79,7 @@ public class AccountSTS extends ProtoRequestHandler
 			_sUserDomain = ASelectConfigManager.getParamFromSection(null, "aselect", "user_domain", false);
 			if (_sUserDomain == null) _sUserDomain = "digid.nl";
 			_sMyAppId = ASelectConfigManager.getParamFromSection(oConfig, "application", "id", true);
+			_sPassTransientId = ASelectConfigManager.getSimpleParam(oConfig, "pass_transient_id", false);
 			_sIstsUrl = ASelectConfigManager.getSimpleParam(oConfig, "ists_url", true);
 			_sProviderId = ASelectConfigManager.getSimpleParam(oConfig, "provider_id", true);
 			_sNameIdFormat = ASelectConfigManager.getSimpleParam(oConfig, "nameid_format", true);
@@ -269,20 +271,25 @@ public class AccountSTS extends ProtoRequestHandler
 			}			
     		String sTryUid = (String)htAttributes.get("uid");
     		if (sTryUid == null) htAttributes.put("uid", sUid);
-    		_systemLogger.log(Level.INFO, MODULE, sMethod, "htAttributes=" + htAttributes);
+    		_systemLogger.log(Level.INFO, MODULE, sMethod, "htAttributes=" + htAttributes+" pass_transient_id="+_sPassTransientId);
     		
     		if (htCredentials == null) {
 	    		// No credentials were made yet, Issue a TGT
-				createContextAndIssueTGT(response, null, _sASelectServerID, _sASelectOrganization, _sMyAppId, sTgt, htAttributes);
+				sTgt = createContextAndIssueTGT(response, null, _sASelectServerID, _sASelectOrganization, _sMyAppId, sTgt, htAttributes);
 	    		
 	    		// Create Token and POST it to the caller
 				HashMap htSessionData = retrieveSessionDataFromRid(request, SESSION_ID_PREFIX);
 				if (htSessionData == null)
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
+				if ("true".equals(_sPassTransientId))
+					htAttributes.put("transient_id", sTgt);
 	    		return postRequestorToken(request, response, sUid, htSessionData, htAttributes);
     		}
-    		else
+    		else {
+				if ("true".equals(_sPassTransientId))
+					htAttributes.put("transient_id", sTgt);
     			return postRequestorToken(request, response, sUid, htCredentials, htAttributes);
+    		}
 		}
 		catch (ASelectException e) {
 			throw e;

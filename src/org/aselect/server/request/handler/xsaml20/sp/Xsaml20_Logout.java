@@ -96,12 +96,9 @@ public class Xsaml20_Logout extends Saml20_BaseHandler
 	/**
 	 * This function handles the <code>request=kill_tgt</code> request. <br>
 	 * 
-	 * @param request
-	 *            The input message.
-	 * @param response
-	 *            The output message.
-	 * @throws ASelectException
-	 *             If proccessing fails.
+	 * @param request - The input message.
+	 * @param response - The output message.
+	 * @throws ASelectException - If proccessing fails.
 	 */
 	private void handleKillTGTRequest(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
@@ -130,8 +127,11 @@ public class Xsaml20_Logout extends Saml20_BaseHandler
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID, eIA);
 		}
 
-		// Check if the TGT exists
+		// 20090627, Bauke: added option to supply return URL
+		// can be done here, because this is a browser request
 		String sLogoutReturnUrl = request.getParameter("logout_return_url");
+		
+		// Check if the TGT exists
 		if (!_oTGTManager.containsKey(sTGT)) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unknown TGT / Already logged out");
 			if (!"".equals(sLogoutReturnUrl)) {

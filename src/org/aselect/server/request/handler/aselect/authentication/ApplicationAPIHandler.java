@@ -348,9 +348,10 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		else if (sAPIRequest.equals("upgrade_tgt")) {
 			handleUpgradeTGTRequest(oInputMessage, oOutputMessage);
 		}
-		else if (sAPIRequest.equals("alive")) {
-			handleUpgradeTGTRequest(oInputMessage, oOutputMessage);
-		}
+		// Not an API call:
+		//else if (sAPIRequest.equals("alive")) {
+		//	handleUpgradeTGTRequest(oInputMessage, oOutputMessage);
+		//}
 		else {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unsupported API Call: " + sAPIRequest);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
@@ -491,13 +492,11 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			byte[] baTgtBlobBytes = CryptoEngine.getHandle().decryptTGT(sEncTGT);
 			sTGT = Utils.toHexString(baTgtBlobBytes);
 		}
-		catch (ASelectException eAC) //decrypt failed
-		{
+		catch (ASelectException eAC) {  //decrypt failed
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not decrypt TGT", eAC);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID, eAC);
 		}
-		catch (IllegalArgumentException eIA) //HEX conversion fails
-		{
+		catch (IllegalArgumentException eIA) {  //HEX conversion fails
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not decrypt TGT", eIA);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID, eIA);
 		}

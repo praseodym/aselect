@@ -734,20 +734,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							// needed for attribute gathering in verify_tgt
 							HashMap htTGTContext = _tgtManager.getTGT(sTgt);
 
-							String sAppId = (String) _htSessionContext.get("app_id");
-							if (sAppId != null)
-								htTGTContext.put("app_id", sAppId);
-
-							String sLocalOrg = (String) _htSessionContext.get("local_organization");
-							if (sLocalOrg != null)
-								htTGTContext.put("local_organization", sLocalOrg);
-
 							htTGTContext.put("rid", sRid);
-							// Update SP rid as well: xsaml20
-							String spRid = (String) _htSessionContext.get("sp_rid");
-							if (spRid != null)
-								htTGTContext.put("sp_rid", spRid);
-							_systemLogger.log(Level.INFO, _sModule, sMethod, "UPD rid=" + sRid + " sprid=" + spRid);
+							Utils.copyHashmapValue("app_id", htTGTContext, _htSessionContext);
+							Utils.copyHashmapValue("local_organization", htTGTContext, _htSessionContext);
+							// Copy sp_rid as well: xsaml20
+							Utils.copyHashmapValue("sp_rid", htTGTContext, _htSessionContext);
+							Utils.copyHashmapValue("RelayState", htTGTContext, _htSessionContext);
+							_systemLogger.log(Level.INFO, _sModule, sMethod, "UPD rid=" + sRid);
 
 							// Add the SP to SSO administration - xsaml20
 							String spUrl = (String) _htSessionContext.get("sp_issuer");
@@ -764,9 +757,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 							// Overwrite with the latest value of sp_assert_url,
 							// so the customer can reach his home-SP again.
-							String sAssertUrl = (String) _htSessionContext.get("sp_assert_url");
-							if (sAssertUrl != null)
-								htTGTContext.put("sp_assert_url", sAssertUrl);
+							Utils.copyHashmapValue("sp_assert_url", htTGTContext, _htSessionContext);
 
 							_tgtManager.updateTGT(sTgt, htTGTContext);							
 							_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRedirectUrl);
@@ -784,8 +775,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							return;
 						}
 					}
+					// TGT found but not sufficient or forced_authenticate
 					_systemLogger.log(Level.INFO, _sModule, sMethod, "TGT found but not sufficient");
-					// TGT found but not sufficient.
 
 					if (!handleUserConsent(htServiceRequest, servletResponse, pwOut, sRid))
 						return; // No consent, Quit
