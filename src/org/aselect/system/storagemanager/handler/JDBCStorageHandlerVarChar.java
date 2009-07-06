@@ -13,7 +13,10 @@ import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.utils.BASE64Decoder;
 import org.aselect.system.utils.BASE64Encoder;
 
-public class JDBCStorageHandlerVarChar extends JDBCStorageHandler
+/**
+ * @deprecated class hasn't been updated and therefore may be buggy, use {@link #JDBCStorageHandler()}
+ */
+@Deprecated public class JDBCStorageHandlerVarChar extends JDBCStorageHandler
 {
 	/**
 	 * Returns a particular object from the database.
