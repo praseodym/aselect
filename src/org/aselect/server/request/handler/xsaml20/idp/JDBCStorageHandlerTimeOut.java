@@ -214,7 +214,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			}
 		}
 		catch (ASelectException ex) {
-			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "IDPTO - Exception in checkSpTimeOut", ex);
+			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "IDPTO - Exception: ", ex);
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 	}

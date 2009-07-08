@@ -46,10 +46,11 @@ public class BasicSensorHandler implements ISensorHandler
 		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Port="+iPort);
 
 		// try to allocate the listening ports on localhost.
+		// Bauke, 20090707: Listen on all addresses
 		try {
-			_oServiceSocket = new ServerSocket(iPort, 50, InetAddress.getByName("127.0.0.1"));
-			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Socket=" + _oServiceSocket +
-								" for "+InetAddress.getByName("127.0.0.1"));
+			_oServiceSocket = new ServerSocket(iPort, 50, null/*InetAddress.getByName("127.0.0.1")*/);
+			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Socket=" + _oServiceSocket);
+								//+ " for "+InetAddress.getByName("127.0.0.1"));
 		}
 		catch (Exception e) {
 			_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "Cannot create serversocket on port "+iPort);
