@@ -362,6 +362,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 			// Cleanup for a forced_authenticate session
 			Boolean bForcedAuthn = (Boolean)htTGTContext.get("forced_authenticate");
+			if (bForcedAuthn == null) bForcedAuthn = false;
 			if (bForcedAuthn && htTGTContext != null) {
 				TGTManager tgtManager = TGTManager.getHandle();
 				tgtManager.remove(sTgt);

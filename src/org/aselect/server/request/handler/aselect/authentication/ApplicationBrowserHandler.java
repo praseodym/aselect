@@ -570,6 +570,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					if (checkCredentials(sTgt, sUid, sServerId)) //valid credentials/level/SSO group
 					{
 						Boolean boolForced = (Boolean)_htSessionContext.get("forced_authenticate");
+						if (boolForced == null) boolForced = false;
 						_systemLogger.log(Level.INFO, _sModule, sMethod, "CheckCred OK forced="+boolForced);
 						if (!boolForced.booleanValue()) {
 							// valid tgt, no forced_authenticate
@@ -715,6 +716,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					if (checkCredentials(sTgt, sUid, sServerId)) //valid credentials/level/SSO group
 					{
 						Boolean boolForced = (Boolean) _htSessionContext.get("forced_authenticate");
+						if (boolForced == null) boolForced = false;
 						_systemLogger.log(Level.INFO, _sModule, sMethod, "CheckCred OK forced="+boolForced);
 						if (!boolForced.booleanValue()) {
 							// valid tgt, no forced_authenticate
@@ -1436,6 +1438,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			htRequestTable.put("request", "authenticate");
 
 			Boolean boolForced = (Boolean)_htSessionContext.get("forced_authenticate");  // a Boolean
+			if (boolForced == null) boolForced = false;
 			htRequestTable.put("forced_logon", boolForced.toString());  // and this is a String!
 			htRequestTable.put("local_as_url", sbMyAppUrl.toString());
 

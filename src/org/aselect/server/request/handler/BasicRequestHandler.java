@@ -56,9 +56,8 @@ public abstract class BasicRequestHandler
 		String sLanguage = hmInput.get("language");
 		
 		// Acccept both 'forced_logon' and 'forced_authenticate' (preferred)
-		Boolean boolForcedAuthn = false;
 		String sForcedAuthn = hmInput.get("forced_authenticate");
-		if (sForcedAuthn != null) boolForcedAuthn = new Boolean(sForcedAuthn);
+		Boolean boolForcedAuthn = new Boolean(sForcedAuthn);
 		
 		String sForcedLogon = hmInput.get("forced_logon");
 		if (sForcedLogon != null) boolForcedAuthn = new Boolean(sForcedLogon);		

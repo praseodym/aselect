@@ -371,6 +371,7 @@ public class TGTIssuer
 
 			// 20090617, Bauke:forced_authenticate specials
 			Boolean bForcedAuthn = (Boolean)htSessionContext.get("forced_authenticate");
+			if (bForcedAuthn == null) bForcedAuthn = false;
 			if (bForcedAuthn)
 				htTGTContext.put("forced_authenticate", bForcedAuthn);
 
@@ -539,6 +540,7 @@ public class TGTIssuer
 
 			// 20090617, Bauke:forced_authenticate specials
 			Boolean bForcedAuthn = (Boolean)htSessionContext.get("forced_authenticate");
+			if (bForcedAuthn == null) bForcedAuthn = false;
 			if (bForcedAuthn)
 				htTGTContext.put("forced_authenticate", bForcedAuthn);
 

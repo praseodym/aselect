@@ -336,13 +336,12 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 		}
 
 		// check if the request must be handled as a forced authentication
-		Boolean boolForcedAuthn = new Boolean(false);
 		String sForcedLogon = null;
 		try {
 			sForcedLogon = oInputMessage.getParam("forced_logon");
-			boolForcedAuthn = new Boolean(sForcedLogon);
 		}
 		catch (ASelectCommunicationException e) { }
+		Boolean boolForcedAuthn = new Boolean(sForcedLogon);
 		
 		// 20090613, Bauke: accept forced_authenticate as well
 		// NOTE: API's accept the String 'forced_logon' (and now also 'forced_authenticate'),

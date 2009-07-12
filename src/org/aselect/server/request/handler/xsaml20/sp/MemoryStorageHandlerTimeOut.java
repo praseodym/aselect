@@ -157,6 +157,7 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 			String sSync = (String)htTGTContext.get("sessionsynctime");
 			Long lastSync = Long.parseLong(sSync);
 			Boolean bForcedAuthn = (Boolean)htTGTContext.get("forced_authenticate");
+			if (bForcedAuthn == null) bForcedAuthn = false;
 			Long expireTime = _oTGTManager.getExpirationTime(key);
 			Long timeStamp = _oTGTManager.getTimestamp(key);
 			Long now = new Date().getTime();

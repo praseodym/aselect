@@ -253,80 +253,7 @@ public class ApplicationManager
 			// Read config data for all applications
 			while (oApplication != null) {
 				Application application = new Application();
-				
-				/*try {
-					sAppId = _oASelectConfigManager.getParam(oApplication, "id");
-				}
-				catch (ASelectConfigException e) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod,
-							"No valid 'id' parameter found in section 'application'", e);
-					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-				}*/
-				/*try {
-					intLevel = new Integer(_oASelectConfigManager.getParam(oApplication, "level"));
-				}
-				catch (ASelectConfigException e) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod,
-							"No valid 'level' parameter found in section 'application'", e);
-					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-				}*/
-				/*try {
-					intMaxLevel = new Integer(_oASelectConfigManager.getParam(oApplication, "max_level"));
-				}
-				catch (ASelectConfigException e) {
-					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-							"No optional 'max_level' parameter found in section 'application'", e);
-				}*/
-				/*try {
-					String sForced = _oASelectConfigManager.getParam(oApplication, "forced_authenticate");
-					bForced = new Boolean(sForced).booleanValue();
-				}
-				catch (ASelectConfigException e) {
-					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-							"No 'forced_authenticate' parameter found in section 'applications',"
-									+ " set 'forced_authenticate' to default value 'false'", e);
-				}*/
-				/*try {
-					sFriendlyName = _oASelectConfigManager.getParam(oApplication, "friendly_name");
-				}
-				catch (ASelectConfigException e) {
-					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-							"No optional 'friendly_name' parameter found in section 'applications'", e);
-				}*/
-				/*try {
-					sMaintainerEmail = _oASelectConfigManager.getParam(oApplication, "maintainer_email");
-				}
-				catch (ASelectConfigException e) {
-					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-							"No optional 'maintainer_email' parameter found in section 'applications'", e);
-				}*/
-				/*try {
-					String sShowUrl = _oASelectConfigManager.getParam(oApplication, "show_url");
-					bShowUrl = new Boolean(sShowUrl).booleanValue();
-				}
-				catch (ASelectConfigException e) {
-					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-							"No valid 'show_url' parameter found in section 'applications',"
-									+ " set 'show_url' to default value 'false'", e);
-				}*/
-				/*try {
-					String sUseOpaqueUid = _oASelectConfigManager.getParam(oApplication, "use_opaque_uid");
-					bUseOpaqueId = new Boolean(sUseOpaqueUid).booleanValue();
-				}
-				catch (ASelectConfigException e) {
-					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-							"No valid 'use_opaque_uid' parameter found in section 'applications',"
-									+ " set 'use_opaque_uid'to default value 'false'", e);
-				}*/
-				/*try {
-					sAttributePolicy = _oASelectConfigManager.getParam(oApplication, "attribute_policy");
-				}
-				catch (ASelectConfigException e) {
-					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-							"No valid 'attribute_policy' parameter found in section 'applications',"
-									+ " not using an attribute policy for application with id: '" + sAppId, e);
-				}*/
-				
+								
 				String sAppId = ASelectConfigManager.getSimpleParam(oApplication, "id", true);
 				Integer intLevel = null;
 				String sLevel = ASelectConfigManager.getSimpleParam(oApplication, "level", true);
@@ -335,9 +262,8 @@ public class ApplicationManager
 				Integer intMaxLevel = null;
 				String sMax = ASelectConfigManager.getSimpleParam(oApplication, "max_level", false);
 				if (sMax != null) intMaxLevel = new Integer(sMax);
-				boolean bForced = false;
 				String sForced = ASelectConfigManager.getSimpleParam(oApplication, "forced_authenticate", false);
-				if (sForced != null) bForced = new Boolean(sForced).booleanValue();
+				boolean bForced = new Boolean(sForced);
 				String sFriendlyName = ASelectConfigManager.getSimpleParam(oApplication, "friendly_name", false);
 				String sMaintainerEmail = ASelectConfigManager.getSimpleParam(oApplication, "maintainer_email", false);
 				boolean bShowUrl = false;

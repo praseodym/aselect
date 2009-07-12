@@ -209,6 +209,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler // RH, 20080606, n
 			// Check if we have to set the ForceAuthn attribute
 			// 20090613, Bauke: use forced_authenticate (not forced_logon)!
 			Boolean bForcedAuthn = (Boolean)htSessionContext.get("forced_authenticate");
+			if (bForcedAuthn == null) bForcedAuthn = false;
 			//String sForcedLogin = (String) htSessionContext.get("forced_logon");
 	        //if ("true".equalsIgnoreCase(sForcedLogin)) {
 			if (bForcedAuthn) {
