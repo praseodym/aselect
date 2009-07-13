@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 	<head>
-		<title>Session information | [version] - [organization_friendly]</title>
+		<title>Session information | [organization_friendly]</title>
 		<link rel="stylesheet" type="text/css" href="style/aselect.css" >
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	</head>
@@ -73,10 +73,14 @@
 			<tr>
 				<td>&nbsp;</td>
 				<td>
-					<form action="[aselect_url]" method="post" name="info">
-						<input type="hidden" name="request" value="logout">
+					<!-- use GET and request "kill_tgt" for saml2 logout
+					    and POST and request "logout" for A-Select logout -->
+					<form action="[aselect_url]" method="GET" name="info">
+						<input type="hidden" name="request" value="kill_tgt">
+						<input type="hidden" name="logout_return_url" value="http://www.anoigo.nl">
+						<input type="hidden" name="tgt_blob" value="[tgt_blob]">
 						<input type="hidden" name="a-select-server" value="[a-select-server]">
-						<input type="submit" name="logoutbutton" value="  Log Out ">
+						<input type="submit" name="logoutbutton" value=" Log Out ">
 					</form>
 				</td>
 				<td valign="top">&nbsp;</td>
@@ -97,10 +101,6 @@
 			<tr>
 				<td>&nbsp;</td>
 				<td align="left"><span class="smallText">[requestor_url]</span></td>
-			</tr>
-			<tr>
-				<td height="50">&nbsp;</td>
-				<td colspan="2" nowrap><span class="footerText">[version] | This product includes software developed by <a href="http://www.alfa-ariss.com" target="_blank">Alfa & Ariss B.V.</a> </span></td>
 			</tr>
 		</table>
 

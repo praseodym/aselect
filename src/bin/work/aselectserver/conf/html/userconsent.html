@@ -30,12 +30,15 @@
 		    <input type="hidden" name="rid" value="[rid]">
 		    <input type="hidden" name="a-select-server" value="[a-select-server]">
 		    <input type="hidden" name="consent" value="[consent]">
-		    <input type="submit" value=" OK ">&nbsp;&nbsp;
+		    <input type="submit" id="ok_button" value=" OK ">&nbsp;&nbsp;
 		    <input type="button" value=" Cancel " onclick="window.location='[cancel]'; return true;">
 		</form>
 	    </td>
 	</tr>
     </table>
+<script type="text/javascript">
+    document.forms[0].ok_button.focus();
+</script>
 </body>
 </html>
 

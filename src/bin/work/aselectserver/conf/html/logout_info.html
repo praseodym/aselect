@@ -37,14 +37,18 @@
 		<br>
 		<form action="[aselect_url]" method="GET" name="logout_form">
 		    <input type="hidden" name="SAMLRequest" value="[SAMLRequest]">
+		    <input type="hidden" name="RelayState" value="[RelayState]">
 		    <input type="hidden" name="SigAlg" value="[SigAlg]">
 		    <input type="hidden" name="Signature" value="[Signature]">
 		    <input type="hidden" name="consent" value="[consent]">
-		    <input type="submit" value=" OK ">&nbsp;&nbsp;
+		    <input type="submit" id="ok_button" value=" OK ">&nbsp;&nbsp;
 		</form>
 	    </td>
 	</tr>
     </table>
+<script type="text/javascript">
+    document.forms[0].ok_button.focus();
+</script>
 </body>
 </html>
 
