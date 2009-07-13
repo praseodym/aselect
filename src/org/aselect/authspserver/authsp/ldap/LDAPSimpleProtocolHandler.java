@@ -141,7 +141,7 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 			htEnvironment.put(Context.SECURITY_CREDENTIALS, sPassword);
 
             _systemLogger.log(Level.INFO, _sModule, sMethod,
-            		"BIND "+_sLDAPUrl+"_"+_sDriver+"_"+"simple1"+"_"+sbTemp.toString()+"_"+sPassword);
+            		"BIND "+_sLDAPUrl+"_"+_sDriver+"_"+"simple1"+"_"+sbTemp.toString());
 			try
 			{
 				oDirContext = new InitialDirContext(htEnvironment);
@@ -338,7 +338,7 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 	        htEnvironment.put(Context.SECURITY_CREDENTIALS, sPassword);
 	
             _systemLogger.log(Level.INFO, _sModule, sMethod,
-            		"USR_BIND "+_sLDAPUrl+"_"+_sDriver+"_"+"simple3"+"_"+sbTemp.toString()+"_"+sPassword);
+            		"USR_BIND "+_sLDAPUrl+"_"+_sDriver+"_"+"simple3"+"_"+sbTemp.toString());
 	        try
 	        {
 	            oDirContext = new InitialDirContext(htEnvironment);
