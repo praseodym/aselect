@@ -241,7 +241,7 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
         //pwOut.println(sLoggedOutForm);
 
 		String sRelayState = httpRequest.getParameter("RelayState");
-		if (!"".equals(sRelayState)) {
+		if (sRelayState != null && !"".equals(sRelayState)) {
 			// Redirect to the url in sRelayState
 			String sAmpQuest = (sRelayState.indexOf('?') >= 0) ? "&": "?"; 
 			String url = sRelayState + sAmpQuest + "result_code=" + resultCode;

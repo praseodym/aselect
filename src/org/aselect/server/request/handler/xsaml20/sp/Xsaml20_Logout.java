@@ -134,7 +134,7 @@ public class Xsaml20_Logout extends Saml20_BaseHandler
 		// Check if the TGT exists
 		if (!_oTGTManager.containsKey(sTGT)) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unknown TGT / Already logged out");
-			if (!"".equals(sLogoutReturnUrl)) {
+			if (sLogoutReturnUrl != null && !"".equals(sLogoutReturnUrl)) {
 				// Redirect to the url in sRelayState
 				String sAmpQuest = (sLogoutReturnUrl.indexOf('?') >= 0) ? "&": "?"; 
 				String url = sLogoutReturnUrl + sAmpQuest + "result_code=" + Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT;

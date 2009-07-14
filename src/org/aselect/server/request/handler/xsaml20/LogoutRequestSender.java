@@ -81,7 +81,7 @@ public class LogoutRequestSender
 		messageContext.setPeerEntityEndpoint(samlEndpoint);
 		
 		// 20090627, Bauke: pass return url, will be used by the Logout Response handler
-		if (!"".equals(sLogoutReturnUrl))
+		if (sLogoutReturnUrl != null && !"".equals(sLogoutReturnUrl))
 			messageContext.setRelayState(sLogoutReturnUrl);
 
 		BasicX509Credential credential = new BasicX509Credential();
