@@ -88,7 +88,7 @@ public class BasicSensorHandler implements ISensorHandler
 				int port = oSocket.getPort();
 				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Accepted T=" + System.currentTimeMillis() + " "+stamp+" port="+port);
 
-				oSocket.setSoTimeout(4000);  // timeout for read actions
+				oSocket.setSoTimeout(40);  // timeout for read actions
 				InputStream isInput = oSocket.getInputStream();
 		        OutputStream osOutput = oSocket.getOutputStream();
 				oInReader = new BufferedReader(new InputStreamReader(isInput));
