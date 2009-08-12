@@ -150,8 +150,6 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
         Set keys = allTgts.keySet();
 		for (Object s : keys) {
 			String key = (String) s;
-//		for (Enumeration<String> e = allTgts.keys(); e.hasMoreElements();) {
-//			String key = e.nextElement();
 			HashMap htTGTContext = (HashMap) _oTGTManager.get(key);
 			String sNameID = (String)htTGTContext.get("name_id");
 			String sSync = (String)htTGTContext.get("sessionsynctime");
@@ -166,41 +164,25 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO - NameID=" + sNameID + 
 					" TimeStamp="+(timeStamp-now)+" Left=" + (expireTime - now) + " lastSync=" + (lastSync-now)+" Key=" + sKey);
 			
+			String sAuthspType = (String)htTGTContext.get("authsp_type");
+			Boolean bToFed = (sAuthspType != null && sAuthspType.equals("saml20"));
 			// Check Ticket Expiration
 			if (now >= expireTime) {
 				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SPTO Remove TGT (and send Logout), Key=" + sKey + " forced="+bForcedAuthn);
 				_oTGTManager.remove(key);
 
 				// 20090622, Bauke, if forced_authenticate, the IdP does not have a ticket
-				if (!bForcedAuthn)
+				if (bToFed && !bForcedAuthn)
 					sendLogoutToFederation(sNameID);
 			}
 
 			// Check Session Sync
-//			try {
-				//String errorCode = Errors.ERROR_ASELECT_SUCCESS;
-				//HashMap htResult = SessionSyncRequestSender.getSessionSyncParameters(_oSystemLogger);
-				//Long updateInterval = (Long)htResult.get("update_interval");
-				//String samlMessageType = (String)htResult.get("message_type");
-				//String federationUrl = (String)htResult.get("federation_url");
-				
-				// Since the last Session Sync also update the TGT's timestamp
-				// also skip a few seconds after lastSync
-				if (updateInterval > 0 && timeStamp > lastSync+10 && now >= lastSync + updateInterval) {
-					// Perform a Session Sync to the Federation
-					_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO Skip this SessionSync");
-					//SessionSyncRequestSender ss_req = new SessionSyncRequestSender(_oSystemLogger,
-					//			_sRedirectUrl, updateInterval, samlMessageType, federationUrl);
-					//errorCode = ss_req.synchronizeSession(key, false, false);  // credentials not crypted, no tgt upgrade
-					//if (errorCode != Errors.ERROR_ASELECT_SUCCESS) {
-					//	_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO Session Sync FAILED");
-					//	throw new ASelectStorageException(errorCode);
-					//}
-				}
-//			}
-//			catch (ASelectException ase) {
-//				throw new ASelectStorageException(ase.toString());
-//			}
+			// Since the last Session Sync also update the TGT's timestamp
+			// also skip a few seconds after lastSync
+			if (bToFed && updateInterval > 0 && timeStamp > lastSync+10 && now >= lastSync + updateInterval) {
+				// Perform a Session Sync to the Federation
+				_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO Skip this SessionSync");
+			}
 		}
 	}
 

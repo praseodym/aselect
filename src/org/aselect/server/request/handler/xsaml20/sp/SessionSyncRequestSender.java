@@ -1,7 +1,6 @@
 package org.aselect.server.request.handler.xsaml20.sp;
 
 import java.io.StringReader;
-import java.net.URLDecoder;
 import java.security.PublicKey;
 import java.util.*;
 import java.util.logging.Level;
@@ -183,7 +182,7 @@ public class SessionSyncRequestSender
 	public String synchronizeSession(String argCredentials, boolean credsAreCoded, boolean updateTgt)
 	{
 		String _sMethod = "synchronizeSession";
-		String errorCode = Errors.ERROR_ASELECT_SUCCESS;
+		String returnCode = Errors.ERROR_ASELECT_SUCCESS;
 		String credentials;
 
 		if (credsAreCoded) {
@@ -201,7 +200,12 @@ public class SessionSyncRequestSender
 			return Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT;
 		}
 		
-		if (updateTgt) {
+		// 20090811, Bauke: Only saml20 needs this type of session sync
+		String sAuthspType = (String)htTGTContext.get("authsp_type");
+		if (sAuthspType==null || !sAuthspType.equals("saml20"))
+			return returnCode;
+		
+		if (updateTgt) {  // updates the timestamp
 			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Update TICKET context=" + htTGTContext);
 			_oTGTManager.updateTGT(credentials, htTGTContext);
 		}
@@ -237,9 +241,9 @@ public class SessionSyncRequestSender
 				}
 			}
 			else {
-				errorCode = Errors.ERROR_ASELECT_SERVER_INVALID_SESSION;
+				returnCode = Errors.ERROR_ASELECT_SERVER_INVALID_SESSION;
 				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "No user found with credentials="+credentials);
-				return errorCode;
+				return returnCode;
 			}
 			
 			// If successful, update the ticket granting ticket (timestamp will be set to "now")
@@ -252,7 +256,7 @@ public class SessionSyncRequestSender
 		else {
 			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SP - No SessionSync Yet");
 		}
-		return errorCode;
+		return returnCode;
 	}
 
 	/*

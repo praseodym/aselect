@@ -77,20 +77,6 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 		String sMethod = "init()";
 		super.init(oServletConfig, oConfig);
 		
-	  // RH, 20080602, so, this is don by Saml20_BaseHandler now
-//		String sVerifySignature = null;
-//		try {
-//			sVerifySignature = _configManager.getParam(oConfig, "verify_signature");
-//		}
-//		catch (Exception e) {
-//			if (sVerifySignature != null) {
-//				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-//			}
-//		}
-//		if (sVerifySignature != null && sVerifySignature.equalsIgnoreCase("false")) {
-//			_bVerifySignature = false;
-//		}
-		  // RH, 20080602, eo, this is don by Saml20_BaseHandler now
 		try {
 			Object aselect = _configManager.getSection(null, "aselect");
 			_sFriendlyName = _configManager.getParam(aselect, "organization_friendly_name");

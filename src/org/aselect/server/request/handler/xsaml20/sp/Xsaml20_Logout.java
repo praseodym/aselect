@@ -188,18 +188,22 @@ public class Xsaml20_Logout extends Saml20_BaseHandler
         String sCookieDomain = _configManager.getCookieDomain();
         HandlerTools.delCookieValue(response, "aselect_credentials", sCookieDomain, _systemLogger);
 
-		// now send a saml LogoutRequest to the federation idp
-		LogoutRequestSender logoutRequestSender = new LogoutRequestSender();
-		String sNameID = (String) htTGTContext.get("name_id");
-
-		// metadata
-		MetaDataManagerSp metadataManager = MetaDataManagerSp.getHandle();
-		String url = metadataManager.getLocation(_sFederationUrl, SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME,
-				SAMLConstants.SAML2_REDIRECT_BINDING_URI);
-
-		if (url != null) {
-			logoutRequestSender.sendLogoutRequest(url, _sReturnUrl/*issuer*/, sNameID,
-						request, response, "urn:oasis:names:tc:SAML:2.0:logout:user", sLogoutReturnUrl);
+        // If Saml20, also send word to the IdP
+		String sAuthspType = (String)htTGTContext.get("authsp_type");
+		if (sAuthspType != null && sAuthspType.equals("saml20")) {
+			// Send a saml LogoutRequest to the federation idp
+			LogoutRequestSender logoutRequestSender = new LogoutRequestSender();
+			String sNameID = (String) htTGTContext.get("name_id");
+	
+			// metadata
+			MetaDataManagerSp metadataManager = MetaDataManagerSp.getHandle();
+			String url = metadataManager.getLocation(_sFederationUrl, SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME,
+					SAMLConstants.SAML2_REDIRECT_BINDING_URI);
+	
+			if (url != null) {
+				logoutRequestSender.sendLogoutRequest(url, _sReturnUrl/*issuer*/, sNameID,
+							request, response, "urn:oasis:names:tc:SAML:2.0:logout:user", sLogoutReturnUrl);
+			}
 		}
 	}
 

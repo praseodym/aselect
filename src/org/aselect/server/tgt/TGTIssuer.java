@@ -322,6 +322,7 @@ public class TGTIssuer
 
 				sAppId = sbAppID.toString();
 			}
+			
 			HashMap htTGTContext = new HashMap();
 
 			// Bauke: copy DigiD data to the context
@@ -364,6 +365,9 @@ public class TGTIssuer
 			if (sClientIP != null && !"".equals(sClientIP))
 				htTGTContext.put("client_ip", sClientIP);
 			// RH, 20080619, en
+			
+			// 20090811, Bauke: save authsp_type for use by the Saml20 session sync
+			Utils.copyHashmapValue("authsp_type", htTGTContext, htSessionContext);
 
 			// Bauke 20081110 copy RelayState to the TgT
 			Utils.copyHashmapValue("RelayState", htTGTContext, htSessionContext);
@@ -499,7 +503,6 @@ public class TGTIssuer
 
 			String sUserId = (String) htSessionContext.get("user_id");
 			String sOrganization = (String) htSessionContext.get("organization");
-			HashMap htAllowedAuthsps = (HashMap) htSessionContext.get("allowed_user_authsps");
 			Integer intAppLevel = (Integer) htSessionContext.get("level");
 			Vector vSSOGroups = (Vector) htSessionContext.get("sso_groups");
 			sLevel = (_authSPHandlerManager.getLevel(sAuthSP)).toString();
@@ -524,6 +527,7 @@ public class TGTIssuer
 			htTGTContext.put("rid", sRid);
 			if (sArpTarget != null)
 				htTGTContext.put("arp_target", sArpTarget);
+			HashMap htAllowedAuthsps = (HashMap) htSessionContext.get("allowed_user_authsps");
 			if (htAllowedAuthsps != null)
 				htTGTContext.put("allowed_user_authsps", htAllowedAuthsps);
 			if (sLocalOrg != null)
@@ -537,6 +541,8 @@ public class TGTIssuer
 
 			// Bauke: copy from rid context
 			Utils.copyHashmapValue("sel_uid", htTGTContext, htSessionContext);
+			// 20090811, Bauke: save authsp_type for use by the Saml20 session sync
+			Utils.copyHashmapValue("authsp_type", htTGTContext, htSessionContext);
 
 			// 20090617, Bauke:forced_authenticate specials
 			Boolean bForcedAuthn = (Boolean)htSessionContext.get("forced_authenticate");

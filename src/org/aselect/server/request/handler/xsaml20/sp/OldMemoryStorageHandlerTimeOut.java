@@ -172,30 +172,12 @@ public class OldMemoryStorageHandlerTimeOut extends OldMemoryStorageHandler
 			}
 
 			// Check Session Sync
-//			try {
-				//String errorCode = Errors.ERROR_ASELECT_SUCCESS;
-				//HashMap htResult = SessionSyncRequestSender.getSessionSyncParameters(_oSystemLogger);
-				//Long updateInterval = (Long)htResult.get("update_interval");
-				//String samlMessageType = (String)htResult.get("message_type");
-				//String federationUrl = (String)htResult.get("federation_url");
-				
-				// Since the last Session Sync also update the TGT's timestamp
-				// also skip a few seconds after lastSync
-				if (updateInterval > 0 && timeStamp > lastSync+10 && now >= lastSync + updateInterval) {
-					// Perform a Session Sync to the Federation
-					_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO Skip this SessionSync");
-					//SessionSyncRequestSender ss_req = new SessionSyncRequestSender(_oSystemLogger,
-					//			_sRedirectUrl, updateInterval, samlMessageType, federationUrl);
-					//errorCode = ss_req.synchronizeSession(key, false, false);  // credentials not crypted, no tgt upgrade
-					//if (errorCode != Errors.ERROR_ASELECT_SUCCESS) {
-					//	_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO Session Sync FAILED");
-					//	throw new ASelectStorageException(errorCode);
-					//}
-				}
-//			}
-//			catch (ASelectException ase) {
-//				throw new ASelectStorageException(ase.toString());
-//			}
+			// Since the last Session Sync also update the TGT's timestamp
+			// also skip a few seconds after lastSync
+			if (updateInterval > 0 && timeStamp > lastSync+10 && now >= lastSync + updateInterval) {
+				// Perform a Session Sync to the Federation
+				_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO Skip this SessionSync");
+			}
 		}
 	}
 

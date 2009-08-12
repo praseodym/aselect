@@ -114,8 +114,8 @@ public class Xsaml20_TokenRequestHandler extends Saml20_BaseHandler {
 	 * @see org.aselect.server.request.handler.IRequestHandler#process(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
 	public RequestState process(HttpServletRequest request,
-			HttpServletResponse response) throws ASelectException {
-		
+			HttpServletResponse response) throws ASelectException
+	{	
 		String sMethod = "process()";
 		String sPathInfo = request.getPathInfo();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "==== Path="+sPathInfo+" TokenRequestQuery: " + request.getQueryString());
@@ -137,19 +137,18 @@ public class Xsaml20_TokenRequestHandler extends Saml20_BaseHandler {
 		try {
 			// TODO, verify signature, get CN, decrypt if necessary etc.
 			handleTokenRequest(request, response);
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			// TODO Auto-generated catch block
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, e.getMessage());
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 		return new RequestState(null);
-
 	}
 
 	// For now we use SAML URI Binding (which is simple but not very safe!)
 	// TODO, agree upon other (safer) binding protocol
-	protected void handleTokenRequest(HttpServletRequest request,
-			HttpServletResponse response)
+	protected void handleTokenRequest(HttpServletRequest request, HttpServletResponse response)
 	throws IOException, ASelectException
 	{
 		String sMethod = "handleTokenRequest()";

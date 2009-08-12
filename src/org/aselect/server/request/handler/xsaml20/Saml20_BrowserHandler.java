@@ -352,7 +352,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 		String sInResponseTo = authnRequest.getID(); // Is required in SAMLsyntax
 		String sDestination = authnRequest.getAssertionConsumerServiceURL();
 		if (sDestination == null) {
-			sDestination = "UnkownDestination";
+			sDestination = "UnknownDestination";
 		}
 		String sStatusCode = "";
 		String sStatusMessage = "";

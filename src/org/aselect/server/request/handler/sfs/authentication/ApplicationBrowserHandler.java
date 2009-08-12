@@ -1735,22 +1735,17 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				sSignature = URLDecoder.decode(sSignature, "UTF-8");
 				sUID = URLDecoder.decode(sUID, "UTF-8");
 			}
-			catch (UnsupportedEncodingException eUE)
-			//Interne fout UTF-8 niet ondersteund
-			{
-				_systemLogger
-						.log(Level.WARNING, _sModule, sMethod, "Internal error: request could not be decoded", eUE);
+			catch (UnsupportedEncodingException eUE) {  // UTF-8 not supported
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error: request could not be decoded", eUE);
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
 
 			StringBuffer sbBuffer = new StringBuffer();
 			sbBuffer.append(sRid).append(sUID);
 			sbBuffer.append(sPrivilegedApplication).append(sAuthspLevel);
-			if (!CryptoEngine.getHandle().verifyPrivilegedSignature(sPrivilegedApplication, sbBuffer.toString(),
-					sSignature)) {
+			if (!CryptoEngine.getHandle().verifyPrivilegedSignature(sPrivilegedApplication, sbBuffer.toString(), sSignature)) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request received: invalid signature.");
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-
 			}
 
 			// Get session context

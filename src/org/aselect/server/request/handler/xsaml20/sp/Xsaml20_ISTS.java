@@ -41,8 +41,7 @@ import org.opensaml.xml.security.x509.BasicX509Credential;
 import org.opensaml.xml.util.XMLHelper;
 import org.w3c.dom.Node;
 
-//public class Xsaml20_ISTS extends ProtoRequestHandler // RH, 20080606, o
-public class Xsaml20_ISTS extends Saml20_BaseHandler // RH, 20080606, n
+public class Xsaml20_ISTS extends Saml20_BaseHandler
 {
     private final static String MODULE = "Xsaml20_ISTS";
 	protected final String singleSignOnServiceBindingConstantREDIRECT = SAMLConstants.SAML2_REDIRECT_BINDING_URI;
@@ -142,6 +141,11 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler // RH, 20080606, n
 	            throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 	        }
 	        
+	        // 20090811, Bauke: save type of Authsp to store in the TGT later on
+	        // This is needed to prevent session sync when we're not saml20
+	        htSessionContext.put("authsp_type", "saml20");
+			_oSessionManager.updateSession(sRid, htSessionContext);
+	        
 			/* 20090113, Bauke TRY TO SKIP THIS CODE, "remote_organization" will not be set
 			CrossASelectManager oCrossASelectManager = CrossASelectManager.getHandle();
 			// Gets from organization key/value = id/friendforced_ly_name
@@ -195,7 +199,6 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler // RH, 20080606, n
 			authnRequest.setAssertionConsumerServiceURL(sMyUrl);
 			authnRequest.setDestination(sDestination);
 			authnRequest.setID(sRid);
-//			authnRequest.setIssueInstant(new DateTime()); // RH, 20080606, o
 			DateTime tStamp = new DateTime();
 			authnRequest.setIssueInstant(tStamp);
 			// Set interval conditions
@@ -216,7 +219,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler // RH, 20080606, n
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Setting the ForceAuthn attribute");
 	        	authnRequest.setForceAuthn(true);
 	        }
-	        
+
 			SAMLObjectBuilder<Endpoint> endpointBuilder = (SAMLObjectBuilder<Endpoint>) builderFactory
 					.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);
 			Endpoint samlEndpoint = endpointBuilder.buildObject();

@@ -96,18 +96,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 		super.init(oServletConfig, oHandlerConfig);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
 
-		// RH, 20080602, so, is done by Saml20_BaseHandler now        
-//		try {
-//			DefaultBootstrap.bootstrap();
-			// RH, 20080602, eo, is done by Saml20_BaseHandler now        
 		_oBuilderFactory = Configuration.getBuilderFactory();
-			// RH, 20080602, so, is done by Saml20_BaseHandler now        
-//		}
-//		catch (ConfigurationException e) {
-//			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot initialize the OpenSAML library", e);
-//			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-//		}
-		// RH, 20080602, eo, is done by Saml20_BaseHandler now        
 
 		_sMyServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
 		_sFederationUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "federation_url", true);
@@ -345,7 +334,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 					htRemoteAttributes.put("authsp", sOrganization);
 					
 					// Bauke, 20081204: If we want to send the IdP token as an attribute
-					// to the application,we need the following code:
+					// to the application, we would need the following code:
 					/*
 					String sAssertion = XMLHelper.nodeToString(samlAssertion.getDOM());
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "sAssertion="+sAssertion);

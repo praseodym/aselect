@@ -842,6 +842,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			if (htSession != null) {
 				Utils.copyHashmapValue("client_ip", htTGTContext, htSession);
 				Utils.copyHashmapValue("user_agent", htTGTContext, htSession);
+				Utils.copyHashmapValue("authsp_type", htTGTContext, htSession);
 			}
 		}
 		// RH, 20080617, en

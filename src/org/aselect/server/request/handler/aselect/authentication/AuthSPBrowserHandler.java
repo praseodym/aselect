@@ -92,6 +92,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.AuthenticationLogger;
 import org.aselect.system.sam.agent.SAMResource;
 import org.aselect.system.utils.Tools;
+import org.aselect.system.utils.Utils;
 
 /**
  * This class handles cross-authentication requests coming from a remote A-Select Server, except for the
@@ -268,18 +269,12 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			}
 
 			// Bauke: transfer PKI attributes to the Context
-			String sSubjectDN = (String) htResponse.get("pki_subject_dn");
-			if (sSubjectDN != null)
-				htAdditional.put("pki_subject_dn", sSubjectDN);
-			String sIssuerDN = (String) htResponse.get("pki_issuer_dn");
-			if (sIssuerDN != null)
-				htAdditional.put("pki_issuer_dn", sIssuerDN);
-			String sSubjectId = (String) htResponse.get("pki_subject_id");
-			if (sSubjectId != null)
-				htAdditional.put("pki_subject_id", sSubjectId);
-			String sSmsPhone = (String) htResponse.get("sms_phone");
-			if (sSmsPhone != null)
-				htAdditional.put("sms_phone", sSmsPhone);
+			Utils.copyHashmapValue("pki_subject_dn", htAdditional, htResponse);
+			Utils.copyHashmapValue("pki_issuer_dn", htAdditional, htResponse);
+			Utils.copyHashmapValue("pki_subject_id", htAdditional, htResponse);
+			Utils.copyHashmapValue("sms_phone", htAdditional, htResponse);
+			// 20090811, Bauke: save authsp_type for use by the Saml20 session sync
+			Utils.copyHashmapValue("authsp_type", htAdditional, htSessionContext);
 
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
 			String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");

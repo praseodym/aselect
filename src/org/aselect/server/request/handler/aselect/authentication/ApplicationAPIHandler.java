@@ -577,8 +577,13 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "Upgrade TICKET context=" + htTGTContext);
 
-		// Send Session Sync to the Federation
-		HashMap htResult = SessionSyncRequestSender.getSessionSyncParameters(_systemLogger);
+		// 20090811, Bauke: Only saml20 needs this type of session sync
+		HashMap htResult = null;
+		String sAuthspType = (String)htTGTContext.get("authsp_type");
+		if (sAuthspType != null && sAuthspType.equals("saml20")) {
+			// Send Session Sync to the Federation
+			htResult = SessionSyncRequestSender.getSessionSyncParameters(_systemLogger);
+		}
 		if (htResult == null || htResult.isEmpty()) {
 			// No Session Sync handler, only update the ticket granting ticket
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "updateTGT only");

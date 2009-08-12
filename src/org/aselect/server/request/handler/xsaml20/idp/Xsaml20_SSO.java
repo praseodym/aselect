@@ -231,7 +231,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 		//_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta");
 		MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
-		try {  // TEST
+		
+		/*try {  // TEST
 			sAssertionConsumerServiceURL = metadataManager.getLocation("https://www.sp.com:9443/sps/IBM-Overheid/saml20",
 					"AssertionConsumerService", "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Location="+sAssertionConsumerServiceURL);
@@ -258,7 +259,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Location="+sAssertionConsumerServiceURL);
 		} catch (ASelectException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to get location: "+e.getMessage());
-		}
+		}*/
 		
 		try {
 			sAssertionConsumerServiceURL = metadataManager.getLocation(sEntityId, sElementName, sBindingName);

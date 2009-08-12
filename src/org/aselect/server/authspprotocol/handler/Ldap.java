@@ -680,6 +680,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
 				htSessionContext.put("user_id", sUid);
 				htSessionContext.put("authsp_level", intAuthSPLevel.toString());
+				htSessionContext.put("authsp_type", "ldap");
 				_sessionManager.updateSession(sRid, htSessionContext); // store too (545)
 				tgtIssuer.issueTGT(sRid, sAuthSPId, null, servletResponse, sOldTGT);
 				
