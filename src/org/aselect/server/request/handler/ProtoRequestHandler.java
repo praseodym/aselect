@@ -238,15 +238,13 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
         AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
         HashMap htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
         if (htAttribs == null) htAttribs = new HashMap();
-        _systemLogger.log(Level.INFO, MODULE, sMethod, "Attributes after Gathering="+htAttribs);  // can be empty
+        _systemLogger.log(Level.INFO, MODULE, sMethod, "Attributes after Gathering="+htAttribs);
+        // Can be empty, can contain multi-valued attributes in Vectors
         
         // Copy the gathered attributes over the ticket context attributes
 		Set keys = htAttribs.keySet();
 		for (Object s : keys) {
 			String sKey = (String) s;
-        //Enumeration eAttr = htAttribs.keys();
-        //while (eAttr.hasMoreElements()) {
-        	//String sKey = (String)eAttr.nextElement();
         	htCtxAttribs.put(sKey, htAttribs.get(sKey));
         }
         return htCtxAttribs;

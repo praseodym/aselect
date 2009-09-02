@@ -326,7 +326,6 @@ public class JDBCStorageHandler implements IStorageHandler
 			sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?");  // new
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
 
-			// Connection oConnection = getConnection();  // RH, 20090604, o
 			oConnection = getConnection();  // RH, 20090604, n
 			oStatement = oConnection.prepareStatement(sbBuffer.toString());
 			

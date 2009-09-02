@@ -256,8 +256,7 @@ public class AttributeGatherer
 			if (oAttributeGatheringConfig != null) {
 				// Obtain and verify requestors
 
-				oRequestorsSection = _configManager.getSection(oAttributeGatheringConfig,
-						sConfigItem = "attribute_requestors");
+				oRequestorsSection = _configManager.getSection(oAttributeGatheringConfig, sConfigItem = "attribute_requestors");
 				_htRequestors = new HashMap();
 				Object oRequestorConfig = null;
 				try {
@@ -491,11 +490,6 @@ public class AttributeGatherer
 				Set keys = htReleasePolicy.keySet();
 				for (Object s : keys) {
 					String sRequestorID = (String) s;
-					// for (Enumeration e = htReleasePolicy.keys();
-					// e.hasMoreElements();)
-					// {
-					// Obtain next AR and invoke it
-					// String sRequestorID = (String) e.nextElement();
 					Vector vAttributes = (Vector) htReleasePolicy.get(sRequestorID);
 					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER Requestor=" + sRequestorID);
 
@@ -515,8 +509,8 @@ public class AttributeGatherer
 								.append("\"");
 						_systemLogger.log(Level.WARNING, _MODULE, sMethod, sb.toString(), eA);
 					}
-					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER-ed Requestor=" + sRequestorID + " htAttrs="
-							+ htAttrsFromAR);
+					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER-ed Requestor=" + sRequestorID
+							+ " htAttrs=" + htAttrsFromAR);
 
 					// Merge the returned attributes with our set
 					if (htAttrsFromAR != null) {
@@ -526,12 +520,8 @@ public class AttributeGatherer
 						Set keys1 = htAttrsFromAR.keySet();
 						for (Object s1 : keys1) {
 							String sKey = (String) s1;
-							// for (Enumeration e2 = htAttrsFromAR.keys();
-							// e2.hasMoreElements();) {
-							// String sKey = (String) e2.nextElement();
 							if (htAttributes.containsKey(sKey)) {
 								String sDuplicateOption = (String) _htDuplicatePolicies.get(sReleasePolicy);
-
 								StringBuffer sb = new StringBuffer("Attribute \"").append(sKey).append(
 										"\" returned by attribute requestor \"").append(sRequestorID).append(
 										"\" already exists (\"duplicate\"=\"" + sDuplicateOption + "\").");
@@ -581,7 +571,7 @@ public class AttributeGatherer
 														+ "\"!");
 									}
 								} // else: backwards compatibility: no action,
-									// end of 1.5.4
+								// end of 1.5.4
 							}
 							else
 								htAttributes.put(sKey, htAttrsFromAR.get(sKey));
@@ -613,19 +603,14 @@ public class AttributeGatherer
 
 		// Bauke: added additional attributes
 		String sAuthsp = (String) htTGTContext.get("authsp");
-		if (sAuthsp != null)
-			htAttributes.put("sel_authsp", sAuthsp);
+		if (sAuthsp != null) htAttributes.put("sel_authsp", sAuthsp);
 		String sAuthspLevel = (String) htTGTContext.get("authsp_level");
-		if (sAuthsp != null)
-			htAttributes.put("authsp_level", sAuthspLevel);
-		if (sAuthsp != null)
-			htAttributes.put("sel_level", sAuthspLevel);
+		if (sAuthsp != null) htAttributes.put("authsp_level", sAuthspLevel);
+		if (sAuthsp != null) htAttributes.put("sel_level", sAuthspLevel);
 		String sClientIp = (String) htTGTContext.get("client_ip");
-		if (sClientIp != null)
-			htAttributes.put("client_ip", sClientIp);
+		if (sClientIp != null) htAttributes.put("client_ip", sClientIp);
 		String sUserAgent = (String) htTGTContext.get("user_agent");
-		if (sUserAgent != null)
-			htAttributes.put("user_agent", sUserAgent);
+		if (sUserAgent != null) htAttributes.put("user_agent", sUserAgent);
 
 		String sSubjectDN = (String) htTGTContext.get("pki_subject_dn");
 		String sToken;
@@ -665,27 +650,32 @@ public class AttributeGatherer
 			for (int fldnr = 1; st.hasMoreTokens(); fldnr++) {
 				sToken = st.nextToken(); // 01.001
 				String sFld = "pki_subject_id" + Integer.toString(fldnr);
-				// _systemLogger.log(Level.INFO, _MODULE, sMethod,
-				// "Field="+sFld+" Token="+sToken);
+				// _systemLogger.log(Level.INFO, _MODULE, sMethod, "Field="+sFld+" Token="+sToken);
 				htAttributes.put(sFld, sToken);
 			}
 		}
 
 		String sSmsPhone = (String) htTGTContext.get("sms_phone");
-		if (sSmsPhone != null)
-			htAttributes.put("sms_phone", sSmsPhone);
+		if (sSmsPhone != null) htAttributes.put("sms_phone", sSmsPhone);
 		// End of additions
 
-		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Add handler");
+		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Try handler "+sAuthsp);  // if present
 		try {
-			Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp",
-					"id=" + sAuthsp);
-			String sHandler = _configManager.getParam(authSPsection, "handler");
-			int iDot = sHandler.lastIndexOf(".");
-			sHandler = sHandler.substring(iDot + 1, sHandler.length());
-
-			_systemLogger.log(Level.INFO, _MODULE, sMethod, "sHandler=" + sHandler);
-			htAttributes.put("handler", sHandler);
+			//Object authSPs = _configManager.getSection(null, "authsps");
+			//Object authSPsection = _configManager.getSection(authSPs, "authsp", "id=" + sAuthsp);
+			Object authSPs = Utils.getSimpleSection(_configManager, _systemLogger, null, "authsps", true);
+			Object authSPsection = Utils.getSectionFromSection(_configManager, _systemLogger,
+										authSPs, "authsp", "id=" + sAuthsp, false);
+			if (authSPsection != null) {
+				String sHandler = _configManager.getParam(authSPsection, "handler");
+				int iDot = sHandler.lastIndexOf(".");
+				sHandler = sHandler.substring(iDot + 1, sHandler.length());
+	
+				_systemLogger.log(Level.INFO, _MODULE, sMethod, "sHandler=" + sHandler);
+				htAttributes.put("handler", sHandler);
+			}
+			else 
+				_systemLogger.log(Level.INFO, _MODULE, sMethod, "Handler "+sAuthsp+ " not present");
 		}
 		catch (ASelectConfigException e) {
 			_systemLogger.log(Level.WARNING, _MODULE, sMethod, "Failed to retrieve config for AuthSPs.", e);
