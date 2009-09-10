@@ -462,11 +462,11 @@ public class TGTIssuer
 	 * cookie at the user (can be null if not exists)
 	 * @throws ASelectException if an error page must be shown
 	 */
-	public void issueTGT(String sRid, String sAuthSP, HashMap htAdditional, HttpServletResponse oHttpServletResponse, String sOldTGT)
+	public void issueTGT(String sRid, String sAuthSP, HashMap htAdditional,
+					HttpServletResponse oHttpServletResponse, String sOldTGT)
 	throws ASelectException
 	{
 		String sMethod = "issueTGT()";
-		String sLevel = null;
 		String sArpTarget = null; // added 1.5.4
 
 		try {
@@ -485,10 +485,7 @@ public class TGTIssuer
 				// The 'organization' in a TGT always contains the organization where the authentication was done.
 				// The 'local_organization' is needed e.g. attribute release policies
 				sLocalOrg = (String) htSessionContext.get("local_organization");
-				StringBuffer sbAppID = new StringBuffer("[unknown@");
-				sbAppID.append(sLocalOrg);
-				sbAppID.append("]");
-				sAppId = sbAppID.toString();
+				sAppId = "[unknown@"+sLocalOrg+"]";
 			}
 
 			// Check Authentication result
@@ -499,42 +496,44 @@ public class TGTIssuer
 				// Must be killed by sAppUrl: _sessionManager.killSession(sRid);
 				return;
 			}
+
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Issue TGT for RID: " + sRid);
+			HashMap htTGTContext = new HashMap();
+			htTGTContext.put("rid", sRid);
+			htTGTContext.put("app_id", sAppId);
+			if (sLocalOrg != null) htTGTContext.put("local_organization", sLocalOrg);
 
 			String sUserId = (String) htSessionContext.get("user_id");
-			String sOrganization = (String) htSessionContext.get("organization");
-			Integer intAppLevel = (Integer) htSessionContext.get("level");
-			Vector vSSOGroups = (Vector) htSessionContext.get("sso_groups");
-			sLevel = (_authSPHandlerManager.getLevel(sAuthSP)).toString();
-			sArpTarget = (String) htSessionContext.get("arp_target");
-			try {
-				Object oAuthSPSSection = _configManager.getSection(null, "authsps");
-				Object oAuthSP = _configManager.getSection(oAuthSPSSection, "authsp", "id=" + sAuthSP);
-				sLevel = _configManager.getParam(oAuthSP, "level");
-			}
-			catch (ASelectConfigException e) {
-				//It is a "priviliged authsp" -> get level from context
-				sLevel = ((Integer) htSessionContext.get("authsp_level")).toString();
-			}
-
-			HashMap htTGTContext = new HashMap();
 			htTGTContext.put("uid", sUserId);
+			String sOrganization = (String) htSessionContext.get("organization");
 			htTGTContext.put("organization", sOrganization);
-			htTGTContext.put("authsp_level", sLevel);
-			htTGTContext.put("authsp", sAuthSP);
-			htTGTContext.put("app_level", intAppLevel.toString());
-			htTGTContext.put("app_id", sAppId);
-			htTGTContext.put("rid", sRid);
-			if (sArpTarget != null)
-				htTGTContext.put("arp_target", sArpTarget);
-			HashMap htAllowedAuthsps = (HashMap) htSessionContext.get("allowed_user_authsps");
-			if (htAllowedAuthsps != null)
-				htTGTContext.put("allowed_user_authsps", htAllowedAuthsps);
-			if (sLocalOrg != null)
-				htTGTContext.put("local_organization", sLocalOrg);
-			if (vSSOGroups != null)
-				htTGTContext.put("sso_groups", vSSOGroups);
+			if (sAuthSP != null) htTGTContext.put("authsp", sAuthSP);
+			String sLevel = null;
+			if (sAuthSP != null) {
+				sLevel = (_authSPHandlerManager.getLevel(sAuthSP)).toString();
+				try {
+					Object oAuthSPSSection = _configManager.getSection(null, "authsps");
+					Object oAuthSP = _configManager.getSection(oAuthSPSSection, "authsp", "id=" + sAuthSP);
+					sLevel = _configManager.getParam(oAuthSP, "level");
+				}
+				catch (ASelectConfigException e) {
+					//It is a "priviliged authsp" -> use default level from context
+					sLevel = ((Integer) htSessionContext.get("authsp_level")).toString();
+				}
+			}
+			if (sLevel != null) htTGTContext.put("authsp_level", sLevel);
 
+			Integer intAppLevel = (Integer) htSessionContext.get("level");
+			htTGTContext.put("app_level", intAppLevel.toString());
+			HashMap htAllowedAuthsps = (HashMap) htSessionContext.get("allowed_user_authsps");
+			if (htAllowedAuthsps != null) htTGTContext.put("allowed_user_authsps", htAllowedAuthsps);
+			Vector vSSOGroups = (Vector) htSessionContext.get("sso_groups");
+			if (vSSOGroups != null) htTGTContext.put("sso_groups", vSSOGroups);
+			Utils.copyHashmapValue("arp_target", htTGTContext, htSessionContext);
+
+			String sRemoteAttrs = (String)htSessionContext.get("attributes");
+			if (sRemoteAttrs != null) htTGTContext.put("remote_attributes", sRemoteAttrs);
+			
 			//overwrite or set additional properties in the newly created tgt context
 			if (htAdditional != null)
 				htTGTContext.putAll(htAdditional);

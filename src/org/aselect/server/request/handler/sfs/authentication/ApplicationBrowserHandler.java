@@ -1494,9 +1494,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							//.get("tgt_exp_time"));
 
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-
 							oTGTIssuer.issueTGT(sRid, sAuthsp, htAdditional, servletResponse, null);
-
 							return;
 						}
 					}

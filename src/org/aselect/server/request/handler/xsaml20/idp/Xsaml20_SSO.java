@@ -3,6 +3,7 @@ package org.aselect.server.request.handler.xsaml20.idp;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
@@ -344,7 +345,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	        if (sAssertUrl == null && htSessionContext != null)
 		        sAssertUrl = (String)htSessionContext.get("sp_assert_url");
 	        if (sAssertUrl == null) {
-	    		_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Return Url \"sp_assert_url\" is missing");
+	    		_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Return url \"sp_assert_url\" is missing");
 	            throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
 	        }
 
@@ -408,42 +409,73 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				sSPRid = (String) htSessionContext.get("sp_rid");
 			
 			if (htTGTContext != null) {
+
 				sSPRid = (String) htTGTContext.get("sp_rid");
 				String sAuthspLevel = (String) htTGTContext.get("betrouwbaarheidsniveau");
-				if (sAuthspLevel==null)
-					sAuthspLevel = (String) htTGTContext.get("authsp_level");
+				if (sAuthspLevel==null) sAuthspLevel = (String) htTGTContext.get("authsp_level");
 				String sUid = (String) htTGTContext.get("uid");
 				String sCtxRid = (String) htTGTContext.get("rid");
 				String sSubjectLocalityAddress = (String) htTGTContext.get("client_ip");
 				String sAssertionID = SamlTools.generateIdentifier(_systemLogger, MODULE); 
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "CHECK ctxRid="+sCtxRid+" rid="+sRid +" client_ip="+sSubjectLocalityAddress);
 
-				// Attributes
-				XSString attributeAuthspLevelValue = (XSString) stringBuilder.buildObject(
-						AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
-				attributeAuthspLevelValue.setValue(sAuthspLevel);
-	
-				SAMLObjectBuilder<Attribute> attributeBuilder = (SAMLObjectBuilder<Attribute>) builderFactory
-						.getBuilder(Attribute.DEFAULT_ELEMENT_NAME);
-				Attribute attributeAuthspLevel = attributeBuilder.buildObject();
-				attributeAuthspLevel.setName("betrouwbaarheidsniveau");
-				attributeAuthspLevel.getAttributeValues().add(attributeAuthspLevelValue);
-	
-				XSString attributeUidValue = (XSString) stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
-						XSString.TYPE_NAME);
-				attributeUidValue.setValue(sUid);
-	
-				Attribute attributeUid = attributeBuilder.buildObject();
-				attributeUid.setName("uid");
-				attributeUid.getAttributeValues().add(attributeUidValue);
-	
+				// ---- Attributes
+				// Create an attribute statement builder
 				SAMLObjectBuilder<AttributeStatement> attributeStatementBuilder = (SAMLObjectBuilder<AttributeStatement>) builderFactory
 						.getBuilder(AttributeStatement.DEFAULT_ELEMENT_NAME);
 				AttributeStatement attributeStatement = attributeStatementBuilder.buildObject();
-				attributeStatement.getAttributes().add(attributeUid);
-				attributeStatement.getAttributes().add(attributeAuthspLevel);
 
-				// AuthenticationContext
+				// Create an attribute builder
+				SAMLObjectBuilder<Attribute> attributeBuilder = (SAMLObjectBuilder<Attribute>) builderFactory
+						.getBuilder(Attribute.DEFAULT_ELEMENT_NAME);
+				
+		        // Gather attributes, including the attributes from the ticket context
+		        HashMap htAttributes = getAttributesFromTgtAndGatherer(htTGTContext);
+		        String sAllAttributes = _saml11Builder.serializeAttributes(htAttributes);
+		    	
+		        // 20090910, Bauke: new mechanism to pass the attributes
+		        HashMap htAllAttributes = new HashMap();
+		        htAllAttributes.put("attributes", sAllAttributes);
+		        htAllAttributes.put("uid", sUid);
+		        htAllAttributes.put("betrouwbaarheidsniveau", sAuthspLevel);
+		        
+				Set keys = htAllAttributes.keySet();
+				for (Object s : keys) {
+					String sKey = (String)s;
+					Object oValue = htAllAttributes.get(sKey);
+					
+					if (!(oValue instanceof String))
+						continue;
+		        	String sValue = (String)oValue;
+		        	
+					Attribute theAttribute = attributeBuilder.buildObject();
+					theAttribute.setName(sKey);
+			        XSString theAttributeValue = (XSString) stringBuilder.buildObject(
+							AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
+					theAttributeValue.setValue(sValue);
+					theAttribute.getAttributeValues().add(theAttributeValue);
+					attributeStatement.getAttributes().add(theAttribute);  // add this attribute
+		        }
+
+				/*
+				// 200909, Bauke: replaced by the attribute gatherer solution
+				Attribute attributeAuthspLevel = attributeBuilder.buildObject();
+				attributeAuthspLevel.setName("betrouwbaarheidsniveau");
+		        XSString attributeAuthspLevelValue = (XSString) stringBuilder.buildObject(
+						AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
+				attributeAuthspLevelValue.setValue(sAuthspLevel);
+				attributeAuthspLevel.getAttributeValues().add(attributeAuthspLevelValue);
+				attributeStatement.getAttributes().add(attributeAuthspLevel);  // add this attribute
+	
+				Attribute attributeUid = attributeBuilder.buildObject();
+				attributeUid.setName("uid");
+				XSString attributeUidValue = (XSString) stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
+				attributeUidValue.setValue(sUid);
+				attributeUid.getAttributeValues().add(attributeUidValue);
+				attributeStatement.getAttributes().add(attributeUid);
+				*/
+				
+				// ---- AuthenticationContext
 				SAMLObjectBuilder<AuthnContextClassRef> authnContextClassRefBuilder = (SAMLObjectBuilder<AuthnContextClassRef>) builderFactory
 						.getBuilder(AuthnContextClassRef.DEFAULT_ELEMENT_NAME);
 				AuthnContextClassRef authnContextClassRef = authnContextClassRefBuilder.buildObject();

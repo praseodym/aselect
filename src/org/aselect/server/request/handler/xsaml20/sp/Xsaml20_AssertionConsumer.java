@@ -307,6 +307,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 					// This is the quickest way to get "name_id" into the Context
 					
 					// Retrieve the embedded attributes
+					//HashMap htAttributes = new HashMap();
 					List<AttributeStatement> lAttrStatList = samlAssertion.getAttributeStatements();
 					Iterator<AttributeStatement> iASList = lAttrStatList.iterator();
 					while (iASList.hasNext()) {
@@ -326,6 +327,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 							" remote_rid="+sRemoteRid+" local_rid="+sLocalRid+
 							" authsp_level="+sAuthSpLevel+" organization/authsp="+sOrganization);
 					
+					//htRemoteAttributes.put("attributes", _saml11Builder.serializeAttributes(htAttributes));
 					htRemoteAttributes.put("remote_rid", sRemoteRid);
 					htRemoteAttributes.put("local_rid", sLocalRid);
 
@@ -458,7 +460,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 				TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 				String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
 				// Will also redirect the user
-				oTGTIssuer.issueCrossTGT(sLocalRid, null, htRemoteAttributes, servletResponse, sOldTGT);
+				oTGTIssuer.issueTGT(sLocalRid, null, htRemoteAttributes, servletResponse, sOldTGT);
+				// 20090909: oTGTIssuer.issueCrossTGT(sLocalRid, null, htRemoteAttributes, servletResponse, sOldTGT);
 			}
 		}
 		catch (ASelectException ae) {
@@ -538,68 +541,23 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 	@SuppressWarnings("unchecked")
 	protected HashMap getASelectCredentials(HttpServletRequest servletRequest)
 	{
+		// This method overrides the default from ProtoRequestHandler.java
 		String sMethod = "getASelectCredentials";
 		HashMap htCredentials = new HashMap();
 
-		// check for credentials that might be present
-/*		Cookie[] aCookies = servletRequest.getCookies();
-
-		if (aCookies == null) {
-			return null;
-		}
-
-		String sCredentialsCookie = null;
-
-		for (int i = 0; i < aCookies.length; i++) {
-			if (aCookies[i].getName().equals("aselect_credentials")) {
-				sCredentialsCookie = aCookies[i].getValue();
-				// remove '"' surrounding cookie if applicable
-				int iLength = sCredentialsCookie.length();
-				if (sCredentialsCookie.charAt(0) == '"' && sCredentialsCookie.charAt(iLength - 1) == '"') {
-					sCredentialsCookie = sCredentialsCookie.substring(1, iLength - 1);
-				}
-			}
-		}*/
+		// Check for credentials that might be present
     	// Bauke 20080618, we only store the tgt value from now on
 		String sTgt = HandlerTools.getCookieValue(servletRequest, "aselect_credentials", _systemLogger);
-		if (sTgt == null) {
+		if (sTgt == null)
 			return null;
-		}
-
-/*		HashMap sCredentialsParams = Utils.convertCGIMessage(sCredentialsCookie);
-		if (sCredentialsParams == null) {
+		
+		HashMap htTGTContext = _tgtManager.getTGT(sTgt);
+		if (htTGTContext == null)
 			return null;
-		}
-		String sTgt = (String) sCredentialsParams.get("tgt");
-		String sUserId = (String) sCredentialsParams.get("uid");
-		String sServerId = (String) sCredentialsParams.get("a-select-server");
-		if ((sTgt == null) || (sUserId == null) || (sServerId == null)) {
-			return null;
-		}
-		if (!sServerId.equals(_sMyServerId)) {
-			return null;
-		}
-*/
-		HashMap htTGTContext = null;
-		htTGTContext = _tgtManager.getTGT(sTgt);
-/*		try {
-			if (_tgtManager.containsKey(sTgt)) {
-				htTGTContext = _tgtManager.getTGT(sTgt);
-			}
-		}
-		catch (ASelectStorageException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage());
-		}*/
-		if (htTGTContext == null) {
-			return null;
-		}
-//		if (!sUserId.equals(htTGTContext.get("uid"))) {
-//			return null;
-//		}
-
+	
 		String sUserId = (String)htTGTContext.get("uid");
-		htCredentials.put("aselect_credentials_tgt", sTgt);
 		if (sUserId != null) htCredentials.put("aselect_credentials_uid", sUserId);
+		htCredentials.put("aselect_credentials_tgt", sTgt);
 		htCredentials.put("aselect_credentials_server_id", _sMyServerId);  // Bauke 200806128 was: sServerId);
 		return htCredentials;
 	}

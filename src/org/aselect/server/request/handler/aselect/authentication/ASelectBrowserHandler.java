@@ -322,7 +322,6 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 						"Cross", sUID, (String) htServiceRequest.get("client_ip"), sRemoteOrg,
 						htSessionContext.get("app_id"), "denied", sResultCode
 					});
-
 					throw new ASelectException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);
 				}
 			}
@@ -345,7 +344,6 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error", e);
-
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 	}

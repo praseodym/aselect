@@ -17,7 +17,6 @@ import java.net.URISyntaxException;
 import java.util.logging.Level;
 
 import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpHost;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;

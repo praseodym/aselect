@@ -556,7 +556,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				String sUid = (String) htServiceRequest.get("aselect_credentials_uid");
 				String sServerId = (String) htServiceRequest.get("aselect_credentials_server_id");
 
-				// check if a request was done for an other user-id
+				// check if a request was done for another user-id
 				String sForcedUid = (String) _htSessionContext.get("forced_uid");
 
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "DLOGIN sTgt=" + sTgt + "sUid=" + sUid + "sServerId="
@@ -813,7 +813,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// Note the current session is available through _htSessionContext			
 			Utils.copyHashmapValue("client_ip", _htSessionContext, htServiceRequest);
 			Utils.copyHashmapValue("user_agent", _htSessionContext, htServiceRequest);
-			// TODO: could be handleUserConsent() also saved the session, should be optimized
+			// TODO: could be that handleUserConsent() also saved the session, should be optimized
 			_sessionManager.update(sRid, _htSessionContext);  // Will also update SensorData changed in handleUserConsent()
 
 			// no TGT found or killed (other uid)
@@ -1050,7 +1050,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	{
 		String sRid = null;
 		String sUid = null;
-		String sAuthsp = null;
 		String sMethod = "handleLogin2()";
 
 		StringBuffer sb;
@@ -1058,7 +1057,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		try {
 			sRid = (String) htServiceRequest.get("rid");
 			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
-			sAuthsp = (String) htSessionContext.get("forced_authsp"); // 20090111, Bauke from SessionContext not ServiceRequest
+			String sAuthsp = (String) htSessionContext.get("forced_authsp"); // 20090111, Bauke from SessionContext not ServiceRequest
 			if (sAuthsp != null) {
 				// Bauke 20080511: added
 				// Redirect to the AuthSP's ISTS
@@ -1068,6 +1067,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				servletResponse.sendRedirect(sAsUrl);
 				return;
 			}
+			// Has done it's work if present, note that getAuthsps() will store the session
+			htSessionContext.remove("forced_uid");
+			
 			sUid = (String) htServiceRequest.get("user_id");
 			if (sUid == null) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request, missing parmeter 'user_id'");
@@ -1144,7 +1146,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							"Failed to retrieve config 'always_show_select_form'. Using default (yes).", e);
 				}
 			}
-
 			// end only 1 valid authsp
 
 			String sSelectForm = _configManager.getForm("select");

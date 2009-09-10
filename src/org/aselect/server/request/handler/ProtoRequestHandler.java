@@ -148,16 +148,9 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 
         // Check for credentials that might be present
     	String sTgt = getCredentialsFromCookie(servletRequest);
-        //if (htCredentialsParams == null)
-        //    return null;
         
-        //String sTgt = (String)htCredentialsParams.get("tgt");
-        //String sUserId = (String)htCredentialsParams.get("uid");
-        //String sServerId = (String)htCredentialsParams.get("a-select-server");
-        if (sTgt == null) // || (sUserId == null) || (sServerId == null)
+        if (sTgt == null)
             return null;
-        //if (!sServerId.equals(_sASelectServerID))
-        //    return null;
         
         HashMap htTGTContext = getContextFromTgt(sTgt, true);  // Check expiration
         if (htTGTContext == null)
@@ -166,11 +159,6 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
         if (sUserId == null)
         	return null;
         
-        // Check corresponding parameters
-        //if (!sUserId.equals(htTGTContext.get("uid"))) {
-        //    _systemLogger.log(Level.INFO, MODULE, sMethod, "sUserId="+ sUserId+" != uid="+htTGTContext.get("uid"));
-        //    return null;
-        //}
         String sRid = (String)htTGTContext.get("rid");  // Bauke: added
         if (sRid == null) {
             _systemLogger.log(Level.INFO, MODULE, sMethod, "sRid="+ sUserId+" != uid="+htTGTContext.get("rid"));
@@ -184,7 +172,6 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
         // And assemble the credentials
         _systemLogger.log(Level.INFO, MODULE, sMethod, "Credentials for sUserId="+ sUserId+" rid="+sRid);
     	HashMap htCredentials = new HashMap();
-        //htCredentials.put("aselect_credentials", sCredentialsCookie);  // not crypted
         htCredentials.put("rid", sRid);
         htCredentials.put("uid", sUserId);
         htCredentials.put("a-select-server", _sASelectServerID);  // sServerId);
@@ -227,13 +214,13 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	throws ASelectException
 	{
 		String sMethod = "getAttributesFromTgtAndGatherer()";
-        String sCtxAttribs = (String)htTGTContext.get("attributes");
+        String sTgtAttributes = (String)htTGTContext.get("attributes");
         if (_saml11Builder == null) {
             _systemLogger.log(Level.SEVERE, MODULE, sMethod, "_saml11Builder not set");
             throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
         }
-        HashMap htCtxAttribs = _saml11Builder.deserializeAttributes(sCtxAttribs);
-        _systemLogger.log(Level.INFO, MODULE, sMethod, "Attributes from TGTContext="+htCtxAttribs);
+        HashMap htTgtAttributes = _saml11Builder.deserializeAttributes(sTgtAttributes);
+        _systemLogger.log(Level.INFO, MODULE, sMethod, "Attributes from TGT-\"attributes\"="+htTgtAttributes);
         
         AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
         HashMap htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
@@ -245,9 +232,9 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		Set keys = htAttribs.keySet();
 		for (Object s : keys) {
 			String sKey = (String) s;
-        	htCtxAttribs.put(sKey, htAttribs.get(sKey));
+        	htTgtAttributes.put(sKey, htAttribs.get(sKey));
         }
-        return htCtxAttribs;
+        return htTgtAttributes;
 	}
 
 	public HashMap getContextFromTgt(String sTgt, boolean checkExpiration)

@@ -155,8 +155,7 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
         
         try {
 			String sSerializedRemoteAttributes = (String) htTGTContext.get("remote_attributes");
-			if (sSerializedRemoteAttributes != null) // remote attributes available
-			{
+			if (sSerializedRemoteAttributes != null) {  // remote attributes available
 				htAttributes = deserializeAttributes(sSerializedRemoteAttributes);
 			}
 			else {
@@ -166,8 +165,6 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
 			Set keys = htAttributes.keySet();
 			for (Object s : keys) {
 				String oldName = (String) s;
-			//for (Enumeration e = htAttributes.keys(); e.hasMoreElements();) {
-			//	String oldName = (String) e.nextElement();
 				String newName = oldName;
 				Object value = htAttributes.get(oldName);
 				if (_htReMapAttributes.containsKey(oldName)) {

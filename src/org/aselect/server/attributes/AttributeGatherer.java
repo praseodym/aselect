@@ -125,6 +125,7 @@ import org.aselect.server.attributes.requestors.IAttributeRequestor;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.cross.CrossASelectManager;
 import org.aselect.server.log.ASelectSystemLogger;
+import org.aselect.server.request.handler.Saml11Builder;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAttributesException;
 import org.aselect.system.exception.ASelectConfigException;
@@ -416,14 +417,14 @@ public class AttributeGatherer
 		String sArpTarget = null;
 		boolean bFound = false;
 
-		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER _htReleasePolicies=" + _htReleasePolicies
-				+ ", TGTContext=" + htTGTContext);
+		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER _htReleasePolicies=" + _htReleasePolicies);
+		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER TGTContext=" + htTGTContext);
 
 		// Release policies available?
-		if (_vReleasePolicies == null)
+		if (_vReleasePolicies == null || _htReleasePolicies == null) {
+			_systemLogger.log(Level.INFO, _MODULE, sMethod, "No release policies available");
 			return null;
-		if (_htReleasePolicies == null)
-			return null;
+		}
 
 		// Get user ID
 		String sUID = (String) htTGTContext.get("uid");
@@ -586,20 +587,32 @@ public class AttributeGatherer
 		}
 
 		// Bauke: Pass Digid Attributes
-		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Add additional attributes");
+		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Add additional attributes from TGT");
 		String fld = (String) htTGTContext.get("uid");
 		if (fld != null)
 			htAttributes.put("uid", fld);
 
 		fld = (String) htTGTContext.get("digid_uid");
-		if (fld != null)
-			htAttributes.put("digid_uid", fld);
+		if (fld != null) htAttributes.put("digid_uid", fld);
 		fld = (String) htTGTContext.get("digid_betrouwbaarheidsniveau");
-		if (fld != null)
-			htAttributes.put("digid_betrouwbaarheidsniveau", fld);
+		if (fld != null) htAttributes.put("digid_betrouwbaarheidsniveau", fld);
 		fld = (String) htTGTContext.get("sel_uid");
-		if (fld != null)
-			htAttributes.put("sel_uid", fld);
+		if (fld != null) htAttributes.put("sel_uid", fld);
+
+		fld = (String) htTGTContext.get("attributes");  // attributes from a remote system
+		if (fld != null) {
+		    Saml11Builder _saml11Builder = new Saml11Builder();
+			HashMap htTgtAttributes = _saml11Builder.deserializeAttributes(fld);
+			_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER \"attributes\"=" + htTgtAttributes);
+			Set keys = htTgtAttributes.keySet();
+			for (Object s : keys) {
+				String sKey = (String)s;
+				Object oValue = htTgtAttributes.get(sKey);
+				if (!(oValue instanceof String))
+					continue;
+	        	htAttributes.put(sKey, (String)oValue);
+			}
+		}
 
 		// Bauke: added additional attributes
 		String sAuthsp = (String) htTGTContext.get("authsp");
@@ -659,7 +672,7 @@ public class AttributeGatherer
 		if (sSmsPhone != null) htAttributes.put("sms_phone", sSmsPhone);
 		// End of additions
 
-		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Try handler "+sAuthsp);  // if present
+		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Try authsp with id: "+sAuthsp);  // if present
 		try {
 			//Object authSPs = _configManager.getSection(null, "authsps");
 			//Object authSPsection = _configManager.getSection(authSPs, "authsp", "id=" + sAuthsp);
@@ -675,7 +688,7 @@ public class AttributeGatherer
 				htAttributes.put("handler", sHandler);
 			}
 			else 
-				_systemLogger.log(Level.INFO, _MODULE, sMethod, "Handler "+sAuthsp+ " not present");
+				_systemLogger.log(Level.INFO, _MODULE, sMethod, "Authsp "+sAuthsp+ " not present");
 		}
 		catch (ASelectConfigException e) {
 			_systemLogger.log(Level.WARNING, _MODULE, sMethod, "Failed to retrieve config for AuthSPs.", e);
