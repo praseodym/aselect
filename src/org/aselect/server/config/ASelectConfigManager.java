@@ -248,6 +248,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 import org.aselect.server.application.ApplicationManager;
@@ -428,6 +429,14 @@ public class ASelectConfigManager extends ConfigManager
 	// use either "consent" or "save_consent"
 	private String _sUserInfoSettings = "";
 
+	// TODO: The Template cache
+	// Key is <template_name>_<lang> where _<lang> is optional (default entry)
+	private ConcurrentHashMap<String,String> hmCachedTemplates = new ConcurrentHashMap<String,String>();
+
+	// TODO: The Error Message cache
+	// Key is errors_<lang> where _<lang> is optional (default entry)
+	private ConcurrentHashMap<Properties,String> hmCachedErrorMessages = new ConcurrentHashMap<Properties,String>();
+
 	/**
 	 * Check if CrossFallback is enabled when user not is found in local
 	 * A-Select UDB.
@@ -586,11 +595,8 @@ public class ASelectConfigManager extends ConfigManager
 		StringBuffer sbErrorFile = new StringBuffer(sWorkingDir);
 		if (!sWorkingDir.endsWith(File.separator))
 			sbErrorFile.append(File.separator);
-		sbErrorFile.append("conf");
-		sbErrorFile.append(File.separator);
-		sbErrorFile.append("errors");
-		sbErrorFile.append(File.separator);
-		sbErrorFile.append("errors.conf");
+		sbErrorFile.append("conf").append(File.separator).append("errors").
+					append(File.separator).append("errors.conf");
 
 		File fErrors = new File(sbErrorFile.toString());
 		if (!fErrors.exists()) {
@@ -954,21 +960,78 @@ public class ASelectConfigManager extends ConfigManager
 	 *            An error code as configured in the errors.conf file
 	 * @return A <code>String</code> representation of the error message
 	 */
-	public String getErrorMessage(String sErrorCode)
+	// TODO: move to ConfigManager, so AuthSP can also use this functionality
+	public String getErrorMessage(String sErrorCode, String sLanguage, String sCountry)
 	{
 		String sMessage = null;
 
+		boolean langDefault = (sLanguage==null || sLanguage.equals(""));
 		try {
-			sMessage = _propErrorMessages.getProperty(sErrorCode).trim();
+			Properties props = (langDefault)? _propErrorMessages: loadErrorFile(sLanguage, sCountry);
+			sMessage = props.getProperty(sErrorCode).trim();
 			if (sMessage == null)
 				return sErrorCode;
 		}
-		catch (Exception e) {
-			// value was probably null so trim() function failed
+		catch (Exception e) {  // value was probably null so trim() function failed
 			return sErrorCode;
 		}
-
 		return sMessage;
+	}
+	
+	// TODO: move to ConfigManager, so AuthSP can also use this functionality
+	public String getErrorMessage(String sErrorCode)
+	{
+		return getErrorMessage(sErrorCode, "", "");
+	}
+	
+	// 20090930, Bauke: added localization
+	// TODO: use a cache for the error.conf files
+	// TODO: move to ConfigManager, so AuthSP can also use this functionality
+	public Properties loadErrorFile(String sLanguage, String sCountry)
+	throws ASelectException
+	{
+		String sMethod = "loadErrorFile";
+		File fTemplate = null;
+		
+		StringBuffer sbErrorFile = new StringBuffer(getWorkingdir());
+		if (!getWorkingdir().endsWith(File.separator))
+			sbErrorFile.append(File.separator);
+		sbErrorFile.append("conf");
+		sbErrorFile.append(File.separator);
+		sbErrorFile.append("errors");
+		sbErrorFile.append(File.separator);
+		sbErrorFile.append("errors").append(".conf");
+	
+		boolean langDefault = (sLanguage==null || sLanguage.equals(""));
+		String sLangExt = (langDefault)? "": "_"+sLanguage;
+		for ( ; ; ) {
+			StringBuffer sbFilePath = new StringBuffer(sbErrorFile);
+			sbFilePath.append(sLangExt).append(".conf");
+
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "HTML " + sbFilePath);
+			fTemplate = new File(sbFilePath.toString());
+			if (fTemplate.exists())
+				break;
+			if (sLangExt.equals("")) {  // already tried the default
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error config file not found: "+sbFilePath.toString());
+				throw new ASelectException(Errors.ERROR_ASELECT_NOT_FOUND);
+			}
+			sLangExt = "";  // try the default file
+		}
+			
+		try {
+			Properties errorProps = new Properties();
+			errorProps.load(new FileInputStream(fTemplate));
+			return errorProps;
+		}
+		catch (FileNotFoundException eFNF) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error loading error messages", eFNF);
+			throw new ASelectException(Errors.ERROR_ASELECT_NOT_FOUND);
+		}
+		catch (IOException eIO) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error loading error messages", eIO);
+			throw new ASelectException(Errors.ERROR_ASELECT_IO);
+		}
 	}
 
 	/**
@@ -989,43 +1052,52 @@ public class ASelectConfigManager extends ConfigManager
 	 * @param sForm
 	 *            The id of the form that must be returned.
 	 * @return A <code>String</code> representation of the requested form.
+	 * @throws ASelectException 
 	 */
-	public String getForm(String sForm)
+	public String getForm(String sForm, String sLanguage, String sCountry)
+	throws ASelectException
 	{
-		_systemLogger.log(Level.INFO, "ASelectConfigManager", "getForm", "Get FORM '" + sForm + "'");
+		_systemLogger.log(Level.INFO, "ASelectConfigManager", "getForm", "Get FORM '" + sForm + "' _"+sLanguage+"_"+sCountry);
+		
 		if (sForm.equals("login"))
-			return _sLoginForm;
+			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
 
-		if (sForm.equals("direct_login"))
-			return _sDirectLoginForm;
+		if (sForm.equals("directlogin"))
+			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
 
 		if (sForm.equals("userinfo"))
-			return _sUserInfoForm;
+			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
 
 		if (sForm.equals("select"))
-			return _sSelectForm;
+			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
 
 		if (sForm.equals("popup"))
-			return _sPopupForm;
+			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
 
 		if (sForm.equals("serverinfo"))
-			return _sServerInfoForm;
+			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
 
 		if (sForm.equals("logout_info"))
-			return _sLogoutInfoForm;
+			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
 
 		if (sForm.equals("session_info"))
-			return _sSessionInfoForm;
+			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
 
 		if (sForm.equals("error"))
-			return _sErrorForm;
+			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
 
 		if (sForm.equals("loggedout"))
-			return _sLoggedOutForm;
+			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
 
-		return "";
+		return "Form '"+sForm+"' not found.";
 	}
 
+	public String getForm(String sForm)
+	throws ASelectException
+	{
+		return getForm(sForm, "", "");
+	}
+		
 	/**
 	 * Updates the supplied template with optional requestor information. <br>
 	 * <br>
@@ -1526,6 +1598,8 @@ public class ASelectConfigManager extends ConfigManager
 	{
 		String sMethod = "loadHTMLTemplates()";
 
+		// 20090930, Bauke:
+		// The _s...Form variables are no longer used, these call still check the presence of the templates
 		try {
 			_sServerInfoForm = loadHTMLTemplate(sWorkingDir, "serverinfo.html");
 			_sUserInfoForm = loadHTMLTemplate(sWorkingDir, "userinfo.html");
@@ -1549,7 +1623,7 @@ public class ASelectConfigManager extends ConfigManager
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}
-
+	
 	/**
 	 * Loads a template from harddisk to the supplied <code>sTemplate</code>
 	 * variable. <br>
@@ -1579,26 +1653,38 @@ public class ASelectConfigManager extends ConfigManager
 	 * @throws ASelectException
 	 *             if loading fails.
 	 */
-	public String loadHTMLTemplate(String sWorkingDir, String sFileName)
-		throws ASelectException
+	// 20090930, Bauke: added localization
+	// TODO: use a cache for the templates
+	// TODO: move to ConfigManager, so AuthSP can also use this functionality
+	public String loadHTMLTemplate(String sUnUsed, String sFileName, String sLanguage, String sCountry)
+	throws ASelectException
 	{
+		String sMethod = "loadHTMLTemplate()";
 		String sLine = null;
 		String sTemplate = "";
+		File fTemplate = null;
 		BufferedReader brIn = null;
-		String sMethod = "loadHTMLTemplate()";
 
+		boolean langDefault = (sLanguage==null || sLanguage.equals(""));
 		try {
-			StringBuffer sbFilePath = new StringBuffer(sWorkingDir);
-			sbFilePath.append(File.separator).append("conf").append(File.separator).append("html").append(
-					File.separator).append(sFileName);
-
-			File fTemplate = new File(sbFilePath.toString());
-			if (!fTemplate.exists()) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Required template not found: "
-						+ sbFilePath.toString());
-				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
+			String sLangExt = (langDefault)? "": "_"+sLanguage;
+			String sHtmlExt = (!sFileName.endsWith(".html"))? ".html": "";
+			for ( ; ; ) {
+				StringBuffer sbFilePath = new StringBuffer(getWorkingdir());
+				sbFilePath.append(File.separator).append("conf").append(File.separator).append("html").append(
+						File.separator).append(sFileName).append(sLangExt).append(sHtmlExt);
+	
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "HTML " + sbFilePath);
+				fTemplate = new File(sbFilePath.toString());
+				if (fTemplate.exists())
+					break;
+				if (sLangExt.equals("")) {  // already tried the default
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Required template not found: "
+							+ sbFilePath.toString());
+					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
+				}
+				sLangExt = "";  // try the default file
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "HTML " + sbFilePath);
 
 			brIn = new BufferedReader(new InputStreamReader(new FileInputStream(fTemplate)));
 			while ((sLine = brIn.readLine()) != null) {
@@ -1629,6 +1715,12 @@ public class ASelectConfigManager extends ConfigManager
 			}
 		}
 		return sTemplate;
+	}
+	
+	public String loadHTMLTemplate(String sWorkingDir, String sFileName)
+	throws ASelectException
+	{
+		return loadHTMLTemplate(sWorkingDir, sFileName, "", "");
 	}
 
 	/**

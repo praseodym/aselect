@@ -137,7 +137,8 @@ import org.aselect.system.sam.agent.SAMResource;
  *
  * @author Alfa & Ariss
  * 
- * 
+ * 20080918, tolk code removed
+ *
  * 14-11-2007 - Changes:
  * - DigiD Gateway integration, support tolk_fromdigid request
  *   pass DigiD attributes in the context
@@ -177,8 +178,9 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 	public void processBrowserRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 		throws ASelectException
 	{
-		if (htServiceRequest.get("aselect_credentials") != null)
+		if (htServiceRequest.get("aselect_credentials") != null) {
 			handleCrossAuthenticateResponse(htServiceRequest, _servletResponse, pwOut);
+		}
 		else
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 	}
@@ -196,44 +198,12 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 	 * @param servletResponse
 	 * @throws ASelectException
 	 */
-	private void handleCrossAuthenticateResponse(HashMap htServiceRequest, HttpServletResponse servletResponse,
-			PrintWriter pwOut)
-		// Bauke: pwOut added
-		throws ASelectException
+	private void handleCrossAuthenticateResponse(HashMap htServiceRequest,
+			HttpServletResponse servletResponse, PrintWriter pwOut)
+	throws ASelectException
 	{
 		String sMethod = "handleCrossAuthenticateResponse()";
 
-		//String sRequest = (String)htServiceRequest.get("request");
-		// Bauke: DigiD Gateway integration
-		// Bauke 20080918, removed
-		/*HashMap htTolkResponse = null;
-		 if (sRequest != null && sRequest.equals("tolk_fromdigid"))
-		 {
-		 tolk.FromDigiD x = new tolk.FromDigiD();
-		 try {
-		 x.init();
-		 }
-		 catch (ServletException e) {
-		 }
-		 _systemLogger.log(Level.INFO,_sModule,"processBrowserRequest", "handleTolkFromDigiD, REQ="+htServiceRequest);
-		 htTolkResponse = x.handleTolkFromDigiD(_servletRequest, _servletResponse, pwOut, htServiceRequest);
-		 _systemLogger.log(Level.INFO,_sModule,"processBrowserRequest", "handleTolkFromDigiD, RESP="+htTolkResponse);
-
-		 // On succes, sets: "local_rid","uid","betrouwbaarheidsniveau","result_code","organization",
-		 //		"laatst_ingelogd","authsp","authsp_level","app_level","app_id"
-		 //				"a-select-server","tgt_exp_time"getRequestOrigin
-		 String sResult = (String)htTolkResponse.get("result_code");
-		 x.destroy();
-		 if (sResult == null) {
-		 throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-		 }
-		 if (!sResult.equals(Errors.ERROR_ASELECT_SUCCESS)) {
-		 throw new ASelectException(sResult);
-		 }
-		 String fld = (String)htTolkResponse.get("local_rid");
-		 htServiceRequest.put("local_rid", (fld != null)? fld: "");
-		 }*/
-		// End of tolk code, fall through
 		try {
 			String sRemoteRid = null;
 			String sLocalRid = null;

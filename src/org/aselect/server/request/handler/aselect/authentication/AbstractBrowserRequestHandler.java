@@ -90,6 +90,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
@@ -130,9 +131,8 @@ import org.aselect.system.utils.Utils;
  * Copyright Gemeente Den Haag (http://www.denhaag.nl) and UMC Nijmegen (http://www.umcn.nl)
  * 
  */
-public abstract class AbstractBrowserRequestHandler
-	extends BasicRequestHandler
-	implements IAuthnRequestHandler
+public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler
+implements IAuthnRequestHandler
 {
 	/** The module name. Can be overwritten in sub classes */
 	protected String _sModule = "AbstractBrowserRequestHandler";
@@ -156,6 +156,9 @@ public abstract class AbstractBrowserRequestHandler
 
 	/** The origanisation */
 	protected String _sMyOrg;
+	
+	protected String _sUserLanguage = "";
+	protected String _sUserCountry = "";
 
 	/**
 	 * Construct an instance.
@@ -172,16 +175,24 @@ public abstract class AbstractBrowserRequestHandler
 	public AbstractBrowserRequestHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			String sMyServerId, String sMyOrg)
 	{
+		String sMethod = "AbstractBrowserRequestHandler";
+		
+		_systemLogger = ASelectSystemLogger.getHandle();
 		_configManager = ASelectConfigManager.getHandle();
 		_sessionManager = SessionManager.getHandle();
 		_tgtManager = TGTManager.getHandle();
-		_systemLogger = ASelectSystemLogger.getHandle();
 
 		_sMyServerId = sMyServerId;
 		_sMyOrg = sMyOrg;
 
 		_servletRequest = servletRequest;
 		_servletResponse = servletResponse;
+
+		// Localization
+		Locale loc = servletRequest.getLocale();
+		_sUserLanguage = loc.getLanguage();
+		_sUserCountry = loc.getCountry();
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "Locale: _"+_sUserLanguage+"_"+_sUserCountry);
 	}
 
 	/**
@@ -265,12 +276,13 @@ public abstract class AbstractBrowserRequestHandler
 	protected void showErrorPage(String sErrorCode, HashMap htServiceRequest, PrintWriter pwOut)
 	{
 		String sMethod = "showErrorPage";
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "FORM[error] " + sErrorCode + ":"
-				+ _configManager.getErrorMessage(sErrorCode));
+		
+		String sErrorMessage = _configManager.getErrorMessage(sErrorCode, _sUserLanguage, _sUserCountry);
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "FORM[error] "+sErrorCode+":"+sErrorMessage);
 		try {
-			String sErrorForm = _configManager.getForm("error");
+			String sErrorForm = _configManager.getForm("error", _sUserLanguage, _sUserCountry);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error]", sErrorCode);
-			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", _configManager.getErrorMessage(sErrorCode));
+			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
 
 			String sRid = (String) htServiceRequest.get("rid");
 			if (sRid != null) {
@@ -279,13 +291,6 @@ public abstract class AbstractBrowserRequestHandler
 					sErrorForm = _configManager.updateTemplate(sErrorForm, _sessionManager.getSessionContext(sRid));
 			}
 			
-			/* 20090303, Bauke Removed duplicate code:
-			HashMap htSession = null;
-			if (sRid != null)
-				htSession = _sessionManager.getSessionContext(sRid);
-
-			sErrorForm = _configManager.updateTemplate(sErrorForm, htSession);
-			*/
 			pwOut.println(sErrorForm);
 		}
 		catch (Exception e) {

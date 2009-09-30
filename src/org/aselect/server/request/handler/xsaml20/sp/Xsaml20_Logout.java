@@ -3,6 +3,7 @@ package org.aselect.server.request.handler.xsaml20.sp;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -58,10 +59,10 @@ public class Xsaml20_Logout extends Saml20_BaseHandler
 		_sReturnUrl = _configManager.getParam(aselect, "redirect_url");
 		_sFriendlyName = _configManager.getParam(aselect, "organization_friendly_name");
 
-	    _sLogoutResultPage = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "logoutresult.html");    
-	    _sLogoutResultPage = org.aselect.system.utils.Utils.replaceString(_sLogoutResultPage, "[version]", Version.getVersion());
-	    // Was: [organization_friendly_name], replaced 20081104
-	    _sLogoutResultPage = org.aselect.system.utils.Utils.replaceString(_sLogoutResultPage, "[organization_friendly]", _sFriendlyName);
+//	    _sLogoutResultPage = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "logoutresult.html");    
+//	    _sLogoutResultPage = org.aselect.system.utils.Utils.replaceString(_sLogoutResultPage, "[version]", Version.getVersion());
+//	    // Was: [organization_friendly_name], replaced 20081104
+//	    _sLogoutResultPage = org.aselect.system.utils.Utils.replaceString(_sLogoutResultPage, "[organization_friendly]", _sFriendlyName);
 	}
 
 	/**
@@ -83,6 +84,12 @@ public class Xsaml20_Logout extends Saml20_BaseHandler
 
 		String paramRequest = request.getParameter("request");
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "request="+paramRequest);
+		// Localization
+		Locale loc = request.getLocale();
+		_sUserLanguage = loc.getLanguage();
+		_sUserCountry = loc.getCountry();
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "Locale: _"+_sUserLanguage+"_"+_sUserCountry);
+
 		if ("kill_tgt".equals(paramRequest)) {
 			handleKillTGTRequest(request, response);
 		}
@@ -148,6 +155,10 @@ public class Xsaml20_Logout extends Saml20_BaseHandler
 			else {
 				PrintWriter pwOut = null;
 				try {					
+				    _sLogoutResultPage = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "logoutresult", _sUserLanguage, _sUserCountry);    
+				    _sLogoutResultPage = org.aselect.system.utils.Utils.replaceString(_sLogoutResultPage, "[version]", Version.getVersion());
+				    // Was: [organization_friendly_name], replaced 20081104
+				    _sLogoutResultPage = org.aselect.system.utils.Utils.replaceString(_sLogoutResultPage, "[organization_friendly]", _sFriendlyName);
 					String sHtmlPage = Utils.replaceString(_sLogoutResultPage, "[result_code]", Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT);
 					pwOut = response.getWriter();
 				    response.setContentType("text/html");

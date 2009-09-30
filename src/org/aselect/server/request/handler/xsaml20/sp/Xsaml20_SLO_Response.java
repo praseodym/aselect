@@ -86,9 +86,9 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 
-	    _sLogoutResultPage = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "logoutresult.html");    
-	    _sLogoutResultPage = Utils.replaceString(_sLogoutResultPage, "[version]", Version.getVersion());
-	    _sLogoutResultPage = Utils.replaceString(_sLogoutResultPage, "[organization_friendly]", _sFriendlyName);
+	//    _sLogoutResultPage = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "logoutresult.html");    
+	//   _sLogoutResultPage = Utils.replaceString(_sLogoutResultPage, "[version]", Version.getVersion());
+	//    _sLogoutResultPage = Utils.replaceString(_sLogoutResultPage, "[organization_friendly]", _sFriendlyName);
 	}
 
 	/**
@@ -206,8 +206,8 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 		}
 	}
 
-	private void handleLogoutResponse(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
-			LogoutResponse response)
+	private void handleLogoutResponse(HttpServletRequest httpRequest, HttpServletResponse httpResponse, LogoutResponse response)
+	throws ASelectException
 	{
 		String sMethod = "handleLogoutResponse";
 		String statusCode = response.getStatus().getStatusCode().getValue();
@@ -219,12 +219,6 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 		else {
 			resultCode = Errors.ERROR_ASELECT_INTERNAL_ERROR;
 		}
-
-		// Standard A-Select mechanisme is here:
-		// But it needs a TGT to present its info
-		//String sLoggedOutForm = _configManager.getForm("loggedout");
-        //sLoggedOutForm = _configManager.updateTemplate(sLoggedOutForm, htTGTContext);
-        //pwOut.println(sLoggedOutForm);
 
 		String sRelayState = httpRequest.getParameter("RelayState");
 		if (sRelayState != null && !"".equals(sRelayState)) {
@@ -241,6 +235,9 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 		else {
 			PrintWriter pwOut = null;
 			try {
+			    _sLogoutResultPage = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "logoutresult", _sUserLanguage, _sUserCountry);    
+			    _sLogoutResultPage = Utils.replaceString(_sLogoutResultPage, "[version]", Version.getVersion());
+			    _sLogoutResultPage = Utils.replaceString(_sLogoutResultPage, "[organization_friendly]", _sFriendlyName);
 				String sHtmlPage = Utils.replaceString(_sLogoutResultPage, "[result_code]", resultCode);
 				pwOut = httpResponse.getWriter();
 			    httpResponse.setContentType("text/html");

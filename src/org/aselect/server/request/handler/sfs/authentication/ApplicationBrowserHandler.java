@@ -632,7 +632,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					// The userid is already known from the TGT
 					htServiceRequest.put("user_id", sUid);
 					//showDirectLoginForm(htServiceRequest,pwOut);
-					oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId);
+					oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId, "", "");
 					return;
 				}
 			}
@@ -645,10 +645,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			if (sForcedUid != null) {
 				htServiceRequest.put("user_id", sForcedUid);
 				//showDirectLoginForm(htServiceRequest,pwOut);
-				oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId);
+				oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId, "", "");
 				return;
 			}
-			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId);
+			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId, "", "");
 
 			//Store changed session, for JDBC Storage Handler
 			if (!_sessionManager.writeSession(sRid, _htSessionContext)) {

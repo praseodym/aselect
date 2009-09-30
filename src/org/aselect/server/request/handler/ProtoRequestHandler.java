@@ -81,6 +81,10 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
     protected Vector _vIdPUrls;
     protected HashMap _htIdPs;
 
+    // Localization
+    protected String _sUserLanguage = "";
+	protected String _sUserCountry = "";
+
     public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
@@ -439,13 +443,13 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
     protected void showErrorPage(String sErrorCode, HashMap htSessionContext, PrintWriter pwOut)
     {
         String sMethod = "showErrorPage()";
-    	_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM[error] "+sErrorCode+":"+
-				_configManager.getErrorMessage(sErrorCode));
+        
+        String sErrorMessage = _configManager.getErrorMessage(sErrorCode, _sUserLanguage, _sUserCountry);
+    	_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM[error] "+sErrorCode+":"+sErrorMessage);
         try {
-            String sErrorForm = _configManager.getForm("error");
+            String sErrorForm = _configManager.getForm("error", _sUserLanguage, _sUserCountry);
             sErrorForm = Utils.replaceString(sErrorForm, "[error]", sErrorCode);
-            sErrorForm = Utils.replaceString(sErrorForm, "[error_message]",
-            				_configManager.getErrorMessage(sErrorCode));
+            sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
             
             sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext);           
             pwOut.println(sErrorForm);        
@@ -1079,67 +1083,13 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 
 		return tmp.toString();
 	}
-	
-	// Bauke: copied from AselectConfigManager (is private there), also present in AuthSPConfigManager
-	// NO LONGER USED 20080623
-	//
-	public static String xxx_loadHTMLTemplate(ASelectSystemLogger systemLogger, String sWorkingDir, String sFileName)
-		throws ASelectException
-	{
-		String sLine = null;
-		String sTemplate = "";
-		BufferedReader brIn = null;
-		String sMethod = "loadHTMLTemplate()";
-
-		try {
-			StringBuffer sbFilePath = new StringBuffer(sWorkingDir);
-			sbFilePath.append(File.separator).append("conf").append(File.separator).
-						append("html").append(File.separator).append(sFileName);
-
-			File fTemplate = new File(sbFilePath.toString());
-			if (!fTemplate.exists()) {
-				systemLogger.log(Level.WARNING, MODULE, sMethod, "Required template not found: "
-						+ sbFilePath.toString());
-
-				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
-			}
-			systemLogger.log(Level.INFO, MODULE, sMethod, "HTML " + sbFilePath);
-
-			brIn = new BufferedReader(new InputStreamReader(new FileInputStream(fTemplate)));
-
-			while ((sLine = brIn.readLine()) != null) {
-				sTemplate += sLine + "\n";
-			}
-		}
-		catch (ASelectException e) {
-			throw e;
-		}
-		catch (Exception e) {
-			StringBuffer sbError = new StringBuffer("Could not load '");
-			sbError.append(sFileName).append("' HTML template.");
-			systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-		}
-		finally {
-			try {
-				if (brIn != null)
-					brIn.close();
-			}
-			catch (Exception e) {
-				StringBuffer sbError = new StringBuffer("Could not close '");
-				sbError.append(sFileName).append("' FileInputStream");
-				systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
-			}
-		}
-		return sTemplate;
-	}
 
 	public String readHttpPostData(HttpServletRequest request)
 	throws ASelectException
 	{
 		String _sMethod = "readHttpPostData";
 		try {
-			/*
+			/* debugging:
 			ServletInputStream input = request.getInputStream();
 			BufferedInputStream bufInput = new BufferedInputStream(input);
 			char b = (char) bufInput.read();

@@ -107,7 +107,9 @@ public interface IAuthSPDirectLoginProtocolHandler
      * @param sServerId
      * @throws ASelectException
      */
-    public void handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut, String sServerId) throws ASelectException;
+    public void handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse,
+    		PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
+    throws ASelectException;
 
 }
 

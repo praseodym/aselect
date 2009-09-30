@@ -49,10 +49,7 @@
 
 package org.aselect.server.cross.selectorhandler;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Set;
@@ -233,12 +230,13 @@ public class DefaultSelectorHandler implements ISelectorHandler
 		String sWorkingdir = new StringBuffer(_configManager.getWorkingdir()).append(File.separator).append("conf")
 				.append(File.separator).append("html").append(File.separator).toString();
 
-		_sHTMLSelectForm = loadHTMLTemplate(sWorkingdir + "defaultcrossselect.html");
+		_sHTMLSelectForm = _configManager.loadHTMLTemplate(sWorkingdir, "defaultcrossselect");
 
 		_sHTMLSelectForm = Utils.replaceString(_sHTMLSelectForm, "[version]", Version.getVersion());
 		_sHTMLSelectForm = Utils.replaceString(_sHTMLSelectForm, "[organization_friendly]", _sFriendlyName);
 	}
 
+/* 20090930, Bauke: use _configManager version
 	private String loadHTMLTemplate(String sLocation)
 		throws ASelectException
 	{
@@ -271,5 +269,5 @@ public class DefaultSelectorHandler implements ISelectorHandler
 			}
 		}
 		return sTemplate;
-	}
+	}*/
 }

@@ -76,6 +76,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletResponse;
@@ -185,6 +186,10 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 
 	/** Prefix in errors.conf for LDAP specific errors */
 	private final static String ERROR_LDAP_PREFIX = "LDAP";
+
+	// Localization
+    protected String _sUserLanguage = "";
+	protected String _sUserCountry = "";
 
 	/**
 	 * Initializes the <code>Ldap</code> AuthSP handler.
@@ -527,11 +532,16 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	 * @see org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler#handleDirectLoginRequest(java.util.HashMap, javax.servlet.http.HttpServletResponse, java.io.PrintWriter, java.lang.String)
 	 */
 	public void handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse,
-			PrintWriter pwOut, String sServerId)
+			PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
 		throws ASelectException
 	{
 		String sMethod = "handleDirectLoginRequest()";
 		String sRequest = (String) htServiceRequest.get("request");
+		
+		// Localization
+		_sUserLanguage = sLanguage;
+		_sUserCountry = sCountry;
+
 		if (sRequest.equalsIgnoreCase("direct_login1")) {
 			handleDirectLogin1(htServiceRequest, pwOut, sServerId);
 		}
@@ -611,9 +621,10 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	 */
 	private void handleDirectLogin2(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut,
 			String sServerId)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleDirectLogin2()";
+		
 		try {
 			String sRid = null;
 			String sUid = null;
@@ -695,9 +706,9 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 						sOrg, (String)htSessionContext.get("app_id"), "denied"
 				});
 
-				String sErrorTemplate = _configManager.getForm("error");
+				String sErrorTemplate = _configManager.getForm("error", _sUserLanguage, _sUserCountry);
 				sErrorTemplate = Utils.replaceString(sErrorTemplate, "[error]", ERROR_LDAP_ACCESS_DENIED);
-				String sErrorMessage = _configManager.getErrorMessage(ERROR_LDAP_PREFIX + ERROR_LDAP_ACCESS_DENIED);
+				String sErrorMessage = _configManager.getErrorMessage(ERROR_LDAP_PREFIX + ERROR_LDAP_ACCESS_DENIED, _sUserLanguage, _sUserCountry);
 				sErrorTemplate = Utils.replaceString(sErrorTemplate, "[error_message]", sErrorMessage);
 				sErrorTemplate = _configManager.updateTemplate(sErrorTemplate, htSessionContext);
 				pwOut.println(sErrorTemplate);
@@ -705,7 +716,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			else {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error response received: '" + sResponse
 						+ "' from DirectAuthSP: '" + sAuthSPId + "'.");
-				String sErrorMessage = _configManager.getErrorMessage(ERROR_LDAP_PREFIX	+ ERROR_LDAP_INVALID_CREDENTIALS);
+				String sErrorMessage = _configManager.getErrorMessage(ERROR_LDAP_PREFIX	+ ERROR_LDAP_INVALID_CREDENTIALS, _sUserLanguage, _sUserCountry);
 				htServiceRequest.put("error_message", sErrorMessage);
 				showDirectLoginForm(htServiceRequest, pwOut, sServerId);
 			}
@@ -749,7 +760,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 		String sMethod = "showDirectLoginForm()";
 		try {
 
-			String sDirectLoginForm = _configManager.getForm("direct_login");
+			String sDirectLoginForm = _configManager.getForm("directlogin", _sUserLanguage, _sUserCountry);
 			if (sDirectLoginForm == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "template file 'directlogin.html' not found");
 				throw new ASelectException(Errors.ERROR_ASELECT_NOT_FOUND);
@@ -774,7 +785,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			if (sErrorMessage == null) {
 				sErrorMessage = "";
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM direct_login, sServerId=" + sServerId);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM directlogin, sServerId=" + sServerId);
 
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[rid]", sRid);
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[aselect_url]", (String) htServiceRequest.get("my_url"));

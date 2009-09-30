@@ -149,7 +149,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 		final String sMethod = "showLogoutInfo";
 		
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "redirect_url="+sRedirectUrl);
-		String sInfoForm = _configManager.getForm("logout_info");
+		String sInfoForm = _configManager.getForm("logout_info", _sUserLanguage, _sUserCountry);
 		sInfoForm = Utils.replaceString(sInfoForm, "[aselect_url]", sRedirectUrl);
 		sInfoForm = Utils.replaceString(sInfoForm, "[SAMLRequest]", httpRequest.getParameter("SAMLRequest"));
 		sInfoForm = Utils.replaceString(sInfoForm, "[RelayState]", httpRequest.getParameter("RelayState"));

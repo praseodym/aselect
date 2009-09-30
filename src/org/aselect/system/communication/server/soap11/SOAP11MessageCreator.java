@@ -738,29 +738,23 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 
 		//check envelope tag name
 		String xEnvelopeName = elRoot.getLocalName();
-		if (!xEnvelopeName.equals(SOAPConstants.ELEM_ENVELOPE)) //invalid
-		// envelop
-		{
+		if (!xEnvelopeName.equals(SOAPConstants.ELEM_ENVELOPE)) {  //invalid envelop
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Version Mismatch, invalid envelope tag name.");
 			String xDetail = null; //no detail for VerionMismatch
 			throw new ASOAPException(ASOAPException.VERSION_MISMATCH, "Version Mismatch", xDetail);
 		}
 		//validate Body tag
 		String nameSpace = elRoot.getNamespaceURI();
-		if (nameSpace != null) //if encoding schema is specified, then use it.
-		{
+		if (nameSpace != null) {  //if encoding schema is specified, then use it.
 			_sInputMessageSchema = nameSpace;
 			_elInputBody = getChildElementNS(elRoot, SOAPConstants.ELEM_BODY, _sInputMessageSchema);
 		}
-		else
-		//no namespace is used
-		{
+		else {  //no namespace is used
 			_elInputBody = getChildElement(elRoot, SOAPConstants.ELEM_BODY);
 		}
 		if (_elInputBody == null) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Bad request, No Body element found.");
-			throw new ASOAPException(ASOAPException.CLIENT, "Bad request",
-					"SOAP message must contain mandatory Body element.");
+			throw new ASOAPException(ASOAPException.CLIENT, "Bad request", "SOAP message must contain mandatory Body element.");
 		}
 		//retrieve RPCBody
 		_elInputRPCBody = getChildElementNS(_elInputBody, _sMethodName, _sMethodEnv);

@@ -261,20 +261,17 @@ public class RegexSelectorHandler implements ISelectorHandler
     }
 
     //  Private function which loads the HTML Templates
-    private void loadHTMLTemplates() throws ASelectException
-    {
-	    String sWorkingdir = new StringBuffer(_configManager.getWorkingdir())
-    	.append(File.separator).append("conf").append(File.separator)
-    	.append("html").append(File.separator).toString();
+    private void loadHTMLTemplates()
+		throws ASelectException
+	{
+		String sWorkingdir = new StringBuffer(_configManager.getWorkingdir()).append(File.separator).
+			append("conf").append(File.separator).append("html").append(File.separator).toString();
 
-	    _sCrossRegexSelectorPage = loadHTMLTemplate(sWorkingdir
-      + "regexselect.html");
-    
-	    _sCrossRegexSelectorPage = Utils.replaceString(_sCrossRegexSelectorPage, "[version]", Version
-        .getVersion());
-	    _sCrossRegexSelectorPage = Utils.replaceString(_sCrossRegexSelectorPage,
-        "[organization_friendly]", _sFriendlyName);
-    }
+		_sCrossRegexSelectorPage = loadHTMLTemplate(sWorkingdir + "regexselect.html");
+
+		_sCrossRegexSelectorPage = Utils.replaceString(_sCrossRegexSelectorPage, "[version]", Version.getVersion());
+		_sCrossRegexSelectorPage = Utils.replaceString(_sCrossRegexSelectorPage, "[organization_friendly]", _sFriendlyName);
+	}
     
     // Private funtion which load the HTML template on location sLocation.
 	private String loadHTMLTemplate(String sLocation)

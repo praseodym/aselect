@@ -611,4 +611,16 @@ public class Utils
 		}
 		return oLogSection;
 	}
+	
+	// Localization
+	public static void transferLocalization(HashMap _htSessionContext, String _sUserLanguage, String _sUserCountry)
+	{
+		String sloc = (String)_htSessionContext.get("language");
+		if ((sloc==null || sloc.equals("")) && _sUserLanguage!=null && !_sUserLanguage.equals(""))
+			_htSessionContext.put("language", _sUserLanguage);
+		sloc = (String)_htSessionContext.get("country");
+		if ((sloc==null || sloc.equals("")) && _sUserCountry!=null && !_sUserCountry.equals(""))
+			_htSessionContext.put("country", _sUserCountry);
+	}
+
 }

@@ -370,7 +370,7 @@ import org.aselect.system.utils.Utils;
  */
 public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 {
-	private HashMap _htSessionContext;
+	private HashMap _htSessionContext = null;
 	private ApplicationManager _applicationManager;
 	private CrossASelectManager _crossASelectManager;
 	private AuthSPHandlerManager _authspHandlerManager;
@@ -390,7 +390,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	{
 		super(servletRequest, servletResponse, sMyServerId, sMyOrg);
 		_sModule = "ApplicationBrowserHandler";
-		_systemLogger.log(Level.INFO, _sModule, "ApplicationBrowserHandler", "== create ==");
+		_systemLogger.log(Level.INFO, _sModule, _sModule, "== create == language="+_sUserLanguage);
 		_applicationManager = ApplicationManager.getHandle();
 		_authspHandlerManager = AuthSPHandlerManager.getHandle();
 		_crossASelectManager = CrossASelectManager.getHandle();
@@ -405,13 +405,19 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	public void processBrowserRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 	throws ASelectException
 	{
-		String sRequest;
-		String sRid;
 		String sMethod = "processBrowserRequest";
 
-		sRequest = (String) htServiceRequest.get("request");
+		String sRequest = (String) htServiceRequest.get("request");
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplBrowREQ sRequest=" + sRequest +
-				", htServiceRequest=" + htServiceRequest);
+				", htServiceRequest=" + htServiceRequest + " language="+_sUserLanguage);
+
+		// Bauke, 20090929: added localization, do this asap.
+		String sRid = (String) htServiceRequest.get("rid");
+		if (sRid != null) {
+			_htSessionContext = _sessionManager.getSessionContext(sRid);
+			Utils.transferLocalization(_htSessionContext, _sUserLanguage, _sUserCountry);
+		}
+
 		if (sRequest == null) {
 			// Show info page if nothing else to do
 			String sUrl = (String) htServiceRequest.get("my_url");
@@ -420,7 +426,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			if (htServiceRequest.containsKey("aselect_credentials_uid"))
 				showUserInfo(htServiceRequest, _servletResponse);
 			else {
-				String sServerInfoForm = _configManager.getForm("serverinfo");
+				String sServerInfoForm = _configManager.getForm("serverinfo", _sUserLanguage, _sUserCountry);
 				sServerInfoForm = Utils.replaceString(sServerInfoForm, "[message]", " ");
 
 				try {
@@ -443,16 +449,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 		else {
 			// Precondition
-			sRid = (String) htServiceRequest.get("rid");
 			if (sRid == null) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing RID parameter");
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 
 			// Precondition
-			// If a valid session is found, it will be valid during the whole
-			// servlet request handling.
-			_htSessionContext = _sessionManager.getSessionContext(sRid);
+			// If a valid session is found, it will be valid during the whole servlet request handling.
 			if (_htSessionContext == null) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid RID: " + sRid);
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
@@ -532,7 +535,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		String sMethod = "handleDirectLogin()";
 		String sRid = null;
 
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "DirectLogin");
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "====");
 		try {
 			sRid = (String)htServiceRequest.get("rid");
 			String sAuthSPId = (String) _htSessionContext.get("direct_authsp");
@@ -623,7 +626,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					// The userid is already known from the TGT
 					htServiceRequest.put("user_id", sUid);
 					//showDirectLoginForm(htServiceRequest,pwOut);
-					oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId);
+					oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId, _sUserLanguage, _sUserCountry);
 					return;
 				}
 			}
@@ -637,7 +640,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				htServiceRequest.put("user_id", sForcedUid);
 				//showDirectLoginForm(htServiceRequest,pwOut);
 			}
-			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId);
+			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId, _sUserLanguage, _sUserCountry);
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -833,7 +836,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Show login (user_id) form
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "show LOGIN form");
-			String sLoginForm = _configManager.getForm("login");
+			String sLoginForm = _configManager.getForm("login", _sUserLanguage, _sUserCountry);
 			sLoginForm = Utils.replaceString(sLoginForm, "[rid]", sRid);
 			sLoginForm = Utils.replaceString(sLoginForm, "[aselect_url]", (String) htServiceRequest.get("my_url"));
 			sLoginForm = Utils.replaceString(sLoginForm, "[a-select-server]", _sMyServerId);
@@ -865,7 +868,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		long now = new Date().getTime();
 		
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "redirect url="+sRedirectUrl);    
-		String sInfoForm = _configManager.getForm("session_info");
+		String sInfoForm = _configManager.getForm("session_info", _sUserLanguage, _sUserCountry);
 		sInfoForm = Utils.replaceString(sInfoForm, "[aselect_url]", sRedirectUrl);
 		sInfoForm = Utils.replaceString(sInfoForm, "[a-select-server]", _sMyServerId);
 		sInfoForm = Utils.replaceString(sInfoForm, "[rid]", sRid);
@@ -983,7 +986,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 		// Ask for consent by presenting the userconsent.html form
 		try {
-			_sConsentForm = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "userconsent.html");
+			_sConsentForm = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "userconsent", _sUserLanguage, _sUserCountry);
 			_sConsentForm = Utils.replaceString(_sConsentForm, "[version]", Version.getVersion());
 			_sConsentForm = Utils.replaceString(_sConsentForm, "[organization_friendly]", sFriendlyName);
 			_sConsentForm = Utils.replaceString(_sConsentForm, "[request]", "login1");
@@ -1148,7 +1151,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 			// end only 1 valid authsp
 
-			String sSelectForm = _configManager.getForm("select");
+			String sSelectForm = _configManager.getForm("select", _sUserLanguage, _sUserCountry);
 			sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
 			sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", _sMyServerId);
 			sSelectForm = Utils.replaceString(sSelectForm, "[user_id]", sUid);
@@ -1265,7 +1268,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				}
 
 				// must use popup so show the popup page
-				String sPopupForm = _configManager.getForm("popup");
+				String sPopupForm = _configManager.getForm("popup", _sUserLanguage, _sUserCountry);
 				sPopupForm = Utils.replaceString(sPopupForm, "[authsp_url]", sRedirectUrl);
 				String strFriendlyName = _configManager.getParam(authSPsection, "friendly_name");
 				sPopupForm = Utils.replaceString(sPopupForm, "[authsp]", strFriendlyName);
@@ -1740,7 +1743,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		throws ASelectException
 	{
 		String sMethod = "handleLogout";
-		String sLoggedOutForm = _configManager.getForm("loggedout");
+		String sLoggedOutForm = _configManager.getForm("loggedout", _sUserLanguage, _sUserCountry);
 
 		try {
 			String sTgt = (String) htServiceRequest.get("aselect_credentials_tgt");
@@ -2181,7 +2184,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			String sMyUrl = (String) htServiceRequest.get("my_url");
 			String sTgt = (String) htServiceRequest.get("aselect_credentials_tgt");
 
-			String sUserInfoForm = _configManager.getForm("userinfo");
+			String sUserInfoForm = _configManager.getForm("userinfo", _sUserLanguage, _sUserCountry);
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[uid]", sUserId);
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[a-select-server]", _sMyServerId);
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[aselect_url]", sMyUrl);

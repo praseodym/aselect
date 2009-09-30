@@ -23,13 +23,9 @@ import org.aselect.system.utils.Tools;
  */
 public class MollieHttpSmsSender implements SmsSender
 {
-
 	private final String user;
-
 	private final String password;
-
 	private final URL url;
-
 	private final String gateway;
 
 	/**
@@ -64,8 +60,7 @@ public class MollieHttpSmsSender implements SmsSender
 	    AuthSPSystemLogger _systemLogger;
 		_systemLogger = AuthSPSystemLogger.getHandle();
 
-		try
-		{
+		try {
 			final String EQUAL_SIGN = "=";
 			final String AMPERSAND = "&";
 			// data.append(this.url);
@@ -111,30 +106,28 @@ public class MollieHttpSmsSender implements SmsSender
 			
 			// Bauke: adapted to latest protocol
 			String sResult, sResultCode = "";
-	    	while ((line = rd.readLine()) != null) {
-	    		System.out.println(line);
-	    		sResult = Tools.extractFromXml(line, "resultcode", true);
-	    		if (sResult != null) {
-	    			sResultCode = sResult;
-	    			break;
-	    		}
-	    	}
-	    	_systemLogger.log(Level.INFO, "Mollie", "sendSms", "resultcode="+sResultCode);
-	    	if (!sResultCode.equals("10")) {
+			while ((line = rd.readLine()) != null) {
+				System.out.println(line);
+				sResult = Tools.extractFromXml(line, "resultcode", true);
+				if (sResult != null) {
+					sResultCode = sResult;
+					break;
+				}
+			}
+			_systemLogger.log(Level.INFO, "Mollie", "sendSms", "resultcode="+sResultCode);
+			if (!sResultCode.equals("10")) {
 				throw new SmsException("Mollie could not send sms, returncode from Mollie: " + sResultCode + ".");
-	    	}
-
-	    	returncode++; // 19
+			}
+			
+			returncode++; // 19
 			wr.close();
 			rd.close();
 		}
-		catch (NumberFormatException e)
-		{
-			throw new SmsException("Sending SMS, using \'" + this.url.toString() + ", data=" + data.toString() + "\' failed due to number format exception!" + e.getMessage(), e);
+		catch (NumberFormatException e) {
+			throw new SmsException("Sending SMS, using \'" + this.url.toString() + "\' failed due to number format exception! " + e.getMessage(), e);
 		}
-		catch (Exception e)
-		{
-			throw new SmsException("Sending SMS, using \'" + this.url.toString() + ", data=" + data.toString() + "\' failed (return code=" + returncode + ")! " + e.getMessage(), e);
+		catch (Exception e) {
+			throw new SmsException("Sending SMS, using \'" + this.url.toString() + "\' failed (progress=" + returncode + ")! " + e.getMessage(), e);
 		}
 		return returncode;
 	}

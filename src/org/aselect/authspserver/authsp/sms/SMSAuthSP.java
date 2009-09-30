@@ -320,10 +320,8 @@ public class SMSAuthSP extends ASelectHttpServlet
 
 			// _oSmsSender = new MollieHttpSmsSender(new URL(_sSmsUrl),
 			// _sSmsUser, _sSmsPassword); // RH, 20080729, o
-			_oSmsSender = new MollieHttpSmsSender(new URL(_sSmsUrl), _sSmsUser, _sSmsPassword, _sSmsGateway); // RH,
-																												// 20080729,
-																												// n
-
+			_oSmsSender = new MollieHttpSmsSender(new URL(_sSmsUrl), _sSmsUser, _sSmsPassword, _sSmsGateway);
+			// RH, 20080729
 			sbInfo = new StringBuffer("Successfully started ");
 			sbInfo.append(VERSION).append(".");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());

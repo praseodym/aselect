@@ -418,8 +418,7 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 			parms.add("organization");
 			parms.add("app_id");
 			parms.add("authsp");
-			// HashMap ht = getAttributes2(tgtContext , null, con, parms ,
-			// query);
+			// HashMap ht = getAttributes2(tgtContext , null, con, parms, query);
 			HashMap ht = new HashMap();
 			Set keys = ht.keySet();
 			for (Object s : keys) {

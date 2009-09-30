@@ -121,9 +121,8 @@ import org.aselect.system.utils.BASE64Encoder;
  * @author Alfa & Ariss
  * 
  */
-public abstract class AbstractAPIRequestHandler
-	extends BasicRequestHandler
-	implements IAuthnRequestHandler
+public abstract class AbstractAPIRequestHandler extends BasicRequestHandler
+implements IAuthnRequestHandler
 {
 	/** The module name. Can be overwritten in sub classes */
 	protected String _sModule = "AbstractAPIRequestHandler";
