@@ -40,6 +40,7 @@ import org.aselect.server.session.SessionManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAuthSPException;
 import org.aselect.system.exception.ASelectConfigException;
+import org.aselect.system.utils.BASE64Decoder;
 
 /**
  * The PKI AuthSP Handler.
@@ -329,7 +330,7 @@ public class PKI implements IAuthSPProtocolHandler
 	 */
 	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse)
 	{
-		String sMethod = "verifyAuthenticationRequest(): ";
+		String sMethod = "verifyAuthenticationResponse";
 		StringBuffer sbTemp;
 		_systemLogger.log(Level.INFO, sMethod + " htAuthspResponse=" + htAuthspResponse);
 
@@ -359,7 +360,7 @@ public class PKI implements IAuthSPProtocolHandler
 			sAsUrl = sbTemp.toString();
 			HashMap htSessionContext = _oSessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
-				//Session is expired or never exists.
+				//Session is expired or never existed.
 				sbTemp = new StringBuffer(sMethod);
 				sbTemp.append("session for RID: " + sRid + " is invalid.");
 				htResponse.put("result", Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
@@ -370,21 +371,19 @@ public class PKI implements IAuthSPProtocolHandler
 			String sOrg = (String)htSessionContext.get("organization");
 
 			sSignature = URLDecoder.decode(sSignature, "UTF-8");
-
 			sbTemp = new StringBuffer(sRid);
-			sbTemp.append(sAsUrl);
-			sbTemp.append(sResultCode);
-			sbTemp.append(sAsId);
-			if (sSubjectDN != null)
-				sbTemp.append(sSubjectDN); // Bauke: added
-			if (sIssuerDN != null)
-				sbTemp.append(sIssuerDN); // Bauke: added
-			if (sSubjectId != null)
-				sbTemp.append(sSubjectId); // Bauke: added
-
+			sbTemp.append(sAsUrl).append(sResultCode).append(sAsId);
+			
+			_systemLogger.log(Level.INFO, "Coded sSubjectDN="+sSubjectDN);
+            if (sSubjectDN != null)	sbTemp.append(sSubjectDN); // Bauke: added
+            if (sIssuerDN != null) sbTemp.append(sIssuerDN); // Bauke: added
+			if (sSubjectId != null) sbTemp.append(sSubjectId); // Bauke: added
+			
 			boolean bVerifies = false;
-			bVerifies = CryptoEngine.getHandle().verifySignature(_sAuthsp,
-					URLDecoder.decode(sbTemp.toString(), "UTF-8"), sSignature);
+			_systemLogger.log(Level.INFO, "Verify["+sbTemp+"]");
+			bVerifies = CryptoEngine.getHandle().verifySignature(_sAuthsp, sbTemp.toString(), sSignature);
+//			bVerifies = CryptoEngine.getHandle().verifySignature(_sAuthsp,
+//					URLDecoder.decode(sbTemp.toString(), "UTF-8"), sSignature);
 			if (!bVerifies) {
 				sbTemp = new StringBuffer(sMethod);
 				sbTemp.append("invalid signature in response from AuthSP:" + _sAuthsp);
@@ -393,6 +392,12 @@ public class PKI implements IAuthSPProtocolHandler
 				htResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 				return htResponse;
 			}
+
+			BASE64Decoder base64Decoder = new BASE64Decoder();
+            if (sSubjectDN != null) sSubjectDN = new String(base64Decoder.decodeBuffer(sSubjectDN));
+			if (sIssuerDN != null) sIssuerDN = new String(base64Decoder.decodeBuffer(sIssuerDN));
+			if (sSubjectId != null) sSubjectId = new String(base64Decoder.decodeBuffer(sSubjectId));
+			_systemLogger.log(Level.INFO, "Decoded sSubjectDN="+sSubjectDN);
 
 			// 20090224, Bauke: When 'forced_uid' is used change the 'uid' to a more discriminating value
 			String sForcedUid = (String)htSessionContext.get("forced_uid");
@@ -409,12 +414,10 @@ public class PKI implements IAuthSPProtocolHandler
 
 				htResponse.put("rid", sRid);
 				// Bauke: transfer additional attributes to caller
-				if (sSubjectDN != null)
-					htResponse.put("pki_subject_dn", URLDecoder.decode(sSubjectDN, "UTF-8")); // Bauke: added
-				if (sIssuerDN != null)
-					htResponse.put("pki_issuer_dn", URLDecoder.decode(sIssuerDN, "UTF-8")); // Bauke: added
-				if (sSubjectId != null)
-					htResponse.put("pki_subject_id", URLDecoder.decode(sSubjectId, "UTF-8")); // Bauke: added
+				_systemLogger.log(Level.INFO, "to Response: sSubjectDN="+sSubjectDN);
+				if (sSubjectDN != null) htResponse.put("pki_subject_dn", sSubjectDN); // Bauke: added
+				if (sIssuerDN != null) htResponse.put("pki_issuer_dn", sIssuerDN); // Bauke: added
+				if (sSubjectId != null) htResponse.put("pki_subject_id", sSubjectId); // Bauke: added
 				return htResponse;
 			}
 			_authenticationLogger.log(new Object[] {
@@ -437,7 +440,6 @@ public class PKI implements IAuthSPProtocolHandler
 				sbTemp.append("error from from AuthSP: ").append(sResultCode);
 			}
 			_systemLogger.log(Level.INFO, sbTemp.toString());
-
 		}
 		catch (Exception e) {
 			sbTemp = new StringBuffer(sMethod);

@@ -30,8 +30,8 @@ import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.BASE64Decoder;
 import org.aselect.system.utils.BASE64Encoder;
-import org.aselect.system.utils.Base64;
 import org.aselect.system.utils.Tools;
 import org.opensaml.*;
 import org.w3c.dom.Node;
@@ -333,7 +333,8 @@ public class Saml11Builder
 		{
 			try {
 				//base64 decode
-				String sDecodedUserAttrs = new String(Base64.decode(sSerializedAttributes));
+				BASE64Decoder base64Decoder = new BASE64Decoder();
+				String sDecodedUserAttrs = new String(base64Decoder.decodeBuffer(sSerializedAttributes));
 
 				//decode & and = chars
 				String[] saAttrs = sDecodedUserAttrs.split("&");

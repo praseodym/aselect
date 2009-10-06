@@ -144,9 +144,7 @@ public class SamlTools
 	{
 		String sMethod = "verifySignature()";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
-		systemLogger.log(Level.INFO, MODULE, sMethod, "==== VS "+key);
-
-		java.security.Signature signature;
+		systemLogger.log(Level.INFO, MODULE, sMethod, "Public key="+key+" hashcode="+key.hashCode());
 
 		String signingAlgo;
 		if (key instanceof RSAPublicKey) {
@@ -169,7 +167,7 @@ public class SamlTools
 			}
 			sData = sData.substring(0, sData.length() - 1); // Delete the last '&'
 
-			signature = java.security.Signature.getInstance(signingAlgo);
+			java.security.Signature signature = java.security.Signature.getInstance(signingAlgo);
 			// TODO this uses SAML11, should be SAML20
 			signature.initVerify(key);
 			byte[] bData = sData.getBytes();

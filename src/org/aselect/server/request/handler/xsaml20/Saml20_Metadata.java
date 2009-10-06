@@ -119,7 +119,6 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	throws ASelectException
 	{
 		String sMethod = "readMetaDataPublicKeyCert";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
 	
 		try {
 			StringBuffer sbKeystoreLocation = new StringBuffer(sWorkingDir);
@@ -129,6 +128,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
 			sbKeystoreLocation.append("keystores");
 			sbKeystoreLocation.append(File.separator);
 			sbKeystoreLocation.append(PUBLIC_KEYSTORE_NAME);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Read:"+sbKeystoreLocation);
 	
 			File fKeystore = new File(sbKeystoreLocation.toString());
 			if (!fKeystore.exists()) {

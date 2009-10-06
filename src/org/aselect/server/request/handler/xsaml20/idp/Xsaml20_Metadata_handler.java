@@ -236,7 +236,7 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 		ssoDescriptor.addSupportedProtocol(SAMLConstants.SAML20P_NS);
 		entityDescriptor.getRoleDescriptors().add(ssoDescriptor);
 
-		pdpDescriptor.getKeyDescriptors().add( createKeyDescriptor(getSigningCertificate()));
+		pdpDescriptor.getKeyDescriptors().add(createKeyDescriptor(getSigningCertificate()));
 		pdpDescriptor.addSupportedProtocol(SAMLConstants.SAML20P_NS);
 		entityDescriptor.getRoleDescriptors().add(pdpDescriptor);
 
