@@ -289,7 +289,7 @@ public class CryptoEngine
 			catch (Exception e) {
 				StringBuffer sbInfo = new StringBuffer("Unable to create random generator with algorithm: ");
 				sbInfo.append(_sSecureRandomAlgorithm);
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbInfo.toString(), e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbInfo.toString());
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 			}
 
@@ -318,7 +318,7 @@ public class CryptoEngine
 				}
 				catch (ASelectStorageException ee) {
 					if (e.getMessage().equals(Errors.ERROR_ASELECT_STORAGE_MAXIMUM_REACHED)) {
-						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Maximum server session keys reached", e);
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Maximum server session keys reached");
 					}
 					throw ee;
 				}
@@ -722,13 +722,8 @@ public class CryptoEngine
 			oSection = null;
 			_sSignatureAlgorithm = DEFAULT_SIGNATURE_ALGORITHM;
 
-			_systemLogger
-					.log(
-							Level.CONFIG,
-							MODULE,
-							sMethod,
-							"Could not retrieve 'signature_algorithm' config section in crypto config section. Using default algorithm and provider.",
-							e);
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+				"Could not retrieve 'signature_algorithm' config section in crypto config section. Using default algorithm and provider.");
 		}
 
 		if (oSection != null) {
@@ -754,13 +749,8 @@ public class CryptoEngine
 			catch (ASelectConfigException e) {
 				sProvider = null;
 
-				_systemLogger
-						.log(
-								Level.CONFIG,
-								MODULE,
-								sMethod,
-								"Could not retrieve 'provider' config section in crypto config section. Using default provider.",
-								e);
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+					"Could not retrieve 'provider' config section in crypto config section. Using default provider.");
 			}
 
 			if (sProvider != null) {
@@ -793,14 +783,8 @@ public class CryptoEngine
 		catch (ASelectConfigException e) {
 			oSection = null;
 			_sCipherAlgorithm = DEFAULT_ENCRYPTION_ALGORITHM;
-
-			_systemLogger
-					.log(
-							Level.CONFIG,
-							MODULE,
-							sMethod,
-							"Could not retrieve 'encryption_algorithm' config section in crypto config section. Using default algorithm and provider.",
-							e);
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+				"Could not retrieve 'encryption_algorithm' config section in crypto config section. Using default algorithm and provider.");
 		}
 
 		if (oSection != null) {
@@ -810,7 +794,6 @@ public class CryptoEngine
 			}
 			catch (ASelectConfigException e) {
 				_sCipherAlgorithm = DEFAULT_ENCRYPTION_ALGORITHM;
-
 				StringBuffer sbConfig = new StringBuffer(
 						"Could not retrieve 'encryption_algorithm' config parameter in crypto config section. Using default algorithm: ");
 				sbConfig.append(_sCipherAlgorithm);
@@ -826,13 +809,8 @@ public class CryptoEngine
 			catch (ASelectConfigException e) {
 				sProvider = null;
 
-				_systemLogger
-						.log(
-								Level.CONFIG,
-								MODULE,
-								sMethod,
-								"Could not retrieve 'provider' config parameter in crypto config section. Using default provider.",
-								e);
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+						"Could not retrieve 'provider' config parameter in crypto config section. Using default provider.");
 			}
 
 			if (sProvider != null) {
@@ -866,13 +844,8 @@ public class CryptoEngine
 			oSection = null;
 			_sSecureRandomAlgorithm = DEFAULT_RANDOM_ALGORITHM;
 
-			_systemLogger
-					.log(
-							Level.CONFIG,
-							MODULE,
-							sMethod,
-							"Could not retrieve 'random_generator_algorithm' config section in crypto config section. Using default algorithm and provider.",
-							e);
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+				"Could not retrieve 'random_generator_algorithm' config section in crypto config section. Using default algorithm and provider.");
 		}
 
 		if (oSection != null) {
@@ -898,13 +871,8 @@ public class CryptoEngine
 			catch (ASelectConfigException e) {
 				sProvider = null;
 
-				_systemLogger
-						.log(
-								Level.CONFIG,
-								MODULE,
-								sMethod,
-								"Could not retrieve 'provider' config parameter in crypto config section. Using default provider.",
-								e);
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+					"Could not retrieve 'provider' config parameter in crypto config section. Using default provider.");
 			}
 
 			if (sProvider != null) {

@@ -129,7 +129,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BaseHandler
 				}
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "SAML message IS signed.");
 				MetaDataManagerSp metadataManager = MetaDataManagerSp.getHandle();
-				PublicKey publicKey = metadataManager.getSigningKey(sEntityId);
+				PublicKey publicKey = metadataManager.getSigningKeyFromMetadata(sEntityId);
 				if (publicKey == null) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "PublicKey for entityId: " + sEntityId
 							+ " not found.");

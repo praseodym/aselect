@@ -756,7 +756,7 @@ public class ApplicationManager
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No valid 'sso_groups' config item found, disabling single sign-on groups.", e);
+						"No valid 'sso_groups' config item found, disabling single sign-on groups.");
 			}
 
 			if (oSSOGroups != null) {
@@ -766,7 +766,7 @@ public class ApplicationManager
 				}
 				catch (ASelectConfigException e) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod,
-							"Not even one valid 'sso_group' config section defined.", e);
+							"Not even one valid 'sso_group' config section defined.");
 					throw e;
 				}
 
@@ -777,7 +777,7 @@ public class ApplicationManager
 					}
 					catch (ASelectConfigException e) {
 						_systemLogger.log(Level.WARNING, MODULE, sMethod,
-								"No valid 'id' config item defined in 'sso_group' config item.", e);
+								"No valid 'id' config item defined in 'sso_group' config item.");
 						throw e;
 					}
 
@@ -802,7 +802,7 @@ public class ApplicationManager
 							StringBuffer sbError = new StringBuffer(
 									"No valid 'id' config item defined in 'application' config section within the 'sso_group with id:'");
 							sbError.append(sSSOGroupID);
-							_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
+							_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
 							throw e;
 						}
 
@@ -835,7 +835,7 @@ public class ApplicationManager
 			throw e;
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not load the ss_groups config", e);
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not load the ss_groups config");
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 

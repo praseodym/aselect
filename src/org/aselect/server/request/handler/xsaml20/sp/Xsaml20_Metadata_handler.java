@@ -2,8 +2,12 @@ package org.aselect.server.request.handler.xsaml20.sp;
 
 import java.util.logging.Level;
 
+import javax.servlet.ServletConfig;
+
+import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.request.handler.xsaml20.Saml20_Metadata;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
+import org.aselect.server.request.handler.xsaml20.idp.MetaDataManagerIdp;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
@@ -38,7 +42,19 @@ import org.w3c.dom.Node;
 public class Xsaml20_Metadata_handler extends Saml20_Metadata
 {
 	private final static String MODULE = "sp.Xsaml20_Metadata_handler";
-	
+
+	public void init(ServletConfig oServletConfig, Object oConfig)
+	throws ASelectException
+	{
+		String sMethod = "init";
+		
+		super.init(oServletConfig, oConfig);
+		String sCheckCertificates = ASelectConfigManager.getSimpleParam(oConfig, "check_certificates", false);
+		if (sCheckCertificates != null) {
+			MetaDataManagerIdp.setCheckCertificates(sCheckCertificates);
+		}
+	}
+
 	protected void aselectReader() // Get handler specific data from configuration 
 	throws ASelectException
 	{

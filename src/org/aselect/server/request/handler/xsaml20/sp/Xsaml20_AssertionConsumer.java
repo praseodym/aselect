@@ -247,8 +247,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 					_systemLogger.log(Level.SEVERE, MODULE, sMethod, "For signature verification the received message must have an Issuer");
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
-				PublicKey pkey = metadataManager.getSigningKey(artifactResponseIssuer);
-				
+				PublicKey pkey = metadataManager.getSigningKeyFromMetadata(artifactResponseIssuer);			
 				if (pkey == null || "".equals(pkey)) {
 					_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No valid public key in metadata");
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);

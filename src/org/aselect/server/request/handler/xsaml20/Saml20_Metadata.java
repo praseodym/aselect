@@ -98,7 +98,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
         		}
         		String sCacheDuration = ASelectConfigManager.getSimpleParam(oConfig, "cache_duration", false);
         		if (sCacheDuration != null) {
-        			setCacheDuration(new Long( Long.parseLong(sValidUntil) * 1000));
+        			setCacheDuration(new Long( Long.parseLong(sCacheDuration) * 1000));
         		}
             }
             catch (ASelectConfigException e) {

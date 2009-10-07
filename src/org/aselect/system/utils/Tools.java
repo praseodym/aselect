@@ -323,7 +323,7 @@ public class Tools
 				Tools.reportUsageToSensor(oConfMgr, oSysLog, oConfig, Long.toString(lTotalSpent));
 			}
 			catch(Exception e) {
-				oSysLog.log(Level.INFO, MODULE, sMethod, "Sensor report failed", e);
+				oSysLog.log(Level.INFO, MODULE, sMethod, "Sensor report failed");
 			}
 		}
 	}

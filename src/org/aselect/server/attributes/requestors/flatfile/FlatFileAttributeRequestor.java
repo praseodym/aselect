@@ -68,7 +68,7 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 				sResourceGroup = _configManager.getParam(oConfig, "resourcegroup");
 			}
 			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'resourcegroup' config item found", e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'resourcegroup' config item found");
 				throw new ASelectAttributesException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -78,20 +78,17 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 			catch (ASelectSAMException e) {
 				StringBuffer sbFailed = new StringBuffer("No active resource found in attributes resourcegroup: ");
 				sbFailed.append(sResourceGroup);
-
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
-
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString());
 				throw e;
 			}
 
 			oResourceConfig = oSAMResource.getAttributes();
-
 			String sFileName = null;
 			try {
 				sFileName = _configManager.getParam(oResourceConfig, "file");
 			}
 			catch (ASelectException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'file' found", e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'file' found");
 				throw new ASelectAttributesException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -109,7 +106,7 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 				oGlobal = _oFlatFileManager.getSection(null, "global");
 			}
 			catch (ASelectException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config section 'global' found", e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config section 'global' found");
 				throw new ASelectAttributesException(Errors.ERROR_ASELECT_INIT_ERROR);
 			}
 
@@ -119,7 +116,7 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 			}
 			catch (ASelectException e) {
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No global attributes configured, not using global attributes", e);
+						"No global attributes configured, not using global attributes");
 			}
 
 			_htGlobalAttributes = readAttributes(oAttribute);
@@ -130,7 +127,7 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 			throw e;
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to generate flatfile handle", e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to generate flatfile handle");
 			throw new ASelectAttributesException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 	}
@@ -161,7 +158,7 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 				oUser = _oFlatFileManager.getSection(null, "user", "id=" + sUserId);
 			}
 			catch (ASelectException e) {
-				_systemLogger.log(Level.FINE, MODULE, sMethod, "No config section 'user' found", e);
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "No config section 'user' found");
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "No attributes found for user with id: " + sUserId);
 				return htReturn;
 			}
@@ -171,7 +168,7 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 				oAttribute = _oFlatFileManager.getSection(oUser, "attribute");
 			}
 			catch (ASelectException e) {
-				_systemLogger.log(Level.FINE, MODULE, sMethod, "Not one config section 'attribute' found", e);
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "Not one config section 'attribute' found");
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "No attributes found for user with id: " + sUserId);
 				return htReturn;
 			}
@@ -181,7 +178,7 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 			throw e;
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to resolve attributes", e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to resolve attributes");
 			throw new ASelectAttributesException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 
@@ -212,7 +209,7 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 				}
 				catch (ASelectException e) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod,
-							"No config item 'id' in 'attribute' section found", e);
+							"No config item 'id' in 'attribute' section found");
 					throw new ASelectAttributesException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 				}
 
@@ -222,7 +219,7 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 				}
 				catch (ASelectException e) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod,
-							"Not one config section 'value' in 'attribute' section found", e);
+							"Not one config section 'value' in 'attribute' section found");
 					throw new ASelectAttributesException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 				}
 
@@ -234,12 +231,10 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 					}
 					catch (ASelectException e) {
 						_systemLogger.log(Level.WARNING, MODULE, sMethod,
-								"No config item 'value' in section 'attribute' found", e);
+								"No config item 'value' in section 'attribute' found");
 						throw new ASelectAttributesException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 					}
-
 					vValues.add(sValue);
-
 					oValue = _oFlatFileManager.getNextSection(oValue);
 				}
 
@@ -256,16 +251,13 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 					//singlevalue attribute
 					htReturn.put(sID, vValues.firstElement());
 				}
-
 				oAttribute = _oFlatFileManager.getNextSection(oAttribute);
 			}
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to resolve attributes", e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to resolve attributes");
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-
 		return htReturn;
 	}
-
 }

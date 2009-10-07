@@ -2,6 +2,9 @@ package org.aselect.server.request.handler.xsaml20.idp;
 
 import java.util.logging.Level;
 
+import javax.servlet.ServletConfig;
+
+import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.request.handler.xsaml20.Saml20_Metadata;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.system.error.Errors;
@@ -44,7 +47,20 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 {
 	private final static String MODULE = "idp.Xsaml20_Metadata_handler";
 
-	protected void aselectReader() // Get handler specific data from configuration 
+	public void init(ServletConfig oServletConfig, Object oConfig)
+	throws ASelectException
+	{
+		String sMethod = "init";
+		
+		super.init(oServletConfig, oConfig);
+		String sCheckCertificates = ASelectConfigManager.getSimpleParam(oConfig, "check_certificates", false);
+		if (sCheckCertificates != null) {
+			MetaDataManagerIdp.setCheckCertificates(sCheckCertificates);
+		}
+	}
+	
+	// Get handler specific data from configuration 
+	protected void aselectReader()
 	throws ASelectException
 	{
 		String sMethod = "aselectReader()";
@@ -137,32 +153,7 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 			entityDescriptor.setValidUntil(tStamp.plus(getValidUntil().longValue()));
 		if (getCacheDuration()!=null)
 			entityDescriptor.setCacheDuration(getCacheDuration());
-		
-/*		
-		// Create the KeyDescriptor
-		SAMLObjectBuilder<KeyDescriptor> keyDescriptorBuilder = (SAMLObjectBuilder<KeyDescriptor>) _oBuilderFactory
-		.getBuilder(KeyDescriptor.DEFAULT_ELEMENT_NAME);
-		KeyDescriptor keyDescriptor = keyDescriptorBuilder.buildObject();
-		keyDescriptor.setUse(org.opensaml.xml.security.credential.UsageType.SIGNING);
-		
-		XMLSignatureBuilder<KeyInfo> keyInfoBuilder = (XMLSignatureBuilder<KeyInfo>) _oBuilderFactory
-		.getBuilder(KeyInfo.DEFAULT_ELEMENT_NAME);
-		KeyInfo keyInfo = keyInfoBuilder.buildObject();
-
-		X509CertificateBuilder x509CertificateBuilder = (X509CertificateBuilder) _oBuilderFactory
-		.getBuilder(X509Certificate.DEFAULT_ELEMENT_NAME);
-		X509Certificate x509Certificate = x509CertificateBuilder.buildObject();
-		x509Certificate.setValue(getSigningCertificate());
-		
-		X509DataBuilder x509DataBuilder = (X509DataBuilder) _oBuilderFactory
-		.getBuilder(X509Data.DEFAULT_ELEMENT_NAME);
-		X509Data x509Data = x509DataBuilder.buildObject();
-		x509Data.getX509Certificates().add(x509Certificate);
-		
-		keyInfo.getX509Datas().add(x509Data);
-		keyDescriptor.setKeyInfo(keyInfo);
-*/
-		
+				
 		// Create the IDPSSODescriptor
 		SAMLObjectBuilder<IDPSSODescriptor> ssoDescriptorBuilder = (SAMLObjectBuilder<IDPSSODescriptor>) _oBuilderFactory
 						.getBuilder(IDPSSODescriptor.DEFAULT_ELEMENT_NAME);
@@ -265,7 +256,8 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 	
 	// Create the KeyDescriptor
 	// TODO, this should probably be a utility in SAMLTools
-	private KeyDescriptor createKeyDescriptor(String signingCertificate) {
+	private KeyDescriptor createKeyDescriptor(String signingCertificate)
+	{
 		SAMLObjectBuilder<KeyDescriptor> keyDescriptorBuilder = (SAMLObjectBuilder<KeyDescriptor>) _oBuilderFactory
 						.getBuilder(KeyDescriptor.DEFAULT_ELEMENT_NAME);
 		KeyDescriptor keyDescriptor = keyDescriptorBuilder.buildObject();

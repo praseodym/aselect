@@ -178,7 +178,7 @@ public class RawCommunicator implements IClientCommunicator
 				htReturn = convertCGIMessage(sResponse);
 		}
 		catch (UnsupportedEncodingException eUE) {
-			_systemLogger.log(Level.WARNING, MODULE, "sendMessage()", "Could not URL encode/decode one or more values",eUE);
+			_systemLogger.log(Level.WARNING, MODULE, "sendMessage()", "Could not URL encode/decode one or more values");
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 		return htReturn;
@@ -247,7 +247,7 @@ public class RawCommunicator implements IClientCommunicator
 			sbBuffer.append(sUrl);
 			sbBuffer.append("\" errorcode: ");
 			sbBuffer.append(Errors.ERROR_ASELECT_USE_ERROR);
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString(), eMU);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR, eMU);
 		}
 		catch (IOException eIO) //Error communicating with A-Select Server
@@ -256,7 +256,7 @@ public class RawCommunicator implements IClientCommunicator
 			sbBuffer.append(sUrl);
 			sbBuffer.append("\" errorcode: ");
 			sbBuffer.append(Errors.ERROR_ASELECT_IO);
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString(), eIO);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_IO, eIO);
 		}
 

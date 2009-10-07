@@ -601,7 +601,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 
 							_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRedirectUrl);
-
 							oTGTIssuer.sendRedirect(sRedirectUrl, sTgt, sRid, servletResponse);
 							_sessionManager.killSession(sRid);
 							return;
@@ -1085,7 +1084,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				sUid = URLDecoder.decode(sUid, "UTF-8");
 			}
 			catch (UnsupportedEncodingException e) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to decode user id.", e);
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to decode user id.");
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 			}
 
@@ -1146,7 +1145,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				}
 				catch (ASelectConfigException e) {
 					_systemLogger.log(Level.WARNING, _sModule, sMethod,
-							"Failed to retrieve config 'always_show_select_form'. Using default (yes).", e);
+							"Failed to retrieve config 'always_show_select_form'. Using default (yes).");
 				}
 			}
 			// end only 1 valid authsp
@@ -1180,7 +1179,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					sb.append("</OPTION>");
 				}
 				catch (ASelectConfigException ace) {
-					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to retrieve config for AuthSPs.", ace);
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to retrieve config for AuthSPs.");
 					throw ace;
 				}
 			}
@@ -1277,11 +1276,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				return;
 			}
 			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to retrieve config for AuthSPs.", e);
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to retrieve config for AuthSPs.");
 				throw new ASelectException(e.getMessage());
 			}
 			catch (IOException e) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to redirect user.", e);
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to redirect user.");
 				throw new ASelectException(Errors.ERROR_ASELECT_IO);
 			}
 		}
@@ -1353,8 +1352,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			if (sRemoteOrg == null) {
 				if (!_crossASelectManager.isCrossSelectorEnabled()) {
-					_systemLogger
-							.log(Level.WARNING, _sModule, sMethod,
+					_systemLogger.log(Level.WARNING, _sModule, sMethod,
 									"Dynamic 'cross_selector' is disabled, parameter 'remote_organization' is required but not found.");
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_UNKNOWN_ORG);
 				}
@@ -1375,8 +1373,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							servletResponse, pwOut);
 				}
 				catch (ASelectException ace) {
-					_systemLogger
-							.log(Level.WARNING, _sModule, sMethod, "Failed to retrieve the remote server id.", ace);
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to retrieve the remote server id.");
 					throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_UNKNOWN_ORG, ace);
 				}
 				if (htIdentification == null) {
@@ -1422,11 +1419,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				sRemoteServer = _crossASelectManager.getRemoteParam(sRemoteOrg, "server");
 			}
 			catch (ASelectSAMException ase) {
-				_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to read SAM.", ase);
+				_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to read SAM.");
 				throw ase;
 			}
 			catch (ASelectConfigException ace) {
-				_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to read config.", ace);
+				_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to read config.");
 				throw ace;
 			}
 
@@ -1518,7 +1515,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			catch (IOException e) {
 				StringBuffer sbWarning = new StringBuffer("Failed to redirect user to: ");
 				sbWarning.append(sRemoteServer);
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString(), e);
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString());
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_IO, e);
 			}
 		}
@@ -1662,11 +1659,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						servletResponse.sendRedirect(sb.toString());
 					}
 					catch (UnsupportedEncodingException e) {
-						_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to encode user id.", e);
+						_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to encode user id.");
 						throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 					}
 					catch (IOException e) {
-						_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to redirect user.", e);
+						_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to redirect user.");
 						throw new ASelectException(Errors.ERROR_ASELECT_IO, e);
 					}
 				}
@@ -1770,7 +1767,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						sRemoteAsUrl = _configManager.getParam(oRemoteServer, "url");
 					}
 					catch (ASelectException ae) {
-						_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to read SAM.", ae);
+						_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to read SAM.");
 						sRemoteAsUrl = null;
 					}
 				}
@@ -1846,7 +1843,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				sUID = URLDecoder.decode(sUID, "UTF-8");
 			}
 			catch (UnsupportedEncodingException eUE) {  //Interne fout UTF-8 niet ondersteund
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error: request could not be decoded", eUE);
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error: request could not be decoded");
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
 
@@ -2093,11 +2090,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			oProtocolHandler.init(oAuthSPsection, objAuthSPResource);
 		}
 		catch (ASelectConfigException e) {
-			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to retrieve config for AuthSPs.", e);
+			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to retrieve config for AuthSPs.");
 			throw new ASelectException(e.getMessage());
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to initialize handler AuthSPHandler.", e);
+			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to initialize handler AuthSPHandler.");
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 
@@ -2247,10 +2244,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					sRemoteAsUrl = _configManager.getParam(oRemoteServer, "url");
 				}
 				catch (ASelectException ae) {
-					_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to read SAM.", ae);
+					_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to read SAM.");
 				}
 				catch (Exception ae) { // Bauke: added
-					_systemLogger.log(Level.INFO, _sModule, sMethod, "Not a 'cross' organization: " + sTemp, ae);
+					_systemLogger.log(Level.INFO, _sModule, sMethod, "Not a 'cross' organization: " + sTemp);
 				}
 			}
 			if (sRemoteAsUrl == null) {
@@ -2263,7 +2260,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			pwOut.println(sUserInfoForm);
 		}
 		catch (IOException eIO) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Error writing output", eIO);
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Error writing output");
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 	}

@@ -72,6 +72,8 @@ public abstract class AbstractMetaDataManager
 	protected ConcurrentHashMap<String, java.security.cert.X509Certificate>
 				trustedIssuers = new ConcurrentHashMap<String, java.security.cert.X509Certificate>();
 
+	private static String _sCheckCertificates = null;
+
 	protected void init()
 	throws ASelectException
 	{
@@ -80,16 +82,11 @@ public abstract class AbstractMetaDataManager
 	}
 
 	/**
-	 * Read the List metaDataUrls, read the metadata.xml and put it to the
-	 * metadataprovider.
-	 * 
-	 * @return metadataProvider
-	 * @throws ASelectException
 	 */
-	protected void getMetaDataProviderfromList()
+	protected void initializeMetaDataHandling()
 	throws ASelectException
 	{
-		String sMethod = "getMetaDataProviderfromList()";
+		String sMethod = "initializeMetaData";
 
 		// Initialize the opensaml library
 		try {
@@ -103,6 +100,7 @@ public abstract class AbstractMetaDataManager
 	}
 
 	protected void fileSystemProvider(ChainingMetadataProvider myMetadataProvider, String sMethod, BasicParserPool ppMgr, String metadataURL)
+	throws ASelectException
 	{
 		File mdFile = new File(metadataURL);
 		mdFile.toURI();
@@ -116,11 +114,13 @@ public abstract class AbstractMetaDataManager
 		catch (MetadataProviderException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"Could not read metadata xml file, check the pathname within aselect xml file: " + metadataURL, e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}
 
 	protected void urlSystemProvider(ChainingMetadataProvider myMetadataProvider, String sMethod,
 			BasicParserPool ppMgr, String metadataURL)
+	throws ASelectException
 	{
 		HTTPMetadataProvider urlProvider;
 		try {
@@ -149,38 +149,36 @@ public abstract class AbstractMetaDataManager
 		catch (MetadataProviderException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not read metadata, check your aselect.xml file: "
 					+ metadataURL, e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}
 
 	// Bauke: added
-	//
-	// If a new SP is making contact with the IdP, we must be able to read it's metadata
-	// Can be called any time, not necessarily at startup
-	// Must be called before using SSODescriptors
-	//
+	/**
+	 * If a new SP is making contact with the IdP, we must be able to read it's metadata
+	 * Can be called any time, not necessarily at startup
+	 * Must be called before using SSODescriptors
+	 */
 	protected void checkMetadataProvider(String entityId)
+	throws ASelectException
 	{
 		String sMethod = "checkMetadataProvider";
 		String metadataURL = null;
 		ChainingMetadataProvider myMetadataProvider = new ChainingMetadataProvider();
 
-		if (trustedIssuers.isEmpty()) {
-			try {
-				loadTrustedIssuers();
-			}
-			catch (ASelectException e) {
-			}
+		if (trustedIssuers.isEmpty()) {  // Load trusted ca's from trusted_issuers.keystore
+			loadTrustedIssuers();
 		}
 		_systemLogger.log(Level.FINE, MODULE, sMethod, "SSODescriptors=" + SSODescriptors); // +" entityDescriptors=" + entityDescriptors);
 		if (entityId == null)
 			return;
 		if (SSODescriptors.containsKey(entityId)) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId=" + entityId + " already present");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId=" + entityId + " already in cache");
 			return;
 		}
 		
 		// Read the new metadata
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId=" + entityId + " not present yet");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId=" + entityId + " not in cache yet");
 		metadataURL = metadataSPs.get((myRole.equals("SP"))? sFederationIdpKeyword: entityId);
 		if (metadataURL == null) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity id: " + entityId + " is not Configured");
@@ -198,7 +196,7 @@ public abstract class AbstractMetaDataManager
 			fileSystemProvider(myMetadataProvider, sMethod, ppMgr, metadataURL);
 		// Result has been stored in myMetadataProvider
 		
-		// Add the SSODescriptors
+		// Add to the SSODescriptor
 		addMetadata(myMetadataProvider);
 	}
 
@@ -209,64 +207,56 @@ public abstract class AbstractMetaDataManager
 		
 	    ASelectConfigManager _oASelectConfigManager = ASelectConfigManager.getHandle();
         StringBuffer sbKeystoreLocation = new StringBuffer(_oASelectConfigManager.getWorkingdir());	
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "WorkingDir="+sbKeystoreLocation);
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "WorkingDir="+sbKeystoreLocation);
         sbKeystoreLocation.append(File.separator).append("keystores").
         		append(File.separator).append("trusted_issuers.keystore").toString();
 		
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Read "+sbKeystoreLocation);
-
-		KeyStore ksASelect;
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Read "+sbKeystoreLocation+ " Prefix=ca_ Check="+getCheckCertificates());
 		try {
-			ksASelect = KeyStore.getInstance("JKS");
+			KeyStore ksASelect = KeyStore.getInstance("JKS");
 			ksASelect.load(new FileInputStream(sbKeystoreLocation.toString()), null);
 			
 			Enumeration<String> enumAliases = ksASelect.aliases();
 			while (enumAliases.hasMoreElements()) {
-				String sAlias = enumAliases.nextElement();
-
-				sAlias = sAlias.toLowerCase();
-				java.security.cert.X509Certificate x509Cert = (java.security.cert.X509Certificate)
-								ksASelect.getCertificate(sAlias);
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "OwnerDN="+x509Cert.getSubjectX500Principal().getName());
-				trustedIssuers.put(sAlias, x509Cert);
+				String sAlias = enumAliases.nextElement().toLowerCase();
+				java.security.cert.X509Certificate x509Cert = 
+						(java.security.cert.X509Certificate) ksASelect.getCertificate(sAlias);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "Alias="+sAlias);
+				if (checkCertificate("ca_", x509Cert))
+					trustedIssuers.put(sAlias, x509Cert);
+				else
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Alias="+sAlias+" not valid!");
 			}
 		}
 		catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Algorithm exception, "+e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 		catch (CertificateException e) {
-			e.printStackTrace();
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Certificate exception, "+e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 		catch (FileNotFoundException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Keystore '"+sbKeystoreLocation+"' cannot be found.");
-			throw new ASelectException(Errors.ERROR_ASELECT_NOT_FOUND);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Keystore cannot be found, "+e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 		catch (IOException e) {
-			e.printStackTrace();
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Keystore cannot be read, "+e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 		catch (KeyStoreException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Keystore exception: "+e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
+		// Make size() > 0 so this method does not get called again
 		if (trustedIssuers.size() == 0)
-			trustedIssuers.put("loading_has_been_done", null);  // makes size() > 0
-	}
-	
-	private boolean isCertificateTrusted(java.security.cert.X509Certificate cert)
-	{
-		String sMethod = "isCertificateTrusted";
-		
-		Set<String> allIssuers = trustedIssuers.keySet();
-		for (String issuer : allIssuers) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Check="+issuer);
-			java.security.cert.X509Certificate x509Cert = trustedIssuers.get(issuer);
-			if (x509Cert.getSubjectX500Principal().equals(cert.getIssuerX500Principal()))
-				return true;
-		}
-		return false;
+			trustedIssuers.put("loading_has_been_done", null);
 	}
 
 	// Bauke: added
 	// List all entries or Remove an entity from the metadata storage
 	// Produces output on stdout!
+	// Can be called from the Operating System to cleanup the cache.
 	//
 	public void handleMetadataProvider(PrintWriter out, String entityId, boolean sList)
 	{
@@ -288,13 +278,15 @@ public abstract class AbstractMetaDataManager
 	}
 
 	/**
-	 * Get issuer(entityID) and metadata file location from application Put these
-	 * values in SSODescriptors. The key is the entityID and the value the Descriptors
+	 * Get issuer(entityID) and metadata file location from application.
+	 * Put these values in SSODescriptors.
+	 * The key is the entityID and the value the Descriptors
 	 * 
 	 * @param application
-	 * @throws ASelectException
+	 * @throws ASelectException 
 	 */
 	protected void addMetadata(ChainingMetadataProvider myMetadataProvider)
+	throws ASelectException
 	{
 		String sMethod = "addMetadata";
 		ArrayList<MetadataProvider> metadataProviderArray = new ArrayList<MetadataProvider>();
@@ -319,33 +311,45 @@ public abstract class AbstractMetaDataManager
 					SSODescriptor descriptorValueIDP = entityDescriptorValue.getIDPSSODescriptor(protocolSupportEnumeration);
 					SSODescriptor descriptorValueSP = entityDescriptorValue.getSPSSODescriptor(protocolSupportEnumeration);
 					if (descriptorValueIDP != null) {
-						checkKeyDescriptors(descriptorValueIDP);
+						if (!checkKeyDescriptor(descriptorValueIDP))
+							throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 						SSODescriptors.put(entityId, descriptorValueIDP);
 					}
 					else if (descriptorValueSP != null) {
-						checkKeyDescriptors(descriptorValueSP);
+						if (!checkKeyDescriptor(descriptorValueSP))
+							throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 						SSODescriptors.put(entityId, descriptorValueSP);
 					}
 				}
 			}
 			catch (MarshallingException e) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Marshalling failed with the following error: ", e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 			catch (XMLParserException e) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Parser failed with the following error: ", e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 			catch (MetadataProviderException e) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not read metadata xml file ", e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 		}
 	}
 	
+	/**
+	 * Check validity  of a metadata certificate.
+	 * Called when the metadata is read in.
+	 * Dates must be valid, and the certificate must be trusted by a
+	 * ca stored in the trusted_issuers keystore.
+	 */
 	// Bauke, 20091006: Added
-	private boolean checkKeyDescriptors(SSODescriptor descriptor)
+	private boolean checkKeyDescriptor(SSODescriptor descriptor)
 	{
-		String sMethod = "checkKeyDescriptors";
+		String sMethod = "checkKeyDescriptor";
 		List<KeyDescriptor> keyDescriptors = descriptor.getKeyDescriptors();
 
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Metadata Prefix= Check="+getCheckCertificates());
 		for (KeyDescriptor keydescriptor : keyDescriptors) {
 			UsageType useType = keydescriptor.getUse();
 			if (!useType.name().equalsIgnoreCase("SIGNING")) {
@@ -362,19 +366,11 @@ public abstract class AbstractMetaDataManager
 				try {
 					java.security.cert.X509Certificate javaCert = SamlTools.getCertificate(cert);
 					if (javaCert != null) {
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "Found: Issuer="+javaCert.getIssuerX500Principal().getName());
-						try {
-							javaCert.checkValidity();
-							return isCertificateTrusted(javaCert);
+						if (checkCertificate("", javaCert)) {
+							_systemLogger.log(Level.INFO, MODULE, sMethod, "OK "+javaCert.getSubjectX500Principal().getName()+" - Issuer="+javaCert.getIssuerX500Principal().getName());
+							return true;
 						}
-						catch (CertificateExpiredException e) {
-							_systemLogger.log(Level.WARNING, MODULE, sMethod, "The certificate has expired");
-							return false;
-						}
-						catch (CertificateNotYetValidException e) {
-							_systemLogger.log(Level.WARNING, MODULE, sMethod, "The certificate is not yet valid");
-							return false;
-						}
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "NOT OK "+javaCert.getSubjectX500Principal().getName()+" - Issuer="+javaCert.getIssuerX500Principal().getName());
 					}
 				}
 				catch (CertificateException e) {
@@ -383,8 +379,121 @@ public abstract class AbstractMetaDataManager
 				}
 			}
 		}
-		_systemLogger.log(Level.WARNING, MODULE, sMethod, "No signing certificate found at all");
+		_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid signing certificate found");
 		return false;
+	}
+
+	/**
+	 * Check dates and/or issuer of the given certificate
+	 * 
+	 * @param prefix - can be "" or "ca_", the second version checks the ca-certificate as well
+	 * @param javaCert - the certificate to be checked
+	 * @return - is certificate ok?
+	 */
+	private boolean checkCertificate(String prefix, java.security.cert.X509Certificate javaCert)
+	{
+		String sMethod = "checkCertificate";
+		String sCheckCerts = getCheckCertificates();
+
+		//_systemLogger.log(Level.INFO, MODULE, sMethod, "Prefix="+prefix+" CheckCerts="+sCheckCerts);
+		try {
+			if (sCheckCerts != null && sCheckCerts.contains(prefix+"dates")) {
+				javaCert.checkValidity();
+				//_systemLogger.log(Level.INFO, MODULE, sMethod, "The certificate dates are valid");
+			}
+			if (sCheckCerts != null && sCheckCerts.contains(prefix+"issuer")) {
+				boolean isTrusted = isCertificateTrusted(javaCert);
+				if (!isTrusted)
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "The certificate issuer is not valid");
+				return isTrusted;
+			}
+			// TODO: CRL checking?
+			return true;
+		}
+		catch (CertificateExpiredException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "The certificate has expired");
+			return false;
+		}
+		catch (CertificateNotYetValidException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "The certificate is not yet valid");
+			return false;
+		}
+	}
+	
+	private boolean isCertificateTrusted(java.security.cert.X509Certificate clientCert)
+	{
+		String sMethod = "isCertificateTrusted";
+		
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Check clientCert="+clientCert.getSubjectX500Principal().getName()+
+							" - Issued by "+clientCert.getIssuerX500Principal().getName());
+		Set<String> allIssuers = trustedIssuers.keySet();
+		for (String ca : allIssuers) {
+			java.security.cert.X509Certificate caCert = trustedIssuers.get(ca);
+			if (caCert == null)  // skip dummy entry
+				continue;
+			if (caCert.getSubjectX500Principal().equals(clientCert.getIssuerX500Principal())) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Trusted by '"+ca+"': "+caCert.getSubjectX500Principal().getName());
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Retrieve the signing key for the given entity id from the metadata cache.
+	 * 
+	 * @param entityId
+	 * @return PublicKey, is null on errors.
+	 */
+	public PublicKey getSigningKeyFromMetadata(String entityId)
+	{
+		String sMethod = "getSigningKeyFromMetadata";
+
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId="+entityId);
+		try {
+			checkMetadataProvider(entityId);
+		}
+		catch (ASelectException e) {
+			return null;
+		}
+		
+		SSODescriptor descriptor = SSODescriptors.get(entityId);
+		if (descriptor == null) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Entity id: " + entityId + " not in SSODescriptors");
+			return null;
+		}
+
+		List<KeyDescriptor> keyDescriptors = descriptor.getKeyDescriptors();
+		for (KeyDescriptor keydescriptor : keyDescriptors) {
+			UsageType useType = keydescriptor.getUse();
+			if (!useType.name().equalsIgnoreCase("SIGNING")) {
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "Use type: " + useType + " != SIGNING");
+				return null;
+			}
+
+			org.opensaml.xml.signature.KeyInfo keyinfo = keydescriptor.getKeyInfo();
+			X509Data x509Data = keyinfo.getX509Datas().get(0);
+
+			List<X509Certificate> certs = x509Data.getX509Certificates();
+			if (!certs.isEmpty()) {
+				X509Certificate cert = certs.get(0);
+				try {
+					java.security.cert.X509Certificate javaCert = SamlTools.getCertificate(cert);
+					if (javaCert != null) {
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "Cert: "+javaCert.getSubjectX500Principal().getName()+
+										" - Issuer="+javaCert.getIssuerX500Principal().getName());
+						return javaCert.getPublicKey();
+					}
+					else {
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot retrieve the public key from metadata for entity id : " + entityId);
+					}
+				}
+				catch (CertificateException e) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot retrieve the public key from metadata: ", e);
+				}
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -516,56 +625,13 @@ public abstract class AbstractMetaDataManager
 		return domDescriptor;
 	}
 
-	/**
-	 * 
-	 * @param entityId
-	 * @return PublicKey
-	 */
-	public PublicKey getSigningKey(String entityId)
+	public static String getCheckCertificates()
 	{
-		String sMethod = "getSigningKey()";
+		return _sCheckCertificates;
+	}
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId="+entityId);
-		checkMetadataProvider(entityId);
-		
-		SSODescriptor descriptor = SSODescriptors.get(entityId);
-		if (descriptor == null) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Entity id: " + entityId + " not in SSODescriptors");
-			return null;
-		}
-
-		List<KeyDescriptor> keyDescriptors = descriptor.getKeyDescriptors();
-		for (KeyDescriptor keydescriptor : keyDescriptors) {
-			UsageType useType = keydescriptor.getUse();
-			if (!useType.name().equalsIgnoreCase("SIGNING")) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Use type: " + useType + " != SIGNING");
-				return null;
-			}
-
-			org.opensaml.xml.signature.KeyInfo keyinfo = keydescriptor.getKeyInfo();
-			X509Data x509Data = keyinfo.getX509Datas().get(0);
-
-			List<X509Certificate> certs = x509Data.getX509Certificates();
-			if (!certs.isEmpty()) {
-				X509Certificate cert = certs.get(0);
-				try {
-					java.security.cert.X509Certificate javaCert = SamlTools.getCertificate(cert);
-					if (javaCert != null) {
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "Found: Issuer="+javaCert.getIssuerX500Principal().getName());
-						
-						PublicKey publicKey = javaCert.getPublicKey();
-						return publicKey;
-					}
-					else {
-						_systemLogger.log(Level.WARNING, MODULE, sMethod,
-								"Could not retrieve the public key from metadata for entity id : " + entityId);
-					}
-				}
-				catch (CertificateException e) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot retrieve the public key from metadata: ", e);
-				}
-			}
-		}
-		return null;
+	public static void setCheckCertificates(String checkCertificates)
+	{
+		_sCheckCertificates = checkCertificates;
 	}
 }

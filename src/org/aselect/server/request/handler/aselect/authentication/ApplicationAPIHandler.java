@@ -532,7 +532,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 
 	// Bauke: added to support TGT refreshing
 	private void handleUpgradeTGTRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleUpgradeTGTRequest";
 		String sEncTGT = null;
@@ -599,7 +599,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			String verify_signature = (String) htResult.get("verify_signature");
 			PublicKey pKey = null;
 			if ("true".equalsIgnoreCase(verify_signature.trim())) {
-				pKey = _metadataManager.getSigningKey(_configManager.getFederationURL());
+				pKey = _metadataManager.getSigningKeyFromMetadata(_configManager.getFederationURL());
 			}
 
 			String verify_interval = (String) htResult.get("verify_interval");

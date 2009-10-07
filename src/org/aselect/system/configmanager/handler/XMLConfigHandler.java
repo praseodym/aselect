@@ -483,10 +483,11 @@ public class XMLConfigHandler implements IConfigHandler
 	 *      java.lang.String)
 	 */
 	public synchronized String getParam(Object oSection, String sConfigItem)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
 		String sMethod = "getParam()";
+		String sId = null;
 
 		String sValue = null;
 		Node nAttribute = null;
@@ -503,7 +504,7 @@ public class XMLConfigHandler implements IConfigHandler
 			throw new ASelectConfigException(Errors.ERROR_ASELECT_NOT_FOUND);
 		}
 		if (!(oSection instanceof Node)) {
-			sbError.append("Supplied section is of type Node.");
+			sbError.append("Supplied section is not of type Node.");
 			_oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
 			throw new ASelectConfigException(Errors.ERROR_ASELECT_NOT_FOUND);
 		}
@@ -515,16 +516,19 @@ public class XMLConfigHandler implements IConfigHandler
 			//get all attributes
 			if (nSection.hasAttributes()) {
 				nnmAttributes = nSection.getAttributes();
-				nAttribute = nnmAttributes.getNamedItem(sConfigItem);
-				if (nAttribute != null) {
-					//requested param is an attribute
-					sValue = nAttribute.getNodeValue();
+				if (nnmAttributes != null) {
+					nAttribute = nnmAttributes.getNamedItem(sConfigItem);
+					Node nId = nnmAttributes.getNamedItem("id");
+					if (nId != null)
+						sId = nId.getNodeValue();
+					if (nAttribute != null) { // Requested param is an attribute
+						sValue = nAttribute.getNodeValue();
+					}
 				}
 			}
 
 			//check sub tagnames for the specific sConfigItem
-			if (sValue == null) {
-				//check if param = sub node
+			if (sValue == null) {  // Check if param = sub node
 				nlChilds = nSection.getChildNodes();
 				for (int i = 0; i < nlChilds.getLength(); i++) {
 					nTemp = nlChilds.item(i);
@@ -532,20 +536,16 @@ public class XMLConfigHandler implements IConfigHandler
 					if (nTemp != null && nTemp.getNodeName().equalsIgnoreCase(sConfigItem)) {
 						nlSubNodes = nTemp.getChildNodes();
 
-						if (nlSubNodes.getLength() == 0) {
-							//
-							// Node contains no data
-							//
+						if (nlSubNodes.getLength() == 0) {  // Node contains no data
 							if (sValue == null)
 								sValue = new String("");
 						}
 						else {
 							for (int xI = 0; xI < nlSubNodes.getLength(); xI++) {
 								nTemp2 = nlSubNodes.item(xI);
-								if (nTemp2.getNodeType() == Node.TEXT_NODE) {
+								if (nTemp2 != null && nTemp2.getNodeType() == Node.TEXT_NODE) {
 									sValue = nTemp2.getNodeValue();
-
-									// Parameter value is empty(tom)
+									// Handle empty parameter value (tom)
 									if (sValue == null)
 										sValue = new String("");
 								}
@@ -556,15 +556,15 @@ public class XMLConfigHandler implements IConfigHandler
 			}
 		}
 		catch (Exception e) {
-			sbError.append("Error retrieving parameter: ");
-			sbError.append(sConfigItem);
+			sbError.append("Error retrieving parameter: ").append(sConfigItem);
+			if (sId != null) sbError.append(", id=").append(sId);
 			_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString());
-			throw new ASelectConfigException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+			throw new ASelectConfigException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 
 		if (sValue == null) {
-			sbError.append("Error retrieving parameter: ");
-			sbError.append(sConfigItem + oSection.toString());
+			sbError.append("Error retrieving parameter: ").append(sConfigItem +" / " + oSection.toString());
+			if (sId != null) sbError.append(", id=").append(sId);
 			_oSystemLogger.log(Level.FINEST, MODULE, sMethod, sbError.toString());
 			throw new ASelectConfigException(Errors.ERROR_ASELECT_NOT_FOUND);
 		}

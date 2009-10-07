@@ -83,215 +83,196 @@ import org.aselect.system.logging.SystemLogger;
  */
 public class SAMAgent
 {
-    /**
-     * The name of the class, used for logging.
-     */
-    private final static String MODULE = "SAMAgent";
-    
-    /**
-     * Contains the SAM ResourceGroups
-     */
-    private HashMap _htResourceGroups = null;
-    
-    private SystemLogger _oSystemLogger;
+	/**
+	 * The name of the class, used for logging.
+	 */
+	private final static String MODULE = "SAMAgent";
 
-    /**
-     * Default constructor
-     */
-    public SAMAgent ()
-    {}
+	/**
+	 * Contains the SAM ResourceGroups
+	 */
+	private HashMap _htResourceGroups = null;
 
-    /**
-     * This function is to initialize the SAMAgent.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Loads all configured resources within the 'samagent' config section in the 
-     * <code>HashMap</code> <i>_htResourceGroups</i>. 
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @param oConfigManager The section within the configuration file in which 
-     * the parameters for the SAMAgent can be found.
-     * @param oSystemLogger the <code>SystemLogger</code> object that is the 
-     * logging target
-     * @throws ASelectSAMException if no correct configuration was found
-     */
-    public void init(ConfigManager oConfigManager, SystemLogger oSystemLogger)
-        throws ASelectSAMException
-    {
-        String sMethod = "init()";
+	private SystemLogger _oSystemLogger;
 
-        Object oSAMSection = null;
-        Object oAgentSection = null;
-        Object oResourceGroupSection = null;
-        try
-        {
-            _oSystemLogger = oSystemLogger;
-            
-            try
-            {
-                oSAMSection = oConfigManager.getSection(null, "sam");
-            }
-            catch (Exception e)
-            {
-                _oSystemLogger.log(Level.WARNING, MODULE, sMethod, "Could not find the 'sam' config section", e);
-                throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-            }
-            
-            try
-            {
-                oAgentSection = oConfigManager.getSection(oSAMSection, "agent");
-            }
-            catch (Exception e)
-            {
-                _oSystemLogger.log(Level.WARNING, MODULE, sMethod, "Could not find the 'agent' config section inside the 'sam' section", e);
-                throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-            }
+	/**
+	 * Default constructor
+	 */
+	public SAMAgent() {
+	}
 
-            try
-            {
-                oResourceGroupSection = oConfigManager.getSection(oAgentSection,
-                    "resourcegroup");
-            }
-            catch (Exception e)
-            {
-                _oSystemLogger.log(Level.WARNING, MODULE, sMethod, "Could not find the 'resourcegroup' config section with the 'agent' section", e);
-                throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-            }
+	/**
+	 * This function is to initialize the SAMAgent.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Loads all configured resources within the 'samagent' config section in the 
+	 * <code>HashMap</code> <i>_htResourceGroups</i>. 
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * @param oConfigManager The section within the configuration file in which 
+	 * the parameters for the SAMAgent can be found.
+	 * @param oSystemLogger the <code>SystemLogger</code> object that is the 
+	 * logging target
+	 * @throws ASelectSAMException if no correct configuration was found
+	 */
+	public void init(ConfigManager oConfigManager, SystemLogger oSystemLogger)
+		throws ASelectSAMException
+	{
+		String sMethod = "init()";
 
-            //Remove old resource groups
-            destroy();
+		Object oSAMSection = null;
+		Object oAgentSection = null;
+		Object oResourceGroupSection = null;
+		try {
+			_oSystemLogger = oSystemLogger;
 
-            SAMResourceGroup oSAMResourceGroup = new SAMResourceGroup();
-            oSAMResourceGroup.init(oResourceGroupSection, oConfigManager, _oSystemLogger);
-            oSAMResourceGroup.start();
+			try {
+				oSAMSection = oConfigManager.getSection(null, "sam");
+			}
+			catch (Exception e) {
+				_oSystemLogger.log(Level.WARNING, MODULE, sMethod, "Could not find the 'sam' config section", e);
+				throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			}
 
-            _htResourceGroups = new HashMap();
-            _htResourceGroups.put(oConfigManager.getParam(oResourceGroupSection, "id"),
-                oSAMResourceGroup);
+			try {
+				oAgentSection = oConfigManager.getSection(oSAMSection, "agent");
+			}
+			catch (Exception e) {
+				_oSystemLogger.log(Level.WARNING, MODULE, sMethod,
+						"Could not find the 'agent' config section inside the 'sam' section", e);
+				throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			}
 
-            while ((oResourceGroupSection = oConfigManager
-                .getNextSection(oResourceGroupSection)) != null)
-            {
-                oSAMResourceGroup = new SAMResourceGroup();
-                oSAMResourceGroup
-                    .init(oResourceGroupSection, oConfigManager, _oSystemLogger);
-                oSAMResourceGroup.start();
+			try {
+				oResourceGroupSection = oConfigManager.getSection(oAgentSection, "resourcegroup");
+			}
+			catch (Exception e) {
+				_oSystemLogger.log(Level.WARNING, MODULE, sMethod,
+						"Could not find the 'resourcegroup' config section with the 'agent' section", e);
+				throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			}
 
-                _htResourceGroups.put(oConfigManager.getParam(oResourceGroupSection, "id"),
-                    oSAMResourceGroup);
-            }
-        }
-        catch (ASelectSAMException e)
-        {
-            throw e;
-        }
-        catch (Exception e)
-        {
-            _oSystemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize SAMLAgent", e);
+			//Remove old resource groups
+			destroy();
 
-            throw new ASelectSAMException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+			SAMResourceGroup oSAMResourceGroup = new SAMResourceGroup();
+			oSAMResourceGroup.init(oResourceGroupSection, oConfigManager, _oSystemLogger);
+			oSAMResourceGroup.start();
 
-        }
-    }
+			_htResourceGroups = new HashMap();
+			_htResourceGroups.put(oConfigManager.getParam(oResourceGroupSection, "id"), oSAMResourceGroup);
 
-    /**
-     * Gets an active resource from a paricular group. <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * Returns the active resource from the resource group with the supplied id.
-     * <br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>-<br>
-     * <br>
-     * <b>Preconditions: </b> <br>- <i>sID </i>!= null <br>
-     * <br>
-     * <b>Postconditions: </b> <br>-<br>
-     * 
-     * @param sID
-     *            The identifier for a particular group of resources.
-     * @return The SAMResource object of an active resource.
-     * @throws ASelectSAMException
-     *             if no active resource can be found
-     */
-    public SAMResource getActiveResource(String sID) throws ASelectSAMException
-    {
-        String sMethod = "getActiveResource()";
-        
-        SAMResource oSAMResource = null;
-        
-        SAMResourceGroup oSAMResourceGroup = (SAMResourceGroup)_htResourceGroups.get(sID);
-        
-        if (oSAMResourceGroup != null)
-        {
-            oSAMResource = oSAMResourceGroup.getActiveResource();
-        }
-        else
-        {
-            StringBuffer sbError = new StringBuffer("Resourcegroup with name '");
-            sbError.append(sID);
-            sbError.append("' does not exist");
-            _oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
-            
-            throw new ASelectSAMException(Errors.ERROR_ASELECT_SAM_UNAVALABLE);
-        }
-        
-        return oSAMResource;
-    }
+			while ((oResourceGroupSection = oConfigManager.getNextSection(oResourceGroupSection)) != null) {
+				oSAMResourceGroup = new SAMResourceGroup();
+				oSAMResourceGroup.init(oResourceGroupSection, oConfigManager, _oSystemLogger);
+				oSAMResourceGroup.start();
 
-    /**
-     * Destroys all resourcegroups (SAMResourceGroups).
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Destroys all SAMResourceGroups in the <i>_htResourceGroups</i> and removes them.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     */
-    public void destroy()
-    {
-        if (_htResourceGroups != null)
-        {
-            try
-            {
-    	        Set keys = _htResourceGroups.keySet();
-    			for (Object s : keys) {
-    				String sKey = (String) s;
-	            //Enumeration enumKeys = _htResourceGroups.keys();	
-	            //while (enumKeys.hasMoreElements())
-	            //{
-	              //  String sKey = (String)enumKeys.nextElement();
-	                SAMResourceGroup oSAMResourceGroup = (SAMResourceGroup)_htResourceGroups.get(sKey);
-	                oSAMResourceGroup.destroy();
-	                oSAMResourceGroup.interrupt();
-	            }
-            }
-            catch(Exception e)
-            {
-                //SAMLOcator allready disposed
-            }
-        }
-    }
+				_htResourceGroups.put(oConfigManager.getParam(oResourceGroupSection, "id"), oSAMResourceGroup);
+			}
+		}
+		catch (ASelectSAMException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize SAMLAgent", e);
+			throw new ASelectSAMException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+
+		}
+	}
+
+	/**
+	 * Gets an active resource from a paricular group. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Returns the active resource from the resource group with the supplied id.
+	 * <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>- <i>sID </i>!= null <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>-<br>
+	 * 
+	 * @param sID
+	 *            The identifier for a particular group of resources.
+	 * @return The SAMResource object of an active resource.
+	 * @throws ASelectSAMException
+	 *             if no active resource can be found
+	 */
+	public SAMResource getActiveResource(String sID)
+		throws ASelectSAMException
+	{
+		String sMethod = "getActiveResource()";
+
+		SAMResource oSAMResource = null;
+
+		SAMResourceGroup oSAMResourceGroup = (SAMResourceGroup) _htResourceGroups.get(sID);
+
+		if (oSAMResourceGroup != null) {
+			oSAMResource = oSAMResourceGroup.getActiveResource();
+		}
+		else {
+			StringBuffer sbError = new StringBuffer("Resourcegroup with name '");
+			sbError.append(sID);
+			sbError.append("' does not exist");
+			_oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
+			throw new ASelectSAMException(Errors.ERROR_ASELECT_SAM_UNAVALABLE);
+		}
+
+		return oSAMResource;
+	}
+
+	/**
+	 * Destroys all resourcegroups (SAMResourceGroups).
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Destroys all SAMResourceGroups in the <i>_htResourceGroups</i> and removes them.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 */
+	public void destroy()
+	{
+		if (_htResourceGroups != null) {
+			try {
+				Set keys = _htResourceGroups.keySet();
+				for (Object s : keys) {
+					String sKey = (String) s;
+					//Enumeration enumKeys = _htResourceGroups.keys();	
+					//while (enumKeys.hasMoreElements())
+					//{
+					//  String sKey = (String)enumKeys.nextElement();
+					SAMResourceGroup oSAMResourceGroup = (SAMResourceGroup) _htResourceGroups.get(sKey);
+					oSAMResourceGroup.destroy();
+					oSAMResourceGroup.interrupt();
+				}
+			}
+			catch (Exception e) {
+				//SAMLOcator allready disposed
+			}
+		}
+	}
 }

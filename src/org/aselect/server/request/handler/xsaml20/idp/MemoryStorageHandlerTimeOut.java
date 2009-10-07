@@ -243,7 +243,7 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 
 		PublicKey pkey = null;
 		if (is_bVerifySignature()) {
-			pkey = metadataManager.getSigningKey(urlSp);
+			pkey = metadataManager.getSigningKeyFromMetadata(urlSp);
 			if (pkey == null || "".equals(pkey)) {
 				_oSystemLogger.log(Level.SEVERE, MODULE, _sMethod, "No valid public key in metadata");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);

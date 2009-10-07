@@ -157,7 +157,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 //						"".equals(logoutRequest.getIssuer().getValue()) ) ? null : 
 //							logoutRequest.getIssuer().getValue();	// else value from message
 				MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
-				PublicKey pkey = metadataManager.getSigningKey(initiatingSP);
+				PublicKey pkey = metadataManager.getSigningKeyFromMetadata(initiatingSP);
 				if (pkey == null) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "PublicKey for entityId: " + initiatingSP
 							+ " not found.");

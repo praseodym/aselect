@@ -45,7 +45,7 @@ public class MetaDataManagerIdp extends AbstractMetaDataManager
 	 * @throws ASelectException
 	 */
 	protected void init()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		Object applications = null;
@@ -82,7 +82,7 @@ public class MetaDataManagerIdp extends AbstractMetaDataManager
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 		}
-		getMetaDataProviderfromList();
+		initializeMetaDataHandling();
 	}
 
 	/**

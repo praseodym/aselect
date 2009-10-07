@@ -297,7 +297,7 @@ public class CrossASelectManager
 			oASelect = _oASelectConfigManager.getSection(null, "aselect");
 		}
 		catch (ASelectConfigException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'aselect' config section found", e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'aselect' config section found");
 			throw e;
 		}
 
@@ -306,7 +306,7 @@ public class CrossASelectManager
 		}
 		catch (ASelectConfigException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"Could not retrieve 'organization' config parameter in aselect config section", e);
+					"Could not retrieve 'organization' config parameter in aselect config section");
 			throw e;
 		}
 
@@ -376,7 +376,7 @@ public class CrossASelectManager
 		catch (Exception e) {
 			StringBuffer sbError = new StringBuffer("Organization id not found:");
 			sbError.append(sOrg);
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
 		}
 		return bForced;
 	}
@@ -464,7 +464,7 @@ public class CrossASelectManager
 			catch (ASelectConfigException eAC) {
 				StringBuffer sbMessage = new StringBuffer("No valid 'organization' section found for '");
 				sbMessage.append(sOrgId).append("' in 'remote_servers' config.");
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbMessage.toString(), eAC);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbMessage.toString());
 				return null;
 			}
 			try {
@@ -474,7 +474,7 @@ public class CrossASelectManager
 				StringBuffer sbMessage = new StringBuffer("No valid '");
 				sbMessage.append(sName).append("' found for '");
 				sbMessage.append(sOrgId).append("' in 'organization' section");
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbMessage.toString(), eAC);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbMessage.toString());
 				return null;
 			}
 			sReturn = sReturn.trim();
@@ -517,7 +517,7 @@ public class CrossASelectManager
 			catch (ASelectConfigException eAC) {
 				StringBuffer sbMessage = new StringBuffer("No valid 'organization' section found for '");
 				sbMessage.append(sOrgId).append("' in 'local_servers' config");
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbMessage.toString(), eAC);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbMessage.toString());
 				return null;
 			}
 			try {
@@ -527,7 +527,7 @@ public class CrossASelectManager
 				StringBuffer sbMessage = new StringBuffer("No valid '");
 				sbMessage.append(sName).append("' found for '");
 				sbMessage.append(sOrgId).append("' in 'organization' section");
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbMessage.toString(), eAC);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbMessage.toString());
 				return null;
 			}
 			sReturn = sReturn.trim();
@@ -574,7 +574,7 @@ public class CrossASelectManager
 		catch (ASelectConfigException eAC) {
 			StringBuffer sbMessage = new StringBuffer("No valid 'organisation' section found for '");
 			sbMessage.append(sOrgId).append("' in A-Select config");
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbMessage.toString(), eAC);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbMessage.toString());
 			throw new ASelectException(Errors.ERROR_ASELECT_CONFIG_ERROR);
 		}
 
@@ -719,7 +719,7 @@ public class CrossASelectManager
 		}
 		catch (ASelectConfigException eAC) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"No valid 'organization' section found in 'local_servers' section", eAC);
+					"No valid 'organization' section found in 'local_servers' section");
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
 		}
 
@@ -731,7 +731,7 @@ public class CrossASelectManager
 			_bRequireLocalSigning = false;
 			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
 					"No valid 'require_signing' parameter found in section 'local_servers',"
-							+ " Using default value 'false'", eAC);
+							+ " Using default value 'false'");
 		}
 		if (_bRequireLocalSigning) {
 			loadLocalServerSigningKeys(_oASelectConfigManager.getWorkingdir());
@@ -745,7 +745,7 @@ public class CrossASelectManager
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"No valid 'id' parameter found in section 'organisation'", e);
+						"No valid 'id' parameter found in section 'organisation'");
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -756,7 +756,7 @@ public class CrossASelectManager
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
 						"No valid 'forced_authenticate' parameter found in section 'local_servers',"
-								+ " setting forced_authenticate to FALSE", e);
+								+ " setting forced_authenticate to FALSE");
 			}
 
 			if (sOrg.equalsIgnoreCase(_sMyOrg)) {
@@ -776,7 +776,7 @@ public class CrossASelectManager
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No optional 'maintainer_email' config item found in 'organization' config section", e);
+						"No optional 'maintainer_email' config item found in 'organization' config section");
 			}
 
 			String sFriendlyName = null;
@@ -786,7 +786,7 @@ public class CrossASelectManager
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No optional 'friendly_name' config item found in 'organization' config section", e);
+						"No optional 'friendly_name' config item found in 'organization' config section");
 			}
 
 			String sShowUrl = null;
@@ -795,7 +795,7 @@ public class CrossASelectManager
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No optional 'show_url' config item found in 'organization' config section", e);
+						"No optional 'show_url' config item found in 'organization' config section");
 			}
 
 			Boolean boolShowUrl = null;
@@ -849,7 +849,7 @@ public class CrossASelectManager
 		}
 		catch (ASelectConfigException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"Not even one 'organization' config section found in 'remote_servers' section", e);
+					"Not even one 'organization' config section found in 'remote_servers' section");
 		}
 
 		while (oRemoteOrg != null) {
@@ -860,7 +860,7 @@ public class CrossASelectManager
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"No 'id' config item found in 'organization' config section", e);
+						"No 'id' config item found in 'organization' config section");
 				throw e;
 			}
 
@@ -870,7 +870,7 @@ public class CrossASelectManager
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"No 'friendly_name' config item found in 'organization' config section", e);
+						"No 'friendly_name' config item found in 'organization' config section");
 				throw e;
 			}
 
@@ -897,7 +897,7 @@ public class CrossASelectManager
 			ocross_selector_ConfigSection = _oASelectConfigManager.getSection(_oCrossConfigSection, "cross_selector");
 		}
 		catch (ASelectConfigException e) {
-			_systemLogger.log(Level.CONFIG, MODULE, sMethod, "'cross_selector' disabled", e);
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod, "'cross_selector' disabled");
 			return false;
 		}
 		try {
@@ -911,7 +911,7 @@ public class CrossASelectManager
 			_iSelectorHandler.init(_oHandlerConfigSection);
 		}
 		catch (ASelectConfigException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to initialize cross_selector: ", e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to initialize cross_selector: ");
 			throw e;
 		}
 		catch (Exception e) {

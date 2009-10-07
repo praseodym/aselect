@@ -78,6 +78,6 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 			}
 			resourcegroup = _configManager.getNextSection(resourcegroup);
 		}
-		getMetaDataProviderfromList();
+		initializeMetaDataHandling();
 	}
 }

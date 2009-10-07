@@ -131,7 +131,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 				}
 				MetaDataManagerSp metadataManager = MetaDataManagerSp.getHandle();
-				pkey = metadataManager.getSigningKey(_sFederationUrl);
+				pkey = metadataManager.getSigningKeyFromMetadata(_sFederationUrl);
 				if (pkey == null || "".equals(pkey)) {
 					_systemLogger.log(Level.SEVERE, MODULE, _sMethod, "No public valid key in metadata from: " + _sFederationUrl);
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);

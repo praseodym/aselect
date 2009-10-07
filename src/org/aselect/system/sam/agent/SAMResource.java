@@ -73,331 +73,304 @@ import org.aselect.system.logging.SystemLogger;
  */
 public class SAMResource
 {
-    /**
-     * The name of the class, used for logging.
-     */
-    private final static String MODULE = "SAMResource";
-    
-    /**
-     * The logger used for system logging
-     */
-    private SystemLogger _oSystemLogger;
-    
-    /**
-     * The id of the resource
-     */
-    private String _sId;
+	/**
+	 * The name of the class, used for logging.
+	 */
+	private final static String MODULE = "SAMResource";
 
-    /**
-     * The resource config section
-     */
-    private Object _oConfiguredAttributesSection;
+	/**
+	 * The logger used for system logging
+	 */
+	private SystemLogger _oSystemLogger;
 
-    /**
-     * A <code>boolean</code> that keeps track iof the resource availability
-     */
-    private boolean _bLive;
+	/**
+	 * The id of the resource
+	 */
+	private String _sId;
 
-    /**
-     * The thread that polls every interval
-     */
-    private PollingThread _oPollingThread;
+	/**
+	 * The resource config section
+	 */
+	private Object _oConfiguredAttributesSection;
 
-    /**
-     * The polling interval
-     */
-    private long _lInterval;
+	/**
+	 * A <code>boolean</code> that keeps track iof the resource availability
+	 */
+	private boolean _bLive;
 
-    /**
-     * Used for stopping the <code>Thread</code>.
-     */
-    private boolean _bRunThread;
+	/**
+	 * The thread that polls every interval
+	 */
+	private PollingThread _oPollingThread;
 
-    /**
-     * The polling method used for polling this resource
-     */
-    private ISAMPollingMethod _oSAMPollingMethod;
-    
-    /**
-     * Default constructor.
-     */
-    public SAMResource()
-    {
-    }
-    
-    /**
-     * Initializes the configured resource.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Checks if their is a polling methodconfigured for the resource and starts 
-     * polling. If no polling method is found, no thread is started.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * - <i>oConfigSection</i> may not be <code>null</code><br>
-     * - <i>oConfigManager</i> may not be <code>null</code><br>
-     * - <i>oSystemLogger</i> may not be <code>null</code><br>
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @param oConfigSection - The section within the configuration file in 
-     * which the parameters for the SAMAgent can be found.
-     * @param oConfigManager the config manager object that is used to retrieve 
-     * the configuration
-     * @param oSystemLogger the logger used for system logging
-     * @throws ASelectSAMException if the resource could not initialize
-     */
-    public void init(Object oConfigSection, ConfigManager oConfigManager,
-            SystemLogger oSystemLogger) throws ASelectSAMException
-    {
-        String sMethod = "init()";
-        
-        //must always be set, even if no polling method is configured
-        _oConfiguredAttributesSection = oConfigSection;
-        _oSystemLogger = oSystemLogger;
-                
-        String sConfiguredPollingMethod = null;
-        Object oPollingMethodSection = null;
-        Class cPollingClass = null;
-        String sConfiguredInterval = null;
-        _bLive = true;
+	/**
+	 * The polling interval
+	 */
+	private long _lInterval;
 
-        try
-        {
-	        try
-	        {
-	            _sId = oConfigManager.getParam(oConfigSection, "id");
-	        } 
-	        catch (Exception e)
-	        {
-	            _oSystemLogger.log(Level.SEVERE, MODULE, sMethod, "Error resolving config item 'id' in 'resource' section.", e);
-	
-	            throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-	        }
-	
-	        try
-	        {
-	            sConfiguredPollingMethod = oConfigManager.getParam(oConfigSection,
-	            	"polling");
-	        } 
-	        catch (Exception e)
-	        {
-	            _oSystemLogger.log(Level.CONFIG, MODULE, sMethod, "No config item 'polling' is found, disabling polling.", e);
-	        }
-	
-	        if (sConfiguredPollingMethod != null)
-	        {
-	            try
-	            {
-	                oPollingMethodSection = oConfigManager.getSection(
-	                        oConfigSection, "pollingmethod", "id="
-	                                + sConfiguredPollingMethod);
-	            } 
-	            catch (Exception e)
-	            {
-	                StringBuffer sbError = new StringBuffer(
-	                    "No config item 'pollingmethod' is found, disabling polling for resource: ");
-	                sbError.append(_sId);
-	                
-	                _oSystemLogger.log(Level.CONFIG, MODULE, sMethod, sbError.toString(), e);
-	            }
-	        
-		        if (oPollingMethodSection != null)
-		        {
-		            try
-		            {
-		                cPollingClass = Class.forName(oConfigManager.getParam(
-		                        oPollingMethodSection, "class"));
-		            } 
-		            catch (Exception e)
-		            {
-		                StringBuffer sbError = new StringBuffer(
-		                    "No config item 'class' is found or isn't a correct polling class.");
-		                sbError.append(_sId);
-		                _oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
-		                
-		                throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-		            } 
-		            
-		            try
-		            {
-		                sConfiguredInterval = oConfigManager.getParam(oConfigSection,
-		                        "interval");
-		            } 
-		            catch (Exception e)
-		            {
-		                StringBuffer sbError = new StringBuffer(
-		                    "No config item 'interval' is found for resource with id: '");
-		                sbError.append(_sId);
-		                sbError.append("'");		                
-		                _oSystemLogger.log(Level.INFO, MODULE, sMethod, sbError.toString(), e);
-		                
-		                throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-		            }
-		            
-		            _oSAMPollingMethod = (ISAMPollingMethod) cPollingClass.newInstance();
-		            _oSAMPollingMethod.init(oConfigSection, oPollingMethodSection,
-	                        oConfigManager, _oSystemLogger);
-	
-	                _lInterval = (Long.parseLong(sConfiguredInterval) * 1000);
-	
-	                _bRunThread = true;
-	                
-	                //start polling
-	                _oPollingThread = new PollingThread();
-	                _oPollingThread.start();
-		        }
-	        }
-        }
-    	catch (ASelectSAMException e)
-        {
-            throw e;
-        } 
-    	catch (Exception e)
-        {
-    	    StringBuffer sbError = new StringBuffer("Could not initialize the resource with id: '");
-            sbError.append(_sId);
-            sbError.append("'.");
-            _oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
-            
-            throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-        }
-    }
+	/**
+	 * Used for stopping the <code>Thread</code>.
+	 */
+	private boolean _bRunThread;
 
-    /**
-     * Check if the resource is still available.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Returns the <i>_bLive</i> variable that is set when the resource is 
-     * alive.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @return TRUE if the resource is available, FALSE if the resource is 
-     * unavailable.
-     */
-    public boolean live()
-    {
-        return _bLive;
-    }
+	/**
+	 * The polling method used for polling this resource
+	 */
+	private ISAMPollingMethod _oSAMPollingMethod;
 
-    /**
-     * Returns the configuration attributes of this resource as an <code>Object
-     * </code>.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Along with the configuration of the SAMResource, additional parameters
-     * can be defined. These parameters can hold information about the resource.
-     * For example, a username and password. This functions returns these
-     * parameters to the application.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * The init() method must be called before using this method.
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @return A Object pointing to the section with the attributes within the 
-     * configuration file.
-     */
-    public Object getAttributes()
-    {
-        return _oConfiguredAttributesSection;
-    }
+	/**
+	 * Default constructor.
+	 */
+	public SAMResource() {
+	}
 
-    /**
-     * Class destroyer.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Destroy this class properly and stopped the polling thread.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * The polling thread is stopped. 
-     * <br>
-     * 
-     */
-    public void destroy()
-    {
-        _bRunThread = false;
-        _bLive = false;
-        
-        try
-        {
-            _oPollingThread.interrupt();
-        } 
-        catch (Exception e) {}  
-    }
+	/**
+	 * Initializes the configured resource.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Checks if their is a polling methodconfigured for the resource and starts 
+	 * polling. If no polling method is found, no thread is started.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * - <i>oConfigSection</i> may not be <code>null</code><br>
+	 * - <i>oConfigManager</i> may not be <code>null</code><br>
+	 * - <i>oSystemLogger</i> may not be <code>null</code><br>
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * @param oConfigSection - The section within the configuration file in 
+	 * which the parameters for the SAMAgent can be found.
+	 * @param oConfigManager the config manager object that is used to retrieve 
+	 * the configuration
+	 * @param oSystemLogger the logger used for system logging
+	 * @throws ASelectSAMException if the resource could not initialize
+	 */
+	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger oSystemLogger)
+		throws ASelectSAMException
+	{
+		String sMethod = "init()";
 
-    /**
-     * To keep track of whether or not this resource is still available, this
-     * thread poll the resource periodically.
-     */
-    private class PollingThread extends Thread
-    {
-        /**
-         * Start polling every configured interval
-         * <br><br>
-         * @see java.lang.Runnable#run()
-         */
-        public void run()
-        {
-            String sMethod = "run()";
-            
-            while (_bRunThread)
-            {
-                try
-                {
-                    _bLive = _oSAMPollingMethod.poll();
+		//must always be set, even if no polling method is configured
+		_oConfiguredAttributesSection = oConfigSection;
+		_oSystemLogger = oSystemLogger;
 
-                    if (!_bLive)
-                    {
-                        StringBuffer sbError = new StringBuffer(MODULE);
-                        sbError.append(":PollingThread.run() -> ");
-                        sbError.append("Resource '");
-                        sbError.append(_sId);
-                        sbError.append("' is currently unavailable.");
-                        _oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
-                    }
+		String sConfiguredPollingMethod = null;
+		Object oPollingMethodSection = null;
+		Class cPollingClass = null;
+		String sConfiguredInterval = null;
+		_bLive = true;
 
-                    sleep(_lInterval);
-                } 
-                catch (Exception e) {}
-            }
-        }
-    }
+		try {
+			try {
+				_sId = oConfigManager.getParam(oConfigSection, "id");
+			}
+			catch (Exception e) {
+				_oSystemLogger.log(Level.SEVERE, MODULE, sMethod,
+						"Error resolving config item 'id' in 'resource' section.");
+				throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			}
+
+			try {
+				sConfiguredPollingMethod = oConfigManager.getParam(oConfigSection, "polling");
+			}
+			catch (Exception e) {
+				_oSystemLogger.log(Level.CONFIG, MODULE, sMethod,
+						"No config item 'polling' is found, disabling polling.");
+			}
+
+			if (sConfiguredPollingMethod != null) {
+				try {
+					oPollingMethodSection = oConfigManager.getSection(oConfigSection, "pollingmethod", "id="
+							+ sConfiguredPollingMethod);
+				}
+				catch (Exception e) {
+					StringBuffer sbError = new StringBuffer(
+							"No config item 'pollingmethod' is found, disabling polling for resource: ");
+					sbError.append(_sId);
+					_oSystemLogger.log(Level.CONFIG, MODULE, sMethod, sbError.toString());
+				}
+
+				if (oPollingMethodSection != null) {
+					try {
+						cPollingClass = Class.forName(oConfigManager.getParam(oPollingMethodSection, "class"));
+					}
+					catch (Exception e) {
+						StringBuffer sbError = new StringBuffer(
+								"No config item 'class' is found or isn't a correct polling class.");
+						sbError.append(_sId);
+						_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString());
+						throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+					}
+
+					try {
+						sConfiguredInterval = oConfigManager.getParam(oConfigSection, "interval");
+					}
+					catch (Exception e) {
+						StringBuffer sbError = new StringBuffer(
+								"No config item 'interval' is found for resource with id: '");
+						sbError.append(_sId);
+						sbError.append("'");
+						_oSystemLogger.log(Level.INFO, MODULE, sMethod, sbError.toString());
+						throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+					}
+
+					_oSAMPollingMethod = (ISAMPollingMethod) cPollingClass.newInstance();
+					_oSAMPollingMethod.init(oConfigSection, oPollingMethodSection, oConfigManager, _oSystemLogger);
+
+					_lInterval = (Long.parseLong(sConfiguredInterval) * 1000);
+
+					_bRunThread = true;
+
+					//start polling
+					_oPollingThread = new PollingThread();
+					_oPollingThread.start();
+				}
+			}
+		}
+		catch (ASelectSAMException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			StringBuffer sbError = new StringBuffer("Could not initialize the resource with id: '");
+			sbError.append(_sId);
+			sbError.append("'.");
+			_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
+			throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+		}
+	}
+
+	/**
+	 * Check if the resource is still available.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Returns the <i>_bLive</i> variable that is set when the resource is 
+	 * alive.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * @return TRUE if the resource is available, FALSE if the resource is 
+	 * unavailable.
+	 */
+	public boolean live()
+	{
+		return _bLive;
+	}
+
+	/**
+	 * Returns the configuration attributes of this resource as an <code>Object
+	 * </code>.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Along with the configuration of the SAMResource, additional parameters
+	 * can be defined. These parameters can hold information about the resource.
+	 * For example, a username and password. This functions returns these
+	 * parameters to the application.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * The init() method must be called before using this method.
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * -
+	 * <br>
+	 * @return A Object pointing to the section with the attributes within the 
+	 * configuration file.
+	 */
+	public Object getAttributes()
+	{
+		return _oConfiguredAttributesSection;
+	}
+
+	/**
+	 * Class destroyer.
+	 * <br><br>
+	 * <b>Description:</b>
+	 * <br>
+	 * Destroy this class properly and stopped the polling thread.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Postconditions:</b>
+	 * <br>
+	 * The polling thread is stopped. 
+	 * <br>
+	 * 
+	 */
+	public void destroy()
+	{
+		_bRunThread = false;
+		_bLive = false;
+
+		try {
+			_oPollingThread.interrupt();
+		}
+		catch (Exception e) {
+		}
+	}
+
+	/**
+	 * To keep track of whether or not this resource is still available, this
+	 * thread poll the resource periodically.
+	 */
+	private class PollingThread extends Thread
+	{
+		/**
+		 * Start polling every configured interval
+		 * <br><br>
+		 * @see java.lang.Runnable#run()
+		 */
+		public void run()
+		{
+			String sMethod = "run()";
+
+			while (_bRunThread) {
+				try {
+					_bLive = _oSAMPollingMethod.poll();
+
+					if (!_bLive) {
+						StringBuffer sbError = new StringBuffer(MODULE);
+						sbError.append(":PollingThread.run() -> ");
+						sbError.append("Resource '");
+						sbError.append(_sId);
+						sbError.append("' is currently unavailable.");
+						_oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
+					}
+					sleep(_lInterval);
+				}
+				catch (Exception e) {
+				}
+			}
+		}
+	}
 }

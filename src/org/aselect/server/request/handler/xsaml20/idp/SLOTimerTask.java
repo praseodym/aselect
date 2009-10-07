@@ -117,7 +117,7 @@ public class SLOTimerTask extends TimerTask
 				// TODO verify the signature if we know that we have to and set_bVerirfySignature accordingly
 				PublicKey pkey = null;
 				if (is_bVerifySignature()) {
-					pkey = metadataManager.getSigningKey(sp);
+					pkey = metadataManager.getSigningKeyFromMetadata(sp);
 					if (pkey == null || "".equals(pkey)) {
 						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No valid public key in metadata");
 						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);

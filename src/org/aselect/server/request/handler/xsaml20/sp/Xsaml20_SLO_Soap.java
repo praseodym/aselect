@@ -141,7 +141,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Do logoutRequest signature verification=" + is_bVerifySignature());
 			if (is_bVerifySignature()) {
 				// Check signature of LogoutRequest
-				PublicKey pkey = metadataManager.getSigningKey(logoutRequestIssuer);
+				PublicKey pkey = metadataManager.getSigningKeyFromMetadata(logoutRequestIssuer);
 				if (pkey == null) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "PublicKey for entityId: " + logoutRequestIssuer
 							+ " not found.");

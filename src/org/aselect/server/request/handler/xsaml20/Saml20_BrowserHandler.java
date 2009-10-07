@@ -268,7 +268,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "SAML message IS signed.");
 
 				MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
-				PublicKey publicKey = metadataManager.getSigningKey(sEntityId);
+				PublicKey publicKey = metadataManager.getSigningKeyFromMetadata(sEntityId);
 				if (publicKey == null) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "PublicKey for entityId: " + sEntityId + " not found.");
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);

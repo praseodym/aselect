@@ -210,7 +210,7 @@ public class JDBCStorageHandler implements IStorageHandler
 				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Found resourcegroup: " + _sResourceGroup);
 			}
 			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'resourcegroup' section found", e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'resourcegroup' section found");
 				throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 			if (_oActiveResource == null || !_oActiveResource.live())
@@ -244,7 +244,7 @@ public class JDBCStorageHandler implements IStorageHandler
 				oTableSection = oConfigManager.getSection(oConfigSection, "table");
 			}
 			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'table' config section found", e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'table' config section found");
 				throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -253,7 +253,7 @@ public class JDBCStorageHandler implements IStorageHandler
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"No valid 'name' config item in 'table' section found", e);
+						"No valid 'name' config item in 'table' section found");
 				throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -262,7 +262,7 @@ public class JDBCStorageHandler implements IStorageHandler
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"No valid 'hash' config item in 'table' section found", e);
+						"No valid 'hash' config item in 'table' section found");
 				throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -271,7 +271,7 @@ public class JDBCStorageHandler implements IStorageHandler
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"No valid 'timestamp' config item in 'table' section found", e);
+						"No valid 'timestamp' config item in 'table' section found");
 				throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -280,7 +280,7 @@ public class JDBCStorageHandler implements IStorageHandler
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"No valid 'key' config item in 'table' section found", e);
+						"No valid 'key' config item in 'table' section found");
 				throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -289,7 +289,7 @@ public class JDBCStorageHandler implements IStorageHandler
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"No valid 'value' config item in 'table' section found", e);
+						"No valid 'value' config item in 'table' section found");
 				throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 			// getConnection();  // RH, 20090604, o
@@ -298,7 +298,7 @@ public class JDBCStorageHandler implements IStorageHandler
 			throw e;
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "The JDBC IStorageHandler could not be initialized", e);
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "The JDBC IStorageHandler could not be initialized");
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 	}
@@ -347,19 +347,19 @@ public class JDBCStorageHandler implements IStorageHandler
 			}
 		}
 		catch (IOException eIO) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not decode the object from the database", eIO);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not decode the object from the database");
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_RETRIEVE, eIO);
 		}
 		catch (ClassNotFoundException eCNF) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not decode the object from the database", eCNF);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not decode the object from the database");
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_RETRIEVE, eCNF);
 		}
 		catch (NullPointerException eNP) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Empty (null) key-object was supplied", eNP);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Empty (null) key-object was supplied");
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_RETRIEVE, eNP);
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not retrieve the object from the database", e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not retrieve the object from the database");
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_RETRIEVE, e);
 		}
 		finally {
@@ -372,15 +372,14 @@ public class JDBCStorageHandler implements IStorageHandler
 				}
 			}
 			catch (SQLException e) {
-				_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resource.", e);
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resource.");
 			}
 			finally { // RH, 20090604, sn
 				_oConnectionHandler.releaseConnection(oConnection);
 			} // RH, 20090604, en
 		}
 		if (oRet == null) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "The supplied key is not mapped to any value",
-					new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_RETRIEVE));
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "The supplied key is not mapped to any value");
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_RETRIEVE);
 		}
 		return oRet;
@@ -437,15 +436,15 @@ public class JDBCStorageHandler implements IStorageHandler
 			StringBuffer sbError = new StringBuffer(
 					"Could not resolve the timestamp from the JDBC database by executing the query: ");
 			sbError.append(sbQuery.toString());
-			_systemLogger.log(Level.FINE, MODULE, sMethod, sbError.toString(), e);
+			_systemLogger.log(Level.FINE, MODULE, sMethod, sbError.toString());
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_RETRIEVE, e);
 		}
 		catch (NullPointerException eNP) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Empty (null) key-object was supplied", eNP);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Empty (null) key-object was supplied");
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_RETRIEVE, eNP);
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not retrieve the object from the database", e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not retrieve the object from the database");
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_RETRIEVE, e);
 		}
 		finally {
@@ -458,7 +457,7 @@ public class JDBCStorageHandler implements IStorageHandler
 				}
 			}
 			catch (SQLException e) {
-				_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resource.", e);
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resource.");
 			}
 			finally { // RH, 20090604, sn
 				_oConnectionHandler.releaseConnection(oConnection);

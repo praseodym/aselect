@@ -172,7 +172,7 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 				
 				String sEntityId = issuer.getValue();
 				MetaDataManagerSp metadataManager = MetaDataManagerSp.getHandle();
-				PublicKey publicKey = metadataManager.getSigningKey(sEntityId);
+				PublicKey publicKey = metadataManager.getSigningKeyFromMetadata(sEntityId);
 				if (publicKey == null) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "PublicKey for entityId: " + sEntityId
 							+ " not found.");
@@ -303,7 +303,7 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 //						"".equals(logoutRequest.getIssuer().getValue()) ) ? null : 
 //							logoutRequest.getIssuer().getValue();	// else value from message
 				MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
-				PublicKey pkey = metadataManager.getSigningKey(initiatingSP);
+				PublicKey pkey = metadataManager.getSigningKeyFromMetadata(initiatingSP);
 				if (pkey == null) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "PublicKey for entityId: " + initiatingSP
 							+ " not found.");
