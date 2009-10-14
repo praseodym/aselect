@@ -17,7 +17,6 @@ import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.joda.time.DateTime;
-import org.opensaml.DefaultBootstrap;
 import org.opensaml.common.SAMLObjectBuilder;
 import org.opensaml.common.SAMLVersion;
 import org.opensaml.common.binding.BasicSAMLMessageContext;
@@ -33,7 +32,6 @@ import org.opensaml.saml2.metadata.Endpoint;
 import org.opensaml.saml2.metadata.SingleSignOnService;
 import org.opensaml.ws.transport.http.HttpServletResponseAdapter;
 import org.opensaml.xml.Configuration;
-import org.opensaml.xml.ConfigurationException;
 import org.opensaml.xml.XMLObjectBuilderFactory;
 import org.opensaml.xml.io.Marshaller;
 import org.opensaml.xml.io.MarshallerFactory;
@@ -66,13 +64,14 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 	        throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 	    }
 	    // TODO, remove this bootstrap, is done by Saml20_BaseHandler, RH, 20080721, n
-		try {
+		/*try {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Saml Bootstrap");
 			DefaultBootstrap.bootstrap();
 		}
 		catch (ConfigurationException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot initialize the OpenSAML library", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-		}
+		}*/
 
 		_sServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
 		_sFederationUrl = ASelectConfigManager.getSimpleParam(oConfig, "federation_url", true);

@@ -56,10 +56,10 @@ public class SLOTimerTask extends TimerTask
 	public void run()
 	{
 		String sMethod = "run()";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "RUN user="+sso.getUserId()+" - requestId="+requestId + " - "+tgtId);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "RUN user="+sso.getUserId()+" - requestId="+requestId +
+				" - "+tgtId+" mySso="+this.sso);
 
 		// Check if there are any involved SPs left for this user
-//		try {
 		TGTManager tgtManager = TGTManager.getHandle();
 		HashMap tgtContext = tgtManager.getTGT(tgtId);
 		if (tgtContext == null) {
@@ -73,31 +73,20 @@ public class SLOTimerTask extends TimerTask
 		catch (ASelectStorageException e) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Removing TGT failed "+tgtId+", continue");
 		}
-			//SSOSessionManager sessionManager = SSOSessionManager.getHandle();
-			//if (sessionManager.containsKey(user)) {
-			//	session = sessionManager.getSsoSession(user);
-			//}
-//		}
-//		catch (ASelectException e) {
-//			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Can't get session: "+e);
-//		}
+		UserSsoSession tgtSso = (UserSsoSession)tgtContext.get("sso_session");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Soap logout to all, using tgt.SSO="+tgtSso);
 		
-		// We have our own version: UserSsoSession sso = (UserSsoSession)tgtContext.get("sso_session");
-		
+		// We have our own version: UserSsoSession sso = (UserSsoSession)tgtContext.get("sso_session");		
 		// Nono use the version from the Tgt, it contains all that's left of the SP's
-		if (sso == null) {
+		if (tgtSso == null) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "RUN END - requestId="+requestId+" NO SESSION, no backchannel logout requiered");
 			return;
 		}
-//		if (!session.getTgtId().equals(tgtId)) {
-//			_systemLogger.log(Level.INFO, MODULE, sMethod, "RUN END - requestId="+requestId+" NO TGT MATCH, no backchannel logout required");
-//			return;
-//		}
 		
 		// Send a backchannel logout to all known SP's
-		String initiatingSP = sso.getLogoutInitiator();
+		String initiatingSP = tgtSso.getLogoutInitiator();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "initiatingSP="+initiatingSP);
-		List<ServiceProvider> sps = sso.getServiceProviders();
+		List<ServiceProvider> sps = tgtSso.getServiceProviders();
 		for (ServiceProvider serviceProvider : sps) {
 			try {
 				String sp = serviceProvider.getServiceProviderUrl();
@@ -109,7 +98,7 @@ public class SLOTimerTask extends TimerTask
 				MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
 				String url = metadataManager.getLocation(sp, SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME,
 						SAMLConstants.SAML2_SOAP11_BINDING_URI);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Logging out '" + serviceProvider + "' via backchannel");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Logging out '" + sp + "' via backchannel");
 				SoapLogoutRequestSender sender = new SoapLogoutRequestSender();
 				
 				// Unfortunately we have no handle to the aselect configuration
@@ -130,12 +119,12 @@ public class SLOTimerTask extends TimerTask
 			}
 		}
 
-		// now we have to send a logoutResponse to the initiating SP. One
+		// Now we have to send a logoutResponse to the initiating SP. One
 		// of the 'other SPs' did not respond, so the chain is broken. This
 		// means there was no logoutresponse send to the initiating SP yet
 		// this response must now be backchannel. This is necesary for the sake
 		// of completeness. Plus we get to log it
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "LogoutResponse to initiating SP="+initiatingSP);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "FINAL: LogoutResponse to initiating SP="+initiatingSP);
 		try {
 			if (initiatingSP != null) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Logging out initiator '" + initiatingSP + "' via backchannel");

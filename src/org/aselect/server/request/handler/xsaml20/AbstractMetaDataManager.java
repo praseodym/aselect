@@ -90,6 +90,7 @@ public abstract class AbstractMetaDataManager
 
 		// Initialize the opensaml library
 		try {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Saml Bootstrap");
 			DefaultBootstrap.bootstrap();
 		}
 		catch (ConfigurationException cfge) {
@@ -153,12 +154,12 @@ public abstract class AbstractMetaDataManager
 		}
 	}
 
-	// Bauke: added
 	/**
 	 * If a new SP is making contact with the IdP, we must be able to read it's metadata
 	 * Can be called any time, not necessarily at startup
 	 * Must be called before using SSODescriptors
 	 */
+	// Bauke: added
 	protected void checkMetadataProvider(String entityId)
 	throws ASelectException
 	{
@@ -166,10 +167,11 @@ public abstract class AbstractMetaDataManager
 		String metadataURL = null;
 		ChainingMetadataProvider myMetadataProvider = new ChainingMetadataProvider();
 
-		if (trustedIssuers.isEmpty()) {  // Load trusted ca's from trusted_issuers.keystore
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "SSODescriptors=" + SSODescriptors); // +" entityDescriptors=" + entityDescriptors);
+		if (trustedIssuers.isEmpty() && getCheckCertificates() != null) {
+			// Load trusted ca's (SP) or trusted SP's (IdP) from trusted_issuers.keystore
 			loadTrustedIssuers();
 		}
-		_systemLogger.log(Level.FINE, MODULE, sMethod, "SSODescriptors=" + SSODescriptors); // +" entityDescriptors=" + entityDescriptors);
 		if (entityId == null)
 			return;
 		if (SSODescriptors.containsKey(entityId)) {

@@ -437,7 +437,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				catch (Exception e) {
 					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Configuration error: " + e);
 				}
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Serverinfo ["+sServerInfoForm+"]");
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "Serverinfo ["+sServerInfoForm+"]");
 				pwOut.println(sServerInfoForm);
 			}
 		}
@@ -2168,7 +2168,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @throws ASelectException
 	 */
 	private void showUserInfo(HashMap htServiceRequest, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "showUserInfo()";
 		PrintWriter pwOut = null;
@@ -2206,7 +2206,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			if (sTemp == null)
 				sTemp = "[unknown]";
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[app]", sTemp);
-
 			sUserInfoForm = _configManager.updateTemplate(sUserInfoForm, htTGTContext);
 
 			sTemp = (String) htTGTContext.get("authsp");
@@ -2239,9 +2238,18 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				try {
 					CrossASelectManager oCrossASelectManager = CrossASelectManager.getHandle();
 					String sResourcegroup = oCrossASelectManager.getRemoteParam(sTemp, "resourcegroup");
-					SAMResource oSAMResource = ASelectSAMAgent.getHandle().getActiveResource(sResourcegroup);
-					Object oRemoteServer = oSAMResource.getAttributes();
-					sRemoteAsUrl = _configManager.getParam(oRemoteServer, "url");
+					if (sResourcegroup != null) {
+						SAMResource oSAMResource = ASelectSAMAgent.getHandle().getActiveResource(sResourcegroup);
+						Object oRemoteServer = oSAMResource.getAttributes();
+						try {
+							sRemoteAsUrl = _configManager.getParam(oRemoteServer, "url");
+						}
+						catch (ASelectConfigException e) {
+							_systemLogger.log(Level.INFO, _sModule, sMethod, "Remote url not available");
+						}
+					}
+					else
+						_systemLogger.log(Level.INFO, _sModule, sMethod, "Remote resourcegroup not available");
 				}
 				catch (ASelectException ae) {
 					_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to read SAM.");

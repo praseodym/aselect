@@ -112,9 +112,10 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 			String sRelayState = httpRequest.getParameter("RelayState");  // is null if missing
 			if (sRelayState != null) htTGTContext.put("RelayState", sRelayState);
 			
+			// If user consent is needed, first show the logout_info.html
 			ASelectConfigManager configManager = ASelectConfigManager.getHandle();
 			if (!"true".equals(sConsent) && configManager.getUserInfoSettings().contains("logout")) {
-				if (sRelayState != null)  // save RelayState/ in the TGT
+				if (sRelayState != null)  // saved RelayState in the TGT
 					tgtManager.updateTGT(sNameID, htTGTContext);
 				showLogoutInfo(httpRequest, httpResponse, pwOut, sInitiatingSP, logoutRequest.getDestination(), htTGTContext);
 				return;
@@ -123,14 +124,14 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 			// Delete the IdP client cookie
 	        String sCookieDomain = _configManager.getCookieDomain();
 	        HandlerTools.delCookieValue(httpResponse, "aselect_credentials", sCookieDomain, _systemLogger);
-			// NOTE: cookie GOES, TGT STAYS in admin!!
+			// NOTE: cookie GOES, TGT STAYS in admin (contains the sessions)!!
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Removed cookie for domain: "+sCookieDomain);
 			
 			// Will save TGT (including the RelayState) as well
 			// 20090616, Bauke: save ID of initiator for the logout response
 			String sRequestID = logoutRequest.getID();
 	        logoutNextSessionSP(httpRequest, httpResponse, logoutRequest, sInitiatingSP, sRequestID,
-						_bTryRedirectLogoutFirst, _iRedirectLogoutTimeout, htTGTContext);
+						_bTryRedirectLogoutFirst, _iRedirectLogoutTimeout, htTGTContext, null);
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request handled " + pathInfo);
 		}
 		catch (ASelectException e) {

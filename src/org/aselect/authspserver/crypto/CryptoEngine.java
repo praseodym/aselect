@@ -649,13 +649,8 @@ public class CryptoEngine
 			oSection = null;
 			_sSignatureAlgorithm = DEFAULT_SIGNATURE_ALGORITHM;
 
-			_systemLogger
-					.log(
-							Level.CONFIG,
-							MODULE,
-							sMethod,
-							"Could not retrieve 'signature_algorithm' config section in crypto config section. Using default algorithm and provider.",
-							e);
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+					"Could not retrieve 'signature_algorithm' config section in crypto config section. Using default algorithm and provider.");
 		}
 
 		if (oSection != null) {

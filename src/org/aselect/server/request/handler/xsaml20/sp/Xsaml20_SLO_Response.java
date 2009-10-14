@@ -226,6 +226,7 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 			String sAmpQuest = (sRelayState.indexOf('?') >= 0) ? "&": "?"; 
 			String url = sRelayState + sAmpQuest + "result_code=" + resultCode;
 			try {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to "+url); 
 				httpResponse.sendRedirect(url);
 			}
 			catch (IOException e) {
@@ -297,12 +298,8 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Do logoutResponse signature verification=" + is_bVerifySignature());
 			String initiatingSP = logoutResponse.getIssuer().getValue();
 			if (is_bVerifySignature()) {
-// Let it just generate an AselectException!!
-//				String logoutRequestIssuer = ( logoutRequest.getIssuer() == null ||	// avoid nullpointers
-//						logoutRequest.getIssuer().getValue() == null ||
-//						"".equals(logoutRequest.getIssuer().getValue()) ) ? null : 
-//							logoutRequest.getIssuer().getValue();	// else value from message
-				MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
+				// Bauke, 20091008: changed from MetaDataManagerIdp to ...Sp
+				MetaDataManagerSp metadataManager = MetaDataManagerSp.getHandle();
 				PublicKey pkey = metadataManager.getSigningKeyFromMetadata(initiatingSP);
 				if (pkey == null) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "PublicKey for entityId: " + initiatingSP

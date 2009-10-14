@@ -215,9 +215,7 @@ public class SAMAgent
 		throws ASelectSAMException
 	{
 		String sMethod = "getActiveResource()";
-
 		SAMResource oSAMResource = null;
-
 		SAMResourceGroup oSAMResourceGroup = (SAMResourceGroup) _htResourceGroups.get(sID);
 
 		if (oSAMResourceGroup != null) {

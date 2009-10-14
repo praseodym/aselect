@@ -100,10 +100,10 @@ public abstract class AbstractRequestHandler extends BasicRequestHandler impleme
 				sTarget = _configManager.getParam(oConfig, "target");
 			}
 			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'target' in 'handler' section found",
-						e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'target' in 'handler' section found", e);
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "target="+sTarget);
 
 			try {
 				_pTarget = Pattern.compile(sTarget);
@@ -112,7 +112,6 @@ public abstract class AbstractRequestHandler extends BasicRequestHandler impleme
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Not a valid pattern: " + sTarget, e);
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
-
 		}
 		catch (ASelectException e) {
 			throw e;

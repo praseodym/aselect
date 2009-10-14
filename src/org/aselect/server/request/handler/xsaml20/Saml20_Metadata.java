@@ -20,7 +20,9 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.opensaml.Configuration;
+import org.opensaml.DefaultBootstrap;
 import org.opensaml.common.xml.SAMLConstants;
+import org.opensaml.xml.ConfigurationException;
 import org.opensaml.xml.XMLObjectBuilderFactory;
 
 public class Saml20_Metadata extends ProtoRequestHandler
@@ -78,6 +80,15 @@ public class Saml20_Metadata extends ProtoRequestHandler
 
 		try {
 	        super.init(oServletConfig, oConfig);
+			try {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Saml Bootstrap");
+				DefaultBootstrap.bootstrap();
+			}
+			catch (ConfigurationException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "OpenSAML library could not be initialized", e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			}
+	        _systemLogger.log(Level.FINEST, MODULE, sMethod, "Bootstrap done");
 			_oBuilderFactory = Configuration.getBuilderFactory(); // RH, 20080722, n
 
 	        // TODO, move this to a aselect config parameter (location of keystore)

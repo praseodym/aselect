@@ -113,7 +113,7 @@ public class SoapLogoutRequestSender
 			Document docReceivedSoap = builder.parse(inputSource);
 			Element elementReceivedSoap = docReceivedSoap.getDocumentElement();
 			Node eltArtifactResolve = SamlTools.getNode(elementReceivedSoap, LOGOUTRESPONSE);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Artifact retrieved");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Artifact retrieved from response");
 			// XMLHelper.nodeToString(eltArtifactResolve));
 
 			// Unmarshall to the SAMLmessage

@@ -260,9 +260,7 @@ public class CryptoEngine
 					}
 
 					java.security.Security.addProvider(oProvider);
-
 					htProviders.put(sProviderID, oProvider);
-
 					oCryptoProvider = _configManager.getNextSection(oCryptoProvider);
 				}
 			}
@@ -272,12 +270,14 @@ public class CryptoEngine
 
 			//Obtain algorithm for encryption and create a cipher
 			readEncryptionConfig(oCryptoSection, htProviders);
+            _systemLogger.log(Level.FINE, MODULE, sMethod, "get cipher");
 			if (_oCipherProvider != null)
 				_cipher = Cipher.getInstance(_sCipherAlgorithm, _oCipherProvider);
 			else
 				_cipher = Cipher.getInstance(_sCipherAlgorithm);
 
 			//Obtain algorithm for the random generator
+            _systemLogger.log(Level.INFO, MODULE, sMethod, "random generator config");
 			readRandomGeneratorConfig(oCryptoSection, htProviders);
 
 			try {
@@ -298,8 +298,10 @@ public class CryptoEngine
 			_htAuthspSettings = _configManager.getAuthspSettings();
 
 			// Init the storage manager
+            _systemLogger.log(Level.INFO, MODULE, sMethod, "init storagemanager");
 			_storageManager.init(_configManager.getSection(null, "storagemanager", "id=crypto"), _configManager,
 					ASelectSystemLogger.getHandle(), ASelectSAMAgent.getHandle());
+            _systemLogger.log(Level.INFO, MODULE, sMethod, "server key");
 			try {
 				_secretKey = (SecretKey) _storageManager.get("server-session-key");
 			}
@@ -801,17 +803,16 @@ public class CryptoEngine
 			}
 		}
 
-		if (oSection != null) {
-			//retrieve provider
+		if (oSection != null) {	//retrieve provider
 			try {
 				sProvider = _configManager.getParam(oSection, "provider");
 			}
 			catch (ASelectConfigException e) {
 				sProvider = null;
-
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
 						"Could not retrieve 'provider' config parameter in crypto config section. Using default provider.");
 			}
+            _systemLogger.log(Level.FINE, MODULE, sMethod, "provider="+sProvider);
 
 			if (sProvider != null) {
 				if (!htProviders.containsKey(sProvider)) {
@@ -828,6 +829,7 @@ public class CryptoEngine
 				_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 			}
 		}
+        _systemLogger.log(Level.FINE, MODULE, sMethod, "done");
 	}
 
 	private void readRandomGeneratorConfig(Object oCryptoSection, HashMap htProviders)

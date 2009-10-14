@@ -91,7 +91,6 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		String sMethod = "init()";
 		try {
 			super.init(oServletConfig, oConfig);
-
 			_tgtManager = TGTManager.getHandle();
 			_sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true);
 			_sASelectServerID = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);

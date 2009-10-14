@@ -117,17 +117,6 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	        throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 	    }
         _systemLogger.log(Level.INFO, MODULE, sMethod, "SSO");
-
-		// RH, 20080602, so, is done by Saml20_BaseHandler now        
-//		try {
-//			DefaultBootstrap.bootstrap();
-//		}
-//		catch (ConfigurationException e) {
-//			_systemLogger.log(Level.WARNING, MODULE, sMethod, "There is a problem initializing the OpenSAML library", e);
-//			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-//		}
-		// RH, 20080602, eo, is done by Saml20_BaseHandler now        
-
 		_oBuilderFactory = Configuration.getBuilderFactory();
 
 		Object oASelect = null;
@@ -462,11 +451,13 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 		return response;
 	}
 
+	//
 	// Get the next SP session from the TgT and send it a Logout request
+	// Always save the TgT, caller may have changed it already.
 	//
 	protected void logoutNextSessionSP(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
-						LogoutRequest logoutRequest, String initiatingSP, String initiatingID, 
-						boolean tryRedirectLogoutFirst, int redirectLogoutTimeout, HashMap htTGTContext)
+				LogoutRequest logoutRequest, String initiatingSP, String initiatingID, 
+				boolean tryRedirectLogoutFirst, int redirectLogoutTimeout, HashMap htTGTContext, Issuer responseIssuer)
 	throws ASelectException, ASelectStorageException
 	{
 		String sMethod = "logoutNextSessionSP";
@@ -495,6 +486,16 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 				sso.setLogoutInitiatingID(initiatingID);
 			else
 				initiatingID = sso.getLogoutInitiatingID();
+			// initiatingSP & initiatingID are known now
+			
+			// Remove SP from the session
+			// Only do this when the slo_http_response comes in!
+			if (responseIssuer != null) {  // It's an HTTP response
+				sso.removeServiceProvider(responseIssuer.getValue());
+				htTGTContext.put("sso_session", sso);
+			}
+			// Write the TgT (caller may also have changed it!)
+			tgtManager.updateTGT(sNameID, htTGTContext);
 			
 			// Send a LogoutRequest to another SP
 			for (ServiceProvider sp : spList) {
@@ -509,21 +510,23 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 				
 				if (tryRedirectLogoutFirst) {
 					// If there is another SP involved we redirect the user there.
-					// We start a timertask for this request. Which will start synchronized
+					// We also start a timertask for this request. Which will start synchronized
 					// logout if the 'normal' way with redirects is not working correctly
 					// (for instance when a service provider does not respond properly to
-					// our logoutrequest). We already remove the current spUrl from the list,
-					// because if it does not respond to the normal way of logging out,
-					// it will probably not respond to backchannel logout either.
+					// our logoutrequest).
+					// 20091010, Bauke: Session is removed when http_response comes in (not beforehand).
 	
-					// Schedule the task at the configured time
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "TIMER logout (as backup)");
-					SLOTimer timer = SLOTimer.getHandle(_systemLogger);
-					// Store the session with the remaining SP's in it
-					SLOTimerTask task = new SLOTimerTask(sNameID, logoutRequest.getID(), sso, _sASelectServerUrl);
-					long now = new Date().getTime();
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Schedule timer +" + redirectLogoutTimeout * 1000);
-					timer.schedule(task, new Date(now + redirectLogoutTimeout * 1000));
+					// 20091011, Bauke: needs to be scheduled only once
+					if (responseIssuer == null) {  // It's an HTTP request from the initiating SP
+						// Schedule the task at the configured time
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "TIMER logout (as backup)");
+						SLOTimer timer = SLOTimer.getHandle(_systemLogger);
+						// Store the session with the remaining SP's in it
+						SLOTimerTask task = new SLOTimerTask(sNameID, logoutRequest.getID(), sso, _sASelectServerUrl);
+						long now = new Date().getTime();
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "Schedule timer +" + redirectLogoutTimeout * 1000);
+						timer.schedule(task, new Date(now + redirectLogoutTimeout * 1000));
+					}
 	
 					// Determine ResponseLocation from metadata
 					MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
@@ -537,6 +540,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 							"urn:oasis:names:tc:SAML:2.0:logout:user", null);  // was "federation initiated redirect logout"
 				}
 				else {
+					// This will logout all SP's
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "TIMER logout for SP="+serviceProvider);
 					SLOTimer timer = SLOTimer.getHandle(_systemLogger);
 					SLOTimerTask task = new SLOTimerTask(sNameID, logoutRequest.getID(), sso, _sASelectServerUrl);
@@ -544,11 +548,6 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Schedule timer now");
 					timer.schedule(task, new Date());
 				}
-				sso.removeServiceProvider(serviceProvider);
-				htTGTContext.put("sso_session", sso);
-									
-				// Write TGT to save updated session (with the SP removed)
-				tgtManager.updateTGT(sNameID, htTGTContext);
 				return;  // stop further execution
 			}
 			// No SP's left (except the initiating SP), there goes the TGT

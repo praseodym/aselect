@@ -54,6 +54,7 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 		
 		super.init(oServletConfig, oConfig);
 		String sCheckCertificates = ASelectConfigManager.getSimpleParam(oConfig, "check_certificates", false);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "check_certificates="+sCheckCertificates);
 		if (sCheckCertificates != null) {
 			MetaDataManagerIdp.setCheckCertificates(sCheckCertificates);
 		}

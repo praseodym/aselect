@@ -51,8 +51,7 @@ import org.xml.sax.InputSource;
  * 
  * @author Atos Origin
  */
-//public class Xsaml20_ArtifactResolver extends ProtoRequestHandler  // RH, 20080602, o
-public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler  // RH, 20080602, n
+public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler
 {
 	// TODO This is NOT a good default
 	// We have a problem if the SAML message send from the SP has no Issuer element
@@ -79,28 +78,12 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler  // RH, 2008060
 	 *             If initialization fails.
 	 */
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 
 		super.init(oServletConfig, oHandlerConfig);
-
-		// RH, 20080602, so, is done by Saml20_BaseHandler now        
-//		try {
-//			DefaultBootstrap.bootstrap();
-			// RH, 20080602, eo, is done by Saml20_BaseHandler now        
-
-			_oBuilderFactory = Configuration.getBuilderFactory();
-			// RH, 20080602, so, is done by Saml20_BaseHandler now        
-
-//		}
-//		catch (ConfigurationException e) {
-//			_systemLogger
-//					.log(Level.WARNING, MODULE, sMethod, "There is a problem initializing the OpenSAML library", e);
-//			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-//		}
-		// RH, 20080602, eo, is done by Saml20_BaseHandler now        
-
+		_oBuilderFactory = Configuration.getBuilderFactory();
 		_sEntityId = _configManager.getRedirectURL();
 	}
 
@@ -116,7 +99,7 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler  // RH, 2008060
 	 */
 	@SuppressWarnings("unchecked")
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, request.getContentType());

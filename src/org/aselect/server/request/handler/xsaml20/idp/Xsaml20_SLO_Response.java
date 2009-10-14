@@ -90,25 +90,25 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 		Element element = (Element)SamlHistoryManager.getHandle().get(inResponseTo);
 
 		// Get the original LogoutRequest sent by the initiating SP
-		XMLObject oXml = null;
+		XMLObject originalRequest = null;
 		try {
-			oXml = SamlTools.unmarshallElement(element);
+			originalRequest = SamlTools.unmarshallElement(element);
 		}
 		catch (MessageEncodingException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error while unmarshalling " + element, e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
-		if (!(oXml instanceof LogoutRequest)) {
+		if (!(originalRequest instanceof LogoutRequest)) {
 			// Must be a LogoutRequest
-			String msg = "LogoutRequest expected from SamlMessageHistory but received: " + oXml.getClass();
+			String msg = "LogoutRequest expected from SamlMessageHistory but received: " + originalRequest.getClass();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, msg);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
-		LogoutRequest originalLogoutRequest = (LogoutRequest) oXml;
+		LogoutRequest originalLogoutRequest = (LogoutRequest) originalRequest;
 //		String uid = originalLogoutRequest.getNameID().getValue();
 		
         logoutNextSessionSP(httpRequest, httpResponse, originalLogoutRequest, null, null,
-					_bTryRedirectLogoutFirst, _iRedirectLogoutTimeout, null);
+				_bTryRedirectLogoutFirst, _iRedirectLogoutTimeout, null, logoutResponse.getIssuer());
 	}
     
 	public Issuer retrieveIssuer(String elementName, SignableSAMLObject samlMessage)

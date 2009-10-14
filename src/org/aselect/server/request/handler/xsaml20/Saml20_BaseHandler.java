@@ -50,12 +50,14 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
 
 		try {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Saml Bootstrap");
 			DefaultBootstrap.bootstrap();
 		}
 		catch (ConfigurationException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "OpenSAML library could not be initialized", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
+        _systemLogger.log(Level.FINEST, MODULE, sMethod, "Bootstrap done");
 
 		String sVerifySignature = ASelectConfigManager.getSimpleParam(oHandlerConfig, "verify_signature", false);
 		if ("true".equalsIgnoreCase(sVerifySignature)) {
