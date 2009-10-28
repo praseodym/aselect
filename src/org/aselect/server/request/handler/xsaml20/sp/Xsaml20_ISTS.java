@@ -63,15 +63,6 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 	        _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize", e);
 	        throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 	    }
-	    // TODO, remove this bootstrap, is done by Saml20_BaseHandler, RH, 20080721, n
-		/*try {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Saml Bootstrap");
-			DefaultBootstrap.bootstrap();
-		}
-		catch (ConfigurationException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot initialize the OpenSAML library", e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-		}*/
 
 		_sServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
 		_sFederationUrl = ASelectConfigManager.getSimpleParam(oConfig, "federation_url", true);

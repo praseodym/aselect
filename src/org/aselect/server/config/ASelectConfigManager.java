@@ -1000,7 +1000,7 @@ public class ASelectConfigManager extends ConfigManager
 		sbErrorFile.append(File.separator);
 		sbErrorFile.append("errors");
 		sbErrorFile.append(File.separator);
-		sbErrorFile.append("errors").append(".conf");
+		sbErrorFile.append("errors");
 	
 		boolean langDefault = (sLanguage==null || sLanguage.equals(""));
 		String sLangExt = (langDefault)? "": "_"+sLanguage;

@@ -266,8 +266,8 @@ public class Tools
 		long now = System.currentTimeMillis();
 		
 		oSysLog.log(Level.INFO, MODULE, sMethod, "init now="+now);
-		htSessionContext.put("first_contact", Long.toString(now));  // seconds
-		htSessionContext.put("time_spent", "0");  // seconds
+		htSessionContext.put("first_contact", Long.toString(now));  // milliseconds
+		htSessionContext.put("time_spent", "0");  // milliseconds
 	}
 
 	public static void pauseSensorData(SystemLogger oSysLog, HashMap<String,String> htSessionContext)
