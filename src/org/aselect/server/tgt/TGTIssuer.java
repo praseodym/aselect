@@ -372,6 +372,8 @@ public class TGTIssuer
 			// Bauke 20081110 copy RelayState to the TgT
 			Utils.copyHashmapValue("RelayState", htTGTContext, htSessionContext);
 			Utils.copyHashmapValue("user_agent", htTGTContext, htSessionContext);
+			// Bauke 20091029, for multiple saml IdPs
+			Utils.copyHashmapValue("federation_url", htTGTContext, htSessionContext);
 
 			// 20090617, Bauke:forced_authenticate specials
 			Boolean bForcedAuthn = (Boolean)htSessionContext.get("forced_authenticate");
@@ -594,6 +596,8 @@ public class TGTIssuer
 			// Bauke 20081110 copy RelayState to the TgT
 			Utils.copyHashmapValue("RelayState", htTGTContext, htSessionContext);
 			Utils.copyHashmapValue("user_agent", htTGTContext, htSessionContext);
+			// Bauke 20091029, for multiple saml IdPs
+			Utils.copyHashmapValue("federation_url", htTGTContext, htSessionContext);
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Store TGT " + htTGTContext);
 			String sTgt = null;

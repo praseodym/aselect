@@ -100,7 +100,7 @@ public class SessionSyncRequestSender
 		_maxNotBefore = maxNotBefore;
 		_maxNotOnOrAfter = maxNotOnOrAfter;
 		_checkValidityInterval = checkValidityInterval;
-		_oSystemLogger.log(Level.INFO, MODULE, sMethod, "_pkey:" + getPkey()+" _maxNotBefore:" + get_maxNotBefore()+
+		_oSystemLogger.log(Level.INFO, MODULE, sMethod, "Url="+_sFederationUrl+" _pkey:" + getPkey()+" _maxNotBefore:" + get_maxNotBefore()+
 				"_maxNotOnOrAfter:" + get_maxNotOnOrAfter()+"_checkValidityInterval:" + is_checkValidityInterval());
 	}
 
@@ -130,8 +130,8 @@ public class SessionSyncRequestSender
 					String sId = myConfigManager.getParam(oHandler, "id");
 					//mySystemLogger.log(Level.INFO, MODULE, sMethod, "Handler "+sId);
 					if (sId.equals("saml20_sp_session_sync")) {
-						String sFederationUrl = ASelectConfigManager.getSimpleParam(oHandler, "federation_url", true);
-						htSessionSyncParameters.put("federation_url", sFederationUrl);
+						//String sFederationUrl = ASelectConfigManager.getSimpleParam(oHandler, "federation_url", true);
+						//htSessionSyncParameters.put("federation_url", sFederationUrl);
 
 						String _sUpdateInterval = ASelectConfigManager.getSimpleParam(oHandler, "update_interval", true);
 						Long updateInterval = Long.parseLong(_sUpdateInterval);
@@ -179,17 +179,16 @@ public class SessionSyncRequestSender
 	// Bauke: rewritten
 	// Returns: ERROR_ASELECT_SUCCESS or error code upon failure
 	//
-	public String synchronizeSession(String argCredentials, boolean credsAreCoded, boolean updateTgt)
+	public String synchronizeSession(String sTgT, HashMap htTGTContext, /*boolean credsAreCoded,*/ boolean updateTgt)
+	throws ASelectException
 	{
 		String _sMethod = "synchronizeSession";
-		String returnCode = Errors.ERROR_ASELECT_SUCCESS;
-		String credentials;
-
-		if (credsAreCoded) {
-			credentials = this.decodeCredentials(argCredentials);
+		
+		/*if (credsAreCoded) {
+			credentials = Utils.decodeCredentials(argCredentials, _oSystemLogger);
 			if (credentials == null) {
 				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Can not decode credentials");
-				return Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID;
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
 			}
 		}
 		else credentials = argCredentials;
@@ -197,17 +196,17 @@ public class SessionSyncRequestSender
 		HashMap htTGTContext = _oTGTManager.getTGT(credentials);
 		if (htTGTContext == null) {
 			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "Unknown TGT");
-			return Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT;
-		}
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT);
+		}*/
 		
 		// 20090811, Bauke: Only saml20 needs this type of session sync
 		String sAuthspType = (String)htTGTContext.get("authsp_type");
 		if (sAuthspType==null || !sAuthspType.equals("saml20"))
-			return returnCode;
+			return Errors.ERROR_ASELECT_SUCCESS;
 		
 		if (updateTgt) {  // updates the timestamp
 			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Update TICKET context=" + htTGTContext);
-			_oTGTManager.updateTGT(credentials, htTGTContext);
+			_oTGTManager.updateTGT(sTgT, htTGTContext);
 		}
 
 		Long now = new Date().getTime();
@@ -227,23 +226,22 @@ public class SessionSyncRequestSender
 				boolean success = false;
 				try {
 					if (_sSamlMessageType.equals("xacml"))
-						success = sendXACMLMessageToFederation(sNameID, credentials);
+						success = sendXACMLMessageToFederation(sNameID, sTgT);
 					else
-						success = sendSAMLUpdateToFederation(sNameID, credentials);
+						success = sendSAMLUpdateToFederation(sNameID, sTgT);
 				}
 				catch(ASelectException e) {
-					return Errors.ERROR_ASELECT_INTERNAL_ERROR;
+					throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 				}
 				
 				if (!success) {  // don't continue
 					_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "Failed to send update to federation");
-					return Errors.ERROR_ASELECT_INTERNAL_ERROR;
+					throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 				}
 			}
 			else {
-				returnCode = Errors.ERROR_ASELECT_SERVER_INVALID_SESSION;
-				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "No user found with credentials="+credentials);
-				return returnCode;
+				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "No user found with credentials="+sTgT);
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
 			}
 			
 			// If successful, update the ticket granting ticket (timestamp will be set to "now")
@@ -251,12 +249,12 @@ public class SessionSyncRequestSender
 			htTGTContext.put("sessionsynctime", Long.toString(now));
 			// Setting the value below prevents the regular Timestamp update
 			htTGTContext.put("updatetimestamp", "no");
-			_oTGTManager.updateTGT(credentials, htTGTContext);
+			_oTGTManager.updateTGT(sTgT, htTGTContext);
 		}
 		else {
 			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SP - No SessionSync Yet");
 		}
-		return returnCode;
+		return Errors.ERROR_ASELECT_SUCCESS;
 	}
 
 	/*
@@ -264,8 +262,8 @@ public class SessionSyncRequestSender
 	 * 
 	 */
 	@SuppressWarnings("unchecked")
-	private boolean sendSAMLUpdateToFederation(String sNameID, String credentials)
-		throws ASelectException
+	private boolean sendSAMLUpdateToFederation(String sNameID, String sTgT)
+	throws ASelectException
 	{
 		String _sMethod = "sendSAMLUpdateToFederation";
 
@@ -346,27 +344,8 @@ public class SessionSyncRequestSender
 			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "MessageEncodingException!", e);
 			e.printStackTrace();
 		}
-		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Writing SOAP message:\n"+XMLHelper.nodeToString(envelopeElem));
-		return sendMessageToFederation(XMLHelper.nodeToString(envelopeElem), sNameID, credentials);
-	}
-
-	/*
-	 * Methode decode de meegeven credentials.
-	 */
-	private String decodeCredentials(String credentials)
-	{
-		String _sMethod = "decodeCredentials";
-		String decodedCredentials = null;
-		try {
-			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Credentials are " + credentials);
-			byte[] TgtBlobBytes = CryptoEngine.getHandle().decryptTGT(credentials);
-			decodedCredentials = Utils.toHexString(TgtBlobBytes);
-		}
-		catch (ASelectException as) {
-			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "fails to decrypt credentials", as);
-			as.printStackTrace();
-		}
-		return decodedCredentials;
+		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "FederationUrl="+_sFederationUrl+" SOAP message:"+XMLHelper.nodeToString(envelopeElem));
+		return sendMessageToFederation(XMLHelper.nodeToString(envelopeElem), sNameID, sTgT);
 	}
 
 	/*
@@ -429,7 +408,7 @@ public class SessionSyncRequestSender
 	 * Build a XACML message and send it to the federation.
 	 * NOTE: no signing takes place
 	 */
-	private boolean sendXACMLMessageToFederation(String user, String credentials)
+	private boolean sendXACMLMessageToFederation(String user, String sTgT)
 	{
 		String _sMethod = "sendXACMLMessageToFederation";
 		String action = "GET";
@@ -482,13 +461,13 @@ public class SessionSyncRequestSender
 				+ "</Request>"
 				+ "</soap:Body>" + "</soap:Envelope>";
 		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Send message: "+xacmlRequest);
-		return sendMessageToFederation(xacmlRequest, user, credentials);
+		return sendMessageToFederation(xacmlRequest, user, sTgT);
 	}
 
 	// Bauke:
 	// Return is true when Message was sent successful
 	//
-	private boolean sendMessageToFederation(String message, String sNameID, String credentials)
+	private boolean sendMessageToFederation(String message, String sNameID, String sTgT)
 	{
 		String _sMethod = "sendMessageToFederation";
 		SoapManager soapmanager = new SoapManager();
@@ -498,9 +477,9 @@ public class SessionSyncRequestSender
 		boolean saml = false;
 		
 		try {
-			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Send message for "+sNameID);
+			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Send message for "+sNameID+" to "+_sFederationUrl);
 			// Send/Receive the SOAP message
-			sResponse = soapmanager.sendSOAP(message, _sFederationUrl);
+			sResponse = soapmanager.sendSOAP(message, _sFederationUrl /* set in the creator */);
 			// 20090624: don't: sResponse = URLDecoder.decode(soapmanager.sendSOAP(message, _sFederationUrl), "UTF-8");
 			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Received response from IDP: " + sResponse);
 			try {
@@ -509,7 +488,7 @@ public class SessionSyncRequestSender
 			catch(ASelectException e) {
 				// Bad or no response from partner
 				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Kill tgt for " + sNameID);
-				tgtmanager.remove(credentials);
+				tgtmanager.remove(sTgT);
 				return false;  // Bauke: no need to continue
 			}
 			if (saml) {
@@ -522,7 +501,7 @@ public class SessionSyncRequestSender
 					_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "RESPONSE not correct)");
 					String samlNameID = getNameIdFromSAMLResponse(sResponse);
 					_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Kill tgt for " + samlNameID);
-					tgtmanager.remove(credentials);
+					tgtmanager.remove(sTgT);
 					return false;
 				}
 			}
@@ -535,7 +514,7 @@ public class SessionSyncRequestSender
 				else {
 					_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "RESPONSE contains deny (IDP has not processed update correct)");
 					_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Kill tgt for " + sNameID);
-					tgtmanager.remove(credentials);
+					tgtmanager.remove(sTgT);
 					return false;
 				}
 			}

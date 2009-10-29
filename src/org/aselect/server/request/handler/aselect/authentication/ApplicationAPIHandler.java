@@ -547,22 +547,14 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing required parameters");
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
-		String sTGT = null;
-		try {
-			byte[] baTgtBlobBytes = CryptoEngine.getHandle().decryptTGT(sEncTGT);
-			sTGT = Utils.toHexString(baTgtBlobBytes);
-		}
-		catch (ASelectException eAC) { //decrypt failed
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not decrypt TGT", eAC);
-			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID, eAC);
-		}
-		catch (IllegalArgumentException eIA) { //HEX conversion fails
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not decrypt TGT", eIA);
-			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID, eIA);
+		String sTgT = Utils.decodeCredentials(sEncTGT, _systemLogger);
+		if (sTgT == null) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Can not decode credentials");
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
 		}
 
 		// check if the TGT exists
-		HashMap htTGTContext = _oTGTManager.getTGT(sTGT);
+		HashMap htTGTContext = _oTGTManager.getTGT(sTgT);
 		if (htTGTContext == null) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unknown TGT");
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT);
@@ -587,19 +579,21 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		if (htResult == null || htResult.isEmpty()) {
 			// No Session Sync handler, only update the ticket granting ticket
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "updateTGT only");
-			_oTGTManager.updateTGT(sTGT, htTGTContext);
+			_oTGTManager.updateTGT(sTgT, htTGTContext);
 		}
 		else {
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "Send Sync to Federation");
 			long updateInterval = (Long) htResult.get("update_interval");
-			String _sSamlMessageType = (String) htResult.get("message_type");
-			String _sFederationUrl = (String) htResult.get("federation_url");
-			String _sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true);
+			String sSamlMessageType = (String) htResult.get("message_type");
+			// Bauke 20091029, take federation url from TGT
+			String sFederationUrl = (String)htTGTContext.get("federation_url");
+			if (sFederationUrl == null) sFederationUrl = (String) htResult.get("federation_url");
+			String sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true);
 
 			String verify_signature = (String) htResult.get("verify_signature");
 			PublicKey pKey = null;
 			if ("true".equalsIgnoreCase(verify_signature.trim())) {
-				pKey = _metadataManager.getSigningKeyFromMetadata(_configManager.getFederationURL());
+				pKey = _metadataManager.getSigningKeyFromMetadata(sFederationUrl); // 20091029, was: _configManager.getFederationURL());
 			}
 
 			String verify_interval = (String) htResult.get("verify_interval");
@@ -612,12 +606,12 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			if (max_notonorafter != null)
 				l_max_notonorafter = Long.parseLong((String) htResult.get("max_notonorafter"));
 
-			//			SessionSyncRequestSender ss_req = new SessionSyncRequestSender(_systemLogger,
-			//						_sServerUrl, updateInterval, _sSamlMessageType, _sFederationUrl);
-			SessionSyncRequestSender ss_req = new SessionSyncRequestSender(_systemLogger, _sServerUrl, updateInterval,
-					_sSamlMessageType, _sFederationUrl, pKey, l_max_notbefore, l_max_notonorafter, ("true"
-							.equalsIgnoreCase(verify_interval.trim())) ? true : false);
-			String ssReturn = ss_req.synchronizeSession(sEncTGT, true/*coded*/, true/*updateTGT*/);
+			
+			String sSessionSyncUrl = MetaDataManagerSp.getHandle().getSessionSyncURL(sFederationUrl);  // "/saml20_session_sync";
+			SessionSyncRequestSender ss_req = new SessionSyncRequestSender(_systemLogger, sServerUrl, updateInterval,
+					sSamlMessageType, sSessionSyncUrl, pKey, l_max_notbefore, l_max_notonorafter,
+					("true".equalsIgnoreCase(verify_interval.trim())) ? true : false);
+			String ssReturn = ss_req.synchronizeSession(sTgT, htTGTContext, /*true, coded*/ true/*updateTGT*/);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "ssReturn=" + ssReturn);
 		}
 		try {

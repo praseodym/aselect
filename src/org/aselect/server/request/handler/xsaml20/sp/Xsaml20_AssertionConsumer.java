@@ -137,18 +137,23 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 	throws ASelectException
 	{
 		String sMethod = "process()";
-
+		
 		String sReceivedArtifact = request.getParameter("SAMLart");
 		if (sReceivedArtifact == null || "".equals(sReceivedArtifact)) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No artifact found in the message.");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Received artifact: " + sReceivedArtifact);
+		String sRelayState = request.getParameter("RelayState");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Received artifact: "+sReceivedArtifact+" RelayState="+sRelayState);
+		String sFederationUrl = _sFederationUrl;  // default
+		if (sRelayState.startsWith("idp=")) {
+			sFederationUrl = sRelayState.substring(4);
+		}
 
 		try {
 			// use metadata
 			MetaDataManagerSp metadataManager = MetaDataManagerSp.getHandle();
-			String sASelectServerUrl = metadataManager.getLocation(_sFederationUrl,
+			String sASelectServerUrl = metadataManager.getLocation(sFederationUrl,
 					ArtifactResolutionService.DEFAULT_ELEMENT_LOCAL_NAME,
 					SAMLConstants.SAML2_SOAP11_BINDING_URI);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Artifact Resolution at " + sASelectServerUrl);

@@ -168,7 +168,7 @@ public class OldMemoryStorageHandlerTimeOut extends OldMemoryStorageHandler
 			if (now >= expireTime) {
 				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SPTO Remove TGT and send Logout, Key=" + sKey);
 				_oTGTManager.remove(key);
-				sendLogoutToFederation(sNameID);
+				sendLogoutToFederation(sNameID, htTGTContext);
 			}
 
 			// Check Session Sync
@@ -181,17 +181,20 @@ public class OldMemoryStorageHandlerTimeOut extends OldMemoryStorageHandler
 		}
 	}
 
-	private boolean sendLogoutToFederation(String sNameID)
+	private boolean sendLogoutToFederation(String sNameID, HashMap htTGTContext)
 	throws ASelectStorageException
 	{
 		String _sMethod = "sendLogoutToFederation";
+
+		String sFederationUrl = (String)htTGTContext.get("federation_url");
+		if (sFederationUrl == null) sFederationUrl = _sFederationUrl;  // xxx for now
 		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SPTO (" + _serverUrl + ") - NameID to timeout = " + sNameID);
 		SoapLogoutRequestSender logout = new SoapLogoutRequestSender();
 		String url = null;
 		MetaDataManagerSp metadataManager = null;
 		try {
 			metadataManager = MetaDataManagerSp.getHandle();
-			url = metadataManager.getLocation(_sFederationUrl, SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME,
+			url = metadataManager.getLocation(sFederationUrl, SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME,
 					SAMLConstants.SAML2_SOAP11_BINDING_URI);
 		}
 		catch (ASelectException e1) {
@@ -200,7 +203,7 @@ public class OldMemoryStorageHandlerTimeOut extends OldMemoryStorageHandler
 		String issuerUrl = _serverUrl;
 		PublicKey pkey = null;
 		if (is_bVerifySignature()) {
-			pkey = metadataManager.getSigningKeyFromMetadata(_sFederationUrl);
+			pkey = metadataManager.getSigningKeyFromMetadata(sFederationUrl);
 			if (pkey == null || "".equals(pkey)) {
 				_oSystemLogger.log(Level.SEVERE, MODULE, _sMethod, "No valid public key in metadata");
 				throw new ASelectStorageException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);

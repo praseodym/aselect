@@ -1599,7 +1599,7 @@ public class ASelectConfigManager extends ConfigManager
 		String sMethod = "loadHTMLTemplates()";
 
 		// 20090930, Bauke:
-		// The _s...Form variables are no longer used, these call still check the presence of the templates
+		// The _s...Form variables are no longer used, these calls still check the presence of the templates
 		try {
 			_sServerInfoForm = loadHTMLTemplate(sWorkingDir, "serverinfo.html");
 			_sUserInfoForm = loadHTMLTemplate(sWorkingDir, "userinfo.html");

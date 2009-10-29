@@ -66,6 +66,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 
+import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.system.communication.server.IInputMessage;
 import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
@@ -621,6 +622,26 @@ public class Utils
 		sloc = (String)_htSessionContext.get("country");
 		if ((sloc==null || sloc.equals("")) && _sUserCountry!=null && !_sUserCountry.equals(""))
 			_htSessionContext.put("country", _sUserCountry);
+	}
+
+	/*
+	 * Methode decode the credentials passed.
+	 */
+	public static String decodeCredentials(String credentials, SystemLogger oSysLog)
+	throws ASelectException
+	{
+		String _sMethod = "decodeCredentials";
+		String decodedCredentials = null;
+		try {
+			oSysLog.log(Level.INFO, MODULE, _sMethod, "Credentials are " + credentials);
+			byte[] TgtBlobBytes = CryptoEngine.getHandle().decryptTGT(credentials);
+			decodedCredentials = Utils.toHexString(TgtBlobBytes);
+		}
+		catch (ASelectException as) {
+			oSysLog.log(Level.WARNING, MODULE, _sMethod, "failed to decrypt credentials", as);
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
+		}
+		return decodedCredentials;
 	}
 
 }

@@ -152,7 +152,7 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 			String key = (String) s;
 //		for (Enumeration<String> e = allTgts.keys(); e.hasMoreElements();) {
 //			String key = e.nextElement();
-			HashMap htTGTContext = (HashMap) _oTGTManager.get(key);
+			HashMap htTGTContext = (HashMap)_oTGTManager.get(key);
 			String sNameID = (String)htTGTContext.get("name_id");
 			String sSync = (String)htTGTContext.get("sessionsynctime");
 			Long lastSync = Long.parseLong(sSync);
@@ -175,7 +175,7 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 
 				// 20090622, Bauke, if forced_authenticate, the IdP does not have a ticket
 				if (bToFed && !bForcedAuthn)
-					sendLogoutToFederation(sNameID);
+					sendLogoutToFederation(sNameID, htTGTContext);
 			}
 
 			// Check Session Sync
@@ -188,17 +188,20 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 		}
 	}
 
-	private boolean sendLogoutToFederation(String sNameID)
+	private boolean sendLogoutToFederation(String sNameID, HashMap htTGTContext)
 	throws ASelectStorageException
 	{
 		String _sMethod = "sendLogoutToFederation";
+		
+		String sFederationUrl = (String)htTGTContext.get("federation_url");
+		if (sFederationUrl == null) sFederationUrl = _sFederationUrl;  // xxx for now
 		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SPTO (" + _serverUrl + ") - NameID to timeout = " + sNameID);
 		SoapLogoutRequestSender logout = new SoapLogoutRequestSender();
 		String url = null;
 		MetaDataManagerSp metadataManager = null;
 		try {
 			metadataManager = MetaDataManagerSp.getHandle();
-			url = metadataManager.getLocation(_sFederationUrl, SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME,
+			url = metadataManager.getLocation(sFederationUrl, SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME,
 					SAMLConstants.SAML2_SOAP11_BINDING_URI);
 		}
 		catch (ASelectException e1) {
@@ -207,7 +210,7 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 		String issuerUrl = _serverUrl;
 		PublicKey pkey = null;
 		if (is_bVerifySignature()) {
-			pkey = metadataManager.getSigningKeyFromMetadata(_sFederationUrl);
+			pkey = metadataManager.getSigningKeyFromMetadata(sFederationUrl);
 			if (pkey == null || "".equals(pkey)) {
 				_oSystemLogger.log(Level.SEVERE, MODULE, _sMethod, "No valid public key in metadata");
 				throw new ASelectStorageException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
@@ -220,7 +223,6 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "exception trying to send Logout message", e);
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
-
 		return false;
 	}
 

@@ -421,7 +421,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		if (sRequest == null) {
 			// Show info page if nothing else to do
 			String sUrl = (String) htServiceRequest.get("my_url");
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplBrowREQ sRequest==null sUrl=" + sUrl);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplBrowREQ null request sUrl=" + sUrl);
 
 			if (htServiceRequest.containsKey("aselect_credentials_uid"))
 				showUserInfo(htServiceRequest, _servletResponse);
@@ -1150,6 +1150,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 			// end only 1 valid authsp
 
+			// Multiple candidates, present the select.html form
 			String sSelectForm = _configManager.getForm("select", _sUserLanguage, _sUserCountry);
 			sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
 			sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", _sMyServerId);
@@ -1185,6 +1186,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 			sSelectForm = Utils.replaceString(sSelectForm, "[allowed_user_authsps]", sb.toString());
 
+			// Create the Cancel action:
 			sb = new StringBuffer((String) htServiceRequest.get("my_url")).append("?request=error").append(
 					"&result_code=").append(Errors.ERROR_ASELECT_SERVER_CANCEL).append("&a-select-server=").append(
 					_sMyServerId).append("&rid=").append(sRid);

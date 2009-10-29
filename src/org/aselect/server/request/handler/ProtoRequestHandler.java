@@ -42,7 +42,6 @@ import org.apache.xml.security.signature.XMLSignature;
 import org.aselect.server.attributes.AttributeGatherer;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
-import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.server.session.SessionManager;

@@ -19,7 +19,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
-
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
@@ -63,12 +62,13 @@ public abstract class AbstractMetaDataManager
 	protected String protocolSupportEnumeration = SAMLConstants.SAML20P_NS; // "urn:oasis:names:tc:SAML:2.0:protocol"
 	protected ASelectConfigManager _configManager;
 	protected SystemLogger _systemLogger;
-	protected String myRole = "IDP";
+	protected String myRole = "IDP";  // default
 
 	// All descriptors
 	//protected ConcurrentHashMap<String, EntityDescriptor> entityDescriptors = new ConcurrentHashMap<String, EntityDescriptor>();
 	protected ConcurrentHashMap<String, SSODescriptor> SSODescriptors = new ConcurrentHashMap<String, SSODescriptor>();
 	protected ConcurrentHashMap<String, String> metadataSPs = new ConcurrentHashMap<String, String>();
+	protected ConcurrentHashMap<String, String> sessionSyncSPs = new ConcurrentHashMap<String, String>();
 	protected ConcurrentHashMap<String, java.security.cert.X509Certificate>
 				trustedIssuers = new ConcurrentHashMap<String, java.security.cert.X509Certificate>();
 
@@ -97,7 +97,7 @@ public abstract class AbstractMetaDataManager
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not initialize bootstrap", cfge);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, cfge);
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Metadata SPs="+metadataSPs);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Metadata SPs="+metadataSPs+" SessionSync SPs="+sessionSyncSPs);
 	}
 
 	protected void fileSystemProvider(ChainingMetadataProvider myMetadataProvider, String sMethod, BasicParserPool ppMgr, String metadataURL)
@@ -167,7 +167,7 @@ public abstract class AbstractMetaDataManager
 		String metadataURL = null;
 		ChainingMetadataProvider myMetadataProvider = new ChainingMetadataProvider();
 
-		_systemLogger.log(Level.FINE, MODULE, sMethod, "SSODescriptors=" + SSODescriptors); // +" entityDescriptors=" + entityDescriptors);
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "this="+this+" SSODescriptors=" + SSODescriptors); // +" entityDescriptors=" + entityDescriptors);
 		if (trustedIssuers.isEmpty() && getCheckCertificates() != null) {
 			// Load trusted ca's (SP) or trusted SP's (IdP) from trusted_issuers.keystore
 			loadTrustedIssuers();
@@ -181,7 +181,8 @@ public abstract class AbstractMetaDataManager
 		
 		// Read the new metadata
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId=" + entityId + " not in cache yet");
-		metadataURL = metadataSPs.get((myRole.equals("SP"))? sFederationIdpKeyword: entityId);
+		metadataURL = metadataSPs.get(entityId);
+//		metadataURL = metadataSPs.get((myRole.equals("SP"))? sFederationIdpKeyword: entityId);
 		if (metadataURL == null) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity id: " + entityId + " is not Configured");
 			return;
@@ -516,7 +517,7 @@ public abstract class AbstractMetaDataManager
 	 * @throws ASelectException
 	 */
 	public String getLocation(String entityId, String elementName, String bindingName)
-		throws ASelectException
+	throws ASelectException
 	{
 		String locationValue = getMDNodevalue(entityId, elementName, bindingName, "Location");
 		return locationValue;

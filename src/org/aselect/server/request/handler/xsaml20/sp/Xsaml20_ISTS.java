@@ -1,5 +1,6 @@
 package org.aselect.server.request.handler.xsaml20.sp;
 
+import java.io.PrintWriter;
 import java.security.PrivateKey;
 import java.util.HashMap;
 import java.util.logging.Level;
@@ -16,6 +17,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
 import org.opensaml.common.SAMLObjectBuilder;
 import org.opensaml.common.SAMLVersion;
@@ -45,7 +47,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 	protected final String singleSignOnServiceBindingConstantREDIRECT = SAMLConstants.SAML2_REDIRECT_BINDING_URI;
 
 	private String _sServerId; // <server_id> in <aselect>
-	private String _sFederationUrl;
+	//private String _sFederationUrl;
 	private HashMap<String, String> levelMap;
 
 	public void init(ServletConfig oServletConfig, Object oConfig)
@@ -65,7 +67,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 	    }
 
 		_sServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
-		_sFederationUrl = ASelectConfigManager.getSimpleParam(oConfig, "federation_url", true);
+		//_sFederationUrl = ASelectConfigManager.getSimpleParam(oConfig, "federation_url", true);
 
 		levelMap = new HashMap<String, String>();
 		Object oSecurity = null;
@@ -115,9 +117,6 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
         _systemLogger.log(Level.INFO, MODULE, sMethod, "MyUrl="+sMyUrl+" Request="+request);
         
         try {
-	        sFederationUrl = request.getParameter("federation_url");
-	        if (sFederationUrl == null || sFederationUrl.equals(""))
-	        	sFederationUrl = _sFederationUrl;  // use the default
 	        sRid = request.getParameter("rid");
 	        if (sRid == null) {
 	            _systemLogger.log(Level.WARNING,MODULE,sMethod, "Missing RID parameter");
@@ -130,10 +129,29 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 	            _systemLogger.log(Level.WARNING,MODULE,sMethod, "No session found for RID: "+sRid);	            
 	            throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 	        }
+
+	        sFederationUrl = request.getParameter("federation_url");
+	        if (sFederationUrl == null || sFederationUrl.equals("")) {
+	        	// No Federation URL choice made yet
+				String sSelectForm = _configManager.loadHTMLTemplate(null, "idpselect", _sUserLanguage, _sUserCountry);
+				sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
+				sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", sMyUrl+"/saml20_ists");
+				sSelectForm = _configManager.updateTemplate(sSelectForm, htSessionContext);
+				//_systemLogger.log(Level.FINER, _sModule, sMethod, "Form select=["+sSelectForm+"]");
+		    	response.setContentType("text/html");
+				PrintWriter pwOut = response.getWriter(); 
+				pwOut.println(sSelectForm);
+				pwOut.close();
+				return new RequestState(null);
+
+				// 20091028: Original code
+				//sFederationUrl = _sFederationUrl;  // use the default
+	        }
 	        
 	        // 20090811, Bauke: save type of Authsp to store in the TGT later on
 	        // This is needed to prevent session sync when we're not saml20
 	        htSessionContext.put("authsp_type", "saml20");
+	        htSessionContext.put("federation_url", sFederationUrl);
 			_oSessionManager.updateSession(sRid, htSessionContext);
 	        
 			/* 20090113, Bauke TRY TO SKIP THIS CODE, "remote_organization" will not be set
@@ -226,12 +244,14 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			messageContext.setOutboundMessageTransport(outTransport);
 			messageContext.setOutboundSAMLMessage(authnRequest);
 			messageContext.setPeerEntityEndpoint(samlEndpoint);
-			//messageContext.setRelayState("federation_url="+sFederationUrl);  // 20090526: we're not using RelayState here
 	
 			BasicX509Credential credential = new BasicX509Credential();
 			PrivateKey key = _configManager.getDefaultPrivateKey();
 			credential.setPrivateKey(key);
 			messageContext.setOutboundSAMLMessageSigningCredential(credential);
+			
+			// 20091028, Bauke: use RelayState to transport rid to the AssertionConsumer
+			messageContext.setRelayState("idp="+sFederationUrl);
 	
 			MarshallerFactory marshallerFactory = Configuration.getMarshallerFactory();
 			Marshaller marshaller = marshallerFactory.getMarshaller(messageContext.getOutboundSAMLMessage());
