@@ -64,7 +64,7 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 	protected void aselectReader()
 	throws ASelectException
 	{
-		String sMethod = "aselectReader()";
+		String sMethod = "aselectReader";
 		String sRedirectUrl = getRedirectURL();
 	
 		Object oRequest = null;
@@ -137,7 +137,7 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 	// Create Metadata entries for IdP
 	protected String createMetaDataXML() throws ASelectException
 	{
-		String sMethod = "createMetaDataXML()";
+		String sMethod = "createMetaDataXML";
 		String xmlMDRequest = null;
 		DateTime tStamp = new DateTime();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Starting to build metadata");

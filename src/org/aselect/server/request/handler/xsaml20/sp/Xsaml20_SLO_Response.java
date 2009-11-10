@@ -1,9 +1,9 @@
 package org.aselect.server.request.handler.xsaml20.sp;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.security.PublicKey;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -12,17 +12,15 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.aselect.server.config.Version;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.xsaml20.Saml20_BaseHandler;
 import org.aselect.server.request.handler.xsaml20.Saml20_RedirectDecoder;
 import org.aselect.server.request.handler.xsaml20.SamlHistoryManager;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
-import org.aselect.server.request.handler.xsaml20.idp.MetaDataManagerIdp;
+import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Tools;
-import org.aselect.system.utils.Utils;
 import org.opensaml.Configuration;
 import org.opensaml.common.SignableSAMLObject;
 import org.opensaml.common.binding.BasicSAMLMessageContext;
@@ -48,13 +46,9 @@ import org.xml.sax.InputSource;
 //
 public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 {
-	private static final String MODULE = "Xsaml20_SLO_Response";
+	private static final String MODULE = "sp.Xsaml20_SLO_Response";
 	private static final String SOAP_TYPE = "text/xml";
 	private final String LOGOUTRESPONSE = "LogoutResponse";
-
-//	private boolean _bVerifySignature = true;  // RH, 20080602, o, this is don by Saml20_BaseHandler now
-    private String _sFriendlyName = "";
-    private String _sLogoutResultPage = "";
 
 	public void destroy()
 	{
@@ -74,21 +68,8 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 		throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		super.init(oServletConfig, oConfig);
-		
-		try {
-			Object aselect = _configManager.getSection(null, "aselect");
-			_sFriendlyName = _configManager.getParam(aselect, "organization_friendly_name");
-		}
-		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'organization_friendly_name' found in handler section", e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-		}
-
-	//    _sLogoutResultPage = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "logoutresult.html");    
-	//   _sLogoutResultPage = Utils.replaceString(_sLogoutResultPage, "[version]", Version.getVersion());
-	//    _sLogoutResultPage = Utils.replaceString(_sLogoutResultPage, "[organization_friendly]", _sFriendlyName);
 	}
 
 	/**
@@ -104,7 +85,7 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 		throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
 		if (request.getParameter("SAMLResponse") != null) {
 			handleRedirectLogoutResponse(request, response);
@@ -123,7 +104,7 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 	private void handleRedirectLogoutResponse(HttpServletRequest httpRequest, HttpServletResponse httpResponse)
 	throws ASelectException
 	{
-		String sMethod = "handleRedirectLogoutResponse()";
+		String sMethod = "handleRedirectLogoutResponse";
 
 		try {
 			BasicSAMLMessageContext messageContext = new BasicSAMLMessageContext();
@@ -188,14 +169,7 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 				}
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Signature is correct.");
 			}
-
-			if (elementName.equals(LOGOUTRESPONSE)) {
-				handleLogoutResponse(httpRequest, httpResponse, (LogoutResponse) samlMessage);
-			}
-			else {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "SAMLMessage was not recognized");
-				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-			}
+			handleLogoutResponse(httpRequest, httpResponse, (LogoutResponse) samlMessage);
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -206,53 +180,35 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 		}
 	}
 
-	private void handleLogoutResponse(HttpServletRequest httpRequest, HttpServletResponse httpResponse, LogoutResponse response)
+	// This response is arriving from the IdP.
+	// TgT is still present, response must be sent to our SP party or application
+	private void handleLogoutResponse(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
+			LogoutResponse response)
 	throws ASelectException
 	{
 		String sMethod = "handleLogoutResponse";
+		TGTManager tgtManager = TGTManager.getHandle();
 		String statusCode = response.getStatus().getStatusCode().getValue();
-		String resultCode = null;
+		String resultCode = (statusCode.equals(StatusCode.SUCCESS_URI))?
+				Errors.ERROR_ASELECT_SUCCESS: Errors.ERROR_ASELECT_INTERNAL_ERROR;
+
+		String sTgT = response.getInResponseTo();  // hopefully contains the TgT
+		if (sTgT.startsWith("_"))
+				sTgT = sTgT.substring(1);
+		HashMap htTGTContext = tgtManager.getTGT(sTgT);
+		String sIdP = (htTGTContext==null)? null: (String)htTGTContext.get("SendIdPLogout");
 		
-		if (statusCode.equals(StatusCode.SUCCESS_URI)) {
-			resultCode = Errors.ERROR_ASELECT_SUCCESS;
-		}
-		else {
-			resultCode = Errors.ERROR_ASELECT_INTERNAL_ERROR;
+		// 20091106, TODO: this mechanism should be replace by sending a LogoutResponse to the caller
+		String sReturnUrl = (htTGTContext==null)? null: (String)htTGTContext.get("RelayState");
+		if (sIdP == null || sReturnUrl == null) {
+			sReturnUrl = httpRequest.getParameter("RelayState");  // fall back mechanism
 		}
 
-		String sRelayState = httpRequest.getParameter("RelayState");
-		if (sRelayState != null && !"".equals(sRelayState)) {
-			// Redirect to the url in sRelayState
-			String sAmpQuest = (sRelayState.indexOf('?') >= 0) ? "&": "?"; 
-			String url = sRelayState + sAmpQuest + "result_code=" + resultCode;
-			try {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to "+url); 
-				httpResponse.sendRedirect(url);
-			}
-			catch (IOException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
-			}
-		}
-		else {
-			PrintWriter pwOut = null;
-			try {
-			    _sLogoutResultPage = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "logoutresult", _sUserLanguage, _sUserCountry);    
-			    _sLogoutResultPage = Utils.replaceString(_sLogoutResultPage, "[version]", Version.getVersion());
-			    _sLogoutResultPage = Utils.replaceString(_sLogoutResultPage, "[organization_friendly]", _sFriendlyName);
-				String sHtmlPage = Utils.replaceString(_sLogoutResultPage, "[result_code]", resultCode);
-				pwOut = httpResponse.getWriter();
-			    httpResponse.setContentType("text/html");
-	            pwOut.println(sHtmlPage);
-			}
-			catch (IOException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
-			}
-			finally {
-	            if (pwOut != null) {
-	                pwOut.close();
-	            }
-			}
-		}
+		// Remove the TgT
+		if (htTGTContext != null)
+			tgtManager.remove(sTgT);
+		
+		finishLogoutActions(httpResponse, resultCode, sReturnUrl);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Logout Succeeded");
 	}
 
@@ -272,7 +228,7 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 			}
 			String sReceivedSoap = sb.toString();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Received Soap:\n" + sReceivedSoap);
-			 */
+			*/
 			String sReceivedSoap = Tools.stream2string(request.getInputStream()); // RH, 20080715, n
 			
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();

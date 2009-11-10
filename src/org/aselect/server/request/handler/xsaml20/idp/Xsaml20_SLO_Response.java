@@ -27,7 +27,7 @@ import org.w3c.dom.Element;
 //
 public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 {
-	private static final String MODULE = "LogoutResponseHandler";
+	private static final String MODULE = "idp.LogoutResponseHandler";
 	private final String LOGOUTRESPONSE = "LogoutResponse";
 
 	private int _iRedirectLogoutTimeout = 30;

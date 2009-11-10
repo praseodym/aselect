@@ -79,7 +79,7 @@ public class SoapLogoutRequestSender
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Send backchannel LogoutRequest to " + serviceProviderUrl
 				+ " for user: " + sNameID);
 
-		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(serviceProviderUrl, sNameID, issuerUrl, reason);
+		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(serviceProviderUrl, null, sNameID, issuerUrl, reason);
 		// TODO SamlTools.setValidityInterval with only NotOnOrAfter, but we need this from calling object
 		// Always sign the logoutRequest
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the logoutRequest >======" );

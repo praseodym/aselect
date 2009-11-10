@@ -10,7 +10,6 @@ import javax.xml.parsers.*;
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
 import org.aselect.server.config.ASelectConfigManager;
-import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.server.request.handler.xsaml20.SoapManager;
 import org.aselect.server.tgt.TGTManager;
@@ -18,7 +17,6 @@ import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
 import org.opensaml.common.SAMLObject;
 import org.opensaml.common.SAMLObjectBuilder;
@@ -66,7 +64,7 @@ public class SessionSyncRequestSender
 	private Long _maxNotOnOrAfter = null; 	// TODO, this should be handled (passed) more elegantly, for now we just pass the values
 	private boolean _checkValidityInterval = false;
 
-	private static HashMap htSessionSyncParameters = null;
+	private static HashMap<String,Object> htSessionSyncParameters = null;
 	
 	// For backward compatibility
 	public SessionSyncRequestSender(ASelectSystemLogger systemLogger, String redirectUrl,
@@ -123,15 +121,15 @@ public class SessionSyncRequestSender
 			
 			// 20090304, Bauke: cache the results in htSessionSyncParameters
 			// Not present yet, so get the parameters
-			htSessionSyncParameters = new HashMap();
+			htSessionSyncParameters = new HashMap<String,Object>();
 			mySystemLogger.log(Level.INFO, MODULE, sMethod, "Scan handlers");
 			for ( ; oHandler != null; ) {
 				try {
 					String sId = myConfigManager.getParam(oHandler, "id");
-					//mySystemLogger.log(Level.INFO, MODULE, sMethod, "Handler "+sId);
+					mySystemLogger.log(Level.INFO, MODULE, sMethod, "Scan handler "+sId);
 					if (sId.equals("saml20_sp_session_sync")) {
 						//String sFederationUrl = ASelectConfigManager.getSimpleParam(oHandler, "federation_url", true);
-						//htSessionSyncParameters.put("federation_url", sFederationUrl);
+						//htSessionSyncParameters.put("federation_url", sFederationUrl);  // 20091030: backward compat
 
 						String _sUpdateInterval = ASelectConfigManager.getSimpleParam(oHandler, "update_interval", true);
 						Long updateInterval = Long.parseLong(_sUpdateInterval);
@@ -179,7 +177,7 @@ public class SessionSyncRequestSender
 	// Bauke: rewritten
 	// Returns: ERROR_ASELECT_SUCCESS or error code upon failure
 	//
-	public String synchronizeSession(String sTgT, HashMap htTGTContext, /*boolean credsAreCoded,*/ boolean updateTgt)
+	public String synchronizeSession(String sTgT, HashMap<String,Object> htTGTContext, /*boolean credsAreCoded,*/ boolean updateTgt)
 	throws ASelectException
 	{
 		String _sMethod = "synchronizeSession";
@@ -315,7 +313,7 @@ public class SessionSyncRequestSender
 		SAMLObjectBuilder<Issuer> issuerBuilder = (SAMLObjectBuilder<Issuer>) oBuilderFactory
 				.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
 		Issuer issuer = issuerBuilder.buildObject();
-		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "sp url is ===== " + _sRedirectUrl);
+		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "sp url: " + _sRedirectUrl);
 		issuer.setValue(_sRedirectUrl);
 
 		// Fill Authz obj

@@ -50,17 +50,16 @@ public class LogoutRequestSender
 	 * @throws ASelectException
 	 */
 	@SuppressWarnings("unchecked")
-	public void sendLogoutRequest(String sServiceProviderUrl, String sIssuerUrl, String sNameID, HttpServletRequest request,
-			HttpServletResponse response, String reason, String sLogoutReturnUrl)
-		throws ASelectException
+	public void sendLogoutRequest(HttpServletRequest request, HttpServletResponse response, String sTgT,
+			String sServiceProviderUrl, String sIssuerUrl, String sNameID, String reason, String sLogoutReturnUrl)
+	throws ASelectException
 	{
 		String sMethod = "sendLogoutRequest";
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Send LogoutRequest to: " + sServiceProviderUrl);
 		XMLObjectBuilderFactory builderFactory = Configuration.getBuilderFactory();
 
-		//LogoutRequestBuilder logoutRequestBuilder = new LogoutRequestBuilder();
-		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(sServiceProviderUrl, sNameID, sIssuerUrl, reason);
+		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(sServiceProviderUrl, sTgT, sNameID, sIssuerUrl, reason);
 		// TODO setValidityInterval with only NotOnOrAfter, but we need this from calling object (from aselect.xml)
 		SAMLObjectBuilder<Endpoint> endpointBuilder = (SAMLObjectBuilder<Endpoint>) builderFactory
 											.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);
@@ -81,8 +80,11 @@ public class LogoutRequestSender
 		messageContext.setPeerEntityEndpoint(samlEndpoint);
 		
 		// 20090627, Bauke: pass return url, will be used by the Logout Response handler
+		// 20091105, Bauke: always pass a RelayState, will make the consent forms easier to implement
 		if (sLogoutReturnUrl != null && !"".equals(sLogoutReturnUrl))
 			messageContext.setRelayState(sLogoutReturnUrl);
+		else
+			messageContext.setRelayState("none");
 
 		BasicX509Credential credential = new BasicX509Credential();
 		credential.setPrivateKey(privateKey);
@@ -99,11 +101,11 @@ public class LogoutRequestSender
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 		String msg = XMLHelper.prettyPrintXML(node);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "About to send: " + msg);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "About to send: " + msg);
 
-		// store it in de history
+		// Store it in de history
 		SamlHistoryManager history = SamlHistoryManager.getHandle();
-		history.put(logoutRequest.getID(), logoutRequest.getDOM());
+		history.put(sTgT, logoutRequest.getDOM());
 
 		HTTPRedirectDeflateEncoder encoder = new HTTPRedirectDeflateEncoder();
 		try {

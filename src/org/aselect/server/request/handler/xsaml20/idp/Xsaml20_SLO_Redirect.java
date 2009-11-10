@@ -40,7 +40,7 @@ import org.opensaml.xml.util.XMLHelper;
 //
 public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 {
-    private final static String MODULE = "Xsaml20_SLO_Redirect";
+    private final static String MODULE = "idp.Xsaml20_SLO_Redirect";
 //	private final static String SESSION_ID_PREFIX = "saml20_";
 	private final String LOGOUTREQUEST = "LogoutRequest";
 
@@ -153,7 +153,8 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 		String sInfoForm = _configManager.getForm("logout_info", _sUserLanguage, _sUserCountry);
 		sInfoForm = Utils.replaceString(sInfoForm, "[aselect_url]", sRedirectUrl);
 		sInfoForm = Utils.replaceString(sInfoForm, "[SAMLRequest]", httpRequest.getParameter("SAMLRequest"));
-		sInfoForm = Utils.replaceString(sInfoForm, "[RelayState]", httpRequest.getParameter("RelayState"));
+		String sRS = httpRequest.getParameter("RelayState");
+		sInfoForm = Utils.replaceString(sInfoForm, "[RelayState]", (sRS==null)? "": sRS);
 		sInfoForm = Utils.replaceString(sInfoForm, "[SigAlg]", httpRequest.getParameter("SigAlg"));
 		sInfoForm = Utils.replaceString(sInfoForm, "[Signature]", httpRequest.getParameter("Signature"));
 		sInfoForm = Utils.replaceString(sInfoForm, "[consent]", "true");

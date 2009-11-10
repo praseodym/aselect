@@ -166,7 +166,8 @@ public class SamlTools
 				}
 			}
 			sData = sData.substring(0, sData.length() - 1); // Delete the last '&'
-
+			systemLogger.log(Level.FINEST, MODULE, sMethod, "Check ["+sData+"]");
+			
 			java.security.Signature signature = java.security.Signature.getInstance(signingAlgo);
 			// TODO this uses SAML11, should be SAML20
 			signature.initVerify(key);
@@ -174,11 +175,13 @@ public class SamlTools
 			signature.update(bData);
 
 			String sSig = httpRequest.getParameter("Signature");
+			if (sSig == null)
+				systemLogger.log(Level.SEVERE, MODULE, sMethod, "Signature NOT PRESENT");
 			byte[] bSig = Base64.decode(sSig);
 			return signature.verify(bSig);
 		}
 		catch (Exception e) {
-			throw new MessageDecodingException("Unable to verify URL query string", e);
+			throw new MessageDecodingException("Unable to verify URL signature", e);
 		}
 	}
 
@@ -509,19 +512,19 @@ public class SamlTools
 	 * @throws ASelectException If building logout request fails.
 	 */
 	@SuppressWarnings("unchecked")
-	public static LogoutRequest buildLogoutRequest(String sServiceProviderUrl, String sNameID, String issuerUrl, String reason)
+	public static LogoutRequest buildLogoutRequest(String sServiceProviderUrl, String sTgT, String sNameID, String issuerUrl, String reason)
 		throws ASelectException
 	{
-		String sMethod = "buildLogoutRequest()";
+		String sMethod = "buildLogoutRequest";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
-		systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
+		systemLogger.log(Level.INFO, MODULE, sMethod, "provider="+sServiceProviderUrl);
 
 		XMLObjectBuilderFactory builderFactory = Configuration.getBuilderFactory();
 		SAMLObjectBuilder<LogoutRequest> logoutRequestBuilder = (SAMLObjectBuilder<LogoutRequest>) builderFactory
 				.getBuilder(LogoutRequest.DEFAULT_ELEMENT_NAME);
 		LogoutRequest logoutRequest = logoutRequestBuilder.buildObject();
 		// verplichte velden
-		logoutRequest.setID(SamlTools.generateIdentifier(systemLogger, MODULE));
+		logoutRequest.setID((sTgT!=null)? "_"+sTgT: SamlTools.generateIdentifier(systemLogger, MODULE));
 		logoutRequest.setVersion(SAMLVersion.VERSION_20);
 		logoutRequest.setIssueInstant(new DateTime());
 

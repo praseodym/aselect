@@ -248,8 +248,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			if (!is_bVerifySignature()) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "No signature verification needed");
 			}
-			else {
-				// The SAMLRequest must be signed
+			else {  // The SAMLRequest must be signed
 				if (!SamlTools.isSigned(httpRequest)) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "SAML message must be signed.");
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
@@ -263,7 +262,8 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Found PublicKey for entityId: " + sEntityId);
-				if (!SamlTools.verifySignature(publicKey, httpRequest)) { 			// TODO this uses SAML11, should be SAML20
+				// TODO this uses SAML11, should be SAML20:
+				if (!SamlTools.verifySignature(publicKey, httpRequest)) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "SAML message signature is not correct.");
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
@@ -472,7 +472,6 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 		// TODO: if one or more sessionindexes are mentioned in the logout request
 		//       only logout the ones mentioned!!
 		// List SessionIndexes = logoutRequest.getSessionIndexes();
-		
 		if (htTGTContext != null) {
 			UserSsoSession sso = (UserSsoSession)htTGTContext.get("sso_session");
 			List<ServiceProvider> spList = sso.getServiceProviders();
@@ -496,6 +495,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			}
 			// Write the TgT (caller may also have changed it!)
 			tgtManager.updateTGT(sNameID, htTGTContext);
+			sRelayState = (String)htTGTContext.get("RelayState");
 			
 			// Send a LogoutRequest to another SP
 			for (ServiceProvider sp : spList) {
@@ -536,8 +536,11 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect logout for SP="+serviceProvider);
 					LogoutRequestSender sender = new LogoutRequestSender();
 					_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">> Sending logoutrequest to: "+ url);
-					sender.sendLogoutRequest(url, _sASelectServerUrl, sNameID, httpRequest, httpResponse,
-							"urn:oasis:names:tc:SAML:2.0:logout:user", null);  // was "federation initiated redirect logout"
+					// Will come back at this same handler
+					sender.sendLogoutRequest(httpRequest, httpResponse, sNameID, url, _sASelectServerUrl, sNameID,
+							"urn:oasis:names:tc:SAML:2.0:logout:user", null);
+					return;
+					// stop further execution, we'll be back here to handle the rest
 				}
 				else {
 					// This will logout all SP's
@@ -547,11 +550,26 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 					// schedule it for now. No need to wait
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Schedule timer now");
 					timer.schedule(task, new Date());
+					// Continue with the rest
 				}
-				return;  // stop further execution
 			}
-			// No SP's left (except the initiating SP), there goes the TGT
-			sRelayState = (String)htTGTContext.get("RelayState");
+			// No SP's left (except the initiating SP)
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "No SP's left");
+			String sSendIdPLogout = (String)htTGTContext.get("SendIdPLogout");
+			String sAuthspType = (String)htTGTContext.get("authsp_type");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "No SP's left. SendIdPLogout="+sSendIdPLogout+" authsp_type="+sAuthspType);
+	        // For Saml20, will also send word to the IdP
+			if (sAuthspType != null && sAuthspType.equals("saml20") && sSendIdPLogout == null) {
+				htTGTContext.put("SendIdPLogout", "true");
+				tgtManager.updateTGT(sNameID, htTGTContext);
+				// Should also come back to this handler, but an IdP will send to the slo_http_response handler!
+				sendLogoutToIdP(httpRequest, httpResponse, sNameID, htTGTContext, _sASelectServerUrl, null/*sLogoutReturnUrl*/); 
+						//_sASelectServerUrl+"/saml20_sp_slo_http_request");
+				// The sp_slo_htt_response handler must take care of TgT destruction
+				// and responding to the caller
+				return;
+			}
+			// No saml20 IdP, the TgT goes down the drain
 			tgtManager.remove(sNameID);
 		}
 

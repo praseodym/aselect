@@ -181,7 +181,7 @@ public abstract class AbstractMetaDataManager
 		
 		// Read the new metadata
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId=" + entityId + " not in cache yet");
-		metadataURL = metadataSPs.get(entityId);
+		metadataURL = getMetadataURL(entityId);
 //		metadataURL = metadataSPs.get((myRole.equals("SP"))? sFederationIdpKeyword: entityId);
 		if (metadataURL == null) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity id: " + entityId + " is not Configured");
@@ -636,5 +636,64 @@ public abstract class AbstractMetaDataManager
 	public static void setCheckCertificates(String checkCertificates)
 	{
 		_sCheckCertificates = checkCertificates;
+	}
+
+	/**
+	 * Retrieve the session sync URL for the given entity id.
+	 * 
+	 * @param entityId
+	 * @return The session sync URL, or null on errors.
+	 */
+	public String getSessionSyncURL(String entityId)
+	{
+		String sMethod = "getSessionSyncURL";
+
+		String sUrl = sessionSyncSPs.get(entityId);
+		if (sUrl == null) {
+			sUrl = sessionSyncSPs.get("metadata");  // old mechanism
+		}
+		if (sUrl == null) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity id: " + entityId + " not found (session sync)");
+			return null;
+		}
+		return sUrl;
+	}
+
+	/**
+	 * Retrieve the session sync URL for the given entity id.
+	 * 
+	 * @param entityId
+	 * @return The session sync URL, or null on errors.
+	 */
+	public String getMetadataURL(String entityId)
+	{
+		String sMethod = "getMetadataURL";
+
+		String sUrl = metadataSPs.get(entityId);
+		if (sUrl == null) {
+			sUrl = metadataSPs.get("metadata");  // old mechanism
+		}
+		if (sUrl == null) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity id: " + entityId + " not found (metadata)");
+			return null;
+		}
+		return sUrl;
+	}
+	
+	// Return the number of configured IdPs
+	public int getIdpCount()
+	{
+		return metadataSPs.size();
+	}
+	
+	public String getDefaultIdP()
+	{
+		// Get the first one, usefull when there's only one (the default)
+		Set keys = metadataSPs.keySet();
+		for (Object s : keys) {
+			String sIdP = (String)s;
+			return (sIdP.equals("metadata"))? _configManager.getFederationURL(): sIdP;
+		}
+		return null;
 	}
 }

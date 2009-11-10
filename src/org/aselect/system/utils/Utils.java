@@ -70,7 +70,6 @@ import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.system.communication.server.IInputMessage;
 import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
-import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
@@ -324,7 +323,7 @@ public class Utils
 		String xToken, xKey, xValue;
 		StringTokenizer xST = null;
 		int iPos;
-		HashMap xResponse = new HashMap();
+		HashMap<String,String> xResponse = new HashMap<String,String>();
 
 		if (xMessage != null) {
 			xST = new StringTokenizer(xMessage, "&");
@@ -614,14 +613,16 @@ public class Utils
 	}
 	
 	// Localization
-	public static void transferLocalization(HashMap _htSessionContext, String _sUserLanguage, String _sUserCountry)
+	public static void transferLocalization(HashMap<String,Object> htSessionContext, String sUserLanguage, String sUserCountry)
 	{
-		String sloc = (String)_htSessionContext.get("language");
-		if ((sloc==null || sloc.equals("")) && _sUserLanguage!=null && !_sUserLanguage.equals(""))
-			_htSessionContext.put("language", _sUserLanguage);
-		sloc = (String)_htSessionContext.get("country");
-		if ((sloc==null || sloc.equals("")) && _sUserCountry!=null && !_sUserCountry.equals(""))
-			_htSessionContext.put("country", _sUserCountry);
+		if (htSessionContext == null)
+			return;
+		String sloc = (String)htSessionContext.get("language");
+		if ((sloc==null || sloc.equals("")) && sUserLanguage!=null && !sUserLanguage.equals(""))
+			htSessionContext.put("language", sUserLanguage);
+		sloc = (String)htSessionContext.get("country");
+		if ((sloc==null || sloc.equals("")) && sUserCountry!=null && !sUserCountry.equals(""))
+			htSessionContext.put("country", sUserCountry);
 	}
 
 	/*

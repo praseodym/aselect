@@ -130,7 +130,12 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 	            throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 	        }
 
+	        // 20091028, Bauke, let the user choose which IdP to use
 	        sFederationUrl = request.getParameter("federation_url");
+	        int cnt = MetaDataManagerSp.getHandle().getIdpCount();
+	        if (cnt == 1) {
+	        	sFederationUrl = MetaDataManagerSp.getHandle().getDefaultIdP();  // there can only be one
+	        }
 	        if (sFederationUrl == null || sFederationUrl.equals("")) {
 	        	// No Federation URL choice made yet
 				String sSelectForm = _configManager.loadHTMLTemplate(null, "idpselect", _sUserLanguage, _sUserCountry);
@@ -144,8 +149,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				pwOut.close();
 				return new RequestState(null);
 
-				// 20091028: Original code
-				//sFederationUrl = _sFederationUrl;  // use the default
+				// 20091028: Original code: sFederationUrl = _sFederationUrl;  // use the default
 	        }
 	        
 	        // 20090811, Bauke: save type of Authsp to store in the TGT later on
@@ -165,7 +169,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			_oSessionManager.updateSession(sRid, htSessionContext);
 			*/
 
-	        _systemLogger.log(Level.INFO, MODULE, sMethod, "Get MetaData");
+	        _systemLogger.log(Level.INFO, MODULE, sMethod, "Get MetaData Url="+sFederationUrl);
 			MetaDataManagerSp metadataMgr = MetaDataManagerSp.getHandle();
 			// TODO maybe allow for other BINDINGs
 			String sDestination = metadataMgr.getLocation(sFederationUrl, SingleSignOnService.DEFAULT_ELEMENT_LOCAL_NAME, singleSignOnServiceBindingConstantREDIRECT);
@@ -204,7 +208,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			SAMLObjectBuilder<AuthnRequest> authnRequestbuilder = (SAMLObjectBuilder<AuthnRequest>) builderFactory
 					.getBuilder(AuthnRequest.DEFAULT_ELEMENT_NAME);
 			AuthnRequest authnRequest = authnRequestbuilder.buildObject();
-			authnRequest.setAssertionConsumerServiceURL(sMyUrl);
+			// 20091103 This is WRONG: authnRequest.setAssertionConsumerServiceURL(sMyUrl);
 			authnRequest.setDestination(sDestination);
 			authnRequest.setID(sRid);
 			DateTime tStamp = new DateTime();

@@ -104,7 +104,7 @@ public class LogoutResponseSender
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 		String msg = XMLHelper.prettyPrintXML(node);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "About to send:\n" + msg);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "About to send:\n" + msg);
 
 		// store it in de history
 		SamlHistoryManager history = SamlHistoryManager.getHandle();

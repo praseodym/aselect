@@ -58,7 +58,7 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 	protected void aselectReader() // Get handler specific data from configuration 
 	throws ASelectException
 	{
-		String sMethod = "aselectReader()";
+		String sMethod = "aselectReader";
 	
 		Object oRequest = null;
 		Object oHandlers = null;
@@ -88,11 +88,11 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 					else if (sId.equals("saml20_sp_slo_http_request")) {
 						setSpSloHttpLocation(sTarget);
 					}
-					else if (sId.equals("saml20_sp_slo_http_response")) {
-						setSpSloHttpResponse(sTarget);
-					}
 					else if (sId.equals("saml20_sp_slo_soap_request")) {
 						setSpSloSoapLocation(sTarget);
+					}
+					else if (sId.equals("saml20_sp_slo_http_response")) {
+						setSpSloHttpResponse(sTarget);
 					}
 					else if (sId.equals("saml20_sp_slo_soap_response")) {
 						setSpSloSoapResponse(sTarget);
@@ -114,45 +114,10 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 	// Create Metadata SP version
 	protected String createMetaDataXML() throws ASelectException
 	{
-		String sMethod = "createMetaDataXML()";
+		String sMethod = "createMetaDataXML";
 		String xmlMDRequest = null;
 		
 		DateTime tStamp = new DateTime();
-
-/*
-		// TODO, this should be done by a transformer (using xslt)
-		String xmlMDRequest = "<?xml version=\"1.0\"?>"
-				+ "<m:EntityDescriptor xmlns:m=\"urn:oasis:names:tc:SAML:2.0:metadata\" entityID=\""
-				+ getEntityIdIdp() + "\">"
-				+ "	<m:SPSSODescriptor WantAuthnRequestsSigned=\"true\" protocolSupportEnumeration=\"urn:oasis:names:tc:SAML:2.0:protocol\">"
-				+ "<m:KeyDescriptor use=\"signing\">" + "<ds:KeyInfo xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\">"
-				+ "<ds:X509Data>" + "<ds:X509Certificate>" + getSigningCertificate() + "</ds:X509Certificate>"
-				+ "</ds:X509Data>" + "</ds:KeyInfo>" + "</m:KeyDescriptor>";
-
-		if (getAssertionConsumerTarget() != null)
-			xmlMDRequest += "<m:AssertionConsumerService Binding=\""
-					+ assertionConsumerServiceBindingConstantARTIFACT + "\""
-					+ " Location=\"" + getRedirectURL()+getAssertionConsumerTarget()
-					+ "\"" + " index=\"0\" isDefault=\"true\">" + "</m:AssertionConsumerService>";
-		
-		if (getSpSloHttpLocation() != null) {
-			xmlMDRequest += "<m:SingleLogoutService Binding=\"" + singleLogoutServiceBindingConstantREDIRECT + "\""
-					+ " Location=\"" + getRedirectURL()+getSpSloHttpLocation();
-			if (getSpSloHttpResponse() != null)
-				xmlMDRequest += "\" ResponseLocation=\"" + getRedirectURL()+getSpSloHttpResponse();
-			xmlMDRequest += "\">" + "</m:SingleLogoutService>";
-		}
-		
-		if (getSpSloSoapLocation() != null) {				
-			xmlMDRequest += "<m:SingleLogoutService Binding=\"" + singleLogoutServiceBindingConstantSOAP + "\""
-					+ " Location=\"" + getRedirectURL()+getSpSloSoapLocation();
-			if (getSpSloSoapResponse() != null)
-				xmlMDRequest += "\" ResponseLocation=\"" + getRedirectURL()+getSpSloSoapResponse();
-			xmlMDRequest += "\">" + "</m:SingleLogoutService>";
-		}
-
-		xmlMDRequest += "</m:SPSSODescriptor>" + "</m:EntityDescriptor>";
-	*/	
 		
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Starting to build metadata");
 		// Create the EntityDescriptor
@@ -192,12 +157,12 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 		keyDescriptor.setKeyInfo(keyInfo);
 
 		// Create the SPSSODescriptor
-		SAMLObjectBuilder<SPSSODescriptor> ssoDescriptorBuilder = (SAMLObjectBuilder<SPSSODescriptor>) _oBuilderFactory
-		.getBuilder(SPSSODescriptor.DEFAULT_ELEMENT_NAME);
+		SAMLObjectBuilder<SPSSODescriptor> ssoDescriptorBuilder =
+			(SAMLObjectBuilder<SPSSODescriptor>) _oBuilderFactory.getBuilder(SPSSODescriptor.DEFAULT_ELEMENT_NAME);
 		SPSSODescriptor ssoDescriptor = ssoDescriptorBuilder.buildObject();
 
-
 		// Create the AssertionConsumerService 
+		_systemLogger.log(Level.INFO, MODULE, sMethod, getAssertionConsumerTarget());
 		if (getAssertionConsumerTarget() != null) {
 			SAMLObjectBuilder<AssertionConsumerService> assResolutionSeviceBuilder = (SAMLObjectBuilder<AssertionConsumerService>) _oBuilderFactory
 			.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);
@@ -209,7 +174,8 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 			ssoDescriptor.getAssertionConsumerServices().add(assResolutionService);
 		}
 
-		// Create the SingleLogoutService HTTP
+		// Create the SingleLogoutService HTTP, creates Request and Response
+		_systemLogger.log(Level.INFO, MODULE, sMethod, getSpSloHttpLocation());
 		if (getSpSloHttpLocation() != null) {
 			SAMLObjectBuilder<SingleLogoutService> sloHttpServiceBuilder = (SAMLObjectBuilder<SingleLogoutService>) _oBuilderFactory
 			.getBuilder(SingleLogoutService.DEFAULT_ELEMENT_NAME);
@@ -222,7 +188,8 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 			ssoDescriptor.getSingleLogoutServices().add(sloHttpService);
 		}
 
-		// Create the SingleLogoutService SOAP
+		// Create the SingleLogoutService SOAP, creates Request and Response
+		_systemLogger.log(Level.INFO, MODULE, sMethod, getSpSloSoapLocation());
 		if (getSpSloSoapLocation() != null) {
 			SAMLObjectBuilder<SingleLogoutService> sloSoaperviceBuilder = (SAMLObjectBuilder<SingleLogoutService>) _oBuilderFactory
 			.getBuilder(SingleLogoutService.DEFAULT_ELEMENT_NAME);
@@ -245,7 +212,7 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 
 		// TODO create descriptor (PDPDescriptor?) for session sync here
 		
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Just built the entityDescriptor");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "entityDescriptor done");
 		
 		// Marshall to the Node
 		MarshallerFactory factory = Configuration.getMarshallerFactory();
@@ -253,15 +220,13 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 		Node node = null;
 		try {
 			node = marshaller.marshall(entityDescriptor);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, xmlMDRequest);
 		}
 		catch (MarshallingException e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, e.getMessage(), e);
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not marshall metadata",	e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
-
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Just marshalled into metadata node");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Marshalling done");
 		xmlMDRequest = XMLHelper.nodeToString(node);
 		
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, "xmlMDRequest: " + xmlMDRequest);

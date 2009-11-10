@@ -1,18 +1,26 @@
 package org.aselect.server.request.handler.xsaml20;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.logging.Level;
 import javax.servlet.ServletConfig;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.config.ASelectConfigManager;
+import org.aselect.server.config.Version;
 import org.aselect.server.request.handler.ProtoRequestHandler;
+import org.aselect.server.request.handler.xsaml20.sp.MetaDataManagerSp;
 import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.utils.Utils;
 import org.opensaml.DefaultBootstrap;
+import org.opensaml.common.xml.SAMLConstants;
+import org.opensaml.saml2.metadata.SingleLogoutService;
 import org.opensaml.xml.ConfigurationException;
 
 //
@@ -104,6 +112,80 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 			}
 		}
 		return found;
+	}
+
+	protected void sendLogoutToIdP(HttpServletRequest request, HttpServletResponse response,
+			String sTgT, HashMap htTGTContext, String sIssuer, String sLogoutReturnUrl)
+	throws ASelectException
+	{
+		String sMethod = "sendLogoutToIdP";
+//		String sAuthspType = (String)htTGTContext.get("authsp_type");
+//		if (sAuthspType != null && sAuthspType.equals("saml20")) {
+			// Send a saml LogoutRequest to the federation idp
+			LogoutRequestSender logoutRequestSender = new LogoutRequestSender();
+			String sNameID = (String) htTGTContext.get("name_id");
+	
+			// metadata
+			String sFederationUrl = (String)htTGTContext.get("federation_url");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Logout to IdP="+sFederationUrl+" returnUrl="+sLogoutReturnUrl);
+			//if (sFederationUrl == null) sFederationUrl = _sFederationUrl;  // xxx for now
+			MetaDataManagerSp metadataManager = MetaDataManagerSp.getHandle();
+			String url = metadataManager.getLocation(sFederationUrl, SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME,
+					SAMLConstants.SAML2_REDIRECT_BINDING_URI);
+	
+			if (url != null) {
+				logoutRequestSender.sendLogoutRequest(request, response, sTgT, url, sIssuer/*issuer*/,
+						sNameID, "urn:oasis:names:tc:SAML:2.0:logout:user", sLogoutReturnUrl);
+			}
+			else {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "No IdP SingleLogoutService");
+				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
+			}
+//		}
+//		else
+//			_systemLogger.log(Level.INFO, MODULE, sMethod, "authsp_type != saml20");
+	}
+
+	protected void finishLogoutActions(HttpServletResponse httpResponse, String resultCode, String sReturnUrl)
+	throws ASelectException
+	{
+		String sMethod = "finishLogoutActions";
+	    String sLogoutResultPage = "";
+
+		// And inform the caller or user
+		if (sReturnUrl != null && !"".equals(sReturnUrl)) {
+			// Redirect to the "RelayState" url
+			String sAmpQuest = (sReturnUrl.indexOf('?') >= 0) ? "&": "?"; 
+			String url = sReturnUrl + sAmpQuest + "result_code=" + resultCode;
+			try {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to "+url); 
+				httpResponse.sendRedirect(url);
+			}
+			catch (IOException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
+			}
+		}
+		else {
+			PrintWriter pwOut = null;
+			try {
+			    sLogoutResultPage = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "logoutresult", _sUserLanguage, _sUserCountry);    
+			    sLogoutResultPage = Utils.replaceString(sLogoutResultPage, "[version]", Version.getVersion());
+			    sLogoutResultPage = Utils.replaceString(sLogoutResultPage, "[organization_friendly]", _sFriendlyName);
+				String sHtmlPage = Utils.replaceString(sLogoutResultPage, "[result_code]", resultCode);
+				pwOut = httpResponse.getWriter();
+			    httpResponse.setContentType("text/html");
+	            pwOut.println(sHtmlPage);
+			}
+			catch (IOException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+			}
+			finally {
+	            if (pwOut != null) {
+	                pwOut.close();
+	            }
+			}
+		}
 	}
 
 	/**

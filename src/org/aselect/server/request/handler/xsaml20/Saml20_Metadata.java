@@ -168,7 +168,6 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	
 					setSigningCertificate(encodedCert);
 				}
-	
 			}
 			if (getSigningCertificate() == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No alias found for idp public key with name : "
@@ -186,6 +185,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
 		}
 	}
 	
+	// Override this method!
 	protected void aselectReader() // Will read all non-handler specific config parameters for metadatarequest
 	throws ASelectException
 	{
@@ -196,7 +196,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	private void handleMetaDataRequest(HttpServletRequest httpRequest, HttpServletResponse httpResponse)
 	throws ASelectException
 	{
-		String sMethod = "handleMetaDataRequest()";
+		String sMethod = "handleMetaDataRequest";
 		String mdxml = createMetaDataXML();
 	
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "metadatXML file for entityID " + getEntityIdIdp() + " " + mdxml);
@@ -219,7 +219,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	protected String createMetaDataXML()
 	throws ASelectException
 	{
-		String sMethod = "createMetaDataXML()";
+		String sMethod = "createMetaDataXML";
 		String error = "This method should NOT be called directly but must be overridden!";
         _systemLogger.log(Level.SEVERE, MODULE, sMethod, error);
         throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
@@ -305,17 +305,21 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	}
 
 	public synchronized String getSpSloHttpLocation() {
+		_systemLogger.log(Level.INFO, MODULE, "getSpSloHttpLocation", "Get "+spSloHttpLocation);
 		return spSloHttpLocation;
 	}
 	public synchronized void setSpSloHttpLocation(String singleLogoutTarget) {
+		_systemLogger.log(Level.INFO, MODULE, "setSpSloHttpLocation", "Set "+singleLogoutTarget);
 		this.spSloHttpLocation = singleLogoutTarget;
 	}
 
 	public synchronized String getAssertionConsumerTarget() {
+		_systemLogger.log(Level.INFO, MODULE, "getAssertionConsumerTarget", "Get "+assertionConsumerTarget);
 		return assertionConsumerTarget;
 	}
 
 	public synchronized void setAssertionConsumerTarget(String assertionConsumerLocation) {
+		_systemLogger.log(Level.INFO, MODULE, "setAssertionConsumerTarget", "Set "+assertionConsumerLocation);
 		this.assertionConsumerTarget = assertionConsumerLocation;
 	}
 
@@ -368,11 +372,12 @@ public class Saml20_Metadata extends ProtoRequestHandler
 
 	public String getSpSloHttpResponse()
 	{
+		_systemLogger.log(Level.INFO, MODULE, "getSpSloHttpResponse", "Get "+spSloHttpResponse);
 		return spSloHttpResponse;
 	}
-
 	public void setSpSloHttpResponse(String spSloHttpResponse)
 	{
+		_systemLogger.log(Level.INFO, MODULE, "setSpSloHttpResponse", "Set "+spSloHttpResponse);
 		this.spSloHttpResponse = spSloHttpResponse;
 	}
 

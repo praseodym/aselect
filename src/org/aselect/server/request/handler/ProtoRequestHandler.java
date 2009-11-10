@@ -75,7 +75,8 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
     protected Saml11Builder _saml11Builder = null;
     protected String _sASelectServerID;
     protected String _sASelectOrganization;
-	protected String _sServerUrl;
+    protected String _sFriendlyName = "";
+    protected String _sServerUrl;
 
     protected Vector _vIdPUrls;
     protected HashMap _htIdPs;
@@ -94,6 +95,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			_sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true);
 			_sASelectServerID = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
 			_sASelectOrganization = ASelectConfigManager.getParamFromSection(null, "aselect", "organization", true);
+			_sFriendlyName = ASelectConfigManager.getParamFromSection(null, "aselect", "organization_friendly_name", true);
 
   			// Initialize assertion building, if needed
 	        if (useConfigToCreateSamlBuilder())

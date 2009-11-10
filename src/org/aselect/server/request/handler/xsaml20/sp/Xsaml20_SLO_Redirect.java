@@ -33,7 +33,7 @@ import org.opensaml.xml.util.XMLHelper;
 //
 public class Xsaml20_SLO_Redirect extends Saml20_BaseHandler
 {
-	private final static String MODULE = "Saml20_BaseHandler";
+	private final static String MODULE = "sp.Xsaml20_SLO_Redirect";
 	private static final String LOGOUTREQUEST = "LogoutRequest";
 
 	/**

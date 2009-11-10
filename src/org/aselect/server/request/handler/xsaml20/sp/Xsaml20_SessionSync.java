@@ -152,6 +152,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 			}
 			
 			String sSessionSyncUrl = MetaDataManagerSp.getHandle().getSessionSyncURL(sFederationUrl);  // "/saml20_session_sync";
+			if (sSessionSyncUrl == null) sSessionSyncUrl = _sFederationUrl;  // 20091030: backward compatibility
 			SessionSyncRequestSender ss_req = new SessionSyncRequestSender(_oSystemLogger, _sSpUrl,
 					updateInterval, _sMessageType, sSessionSyncUrl, pkey, getMaxNotBefore(), getMaxNotOnOrAfter(), is_bVerifyInterval());
 			errorCode = ss_req.synchronizeSession(sTgT, htTGTContext, /*true, coded*/ true/*upgrade*/);

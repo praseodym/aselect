@@ -587,7 +587,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			String sSamlMessageType = (String) htResult.get("message_type");
 			// Bauke 20091029, take federation url from TGT
 			String sFederationUrl = (String)htTGTContext.get("federation_url");
-			if (sFederationUrl == null) sFederationUrl = (String) htResult.get("federation_url");
+			//if (sFederationUrl == null) sFederationUrl = (String)htResult.get("federation_url");
 			String sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true);
 
 			String verify_signature = (String) htResult.get("verify_signature");
@@ -605,8 +605,8 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 				l_max_notbefore = Long.parseLong((String) htResult.get("max_notbefore"));
 			if (max_notonorafter != null)
 				l_max_notonorafter = Long.parseLong((String) htResult.get("max_notonorafter"));
-
-			
+		
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "sFederationUrl=" + sFederationUrl);
 			String sSessionSyncUrl = MetaDataManagerSp.getHandle().getSessionSyncURL(sFederationUrl);  // "/saml20_session_sync";
 			SessionSyncRequestSender ss_req = new SessionSyncRequestSender(_systemLogger, sServerUrl, updateInterval,
 					sSamlMessageType, sSessionSyncUrl, pKey, l_max_notbefore, l_max_notonorafter,

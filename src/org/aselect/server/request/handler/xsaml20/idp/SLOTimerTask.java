@@ -121,7 +121,7 @@ public class SLOTimerTask extends TimerTask
 
 		// Now we have to send a logoutResponse to the initiating SP. One
 		// of the 'other SPs' did not respond, so the chain is broken. This
-		// means there was no logoutresponse send to the initiating SP yet
+		// means there was no logoutresponse sent to the initiating SP yet
 		// this response must now be backchannel. This is necesary for the sake
 		// of completeness. Plus we get to log it
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "FINAL: LogoutResponse to initiating SP="+initiatingSP);
