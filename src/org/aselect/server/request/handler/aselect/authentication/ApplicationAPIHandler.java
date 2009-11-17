@@ -375,7 +375,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			IOutputMessage oOutputMessage)
 		throws ASelectException
 	{
-		String sMethod = "handleAuthenticateRequest()";
+		String sMethod = "handleAuthenticateRequest";
 
 		HashMap<String, String> hmRequest = new HashMap<String, String>();
 		Utils.copyMsgValueToHashmap("app_id", hmRequest, oInputMessage);
@@ -450,7 +450,6 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		Integer intAppLevel = _applicationManager.getRequiredLevel(sAppId);
 		if (intAppLevel == null) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unknown application ID");
-
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_UNKNOWN_APP);
 		}
 		try {
@@ -461,7 +460,6 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not set response parameter", eAC);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR, eAC);
 		}
-
 	}
 
 	/**
@@ -537,6 +535,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		String sMethod = "handleUpgradeTGTRequest";
 		String sEncTGT = null;
 		String sASelectServer = null;
+		String sLanguage = null;
 
 		// Get mandatory parameters
 		try {
@@ -569,6 +568,23 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "Upgrade TICKET context=" + htTGTContext);
 
+		// 20091113, Bauke: overwrite user's preferred language taken from filter
+		// Also if the filter does not pass a language, let it know our favourite!
+		try {
+			sLanguage = oInputMessage.getParam("language");
+		}
+		catch (ASelectCommunicationException eAC) {
+		}
+		if (sLanguage != null) {
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "Request language="+sLanguage);
+			htTGTContext.put("language", sLanguage);
+		}
+		else {
+			sLanguage = (String)htTGTContext.get("language");
+			if (sLanguage != null)
+				oOutputMessage.setParam("language", sLanguage);
+		}
+		
 		// 20090811, Bauke: Only saml20 needs this type of session sync
 		HashMap htResult = null;
 		String sAuthspType = (String)htTGTContext.get("authsp_type");
@@ -873,16 +889,16 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			pk = _applicationManager.getSigningKey(sAppId);
 		}
 		catch (ASelectException e) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid application ID: \"" + sAppId
-					+ "\". Could not find signing key for application.", e);
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid application ID: " + sAppId
+					+ ". Could not find signing key for application.", e);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
 
 		if (!_cryptoEngine.verifyApplicationSignature(pk, sData, sSignature))
 		// throws ERROR_ASELECT_INTERNAL_ERROR
 		{
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Application:" + sAppId + " Invalid signature:"
-					+ sSignature + " Key=" + pk);
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid signature ID: " + sAppId +
+					" signature: " + sSignature + " Key=" + pk);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
 	}

@@ -1399,14 +1399,15 @@ public class RequestHandler extends Thread
 	{
 		String sMethod = "processVerifyTicketRequest()";
 		StringBuffer sbBuffer = new StringBuffer();
+		String sTicket = null;
+		String sUid = null;
+		String sOrg = null;
+		String sAttributesHash = null;
+		String sRequestURI = null;
+		String sIP = null;
+		String sLanguage = null;
 
-		try {
-			String sTicket = null;
-			String sUid = null;
-			String sOrg = null;
-			String sAttributesHash = null;
-			String sRequestURI = null;
-			String sIP = null;
+		try {			
 			try {
 				// get required API parameters
 				sTicket = oInputMessage.getParam("ticket");
@@ -1437,6 +1438,11 @@ public class RequestHandler extends Thread
 			}
 			try {
 				sIP = oInputMessage.getParam("ip");
+			}
+			catch (ASelectCommunicationException e) {
+			}
+			try {
+				sLanguage = oInputMessage.getParam("language");
 			}
 			catch (ASelectCommunicationException e) {
 			}
@@ -1527,6 +1533,10 @@ public class RequestHandler extends Thread
 				htRequest.put("a-select-server", sAselectServer);
 				//htRequest.put("rid",sRid);
 				htRequest.put("crypted_credentials", sCryptedCredentials);
+				
+				// 20091113, Bauke: added, to let the filter report the user's language to the A-Select server
+				if (sLanguage != null)
+					htRequest.put("language", sLanguage);
 
 				HashMap htResponseParameters = sendToASelectServer(htRequest);
 				if (htResponseParameters.isEmpty()) {
@@ -1539,6 +1549,10 @@ public class RequestHandler extends Thread
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid response from A-Select Server.");
 					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
 					return;
+				}
+				sLanguage = (String) htResponseParameters.get("language");
+				if (sLanguage != null) {
+					oOutputMessage.setParam("language", sLanguage);
 				}
 				if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
 					sbBuffer = new StringBuffer("A-Select Server returned error: '");
@@ -2112,11 +2126,10 @@ public class RequestHandler extends Thread
 			Object oConfigSection = oResource.getAttributes();
 
 			String sAS = _configManager.getParam(oConfigSection, "aselect-server-id");
-			String sAsUrl = _configManager.getParam(oConfigSection, "url");
-
 			htParams.put("a-select-server", sAS);
 			signRequest(htParams);
 
+			String sAsUrl = _configManager.getParam(oConfigSection, "url");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "ToSERVER, url=" + sAsUrl + ", params=" + htParams);
 			htResponse = sendRequestToASelectServer(sAsUrl, htParams);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "FromSERVER, htResponse=" + htResponse);

@@ -85,7 +85,7 @@ static const command_rec    aselect_filter_cmds[];
 int aselect_filter_upload_all_rules(PASELECT_FILTER_CONFIG pConfig, server_rec *pServer, pool *pPool);
 int             aselect_filter_upload_authz_rules(PASELECT_FILTER_CONFIG pConfig, server_rec *pServer, pool *pPool, PASELECT_APPLICATION pApp);
 char *          aselect_filter_verify_ticket(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcTicket, char *pcUID,
-		char *pcOrganization, char *pcAttributes);
+		char *pcOrganization, char *pcAttributes, char *language);
 char *          aselect_filter_kill_ticket(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcTicket );
 char *          aselect_filter_auth_user(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcAppUrl );
 char *          aselect_filter_verify_credentials(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcRID, char *pcCredentials );
@@ -106,7 +106,7 @@ static const char *aselect_filter_add_attribute(cmd_parms *parms, void *mconfig,
 
 static char * aselect_filter_attributes(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcTicket, char *pcUid, char *pcOrganization);
 static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, request_rec *pRequest,
-	    PASELECT_FILTER_CONFIG pConfig, char *pcTicketIn, char *pcUIDIn, char *pcOrganizationIn, table *headers_in);
+	    PASELECT_FILTER_CONFIG pConfig, char *pcTicketIn, char *pcUIDIn, char *pcOrganizationIn, char *pcRequestLanguage, table *headers_in);
 
 //
 // Called once during the module initialization phase.
@@ -261,21 +261,14 @@ aselect_filter_upload_authz_rules(PASELECT_FILTER_CONFIG pConfig,
         strcat(pRequest, "\r\n");
         
         //TRACE1("aselect_filter_upload_authz_rules: sending: %s", pRequest);
-        pcResponse = aselect_filter_send_request(pServer, 
-                pPool,
-                pConfig->pcASAIP,
-                pConfig->iASAPort,
-                pRequest,
-                strlen(pRequest));
-        if (pcResponse == NULL)
-        {
+        pcResponse = aselect_filter_send_request(pServer, pPool, pConfig->pcASAIP, pConfig->iASAPort, pRequest, strlen(pRequest));
+        if (pcResponse == NULL) {
             // Could not send request, error already logged
             return 0;
         }
         //TRACE1("aselect_filter_upload_authz_rules: response: %s", pcResponse);
         iRet = aselect_filter_get_error(pPool, pcResponse);
-        if (iRet != 0)
-        {
+        if (iRet != 0) {
             ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, 
                 ap_psprintf(pPool, "ASELECT_FILTER:: Agent returned "
                     "error %s while uploading authorization rules", 
@@ -283,8 +276,7 @@ aselect_filter_upload_authz_rules(PASELECT_FILTER_CONFIG pConfig,
             return 0;
         }
     }
-    else
-    {
+    else {
         TRACE("aselect_filter_upload_authz_rules: Out of memory");
         return 0;
     }
@@ -295,13 +287,8 @@ aselect_filter_upload_authz_rules(PASELECT_FILTER_CONFIG pConfig,
 // Request validation of a ticket
 //
 char *
-aselect_filter_verify_ticket(request_rec *pRequest, 
-                pool *pPool,
-                PASELECT_FILTER_CONFIG pConfig,
-                char *pcTicket,
-                char *pcUID,
-                char *pcOrganization,
-                char *pcAttributes)
+aselect_filter_verify_ticket(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig,
+	char *pcTicket, char *pcUID, char *pcOrganization, char *pcAttributes, char *language)
 {
     char *          pcSendMessage;
     int             ccSendMessage;
@@ -310,12 +297,11 @@ aselect_filter_verify_ticket(request_rec *pRequest,
     char            cSHA1[SHA_DIGESTSIZE]; // 20
     char            pcSHA1[64];  // 2* SHA_DIGESTSIZE
     char            *pcURI;
+    char langBuf[40];
     
     TRACE1("aselect_filter_verify_ticket: pcAttributes=%s", (pcAttributes)?pcAttributes:"NULL");
-    
-    //
+
     // Create the message
-    //
     // Bauke: added
     *pcSHA1 = 0;
     if (pcAttributes && *pcAttributes)
@@ -329,37 +315,32 @@ aselect_filter_verify_ticket(request_rec *pRequest,
     pcURI = pRequest->uri + strlen(pConfig->pCurrentApp->pcLocation);
     pcURI = aselect_filter_url_encode(pPool, pcURI);
     
+    langBuf[0] = '\0';
+    if (language)
+	sprintf(langBuf, "&language=%s", language);
     if (*pcSHA1)
 	pcSendMessage = ap_psprintf(pPool, 
-	    "request=verify_ticket&ticket=%s&app_id=%s&uid=%s&organization=%s&attributes_hash=%s&request_uri=%s&ip=%s\r\n", 
+	    "request=verify_ticket&ticket=%s&app_id=%s&uid=%s&organization=%s&attributes_hash=%s&request_uri=%s&ip=%s%s\r\n", 
 	    pcTicket, pConfig->pCurrentApp->pcAppId, pcUID, pcOrganization, 
-	    pcSHA1, pcURI, pRequest->connection->remote_ip);
+	    pcSHA1, pcURI, pRequest->connection->remote_ip, langBuf);
     else // No attribute hash available, so don't ask for an attribute check
 	pcSendMessage = ap_psprintf(pPool, 
-	    "request=verify_ticket&ticket=%s&app_id=%s&uid=%s&organization=%s&request_uri=%s&ip=%s\r\n", 
+	    "request=verify_ticket&ticket=%s&app_id=%s&uid=%s&organization=%s&request_uri=%s&ip=%s%s\r\n", 
 	    pcTicket, pConfig->pCurrentApp->pcAppId, pcUID, pcOrganization, 
-	    pcURI, pRequest->connection->remote_ip);
+	    pcURI, pRequest->connection->remote_ip, langBuf);
+
     ccSendMessage = strlen(pcSendMessage);
 
     //TRACE2("request(%d): %s", ccSendMessage, pcSendMessage);
-    pcResponse = aselect_filter_send_request(pRequest->server, 
-                        pPool,
-                        pConfig->pcASAIP,
-                        pConfig->iASAPort,
-                        pcSendMessage,
-                        ccSendMessage);
-
+    pcResponse = aselect_filter_send_request(pRequest->server, pPool, pConfig->pcASAIP, pConfig->iASAPort,
+			pcSendMessage, ccSendMessage);
     return pcResponse;
 }
 
 //
 // Kills the ticket
 //
-char *
-aselect_filter_kill_ticket(request_rec *pRequest,
-                                pool *pPool,
-                                PASELECT_FILTER_CONFIG pConfig,
-                                char *pcTicket)
+char *aselect_filter_kill_ticket(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcTicket)
 {
     char            *pcSendMessage;
     int             ccSendMessage;
@@ -370,30 +351,19 @@ aselect_filter_kill_ticket(request_rec *pRequest,
     //
     TRACE("aselect_filter_kill_ticket");
     pcSendMessage = ap_psprintf(pPool, "request=kill_ticket&ticket=%s&app_id=%s\r\n", 
-        aselect_filter_url_encode(pPool, pcTicket), 
-        aselect_filter_url_encode(pPool, pConfig->pCurrentApp->pcAppId));
+	    aselect_filter_url_encode(pPool, pcTicket), aselect_filter_url_encode(pPool, pConfig->pCurrentApp->pcAppId));
     ccSendMessage = strlen(pcSendMessage);
 
     //TRACE2("request(%d): %s", ccSendMessage, pcSendMessage);
-
-    pcResponse = aselect_filter_send_request(pRequest->server,
-                    pPool,
-                    pConfig->pcASAIP,
-                    pConfig->iASAPort,
-                    pcSendMessage,
-                    ccSendMessage);
-
+    pcResponse = aselect_filter_send_request(pRequest->server, pPool, pConfig->pcASAIP, pConfig->iASAPort,
+		    pcSendMessage, ccSendMessage);
     return pcResponse;
 }
 
 //
 // Request an authentication of a user
 //
-char *
-aselect_filter_auth_user(request_rec *pRequest,
-            pool *pPool,
-            PASELECT_FILTER_CONFIG pConfig,
-            char *pcAppUrl)
+char *aselect_filter_auth_user(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcAppUrl)
 {
     char    *pcSendMessage;
     int     ccSendMessage;
@@ -418,23 +388,13 @@ aselect_filter_auth_user(request_rec *pRequest,
 
     //TRACE2("request(%d): %s", ccSendMessage, pcSendMessage);
 
-    if ((pcResponse = aselect_filter_send_request(pRequest->server,
-                            pPool,
-                            pConfig->pcASAIP,
-                            pConfig->iASAPort,
-                            pcSendMessage,
-                            ccSendMessage)))
+    if ((pcResponse = aselect_filter_send_request(pRequest->server, pPool, pConfig->pcASAIP, pConfig->iASAPort, pcSendMessage, ccSendMessage)))
     {
         //TRACE1("response message: %s", pcResponse);
     }
-    else
-    {
-        //
-        // socket error occured, take appropiate action
-        //
+    else { // socket error occured, take appropiate action
         pcResponse = NULL;
     }
-
     return pcResponse;
 }
 
@@ -482,12 +442,7 @@ static char *getRequestedAttributes(pool *pPool, PASELECT_FILTER_CONFIG pConfig)
 // sends the RID and the credentials to the Aselect Agent for verification
 // Bauke 20081201: added saml_attributes
 //
-char *
-aselect_filter_verify_credentials(request_rec *pRequest,
-            pool *pPool,
-            PASELECT_FILTER_CONFIG pConfig,
-            char *pcRID,
-            char *pcCredentials)
+char *aselect_filter_verify_credentials(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcRID, char *pcCredentials)
 {
     char    *pcSendMessage;
     int     ccSendMessage;
@@ -518,13 +473,7 @@ aselect_filter_verify_credentials(request_rec *pRequest,
 // Bauke: Added:
 // Retrieve Attribute values from the Agent
 //
-char *
-aselect_filter_attributes(request_rec *pRequest,
-            pool *pPool,
-            PASELECT_FILTER_CONFIG pConfig,
-            char *pcTicket,
-            char *pcUid,
-	    char *pcOrganization)
+char *aselect_filter_attributes(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcTicket, char *pcUid, char *pcOrganization)
 {
     char    *pcSendMessage;
     int     ccSendMessage;
@@ -535,18 +484,12 @@ aselect_filter_attributes(request_rec *pRequest,
     // Create the message
     //
     pcSendMessage = ap_psprintf(pPool, "request=attributes&ticket=%s&uid=%s&organization=%s\r\n", 
-        aselect_filter_url_encode(pPool, pcTicket), 
-        aselect_filter_url_encode(pPool, pcUid),
-	aselect_filter_url_encode(pPool, pcOrganization));
+		aselect_filter_url_encode(pPool, pcTicket), aselect_filter_url_encode(pPool, pcUid),
+		aselect_filter_url_encode(pPool, pcOrganization));
     ccSendMessage = strlen(pcSendMessage);
 
     //TRACE2("request(%d): %s", ccSendMessage, pcSendMessage);
-    if ((pcResponse = aselect_filter_send_request(pRequest->server,
-                            pPool,
-                            pConfig->pcASAIP,
-                            pConfig->iASAPort,
-                            pcSendMessage,
-                            ccSendMessage)))
+    if ((pcResponse = aselect_filter_send_request(pRequest->server, pPool, pConfig->pcASAIP, pConfig->iASAPort, pcSendMessage, ccSendMessage)))
     {
         //TRACE1("response message: %s", pcResponse);
     }
@@ -629,63 +572,54 @@ aselect_filter_handler(request_rec *pRequest)
     char            *pcStrippedParams;
     char            *pcAttributes = NULL;
     int             bFirstParam;
+    char * pcRequestLanguage = NULL;
 
     ap_log_error(APLOG_MARK, APLOG_INFO, pRequest->server, ap_psprintf(pRequest->pool, "XX Url - %s", pRequest->uri));
     TRACE("");
     TRACE("----------------------------------------------------------- aselect_filter_handler");
-    TRACE1("GET %s", pRequest->uri);
+    TRACE2("GET %s %s", pRequest->uri, pRequest->args);
     TRACE("-----------------------------------------------------------");
     ap_table_do(aselect_filter_print_table, pRequest, headers_in, NULL);
 
     //
     // Select which pool to use
     //
-    
 #ifdef APACHE_13_ASELECT_FILTER
     if ((pPool = ap_make_sub_pool(pRequest->pool)) == NULL)
 #else
     if ((apr_pool_create(&pPool, pRequest->pool)) != APR_SUCCESS)
 #endif
     {
-        //
-        // could not allocate pool
-        //
+        // Could not allocate pool
         TRACE("aselect_filter_handler:: could not allocate memory pool");
         ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest,
              "ASELECT_FILTER:: could allocate memory pool");
         return iRet;
     }
 
+    // 20091114, Bauke: report application language back to the Server
+    // TODO: Should look into the POST data as well!
+    // Currently callers have to specify the language as an URL parameter
+    pcRequestLanguage = aselect_filter_get_param(pPool, pRequest->args, "language=", "&", TRUE);
+
     //
-    // NOTE: the application ticket is a cookie, check if the browser can handle cookies else we
-    // run into a loop
+    // NOTE: the application ticket is a cookie, check if the browser can handle cookies else we run into a loop
     // check cookie, no cookie, validate_user, set cookie, check cookie, no cookie.... and so on
-    //
     
-    //
     // Read config data
-    //
     if (!(pConfig = (PASELECT_FILTER_CONFIG) 
         ap_get_module_config(pRequest->server->module_config, &aselect_filter_module)))
     {
-        //
         // Something went wrong, access denied
-        //
         TRACE("could not get module config data");
         ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest,
             "ASELECT_FILTER:: could not retrieve configuration data");
 
-        //
         // Cleanup
-        //
         ap_destroy_pool(pPool);
         return iRet;
     }
-    else
-    {
-        //
-        // Verify configuration
-        //
+    else { // Verify configuration
 	TRACE1("IP=%s", (pConfig->pcASAIP)? pConfig->pcASAIP: "NULL");
 	TRACE1("Port=%d", pConfig->iASAPort);
         if (aselect_filter_verify_config(pConfig) != ASELECT_FILTER_ERROR_OK)
@@ -764,23 +698,23 @@ aselect_filter_handler(request_rec *pRequest)
                     // Validate ticket
                     //
 		    // Bauke: added, always send rules
-		    if (aselect_filter_upload_all_rules(pConfig, pRequest->server, pPool))
-		    	;
+		    aselect_filter_upload_all_rules(pConfig, pRequest->server, pPool);
 
-                    if ((pcResponseVT = aselect_filter_verify_ticket(pRequest, pPool, pConfig, pcTicketIn, pcUIDIn, pcOrganizationIn, pcAttributesIn)))
+                    if ((pcResponseVT = aselect_filter_verify_ticket(pRequest, pPool, pConfig, pcTicketIn, pcUIDIn, pcOrganizationIn, pcAttributesIn, pcRequestLanguage)))
                     {
                         iError = aselect_filter_get_error(pPool, pcResponseVT);
-        
-                        if (iError == ASELECT_FILTER_ASAGENT_ERROR_OK)
-                        {
-                            //
+                        if (iError == ASELECT_FILTER_ASAGENT_ERROR_OK) {
                             // User has ticket, ACCESS GRANTED
-                            //
+			    // 20091114, Bauke: Possibly a server language was passed back
+			    pcTmp = aselect_filter_get_param(pPool, pcResponseVT, "language=", "&", TRUE);
+			    if (pcTmp != NULL) {
+				TRACE1("Return language=%s", pcTmp);
+			    	pcRequestLanguage = pcTmp;
+			    }
                             iAction = ASELECT_FILTER_ACTION_ACCESS_GRANTED;
                             TRACE("aselect_filter_handler: User has ticket: ACCESS_GRANTED");
                         }
-                        else
-                        {
+                        else {
                             if (iError == ASELECT_SERVER_ERROR_TGT_NOT_VALID ||
                                 iError == ASELECT_SERVER_ERROR_TGT_EXPIRED ||
                                 iError == ASELECT_SERVER_ERROR_TGT_TOO_LOW ||
@@ -793,8 +727,7 @@ aselect_filter_handler(request_rec *pRequest)
                                 iAction = ASELECT_FILTER_ACTION_VERIFY_CREDENTIALS;
 				TRACE("aselect_filter_handler: Invalid ticket: VERIFY_CREDENTIALS");
                             }
-                            else
-                            {
+                            else {
                                 TRACE1("aselect_filter_verify_ticket FAILED (%d)", iError);
                                 ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
                                     ap_psprintf(pPool, "ASELECT_FILTER::aselect_filter_verify_ticket FAILED (%d)", iError));
@@ -802,11 +735,7 @@ aselect_filter_handler(request_rec *pRequest)
                         }
                     }
                 }
-                else
-                {
-                    //
-                    // Ticket verification failed, check if credentials is valid (if credentials is present)
-                    //
+                else { // Ticket verification failed, check if credentials is valid (if credentials is present)
                     iError = ASELECT_FILTER_ASAGENT_ERROR_CORRUPT_ATTRIBUTES;
                 }
             }
@@ -1177,7 +1106,7 @@ aselect_filter_handler(request_rec *pRequest)
 			    strchr(pConfig->pcPassAttributes,'h')!=0 || strchr(pConfig->pcPassAttributes,'t')!=0) {  // Bauke: added
 		    // Pass attributes in the html header and/or query string
 		    iError = passAttributesInUrl(iError, pcAttributes, pPool, pRequest, pConfig,
-				    pcTicketOut, pcUIDOut, pcOrganizationOut, headers_in);
+				    pcTicketOut, pcUIDOut, pcOrganizationOut, pcRequestLanguage, headers_in);
 		}
 
                 pcCookie = ap_psprintf(pPool, "%s=%s; version=1; path=%s; secure; HttpOnly", "aselectticket", 
@@ -1245,7 +1174,7 @@ aselect_filter_handler(request_rec *pRequest)
     // Bauke: added
     if (iError == ASELECT_FILTER_ERROR_OK && iAction == ASELECT_FILTER_ACTION_ACCESS_GRANTED) { /*!pConfig->bUseCookie ||*/
 	if (strchr(pConfig->pcPassAttributes,'q')!=0 || strchr(pConfig->pcPassAttributes,'h')!=0 || strchr(pConfig->pcPassAttributes,'t')!=0) {
-	    iError = passAttributesInUrl(iError, pcAttributes, pPool, pRequest, pConfig, pcTicketIn, pcUIDIn, pcOrganizationIn, headers_in);
+	    iError = passAttributesInUrl(iError, pcAttributes, pPool, pRequest, pConfig, pcTicketIn, pcUIDIn, pcOrganizationIn, pcRequestLanguage, headers_in);
 	}
 	//iRet = DONE;
     }
@@ -1264,7 +1193,7 @@ aselect_filter_handler(request_rec *pRequest)
 // Bauke added: Pass attributes in the query string and/or in the header
 //
 static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, request_rec *pRequest,
-	    PASELECT_FILTER_CONFIG pConfig, char *pcTicketIn, char *pcUIDIn, char *pcOrganizationIn, table *headers_in)
+	    PASELECT_FILTER_CONFIG pConfig, char *pcTicketIn, char *pcUIDIn, char *pcOrganizationIn, char *pcRequestLanguage, table *headers_in)
 {
     TRACE4("==== Attributes iError=%d, TicketIn=%s, UidIn=%s, OrgIn=%s", iError,
 		pcTicketIn?pcTicketIn:"NULL", pcUIDIn?pcUIDIn:"NULL", pcOrganizationIn?pcOrganizationIn:"NULL");
@@ -1366,10 +1295,23 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 			if (attrName[0] == '\0')  // no HTTP header name
 			    continue;
 
-			TRACE3("%s,%s,%s", digidName, ldapName, attrName);
+			TRACE3("Attr %s,%s,%s", digidName, ldapName, attrName);
 			// attrName has a value
-			// Pass this attribute, 
-			p = (char *)0;
+			if (strcmp(attrName, "language")==0) {
+			    char *p = (pRequest->args)? strstr(pRequest->args, "language="): NULL;
+			    if (pcRequestLanguage != NULL) {
+				// Server has a language for us, must be passed, don't skip
+			    }
+			    else if (p != NULL && (p == pRequest->args || *(p-1) == '&' || *(p-1) == ' ')) {
+				// No server language, but language in application parameters, it takes precedence
+				// over the A-Select attribute, leave application parameter in place
+				TRACE1("Request: skip attr language: %s", p);
+				continue; 
+			    }
+			}
+
+			// Pass this attribute, either in the Query string or in the HTTP-header
+			p = NULL;
 			constant = 0;
 			if (ldapName[0] != '\0') {  // try to use Ldap value
 			    // Can also be a constant, e.g. 'I am a constant' (no quote escapes possible)
@@ -1387,6 +1329,10 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 			    sprintf(buf, "digid_%s=", digidName);
 			    p = aselect_filter_get_param(pPool, pcAttributes, buf, "&", FALSE);
 			}
+			if (strcmp(attrName, "language")==0 && pcRequestLanguage != NULL) {
+			    p = pcRequestLanguage; // replace attribute value
+			    constant = 0;
+			}
 			if (p && (*p||constant)) {
 			    if (newArgs[0])
 				newArgs = ap_psprintf(pPool, "%s&%s=%s", newArgs, attrName, p);
@@ -1401,6 +1347,7 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 				ap_table_set(headers_in, "Authorization", ap_psprintf(pPool, "Basic %s", encoded));
 			    }
 			    else if (strchr(pConfig->pcPassAttributes,'h')!=0) {
+				// Pass in the header
 				TRACE2("X-Header - %s: %s", attrName, p);
 				ap_log_error(APLOG_MARK, APLOG_INFO, pRequest->server,
 					    ap_psprintf(pPool, "X-Header - %s: %s", attrName, p));

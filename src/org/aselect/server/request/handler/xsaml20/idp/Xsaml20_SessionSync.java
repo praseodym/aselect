@@ -248,6 +248,11 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 		long now = new Date().getTime();
 //		SSOSessionManager sso = SSOSessionManager.getHandle();
 		UserSsoSession ssoSession = (UserSsoSession)htTGTContext.get("sso_session");  // sso.getSsoSession(user);
+		if (ssoSession == null) {
+			_systemLogger.log(Level.WARNING, MODULE, _sMethod, "Missing sso_session data in TGT");
+			return;
+		}
+			
 		List<ServiceProvider> spList = ssoSession.getServiceProviders();
 		for (ServiceProvider sp : spList) {
 			_systemLogger.log(Level.INFO, MODULE, _sMethod, "ServiceProvider = " + serviceProviderUrl);
@@ -276,7 +281,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 					"("+getReadableDate(_oTGTManager.getTimestamp(tgtId))+")");
 		}
 		else {
-			_systemLogger.log(Level.INFO, MODULE, _sMethod, "SP not found in list SP=(" + serviceProviderUrl + ")");
+			_systemLogger.log(Level.WARNING, MODULE, _sMethod, "SP not found in list SP=(" + serviceProviderUrl + ")");
 		}
 	}
 

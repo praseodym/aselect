@@ -588,18 +588,12 @@ public class AttributeGatherer
 
 		// Bauke: Pass Digid Attributes
 		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Add additional attributes from TGT");
-		String fld = (String) htTGTContext.get("uid");
-		if (fld != null)
-			htAttributes.put("uid", fld);
+		Utils.copyHashmapValue("uid", htAttributes, htTGTContext);
+		Utils.copyHashmapValue("digid_uid", htAttributes, htTGTContext);
+		Utils.copyHashmapValue("digid_betrouwbaarheidsniveau", htAttributes, htTGTContext);
+		Utils.copyHashmapValue("sel_uid", htAttributes, htTGTContext);
 
-		fld = (String) htTGTContext.get("digid_uid");
-		if (fld != null) htAttributes.put("digid_uid", fld);
-		fld = (String) htTGTContext.get("digid_betrouwbaarheidsniveau");
-		if (fld != null) htAttributes.put("digid_betrouwbaarheidsniveau", fld);
-		fld = (String) htTGTContext.get("sel_uid");
-		if (fld != null) htAttributes.put("sel_uid", fld);
-
-		fld = (String) htTGTContext.get("attributes");  // attributes from a remote system
+		String fld = (String) htTGTContext.get("attributes");  // attributes from a remote system
 		if (fld != null) {
 		    Saml11Builder _saml11Builder = new Saml11Builder();
 			HashMap htTgtAttributes = _saml11Builder.deserializeAttributes(fld);
@@ -620,10 +614,11 @@ public class AttributeGatherer
 		String sAuthspLevel = (String) htTGTContext.get("authsp_level");
 		if (sAuthsp != null) htAttributes.put("authsp_level", sAuthspLevel);
 		if (sAuthsp != null) htAttributes.put("sel_level", sAuthspLevel);
-		String sClientIp = (String) htTGTContext.get("client_ip");
-		if (sClientIp != null) htAttributes.put("client_ip", sClientIp);
-		String sUserAgent = (String) htTGTContext.get("user_agent");
-		if (sUserAgent != null) htAttributes.put("user_agent", sUserAgent);
+
+		Utils.copyHashmapValue("client_ip", htAttributes, htTGTContext);
+		Utils.copyHashmapValue("user_agent", htAttributes, htTGTContext);
+		Utils.copyHashmapValue("language", htAttributes, htTGTContext);
+		Utils.copyHashmapValue("sms_phone", htAttributes, htTGTContext);
 
 		String sSubjectDN = (String) htTGTContext.get("pki_subject_dn");
 		String sToken;
@@ -667,9 +662,6 @@ public class AttributeGatherer
 				htAttributes.put(sFld, sToken);
 			}
 		}
-
-		String sSmsPhone = (String) htTGTContext.get("sms_phone");
-		if (sSmsPhone != null) htAttributes.put("sms_phone", sSmsPhone);
 		// End of additions
 
 		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Try authsp with id: "+sAuthsp);  // if present

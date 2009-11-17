@@ -129,16 +129,14 @@ void aselect_filter_trace2(const char *filename, int line, const char *fmt, ...)
 //
 // Prints out the contents of a table if tracing is enabled
 //
-int
-aselect_filter_print_table(void * data, const char *key, const char *val)
+int aselect_filter_print_table(void * data, const char *key, const char *val)
 {
     TRACE2("%s - %s", key, val);
     return 1;
 }
 
 // Convert a hex-formatted string into an array of bytes
-char *
-aselect_filter_hex_to_bytes(pool *pPool, char *pcString, int *ccBytes)
+char * aselect_filter_hex_to_bytes(pool *pPool, char *pcString, int *ccBytes)
 {
     int i, length;
     char pcByte[4] = {0, 0, 0, 0};
@@ -200,7 +198,7 @@ aselect_filter_get_error(pool *pPool, char *pcError)
             iError = pcTemp3[0];
             iError <<= 8;
             iError |= pcTemp3[1];
-            TRACE2("aselect_filter_get_error: length=%d, error=%d", iLength, iError);
+            //TRACE2("aselect_filter_get_error: length=%d, error=%d", iLength, iError);
         }
     }
     return iError;
@@ -311,12 +309,7 @@ cnt = ++count;
 // Connect to ASelect Agent send request and wait for response
 //
 char *
-aselect_filter_send_request(server_rec *pServer,
-                pool *pPool,
-                char *pcASAIP,
-                int iASAPort,
-                char *pcSendMessage,
-                int ccSendMessage)
+aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAIP, int iASAPort, char *pcSendMessage, int ccSendMessage)
 {
     int                 sd;
     struct sockaddr_in  pin;
@@ -325,9 +318,9 @@ aselect_filter_send_request(server_rec *pServer,
     char                pcReceiveMessage[ASELECT_FILTER_MAX_RECV+1];
     int                 ccReceiveMessage;
     char                *pcResponse = NULL;
-int cnt;
-static int count = 0;
-cnt = ++count;
+    int cnt;
+    static int count = 0;
+    cnt = ++count;
 
     TRACE2("ToAGENT[%d] aselect_filter_send_request { [%s]", cnt, pcSendMessage);
     memset(pcReceiveMessage, 0, ASELECT_FILTER_MAX_RECV);
@@ -335,8 +328,7 @@ cnt = ++count;
     //
     // Retrieve the host information
     //
-    if ((hp = gethostbyname(pcASAIP)) != NULL)
-    {
+    if ((hp = gethostbyname(pcASAIP)) != NULL) {
         //
         // Initialize the connection information
         //
@@ -345,16 +337,11 @@ cnt = ++count;
         pin.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
         pin.sin_port = htons(iASAPort); 
     }
-    else
-    {
+    else {
         //
         // gethostbyname failed, so try IP address
         //
-        memset(&pin, 0, sizeof(pin));
-                pin.sin_family = AF_INET;
-                pin.sin_addr.s_addr = inet_addr(pcASAIP); 
-                pin.sin_port = htons(iASAPort);
-
+        memset(&pin, 0, sizeof(pin)); pin.sin_family = AF_INET; pin.sin_addr.s_addr = inet_addr(pcASAIP); pin.sin_port = htons(iASAPort);
     }
 
     //
@@ -375,11 +362,7 @@ cnt = ++count;
             //
             timeout = ASELECT_FILTER_SOCKET_TIME_OUT;
 
-            if (setsockopt(sd,
-                    SOL_SOCKET,
-                    SO_SNDTIMEO,
-                    (char*) &timeout,
-                    sizeof(timeout)) != -1)
+            if (setsockopt(sd, SOL_SOCKET, SO_SNDTIMEO, (char*) &timeout, sizeof(timeout)) != -1)
             {
                 //
                 // Could not connect to specified address and port
@@ -389,11 +372,7 @@ cnt = ++count;
                     ap_psprintf(pPool, "ASELECT_FILTER:: could not set socket send timeout (%d)", errno));
             }
 
-            if (setsockopt(sd,
-                    SOL_SOCKET,
-                    SO_RCVTIMEO,
-                    (char*) &timeout,
-                    sizeof(timeout)) != -1)
+            if (setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, (char*) &timeout, sizeof(timeout)) != -1)
             {
                 TRACE1("could not set socket receive timeout (%d)", errno);
                 ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pServer,
@@ -495,18 +474,18 @@ char *aselect_filter_get_param(pool *pPool, char *pcArgs, char *pcParam, char *p
     int             ccValue = 0;
     char *p;
 
-    //TRACE1("aselect_filter_get_param: %s", pcParam);
+    //TRACE2("aselect_filter_get_param: %s args=%s", pcParam, pcArgs);
     if (pcArgs) {
 	// Bauke: example args: my_uid=9876&uid2=0000&uid=1234&...
-	//        get parameter "uid" must result in: 1234
+	//        get parameter "uid=" must result in: 1234
 	// NOTE: Delimiter is a single character, but in pcArgs it can be followed by a space!
 	// pcParam has a '=' at the end
 	for (p = pcArgs; p != NULL; p = pcTemp+1) {
 	    pcTemp = strstr(p, pcParam);
 	    if (!pcTemp)
 		break;
-	    //TRACE1("aselect_filter_get_param: 1.TEMP=%s '%c'", pcTemp, (pcTemp==pcArgs)? '#': *(pcTemp-1));
-	    //TRACE1("%d %d %d", (pcTemp==pcArgs), *(pcTemp-1) == *pcDelimiter, *(pcTemp-1) == ' ');
+	    //TRACE2("aselect_filter_get_param: 1.TEMP=%s '%c'", pcTemp, (pcTemp==pcArgs)? '#': *(pcTemp-1));
+	    //TRACE3("%d %d %d", (pcTemp==pcArgs), *(pcTemp-1) == *pcDelimiter, *(pcTemp-1) == ' ');
 	    if (pcTemp==pcArgs || *(pcTemp-1) == *pcDelimiter || *(pcTemp-1) == ' ') {
 		break;
 	    }
@@ -524,8 +503,10 @@ char *aselect_filter_get_param(pool *pPool, char *pcArgs, char *pcParam, char *p
                 ccValue = strlen(pcTemp);
             }
 
+	    //TRACE3("Value=%.*s %d", ccValue, pcTemp, ccValue);
             if (ccValue >= 0) {
-                if ((pcValue = ap_pstrndup(pPool, pcTemp, ccValue))) {
+                pcValue = ap_pstrndup(pPool, pcTemp, ccValue+1);
+                if (pcValue) {
                     *(pcValue + ccValue) = '\0';
                     if (bUrlDecode)
                         aselect_filter_url_decode(pcValue);

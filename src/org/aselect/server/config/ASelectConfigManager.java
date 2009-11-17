@@ -963,6 +963,7 @@ public class ASelectConfigManager extends ConfigManager
 	// TODO: move to ConfigManager, so AuthSP can also use this functionality
 	public String getErrorMessage(String sErrorCode, String sLanguage, String sCountry)
 	{
+		String sMethod = "getErrorMessage";
 		String sMessage = null;
 
 		boolean langDefault = (sLanguage==null || sLanguage.equals(""));
@@ -970,11 +971,12 @@ public class ASelectConfigManager extends ConfigManager
 			Properties props = (langDefault)? _propErrorMessages: loadErrorFile(sLanguage, sCountry);
 			sMessage = props.getProperty(sErrorCode).trim();
 			if (sMessage == null)
-				return sErrorCode;
+				sMessage = "["+sErrorCode+"].";
 		}
 		catch (Exception e) {  // value was probably null so trim() function failed
-			return sErrorCode;
+			sMessage = "["+sErrorCode+"]";
 		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "MSG-" + sMessage);
 		return sMessage;
 	}
 	
@@ -1003,7 +1005,7 @@ public class ASelectConfigManager extends ConfigManager
 		sbErrorFile.append("errors");
 	
 		boolean langDefault = (sLanguage==null || sLanguage.equals(""));
-		String sLangExt = (langDefault)? "": "_"+sLanguage;
+		String sLangExt = (langDefault)? "": "_"+sLanguage.toLowerCase();
 		for ( ; ; ) {
 			StringBuffer sbFilePath = new StringBuffer(sbErrorFile);
 			sbFilePath.append(sLangExt).append(".conf");
@@ -1659,7 +1661,7 @@ public class ASelectConfigManager extends ConfigManager
 	public String loadHTMLTemplate(String sUnUsed, String sFileName, String sLanguage, String sCountry)
 	throws ASelectException
 	{
-		String sMethod = "loadHTMLTemplate()";
+		String sMethod = "loadHTMLTemplate";
 		String sLine = null;
 		String sTemplate = "";
 		File fTemplate = null;
@@ -1667,7 +1669,7 @@ public class ASelectConfigManager extends ConfigManager
 
 		boolean langDefault = (sLanguage==null || sLanguage.equals(""));
 		try {
-			String sLangExt = (langDefault)? "": "_"+sLanguage;
+			String sLangExt = (langDefault)? "": "_"+sLanguage.toLowerCase();
 			String sHtmlExt = (!sFileName.endsWith(".html"))? ".html": "";
 			for ( ; ; ) {
 				StringBuffer sbFilePath = new StringBuffer(getWorkingdir());

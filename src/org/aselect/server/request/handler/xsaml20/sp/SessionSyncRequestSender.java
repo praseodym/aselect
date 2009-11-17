@@ -181,22 +181,7 @@ public class SessionSyncRequestSender
 	throws ASelectException
 	{
 		String _sMethod = "synchronizeSession";
-		
-		/*if (credsAreCoded) {
-			credentials = Utils.decodeCredentials(argCredentials, _oSystemLogger);
-			if (credentials == null) {
-				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Can not decode credentials");
-				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
-			}
-		}
-		else credentials = argCredentials;
-		
-		HashMap htTGTContext = _oTGTManager.getTGT(credentials);
-		if (htTGTContext == null) {
-			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "Unknown TGT");
-			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT);
-		}*/
-		
+				
 		// 20090811, Bauke: Only saml20 needs this type of session sync
 		String sAuthspType = (String)htTGTContext.get("authsp_type");
 		if (sAuthspType==null || !sAuthspType.equals("saml20"))

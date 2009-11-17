@@ -374,6 +374,8 @@ public class TGTIssuer
 			Utils.copyHashmapValue("user_agent", htTGTContext, htSessionContext);
 			// Bauke 20091029, for multiple saml IdPs
 			Utils.copyHashmapValue("federation_url", htTGTContext, htSessionContext);
+			// Bauke, 20091112, pass language
+			Utils.copyHashmapValue("language", htTGTContext, htSessionContext);
 
 			// 20090617, Bauke:forced_authenticate specials
 			Boolean bForcedAuthn = (Boolean)htSessionContext.get("forced_authenticate");
@@ -568,20 +570,8 @@ public class TGTIssuer
 
 			// Bauke: added for xsaml20
 			Utils.copyHashmapValue("sp_assert_url", htTGTContext, htSessionContext);
-			String sIssuer = (String) htSessionContext.get("sp_issuer");
-			if (sIssuer != null) {
-				// SSO Sessions in effect
-				htTGTContext.put("sp_issuer", sIssuer);
-				Utils.copyHashmapValue("sp_rid", htTGTContext, htSessionContext);
-				if (ssoSession == null) {
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "NEW SSO session for "+sUserId+" issuer="+sIssuer);
-					ssoSession = new UserSsoSession(sUserId, ""); // sTgt);
-				}
-				ServiceProvider sp = new ServiceProvider(sIssuer);
-				ssoSession.addServiceProvider(sp);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "SSO session " + ssoSession);
-				htTGTContext.put("sso_session", ssoSession);
-			}
+			Utils.copyHashmapValue("sp_rid", htTGTContext, htSessionContext);
+			ensureSessionPresence(sUserId, htTGTContext, htSessionContext, ssoSession);
 
 			// Bauke, 20081209 added for ADFS / WS-Fed
 			Utils.copyHashmapValue("wreply", htTGTContext, htSessionContext);
@@ -598,6 +588,8 @@ public class TGTIssuer
 			Utils.copyHashmapValue("user_agent", htTGTContext, htSessionContext);
 			// Bauke 20091029, for multiple saml IdPs
 			Utils.copyHashmapValue("federation_url", htTGTContext, htSessionContext);
+			// Bauke, 20091112, pass language
+			Utils.copyHashmapValue("language", htTGTContext, htSessionContext);
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Store TGT " + htTGTContext);
 			String sTgt = null;
@@ -633,6 +625,26 @@ public class TGTIssuer
 			sbError.append(sRid).append("' failed due to internal error");
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+	}
+
+	// Looks very much like code in the ApplicationBrowserHandler
+	private void ensureSessionPresence(String sUserId, HashMap htTGTContext, HashMap htSessionContext, UserSsoSession ssoSession)
+	{
+		String sMethod = "ensureSessionPresence";
+		
+		String sIssuer = (String) htSessionContext.get("sp_issuer");
+		if (sIssuer != null) {
+			// SSO Sessions in effect
+			htTGTContext.put("sp_issuer", sIssuer);
+			if (ssoSession == null) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "NEW SSO session for "+sUserId+" issuer="+sIssuer);
+				ssoSession = new UserSsoSession(sUserId, ""); // sTgt);
+			}
+			ServiceProvider sp = new ServiceProvider(sIssuer);
+			ssoSession.addServiceProvider(sp);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "UPD SSO session " + ssoSession);
+			htTGTContext.put("sso_session", ssoSession);
 		}
 	}
 

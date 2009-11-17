@@ -480,24 +480,27 @@ public class Utils
 		return (len <= max) ? sValue : sValue.substring(0, max) + "...";
 	}
 	
-	public static void copyHashmapValue(String sName, HashMap<String,Object> hmTo, HashMap<String,Object> hmFrom)
+	public static Object copyHashmapValue(String sName, HashMap<String,Object> hmTo, HashMap<String,Object> hmFrom)
 	{
 		if (hmFrom == null | hmTo == null)
-			return;
+			return null;
 		Object oValue = hmFrom.get(sName);
 		if (oValue != null)
 			hmTo.put(sName, (Object)oValue);
+		return oValue;
 	}
 	
-	public static void copyMsgValueToHashmap(String sName, HashMap<String,String> hmTo, IInputMessage imFrom)
+	public static String copyMsgValueToHashmap(String sName, HashMap<String,String> hmTo, IInputMessage imFrom)
 	{
+		String sValue = null;
 		if (imFrom == null | hmTo == null)
-			return;
+			return null;
 		try {
-			String sValue = imFrom.getParam(sName);
+			sValue = imFrom.getParam(sName);
 			if (sValue != null)
 				hmTo.put(sName, sValue);
 		} catch(Exception e) { }
+		return sValue;
 	}
 
 	// Get 'sParam' within the 'oConfig' section
@@ -613,6 +616,8 @@ public class Utils
 	}
 	
 	// Localization
+	// If no language/country is present in 'htSessionContext',
+	// store the given values in it.
 	public static void transferLocalization(HashMap<String,Object> htSessionContext, String sUserLanguage, String sUserCountry)
 	{
 		if (htSessionContext == null)

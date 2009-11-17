@@ -390,7 +390,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	{
 		super(servletRequest, servletResponse, sMyServerId, sMyOrg);
 		_sModule = "ApplicationBrowserHandler";
-		_systemLogger.log(Level.INFO, _sModule, _sModule, "== create == language="+_sUserLanguage);
+		_systemLogger.log(Level.INFO, _sModule, _sModule, "== create == user language="+_sUserLanguage);
 		_applicationManager = ApplicationManager.getHandle();
 		_authspHandlerManager = AuthSPHandlerManager.getHandle();
 		_crossASelectManager = CrossASelectManager.getHandle();
@@ -409,13 +409,26 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 		String sRequest = (String) htServiceRequest.get("request");
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplBrowREQ sRequest=" + sRequest +
-				", htServiceRequest=" + htServiceRequest + " language="+_sUserLanguage);
+				", htServiceRequest=" + htServiceRequest + " user language="+_sUserLanguage);
+		String sReqLanguage = (String) htServiceRequest.get("language");
+		if (sReqLanguage != null && !sReqLanguage.equals("")) {
+			_sUserLanguage = sReqLanguage;
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "Set user language="+_sUserLanguage+" from Request");
+		}
 
 		// Bauke, 20090929: added localization, do this asap.
 		String sRid = (String) htServiceRequest.get("rid");
 		if (sRid != null) {
 			_htSessionContext = _sessionManager.getSessionContext(sRid);
+			if (sReqLanguage != null && !sReqLanguage.equals("")) {
+				_htSessionContext.put("language", sReqLanguage);
+				_sessionManager.updateSession(sRid, _htSessionContext);  // store language for posterity
+			}
+			// Copy language & country to session if not present yet (session takes precedence)
 			Utils.transferLocalization(_htSessionContext, _sUserLanguage, _sUserCountry);
+			// And copy language back
+			_sUserLanguage = (String)_htSessionContext.get("language");  // override
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "After transfer user language="+_sUserLanguage);
 		}
 
 		if (sRequest == null) {
@@ -700,7 +713,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// Check if user already has a tgt so that he/she doesnt need to be authenticated again            
 			if (_configManager.isSingleSignOn() && htServiceRequest.containsKey("aselect_credentials_tgt")
 					&& htServiceRequest.containsKey("aselect_credentials_uid")
-					&& htServiceRequest.containsKey("aselect_credentials_server_id")) {
+					&& htServiceRequest.containsKey("aselect_credentials_server_id"))
+			{
 				String sTgt = (String) htServiceRequest.get("aselect_credentials_tgt");
 				String sUid = (String) htServiceRequest.get("aselect_credentials_uid");
 				String sServerId = (String) htServiceRequest.get("aselect_credentials_server_id");
@@ -738,7 +752,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							HashMap htTGTContext = _tgtManager.getTGT(sTgt);
 
 							htTGTContext.put("rid", sRid);
-							Utils.copyHashmapValue("app_id", htTGTContext, _htSessionContext);
 							Utils.copyHashmapValue("local_organization", htTGTContext, _htSessionContext);
 							// Copy sp_rid as well: xsaml20
 							Utils.copyHashmapValue("sp_rid", htTGTContext, _htSessionContext);
@@ -746,18 +759,27 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							_systemLogger.log(Level.INFO, _sModule, sMethod, "UPD rid=" + sRid);
 
 							// Add the SP to SSO administration - xsaml20
-							String spUrl = (String) _htSessionContext.get("sp_issuer");
-							if (spUrl != null) {
-								htTGTContext.put("sp_issuer", spUrl); // save latest issuer
-								UserSsoSession ssoSession = (UserSsoSession) htTGTContext.get("sso_session");
-								if (ssoSession != null) {
-									ServiceProvider sp = new ServiceProvider(spUrl);
-									ssoSession.addServiceProvider(sp);
-									_systemLogger.log(Level.INFO, _sModule, sMethod, "ADD SSO session " + ssoSession);
-									htTGTContext.put("sso_session", ssoSession);
-								}
+							String sAppId = (String)_htSessionContext.get("app_id");
+							String sTgtAppId = (String)htTGTContext.get("app_id");
+							String spIssuer = (String)_htSessionContext.get("sp_issuer");
+							// Utils.copyHashmapValue("app_id", htTGTContext, _htSessionContext);
+							if (sAppId != null) {
+								if (spIssuer == null || sTgtAppId == null)
+									htTGTContext.put("app_id", sAppId);
 							}
-
+							if (spIssuer != null) {  // saml20 sessions
+								htTGTContext.put("sp_issuer", spIssuer); // save latest issuer
+								UserSsoSession ssoSession = (UserSsoSession) htTGTContext.get("sso_session");
+								if (ssoSession == null) {
+									_systemLogger.log(Level.INFO, MODULE, sMethod, "NEW SSO session for "+sUid+" issuer="+spIssuer);
+									ssoSession = new UserSsoSession(sUid, ""); // sTgt);
+								}
+								ServiceProvider sp = new ServiceProvider(spIssuer);
+								ssoSession.addServiceProvider(sp);
+								_systemLogger.log(Level.INFO, _sModule, sMethod, "UPD SSO session " + ssoSession);
+								htTGTContext.put("sso_session", ssoSession);
+							}
+		
 							// Overwrite with the latest value of sp_assert_url,
 							// so the customer can reach his home-SP again.
 							Utils.copyHashmapValue("sp_assert_url", htTGTContext, _htSessionContext);
@@ -767,9 +789,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 							// 20090313, Bauke: add info screen for the user, shows SP's already logged in
 							ASelectConfigManager configManager = ASelectConfigManager.getHandle();
-							if (spUrl != null && configManager.getUserInfoSettings().contains("session"))
+							if (spIssuer != null && configManager.getUserInfoSettings().contains("session"))
 								showSessionInfo(htServiceRequest, servletResponse, pwOut, sRedirectUrl,
-												sTgt, htTGTContext, sRid, spUrl);
+												sTgt, htTGTContext, sRid, spIssuer);
 							else {
 								TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 								oTGTIssuer.sendRedirect(sRedirectUrl, sTgt, sRid, servletResponse);

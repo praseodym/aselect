@@ -15,6 +15,7 @@ import org.aselect.server.session.SessionManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.Utils;
 
 //
 // The mother of all RequestHandlers ...
@@ -155,8 +156,18 @@ public abstract class BasicRequestHandler
 
 		if (sCountry != null && sCountry.trim().length() > 0)
 			htSessionContext.put("country", sCountry);
+		
+		// 20091113, Bauke: Also take sAppUrl into consideration
 		if (sLanguage != null && sLanguage.trim().length() > 0)
-			htSessionContext.put("language", sLanguage);
+			htSessionContext.put("language", sLanguage.toLowerCase());
+		int idx = sAppUrl.indexOf("?");
+		if (idx != -1) {
+			String sArgs = sAppUrl.substring(idx+1);
+			HashMap<String,String> hmArgs = Utils.convertCGIMessage(sArgs);
+			sLanguage = hmArgs.get("language");
+			if (sLanguage != null)  // takes precedence
+				htSessionContext.put("language", sLanguage.toLowerCase());
+		}
 
 		// We only want to set the client_ip on application browserrequests (see ApplicationBrwoserHandler)
 		// Bauke 20081217: Therefore the lines below should go!
