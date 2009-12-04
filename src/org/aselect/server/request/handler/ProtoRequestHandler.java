@@ -605,7 +605,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	    try
 	    {
 	        byte[] baTgtBytes = CryptoEngine.getHandle().decryptTGT(encrypted);
-	        return Utils.toHexString(baTgtBytes);
+	        return Utils.byteArrayToHexString(baTgtBytes);
 	    }
 	    catch(ASelectException eAC) //decrypt failed
 	    {

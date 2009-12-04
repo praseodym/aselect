@@ -109,9 +109,9 @@ public class Idff12_AssertConsumer extends SamlAssertionConsumer
                 throw new ASelectException (Errors.ERROR_ASELECT_INIT_ERROR);
 			}
             _systemLogger.log(Level.INFO, MODULE, sMethod, "IdP id="+sIdP_ID+" url="+sIdP_URL+
-            				" srcid="+Utils.toHexString(bSourceId)+", "+bSourceId.toString());
+            				" srcid="+Utils.byteArrayToHexString(bSourceId)+", "+bSourceId.toString());
             
-			_htIdPs.put(Utils.toHexString(bSourceId), sIdP_URL);
+			_htIdPs.put(Utils.byteArrayToHexString(bSourceId), sIdP_URL);
             
             oIdP = _configManager.getNextSection(oIdP);
         }
@@ -129,10 +129,10 @@ public class Idff12_AssertConsumer extends SamlAssertionConsumer
 			SAMLArtifactType0003.Parser parser = new SAMLArtifactType0003.Parser();
 			SAMLArtifactType0003 oArtifact = (SAMLArtifactType0003)parser.parse(sArtifact);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Artifact="+oArtifact+ 
-					", SourceID="+Utils.toHexString(oArtifact.getSourceId()).toLowerCase()+
-					", AssertHandle="+Utils.toHexString(oArtifact.getAssertionHandle()).toLowerCase());
+					", SourceID="+Utils.byteArrayToHexString(oArtifact.getSourceId()).toLowerCase()+
+					", AssertHandle="+Utils.byteArrayToHexString(oArtifact.getAssertionHandle()).toLowerCase());
 			// Find URL for the Artifact resolver
-			Object obj = _htIdPs.get(Utils.toHexString(oArtifact.getSourceId()));
+			Object obj = _htIdPs.get(Utils.byteArrayToHexString(oArtifact.getSourceId()));
 	        _systemLogger.log(Level.INFO, MODULE, sMethod, "obj="+obj);
 	        if (obj == null) {
 		        _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Unknown Identity Provider");

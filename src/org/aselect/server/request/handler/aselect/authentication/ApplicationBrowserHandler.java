@@ -894,7 +894,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		sInfoForm = Utils.replaceString(sInfoForm, "[a-select-server]", _sMyServerId);
 		sInfoForm = Utils.replaceString(sInfoForm, "[rid]", sRid);
 
-		String sEncryptedTgt = (sTgt == null)? "": _cryptoEngine.encryptTGT(Utils.stringToHex(sTgt));
+		String sEncryptedTgt = (sTgt == null)? "": _cryptoEngine.encryptTGT(Utils.hexStringToByteArray(sTgt));
 		sInfoForm = Utils.replaceString(sInfoForm, "[aselect_credentials]", sEncryptedTgt);
 
 		String sCreateTime = (String)htTGTContext.get("createtime");
@@ -1671,7 +1671,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						sUid = URLEncoder.encode(sUid, "UTF-8");
 						sUid = URLEncoder.encode(sUid, "UTF-8");
 
-						String sEncTgt = CryptoEngine.getHandle().encryptTGT(Utils.stringToHex(sTgt));
+						String sEncTgt = CryptoEngine.getHandle().encryptTGT(Utils.hexStringToByteArray(sTgt));
 						sb.append("aselect_credentials=").append(sEncTgt);
 						sb.append("_").append(sUid).append("_");
 						sb.append(sServerId);
@@ -2222,7 +2222,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 
 			// In case the SAML20 logout procedure reaches this handler:
-			String sEncTgt = CryptoEngine.getHandle().encryptTGT(Utils.stringToHex(sTgt));
+			String sEncTgt = CryptoEngine.getHandle().encryptTGT(Utils.hexStringToByteArray(sTgt));
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[tgt_blob]", sEncTgt);
 			// End of SAML20 patch
 

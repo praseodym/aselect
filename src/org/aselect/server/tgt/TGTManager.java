@@ -97,7 +97,7 @@ public class TGTManager extends StorageManager
 	/**
 	 * Size of a TGT
 	 */
-	private final static int TGT_LENGTH = 128; //256;
+	private final static int TGT_LENGTH = 120;  //128; //256;
 	/**
 	 * The singleton instance of this object
 	 */
@@ -235,12 +235,12 @@ public class TGTManager extends StorageManager
 
 			//creates a new TGT by resolveing randombytes
 			CryptoEngine.nextRandomBytes(baTGT);
-			sTGT = Utils.toHexString(baTGT);
+			sTGT = Utils.byteArrayToHexString(baTGT);
 
 			//checks if the generated tgt is unique and create a new one till it is unique
 			while (containsKey(sTGT)) {
 				CryptoEngine.nextRandomBytes(baTGT);
-				sTGT = Utils.toHexString(baTGT);
+				sTGT = Utils.byteArrayToHexString(baTGT);
 			}
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "New TGT=" + Utils.firstPartOf(sTGT, 30));

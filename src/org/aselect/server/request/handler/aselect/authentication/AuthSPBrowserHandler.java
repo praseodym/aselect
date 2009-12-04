@@ -275,7 +275,9 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			Utils.copyHashmapValue("sms_phone", htAdditional, htResponse);
 			// 20090811, Bauke: save authsp_type for use by the Saml20 session sync
 			Utils.copyHashmapValue("authsp_type", htAdditional, htSessionContext);
-
+			// 20091118, Bauke: new functionality: copy attributes from AuthSP
+			Utils.copyHashmapValue("attributes", htAdditional, htResponse);
+			
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
 			String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
 			String sCred = (String) htServiceRequest.get("aselect_credentials");

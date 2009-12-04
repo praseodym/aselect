@@ -625,7 +625,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		String sTGT = null;
 		try {
 			byte[] baTgtBlobBytes = CryptoEngine.getHandle().decryptTGT(sEncTGT);
-			sTGT = Utils.toHexString(baTgtBlobBytes);
+			sTGT = Utils.byteArrayToHexString(baTgtBlobBytes);
 		}
 		catch (ASelectException eAC) //decrypt failed
 		{
@@ -699,7 +699,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 
 		try {
 			byte[] baTgtBytes = CryptoEngine.getHandle().decryptTGT(sEncTgt);
-			sTGT = Utils.toHexString(baTgtBytes);
+			sTGT = Utils.byteArrayToHexString(baTgtBytes);
 		}
 		catch (ASelectException eAC) //decrypt failed
 		{
@@ -828,7 +828,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 					}
 					oMessageDigest = MessageDigest.getInstance("SHA1");
 					oMessageDigest.update(sInput.getBytes("UTF-8"));
-					sUid = Utils.toHexString(oMessageDigest.digest());
+					sUid = Utils.byteArrayToHexString(oMessageDigest.digest());
 					if (sOrgPart != null) {
 						sUid += sOrgPart;
 					}

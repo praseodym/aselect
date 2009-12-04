@@ -78,7 +78,6 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 	throws ASelectException
 	{
 		String sMethod = "handleSpecificSaml20Request";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
 		String pathInfo = httpRequest.getPathInfo();
 		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request received === Path="+ pathInfo);
 
@@ -97,6 +96,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 			}
 			// Now the message is OK
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SAMLRequest="+httpRequest.getParameter("SAMLRequest"));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "RelayState="+httpRequest.getParameter("RelayState"));
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SigAlg="+httpRequest.getParameter("SigAlg"));
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signature="+httpRequest.getParameter("Signature"));
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Destination="+logoutRequest.getDestination());
@@ -109,15 +109,23 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 			HashMap htTGTContext = (HashMap)tgtManager.getTGT(sNameID);
 			
 			// 20090525, Bauke: also save RelayState in the TGT for the logout response
+			// 20091118, Bauke: ignore "empty" RelayState (came from logout_info.html)
+			//           Note: we still have it in 'httpRequest'
 			String sRelayState = httpRequest.getParameter("RelayState");  // is null if missing
-			if (sRelayState != null) htTGTContext.put("RelayState", sRelayState);
+			if (sRelayState != null && sRelayState.equals("[RelayState]"))
+				sRelayState = null;
+			if (sRelayState != null)
+				htTGTContext.put("RelayState", sRelayState);
+			else
+				htTGTContext.remove("RelayState");
 			
 			// If user consent is needed, first show the logout_info.html
 			ASelectConfigManager configManager = ASelectConfigManager.getHandle();
 			if (!"true".equals(sConsent) && configManager.getUserInfoSettings().contains("logout")) {
-				if (sRelayState != null)  // saved RelayState in the TGT
-					tgtManager.updateTGT(sNameID, htTGTContext);
-				showLogoutInfo(httpRequest, httpResponse, pwOut, sInitiatingSP, logoutRequest.getDestination(), htTGTContext);
+			//	if (sRelayState != null)  // saved RelayState in the TGT
+				tgtManager.updateTGT(sNameID, htTGTContext);
+				showLogoutInfo(httpRequest, httpResponse, pwOut, sInitiatingSP, logoutRequest.getDestination(),
+						htTGTContext, sRelayState);
 				return;
 			}
 	
@@ -128,7 +136,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Removed cookie for domain: "+sCookieDomain);
 			
 			// Will save TGT (including the RelayState) as well
-			// 20090616, Bauke: save ID of initiator for the logout response
+			// 20090616, Bauke: save initiator ID for the logout response
 			String sRequestID = logoutRequest.getID();
 	        logoutNextSessionSP(httpRequest, httpResponse, logoutRequest, sInitiatingSP, sRequestID,
 						_bTryRedirectLogoutFirst, _iRedirectLogoutTimeout, htTGTContext, null);
@@ -144,7 +152,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 	}
 	
 	private void showLogoutInfo(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
-			PrintWriter pwOut, String sInitiatingSP, String sRedirectUrl, HashMap htTGTContext)
+			PrintWriter pwOut, String sInitiatingSP, String sRedirectUrl, HashMap htTGTContext, String sRelayState)
 	throws ASelectException
 	{
 		final String sMethod = "showLogoutInfo";
@@ -153,8 +161,8 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 		String sInfoForm = _configManager.getForm("logout_info", _sUserLanguage, _sUserCountry);
 		sInfoForm = Utils.replaceString(sInfoForm, "[aselect_url]", sRedirectUrl);
 		sInfoForm = Utils.replaceString(sInfoForm, "[SAMLRequest]", httpRequest.getParameter("SAMLRequest"));
-		String sRS = httpRequest.getParameter("RelayState");
-		sInfoForm = Utils.replaceString(sInfoForm, "[RelayState]", (sRS==null)? "": sRS);
+		if (sRelayState != null)
+			sInfoForm = Utils.replaceString(sInfoForm, "[RelayState]", sRelayState);
 		sInfoForm = Utils.replaceString(sInfoForm, "[SigAlg]", httpRequest.getParameter("SigAlg"));
 		sInfoForm = Utils.replaceString(sInfoForm, "[Signature]", httpRequest.getParameter("Signature"));
 		sInfoForm = Utils.replaceString(sInfoForm, "[consent]", "true");

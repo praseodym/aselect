@@ -301,9 +301,9 @@ public class RADIUSCHAPProtocolHandler extends AbstractRADIUSProtocolHandler
 				if (baAuthenticator[i] != baHash[i]) {
 					StringBuffer sbTemp = new StringBuffer("RADIUS Authenticator mismatchnServer\r\n");
 					sbTemp.append("Authenticator: ");
-					sbTemp.append(Utils.toHexString(baAuthenticator));
+					sbTemp.append(Utils.byteArrayToHexString(baAuthenticator));
 					sbTemp.append("\r\n Computed Authenticator: ");
-					sbTemp.append(Utils.toHexString(baHash));
+					sbTemp.append(Utils.byteArrayToHexString(baHash));
 
 					_systemLogger.log(Level.FINE, MODULE, sMethod, sbTemp.toString());
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "RADIUS Authenticator mismatch");

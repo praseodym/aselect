@@ -270,14 +270,16 @@ public class SessionManager extends StorageManager
 		String sMethod = "createSession";
 		String sSessionId = null;
 
+		// The sessionid must be of the type xs:NCName and at least 20 random bytes long
+		// xs:NCName starts with a letter or '_' 
 		try {
-			byte[] baRandomBytes = new byte[8];
+			byte[] baRandomBytes = new byte[20];
 
 			CryptoEngine.nextRandomBytes(baRandomBytes);
-			sSessionId = Utils.toHexString(baRandomBytes);
+			sSessionId = "R"+Utils.byteArrayToHexString(baRandomBytes);
 			while (containsKey(sSessionId)) {
 				CryptoEngine.nextRandomBytes(baRandomBytes);
-				sSessionId = Utils.toHexString(baRandomBytes);
+				sSessionId = "R"+Utils.byteArrayToHexString(baRandomBytes);
 				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Generated new sSessionId=" + sSessionId);
 			}
 

@@ -2,6 +2,7 @@ package org.aselect.server.request.handler.xsaml20;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -19,11 +20,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.config.ASelectConfigManager;
+import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.BASE64Encoder;
+import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
 import org.opensaml.Configuration;
 import org.opensaml.common.SAMLObject;
@@ -81,24 +84,28 @@ public class SamlTools
 {
 	private static final String MODULE = "SamlTools";
 
+	// 20091203, generate our own id
 	public static String generateIdentifier(ASelectSystemLogger systemLogger, String sModule)
 	throws ASelectException
 	{
-		String sMethod = "generateIdentifier()";
+		String sMethod = "generateIdentifier";
+		byte[] baRandomBytes = new byte[20];
 
-		SecureRandomIdentifierGenerator idGenerator = null;
+		CryptoEngine.nextRandomBytes(baRandomBytes);
+		return "I"+Utils.byteArrayToHexString(baRandomBytes);
+
+		/*SecureRandomIdentifierGenerator idGenerator = null;
 		try {
 			idGenerator = new SecureRandomIdentifierGenerator();
 		}
 		catch (NoSuchAlgorithmException e) {
 			if (systemLogger != null)
-				systemLogger.log(Level.WARNING, sModule, sMethod, "The SHA1PRNG algorithm is not supported by the JVM",
-						e);
+				systemLogger.log(Level.WARNING, sModule, sMethod, "The SHA1PRNG algorithm is not supported by the JVM", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
-		// RH, 20081107, add '_' to this ID to make it saml NCName compliant
+		// RH, 20081107, add a letter to this ID to make it saml NCName compliant
 //		return idGenerator.generateIdentifier();
-		return "_" + idGenerator.generateIdentifier();
+		return "I" + idGenerator.generateIdentifier();*/
 	}
 
 	/**
@@ -161,7 +168,11 @@ public class SamlTools
 			String sData = "";
 			while (tokenizer.hasMoreTokens()) {
 				String s = tokenizer.nextToken();
-				if (!s.startsWith("Signature=") && !s.startsWith("consent=")) {
+				systemLogger.log(Level.FINEST, MODULE, sMethod, "Token=["+s+"]");
+				String sDecoded = URLDecoder.decode(s, "UTF-8");
+				if (sDecoded.equals("RelayState=[RelayState]"))
+					;   // 20091118, Bauke: ignore "empty" RelayState (came from logout_info.html)
+				else if (!s.startsWith("Signature=") && !s.startsWith("consent=")) {
 					sData += s + "&";
 				}
 			}
@@ -181,7 +192,7 @@ public class SamlTools
 			return signature.verify(bSig);
 		}
 		catch (Exception e) {
-			throw new MessageDecodingException("Unable to verify URL signature", e);
+			throw new MessageDecodingException("Unable to verify  signature", e);
 		}
 	}
 
@@ -505,9 +516,9 @@ public class SamlTools
 	/**
 	 * Build Logout Request
 	 * <br>
-	 * @param sServiceProviderUrl String with SP url.
+	 * @param sServiceProviderUrl String with SP .
 	 * @param user String with user id.
-	 * @param issuerUrl String with Issuer url.
+	 * @param issuerUrl String with Issuer .
 	 * @param reason String with logout reason.
 	 * @throws ASelectException If building logout request fails.
 	 */

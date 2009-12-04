@@ -796,7 +796,7 @@ public class TGTIssuer
 			else
 				sAppUrl += "?";
 
-			String sEncryptedTgt = (sTgt == null) ? "" : _cryptoEngine.encryptTGT(Utils.stringToHex(sTgt));
+			String sEncryptedTgt = (sTgt == null) ? "" : _cryptoEngine.encryptTGT(Utils.hexStringToByteArray(sTgt));
 			sbRedirect = new StringBuffer(sAppUrl);
 			sbRedirect.append("aselect_credentials=");
 			sbRedirect.append(sEncryptedTgt);
@@ -809,9 +809,8 @@ public class TGTIssuer
 			oHttpServletResponse.sendRedirect(sbRedirect.toString());
 		}
 		catch (Exception e) {
-			StringBuffer sbError = new StringBuffer("Could not send redirect to user: ");
-			sbError.append(sbRedirect.toString());
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not send redirect to: "+
+					((sbRedirect==null)? "null": sbRedirect.toString()), e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 	}

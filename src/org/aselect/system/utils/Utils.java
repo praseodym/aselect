@@ -160,7 +160,7 @@ public class Utils
 	 * @return a String object respresenting <code>xBytes</code> in
 	 *         hexadecimal format.
 	 */
-	public static String toHexString(byte[] xBytes)
+	public static String byteArrayToHexString(byte[] xBytes)
 	{
 		int xLength = xBytes.length;
 		char[] xBuffer = new char[xLength * 2];
@@ -196,7 +196,7 @@ public class Utils
 	 * @throws IllegalArgumentException
 	 *             on non-hexadecimal characters.
 	 */
-	public static byte[] stringToHex(String xHexString)
+	public static byte[] hexStringToByteArray(String xHexString)
 	{
 		int len = xHexString.length();
 
@@ -641,7 +641,7 @@ public class Utils
 		try {
 			oSysLog.log(Level.INFO, MODULE, _sMethod, "Credentials are " + credentials);
 			byte[] TgtBlobBytes = CryptoEngine.getHandle().decryptTGT(credentials);
-			decodedCredentials = Utils.toHexString(TgtBlobBytes);
+			decodedCredentials = Utils.byteArrayToHexString(TgtBlobBytes);
 		}
 		catch (ASelectException as) {
 			oSysLog.log(Level.WARNING, MODULE, _sMethod, "failed to decrypt credentials", as);

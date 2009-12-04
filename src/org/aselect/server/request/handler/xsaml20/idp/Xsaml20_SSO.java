@@ -121,6 +121,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 		try {
 			String sRelayState = (String)httpRequest.getParameter("RelayState");
+			if (sRelayState != null && sRelayState.equals("[RelayState]"))
+				sRelayState = null;  // 20091118, Bauke: ignore "empty" RelayState (came from logout_info.html)
 			Response errorResponse = validateAuthnRequest(authnRequest, httpRequest);
 			if (errorResponse != null) {
 				_systemLogger.log(Audit.SEVERE, MODULE, sMethod, "validateAuthnRequest failed");

@@ -1237,7 +1237,7 @@ public class RequestHandler extends Thread
 				BASE64Decoder b64d = new BASE64Decoder();
 				MessageDigest md = MessageDigest.getInstance("SHA1");
 				md.update(b64d.decodeBuffer(sAttributes));
-				htTicketContext.put("attributes_hash", Utils.toHexString(md.digest()));
+				htTicketContext.put("attributes_hash", Utils.byteArrayToHexString(md.digest()));
 			}
 			else
 				htTicketContext.put("attributes_hash", new String(""));

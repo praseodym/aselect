@@ -221,7 +221,7 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 			baOutputBuffer[2] = (byte) (iIndex >> 8);
 			baOutputBuffer[3] = (byte) (iIndex & 0x00ff);
 			oRADIUSPacket.setData(baOutputBuffer);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "request="+Utils.toHexString(baOutputBuffer));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "request="+Utils.byteArrayToHexString(baOutputBuffer));
 			_sErrorCode = Errors.ERROR_RADIUS_SUCCESS;
 		}
 		catch (Exception e) {
@@ -248,7 +248,7 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "uid="+_sUid);
 		try {
 			byte[] baResponseBuffer = oRADIUSPacket.getData();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "request="+Utils.toHexString(baResponseBuffer));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "request="+Utils.byteArrayToHexString(baResponseBuffer));
 
 			// check code
 			iResponseBufferIndex = 0;
@@ -298,9 +298,9 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 				if (baAuthenticator[i] != baHash[i]) {
 					StringBuffer sbTemp = new StringBuffer("RADIUS Authenticator mismatch Server\r\n");
 					sbTemp.append("Authenticator: ");
-					sbTemp.append(Utils.toHexString(baAuthenticator));
+					sbTemp.append(Utils.byteArrayToHexString(baAuthenticator));
 					sbTemp.append("\r\n Computed Authenticator: ");
-					sbTemp.append(Utils.toHexString(baHash));
+					sbTemp.append(Utils.byteArrayToHexString(baHash));
 
 					_systemLogger.log(Level.FINE, MODULE, sMethod, sbTemp.toString());
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "RADIUS Authenticator mismatch");

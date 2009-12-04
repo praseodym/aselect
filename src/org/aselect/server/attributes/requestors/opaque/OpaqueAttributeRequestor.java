@@ -99,7 +99,7 @@ public class OpaqueAttributeRequestor extends GenericAttributeRequestor
 	            // Calculate opaque handle
 		        MessageDigest md = MessageDigest.getInstance("SHA1");
 		        md.update(sUID.getBytes("UTF-8"));
-		        String sHandle = Utils.toHexString(md.digest());
+		        String sHandle = Utils.byteArrayToHexString(md.digest());
 		        
 		        // Return result in a HashMap
 		        htAttrs.put(e.nextElement(), sHandle);

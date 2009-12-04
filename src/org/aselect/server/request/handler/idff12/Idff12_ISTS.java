@@ -113,10 +113,10 @@ public class Idff12_ISTS extends ProtoRequestHandler
             // Generate a RequestID nonce
         	byte[] RequestID = new byte[20];
 			CryptoEngine.nextRandomBytes(RequestID);
-	        _systemLogger.log(Level.INFO, MODULE, sMethod, "RequestID="+Utils.toHexString(RequestID));
+	        _systemLogger.log(Level.INFO, MODULE, sMethod, "RequestID="+Utils.byteArrayToHexString(RequestID));
 
 	        StringBuffer sbRedirect = new StringBuffer(sIdPUrl);
-            sbRedirect.append("RequestID=").append(Utils.toHexString(RequestID));
+            sbRedirect.append("RequestID=").append(Utils.byteArrayToHexString(RequestID));
             sbRedirect.append("&RelayState=").append(URLEncoder.encode(sRelayState, "UTF-8"));
             
             _systemLogger.log(Level.INFO, MODULE, sMethod, "IdPUrl="+sIdPUrl+"oracle_glitch="+_sOracleGlitch);

@@ -115,7 +115,7 @@ public class Xsaml20_Logout extends Saml20_BaseHandler
 		String sTGT = null;
 		try {
 			byte[] baTgtBlobBytes = CryptoEngine.getHandle().decryptTGT(sEncTGT);
-			sTGT = Utils.toHexString(baTgtBlobBytes);
+			sTGT = Utils.byteArrayToHexString(baTgtBlobBytes);
 		}
 		catch (ASelectException eAC) {  // decrypt failed
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not decrypt TGT", eAC);

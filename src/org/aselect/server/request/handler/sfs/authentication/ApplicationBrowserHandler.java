@@ -1516,7 +1516,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						sUid = URLEncoder.encode(sUid, "UTF-8");
 						sUid = URLEncoder.encode(sUid, "UTF-8");
 
-						String sEncTgt = CryptoEngine.getHandle().encryptTGT(Utils.stringToHex(sTgt));
+						String sEncTgt = CryptoEngine.getHandle().encryptTGT(Utils.hexStringToByteArray(sTgt));
 
 						sb.append("aselect_credentials=").append(sEncTgt);
 						sb.append("_").append(sUid).append("_");

@@ -480,7 +480,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 
 		try {
 			byte[] baTgtBytes = CryptoEngine.getHandle().decryptTGT(sEncTgt);
-			sTGT = Utils.toHexString(baTgtBytes);
+			sTGT = Utils.byteArrayToHexString(baTgtBytes);
 		}
 		catch (ASelectException eAC) //decrypt failed
 		{

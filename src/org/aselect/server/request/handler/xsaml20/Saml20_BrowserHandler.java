@@ -429,19 +429,6 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 		SAMLObjectBuilder<Response> responseBuilder = (SAMLObjectBuilder<Response>) _oBuilderFactory
 				.getBuilder(Response.DEFAULT_ELEMENT_NAME);
 		Response response = responseBuilder.buildObject();
-		// RH, 20081107, use SamlTools now
-//		SecureRandomIdentifierGenerator idGenerator = null;
-//		try {
-//			idGenerator = new SecureRandomIdentifierGenerator();
-//		}
-//		catch (NoSuchAlgorithmException e) {
-//			_systemLogger.log(Level.WARNING, MODULE, sMethod, "The SHA1PRNG algorithm is not supported by the JVM", e);
-//			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-//		}
-		// TODO, add '_' to this ID to make it saml NCName compliant
-//		response.setID(idGenerator.generateIdentifier());
-//		response.setID("_" + idGenerator.generateIdentifier());
-		// RH, 20081107, use SamlTools
 		response.setID(SamlTools.generateIdentifier(_systemLogger, MODULE));
 		response.setInResponseTo(sInResponseTo);
 		response.setVersion(SAMLVersion.VERSION_20);

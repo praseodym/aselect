@@ -273,11 +273,11 @@ public class TicketManager
 		try {
 			synchronized (_oTicketTable) {
 				_oRandomGenerator.nextBytes(baTicketBytes);
-				sTicket = Utils.toHexString(baTicketBytes);
+				sTicket = Utils.byteArrayToHexString(baTicketBytes);
 
 				while (_oTicketTable.containsKey(sTicket)) {
 					_oRandomGenerator.nextBytes(baTicketBytes);
-					sTicket = Utils.toHexString(baTicketBytes);
+					sTicket = Utils.byteArrayToHexString(baTicketBytes);
 				}
 
 				try {

@@ -1258,7 +1258,7 @@ public class ASelectConfigManager extends ConfigManager
 			byte[] baCert = x509Cert.getEncoded();
 			MessageDigest mdDigest = MessageDigest.getInstance("SHA1");
 			mdDigest.update(baCert);
-			String sCertFingerPrint = Utils.toHexString(mdDigest.digest());
+			String sCertFingerPrint = Utils.byteArrayToHexString(mdDigest.digest());
 
 			_htServerCrypto.put("signing_cert", x509Cert);
 			_htServerCrypto.put("private_key", oPrivateKey);
@@ -1542,7 +1542,7 @@ public class ASelectConfigManager extends ConfigManager
 			byte[] baCert = x509Cert.getEncoded();
 			MessageDigest mdDigest = MessageDigest.getInstance("SHA1");
 			mdDigest.update(baCert);
-			String sCertFingerPrint = Utils.toHexString(mdDigest.digest());
+			String sCertFingerPrint = Utils.byteArrayToHexString(mdDigest.digest());
 
 			_htAuthspKeys.put(sAlias + ".specific_private_key", pkPrivateKey);
 			_htAuthspKeys.put(sAlias + ".specific_private_key.cert_id", sCertFingerPrint);

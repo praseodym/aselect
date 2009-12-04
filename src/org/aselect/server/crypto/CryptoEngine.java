@@ -702,10 +702,8 @@ public class CryptoEngine
 	 * <br>
 	 * @param baRandom A byte array that will hold the random bytes 
 	 * upon completion of this method
-	 * @throws Exception
 	 */
 	public static void nextRandomBytes(byte[] baRandom)
-		throws Exception
 	{
 		getHandle()._secureRandom.nextBytes(baRandom);
 	}
