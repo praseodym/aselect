@@ -200,7 +200,7 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 	{
 		String sMethod = "readAttributes()";
 		HashMap htReturn = new HashMap();
-		_systemLogger.log(Level.WARNING, MODULE, sMethod, "Read");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Read");
 		try {
 			while (oAttribute != null) {
 				String sID = null;

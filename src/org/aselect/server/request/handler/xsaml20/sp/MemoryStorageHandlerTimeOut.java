@@ -31,7 +31,7 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 	private ConfigManager _oConfigManager;
 	private ASelectSystemLogger _oSystemLogger;
 	private String _serverUrl;
-	private String _sFederationUrl;
+	private String _sFederationUrl = null;
 	private boolean _bVerifySignature = false; 	
 
 	@Override
@@ -55,14 +55,14 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 					"No config item 'redirect_url' found in 'aselect' section", e);
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
+		// 20091207: default if not available in TgT, only available for backward compatibility
 		try {
 			Object aselectSection = _oConfigManager.getSection(null, "aselect");
 			_sFederationUrl = _oConfigManager.getParam(aselectSection, "federation_url");
 		}
 		catch (ASelectConfigException e) {
-			systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"No config item 'federation_url' found in 'aselect' section", e);
-			throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			// 20091207: systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'federation_url' found in 'aselect' section", e);
+			// 20091207: throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 
 		set_bVerifySignature(false);
@@ -194,7 +194,11 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 		String _sMethod = "sendLogoutToFederation";
 		
 		String sFederationUrl = (String)htTGTContext.get("federation_url");
-		if (sFederationUrl == null) sFederationUrl = _sFederationUrl;  // xxx for now
+		if (sFederationUrl == null) sFederationUrl = _sFederationUrl;  // TODO: remove later on
+		if (sFederationUrl == null || sFederationUrl.equals("")) {
+			_oSystemLogger.log(Level.SEVERE, MODULE, _sMethod, "No \"federation_url\" available in TGT");
+			throw new ASelectStorageException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
 		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SPTO (" + _serverUrl + ") - NameID to timeout = " + sNameID);
 		SoapLogoutRequestSender logout = new SoapLogoutRequestSender();
 		String url = null;

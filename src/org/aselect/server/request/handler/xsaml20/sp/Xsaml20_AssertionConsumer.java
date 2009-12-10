@@ -99,7 +99,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 		_oBuilderFactory = Configuration.getBuilderFactory();
 
 		_sMyServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
-		_sFederationUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "federation_url", true);
+		_sFederationUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "federation_url", false);  // 20091207: true);
 		_sRedirectUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true); // We use as Issuer in the send SAML message
 
 		String sLocalityAddressRequired = ASelectConfigManager.getSimpleParam(oHandlerConfig,
@@ -145,9 +145,13 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 		}
 		String sRelayState = request.getParameter("RelayState");
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Received artifact: "+sReceivedArtifact+" RelayState="+sRelayState);
-		String sFederationUrl = _sFederationUrl;  // default
+		String sFederationUrl = _sFederationUrl;  // default, remove later on
 		if (sRelayState.startsWith("idp=")) {
 			sFederationUrl = sRelayState.substring(4);
+		}
+		if (sFederationUrl == null || sFederationUrl.equals("")) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No idp value found in RelayState (or in <federation_url> config)");
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
 
 		try {

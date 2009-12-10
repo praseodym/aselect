@@ -14,9 +14,8 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 
 import org.aselect.server.log.ASelectSystemLogger;
+import org.aselect.system.utils.BASE64Decoder;
 import org.aselect.system.utils.Tools;
-
-import sun.misc.BASE64Decoder;
 
 public class HtmlInfo extends HttpServlet
 {

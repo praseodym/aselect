@@ -726,8 +726,8 @@ public class SamlTools
 		final String CONTENT_TYPE = "text/xml; charset=utf-8";
 	
 		response.setContentType(CONTENT_TYPE);	
-		response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, private");
 		response.setHeader("Pragma", "no-cache");
+		response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 		
 	    ServletOutputStream sos = response.getOutputStream();
 		sos.print(envelope);

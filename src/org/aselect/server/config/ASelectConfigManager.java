@@ -336,7 +336,7 @@ public class ASelectConfigManager extends ConfigManager
 	 * The federation URL is the external URL of the A-Select Server, which must
 	 * be used in auth requests
 	 */
-	private String _sFederationURL;
+	private String _sFederationUrl;
 
 	/**
 	 * Contains the AuthSP keys that can be found in the local_authsp.keystore
@@ -632,17 +632,17 @@ public class ASelectConfigManager extends ConfigManager
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 
-		// read federation URL
+		// read federation URL (OLD mechanism)
 		try {
-			_sFederationURL = getParam(_oASelectConfigSection, "federation_url");
-			new URL(_sFederationURL);
+			_sFederationUrl = getParam(_oASelectConfigSection, "federation_url");
+			new URL(_sFederationUrl);
 		}
 		catch (ASelectConfigException e) {
 			_systemLogger.log(Level.CONFIG, MODULE, sMethod, "No configuration item 'federation_url' defined");
 		}
 		catch (MalformedURLException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"Configured configuration item 'federation_url' isn't an URL: " + _sFederationURL);
+					"Configured configuration item 'federation_url' isn't an URL: " + _sFederationUrl);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 
@@ -834,9 +834,9 @@ public class ASelectConfigManager extends ConfigManager
 		return _sRedirectURL;
 	}
 
-	public String getFederationURL()
+	public String getFederationUrl()
 	{
-		return _sFederationURL;
+		return _sFederationUrl;
 	}
 
 	/**
@@ -1291,14 +1291,13 @@ public class ASelectConfigManager extends ConfigManager
 	 *             id loading fails.
 	 */
 	private void loadAuthSPSettings(String sWorkingDir)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadAuthSPSettings()";
 		Object oAuthSP = null;
 		Object oAuthSPsSection = null;
 
 		try {
-
 			try {
 				oAuthSPsSection = this.getSection(null, "authsps");
 			}
@@ -1314,8 +1313,7 @@ public class ASelectConfigManager extends ConfigManager
 					oAuthSP = this.getSection(oAuthSPsSection, "authsp");
 				}
 				catch (ASelectConfigException e) {
-					// may happen if A-Select is only configured for Cross
-					// A-Select
+					// may happen if A-Select is only configured for Cross A-Select
 					// will be logged, because _htAuthspKeys.size() == 0
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'authsp' config section found", e);
 				}
@@ -1342,7 +1340,6 @@ public class ASelectConfigManager extends ConfigManager
 			StringBuffer sbError = new StringBuffer("Could not load AuthSP settings.");
 			sbError.append("AuthSP's disabled.");
 			sbError.append("Can be valid if A-Select Server is configured in Cross A-Select modus");
-
 			_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbError.toString(), e);
 		}
 	}

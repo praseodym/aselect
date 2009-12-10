@@ -33,6 +33,7 @@
  */
 package org.aselect.system.utils;
 
+// TODO: Consider using: import org.apache.commons.codec.binary.Base64;
 
 /**
  * RFC 2045 compliant Base64 decoder.

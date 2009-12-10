@@ -5,6 +5,7 @@
 package org.aselect.server.request.handler.xsaml20;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringReader;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
@@ -84,10 +85,20 @@ public class Saml20_ArtifactManager extends StorageManager
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sRedirectUrl);
 		// RH, 20081113, Set appropriate headers here
-		oHttpServletResponse.setHeader("Cache-Control", "no-cache, no-store");
+		oHttpServletResponse.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+		oHttpServletResponse.setContentType("text/html");	
 		oHttpServletResponse.setHeader("Pragma", "no-cache");
-		oHttpServletResponse.sendRedirect(sRedirectUrl);
 		
+		//oHttpServletResponse.sendRedirect(sRedirectUrl);
+		// OR:
+		PrintWriter out = oHttpServletResponse.getWriter();
+		String htmlResponse = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n"+
+			"<html><head><title>Redirect</title>\n"+
+			"<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">" +
+			"<meta http-equiv=\"refresh\" content=\"0;URL="+sRedirectUrl+"\">" +
+			"</head><body></body></html>";
+		out.println(htmlResponse);
+		out.close();
 	}
 
 	// We want an XMLObject out

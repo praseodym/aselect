@@ -23,7 +23,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 {
 	private final static String MODULE = "Xsaml20_SessionSync";
 	private ASelectSystemLogger _oSystemLogger = _systemLogger;
-	private String _sFederationUrl;
+	private String _sFederationUrl = null;
 	private String _sUpdateInterval;
 	private String _sMessageType;
 	private long updateInterval;
@@ -59,13 +59,13 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 
+		// 20091207: default if not available in TgT, only available for backward compatibility
 		try {
 			_sFederationUrl = _configManager.getParam(oHandlerConfig, "federation_url");
 		}
 		catch (ASelectConfigException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"No config item 'federation_url' found in 'handler' section", e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			// 20091207: _systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'federation_url' found in 'handler' section", e);
+			// 20091207: throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 
 		try {
@@ -131,18 +131,15 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT);
 			}
 			String sFederationUrl = (String)htTGTContext.get("federation_url");
-			if (sFederationUrl == null) sFederationUrl = _sFederationUrl;  // xxx for now
+			if (sFederationUrl == null) sFederationUrl = _sFederationUrl;  // TODO: remove, only here for backward compatibility
+			if (sFederationUrl == null || sFederationUrl.equals("")) {
+				_systemLogger.log(Level.SEVERE, MODULE, _sMethod, "No \"federation_url\" available in TGT");
+				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
+			}
 			
 			PublicKey pkey = null;
 			if (is_bVerifySignature()) {
-				// check signature of session synchronization here
-				// We get the public key from the metadata
-				// We use _sFederationUrl as the Issuer to lookup the entityID in the metadata
-				// We get the _sFederationUrl from aselect.xml so we consider this safe and authentic
-				if (sFederationUrl == null || "".equals(sFederationUrl)) {
-					_systemLogger.log(Level.SEVERE, MODULE, _sMethod, "For signature verification we need a valid FederationUrl");
-					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
-				}
+				// Check signature of session synchronization here
 				MetaDataManagerSp metadataManager = MetaDataManagerSp.getHandle();
 				pkey = metadataManager.getSigningKeyFromMetadata(sFederationUrl);
 				if (pkey == null || "".equals(pkey)) {
@@ -152,7 +149,12 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 			}
 			
 			String sSessionSyncUrl = MetaDataManagerSp.getHandle().getSessionSyncURL(sFederationUrl);  // "/saml20_session_sync";
+			_systemLogger.log(Level.INFO, MODULE, _sMethod, "Metadata session sync url=" + sSessionSyncUrl);
 			if (sSessionSyncUrl == null) sSessionSyncUrl = _sFederationUrl;  // 20091030: backward compatibility
+			if (sSessionSyncUrl == null || sSessionSyncUrl.equals("")) {
+				_systemLogger.log(Level.SEVERE, MODULE, _sMethod, "No session sync url found in metadata");
+				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
+			}
 			SessionSyncRequestSender ss_req = new SessionSyncRequestSender(_oSystemLogger, _sSpUrl,
 					updateInterval, _sMessageType, sSessionSyncUrl, pkey, getMaxNotBefore(), getMaxNotOnOrAfter(), is_bVerifyInterval());
 			errorCode = ss_req.synchronizeSession(sTgT, htTGTContext, /*true, coded*/ true/*upgrade*/);

@@ -30,7 +30,8 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.sam.agent.SAMResource;
 
-import com.mysql.jdbc.ResultSetMetaData;
+import java.sql.ResultSetMetaData;
+//import com.mysql.jdbc.ResultSetMetaData;
 
 public class JDBCAttributeRequestor extends GenericAttributeRequestor
 {

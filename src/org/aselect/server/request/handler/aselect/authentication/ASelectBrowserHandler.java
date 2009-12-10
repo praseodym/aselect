@@ -234,35 +234,9 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 					+ sLocalRid + ", sRemoteOrg=" + sRemoteOrg + " forced_uid=" + htSessionContext.get("forced_uid"));
 
 			// Retrieve backchannel data from the Remote Organization
-			// Bauke 20080918, removed
 			HashMap htRemoteAttributes;
-			/*if (sRequest != null && sRequest.equals("tolk_fromdigid"))
-			 {
-			 if (sRemoteOrg == null)
-			 sRemoteOrg = (String)htTolkResponse.get("organization");  // Bauke: tolk_fromdigid
-			 htRemoteAttributes = htTolkResponse;
-			 String sUid = (String)htTolkResponse.get("uid");
-			 if (sUid != null) { 
-			 htRemoteAttributes.put("digid_uid", sUid);
-			 htSessionContext.put("digid_uid", sUid);
-			 htSessionContext.put("uid", sUid);  // initial value
-			 }
-			 String sLevel = (String)htTolkResponse.get("betrouwbaarheidsniveau");
-			 if (sLevel != null) { 
-			 htRemoteAttributes.put("digid_betrouwbaarheidsniveau", sLevel);
-			 htSessionContext.put("digid_betrouwbaarheidsniveau", sLevel);
-			 htSessionContext.put("betrouwbaarheidsniveau", sLevel);  // initial value
-			 }
-			 String sForcedUid = (String)htSessionContext.get("forced_uid");
-			 if (sForcedUid != null) {
-			 htRemoteAttributes.put("uid", sForcedUid);  // overwrite uid
-			 htSessionContext.put("uid", sForcedUid);  // overwrite
-			 }
-			 }
-			 else  {*/
 			// verify the credentials at the remote server
 			htRemoteAttributes = verifyRemoteCredentials(sCredentials, sRemoteRid, sRemoteOrg);
-			/*}*/
 
 			// for authentication logging
 			String sOrg = (String) htRemoteAttributes.get("organization");

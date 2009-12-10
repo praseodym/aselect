@@ -688,11 +688,11 @@ public abstract class AbstractMetaDataManager
 	
 	public String getDefaultIdP()
 	{
-		// Get the first one, usefull when there's only one (the default)
+		// Get the first one, useful when there's only one (the default)
 		Set keys = metadataSPs.keySet();
 		for (Object s : keys) {
 			String sIdP = (String)s;
-			return (sIdP.equals("metadata"))? _configManager.getFederationURL(): sIdP;
+			return (sIdP.equals("metadata"))? _configManager.getFederationUrl(): sIdP;
 		}
 		return null;
 	}

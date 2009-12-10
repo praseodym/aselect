@@ -272,8 +272,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			
 			// Set appropriate headers Pragma and Cache-Control
 			httpResponse.setHeader("Pragma", "no-cache");
-			httpResponse.setHeader("Cache-Control", "no-cache");
-			httpResponse.addHeader("Cache-Control", "no-store");
+			httpResponse.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 			handleSpecificSaml20Request(httpRequest, httpResponse, samlMessage);
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">> SAMLMessage handled");
 		}

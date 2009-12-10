@@ -24,8 +24,6 @@ public class Xsaml20_Logout extends Saml20_BaseHandler
 
 	// The managers and engine
 	private TGTManager _oTGTManager;
-
-	public String _sFederationUrl; // the url to send the saml request to
 	public String _sRedirectUrl;
 
 	/**
@@ -43,11 +41,12 @@ public class Xsaml20_Logout extends Saml20_BaseHandler
 	throws ASelectException
 	{
 		String sMethod = "init";
+		
 		super.init(oServletConfig, oConfig);
 		_oTGTManager = TGTManager.getHandle();
 
 		Object aselect = _configManager.getSection(null, "aselect");
-		_sFederationUrl = _configManager.getParam(aselect, "federation_url");
+		// 20091207 _sFederationUrl = _configManager.getParam(aselect, "federation_url");
 		_sRedirectUrl = _configManager.getParam(aselect, "redirect_url");
 		
 //		_sFriendlyName = _configManager.getParam(aselect, "organization_friendly_name");

@@ -8,6 +8,7 @@ import java.util.logging.Level;
 
 import org.aselect.server.request.handler.xsaml20.SoapLogoutRequestSender;
 import org.aselect.server.tgt.TGTManager;
+import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
@@ -31,7 +32,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 	private ConfigManager _oConfigManager;
 	private ASelectSystemLogger _oSystemLogger;
 	private String _serverUrl;
-	private String _sFederationUrl;
+	private String _sFederationUrl = null;
 	private boolean _bVerifySignature = false; 	
 
 	@Override
@@ -55,14 +56,14 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 					"No config item 'redirect_url' found in 'aselect' section", e);
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
+		// 20091207: default if not available in TgT, only available for backward compatibility
 		try {
 			Object aselectSection = _oConfigManager.getSection(null, "aselect");
 			_sFederationUrl = _oConfigManager.getParam(aselectSection, "federation_url");
 		}
 		catch (ASelectConfigException e) {
-			systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"No config item 'federation_url' found in 'aselect' section", e);
-			throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			// 20091207: systemLogger.log(Level.INFO, MODULE, sMethod, "No config item 'federation_url' found in 'aselect' section", e);
+			// 20091207: throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 
 		set_bVerifySignature(false);
@@ -192,7 +193,11 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 		String _sMethod = "sendLogoutToFederation";
 	
 		String sFederationUrl = (String)htTGTContext.get("federation_url");
-		if (sFederationUrl == null) sFederationUrl = _sFederationUrl;  // xxx for now
+		if (sFederationUrl == null) sFederationUrl = _sFederationUrl;  // TODO: remove later on
+		if (sFederationUrl == null || sFederationUrl.equals("")) {
+			_oSystemLogger.log(Level.SEVERE, MODULE, _sMethod, "No \"federation_url\" available in TGT");
+			throw new ASelectStorageException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
 		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SPTO (" + _serverUrl + ") - NameID to timeout = " + sNameID);
 		SoapLogoutRequestSender logout = new SoapLogoutRequestSender();
 		String url = null;
@@ -218,7 +223,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			logout.sendSoapLogoutRequest(url, issuerUrl, sNameID, "urn:oasis:names:tc:SAML:2.0:logout:sp-timeout", pkey);
 		}
 		catch (ASelectException e) {
-			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "exception trying to send Logout message", e);
+			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "Exception trying to send Logout message", e);
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 

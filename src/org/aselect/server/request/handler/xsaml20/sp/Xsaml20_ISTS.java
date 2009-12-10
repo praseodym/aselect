@@ -148,7 +148,6 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				pwOut.println(sSelectForm);
 				pwOut.close();
 				return new RequestState(null);
-
 				// 20091028: Original code: sFederationUrl = _sFederationUrl;  // use the default
 	        }
 	        
