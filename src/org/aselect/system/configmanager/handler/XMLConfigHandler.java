@@ -102,21 +102,19 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+// TODO: Auto-generated Javadoc
 /**
- * ConfigHandler that reads and writes configuration items as XML data. 
- * <br><br>
- * <b>Description: </b> 
+ * ConfigHandler that reads and writes configuration items as XML data. <br>
  * <br>
- * ConfigHandler that reads and writes configuration files located on harddisk
- * or JDBC database. This class can handle XML configuration files that are
- * located in a file or a JDBC database, like: <br>
+ * <b>Description: </b> <br>
+ * ConfigHandler that reads and writes configuration files located on harddisk or JDBC database. This class can handle
+ * XML configuration files that are located in a file or a JDBC database, like: <br>
  * table_name -> [id][XML data] where id is unique within the table. <br>
  * <br>
  * <b>Concurrency issues: </b> <br>
  * This <code>IConfigHandler</code> is threadsafe. <br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class XMLConfigHandler implements IConfigHandler
 {
@@ -126,14 +124,12 @@ public class XMLConfigHandler implements IConfigHandler
 	private static final String MODULE = "XMLConfigHandler";
 
 	/**
-	 * The name of the database column that indicates the configuration that
-	 * must be read by this config handler.
+	 * The name of the database column that indicates the configuration that must be read by this config handler.
 	 */
 	private static final String ID_COLUMN = "id";
 
 	/**
-	 * The name of the database column that is used to store the XML
-	 * configuration in the configuration table.
+	 * The name of the database column that is used to store the XML configuration in the configuration table.
 	 */
 	private static final String DATA_COLUMN = "data";
 
@@ -143,8 +139,7 @@ public class XMLConfigHandler implements IConfigHandler
 	private Document _oDomDocument;
 
 	/**
-	 * The configuration file containing the XML config, if a file is used as
-	 * physical storage.
+	 * The configuration file containing the XML config, if a file is used as physical storage.
 	 */
 	private File _fConfig;
 
@@ -154,8 +149,7 @@ public class XMLConfigHandler implements IConfigHandler
 	private String _sDatabaseTableName;
 
 	/**
-	 * The id of the configuration that indicates the configuration in the
-	 * database.
+	 * The id of the configuration that indicates the configuration in the database.
 	 */
 	private String _sConfigId;
 
@@ -170,13 +164,13 @@ public class XMLConfigHandler implements IConfigHandler
 	private SQLDatabaseConnector _sdcConnector;
 
 	/**
-	 * Default constructor. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Default constructor. <br>
 	 * <br>
+	 * <b>Description: </b> <br>
 	 * Default constructor for <code>XMLConfigHandler</code>.<br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
 	 * <b>Preconditions: </b> <br>
 	 * <code>oSystemLogger</code> should be initialized. <br>
@@ -193,8 +187,13 @@ public class XMLConfigHandler implements IConfigHandler
 	}
 
 	/**
-	 * Parses an XML config File to an XML DOM Object. 
-	 * <br><br>
+	 * Parses an XML config File to an XML DOM Object. <br>
+	 * <br>
+	 * 
+	 * @param fConfig
+	 *            the f config
+	 * @throws ASelectConfigException
+	 *             the a select config exception
 	 * @see org.aselect.system.configmanager.IConfigHandler#init(java.io.File)
 	 */
 	public void init(File fConfig)
@@ -234,12 +233,25 @@ public class XMLConfigHandler implements IConfigHandler
 	}
 
 	/**
-	 * Parses the XML configuration located in a JDBC database to an XML Dom
-	 * object. 
-	 * <br><br>
-	 * @see org.aselect.system.configmanager.IConfigHandler#init(java.lang.String,
-	 *      java.lang.String, java.lang.String, java.lang.String,
-	 *      java.lang.String, java.lang.String)
+	 * Parses the XML configuration located in a JDBC database to an XML Dom object. <br>
+	 * <br>
+	 * 
+	 * @param sUser
+	 *            the s user
+	 * @param sPassword
+	 *            the s password
+	 * @param sDatabaseURL
+	 *            the s database url
+	 * @param sDatabaseTable
+	 *            the s database table
+	 * @param sDriverName
+	 *            the s driver name
+	 * @param sConfigId
+	 *            the s config id
+	 * @throws ASelectConfigException
+	 *             the a select config exception
+	 * @see org.aselect.system.configmanager.IConfigHandler#init(java.lang.String, java.lang.String, java.lang.String,
+	 *      java.lang.String, java.lang.String, java.lang.String)
 	 */
 	public void init(String sUser, String sPassword, String sDatabaseURL, String sDatabaseTable, String sDriverName,
 			String sConfigId)
@@ -255,7 +267,7 @@ public class XMLConfigHandler implements IConfigHandler
 			_sdcConnector = new SQLDatabaseConnector(sDriverName, sUser, sPassword, sDatabaseURL, _oSystemLogger);
 			_sConfigId = sConfigId;
 			_sDatabaseTableName = sDatabaseTable;
-			//create query
+			// create query
 			StringBuffer sbQuery = new StringBuffer("Select ");
 			sbQuery.append(DATA_COLUMN);
 			sbQuery.append(" FROM ");
@@ -263,7 +275,7 @@ public class XMLConfigHandler implements IConfigHandler
 			sbQuery.append(" WHERE ").append(ID_COLUMN);
 			sbQuery.append("='").append(_sConfigId).append("'");
 
-			//open DB connection
+			// open DB connection
 			oStatement = _sdcConnector.connect();
 			if (oStatement != null) {
 				ResultSet rsResponse = _sdcConnector.executeQuery(oStatement, sbQuery.toString());
@@ -320,10 +332,20 @@ public class XMLConfigHandler implements IConfigHandler
 	}
 
 	/**
-	 * Retrieves a config section by it's type and id. 
-	 * <br><br>
-	 * @see org.aselect.system.configmanager.IConfigHandler#getSection(java.lang.Object,
-	 *      java.lang.String, java.lang.String)
+	 * Retrieves a config section by it's type and id. <br>
+	 * <br>
+	 * 
+	 * @param oRootSection
+	 *            the o root section
+	 * @param sSectionType
+	 *            the s section type
+	 * @param sSectionID
+	 *            the s section id
+	 * @return the section
+	 * @throws ASelectConfigException
+	 *             the a select config exception
+	 * @see org.aselect.system.configmanager.IConfigHandler#getSection(java.lang.Object, java.lang.String,
+	 *      java.lang.String)
 	 */
 	public synchronized Object getSection(Object oRootSection, String sSectionType, String sSectionID)
 		throws ASelectConfigException
@@ -334,7 +356,7 @@ public class XMLConfigHandler implements IConfigHandler
 		Node nSection = null;
 		Node nRoot = null;
 
-		//rootSection can be null if the first section is requested
+		// rootSection can be null if the first section is requested
 		if (oRootSection != null) {
 			if (oRootSection instanceof Element)
 				nRoot = (Element) oRootSection;
@@ -369,10 +391,17 @@ public class XMLConfigHandler implements IConfigHandler
 	}
 
 	/**
-	 * Retrieves a config section by it's type. 
-	 * <br><br>
-	 * @see org.aselect.system.configmanager.IConfigHandler#getSection(java.lang.Object,
-	 *      java.lang.String)
+	 * Retrieves a config section by it's type. <br>
+	 * <br>
+	 * 
+	 * @param oRootSection
+	 *            the o root section
+	 * @param sSectionType
+	 *            the s section type
+	 * @return the section
+	 * @throws ASelectConfigException
+	 *             the a select config exception
+	 * @see org.aselect.system.configmanager.IConfigHandler#getSection(java.lang.Object, java.lang.String)
 	 */
 	public synchronized Object getSection(Object oRootSection, String sSectionType)
 		throws ASelectConfigException
@@ -383,7 +412,7 @@ public class XMLConfigHandler implements IConfigHandler
 		Node nSection = null;
 		Node nRoot = null;
 
-		//rootSection can be null if the first section is requested
+		// rootSection can be null if the first section is requested
 		if (oRootSection != null)
 			if (oRootSection instanceof Element)
 				nRoot = (Element) oRootSection;
@@ -415,11 +444,17 @@ public class XMLConfigHandler implements IConfigHandler
 	}
 
 	/**
-	 * Adds a config section (empty tag) with section type as it's name
-	 * (tagname) and returns the new section. 
-	 * <br><br>
-	 * @see org.aselect.system.configmanager.IConfigHandler#setSection(java.lang.Object,
-	 *      java.lang.String)
+	 * Adds a config section (empty tag) with section type as it's name (tagname) and returns the new section. <br>
+	 * <br>
+	 * 
+	 * @param oRootSection
+	 *            the o root section
+	 * @param sSectionType
+	 *            the s section type
+	 * @return the object
+	 * @throws ASelectConfigException
+	 *             the a select config exception
+	 * @see org.aselect.system.configmanager.IConfigHandler#setSection(java.lang.Object, java.lang.String)
 	 */
 	public synchronized Object setSection(Object oRootSection, String sSectionType)
 		throws ASelectConfigException
@@ -430,7 +465,7 @@ public class XMLConfigHandler implements IConfigHandler
 		Node nRoot = null;
 		Node nValue = null;
 
-		//rootSection can be null if the first section is requested
+		// rootSection can be null if the first section is requested
 		if (oRootSection != null) {
 			if (oRootSection instanceof Element)
 				nRoot = (Element) oRootSection;
@@ -444,7 +479,7 @@ public class XMLConfigHandler implements IConfigHandler
 			nRoot = _oDomDocument.getDocumentElement();
 
 		if (sSectionType != null)
-			//create new section
+			// create new section
 			nValue = _oDomDocument.createElement(sSectionType);
 		else {
 			sbError.append("No section Type supplied.");
@@ -476,14 +511,20 @@ public class XMLConfigHandler implements IConfigHandler
 	}
 
 	/**
-	 * Retrieves the value of the config parameter from the config section that
-	 * is supplied. 
-	 * <br><br>
-	 * @see org.aselect.system.configmanager.IConfigHandler#getParam(java.lang.Object,
-	 *      java.lang.String)
+	 * Retrieves the value of the config parameter from the config section that is supplied. <br>
+	 * <br>
+	 * 
+	 * @param oSection
+	 *            the o section
+	 * @param sConfigItem
+	 *            the s config item
+	 * @return the param
+	 * @throws ASelectConfigException
+	 *             the a select config exception
+	 * @see org.aselect.system.configmanager.IConfigHandler#getParam(java.lang.Object, java.lang.String)
 	 */
 	public synchronized String getParam(Object oSection, String sConfigItem)
-	throws ASelectConfigException
+		throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
 		String sMethod = "getParam()";
@@ -510,10 +551,10 @@ public class XMLConfigHandler implements IConfigHandler
 		}
 
 		try {
-			//first check all attributes for the specific sConfigItem
+			// first check all attributes for the specific sConfigItem
 			nSection = (Node) oSection;
 
-			//get all attributes
+			// get all attributes
 			if (nSection.hasAttributes()) {
 				nnmAttributes = nSection.getAttributes();
 				if (nnmAttributes != null) {
@@ -527,16 +568,16 @@ public class XMLConfigHandler implements IConfigHandler
 				}
 			}
 
-			//check sub tagnames for the specific sConfigItem
-			if (sValue == null) {  // Check if param = sub node
+			// check sub tagnames for the specific sConfigItem
+			if (sValue == null) { // Check if param = sub node
 				nlChilds = nSection.getChildNodes();
 				for (int i = 0; i < nlChilds.getLength(); i++) {
 					nTemp = nlChilds.item(i);
-					//check if tagname = sConfigItem
+					// check if tagname = sConfigItem
 					if (nTemp != null && nTemp.getNodeName().equalsIgnoreCase(sConfigItem)) {
 						nlSubNodes = nTemp.getChildNodes();
 
-						if (nlSubNodes.getLength() == 0) {  // Node contains no data
+						if (nlSubNodes.getLength() == 0) { // Node contains no data
 							if (sValue == null)
 								sValue = new String("");
 						}
@@ -557,14 +598,16 @@ public class XMLConfigHandler implements IConfigHandler
 		}
 		catch (Exception e) {
 			sbError.append("Error retrieving parameter: ").append(sConfigItem);
-			if (sId != null) sbError.append(", id=").append(sId);
+			if (sId != null)
+				sbError.append(", id=").append(sId);
 			_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString());
 			throw new ASelectConfigException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 
 		if (sValue == null) {
-			sbError.append("Error retrieving parameter: ").append(sConfigItem +" / " + oSection.toString());
-			if (sId != null) sbError.append(", id=").append(sId);
+			sbError.append("Error retrieving parameter: ").append(sConfigItem + " / " + oSection.toString());
+			if (sId != null)
+				sbError.append(", id=").append(sId);
 			_oSystemLogger.log(Level.FINEST, MODULE, sMethod, sbError.toString());
 			throw new ASelectConfigException(Errors.ERROR_ASELECT_NOT_FOUND);
 		}
@@ -572,10 +615,22 @@ public class XMLConfigHandler implements IConfigHandler
 	}
 
 	/**
-	 * Puts a new parameter into the given section like <param>value </param>.
-	 * <br><br>
-	 * @see org.aselect.system.configmanager.IConfigHandler#setParam(java.lang.Object,
-	 *      java.lang.String, java.lang.String, boolean)
+	 * Puts a new parameter into the given section like <param>value </param>. <br>
+	 * <br>
+	 * 
+	 * @param oRootSection
+	 *            the o root section
+	 * @param sConfigItem
+	 *            the s config item
+	 * @param sConfigValue
+	 *            the s config value
+	 * @param bMandatory
+	 *            the b mandatory
+	 * @return true, if sets the param
+	 * @throws ASelectConfigException
+	 *             the a select config exception
+	 * @see org.aselect.system.configmanager.IConfigHandler#setParam(java.lang.Object, java.lang.String,
+	 *      java.lang.String, boolean)
 	 */
 	public synchronized boolean setParam(Object oRootSection, String sConfigItem, String sConfigValue,
 			boolean bMandatory)
@@ -640,11 +695,16 @@ public class XMLConfigHandler implements IConfigHandler
 	}
 
 	/**
-	 * Resolve the next section (XML tag) which has the same type as the
-	 * supplied section, it will be the follow-up tag. The sections must be
-	 * located in the same root section (root tag). It returns the next section
-	 * or null if their is no next section. 
-	 * <br><br>
+	 * Resolve the next section (XML tag) which has the same type as the supplied section, it will be the follow-up tag.
+	 * The sections must be located in the same root section (root tag). It returns the next section or null if their is
+	 * no next section. <br>
+	 * <br>
+	 * 
+	 * @param oSection
+	 *            the o section
+	 * @return the next section
+	 * @throws ASelectConfigException
+	 *             the a select config exception
 	 * @see org.aselect.system.configmanager.IConfigHandler#getNextSection(java.lang.Object)
 	 */
 	public synchronized Object getNextSection(Object oSection)
@@ -671,11 +731,17 @@ public class XMLConfigHandler implements IConfigHandler
 	}
 
 	/**
-	 * Removes the section (XML tag) from the supplied root section which has
-	 * the type that is supplied. 
-	 * <br><br>
-	 * @see org.aselect.system.configmanager.IConfigHandler#removeSection(java.lang.Object,
-	 *      java.lang.String)
+	 * Removes the section (XML tag) from the supplied root section which has the type that is supplied. <br>
+	 * <br>
+	 * 
+	 * @param oRootSection
+	 *            the o root section
+	 * @param sSectionType
+	 *            the s section type
+	 * @return true, if removes the section
+	 * @throws ASelectConfigException
+	 *             the a select config exception
+	 * @see org.aselect.system.configmanager.IConfigHandler#removeSection(java.lang.Object, java.lang.String)
 	 */
 	public synchronized boolean removeSection(Object oRootSection, String sSectionType)
 		throws ASelectConfigException
@@ -688,7 +754,7 @@ public class XMLConfigHandler implements IConfigHandler
 		boolean bRet = false;
 
 		try {
-			//rootSection can be null if the first section is requested
+			// rootSection can be null if the first section is requested
 			if (oRootSection != null)
 				if (nRoot instanceof Element)
 					nRoot = (Element) oRootSection;
@@ -715,7 +781,7 @@ public class XMLConfigHandler implements IConfigHandler
 				throw new ASelectConfigException(Errors.ERROR_ASELECT_NOT_FOUND);
 			}
 
-			//remove section
+			// remove section
 			nRoot.removeChild(nSection);
 			bRet = true;
 		}
@@ -744,12 +810,21 @@ public class XMLConfigHandler implements IConfigHandler
 	}
 
 	/**
-	 * Removes the section (XML tag) from the supplied root section which has
-	 * the type and the ID that is supplied. The ID must be an XML attribute
-	 * like: <section id="id"> should be supplied as id=id 
-	 * <br><br>
-	 * @see org.aselect.system.configmanager.IConfigHandler#removeSection(java.lang.Object,
-	 *      java.lang.String, java.lang.String)
+	 * Removes the section (XML tag) from the supplied root section which has the type and the ID that is supplied. The
+	 * ID must be an XML attribute like: <section id="id"> should be supplied as id=id <br>
+	 * <br>
+	 * 
+	 * @param oRootSection
+	 *            the o root section
+	 * @param sSectionType
+	 *            the s section type
+	 * @param sSectionID
+	 *            the s section id
+	 * @return true, if removes the section
+	 * @throws ASelectConfigException
+	 *             the a select config exception
+	 * @see org.aselect.system.configmanager.IConfigHandler#removeSection(java.lang.Object, java.lang.String,
+	 *      java.lang.String)
 	 */
 	public synchronized boolean removeSection(Object oRootSection, String sSectionType, String sSectionID)
 		throws ASelectConfigException
@@ -786,7 +861,7 @@ public class XMLConfigHandler implements IConfigHandler
 				throw new ASelectConfigException(Errors.ERROR_ASELECT_NOT_FOUND);
 			}
 
-			//remove section
+			// remove section
 			nRoot.removeChild(nSection);
 			bRet = true;
 		}
@@ -817,9 +892,11 @@ public class XMLConfigHandler implements IConfigHandler
 	}
 
 	/**
-	 * Saves the configuration to the physical storage from which it is
-	 * retrieved. It supports file and JDBC database. 
-	 * <br><br>
+	 * Saves the configuration to the physical storage from which it is retrieved. It supports file and JDBC database. <br>
+	 * <br>
+	 * 
+	 * @throws ASelectConfigException
+	 *             the a select config exception
 	 * @see org.aselect.system.configmanager.IConfigHandler#saveConfig()
 	 */
 	public synchronized void saveConfig()
@@ -827,7 +904,7 @@ public class XMLConfigHandler implements IConfigHandler
 	{
 		String sMethod = "saveConfig()";
 
-		//add date to configuration
+		// add date to configuration
 		boolean bFound = false;
 		Date dNow = null;
 		StringBuffer sbComment = null;
@@ -846,28 +923,28 @@ public class XMLConfigHandler implements IConfigHandler
 
 		elRoot = _oDomDocument.getDocumentElement();
 		nCurrent = elRoot.getFirstChild();
-		while (!bFound && nCurrent != null) //all elements
+		while (!bFound && nCurrent != null) // all elements
 		{
 			if (nCurrent.getNodeType() == Node.COMMENT_NODE) {
-				//check if it's a "save changes" comment
+				// check if it's a "save changes" comment
 				sValue = nCurrent.getNodeValue();
 				if (sValue.trim().startsWith("Configuration changes saved on")) {
-					//overwrite message
+					// overwrite message
 					nCurrent.setNodeValue(sbComment.toString());
 					bFound = true;
 				}
 			}
 			nCurrent = nCurrent.getNextSibling();
 		}
-		if (!bFound) //no comment found: adding new
+		if (!bFound) // no comment found: adding new
 		{
-			//create new comment node
+			// create new comment node
 			nComment = _oDomDocument.createComment(sbComment.toString());
-			//insert comment before first node
+			// insert comment before first node
 			elRoot.insertBefore(nComment, elRoot.getFirstChild());
 		}
 
-		if (_fConfig == null) //the confighandler uses raw data
+		if (_fConfig == null) // the confighandler uses raw data
 		{
 			oStream = new ByteArrayOutputStream();
 			serializeTo(oStream);
@@ -926,10 +1003,15 @@ public class XMLConfigHandler implements IConfigHandler
 	}
 
 	/**
-	 * Import configuration items into this configuration.
-	 * <br><br>
+	 * Import configuration items into this configuration. <br>
+	 * <br>
+	 * 
+	 * @param configFile
+	 *            the config file
+	 * @throws ASelectConfigException
+	 *             the a select config exception
 	 * @see org.aselect.system.configmanager.IConfigHandler#importConfig(java.io.File)
-	 * @deprecated All config should be stored in only one config file. 
+	 * @deprecated All config should be stored in only one config file.
 	 */
 	public synchronized void importConfig(File configFile)
 		throws ASelectConfigException
@@ -960,22 +1042,22 @@ public class XMLConfigHandler implements IConfigHandler
 	}
 
 	/**
-	 * Adds a parameter as an XML attribute. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Adds a parameter as an XML attribute. <br>
 	 * <br>
+	 * <b>Description: </b> <br>
 	 * Adds a parameter as an XML attribute <br>
 	 * for example: &lt;section parameter="value"&gt; <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * Has been made Threadsafe by making it synchronized <br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>- <i>oSection </i> must be of type
-	 * <code>Element</code> and not <code>null
-	 * </code>.<br>-
-	 * <i>sConfigItem </i> may not be <code>null</code><br>
+	 * <b>Preconditions: </b> <br>
+	 * - <i>oSection </i> must be of type <code>Element</code> and not <code>null
+	 * </code>.<br>
+	 * - <i>sConfigItem </i> may not be <code>null</code><br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param oSection
 	 *            The section to which the config param will be added
@@ -994,13 +1076,11 @@ public class XMLConfigHandler implements IConfigHandler
 	}
 
 	/**
-	 * Adds a parameter to the given section 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Adds a parameter to the given section <br>
 	 * <br>
-	 * Will add a new XML tag as a child of the given XML tag ( <i>oSection
-	 * </i>), with the given name ( <i>sConfigItem </i>) and value (
-	 * <i>sConfigValue </i>). For example: <br>
+	 * <b>Description: </b> <br>
+	 * Will add a new XML tag as a child of the given XML tag ( <i>oSection </i>), with the given name ( <i>sConfigItem
+	 * </i>) and value ( <i>sConfigValue </i>). For example: <br>
 	 * &lt;section&gt; <br>
 	 * &nbsp;&nbsp;&nbsp;&lt;parameter&gt;value&lt;/parameter&gt; <br>
 	 * &lt;/section&gt; <br>
@@ -1008,18 +1088,16 @@ public class XMLConfigHandler implements IConfigHandler
 	 * <b>Concurrency issues: </b> <br>
 	 * Is made Threadsafe by making it synchronized. <br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>- <i>oSection </i> must be of type
-	 * <code>Element</code> and may not be <code>null</code>.<br>-
-	 * <i>sConfigItem </i> may not be <code>null</code>.<br>-
-	 * <i>sConfigValue </i> may not be <code>null</code>.<br>
+	 * <b>Preconditions: </b> <br>
+	 * - <i>oSection </i> must be of type <code>Element</code> and may not be <code>null</code>.<br>
+	 * - <i>sConfigItem </i> may not be <code>null</code>.<br>
+	 * - <i>sConfigValue </i> may not be <code>null</code>.<br>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
-	 * The updated <code>Element</code> oSection will contain the new XML tag.
-	 * <br>
+	 * The updated <code>Element</code> oSection will contain the new XML tag. <br>
 	 * 
 	 * @param oSection
-	 *            The section (XML tag) to which the parameter must be added as
-	 *            child.
+	 *            The section (XML tag) to which the parameter must be added as child.
 	 * @param sConfigItem
 	 *            The name of the config parameter (XML tag name)
 	 * @param sConfigValue
@@ -1041,11 +1119,11 @@ public class XMLConfigHandler implements IConfigHandler
 
 		elSection = (Element) oSection;
 
-		//check if child allready exists
+		// check if child allready exists
 		nlChilds = elSection.getChildNodes();
 		for (int i = 0; i < nlChilds.getLength(); i++) {
 			nTemp = nlChilds.item(i);
-			//check if tagname = configItem
+			// check if tagname = configItem
 			if (nTemp != null && nTemp.getNodeName().equalsIgnoreCase(sConfigItem)) {
 				nlSubNodes = nTemp.getChildNodes();
 				for (int iIter2 = 0; iIter2 < nlSubNodes.getLength(); iIter2++) {
@@ -1058,25 +1136,23 @@ public class XMLConfigHandler implements IConfigHandler
 			}
 		}
 
-		if (!bFound) //add new child
+		if (!bFound) // add new child
 		{
-			//create new child
+			// create new child
 			nValue = _oDomDocument.createTextNode(sConfigValue);
 			nConfigItem = _oDomDocument.createElement(sConfigItem);
 			nConfigItem.appendChild(nValue);
 
-			//append child
+			// append child
 			elSection.appendChild(nConfigItem);
 		}
 	}
 
 	/**
-	 * Serializes the XML data to the given <code>OutputStream</code>.
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Serializes the XML data to the given <code>OutputStream</code>. <br>
 	 * <br>
-	 * Uses indent and line width to serialze the XML DOM Document to the
-	 * <code>OutputStream</code>.<br>
+	 * <b>Description: </b> <br>
+	 * Uses indent and line width to serialze the XML DOM Document to the <code>OutputStream</code>.<br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * The <code>osOutput</code> may not be closed. <br>
@@ -1085,12 +1161,10 @@ public class XMLConfigHandler implements IConfigHandler
 	 * <i>osOutput </i> may not be <code>null</code><br>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
-	 * The XML DOM Document is written to the given <code>OutputStream</code>.
-	 * <br>
+	 * The XML DOM Document is written to the given <code>OutputStream</code>. <br>
 	 * 
 	 * @param osOutput
-	 *            The <code>OutputStream</code> to which the XML DOM Object
-	 *            will be written.
+	 *            The <code>OutputStream</code> to which the XML DOM Object will be written.
 	 * @throws ASelectConfigException
 	 *             If serialization fails
 	 */
@@ -1100,19 +1174,19 @@ public class XMLConfigHandler implements IConfigHandler
 		String sMethod = "serializeTo()";
 
 		try {
-			//create output format which uses new lines and tabs
+			// create output format which uses new lines and tabs
 			OutputFormat oFormat = new OutputFormat(_oDomDocument);
 			oFormat.setIndenting(true);
 			oFormat.setLineWidth(80);
 
-			//Create serializer
+			// Create serializer
 			XMLSerializer oSerializer = new XMLSerializer(osOutput, oFormat);
 			oSerializer.setNamespaces(true);
 
-			//serialize outputmessage to the writer object
+			// serialize outputmessage to the writer object
 			oSerializer.serialize(_oDomDocument.getDocumentElement());
 		}
-		catch (IOException eIO) //I/O error while serializing, should not occur
+		catch (IOException eIO) // I/O error while serializing, should not occur
 		{
 			_oSystemLogger.log(Level.WARNING, MODULE, sMethod, "Error serializing XML data.", eIO);
 			throw new ASelectConfigException(Errors.ERROR_ASELECT_IO, eIO);
@@ -1120,24 +1194,23 @@ public class XMLConfigHandler implements IConfigHandler
 	}
 
 	/**
-	 * Parses the given <code>File</code> to an XML DOM Object. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Parses the given <code>File</code> to an XML DOM Object. <br>
 	 * <br>
-	 * Will parse the XML configuration to an XML DOM Object and checks if the
-	 * file is correct XML. <br>
+	 * <b>Description: </b> <br>
+	 * Will parse the XML configuration to an XML DOM Object and checks if the file is correct XML. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>- <i>fConfig </i> may not be
-	 * <code>null</code><br>
+	 * <b>Preconditions: </b> <br>
+	 * - <i>fConfig </i> may not be <code>null</code><br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param fConfig
 	 *            <code>File</code> object containing XML information.
-	 * @return The XML DOM Object containing the XML information from the given
-	 *         <code>File</code>.
+	 * @return The XML DOM Object containing the XML information from the given <code>File</code>.
 	 * @throws ParserConfigurationException
 	 *             If parsing configuration is invalid.
 	 * @throws SAXException
@@ -1148,35 +1221,34 @@ public class XMLConfigHandler implements IConfigHandler
 	private Document parseXML(File fConfig)
 		throws ParserConfigurationException, SAXException, IOException
 	{
-		//create DocumentBuilderFactory to parse config file.
+		// create DocumentBuilderFactory to parse config file.
 		DocumentBuilderFactory oDocumentBuilderFactory = DocumentBuilderFactory.newInstance();
 
-		//Create parser
+		// Create parser
 		DocumentBuilder oDocumentBuilder = oDocumentBuilderFactory.newDocumentBuilder();
 
-		//parse
+		// parse
 		return oDocumentBuilder.parse(fConfig);
 	}
 
 	/**
-	 * Parses the given <code>byte[]</code> to an XML DOM Object. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Parses the given <code>byte[]</code> to an XML DOM Object. <br>
 	 * <br>
-	 * Will parse the XML information to an XML DOM Object and checks if the
-	 * given byte array is correct XML. <br>
+	 * <b>Description: </b> <br>
+	 * Will parse the XML information to an XML DOM Object and checks if the given byte array is correct XML. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
 	 * <b>Preconditions: </b> <br>
 	 * baData may not be <code>null</code><br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param baData
 	 *            byte array containing XML data
-	 * @return An XML DOM document containing the parsed data from the given
-	 *         byte array
+	 * @return An XML DOM document containing the parsed data from the given byte array
 	 * @throws ParserConfigurationException
 	 *             If parsing configuration is invalid.
 	 * @throws SAXException
@@ -1187,46 +1259,45 @@ public class XMLConfigHandler implements IConfigHandler
 	private Document parseXML(byte[] baData)
 		throws ParserConfigurationException, SAXException, IOException
 	{
-		//create DocumentBuilderFactory to parse config file.
+		// create DocumentBuilderFactory to parse config file.
 		DocumentBuilderFactory oDocumentBuilderFactory = DocumentBuilderFactory.newInstance();
 
-		//Create parser
+		// Create parser
 		DocumentBuilder oDocumentBuilder = oDocumentBuilderFactory.newDocumentBuilder();
 
 		ByteArrayInputStream oByteArrayInputStream = new ByteArrayInputStream(baData);
 
 		InputSource oInputSource = new InputSource(oByteArrayInputStream);
 
-		//parse
+		// parse
 		return oDocumentBuilder.parse(oInputSource);
 	}
 
 	/**
-	 * Retrieve an XML tag with given <code>sSectionID</code> as an attribute.
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Retrieve an XML tag with given <code>sSectionID</code> as an attribute. <br>
 	 * <br>
-	 * The <i>nRootSection </i> will be searched for an XML tag with the given
-	 * type and id. The found XML tag will be returned. For example: <br>
+	 * <b>Description: </b> <br>
+	 * The <i>nRootSection </i> will be searched for an XML tag with the given type and id. The found XML tag will be
+	 * returned. For example: <br>
 	 * &lt;type id_key="id_value"&gt; <br>
 	 * &lt;/type&gt; <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param nRootSection
-	 *            The XML tag that is searched for the XML sub tag specified by
-	 *            the given ID.
+	 *            The XML tag that is searched for the XML sub tag specified by the given ID.
 	 * @param sSectionType
 	 *            The name of the XML tag that is searched for.
 	 * @param sSectionID
-	 *            The XML attribute name and value as [name]=[value] without
-	 *            surrounding quotes.
-	 * @return A sub section (<code>Node</code>) from the config file with a
-	 *         specific attribute
+	 *            The XML attribute name and value as [name]=[value] without surrounding quotes.
+	 * @return A sub section (<code>Node</code>) from the config file with a specific attribute
 	 * @throws ASelectConfigException
 	 *             If retrieving fails
 	 */
@@ -1236,7 +1307,7 @@ public class XMLConfigHandler implements IConfigHandler
 		StringBuffer sbError = new StringBuffer();
 		String sMethod = "getSubSectionByID()";
 
-		//split sectionID (id=ticket) to key/value pair
+		// split sectionID (id=ticket) to key/value pair
 		Element elReturn = null;
 		Element elCurrent = null;
 		Node nCurrent = null;
@@ -1265,14 +1336,14 @@ public class XMLConfigHandler implements IConfigHandler
 		String sKey = sID[0];
 		String sValue = sID[1];
 
-		//get all childnodes
+		// get all childnodes
 		NodeList nlChilds = nRootSection.getChildNodes();
 		for (int i = 0; i < nlChilds.getLength(); i++) {
 			nCurrent = nlChilds.item(i);
 			if (nCurrent.getNodeType() == Node.ELEMENT_NODE) {
 				elCurrent = (Element) nCurrent;
 				if (elCurrent.getNodeName().equalsIgnoreCase(sSectionType) && elCurrent.hasAttributes()) {
-					//check if node has the strKey attribute and check if
+					// check if node has the strKey attribute and check if
 					// its value = strvalue
 					if (elCurrent.getAttribute(sKey).equalsIgnoreCase(sValue)) {
 						elReturn = elCurrent;
@@ -1281,8 +1352,8 @@ public class XMLConfigHandler implements IConfigHandler
 				}
 			}
 			else {
-				//nothing to do, because it are
-				//only Text Nodes (white spaces or unsupported text between
+				// nothing to do, because it are
+				// only Text Nodes (white spaces or unsupported text between
 				// tags)
 			}
 		}
@@ -1291,22 +1362,23 @@ public class XMLConfigHandler implements IConfigHandler
 	}
 
 	/**
-	 * Retrieve an XML tag of the given type. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Retrieve an XML tag of the given type. <br>
 	 * <br>
-	 * The <i>nRootSection </i> will be searched for an XML tag of the given
-	 * type (tag name is type name). The found XML tag will be returned. <br>
+	 * <b>Description: </b> <br>
+	 * The <i>nRootSection </i> will be searched for an XML tag of the given type (tag name is type name). The found XML
+	 * tag will be returned. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param nRootSection
-	 *            The XML tag that is searched for the XML sub tag specified by
-	 *            the given type (tag name).
+	 *            The XML tag that is searched for the XML sub tag specified by the given type (tag name).
 	 * @param sSectionType
 	 *            The name of the XML tag that is searched for.
 	 * @return A sub section from the given root section (XML Element)
@@ -1355,24 +1427,23 @@ public class XMLConfigHandler implements IConfigHandler
 	}
 
 	/**
-	 * Adds the given XML document to the existing XML document. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Adds the given XML document to the existing XML document. <br>
 	 * <br>
-	 * Adds the given XML document to the XML document known within this
-	 * <code>XMLConfigHandler</code> Object. <br>
+	 * <b>Description: </b> <br>
+	 * Adds the given XML document to the XML document known within this <code>XMLConfigHandler</code> Object. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>- The <code>XMLConfigHandler.init()</code>
-	 * must be succesfully called before using this method. The class variable
-	 * <i>_oDomDocument </i> may not be <code>null</code>.<br>- The given
-	 * XML document must contain a root tagname that is unique within the XML
-	 * DOM document in <i>oDomDocument </i>. <br>
+	 * <b>Preconditions: </b> <br>
+	 * - The <code>XMLConfigHandler.init()</code> must be succesfully called before using this method. The class
+	 * variable <i>_oDomDocument </i> may not be <code>null</code>.<br>
+	 * - The given XML document must contain a root tagname that is unique within the XML DOM document in
+	 * <i>oDomDocument </i>. <br>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
-	 * The <i>_oDomDocument </i> class variable contains the given XML document
-	 * at the end of the already present document. <br>
+	 * The <i>_oDomDocument </i> class variable contains the given XML document at the end of the already present
+	 * document. <br>
 	 * 
 	 * @param docNew
 	 *            The new XML document that must be added to the existing
@@ -1383,8 +1454,8 @@ public class XMLConfigHandler implements IConfigHandler
 		for (int i = 0; i < nlChilds.getLength(); i++) {
 			Node nTemp = nlChilds.item(i);
 			if (nTemp.getNodeType() == Node.ELEMENT_NODE) {
-				//appends every sub element of the document root element of
-				//the new config file to the <xml> tag of the initialized
+				// appends every sub element of the document root element of
+				// the new config file to the <xml> tag of the initialized
 				// config file
 				_oDomDocument.getDocumentElement().appendChild(_oDomDocument.importNode(nTemp, true));
 			}

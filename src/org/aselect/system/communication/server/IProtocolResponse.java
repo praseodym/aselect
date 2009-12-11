@@ -31,73 +31,67 @@ package org.aselect.system.communication.server;
 import java.io.IOException;
 import java.io.OutputStream;
 
+// TODO: Auto-generated Javadoc
 /**
- * Defines an interface to the response part of a protocol.
- * <br><br>
+ * Defines an interface to the response part of a protocol. <br>
+ * <br>
  * <b>Description:</b><br>
- * This interface contains methods to modify and add data and 
- * control information to the response. 
- * <br><br>
- * <b>Concurrency issues:</b>
+ * This interface contains methods to modify and add data and control information to the response. <br>
  * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public interface IProtocolResponse
 {
-    /**
-     * Set a property of the response protocol.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Sets a property in the response. 
-     * For e.g. HTTP these properties are headers like 
-     * "Content-type" or the status code.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <ul>
-     * 	<li><code>sName</code> must contain a valid property name.</li>
-     * 	<li><code>sValue</code> must contain a valid property value.</li>
-     * </ul>
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * The response contains the new property.
-     * <br>
-     * @param sName the name of the property that has to be set.
-     * @param sValue the value that has to be set.
-     */
-    public void setProperty(String sName, String sValue);
+	
+	/**
+	 * Set a property of the response protocol. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Sets a property in the response. For e.g. HTTP these properties are headers like "Content-type" or the status
+	 * code. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b>
+	 * <ul>
+	 * <li><code>sName</code> must contain a valid property name.</li>
+	 * <li><code>sValue</code> must contain a valid property value.</li>
+	 * </ul>
+	 * <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * The response contains the new property. <br>
+	 * 
+	 * @param sName
+	 *            the name of the property that has to be set.
+	 * @param sValue
+	 *            the value that has to be set.
+	 */
+	public void setProperty(String sName, String sValue);
 
-    /**
-     * Return an output stream.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Returns an output stream, which can be used to write the data to.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * The returned <code>OutputStream</code> should be used once.
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @return <code>OutputStream</code> to which the response 
-     * message can be send.
-     * @throws IOException if <CODE>OutputStream</CODE> can't be 
-     * retrieved from the protocol
-     */
-    public OutputStream getOutputStream() throws IOException;
+	/**
+	 * Return an output stream. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Returns an output stream, which can be used to write the data to. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * The returned <code>OutputStream</code> should be used once. <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @return <code>OutputStream</code> to which the response message can be send.
+	 * @throws IOException
+	 *             if <CODE>OutputStream</CODE> can't be retrieved from the protocol
+	 */
+	public OutputStream getOutputStream()
+		throws IOException;
 }

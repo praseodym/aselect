@@ -105,15 +105,16 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
- * This class handles the remote A-Select Server selection by checking the user id against configured regular expressions.
- * <br><br>
- * <b>Description:</b>
+ * This class handles the remote A-Select Server selection by checking the user id against configured regular
+ * expressions. <br>
  * <br>
- * The submitted user_id will be checked against the configured regular expressions, on a match the user will be send to the 
- * corresponding remote A-Select server. 
- * @author Alfa & Ariss
+ * <b>Description:</b> <br>
+ * The submitted user_id will be checked against the configured regular expressions, on a match the user will be send to
+ * the corresponding remote A-Select server.
  * 
+ * @author Alfa & Ariss
  */
 
 public class SFSSelectorHandler implements ISelectorHandler
@@ -130,14 +131,19 @@ public class SFSSelectorHandler implements ISelectorHandler
 	private String _sMyOrgId;
 	private static final String _sHtmlTemplateName = "sfscrossselect.html";
 	private CrossASelectManager _crossAselectManager;
-	private static final int COOKIE_AGE = 3153600; //TODO: Cookie is set to be about a years time(not counting leap years), should be configurable?(seconds, not leap years)
+	private static final int COOKIE_AGE = 3153600; // TODO: Cookie is set to be about a years time(not counting leap
+
+	// years), should be configurable?(seconds, not leap years)
 
 	/**
-	 * Initialization of this Handler.
-	 * Initializes global class-variables that are needed within the whole handler instance.<br>
-	 * 
+	 * Initialization of this Handler. Initializes global class-variables that are needed within the whole handler
+	 * instance.<br>
 	 * <br>
 	 * 
+	 * @param oHandlerConfig
+	 *            the o handler config
+	 * @throws ASelectException
+	 *             the a select exception
 	 * @see org.aselect.server.cross.ISelectorHandler#init(java.lang.Object)
 	 */
 	public void init(Object oHandlerConfig)
@@ -274,6 +280,13 @@ public class SFSSelectorHandler implements ISelectorHandler
 		}
 	}
 
+	/**
+	 * Gets the home organization.
+	 * 
+	 * @param sHomeOrganization
+	 *            the s home organization
+	 * @return the home organization
+	 */
 	private HashMap getHomeOrganization(String sHomeOrganization)
 	{
 		HashMap htResult = null;
@@ -281,9 +294,9 @@ public class SFSSelectorHandler implements ISelectorHandler
 		Set keys = _htSFSOrganizations.keySet();
 		for (Object s : keys) {
 			String sFriendlyName = (String) s;
-			//Enumeration enumSfsServers = _htSFSOrganizations.keys();
-			//while (enumSfsServers.hasMoreElements()) {
-			//	String sFriendlyName = (String) enumSfsServers.nextElement();
+			// Enumeration enumSfsServers = _htSFSOrganizations.keys();
+			// while (enumSfsServers.hasMoreElements()) {
+			// String sFriendlyName = (String) enumSfsServers.nextElement();
 			HashMap ht = (HashMap) _htSFSOrganizations.get(sFriendlyName);
 			String sOrganization = (String) ht.get("organization");
 			if (sOrganization.equals(sHomeOrganization)) {
@@ -304,14 +317,20 @@ public class SFSSelectorHandler implements ISelectorHandler
 	}
 
 	/**
-	 * Returns the remote A-Select Server and optionally a user id. 
-	 * This handler will return <b>NULL</b> if no remote server is
-	 * known yet (first time). Id no user_id is provided the user is presented a login form where
-	 * he/she can submit his/her username, this will be matched against the configured regular expressions
-	 * and on the first match the corresponding remote organization id will be put in a hashtable and returned to 
-	 * the A-Select subsystem.
-	 * <br>
+	 * Returns the remote A-Select Server and optionally a user id. This handler will return <b>NULL</b> if no remote
+	 * server is known yet (first time). Id no user_id is provided the user is presented a login form where he/she can
+	 * submit his/her username, this will be matched against the configured regular expressions and on the first match
+	 * the corresponding remote organization id will be put in a hashtable and returned to the A-Select subsystem. <br>
 	 * 
+	 * @param htServiceRequest
+	 *            the ht service request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @param pwOut
+	 *            the pw out
+	 * @return the remote server id
+	 * @throws ASelectException
+	 *             the a select exception
 	 * @see org.aselect.server.cross.ISelectorHandler#getRemoteServerId(java.util.HashMap,
 	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
 	 */
@@ -394,7 +413,13 @@ public class SFSSelectorHandler implements ISelectorHandler
 		return htResult;
 	}
 
-	//  Private function which loads the HTML Templates
+	// Private function which loads the HTML Templates
+	/**
+	 * Load html templates.
+	 * 
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private void loadHTMLTemplates()
 		throws ASelectException
 	{
@@ -409,6 +434,15 @@ public class SFSSelectorHandler implements ISelectorHandler
 	}
 
 	// Private funtion which load the HTML template on location sLocation.
+	/**
+	 * Load html template.
+	 * 
+	 * @param sLocation
+	 *            the s location
+	 * @return the string
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private String loadHTMLTemplate(String sLocation)
 		throws ASelectException
 	{
@@ -441,7 +475,21 @@ public class SFSSelectorHandler implements ISelectorHandler
 		return sTemplate;
 	}
 
-	//private function which shows the authentication form if no user_id was provided
+	// private function which shows the authentication form if no user_id was provided
+	/**
+	 * Show authentication form.
+	 * 
+	 * @param htServiceRequest
+	 *            the ht service request
+	 * @param pwOut
+	 *            the pw out
+	 * @param sErrorCode
+	 *            the s error code
+	 * @param sDefaultHomeIdp
+	 *            the s default home idp
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private void showAuthenticationForm(HashMap htServiceRequest, PrintWriter pwOut, String sErrorCode,
 			String sDefaultHomeIdp)
 		throws ASelectException
@@ -502,6 +550,15 @@ public class SFSSelectorHandler implements ISelectorHandler
 		}
 	}
 
+	/**
+	 * Gets the remote server html.
+	 * 
+	 * @param htServers
+	 *            the ht servers
+	 * @param sDefaultRemoteOrg
+	 *            the s default remote org
+	 * @return the remote server html
+	 */
 	private String getRemoteServerHTML(HashMap htServers, String sDefaultRemoteOrg)
 	{
 		String sMethod = "getRemoteServerHTML";
@@ -514,9 +571,9 @@ public class SFSSelectorHandler implements ISelectorHandler
 		for (Object s : keys) {
 			sFriendlyName = (String) s;
 
-			//Enumeration enumSfsServers = _htSFSOrganizations.keys();
-			//while (enumSfsServers.hasMoreElements()) {
-			//	sFriendlyName = (String) enumSfsServers.nextElement();
+			// Enumeration enumSfsServers = _htSFSOrganizations.keys();
+			// while (enumSfsServers.hasMoreElements()) {
+			// sFriendlyName = (String) enumSfsServers.nextElement();
 			HashMap ht = (HashMap) _htSFSOrganizations.get(sFriendlyName);
 			sOrganization = (String) ht.get("organization");
 			htAllServers.put(sFriendlyName, sOrganization);
@@ -525,10 +582,10 @@ public class SFSSelectorHandler implements ISelectorHandler
 		keys = htServers.keySet();
 		for (Object s : keys) {
 			sOrganization = (String) s;
-			//Enumeration enumRemoteServers = htServers.keys();
-			//while (enumRemoteServers.hasMoreElements())
-			//{
-			//    sOrganization = (String)enumRemoteServers.nextElement();
+			// Enumeration enumRemoteServers = htServers.keys();
+			// while (enumRemoteServers.hasMoreElements())
+			// {
+			// sOrganization = (String)enumRemoteServers.nextElement();
 			sFriendlyName = (String) htServers.get(sOrganization);
 
 			try { // Already exsists, what to do?
@@ -552,9 +609,9 @@ public class SFSSelectorHandler implements ISelectorHandler
 		keys = htAllServers.keySet();
 		for (Object s : keys) {
 			sFriendlyName = (String) s;
-		//Enumeration enumAllServers = htAllServers.keys();
-		//while (enumAllServers.hasMoreElements()) {
-			//sFriendlyName = (String) enumAllServers.nextElement();
+			// Enumeration enumAllServers = htAllServers.keys();
+			// while (enumAllServers.hasMoreElements()) {
+			// sFriendlyName = (String) enumAllServers.nextElement();
 			sOrganization = (String) htAllServers.get(sFriendlyName);
 
 			if (sDefaultRemoteOrg != null && sDefaultRemoteOrg.equals(sOrganization)) {

@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.xsaml20.sp;
 
 import java.io.StringReader;
@@ -44,6 +55,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
+// TODO: Auto-generated Javadoc
 // Can only be used by an SP
 public class SessionSyncRequestSender
 {
@@ -60,32 +72,81 @@ public class SessionSyncRequestSender
 	private ASelectSystemLogger _oSystemLogger;
 	private final String MODULE = "SessionSyncRequestSender";
 	private PublicKey _pkey = null;
-	private Long _maxNotBefore = null; 	// TODO, this should be handled (passed) more elegantly, for now we just pass the values
-	private Long _maxNotOnOrAfter = null; 	// TODO, this should be handled (passed) more elegantly, for now we just pass the values
+	private Long _maxNotBefore = null; // TODO, this should be handled (passed) more elegantly, for now we just pass the
+	// values
+	private Long _maxNotOnOrAfter = null; // TODO, this should be handled (passed) more elegantly, for now we just pass
+	// the values
 	private boolean _checkValidityInterval = false;
 
-	private static HashMap<String,Object> htSessionSyncParameters = null;
-	
+	private static HashMap<String, Object> htSessionSyncParameters = null;
+
 	// For backward compatibility
-	public SessionSyncRequestSender(ASelectSystemLogger systemLogger, String redirectUrl,
-			long updateInterval, String samlMessageType, String federationUrl)
-	{
-		this(systemLogger, redirectUrl,
-				updateInterval, samlMessageType, federationUrl, null);
+	/**
+	 * Instantiates a new session sync request sender.
+	 * 
+	 * @param systemLogger
+	 *            the system logger
+	 * @param redirectUrl
+	 *            the redirect url
+	 * @param updateInterval
+	 *            the update interval
+	 * @param samlMessageType
+	 *            the saml message type
+	 * @param federationUrl
+	 *            the federation url
+	 */
+	public SessionSyncRequestSender(ASelectSystemLogger systemLogger, String redirectUrl, long updateInterval,
+			String samlMessageType, String federationUrl) {
+		this(systemLogger, redirectUrl, updateInterval, samlMessageType, federationUrl, null);
 	}
 
 	// For backward compatibility
-	public SessionSyncRequestSender(ASelectSystemLogger systemLogger, String redirectUrl,
-			long updateInterval, String samlMessageType, String federationUrl, PublicKey pkey)
-	{
-		this(systemLogger, redirectUrl,
-				updateInterval, samlMessageType, federationUrl, pkey, null, null, false);
+	/**
+	 * Instantiates a new session sync request sender.
+	 * 
+	 * @param systemLogger
+	 *            the system logger
+	 * @param redirectUrl
+	 *            the redirect url
+	 * @param updateInterval
+	 *            the update interval
+	 * @param samlMessageType
+	 *            the saml message type
+	 * @param federationUrl
+	 *            the federation url
+	 * @param pkey
+	 *            the pkey
+	 */
+	public SessionSyncRequestSender(ASelectSystemLogger systemLogger, String redirectUrl, long updateInterval,
+			String samlMessageType, String federationUrl, PublicKey pkey) {
+		this(systemLogger, redirectUrl, updateInterval, samlMessageType, federationUrl, pkey, null, null, false);
 	}
-	
-	public SessionSyncRequestSender(ASelectSystemLogger systemLogger, String redirectUrl,
-			long updateInterval, String samlMessageType, String federationUrl, PublicKey pkey,
-			Long maxNotBefore, Long maxNotOnOrAfter, boolean checkValidityInterval)
-	{
+
+	/**
+	 * Instantiates a new session sync request sender.
+	 * 
+	 * @param systemLogger
+	 *            the system logger
+	 * @param redirectUrl
+	 *            the redirect url
+	 * @param updateInterval
+	 *            the update interval
+	 * @param samlMessageType
+	 *            the saml message type
+	 * @param federationUrl
+	 *            the federation url
+	 * @param pkey
+	 *            the pkey
+	 * @param maxNotBefore
+	 *            the max not before
+	 * @param maxNotOnOrAfter
+	 *            the max not on or after
+	 * @param checkValidityInterval
+	 *            the check validity interval
+	 */
+	public SessionSyncRequestSender(ASelectSystemLogger systemLogger, String redirectUrl, long updateInterval,
+			String samlMessageType, String federationUrl, PublicKey pkey, Long maxNotBefore, Long maxNotOnOrAfter,
+			boolean checkValidityInterval) {
 		String sMethod = "SessionSyncRequestSender";
 
 		_oSystemLogger = systemLogger;
@@ -98,15 +159,25 @@ public class SessionSyncRequestSender
 		_maxNotBefore = maxNotBefore;
 		_maxNotOnOrAfter = maxNotOnOrAfter;
 		_checkValidityInterval = checkValidityInterval;
-		_oSystemLogger.log(Level.INFO, MODULE, sMethod, "Url="+_sFederationUrl+" _pkey:" + getPkey()+" _maxNotBefore:" + get_maxNotBefore()+
-				"_maxNotOnOrAfter:" + get_maxNotOnOrAfter()+"_checkValidityInterval:" + is_checkValidityInterval());
+		_oSystemLogger.log(Level.INFO, MODULE, sMethod, "Url=" + _sFederationUrl + " _pkey:" + getPkey()
+				+ " _maxNotBefore:" + get_maxNotBefore() + "_maxNotOnOrAfter:" + get_maxNotOnOrAfter()
+				+ "_checkValidityInterval:" + is_checkValidityInterval());
 	}
 
 	//
 	// Retrieve the Session Sync parameters from the "saml20_sp_session_sync" section
 	//
+	/**
+	 * Gets the session sync parameters.
+	 * 
+	 * @param mySystemLogger
+	 *            the my system logger
+	 * @return the session sync parameters
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	static public HashMap getSessionSyncParameters(ASelectSystemLogger mySystemLogger)
-	throws ASelectException
+		throws ASelectException
 	{
 		String MODULE = "SessionSyncRequestSender";
 		String sMethod = "getSessionSyncParameters";
@@ -118,20 +189,22 @@ public class SessionSyncRequestSender
 			Object oRequestsSection = myConfigManager.getSection(null, "requests");
 			Object oHandlersSection = myConfigManager.getSection(oRequestsSection, "handlers");
 			Object oHandler = myConfigManager.getSection(oHandlersSection, "handler");
-			
+
 			// 20090304, Bauke: cache the results in htSessionSyncParameters
 			// Not present yet, so get the parameters
-			htSessionSyncParameters = new HashMap<String,Object>();
+			htSessionSyncParameters = new HashMap<String, Object>();
 			mySystemLogger.log(Level.INFO, MODULE, sMethod, "Scan handlers");
-			for ( ; oHandler != null; ) {
+			for (; oHandler != null;) {
 				try {
 					String sId = myConfigManager.getParam(oHandler, "id");
-					mySystemLogger.log(Level.INFO, MODULE, sMethod, "Scan handler "+sId);
+					mySystemLogger.log(Level.INFO, MODULE, sMethod, "Scan handler " + sId);
 					if (sId.equals("saml20_sp_session_sync")) {
-						//String sFederationUrl = ASelectConfigManager.getSimpleParam(oHandler, "federation_url", true);
-						//htSessionSyncParameters.put("federation_url", sFederationUrl);  // 20091030: backward compat
+						// String sFederationUrl = ASelectConfigManager.getSimpleParam(oHandler, "federation_url",
+						// true);
+						// htSessionSyncParameters.put("federation_url", sFederationUrl); // 20091030: backward compat
 
-						String _sUpdateInterval = ASelectConfigManager.getSimpleParam(oHandler, "update_interval", true);
+						String _sUpdateInterval = ASelectConfigManager
+								.getSimpleParam(oHandler, "update_interval", true);
 						Long updateInterval = Long.parseLong(_sUpdateInterval);
 						updateInterval = updateInterval * 1000;
 						mySystemLogger.log(Level.INFO, MODULE, sMethod, "Update interval on SP = " + updateInterval);
@@ -140,21 +213,26 @@ public class SessionSyncRequestSender
 						String samlMessageType = ASelectConfigManager.getSimpleParam(oHandler, "message_type", true);
 						htSessionSyncParameters.put("message_type", samlMessageType);
 
-						String verify_signature = ASelectConfigManager.getSimpleParam(oHandler, "verify_signature", false);
-						htSessionSyncParameters.put("verify_signature", (verify_signature==null)? "false": verify_signature);
-						
-						String verify_interval = ASelectConfigManager.getSimpleParam(oHandler, "verify_interval", false);
-						htSessionSyncParameters.put("verify_interval", (verify_interval==null)? "false": verify_interval);
+						String verify_signature = ASelectConfigManager.getSimpleParam(oHandler, "verify_signature",
+								false);
+						htSessionSyncParameters.put("verify_signature", (verify_signature == null) ? "false"
+								: verify_signature);
+
+						String verify_interval = ASelectConfigManager
+								.getSimpleParam(oHandler, "verify_interval", false);
+						htSessionSyncParameters.put("verify_interval", (verify_interval == null) ? "false"
+								: verify_interval);
 
 						String max_notbefore = ASelectConfigManager.getSimpleParam(oHandler, "max_notbefore", false);
 						if (max_notbefore != null) {
-							max_notbefore = (new Long( Long.parseLong(max_notbefore) * 1000)).toString();
+							max_notbefore = (new Long(Long.parseLong(max_notbefore) * 1000)).toString();
 							htSessionSyncParameters.put("max_notbefore", max_notbefore);
 						}
 
-						String max_notonorafter = ASelectConfigManager.getSimpleParam(oHandler, "max_notonorafter", false);
+						String max_notonorafter = ASelectConfigManager.getSimpleParam(oHandler, "max_notonorafter",
+								false);
 						if (max_notonorafter != null) {
-							max_notonorafter = (new Long( Long.parseLong(max_notonorafter) * 1000)).toString();
+							max_notonorafter = (new Long(Long.parseLong(max_notonorafter) * 1000)).toString();
 							htSessionSyncParameters.put("max_notonorafter", max_notonorafter);
 						}
 					}
@@ -167,8 +245,8 @@ public class SessionSyncRequestSender
 			}
 		}
 		catch (ASelectConfigException e) {
-			mySystemLogger.log(Level.WARNING, MODULE, sMethod,
-					"No config item 'handler' found in 'aselect' section", e);
+			mySystemLogger
+					.log(Level.WARNING, MODULE, sMethod, "No config item 'handler' found in 'aselect' section", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 		return htSessionSyncParameters;
@@ -177,34 +255,49 @@ public class SessionSyncRequestSender
 	// Bauke: rewritten
 	// Returns: ERROR_ASELECT_SUCCESS or error code upon failure
 	//
-	public String synchronizeSession(String sTgT, HashMap<String,Object> htTGTContext, /*boolean credsAreCoded,*/ boolean updateTgt)
-	throws ASelectException
+	/**
+	 * Synchronize session.
+	 * 
+	 * @param sTgT
+	 *            the s tg t
+	 * @param htTGTContext
+	 *            the ht tgt context
+	 * @param updateTgt
+	 *            the update tgt
+	 * @return the string
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	public String synchronizeSession(String sTgT, HashMap<String, Object> htTGTContext, /* boolean credsAreCoded, */
+	boolean updateTgt)
+		throws ASelectException
 	{
 		String _sMethod = "synchronizeSession";
-				
+
 		// 20090811, Bauke: Only saml20 needs this type of session sync
-		String sAuthspType = (String)htTGTContext.get("authsp_type");
-		if (sAuthspType==null || !sAuthspType.equals("saml20"))
+		String sAuthspType = (String) htTGTContext.get("authsp_type");
+		if (sAuthspType == null || !sAuthspType.equals("saml20"))
 			return Errors.ERROR_ASELECT_SUCCESS;
-		
-		if (updateTgt) {  // updates the timestamp
+
+		if (updateTgt) { // updates the timestamp
 			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Update TICKET context=" + htTGTContext);
 			_oTGTManager.updateTGT(sTgT, htTGTContext);
 		}
 
 		Long now = new Date().getTime();
-		String ssTime = (String)htTGTContext.get("sessionsynctime");
-		Long lastSync = (ssTime==null)? -1: Long.parseLong(ssTime);
-		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "update_interval="+_lUpdateInterval+
-				" LastSync="+(lastSync-now)+" Left="+(lastSync+_lUpdateInterval-now));
-		
-		if (ssTime==null) {
+		String ssTime = (String) htTGTContext.get("sessionsynctime");
+		Long lastSync = (ssTime == null) ? -1 : Long.parseLong(ssTime);
+		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "update_interval=" + _lUpdateInterval + " LastSync="
+				+ (lastSync - now) + " Left=" + (lastSync + _lUpdateInterval - now));
+
+		if (ssTime == null) {
 			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SP - Session Sync NOT ACTIVATED (no TimeOut handler?)");
 		}
 		else if (now >= lastSync + _lUpdateInterval) {
 			// Session Sync needed
-			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SP - Session Sync, type="+_sSamlMessageType+" now="+now);
-			String sNameID = (String)htTGTContext.get("name_id");
+			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SP - Session Sync, type=" + _sSamlMessageType + " now="
+					+ now);
+			String sNameID = (String) htTGTContext.get("name_id");
 			if (sNameID != null) {
 				boolean success = false;
 				try {
@@ -213,22 +306,22 @@ public class SessionSyncRequestSender
 					else
 						success = sendSAMLUpdateToFederation(sNameID, sTgT);
 				}
-				catch(ASelectException e) {
+				catch (ASelectException e) {
 					throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 				}
-				
-				if (!success) {  // don't continue
+
+				if (!success) { // don't continue
 					_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "Failed to send update to federation");
 					throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 				}
 			}
 			else {
-				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "No user found with credentials="+sTgT);
+				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "No user found with credentials=" + sTgT);
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
 			}
-			
+
 			// If successful, update the ticket granting ticket (timestamp will be set to "now")
-			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Update TGT timestamp="+now);
+			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Update TGT timestamp=" + now);
 			htTGTContext.put("sessionsynctime", Long.toString(now));
 			// Setting the value below prevents the regular Timestamp update
 			htTGTContext.put("updatetimestamp", "no");
@@ -242,11 +335,21 @@ public class SessionSyncRequestSender
 
 	/*
 	 * Methode bouwt een SAML message. En verstuurt deze naar de federatie.
+	 */
+	/**
+	 * Send saml update to federation.
 	 * 
+	 * @param sNameID
+	 *            the s name id
+	 * @param sTgT
+	 *            the s tg t
+	 * @return true, if successful
+	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	@SuppressWarnings("unchecked")
 	private boolean sendSAMLUpdateToFederation(String sNameID, String sTgT)
-	throws ASelectException
+		throws ASelectException
 	{
 		String _sMethod = "sendSAMLUpdateToFederation";
 
@@ -273,7 +376,7 @@ public class SessionSyncRequestSender
 		SubjectConfirmation sconf = confirmationBuilder.buildObject();
 
 		sconf.setMethod("urn:oasis:names:tc:SAML:2.0:cm:bearer");
-		
+
 		// Build SubjectConfirmationData
 		SAMLObjectBuilder<SubjectConfirmationData> confirmationDataBuilder = (SAMLObjectBuilder<SubjectConfirmationData>) oBuilderFactory
 				.getBuilder(SubjectConfirmationData.DEFAULT_ELEMENT_NAME);
@@ -310,9 +413,9 @@ public class SessionSyncRequestSender
 		authz.setIssuer(issuer);
 
 		// Sign the sessionsync
-		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Sign the sessionSync >======" );
-		authz = (AuthzDecisionQuery)SamlTools.sign(authz);
-		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Signed the sessionSync ======<" );
+		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Sign the sessionSync >======");
+		authz = (AuthzDecisionQuery) SamlTools.sign(authz);
+		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Signed the sessionSync ======<");
 
 		SAMLObject saml = authz;
 		SoapManager soapmanager = new SoapManager();
@@ -327,69 +430,54 @@ public class SessionSyncRequestSender
 			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "MessageEncodingException!", e);
 			e.printStackTrace();
 		}
-		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "FederationUrl="+_sFederationUrl+" SOAP message:"+XMLHelper.nodeToString(envelopeElem));
+		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "FederationUrl=" + _sFederationUrl + " SOAP message:"
+				+ XMLHelper.nodeToString(envelopeElem));
 		return sendMessageToFederation(XMLHelper.nodeToString(envelopeElem), sNameID, sTgT);
 	}
 
 	/*
-	 * Methode haalt de timestamp van de tgt op aan de hand van de meegegeven
-	 * credentials.
+	 * Methode haalt de timestamp van de tgt op aan de hand van de meegegeven credentials.
 	 */
-/*	private long getTimeStamp(String credentials)
-		throws ASelectStorageException
-	{
-		String _sMethod = "getTimeStamp";
-		HashMap htTGT = null;
-		Long setTime = 0L;
-		// get time from tgt manager
-		if (_oTGTManager.containsKey(credentials)) {
-			htTGT = (HashMap) _oTGTManager.get(credentials);
-			setTime = (Long) htTGT.get("lastsync");
-			if (setTime == null) {
-				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "CIO - lastsync was not set!");
-				setTime = _oTGTManager.getTimestamp(credentials);
-			}
-			long expireTime = _oTGTManager.getExpirationTime(credentials);
-			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Timestamp = " + setTime + "("
-					+ this.getReadableDate(setTime) + ")");
-			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Expire Time = " + expireTime + "("
-					+ this.getReadableDate(expireTime) + ")");
-		}
-		else {
-			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "There is no TGT with key " + credentials);
-		}
-		return setTime;
-	}
-*/
+	/*
+	 * private long getTimeStamp(String credentials) throws ASelectStorageException { String _sMethod = "getTimeStamp";
+	 * HashMap htTGT = null; Long setTime = 0L; // get time from tgt manager if (_oTGTManager.containsKey(credentials))
+	 * { htTGT = (HashMap) _oTGTManager.get(credentials); setTime = (Long) htTGT.get("lastsync"); if (setTime == null) {
+	 * _oSystemLogger.log(Level.INFO, MODULE, _sMethod, "CIO - lastsync was not set!"); setTime =
+	 * _oTGTManager.getTimestamp(credentials); } long expireTime = _oTGTManager.getExpirationTime(credentials);
+	 * _oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Timestamp = " + setTime + "(" + this.getReadableDate(setTime) +
+	 * ")"); _oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Expire Time = " + expireTime + "(" +
+	 * this.getReadableDate(expireTime) + ")"); } else { _oSystemLogger.log(Level.INFO, MODULE, _sMethod,
+	 * "There is no TGT with key " + credentials); } return setTime; }
+	 */
 	/*
 	 * Methode haalt aan de hand van de credentials de betreffende uid op.
 	 */
-/*	private String getUser(String credentials)
-	{
-		String _sMethod = "getUser";
-		String user = null;
-		try {
-			// get time from tgt manager
-			String decodedCredentials = decodeCredentials(credentials);
-			if (_oTGTManager.containsKey(decodedCredentials)) {
-				HashMap hash = (HashMap) _oTGTManager.get(decodedCredentials);
-				user = (String) hash.get("uid");
-				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "User = " + user);
-			}
-		}
-		catch (ASelectStorageException asse) {
-			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "fails to get user from TGT manager", asse);
-		}
-		return user;
-	}
-*/
+	/*
+	 * private String getUser(String credentials) { String _sMethod = "getUser"; String user = null; try { // get time
+	 * from tgt manager String decodedCredentials = decodeCredentials(credentials); if
+	 * (_oTGTManager.containsKey(decodedCredentials)) { HashMap hash = (HashMap) _oTGTManager.get(decodedCredentials);
+	 * user = (String) hash.get("uid"); _oSystemLogger.log(Level.INFO, MODULE, _sMethod, "User = " + user); } } catch
+	 * (ASelectStorageException asse) { _oSystemLogger.log(Level.WARNING, MODULE, _sMethod,
+	 * "fails to get user from TGT manager", asse); } return user; }
+	 */
+	/**
+	 * Destroy.
+	 */
 	public void destroy()
 	{
 	}
 
 	/*
-	 * Build a XACML message and send it to the federation.
-	 * NOTE: no signing takes place
+	 * Build a XACML message and send it to the federation. NOTE: no signing takes place
+	 */
+	/**
+	 * Send xacml message to federation.
+	 * 
+	 * @param user
+	 *            the user
+	 * @param sTgT
+	 *            the s tg t
+	 * @return true, if successful
 	 */
 	private boolean sendXACMLMessageToFederation(String user, String sTgT)
 	{
@@ -403,10 +491,7 @@ public class SessionSyncRequestSender
 		String var9 = "http://www.w3.org/2001/XMLSchema#string";
 
 		String xacmlRequest = "<soap:Envelope xmlns:xsi=\" http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\" http://schemas.xmlsoap.org/soap/envelope/\">"
-				+ "<soap:Body>"
-				+ "<Request>"
-				+ "<Subject>"
-				+ "<Attribute AttributeId=\""
+				+ "<soap:Body>" + "<Request>" + "<Subject>" + "<Attribute AttributeId=\""
 				+ var1
 				+ "\""
 				+ " DataType=\""
@@ -440,16 +525,25 @@ public class SessionSyncRequestSender
 				+ action
 				+ "</AttributeValue>"
 				+ "</Attribute>"
-				+ "</Action>"
-				+ "</Request>"
-				+ "</soap:Body>" + "</soap:Envelope>";
-		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Send message: "+xacmlRequest);
+				+ "</Action>" + "</Request>" + "</soap:Body>" + "</soap:Envelope>";
+		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Send message: " + xacmlRequest);
 		return sendMessageToFederation(xacmlRequest, user, sTgT);
 	}
 
 	// Bauke:
 	// Return is true when Message was sent successful
 	//
+	/**
+	 * Send message to federation.
+	 * 
+	 * @param message
+	 *            the message
+	 * @param sNameID
+	 *            the s name id
+	 * @param sTgT
+	 *            the s tg t
+	 * @return true, if successful
+	 */
 	private boolean sendMessageToFederation(String message, String sNameID, String sTgT)
 	{
 		String _sMethod = "sendMessageToFederation";
@@ -458,9 +552,9 @@ public class SessionSyncRequestSender
 		String sResponse = "";
 		boolean tgtKilled = false;
 		boolean saml = false;
-		
+
 		try {
-			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Send message for "+sNameID+" to "+_sFederationUrl);
+			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Send message for " + sNameID + " to " + _sFederationUrl);
 			// Send/Receive the SOAP message
 			sResponse = soapmanager.sendSOAP(message, _sFederationUrl /* set in the creator */);
 			// 20090624: don't: sResponse = URLDecoder.decode(soapmanager.sendSOAP(message, _sFederationUrl), "UTF-8");
@@ -468,11 +562,11 @@ public class SessionSyncRequestSender
 			try {
 				saml = determineMessageType(sResponse);
 			}
-			catch(ASelectException e) {
+			catch (ASelectException e) {
 				// Bad or no response from partner
 				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Kill tgt for " + sNameID);
 				tgtmanager.remove(sTgT);
-				return false;  // Bauke: no need to continue
+				return false; // Bauke: no need to continue
 			}
 			if (saml) {
 				tgtKilled = handleSAMLResponse(sResponse);
@@ -495,7 +589,8 @@ public class SessionSyncRequestSender
 					return true;
 				}
 				else {
-					_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "RESPONSE contains deny (IDP has not processed update correct)");
+					_oSystemLogger.log(Level.INFO, MODULE, _sMethod,
+							"RESPONSE contains deny (IDP has not processed update correct)");
 					_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Kill tgt for " + sNameID);
 					tgtmanager.remove(sTgT);
 					return false;
@@ -509,8 +604,14 @@ public class SessionSyncRequestSender
 	}
 
 	/*
-	 * Deze methode vangt het SAML bericht op van de IDP en haalt de benodigde
-	 * gegevens uit het bericht.
+	 * Deze methode vangt het SAML bericht op van de IDP en haalt de benodigde gegevens uit het bericht.
+	 */
+	/**
+	 * Handle saml response.
+	 * 
+	 * @param sMessage
+	 *            the s message
+	 * @return true, if successful
 	 */
 	private boolean handleSAMLResponse(String sMessage)
 	{
@@ -532,31 +633,35 @@ public class SessionSyncRequestSender
 			Element elementReceivedSoap = docReceivedResponse.getDocumentElement();
 			Node eltArtifactResolve = SamlTools.getNode(elementReceivedSoap, RESPONSE);
 
-			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Unmarshall "+eltArtifactResolve);
+			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Unmarshall " + eltArtifactResolve);
 			// Unmarshall to the SAMLmessage
 			UnmarshallerFactory factory = Configuration.getUnmarshallerFactory();
 			Unmarshaller unmarshaller = factory.getUnmarshaller((Element) eltArtifactResolve);
 			response = (Response) unmarshaller.unmarshall((Element) eltArtifactResolve);
 			if (getPkey() != null) { // If pkey supplied from calling method then check signature
-				if (SamlTools.checkSignature(response, getPkey() )) {
+				if (SamlTools.checkSignature(response, getPkey())) {
 					_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "response was signed OK");
-				} else {
+				}
+				else {
 					_oSystemLogger.log(Level.SEVERE, MODULE, _sMethod, "response was NOT signed OK");
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
-			} else {
+			}
+			else {
 				_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "No signature verification required on response");
 			}
 			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "_checkValidityInterval:" + is_checkValidityInterval());
 
 			if (is_checkValidityInterval()) {
-					if (!SamlTools.checkValidityInterval(response)) {
-						_oSystemLogger.log(Level.SEVERE, MODULE, _sMethod, "response validity interval was NOT valid");
-						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-					}
-			} else { 	// RH, 20080717, sn
-				_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "No validity interval verification required on response");
-			} 			// RH, 20080717, en
+				if (!SamlTools.checkValidityInterval(response)) {
+					_oSystemLogger.log(Level.SEVERE, MODULE, _sMethod, "response validity interval was NOT valid");
+					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+				}
+			}
+			else { // RH, 20080717, sn
+				_oSystemLogger.log(Level.WARNING, MODULE, _sMethod,
+						"No validity interval verification required on response");
+			} // RH, 20080717, en
 		}
 		catch (Exception e) {
 			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "Failed to process SAML message", e);
@@ -566,9 +671,9 @@ public class SessionSyncRequestSender
 		List lijst = response.getAssertions();
 		if (lijst.size() == 1) {
 			Assertion assertion = (Assertion) lijst.get(0);
-			// TODO SamlTools.checkValidityInterval, but we need to now if the calling 
-			//		object wants us to verify (from aselect.xml), this is (for the moment) only known
-			//		by the calling object
+			// TODO SamlTools.checkValidityInterval, but we need to now if the calling
+			// object wants us to verify (from aselect.xml), this is (for the moment) only known
+			// by the calling object
 			List authzLijst = assertion.getAuthzDecisionStatements();
 			if (authzLijst.size() == 1) {
 				AuthzDecisionStatement authz = (AuthzDecisionStatement) authzLijst.get(0);
@@ -583,8 +688,14 @@ public class SessionSyncRequestSender
 	}
 
 	/*
-	 * Deze methode vangt het SAML bericht op van de IDP en haalt de benodigde
-	 * gegevens uit het bericht.
+	 * Deze methode vangt het SAML bericht op van de IDP en haalt de benodigde gegevens uit het bericht.
+	 */
+	/**
+	 * Handle xacml response.
+	 * 
+	 * @param sMessage
+	 *            the s message
+	 * @return true, if successful
 	 */
 	private boolean handleXACMLResponse(String sMessage)
 	{
@@ -616,8 +727,17 @@ public class SessionSyncRequestSender
 		return updateWasSucces;
 	}
 
+	/**
+	 * Determine message type.
+	 * 
+	 * @param request
+	 *            the request
+	 * @return true, if successful
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private boolean determineMessageType(String request)
-	throws ASelectException
+		throws ASelectException
 	{
 		String _sMethod = "determineMessageType";
 		boolean saml = true;
@@ -657,20 +777,22 @@ public class SessionSyncRequestSender
 	/*
 	 * Methode killt de tgt aan de hand van een deny response.
 	 */
-/*	private void killTgt(String uid)
-		throws ASelectStorageException
-	{
-		String _sMethod = "killTgt";
-		TGTManager tgtmanager = TGTManager.getHandle();
-		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Kill tgt for user: " + uid);
-		tgtmanager.remove(UserToTgtMapper.getTgtId(uid));
-		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Does sp contain uid?: "
-				+ tgtmanager.containsKey(UserToTgtMapper.getTgtId(uid)));
-	}*/
+	/*
+	 * private void killTgt(String uid) throws ASelectStorageException { String _sMethod = "killTgt"; TGTManager
+	 * tgtmanager = TGTManager.getHandle(); _oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Kill tgt for user: " +
+	 * uid); tgtmanager.remove(UserToTgtMapper.getTgtId(uid)); _oSystemLogger.log(Level.INFO, MODULE, _sMethod,
+	 * "Does sp contain uid?: " + tgtmanager.containsKey(UserToTgtMapper.getTgtId(uid))); }
+	 */
 
 	/*
-	 * Deze methode vangt het SAML bericht op van de IDP en haalt de benodigde
-	 * gegevens uit het bericht.
+	 * Deze methode vangt het SAML bericht op van de IDP en haalt de benodigde gegevens uit het bericht.
+	 */
+	/**
+	 * Gets the name id from saml response.
+	 * 
+	 * @param sMessage
+	 *            the s message
+	 * @return the name id from saml response
 	 */
 	private String getNameIdFromSAMLResponse(String sMessage)
 	{
@@ -704,9 +826,9 @@ public class SessionSyncRequestSender
 		List lijst = response.getAssertions();
 		if (lijst.size() == 1) {
 			Assertion assertion = (Assertion) lijst.get(0);
-			// TODO SamlTools.checkValidityInterval, but we need to now if the calling 
-			//		object wants us to verify (from aselect.xml), this is (for the moment) only known
-			//		by the calling object
+			// TODO SamlTools.checkValidityInterval, but we need to now if the calling
+			// object wants us to verify (from aselect.xml), this is (for the moment) only known
+			// by the calling object
 
 			Subject subject = assertion.getSubject();
 			NameID nameid = subject.getNameID();
@@ -715,35 +837,87 @@ public class SessionSyncRequestSender
 		return sNameID;
 	}
 
-	public synchronized PublicKey getPkey() {
+	/**
+	 * Gets the pkey.
+	 * 
+	 * @return the pkey
+	 */
+	public synchronized PublicKey getPkey()
+	{
 		return _pkey;
 	}
 
-	public synchronized void setPkey(PublicKey pkey) {
+	/**
+	 * Sets the pkey.
+	 * 
+	 * @param pkey
+	 *            the new pkey
+	 */
+	public synchronized void setPkey(PublicKey pkey)
+	{
 		this._pkey = pkey;
 	}
 
-	public synchronized boolean is_checkValidityInterval() {
+	/**
+	 * Checks if is _check validity interval.
+	 * 
+	 * @return true, if is _check validity interval
+	 */
+	public synchronized boolean is_checkValidityInterval()
+	{
 		return _checkValidityInterval;
 	}
 
-	public synchronized void set_checkValidityInterval(boolean validityInterval) {
+	/**
+	 * Sets the _check validity interval.
+	 * 
+	 * @param validityInterval
+	 *            the new _check validity interval
+	 */
+	public synchronized void set_checkValidityInterval(boolean validityInterval)
+	{
 		_checkValidityInterval = validityInterval;
 	}
 
-	public synchronized Long get_maxNotBefore() {
+	/**
+	 * Gets the _max not before.
+	 * 
+	 * @return the _max not before
+	 */
+	public synchronized Long get_maxNotBefore()
+	{
 		return _maxNotBefore;
 	}
 
-	public synchronized void set_maxNotBefore(Long notBefore) {
+	/**
+	 * Sets the _max not before.
+	 * 
+	 * @param notBefore
+	 *            the new _max not before
+	 */
+	public synchronized void set_maxNotBefore(Long notBefore)
+	{
 		_maxNotBefore = notBefore;
 	}
 
-	public synchronized Long get_maxNotOnOrAfter() {
+	/**
+	 * Gets the _max not on or after.
+	 * 
+	 * @return the _max not on or after
+	 */
+	public synchronized Long get_maxNotOnOrAfter()
+	{
 		return _maxNotOnOrAfter;
 	}
 
-	public synchronized void set_maxNotOnOrAfter(Long notOnOrAfter) {
+	/**
+	 * Sets the _max not on or after.
+	 * 
+	 * @param notOnOrAfter
+	 *            the new _max not on or after
+	 */
+	public synchronized void set_maxNotOnOrAfter(Long notOnOrAfter)
+	{
 		_maxNotOnOrAfter = notOnOrAfter;
 	}
 }

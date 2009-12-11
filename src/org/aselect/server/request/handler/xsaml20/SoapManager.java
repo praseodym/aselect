@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.xsaml20;
 
 import java.io.PrintStream;
@@ -9,13 +20,13 @@ import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.utils.Tools;
-import org.opensaml.Configuration;
 import org.opensaml.common.SAMLObject;
 import org.opensaml.ws.soap.common.SOAPObjectBuilder;
 import org.opensaml.ws.soap.soap11.Body;
 import org.opensaml.ws.soap.soap11.Envelope;
 import org.opensaml.xml.XMLObjectBuilderFactory;
 
+// TODO: Auto-generated Javadoc
 public class SoapManager
 {
 	private static final String MODULE = "SoapManager";
@@ -36,7 +47,7 @@ public class SoapManager
 		String sMethod = "buildSOAPMessage()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
 
-		XMLObjectBuilderFactory builderFactory = Configuration.getBuilderFactory();
+		XMLObjectBuilderFactory builderFactory = org.opensaml.xml.Configuration.getBuilderFactory();
 
 		SOAPObjectBuilder<Envelope> envBuilder = (SOAPObjectBuilder<Envelope>) builderFactory
 				.getBuilder(Envelope.DEFAULT_ELEMENT_NAME);
@@ -58,13 +69,14 @@ public class SoapManager
 	 *            String with message that needs to be send.
 	 * @param sUrl
 	 *            String with url to send message to.
+	 * @return the string
 	 * @throws MalformedURLException
 	 *             If url is not correct
 	 * @throws ASelectCommunicationException
 	 *             If sending fails.
 	 */
 	public String sendSOAP(String sMessage, String sUrl)
-	throws java.net.MalformedURLException, ASelectCommunicationException
+		throws java.net.MalformedURLException, ASelectCommunicationException
 	{
 		String sMethod = "sendSOAP";
 		StringBuffer sb = new StringBuffer();
@@ -100,19 +112,21 @@ public class SoapManager
 			int iRetCode = connection.getResponseCode();
 			switch (iRetCode) { // switch on HTTP response code
 			case 200: // ok
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Response OK: ContentType: " + connection.getContentType());
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Response OK: ContentType: "
+						+ connection.getContentType());
 				// TODO, we might want to parse the charset from the connection
 				// then we should use stream2string(connection.getInputStream, <charset>);
 				// For now we assume utf-8 (default)
 				sb = new StringBuffer(Tools.stream2string(connection.getInputStream())); // RH, 20080715, n
 				break;
 			case 500: // Internal server error
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No response from target host. Errorcode: "+iRetCode);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No response from target host. Errorcode: "
+						+ iRetCode);
 				break;
 			default: // unknown error
 				StringBuffer sbBuffer = new StringBuffer("Invalid response from target host: \"");
 				sbBuffer.append(connection.getHeaderField(0));
-				sbBuffer.append(" \". Errorcode: "+iRetCode);
+				sbBuffer.append(" \". Errorcode: " + iRetCode);
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
 				break;
 			}

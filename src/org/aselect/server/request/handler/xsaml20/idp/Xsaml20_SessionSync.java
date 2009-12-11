@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.xsaml20.idp;
 
 import java.io.IOException;
@@ -28,7 +39,6 @@ import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.joda.time.DateTime;
-import org.opensaml.Configuration;
 import org.opensaml.common.SAMLObjectBuilder;
 import org.opensaml.common.SAMLVersion;
 import org.opensaml.saml2.core.SubjectConfirmation;
@@ -58,12 +68,14 @@ import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+// TODO: Auto-generated Javadoc
 public class Xsaml20_SessionSync extends Saml20_BaseHandler
 {
 	private TGTManager _oTGTManager = TGTManager.getHandle();
 	private final static String MODULE = "Xsaml20_SessionSync";
 	private static final String AUTHZDECISIONQUERY = "AuthzDecisionQuery";
-	//private static final String CONTENT_TYPE = "text/xml; charset=utf-8";
+
+	// private static final String CONTENT_TYPE = "text/xml; charset=utf-8";
 
 	/**
 	 * Init for Xsaml20_SessionSync. <br>
@@ -75,6 +87,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	 * @throws ASelectException
 	 *             If initialisation fails.
 	 */
+	@Override
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
 		throws ASelectException
 	{
@@ -84,16 +97,18 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 
 	/**
 	 * Process Session Sync Request<br>
+	 * .
 	 * 
 	 * @param request
 	 *            The HttpServletRequest.
 	 * @param response
 	 *            The HttpServletResponse.
+	 * @return the request state
 	 * @throws ASelectException
 	 *             If initialisation fails.
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-	throws ASelectException
+		throws ASelectException
 	{
 		String _sMethod = "process";
 		_systemLogger.log(Level.INFO, MODULE, _sMethod, "-- SS IDP RequestHandler --");
@@ -102,7 +117,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 			String docReceived = readHttpPostData(request);
 			String sNameID = null;
 			String sp = null;
-			//String credentials = null;
+			// String credentials = null;
 
 			boolean samlMessage = determineMessageType(docReceived);
 			if (samlMessage) {
@@ -118,7 +133,8 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 					// Therefore we need a valid Issuer to lookup the entityID in the metadata
 					// We get the metadataURL from aselect.xml so we consider this safe and authentic
 					if (sp == null || "".equals(sp)) {
-						_systemLogger.log(Level.SEVERE, MODULE, _sMethod, "For signature verification the received message must have an Issuer");
+						_systemLogger.log(Level.SEVERE, MODULE, _sMethod,
+								"For signature verification the received message must have an Issuer");
 						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 					}
 					MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
@@ -127,7 +143,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 						_systemLogger.log(Level.SEVERE, MODULE, _sMethod, "No public valid key in metadata");
 						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 					}
-					if (checkSignature(authzDecisionQuery, pkey )) {
+					if (checkSignature(authzDecisionQuery, pkey)) {
 						_systemLogger.log(Level.INFO, MODULE, _sMethod, "Message was signed OK");
 					}
 					else {
@@ -139,10 +155,11 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 				if (is_bVerifyInterval()) {
 					Iterator itr = authzDecisionQuery.getSubject().getSubjectConfirmations().iterator();
 					while (itr.hasNext()) { // SAML2 tells us there is at least one SubjectConfirmation
-											//	we wan't them all to be valid
-						SubjectConfirmation sc = (SubjectConfirmation)itr.next();
-						if ( !SamlTools.checkValidityInterval(sc.getSubjectConfirmationData()) ) {
-							_systemLogger.log(Level.SEVERE, MODULE, _sMethod, "One of the SubjectConfirmationData intervals was NOT valid");
+						// we wan't them all to be valid
+						SubjectConfirmation sc = (SubjectConfirmation) itr.next();
+						if (!SamlTools.checkValidityInterval(sc.getSubjectConfirmationData())) {
+							_systemLogger.log(Level.SEVERE, MODULE, _sMethod,
+									"One of the SubjectConfirmationData intervals was NOT valid");
 							throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 						}
 					}
@@ -156,16 +173,16 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 				_systemLogger.log(Level.INFO, MODULE, _sMethod, "XACML NameID === " + sNameID + " XACML sp ===" + sp);
 			}
 
-			//credentials = sNameID;			
+			// credentials = sNameID;
 			try {
 				if (sNameID != null && sp != null) {
 					// Update update time for sp
 					this.changeUpdateTimeSp(sp, sNameID);
 				}
 				else {
-					_systemLogger.log(Level.INFO, MODULE, _sMethod, "NameID or SP not available, SP=" + sp +
-							" credentials=" + sNameID + ")");
-					throw new ASelectException("Not permitted");  // send refusal (handled by catch clause below)
+					_systemLogger.log(Level.INFO, MODULE, _sMethod, "NameID or SP not available, SP=" + sp
+							+ " credentials=" + sNameID + ")");
+					throw new ASelectException("Not permitted"); // send refusal (handled by catch clause below)
 				}
 				if (samlMessage) {
 					this.sendSAMLResponse(request, response, sNameID, true);
@@ -190,69 +207,65 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	/*
 	 * Methode haalt de credentials van de user op
 	 */
-/*	private String getCredentials(String user)
-	{
-		String credentials = null;
-		SSOSessionManager sso;
-		try {
-			sso = SSOSessionManager.getHandle();
-		}
-		catch (ASelectException e) {
-			return null;
-		}
-		UserSsoSession session = sso.getSsoSession(user);
-		if (session == null)
-			return null;
-		credentials = session.getTgtId();
-		return credentials;
-	}*/
+	/*
+	 * private String getCredentials(String user) { String credentials = null; SSOSessionManager sso; try { sso =
+	 * SSOSessionManager.getHandle(); } catch (ASelectException e) { return null; } UserSsoSession session =
+	 * sso.getSsoSession(user); if (session == null) return null; credentials = session.getTgtId(); return credentials;
+	 * }
+	 */
 
 	/*
 	 * Methode update het session obj van de user
 	 */
-/*	private void updateSSOSession(String user)
-		throws ASelectException
-	{
-		SSOSessionManager sso = SSOSessionManager.getHandle();
-		UserSsoSession session = sso.getSsoSession(user);
-		sso.update(user, session);
-	}*/
+	/*
+	 * private void updateSSOSession(String user) throws ASelectException { SSOSessionManager sso =
+	 * SSOSessionManager.getHandle(); UserSsoSession session = sso.getSsoSession(user); sso.update(user, session); }
+	 */
 
 	/*
 	 * Methode werkt de lokale sessie tijd bij.
 	 */
-/*	private void changeTGTSessionTime(String decodedcredentials)
-		throws ASelectStorageException
-	{
-		HashMap tgtBeforeUpdate = (HashMap) _oTGTManager.get(decodedcredentials);
-		_oTGTManager.update(decodedcredentials, tgtBeforeUpdate);
-	}*/
+	/*
+	 * private void changeTGTSessionTime(String decodedcredentials) throws ASelectStorageException { HashMap
+	 * tgtBeforeUpdate = (HashMap) _oTGTManager.get(decodedcredentials); _oTGTManager.update(decodedcredentials,
+	 * tgtBeforeUpdate); }
+	 */
 
 	/*
 	 * Change the update time of the sp
 	 */
+	/**
+	 * Change update time sp.
+	 * 
+	 * @param serviceProviderUrl
+	 *            the service provider url
+	 * @param tgtId
+	 *            the tgt id
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private void changeUpdateTimeSp(String serviceProviderUrl, String tgtId)
-	throws ASelectException
+		throws ASelectException
 	{
 		String _sMethod = "changeUpdateTimeSp";
 		_systemLogger.log(Level.INFO, MODULE, _sMethod, "TGT=" + tgtId);
 
-        HashMap htTGTContext = _oTGTManager.getTGT(tgtId);
-        if (htTGTContext == null) {
+		HashMap htTGTContext = _oTGTManager.getTGT(tgtId);
+		if (htTGTContext == null) {
 			_systemLogger.log(Level.INFO, MODULE, _sMethod, "TGT not found SP=(" + serviceProviderUrl + ")");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_EXPIRED);
 			// was: return; (Bauke: 20080829)
-        }
-        
-        ServiceProvider spToBeChanged = null;
+		}
+
+		ServiceProvider spToBeChanged = null;
 		long now = new Date().getTime();
-//		SSOSessionManager sso = SSOSessionManager.getHandle();
-		UserSsoSession ssoSession = (UserSsoSession)htTGTContext.get("sso_session");  // sso.getSsoSession(user);
+		// SSOSessionManager sso = SSOSessionManager.getHandle();
+		UserSsoSession ssoSession = (UserSsoSession) htTGTContext.get("sso_session"); // sso.getSsoSession(user);
 		if (ssoSession == null) {
 			_systemLogger.log(Level.WARNING, MODULE, _sMethod, "Missing sso_session data in TGT");
 			return;
 		}
-			
+
 		List<ServiceProvider> spList = ssoSession.getServiceProviders();
 		for (ServiceProvider sp : spList) {
 			_systemLogger.log(Level.INFO, MODULE, _sMethod, "ServiceProvider = " + serviceProviderUrl);
@@ -261,24 +274,25 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 			}
 		}
 		if (spToBeChanged != null) {
-			_systemLogger.log(Level.INFO, MODULE, _sMethod, "Time SP update before = " +
-					spToBeChanged.getLastSessionSync()+"("+getReadableDate(spToBeChanged.getLastSessionSync())+")");
+			_systemLogger.log(Level.INFO, MODULE, _sMethod, "Time SP update before = "
+					+ spToBeChanged.getLastSessionSync() + "(" + getReadableDate(spToBeChanged.getLastSessionSync())
+					+ ")");
 			spToBeChanged.setLastSessionSync(now);
-			//sso.update(user, session);
-			
+			// sso.update(user, session);
+
 			// Replace the ServiceProvider data and update the TGT timestamp in the process
 			ssoSession.removeServiceProvider(spToBeChanged.getServiceProviderUrl());
 			ssoSession.addServiceProvider(spToBeChanged);
 			htTGTContext.put("sso_session", ssoSession);
-			
+
 			// Bauke: Also update the TGT Timestamp
-	        //HashMap htTGTContext = _oTGTManager.getTGT(credentials);
-	        //if (htTGTContext != null)
-	        _oTGTManager.updateTGT(tgtId, htTGTContext);
-			_systemLogger.log(Level.INFO, MODULE, _sMethod, "Time SP update after = " +
-					spToBeChanged.getLastSessionSync() + "("+getReadableDate(spToBeChanged.getLastSessionSync())+")"+
-					" New TGT TimeStamp="+_oTGTManager.getTimestamp(tgtId)+
-					"("+getReadableDate(_oTGTManager.getTimestamp(tgtId))+")");
+			// HashMap htTGTContext = _oTGTManager.getTGT(credentials);
+			// if (htTGTContext != null)
+			_oTGTManager.updateTGT(tgtId, htTGTContext);
+			_systemLogger.log(Level.INFO, MODULE, _sMethod, "Time SP update after = "
+					+ spToBeChanged.getLastSessionSync() + "(" + getReadableDate(spToBeChanged.getLastSessionSync())
+					+ ")" + " New TGT TimeStamp=" + _oTGTManager.getTimestamp(tgtId) + "("
+					+ getReadableDate(_oTGTManager.getTimestamp(tgtId)) + ")");
 		}
 		else {
 			_systemLogger.log(Level.WARNING, MODULE, _sMethod, "SP not found in list SP=(" + serviceProviderUrl + ")");
@@ -286,8 +300,22 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	}
 
 	/*
-	 * Maakt een SAML Response en verstuurt deze naar de SP. boolean geeft aan
-	 * of er permit of deny moet worden gestuurd.
+	 * Maakt een SAML Response en verstuurt deze naar de SP. boolean geeft aan of er permit of deny moet worden
+	 * gestuurd.
+	 */
+	/**
+	 * Send saml response.
+	 * 
+	 * @param request
+	 *            the request
+	 * @param response
+	 *            the response
+	 * @param uid
+	 *            the uid
+	 * @param permit
+	 *            the permit
+	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	@SuppressWarnings("unchecked")
 	private void sendSAMLResponse(HttpServletRequest request, HttpServletResponse response, String uid, boolean permit)
@@ -299,9 +327,9 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 		Response finalResponse = buildSAMLResponse(uid, permit);
 
 		// always sign the Response
-		_systemLogger.log(Level.INFO, MODULE, _sMethod, "Sign the finalResponse >======" );
-		finalResponse = (Response)sign(finalResponse);
-		_systemLogger.log(Level.INFO, MODULE, _sMethod, "Signed the finalResponse ======<" );
+		_systemLogger.log(Level.INFO, MODULE, _sMethod, "Sign the finalResponse >======");
+		finalResponse = (Response) sign(finalResponse);
+		_systemLogger.log(Level.INFO, MODULE, _sMethod, "Signed the finalResponse ======<");
 
 		// Send response using SOAP
 		SoapManager soapManager = new SoapManager();
@@ -309,15 +337,16 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 		Element envelopeElem = null;
 		try {
 			envelopeElem = SamlTools.marshallMessage(envelope);
-			_systemLogger.log(Level.INFO, MODULE, _sMethod, "Send SAML response:\n"+XMLHelper.nodeToString(envelopeElem));
+			_systemLogger.log(Level.INFO, MODULE, _sMethod, "Send SAML response:\n"
+					+ XMLHelper.nodeToString(envelopeElem));
 			// XMLHelper.prettyPrintXML(envelopeElem));
 		}
 		catch (MessageEncodingException e) {
 			_systemLogger.log(Level.WARNING, MODULE, _sMethod, "marshall message failed", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
-		
-		try {  // Bauke 20081112: used same code for all Soap messages
+
+		try { // Bauke 20081112: used same code for all Soap messages
 			// Remy: 20081113: Move this code to HandlerTools for uniformity
 			SamlTools.sendSOAPResponse(response, XMLHelper.nodeToString(envelopeElem));
 		}
@@ -327,8 +356,19 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	}
 
 	/*
-	 * De methode bouwt een response op de SAML AuthzDecisionQuery boolean geeft
-	 * aan of er permit of deny moet worden gestuurd.
+	 * De methode bouwt een response op de SAML AuthzDecisionQuery boolean geeft aan of er permit of deny moet worden
+	 * gestuurd.
+	 */
+	/**
+	 * Builds the saml response.
+	 * 
+	 * @param uid
+	 *            the uid
+	 * @param permit
+	 *            the permit
+	 * @return the response
+	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	@SuppressWarnings("unchecked")
 	private Response buildSAMLResponse(String uid, boolean permit)
@@ -338,7 +378,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Build SAML Response for " + uid);
 
 		// Build SAML Response
-		XMLObjectBuilderFactory oBuilderFactory = Configuration.getBuilderFactory();
+		XMLObjectBuilderFactory oBuilderFactory = org.opensaml.xml.Configuration.getBuilderFactory();
 		SAMLObjectBuilder<Response> responseBuilder = (SAMLObjectBuilder<Response>) oBuilderFactory
 				.getBuilder(Response.DEFAULT_ELEMENT_NAME);
 		Response resp = responseBuilder.buildObject();
@@ -383,12 +423,13 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 		List<AuthzDecisionStatement> authzDecisionStatements = assertion.getAuthzDecisionStatements();
 		authzDecisionStatements.add(statement);
 		assertion.setVersion(SAMLVersion.VERSION_20);
-//		assertion.setIssueInstant(new DateTime()); // RH 20080606, o
+		// assertion.setIssueInstant(new DateTime()); // RH 20080606, o
 		DateTime tStamp = new DateTime();
 		assertion.setIssueInstant(tStamp);
 		// Set interval conditions
-		assertion = (Assertion)SamlTools.setValidityInterval(assertion, tStamp, getMaxNotBefore(), getMaxNotOnOrAfter());
-		
+		assertion = (Assertion) SamlTools.setValidityInterval(assertion, tStamp, getMaxNotBefore(),
+				getMaxNotOnOrAfter());
+
 		try {
 			assertion.setID(SamlTools.generateIdentifier(_systemLogger, MODULE));
 		}
@@ -418,8 +459,17 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	}
 
 	/*
-	 * Deze methode vangt het SAML bericht op van de sp en haalt de benodigde
-	 * gegevens uit het bericht. En geeft de gebruiker terug.
+	 * Deze methode vangt het SAML bericht op van de sp en haalt de benodigde gegevens uit het bericht. En geeft de
+	 * gebruiker terug.
+	 */
+	/**
+	 * Handle saml request.
+	 * 
+	 * @param docReceived
+	 *            the doc received
+	 * @return the authz decision query
+	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private AuthzDecisionQuery handleSAMLRequest(String docReceived)
 		throws ASelectException
@@ -442,7 +492,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 			Node eltAuthzDecision = SamlTools.getNode(elementReceivedSoap, AUTHZDECISIONQUERY);
 
 			// Unmarshall to the SAMLmessage
-			UnmarshallerFactory factory = Configuration.getUnmarshallerFactory();
+			UnmarshallerFactory factory = org.opensaml.xml.Configuration.getUnmarshallerFactory();
 			Unmarshaller unmarshaller = factory.getUnmarshaller((Element) eltAuthzDecision);
 			authzDecisionQuery = (AuthzDecisionQuery) unmarshaller.unmarshall((Element) eltAuthzDecision);
 		}
@@ -456,6 +506,13 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	/*
 	 * Methode haalt de user id uit de SAML AuthzDecisionQuery
 	 */
+	/**
+	 * Gets the name id from saml.
+	 * 
+	 * @param authzDecisionQuery
+	 *            the authz decision query
+	 * @return the name id from saml
+	 */
 	private String getNameIdFromSAML(AuthzDecisionQuery authzDecisionQuery)
 	{
 		Subject subject = authzDecisionQuery.getSubject();
@@ -466,12 +523,28 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	/*
 	 * Methode haalt de SP uit de SAML AuthzDecisionQuery
 	 */
+	/**
+	 * Gets the service provider from saml.
+	 * 
+	 * @param authzDecisionQuery
+	 *            the authz decision query
+	 * @return the service provider from saml
+	 */
 	private String getServiceProviderFromSAML(AuthzDecisionQuery authzDecisionQuery)
 	{
 		Issuer issuer = authzDecisionQuery.getIssuer();
 		return issuer.getValue();
 	}
 
+	/**
+	 * Handle xacml request.
+	 * 
+	 * @param xacmlMessage
+	 *            the xacml message
+	 * @return the document
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private Document handleXACMLRequest(String xacmlMessage)
 		throws ASelectException
 	{
@@ -507,6 +580,13 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	/*
 	 * Methode haalt de user id uit de XACML AuthzDecisionQuery
 	 */
+	/**
+	 * Gets the name id from xaml.
+	 * 
+	 * @param xacmlDocument
+	 *            the xacml document
+	 * @return the name id from xaml
+	 */
 	private String getNameIdFromXAML(Document xacmlDocument)
 	{
 		Node node = xacmlDocument.getFirstChild();
@@ -518,6 +598,13 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	/*
 	 * Methode haalt de SP uit de XACML AuthzDecisionQuery
 	 */
+	/**
+	 * Gets the service provider from xacml.
+	 * 
+	 * @param xacmlDocument
+	 *            the xacml document
+	 * @return the service provider from xacml
+	 */
 	private String getServiceProviderFromXACML(Document xacmlDocument)
 	{
 		Node node = xacmlDocument.getFirstChild();
@@ -526,6 +613,18 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 		return SamlTools.getNode(ResourceNode, "AttributeValue").getTextContent();
 	}
 
+	/**
+	 * Send xacml response.
+	 * 
+	 * @param request
+	 *            the request
+	 * @param response
+	 *            the response
+	 * @param uid
+	 *            the uid
+	 * @param permit
+	 *            the permit
+	 */
 	private void sendXACMLResponse(HttpServletRequest request, HttpServletResponse response, String uid, boolean permit)
 	{
 		String _sMethod = "sendXACMLResponse";
@@ -546,6 +645,15 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 
 	/*
 	 * De methode bouwt een response op de XACML AuthzDecisionQuery
+	 */
+	/**
+	 * Builds the xacml response.
+	 * 
+	 * @param uid
+	 *            the uid
+	 * @param permit
+	 *            the permit
+	 * @return the string
 	 */
 	private String buildXACMLResponse(String uid, boolean permit)
 	{
@@ -581,11 +689,20 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 		return xacmlResponse;
 	}
 
+	/**
+	 * Marshall response.
+	 * 
+	 * @param response
+	 *            the response
+	 * @return the response
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	public Response marshallResponse(Response response)
 		throws ASelectException
 	{
 		String sMethod = "marshallResponse";
-		MarshallerFactory factory = Configuration.getMarshallerFactory();
+		MarshallerFactory factory = org.opensaml.xml.Configuration.getMarshallerFactory();
 		Marshaller marshaller = factory.getMarshaller(response);
 		try {
 			Node node = marshaller.marshall(response);
@@ -599,10 +716,23 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 		return response;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.xsaml20.Saml20_BaseHandler#destroy()
+	 */
+	@Override
 	public void destroy()
 	{
 	}
 
+	/**
+	 * Determine message type.
+	 * 
+	 * @param request
+	 *            the request
+	 * @return true, if successful
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private boolean determineMessageType(String request)
 		throws ASelectException
 	{

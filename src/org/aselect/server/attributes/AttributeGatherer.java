@@ -132,23 +132,22 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
  * Gather and filter user attributes. <br>
  * <br>
  * <b>Description:</b> <br>
- * This class gathers user attributes after succesful authentication using one
- * or more configured AttributeRequestors. It also filters out attributes based
- * on the Attribute Release Policy. <br>
+ * This class gathers user attributes after succesful authentication using one or more configured AttributeRequestors.
+ * It also filters out attributes based on the Attribute Release Policy. <br>
  * <br>
  * <b>Concurrency issues:</b> <br>
  * None <br>
  * 
- * @author Alfa & Ariss 14-11-2007 - Changes: - DigiD Gateway integration, pass
- *         attributes - PKI attributes Subject DN and Issuer DN also split in
- *         smaller pieces - Attribute added specifying which handler performed
+ * @author Alfa & Ariss 14-11-2007 - Changes: - DigiD Gateway integration, pass attributes - PKI attributes Subject DN
+ *         and Issuer DN also split in smaller pieces - Attribute added specifying which handler performed
  *         authentication
- * @author Bauke Hiemstra - www.anoigo.nl Copyright Gemeente Den Haag
- *         (http://www.denhaag.nl) and UMC Nijmegen (http://www.umcn.nl)
+ * @author Bauke Hiemstra - www.anoigo.nl Copyright Gemeente Den Haag (http://www.denhaag.nl) and UMC Nijmegen
+ *         (http://www.umcn.nl)
  */
 public class AttributeGatherer
 {
@@ -160,23 +159,20 @@ public class AttributeGatherer
 	private ASelectSystemLogger _systemLogger;
 
 	/**
-	 * Contains all requestor objects as requestor-id=requestor-hashtable Where
-	 * requestor-hastable consists of "object"=requestor-object,
-	 * "uid-source"=uid source
+	 * Contains all requestor objects as requestor-id=requestor-hashtable Where requestor-hastable consists of
+	 * "object"=requestor-object, "uid-source"=uid source
 	 */
 	private HashMap<String, Object> _htRequestors;
 
 	/**
-	 * Contains the set of release policies: key=policy-ID,
-	 * value=mapping-hashtable. The mapping-hashtable consists of
+	 * Contains the set of release policies: key=policy-ID, value=mapping-hashtable. The mapping-hashtable consists of
 	 * key=requestor-ID, value=vector of attributes.
 	 */
 
 	private HashMap _htReleasePolicies;
 
 	/**
-	 * Contains the set of release policies that merges attributes if they
-	 * already exist
+	 * Contains the set of release policies that merges attributes if they already exist
 	 */
 	private HashMap _htDuplicatePolicies;
 
@@ -195,12 +191,14 @@ public class AttributeGatherer
 	 * Is used to acquire an instance of the AttributeGatherer. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Creates a new static <code>AttributeGatherer</code> instance if it's
-	 * not instantiated yet. The static instance is returned. <br>
+	 * Creates a new static <code>AttributeGatherer</code> instance if it's not instantiated yet. The static instance is
+	 * returned. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Postconditions:</b> <br>
 	 * One <code>AttributeGatherer</code> instance exists. <br>
@@ -218,8 +216,7 @@ public class AttributeGatherer
 	 * Initialize the Attribute Gatherer. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Initializes the attribute gatherer by reading and validating the
-	 * attributes configuration. <br>
+	 * Initializes the attribute gatherer by reading and validating the attributes configuration. <br>
 	 * <br>
 	 * <b>Concurrency issues:</b> <br>
 	 * none <br>
@@ -257,7 +254,8 @@ public class AttributeGatherer
 			if (oAttributeGatheringConfig != null) {
 				// Obtain and verify requestors
 
-				oRequestorsSection = _configManager.getSection(oAttributeGatheringConfig, sConfigItem = "attribute_requestors");
+				oRequestorsSection = _configManager.getSection(oAttributeGatheringConfig,
+						sConfigItem = "attribute_requestors");
 				_htRequestors = new HashMap();
 				Object oRequestorConfig = null;
 				try {
@@ -396,11 +394,14 @@ public class AttributeGatherer
 	 * <li>Merge the returned attributes</li>
 	 * </ul>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * <br>
 	 * 
 	 * @param htTGTContext
@@ -510,8 +511,8 @@ public class AttributeGatherer
 								.append("\"");
 						_systemLogger.log(Level.WARNING, _MODULE, sMethod, sb.toString(), eA);
 					}
-					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER-ed Requestor=" + sRequestorID
-							+ " htAttrs=" + htAttrsFromAR);
+					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER-ed Requestor=" + sRequestorID + " htAttrs="
+							+ htAttrsFromAR);
 
 					// Merge the returned attributes with our set
 					if (htAttrsFromAR != null) {
@@ -593,27 +594,30 @@ public class AttributeGatherer
 		Utils.copyHashmapValue("digid_betrouwbaarheidsniveau", htAttributes, htTGTContext);
 		Utils.copyHashmapValue("sel_uid", htAttributes, htTGTContext);
 
-		String fld = (String) htTGTContext.get("attributes");  // attributes from a remote system
+		String fld = (String) htTGTContext.get("attributes"); // attributes from a remote system
 		if (fld != null) {
-		    Saml11Builder _saml11Builder = new Saml11Builder();
+			Saml11Builder _saml11Builder = new Saml11Builder();
 			HashMap htTgtAttributes = _saml11Builder.deserializeAttributes(fld);
 			_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER \"attributes\"=" + htTgtAttributes);
 			Set keys = htTgtAttributes.keySet();
 			for (Object s : keys) {
-				String sKey = (String)s;
+				String sKey = (String) s;
 				Object oValue = htTgtAttributes.get(sKey);
 				if (!(oValue instanceof String))
 					continue;
-	        	htAttributes.put(sKey, (String)oValue);
+				htAttributes.put(sKey, (String) oValue);
 			}
 		}
 
 		// Bauke: added additional attributes
 		String sAuthsp = (String) htTGTContext.get("authsp");
-		if (sAuthsp != null) htAttributes.put("sel_authsp", sAuthsp);
+		if (sAuthsp != null)
+			htAttributes.put("sel_authsp", sAuthsp);
 		String sAuthspLevel = (String) htTGTContext.get("authsp_level");
-		if (sAuthsp != null) htAttributes.put("authsp_level", sAuthspLevel);
-		if (sAuthsp != null) htAttributes.put("sel_level", sAuthspLevel);
+		if (sAuthsp != null)
+			htAttributes.put("authsp_level", sAuthspLevel);
+		if (sAuthsp != null)
+			htAttributes.put("sel_level", sAuthspLevel);
 
 		Utils.copyHashmapValue("client_ip", htAttributes, htTGTContext);
 		Utils.copyHashmapValue("user_agent", htAttributes, htTGTContext);
@@ -633,7 +637,8 @@ public class AttributeGatherer
 				sToken = st.nextToken(); // C=NL
 				idx = sToken.indexOf('=');
 				if (idx > 0)
-					htAttributes.put("pki_subject_" + sToken.substring(0, idx).trim().toLowerCase(), sToken.substring(idx + 1));
+					htAttributes.put("pki_subject_" + sToken.substring(0, idx).trim().toLowerCase(), sToken
+							.substring(idx + 1));
 			}
 		}
 		String sIssuerDN = (String) htTGTContext.get("pki_issuer_dn");
@@ -664,23 +669,23 @@ public class AttributeGatherer
 		}
 		// End of additions
 
-		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Try authsp with id: "+sAuthsp);  // if present
+		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Try authsp with id: " + sAuthsp); // if present
 		try {
-			//Object authSPs = _configManager.getSection(null, "authsps");
-			//Object authSPsection = _configManager.getSection(authSPs, "authsp", "id=" + sAuthsp);
+			// Object authSPs = _configManager.getSection(null, "authsps");
+			// Object authSPsection = _configManager.getSection(authSPs, "authsp", "id=" + sAuthsp);
 			Object authSPs = Utils.getSimpleSection(_configManager, _systemLogger, null, "authsps", true);
-			Object authSPsection = Utils.getSectionFromSection(_configManager, _systemLogger,
-										authSPs, "authsp", "id=" + sAuthsp, false);
+			Object authSPsection = Utils.getSectionFromSection(_configManager, _systemLogger, authSPs, "authsp", "id="
+					+ sAuthsp, false);
 			if (authSPsection != null) {
 				String sHandler = _configManager.getParam(authSPsection, "handler");
 				int iDot = sHandler.lastIndexOf(".");
 				sHandler = sHandler.substring(iDot + 1, sHandler.length());
-	
+
 				_systemLogger.log(Level.INFO, _MODULE, sMethod, "sHandler=" + sHandler);
 				htAttributes.put("handler", sHandler);
 			}
-			else 
-				_systemLogger.log(Level.INFO, _MODULE, sMethod, "Authsp "+sAuthsp+ " not present");
+			else
+				_systemLogger.log(Level.INFO, _MODULE, sMethod, "Authsp " + sAuthsp + " not present");
 		}
 		catch (ASelectConfigException e) {
 			_systemLogger.log(Level.WARNING, _MODULE, sMethod, "Failed to retrieve config for AuthSPs.", e);
@@ -692,22 +697,19 @@ public class AttributeGatherer
 	}
 
 	/**
-	 * Destroys the objects in this class that need to be destroyed carefully.
-	 * <br>
+	 * Destroys the objects in this class that need to be destroyed carefully. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Calls the destroy of the attribute requestors in the
-	 * <code>_htRequestors</code> HashMap. <br>
+	 * Calls the destroy of the attribute requestors in the <code>_htRequestors</code> HashMap. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Preconditions:</b> <br>
-	 * The <code>_htRequestors</code> contains attribute requestors that
-	 * aren't destroyed <br>
+	 * The <code>_htRequestors</code> contains attribute requestors that aren't destroyed <br>
 	 * <br>
 	 * <b>Postconditions:</b> <br>
-	 * All attribute requestors in <code>_htRequestors</code> are destroyed.
-	 * <br>
+	 * All attribute requestors in <code>_htRequestors</code> are destroyed. <br>
 	 */
 	public void destroy()
 	{
@@ -719,10 +721,9 @@ public class AttributeGatherer
 					oAttributeRequestor.destroy();
 				}
 				/*
-				 * Enumeration enumRequestors = _htRequestors.elements(); while
-				 * (enumRequestors.hasMoreElements()) { IAttributeRequestor
-				 * oAttributeRequestor = (IAttributeRequestor)
-				 * enumRequestors.nextElement(); oAttributeRequestor.destroy(); }
+				 * Enumeration enumRequestors = _htRequestors.elements(); while (enumRequestors.hasMoreElements()) {
+				 * IAttributeRequestor oAttributeRequestor = (IAttributeRequestor) enumRequestors.nextElement();
+				 * oAttributeRequestor.destroy(); }
 				 */
 			}
 		}
@@ -731,17 +732,28 @@ public class AttributeGatherer
 		}
 	}
 
-	/** private constructor, class is Singleton */
+	/**
+	 * private constructor, class is Singleton.
+	 */
 	private AttributeGatherer() {
 	}
 
 	// Filter the attributes
+	/**
+	 * Filter attributes.
+	 * 
+	 * @param htAttributes
+	 *            the ht attributes
+	 * @param vRequestedAttributes
+	 *            the v requested attributes
+	 * @return the hash map
+	 */
 	private HashMap filterAttributes(HashMap htAttributes, Vector vRequestedAttributes)
 	{
 		if (htAttributes == null || vRequestedAttributes == null)
 			return htAttributes;
 		HashMap htFiltered = new HashMap();
-		
+
 		Set keys = htAttributes.keySet();
 		for (Object s : keys) {
 			String sKey = (String) s;

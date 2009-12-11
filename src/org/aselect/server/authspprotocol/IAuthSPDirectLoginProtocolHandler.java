@@ -43,73 +43,75 @@ import javax.servlet.http.HttpServletResponse;
 import org.aselect.system.exception.ASelectAuthSPException;
 import org.aselect.system.exception.ASelectException;
 
+// TODO: Auto-generated Javadoc
 /**
- * Interface that all AuthSP API protocol handlers should implement.
- * <br><br>
+ * Interface that all AuthSP API protocol handlers should implement. <br>
+ * <br>
  * <b>Description:</b><br>
- * Interface that all AuthSP API protocol handlers should implement.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * Interface that all AuthSP API protocol handlers should implement. <br>
  * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public interface IAuthSPDirectLoginProtocolHandler
 {
 
-    /**
-     * Initializes the AuthSP direct login protocol handler.
-     * <br><br>
-     * <b>Description: </b> <br>
-     * Initializes the AuthSP protocol direct login handler with AuthSP handler specific
-     * configuration and resources.
-     * <br><br>
-     * <b>Concurrency issues: </b> <br>
-     * -
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * -
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * -
-     * 
-     * @param sAuthSPId
-     *          <code>String</code> containing the AuthSP Id.
-       * @throws ASelectAuthSPException
-     *          If initialization fails.
-     */
-    public void init(String sAuthSPId) throws ASelectAuthSPException;
-        
-    /**
-     * Handles the direct_login requests 
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Handles the direct_login requests 
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @param htServiceRequest
-     * @param servletResponse
-     * @param pwOut
-     * @param sServerId
-     * @throws ASelectException
-     */
-    public void handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse,
-    		PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
-    throws ASelectException;
+	/**
+	 * Initializes the AuthSP direct login protocol handler. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Initializes the AuthSP protocol direct login handler with AuthSP handler specific configuration and resources. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * - <br>
+	 * <b>Preconditions: </b> <br>
+	 * - <br>
+	 * <b>Postconditions: </b> <br>
+	 * -
+	 * 
+	 * @param sAuthSPId
+	 *            <code>String</code> containing the AuthSP Id.
+	 * @throws ASelectAuthSPException
+	 *             If initialization fails.
+	 */
+	public void init(String sAuthSPId)
+		throws ASelectAuthSPException;
+
+	/**
+	 * Handles the direct_login requests <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Handles the direct_login requests <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * .
+	 * 
+	 * @param htServiceRequest
+	 *            the ht service request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @param pwOut
+	 *            the pw out
+	 * @param sServerId
+	 *            the s server id
+	 * @param sLanguage
+	 *            the s language
+	 * @param sCountry
+	 *            the s country
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	public void handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse,
+			PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
+		throws ASelectException;
 
 }
-

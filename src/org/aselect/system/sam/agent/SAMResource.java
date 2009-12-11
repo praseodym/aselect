@@ -53,23 +53,19 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 
+// TODO: Auto-generated Javadoc
 /**
- * A shield surrounding a configured resource in a resourcegroup. 
- * <br>
+ * A shield surrounding a configured resource in a resourcegroup. <br>
  * <br>
  * <b>Description: </b> <br>
- * SAM stands for Simple A-Select Management. SAM is designed to enable A-Select
- * to work in a redundant envirnoment. A SAMResource resembles a server,
- * connection or entry point for a specific resource (e.g. an A-Select Server or
- * a database). At a given interval the SAMResource will check whether or not
- * it's resource is still available. <br>
+ * SAM stands for Simple A-Select Management. SAM is designed to enable A-Select to work in a redundant envirnoment. A
+ * SAMResource resembles a server, connection or entry point for a specific resource (e.g. an A-Select Server or a
+ * database). At a given interval the SAMResource will check whether or not it's resource is still available. <br>
  * <br>
  * <b>Concurrency issues: </b> <br>
- * -
- * <br>
+ * - <br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class SAMResource
 {
@@ -125,40 +121,39 @@ public class SAMResource
 	}
 
 	/**
-	 * Initializes the configured resource.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Initializes the configured resource. <br>
 	 * <br>
-	 * Checks if their is a polling methodconfigured for the resource and starts 
-	 * polling. If no polling method is found, no thread is started.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Checks if their is a polling methodconfigured for the resource and starts polling. If no polling method is found,
+	 * no thread is started. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
+	 * <b>Preconditions:</b> <br>
 	 * - <i>oConfigSection</i> may not be <code>null</code><br>
 	 * - <i>oConfigManager</i> may not be <code>null</code><br>
 	 * - <i>oSystemLogger</i> may not be <code>null</code><br>
-	 * <br><br>
-	 * <b>Postconditions:</b>
 	 * <br>
-	 * -
 	 * <br>
-	 * @param oConfigSection - The section within the configuration file in 
-	 * which the parameters for the SAMAgent can be found.
-	 * @param oConfigManager the config manager object that is used to retrieve 
-	 * the configuration
-	 * @param oSystemLogger the logger used for system logging
-	 * @throws ASelectSAMException if the resource could not initialize
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param oConfigSection
+	 *            - The section within the configuration file in which the parameters for the SAMAgent can be found.
+	 * @param oConfigManager
+	 *            the config manager object that is used to retrieve the configuration
+	 * @param oSystemLogger
+	 *            the logger used for system logging
+	 * @throws ASelectSAMException
+	 *             if the resource could not initialize
 	 */
 	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger oSystemLogger)
 		throws ASelectSAMException
 	{
 		String sMethod = "init()";
 
-		//must always be set, even if no polling method is configured
+		// must always be set, even if no polling method is configured
 		_oConfiguredAttributesSection = oConfigSection;
 		_oSystemLogger = oSystemLogger;
 
@@ -229,7 +224,7 @@ public class SAMResource
 
 					_bRunThread = true;
 
-					//start polling
+					// start polling
 					_oPollingThread = new PollingThread();
 					_oPollingThread.start();
 				}
@@ -248,27 +243,21 @@ public class SAMResource
 	}
 
 	/**
-	 * Check if the resource is still available.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Check if the resource is still available. <br>
 	 * <br>
-	 * Returns the <i>_bLive</i> variable that is set when the resource is 
-	 * alive.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns the <i>_bLive</i> variable that is set when the resource is alive. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @return TRUE if the resource is available, FALSE if the resource is 
-	 * unavailable.
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @return TRUE if the resource is available, FALSE if the resource is unavailable.
 	 */
 	public boolean live()
 	{
@@ -277,29 +266,23 @@ public class SAMResource
 
 	/**
 	 * Returns the configuration attributes of this resource as an <code>Object
-	 * </code>.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * </code>. <br>
 	 * <br>
-	 * Along with the configuration of the SAMResource, additional parameters
-	 * can be defined. These parameters can hold information about the resource.
-	 * For example, a username and password. This functions returns these
-	 * parameters to the application.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Along with the configuration of the SAMResource, additional parameters can be defined. These parameters can hold
+	 * information about the resource. For example, a username and password. This functions returns these parameters to
+	 * the application. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * The init() method must be called before using this method.
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * The init() method must be called before using this method. <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @return A Object pointing to the section with the attributes within the 
-	 * configuration file.
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @return A Object pointing to the section with the attributes within the configuration file.
 	 */
 	public Object getAttributes()
 	{
@@ -307,25 +290,19 @@ public class SAMResource
 	}
 
 	/**
-	 * Class destroyer.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Class destroyer. <br>
 	 * <br>
-	 * Destroy this class properly and stopped the polling thread.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Destroy this class properly and stopped the polling thread. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * The polling thread is stopped. 
-	 * <br>
-	 * 
+	 * <b>Postconditions:</b> <br>
+	 * The polling thread is stopped. <br>
 	 */
 	public void destroy()
 	{
@@ -340,16 +317,19 @@ public class SAMResource
 	}
 
 	/**
-	 * To keep track of whether or not this resource is still available, this
-	 * thread poll the resource periodically.
+	 * To keep track of whether or not this resource is still available, this thread poll the resource periodically.
 	 */
 	private class PollingThread extends Thread
 	{
+		
 		/**
-		 * Start polling every configured interval
-		 * <br><br>
+		 * Start polling every configured interval <br>
+		 * <br>
+		 * .
+		 * 
 		 * @see java.lang.Runnable#run()
 		 */
+		@Override
 		public void run()
 		{
 			String sMethod = "run()";

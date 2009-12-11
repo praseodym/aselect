@@ -28,190 +28,245 @@
  * AuthSP Handler bean
  *
  */
- 
+
 package org.aselect.server.authspprotocol.handler;
 
+// TODO: Auto-generated Javadoc
 /**
- * The AuthSPHandlers (Bean) class
- * <br><br>
+ * The AuthSPHandlers (Bean) class <br>
+ * <br>
  * <b>Description:</b><br>
- * Contains all the required features of an AuthSPHandler needed in A-Select.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * Contains all the required features of an AuthSPHandler needed in A-Select. <br>
  * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public class AuthSPHandler
 {
-    private String _sId;    
-    private String _sHandler;    
-    private String _sType;
-    private String _sFriendlyName;
-    private String _sResourceGroup; 
-    private Integer _intLevel;    
-    private boolean _bPopup;
-    private boolean _bDirectAuthSP;
- 
-    
-    
-    /**
-     * Default condtructor
-     */
-    public AuthSPHandler ()
-    {
-        _sId = null;
-        _sHandler = null;
-        _sType = null;
-        _sFriendlyName = null;
-        _intLevel = new Integer(0);
-        _bPopup = false;
-        _bDirectAuthSP = false;
-    }
-        
-    
-    /**
-     * Contructor which contains the default parameters for an AuthSPHandler
-     * @param id
-     * @param handler
-     * @param resourceGroup
-     * @param type
-     * @param friendlyName
-     * @param popup
-     * @param level
-     */
-    public AuthSPHandler (String id, String handler, String resourceGroup, String type, String friendlyName, Integer level, boolean popup)
-    {
-        _sId = id;
-        _sHandler = handler;
-        _sResourceGroup = resourceGroup;
-        _sType = type;
-        _sFriendlyName = friendlyName;
-        _intLevel = level;
-        _bPopup = popup;
-        _bDirectAuthSP = false;
-    }
-    
-    /**
-     * @return Returns the sType.
-     */
-    public String getType()
-    {
-        return _sType;
-    }
-    /**
-     * @param type The sType to set.
-     */
-    public void setType(String type)
-    {
-        _sType = type;
-    }
-    
-    /**
-     * @return Returns the bDirectAuthSP.
-     */
-    public boolean isDirectAuthSP()
-    {
-        return _bDirectAuthSP;
-    }
-    /**
-     * @param directAuthSP The bDirectAuthSP to set.
-     */
-    public void setDirectAuthSP(boolean directAuthSP)
-    {
-        _bDirectAuthSP = directAuthSP;
-    }
-    /**
-     * @return Returns the iLevel.
-     */
-    public Integer getLevel()
-    {
-        return _intLevel;
-    }
-    /**
-     * @param level The iLevel to set.
-     */
-    public void setLevel(Integer level)
-    {
-        _intLevel = level;
-    }
-    /**
-     * @return Returns the sHandler.
-     */
-    public String getHandler()
-    {
-        return _sHandler;
-    }
-    /**
-     * @param handler The sHandler to set.
-     */
-    public void setHandler(String handler)
-    {
-        _sHandler = handler;
-    }
-    /**
-     * @return Returns the sLevel.
-     */
+	private String _sId;
+	private String _sHandler;
+	private String _sType;
+	private String _sFriendlyName;
+	private String _sResourceGroup;
+	private Integer _intLevel;
+	private boolean _bPopup;
+	private boolean _bDirectAuthSP;
 
-    /**
-     * @return Returns the _sFriendlyName.
-     */
-    public String getFriendlyName()
-    {
-        return _sFriendlyName;
-    }
-    /**
-     * @param friendlyName The _sFriendlyName to set.
-     */
-    public void setFriendlyName(String friendlyName)
-    {
-        _sFriendlyName = friendlyName;
-    }
-    /**
-     * @return Returns the _bPopup.
-     */
-    public boolean isPopup()
-    {
-        return _bPopup;
-    }
-    /**
-     * @param popup The _bPopup to set.
-     */
-    public void setPopup(boolean popup)
-    {
-        _bPopup = popup;
-    }
-    /**
-     * @return Returns the _sId.
-     */
-    public String getId()
-    {
-        return _sId;
-    }
-    /**
-     * @param id The _sId to set.
-     */
-    public void setId(String id)
-    {
-        _sId = id;
-    }
-    
-    /**
-     * @return Returns the _sResourceGroup.
-     */
-    public String getResourceGroup()
-    {
-        return _sResourceGroup;
-    }
-    /**
-     * @param resourceGroup The _sResourceGroup to set.
-     */
-    public void setResourceGroup(String resourceGroup)
-    {
-        _sResourceGroup = resourceGroup;
-    }
+	/**
+	 * Default condtructor.
+	 */
+	public AuthSPHandler() {
+		_sId = null;
+		_sHandler = null;
+		_sType = null;
+		_sFriendlyName = null;
+		_intLevel = new Integer(0);
+		_bPopup = false;
+		_bDirectAuthSP = false;
+	}
 
+	/**
+	 * Contructor which contains the default parameters for an AuthSPHandler.
+	 * 
+	 * @param id
+	 *            the id
+	 * @param handler
+	 *            the handler
+	 * @param resourceGroup
+	 *            the resource group
+	 * @param type
+	 *            the type
+	 * @param friendlyName
+	 *            the friendly name
+	 * @param popup
+	 *            the popup
+	 * @param level
+	 *            the level
+	 */
+	public AuthSPHandler(String id, String handler, String resourceGroup, String type, String friendlyName,
+			Integer level, boolean popup) {
+		_sId = id;
+		_sHandler = handler;
+		_sResourceGroup = resourceGroup;
+		_sType = type;
+		_sFriendlyName = friendlyName;
+		_intLevel = level;
+		_bPopup = popup;
+		_bDirectAuthSP = false;
+	}
+
+	/**
+	 * Gets the type.
+	 * 
+	 * @return Returns the sType.
+	 */
+	public String getType()
+	{
+		return _sType;
+	}
+
+	/**
+	 * Sets the type.
+	 * 
+	 * @param type
+	 *            The sType to set.
+	 */
+	public void setType(String type)
+	{
+		_sType = type;
+	}
+
+	/**
+	 * Checks if is direct auth sp.
+	 * 
+	 * @return Returns the bDirectAuthSP.
+	 */
+	public boolean isDirectAuthSP()
+	{
+		return _bDirectAuthSP;
+	}
+
+	/**
+	 * Sets the direct auth sp.
+	 * 
+	 * @param directAuthSP
+	 *            The bDirectAuthSP to set.
+	 */
+	public void setDirectAuthSP(boolean directAuthSP)
+	{
+		_bDirectAuthSP = directAuthSP;
+	}
+
+	/**
+	 * Gets the level.
+	 * 
+	 * @return Returns the iLevel.
+	 */
+	public Integer getLevel()
+	{
+		return _intLevel;
+	}
+
+	/**
+	 * Sets the level.
+	 * 
+	 * @param level
+	 *            The iLevel to set.
+	 */
+	public void setLevel(Integer level)
+	{
+		_intLevel = level;
+	}
+
+	/**
+	 * Gets the handler.
+	 * 
+	 * @return Returns the sHandler.
+	 */
+	public String getHandler()
+	{
+		return _sHandler;
+	}
+
+	/**
+	 * Sets the handler.
+	 * 
+	 * @param handler
+	 *            The sHandler to set.
+	 */
+	public void setHandler(String handler)
+	{
+		_sHandler = handler;
+	}
+
+	/**
+	 * Gets the friendly name.
+	 * 
+	 * @return Returns the sLevel.
+	 */
+
+	/**
+	 * @return Returns the _sFriendlyName.
+	 */
+	public String getFriendlyName()
+	{
+		return _sFriendlyName;
+	}
+
+	/**
+	 * Sets the friendly name.
+	 * 
+	 * @param friendlyName
+	 *            The _sFriendlyName to set.
+	 */
+	public void setFriendlyName(String friendlyName)
+	{
+		_sFriendlyName = friendlyName;
+	}
+
+	/**
+	 * Checks if is popup.
+	 * 
+	 * @return Returns the _bPopup.
+	 */
+	public boolean isPopup()
+	{
+		return _bPopup;
+	}
+
+	/**
+	 * Sets the popup.
+	 * 
+	 * @param popup
+	 *            The _bPopup to set.
+	 */
+	public void setPopup(boolean popup)
+	{
+		_bPopup = popup;
+	}
+
+	/**
+	 * Gets the id.
+	 * 
+	 * @return Returns the _sId.
+	 */
+	public String getId()
+	{
+		return _sId;
+	}
+
+	/**
+	 * Sets the id.
+	 * 
+	 * @param id
+	 *            The _sId to set.
+	 */
+	public void setId(String id)
+	{
+		_sId = id;
+	}
+
+	/**
+	 * Gets the resource group.
+	 * 
+	 * @return Returns the _sResourceGroup.
+	 */
+	public String getResourceGroup()
+	{
+		return _sResourceGroup;
+	}
+
+	/**
+	 * Sets the resource group.
+	 * 
+	 * @param resourceGroup
+	 *            The _sResourceGroup to set.
+	 */
+	public void setResourceGroup(String resourceGroup)
+	{
+		_sResourceGroup = resourceGroup;
+	}
 
 }

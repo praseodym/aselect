@@ -239,26 +239,25 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
- * Handle API requests from Applications and A-Select Agents.
- * <br><br>
- * <b>Description:</b>
+ * Handle API requests from Applications and A-Select Agents. <br>
  * <br>
+ * <b>Description:</b> <br>
  * This class processes the following incoming application API calls:
  * <ul>
- * 	<li><code>authenticate</code>
- * 	<li><code>cross_authenticate</code>
- * 	<li><code>get_app_level</code>
- * 	<li><code>kill_tgt</code>
- * 	<li><code>verify_credentials</code>
+ * <li><code>authenticate</code>
+ * <li><code>cross_authenticate</code>
+ * <li><code>get_app_level</code>
+ * <li><code>kill_tgt</code>
+ * <li><code>verify_credentials</code>
  * </ul>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 {
-	//The managers and engine
+	// The managers and engine
 	private ASelectConfigManager _configManager;
 	private TGTManager _oTGTManager;
 	private SessionManager _sessionManager;
@@ -267,27 +266,33 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	private CryptoEngine _cryptoEngine;
 
 	/**
-	 * Create a new instance.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Create a new instance. <br>
 	 * <br>
-	 * Calls {@link AbstractAPIRequestHandler#AbstractAPIRequestHandler(
-	 * RequestParser, HttpServletRequest, HttpServletResponse, String, String)}
-	 * and handles are obtained to relevant managers.
-	 * <br><br>
-	 * @param reqParser The request parser to be used.
-	 * @param servletRequest The request.
-	 * @param servletResponse The response.
-	 * @param sMyServerId The A-Select Server ID.
-	 * @param sMyOrg The A-Select Server organisation.
-	 * @throws ASelectCommunicationException If communication fails.
+	 * <b>Description:</b> <br>
+	 * Calls
+	 * {@link AbstractAPIRequestHandler#AbstractAPIRequestHandler(RequestParser, HttpServletRequest, HttpServletResponse, String, String)}
+	 * and handles are obtained to relevant managers. <br>
+	 * <br>
+	 * 
+	 * @param reqParser
+	 *            The request parser to be used.
+	 * @param servletRequest
+	 *            The request.
+	 * @param servletResponse
+	 *            The response.
+	 * @param sMyServerId
+	 *            The A-Select Server ID.
+	 * @param sMyOrg
+	 *            The A-Select Server organisation.
+	 * @throws ASelectCommunicationException
+	 *             If communication fails.
 	 */
 	public ApplicationAPIHandler(RequestParser reqParser, HttpServletRequest servletRequest,
 			HttpServletResponse servletResponse, String sMyServerId, String sMyOrg)
 		throws ASelectCommunicationException {
 		super(reqParser, servletRequest, servletResponse, sMyServerId, sMyOrg);
 
-		//set variables and get handles
+		// set variables and get handles
 		_sModule = "ApplicationAPIHandler";
 		_configManager = ASelectConfigManager.getHandle();
 		_oTGTManager = TGTManager.getHandle();
@@ -299,11 +304,20 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	}
 
 	/**
-	 * Processes all incoming application API calls.
-	 * <br><br>
-	 * @see org.aselect.server.request.handler.sfs.authentication.AbstractAPIRequestHandler#processAPIRequest(
-	 * org.aselect.system.communication.server.IProtocolRequest, org.aselect.system.communication.server.IInputMessage, 
-	 * org.aselect.system.communication.server.IOutputMessage)
+	 * Processes all incoming application API calls. <br>
+	 * <br>
+	 * 
+	 * @param oProtocolRequest
+	 *            the o protocol request
+	 * @param oInputMessage
+	 *            the o input message
+	 * @param oOutputMessage
+	 *            the o output message
+	 * @throws ASelectException
+	 *             the a select exception
+	 * @see org.aselect.server.request.handler.sfs.authentication.AbstractAPIRequestHandler#processAPIRequest(org.aselect.system.communication.server.IProtocolRequest,
+	 *      org.aselect.system.communication.server.IInputMessage,
+	 *      org.aselect.system.communication.server.IOutputMessage)
 	 */
 	protected void processAPIRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
 			IOutputMessage oOutputMessage)
@@ -311,7 +325,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	{
 		String sMethod = "processAPIRequest";
 
-		//Get the request parameter
+		// Get the request parameter
 		String sAPIRequest = null;
 		try {
 			sAPIRequest = oInputMessage.getParam("request");
@@ -341,13 +355,16 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	}
 
 	/**
-	 * This method handles the <code>request=authenticate</code> request. 
-	 * <br>
+	 * This method handles the <code>request=authenticate</code> request. <br>
 	 * 
-	 * @param oProtocolRequest The request protocol properties.
-	 * @param oInputMessage The input message.
-	 * @param oOutputMessage The output message.
-	 * @throws ASelectException If proccessing fails.
+	 * @param oProtocolRequest
+	 *            The request protocol properties.
+	 * @param oInputMessage
+	 *            The input message.
+	 * @param oOutputMessage
+	 *            The output message.
+	 * @throws ASelectException
+	 *             If proccessing fails.
 	 */
 	private void handleAuthenticateRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
 			IOutputMessage oOutputMessage)
@@ -437,9 +454,9 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'forced_logon' parameter found.", e);
 		}
 
-		//check if request should be signed
+		// check if request should be signed
 		if (_applicationManager.isSigningRequired()) {
-			//check signature
+			// check signature
 			StringBuffer sbData = new StringBuffer(sASelectServer);
 			sbData.append(sAppId).append(sAppUrl);
 			if (sCountry != null)
@@ -468,7 +485,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 		intMaxAppLevel = _applicationManager.getMaxLevel(sAppId);
 
-		//Create Session
+		// Create Session
 		htSessionContext = new HashMap();
 		htSessionContext.put("app_id", sAppId);
 		htSessionContext.put("app_url", sAppUrl);
@@ -493,13 +510,13 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		if (sUid != null)
 			htSessionContext.put("forced_uid", sUid);
 
-		//need to check if the request must be handled as a forced authentication
+		// need to check if the request must be handled as a forced authentication
 		if (!boolForced.booleanValue() && _applicationManager.isForcedAuthenticateEnabled(sAppId)) {
 			boolForced = new Boolean(true);
 		}
 		htSessionContext.put("forced_authenticate", boolForced);
 
-		//check single sign-on groups
+		// check single sign-on groups
 		if (_configManager.isSingleSignOn()) {
 			Vector vSSOGroups = _applicationManager.getSSOGroups(sAppId);
 			if (vSSOGroups != null)
@@ -520,7 +537,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 
 		Vector vAuthSPs = _authSPManagerManager.getConfiguredAuthSPs(intAppLevel, intMaxAppLevel);
 
-		//      Authentication OK
+		// Authentication OK
 		if (vAuthSPs.size() == 1 && _authSPManagerManager.isDirectAuthSP((String) vAuthSPs.get(0))) {
 			// A-Select will show username and password box in one page.
 			sbAsUrl.append("?request=direct_login1");
@@ -550,11 +567,14 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	}
 
 	/**
-	 * This function handles the <code>request=get_app_level</code> request.
-	 * <br>
-	 * @param oInputMessage The input message.
-	 * @param oOutputMessage The output message.
-	 * @throws ASelectException If proccessing fails.
+	 * This function handles the <code>request=get_app_level</code> request. <br>
+	 * 
+	 * @param oInputMessage
+	 *            The input message.
+	 * @param oOutputMessage
+	 *            The output message.
+	 * @throws ASelectException
+	 *             If proccessing fails.
 	 * @deprecated Not used anymore since A-Select 1.4.1
 	 */
 	private void handleGetAppLevelRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
@@ -569,14 +589,14 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			sASelectServer = oInputMessage.getParam("a-select-server");
 		}
 		catch (ASelectCommunicationException eAC) {
-			//check if application id is given
+			// check if application id is given
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing required parameters");
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
 
-		//check if request should be signed
+		// check if request should be signed
 		if (_applicationManager.isSigningRequired()) {
-			//check signature
+			// check signature
 			StringBuffer sbData = new StringBuffer(sASelectServer).append(sAppId);
 			verifyApplicationSignature(oInputMessage, sbData.toString(), sAppId);
 		}
@@ -600,11 +620,14 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	}
 
 	/**
-	 * This function handles the <code>request=kill_tgt</code> request.
-	 * <br>
-	 * @param oInputMessage The input message.
-	 * @param oOutputMessage The output message.
-	 * @throws ASelectException If proccessing fails.
+	 * This function handles the <code>request=kill_tgt</code> request. <br>
+	 * 
+	 * @param oInputMessage
+	 *            The input message.
+	 * @param oOutputMessage
+	 *            The output message.
+	 * @throws ASelectException
+	 *             If proccessing fails.
 	 */
 	private void handleKillTGTRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
 		throws ASelectException
@@ -613,7 +636,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		String sEncTGT = null;
 		String sASelectServer = null;
 
-		//get mandatory parameters
+		// get mandatory parameters
 		try {
 			sEncTGT = oInputMessage.getParam("tgt_blob");
 			sASelectServer = oInputMessage.getParam("a-select-server");
@@ -627,12 +650,12 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			byte[] baTgtBlobBytes = CryptoEngine.getHandle().decryptTGT(sEncTGT);
 			sTGT = Utils.byteArrayToHexString(baTgtBlobBytes);
 		}
-		catch (ASelectException eAC) //decrypt failed
+		catch (ASelectException eAC) // decrypt failed
 		{
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not decrypt TGT", eAC);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID, eAC);
 		}
-		catch (IllegalArgumentException eIA) //HEX conversion fails
+		catch (IllegalArgumentException eIA) // HEX conversion fails
 		{
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not decrypt TGT", eIA);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID, eIA);
@@ -645,7 +668,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT);
 		}
 
-		//check if request should be signed
+		// check if request should be signed
 		if (_applicationManager.isSigningRequired()) {
 			// Note: we should do this earlier, but we don't have an app_id until now
 			String sAppId = (String) htTGTContext.get("app_id");
@@ -653,7 +676,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			verifyApplicationSignature(oInputMessage, sbData.toString(), sAppId);
 		}
 
-		//Kill the ticket granting ticket
+		// Kill the ticket granting ticket
 		_oTGTManager.remove(sTGT);
 
 		try {
@@ -666,13 +689,15 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	}
 
 	/**
-	 * This method handles the <code>request=verify_tgt</code> request. If the
-	 * tgt of the user is valid, then this method returns the information of the
-	 * user. 
-	 * <br>
-	 * @param oInputMessage The input message.
-	 * @param oOutputMessage The output message.
-	 * @throws ASelectException If proccessing fails.
+	 * This method handles the <code>request=verify_tgt</code> request. If the tgt of the user is valid, then this
+	 * method returns the information of the user. <br>
+	 * 
+	 * @param oInputMessage
+	 *            The input message.
+	 * @param oOutputMessage
+	 *            The output message.
+	 * @throws ASelectException
+	 *             If proccessing fails.
 	 */
 	private void handleVerifyCredentialsRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
 		throws ASelectException
@@ -701,12 +726,12 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			byte[] baTgtBytes = CryptoEngine.getHandle().decryptTGT(sEncTgt);
 			sTGT = Utils.byteArrayToHexString(baTgtBytes);
 		}
-		catch (ASelectException eAC) //decrypt failed
+		catch (ASelectException eAC) // decrypt failed
 		{
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "could not decrypt TGT", eAC);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID, eAC);
 		}
-		catch (Exception e) //HEX conversion fails
+		catch (Exception e) // HEX conversion fails
 		{
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "could not decrypt TGT", e);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID, e);
@@ -732,7 +757,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
 		}
-		//get app_id from TGT context.
+		// get app_id from TGT context.
 		String sAppId = (String) htTGTContext.get("app_id");
 
 		if (sAppId == null) {
@@ -761,17 +786,17 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 
 		sResultCode = (String) htTGTContext.get("result_code");
 
-		if (sResultCode != null) //Resultcode avaliable in TGT context
+		if (sResultCode != null) // Resultcode avaliable in TGT context
 		{
-			if (sResultCode != Errors.ERROR_ASELECT_SUCCESS) //Error in context
+			if (sResultCode != Errors.ERROR_ASELECT_SUCCESS) // Error in context
 			{
 				_oTGTManager.remove(sTGT);
 				throw new ASelectCommunicationException(sResultCode);
-				//message with error code and rid is send in "processAPIRequest()"
+				// message with error code and rid is send in "processAPIRequest()"
 			}
 		}
 
-		//Get other response parameters
+		// Get other response parameters
 		sUid = (String) htTGTContext.get("uid");
 		String sAuthSPLevel = (String) htTGTContext.get("authsp_level");
 		String sAuthSP = (String) htTGTContext.get("authsp");
@@ -793,15 +818,15 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			oOutputMessage.setParam("app_id", sAppId);
 			oOutputMessage.setParam("organization", (String) htTGTContext.get("organization"));
 			oOutputMessage.setParam("app_level", (String) htTGTContext.get("app_level"));
-			//Return both asp and authsp variables to remain compatible
-			//with A-Select 1.3 and 1.4
+			// Return both asp and authsp variables to remain compatible
+			// with A-Select 1.3 and 1.4
 			oOutputMessage.setParam("asp_level", sAuthSPLevel);
 			oOutputMessage.setParam("asp", sAuthSP);
 			oOutputMessage.setParam("authsp_level", sAuthSPLevel);
 			oOutputMessage.setParam("authsp", sAuthSP);
 
 			if (_applicationManager.isUseOpaqueUid(sAppId)) {
-				// the returned user ID must contain an opaque value 
+				// the returned user ID must contain an opaque value
 				MessageDigest oMessageDigest = null;
 				try {
 
@@ -809,7 +834,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 					String sInput = null;
 					String sSalt;
 
-					//FIXME: Work around broken applicationManager getOptionalParam method.
+					// FIXME: Work around broken applicationManager getOptionalParam method.
 					Object oApplications = _configManager.getSection(null, "applications");
 					Object oApplication = _configManager.getSection(oApplications, "application", "id=" + sAppId);
 
@@ -855,13 +880,18 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			_oTGTManager.remove(sTGT);
 	}
 
-	/** 
-	 * Verify the application signing signature.
-	 * <br><br>
-	 * @param oInputMessage The input message.
-	 * @param sData The data to validate upon.
-	 * @param sAppId The application ID.
-	 * @throws ASelectException If signature is invalid.
+	/**
+	 * Verify the application signing signature. <br>
+	 * <br>
+	 * 
+	 * @param oInputMessage
+	 *            The input message.
+	 * @param sData
+	 *            The data to validate upon.
+	 * @param sAppId
+	 *            The application ID.
+	 * @throws ASelectException
+	 *             If signature is invalid.
 	 */
 	private void verifyApplicationSignature(IInputMessage oInputMessage, String sData, String sAppId)
 		throws ASelectException
@@ -891,7 +921,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 
 		if (!_cryptoEngine.verifyApplicationSignature(pk, sData, sSignature))
-		//throws ERROR_ASELECT_INTERNAL_ERROR 
+		// throws ERROR_ASELECT_INTERNAL_ERROR
 		{
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid signature");
 

@@ -35,119 +35,115 @@
 package org.aselect.system.sam.service;
 
 /**
- * Class that contains static variables containing all OID's used by the A-Select 
- * SAM Service. 
- * <br><br>
+ * Class that contains static variables containing all OID's used by the A-Select SAM Service. <br>
+ * <br>
  * <b>Description:</b><br>
- * Contains all IOD's and Names of these OID's that are supported by the A-Select 
- * SAM Service.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * Contains all IOD's and Names of these OID's that are supported by the A-Select SAM Service. <br>
  * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public class SAMConstants
 {
-    /**
-     * OID for a-select.statistics
-     */
-    public final static String OID_BASE = "1.3.6.1.4.1.15396.10.10.2";
-    /**
-     * Name for 1.3.6.1.4.1.15396.10.10.2
-     */
-    public final static String NAME_BASE = "a-select.statistics";
-    
-    /**
-     * OID for a-select.statistics.sysDescr
-     */
-    public final static String OID_SYSDESCR = "1.3.6.1.4.1.15396.10.10.2.1.1";
-    /**
-     * Name for 1.3.6.1.4.1.15396.10.10.2.1.1
-     */
-    public final static String NAME_SYSDESCR = "a-select.statistics.sysDescr";
-    
-    /**
-     * OID for a-select.statistics.version
-     */
-    public final static String OID_VERSION = "1.3.6.1.4.1.15396.10.10.2.1.2";
-    /**
-     * Name for 1.3.6.1.4.1.15396.10.10.2.1.2
-     */
-    public final static String NAME_VERSION = "a-select.statistics.version";
-    
-    /**
-     * OID for a-select.statistics.operational
-     */
-    public final static String OID_OPERATIONAL = "1.3.6.1.4.1.15396.10.10.2.1.3";
-    /**
-     * Name for 1.3.6.1.4.1.15396.10.10.2.1.3
-     */
-    public final static String NAME_OPERATIONAL = "a-select.statistics.operational";
-    
-    /**
-     * OID for a-select.statistics.uptime
-     */
-    public final static String OID_UPTIME = "1.3.6.1.4.1.15396.10.10.2.1.4";
-    /**
-     * Name for 1.3.6.1.4.1.15396.10.10.2.1.4
-     */
-    public final static String NAME_UPTIME = "a-select.statistics.uptime";
-    
-    /**
-     * OID for a-select.statistics.load
-     */
-    public final static String OID_LOAD = "1.3.6.1.4.1.15396.10.10.2.1.5";
-    /**
-     * Name for 1.3.6.1.4.1.15396.10.10.2.1.5
-     */
-    public final static String NAME_LOAD = "a-select.statistics.load";
-    
-    /**
-     * OID for a-select.statistics.wwwDescr
-     */
-    public final static String OID_WWWDESCR = "1.3.6.1.4.1.15396.10.10.2.1.6";
-    /**
-     * Name for 1.3.6.1.4.1.15396.10.10.2.1.6
-     */
-    public final static String NAME_WWWDESCR = "a-select.statistics.wwwDescr";
-    
-    /**
-     * OID for a-select.statistics.cpus
-     */
-    public final static String OID_CPUS = "1.3.6.1.4.1.15396.10.10.2.1.7";
-    /**
-     * Name for 1.3.6.1.4.1.15396.10.10.2.1.7
-     */
-    public final static String NAME_CPUS = "a-select.statistics.cpus";
-    
-    /**
-     * OID for a-select.statistics.freeMem
-     */
-    public final static String OID_FREEMEM = "1.3.6.1.4.1.15396.10.10.2.1.8";
-    /**
-     * Name for 1.3.6.1.4.1.15396.10.10.2.1.8
-     */
-    public final static String NAME_FREEMEM = "a-select.statistics.freeMem";
-    
-    /**
-     * OID for a-select.statistics.maxMem
-     */
-    public final static String OID_MAXMEM = "1.3.6.1.4.1.15396.10.10.2.1.9";
-    /**
-     * Name for 1.3.6.1.4.1.15396.10.10.2.1.9
-     */
-    public final static String NAME_MAXMEM = "a-select.statistics.maxMem";
-    
-    /**
-     * OID for a-select.statistics.totalMem
-     */
-    public final static String OID_TOTALMEM = "1.3.6.1.4.1.15396.10.10.2.1.10";
-    /**
-     * Name for 1.3.6.1.4.1.15396.10.10.2.1.10
-     */
-    public final static String NAME_TOTALMEM = "a-select.statistics.totalMem";
-	
+	/**
+	 * OID for a-select.statistics
+	 */
+	public final static String OID_BASE = "1.3.6.1.4.1.15396.10.10.2";
+	/**
+	 * Name for 1.3.6.1.4.1.15396.10.10.2
+	 */
+	public final static String NAME_BASE = "a-select.statistics";
+
+	/**
+	 * OID for a-select.statistics.sysDescr
+	 */
+	public final static String OID_SYSDESCR = "1.3.6.1.4.1.15396.10.10.2.1.1";
+	/**
+	 * Name for 1.3.6.1.4.1.15396.10.10.2.1.1
+	 */
+	public final static String NAME_SYSDESCR = "a-select.statistics.sysDescr";
+
+	/**
+	 * OID for a-select.statistics.version
+	 */
+	public final static String OID_VERSION = "1.3.6.1.4.1.15396.10.10.2.1.2";
+	/**
+	 * Name for 1.3.6.1.4.1.15396.10.10.2.1.2
+	 */
+	public final static String NAME_VERSION = "a-select.statistics.version";
+
+	/**
+	 * OID for a-select.statistics.operational
+	 */
+	public final static String OID_OPERATIONAL = "1.3.6.1.4.1.15396.10.10.2.1.3";
+	/**
+	 * Name for 1.3.6.1.4.1.15396.10.10.2.1.3
+	 */
+	public final static String NAME_OPERATIONAL = "a-select.statistics.operational";
+
+	/**
+	 * OID for a-select.statistics.uptime
+	 */
+	public final static String OID_UPTIME = "1.3.6.1.4.1.15396.10.10.2.1.4";
+	/**
+	 * Name for 1.3.6.1.4.1.15396.10.10.2.1.4
+	 */
+	public final static String NAME_UPTIME = "a-select.statistics.uptime";
+
+	/**
+	 * OID for a-select.statistics.load
+	 */
+	public final static String OID_LOAD = "1.3.6.1.4.1.15396.10.10.2.1.5";
+	/**
+	 * Name for 1.3.6.1.4.1.15396.10.10.2.1.5
+	 */
+	public final static String NAME_LOAD = "a-select.statistics.load";
+
+	/**
+	 * OID for a-select.statistics.wwwDescr
+	 */
+	public final static String OID_WWWDESCR = "1.3.6.1.4.1.15396.10.10.2.1.6";
+	/**
+	 * Name for 1.3.6.1.4.1.15396.10.10.2.1.6
+	 */
+	public final static String NAME_WWWDESCR = "a-select.statistics.wwwDescr";
+
+	/**
+	 * OID for a-select.statistics.cpus
+	 */
+	public final static String OID_CPUS = "1.3.6.1.4.1.15396.10.10.2.1.7";
+	/**
+	 * Name for 1.3.6.1.4.1.15396.10.10.2.1.7
+	 */
+	public final static String NAME_CPUS = "a-select.statistics.cpus";
+
+	/**
+	 * OID for a-select.statistics.freeMem
+	 */
+	public final static String OID_FREEMEM = "1.3.6.1.4.1.15396.10.10.2.1.8";
+	/**
+	 * Name for 1.3.6.1.4.1.15396.10.10.2.1.8
+	 */
+	public final static String NAME_FREEMEM = "a-select.statistics.freeMem";
+
+	/**
+	 * OID for a-select.statistics.maxMem
+	 */
+	public final static String OID_MAXMEM = "1.3.6.1.4.1.15396.10.10.2.1.9";
+	/**
+	 * Name for 1.3.6.1.4.1.15396.10.10.2.1.9
+	 */
+	public final static String NAME_MAXMEM = "a-select.statistics.maxMem";
+
+	/**
+	 * OID for a-select.statistics.totalMem
+	 */
+	public final static String OID_TOTALMEM = "1.3.6.1.4.1.15396.10.10.2.1.10";
+	/**
+	 * Name for 1.3.6.1.4.1.15396.10.10.2.1.10
+	 */
+	public final static String NAME_TOTALMEM = "a-select.statistics.totalMem";
+
 }

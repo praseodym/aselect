@@ -36,70 +36,68 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMAgent;
 
+// TODO: Auto-generated Javadoc
 /**
- * The SAM agent for the A-Select Agent.
- * <br><br>
+ * The SAM agent for the A-Select Agent. <br>
+ * <br>
  * <b>Description:</b><br>
- * The <code>ASelectAgentSAMAgent</code> is a {@link SAMAgent} 
- * for the A-Select Agent.
- * <br><br>
- * <i>Note: this agent is implemented as a Singleton.</i>
- * <br><br>
- * <b>Concurrency issues:</b>
+ * The <code>ASelectAgentSAMAgent</code> is a {@link SAMAgent} for the A-Select Agent. <br>
  * <br>
- * -
+ * <i>Note: this agent is implemented as a Singleton.</i> <br>
  * <br>
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
+ * 
  * @author Alfa & Ariss
  */
 public class ASelectAgentSAMAgent extends SAMAgent
 {
 
-    /** The static instance */
-    private static ASelectAgentSAMAgent _oASelectAgentSAMAgent;
+	/** The static instance */
+	private static ASelectAgentSAMAgent _oASelectAgentSAMAgent;
 
-    /**
-     * Get a static handle to the <code>ASelectAgentSAMAgent</code> instance.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     *  Checks if a static instance exists, otherwise it is created. This 
-     * instance is returned.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * A static instance of the <code>ASelectAgentSAMAgent</code> exists.
-     * 
-     * @return A static handle to the <code>ASelectAgentSAMAgent</code>
-     */
-    public static ASelectAgentSAMAgent getHandle()
-    {
-        if (_oASelectAgentSAMAgent == null)
-            _oASelectAgentSAMAgent = new ASelectAgentSAMAgent();
+	/**
+	 * Get a static handle to the <code>ASelectAgentSAMAgent</code> instance. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Checks if a static instance exists, otherwise it is created. This instance is returned. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * A static instance of the <code>ASelectAgentSAMAgent</code> exists.
+	 * 
+	 * @return A static handle to the <code>ASelectAgentSAMAgent</code>
+	 */
+	public static ASelectAgentSAMAgent getHandle()
+	{
+		if (_oASelectAgentSAMAgent == null)
+			_oASelectAgentSAMAgent = new ASelectAgentSAMAgent();
 
-        return _oASelectAgentSAMAgent;
-    }
+		return _oASelectAgentSAMAgent;
+	}
 
-    /**
-     * Initializes the <code>ASelectAgentSAMAgent</code>.
-     * 
-     * @throws ASelectSAMException
-     * @see SAMAgent#init(ConfigManager, SystemLogger)
-     */
-    public void init() throws ASelectSAMException
-    {
-        super.init(ASelectAgentConfigManager.getHandle(),
-            ASelectAgentSystemLogger.getHandle());
-    }
+	/**
+	 * Initializes the <code>ASelectAgentSAMAgent</code>.
+	 * 
+	 * @throws ASelectSAMException
+	 *             the a select sam exception
+	 * @see SAMAgent#init(ConfigManager, SystemLogger)
+	 */
+	public void init()
+		throws ASelectSAMException
+	{
+		super.init(ASelectAgentConfigManager.getHandle(), ASelectAgentSystemLogger.getHandle());
+	}
 
-    /** Private constructor. */
-    private ASelectAgentSAMAgent (){}
+	/**
+	 * Private constructor.
+	 */
+	private ASelectAgentSAMAgent() {
+	}
 
 }

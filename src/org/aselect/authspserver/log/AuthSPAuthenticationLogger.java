@@ -51,165 +51,152 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.AuthenticationLogger;
 
+// TODO: Auto-generated Javadoc
 /**
- * A singleton class for the <code>SystemLogger</code> that logs Authentication 
- * information.
- * <br><br>
+ * A singleton class for the <code>SystemLogger</code> that logs Authentication information. <br>
+ * <br>
  * <b>Description:</b><br>
- * Singleton class for the <code>SystemLogger</code> that is located in the 
- * org.aselect.system package. It is used for logging authentication information 
- * only.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * Singleton class for the <code>SystemLogger</code> that is located in the org.aselect.system package. It is used for
+ * logging authentication information only. <br>
  * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public class AuthSPAuthenticationLogger extends AuthenticationLogger
 {
-    /**
-     * The name of this module, that is used in the system logging.
-     */
-    private static final String MODULE = "AuthSPAuthenticationLogger";
-    
-    /**
-     * The singleton instance of this object
-     */
-    private static AuthSPAuthenticationLogger _oAuthSPAuthenticationLogger;
+	/**
+	 * The name of this module, that is used in the system logging.
+	 */
+	private static final String MODULE = "AuthSPAuthenticationLogger";
 
-    /**
-     * Method to return the instance of the <code>SystemLogger</code>.
-     * <br>
-     * @return always the same <code>SystemLogger</code> instance
-     */
-    public static AuthSPAuthenticationLogger getHandle()
-    {
-        if (_oAuthSPAuthenticationLogger == null)
-            _oAuthSPAuthenticationLogger = new AuthSPAuthenticationLogger();
+	/**
+	 * The singleton instance of this object
+	 */
+	private static AuthSPAuthenticationLogger _oAuthSPAuthenticationLogger;
 
-        return _oAuthSPAuthenticationLogger;
-    }
+	/**
+	 * Method to return the instance of the <code>SystemLogger</code>. <br>
+	 * 
+	 * @return always the same <code>SystemLogger</code> instance
+	 */
+	public static AuthSPAuthenticationLogger getHandle()
+	{
+		if (_oAuthSPAuthenticationLogger == null)
+			_oAuthSPAuthenticationLogger = new AuthSPAuthenticationLogger();
 
-    /**
-     * Initializes the Authentication Logger.
-     * <br><br>
-     * <b>Description:</b>
-     * <ul>
-     * 	<li>Reads the 'target' config section</li>
-     * 	<li>Calls the init of the <i>_oAuthSPAuthenticationLogger</i></li>
-     * 	<li>Reads the 'target' config section</li>
-     * </ul>
-     * <br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <ul>
-     * 	<li>The <i>AuthSPSystemLogger</i> must be initialized.</li>
-     * 	<li>The <i>AuthSPConfigManager</i> must be initialized.</li>
-     * 	<li>The <i>oAuthLogging</i> may not be <code>NULL</code>.</li>
-     * 	<li>The <i>sWorkingDir</i> may not be <code>NULL</code>.</li>
-     * </ul>
-     * <br>
-     * <b>Postconditions:</b>
-     * <br>
-     * An initialized <i>_oAuthSPAuthenticationLogger</i>.
-     * <br>
-     * @param oAuthLogging The logger config section with id='authentication'
-     * @param sWorkingDir The A-Select working dir
-     * @throws ASelectException if initialization went wrong
-     */
-    public void init(Object oAuthLogging, String sWorkingDir) throws ASelectException
-    {
-        String sMethod = "init()";
+		return _oAuthSPAuthenticationLogger;
+	}
 
-        String sAuthLogTarget = null;
-        Object oAuthLogTarget = null;
-        AuthSPSystemLogger oAuthSPSystemLogger = null;
-        AuthSPConfigManager oAuthSPConfigManager = null;
-        try
-        {
-            try
-            {
-                oAuthSPSystemLogger = AuthSPSystemLogger.getHandle();
-                oAuthSPConfigManager = AuthSPConfigManager.getHandle();
- 
-                try
-                {
-                    sAuthLogTarget = oAuthSPConfigManager.getParam(
-                        oAuthLogging, "target");
-                }
-                catch (ASelectConfigException eAC)
-                {
-                    sAuthLogTarget = null;
-                    oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod,
-                        "No valid config item: 'target' in config section 'logging' with id='authentication' found.", eAC);
-                    throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR,eAC);
-                }
+	/**
+	 * Initializes the Authentication Logger. <br>
+	 * <br>
+	 * <b>Description:</b>
+	 * <ul>
+	 * <li>Reads the 'target' config section</li>
+	 * <li>Calls the init of the <i>_oAuthSPAuthenticationLogger</i></li>
+	 * <li>Reads the 'target' config section</li>
+	 * </ul>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b>
+	 * <ul>
+	 * <li>The <i>AuthSPSystemLogger</i> must be initialized.</li>
+	 * <li>The <i>AuthSPConfigManager</i> must be initialized.</li>
+	 * <li>The <i>oAuthLogging</i> may not be <code>NULL</code>.</li>
+	 * <li>The <i>sWorkingDir</i> may not be <code>NULL</code>.</li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * An initialized <i>_oAuthSPAuthenticationLogger</i>. <br>
+	 * 
+	 * @param oAuthLogging
+	 *            The logger config section with id='authentication'
+	 * @param sWorkingDir
+	 *            The A-Select working dir
+	 * @throws ASelectException
+	 *             if initialization went wrong
+	 */
+	public void init(Object oAuthLogging, String sWorkingDir)
+		throws ASelectException
+	{
+		String sMethod = "init()";
 
-                try
-                {
-                    oAuthLogTarget = oAuthSPConfigManager.getSection(
-                        oAuthLogging, "target", "id=" + sAuthLogTarget);
-                }
-                catch (ASelectConfigException eAC)
-                {
-                    oAuthLogTarget = null;
+		String sAuthLogTarget = null;
+		Object oAuthLogTarget = null;
+		AuthSPSystemLogger oAuthSPSystemLogger = null;
+		AuthSPConfigManager oAuthSPConfigManager = null;
+		try {
+			try {
+				oAuthSPSystemLogger = AuthSPSystemLogger.getHandle();
+				oAuthSPConfigManager = AuthSPConfigManager.getHandle();
 
-                    StringBuffer sbInfo = new StringBuffer(
-                        "No valid config section: 'target' with id='");
-                    sbInfo.append(sAuthLogTarget);
-                    sbInfo.append(
-                        "' in config section 'logging' with id='authentication' found.");
-                    oAuthSPSystemLogger
-                        .log(Level.WARNING, MODULE, sMethod, sbInfo.toString(), eAC);
-                    throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR,eAC);
-                }
-            }
-            catch (Exception e)
-            {
-                oAuthSPSystemLogger.log(Level.CONFIG, MODULE, sMethod, 
-                    "No valid config section 'logging' with id='authentication' found, using default logging settings.",
-                    e);
-            }
+				try {
+					sAuthLogTarget = oAuthSPConfigManager.getParam(oAuthLogging, "target");
+				}
+				catch (ASelectConfigException eAC) {
+					sAuthLogTarget = null;
+					oAuthSPSystemLogger
+							.log(
+									Level.WARNING,
+									MODULE,
+									sMethod,
+									"No valid config item: 'target' in config section 'logging' with id='authentication' found.",
+									eAC);
+					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
+				}
 
-            if (oAuthLogTarget != null && sAuthLogTarget != null
-                && sAuthLogTarget.equalsIgnoreCase("database"))
-            {
-                _oAuthSPAuthenticationLogger
-                    .init("A-Select AuthSP Server", oAuthSPConfigManager,
-                        oAuthLogTarget, oAuthSPSystemLogger);
-            }
-            else
-            {
-                _oAuthSPAuthenticationLogger.init("A-Select AuthSP Server",
-                    "authentication",
-                    "org.aselect.server.log.AuthSPAuthenticationLogger",
-                    oAuthSPConfigManager, oAuthLogTarget,
-                    oAuthSPSystemLogger, sWorkingDir);
-            }
-        }
-        catch (ASelectException e)
-        {
-            throw e;
-        }
-        catch (Exception e)
-        {
-            oAuthSPSystemLogger.log(Level.SEVERE, MODULE, sMethod, 
-                "Could not initialize A-Select AuthSP Authentication Logger", e);
+				try {
+					oAuthLogTarget = oAuthSPConfigManager.getSection(oAuthLogging, "target", "id=" + sAuthLogTarget);
+				}
+				catch (ASelectConfigException eAC) {
+					oAuthLogTarget = null;
 
-            throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-        }
+					StringBuffer sbInfo = new StringBuffer("No valid config section: 'target' with id='");
+					sbInfo.append(sAuthLogTarget);
+					sbInfo.append("' in config section 'logging' with id='authentication' found.");
+					oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, sbInfo.toString(), eAC);
+					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
+				}
+			}
+			catch (Exception e) {
+				oAuthSPSystemLogger
+						.log(
+								Level.CONFIG,
+								MODULE,
+								sMethod,
+								"No valid config section 'logging' with id='authentication' found, using default logging settings.",
+								e);
+			}
 
-    }
-    
-    /**
-     * Constructor that has been made private for singleton purposes.
-     */
-    private AuthSPAuthenticationLogger()
-    {
-    }
+			if (oAuthLogTarget != null && sAuthLogTarget != null && sAuthLogTarget.equalsIgnoreCase("database")) {
+				_oAuthSPAuthenticationLogger.init("A-Select AuthSP Server", oAuthSPConfigManager, oAuthLogTarget,
+						oAuthSPSystemLogger);
+			}
+			else {
+				_oAuthSPAuthenticationLogger.init("A-Select AuthSP Server", "authentication",
+						"org.aselect.server.log.AuthSPAuthenticationLogger", oAuthSPConfigManager, oAuthLogTarget,
+						oAuthSPSystemLogger, sWorkingDir);
+			}
+		}
+		catch (ASelectException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			oAuthSPSystemLogger.log(Level.SEVERE, MODULE, sMethod,
+					"Could not initialize A-Select AuthSP Authentication Logger", e);
+
+			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+		}
+
+	}
+
+	/**
+	 * Constructor that has been made private for singleton purposes.
+	 */
+	private AuthSPAuthenticationLogger() {
+	}
 }

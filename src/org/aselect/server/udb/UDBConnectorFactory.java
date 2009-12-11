@@ -46,157 +46,126 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectUDBException;
 
-
 /**
- * User database connector factory.
- * <br><br>
+ * User database connector factory. <br>
+ * <br>
  * <b>Description:</b><br>
  * Resolves, creates and initializes the UDB connector class as an <code>
- * IUDBConnector</code> object.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * IUDBConnector</code> object. <br>
  * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public class UDBConnectorFactory
 {
-    /**
-     * The name of the class, used for logging.
-     */
-    private final static String MODULE = "UDBConnectorFactory";
-    
-    /**
-     * Method to resolve a valid UDB Connector object. 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * Returns a <code>IUDBConnector</code> that can be used to connect to the 
-     * A-Select User Database as configured in the A-Select Server configuration.
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * -
-     * <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * - 
-     * <br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * - 
-     * <br>
-     * 
-     * @return <code>null</code> if no valid <code>IUDBConnector</code> 
-     * can be created.
-     * @throws ASelectException If retrieving fails.
-     * 
-     */
-    public static IUDBConnector getUDBConnector() throws ASelectException 
-    {
-       String sMethod = "getUDBConnector()";
+	/**
+	 * The name of the class, used for logging.
+	 */
+	private final static String MODULE = "UDBConnectorFactory";
 
-        ASelectConfigManager oASelectConfigManager = null; 
-        ASelectSystemLogger systemLogger = null; 
-        IUDBConnector oIUDBConnector = null;
-        String sConnectorType = null;
-        Object oUDBConfigSection = null;
-        String sConnectorID = null;
-        Object oConnectorSection = null;
-        
-        try
-        {
-            oASelectConfigManager = ASelectConfigManager.getHandle();
-            systemLogger = ASelectSystemLogger.getHandle();
-        
-            //get udb connector id from udb config section
-            try
-            {
-                oUDBConfigSection = oASelectConfigManager.getSection(
-                    null, "udb");
-            }
-            catch (ASelectConfigException eAC)
-            {
-                systemLogger.log(Level.SEVERE, MODULE, sMethod,
-                    "No 'udb' config section found in configuration", eAC);
-                throw eAC;
-            }
+	/**
+	 * Method to resolve a valid UDB Connector object. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Returns a <code>IUDBConnector</code> that can be used to connect to the A-Select User Database as configured in
+	 * the A-Select Server configuration. <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * - <br>
+	 * 
+	 * @return <code>null</code> if no valid <code>IUDBConnector</code> can be created.
+	 * @throws ASelectException
+	 *             If retrieving fails.
+	 */
+	public static IUDBConnector getUDBConnector()
+		throws ASelectException
+	{
+		String sMethod = "getUDBConnector()";
 
-            try
-            {
-                sConnectorID = oASelectConfigManager.getParam(
-                    oUDBConfigSection, "connector");
-            }
-            catch (ASelectConfigException eAC)
-            {
-                systemLogger.log(Level.SEVERE, MODULE, sMethod,
-                    "No 'connector' config item found in 'udb' config section.", eAC);
-                throw eAC;
-            }
-            
-            try
-            {
-                //get udb connector handler from connector section
-                oConnectorSection = oASelectConfigManager.getSection(
-                    oUDBConfigSection, "connector", "id=" + sConnectorID);
-            }
-            catch (ASelectConfigException eAC)
-            {
-                StringBuffer sbFailed = new StringBuffer(
-                    "No 'connector' config section found with id='");
-                sbFailed.append(sConnectorID);
-                sbFailed.append("'");
-                systemLogger.log(Level.SEVERE, MODULE, sMethod,
-                    sbFailed.toString(), eAC);
-                throw eAC;
-            }
+		ASelectConfigManager oASelectConfigManager = null;
+		ASelectSystemLogger systemLogger = null;
+		IUDBConnector oIUDBConnector = null;
+		String sConnectorType = null;
+		Object oUDBConfigSection = null;
+		String sConnectorID = null;
+		Object oConnectorSection = null;
 
-            try
-            {
-                sConnectorType = oASelectConfigManager.getParam(oConnectorSection,
-                "class");
-            }
-            catch (ASelectConfigException eAC)
-            {
-                StringBuffer sbFailed = new StringBuffer(
-                    "No 'class' config item found in 'connector' config section with id='");
-                sbFailed.append(sConnectorID);
-                sbFailed.append("'.");
-                systemLogger.log(Level.SEVERE, MODULE, sMethod,
-                    sbFailed.toString(), eAC);
-                throw eAC;
-            }
-            
-            try
-            {
-                Class oClass = Class.forName(sConnectorType);
-                oIUDBConnector = (IUDBConnector)oClass.newInstance();
-            }
-            catch (Exception e)
-            {
-                StringBuffer sbFailed = new StringBuffer(
-                	"Config item 'class' in 'connector' config section with id='");
-                sbFailed.append(sConnectorID);
-                sbFailed.append("' doesn't contain a valid IUDBConnector class");
-                systemLogger.log(Level.SEVERE, MODULE, sMethod,
-                    sbFailed.toString(), e);
-                throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_INTERNAL,e);
-            }
-            
-            oIUDBConnector.init(oConnectorSection);
-        }
-        catch (ASelectException e)
-        {
-           throw e;
-        }
-        catch (Exception e)
-        {
-            systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize UDB connector", e);
-            throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_INTERNAL,e);
-        }
-        
-        return oIUDBConnector;
-    }
+		try {
+			oASelectConfigManager = ASelectConfigManager.getHandle();
+			systemLogger = ASelectSystemLogger.getHandle();
+
+			// get udb connector id from udb config section
+			try {
+				oUDBConfigSection = oASelectConfigManager.getSection(null, "udb");
+			}
+			catch (ASelectConfigException eAC) {
+				systemLogger.log(Level.SEVERE, MODULE, sMethod, "No 'udb' config section found in configuration", eAC);
+				throw eAC;
+			}
+
+			try {
+				sConnectorID = oASelectConfigManager.getParam(oUDBConfigSection, "connector");
+			}
+			catch (ASelectConfigException eAC) {
+				systemLogger.log(Level.SEVERE, MODULE, sMethod,
+						"No 'connector' config item found in 'udb' config section.", eAC);
+				throw eAC;
+			}
+
+			try {
+				// get udb connector handler from connector section
+				oConnectorSection = oASelectConfigManager.getSection(oUDBConfigSection, "connector", "id="
+						+ sConnectorID);
+			}
+			catch (ASelectConfigException eAC) {
+				StringBuffer sbFailed = new StringBuffer("No 'connector' config section found with id='");
+				sbFailed.append(sConnectorID);
+				sbFailed.append("'");
+				systemLogger.log(Level.SEVERE, MODULE, sMethod, sbFailed.toString(), eAC);
+				throw eAC;
+			}
+
+			try {
+				sConnectorType = oASelectConfigManager.getParam(oConnectorSection, "class");
+			}
+			catch (ASelectConfigException eAC) {
+				StringBuffer sbFailed = new StringBuffer(
+						"No 'class' config item found in 'connector' config section with id='");
+				sbFailed.append(sConnectorID);
+				sbFailed.append("'.");
+				systemLogger.log(Level.SEVERE, MODULE, sMethod, sbFailed.toString(), eAC);
+				throw eAC;
+			}
+
+			try {
+				Class oClass = Class.forName(sConnectorType);
+				oIUDBConnector = (IUDBConnector) oClass.newInstance();
+			}
+			catch (Exception e) {
+				StringBuffer sbFailed = new StringBuffer("Config item 'class' in 'connector' config section with id='");
+				sbFailed.append(sConnectorID);
+				sbFailed.append("' doesn't contain a valid IUDBConnector class");
+				systemLogger.log(Level.SEVERE, MODULE, sMethod, sbFailed.toString(), e);
+				throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_INTERNAL, e);
+			}
+
+			oIUDBConnector.init(oConnectorSection);
+		}
+		catch (ASelectException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize UDB connector", e);
+			throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_INTERNAL, e);
+		}
+
+		return oIUDBConnector;
+	}
 }
-

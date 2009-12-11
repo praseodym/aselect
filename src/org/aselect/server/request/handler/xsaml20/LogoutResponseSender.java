@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.xsaml20;
 
 import java.security.PrivateKey;
@@ -10,7 +21,6 @@ import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
-import org.opensaml.Configuration;
 import org.opensaml.common.SAMLObjectBuilder;
 import org.opensaml.common.binding.BasicSAMLMessageContext;
 import org.opensaml.saml2.binding.encoding.HTTPRedirectDeflateEncoder;
@@ -27,12 +37,16 @@ import org.opensaml.xml.security.x509.BasicX509Credential;
 import org.opensaml.xml.util.XMLHelper;
 import org.w3c.dom.Node;
 
+// TODO: Auto-generated Javadoc
 public class LogoutResponseSender
 {
 	private final static String MODULE = "LogoutResponseSender";
 	private ASelectSystemLogger _systemLogger;
 	private PrivateKey privateKey;
 
+	/**
+	 * Instantiates a new logout response sender.
+	 */
 	public LogoutResponseSender() {
 		_systemLogger = ASelectSystemLogger.getHandle();
 		privateKey = ASelectConfigManager.getHandle().getDefaultPrivateKey();
@@ -42,31 +56,34 @@ public class LogoutResponseSender
 	 * Send Logout Response. <br>
 	 * 
 	 * @param logoutResponseLocation
-	 *                String with location to send response .
+	 *            String with location to send response .
 	 * @param issuer
-	 *                String with Issuer url.
+	 *            String with Issuer url.
 	 * @param statusCode
-	 *                String with ???.
+	 *            String with ???.
 	 * @param inResponseTo
-	 *                String with ???.
+	 *            String with ???.
 	 * @param request
-	 *                HttpServletRequest.
+	 *            HttpServletRequest.
 	 * @param response
-	 *                HttpServletResponse.
+	 *            HttpServletResponse.
+	 * @param sRelayState
+	 *            the s relay state
 	 * @throws ASelectException
-	 *                 If sending fails.
+	 *             If sending fails.
 	 */
 	@SuppressWarnings("unchecked")
 	public void sendLogoutResponse(String logoutResponseLocation, String issuer, String statusCode,
 			String inResponseTo, String sRelayState, HttpServletRequest request, HttpServletResponse response)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "sendLogoutResponse()";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Send LogoutResponse to: "+logoutResponseLocation+" RelayState="+sRelayState);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Send LogoutResponse to: " + logoutResponseLocation
+				+ " RelayState=" + sRelayState);
 
 		LogoutResponse logoutResponse = SamlTools.buildLogoutResponse(issuer, statusCode, inResponseTo);
 
-		XMLObjectBuilderFactory builderFactory = Configuration.getBuilderFactory();
+		XMLObjectBuilderFactory builderFactory = org.opensaml.xml.Configuration.getBuilderFactory();
 		SAMLObjectBuilder<Endpoint> endpointBuilder = (SAMLObjectBuilder<Endpoint>) builderFactory
 				.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);
 		Endpoint samlEndpoint = endpointBuilder.buildObject();
@@ -74,16 +91,17 @@ public class LogoutResponseSender
 		String sAppUrl = request.getRequestURL().toString();
 		samlEndpoint.setResponseLocation(sAppUrl);
 
-		HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response, logoutResponseLocation);
+		HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response,
+				logoutResponseLocation);
 		// RH 20081113, set appropriate headers
 		outTransport.setHeader("Pragma", "no-cache");
 		outTransport.setHeader("Cache-Control", "no-cache, no-store");
-		
+
 		BasicSAMLMessageContext messageContext = new BasicSAMLMessageContext();
 		messageContext.setOutboundMessageTransport(outTransport);
 		messageContext.setOutboundSAMLMessage(logoutResponse);
 		messageContext.setPeerEntityEndpoint(samlEndpoint);
-		
+
 		// 20090604, Bauke: moved RelayState setting from caller to here
 		if (sRelayState != null) {
 			messageContext.setRelayState(sRelayState);
@@ -93,7 +111,7 @@ public class LogoutResponseSender
 		credential.setPrivateKey(privateKey);
 		messageContext.setOutboundSAMLMessageSigningCredential(credential);
 
-		MarshallerFactory factory = Configuration.getMarshallerFactory();
+		MarshallerFactory factory = org.opensaml.xml.Configuration.getMarshallerFactory();
 		Marshaller marshaller = factory.getMarshaller(messageContext.getOutboundSAMLMessage());
 		Node node = null;
 		try {

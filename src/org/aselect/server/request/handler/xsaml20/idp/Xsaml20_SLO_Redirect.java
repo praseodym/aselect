@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.xsaml20.idp;
 
 import java.io.PrintWriter;
@@ -28,27 +39,31 @@ import org.opensaml.saml2.core.Response;
 import org.opensaml.saml2.core.StatusCode;
 import org.opensaml.xml.util.XMLHelper;
 
+// TODO: Auto-generated Javadoc
 /**
- * IdP SLO Service
- * Single Logout entry using HTTP-Redirect
+ * IdP SLO Service Single Logout entry using HTTP-Redirect
  */
 // Example configuration
 // <handler id="saml20_slo"
-//    class="org.aselect.server.request.handler.xsaml20.idp.Xsaml20_SLO_Redirect"
-//    target="/saml20_slo.*" >
+// class="org.aselect.server.request.handler.xsaml20.idp.Xsaml20_SLO_Redirect"
+// target="/saml20_slo.*" >
 // </handler>
 //
 public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 {
-    private final static String MODULE = "idp.Xsaml20_SLO_Redirect";
-//	private final static String SESSION_ID_PREFIX = "saml20_";
+	private final static String MODULE = "idp.Xsaml20_SLO_Redirect";
+	// private final static String SESSION_ID_PREFIX = "saml20_";
 	private final String LOGOUTREQUEST = "LogoutRequest";
 
 	private boolean _bTryRedirectLogoutFirst = true;
 	private int _iRedirectLogoutTimeout = 30;
-	
+
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.xsaml20.Saml20_BrowserHandler#init(javax.servlet.ServletConfig, java.lang.Object)
+	 */
+	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "init()";
 
@@ -59,7 +74,8 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 			_bTryRedirectLogoutFirst = false;
 
 		try {
-			_iRedirectLogoutTimeout = new Integer(_configManager.getParam(oConfig, "redirect_logout_timeout")).intValue();
+			_iRedirectLogoutTimeout = new Integer(_configManager.getParam(oConfig, "redirect_logout_timeout"))
+					.intValue();
 		}
 		catch (ASelectConfigException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
@@ -69,22 +85,31 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 	}
 
 	/**
-	 * Send a LogoutRequests to one of the other involved SPs
-	 * When control returns here, the next SP will be handled.
+	 * Send a LogoutRequests to one of the other involved SPs When control returns here, the next SP will be handled.
 	 * After the last one the TGT will be destroyed.
+	 * 
+	 * @param httpRequest
+	 *            the http request
+	 * @param httpResponse
+	 *            the http response
+	 * @param samlMessage
+	 *            the saml message
+	 * @throws ASelectException
+	 *             the a select exception
 	 */
+	@Override
 	protected void handleSpecificSaml20Request(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
-					SignableSAMLObject samlMessage)
-	throws ASelectException
+			SignableSAMLObject samlMessage)
+		throws ASelectException
 	{
 		String sMethod = "handleSpecificSaml20Request";
 		String pathInfo = httpRequest.getPathInfo();
-		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request received === Path="+ pathInfo);
+		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request received === Path=" + pathInfo);
 
 		try {
-			LogoutRequest logoutRequest = (LogoutRequest)samlMessage;
+			LogoutRequest logoutRequest = (LogoutRequest) samlMessage;
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "received SAMLRequest: \n"
-							+ XMLHelper.prettyPrintXML(logoutRequest.getDOM()));
+					+ XMLHelper.prettyPrintXML(logoutRequest.getDOM()));
 
 			PrintWriter pwOut = httpResponse.getWriter();
 			Response errorResponse = validateLogoutRequest(logoutRequest, httpRequest);
@@ -95,51 +120,51 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 				return;
 			}
 			// Now the message is OK
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "SAMLRequest="+httpRequest.getParameter("SAMLRequest"));
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "RelayState="+httpRequest.getParameter("RelayState"));
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "SigAlg="+httpRequest.getParameter("SigAlg"));
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signature="+httpRequest.getParameter("Signature"));
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Destination="+logoutRequest.getDestination());
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "SAMLRequest=" + httpRequest.getParameter("SAMLRequest"));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "RelayState=" + httpRequest.getParameter("RelayState"));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "SigAlg=" + httpRequest.getParameter("SigAlg"));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signature=" + httpRequest.getParameter("Signature"));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Destination=" + logoutRequest.getDestination());
 			String sConsent = httpRequest.getParameter("consent");
 			String sInitiatingSP = logoutRequest.getIssuer().getValue();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "consent="+sConsent+" SP="+sInitiatingSP);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "consent=" + sConsent + " SP=" + sInitiatingSP);
 
 			String sNameID = logoutRequest.getNameID().getValue();
 			TGTManager tgtManager = TGTManager.getHandle();
-			HashMap htTGTContext = (HashMap)tgtManager.getTGT(sNameID);
-			
+			HashMap htTGTContext = tgtManager.getTGT(sNameID);
+
 			// 20090525, Bauke: also save RelayState in the TGT for the logout response
 			// 20091118, Bauke: ignore "empty" RelayState (came from logout_info.html)
-			//           Note: we still have it in 'httpRequest'
-			String sRelayState = httpRequest.getParameter("RelayState");  // is null if missing
+			// Note: we still have it in 'httpRequest'
+			String sRelayState = httpRequest.getParameter("RelayState"); // is null if missing
 			if (sRelayState != null && sRelayState.equals("[RelayState]"))
 				sRelayState = null;
 			if (sRelayState != null)
 				htTGTContext.put("RelayState", sRelayState);
 			else
 				htTGTContext.remove("RelayState");
-			
+
 			// If user consent is needed, first show the logout_info.html
 			ASelectConfigManager configManager = ASelectConfigManager.getHandle();
 			if (!"true".equals(sConsent) && configManager.getUserInfoSettings().contains("logout")) {
-			//	if (sRelayState != null)  // saved RelayState in the TGT
+				// if (sRelayState != null) // saved RelayState in the TGT
 				tgtManager.updateTGT(sNameID, htTGTContext);
 				showLogoutInfo(httpRequest, httpResponse, pwOut, sInitiatingSP, logoutRequest.getDestination(),
 						htTGTContext, sRelayState);
 				return;
 			}
-	
+
 			// Delete the IdP client cookie
-	        String sCookieDomain = _configManager.getCookieDomain();
-	        HandlerTools.delCookieValue(httpResponse, "aselect_credentials", sCookieDomain, _systemLogger);
+			String sCookieDomain = _configManager.getCookieDomain();
+			HandlerTools.delCookieValue(httpResponse, "aselect_credentials", sCookieDomain, _systemLogger);
 			// NOTE: cookie GOES, TGT STAYS in admin (contains the sessions)!!
-			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Removed cookie for domain: "+sCookieDomain);
-			
+			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Removed cookie for domain: " + sCookieDomain);
+
 			// Will save TGT (including the RelayState) as well
 			// 20090616, Bauke: save initiator ID for the logout response
 			String sRequestID = logoutRequest.getID();
-	        logoutNextSessionSP(httpRequest, httpResponse, logoutRequest, sInitiatingSP, sRequestID,
-						_bTryRedirectLogoutFirst, _iRedirectLogoutTimeout, htTGTContext, null);
+			logoutNextSessionSP(httpRequest, httpResponse, logoutRequest, sInitiatingSP, sRequestID,
+					_bTryRedirectLogoutFirst, _iRedirectLogoutTimeout, htTGTContext, null);
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request handled " + pathInfo);
 		}
 		catch (ASelectException e) {
@@ -150,14 +175,34 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 	}
-	
-	private void showLogoutInfo(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
-			PrintWriter pwOut, String sInitiatingSP, String sRedirectUrl, HashMap htTGTContext, String sRelayState)
-	throws ASelectException
+
+	/**
+	 * Show logout info.
+	 * 
+	 * @param httpRequest
+	 *            the http request
+	 * @param httpResponse
+	 *            the http response
+	 * @param pwOut
+	 *            the pw out
+	 * @param sInitiatingSP
+	 *            the s initiating sp
+	 * @param sRedirectUrl
+	 *            the s redirect url
+	 * @param htTGTContext
+	 *            the ht tgt context
+	 * @param sRelayState
+	 *            the s relay state
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	private void showLogoutInfo(HttpServletRequest httpRequest, HttpServletResponse httpResponse, PrintWriter pwOut,
+			String sInitiatingSP, String sRedirectUrl, HashMap htTGTContext, String sRelayState)
+		throws ASelectException
 	{
 		final String sMethod = "showLogoutInfo";
-		
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "redirect_url="+sRedirectUrl);
+
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "redirect_url=" + sRedirectUrl);
 		String sInfoForm = _configManager.getForm("logout_info", _sUserLanguage, _sUserCountry);
 		sInfoForm = Utils.replaceString(sInfoForm, "[aselect_url]", sRedirectUrl);
 		sInfoForm = Utils.replaceString(sInfoForm, "[SAMLRequest]", httpRequest.getParameter("SAMLRequest"));
@@ -188,15 +233,26 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 		}
 		sInfoForm = Utils.replaceString(sInfoForm, "[other_sps]", sOtherSPs);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "display form");
-		
-		//sInfoForm = _configManager.updateTemplate(sInfoForm, _htSessionContext);
+
+		// sInfoForm = _configManager.updateTemplate(sInfoForm, _htSessionContext);
 		httpResponse.setContentType("text/html");
 		pwOut.println(sInfoForm);
 		pwOut.close();
 	}
 
+	/**
+	 * Validate logout request.
+	 * 
+	 * @param logoutRequest
+	 *            the logout request
+	 * @param httpRequest
+	 *            the http request
+	 * @return the response
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private Response validateLogoutRequest(LogoutRequest logoutRequest, HttpServletRequest httpRequest)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "validateLogoutRequest()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
@@ -219,17 +275,21 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, sStatusMessage);
 			return errorResponse(sInResponseTo, sDestination, sStatusCode, sStatusMessage);
 		}
-		
+
 		_systemLogger.log(Level.INFO, MODULE, sMethod, sMethod + " successful");
 		return errorResponse;
 	}
-    
+
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.xsaml20.Saml20_BrowserHandler#retrieveIssuer(java.lang.String, org.opensaml.common.SignableSAMLObject)
+	 */
+	@Override
 	public Issuer retrieveIssuer(String elementName, SignableSAMLObject samlMessage)
-    {
-	    if (elementName.equals(LOGOUTREQUEST)) {
+	{
+		if (elementName.equals(LOGOUTREQUEST)) {
 			LogoutRequest logoutRequest = (LogoutRequest) samlMessage;
 			return logoutRequest.getIssuer();
 		}
 		return null;
-    }
+	}
 }

@@ -70,19 +70,18 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.sam.agent.SAMResource;
 
+// TODO: Auto-generated Javadoc
 /**
- * API call Attribute requestor.
- * <br><br>
+ * API call Attribute requestor. <br>
+ * <br>
  * <b>Description:</b><br>
- * Attribute requestor wich uses SOAP1.1, SOAP1.2, or RAW API calls
- * to sends an API attributes retrieval call to a server.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * Attribute requestor wich uses SOAP1.1, SOAP1.2, or RAW API calls to sends an API attributes retrieval call to a
+ * server. <br>
  * <br>
- * The <code>APIAttributeRequestor</code> should be initialized once.
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * The <code>APIAttributeRequestor</code> should be initialized once. <br>
  * 
+ * @author Alfa & Ariss
  */
 public class APIAttributeRequestor extends GenericAttributeRequestor implements IAttributeRequestor
 {
@@ -110,12 +109,12 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 	private String _sAPIResourceGroup;
 
 	/**
-	 * Create a new <code>APIAttributeRequestor</code>.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Create a new <code>APIAttributeRequestor</code>. <br>
 	 * <br>
-	 * calls <code>super()</code>.
-	 * <br><br>
+	 * <b>Description:</b> <br>
+	 * calls <code>super()</code>. <br>
+	 * <br>
+	 * 
 	 * @see GenericAttributeRequestor#GenericAttributeRequestor()
 	 */
 	public APIAttributeRequestor() {
@@ -124,19 +123,22 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 	}
 
 	/**
-	 * Initializes the <code>APIAttributeRequestor</code>.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Initializes the <code>APIAttributeRequestor</code>. <br>
 	 * <br>
+	 * <b>Description:</b> <br>
 	 * Performs the following steps:
 	 * <ul>
-	 * 	<li>Create an appropiate communicator</li>
-	 * 	<li>get target URL using SAM</li> 
-	 * 	<li>Get configured parameters</li>
-	 * 	<li>Get attributes array name</li>
-	 * 	<li>Get attributes mapping</li>
+	 * <li>Create an appropiate communicator</li>
+	 * <li>get target URL using SAM</li>
+	 * <li>Get configured parameters</li>
+	 * <li>Get attributes array name</li>
+	 * <li>Get attributes mapping</li>
 	 * </ul>
 	 * 
+	 * @param oConfig
+	 *            the o config
+	 * @throws ASelectException
+	 *             the a select exception
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#init(java.lang.Object)
 	 */
 	public void init(Object oConfig)
@@ -144,7 +146,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 	{
 		String sMethod = "init()";
 		try {
-			//Get main configuration
+			// Get main configuration
 			Object oMainConfiguration = null;
 			try {
 				oMainConfiguration = _configManager.getSection(oConfig, "main");
@@ -155,7 +157,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 				throw new ASelectAttributesException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
 			}
 
-			//Get communicator
+			// Get communicator
 			String sProtocol = null;
 			try {
 				sProtocol = _configManager.getParam(oMainConfiguration, "transferprotocol");
@@ -177,11 +179,11 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 				_communicator = new SOAP12Communicator(_sSOAPMethod, _systemLogger);
 			}
 			else {
-				//raw communication is specified or something unreadable
+				// raw communication is specified or something unreadable
 				_communicator = new RawCommunicator(_systemLogger);
 			}
 
-			//get target from SAM     
+			// get target from SAM
 			try {
 				_sAPIResourceGroup = _configManager.getParam(oConfig, "resourcegroup");
 				getConnection();
@@ -197,7 +199,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 				throw new ASelectAttributesException(Errors.ERROR_ASELECT_INTERNAL_ERROR, eSAM);
 			}
 
-			//Get configured parameters
+			// Get configured parameters
 			_vTGTParameters = new Vector();
 			_htConfigParameters = new HashMap();
 			Object oParameterConfiguration = null;
@@ -217,11 +219,11 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
 							"Could not retrieve one 'parameter' in 'parameters' configuration section", eAC);
 				}
-				while (oParameter != null) //for all parameters
+				while (oParameter != null) // for all parameters
 				{
 					try {
 						String sParameterName = _configManager.getParam(oParameter, "id");
-						//check if the parameter is a session parameter
+						// check if the parameter is a session parameter
 						boolean bSession = false;
 						try {
 							String sAttributeMapping = _configManager.getParam(oParameter, "session");
@@ -229,13 +231,13 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 								bSession = true;
 						}
 						catch (ASelectConfigException eAC) {
-							//bSession allready false
+							// bSession allready false
 						}
 
 						if (bSession)
 							_vTGTParameters.add(sParameterName);
 						else {
-							//retrieve value
+							// retrieve value
 							String sParameterValue = _configManager.getParam(oParameter, "value");
 							_htConfigParameters.put(sParameterName, sParameterValue);
 						}
@@ -259,7 +261,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 				throw new ASelectAttributesException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
 			}
 
-			//Get configured attributes from configuration
+			// Get configured attributes from configuration
 			_vAllAttributes = new Vector();
 			_vAllAttributesMappings = new Vector();
 			Object oAttributesConfiguration = null;
@@ -275,15 +277,20 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 			if (oAttributesConfiguration != null) {
 				Object oAttribute = null;
 
-				//get all attribute mappings
+				// get all attribute mappings
 				try {
 					oAttribute = _configManager.getSection(oAttributesConfiguration, "attribute");
 				}
 				catch (ASelectConfigException eAC) {
-					_systemLogger.log(Level.CONFIG,	MODULE,	sMethod,
-							"Could not retrieve one 'attribute' in 'attribute_mapping' configuration section, no mapping used",	eAC);
+					_systemLogger
+							.log(
+									Level.CONFIG,
+									MODULE,
+									sMethod,
+									"Could not retrieve one 'attribute' in 'attribute_mapping' configuration section, no mapping used",
+									eAC);
 				}
-				while (oAttribute != null) //for all attributes
+				while (oAttribute != null) // for all attributes
 				{
 					try {
 						String sAttributeName = _configManager.getParam(oAttribute, "id");
@@ -319,8 +326,16 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 	}
 
 	/**
-	 * Retrieve all, or the specified attributes.
-	 * <br><br>
+	 * Retrieve all, or the specified attributes. <br>
+	 * <br>
+	 * 
+	 * @param htTGTContext
+	 *            the ht tgt context
+	 * @param vAttributes
+	 *            the v attributes
+	 * @return the attributes
+	 * @throws ASelectAttributesException
+	 *             the a select attributes exception
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(HashMap, Vector)
 	 */
 	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes)
@@ -336,9 +351,9 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 
 		HashMap htAttributes = new HashMap();
 		try {
-			if (!vAttributes.isEmpty()) //Attributes should be gathered.
+			if (!vAttributes.isEmpty()) // Attributes should be gathered.
 			{
-				//get connection
+				// get connection
 				try {
 					sURL = getConnection();
 				}
@@ -346,10 +361,10 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not retrieve connection from sam", eSAM);
 					throw new ASelectAttributesException(eSAM.getMessage());
 				}
-				//create request/response
+				// create request/response
 				HashMap htRequest = new HashMap();
 				HashMap htResponse = new HashMap();
-				//set TGT parameters
+				// set TGT parameters
 				Enumeration e = _vTGTParameters.elements();
 				while (e.hasMoreElements()) {
 					String sName = (String) e.nextElement();
@@ -364,34 +379,34 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 					htRequest.put(sName, sValue);
 				}
 
-				//set Configuration parameters
+				// set Configuration parameters
 				htRequest.putAll(_htConfigParameters);
 
-				//add attribute names to request if applicable
-				if (!vAttributes.firstElement().equals("*")) //Not a Wildcard
+				// add attribute names to request if applicable
+				if (!vAttributes.firstElement().equals("*")) // Not a Wildcard
 				{
-					//Map requested attributes            
+					// Map requested attributes
 					Vector vRequestAttributes = new Vector();
 					Object[] oa = vAttributes.toArray();
-					for (int i = 0; i < oa.length; i++) //for all requested attributes
+					for (int i = 0; i < oa.length; i++) // for all requested attributes
 					{
-						//get mapping
+						// get mapping
 						int iIndex = _vAllAttributes.indexOf(oa[i]);
-						if (iIndex < 0) { //no mapping available
+						if (iIndex < 0) { // no mapping available
 							vRequestAttributes.add(oa[i]);
 						}
-						else { //map name
+						else { // map name
 							vRequestAttributes.add(_vAllAttributesMappings.get(iIndex));
 						}
 					}
 					oaAttributes = (String[]) vRequestAttributes.toArray(new String[0]);
-					//Add attributes        
+					// Add attributes
 					htRequest.put(_sAttributesName, oaAttributes);
 				}
 
-				//send message
+				// send message
 				htResponse = _communicator.sendMessage(htRequest, sURL);
-				//retrieve response
+				// retrieve response
 				String saValues[] = (String[]) htResponse.get(_sAttributesName);
 				if (saValues == null) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No attributes in response from: " + sURL);
@@ -400,7 +415,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 				}
 
 				for (int i = 0; i < saValues.length; i++)
-				//for all response attributes
+				// for all response attributes
 				{
 					Vector vVector = null;
 					// Spit value: key=value
@@ -408,7 +423,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 					iEqualsPos = sStatusKeyValue.indexOf("=");
 					sStatusKey = sStatusKeyValue.substring(0, iEqualsPos);
 					sStatusValue = sStatusKeyValue.substring(iEqualsPos + 1);
-					//convert to mapping
+					// convert to mapping
 					int iIndex = _vAllAttributesMappings.indexOf(sStatusKey);
 					if (iIndex >= 0) { // mapping available
 						sStatusKey = (String) _vAllAttributes.get(iIndex);
@@ -423,7 +438,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 						}
 						else {
 							vVector = new Vector();
-							vVector.add((String) oTemp.toString());
+							vVector.add(oTemp.toString());
 						}
 						vVector.add(sStatusValue);
 						htAttributes.put(sStatusKey, vVector);
@@ -441,7 +456,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 			throw new ASelectAttributesException(eAC.getMessage());
 		}
 		catch (ASelectAttributesException eAA) {
-			//allready logged
+			// allready logged
 			throw eAA;
 		}
 		catch (Exception e) {
@@ -452,19 +467,22 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 	}
 
 	/**
-	 * Destroy the <code>APIAttributeRequestor</code>.
-	 * <br><br>
+	 * Destroy the <code>APIAttributeRequestor</code>. <br>
+	 * <br>
+	 * 
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#destroy()
 	 */
 	public void destroy()
 	{
-		//Do nothing for now        
+		// Do nothing for now
 	}
 
 	/**
 	 * Retrieving a URL from a resource that is available.
+	 * 
 	 * @return URL as <code>String</code>.
-	 * @throws ASelectSAMException If retrieving fails.
+	 * @throws ASelectSAMException
+	 *             If retrieving fails.
 	 */
 	private String getConnection()
 		throws ASelectSAMException
@@ -494,10 +512,13 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 		return sUrl;
 	}
 
-	/** 
-	 * retrieve SOAPMethod from configuration. 
-	 * @param oMainConfiguration The main configuration exception.
-	 * @throws ASelectAttributesException if retrieving fails. 
+	/**
+	 * retrieve SOAPMethod from configuration.
+	 * 
+	 * @param oMainConfiguration
+	 *            The main configuration exception.
+	 * @throws ASelectAttributesException
+	 *             if retrieving fails.
 	 */
 	private void retrieveSOAPMethodFromConfig(Object oMainConfiguration)
 		throws ASelectAttributesException

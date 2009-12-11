@@ -74,19 +74,17 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.BASE64Decoder;
 import org.aselect.system.utils.BASE64Encoder;
 
+// TODO: Auto-generated Javadoc
 /**
- * The A-Select AuthSP CryptoEngine. 
- * <br>
+ * The A-Select AuthSP CryptoEngine. <br>
  * <br>
  * <b>Description: </b> <br>
- * Its function is to load the default AuthSP signing key and generate/verify 
- * signatures.<br>
+ * Its function is to load the default AuthSP signing key and generate/verify signatures.<br>
  * <br>
  * <b>Concurrency issues: </b> <br>
  * - <br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class CryptoEngine
 {
@@ -96,7 +94,7 @@ public class CryptoEngine
 	private final static String MODULE = "CryptoEngine";
 
 	/**
-	 * The name of the AuthSP keystore 
+	 * The name of the AuthSP keystore
 	 */
 	private final static String SERVER_KEYSTORE_NAME = "authsp.keystore";
 
@@ -136,8 +134,7 @@ public class CryptoEngine
 	private AuthSPSystemLogger _systemLogger = null;
 
 	/**
-	 * Contains all public keys of the A-Select Servers connected with this 
-	 * AuthSP Server.
+	 * Contains all public keys of the A-Select Servers connected with this AuthSP Server.
 	 */
 	private HashMap _htPublicKeys = null;
 
@@ -152,31 +149,29 @@ public class CryptoEngine
 	private Provider _oSignatureProvider = null;
 
 	/**
-	 * Constructor for <code>CryptoEngine</code>.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Constructor for <code>CryptoEngine</code>. <br>
 	 * <br>
-	 * Loads AuthSP Server keys: private and public. It also loads the public 
-	 * keys of the A-Select Servers that are connected.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Loads AuthSP Server keys: private and public. It also loads the public keys of the A-Select Servers that are
+	 * connected. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
+	 * <b>Preconditions:</b> <br>
 	 * - <i>sWorkingDir</i> may not be <code>null</code><br>
-	 * - <i>oAuthSPSystemLogger</i> may not be <code>null</code> and must be 
-	 * initialized<br>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * - <i>oAuthSPSystemLogger</i> may not be <code>null</code> and must be initialized<br>
 	 * <br>
-	 * - Will start if no A-Select Server public keys are found.
 	 * <br>
-	 * @param sWorkingDir The directory of the AuthSP Server where the keystores 
-	 * are located.
-	 * @param oAuthSPSystemLogger The logger that is used for system logging.
-	 * @throws ASelectException if the Crypto engine can not be initialized.
+	 * <b>Postconditions:</b> <br>
+	 * - Will start if no A-Select Server public keys are found. <br>
+	 * 
+	 * @param sWorkingDir
+	 *            The directory of the AuthSP Server where the keystores are located.
+	 * @param oAuthSPSystemLogger
+	 *            The logger that is used for system logging.
+	 * @throws ASelectException
+	 *             if the Crypto engine can not be initialized.
 	 */
 	public CryptoEngine(String sWorkingDir, AuthSPSystemLogger oAuthSPSystemLogger)
 		throws ASelectException {
@@ -231,7 +226,7 @@ public class CryptoEngine
 					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 				}
 
-				while (oCryptoProvider != null) //for all providers
+				while (oCryptoProvider != null) // for all providers
 				{
 					String sProviderID = null;
 					try {
@@ -274,12 +269,12 @@ public class CryptoEngine
 			// Obtain algorithm for generating/verifying signatures
 			readSignatureConfig(oCryptoSection, htProviders);
 
-			//loading authsp private and public key for generating 
-			//and verifying signatures
+			// loading authsp private and public key for generating
+			// and verifying signatures
 			loadDefaultKeys(sWorkingDir);
 
-			//loading public keys of all A-Select Servers that use the AuthSP 
-			//Server
+			// loading public keys of all A-Select Servers that use the AuthSP
+			// Server
 			loadPublicKeys(sWorkingDir);
 
 			if (_htPublicKeys.size() == 0) {
@@ -297,29 +292,27 @@ public class CryptoEngine
 	}
 
 	/**
-	 * Generates a signature of the supplied data.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Generates a signature of the supplied data. <br>
 	 * <br>
-	 * Generates a signature of the supplied data <code>String</code> by using 
-	 * the AuthSP private key.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Generates a signature of the supplied data <code>String</code> by using the AuthSP private key. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
+	 * <b>Preconditions:</b> <br>
 	 * - <i>sData</i> may not be <code>null</code><br>
-	 * <br><br>
-	 * <b>Postconditions:</b>
 	 * <br>
-	 * - Doesn't throw exceptions, not even when something went wrong.
 	 * <br>
-	 * @param sData the data that should be signed
-	 * @return <code>null</code> when signature could not be generated or the 
-	 * signatue of the supplied data as a <code>String</code>
-	 * @throws ASelectException If generating fails.
+	 * <b>Postconditions:</b> <br>
+	 * - Doesn't throw exceptions, not even when something went wrong. <br>
+	 * 
+	 * @param sData
+	 *            the data that should be signed
+	 * @return <code>null</code> when signature could not be generated or the signatue of the supplied data as a
+	 *         <code>String</code>
+	 * @throws ASelectException
+	 *             If generating fails.
 	 */
 	public synchronized String generateSignature(String sData)
 		throws ASelectException
@@ -351,34 +344,31 @@ public class CryptoEngine
 	}
 
 	/**
-	 * Verifies a signature.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Verifies a signature. <br>
 	 * <br>
-	 * Verifies the given signature for the given data with the key that is 
-	 * known by the given alias.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Verifies the given signature for the given data with the key that is known by the given alias. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
+	 * <b>Preconditions:</b> <br>
 	 * - <i>sAlias</i> may not be <code>null</code><br>
 	 * - <i>sData</i> may not be <code>null</code><br>
 	 * - <i>sSignature</i> may not be <code>null</code><br>
-	 * <br><br>
-	 * <b>Postconditions:</b>
 	 * <br>
-	 * - Will also log with <code>Level.FINE</code> if the verification was not 
-	 * succesfull. 
 	 * <br>
-	 * @param sAlias the alias that is used to identify the public key that is 
-	 * used for verification
-	 * @param sData contains the data that is signed 
-	 * @param sSignature the signature that must be verified
-	 * @return <code>TRUE</code> if the signature is successfully verified or 
-	 * <code>FALSE</code> if it could not be verified.
+	 * <b>Postconditions:</b> <br>
+	 * - Will also log with <code>Level.FINE</code> if the verification was not succesfull. <br>
+	 * 
+	 * @param sAlias
+	 *            the alias that is used to identify the public key that is used for verification
+	 * @param sData
+	 *            contains the data that is signed
+	 * @param sSignature
+	 *            the signature that must be verified
+	 * @return <code>TRUE</code> if the signature is successfully verified or <code>FALSE</code> if it could not be
+	 *         verified.
 	 */
 	public synchronized boolean verifySignature(String sAlias, String sData, String sSignature)
 	{
@@ -430,8 +420,9 @@ public class CryptoEngine
 	}
 
 	/**
-	 * Short description.
-	 * <br><br>
+	 * Short description. <br>
+	 * <br>
+	 * 
 	 * @return a <code>String</code> representation of this <code>Object</code>.
 	 */
 	public String getDescription()
@@ -440,31 +431,28 @@ public class CryptoEngine
 	}
 
 	/**
-	 * This function verifies a signature generated with our private key.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * This function verifies a signature generated with our private key. <br>
 	 * <br>
-	 * It can be used to verify a signature of a request that is created by the 
-	 * AuthSP Server itself.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * It can be used to verify a signature of a request that is created by the AuthSP Server itself. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
+	 * <b>Preconditions:</b> <br>
 	 * - <i>sData</i> may not be <code>null</code><br>
 	 * - <i>sSignature</i> may not be <code>null</code><br>
-	 * <br><br>
-	 * <b>Postconditions:</b>
 	 * <br>
-	 * - Will also log with <code>Level.FINE</code> if the verification was not 
-	 * succesfull. 
 	 * <br>
-	 * @param sData The data from which the supplied signature is created.
-	 * @param sSignature The signature of the supplied data.
-	 * @return <code>TRUE</code> if the signature is successfully verified or 
-	 * <code>FALSE</code> if it could not be verified.
+	 * <b>Postconditions:</b> <br>
+	 * - Will also log with <code>Level.FINE</code> if the verification was not succesfull. <br>
+	 * 
+	 * @param sData
+	 *            The data from which the supplied signature is created.
+	 * @param sSignature
+	 *            The signature of the supplied data.
+	 * @return <code>TRUE</code> if the signature is successfully verified or <code>FALSE</code> if it could not be
+	 *         verified.
 	 */
 	public synchronized boolean verifyMySignature(String sData, String sSignature)
 	{
@@ -504,12 +492,12 @@ public class CryptoEngine
 	}
 
 	/**
-	 * This method loads the private and public key of this AuthSP Server from the
-	 * specified keystore.
+	 * This method loads the private and public key of this AuthSP Server from the specified keystore.
 	 * 
-	 * @param sWorkingDir directory in which the keystores are located
-	 * @throws ASelectException if any error occurs while loading the default 
-	 * keys
+	 * @param sWorkingDir
+	 *            directory in which the keystores are located
+	 * @throws ASelectException
+	 *             if any error occurs while loading the default keys
 	 */
 	private void loadDefaultKeys(String sWorkingDir)
 		throws ASelectException
@@ -568,7 +556,7 @@ public class CryptoEngine
 			java.security.cert.X509Certificate x509Cert = (java.security.cert.X509Certificate) ksPrivate
 					.getCertificate(KEY_ALIAS);
 
-			//public key is needed for verifying signatures
+			// public key is needed for verifying signatures
 			_oPublicKey = x509Cert.getPublicKey();
 		}
 		catch (ASelectException e) {
@@ -583,11 +571,12 @@ public class CryptoEngine
 	}
 
 	/**
-	 * This method loads the public keys of A-Select Servers
+	 * This method loads the public keys of A-Select Servers.
 	 * 
-	 * @param sWorkingDir directory in which the keystores are located
-	 * @throws ASelectException if any error occurs while loading the A-Select 
-	 * public keys
+	 * @param sWorkingDir
+	 *            directory in which the keystores are located
+	 * @throws ASelectException
+	 *             if any error occurs while loading the A-Select public keys
 	 */
 	private void loadPublicKeys(String sWorkingDir)
 		throws ASelectException
@@ -635,6 +624,16 @@ public class CryptoEngine
 		}
 	}
 
+	/**
+	 * Read signature config.
+	 * 
+	 * @param oCryptoSection
+	 *            the o crypto section
+	 * @param htProviders
+	 *            the ht providers
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private void readSignatureConfig(Object oCryptoSection, HashMap htProviders)
 		throws ASelectException
 	{
@@ -649,12 +648,16 @@ public class CryptoEngine
 			oSection = null;
 			_sSignatureAlgorithm = DEFAULT_SIGNATURE_ALGORITHM;
 
-			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-					"Could not retrieve 'signature_algorithm' config section in crypto config section. Using default algorithm and provider.");
+			_systemLogger
+					.log(
+							Level.CONFIG,
+							MODULE,
+							sMethod,
+							"Could not retrieve 'signature_algorithm' config section in crypto config section. Using default algorithm and provider.");
 		}
 
 		if (oSection != null) {
-			//retrieve algorithm
+			// retrieve algorithm
 			try {
 				_sSignatureAlgorithm = _oAuthSPConfigManager.getParam(oSection, "algorithm");
 			}
@@ -668,15 +671,16 @@ public class CryptoEngine
 			}
 		}
 
-		//retrieve provider
+		// retrieve provider
 		if (oSection != null) {
 			try {
 				sProvider = _oAuthSPConfigManager.getParam(oSection, "provider");
 			}
 			catch (ASelectConfigException e) {
 				sProvider = null;
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"Could not retrieve 'provider' config section in crypto config section. Using default provider.");
+				_systemLogger
+						.log(Level.CONFIG, MODULE, sMethod,
+								"Could not retrieve 'provider' config section in crypto config section. Using default provider.");
 			}
 
 			if (sProvider != null) {

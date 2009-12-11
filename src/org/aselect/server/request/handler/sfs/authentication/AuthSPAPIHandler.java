@@ -62,7 +62,7 @@
  * - Redesign of request handling
  *
  *
-*/
+ */
 
 package org.aselect.server.request.handler.sfs.authentication;
 
@@ -81,166 +81,145 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
 
+// TODO: Auto-generated Javadoc
 /**
- * This class handles authentication responses and API calls
- * originating from an authsp. It must be used as follows:
- * <br>
- * For each new incoming request, create a new 
- * <code>AuthSPRequestHandler</code> object and call its
- * <code>handleRequest()</code> method.
- * <code>AuthSPRequestHandler</code> objects cannot be reused
- * due to concurrency issues. 
+ * This class handles authentication responses and API calls originating from an authsp. It must be used as follows: <br>
+ * For each new incoming request, create a new <code>AuthSPRequestHandler</code> object and call its
+ * <code>handleRequest()</code> method. <code>AuthSPRequestHandler</code> objects cannot be reused due to concurrency
+ * issues.
  * 
  * @author Alfa & Ariss
- * 
- * 
  */
 public class AuthSPAPIHandler extends AbstractAPIRequestHandler
 {
 
-    private SessionManager _sessionManager;
-    
-    /**
-     * Create new instance.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Calls {@link AbstractAPIRequestHandler#AbstractAPIRequestHandler(
-     * RequestParser, HttpServletRequest, HttpServletResponse, String, String)}
-     * and handles are obtained to relevant managers.
-     * <br><br>
-     * @param reqParser The request parser to be used.
-     * @param servletRequest The request.
-     * @param servletResponse The response.
-     * @param sMyServerId The A-Select Server ID.
-     * @param sMyOrg The A-Select Server organisation.
-     * @throws ASelectCommunicationException If communication fails.
-     */
-    public AuthSPAPIHandler (RequestParser reqParser, 
-		HttpServletRequest servletRequest, 
-		HttpServletResponse servletResponse,
-		String sMyServerId, 
-		String sMyOrg)
-    	throws ASelectCommunicationException
-    {
-        super(reqParser, servletRequest, servletResponse, sMyServerId, sMyOrg);
-        _sModule = "AuthSPAPIHandler";
-        _sessionManager = SessionManager.getHandle();   	        
-    }
-        
-    /**
-     * Start processing a request coming from an authsp.
-     * <br><br>
-     * @see org.aselect.server.request.handler.sfs.authentication.AbstractAPIRequestHandler#processAPIRequest(
-     * 	org.aselect.system.communication.server.IProtocolRequest, 
-     * 	org.aselect.system.communication.server.IInputMessage, 
-     * 	org.aselect.system.communication.server.IOutputMessage)
-     */
-    public void processAPIRequest(
-        IProtocolRequest oProtocolRequest, 
-        IInputMessage oInputMessage, 
-        IOutputMessage oOutputMessage) throws ASelectException
-    {
-        String sMethod = "processAPIRequest()";
+	private SessionManager _sessionManager;
 
-        String sAPIRequest = null;
-        try
-        {
-            sAPIRequest = oInputMessage.getParam("request");
-        }
-        catch(ASelectCommunicationException eAC)
-        {
-            _systemLogger.log(Level.WARNING, 
-                _sModule, sMethod, "Unsupported API call",eAC);
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-        }  
-        
-        if (sAPIRequest.equals("kill_session"))
-        {
-            handleKillSessionRequest(oInputMessage, oOutputMessage);            
-        }
-        else
-        {
-            _systemLogger.log(Level.WARNING, _sModule, sMethod,
-                "Unsupported API Call: " + sAPIRequest);
-            
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-        }
-    }
+	/**
+	 * Create new instance. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Calls
+	 * {@link AbstractAPIRequestHandler#AbstractAPIRequestHandler(RequestParser, HttpServletRequest, HttpServletResponse, String, String)}
+	 * and handles are obtained to relevant managers. <br>
+	 * <br>
+	 * 
+	 * @param reqParser
+	 *            The request parser to be used.
+	 * @param servletRequest
+	 *            The request.
+	 * @param servletResponse
+	 *            The response.
+	 * @param sMyServerId
+	 *            The A-Select Server ID.
+	 * @param sMyOrg
+	 *            The A-Select Server organisation.
+	 * @throws ASelectCommunicationException
+	 *             If communication fails.
+	 */
+	public AuthSPAPIHandler(RequestParser reqParser, HttpServletRequest servletRequest,
+			HttpServletResponse servletResponse, String sMyServerId, String sMyOrg)
+		throws ASelectCommunicationException {
+		super(reqParser, servletRequest, servletResponse, sMyServerId, sMyOrg);
+		_sModule = "AuthSPAPIHandler";
+		_sessionManager = SessionManager.getHandle();
+	}
 
-    /**
-     * This function handles the <code>request=kill_session</code> call.
-     * <br>
-     * @param oInputMessage The input message.
-     * @param oOutputMessage The output message.
-     * @throws ASelectCommunicationException If proccessing fails.
-     */
-    private void handleKillSessionRequest(IInputMessage oInputMessage, 
-		IOutputMessage oOutputMessage) throws ASelectCommunicationException
-    {
-        String sSessionId = null;
-        String sSignature = null;
-        String sAuthSP = null;
-        HashMap htSessionContext;
-        String sMethod = "handleKillSessionRequest()";
+	/**
+	 * Start processing a request coming from an authsp. <br>
+	 * <br>
+	 * 
+	 * @param oProtocolRequest
+	 *            the o protocol request
+	 * @param oInputMessage
+	 *            the o input message
+	 * @param oOutputMessage
+	 *            the o output message
+	 * @throws ASelectException
+	 *             the a select exception
+	 * @see org.aselect.server.request.handler.sfs.authentication.AbstractAPIRequestHandler#processAPIRequest(org.aselect.system.communication.server.IProtocolRequest,
+	 *      org.aselect.system.communication.server.IInputMessage,
+	 *      org.aselect.system.communication.server.IOutputMessage)
+	 */
+	@Override
+	public void processAPIRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
+			IOutputMessage oOutputMessage)
+		throws ASelectException
+	{
+		String sMethod = "processAPIRequest()";
 
-        try
-        {
-            sSessionId = oInputMessage.getParam("rid");
-            sSignature = oInputMessage.getParam("signature");
-            sAuthSP = oInputMessage.getParam("authsp");
-        }
-        catch(ASelectCommunicationException eAC)
-        {
-            _systemLogger.log(Level.WARNING, 
-                						_sModule,
-                						sMethod,
-                						"Missing required parameters");            
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST, eAC);
-        }
+		String sAPIRequest = null;
+		try {
+			sAPIRequest = oInputMessage.getParam("request");
+		}
+		catch (ASelectCommunicationException eAC) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unsupported API call", eAC);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
 
-        if( !CryptoEngine.getHandle().verifySignature(sAuthSP,
-            									sSessionId, sSignature))
-        {
-            _systemLogger.log(Level.WARNING, 
-				_sModule,
-				sMethod,
-				"Invalid signature from AuthSP: " + sAuthSP);
+		if (sAPIRequest.equals("kill_session")) {
+			handleKillSessionRequest(oInputMessage, oOutputMessage);
+		}
+		else {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unsupported API Call: " + sAPIRequest);
 
-            throw new ASelectCommunicationException(
-                		Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-        }
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+	}
 
-        // check if session exists
-        htSessionContext = _sessionManager.getSessionContext(sSessionId);
-        if (htSessionContext == null)
-        {
-            _systemLogger.log(Level.WARNING, 
-										_sModule,
-										sMethod,
-										"Invalid session: " + sSessionId);
+	/**
+	 * This function handles the <code>request=kill_session</code> call. <br>
+	 * 
+	 * @param oInputMessage
+	 *            The input message.
+	 * @param oOutputMessage
+	 *            The output message.
+	 * @throws ASelectCommunicationException
+	 *             If proccessing fails.
+	 */
+	private void handleKillSessionRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
+		throws ASelectCommunicationException
+	{
+		String sSessionId = null;
+		String sSignature = null;
+		String sAuthSP = null;
+		HashMap htSessionContext;
+		String sMethod = "handleKillSessionRequest()";
 
-            throw new ASelectCommunicationException(
-                		Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
-        }
+		try {
+			sSessionId = oInputMessage.getParam("rid");
+			sSignature = oInputMessage.getParam("signature");
+			sAuthSP = oInputMessage.getParam("authsp");
+		}
+		catch (ASelectCommunicationException eAC) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing required parameters");
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST, eAC);
+		}
 
-        htSessionContext = null;
-        _sessionManager.killSession(sSessionId);
+		if (!CryptoEngine.getHandle().verifySignature(sAuthSP, sSessionId, sSignature)) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid signature from AuthSP: " + sAuthSP);
 
-        try
-        {
-            oOutputMessage.setParam("rid",sSessionId);
-            oOutputMessage.setParam("result_code",Errors.ERROR_ASELECT_SUCCESS);
-        }
-        catch(ASelectCommunicationException eAC)
-        {
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Could not set response parameter",eAC);
-            throw new ASelectCommunicationException(
-                Errors.ERROR_ASELECT_INTERNAL_ERROR,eAC);
-        }
-    }
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+
+		// check if session exists
+		htSessionContext = _sessionManager.getSessionContext(sSessionId);
+		if (htSessionContext == null) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid session: " + sSessionId);
+
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
+		}
+
+		htSessionContext = null;
+		_sessionManager.killSession(sSessionId);
+
+		try {
+			oOutputMessage.setParam("rid", sSessionId);
+			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
+		}
+		catch (ASelectCommunicationException eAC) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not set response parameter", eAC);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR, eAC);
+		}
+	}
 }

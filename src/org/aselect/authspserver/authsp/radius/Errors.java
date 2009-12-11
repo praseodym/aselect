@@ -39,47 +39,45 @@
 package org.aselect.authspserver.authsp.radius;
 
 /**
- * Error Class for Radius AuthSP.
- * <br><br>
+ * Error Class for Radius AuthSP. <br>
+ * <br>
  * <b>Description:</b><br>
- * Class with Error codes, which can occur in the Radius AuthSP
- * <br><br>
- * <b>Concurrency issues:</b>
+ * Class with Error codes, which can occur in the Radius AuthSP <br>
  * <br>
- * None
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * None <br>
  * 
+ * @author Alfa & Ariss
  */
-public class Errors 
+public class Errors
 {
-    /**
-     * Error Code for Successfull handled Request
-     */
-    public final static String ERROR_RADIUS_SUCCESS = "000";
-    
-    /**
-     * Error Code for Internal Error
-     */
-    public final static String ERROR_RADIUS_INTERNAL_ERROR = "100";
-    
-    /**
-     * Error Code for Invalid Request
-     */
-    public final static String ERROR_RADIUS_INVALID_REQUEST = "200";
+	/**
+	 * Error Code for Successfull handled Request
+	 */
+	public final static String ERROR_RADIUS_SUCCESS = "000";
 
-    /**
-     * Error Code for Could Not Reach Radius Server.
-     */
-    public final static String ERROR_RADIUS_COULD_NOT_REACH_RADIUS_SERVER = "300";    
+	/**
+	 * Error Code for Internal Error
+	 */
+	public final static String ERROR_RADIUS_INTERNAL_ERROR = "100";
 
-    /**
-     * Error Code for Access Denied
-     */
-    public final static String ERROR_RADIUS_ACCESS_DENIED = "800";
-    
-    /**
-     * Error Code for Could Not Authenticate User
-     */
-    public final static String ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER = "900";
+	/**
+	 * Error Code for Invalid Request
+	 */
+	public final static String ERROR_RADIUS_INVALID_REQUEST = "200";
+
+	/**
+	 * Error Code for Could Not Reach Radius Server.
+	 */
+	public final static String ERROR_RADIUS_COULD_NOT_REACH_RADIUS_SERVER = "300";
+
+	/**
+	 * Error Code for Access Denied
+	 */
+	public final static String ERROR_RADIUS_ACCESS_DENIED = "800";
+
+	/**
+	 * Error Code for Could Not Authenticate User
+	 */
+	public final static String ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER = "900";
 }

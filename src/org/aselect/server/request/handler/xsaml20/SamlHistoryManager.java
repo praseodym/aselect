@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.xsaml20;
 
 import java.util.logging.Level;
@@ -11,12 +22,11 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.storagemanager.StorageManager;
 
+// TODO: Auto-generated Javadoc
 /**
- * This class stores SAML messages that are being send, for future reference.
- * The messages are stored by their ID. The original message can be found by
- * looking for the in_response_to field in an incoming message. The SAML
- * messages are not stored as SAMLObjects because those are not Serializable.
- * The DOM is stored instead
+ * This class stores SAML messages that are being send, for future reference. The messages are stored by their ID. The
+ * original message can be found by looking for the in_response_to field in an incoming message. The SAML messages are
+ * not stored as SAMLObjects because those are not Serializable. The DOM is stored instead
  */
 public class SamlHistoryManager extends StorageManager
 {
@@ -36,11 +46,11 @@ public class SamlHistoryManager extends StorageManager
 	private ASelectSystemLogger _systemLogger;
 
 	/**
-	 * Method to return an instance of the <code>TGTManager</code> instead of
-	 * using the constructor. <br>
+	 * Method to return an instance of the <code>TGTManager</code> instead of using the constructor. <br>
 	 * 
 	 * @return always the same <code>TGTManager</code> instance.
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	public static SamlHistoryManager getHandle()
 		throws ASelectException
@@ -52,6 +62,12 @@ public class SamlHistoryManager extends StorageManager
 		return _oSamlHistoryManager;
 	}
 
+	/**
+	 * Inits the.
+	 * 
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	public void init()
 		throws ASelectException
 	{
@@ -83,7 +99,8 @@ public class SamlHistoryManager extends StorageManager
 			throw e;
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Internal error while initializing Saml History Manager", e);
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Internal error while initializing Saml History Manager",
+					e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 	}

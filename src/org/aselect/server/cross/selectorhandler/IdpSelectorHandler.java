@@ -102,19 +102,18 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.sam.agent.SAMResource;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
- * This class handles the remote A-Select Server selection by means of a user HTML form.
- * <br><br>
- * <b>Description:</b>
+ * This class handles the remote A-Select Server selection by means of a user HTML form. <br>
  * <br>
- * This handler will present the user a 'dropdown box' containing all configured
- * remote_servers.<br>
+ * <b>Description:</b> <br>
+ * This handler will present the user a 'dropdown box' containing all configured remote_servers.<br>
  * This Class is accessed two times within an cross authentication request.<br>
  * - In the first request a HTML form is presented with a list of all configured remote servers.<br>
- * - The HTML form will post the remote server selection and will be put here in a hashtable.
- * <br><br>
- * @author Alfa & Ariss
+ * - The HTML form will post the remote server selection and will be put here in a hashtable. <br>
+ * <br>
  * 
+ * @author Alfa & Ariss
  */
 public class IdpSelectorHandler implements ISelectorHandler
 {
@@ -134,16 +133,20 @@ public class IdpSelectorHandler implements ISelectorHandler
 	private String _sIdPQueryServerRequest = null;
 	private String _sIdPQueryServerSharedSecret = null;
 
-	private static final int COOKIE_AGE = 31536000; //TODO: Cookie is set to be about a years time(not counting leap years), should be configurable?(seconds, not leap years)
+	private static final int COOKIE_AGE = 31536000; // TODO: Cookie is set to be about a years time(not counting leap
+	// years), should be configurable?(seconds, not leap years)
 
 	private static final String _sHtmlTemplateName = "idpcrossselect.html";
 
 	/**
-	 * Initialization of this Handler.
-	 * Initializes global class-variables that are needed within the whole handler instance.<br>
-	 * 
+	 * Initialization of this Handler. Initializes global class-variables that are needed within the whole handler
+	 * instance.<br>
 	 * <br>
 	 * 
+	 * @param oHandlerConfig
+	 *            the o handler config
+	 * @throws ASelectException
+	 *             the a select exception
 	 * @see org.aselect.server.cross.ISelectorHandler#init(java.lang.Object)
 	 */
 	public void init(Object oHandlerConfig)
@@ -199,7 +202,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 			loadHTMLTemplates();
 		}
 		catch (ASelectException e) {
-			//Already handled.
+			// Already handled.
 			throw e;
 		}
 		catch (Exception e) {
@@ -209,11 +212,18 @@ public class IdpSelectorHandler implements ISelectorHandler
 	}
 
 	/**
-	 * Returns the remote A-Select Server. 
-	 * This handler presents the user with a selection form that is used to determine the remote 
-	 * organization and returns the selected organization to the A-Select sub system.
-	 * <br>
+	 * Returns the remote A-Select Server. This handler presents the user with a selection form that is used to
+	 * determine the remote organization and returns the selected organization to the A-Select sub system. <br>
 	 * 
+	 * @param htServiceRequest
+	 *            the ht service request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @param pwOut
+	 *            the pw out
+	 * @return the remote server id
+	 * @throws ASelectException
+	 *             the a select exception
 	 * @see org.aselect.server.cross.ISelectorHandler#getRemoteServerId(java.util.HashMap,
 	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
 	 */
@@ -276,6 +286,20 @@ public class IdpSelectorHandler implements ISelectorHandler
 		return htReturn;
 	}
 
+	/**
+	 * Show select form.
+	 * 
+	 * @param htServiceRequest
+	 *            the ht service request
+	 * @param pwOut
+	 *            the pw out
+	 * @param htServers
+	 *            the ht servers
+	 * @param sDefaultRemoteOrg
+	 *            the s default remote org
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private void showSelectForm(HashMap htServiceRequest, PrintWriter pwOut, HashMap htServers, String sDefaultRemoteOrg)
 		throws ASelectException
 	{
@@ -308,7 +332,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 			sSelectForm = Utils.replaceString(sSelectForm, "[available_home_idps]", getRemoteServerHTML(htServers,
 					sDefaultRemoteOrg));
 
-			//Update template with the optional requestor information 
+			// Update template with the optional requestor information
 			HashMap htSession = SessionManager.getHandle().getSessionContext(sRid);
 			if (htSession != null)
 				sSelectForm = _configManager.updateTemplate(sSelectForm, htSession);
@@ -326,23 +350,32 @@ public class IdpSelectorHandler implements ISelectorHandler
 		}
 	}
 
+	/**
+	 * Gets the remote server html.
+	 * 
+	 * @param htServers
+	 *            the ht servers
+	 * @param sDefaultRemoteOrg
+	 *            the s default remote org
+	 * @return the remote server html
+	 */
 	private String getRemoteServerHTML(HashMap htServers, String sDefaultRemoteOrg)
 	{
 		String sMethod = "getRemoteServerHTML()";
 		String sResult = null;
 
-		//Enumeration enumServers = htServers.keys();
-		//ArrayList keyList = Collections.list(enumServers);
-		//Collections.sort(keyList);
-		//enumServers = Collections.enumeration(keyList);
+		// Enumeration enumServers = htServers.keys();
+		// ArrayList keyList = Collections.list(enumServers);
+		// Collections.sort(keyList);
+		// enumServers = Collections.enumeration(keyList);
 
 		Set<String> keys = htServers.keySet();
 		SortedSet sortedKeys = new TreeSet<String>(keys);
 		for (Object s : sortedKeys) {
 			String sFriendlyName = (String) s;
-			//while (enumServers.hasMoreElements())
-			//{
-			//    sFriendlyName = (String)enumServers.nextElement();
+			// while (enumServers.hasMoreElements())
+			// {
+			// sFriendlyName = (String)enumServers.nextElement();
 
 			if (sDefaultRemoteOrg != null && sDefaultRemoteOrg.equals(sFriendlyName)) {
 				sResult += "<OPTION VALUE='" + sFriendlyName + "' selected=\"selected\">" + sFriendlyName
@@ -357,26 +390,22 @@ public class IdpSelectorHandler implements ISelectorHandler
 	}
 
 	/**
-	 * Loads all HTML Templates needed.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Loads all HTML Templates needed. <br>
 	 * <br>
+	 * <b>Description:</b> <br>
 	 * At initialization all HTML templates are loaded once.<br>
-	 * @throws ASelectException
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
-	 * <br>
-	 * Run once at startup.
-	 * <br><br>
-	 * <b>Preconditions:</b>
-	 * <br>
-	 * Manager and ISelectorHandler should be initialized.
-	 * <br><br>
-	 * <b>Postconditions:</b>
-	 * <br>
-	 * Global HashMap _htHtmlTemplates variabele contains the templates.
-	 * <br>
 	 * 
+	 * @throws ASelectException
+	 * <br>
+	 * <br>
+	 *             <b>Concurrency issues:</b> <br>
+	 *             Run once at startup. <br>
+	 * <br>
+	 *             <b>Preconditions:</b> <br>
+	 *             Manager and ISelectorHandler should be initialized. <br>
+	 * <br>
+	 *             <b>Postconditions:</b> <br>
+	 *             Global HashMap _htHtmlTemplates variabele contains the templates. <br>
 	 */
 	private void loadHTMLTemplates()
 		throws ASelectException
@@ -402,6 +431,15 @@ public class IdpSelectorHandler implements ISelectorHandler
 
 	}
 
+	/**
+	 * Load html template.
+	 * 
+	 * @param sLocation
+	 *            the s location
+	 * @return the string
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private String loadHTMLTemplate(String sLocation)
 		throws ASelectException
 	{
@@ -434,6 +472,13 @@ public class IdpSelectorHandler implements ISelectorHandler
 		return sTemplate;
 	}
 
+	/**
+	 * Gets the idp query server resource group.
+	 * 
+	 * @return the idp query server resource group
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private void getIdpQueryServerResourceGroup()
 		throws ASelectException
 	{
@@ -464,6 +509,13 @@ public class IdpSelectorHandler implements ISelectorHandler
 
 	}
 
+	/**
+	 * Gets the idp query server url.
+	 * 
+	 * @return the idp query server url
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private String getIdpQueryServerUrl()
 		throws ASelectException
 	{
@@ -501,6 +553,13 @@ public class IdpSelectorHandler implements ISelectorHandler
 		return sUrl;
 	}
 
+	/**
+	 * Handle idp api call.
+	 * 
+	 * @return the hash map
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private HashMap handleIdpApiCall()
 		throws ASelectException
 	{

@@ -25,40 +25,43 @@ import java.security.KeyStore;
 import org.aselect.authspserver.log.AuthSPSystemLogger;
 import org.aselect.system.exception.ASelectException;
 
-
-
+// TODO: Auto-generated Javadoc
 /**
- * Certificate Handler Interface.
- * <br><br>
+ * Certificate Handler Interface. <br>
+ * <br>
  * <b>Description:</b><br>
- * This interface includes all the functions a CRL Handler must include
- * to let it work with the PKI AuthSP.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * This interface includes all the functions a CRL Handler must include to let it work with the PKI AuthSP. <br>
  * <br>
- * None
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * None <br>
  * 
+ * @author Alfa & Ariss
  */
 public interface ICertificateHandler
 {
-	
+
 	/**
-	 * Initialize the Certificate Handler.
-	 * <br>
-	 * @param oSystemLogger the System Logger
-	 * @param oBackendConfig the configuration of the used back-end
+	 * Initialize the Certificate Handler. <br>
+	 * 
+	 * @param oSystemLogger
+	 *            the System Logger
+	 * @param oBackendConfig
+	 *            the configuration of the used back-end
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
-	public void init(AuthSPSystemLogger oSystemLogger, Object oBackendConfig) throws ASelectException;
-	
+	public void init(AuthSPSystemLogger oSystemLogger, Object oBackendConfig)
+		throws ASelectException;
+
 	/**
 	 * Get The Certificate(s) for the corresponding subjectDN.
+	 * 
 	 * @param sSubjectDn
-	 * @return a Keystore with the found certificate(s) 
+	 *            the s subject dn
+	 * @return a Keystore with the found certificate(s)
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
-	public KeyStore getCertificates(String sSubjectDn) 
-			throws ASelectException;
+	public KeyStore getCertificates(String sSubjectDn)
+		throws ASelectException;
 }

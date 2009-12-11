@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.authspserver.authsp.db;
 
 import java.io.File;
@@ -32,13 +43,13 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
  * An A-Select AuthSP that uses a database as back-end. <br>
  * <br>
  * <b>Description:</b><br>
- * The A-Select DB AuthSP uses a database back-end to validate user/password
- * combinations. The DB AuthSP retrieves the following components and attributes
- * from the A-Select AuthSP Server:
+ * The A-Select DB AuthSP uses a database back-end to validate user/password combinations. The DB AuthSP retrieves the
+ * following components and attributes from the A-Select AuthSP Server:
  * <ul>
  * <li>The configmanager</li>
  * <li>The crypto engine</li>
@@ -48,7 +59,8 @@ import org.aselect.system.utils.Utils;
  * <li><code>working_dir</code></li>
  * </ul>
  * <br>
- * <b>Concurrency issues:</b> <br> - <br>
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
  * @author Cristina Gavrila, BTTSD
  * @author Hans Zandbelt, SURFnet
@@ -144,11 +156,14 @@ public class DBAuthSP extends ASelectHttpServlet
 	 * <li>An error config file must exist</li>
 	 * <li>An error template file must exist</li>
 	 * <li>An authentication template file must exist</li>
-	 * <li> An DB 'authsp' config section must be available in the configuration
-	 * of the AuthSP Server. The id of this section must be available as
-	 * 'config_id' servlet init paramater. </li>
+	 * <li>An DB 'authsp' config section must be available in the configuration of the AuthSP Server. The id of this
+	 * section must be available as 'config_id' servlet init paramater.</li>
 	 * </ul>
 	 * 
+	 * @param oConfig
+	 *            the o config
+	 * @throws ServletException
+	 *             the servlet exception
 	 * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
 	 */
 	public void init(ServletConfig oConfig)
@@ -324,7 +339,11 @@ public class DBAuthSP extends ASelectHttpServlet
 			}
 			catch (Exception e) {
 				_sUserPassword = "";
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+				_systemLogger
+						.log(
+								Level.WARNING,
+								MODULE,
+								sMethod,
 								"No or empty config item 'password' found, using empty password. Don't use this in a live production environment.",
 								e);
 				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
@@ -373,6 +392,9 @@ public class DBAuthSP extends ASelectHttpServlet
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.aselect.system.servlet.ASelectHttpServlet#isRestartableServlet()
+	 */
 	protected boolean isRestartableServlet()
 	{
 		return false;
@@ -381,11 +403,15 @@ public class DBAuthSP extends ASelectHttpServlet
 	/**
 	 * Process requests for the HTTP <code>GET</code> method. <br>
 	 * <br>
-	 * This could be a API call, otherwise the authentication screen is
-	 * displayed.
+	 * This could be a API call, otherwise the authentication screen is displayed.
 	 * 
-	 * @see javax.servlet.http.HttpServlet#doGet(
-	 *      javax.servlet.http.HttpServletRequest,
+	 * @param servletRequest
+	 *            the servlet request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest,
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	protected void doGet(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
@@ -504,6 +530,12 @@ public class DBAuthSP extends ASelectHttpServlet
 	 * <br>
 	 * This should be the submitted authentication form.
 	 * 
+	 * @param servletRequest
+	 *            the servlet request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
 	 * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest,
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
@@ -710,18 +742,16 @@ public class DBAuthSP extends ASelectHttpServlet
 	 * Show an HTML authentication page. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Shows a authentication form with, if applicable, an error or warning
-	 * message.
+	 * Shows a authentication form with, if applicable, an error or warning message.
 	 * 
 	 * @param pwOut
-	 *        the <code>PrintWriter</code> that is the target for displaying
-	 *        the html page.
+	 *            the <code>PrintWriter</code> that is the target for displaying the html page.
 	 * @param sError
-	 *        The error that should be shown in the page.
+	 *            The error that should be shown in the page.
 	 * @param sErrorMessage
-	 *        The error message that should be shown in the page.
+	 *            The error message that should be shown in the page.
 	 * @param htServiceRequest
-	 *        The request parameters.
+	 *            The request parameters.
 	 */
 	private void showAuthenticateForm(PrintWriter pwOut, String sError, String sErrorMessage, HashMap htServiceRequest)
 	{
@@ -765,6 +795,18 @@ public class DBAuthSP extends ASelectHttpServlet
 		pwOut.println(sAuthenticateForm);
 	}
 
+	/**
+	 * Handle result.
+	 * 
+	 * @param servletRequest
+	 *            the servlet request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @param pwOut
+	 *            the pw out
+	 * @param sResultCode
+	 *            the s result code
+	 */
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut, String sResultCode)
 	{
@@ -834,13 +876,13 @@ public class DBAuthSP extends ASelectHttpServlet
 	 * Processes an API request to this DB AuthSP.
 	 * 
 	 * @param htServiceRequest
-	 *        a <code>HashMap</code> containing request parameters.
+	 *            a <code>HashMap</code> containing request parameters.
 	 * @param servletRequest
-	 *        The request.
+	 *            The request.
 	 * @param servletResponse
-	 *        The response.
+	 *            The response.
 	 * @param pwOut
-	 *        The output.
+	 *            The output.
 	 */
 	private void handleApiRequest(HashMap htServiceRequest, HttpServletRequest servletRequest, PrintWriter pwOut,
 			HttpServletResponse servletResponse)
@@ -904,6 +946,16 @@ public class DBAuthSP extends ASelectHttpServlet
 		pwOut.write(sbResponse.toString());
 	}
 
+	/**
+	 * Handle authenticate.
+	 * 
+	 * @param htServiceRequest
+	 *            the ht service request
+	 * @param servletRequest
+	 *            the servlet request
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private void handleAuthenticate(HashMap htServiceRequest, HttpServletRequest servletRequest)
 		throws ASelectException
 	{
@@ -1014,13 +1066,12 @@ public class DBAuthSP extends ASelectHttpServlet
 	}
 
 	/**
-	 * Opens a new JDBC connection to the resource that is retrieved from the
-	 * authsp configuration. <br>
+	 * Opens a new JDBC connection to the resource that is retrieved from the authsp configuration. <br>
 	 * <br>
 	 * 
 	 * @return <code>Connection</code> that contains the JDBC connection
 	 * @throws ASelectException
-	 *         if the connection could not be opened
+	 *             if the connection could not be opened
 	 */
 	private Connection getConnection()
 		throws ASelectException

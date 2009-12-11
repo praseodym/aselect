@@ -30,131 +30,151 @@ import org.opensaml.saml2.metadata.provider.MetadataProviderException;
 import org.opensaml.xml.XMLObject;
 import org.opensaml.xml.io.UnmarshallingException;
 
+// TODO: Auto-generated Javadoc
 /**
  * @author Remy Hanswijk
- *
  */
 public class ProxyHTTPMetadataProvider extends HTTPMetadataProvider
 {
-	
-    /** HTTP Client used to pull the metadata. */
-    protected HttpClient proxyhttpClient;
-    /** URL scope that requires authentication. */
-    private AuthScope proxyauthScope;
+
+	/** HTTP Client used to pull the metadata. */
+	protected HttpClient proxyhttpClient;
+	/** URL scope that requires authentication. */
+	private AuthScope proxyauthScope;
 
 	protected SystemLogger _systemLogger;
 
 	/**
+	 * The Constructor.
+	 * 
 	 * @param metadataURL
+	 *            the metadata url
 	 * @param requestTimeout
+	 *            the request timeout
 	 * @param proxyHost
+	 *            the proxy host
 	 * @param proxyPort
+	 *            the proxy port
 	 * @throws MetadataProviderException
+	 *             the metadata provider exception
 	 */
 	public ProxyHTTPMetadataProvider(String metadataURL, int requestTimeout, String proxyHost, int proxyPort)
 		throws MetadataProviderException {
-		
+
 		super(metadataURL, requestTimeout);
-		
+
 		_systemLogger = ASelectSystemLogger.getHandle();
-        HttpClientParams clientParams = new HttpClientParams();
-        clientParams.setSoTimeout(requestTimeout);
-        proxyhttpClient = new HttpClient(clientParams);
-        proxyhttpClient.getHostConfiguration().setProxy(proxyHost, proxyPort);
-        URI l_metadataURI;
+		HttpClientParams clientParams = new HttpClientParams();
+		clientParams.setSoTimeout(requestTimeout);
+		proxyhttpClient = new HttpClient(clientParams);
+		proxyhttpClient.getHostConfiguration().setProxy(proxyHost, proxyPort);
+		URI l_metadataURI;
 		try {
 			l_metadataURI = new URI(getMetadataURI());
 		}
 		catch (URISyntaxException e) {
 			// TODO Auto-generated catch block
-			 throw new MetadataProviderException("Illegal URL syntax", e);
+			throw new MetadataProviderException("Illegal URL syntax", e);
 
 		}
 
-        proxyauthScope = new AuthScope(l_metadataURI.getHost(), l_metadataURI.getPort());
+		proxyauthScope = new AuthScope(l_metadataURI.getHost(), l_metadataURI.getPort());
 
-// commons-http-client >= 4.0 might use: 		
-//		ProxySelectorRoutePlanner routePlanner = new ProxySelectorRoutePlanner(
-//		        httpclient.getConnectionManager().getSchemeRegistry(),
-//		        ProxySelector.getDefault());  
-//		httpclient.setRoutePlanner(routePlanner);
+		// commons-http-client >= 4.0 might use:
+		// ProxySelectorRoutePlanner routePlanner = new ProxySelectorRoutePlanner(
+		// httpclient.getConnectionManager().getSchemeRegistry(),
+		// ProxySelector.getDefault());
+		// httpclient.setRoutePlanner(routePlanner);
 
-        // or:
-//		HttpHost proxy = new HttpHost(proxyHost, proxyPort);
-//		getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
+		// or:
+		// HttpHost proxy = new HttpHost(proxyHost, proxyPort);
+		// getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
 
 	}
 
-	
-    /**
-     * Sets the username and password used to access the metadata URL. To disable BASIC authentication set the username
-     * and password to null;
-     * 
-     * @param username the username
-     * @param password the password
-     */
-    public void setBasicCredentials(String username, String password) {
-        if (username == null && password == null) {
-            proxyhttpClient.getState().setCredentials(null, null);
-        } else {
-            UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(username, password);
-            proxyhttpClient.getState().setCredentials(proxyauthScope, credentials);
-        }
-    }
+	/**
+	 * Sets the username and password used to access the metadata URL. To disable BASIC authentication set the username
+	 * and password to null;
+	 * 
+	 * @param username
+	 *            the username
+	 * @param password
+	 *            the password
+	 */
+	@Override
+	public void setBasicCredentials(String username, String password)
+	{
+		if (username == null && password == null) {
+			proxyhttpClient.getState().setCredentials(null, null);
+		}
+		else {
+			UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(username, password);
+			proxyhttpClient.getState().setCredentials(proxyauthScope, credentials);
+		}
+	}
 
+	/**
+	 * Gets the length of time in milliseconds to wait for the server to respond.
+	 * 
+	 * @return length of time in milliseconds to wait for the server to respond
+	 */
+	@Override
+	public int getRequestTimeout()
+	{
+		return proxyhttpClient.getParams().getSoTimeout();
+	}
 
-    /**
-     * Gets the length of time in milliseconds to wait for the server to respond.
-     * 
-     * @return length of time in milliseconds to wait for the server to respond
-     */
-    public int getRequestTimeout() {
-        return proxyhttpClient.getParams().getSoTimeout();
-    }
-	
-    /**
-     * Sets the socket factory used to create sockets to the HTTP server.
-     * 
-     * @see <a href="http://jakarta.apache.org/commons/httpclient/sslguide.html">HTTPClient SSL guide</a>
-     * 
-     * @param newSocketFactory the socket factory used to produce sockets used to connect to the server
-     */
-    public void setSocketFactory(ProtocolSocketFactory newSocketFactory) {
-        Protocol protocol;
+	/**
+	 * Sets the socket factory used to create sockets to the HTTP server.
+	 * 
+	 * @param newSocketFactory
+	 *            the socket factory used to produce sockets used to connect to the server
+	 * @see <a href="http://jakarta.apache.org/commons/httpclient/sslguide.html">HTTPClient SSL guide</a>
+	 */
+	@Override
+	public void setSocketFactory(ProtocolSocketFactory newSocketFactory)
+	{
+		Protocol protocol;
 		try {
-			protocol = new Protocol(new URI(getMetadataURI()).getScheme(), newSocketFactory, new URI(getMetadataURI()).getPort());
-	        proxyhttpClient.getHostConfiguration().setHost(new URI(getMetadataURI()).getHost(), new URI(getMetadataURI()).getPort(), protocol);
+			protocol = new Protocol(new URI(getMetadataURI()).getScheme(), newSocketFactory, new URI(getMetadataURI())
+					.getPort());
+			proxyhttpClient.getHostConfiguration().setHost(new URI(getMetadataURI()).getHost(),
+					new URI(getMetadataURI()).getPort(), protocol);
 		}
 		catch (URISyntaxException e) {
-			_systemLogger.log(Level.FINEST,"This should not happen, same URI has been instantiated before");
+			_systemLogger.log(Level.FINEST, "This should not happen, same URI has been instantiated before");
 		}
-    }
+	}
 
-    /**
-     * Fetches the metadata from the remote server and unmarshalls it.
-     * 
-     * @return the unmarshalled metadata
-     * 
-     * @throws IOException thrown if the metadata can not be fetched from the remote server
-     * @throws UnmarshallingException thrown if the metadata can not be unmarshalled
-     */
-    protected XMLObject fetchMetadata() throws IOException, UnmarshallingException {
-		_systemLogger.log(Level.FINEST,"Fetching metadata document from remote server");
+	/**
+	 * Fetches the metadata from the remote server and unmarshalls it.
+	 * 
+	 * @return the unmarshalled metadata
+	 * @throws IOException
+	 *             thrown if the metadata can not be fetched from the remote server
+	 * @throws UnmarshallingException
+	 *             thrown if the metadata can not be unmarshalled
+	 */
+	@Override
+	protected XMLObject fetchMetadata()
+		throws IOException, UnmarshallingException
+	{
+		_systemLogger.log(Level.FINEST, "Fetching metadata document from remote server");
 
-        GetMethod getMethod = new GetMethod(getMetadataURI());
-        if (proxyhttpClient.getState().getCredentials(proxyauthScope) != null) {
-        	_systemLogger.log(Level.FINEST,"Using BASIC authentication when retrieving metadata");
-            getMethod.setDoAuthentication(true);
-        }
-        proxyhttpClient.executeMethod(getMethod);
+		GetMethod getMethod = new GetMethod(getMetadataURI());
+		if (proxyhttpClient.getState().getCredentials(proxyauthScope) != null) {
+			_systemLogger.log(Level.FINEST, "Using BASIC authentication when retrieving metadata");
+			getMethod.setDoAuthentication(true);
+		}
+		proxyhttpClient.executeMethod(getMethod);
 
-       	_systemLogger.log(Level.FINEST,"Retrieved the following metadata document\n{}" + getMethod.getResponseBodyAsString());
-        XMLObject metadata = unmarshallMetadata(getMethod.getResponseBodyAsStream());
+		_systemLogger.log(Level.FINEST, "Retrieved the following metadata document\n{}"
+				+ getMethod.getResponseBodyAsString());
+		XMLObject metadata = unmarshallMetadata(getMethod.getResponseBodyAsStream());
 
-       	_systemLogger.log(Level.FINEST,"Unmarshalled metadata from remote server");
-        return metadata;
+		_systemLogger.log(Level.FINEST, "Unmarshalled metadata from remote server");
+		return metadata;
 
-    }
+	}
 
-	
 }

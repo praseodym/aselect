@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.logging.Level;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -22,8 +23,8 @@ import org.apache.log4j.MDC;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.HandlerTools;
 import org.aselect.server.tgt.TGTManager;
-import org.aselect.system.logging.Audit;
 
+// TODO: Auto-generated Javadoc
 /**
  * @author RH
  */
@@ -41,7 +42,6 @@ public class AuditFilter implements Filter
 
 	/*
 	 * (non-Javadoc)
-	 * 
 	 * @see javax.servlet.Filter#destroy()
 	 */
 	public void destroy()
@@ -50,9 +50,8 @@ public class AuditFilter implements Filter
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see javax.servlet.Filter#doFilter(javax.servlet.ServletRequest,
-	 *      javax.servlet.ServletResponse, javax.servlet.FilterChain)
+	 * @see javax.servlet.Filter#doFilter(javax.servlet.ServletRequest, javax.servlet.ServletResponse,
+	 * javax.servlet.FilterChain)
 	 */
 	@SuppressWarnings("unchecked")
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -92,7 +91,7 @@ public class AuditFilter implements Filter
 			// MDC.put("a_rid",
 			// request.getParameter("rid") == null ? "" :
 			// request.getParameter("rid"));
-			MDC.put((String) cookies.get(cookieName), cookieValue == null ? "" : cookieValue);
+			MDC.put(cookies.get(cookieName), cookieValue == null ? "" : cookieValue);
 		}
 		keys = tgts.keySet();
 		for (Object s : keys) {
@@ -113,7 +112,7 @@ public class AuditFilter implements Filter
 						// String cookieParm =
 						// (String)cookieParms.nextElement();
 						String parmVal = (String) htTGTContext.get(cookieParm);
-						MDC.put((String) tgtParms.get(cookieParm), parmVal == null ? "" : parmVal);
+						MDC.put(tgtParms.get(cookieParm), parmVal == null ? "" : parmVal);
 					}
 				}
 			}
@@ -130,7 +129,6 @@ public class AuditFilter implements Filter
 
 	/*
 	 * (non-Javadoc)
-	 * 
 	 * @see javax.servlet.Filter#init(javax.servlet.FilterConfig)
 	 */
 	@SuppressWarnings("unchecked")
@@ -160,16 +158,16 @@ public class AuditFilter implements Filter
 			}
 			if (fullParmName.toLowerCase().startsWith(REQUEST_TGT)) {
 				String fullCookieName = fullParmName.substring(REQUEST_TGT.length());
-				_logger.log(Audit.INFO, _MODULE, sMethod, "fullCookieName:" + fullCookieName);
+				_logger.log(Level.INFO, _MODULE, sMethod, "fullCookieName:" + fullCookieName);
 
 				int i = fullCookieName.indexOf("@");
 				if (i >= 0) {
 					String cookieName = fullCookieName.substring(0, i);
-					_logger.log(Audit.INFO, _MODULE, sMethod, "cookieName:" + cookieName);
+					_logger.log(Level.INFO, _MODULE, sMethod, "cookieName:" + cookieName);
 					String parmName = fullCookieName.substring(i + 1);
-					_logger.log(Audit.INFO, _MODULE, sMethod, "parmName:" + parmName);
+					_logger.log(Level.INFO, _MODULE, sMethod, "parmName:" + parmName);
 					String val = filterConfig.getInitParameter(fullParmName);
-					_logger.log(Audit.INFO, _MODULE, sMethod, "val:" + val);
+					_logger.log(Level.INFO, _MODULE, sMethod, "val:" + val);
 					if (val != null && !"".equals(val)) {
 						HashMap<String, String> tgtParms = tgts.get(cookieName);
 						if (tgtParms == null) {

@@ -50,115 +50,132 @@ import java.util.logging.Level;
 import org.aselect.authspserver.log.AuthSPSystemLogger;
 import org.aselect.system.exception.ASelectException;
 
+// TODO: Auto-generated Javadoc
 /**
- * This class contains base functionality for LDAP AuthSP handlers. 
- * <br><br>
- * <b>Description: </b> 
+ * This class contains base functionality for LDAP AuthSP handlers. <br>
  * <br>
- * Contains base configuration and initialisation functionality. 
- * <br><br>
- * <b>Concurrency issues: </b> 
- * <br>-<br>
+ * <b>Description: </b> <br>
+ * Contains base configuration and initialisation functionality. <br>
+ * <br>
+ * <b>Concurrency issues: </b> <br>
+ * -<br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public abstract class AbstractLDAPProtocolHandler implements ILDAPProtocolHandler
 {
-    /** The module name */
-    protected String _sModule = "AbstractLDAPProtocolHandler";
-    
-    /** The LDAP URL. */
-    protected String _sLDAPUrl;
-    /** The JNDI driver. */
-    protected String _sDriver;
-    /** The base DN. */
-    protected String _sBaseDn;
-    /** The user DN. */
-    protected String _sUserDn;
-    /** The user ID. */
-    protected String _sUid;
-    /** The princial DN */
-    protected String _sPrincipalDn;
-    /** The principal password. */
-    protected String _sPrincipalPwd;
-    /** The complete user ID. */
-    protected boolean _bFullUid;
+	/** The module name */
+	protected String _sModule = "AbstractLDAPProtocolHandler";
 
-    /**
-     * The logger that logs system information
-     */
-    protected AuthSPSystemLogger _systemLogger;
+	/** The LDAP URL. */
+	protected String _sLDAPUrl;
+	/** The JNDI driver. */
+	protected String _sDriver;
+	/** The base DN. */
+	protected String _sBaseDn;
+	/** The user DN. */
+	protected String _sUserDn;
+	/** The user ID. */
+	protected String _sUid;
+	/** The princial DN */
+	protected String _sPrincipalDn;
+	/** The principal password. */
+	protected String _sPrincipalPwd;
+	/** The complete user ID. */
+	protected boolean _bFullUid;
 
-    /**
-     * Set the configuration items and the system logger. <br>
-     * <br>
-     * 
-     * @see org.aselect.authspserver.authsp.ldap.ILDAPProtocolHandler#init(java.lang.String, java.lang.String, java.lang.String, java.lang.String, boolean, java.lang.String, java.lang.String, java.lang.String, org.aselect.authspserver.log.AuthSPSystemLogger)
-     */
-    public boolean init(String sLDAPUrl, String sDriver,
-        String sBaseDn, String sUserDn, boolean bFullUid,
-        String sUid, String sPrincipalDn,
-        String sPrincipalPwd, AuthSPSystemLogger systemLogger)
-    {
-        _systemLogger = systemLogger;
+	/**
+	 * The logger that logs system information
+	 */
+	protected AuthSPSystemLogger _systemLogger;
 
-        _sLDAPUrl = sLDAPUrl;
-        _sDriver = sDriver;
-        _sBaseDn = sBaseDn;
-        _sUserDn = sUserDn;
-        _sUid = sUid;
-        _sPrincipalDn = sPrincipalDn;
-        _sPrincipalPwd = sPrincipalPwd;
-        _bFullUid = bFullUid;
+	/**
+	 * Set the configuration items and the system logger. <br>
+	 * <br>
+	 * 
+	 * @param sLDAPUrl
+	 *            the s ldap url
+	 * @param sDriver
+	 *            the s driver
+	 * @param sBaseDn
+	 *            the s base dn
+	 * @param sUserDn
+	 *            the s user dn
+	 * @param bFullUid
+	 *            the b full uid
+	 * @param sUid
+	 *            the s uid
+	 * @param sPrincipalDn
+	 *            the s principal dn
+	 * @param sPrincipalPwd
+	 *            the s principal pwd
+	 * @param systemLogger
+	 *            the system logger
+	 * @return true, if inits the
+	 * @see org.aselect.authspserver.authsp.ldap.ILDAPProtocolHandler#init(java.lang.String, java.lang.String,
+	 *      java.lang.String, java.lang.String, boolean, java.lang.String, java.lang.String, java.lang.String,
+	 *      org.aselect.authspserver.log.AuthSPSystemLogger)
+	 */
+	public boolean init(String sLDAPUrl, String sDriver, String sBaseDn, String sUserDn, boolean bFullUid, String sUid,
+			String sPrincipalDn, String sPrincipalPwd, AuthSPSystemLogger systemLogger)
+	{
+		_systemLogger = systemLogger;
 
-        return true;
-    }
-    
-    /**
-     * Authenticate a user using LDAP. 
-     * <br>
-     * @see org.aselect.authspserver.authsp.ldap.ILDAPProtocolHandler#authenticate(
-     * java.lang.String)
-     */
-    public String authenticate(String sPassword) 
-    {
-        String sMethod = "authenticate()";
-        String sErrorCode = null;
-        
-        if (!_bFullUid)
-        {
-            int iIndex = _sUid.indexOf('@');
-            if (iIndex > 0)
-                _sUid = _sUid.substring(0, iIndex);
-        }
-      
-        try
-        {
-            doBind(sPassword);            
-            sErrorCode = Errors.ERROR_LDAP_SUCCESS;
-        }
-        catch(ASelectException eAS)
-        {
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Could not authenticate", eAS);
-            sErrorCode = eAS.getMessage();
-        }
-        catch(Exception e)
-        {
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Could not authenticate due to internal error", e);
-            sErrorCode = Errors.ERROR_LDAP_INTERNAL_ERROR;
-        }
-        return sErrorCode;
-    }
-    
-    /**
-     * Bind to the LDAP server using the user credentials. 
-     * <br>     
-     * @param sPassword The user password.
-     * @throws ASelectException If user could not be authenticated.
-     */
-    abstract protected void doBind(String sPassword) throws ASelectException;
-    
+		_sLDAPUrl = sLDAPUrl;
+		_sDriver = sDriver;
+		_sBaseDn = sBaseDn;
+		_sUserDn = sUserDn;
+		_sUid = sUid;
+		_sPrincipalDn = sPrincipalDn;
+		_sPrincipalPwd = sPrincipalPwd;
+		_bFullUid = bFullUid;
+
+		return true;
+	}
+
+	/**
+	 * Authenticate a user using LDAP. <br>
+	 * 
+	 * @param sPassword
+	 *            the s password
+	 * @return the string
+	 * @see org.aselect.authspserver.authsp.ldap.ILDAPProtocolHandler#authenticate(java.lang.String)
+	 */
+	public String authenticate(String sPassword)
+	{
+		String sMethod = "authenticate()";
+		String sErrorCode = null;
+
+		if (!_bFullUid) {
+			int iIndex = _sUid.indexOf('@');
+			if (iIndex > 0)
+				_sUid = _sUid.substring(0, iIndex);
+		}
+
+		try {
+			doBind(sPassword);
+			sErrorCode = Errors.ERROR_LDAP_SUCCESS;
+		}
+		catch (ASelectException eAS) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not authenticate", eAS);
+			sErrorCode = eAS.getMessage();
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not authenticate due to internal error", e);
+			sErrorCode = Errors.ERROR_LDAP_INTERNAL_ERROR;
+		}
+		return sErrorCode;
+	}
+
+	/**
+	 * Bind to the LDAP server using the user credentials. <br>
+	 * 
+	 * @param sPassword
+	 *            The user password.
+	 * @throws ASelectException
+	 *             If user could not be authenticated.
+	 */
+	abstract protected void doBind(String sPassword)
+		throws ASelectException;
+
 }

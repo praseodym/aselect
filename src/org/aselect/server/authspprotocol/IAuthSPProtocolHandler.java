@@ -36,119 +36,103 @@ import java.util.HashMap;
 
 import org.aselect.system.exception.ASelectAuthSPException;
 
+// TODO: Auto-generated Javadoc
 /**
- * Interface that all AuthSP protocol handlers should implement.
- * <br><br>
+ * Interface that all AuthSP protocol handlers should implement. <br>
+ * <br>
  * <b>Description:</b><br>
- * Interface that all AuthSP protocol handlers should implement.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * Interface that all AuthSP protocol handlers should implement. <br>
  * <br>
- * -
- * <br>
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
+ * 
  * @author Alfa & Ariss
- *  
  */
 public interface IAuthSPProtocolHandler
 {
-    /**
-     * Initializes the AuthSP protocol handler.
-     * <br>
-     * <b>Description: </b> <br>
-     * Initializes the AuthSP protocol handler with authsp handler specific
-     * configuration and resources.
-     * <br><br>
-     * <b>Concurrency issues: </b> <br>
-     * -
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * -
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * -
-     * 
-     * @param oAuthSPConfig
-     * 			<code>Object</code> containing the authsp specific configuration.
-     * @param oAuthSPResource
-     * 			<code>Object</code> containing the authsp specific resource(s).
-     * @throws ASelectAuthSPException
-     * 			If initialization fails.
-     */
-    public void init(Object oAuthSPConfig, Object oAuthSPResource)
-        throws ASelectAuthSPException;
+	
+	/**
+	 * Initializes the AuthSP protocol handler. <br>
+	 * <b>Description: </b> <br>
+	 * Initializes the AuthSP protocol handler with authsp handler specific configuration and resources. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * - <br>
+	 * <b>Preconditions: </b> <br>
+	 * - <br>
+	 * <b>Postconditions: </b> <br>
+	 * -
+	 * 
+	 * @param oAuthSPConfig
+	 *            <code>Object</code> containing the authsp specific configuration.
+	 * @param oAuthSPResource
+	 *            <code>Object</code> containing the authsp specific resource(s).
+	 * @throws ASelectAuthSPException
+	 *             If initialization fails.
+	 */
+	public void init(Object oAuthSPConfig, Object oAuthSPResource)
+		throws ASelectAuthSPException;
 
-    /**
-     * Creation of an AuthSP specific redirect URL.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * The AuthSP handler should compute a redirect URL. In the response
-     * hashtable the AuthSP handler shall place "result" to indicate the
-     * processing result and "redirect_url" if everything is ok.
-     * The <code>ASelectLoginHandler</code> will redirect the user to 
-     * this URL.<br>
-     * The created URL should contain AuthSP specific parameters.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @param sRid
-     * 			Needed parameter in the redirect URL. Can also be used
-     * to retrieve session information from the <code>SessionManager</code>.
-     * @return <code>HashMap</code> containing at least:
-     * <ul>
-     * 	<li><code>result</code></li>
-     * 	<li><code>redirect_url</code></li>
-     * </ul>
-     */
-    public HashMap computeAuthenticationRequest(String sRid);
-    
-    /**
-     * Verification of an AuthSP specific response.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * AuthSP redirects user back to <code>ASelectServer</code>
-     * which will parse the response parameters in a <code>
-     * HashMap</code> to this function.
-     * The AuthSP handler should verify the AuthSP specific parameters.
-     * <br><br>
-     * The AuthSP handler should verify the response from an AuthSP In the
-     * response hashtable the AuthSP handler shall place "result" to indicate
-     * the processing result and "rid" of the request if everything is ok
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @param htResponse
-     * 			<code>HashMap</code> containing all parameters that were
-     * 			received from the AuthSP. It should contain at least:
-     * <ul>
-     * <li><code>rid</code>
-     * </ul>
-     * @return <code>HashMap</code> containing at least:
-     * <ul>
-     * <li><code>result</code>
-     * <li><code>rid</code>
-     * </ul>
-     */
-    public HashMap verifyAuthenticationResponse(HashMap htResponse);
+	/**
+	 * Creation of an AuthSP specific redirect URL. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * The AuthSP handler should compute a redirect URL. In the response hashtable the AuthSP handler shall place
+	 * "result" to indicate the processing result and "redirect_url" if everything is ok. The
+	 * <code>ASelectLoginHandler</code> will redirect the user to this URL.<br>
+	 * The created URL should contain AuthSP specific parameters. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sRid
+	 *            Needed parameter in the redirect URL. Can also be used to retrieve session information from the
+	 *            <code>SessionManager</code>.
+	 * @return <code>HashMap</code> containing at least:
+	 *         <ul>
+	 *         <li><code>result</code></li>
+	 *         <li><code>redirect_url</code></li>
+	 *         </ul>
+	 */
+	public HashMap computeAuthenticationRequest(String sRid);
+
+	/**
+	 * Verification of an AuthSP specific response. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * AuthSP redirects user back to <code>ASelectServer</code> which will parse the response parameters in a <code>
+	 * HashMap</code>
+	 * to this function. The AuthSP handler should verify the AuthSP specific parameters. <br>
+	 * <br>
+	 * The AuthSP handler should verify the response from an AuthSP In the response hashtable the AuthSP handler shall
+	 * place "result" to indicate the processing result and "rid" of the request if everything is ok <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param htResponse
+	 *            <code>HashMap</code> containing all parameters that were received from the AuthSP. It should contain
+	 *            at least:
+	 *            <ul>
+	 *            <li><code>rid</code>
+	 *            </ul>
+	 * @return <code>HashMap</code> containing at least:
+	 *         <ul>
+	 *         <li><code>result</code>
+	 *         <li><code>rid</code>
+	 *         </ul>
+	 */
+	public HashMap verifyAuthenticationResponse(HashMap htResponse);
 }

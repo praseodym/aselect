@@ -51,23 +51,21 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.logging.SystemLogger;
 
+// TODO: Auto-generated Javadoc
 /**
- * A common configuration manager. 
- * <br><br>
- * <b>Description: </b> 
+ * A common configuration manager. <br>
  * <br>
- * The <code>ConfigManager</code> offers an interface to the configuration,
- * which can be used by all A-Select components. It's set up like a factory to
- * resolve the right <code>ConfigHandler</code>.<br>
+ * <b>Description: </b> <br>
+ * The <code>ConfigManager</code> offers an interface to the configuration, which can be used by all A-Select
+ * components. It's set up like a factory to resolve the right <code>ConfigHandler</code>.<br>
  * <br>
- * The <code>ConfigManager</code> offers an interface to the
- * <code>ConfigHandler
+ * The <code>ConfigManager</code> offers an interface to the <code>ConfigHandler
  * </code> that is created during initialization. <br>
  * <br>
- * <b>Concurrency issues: </b> <br>-<br>
+ * <b>Concurrency issues: </b> <br>
+ * -<br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class ConfigManager
 {
@@ -81,16 +79,19 @@ public class ConfigManager
 	private SystemLogger _oSystemLogger;
 
 	/**
-	 * Default constructor. 
-	 * <br><br>
+	 * Default constructor. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
 	 * Default constructor which initializes class variables. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 */
 	public ConfigManager() {
 		_oConfigHandler = null;
@@ -98,24 +99,22 @@ public class ConfigManager
 	}
 
 	/**
-	 * Initialize the <code>ConfigManager</code> for use with a config file.
-	 * <br><br>
+	 * Initialize the <code>ConfigManager</code> for use with a config file. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
-	 * The <code>ConfigManager</code> will create an
-	 * <code>ConfigHandler</code> with file support. <br>
+	 * The <code>ConfigManager</code> will create an <code>ConfigHandler</code> with file support. <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
-	 * Only one <code>ConfigHandler</code> per <code>ConfigManager</code>
-	 * will be created. <br>
+	 * Only one <code>ConfigHandler</code> per <code>ConfigManager</code> will be created. <br>
 	 * <br>
 	 * <b>Preconditions: </b> <br>
 	 * The <i>oSystemLogger </i> object must be initialized. <br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param sConfigFile
-	 *            <code>String</code> that contains the full path and filename
-	 *            of the configuration file.
+	 *            <code>String</code> that contains the full path and filename of the configuration file.
 	 * @param oSystemLogger
 	 *            <code>SystemLogger</code> initialized SystemLogger Object.
 	 * @throws ASelectConfigException
@@ -131,7 +130,7 @@ public class ConfigManager
 			_oSystemLogger = oSystemLogger;
 			File fConfig = new File(sConfigFile);
 
-			if (fConfig != null && fConfig.exists()) {  // only start initializing when config file exists
+			if (fConfig != null && fConfig.exists()) { // only start initializing when config file exists
 				_oConfigHandler = resolveConfigHandler(fConfig);
 				if (_oConfigHandler != null)
 					_oConfigHandler.init(fConfig);
@@ -160,19 +159,19 @@ public class ConfigManager
 	}
 
 	/**
-	 * Initialize the <code>ConfigManager</code> for use with a database. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Initialize the <code>ConfigManager</code> for use with a database. <br>
 	 * <br>
-	 * The initialize function for storage of the config file in a database.
+	 * <b>Description: </b> <br>
+	 * The initialize function for storage of the config file in a database. <br>
 	 * <br>
-	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
 	 * <b>Preconditions: </b> <br>
 	 * The <i>oSystemLogger </i> object must be initialized. <br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param sDriverName
 	 *            JDBC Driver name
@@ -232,21 +231,21 @@ public class ConfigManager
 	}
 
 	/**
-	 * Returns a sub-section from the configuration of the given root-section.
-	 * <br><br>
+	 * Returns a sub-section from the configuration of the given root-section. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
-	 * The returned sub-section is of the given type and has the given section
-	 * ID. The root section can be <code>null</code>: the first section will
-	 * be returned. The requested section ID must be a <code>String</code>
+	 * The returned sub-section is of the given type and has the given section ID. The root section can be
+	 * <code>null</code>: the first section will be returned. The requested section ID must be a <code>String</code>
 	 * containing one '=' character (syntax: [param]=[value]). <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
-	 * If the section can't be found, an <code>ASelectConfigException</code>
-	 * will be thrown. <br>
+	 * If the section can't be found, an <code>ASelectConfigException</code> will be thrown. <br>
 	 * 
 	 * @param oRootSection
 	 *            The section in which the requested section is located.
@@ -254,8 +253,7 @@ public class ConfigManager
 	 *            The type of the section, in XML the XML tag name.
 	 * @param sSectionID
 	 *            The id of a section (syntax: [param]=[value])
-	 * @return Object that indicates a specific section within the
-	 *         configuration.
+	 * @return Object that indicates a specific section within the configuration.
 	 * @throws ASelectConfigException
 	 *             If retrieving fails.
 	 */
@@ -266,18 +264,19 @@ public class ConfigManager
 	}
 
 	/**
-	 * Returns a sub-section from the configuration of the given root section
-	 * specified by the given type. 
-	 * <br><br>
+	 * Returns a sub-section from the configuration of the given root section specified by the given type. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
-	 * The root section can be <code>null</code>: the first section will be
-	 * returned. <br>
+	 * The root section can be <code>null</code>: the first section will be returned. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param oRootSection
 	 *            Section that is used to resulve the subsection
@@ -295,17 +294,19 @@ public class ConfigManager
 
 	/**
 	 * Adds an empty configuration section of the specified <code>sectionType
-	 * </code> of the rootSection. 
-	 * <br><br>
+	 * </code> of the rootSection. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
-	 * Must be used to create a new configuration section of a given section
-	 * type. <br>
+	 * Must be used to create a new configuration section of a given section type. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param oRootSection
 	 *            Section to which the new section is added
@@ -322,17 +323,19 @@ public class ConfigManager
 	}
 
 	/**
-	 * Removes a specified configuration section. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Removes a specified configuration section. <br>
 	 * <br>
+	 * <b>Description: </b> <br>
 	 * Removes a section perminently from the configuration. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param oRootSection
 	 *            Section containing the section that must be removed
@@ -349,18 +352,19 @@ public class ConfigManager
 	}
 
 	/**
-	 * Removes a configuration section specified by section ID. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Removes a configuration section specified by section ID. <br>
 	 * <br>
-	 * Removes a section, specified by section type and section ID, perminently
-	 * from the configuration. <br>
+	 * <b>Description: </b> <br>
+	 * Removes a section, specified by section type and section ID, perminently from the configuration. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param oRootSection
 	 *            Section containing the section that must be removed
@@ -379,19 +383,20 @@ public class ConfigManager
 	}
 
 	/**
-	 * Returns a <code>String</code> that contains the requested configuration
-	 * parameter. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Returns a <code>String</code> that contains the requested configuration parameter. <br>
 	 * <br>
-	 * The <code>String</code> that will be returned will be retrieved from
-	 * the given config section and has the specified config item name. <br>
+	 * <b>Description: </b> <br>
+	 * The <code>String</code> that will be returned will be retrieved from the given config section and has the
+	 * specified config item name. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param oSection
 	 *            Section from which contains the parameter
@@ -408,20 +413,21 @@ public class ConfigManager
 	}
 
 	/**
-	 * Adds a config parameter to the given section. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Adds a config parameter to the given section. <br>
 	 * <br>
-	 * Adds a config parameter to the given section in the configuration. The
-	 * parameter has the name <i>sConfigItem </i> and the value <i>sConfigValue
-	 * </i>. With the <i>bMandatory </i> attribute can be set if the config
-	 * parameter is part of the required configuration. <br>
+	 * <b>Description: </b> <br>
+	 * Adds a config parameter to the given section in the configuration. The parameter has the name <i>sConfigItem </i>
+	 * and the value <i>sConfigValue </i>. With the <i>bMandatory </i> attribute can be set if the config parameter is
+	 * part of the required configuration. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param oSection
 	 *            The config section to which the parameter will be added
@@ -442,22 +448,22 @@ public class ConfigManager
 	}
 
 	/**
-	 * Returns the next section with the same type that is direclty located
-	 * after the given section. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Returns the next section with the same type that is direclty located after the given section. <br>
 	 * <br>
+	 * <b>Description: </b> <br>
 	 * It will return <code>null</code> if no next section can be found. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param oSection
-	 *            Section that has the same type as the section that must be
-	 *            returned
+	 *            Section that has the same type as the section that must be returned
 	 * @return Object That contains the next section
 	 * @throws ASelectConfigException
 	 *             If retrieving fails
@@ -469,18 +475,19 @@ public class ConfigManager
 	}
 
 	/**
-	 * Saves the configuration as is known by the ConfigHandler. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Saves the configuration as is known by the ConfigHandler. <br>
 	 * <br>
-	 * Writes the configuration to the physical storage. It will overwrite the
-	 * existing configuration. <br>
+	 * <b>Description: </b> <br>
+	 * Writes the configuration to the physical storage. It will overwrite the existing configuration. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @throws ASelectConfigException
 	 *             If saving fails
@@ -492,29 +499,28 @@ public class ConfigManager
 	}
 
 	/**
-	 * Imports the configuration file within the configuration that is present
-	 * in the <code>ConfigHandler</code>.
-	 * <br><br>
-	 * <b>Description: </b> 
-	 * <br>-<br>
+	 * Imports the configuration file within the configuration that is present in the <code>ConfigHandler</code>. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> 
-	 * <br>-<br>
+	 * <b>Description: </b> <br>
+	 * -<br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
 	 * <b>Preconditions: </b> <br>
 	 * The <code>ConfigManager</code> must be initialized. <br>
 	 * <br>
-	 * <b>Postconditions: </b> 
-	 * <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param fConfig
-	 *            The configuration <code>File</code> that will be imported in
-	 *            the configuration that is known in the memory of the
-	 *            <code>ConfigHandler</code>
+	 *            The configuration <code>File</code> that will be imported in the configuration that is known in the
+	 *            memory of the <code>ConfigHandler</code>
 	 * @throws ASelectConfigException
 	 *             If importing fails
 	 * @deprecated All config should be stored in only one config file.
 	 */
+	@Deprecated
 	public void importConfig(File fConfig)
 		throws ASelectConfigException
 	{
@@ -531,25 +537,23 @@ public class ConfigManager
 	}
 
 	/**
-	 * Resolves a <code>ConfigHandler</code> from the extension of the given
-	 * <code>File</code>.
-	 * <br><br>
-	 * <b>Description: </b> 
-	 * <br>-<br>
+	 * Resolves a <code>ConfigHandler</code> from the extension of the given <code>File</code>. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> 
-	 * <br>-<br>
+	 * <b>Description: </b> <br>
+	 * -<br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
 	 * <b>Preconditions: </b> <br>
 	 * <i>fConfig </I> Object may not be <code>null</code>.<br>
 	 * <br>
-	 * <b>Postconditions: </b> 
-	 * <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param fConfig
 	 *            The <code>File</code> that contains the configuration.
-	 * @return IConfigHandler The <code>ConfigHandler</code> for the specific
-	 *         config file.
+	 * @return IConfigHandler The <code>ConfigHandler</code> for the specific config file.
 	 */
 	private IConfigHandler resolveConfigHandler(File fConfig)
 	{
@@ -564,22 +568,22 @@ public class ConfigManager
 		if (sFileName == null) {
 			_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, "Filename is null.");
 		}
-		//resolve extension
+		// resolve extension
 		iSepIndex = sFileName.lastIndexOf(".");
 		sExtension = fConfig.getName().substring(iSepIndex + 1);
 
-		if (sExtension.equalsIgnoreCase("XML")) {//XML confighandler
+		if (sExtension.equalsIgnoreCase("XML")) {// XML confighandler
 			oConfigHandler = new XMLConfigHandler(_oSystemLogger);
 		}
-		//else if (strExtension.equalsIgnoreCase("CFG"))
-		//{
-		//cfg = new CFGConfigHandler();
-		//}
-		//else if (strExtension.equalsIgnoreCase("PROP"))
-		//{
-		//cfg = new PROPConfigHandler();
-		//}
-		else {//default confighandler
+		// else if (strExtension.equalsIgnoreCase("CFG"))
+		// {
+		// cfg = new CFGConfigHandler();
+		// }
+		// else if (strExtension.equalsIgnoreCase("PROP"))
+		// {
+		// cfg = new PROPConfigHandler();
+		// }
+		else {// default confighandler
 			oConfigHandler = new XMLConfigHandler(_oSystemLogger);
 		}
 
@@ -588,24 +592,25 @@ public class ConfigManager
 
 	/**
 	 * Resolves a <code>ConfigHandler</code> the default <code>ConfigHandler
-	 * </code>.
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * </code>. <br>
 	 * <br>
+	 * <b>Description: </b> <br>
 	 * Is needed if the configuration is stored in a database <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
-	 * @return IConfigHandler The <code>ConfigHandler</code> for the specific
-	 *         configuration.
+	 * @return IConfigHandler The <code>ConfigHandler</code> for the specific configuration.
 	 */
 	private IConfigHandler resolveConfigHandler()
 	{
-		//only XML is supported at this moment
+		// only XML is supported at this moment
 		return new XMLConfigHandler(_oSystemLogger);
 	}
 

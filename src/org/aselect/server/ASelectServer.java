@@ -204,35 +204,27 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
 
+// TODO: Auto-generated Javadoc
 /**
- * This is the A-Select Server main class. It is responsible
- * for <code>init()</code>ializing and <code>destroy()</code>ing all 
- * A-Select Server components,
- * and it serves as the entry point for incoming requests (via
- * the <code>service()</code> method).
- * <br>
+ * This is the A-Select Server main class. It is responsible for <code>init()</code>ializing and <code>destroy()</code>
+ * ing all A-Select Server components, and it serves as the entry point for incoming requests (via the
+ * <code>service()</code> method). <br>
  * Requests are processed as follows:
  * <ul>
- * <li>If the server is currently restarting, a HTTP SERVICE
- * UNAVAILABLE error is sent back to the client and no further
+ * <li>If the server is currently restarting, a HTTP SERVICE UNAVAILABLE error is sent back to the client and no further
  * processing is performed.
- * <li>If a <code>request=restart</code> is present, it is handled and
- * further processing is halted.
- * <li>Otherwise, the A-Select Server uses a {@link RequestHandlerFactory} 
- * to determine the type and origin (application, authsp, remote a-select server,
- * or the user) of the request and delegates further processing to
- * the appropriate IAuthnRequestHandler implementation.
+ * <li>If a <code>request=restart</code> is present, it is handled and further processing is halted.
+ * <li>Otherwise, the A-Select Server uses a {@link RequestHandlerFactory} to determine the type and origin
+ * (application, authsp, remote a-select server, or the user) of the request and delegates further processing to the
+ * appropriate IAuthnRequestHandler implementation.
  * </ul>
- * <br><br>  
- * <b>Concurrency issues:</b>
- * All methods invoked from the 
- * <code>service()</code> methods must be thread-safe. Most
- * request handling methods instantiate a new request-handling
- * object per incoming request to avoid concurrency issues.
  * <br>
  * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> All methods invoked from the <code>service()</code> methods must be thread-safe. Most
+ * request handling methods instantiate a new request-handling object per incoming request to avoid concurrency issues. <br>
+ * <br>
  * 
+ * @author Alfa & Ariss
  */
 public class ASelectServer extends ASelectHttpServlet
 {
@@ -257,38 +249,39 @@ public class ASelectServer extends ASelectHttpServlet
 	 * Initialize the A-Select Server. This method is invoked:
 	 * <ul>
 	 * <li>by Tomcat when the servlet is instantiated, or
-	 * <li>by the A-Select Server itself when it restarts in response to
-	 * a <code>request=restart</code>. 
+	 * <li>by the A-Select Server itself when it restarts in response to a <code>request=restart</code>.
 	 * </ul>
-	 * The second case is actually a <b>re-</b>initialization, i.e. the
-	 * servlet is no longer in its initial state and care must be taken
-	 * not to allocate resources twice.
-	 *  
+	 * The second case is actually a <b>re-</b>initialization, i.e. the servlet is no longer in its initial state and
+	 * care must be taken not to allocate resources twice.
+	 * 
 	 * @param oServletConfig
+	 *            the o servlet config
 	 * @throws ServletException
+	 *             the servlet exception
 	 */
+	@Override
 	public void init(ServletConfig oServletConfig)
 		throws ServletException
 	{
 		String sMethod = "init()";
-		//Initialize Configuration
+		// Initialize Configuration
 		try {
 			super.init(oServletConfig);
 
-			//Create loggers
+			// Create loggers
 			if (_systemLogger != null) // restart
 			{
-				//close de filehandlers
+				// close de filehandlers
 				_systemLogger.closeHandlers();
 			}
 			else {
-				//Create a System logger which logs to System.err
-				//after initializing the configmanager, the systemlogger is
-				//initialized and will log to the logfile
+				// Create a System logger which logs to System.err
+				// after initializing the configmanager, the systemlogger is
+				// initialized and will log to the logfile
 				_systemLogger = ASelectSystemLogger.getHandle();
 			}
 
-			if (_authenticationLogger != null) //reinit
+			if (_authenticationLogger != null) // reinit
 				_authenticationLogger.closeHandlers();
 			else
 				_authenticationLogger = ASelectAuthenticationLogger.getHandle();
@@ -325,7 +318,7 @@ public class ASelectServer extends ASelectHttpServlet
 			throw new ServletException("Initializing failed");
 		}
 
-		//Get default configuration sections
+		// Get default configuration sections
 		Object _oASelectConfig = null;
 		try {
 			try {
@@ -355,9 +348,9 @@ public class ASelectServer extends ASelectHttpServlet
 				throw e;
 			}
 
-			//Initialize other components    
+			// Initialize other components
 			try {
-				//Create and initialize our attribute gatherer object
+				// Create and initialize our attribute gatherer object
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "AttributeGatherer...");
 				_oAttributeGatherer = AttributeGatherer.getHandle();
 				_oAttributeGatherer.init();
@@ -463,16 +456,15 @@ public class ASelectServer extends ASelectHttpServlet
 	}
 
 	/**
-	 * Free resources, stop worker threads, and generally
-	 * shutdown the A-Select Server. This method is invoked
-	 * by Tomcat when the servlet is removed or Tomcat itself
-	 * shuts down. 
+	 * Free resources, stop worker threads, and generally shutdown the A-Select Server. This method is invoked by Tomcat
+	 * when the servlet is removed or Tomcat itself shuts down.
 	 * 
 	 * @see javax.servlet.Servlet#destroy()
 	 */
+	@Override
 	public void destroy()
 	{
-		//Close resources
+		// Close resources
 		closeResources();
 
 		// Close loggers
@@ -483,20 +475,24 @@ public class ASelectServer extends ASelectHttpServlet
 	}
 
 	/**
-	 * Entry point for all incoming requests (GET and POST).
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Entry point for all incoming requests (GET and POST). <br>
 	 * <br>
-	 * This method is responsible for the initial processing of
-	 * all incoming requests. In most cases the <code>RequestHandlerFactory</code>
-	 * is called to create the appropriate requesthandler. 
-	 * (see the <code>requesthandler</code> package for more information).
-	 * <br><br>
-	 * @param request The <code>HttpServletRequest</code> object
-	 * @param response The <code>HttpServletResponse</code> object
-	 * @throws ServletException if processing went wrong
-	 * @throws IOException if no error could be sent to the HttpServletResponse
+	 * <b>Description:</b> <br>
+	 * This method is responsible for the initial processing of all incoming requests. In most cases the
+	 * <code>RequestHandlerFactory</code> is called to create the appropriate requesthandler. (see the
+	 * <code>requesthandler</code> package for more information). <br>
+	 * <br>
+	 * 
+	 * @param request
+	 *            The <code>HttpServletRequest</code> object
+	 * @param response
+	 *            The <code>HttpServletResponse</code> object
+	 * @throws ServletException
+	 *             if processing went wrong
+	 * @throws IOException
+	 *             if no error could be sent to the HttpServletResponse
 	 */
+	@Override
 	protected void service(HttpServletRequest request, HttpServletResponse response)
 		throws ServletException, IOException
 	{
@@ -506,7 +502,7 @@ public class ASelectServer extends ASelectHttpServlet
 			// Prevent caching
 			setDisableCachingHttpHeaders(request, response);
 
-			//If we're currently restarting, then halt all processing
+			// If we're currently restarting, then halt all processing
 			if (isRestartInProgress()) {
 				response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
 				return;
@@ -514,7 +510,7 @@ public class ASelectServer extends ASelectHttpServlet
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SERVICE {" + " T=" + System.currentTimeMillis() + " "
 					+ request.getMethod() + " Query: " + request.getQueryString());
-			//ProtoRequestHandler.logCookies(request, _systemLogger);
+			// ProtoRequestHandler.logCookies(request, _systemLogger);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, request.getRemoteHost() + " / " + request.getRequestURL()
 					+ " / " + request.getRemoteAddr());
 			_oRequestHandlerFactory.process(request, response);
@@ -524,7 +520,7 @@ public class ASelectServer extends ASelectHttpServlet
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "} SERVICE" + " T=" + System.currentTimeMillis()
 					+ " Error while processing request: " + e + "\n====");
 			if (!response.isCommitted()) {
-				//send response if no headers have been written
+				// send response if no headers have been written
 				if (e.getMessage().equals(Errors.ERROR_ASELECT_INTERNAL_ERROR))
 					response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 				else
@@ -535,42 +531,45 @@ public class ASelectServer extends ASelectHttpServlet
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "} SERVICE" + " T=" + System.currentTimeMillis()
 					+ " Internal error: " + e + "\n====");
 			if (!response.isCommitted()) {
-				//send response if no headers have been written
+				// send response if no headers have been written
 				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
 		}
 	}
 
 	/**
-	 * The A-Select server is restartable.
-	 * <br><br>
+	 * The A-Select server is restartable. <br>
+	 * <br>
+	 * 
+	 * @return true, if checks if is restartable servlet
 	 * @see org.aselect.system.servlet.ASelectHttpServlet#isRestartableServlet()
 	 */
+	@Override
 	protected boolean isRestartableServlet()
 	{
 		return true;
 	}
 
 	/**
-	 * Close the admin monitor and other components . 
+	 * Close the admin monitor and other components .
 	 */
 	private void closeResources()
 	{
-		//stop the Gui if applicable
+		// stop the Gui if applicable
 		if (_adminMonitor != null) {
 			_adminMonitor.stop();
 			try {
 				_adminMonitor.dispose();
 			}
 			catch (Exception e) {
-				//ignore interrupted errors while disposing
+				// ignore interrupted errors while disposing
 			}
 		}
-		//Stop attribute gatherer
+		// Stop attribute gatherer
 		if (_oAttributeGatherer != null)
 			_oAttributeGatherer.destroy();
 
-		//Stop request handler factory
+		// Stop request handler factory
 		if (_oRequestHandlerFactory != null)
 			_oRequestHandlerFactory.destroy();
 
@@ -583,7 +582,7 @@ public class ASelectServer extends ASelectHttpServlet
 	}
 
 	/**
-	 * Close the system logger and the authentication logger. 
+	 * Close the system logger and the authentication logger.
 	 */
 	private void closeLoggers()
 	{

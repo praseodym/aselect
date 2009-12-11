@@ -94,18 +94,20 @@ import org.aselect.system.sam.agent.SAMResource;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
  * This class handles cross-authentication requests coming from a remote A-Select Server, except for the
  * <code>cross_login</code> request. It must be used as follows: <br>
  * For each new incoming request, create a new <code>CrossASelectHandler</code> object and call either the
- * <code>handleCrossAuthenticateRequest()</code> or the <code>handleCrossAuthenticateResponse()</code>, as
- * appropriate. <code>CrossASelectHandler</code> objects cannot be reused due to concurrency issues. <br>
+ * <code>handleCrossAuthenticateRequest()</code> or the <code>handleCrossAuthenticateResponse()</code>, as appropriate.
+ * <code>CrossASelectHandler</code> objects cannot be reused due to concurrency issues. <br>
  * 
  * @author Alfa & Ariss 14-11-2007 - Changes: - Transfer PKI attributes Subject DN and Issuer DN to the context
  * @author Bauke Hiemstra - www.anoigo.nl Copyright UMC Nijmegen (http://www.umcn.nl)
  */
 public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 {
+	
 	/**
 	 * Constructor for AuthSPBrowserHandler. <br>
 	 * 
@@ -119,8 +121,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	 *            The A-Select Server organisation.
 	 */
 	public AuthSPBrowserHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-	String sMyServerId, String sMyOrg)
-	{
+			String sMyServerId, String sMyOrg) {
 		super(servletRequest, servletResponse, sMyServerId, sMyOrg);
 		_sModule = "AuthSPBrowserHandler";
 	}
@@ -128,10 +129,20 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	/**
 	 * process authsp browser requests <br>
 	 * <br>
+	 * .
 	 * 
+	 * @param htServiceRequest
+	 *            the ht service request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @param pwOut
+	 *            the pw out
+	 * @throws ASelectException
+	 *             the a select exception
 	 * @see org.aselect.server.request.handler.aselect.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.HashMap,
 	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
 	 */
+	@Override
 	public void processBrowserRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 		throws ASelectException
 	{
@@ -157,9 +168,10 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	 * @param servletResponse
 	 *            Used to send (HTTP) information back to the user
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private void handleAuthSPResponse(HashMap htServiceRequest, HttpServletResponse servletResponse)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "handleAuthSPResponse()";
 		String sHandlerName = null;
@@ -169,8 +181,8 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			IAuthSPProtocolHandler oProtocolHandler = null;
 
 			try {
-				authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"),
-						"authsp", "id=" + sAsp);
+				authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp", "id="
+						+ sAsp);
 			}
 			catch (ASelectException eA) {
 				// Invalid AuthSP received
@@ -231,12 +243,12 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 				_sessionManager.killSession(sRid);
 				throw new ASelectException(sResultCode);
 			}
-			
+
 			// User interaction is finished, resume the stopwatch
 			// Could be done before the verifyAuthenticationResponse() above,
 			// but at that point we did not have the Rid yet
 			Tools.resumeSensorData(_systemLogger, htSessionContext);
-			
+
 			// The user was authenticated successfully, or sp_issuer was present
 			if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
 				htSessionContext.put("result_code", sResultCode); // must be used by the tgt issuer
@@ -277,7 +289,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			Utils.copyHashmapValue("authsp_type", htAdditional, htSessionContext);
 			// 20091118, Bauke: new functionality: copy attributes from AuthSP
 			Utils.copyHashmapValue("attributes", htAdditional, htResponse);
-			
+
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
 			String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
 			String sCred = (String) htServiceRequest.get("aselect_credentials");
@@ -304,9 +316,10 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	 * @param servletResponse
 	 *            Used to send (HTTP) information back to the user
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private void handleError(HashMap htServiceRequest, HttpServletResponse servletResponse)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "handleError()";
 		AuthenticationLogger authenticationLogger = ASelectAuthenticationLogger.getHandle();

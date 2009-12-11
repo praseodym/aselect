@@ -47,200 +47,189 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.ISAMPollingMethod;
 
+// TODO: Auto-generated Javadoc
 /**
  * Polls a resource by using ICMP PING commands. <br>
  * <br>
  * <b>Description: </b> <br>
- * Will check the availability of a resource by sending a ping (ICMP echo
- * request). <br>
+ * Will check the availability of a resource by sending a ping (ICMP echo request). <br>
  * <b>Concurrency issues: </b> <br>
  * -<br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class SAMICMPPollingMethod implements ISAMPollingMethod
 {
-    /**
-     * The name of the class, used for logging.
-     */
-    private final static String MODULE = "SAMICMPPollingMethod";
-    
-    /**
-     * The ICMP ping command that wll be used for polling
-     */
-    private StringBuffer _sbPingCommand;
-    
-    /**
-     * The logger that will be used for system logging
-     */
-    private SystemLogger _oSystemLogger;
+	/**
+	 * The name of the class, used for logging.
+	 */
+	private final static String MODULE = "SAMICMPPollingMethod";
 
-    /**
-     * Reads the config parameters 'url' and 'pingcommand' from the supplied 
-     * polling method config and sets the given system logger as logger for this 
-     * class. 
-     * <br>
-     * <br>
-     * 
-     * @see org.aselect.system.sam.agent.ISAMPollingMethod#init(java.lang.Object,
-     *      java.lang.Object, org.aselect.system.configmanager.ConfigManager,
-     *      org.aselect.system.logging.SystemLogger)
-     */
-    public void init(Object oResourceConfigSection,
-        Object oPollingMethodConfigSection, ConfigManager oConfigManager,
-        SystemLogger oSystemLogger) throws ASelectSAMException
-    {
-        StringBuffer sbError = new StringBuffer();
-        String sMethod = "init()";
-        
-        String sUrl = null;
-        String sPingCommand = null;
-        URI oUri = null;
-        
-        _oSystemLogger = oSystemLogger;
+	/**
+	 * The ICMP ping command that wll be used for polling
+	 */
+	private StringBuffer _sbPingCommand;
 
-        try
-        {
-	        try
-	        {
-	            sUrl = oConfigManager.getParam(oResourceConfigSection, "url");
-	        }
-	        catch (Exception e)
-	        {
-	            sbError.append("Error retrieving config item 'url' from the resource section.");
-	            _oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
-	
-	            throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-	        }
-	
-	        try
-	        {
-	            sPingCommand = oConfigManager.getParam(oPollingMethodConfigSection,
-	                "pingcommand");
-	        }
-	        catch (Exception e)
-	        {
-	            sbError.append("Error retrieving config item 'pingcommand' from the resource section.");
-	            _oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
-	
-	            throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-	        }
-	
-	        oUri = new URI(sUrl);
+	/**
+	 * The logger that will be used for system logging
+	 */
+	private SystemLogger _oSystemLogger;
 
-            if (oUri.getScheme().equalsIgnoreCase("jdbc"))
-            {
-                oUri = parseJDBCString(sUrl);
-            }
+	/**
+	 * Reads the config parameters 'url' and 'pingcommand' from the supplied polling method config and sets the given
+	 * system logger as logger for this class. <br>
+	 * <br>
+	 * 
+	 * @param oResourceConfigSection
+	 *            the o resource config section
+	 * @param oPollingMethodConfigSection
+	 *            the o polling method config section
+	 * @param oConfigManager
+	 *            the o config manager
+	 * @param oSystemLogger
+	 *            the o system logger
+	 * @throws ASelectSAMException
+	 *             the a select sam exception
+	 * @see org.aselect.system.sam.agent.ISAMPollingMethod#init(java.lang.Object, java.lang.Object,
+	 *      org.aselect.system.configmanager.ConfigManager, org.aselect.system.logging.SystemLogger)
+	 */
+	public void init(Object oResourceConfigSection, Object oPollingMethodConfigSection, ConfigManager oConfigManager,
+			SystemLogger oSystemLogger)
+		throws ASelectSAMException
+	{
+		StringBuffer sbError = new StringBuffer();
+		String sMethod = "init()";
 
-            if (oUri.getHost() == null)
-            {
-                sbError.append("The configured url doesn't contain a host.");
-	            _oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString());
-	
-	            throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR);
-            }
-            
-            _sbPingCommand = new StringBuffer(sPingCommand);
-            _sbPingCommand.append(" ");
-            _sbPingCommand.append(oUri.getHost());
-	     
-        }
-        catch (ASelectSAMException e)
-        {
-            throw e;
-        }
-        catch (Exception e)
-        {
-            sbError.append("An error occured during the initialization of the SAM ICMP Poller: ");
-            sbError.append(e.getMessage());
-            _oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
+		String sUrl = null;
+		String sPingCommand = null;
+		URI oUri = null;
 
-            throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-        }
-    }
+		_oSystemLogger = oSystemLogger;
 
-    /**
-     * Polls the resource by executing the ping command located in <i>
-     * _sbPingCommand</i>.
-     * <br><br>
-     * @see org.aselect.system.sam.agent.ISAMPollingMethod#poll()
-     */
-    public boolean poll()
-    {
-        StringBuffer sbError = new StringBuffer(MODULE);
-        String sMethod = "poll()";
-        
-        boolean bPing = false;
+		try {
+			try {
+				sUrl = oConfigManager.getParam(oResourceConfigSection, "url");
+			}
+			catch (Exception e) {
+				sbError.append("Error retrieving config item 'url' from the resource section.");
+				_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
 
-        try
-        {
-            Runtime oRuntime = Runtime.getRuntime();
-            Process oPingProcess = oRuntime.exec(_sbPingCommand.toString());
-            bPing =  (oPingProcess.waitFor() == 0);
-        }
-        catch (Exception e)
-        {
-            sbError.append(
-                "An error occured during the polling of the resource with command '");
-            sbError.append(_sbPingCommand);
-            sbError.append("'");
-            _oSystemLogger.log(Level.FINE, MODULE, sMethod, sbError.toString(), e);
-        }
+				throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			}
 
-        return bPing;
-    }
+			try {
+				sPingCommand = oConfigManager.getParam(oPollingMethodConfigSection, "pingcommand");
+			}
+			catch (Exception e) {
+				sbError.append("Error retrieving config item 'pingcommand' from the resource section.");
+				_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
 
-    /**
-     * Will parse the JDBC URI to an <code>URI</code> Object.
-     * 
-     * @param sUri The JDBC URI to parse.
-     * 
-     * @return the parsed URI object
-     * @throws ASelectSAMException if the uri couldn't be parsed or the result 
-     * is empty.
-     */
-    private URI parseJDBCString(String sUri) throws ASelectSAMException
-    {
-        StringBuffer sbError = new StringBuffer();
-        String sMethod = "parseJDBCString()";
-        URI uriResponse = null;
+				throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			}
 
-        try
-        {
-            StringTokenizer stUri = new StringTokenizer(sUri, ":");
-            while (stUri.hasMoreElements())
-            {
-                String sToken = (String)stUri.nextElement();
+			oUri = new URI(sUrl);
 
-                if (sToken.startsWith("//"))
-                {
-                    uriResponse = new URI("jdbc", sToken.substring(2), null,
-                        null);
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            sbError.append("Could not parse the JDBC URI '");
-            sbError.append(sUri);
-            sbError.append("'");
-            _oSystemLogger.log(Level.FINE, MODULE, sMethod, sbError.toString(), e);
+			if (oUri.getScheme().equalsIgnoreCase("jdbc")) {
+				oUri = parseJDBCString(sUrl);
+			}
 
-            throw new ASelectSAMException(Errors.ERROR_ASELECT_PARSE_ERROR);
-        }
+			if (oUri.getHost() == null) {
+				sbError.append("The configured url doesn't contain a host.");
+				_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString());
 
-        if (uriResponse == null)
-        {
-            sbError.append("Invalid JDBC URI '");
-            sbError.append(sUri);
-            sbError.append("'. Empty result after creating the URI object.");
-            _oSystemLogger.log(Level.FINE, MODULE, sMethod, sbError.toString());
-            
-            throw new ASelectSAMException(Errors.ERROR_ASELECT_PARSE_ERROR);
-        }
+				throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR);
+			}
 
-        return uriResponse;
-    }
+			_sbPingCommand = new StringBuffer(sPingCommand);
+			_sbPingCommand.append(" ");
+			_sbPingCommand.append(oUri.getHost());
+
+		}
+		catch (ASelectSAMException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			sbError.append("An error occured during the initialization of the SAM ICMP Poller: ");
+			sbError.append(e.getMessage());
+			_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
+
+			throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+		}
+	}
+
+	/**
+	 * Polls the resource by executing the ping command located in <i> _sbPingCommand</i>. <br>
+	 * <br>
+	 * 
+	 * @return true, if poll
+	 * @see org.aselect.system.sam.agent.ISAMPollingMethod#poll()
+	 */
+	public boolean poll()
+	{
+		StringBuffer sbError = new StringBuffer(MODULE);
+		String sMethod = "poll()";
+
+		boolean bPing = false;
+
+		try {
+			Runtime oRuntime = Runtime.getRuntime();
+			Process oPingProcess = oRuntime.exec(_sbPingCommand.toString());
+			bPing = (oPingProcess.waitFor() == 0);
+		}
+		catch (Exception e) {
+			sbError.append("An error occured during the polling of the resource with command '");
+			sbError.append(_sbPingCommand);
+			sbError.append("'");
+			_oSystemLogger.log(Level.FINE, MODULE, sMethod, sbError.toString(), e);
+		}
+
+		return bPing;
+	}
+
+	/**
+	 * Will parse the JDBC URI to an <code>URI</code> Object.
+	 * 
+	 * @param sUri
+	 *            The JDBC URI to parse.
+	 * @return the parsed URI object
+	 * @throws ASelectSAMException
+	 *             if the uri couldn't be parsed or the result is empty.
+	 */
+	private URI parseJDBCString(String sUri)
+		throws ASelectSAMException
+	{
+		StringBuffer sbError = new StringBuffer();
+		String sMethod = "parseJDBCString()";
+		URI uriResponse = null;
+
+		try {
+			StringTokenizer stUri = new StringTokenizer(sUri, ":");
+			while (stUri.hasMoreElements()) {
+				String sToken = (String) stUri.nextElement();
+
+				if (sToken.startsWith("//")) {
+					uriResponse = new URI("jdbc", sToken.substring(2), null, null);
+				}
+			}
+		}
+		catch (Exception e) {
+			sbError.append("Could not parse the JDBC URI '");
+			sbError.append(sUri);
+			sbError.append("'");
+			_oSystemLogger.log(Level.FINE, MODULE, sMethod, sbError.toString(), e);
+
+			throw new ASelectSAMException(Errors.ERROR_ASELECT_PARSE_ERROR);
+		}
+
+		if (uriResponse == null) {
+			sbError.append("Invalid JDBC URI '");
+			sbError.append(sUri);
+			sbError.append("'. Empty result after creating the URI object.");
+			_oSystemLogger.log(Level.FINE, MODULE, sMethod, sbError.toString());
+
+			throw new ASelectSAMException(Errors.ERROR_ASELECT_PARSE_ERROR);
+		}
+
+		return uriResponse;
+	}
 }

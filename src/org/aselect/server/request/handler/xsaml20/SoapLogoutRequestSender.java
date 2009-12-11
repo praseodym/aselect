@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.xsaml20;
 
 import java.io.StringReader;
@@ -11,7 +22,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
-import org.opensaml.Configuration;
 import org.opensaml.saml2.core.LogoutRequest;
 import org.opensaml.saml2.core.LogoutResponse;
 import org.opensaml.saml2.core.StatusCode;
@@ -25,13 +35,13 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
+// TODO: Auto-generated Javadoc
 public class SoapLogoutRequestSender
 {
 	private final static String MODULE = "SoapLogoutRequestSender";
 	private static final String LOGOUTRESPONSE = "LogoutResponse";
 	private ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
 
-	
 	/**
 	 * Send Logout Request. <br>
 	 * 
@@ -46,8 +56,7 @@ public class SoapLogoutRequestSender
 	 * @throws ASelectException
 	 *             If sending fails.
 	 */
-	
-	
+
 	// For backward compatibility
 	public void sendSoapLogoutRequest(String serviceProviderUrl, String issuerUrl, String sNameID, String reason)
 		throws ASelectException
@@ -65,26 +74,27 @@ public class SoapLogoutRequestSender
 	 * @param sNameID
 	 *            String with NameID.
 	 * @param reason
-	 *            String with logout reason.           
+	 *            String with logout reason.
 	 * @param pkey
-	 * 				Public key to verify SOAP response with, if null do not verify response
-	 * 
+	 *            Public key to verify SOAP response with, if null do not verify response
 	 * @throws ASelectException
 	 *             If sending fails.
 	 */
-	public void sendSoapLogoutRequest(String serviceProviderUrl, String issuerUrl, String sNameID, String reason, PublicKey pkey)
+	public void sendSoapLogoutRequest(String serviceProviderUrl, String issuerUrl, String sNameID, String reason,
+			PublicKey pkey)
 		throws ASelectException
 	{
 		String sMethod = "sendSoapLogoutRequest";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Send backchannel LogoutRequest to " + serviceProviderUrl
 				+ " for user: " + sNameID);
 
-		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(serviceProviderUrl, null, sNameID, issuerUrl, reason);
+		LogoutRequest logoutRequest = SamlTools
+				.buildLogoutRequest(serviceProviderUrl, null, sNameID, issuerUrl, reason);
 		// TODO SamlTools.setValidityInterval with only NotOnOrAfter, but we need this from calling object
 		// Always sign the logoutRequest
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the logoutRequest >======" );
-		logoutRequest = (LogoutRequest)SamlTools.sign(logoutRequest);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the logoutRequest ======<" );
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the logoutRequest >======");
+		logoutRequest = (LogoutRequest) SamlTools.sign(logoutRequest);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the logoutRequest ======<");
 
 		SoapManager soapManager = new SoapManager();
 		Envelope envelope = soapManager.buildSOAPMessage(logoutRequest);
@@ -92,7 +102,7 @@ public class SoapLogoutRequestSender
 		Element envelopeElem = null;
 		try {
 			envelopeElem = SamlTools.marshallMessage(envelope);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sending message:\n"+XMLHelper.nodeToString(envelopeElem));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sending message:\n" + XMLHelper.nodeToString(envelopeElem));
 		}
 		catch (MessageEncodingException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Exception during marshallling of envelope");
@@ -117,13 +127,13 @@ public class SoapLogoutRequestSender
 			// XMLHelper.nodeToString(eltArtifactResolve));
 
 			// Unmarshall to the SAMLmessage
-			UnmarshallerFactory factory = Configuration.getUnmarshallerFactory();
+			UnmarshallerFactory factory = org.opensaml.xml.Configuration.getUnmarshallerFactory();
 			Unmarshaller unmarshaller = factory.getUnmarshaller((Element) eltArtifactResolve);
 
 			LogoutResponse logoutResponse = (LogoutResponse) unmarshaller.unmarshall((Element) eltArtifactResolve);
 
 			if (pkey != null) { // if there is a key supplied by the calling class, check it
-				if (SamlTools.checkSignature(logoutResponse, pkey )) {
+				if (SamlTools.checkSignature(logoutResponse, pkey)) {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "logoutResponse was signed OK");
 				}
 				else {
@@ -136,11 +146,12 @@ public class SoapLogoutRequestSender
 			}
 			StatusCode statusCode = logoutResponse.getStatus().getStatusCode();
 			if (!statusCode.getValue().equals(StatusCode.SUCCESS_URI)) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Backchannel logout NOT successful. Statuscode=" +
-						statusCode.getValue() + " from " + serviceProviderUrl);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Backchannel logout NOT successful. Statuscode="
+						+ statusCode.getValue() + " from " + serviceProviderUrl);
 			}
 			else {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Backchannel logout for " + serviceProviderUrl+" was successful");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Backchannel logout for " + serviceProviderUrl
+						+ " was successful");
 			}
 		}
 		catch (Exception e) {

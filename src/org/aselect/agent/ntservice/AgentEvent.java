@@ -31,67 +31,63 @@
 
 package org.aselect.agent.ntservice;
 
+// TODO: Auto-generated Javadoc
 /**
- * Implements the class with event codes for use with the ASelect Agent Service
- * for use in Windows environments. 
- * <br><br>
- * <b>Concurrency issues: </b> 
+ * Implements the class with event codes for use with the ASelect Agent Service for use in Windows environments. <br>
  * <br>
- * None. 
+ * <b>Concurrency issues: </b> <br>
+ * None.
  * 
  * @author Alfa & Ariss
  */
 public class AgentEvent
 {
-    /** Stop event ID. */
-    public static final int STOP = 1;
-    
-    /** Shutdown event ID. */
-    public static final int SHUTDOWN = 2;
-    
-    /** Close event ID */
-    public static final int CLOSE = 3;
-    
-    /** Logoff event ID. */
-    public static final int LOGOFF = 4;
+	/** Stop event ID. */
+	public static final int STOP = 1;
 
-    /**
-     * The Event ID
-     */
-    private int _iID;
+	/** Shutdown event ID. */
+	public static final int SHUTDOWN = 2;
 
-    /**
-     * Create a new instance.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Creates a new <code>AgentEvent</code> with the given ID.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @param iID The event ID.
-     */
-    public AgentEvent (int iID)
-    {
-        _iID = iID;
-    }
+	/** Close event ID */
+	public static final int CLOSE = 3;
 
-    /**
-     * get the event ID.
-     * @return The event ID.
-     */
-    public int getId()
-    {
-        return _iID;
-    }
+	/** Logoff event ID. */
+	public static final int LOGOFF = 4;
+
+	/**
+	 * The Event ID
+	 */
+	private int _iID;
+
+	/**
+	 * Create a new instance. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Creates a new <code>AgentEvent</code> with the given ID. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param iID
+	 *            The event ID.
+	 */
+	public AgentEvent(int iID) {
+		_iID = iID;
+	}
+
+	/**
+	 * get the event ID.
+	 * 
+	 * @return The event ID.
+	 */
+	public int getId()
+	{
+		return _iID;
+	}
 }

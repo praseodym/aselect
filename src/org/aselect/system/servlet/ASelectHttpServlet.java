@@ -76,28 +76,23 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
- * Base servlet for A-Select (core) components. 
- * <br>
+ * Base servlet for A-Select (core) components. <br>
  * <br>
  * <b>Description: </b> <br>
- * This base servlet contains functionality for restartable and initialisable
- * Servlets. In addition it contains some helpfull methods which are shared
- * among different A-Select Servlet components. <br>
+ * This base servlet contains functionality for restartable and initialisable Servlets. In addition it contains some
+ * helpfull methods which are shared among different A-Select Servlet components. <br>
  * <br>
  * <b>Concurrency issues: </b> <br>
- * You <b>must</b> use the <code>isRestartInProgress()</code> method
- * in your <code>service()</code> (or other request handling methods)
- * to ensure that the servlet is not currently restarting. If it is,
- * then you should halt processing. It is possible to process events
- * during a restart, but it is very dangerous since a restart can 
- * potentially change the entire state of your servlet.
+ * You <b>must</b> use the <code>isRestartInProgress()</code> method in your <code>service()</code> (or other request
+ * handling methods) to ensure that the servlet is not currently restarting. If it is, then you should halt processing.
+ * It is possible to process events during a restart, but it is very dangerous since a restart can potentially change
+ * the entire state of your servlet. <br>
  * <br>
- * <br>
- * Other than that, this class is thread-safe. 
+ * Other than that, this class is thread-safe.
  * 
  * @author Alfa & Ariss
- * 
  */
 public abstract class ASelectHttpServlet extends HttpServlet
 {
@@ -106,25 +101,28 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	 */
 	private final static String MODULE = "ASelectHttpServlet";
 
-	/** 
+	/**
 	 * Flag indicating whether we are initializing or re-initializing
 	 */
 	private boolean _bFirstInit = true;
 
 	/**
-	 * Initialises the <code>Servlet</code>.
-	 * <br>
+	 * Initialises the <code>Servlet</code>. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
 	 * Performs the following steps:
 	 * <ul>
 	 * <li>Calls the super its initialisation</li>
-	 * <li>Registers this <code>ASelectHttpServlet</code> as a restartable
-	 * servlet if applicable</li>
+	 * <li>Registers this <code>ASelectHttpServlet</code> as a restartable servlet if applicable</li>
 	 * </ul>
 	 * 
+	 * @param config
+	 *            the config
+	 * @throws ServletException
+	 *             the servlet exception
 	 * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
 	 */
+	@Override
 	public void init(ServletConfig config)
 		throws ServletException
 	{
@@ -134,12 +132,10 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	}
 
 	/**
-	 * Set HTTP headers that disable browser caching. 
-	 * <br>
+	 * Set HTTP headers that disable browser caching. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * Sets HTTP 1.0 or HTTP 1.1 disable caching headers depending on the
-	 * request. <br>
+	 * Sets HTTP 1.0 or HTTP 1.1 disable caching headers depending on the request. <br>
 	 * <br>
 	 * <b>Preconditions: </b>
 	 * <ul>
@@ -157,35 +153,35 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	 */
 	public void setDisableCachingHttpHeaders(HttpServletRequest oRequest, HttpServletResponse oResponse)
 	{
-		//turn off caching
+		// turn off caching
 		if (oRequest.getProtocol().equalsIgnoreCase("HTTP/1.0")) {
 			oResponse.setHeader("Pragma", "no-cache");
 		}
 		else if (oRequest.getProtocol().equalsIgnoreCase("HTTP/1.1")) {
 			oResponse.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
 		}
-		//turn off caching by proxies
+		// turn off caching by proxies
 		oResponse.setHeader("Expires", "-1");
 	}
 
 	/**
-	 * Show an HTML error page.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Show an HTML error page. <br>
 	 * <br>
+	 * <b>Description:</b> <br>
 	 * The following tags will be replaced in the error template:
 	 * <ul>
-	 * 	<li>[error] containing the error code</li>
-	 * 	<li>[error_message] containing the error message</li>
+	 * <li>[error] containing the error code</li>
+	 * <li>[error_message] containing the error message</li>
 	 * </ul>
 	 * 
-	 * @param pwOut the <code>PrintWriter</code> that is the target for 
-	 * displaying the html error page.
-	 * @param sTemplate The base HTML error template.
-	 * @param sError The error that should be shown in the error page.
-	 * @param sErrorMessage 
-	 * 		The error message that should be shown in the error page.
-	 * 
+	 * @param pwOut
+	 *            the <code>PrintWriter</code> that is the target for displaying the html error page.
+	 * @param sTemplate
+	 *            The base HTML error template.
+	 * @param sError
+	 *            The error that should be shown in the error page.
+	 * @param sErrorMessage
+	 *            The error message that should be shown in the error page.
 	 */
 	public void showErrorPage(PrintWriter pwOut, String sTemplate, String sError, String sErrorMessage)
 	{
@@ -201,30 +197,24 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	}
 
 	/**
-	 * Determines whether or not a Servlet is restartable. 
-	 * <br>
+	 * Determines whether or not a Servlet is restartable. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * This method should return <code>true</code> if the Servlet
-	 * is restartable, <code>false</code> otherwise.
+	 * This method should return <code>true</code> if the Servlet is restartable, <code>false</code> otherwise. <br>
 	 * <br>
-	 * <br>
-	 * @return <code>true</code> if the Servlet is restartable, otherwise
-	 *         <code>false</code>.
+	 * 
+	 * @return <code>true</code> if the Servlet is restartable, otherwise <code>false</code>.
 	 */
 	protected abstract boolean isRestartableServlet();
 
 	/**
-	 * Determine whether this is a first-time init or a re-initialization
-	 * <br>
+	 * Determine whether this is a first-time init or a re-initialization <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * This method can be used in your <code>init()</code> method 
-	 * to check whether it is a first-time initialization, or a 
-	 * re-initialization after a restart API call.
-	 * <br>
-	 * @return <code>true</code> if this is a re-initialization, 
-	 * <code>false</code> otherwise.
+	 * This method can be used in your <code>init()</code> method to check whether it is a first-time initialization, or
+	 * a re-initialization after a restart API call. <br>
+	 * 
+	 * @return <code>true</code> if this is a re-initialization, <code>false</code> otherwise.
 	 */
 	protected boolean isReinit()
 	{
@@ -234,12 +224,10 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	}
 
 	/**
-	 * Retrieve the modulename. 
-	 * <br>
+	 * Retrieve the modulename. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * Constructs a module name form the class name. This method strips package
-	 * prefix and the "Servlet" postfix. <br>
+	 * Constructs a module name form the class name. This method strips package prefix and the "Servlet" postfix. <br>
 	 * <br>
 	 * 
 	 * @return The constructed module name.
@@ -255,36 +243,36 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	}
 
 	/**
-	 * Retrieve the working directory. 
-	 * <br>
+	 * Retrieve the working directory. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * Return the working directory which A-Select uses for logging,
-	 * configuration, and other data storage. <br>
+	 * Return the working directory which A-Select uses for logging, configuration, and other data storage. <br>
 	 * <br>
-	 * The working dir is read as an Init paramater from the servlets Deployment
-	 * Descriptor. e.g.:
+	 * The working dir is read as an Init paramater from the servlets Deployment Descriptor. e.g.:
 	 * 
-	 * <pre><code>
+	 * <pre>
+	 * <code>
 	 * 
-	 *  
-	 *   &lt;servlet&gt;
-	 *   	...
-	 *   	&lt;init-param&gt;
-	 *   		&lt;param-name&gt;working_dir&lt;/param-name&gt;
-	 *   		&lt;param-value&gt;[param value]&lt;/param-value&gt;
-	 *   	&lt;/init-param&gt;
-	 *   	...
-	 *    &lt;/servlet&gt;
-	 *   	
-	 *  
-	 * </code></pre>
+	 * 
+	 * &lt;servlet&gt;
+	 * ...
+	 * &lt;init-param&gt;
+	 * &lt;param-name&gt;working_dir&lt;/param-name&gt;
+	 * &lt;param-value&gt;[param value]&lt;/param-value&gt;
+	 * &lt;/init-param&gt;
+	 * ...
+	 * &lt;/servlet&gt;
+	 * 
+	 * 
+	 * </code>
+	 * </pre>
 	 * 
 	 * <br>
 	 * <b>Preconditions: </b> <br>
 	 * The working dir is set in the Servlet its Deployment Descriptor. <br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @return The working directory.
 	 */
@@ -294,17 +282,14 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	}
 
 	/**
-	 * Handles the restart request. 
-	 * <br>
+	 * Handles the restart request. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * This method should be called if a sub class receives a restart request.
-	 * This methods calls
-	 * {@link ASelectHttpServlet#restartServlets(SystemLogger)}which restarts
-	 * all restartable servlets in the servlet context. <br>
+	 * This method should be called if a sub class receives a restart request. This methods calls
+	 * {@link ASelectHttpServlet#restartServlets(SystemLogger)}which restarts all restartable servlets in the servlet
+	 * context. <br>
 	 * <br>
-	 * <i>Note: The restart request should be handled by one
-	 * <code>Servlet</code> in the context. </i> <br>
+	 * <i>Note: The restart request should be handled by one <code>Servlet</code> in the context. </i> <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * This method should be called serial. <br>
@@ -322,8 +307,7 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	 * @param oRequest
 	 *            The HTTP request.
 	 * @param sMySharedSecret
-	 *            The shared secret on which the received Shared_secret is
-	 *            validated upon.
+	 *            The shared secret on which the received Shared_secret is validated upon.
 	 * @param pwOut
 	 *            The ouput.
 	 * @param systemLogger
@@ -333,8 +317,8 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	protected String handleRestartRequest(HttpServletRequest oRequest, String sMySharedSecret, PrintWriter pwOut,
 			SystemLogger systemLogger)
 	{
-		//TODO The error handling differs from standard A-Select 
-		//TODO The result is ignored in the A-Select and AuthSP Server (Erwin van den Beld)
+		// TODO The error handling differs from standard A-Select
+		// TODO The result is ignored in the A-Select and AuthSP Server (Erwin van den Beld)
 		String sMethod = "handleRestartRequest()";
 		String sSharedSecret = oRequest.getParameter("shared_secret");
 
@@ -365,8 +349,7 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	}
 
 	/**
-	 * Restart all restartable servlets within this context. 
-	 * <br>
+	 * Restart all restartable servlets within this context. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
 	 * Restarts all servlets in the <code>Servlet</code> context:
@@ -378,7 +361,8 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	 * <br>
 	 * <i>Note: this method logs possible errors. </i> <br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
 	 * All restartable servlets in the context are restarted. <br>
@@ -412,9 +396,9 @@ public abstract class ASelectHttpServlet extends HttpServlet
 			Set keys = htRestartServlets.keySet();
 			for (Object s : keys) {
 				String sKey = (String) s;
-				//for (Enumeration e = htRestartServlets.keys(); e.hasMoreElements();)
-				//{
-				//    String sKey = (String)e.nextElement();
+				// for (Enumeration e = htRestartServlets.keys(); e.hasMoreElements();)
+				// {
+				// String sKey = (String)e.nextElement();
 				ASelectHttpServlet servlet = (ASelectHttpServlet) htRestartServlets.get(sKey);
 				boolean bResult = true;
 				try {
@@ -427,7 +411,7 @@ public abstract class ASelectHttpServlet extends HttpServlet
 				sbResult.append(sKey).append(" (");
 				sbResult.append(bResult ? "OK" : "Failed");
 				sbResult.append(")");
-				//if (e.hasMoreElements())
+				// if (e.hasMoreElements())
 				sbResult.append(", ");
 			}
 			int len = sbResult.length();
@@ -450,19 +434,15 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	}
 
 	/**
-	 * Check if a restart is currently in progress. 
-	 * <br>
+	 * Check if a restart is currently in progress. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * This method reads the servlet configuration attribute
-	 * "restarting_servlets". If this attribute is true then all
-	 * restartable servlets within this context are in the process
-	 * of being restarted.
-	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
-	 * Be careful in handling requests during a restart. A restart
-	 * may potentially change the entire state of the servlets within
-	 * the context.
+	 * This method reads the servlet configuration attribute "restarting_servlets". If this attribute is true then all
+	 * restartable servlets within this context are in the process of being restarted. <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
+	 * Be careful in handling requests during a restart. A restart may potentially change the entire state of the
+	 * servlets within the context.
 	 * 
 	 * @return true if servlets in the context are restarting, otherwise false.
 	 */
@@ -473,16 +453,23 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	}
 
 	/**
-	 * This method returns a "Server Busy" if restarting is in progress. 
+	 * This method returns a "Server Busy" if restarting is in progress. <br>
 	 * <br>
-	 * <br>
-	 * <i>Note: If this method is overwritten in a sub class, it should be
-	 * called explicitly, or you must use the 
+	 * <i>Note: If this method is overwritten in a sub class, it should be called explicitly, or you must use the
 	 * <code>isRestartInProgress()</code> method </i> <br>
 	 * 
+	 * @param request
+	 *            the request
+	 * @param response
+	 *            the response
+	 * @throws ServletException
+	 *             the servlet exception
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
 	 * @see javax.servlet.http.HttpServlet#service(javax.servlet.http.HttpServletRequest,
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
+	@Override
 	protected void service(HttpServletRequest request, HttpServletResponse response)
 		throws ServletException, java.io.IOException
 	{
@@ -493,12 +480,10 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	}
 
 	/**
-	 * Register <code>Servlet</code> as being restartable. 
-	 * <br>
+	 * Register <code>Servlet</code> as being restartable. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * This methods adds the <code>Servlet</code> to the
-	 * "restartable_servlets" context attribute. <br>
+	 * This methods adds the <code>Servlet</code> to the "restartable_servlets" context attribute. <br>
 	 * <br>
 	 * 
 	 * @param sServletName

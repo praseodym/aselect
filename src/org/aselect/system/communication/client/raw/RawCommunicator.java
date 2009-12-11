@@ -110,12 +110,12 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.logging.SystemLogger;
 
+// TODO: Auto-generated Javadoc
 /**
- * Client communicator which uses CGI messages. 
- * <br><br>
+ * Client communicator which uses CGI messages. <br>
+ * <br>
  * <b>Description: </b> <br>
- * The Raw communicator used by the A-Select agent to create, retrieve, and send
- * URL encoded CGI messages. <br>
+ * The Raw communicator used by the A-Select agent to create, retrieve, and send URL encoded CGI messages. <br>
  * 
  * @author Alfa & Ariss
  */
@@ -131,14 +131,13 @@ public class RawCommunicator implements IClientCommunicator
 	private final String MODULE = "RawCommunicator";
 
 	/**
-	 * Creates a new <code>RawCommunicator</code>.
-	 * <br><br>
+	 * Creates a new <code>RawCommunicator</code>. <br>
+	 * <br>
 	 * <b>Preconditions: </b> <br>
 	 * <code>systemLogger</code> should be initialized. <br>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
-	 * <code>_systemLogger</code> is set with <code> systemLogger</code>.
-	 * <br>
+	 * <code>_systemLogger</code> is set with <code> systemLogger</code>. <br>
 	 * 
 	 * @param systemLogger
 	 *            the <code>logger</code> to log system information.
@@ -148,8 +147,8 @@ public class RawCommunicator implements IClientCommunicator
 	}
 
 	/**
-	 * Sends a raw api call to the A-Select Server. 
-	 * <br><br>
+	 * Sends a raw api call to the A-Select Server. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
 	 * Executes the following steps:
 	 * <ul>
@@ -159,21 +158,27 @@ public class RawCommunicator implements IClientCommunicator
 	 * <li>Convert response to HashMap</li>
 	 * </ul>
 	 * <br>
-	 * @throws ASelectCommunicationException If sending fails.
-	 * @see org.aselect.system.communication.client.IClientCommunicator#sendMessage(java.util.HashMap,
-	 *      java.lang.String)
+	 * 
+	 * @param parameters
+	 *            the parameters
+	 * @param target
+	 *            the target
+	 * @return the hash map
+	 * @throws ASelectCommunicationException
+	 *             If sending fails.
+	 * @see org.aselect.system.communication.client.IClientCommunicator#sendMessage(java.util.HashMap, java.lang.String)
 	 */
 	public HashMap sendMessage(HashMap parameters, String target)
 		throws ASelectCommunicationException
 	{
-		//create empty return HashMap
+		// create empty return HashMap
 		HashMap htReturn = new HashMap();
 		try {
-			//convert paramaters to CGI message string.
+			// convert paramaters to CGI message string.
 			String sRequest = hashtable2CGIMessage(parameters);
-			//Send request to A-Select server
+			// Send request to A-Select server
 			String sResponse = sendRequestToASelectServer(target, sRequest);
-			//convert response to HashMap
+			// convert response to HashMap
 			if (sResponse != null)
 				htReturn = convertCGIMessage(sResponse);
 		}
@@ -185,15 +190,18 @@ public class RawCommunicator implements IClientCommunicator
 	}
 
 	// Bauke: added
+	/* (non-Javadoc)
+	 * @see org.aselect.system.communication.client.IClientCommunicator#sendStringMessage(java.lang.String, java.lang.String)
+	 */
 	public String sendStringMessage(String soapMessage, String sTarget)
-	throws ASelectCommunicationException
+		throws ASelectCommunicationException
 	{
 		return null;
 	}
 
 	/**
-	 * Send the request to the A-Select server. 
-	 * <br><br>
+	 * Send the request to the A-Select server. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
 	 * Executes the following steps:
 	 * <ul>
@@ -216,8 +224,8 @@ public class RawCommunicator implements IClientCommunicator
 	 * @param sParams
 	 *            The parameters to be send as CGIMessage.
 	 * @return The response from the A-Select server.
-	 * @throws ASelectCommunicationException 
-	 * 		If communication with <code>sUrl</code> fails.
+	 * @throws ASelectCommunicationException
+	 *             If communication with <code>sUrl</code> fails.
 	 */
 	private String sendRequestToASelectServer(String sUrl, String sParams)
 		throws ASelectCommunicationException
@@ -241,7 +249,7 @@ public class RawCommunicator implements IClientCommunicator
 			if (sInputLine != null)
 				sInputLine = sInputLine.trim();
 		}
-		catch (MalformedURLException eMU) //Invalid URL
+		catch (MalformedURLException eMU) // Invalid URL
 		{
 			sbBuffer = new StringBuffer("Invalid URL: \"");
 			sbBuffer.append(sUrl);
@@ -250,7 +258,7 @@ public class RawCommunicator implements IClientCommunicator
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR, eMU);
 		}
-		catch (IOException eIO) //Error communicating with A-Select Server
+		catch (IOException eIO) // Error communicating with A-Select Server
 		{
 			sbBuffer = new StringBuffer("Error communicating with A-Select Server: \"");
 			sbBuffer.append(sUrl);
@@ -264,27 +272,25 @@ public class RawCommunicator implements IClientCommunicator
 	}
 
 	/**
-	 * Convert <code>HashMap</code> to CGI message string. 
-	 * <br><br>
+	 * Convert <code>HashMap</code> to CGI message string. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
-	 * Creates a CGI syntax message from the key/value pairs in the input
-	 * <code>HashMap</code>.<br>
+	 * Creates a CGI syntax message from the key/value pairs in the input <code>HashMap</code>.<br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * The used {@link java.util.HashMap}objects are synchronized. <br>
 	 * <br>
 	 * <b>Preconditions: </b> <br>
-	 * <code>htInput</code> should be a HashMap containing valid parameters.
-	 * <br>
+	 * <code>htInput</code> should be a HashMap containing valid parameters. <br>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
-	 * The return <code>String</code> contains the parameters in CGI syntax.
-	 * <br>
+	 * The return <code>String</code> contains the parameters in CGI syntax. <br>
 	 * 
 	 * @param htInput
 	 *            The <code>HashMap</code> to be converted.
 	 * @return CGI message containg all parameters in <code>htInput</code>.
-	 * @throws UnsupportedEncodingException If URL encoding fails.
+	 * @throws UnsupportedEncodingException
+	 *             If URL encoding fails.
 	 */
 	private static String hashtable2CGIMessage(HashMap htInput)
 		throws UnsupportedEncodingException
@@ -294,17 +300,17 @@ public class RawCommunicator implements IClientCommunicator
 		Set keys = htInput.keySet();
 		for (Object s : keys) {
 			String sKey = (String) s;
-			//        Enumeration enumKeys = htInput.keys();
+			// Enumeration enumKeys = htInput.keys();
 
-			//boolean bStop = !enumKeys.hasMoreElements(); //more elements?
-			//while (!bStop)
-			//{
-			//  String sKey = (String)enumKeys.nextElement();
+			// boolean bStop = !enumKeys.hasMoreElements(); //more elements?
+			// while (!bStop)
+			// {
+			// String sKey = (String)enumKeys.nextElement();
 			Object oValue = htInput.get(sKey);
 			if (oValue instanceof String) {
 				sbBuffer.append(sKey);
 				sbBuffer.append("=");
-				//URL encode value
+				// URL encode value
 				String sValue = URLEncoder.encode((String) oValue, "UTF-8");
 				sbBuffer.append(sValue);
 			}
@@ -319,21 +325,20 @@ public class RawCommunicator implements IClientCommunicator
 						sbBuffer.append("&");
 				}
 			}
-//			if (enumKeys.hasMoreElements()) {
-			//Append extra '&' after every parameter.
+			// if (enumKeys.hasMoreElements()) {
+			// Append extra '&' after every parameter.
 			sbBuffer.append("&");
-//			}
+			// }
 		}
 		int len = sbBuffer.length();
-		return sbBuffer.substring(0, (len>0)? len-1: len);
+		return sbBuffer.substring(0, (len > 0) ? len - 1 : len);
 	}
 
 	/**
-	 * Convert a CGI message string into a <code>HashMap</code>.
-	 * <br><br>
+	 * Convert a CGI message string into a <code>HashMap</code>. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
-	 * This method will convert a CGI request string (
-	 * <code>key=value&key=value</code> etc. ) into a hashtable for much
+	 * This method will convert a CGI request string ( <code>key=value&key=value</code> etc. ) into a hashtable for much
 	 * easier processing. <br>
 	 * The <code>HashMap</code> will contain:
 	 * <ul>
@@ -349,14 +354,13 @@ public class RawCommunicator implements IClientCommunicator
 	 * <code>sMessage</code> must contain a valid CGI message. <br>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
-	 * The returned <code>HashMap</code> contains all the key/value pairs of
-	 * the CGI message. <br>
+	 * The returned <code>HashMap</code> contains all the key/value pairs of the CGI message. <br>
 	 * 
 	 * @param sMessage
 	 *            The CGI message to be converted.
-	 * @return A <code>HashMap</code> containing the parameters from the CGI
-	 *         message
-	 * @throws UnsupportedEncodingException If URL decoding fails.
+	 * @return A <code>HashMap</code> containing the parameters from the CGI message
+	 * @throws UnsupportedEncodingException
+	 *             If URL decoding fails.
 	 */
 	public HashMap convertCGIMessage(String sMessage)
 		throws UnsupportedEncodingException
@@ -383,7 +387,7 @@ public class RawCommunicator implements IClientCommunicator
 							sValue = "";
 						}
 						if (sKey != null && sValue != null) {
-							//URL decode
+							// URL decode
 							sValue = URLDecoder.decode(sValue, "UTF-8");
 							if (sKey.endsWith(ENCODED_BRACES)) {
 								sKey = sKey.substring(0, sKey.lastIndexOf(ENCODED_BRACES));
@@ -407,12 +411,12 @@ public class RawCommunicator implements IClientCommunicator
 			}
 
 			if (!tblVectors.isEmpty()) {
-		        Set keys = tblVectors.keySet();
+				Set keys = tblVectors.keySet();
 				for (Object s : keys) {
 					String sArrName = (String) s;
-				//Enumeration keysEnum = tblVectors.keys();
-				//while (keysEnum.hasMoreElements()) {
-					//String sArrName = (String) keysEnum.nextElement();
+					// Enumeration keysEnum = tblVectors.keys();
+					// while (keysEnum.hasMoreElements()) {
+					// String sArrName = (String) keysEnum.nextElement();
 					Vector vTmp = (Vector) tblVectors.get(sArrName);
 					String[] arrTemp = new String[vTmp.size()];
 

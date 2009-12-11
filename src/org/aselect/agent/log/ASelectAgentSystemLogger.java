@@ -46,13 +46,15 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
 
+// TODO: Auto-generated Javadoc
 /**
  * Implements the System logger for the A-Select Agent package. <br>
  * <br>
  * <b>Description:</b><br>
  * Implements the System logger for the A-Select Agent package as a single pattern. <br>
  * <br>
- * <b>Concurrency issues:</b> <br> - <br>
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
  * @author Alfa & Ariss
  */
@@ -67,6 +69,8 @@ public class ASelectAgentSystemLogger extends SystemLogger
 	private static ASelectAgentSystemLogger _oASelectAgentSystemLogger;
 
 	/**
+	 * Gets the handle.
+	 * 
 	 * @return A static handle to the A-Select Agent system logger.
 	 */
 	public static ASelectAgentSystemLogger getHandle()
@@ -81,19 +85,16 @@ public class ASelectAgentSystemLogger extends SystemLogger
 	 * Initializes the Authentication Logger. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * <li>Reads the 'target' config section</li>
-	 * <li>Calls the init of the <i>_oASelectAuthenticationLogger</i></li>
-	 * <li>Reads the 'target' config section</li>
+	 * <li>Reads the 'target' config section</li> <li>Calls the init of the <i>_oASelectAuthenticationLogger</i></li>
+	 * <li>Reads the 'target' config section</li> <br>
 	 * <br>
-	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Preconditions:</b> <br>
-	 * <li>The <i>ASelectSystemLogger</i> must be initialized.</li>
-	 * <li>The <i>ASelectConfigManager</i> must be initialized.</li>
-	 * <li>The <i>oSysLogging</i> may not be <code>NULL</code>.</li>
-	 * <li>The <i>sWorkingDir</i> may not be <code>NULL</code>.</li>
-	 * <br>
+	 * <li>The <i>ASelectSystemLogger</i> must be initialized.</li> <li>The <i>ASelectConfigManager</i> must be
+	 * initialized.</li> <li>The <i>oSysLogging</i> may not be <code>NULL</code>.</li> <li>The <i>sWorkingDir</i> may
+	 * not be <code>NULL</code>.</li> <br>
 	 * <br>
 	 * <b>Postconditions:</b> <br>
 	 * An initialized <i>_oASelectAuthenticationLogger</i>. <br>
@@ -106,7 +107,7 @@ public class ASelectAgentSystemLogger extends SystemLogger
 	 *             if initialization went wrong
 	 */
 	public void init(Object oSysLogging, String sWorkingDir)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "init()";
 
@@ -176,7 +177,9 @@ public class ASelectAgentSystemLogger extends SystemLogger
 		}
 	}
 
-	/** private default constructor (singleton) */
+	/**
+	 * private default constructor (singleton).
+	 */
 	private ASelectAgentSystemLogger() {
 	}
 }

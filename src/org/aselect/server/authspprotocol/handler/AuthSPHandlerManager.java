@@ -61,20 +61,18 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMResource;
 
+// TODO: Auto-generated Javadoc
 /**
- * The AuthSPHandler manager for the A-Select Server.
- * <br><br>
+ * The AuthSPHandler manager for the A-Select Server. <br>
+ * <br>
  * <b>Description:</b><br>
- * A singleton AuthSPHandler manager, containing the authsp handler configuration.
- * It loads several authsp handler settings in memory during initialize.   
- * <br><br>
- * <b>Concurrency issues:</b>
+ * A singleton AuthSPHandler manager, containing the authsp handler configuration. It loads several authsp handler
+ * settings in memory during initialize. <br>
  * <br>
- * The class is a singleton, so the same class is used in all the classes of 
- * the A-Select Server.
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * The class is a singleton, so the same class is used in all the classes of the A-Select Server. <br>
  * 
+ * @author Alfa & Ariss
  */
 public class AuthSPHandlerManager
 {
@@ -86,25 +84,20 @@ public class AuthSPHandlerManager
 	private SystemLogger _systemLogger;
 
 	/**
-	 * Must be used to get an AuthSPHandlerManager instance.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Must be used to get an AuthSPHandlerManager instance. <br>
 	 * <br>
-	 * Creates a new <code>AuthSPHandlerManager</code> instance if it's still <code>null</code>.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Creates a new <code>AuthSPHandlerManager</code> instance if it's still <code>null</code>. <br>
 	 * <br>
-	 * Always the same instance of the AuthSPHandlerManager is returned, because it's a
-	 * singleton.
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * Always the same instance of the AuthSPHandlerManager is returned, because it's a singleton. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
 	 * @return A satic handle to the <code>AuthSPHandlerManager</code>.
 	 */
 	public static AuthSPHandlerManager getHandle()
@@ -116,25 +109,23 @@ public class AuthSPHandlerManager
 	}
 
 	/**
-	 * Initialization of the AuthSPHandlerManager singleton
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Initialization of the AuthSPHandlerManager singleton <br>
 	 * <br>
-	 * Must be successfully run once, before it can be used.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Must be successfully run once, before it can be used. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
+	 * <b>Preconditions:</b> <br>
 	 * - Singleton <code>ASelectConfigManager</code> should be initialized.<BR>
-	 * <br><br>
-	 * <b>Postconditions:</b>
 	 * <br>
-	 * -
 	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	public void init()
 		throws ASelectException
@@ -174,7 +165,7 @@ public class AuthSPHandlerManager
 				String sLevel = null;
 				boolean bDirectAuthSP = false;
 				try {
-					//Get all required parameters.
+					// Get all required parameters.
 					sAuthSPId = _oASelectConfigManager.getParam(oAuthSPHandlerConfig, "id");
 					sResourceGroup = _oASelectConfigManager.getParam(oAuthSPHandlerConfig, "resourcegroup");
 					sHandler = _oASelectConfigManager.getParam(oAuthSPHandlerConfig, "handler");
@@ -189,7 +180,7 @@ public class AuthSPHandlerManager
 					throw e;
 				}
 				try {
-					//Get optional parameters.
+					// Get optional parameters.
 					String sDirectAuthSP = _oASelectConfigManager.getParam(oAuthSPHandlerConfig, "direct_authsp");
 					bDirectAuthSP = Boolean.valueOf(sDirectAuthSP).booleanValue();
 				}
@@ -223,24 +214,20 @@ public class AuthSPHandlerManager
 	}
 
 	/**
-	 * Get all the configured AuthSP handlers.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Get all the configured AuthSP handlers. <br>
 	 * <br>
-	 * Returns a {@link Vector} object containing the Id's of all configured AuthSP handlers.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns a {@link Vector} object containing the Id's of all configured AuthSP handlers. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
 	 * @return Vector with all the AuthSP Id's.
 	 */
 	public Vector getConfiguredAuthSPs()
@@ -251,37 +238,34 @@ public class AuthSPHandlerManager
 			AuthSPHandler oAuthSPHandler = (AuthSPHandler) entry.getValue();
 			vResult.add(oAuthSPHandler.getId());
 		}
-		/*        Enumeration enumElements = _htAuthSPHandlers.elements();
-		 while(enumElements.hasMoreElements())
-		 {
-		 AuthSPHandler oAuthSPHandler = (AuthSPHandler)enumElements.nextElement();
-		 vResult.add(oAuthSPHandler.getId());
-		 }*/
+		/*
+		 * Enumeration enumElements = _htAuthSPHandlers.elements(); while(enumElements.hasMoreElements()) {
+		 * AuthSPHandler oAuthSPHandler = (AuthSPHandler)enumElements.nextElement();
+		 * vResult.add(oAuthSPHandler.getId()); }
+		 */
 		return vResult;
 	}
 
 	/**
-	 * Get all the configured AuthSP handlers between two levels.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Get all the configured AuthSP handlers between two levels. <br>
 	 * <br>
-	 * Returns a {@link Vector} containing the AuthSP Id's of all configured 
-	 * AuthSP handlers with an level between the suplied minimum and maximum level.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns a {@link Vector} containing the AuthSP Id's of all configured AuthSP handlers with an level between the
+	 * suplied minimum and maximum level. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param intMinLevel Minimum level of the AuthSP Handlers to return. 
-	 * @param intMaxLevel Maximum level of the AuthSP Handlers to return. 
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param intMinLevel
+	 *            Minimum level of the AuthSP Handlers to return.
+	 * @param intMaxLevel
+	 *            Maximum level of the AuthSP Handlers to return.
 	 * @return Vector with the AuthSP Id's.
 	 */
 	public Vector getConfiguredAuthSPs(Integer intMinLevel, Integer intMaxLevel)
@@ -299,41 +283,33 @@ public class AuthSPHandlerManager
 			}
 		}
 
-		/*        Enumeration enumElements = _htAuthSPHandlers.elements();
-		 while(enumElements.hasMoreElements())
-		 {
-		 AuthSPHandler oAuthSPHandler = (AuthSPHandler)enumElements.nextElement();
-		 Integer intLevel = oAuthSPHandler.getLevel();
-		 if(intLevel.intValue() >= intMinLevel.intValue() && intLevel.intValue() <= intMaxLevel.intValue())
-		 {
-		 vResult.add(oAuthSPHandler.getId());
-		 }
-		 }*/
+		/*
+		 * Enumeration enumElements = _htAuthSPHandlers.elements(); while(enumElements.hasMoreElements()) {
+		 * AuthSPHandler oAuthSPHandler = (AuthSPHandler)enumElements.nextElement(); Integer intLevel =
+		 * oAuthSPHandler.getLevel(); if(intLevel.intValue() >= intMinLevel.intValue() && intLevel.intValue() <=
+		 * intMaxLevel.intValue()) { vResult.add(oAuthSPHandler.getId()); } }
+		 */
 		return vResult;
 	}
 
 	/**
-	 * Get all the configured AuthSP handlers with a minimum level.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Get all the configured AuthSP handlers with a minimum level. <br>
 	 * <br>
-	 * Returns a {@link Vector} containing the AuthSP Id's of all 
-	 * configured AuthSP handlers with an level higher than the 
-	 * suplied minimum level.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns a {@link Vector} containing the AuthSP Id's of all configured AuthSP handlers with an level higher than
+	 * the suplied minimum level. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param intMinLevel Minimum level of the AuthSP Handlers to return. 
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param intMinLevel
+	 *            Minimum level of the AuthSP Handlers to return.
 	 * @return Vector with the AuthSP Id's.
 	 */
 	public Vector getConfiguredAuthSPs(Integer intMinLevel)
@@ -348,42 +324,36 @@ public class AuthSPHandlerManager
 			}
 		}
 
-		/*        Enumeration enumElements = _htAuthSPHandlers.elements();
-		 while(enumElements.hasMoreElements())
-		 {
-		 AuthSPHandler oAuthSPHandler = (AuthSPHandler)enumElements.nextElement();
-		 Integer intLevel = oAuthSPHandler.getLevel();
-		 if(intLevel.intValue() >= intMinLevel.intValue())
-		 {
-		 vResult.add(oAuthSPHandler.getId());
-		 }
-		 }*/
+		/*
+		 * Enumeration enumElements = _htAuthSPHandlers.elements(); while(enumElements.hasMoreElements()) {
+		 * AuthSPHandler oAuthSPHandler = (AuthSPHandler)enumElements.nextElement(); Integer intLevel =
+		 * oAuthSPHandler.getLevel(); if(intLevel.intValue() >= intMinLevel.intValue()) {
+		 * vResult.add(oAuthSPHandler.getId()); } }
+		 */
 		return vResult;
 	}
 
 	/**
-	 * Checks if an AuthSP is a DirectAuthSP or not.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Checks if an AuthSP is a DirectAuthSP or not. <br>
 	 * <br>
-	 * Returns wether an AuthSP is a DirectAuthSP or not and throws an ASelectException if the supplied id doesn't exists.       
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns wether an AuthSP is a DirectAuthSP or not and throws an ASelectException if the supplied id doesn't
+	 * exists. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sAuthSPId The Id of the AuthSP
-	 * @return  Returns true if the AuthSP with the given Id is a 
-	 * Direct Authsp and false if not.
-	 * @throws ASelectException if AuthSP with sAuthSPId not exists.
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sAuthSPId
+	 *            The Id of the AuthSP
+	 * @return Returns true if the AuthSP with the given Id is a Direct Authsp and false if not.
+	 * @throws ASelectException
+	 *             if AuthSP with sAuthSPId not exists.
 	 */
 	public boolean isDirectAuthSP(String sAuthSPId)
 		throws ASelectException
@@ -398,28 +368,26 @@ public class AuthSPHandlerManager
 	}
 
 	/**
-	 * Returns the Friendly Name of an AuthSP handler.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns the Friendly Name of an AuthSP handler. <br>
 	 * <br>
-	 * Returns the Friendly Name of the AuthSP handler with the supplied Id
-	 * and throws an ASelectException if the supplied id doesn't exists.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns the Friendly Name of the AuthSP handler with the supplied Id and throws an ASelectException if the
+	 * supplied id doesn't exists. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sAuthSPId The Id of the AuthSP
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sAuthSPId
+	 *            The Id of the AuthSP
 	 * @return The Friendly Name
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	public String getFriendlyName(String sAuthSPId)
 		throws ASelectException
@@ -434,27 +402,25 @@ public class AuthSPHandlerManager
 	}
 
 	/**
-	 * Returns the class name of the AuthSP Handler.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns the class name of the AuthSP Handler. <br>
 	 * <br>
-	 * Returns the class name of the AuthSP Handler.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns the class name of the AuthSP Handler. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sAuthSPId The Id of the AuthSP
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sAuthSPId
+	 *            The Id of the AuthSP
 	 * @return handler class name.
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	public String getHandler(String sAuthSPId)
 		throws ASelectException
@@ -469,28 +435,25 @@ public class AuthSPHandlerManager
 	}
 
 	/**
-	 * Returns the type of an AuthSP.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns the type of an AuthSP. <br>
 	 * <br>
-	 * Returns local if it is a local AuthSP and remote if 
-	 * it is a remote AuthSP. 
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns local if it is a local AuthSP and remote if it is a remote AuthSP. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sAuthSPId The Id of the AuthSP
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sAuthSPId
+	 *            The Id of the AuthSP
 	 * @return local or remote.
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	public String getType(String sAuthSPId)
 		throws ASelectException
@@ -505,29 +468,26 @@ public class AuthSPHandlerManager
 	}
 
 	/**
-	 * Returns the level of an AuthSP.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns the level of an AuthSP. <br>
 	 * <br>
-	 * Returns the level of an AuthSP, 
-	 * this is a security indicator of the AuthSP, the higher the level the more secure the 
-	 * AuthSP is.  
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns the level of an AuthSP, this is a security indicator of the AuthSP, the higher the level the more secure
+	 * the AuthSP is. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sAuthSPId The Id of the AuthSP
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sAuthSPId
+	 *            The Id of the AuthSP
 	 * @return local or remote.
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	public Integer getLevel(String sAuthSPId)
 		throws ASelectException
@@ -542,27 +502,25 @@ public class AuthSPHandlerManager
 	}
 
 	/**
-	 * Returns the resource group of an AuthSP.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns the resource group of an AuthSP. <br>
 	 * <br>
-	 * Returns the resource group of an AuthSP.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns the resource group of an AuthSP. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sAuthSPId The id of the AuthSP
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sAuthSPId
+	 *            The id of the AuthSP
 	 * @return local or remote.
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	public String getResourceGroup(String sAuthSPId)
 		throws ASelectException
@@ -577,27 +535,25 @@ public class AuthSPHandlerManager
 	}
 
 	/**
-	 * Returns the URL an AuthSP.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns the URL an AuthSP. <br>
 	 * <br>
-	 * Returns the URL an AuthSP.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns the URL an AuthSP. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -)
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * -) <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sAuthSPId The id of the AuthSP
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sAuthSPId
+	 *            The id of the AuthSP
 	 * @return The URL of the AuthSP
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	public String getUrl(String sAuthSPId)
 		throws ASelectException
@@ -636,27 +592,26 @@ public class AuthSPHandlerManager
 	}
 
 	/**
-	 * Returns the handler which is able to handle direct_login requests
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns the handler which is able to handle direct_login requests <br>
 	 * <br>
-	 * Returns the handler which is able to handle direct_login requests
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns the handler which is able to handle direct_login requests <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sAuthSPId The id of the AuthSP
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * .
+	 * 
+	 * @param sAuthSPId
+	 *            The id of the AuthSP
 	 * @return IAuthSPDirectLoginProtocolHandler
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	public IAuthSPDirectLoginProtocolHandler getAuthSPDirectLoginProtocolHandler(String sAuthSPId)
 		throws ASelectException

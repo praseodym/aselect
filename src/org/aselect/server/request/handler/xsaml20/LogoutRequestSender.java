@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.xsaml20;
 
 import java.security.PrivateKey;
@@ -10,7 +21,6 @@ import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
-import org.opensaml.Configuration;
 import org.opensaml.common.SAMLObjectBuilder;
 import org.opensaml.common.binding.BasicSAMLMessageContext;
 import org.opensaml.saml2.binding.encoding.HTTPRedirectDeflateEncoder;
@@ -27,49 +37,67 @@ import org.opensaml.xml.security.x509.BasicX509Credential;
 import org.opensaml.xml.util.XMLHelper;
 import org.w3c.dom.Node;
 
+// TODO: Auto-generated Javadoc
 public class LogoutRequestSender
 {
 	private final static String MODULE = "LogoutRequestSender";
 	private ASelectSystemLogger _systemLogger;
 	private PrivateKey privateKey;
 
-	public LogoutRequestSender()
-	{
+	/**
+	 * Instantiates a new logout request sender.
+	 */
+	public LogoutRequestSender() {
 		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
 		_systemLogger = ASelectSystemLogger.getHandle();
 		privateKey = _configManager.getDefaultPrivateKey();
 	}
 
 	/**
-	 * Sends a LogoutRequest
+	 * Sends a LogoutRequest.
 	 * 
 	 * @param sServiceProviderUrl
+	 *            the s service provider url
 	 * @param sNameID
+	 *            the s name id
 	 * @param request
+	 *            the request
 	 * @param response
+	 *            the response
+	 * @param sTgT
+	 *            the s tg t
+	 * @param sIssuerUrl
+	 *            the s issuer url
+	 * @param reason
+	 *            the reason
+	 * @param sLogoutReturnUrl
+	 *            the s logout return url
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	@SuppressWarnings("unchecked")
 	public void sendLogoutRequest(HttpServletRequest request, HttpServletResponse response, String sTgT,
 			String sServiceProviderUrl, String sIssuerUrl, String sNameID, String reason, String sLogoutReturnUrl)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "sendLogoutRequest";
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Send LogoutRequest to: " + sServiceProviderUrl);
-		XMLObjectBuilderFactory builderFactory = Configuration.getBuilderFactory();
+		XMLObjectBuilderFactory builderFactory = org.opensaml.xml.Configuration.getBuilderFactory();
 
-		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(sServiceProviderUrl, sTgT, sNameID, sIssuerUrl, reason);
+		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(sServiceProviderUrl, sTgT, sNameID, sIssuerUrl,
+				reason);
 		// TODO setValidityInterval with only NotOnOrAfter, but we need this from calling object (from aselect.xml)
 		SAMLObjectBuilder<Endpoint> endpointBuilder = (SAMLObjectBuilder<Endpoint>) builderFactory
-											.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);
+				.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);
 		Endpoint samlEndpoint = endpointBuilder.buildObject();
 		// samlEndpoint.setBinding(HTTPPostEncoder.BINDING_URI);
 		samlEndpoint.setLocation(sServiceProviderUrl);
 		String sAppUrl = request.getRequestURL().toString();
 		samlEndpoint.setResponseLocation(sAppUrl);
 
-		HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response, sServiceProviderUrl);
+		HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response,
+				sServiceProviderUrl);
 		// 20090627, Bauke: need headers too
 		outTransport.setHeader("Pragma", "no-cache");
 		outTransport.setHeader("Cache-Control", "no-cache, no-store");
@@ -78,22 +106,22 @@ public class LogoutRequestSender
 		messageContext.setOutboundMessageTransport(outTransport);
 		messageContext.setOutboundSAMLMessage(logoutRequest);
 		messageContext.setPeerEntityEndpoint(samlEndpoint);
-		
+
 		// 20090627, Bauke: pass return url, will be used by the Logout Response handler
 		// 20091105, Bauke: always pass a RelayState, will make the consent forms easier to implement
 		// 20091118, Bauke: 20091105, bad decision, turn it back
-		if (sLogoutReturnUrl != null) {  // && !"".equals(sLogoutReturnUrl))
+		if (sLogoutReturnUrl != null) { // && !"".equals(sLogoutReturnUrl))
 			messageContext.setRelayState(sLogoutReturnUrl);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Set RelayState="+sLogoutReturnUrl);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Set RelayState=" + sLogoutReturnUrl);
 		}
-		//else
-		//	messageContext.setRelayState("none");
+		// else
+		// messageContext.setRelayState("none");
 
 		BasicX509Credential credential = new BasicX509Credential();
 		credential.setPrivateKey(privateKey);
 		messageContext.setOutboundSAMLMessageSigningCredential(credential);
 
-		MarshallerFactory factory = Configuration.getMarshallerFactory();
+		MarshallerFactory factory = org.opensaml.xml.Configuration.getMarshallerFactory();
 		Marshaller marshaller = factory.getMarshaller(messageContext.getOutboundSAMLMessage());
 		Node node = null;
 		try {

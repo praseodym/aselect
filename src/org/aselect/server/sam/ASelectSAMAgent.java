@@ -39,55 +39,55 @@ import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.sam.agent.SAMAgent;
 
+// TODO: Auto-generated Javadoc
 /**
- * A singleton class for the <code>SAMAgent</code>.
- * <br><br>
+ * A singleton class for the <code>SAMAgent</code>. <br>
+ * <br>
  * <b>Description:</b><br>
- * A singleton class for the <code>SAMAgent</code> that is located in the 
- * org.aselect.system package.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * A singleton class for the <code>SAMAgent</code> that is located in the org.aselect.system package. <br>
  * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public class ASelectSAMAgent extends SAMAgent
 {
-    /**
-     * The singleton instance of this object
-     */
-    private static ASelectSAMAgent oASelectSAMAgent;
+	/**
+	 * The singleton instance of this object
+	 */
+	private static ASelectSAMAgent oASelectSAMAgent;
 
-    /**
-     * Constructor that has been made private for singleton purposes.
-     */
-    private ASelectSAMAgent () {}
+	/**
+	 * Constructor that has been made private for singleton purposes.
+	 */
+	private ASelectSAMAgent() {
+	}
 
-    /**
-     * Method to return the instance of the <code>SAMAgent</code>.
-     * <br>
-     * @return always the same <code>SAMAgent</code> object
-     */
-    public static ASelectSAMAgent getHandle()
-    {
-        if (oASelectSAMAgent == null)
-            oASelectSAMAgent = new ASelectSAMAgent();
+	/**
+	 * Method to return the instance of the <code>SAMAgent</code>. <br>
+	 * 
+	 * @return always the same <code>SAMAgent</code> object
+	 */
+	public static ASelectSAMAgent getHandle()
+	{
+		if (oASelectSAMAgent == null)
+			oASelectSAMAgent = new ASelectSAMAgent();
 
-        return oASelectSAMAgent;
-    }
+		return oASelectSAMAgent;
+	}
 
-    /**
-     * Calls the initialize class of the super class <code>SAMAgent</code> with 
-     * the A-Select config manager and the A-Select system logger.
-     * <br>
-     * @throws ASelectSAMException
-     */
-    public void init() throws ASelectSAMException
-    {
-        super.init(ASelectConfigManager.getHandle(), ASelectSystemLogger
-            .getHandle());
-    }
+	/**
+	 * Calls the initialize class of the super class <code>SAMAgent</code> with the A-Select config manager and the
+	 * A-Select system logger. <br>
+	 * 
+	 * @throws ASelectSAMException
+	 *             the a select sam exception
+	 */
+	public void init()
+		throws ASelectSAMException
+	{
+		super.init(ASelectConfigManager.getHandle(), ASelectSystemLogger.getHandle());
+	}
 
 }

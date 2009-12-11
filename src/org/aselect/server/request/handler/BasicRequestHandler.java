@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler;
 
 import java.security.PublicKey;
@@ -17,21 +28,34 @@ import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 //
 // The mother of all RequestHandlers ...
 //
 public abstract class BasicRequestHandler
 {
-    public final static String MODULE = "BasicRequestHandler";
-    
+	public final static String MODULE = "BasicRequestHandler";
+
 	protected ASelectSystemLogger _systemLogger;
 	protected ASelectConfigManager _configManager;
-	
+
 	// This code was stolen from ApplicationAPIHandler.handleAuthenticateRequest()
 	// But also slightly different versions were found in ASelectAPIHandler and the 'sfs' handlers
 	// TODO: merge
-	protected HashMap<String, String> handleAuthenticateAndCreateSession(HashMap<String,String> hmInput, String sUrlTarget)
-	throws ASelectException
+	/**
+	 * Handle authenticate and create session.
+	 * 
+	 * @param hmInput
+	 *            the hm input
+	 * @param sUrlTarget
+	 *            the s url target
+	 * @return the hash map< string, string>
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	protected HashMap<String, String> handleAuthenticateAndCreateSession(HashMap<String, String> hmInput,
+			String sUrlTarget)
+		throws ASelectException
 	{
 		String sMethod = "handleAuthenticateAndCreateSession()";
 		AuthSPHandlerManager _authSPManagerManager = AuthSPHandlerManager.getHandle();
@@ -55,17 +79,19 @@ public abstract class BasicRequestHandler
 		String sRemoteOrg = hmInput.get("remote_organization");
 		String sCountry = hmInput.get("country");
 		String sLanguage = hmInput.get("language");
-		
+
 		// Acccept both 'forced_logon' and 'forced_authenticate' (preferred)
 		String sForcedAuthn = hmInput.get("forced_authenticate");
 		Boolean boolForcedAuthn = new Boolean(sForcedAuthn);
-		
+
 		String sForcedLogon = hmInput.get("forced_logon");
-		if (sForcedLogon != null) boolForcedAuthn = new Boolean(sForcedLogon);		
-		
+		if (sForcedLogon != null)
+			boolForcedAuthn = new Boolean(sForcedLogon);
+
 		Boolean bCheckSignature = true;
 		String sCheckSignature = hmInput.get("check-signature");
-		if (sCheckSignature != null) bCheckSignature = Boolean.valueOf(sCheckSignature);
+		if (sCheckSignature != null)
+			bCheckSignature = Boolean.valueOf(sCheckSignature);
 
 		// check if request should be signed
 		if (_applicationManager.isSigningRequired() && bCheckSignature) {
@@ -78,13 +104,20 @@ public abstract class BasicRequestHandler
 			// NOTE: add sbData items sorted!
 			StringBuffer sbData = new StringBuffer(sASelectServer);
 			sbData.append(sAppId).append(sAppUrl);
-			if (sAuthsp != null) sbData.append(sAuthsp);
-			if (sCountry != null) sbData.append(sCountry);
-			if (sForcedLogon != null) sbData.append(sForcedLogon);
-			if (sForcedAuthn != null) sbData.append(sForcedAuthn);
-			if (sLanguage != null) sbData.append(sLanguage);
-			if (sRemoteOrg != null) sbData.append(sRemoteOrg);
-			if (sUid != null) sbData.append(sUid);
+			if (sAuthsp != null)
+				sbData.append(sAuthsp);
+			if (sCountry != null)
+				sbData.append(sCountry);
+			if (sForcedLogon != null)
+				sbData.append(sForcedLogon);
+			if (sForcedAuthn != null)
+				sbData.append(sForcedAuthn);
+			if (sLanguage != null)
+				sbData.append(sLanguage);
+			if (sRemoteOrg != null)
+				sbData.append(sRemoteOrg);
+			if (sUid != null)
+				sbData.append(sUid);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "sbData=" + sbData);
 			verifyApplicationSignature(sSignature, sbData.toString(), sAppId);
 		}
@@ -96,7 +129,8 @@ public abstract class BasicRequestHandler
 		}
 		Integer intAppLevel = _applicationManager.getRequiredLevel(sAppId);
 		if (intAppLevel == null) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No level specified for application with ID: '" + sAppId + "'");
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No level specified for application with ID: '" + sAppId
+					+ "'");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_APP_LEVEL);
 		}
 		Integer intMaxAppLevel = _applicationManager.getMaxLevel(sAppId);
@@ -137,15 +171,18 @@ public abstract class BasicRequestHandler
 		// After validation, these values can be set as 'user_id' and 'remote_organization'.
 		//
 		// Bauke 20080511: added "forced_authsp" to influence AuthSP choice
-		if (sRemoteOrg != null) htSessionContext.put("forced_organization", sRemoteOrg);
-		if (sUid != null) htSessionContext.put("forced_uid", sUid);
-		if (sAuthsp != null) htSessionContext.put("forced_authsp", sAuthsp);
+		if (sRemoteOrg != null)
+			htSessionContext.put("forced_organization", sRemoteOrg);
+		if (sUid != null)
+			htSessionContext.put("forced_uid", sUid);
+		if (sAuthsp != null)
+			htSessionContext.put("forced_authsp", sAuthsp);
 
 		// need to check if the request must be handled as a forced authentication
 		if (!boolForcedAuthn.booleanValue() && _applicationManager.isForcedAuthenticateEnabled(sAppId)) {
 			boolForcedAuthn = new Boolean(true);
 		}
-		htSessionContext.put("forced_authenticate", boolForcedAuthn);  // NOTE: the Boolean object, not a string
+		htSessionContext.put("forced_authenticate", boolForcedAuthn); // NOTE: the Boolean object, not a string
 
 		// check single sign-on groups
 		if (_configManager.isSingleSignOn()) {
@@ -156,24 +193,25 @@ public abstract class BasicRequestHandler
 
 		if (sCountry != null && sCountry.trim().length() > 0)
 			htSessionContext.put("country", sCountry);
-		
+
 		// 20091113, Bauke: Also take sAppUrl into consideration
 		if (sLanguage != null && sLanguage.trim().length() > 0)
 			htSessionContext.put("language", sLanguage.toLowerCase());
 		int idx = sAppUrl.indexOf("?");
 		if (idx != -1) {
-			String sArgs = sAppUrl.substring(idx+1);
-			HashMap<String,String> hmArgs = Utils.convertCGIMessage(sArgs);
+			String sArgs = sAppUrl.substring(idx + 1);
+			HashMap<String, String> hmArgs = Utils.convertCGIMessage(sArgs);
 			sLanguage = hmArgs.get("language");
-			if (sLanguage != null)  // takes precedence
+			if (sLanguage != null) // takes precedence
 				htSessionContext.put("language", sLanguage.toLowerCase());
 		}
 
 		// We only want to set the client_ip on application browserrequests (see ApplicationBrwoserHandler)
 		// Bauke 20081217: Therefore the lines below should go!
-		//htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr()); // RH, 20080716, n // RH, 20080719, o
-		//String sAgent = get_servletRequest().getHeader("User-Agent");
-		//if (sAgent != null) htSessionContext.put("user_agent", sAgent);
+		// htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr()); // RH, 20080716, n // RH, 20080719,
+		// o
+		// String sAgent = get_servletRequest().getHeader("User-Agent");
+		// if (sAgent != null) htSessionContext.put("user_agent", sAgent);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "CTX htSessionContext=" + htSessionContext);
 
 		String sSessionId = _sessionManager.createSession(htSessionContext);
@@ -202,20 +240,32 @@ public abstract class BasicRequestHandler
 		}
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "OUT sbAsUrl=" + sbAsUrl + ", rid=" + sSessionId);
 
-		HashMap<String, String> hmOutput = new HashMap<String, String>(); 
+		HashMap<String, String> hmOutput = new HashMap<String, String>();
 		hmOutput.put("as_url", sbAsUrl.toString());
 		hmOutput.put("rid", sSessionId);
 		hmOutput.put("result_code", Errors.ERROR_ASELECT_SUCCESS);
 		return hmOutput;
 	}
 
+	/**
+	 * Verify application signature.
+	 * 
+	 * @param sSignature
+	 *            the s signature
+	 * @param sData
+	 *            the s data
+	 * @param sAppId
+	 *            the s app id
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	protected void verifyApplicationSignature(String sSignature, String sData, String sAppId)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "verifyApplicationSignature()";
 		ApplicationManager _applicationManager = ApplicationManager.getHandle();
 		CryptoEngine _cryptoEngine = CryptoEngine.getHandle();
-		
+
 		PublicKey pk = null;
 		try {
 			pk = _applicationManager.getSigningKey(sAppId);
@@ -225,10 +275,11 @@ public abstract class BasicRequestHandler
 					+ "\". Could not find signing key for application.", e);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
-	
-		if (!_cryptoEngine.verifyApplicationSignature(pk, sData, sSignature)) {  // can throw ERROR_ASELECT_INTERNAL_ERROR
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Application:" + sAppId +
-					" Invalid signature:" + sSignature + " Key=" + pk);
+
+		if (!_cryptoEngine.verifyApplicationSignature(pk, sData, sSignature)) { // can throw
+			// ERROR_ASELECT_INTERNAL_ERROR
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Application:" + sAppId + " Invalid signature:"
+					+ sSignature + " Key=" + pk);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
 	}

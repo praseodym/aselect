@@ -43,29 +43,30 @@
  * - Redesign of request handling
  *
  */
- 
+
 package org.aselect.server.request.handler.aselect.authentication;
 
 import org.aselect.system.exception.ASelectException;
 
-
 /**
- * RequestHandler Interface.
- * <br><br>
- * <b>Description:</b><br>
- * This Class is implemented by the AbstractAPIRequestHandler and
- * AbstractBrowserRequestHandler.
+ * RequestHandler Interface. <br>
  * <br>
- * @author Alfa & Ariss
+ * <b>Description:</b><br>
+ * This Class is implemented by the AbstractAPIRequestHandler and AbstractBrowserRequestHandler. <br>
  * 
+ * @author Alfa & Ariss
  */
 // 20090606, Bauke changed name from IRequestHandler to avoid confusion
 public interface IAuthnRequestHandler
 {
-    /**
-     * Main processRequest function called when a handler is to process a request.
-     * <br><br>
-     * @throws ASelectException
-     */
-    public void processRequest() throws ASelectException;
+	
+	/**
+	 * Main processRequest function called when a handler is to process a request. <br>
+	 * <br>
+	 * 
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	public void processRequest()
+		throws ASelectException;
 }

@@ -54,20 +54,16 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.ISAMPollingMethod;
 
+// TODO: Auto-generated Javadoc
 /**
- * The interface for polling methods. 
- * <br>
+ * The interface for polling methods. <br>
  * <br>
  * <b>Description: </b> <br>
- * Will check the availability of a resource by making an API call by using the 
- * SAM protocol.
- * <br>
+ * Will check the availability of a resource by making an API call by using the SAM protocol. <br>
  * <b>Concurrency issues: </b> <br>
- * -
- * <br>
+ * - <br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class SAMAPIPollingMethod implements ISAMPollingMethod
 {
@@ -82,7 +78,7 @@ public class SAMAPIPollingMethod implements ISAMPollingMethod
 	private final static String OID_OPERATIONAL = "1.3.6.1.4.1.15396.10.10.2.1.3";
 
 	/**
-	 * A SAM wildcard OID that will return all information available 
+	 * A SAM wildcard OID that will return all information available
 	 */
 	private final static String OID_ALL = "1.3.6.1.4.1.15396.10.10.2.";
 
@@ -108,11 +104,22 @@ public class SAMAPIPollingMethod implements ISAMPollingMethod
 	private ConfigManager _oConfigManager;
 
 	/**
-	 * Will read the url from the SAMService servlet that must be polled and 
-	 * sets the given <code>ConfigManager</code> and <code>SystemLogger</code> 
-	 * as class variables.  
-	 * <br><br>
-	 * @see org.aselect.system.sam.agent.ISAMPollingMethod#init(java.lang.Object, java.lang.Object, org.aselect.system.configmanager.ConfigManager, org.aselect.system.logging.SystemLogger)
+	 * Will read the url from the SAMService servlet that must be polled and sets the given <code>ConfigManager</code>
+	 * and <code>SystemLogger</code> as class variables. <br>
+	 * <br>
+	 * 
+	 * @param oResourceConfigSection
+	 *            the o resource config section
+	 * @param oPollingMethodConfigSection
+	 *            the o polling method config section
+	 * @param oConfigManager
+	 *            the o config manager
+	 * @param oSystemLogger
+	 *            the o system logger
+	 * @throws ASelectSAMException
+	 *             the a select sam exception
+	 * @see org.aselect.system.sam.agent.ISAMPollingMethod#init(java.lang.Object, java.lang.Object,
+	 *      org.aselect.system.configmanager.ConfigManager, org.aselect.system.logging.SystemLogger)
 	 */
 	public void init(Object oResourceConfigSection, Object oPollingMethodConfigSection, ConfigManager oConfigManager,
 			SystemLogger oSystemLogger)
@@ -138,9 +145,11 @@ public class SAMAPIPollingMethod implements ISAMPollingMethod
 	}
 
 	/**
-	 * The method that used to poll the SAMService. It checks only if the OID: 
-	 * 1.3.6.1.4.1.15396.10.10.2.1.3 is 1 (only the operational check)
-	 * <br><br>
+	 * The method that used to poll the SAMService. It checks only if the OID: 1.3.6.1.4.1.15396.10.10.2.1.3 is 1 (only
+	 * the operational check) <br>
+	 * <br>
+	 * 
+	 * @return true, if poll
 	 * @see org.aselect.system.sam.agent.ISAMPollingMethod#poll()
 	 */
 	public boolean poll()
@@ -166,29 +175,24 @@ public class SAMAPIPollingMethod implements ISAMPollingMethod
 	}
 
 	/**
-	 * Communicates with the <code>SAMService</code> by using the SAM protocol.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Communicates with the <code>SAMService</code> by using the SAM protocol. <br>
 	 * <br>
-	 * Communicates by using a <code>ClientCommunicator</code> object with the 
-	 * <code>SAMService</code>. It send a message containing a wildcard OID to 
-	 * retrieve all available information from that SAMService.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Communicates by using a <code>ClientCommunicator</code> object with the <code>SAMService</code>. It send a
+	 * message containing a wildcard OID to retrieve all available information from that SAMService. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @return a <code>HashMap</code> containing all requested SAM OID's with 
-	 * it's values.
-	 * @throws ASelectSAMException if no response can be retrieved
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @return a <code>HashMap</code> containing all requested SAM OID's with it's values.
+	 * @throws ASelectSAMException
+	 *             if no response can be retrieved
 	 */
 	private HashMap communicate()
 		throws ASelectSAMException
@@ -250,27 +254,23 @@ public class SAMAPIPollingMethod implements ISAMPollingMethod
 	}
 
 	/**
-	 * Resolves the <code>ClientCommunicator</code> object.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Resolves the <code>ClientCommunicator</code> object. <br>
 	 * <br>
-	 * Resolves the <code>ClientCommunicator</code> object that must be used for 
-	 * polling. It can be configured or is default 'raw'.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Resolves the <code>ClientCommunicator</code> object that must be used for polling. It can be configured or is
+	 * default 'raw'. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * - <i>oConfigSection</i> may not be <code>null</code>.
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <i>oConfigSection</i> may not be <code>null</code>. <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param oConfigSection the config section object that contains the polling 
-	 * method configuration
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param oConfigSection
+	 *            the config section object that contains the polling method configuration
 	 * @return the client communicator that is configured, or the default
 	 */
 	private IClientCommunicator getCommunicator(Object oConfigSection)
@@ -299,7 +299,7 @@ public class SAMAPIPollingMethod implements ISAMPollingMethod
 			oClientCommunicator = new SOAP12Communicator("Status", _oSystemLogger);
 		}
 		else {
-			//raw communication is specified or something unreadable
+			// raw communication is specified or something unreadable
 			oClientCommunicator = new RawCommunicator(_oSystemLogger);
 		}
 		return oClientCommunicator;

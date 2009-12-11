@@ -66,18 +66,17 @@ import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTaggedObject;
 
+// TODO: Auto-generated Javadoc
 /**
- * The PKI Manager.
- * <br><br>
+ * The PKI Manager. <br>
+ * <br>
  * <b>Description:</b><br>
- * Handles all the PKI functionality of the PKI AuthSP
- * <br><br>
- * <b>Concurrency issues:</b>
+ * Handles all the PKI functionality of the PKI AuthSP <br>
  * <br>
- * None
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * None <br>
  * 
+ * @author Alfa & Ariss
  */
 public class PKIManager
 {
@@ -102,9 +101,13 @@ public class PKIManager
 
 	/**
 	 * Initializes the PKI Manager.
-	 * @param oConfig necessary configuration
-	 * @param oSystemLogger the systemlogger 
-	 * @throws ASelectException if something goes wrong during init.
+	 * 
+	 * @param oConfig
+	 *            necessary configuration
+	 * @param oSystemLogger
+	 *            the systemlogger
+	 * @throws ASelectException
+	 *             if something goes wrong during init.
 	 */
 	public void init(Object oConfig, AuthSPSystemLogger oSystemLogger)
 		throws ASelectException
@@ -125,7 +128,7 @@ public class PKIManager
 				_sCaKeyStoreLocation = _oConfigManager.getParam(oKeystoreConfig, "location");
 				_sCaKeyStorePassword = _oConfigManager.getParam(oKeystoreConfig, "password");
 
-				//Load CA KeyStore
+				// Load CA KeyStore
 				loadCaKeyStoreFromPFXFile(_sCaKeyStoreLocation, _sCaKeyStorePassword);
 
 				// Load CRL's in HashMap
@@ -141,7 +144,7 @@ public class PKIManager
 				_oCrlRecoverer = new CRLRecoverer(intTmp.intValue());
 				new Thread(_oCrlRecoverer).start();
 
-				// init and start Admin Server Thread 
+				// init and start Admin Server Thread
 				intTmp = new Integer(_oConfigManager.getParam(oConfig, "pki_admin_port"));
 				_oPkiAdminServer = new PKIAdminServer(intTmp.intValue());
 				new Thread(_oPkiAdminServer).start();
@@ -154,7 +157,7 @@ public class PKIManager
 	}
 
 	/**
-	 * Destroy all running threads
+	 * Destroy all running threads.
 	 */
 	public void destroy()
 	{
@@ -165,7 +168,9 @@ public class PKIManager
 
 	/**
 	 * Load the CRL's for all the CA's where CRL Checking is enabled.
+	 * 
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private void loadCRLs()
 		throws ASelectException
@@ -193,26 +198,24 @@ public class PKIManager
 	}
 
 	/**
-	 * Loads the CRL for a particular CA.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Loads the CRL for a particular CA. <br>
 	 * <br>
-	 * Loads the CRL for a particular CA.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Loads the CRL for a particular CA. <br>
 	 * <br>
-	 * None
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * None <br>
 	 * <br>
-	 * sAlias may not be null.
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * sAlias may not be null. <br>
 	 * <br>
-	 * none
-	 * <br>
-	 * @param sCaAlias The alias of the CA. 
+	 * <b>Postconditions:</b> <br>
+	 * none <br>
+	 * 
+	 * @param sCaAlias
+	 *            The alias of the CA.
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private void loadCRLForCA(String sCaAlias)
 		throws ASelectException
@@ -268,27 +271,25 @@ public class PKIManager
 	}
 
 	/**
-	 * Looks up the certifcate and alias of the CA for a client certificate.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Looks up the certifcate and alias of the CA for a client certificate. <br>
 	 * <br>
-	 * Looks up the certifcate of the CA which have signed the client certificate.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Looks up the certifcate of the CA which have signed the client certificate. <br>
 	 * <br>
-	 * None
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * None <br>
 	 * <br>
-	 * oCert may not be null
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * oCert may not be null <br>
 	 * <br>
-	 * None
-	 * <br>
-	 * @param oCert the client certificate
+	 * <b>Postconditions:</b> <br>
+	 * None <br>
+	 * 
+	 * @param oCert
+	 *            the client certificate
 	 * @return HashMap containing alias and certificate of CA which signed the client cert.
-	 * @throws ASelectException 
+	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	public HashMap getTrustedCACertificate(X509Certificate oCert)
 		throws ASelectException
@@ -325,26 +326,24 @@ public class PKIManager
 	}
 
 	/**
-	 * Validates if the provided client certificate is signed by the provided CA cert.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Validates if the provided client certificate is signed by the provided CA cert. <br>
 	 * <br>
-	 * Validates if the provided client certificate is signed by the provided CA cert.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Validates if the provided client certificate is signed by the provided CA cert. <br>
 	 * <br>
-	 * None
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * None <br>
 	 * <br>
-	 * oClientCert, oCaCert may not be null
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * oClientCert, oCaCert may not be null <br>
 	 * <br>
-	 * none
-	 * <br>
-	 * @param oClientCert  Client certificate
-	 * @param oCaCert  CA certificate 
+	 * <b>Postconditions:</b> <br>
+	 * none <br>
+	 * 
+	 * @param oClientCert
+	 *            Client certificate
+	 * @param oCaCert
+	 *            CA certificate
 	 * @return true if client cert is signed by CA and false otherwise.
 	 */
 	public boolean validateCertificateIsSignedByCA(Certificate oClientCert, Certificate oCaCert)
@@ -378,6 +377,15 @@ public class PKIManager
 		return isSignedByCA;
 	}
 
+	/**
+	 * Gets the cA.
+	 * 
+	 * @param sCaAlias
+	 *            the s ca alias
+	 * @return the cA
+	 * @throws KeyStoreException
+	 *             the key store exception
+	 */
 	private X509Certificate getCA(String sCaAlias)
 		throws KeyStoreException
 	{
@@ -385,26 +393,24 @@ public class PKIManager
 	}
 
 	/**
-	 * Checks if the provided certificate is valid.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Checks if the provided certificate is valid. <br>
 	 * <br>
-	 * Checks if the provided certificate is valid yet and not expired.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Checks if the provided certificate is valid yet and not expired. <br>
 	 * <br>
-	 * None
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * None <br>
 	 * <br>
-	 * oCert may not be null.
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * oCert may not be null. <br>
 	 * <br>
-	 * None
-	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * None <br>
+	 * 
 	 * @param oCert
-	 * @throws ASelectException if cert is not yet valid or expired.
+	 *            the o cert
+	 * @throws ASelectException
+	 *             if cert is not yet valid or expired.
 	 */
 	public void validateCertificateDate(X509Certificate oCert)
 		throws ASelectException
@@ -424,26 +430,24 @@ public class PKIManager
 	}
 
 	/**
-	 * Validates if the provided CRL is signed by the provided Issuer.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Validates if the provided CRL is signed by the provided Issuer. <br>
 	 * <br>
-	 * Validates if the provided CRL is signed by the provided Issuer.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Validates if the provided CRL is signed by the provided Issuer. <br>
 	 * <br>
-	 * None
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * None <br>
 	 * <br>
-	 * crl and crlIssuerCert may not be null
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * crl and crlIssuerCert may not be null <br>
 	 * <br>
-	 * none 
-	 * <br>
-	 * @param crl The Certificate Revocation List
-	 * @param crlIssuerCert the CRL Issuer 
+	 * <b>Postconditions:</b> <br>
+	 * none <br>
+	 * 
+	 * @param crl
+	 *            The Certificate Revocation List
+	 * @param crlIssuerCert
+	 *            the CRL Issuer
 	 * @return true if crl is valid and false otherwise
 	 */
 	public boolean validateCrl(X509CRL crl, X509Certificate crlIssuerCert)
@@ -478,28 +482,27 @@ public class PKIManager
 	}
 
 	/**
-	 * Checks if a certificate is revoked.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Checks if a certificate is revoked. <br>
 	 * <br>
-	 * Checks if a certificate stands on the CRL
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Checks if a certificate stands on the CRL <br>
 	 * <br>
-	 * None
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * None <br>
 	 * <br>
-	 * sCaAlias and oClientCert may not be null
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * sCaAlias and oClientCert may not be null <br>
 	 * <br>
-	 * None
-	 * <br>
-	 * @param sCaAlias The Alias of the CA.
-	 * @param oClientCert The certificate to be checked
+	 * <b>Postconditions:</b> <br>
+	 * None <br>
+	 * 
+	 * @param sCaAlias
+	 *            The Alias of the CA.
+	 * @param oClientCert
+	 *            The certificate to be checked
 	 * @return true if the certicate is listed on the CRL and false otherwise.
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	public boolean isClientCertRevoked(String sCaAlias, X509Certificate oClientCert)
 		throws ASelectException
@@ -515,29 +518,27 @@ public class PKIManager
 	}
 
 	/**
-	 * Get all defined CRLs for a corresponding CA.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Get all defined CRLs for a corresponding CA. <br>
 	 * <br>
-	 * Get all defined CRLs for a corresponding CA can be from confiration or from
-	 * the CA certificate.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Get all defined CRLs for a corresponding CA can be from confiration or from the CA certificate. <br>
 	 * <br>
-	 * None
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * None <br>
 	 * <br>
-	 * None
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * None <br>
 	 * <br>
-	 * None 
-	 * <br>
-	 * @param oCrlConfig necessary configuration
-	 * @param sCaAlias the ca alias
+	 * <b>Postconditions:</b> <br>
+	 * None <br>
+	 * 
+	 * @param oCrlConfig
+	 *            necessary configuration
+	 * @param sCaAlias
+	 *            the ca alias
 	 * @return a vector containing URL to CRL files.
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private Vector getCRLUrls(Object oCrlConfig, String sCaAlias)
 		throws ASelectException
@@ -577,25 +578,22 @@ public class PKIManager
 	}
 
 	/**
-	 * Get the CRL File for the given URI.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Get the CRL File for the given URI. <br>
 	 * <br>
-	 * Get the CRL File for the given URI.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Get the CRL File for the given URI. <br>
 	 * <br>
-	 *
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
 	 * <br>
-	 * sUri != null
-	 * <br><br>
-	 * <b>Postconditions:</b>
 	 * <br>
-	 * None
+	 * <b>Preconditions:</b> <br>
+	 * sUri != null <br>
 	 * <br>
-	 * @param sUri the location of the CRL file
+	 * <b>Postconditions:</b> <br>
+	 * None <br>
+	 * 
+	 * @param sUri
+	 *            the location of the CRL file
 	 * @return a CRL
 	 */
 	private X509CRL getCRL(String sUri)
@@ -628,27 +626,26 @@ public class PKIManager
 	}
 
 	/**
-	 * loads the CA certificate from the CA Keystore.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * loads the CA certificate from the CA Keystore. <br>
 	 * <br>
-	 * loads the CA certificate from the CA Keystore.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * loads the CA certificate from the CA Keystore. <br>
 	 * <br>
-	 * None
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * None <br>
 	 * <br>
-	 * None
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * None <br>
 	 * <br>
-	 * None
-	 * <br>
-	 * @param aFileName Filename of ca keystore
-	 * @param aKeyStorePassword password for keystore
+	 * <b>Postconditions:</b> <br>
+	 * None <br>
+	 * 
+	 * @param aFileName
+	 *            Filename of ca keystore
+	 * @param aKeyStorePassword
+	 *            password for keystore
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private void loadCaKeyStoreFromPFXFile(String aFileName, String aKeyStorePassword)
 		throws ASelectException
@@ -684,27 +681,25 @@ public class PKIManager
 	}
 
 	/**
-	 * Returns the CRL Url located in the (CA) Certificate.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns the CRL Url located in the (CA) Certificate. <br>
 	 * <br>
-	 * Returns the CRL Distribution Points located in the CA Cert.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns the CRL Distribution Points located in the CA Cert. <br>
 	 * <br>
-	 * None.
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * None. <br>
 	 * <br>
-	 * oCertificate may not be null.
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * oCertificate may not be null. <br>
 	 * <br>
-	 * None
-	 * <br>
-	 * @param oCertificate the Certificate to get the CRL distribution points from.
+	 * <b>Postconditions:</b> <br>
+	 * None <br>
+	 * 
+	 * @param oCertificate
+	 *            the Certificate to get the CRL distribution points from.
 	 * @return a Vector with CRL urls.
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private Vector getCrlUrls(X509Certificate oCertificate)
 		throws ASelectException
@@ -727,27 +722,25 @@ public class PKIManager
 	}
 
 	/**
-	 * Return a vector with the octet Values for the binary input.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Return a vector with the octet Values for the binary input. <br>
 	 * <br>
-	 * Return a vector with the octet Values for the binary input.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Return a vector with the octet Values for the binary input. <br>
 	 * <br>
-	 * None
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * None <br>
 	 * <br>
-	 * None
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * None <br>
 	 * <br>
-	 * None 
-	 * <br>
-	 * @param baExtensionValue DER encoded binary input
+	 * <b>Postconditions:</b> <br>
+	 * None <br>
+	 * 
+	 * @param baExtensionValue
+	 *            DER encoded binary input
 	 * @return a vector with octet values.
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private Vector getOctetValues(byte[] baExtensionValue)
 		throws ASelectException
@@ -756,11 +749,14 @@ public class PKIManager
 	}
 
 	/**
-	 * private Helper function for DER Decoding.
-	 * <br><br>
+	 * private Helper function for DER Decoding. <br>
+	 * <br>
+	 * 
 	 * @param baExtensionValue
+	 *            the ba extension value
 	 * @return a DER object
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private DERObject getDERObject(byte[] baExtensionValue)
 		throws ASelectException
@@ -779,11 +775,14 @@ public class PKIManager
 	}
 
 	/**
-	 * private Helper function for DER Decoding.
-	 * <br><br>
+	 * private Helper function for DER Decoding. <br>
+	 * <br>
+	 * 
 	 * @param derObject
+	 *            the der object
 	 * @return a DER object
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private Vector getOctetValues(DERObject derObject)
 		throws ASelectException
@@ -827,33 +826,26 @@ public class PKIManager
 		private long _lMilliSeconds;
 
 		/**
-		 * Thread that keeps track of the latest CRLs
-		 * <br><br>
-		 * <b>Description:</b>
+		 * Thread that keeps track of the latest CRLs <br>
 		 * <br>
-		 * Thread that runs with a configurable interval.
-		 * Every CRL is checked on its 'NextUpdate' time.
-		 * If the 'NextUpdate' time was in the history, a 
-		 * new CRL will be retrieved from one of the CRL 
-		 * distibution points configured for that particular
-		 * CA.<br>
-		 * If retrieval of the CRL fails, the CA will be added
-		 * to a 'failed_CRL' list that will be processed by the
-		 * <code>CRLRecoverer</code>
-		 * <br><br>
-		 * <b>Concurrency issues:</b>
+		 * <b>Description:</b> <br>
+		 * Thread that runs with a configurable interval. Every CRL is checked on its 'NextUpdate' time. If the
+		 * 'NextUpdate' time was in the history, a new CRL will be retrieved from one of the CRL distibution points
+		 * configured for that particular CA.<br>
+		 * If retrieval of the CRL fails, the CA will be added to a 'failed_CRL' list that will be processed by the
+		 * <code>CRLRecoverer</code> <br>
 		 * <br>
-		 * -
-		 * <br><br>
-		 * <b>Preconditions:</b>
+		 * <b>Concurrency issues:</b> <br>
+		 * - <br>
 		 * <br>
-		 * -
-		 * <br><br>
-		 * <b>Postconditions:</b>
+		 * <b>Preconditions:</b> <br>
+		 * - <br>
 		 * <br>
-		 * -
-		 * <br>
-		 * @param lSeconds the interval between the checks.
+		 * <b>Postconditions:</b> <br>
+		 * - <br>
+		 * 
+		 * @param lSeconds
+		 *            the interval between the checks.
 		 */
 		public AutoCRLUpdater(long lSeconds) {
 			_lMilliSeconds = lSeconds * 1000;
@@ -861,8 +853,9 @@ public class PKIManager
 		}
 
 		/**
-		 * tries to auto update the CRL's when they are expired.
-		 * <br><br>
+		 * tries to auto update the CRL's when they are expired. <br>
+		 * <br>
+		 * 
 		 * @see java.lang.Runnable#run()
 		 */
 		public void run()
@@ -872,10 +865,10 @@ public class PKIManager
 					Thread.sleep(_lMilliSeconds);
 					Set keys = _htCRLs.keySet();
 					for (Object oCrlKey : keys) {
-						//Enumeration oCrlKeys = _htCRLs.keys();
-						//while(oCrlKeys.hasMoreElements())
-						//{
-						//Object oCrlKey = oCrlKeys.nextElement();
+						// Enumeration oCrlKeys = _htCRLs.keys();
+						// while(oCrlKeys.hasMoreElements())
+						// {
+						// Object oCrlKey = oCrlKeys.nextElement();
 						X509CRL oCrl = (X509CRL) _htCRLs.get(oCrlKey);
 						Date oCrlExpirtationDate = oCrl.getNextUpdate();
 						Date oCurrentDate = new Date(System.currentTimeMillis());
@@ -900,18 +893,19 @@ public class PKIManager
 		}
 
 		/**
-		 * Destroys the AutoUpdater. 
-		 * <br>
+		 * Destroys the AutoUpdater. <br>
 		 * <br>
 		 * <b>Description: </b> <br>
 		 * Stop the thread from running. <br>
 		 * <br>
-		 * <b>Concurrency issues: </b> <br>-<br>
+		 * <b>Concurrency issues: </b> <br>
+		 * -<br>
 		 * <br>
 		 * <b>Preconditions: </b> <br>
 		 * <br>
 		 * <br>
-		 * <b>Postconditions: </b> <br>-
+		 * <b>Postconditions: </b> <br>
+		 * -
 		 * 
 		 * @see java.lang.Thread#destroy()
 		 */
@@ -919,12 +913,12 @@ public class PKIManager
 		{
 			_bActive = false;
 			try
-			//interrupt if sleeping
+			// interrupt if sleeping
 			{
 				Thread.currentThread().interrupt();
 			}
 			catch (Exception e) {
-				//no logging
+				// no logging
 			}
 
 		}
@@ -936,28 +930,23 @@ public class PKIManager
 		private long _lMilliSeconds;
 
 		/**
-		 * Thread that keeps tries to recover failed CRL updates.
-		 * <br><br>
-		 * <b>Description:</b>
+		 * Thread that keeps tries to recover failed CRL updates. <br>
 		 * <br>
-		 * Thread that runs with a configurable interval.
-		 * Every expired CRL that could not be updated is put in a list.
-		 * This thread runs through the list of failed CRL updates and
-		 * will keep trying to recover the CRL.
-		 * <br><br>
-		 * <b>Concurrency issues:</b>
+		 * <b>Description:</b> <br>
+		 * Thread that runs with a configurable interval. Every expired CRL that could not be updated is put in a list.
+		 * This thread runs through the list of failed CRL updates and will keep trying to recover the CRL. <br>
 		 * <br>
-		 * -
-		 * <br><br>
-		 * <b>Preconditions:</b>
+		 * <b>Concurrency issues:</b> <br>
+		 * - <br>
 		 * <br>
-		 * -
-		 * <br><br>
-		 * <b>Postconditions:</b>
+		 * <b>Preconditions:</b> <br>
+		 * - <br>
 		 * <br>
-		 * -
-		 * <br>
-		 * @param lSeconds the interval between the checks.
+		 * <b>Postconditions:</b> <br>
+		 * - <br>
+		 * 
+		 * @param lSeconds
+		 *            the interval between the checks.
 		 */
 		public CRLRecoverer(long lSeconds) {
 			_lMilliSeconds = lSeconds * 1000;
@@ -965,8 +954,9 @@ public class PKIManager
 		}
 
 		/**
-		 * tries to auto update the CRL's when retrieval failed.
-		 * <br><br>
+		 * tries to auto update the CRL's when retrieval failed. <br>
+		 * <br>
+		 * 
 		 * @see java.lang.Runnable#run()
 		 */
 		public void run()
@@ -976,10 +966,10 @@ public class PKIManager
 					Thread.sleep(_lMilliSeconds);
 					Set keys = _htFailedCRLs.keySet();
 					for (Object oFailedCrlKey : keys) {
-						//Enumeration oFailedCrlKeys = _htFailedCRLs.keys();
-						//while(oFailedCrlKeys.hasMoreElements())
-						//{
-						//Object oFailedCrlKey = oFailedCrlKeys.nextElement();
+						// Enumeration oFailedCrlKeys = _htFailedCRLs.keys();
+						// while(oFailedCrlKeys.hasMoreElements())
+						// {
+						// Object oFailedCrlKey = oFailedCrlKeys.nextElement();
 						try {
 							loadCRLForCA((String) oFailedCrlKey);
 							_htFailedCRLs.remove(oFailedCrlKey);
@@ -997,18 +987,19 @@ public class PKIManager
 		}
 
 		/**
-		 * Destroys the CRLRecoverer. 
-		 * <br>
+		 * Destroys the CRLRecoverer. <br>
 		 * <br>
 		 * <b>Description: </b> <br>
 		 * Stop the thread from running. <br>
 		 * <br>
-		 * <b>Concurrency issues: </b> <br>-<br>
+		 * <b>Concurrency issues: </b> <br>
+		 * -<br>
 		 * <br>
 		 * <b>Preconditions: </b> <br>
 		 * <br>
 		 * <br>
-		 * <b>Postconditions: </b> <br>-
+		 * <b>Postconditions: </b> <br>
+		 * -
 		 * 
 		 * @see java.lang.Thread#destroy()
 		 */
@@ -1016,12 +1007,12 @@ public class PKIManager
 		{
 			_bActive = false;
 			try
-			//interrupt if sleeping
+			// interrupt if sleeping
 			{
 				Thread.currentThread().interrupt();
 			}
 			catch (Exception e) {
-				//no logging
+				// no logging
 			}
 
 		}
@@ -1033,27 +1024,24 @@ public class PKIManager
 		private boolean _bActive;
 
 		/**
-		 * Thread that handles incoming requests from the admin tool.
-		 * <br><br>
-		 * <b>Description:</b>
+		 * Thread that handles incoming requests from the admin tool. <br>
 		 * <br>
-		 * Thread that creates a new <code>PKIAdminRequestDispatcher</code>
-		 * thread to interact with the client.
-		 * <br><br>
-		 * <b>Concurrency issues:</b>
+		 * <b>Description:</b> <br>
+		 * Thread that creates a new <code>PKIAdminRequestDispatcher</code> thread to interact with the client. <br>
 		 * <br>
-		 * -
-		 * <br><br>
-		 * <b>Preconditions:</b>
+		 * <b>Concurrency issues:</b> <br>
+		 * - <br>
 		 * <br>
-		 * -
-		 * <br><br>
-		 * <b>Postconditions:</b>
+		 * <b>Preconditions:</b> <br>
+		 * - <br>
 		 * <br>
-		 * -
-		 * <br>
+		 * <b>Postconditions:</b> <br>
+		 * - <br>
+		 * 
 		 * @param iPort
+		 *            the i port
 		 * @throws ASelectException
+		 *             the a select exception
 		 */
 		public PKIAdminServer(int iPort)
 			throws ASelectException {
@@ -1073,8 +1061,9 @@ public class PKIManager
 		}
 
 		/**
-		 * Listen for incoming requests.
-		 * <br><br>
+		 * Listen for incoming requests. <br>
+		 * <br>
+		 * 
 		 * @see java.lang.Runnable#run()
 		 */
 		public void run()
@@ -1096,18 +1085,19 @@ public class PKIManager
 		}
 
 		/**
-		 * Destroys the PKIAdminServer. 
-		 * <br>
+		 * Destroys the PKIAdminServer. <br>
 		 * <br>
 		 * <b>Description: </b> <br>
 		 * Stop the thread from running. <br>
 		 * <br>
-		 * <b>Concurrency issues: </b> <br>-<br>
+		 * <b>Concurrency issues: </b> <br>
+		 * -<br>
 		 * <br>
 		 * <b>Preconditions: </b> <br>
 		 * <br>
 		 * <br>
-		 * <b>Postconditions: </b> <br>-
+		 * <b>Postconditions: </b> <br>
+		 * -
 		 * 
 		 * @see java.lang.Thread#destroy()
 		 */
@@ -1115,13 +1105,13 @@ public class PKIManager
 		{
 			_bActive = false;
 			try
-			//interrupt if sleeping
+			// interrupt if sleeping
 			{
 				Thread.currentThread().interrupt();
 				oSocket.close();
 			}
 			catch (Exception e) {
-				//no logging
+				// no logging
 			}
 		}
 
@@ -1135,26 +1125,23 @@ public class PKIManager
 		private PrintWriter _pwOutput;
 
 		/**
-		 * Thread that offers admin functionality.
-		 * <br><br>
-		 * <b>Description:</b>
+		 * Thread that offers admin functionality. <br>
 		 * <br>
-		 * Thread created by the <code>PKIAdminServer</code>.
-		 * Offers functionality to reload CA keystores and/or CRL files.
-		 * <br><br>
-		 * <b>Concurrency issues:</b>
+		 * <b>Description:</b> <br>
+		 * Thread created by the <code>PKIAdminServer</code>. Offers functionality to reload CA keystores and/or CRL
+		 * files. <br>
 		 * <br>
-		 * -
-		 * <br><br>
-		 * <b>Preconditions:</b>
+		 * <b>Concurrency issues:</b> <br>
+		 * - <br>
 		 * <br>
-		 * -
-		 * <br><br>
-		 * <b>Postconditions:</b>
+		 * <b>Preconditions:</b> <br>
+		 * - <br>
 		 * <br>
-		 * -
-		 * <br>
+		 * <b>Postconditions:</b> <br>
+		 * - <br>
+		 * 
 		 * @param oClientSocket
+		 *            the o client socket
 		 */
 		public PKIAdminRequestDispatcher(Socket oClientSocket) {
 
@@ -1163,8 +1150,9 @@ public class PKIManager
 		}
 
 		/**
-		 * Reads input from admin client to proces desired functionality.
-		 * <br><br>
+		 * Reads input from admin client to proces desired functionality. <br>
+		 * <br>
+		 * 
 		 * @see java.lang.Runnable#run()
 		 */
 		public void run()
@@ -1193,6 +1181,7 @@ public class PKIManager
 		 * Provides an ASCII menu and reads input from admin client.
 		 * 
 		 * @param sRequest
+		 *            the s request
 		 */
 		public void handleRequest(String sRequest)
 		{
@@ -1269,18 +1258,19 @@ public class PKIManager
 		}
 
 		/**
-		 * Destroys the PKIAdminRequestDispatcher. 
-		 * <br>
+		 * Destroys the PKIAdminRequestDispatcher. <br>
 		 * <br>
 		 * <b>Description: </b> <br>
 		 * Stop the thread from running. <br>
 		 * <br>
-		 * <b>Concurrency issues: </b> <br>-<br>
+		 * <b>Concurrency issues: </b> <br>
+		 * -<br>
 		 * <br>
 		 * <b>Preconditions: </b> <br>
 		 * <br>
 		 * <br>
-		 * <b>Postconditions: </b> <br>-
+		 * <b>Postconditions: </b> <br>
+		 * -
 		 * 
 		 * @see java.lang.Thread#destroy()
 		 */
@@ -1288,12 +1278,12 @@ public class PKIManager
 		{
 			_bActive = false;
 			try
-			//interrupt if sleeping
+			// interrupt if sleeping
 			{
 				Thread.currentThread().interrupt();
 			}
 			catch (Exception e) {
-				//no logging
+				// no logging
 			}
 		}
 	}

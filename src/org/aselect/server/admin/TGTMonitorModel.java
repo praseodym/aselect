@@ -65,19 +65,17 @@ import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectStorageException;
 
+// TODO: Auto-generated Javadoc
 /**
- * Main TGTMonitorModel Class.
- * 
- * <br><br>
+ * Main TGTMonitorModel Class. <br>
+ * <br>
  * <b>Description:</b><br>
- * This monitor contains all the information concerning the A-Select TGTs.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * This monitor contains all the information concerning the A-Select TGTs. <br>
  * <br>
- * none
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * none <br>
  * 
+ * @author Alfa & Ariss
  */
 public class TGTMonitorModel extends AbstractTableModel implements Runnable
 {
@@ -87,7 +85,7 @@ public class TGTMonitorModel extends AbstractTableModel implements Runnable
 	public static final String MODULE = "TGTMonitorModel";
 
 	/**
-	 *  Main thread.
+	 * Main thread.
 	 */
 	private Thread _oRunnerThread;
 
@@ -129,26 +127,22 @@ public class TGTMonitorModel extends AbstractTableModel implements Runnable
 	private boolean _bActive = false;
 
 	/**
-	 * SessionMonitorModel constructor.
-	 * 
-	 * <br><br>
-	 * <b>Description:</b>
+	 * SessionMonitorModel constructor. <br>
 	 * <br>
-	 * Initializes the SessionMonitorModel.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Initializes the SessionMonitorModel. <br>
 	 * <br>
-	 * none
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * none <br>
 	 * <br>
-	 * iCheckInterval > 0.
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * iCheckInterval > 0. <br>
 	 * <br>
+	 * <b>Postconditions:</b> <br>
 	 * The Main RunnerThread is running. <br>
+	 * 
 	 * @param iCheckInterval
-	 * 					Interval used to check for new information.
+	 *            Interval used to check for new information.
 	 */
 	public TGTMonitorModel(int iCheckInterval) {
 		this._iCheckInterval = iCheckInterval;
@@ -177,9 +171,7 @@ public class TGTMonitorModel extends AbstractTableModel implements Runnable
 	}
 
 	/**
-	 * This functions stops the TGTMonitor.
-	 * 
-	 * <br>
+	 * This functions stops the TGTMonitor. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
 	 * _bActive is set to false and the current thread is interupted. <br>
@@ -192,7 +184,6 @@ public class TGTMonitorModel extends AbstractTableModel implements Runnable
 	 * <br>
 	 * <b>Postconditions: </b> <br>
 	 * none <br>
-	 *  
 	 */
 	public void stop()
 	{
@@ -201,14 +192,11 @@ public class TGTMonitorModel extends AbstractTableModel implements Runnable
 	}
 
 	/**
-	 * Returns the TGT count.
-	 * 
-	 * <br>
+	 * Returns the TGT count. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * This function calls _oTGTManager.getTGTCounter() to retrieve the
-	 * TGT count. 
-	 * <br><br>
+	 * This function calls _oTGTManager.getTGTCounter() to retrieve the TGT count. <br>
+	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * none <br>
 	 * <br>
@@ -229,6 +217,7 @@ public class TGTMonitorModel extends AbstractTableModel implements Runnable
 	 * Returns the current row count. <br>
 	 * <br>
 	 * 
+	 * @return the row count
 	 * @see javax.swing.table.TableModel#getRowCount()
 	 */
 	public int getRowCount()
@@ -240,6 +229,7 @@ public class TGTMonitorModel extends AbstractTableModel implements Runnable
 	 * Returns the current column count. <br>
 	 * <br>
 	 * 
+	 * @return the column count
 	 * @see javax.swing.table.TableModel#getColumnCount()
 	 */
 	public int getColumnCount()
@@ -251,6 +241,11 @@ public class TGTMonitorModel extends AbstractTableModel implements Runnable
 	 * Returns the current value at a specific row and column. <br>
 	 * <br>
 	 * 
+	 * @param iRow
+	 *            the i row
+	 * @param iColumn
+	 *            the i column
+	 * @return the value at
 	 * @see javax.swing.table.TableModel#getValueAt(int, int)
 	 */
 	public Object getValueAt(int iRow, int iColumn)
@@ -259,11 +254,11 @@ public class TGTMonitorModel extends AbstractTableModel implements Runnable
 		HashMap htTGTContext = (HashMap) _htTGTContexts.get(sTGT);
 
 		if (iColumn == 0)
-			return (String) htTGTContext.get("uid");
+			return htTGTContext.get("uid");
 		if (iColumn == 1) {
 			String sProxy = (String) htTGTContext.get("proxy_organization");
 			if (sProxy == null)
-				return (String) htTGTContext.get("organization");
+				return htTGTContext.get("organization");
 			return (String) htTGTContext.get("organization") + "@" + sProxy;
 		}
 		if (iColumn == 2) {
@@ -276,11 +271,11 @@ public class TGTMonitorModel extends AbstractTableModel implements Runnable
 			}
 		}
 		if (iColumn == 3)
-			return (String) htTGTContext.get("authsp");
+			return htTGTContext.get("authsp");
 		if (iColumn == 4)
-			return (String) htTGTContext.get("authsp_level");
+			return htTGTContext.get("authsp_level");
 		if (iColumn == 5)
-			return (String) htTGTContext.get("app_id");
+			return htTGTContext.get("app_id");
 		if (iColumn == 6)
 			return sTGT;
 
@@ -291,8 +286,12 @@ public class TGTMonitorModel extends AbstractTableModel implements Runnable
 	 * Returns the name of the column based on iIndex. <br>
 	 * <br>
 	 * 
+	 * @param xIndex
+	 *            the x index
+	 * @return the column name
 	 * @see javax.swing.table.TableModel#getColumnName(int)
 	 */
+	@Override
 	public String getColumnName(int xIndex)
 	{
 		return _saHeaders[xIndex];
@@ -319,14 +318,11 @@ public class TGTMonitorModel extends AbstractTableModel implements Runnable
 	}
 
 	/**
-	 * Retrieve the current A-Select TGT information.
-	 * 
-	 * <br>
+	 * Retrieve the current A-Select TGT information. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * This function retrieves the TGT context using
-	 * _oTGTManager.getTGTContexts() and copies the TGT information
-	 * into the local TGT array _saTGTs. <br>
+	 * This function retrieves the TGT context using _oTGTManager.getTGTContexts() and copies the TGT information into
+	 * the local TGT array _saTGTs. <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * none <br>
@@ -336,7 +332,6 @@ public class TGTMonitorModel extends AbstractTableModel implements Runnable
 	 * <br>
 	 * <b>Postconditions: </b> <br>
 	 * _saTGTs now contains the latest TGT information. <br>
-	 *  
 	 */
 	private void getServerStatus()
 	{
@@ -346,9 +341,9 @@ public class TGTMonitorModel extends AbstractTableModel implements Runnable
 			int i = 0;
 			Set keys = _htTGTContexts.keySet();
 			for (Object s : keys) {
-				//Enumeration _enumTGTContexts = _htTGTContexts.keys();
-				//while (_enumTGTContexts.hasMoreElements())
-				//{
+				// Enumeration _enumTGTContexts = _htTGTContexts.keys();
+				// while (_enumTGTContexts.hasMoreElements())
+				// {
 				_saTGTs[i++] = (String) s;
 			}
 		}

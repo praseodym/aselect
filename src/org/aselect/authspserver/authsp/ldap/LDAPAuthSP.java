@@ -123,30 +123,26 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
- * An A-Select AuthtSP that uses LDAP as back-end.
- * <br><br>
+ * An A-Select AuthtSP that uses LDAP as back-end. <br>
+ * <br>
  * <b>Description:</b><br>
- * The A-Select LDAP AuthSP uses a LDAP back-end to validate user/password 
- * combinations. The LDAP AuthSP retrieves the following components and attributes
- * from the A-Select AuthSP Server:
+ * The A-Select LDAP AuthSP uses a LDAP back-end to validate user/password combinations. The LDAP AuthSP retrieves the
+ * following components and attributes from the A-Select AuthSP Server:
  * <ul>
- *  <li>The configmanager</li>
- *  <li>The crypto engine</li>
- *  <li>The system logger</li>
- *  <li>The authentication logger</li>
- *  <li><code>friendly_name</code></li>
- *  <li><code>working_dir</code></li>
+ * <li>The configmanager</li>
+ * <li>The crypto engine</li>
+ * <li>The system logger</li>
+ * <li>The authentication logger</li>
+ * <li><code>friendly_name</code></li>
+ * <li><code>working_dir</code></li>
  * </ul>
  * <br>
- * <b>Concurrency issues:</b>
- * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
- * 
- * TODO use communication package for API calls? (Erwin)
+ * @author Alfa & Ariss TODO use communication package for API calls? (Erwin)
  */
 public class LDAPAuthSP extends ASelectHttpServlet
 {
@@ -160,7 +156,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	private final static String DEFAULT_FAILUREHANDLING = "aselect";
 
 	/** The version. */
-	public static final String VERSION = "A-Select LDAP AuthSP "+"1.9";
+	public static final String VERSION = "A-Select LDAP AuthSP " + "1.9";
 
 	/** The logger that logs system information. */
 	private AuthSPSystemLogger _systemLogger;
@@ -185,42 +181,41 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	/** HTML error templates */
 	private String _sAuthenticateHtmlTemplate;
 
-	//failure handling properties
+	// failure handling properties
 	private Properties _oErrorProperties;
 	private String _sFailureHandling;
 	private String _sFriendlyName;
 	private int _iAllowedRetries;
 
 	/**
-	 * Initialization of the LDAP AuthSP. 
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Initialization of the LDAP AuthSP. <br>
 	 * <br>
+	 * <b>Description:</b> <br>
 	 * Performs the following steps to initialise the <code>LDAPAuthSP</code>:
 	 * <ul>
-	 *  <li>Retrieve handles to managers and loggers</li>
-	 *  <li>Retrieve crypto engine from servlet context</li>
-	 *  <li>Retrieve friendly name from servlet context</li>
-	 *  <li>Load error properties</li>
-	 *  <li>Load HTML templates</li>
-	 *  <li>Get allowed retries from configuration</li>
-	 *  <li>Get failure handling from configuration</li>
+	 * <li>Retrieve handles to managers and loggers</li>
+	 * <li>Retrieve crypto engine from servlet context</li>
+	 * <li>Retrieve friendly name from servlet context</li>
+	 * <li>Load error properties</li>
+	 * <li>Load HTML templates</li>
+	 * <li>Get allowed retries from configuration</li>
+	 * <li>Get failure handling from configuration</li>
 	 * </ul>
 	 * <br>
 	 * <b>Preconditions:</b>
 	 * <ul>
-	 *  <li>The AuthSPServer must be succesfully started</li>
-	 *  <li>An error config file must exist</li>
-	 *  <li>An error template file must exist</li>
-	 *  <li>An authentication template file must exist</li>
-	 *  <li>
-	 *      An LDAP 'authsp' config section must be available 
-	 *      in the configuration of the AuthSP Server. 
-	 *      The id of this section must be available as 'config_id' 
-	 *      servlet init paramater.
-	 *  </li> 
+	 * <li>The AuthSPServer must be succesfully started</li>
+	 * <li>An error config file must exist</li>
+	 * <li>An error template file must exist</li>
+	 * <li>An authentication template file must exist</li>
+	 * <li>An LDAP 'authsp' config section must be available in the configuration of the AuthSP Server. The id of this
+	 * section must be available as 'config_id' servlet init paramater.</li>
 	 * </ul>
 	 * 
+	 * @param oConfig
+	 *            the o config
+	 * @throws ServletException
+	 *             the servlet exception
 	 * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
 	 */
 	public void init(ServletConfig oConfig)
@@ -229,19 +224,19 @@ public class LDAPAuthSP extends ASelectHttpServlet
 		String sMethod = "init()";
 		StringBuffer sbTemp = null;
 		try {
-			//super init
+			// super init
 			super.init(oConfig);
-			//retrieve managers and loggers
+			// retrieve managers and loggers
 			_systemLogger = AuthSPSystemLogger.getHandle();
 			_authenticationLogger = AuthSPAuthenticationLogger.getHandle();
 			_configManager = AuthSPConfigManager.getHandle();
 			_sessionManager = AuthSPSessionManager.getHandle();
-			//log start
+			// log start
 			StringBuffer sbInfo = new StringBuffer("Starting : ");
 			sbInfo.append(MODULE);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 
-			//Retrieve crypto engine from servlet context.
+			// Retrieve crypto engine from servlet context.
 			ServletContext oContext = oConfig.getServletContext();
 			_cryptoEngine = (CryptoEngine) oContext.getAttribute("CryptoEngine");
 			if (_cryptoEngine == null) {
@@ -250,7 +245,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded CryptoEngine.");
 
-			//Retrieve friendly name            
+			// Retrieve friendly name
 			_sFriendlyName = (String) oContext.getAttribute("friendly_name");
 			if (_sFriendlyName == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'friendly_name' found in servlet context.");
@@ -258,7 +253,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'friendly_name'.");
 
-			//Retrieve working directory
+			// Retrieve working directory
 			_sWorkingDir = (String) oContext.getAttribute("working_dir");
 			if (_sWorkingDir == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No working_dir found in servlet context.");
@@ -266,7 +261,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded working_dir");
 
-			//Retrieve configuration
+			// Retrieve configuration
 			String sConfigID = oConfig.getInitParameter("config_id");
 			if (sConfigID == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'config_id' found as init-parameter in web.xml.");
@@ -282,7 +277,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 				throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR);
 			}
 
-			//Load error properties            
+			// Load error properties
 			StringBuffer sbErrorsConfig = new StringBuffer(_sWorkingDir);
 			sbErrorsConfig.append(File.separator);
 			sbErrorsConfig.append("conf");
@@ -307,7 +302,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			sbInfo.append(sbErrorsConfig.toString()).append("\".");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 
-			//Load HTML templates.
+			// Load HTML templates.
 			_sErrorHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "error.html", sConfigID,
 					_sFriendlyName, VERSION);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'error.html' template.");
@@ -315,7 +310,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 					_sFriendlyName, VERSION);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'authenticate.html' template.");
 
-			//get allowed retries
+			// get allowed retries
 			try {
 				String sAllowedRetries = _configManager.getParam(_oAuthSpConfig, "allowed_retries");
 				_iAllowedRetries = Integer.parseInt(sAllowedRetries);
@@ -331,7 +326,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 				throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR, eNF);
 			}
 
-			//get failure handling
+			// get failure handling
 			try {
 				_sFailureHandling = _configManager.getParam(_oAuthSpConfig, "failure_handling");
 			}
@@ -363,13 +358,18 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	}
 
 	/**
-	 * Process requests for the HTTP <code>GET</code> method.
-	 * <br><br>
-	 * This could be a API call, otherwise the 
-	 * authentication screen is displayed. 
-	 * @see javax.servlet.http.HttpServlet#doGet(
-	 * javax.servlet.http.HttpServletRequest, 
-	 * javax.servlet.http.HttpServletResponse)
+	 * Process requests for the HTTP <code>GET</code> method. <br>
+	 * <br>
+	 * This could be a API call, otherwise the authentication screen is displayed.
+	 * 
+	 * @param servletRequest
+	 *            the servlet request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest,
+	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	protected void doGet(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 		throws java.io.IOException
@@ -384,17 +384,17 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			String sQueryString = servletRequest.getQueryString();
 			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString);
 
-			//check if the request is an API call
+			// check if the request is an API call
 			String sRequestName = (String) htServiceRequest.get("request");
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "LDAP GET {" + servletRequest + " --> " + sMethod + ", "
 					+ ((sRequestName != null) ? sRequestName : "NULL") + ": " + sQueryString);
 
-			if (sRequestName != null) //API request
+			if (sRequestName != null) // API request
 			{
 				handleApiRequest(htServiceRequest, servletRequest, pwOut, servletResponse);
 			}
-			else //Browser request
+			else // Browser request
 			{
 				String sMyUrl = servletRequest.getRequestURL().toString();
 				htServiceRequest.put("my_url", sMyUrl);
@@ -411,35 +411,35 @@ public class LDAPAuthSP extends ASelectHttpServlet
 					throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);
 				}
 
-				//optional country code
+				// optional country code
 				String sCountry = (String) htServiceRequest.get("country");
 				if (sCountry == null || sCountry.trim().length() < 1) {
 					sCountry = null;
 				}
 
-				//optional language code
+				// optional language code
 				String sLanguage = (String) htServiceRequest.get("language");
 				if (sLanguage == null || sLanguage.trim().length() < 1) {
 					sLanguage = null;
 				}
 
 				servletResponse.setContentType("text/html");
-				//URL decode values
+				// URL decode values
 				sAsUrl = URLDecoder.decode(sAsUrl, "UTF-8");
 				sUid = URLDecoder.decode(sUid, "UTF-8");
 				sSignature = URLDecoder.decode(sSignature, "UTF-8");
 
-				//validate signature
+				// validate signature
 				StringBuffer sbSignature = new StringBuffer(sRid);
 				sbSignature.append(sAsUrl);
 				sbSignature.append(sUid);
 				sbSignature.append(sAsId);
 
-				//optional country code
+				// optional country code
 				if (sCountry != null)
 					sbSignature.append(sCountry);
 
-				//optional language code            
+				// optional language code
 				if (sLanguage != null)
 					sbSignature.append(sLanguage);
 
@@ -452,13 +452,13 @@ public class LDAPAuthSP extends ASelectHttpServlet
 					throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);
 				}
 
-				//Get the User its contexts
+				// Get the User its contexts
 				LDAPProtocolHandlerFactory.getContext(_oAuthSpConfig, sUid, _systemLogger);
 
-				//show authentication form
+				// show authentication form
 				htServiceRequest.put("as_url", sAsUrl);
 				htServiceRequest.put("uid", sUid);
-				//TODO The retry counter is not entirely safe (Erwin)
+				// TODO The retry counter is not entirely safe (Erwin)
 				htServiceRequest.put("retry_counter", "1");
 
 				if (sCountry != null)
@@ -476,7 +476,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 		catch (IOException eIO) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error sending response", eIO);
 			if (!servletResponse.isCommitted()) {
-				//send response if no headers have been written
+				// send response if no headers have been written
 				servletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
 		}
@@ -495,11 +495,18 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	}
 
 	/**
-	 * Process requests for the HTTP <code>POST</code> method.
-	 * <br><br>
-	 * This should be the submitted authentication form. 
+	 * Process requests for the HTTP <code>POST</code> method. <br>
+	 * <br>
+	 * This should be the submitted authentication form.
 	 * 
-	 * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+	 * @param servletRequest
+	 *            the servlet request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest,
+	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 		throws java.io.IOException
@@ -531,19 +538,19 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "LDAP POST {" + servletRequest + " --> " + sMethod + ", "
 					+ sRid + ": " + sMyUrl);
 
-			//optional country code
+			// optional country code
 			String sCountry = servletRequest.getParameter("country");
 			if (sCountry == null || sCountry.trim().length() < 1) {
 				sCountry = null;
 			}
 
-			//optional language code
+			// optional language code
 			String sLanguage = servletRequest.getParameter("language");
 			if (sLanguage == null || sLanguage.trim().length() < 1) {
 				sLanguage = null;
 			}
 
-			if (sPassword.trim().length() < 1) //invalid password
+			if (sPassword.trim().length() < 1) // invalid password
 			{
 				HashMap htServiceRequest = new HashMap();
 				htServiceRequest.put("my_url", sMyUrl);
@@ -557,12 +564,12 @@ public class LDAPAuthSP extends ASelectHttpServlet
 					htServiceRequest.put("country", sCountry);
 				if (sLanguage != null)
 					htServiceRequest.put("language", sLanguage);
-				//show authentication form once again with warning message
+				// show authentication form once again with warning message
 				showAuthenticateForm(pwOut, Errors.ERROR_LDAP_INVALID_PASSWORD, _configManager.getErrorMessage(
 						Errors.ERROR_LDAP_INVALID_PASSWORD, _oErrorProperties), htServiceRequest);
 			}
 			else {
-				//generate signature            
+				// generate signature
 				StringBuffer sbSignature = new StringBuffer(sRid);
 				sbSignature.append(sAsUrl);
 				sbSignature.append(sUid);
@@ -583,15 +590,15 @@ public class LDAPAuthSP extends ASelectHttpServlet
 					throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);
 				}
 
-				//authenticate user
+				// authenticate user
 				ILDAPProtocolHandler oProtocolHandler = LDAPProtocolHandlerFactory.instantiateProtocolHandler(
 						_oAuthSpConfig, sUid, _systemLogger);
 				String sResultCode = oProtocolHandler.authenticate(sPassword);
 				if (sResultCode.equals(Errors.ERROR_LDAP_INVALID_PASSWORD))
-				//invalid password
+				// invalid password
 				{
 					int iRetriesDone = Integer.parseInt(sRetryCounter);
-					if (iRetriesDone < _iAllowedRetries) //try again
+					if (iRetriesDone < _iAllowedRetries) // try again
 					{
 						HashMap htServiceRequest = new HashMap();
 						htServiceRequest.put("my_url", sMyUrl);
@@ -605,28 +612,28 @@ public class LDAPAuthSP extends ASelectHttpServlet
 							htServiceRequest.put("country", sCountry);
 						if (sLanguage != null)
 							htServiceRequest.put("language", sLanguage);
-						//show authentication form once again with warning message
+						// show authentication form once again with warning message
 						showAuthenticateForm(pwOut, Errors.ERROR_LDAP_INVALID_PASSWORD, _configManager.getErrorMessage(
 								Errors.ERROR_LDAP_INVALID_PASSWORD, _oErrorProperties), htServiceRequest);
 					}
 					else {
-						//authenticate failed
+						// authenticate failed
 						_authenticationLogger.log(new Object[] {
 							MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied"
 						});
 						handleResult(servletRequest, servletResponse, pwOut, sResultCode);
 					}
 				}
-				else if (sResultCode.equals(Errors.ERROR_LDAP_SUCCESS)) //success
+				else if (sResultCode.equals(Errors.ERROR_LDAP_SUCCESS)) // success
 				{
-					//Authentication successfull
+					// Authentication successfull
 					_authenticationLogger.log(new Object[] {
 						MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "granted"
 					});
 
 					handleResult(servletRequest, servletResponse, pwOut, sResultCode);
 				}
-				else //other error
+				else // other error
 				{
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error authenticating user, cause: "
 							+ sResultCode);
@@ -638,21 +645,21 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Sending error to client", eAS);
 			handleResult(servletRequest, servletResponse, pwOut, eAS.getMessage());
 		}
-		catch (IOException eIO) //could not send response
+		catch (IOException eIO) // could not send response
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error sending response", eIO);
 			if (!servletResponse.isCommitted()) {
-				//send response if no headers have been written
+				// send response if no headers have been written
 				servletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
 		}
-		catch (NumberFormatException eNF) //error parsing retry_counter
+		catch (NumberFormatException eNF) // error parsing retry_counter
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"Invalid request received: The retry counter parameter is invalid.");
 			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_LDAP_INVALID_REQUEST);
 		}
-		catch (Exception e) //internal error
+		catch (Exception e) // internal error
 		{
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process request due to internal error", e);
 			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER);
@@ -667,31 +674,34 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	}
 
 	/**
-	 * Determines whether or not the LDAP AuthsP is restartable. 
-	 * <br><br>
+	 * Determines whether or not the LDAP AuthsP is restartable. <br>
+	 * <br>
+	 * 
+	 * @return true, if checks if is restartable servlet
 	 * @see org.aselect.system.servlet.ASelectHttpServlet#isRestartableServlet()
 	 */
 	protected boolean isRestartableServlet()
 	{
-		//      TODO Restart functionality has to be added (Erwin)
+		// TODO Restart functionality has to be added (Erwin)
 		return false;
 	}
 
 	/**
-	 * Handle the response to the client.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Handle the response to the client. <br>
 	 * <br>
-	 * Creates a redirect url and redirects the user back to the A-Select Server. 
-	 * If errors are handled locally the 
-	 * {@link ASelectHttpServlet#showErrorPage(PrintWriter, String, String, String)}
-	 * method is called in case of an error.
+	 * <b>Description:</b> <br>
+	 * Creates a redirect url and redirects the user back to the A-Select Server. If errors are handled locally the
+	 * {@link ASelectHttpServlet#showErrorPage(PrintWriter, String, String, String)} method is called in case of an
+	 * error.
 	 * 
-	 * @param servletRequest The servlet request.
-	 * @param servletResponse The servlet response.
-	 * @param sResultCode The error code that should be sent to the A-Select Server
-	 * @param pwOut The output that is used, when error handling is local.
-	 * 
+	 * @param servletRequest
+	 *            The servlet request.
+	 * @param servletResponse
+	 *            The servlet response.
+	 * @param sResultCode
+	 *            The error code that should be sent to the A-Select Server
+	 * @param pwOut
+	 *            The output that is used, when error handling is local.
 	 */
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut, String sResultCode)
@@ -701,7 +711,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 
 		try {
 			if (_sFailureHandling.equalsIgnoreCase("aselect") || sResultCode.equals(Errors.ERROR_LDAP_SUCCESS))
-			//A-Select handles error or success
+			// A-Select handles error or success
 			{
 				String sRid = servletRequest.getParameter("rid");
 				String sAsUrl = servletRequest.getParameter("as_url");
@@ -729,7 +739,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 					try {
 						servletResponse.sendRedirect(sbTemp.toString());
 					}
-					catch (IOException eIO) //could not send redirect
+					catch (IOException eIO) // could not send redirect
 					{
 						StringBuffer sbError = new StringBuffer("Could not send redirect to: \"");
 						sbError.append(sbTemp.toString()).append("\"");
@@ -737,19 +747,19 @@ public class LDAPAuthSP extends ASelectHttpServlet
 					}
 				}
 			}
-			else //Local error handling 
+			else // Local error handling
 			{
 				showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
 						_oErrorProperties));
 			}
 		}
-		catch (ASelectException eAS) //could not generate signature
+		catch (ASelectException eAS) // could not generate signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate LDAP AuthSP signature", eAS);
 			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER, _configManager
 					.getErrorMessage(sResultCode, _oErrorProperties));
 		}
-		catch (UnsupportedEncodingException eUE) //could not encode signature
+		catch (UnsupportedEncodingException eUE) // could not encode signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode LDAP AuthSP signature", eUE);
 			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER, _configManager
@@ -757,14 +767,17 @@ public class LDAPAuthSP extends ASelectHttpServlet
 		}
 	}
 
-	/** 
+	/**
 	 * Processes an API request to this LDAP AuthSP.
 	 * 
-	 * @param  htServiceRequest 
-	 *  a <code>HashMap</code> containing request parameters.
-	 * @param servletRequest The request.
-	 * @param servletResponse The response.
-	 * @param pwOut The output.
+	 * @param htServiceRequest
+	 *            a <code>HashMap</code> containing request parameters.
+	 * @param servletRequest
+	 *            The request.
+	 * @param servletResponse
+	 *            The response.
+	 * @param pwOut
+	 *            The output.
 	 */
 	private void handleApiRequest(HashMap htServiceRequest, HttpServletRequest servletRequest, PrintWriter pwOut,
 			HttpServletResponse servletResponse)
@@ -772,16 +785,16 @@ public class LDAPAuthSP extends ASelectHttpServlet
 		String sMethod = "handleApiRequest()";
 		String sRid = (String) htServiceRequest.get("rid");
 		HashMap htSessionContext = null;
-		//create response HashTable
+		// create response HashTable
 		StringBuffer sbResponse = new StringBuffer("&rid=");
-		//add rid to response
+		// add rid to response
 		sbResponse.append(sRid);
 		int iAllowedRetries = 0;
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "REQ " + htServiceRequest.get("request"));
 
 			if (htServiceRequest.get("request").equals("authenticate"))
-			//authenticate request
+			// authenticate request
 			{
 				if (_sessionManager.containsKey(sRid)) {
 					htSessionContext = _sessionManager.getSessionContext(sRid);
@@ -821,53 +834,52 @@ public class LDAPAuthSP extends ASelectHttpServlet
 		}
 		catch (ASelectException eAS) {
 
-			//Allready logged
+			// Allready logged
 			sbResponse.append("&").append(RESULT_CODE);
 			sbResponse.append("=").append(eAS.getMessage());
 		}
-		//set reponse headers
+		// set reponse headers
 		servletResponse.setContentType("application/x-www-form-urlencoded");
 		servletResponse.setContentLength(sbResponse.length());
-		//respond
+		// respond
 		pwOut.write(sbResponse.toString());
 	}
 
 	/**
-	 * Handle the API call <code>request=authenticate</code>.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Handle the API call <code>request=authenticate</code>. <br>
 	 * <br>
-	 * processes a authenticate API call and sends an API reponse to the client. 
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * processes a authenticate API call and sends an API reponse to the client. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param htServiceRequest The request.
-	 * @param servletRequest The request parameters.
-	 * @throws ASelectException If authenticate fails.
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param htServiceRequest
+	 *            The request.
+	 * @param servletRequest
+	 *            The request parameters.
+	 * @throws ASelectException
+	 *             If authenticate fails.
 	 */
 	private void handleAuthenticate(HashMap htServiceRequest, HttpServletRequest servletRequest)
 		throws ASelectException
 	{
 		String sMethod = "handleAuthenticate()";
 
-		//get user properties
+		// get user properties
 		String sUid = (String) htServiceRequest.get("user");
-		//get password
+		// get password
 		String sPassword = (String) htServiceRequest.get("password");
-		//Get A-Select server ID
+		// Get A-Select server ID
 		String sAsID = (String) htServiceRequest.get("a-select-server");
 
-		if (sUid == null || sPassword == null) //missing request parameters
+		if (sUid == null || sPassword == null) // missing request parameters
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"Invalid API request: one or more mandatory parameters are missing.");
@@ -875,7 +887,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 		}
 
 		sPassword = sPassword.trim();
-		if (sPassword.length() < 1) //password invalid
+		if (sPassword.length() < 1) // password invalid
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid API request: invalid password.");
 			throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);
@@ -885,25 +897,25 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			sUid = URLDecoder.decode(sUid, "UTF-8");
 			sPassword = URLDecoder.decode(sPassword, "UTF-8");
 
-			//authenticate user
+			// authenticate user
 			ILDAPProtocolHandler oProtocolHandler = LDAPProtocolHandlerFactory.instantiateProtocolHandler(
 					_oAuthSpConfig, sUid, _systemLogger);
 			String sResultCode = oProtocolHandler.authenticate(sPassword);
-			if (sResultCode.equals(Errors.ERROR_LDAP_SUCCESS)) //user authenticated
+			if (sResultCode.equals(Errors.ERROR_LDAP_SUCCESS)) // user authenticated
 			{
-				//Authentication successfull
+				// Authentication successfull
 				_authenticationLogger.log(new Object[] {
 					MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "granted"
 				});
 			}
-			else if (sResultCode.equals(Errors.ERROR_LDAP_INVALID_PASSWORD)) //invalid password
+			else if (sResultCode.equals(Errors.ERROR_LDAP_INVALID_PASSWORD)) // invalid password
 			{
 				_authenticationLogger.log(new Object[] {
 					MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "denied"
 				});
 				throw new ASelectException(sResultCode);
 			}
-			else //other error
+			else // other error
 			{
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not authenticate user, cause:" + sResultCode);
 				throw new ASelectException(sResultCode);
@@ -916,20 +928,19 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	}
 
 	/**
-	 * Show an HTML authentication page.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Show an HTML authentication page. <br>
 	 * <br>
+	 * <b>Description:</b> <br>
 	 * Shows a authentication form with, if applicable, an error or warning message.
 	 * 
-	 * @param pwOut the <code>PrintWriter</code> that is the target for 
-	 * displaying the html page.
-	 * @param sError The error that should be shown in the page.
-	 * @param sErrorMessage 
-	 *      The error message that should be shown in the page.
+	 * @param pwOut
+	 *            the <code>PrintWriter</code> that is the target for displaying the html page.
+	 * @param sError
+	 *            The error that should be shown in the page.
+	 * @param sErrorMessage
+	 *            The error message that should be shown in the page.
 	 * @param htServiceRequest
-	 *      The request parameters.
-	 * 
+	 *            The request parameters.
 	 */
 	private void showAuthenticateForm(PrintWriter pwOut, String sError, String sErrorMessage, HashMap htServiceRequest)
 	{
@@ -957,7 +968,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[signature]", sSignature);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[retry_counter]", sRetryCounter);
 
-		//optional country code
+		// optional country code
 		if (sCountry != null) {
 			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[country]", sCountry);
 		}
@@ -965,7 +976,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[country]", "");
 		}
 
-		//optional language code
+		// optional language code
 		if (sLanguage != null) {
 			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", sLanguage);
 		}

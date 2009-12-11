@@ -43,120 +43,107 @@
 
 package org.aselect.authspserver.config;
 
+// TODO: Auto-generated Javadoc
 /**
- * Class containing the version of the A-Select AuthSP Server.
- * <br><br>
+ * Class containing the version of the A-Select AuthSP Server. <br>
+ * <br>
  * <b>Description:</b><br>
- * Methods that supply this version of the A-Select AuthSP Server
- * <br><br>
- * <b>Concurrency issues:</b>
+ * Methods that supply this version of the A-Select AuthSP Server <br>
  * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public class Version
 {
-    /**
-     * The main release version of this A-Select AuthSP Server
-     */
-    private final static String VERSION = "1.9";
+	/**
+	 * The main release version of this A-Select AuthSP Server
+	 */
+	private final static String VERSION = "1.9";
 
-    /**
-     * The service pack version of this A-Select AuthSP Server
-     */
-    private final static String SP      = "0";
+	/**
+	 * The service pack version of this A-Select AuthSP Server
+	 */
+	private final static String SP = "0";
 
-    /**
-     * The patch version of this A-Select AuthSP Server
-     */
-    private final static String PATCH   = "0";
+	/**
+	 * The patch version of this A-Select AuthSP Server
+	 */
+	private final static String PATCH = "0";
 
-    /**
-     * Returns the main version of this A-Select AuthSP Server.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Static method that returns the main version as <code>String</code>.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @return the full version of this A-Select AuthSP Server
-     */
-    public static String getVersion()
-    {
-        StringBuffer sbVersion = new StringBuffer(VERSION);
-        sbVersion.append(getSP());
-        sbVersion.append(getPatch());
-        return  sbVersion.toString();
-    }
+	/**
+	 * Returns the main version of this A-Select AuthSP Server. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Static method that returns the main version as <code>String</code>. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @return the full version of this A-Select AuthSP Server
+	 */
+	public static String getVersion()
+	{
+		StringBuffer sbVersion = new StringBuffer(VERSION);
+		sbVersion.append(getSP());
+		sbVersion.append(getPatch());
+		return sbVersion.toString();
+	}
 
-    /**
-     * Returns the service pack version of this A-Select AuthSP Server.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Static method that returns the service pack version as <code>String</code>.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @return the service pack version of this A-Select AuthSP Server
-     */
-    public static String getSP()
-    {
-        if (!SP.equals("0"))
-            return "." + SP;
+	/**
+	 * Returns the service pack version of this A-Select AuthSP Server. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Static method that returns the service pack version as <code>String</code>. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @return the service pack version of this A-Select AuthSP Server
+	 */
+	public static String getSP()
+	{
+		if (!SP.equals("0"))
+			return "." + SP;
 
-        return "";
-    }
+		return "";
+	}
 
-    /**
-     * Returns the patch version of this A-Select AuthSP Server.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Static method that returns the patch version as <code>String</code>.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @return the pacth version of this A-Select AuthSP Server
-     */
-    public static String getPatch()
-    {
-        if (!PATCH.equals("0"))
-            return " (p. " + PATCH + ")";
-        
-        return "";
-    }
+	/**
+	 * Returns the patch version of this A-Select AuthSP Server. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Static method that returns the patch version as <code>String</code>. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @return the pacth version of this A-Select AuthSP Server
+	 */
+	public static String getPatch()
+	{
+		if (!PATCH.equals("0"))
+			return " (p. " + PATCH + ")";
+
+		return "";
+	}
 }

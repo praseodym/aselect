@@ -75,18 +75,17 @@ import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.storagemanager.StorageManager;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
- * The A-Select Server TGT manager.
- * <br><br>
+ * The A-Select Server TGT manager. <br>
+ * <br>
  * <b>Description:</b><br>
- * Creates TGT's and storages them in a storage manager.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * Creates TGT's and storages them in a storage manager. <br>
  * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public class TGTManager extends StorageManager
 {
@@ -97,7 +96,7 @@ public class TGTManager extends StorageManager
 	/**
 	 * Size of a TGT
 	 */
-	private final static int TGT_LENGTH = 120;  //128; //256;
+	private final static int TGT_LENGTH = 120; // 128; //256;
 	/**
 	 * The singleton instance of this object
 	 */
@@ -114,9 +113,8 @@ public class TGTManager extends StorageManager
 	private long _lTGTCounter;
 
 	/**
-	 * Method to return an instance of the <code>TGTManager</code> instead of 
-	 * using the constructor.
-	 * <br>
+	 * Method to return an instance of the <code>TGTManager</code> instead of using the constructor. <br>
+	 * 
 	 * @return always the same <code>TGTManager</code> instance.
 	 */
 	public static TGTManager getHandle()
@@ -128,28 +126,24 @@ public class TGTManager extends StorageManager
 	}
 
 	/**
-	 * Initializes the A-Select TGT Manager.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Initializes the A-Select TGT Manager. <br>
 	 * <br>
-	 * <li>Reads the ticket manager configuration</li>
-	 * <li>Initializes the StorageManager object</li>
-	 * <li>Resets the <i>_lTGTCounter</i></li>
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * <li>Reads the ticket manager configuration</li> <li>Initializes the StorageManager object</li> <li>Resets the
+	 * <i>_lTGTCounter</i></li> <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <li>The <code>ASelectSystemLogger</code> must be initialized</li>
-	 * <li>The <code>ASelectConfigManager</code> must be initialized</li>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <li>The <code>ASelectSystemLogger</code> must be initialized</li> <li>The <code>ASelectConfigManager</code> must
+	 * be initialized</li> <br>
 	 * <br>
-	 * All class variables are created and initialized.
-	 * <br>
-	 * @throws ASelectException if config is missing or the configured information is incorrect
+	 * <b>Postconditions:</b> <br>
+	 * All class variables are created and initialized. <br>
+	 * 
+	 * @throws ASelectException
+	 *             if config is missing or the configured information is incorrect
 	 */
 	public void init()
 		throws ASelectException
@@ -175,7 +169,7 @@ public class TGTManager extends StorageManager
 					+ oTicketSection);
 			super.init(oTicketSection, oASelectConfigManager, _systemLogger, ASelectSAMAgent.getHandle());
 
-			//reset the tgt counter
+			// reset the tgt counter
 			_lTGTCounter = 0;
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully initialized TGT Manager");
 		}
@@ -193,36 +187,30 @@ public class TGTManager extends StorageManager
 	}
 
 	/**
-	 * Creates a new TGT for the supplied data and stores it in the storage manager.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Creates a new TGT for the supplied data and stores it in the storage manager. <br>
 	 * <br>
-	 * Generates a tgt of TGT_LENGTH random bytes. It is made sure that the tgt
-	 * is not present in the current tgt table. The variable
-	 * <code>htTGTContext</code> contains information from the caller. The
-	 * caller can retrieve this information by calling the
-	 * <code>getTGT()</code> method.
-	 * <br><br>
-	 * <li>checks if the maximum TGT's are reached</li>
-	 * <li>generates a unique tgt</li>
-	 * <li>stores the ticket to the storage manager</li>
-	 * <li>increases the tgt counter for monitoring purposes</li>
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Generates a tgt of TGT_LENGTH random bytes. It is made sure that the tgt is not present in the current tgt table.
+	 * The variable <code>htTGTContext</code> contains information from the caller. The caller can retrieve this
+	 * information by calling the <code>getTGT()</code> method. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <li>checks if the maximum TGT's are reached</li> <li>generates a unique tgt</li> <li>stores the ticket to the
+	 * storage manager</li> <li>increases the tgt counter for monitoring purposes</li> <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * @param htTGTContext The context of the TGT that will be created.
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param htTGTContext
+	 *            The context of the TGT that will be created.
 	 * @return the created TGT.
-	 * @throws ASelectException If creation fails.
+	 * @throws ASelectException
+	 *             If creation fails.
 	 */
 	synchronized public String createTGT(HashMap htTGTContext)
 		throws ASelectException
@@ -233,11 +221,11 @@ public class TGTManager extends StorageManager
 		try {
 			byte[] baTGT = new byte[TGT_LENGTH];
 
-			//creates a new TGT by resolveing randombytes
+			// creates a new TGT by resolveing randombytes
 			CryptoEngine.nextRandomBytes(baTGT);
 			sTGT = Utils.byteArrayToHexString(baTGT);
 
-			//checks if the generated tgt is unique and create a new one till it is unique
+			// checks if the generated tgt is unique and create a new one till it is unique
 			while (containsKey(sTGT)) {
 				CryptoEngine.nextRandomBytes(baTGT);
 				sTGT = Utils.byteArrayToHexString(baTGT);
@@ -272,27 +260,25 @@ public class TGTManager extends StorageManager
 	}
 
 	/**
-	 * Updates a valid tgt context with a new one.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Updates a valid tgt context with a new one. <br>
 	 * <br>
-	 * Overwrites the context of the supplied TGT with supplied context with 
-	 * the one in the storage manager if the TGT already exists.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Overwrites the context of the supplied TGT with supplied context with the one in the storage manager if the TGT
+	 * already exists. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sTGT The TGT that must be updated
-	 * @param htTGTContext The new context of the TGT
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sTGT
+	 *            The TGT that must be updated
+	 * @param htTGTContext
+	 *            The new context of the TGT
 	 * @return TRUE if the TGT context is updated.
 	 */
 	public boolean updateTGT(String sTGT, HashMap htTGTContext)
@@ -301,7 +287,7 @@ public class TGTManager extends StorageManager
 		boolean bReturn = false;
 		if (getTGT(sTGT) != null) {
 			try {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "updateTGT("+Utils.firstPartOf(sTGT, 30)+")");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "updateTGT(" + Utils.firstPartOf(sTGT, 30) + ")");
 				update(sTGT, htTGTContext);
 				bReturn = true;
 			}
@@ -314,9 +300,11 @@ public class TGTManager extends StorageManager
 	}
 
 	/**
-	 * Returns the tgt context for the tgt specified in <code>sTGT</code>.
-	 * <br><br>
-	 * @param sTGT The A-Select TGT created with the createTGT method 
+	 * Returns the tgt context for the tgt specified in <code>sTGT</code>. <br>
+	 * <br>
+	 * 
+	 * @param sTGT
+	 *            The A-Select TGT created with the createTGT method
 	 * @return a <code>HashMap</code> containing the TGT context
 	 */
 	public HashMap getTGT(String sTGT)
@@ -325,8 +313,8 @@ public class TGTManager extends StorageManager
 		HashMap htContext = null;
 
 		try {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "getTGT("+Utils.firstPartOf(sTGT, 30)+")");
-			htContext = (HashMap)get(sTGT);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "getTGT(" + Utils.firstPartOf(sTGT, 30) + ")");
+			htContext = (HashMap) get(sTGT);
 		}
 		catch (ASelectStorageException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "TGT not found");
@@ -335,9 +323,9 @@ public class TGTManager extends StorageManager
 	}
 
 	/**
-	 * Returns the number of TGT's that are created by the TGT manager for 
-	 * monitoring purposes.
-	 * @return the number of TGT's created by this TGT manager 
+	 * Returns the number of TGT's that are created by the TGT manager for monitoring purposes.
+	 * 
+	 * @return the number of TGT's created by this TGT manager
 	 */
 	public long getTGTCounter()
 	{
@@ -345,22 +333,18 @@ public class TGTManager extends StorageManager
 	}
 
 	/**
-	 * Private constructor.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Private constructor. <br>
 	 * <br>
-	 * Creates a new storage manager and retrieves the system logger.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Creates a new storage manager and retrieves the system logger. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
+	 * <b>Postconditions:</b> <br>
 	 * The storage manager is created.
 	 */
 	private TGTManager() {

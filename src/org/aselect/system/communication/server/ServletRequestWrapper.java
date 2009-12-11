@@ -36,122 +36,127 @@ import java.io.InputStreamReader;
 
 import javax.servlet.http.HttpServletRequest;
 
+// TODO: Auto-generated Javadoc
 /**
- * Wrapper to communicate in a transparant manner to a 
- * <CODE>HttpServletRequest</CODE>.
- * <br><br>
+ * Wrapper to communicate in a transparant manner to a <CODE>HttpServletRequest</CODE>. <br>
+ * <br>
  * <b>Description:</b><br>
- * This class is a Wrapper for the <code>HttpServletRequest</code> 
- * which implements <code>IProtocolRequest</code>.
- * <br><br>
- * <i>Note: Wrapper is commonly used Design pattern also known as adapter.</i>
- * <br><br>
- * <b>Concurrency issues:</b>
+ * This class is a Wrapper for the <code>HttpServletRequest</code> which implements <code>IProtocolRequest</code>. <br>
  * <br>
- * -
+ * <i>Note: Wrapper is commonly used Design pattern also known as adapter.</i> <br>
  * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public class ServletRequestWrapper implements IProtocolRequest
 {
-    /** The actual request. */
-    private HttpServletRequest 	_oRequest;
-    
-    /** The request data */
-    private String				_sMessage;
+	/** The actual request. */
+	private HttpServletRequest _oRequest;
 
-    /**
-     * Create a new instance.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Creates a new instance wrapping <code>oRequest</code>.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * <code>oRequest</code> should be created by a servlet container.  
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * This instance wraps <code>oRequest</code>.
-     * <br>
-     * @param oRequest  The <CODE>HttpServletRequest</CODE> 
-     * that this wrapper wraps.
-     */
-    public ServletRequestWrapper(HttpServletRequest oRequest)
-    {
-        _oRequest = oRequest;
-    }
+	/** The request data */
+	private String _sMessage;
 
-    /**
-     * Get the input stream of the request protocol.
-     * The input stream is buffered in a <code>String</code>.
-     * <br><br>
-     * @see org.aselect.system.communication.server.IProtocolRequest#getInputStream()
-     */
-    public InputStream getInputStream() throws IOException
-    {
-        //read the original data and put it in a buffer (String)
-	    BufferedReader br = new BufferedReader(new InputStreamReader(_oRequest.getInputStream()));
-	    StringBuffer sb = new StringBuffer();
-	    String s;
-	    
-	    while((s = br.readLine()) != null)
-	    {   
-	        sb.append(s);
-	        sb.append("\r\n");
-	    }
-	    _sMessage = sb.toString();
-	    
-	    //return a new InputSTream which reads from the buffer
-	    return new ByteArrayInputStream(sb.toString().getBytes());    
-    }
+	/**
+	 * Create a new instance. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Creates a new instance wrapping <code>oRequest</code>. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * <code>oRequest</code> should be created by a servlet container. <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * This instance wraps <code>oRequest</code>. <br>
+	 * 
+	 * @param oRequest
+	 *            The <CODE>HttpServletRequest</CODE> that this wrapper wraps.
+	 */
+	public ServletRequestWrapper(HttpServletRequest oRequest) {
+		_oRequest = oRequest;
+	}
 
-    /**
-     * Retrieve a property of the request protocol.
-     * @see org.aselect.system.communication.server.IProtocolRequest#getProperty(java.lang.String)
-     */
-    public String getProperty(String name)
-    {
-        String xRetVal = null;
-        if (name.equalsIgnoreCase("QueryString"))
-        {
-            xRetVal = _oRequest.getQueryString();
-        } else
-        {
-            xRetVal = _oRequest.getHeader(name);
-        }
-        return xRetVal;
-    }
+	/**
+	 * Get the input stream of the request protocol. The input stream is buffered in a <code>String</code>. <br>
+	 * <br>
+	 * 
+	 * @return the input stream
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 * @see org.aselect.system.communication.server.IProtocolRequest#getInputStream()
+	 */
+	public InputStream getInputStream()
+		throws IOException
+	{
+		// read the original data and put it in a buffer (String)
+		BufferedReader br = new BufferedReader(new InputStreamReader(_oRequest.getInputStream()));
+		StringBuffer sb = new StringBuffer();
+		String s;
 
-    /**
-     * Retrieve the name of the protocol that is wrapped by this wrapper.
-     * @see org.aselect.system.communication.server.IProtocolRequest#getProtocolName()
-     */
-    public String getProtocolName()
-    {
-        return _oRequest.getProtocol();
-    }
+		while ((s = br.readLine()) != null) {
+			sb.append(s);
+			sb.append("\r\n");
+		}
+		_sMessage = sb.toString();
 
-    /**
-     * Retrieve the full servlet address.
-     * @see org.aselect.system.communication.server.IProtocolRequest#getTarget()
-     */
-    public String getTarget()
-    {
-        return _oRequest.getRequestURL().toString();
-    }
+		// return a new InputSTream which reads from the buffer
+		return new ByteArrayInputStream(sb.toString().getBytes());
+	}
 
-    /**
-     * @see org.aselect.system.communication.server.IProtocolRequest#getMessage()
-     */
-    public String getMessage()
-    {
-        return _sMessage;
-    }
+	/**
+	 * Retrieve a property of the request protocol.
+	 * 
+	 * @param name
+	 *            the name
+	 * @return the property
+	 * @see org.aselect.system.communication.server.IProtocolRequest#getProperty(java.lang.String)
+	 */
+	public String getProperty(String name)
+	{
+		String xRetVal = null;
+		if (name.equalsIgnoreCase("QueryString")) {
+			xRetVal = _oRequest.getQueryString();
+		}
+		else {
+			xRetVal = _oRequest.getHeader(name);
+		}
+		return xRetVal;
+	}
+
+	/**
+	 * Retrieve the name of the protocol that is wrapped by this wrapper.
+	 * 
+	 * @return the protocol name
+	 * @see org.aselect.system.communication.server.IProtocolRequest#getProtocolName()
+	 */
+	public String getProtocolName()
+	{
+		return _oRequest.getProtocol();
+	}
+
+	/**
+	 * Retrieve the full servlet address.
+	 * 
+	 * @return the target
+	 * @see org.aselect.system.communication.server.IProtocolRequest#getTarget()
+	 */
+	public String getTarget()
+	{
+		return _oRequest.getRequestURL().toString();
+	}
+
+	/**
+	 * Gets the message.
+	 * 
+	 * @return the message
+	 * @see org.aselect.system.communication.server.IProtocolRequest#getMessage()
+	 */
+	public String getMessage()
+	{
+		return _sMessage;
+	}
 }

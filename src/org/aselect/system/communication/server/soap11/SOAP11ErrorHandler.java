@@ -34,51 +34,65 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
+// TODO: Auto-generated Javadoc
 /**
- * SOAP 1.1 parse error handler.
- * <br><br>
+ * SOAP 1.1 parse error handler. <br>
+ * <br>
  * <b>Description:</b><br>
- * An error handler that handles SOAP11 message parse and validation errors.
- * This implementation just throws the received warning and errors.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * An error handler that handles SOAP11 message parse and validation errors. This implementation just throws the
+ * received warning and errors. <br>
  * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public class SOAP11ErrorHandler implements ErrorHandler
 {
 
-    /**
-     * Handle a parser warning.
-     * 
-     * @see org.xml.sax.ErrorHandler#warning(org.xml.sax.SAXParseException)
-     */
-    public void warning(SAXParseException eSP) throws SAXException
-    {
-        throw eSP;
-    }
+	/**
+	 * Handle a parser warning.
+	 * 
+	 * @param eSP
+	 *            the e sp
+	 * @throws SAXException
+	 *             the SAX exception
+	 * @see org.xml.sax.ErrorHandler#warning(org.xml.sax.SAXParseException)
+	 */
+	public void warning(SAXParseException eSP)
+		throws SAXException
+	{
+		throw eSP;
+	}
 
-    /**
-     * Handle a parser error.
-     * 
-     * @see org.xml.sax.ErrorHandler#error(org.xml.sax.SAXParseException)
-     */
-    public void error(SAXParseException eSP) throws SAXException
-    {
-        throw eSP;
-    }
+	/**
+	 * Handle a parser error.
+	 * 
+	 * @param eSP
+	 *            the e sp
+	 * @throws SAXException
+	 *             the SAX exception
+	 * @see org.xml.sax.ErrorHandler#error(org.xml.sax.SAXParseException)
+	 */
+	public void error(SAXParseException eSP)
+		throws SAXException
+	{
+		throw eSP;
+	}
 
-    /**
-     * Handle a parser fatal error.
-     * 
-     * @see org.xml.sax.ErrorHandler#fatalError(org.xml.sax.SAXParseException)
-     */
-    public void fatalError(SAXParseException eSP) throws SAXException
-    {
-        throw eSP;
-    }
+	/**
+	 * Handle a parser fatal error.
+	 * 
+	 * @param eSP
+	 *            the e sp
+	 * @throws SAXException
+	 *             the SAX exception
+	 * @see org.xml.sax.ErrorHandler#fatalError(org.xml.sax.SAXParseException)
+	 */
+	public void fatalError(SAXParseException eSP)
+		throws SAXException
+	{
+		throw eSP;
+	}
 
 }

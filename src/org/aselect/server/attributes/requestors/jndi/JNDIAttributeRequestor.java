@@ -105,25 +105,18 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.exception.ASelectUDBException;
 import org.aselect.system.sam.agent.SAMResource;
 
+// TODO: Auto-generated Javadoc
 /**
- * The JNDI Attribute Requestor.
- * <br><br>
+ * The JNDI Attribute Requestor. <br>
+ * <br>
  * <b>Description:</b><br>
- * This class can be used as AttributeRequestor by the A-Select Server 
- * AttributeGatherer
- * <br><br>
- * <b>Concurrency issues:</b>
+ * This class can be used as AttributeRequestor by the A-Select Server AttributeGatherer <br>
  * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
- * 14-11-2007 - Changes:
- * - DigiD Gateway integration
- *   Additional alt_user_dn configuration parameter
- * 
- * @author Bauke Hiemstra - www.anoigo.nl
- * Copyright Gemeente Den Haag (http://www.denhaag.nl)
+ * @author Alfa & Ariss 14-11-2007 - Changes: - DigiD Gateway integration Additional alt_user_dn configuration parameter
+ * @author Bauke Hiemstra - www.anoigo.nl Copyright Gemeente Den Haag (http://www.denhaag.nl)
  */
 public class JNDIAttributeRequestor extends GenericAttributeRequestor
 {
@@ -140,12 +133,16 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	private boolean _bNumericalUid = false;
 
 	/**
-	 * Initializes the JNDI Attribute Requestor.
-	 * <br>
+	 * Initializes the JNDI Attribute Requestor. <br>
 	 * Reads the 'main' section of the supplied configuration<br>
 	 * Reads the 'attributes' section of the supplied configuration<br>
-	 * Checks if there is at least one resource configured in the resourcegroup 
-	 * <br><br>
+	 * Checks if there is at least one resource configured in the resourcegroup <br>
+	 * <br>
+	 * 
+	 * @param oConfig
+	 *            the o config
+	 * @throws ASelectException
+	 *             the a select exception
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#init(java.lang.Object)
 	 */
 	public void init(Object oConfig)
@@ -286,7 +283,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				}
 			}
 
-			//check if at least one resource is configured
+			// check if at least one resource is configured
 			getConnection();
 		}
 		catch (ASelectAttributesException e) {
@@ -299,15 +296,22 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	}
 
 	/**
-	 * Resolves the attribute values from the JNDI backend.
-	 * <br>
+	 * Resolves the attribute values from the JNDI backend. <br>
 	 * A search will be done to search the user in the base dn.<br>
-	 * The attributes that are supplied to the method will directly be requested. 
-	 * <br>
+	 * The attributes that are supplied to the method will directly be requested. <br>
 	 * If a '*' character is the first element of the supplied <code>Vector
-	 * </code>, then all attributes will be returned.
-	 * <br><br>
-	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(java.util.HashMap, java.util.Vector)
+	 * </code>, then all attributes will be returned. <br>
+	 * <br>
+	 * 
+	 * @param htTGTContext
+	 *            the ht tgt context
+	 * @param vAttributes
+	 *            the v attributes
+	 * @return the attributes
+	 * @throws ASelectAttributesException
+	 *             the a select attributes exception
+	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(java.util.HashMap,
+	 *      java.util.Vector)
 	 */
 	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes)
 		throws ASelectAttributesException
@@ -370,7 +374,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 			oScope.setSearchScope(SearchControls.SUBTREE_SCOPE);
 
 			if (!vAttributes.isEmpty() && !vAttributes.firstElement().equals("*")) {
-				//convert the supplied attribute names to the mapped attribute names
+				// convert the supplied attribute names to the mapped attribute names
 				Enumeration enumSuppliedAttribs = vAttributes.elements();
 				while (enumSuppliedAttribs.hasMoreElements()) {
 					String sSuppliedAttribute = (String) enumSuppliedAttribs.nextElement();
@@ -439,7 +443,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "Next search result " + oSearchResult + " id="
 						+ oSearchResult.getName() + " full=" + oSearchResult.getNameInNamespace());
 
-				//retrieve all requested attributes
+				// retrieve all requested attributes
 				oAttributes = oSearchResult.getAttributes();
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "Attrs " + oAttributes);
 
@@ -532,12 +536,14 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	}
 
 	/**
-	 * Opens a new JNDI connection to the resource that is retrieved from the 
-	 * SAMAgent.
-	 * <br><br>
+	 * Opens a new JNDI connection to the resource that is retrieved from the SAMAgent. <br>
+	 * <br>
+	 * 
 	 * @return <code>DirContext</code> that contains the JNDI connection
-	 * @throws ASelectUDBException if the connection could not be opened
-	 * @throws ASelectSAMException if no valid resource could be found
+	 * @throws ASelectUDBException
+	 *             if the connection could not be opened
+	 * @throws ASelectSAMException
+	 *             if no valid resource could be found
 	 */
 	private DirContext getConnection()
 		throws ASelectUDBException, ASelectSAMException
@@ -634,29 +640,30 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	}
 
 	/**
-	 * Creates an <code>HashMap</code> containing the JNDI environment variables.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Creates an <code>HashMap</code> containing the JNDI environment variables. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sDriver The JNDI driver that must be used
-	 * @param sPrincipal The principal dn
-	 * @param sPassword The password to use while connecting
-	 * @param sUseSSL indicates if an ssl connection must be created
-	 * @param sUrl The connection url
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sDriver
+	 *            The JNDI driver that must be used
+	 * @param sPrincipal
+	 *            The principal dn
+	 * @param sPassword
+	 *            The password to use while connecting
+	 * @param sUseSSL
+	 *            indicates if an ssl connection must be created
+	 * @param sUrl
+	 *            The connection url
 	 * @return a <code>Hastable</code> containing the JNDI environment variables
 	 */
 	private Hashtable createJNDIEnvironment(String sDriver, String sPrincipal, String sPassword, String sUseSSL,

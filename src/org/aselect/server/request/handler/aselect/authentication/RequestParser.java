@@ -71,28 +71,17 @@ package org.aselect.server.request.handler.aselect.authentication;
 
 import javax.servlet.http.HttpServletRequest;
 
+// TODO: Auto-generated Javadoc
 /**
- * The <code>RequestParser</code> determines the type, origin, and protocol of
- * any request arriving at the A-Select Server. The A-Select Server
- * routes the request through its request handlers based on the
- * classification made by the <code>RequestParser</code>.
- * Therefore, this class <i>must</i> be
- * able to recognize <i>all</i> types of incoming requests 
- * and classify them correctly.
- * <br>
- * Use the <code>parseRequest()</code> method to parse an incoming request.
- * After that, use the <code>getX()</code> methods to determine
- * the type of the request.
- * <br>
- * @author Alfa & Ariss
+ * The <code>RequestParser</code> determines the type, origin, and protocol of any request arriving at the A-Select
+ * Server. The A-Select Server routes the request through its request handlers based on the classification made by the
+ * <code>RequestParser</code>. Therefore, this class <i>must</i> be able to recognize <i>all</i> types of incoming
+ * requests and classify them correctly. <br>
+ * Use the <code>parseRequest()</code> method to parse an incoming request. After that, use the <code>getX()</code>
+ * methods to determine the type of the request. <br>
  * 
- * 
- * 14-11-2007 - Changes:
- * - Allow tolk_fromdigid request to be recognized
- * 
- * @author Bauke Hiemstra - www.anoigo.nl
- * Copyright Gemeente Den Haag (http://www.denhaag.nl)
- * 
+ * @author Alfa & Ariss 14-11-2007 - Changes: - Allow tolk_fromdigid request to be recognized
+ * @author Bauke Hiemstra - www.anoigo.nl Copyright Gemeente Den Haag (http://www.denhaag.nl)
  */
 public class RequestParser
 {
@@ -154,22 +143,23 @@ public class RequestParser
 	public static final int PROTOCOL_SOAP12 = 2;
 
 	/**
-	 * Constructor.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Constructor. <br>
 	 * <br>
-	 * Constructs a <code>RequestParser</code> object from a
-	 * <code>HttpServletRequest</code> object. 
-	 * <br><br>
+	 * <b>Description:</b> <br>
+	 * Constructs a <code>RequestParser</code> object from a <code>HttpServletRequest</code> object. <br>
+	 * <br>
+	 * 
 	 * @param request
+	 *            the request
 	 */
 	public RequestParser(HttpServletRequest request) {
 		parseRequest(request);
 	}
 
 	/**
-	 * Retrieve the request type (one of REQTYPE_xxx).
-	 * <br><br>
+	 * Retrieve the request type (one of REQTYPE_xxx). <br>
+	 * <br>
+	 * 
 	 * @return the request type (REQTYPE_xxx).
 	 */
 	public int getRequestType()
@@ -178,8 +168,9 @@ public class RequestParser
 	}
 
 	/**
-	 * Retrieve the origin of the request (one of ORIGIN_xxx).
-	 * <br><br>
+	 * Retrieve the origin of the request (one of ORIGIN_xxx). <br>
+	 * <br>
+	 * 
 	 * @return the request origin (ORIGIN_xxx).
 	 */
 	public int getRequestOrigin()
@@ -188,8 +179,9 @@ public class RequestParser
 	}
 
 	/**
-	 * Retrieve protocol used to send the request (one of PROTOCOL_xxx).
-	 * <br><br>
+	 * Retrieve protocol used to send the request (one of PROTOCOL_xxx). <br>
+	 * <br>
+	 * 
 	 * @return the request protocol (PROTOCOL_xxx).
 	 */
 	public int getRequestProtocol()
@@ -198,12 +190,11 @@ public class RequestParser
 	}
 
 	/**
-	 * Retrieve the value of the <code>request</code> parameter. If the 
-	 * <code>request</code> parameter is not present, an empty string 
-	 * (not <code>null</code>!) is returned.
-	 * <br><br>
-	 * @return The value of the <code>request</code> parameter as a 
-	 * <code>String</code>
+	 * Retrieve the value of the <code>request</code> parameter. If the <code>request</code> parameter is not present,
+	 * an empty string (not <code>null</code>!) is returned. <br>
+	 * <br>
+	 * 
+	 * @return The value of the <code>request</code> parameter as a <code>String</code>
 	 */
 	public String getRequest()
 	{
@@ -211,23 +202,18 @@ public class RequestParser
 	}
 
 	/**
-	 * Determine the request type, origin, and protocol 
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Determine the request type, origin, and protocol <br>
 	 * <br>
-	 * This method parses the request to the point that it can
-	 * determine the type (API call or user/browser request),
-	 * origin (user, authsp, application, or remote a-select server),
-	 * and the protocol (CGI or SOAP 1.1/1.2). The A-Select Server
-	 * will route the request through its request handlers based
-	 * on the output of this method. Therefore, this method must be
-	 * able to recognize <i>all</i> types of requests that can arrive
-	 * at the A-Select Server and classify them correctly.
-	 * <br>
-	 * After parsing a request, you can use the <code>getX()</code> methods
-	 * to determine the request type.
-	 * <br>
-	 * @param request The incoming <code>HttpServletRequest</code>
+	 * <b>Description:</b> <br>
+	 * This method parses the request to the point that it can determine the type (API call or user/browser request),
+	 * origin (user, authsp, application, or remote a-select server), and the protocol (CGI or SOAP 1.1/1.2). The
+	 * A-Select Server will route the request through its request handlers based on the output of this method.
+	 * Therefore, this method must be able to recognize <i>all</i> types of requests that can arrive at the A-Select
+	 * Server and classify them correctly. <br>
+	 * After parsing a request, you can use the <code>getX()</code> methods to determine the request type. <br>
+	 * 
+	 * @param request
+	 *            The incoming <code>HttpServletRequest</code>
 	 */
 	private void parseRequest(HttpServletRequest request)
 	{
@@ -259,7 +245,7 @@ public class RequestParser
 				}
 				// 20090522, Bauke added: lets another process determine alive-ness of the server
 				if (_sRequest.equals("alive")) {
-					_iRequestOrigin = ORIGIN_APPLICATION;  // actually any client
+					_iRequestOrigin = ORIGIN_APPLICATION; // actually any client
 					_iRequestType = REQTYPE_BROWSER;
 				}
 				// API call from application (or Agent)?

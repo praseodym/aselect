@@ -28,18 +28,17 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 
+// TODO: Auto-generated Javadoc
 /**
- * Abstract class implementing the basic functionality of a Request handler.
- * <br><br>
+ * Abstract class implementing the basic functionality of a Request handler. <br>
+ * <br>
  * <b>Description:</b><br>
- * Reads default configuration and contains functionality for request handling.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * Reads default configuration and contains functionality for request handling. <br>
  * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public abstract class AbstractRequestHandler extends BasicRequestHandler implements IRequestHandler
 {
@@ -51,29 +50,33 @@ public abstract class AbstractRequestHandler extends BasicRequestHandler impleme
 	private Pattern _pTarget;
 
 	/**
-	 * Initializes the default functionality for a RequestHandler.
-	 * <br/><br/>
+	 * Initializes the default functionality for a RequestHandler. <br/>
+	 * <br/>
 	 * <b>Description:</b><br>
-	 * <li>Reads the configuration</li>
-	 * <li>Verifies if the configured 'target' is a regular expression</li>
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <li>Reads the configuration</li> <li>Verifies if the configured 'target' is a regular expression</li> <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
-	 * <br><br>
-	 * Reads the following configuration:<br/><br/>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * <br>
+	 * Reads the following configuration:<br/>
+	 * <br/>
 	 * &lt;handler id='[id]' class='[class]' target='[target]'&gt;<br/>
 	 * ...<br>
-	 * &lt;/handler
-	 * <br><br>
-	 * <li><b>id</b> - Unique ID of the handler</li>
-	 * <li><b>class</b> - Class name of the handler, must implement the 
-	 * <code>IAuthnRequestHandler</code> interface</li>
-	 * <li><b>target</b> - The regular expression of URLs that will be handled 
-	 * by this request handler</li>
-	 * <br><br>
+	 * &lt;/handler <br>
+	 * <br>
+	 * <li><b>id</b> - Unique ID of the handler</li> <li><b>class</b> - Class name of the handler, must implement the
+	 * <code>IAuthnRequestHandler</code> interface</li> <li><b>target</b> - The regular expression of URLs that will be
+	 * handled by this request handler</li> <br>
+	 * <br>
+	 * 
+	 * @param oServletConfig
+	 *            the o servlet config
+	 * @param oConfig
+	 *            the o config
+	 * @throws ASelectException
+	 *             the a select exception
 	 * @see org.aselect.server.request.handler.IRequestHandler#init(javax.servlet.ServletConfig, java.lang.Object)
 	 */
 	public void init(ServletConfig oServletConfig, Object oConfig)
@@ -93,17 +96,18 @@ public abstract class AbstractRequestHandler extends BasicRequestHandler impleme
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'id' in 'handler' section found", e);
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "id="+_sID);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "id=" + _sID);
 
 			String sTarget = null;
 			try {
 				sTarget = _configManager.getParam(oConfig, "target");
 			}
 			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'target' in 'handler' section found", e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'target' in 'handler' section found",
+						e);
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "target="+sTarget);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "target=" + sTarget);
 
 			try {
 				_pTarget = Pattern.compile(sTarget);
@@ -123,8 +127,10 @@ public abstract class AbstractRequestHandler extends BasicRequestHandler impleme
 	}
 
 	/**
-	 * Returns the handler ID as <code>String</code>.
-	 * <br><br>
+	 * Returns the handler ID as <code>String</code>. <br>
+	 * <br>
+	 * 
+	 * @return the ID
 	 * @see org.aselect.server.request.handler.IRequestHandler#getID()
 	 */
 	public String getID()
@@ -133,8 +139,10 @@ public abstract class AbstractRequestHandler extends BasicRequestHandler impleme
 	}
 
 	/**
-	 * Returns the configured target as <code>Pattern</code> object.
-	 * <br><br>
+	 * Returns the configured target as <code>Pattern</code> object. <br>
+	 * <br>
+	 * 
+	 * @return the pattern
 	 * @see org.aselect.server.request.handler.IRequestHandler#getPattern()
 	 */
 	public Pattern getPattern()

@@ -36,20 +36,18 @@ import org.aselect.system.utils.Utils;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 
+// TODO: Auto-generated Javadoc
 /**
- * Factory that invokes the appropriate request handler.
- * <br><br>
+ * Factory that invokes the appropriate request handler. <br>
+ * <br>
  * <b>Description:</b><br>
- * Using the request URL this Factory will try and match it with the 
- * configured regular expressions and invoke the associated request 
- * handler. The first match will process the request.  
- * <br><br>
- * <b>Concurrency issues:</b>
+ * Using the request URL this Factory will try and match it with the configured regular expressions and invoke the
+ * associated request handler. The first match will process the request. <br>
  * <br>
- * - The factory is singleton
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - The factory is singleton <br>
  * 
+ * @author Alfa & Ariss
  */
 public class RequestHandlerFactory
 {
@@ -58,28 +56,27 @@ public class RequestHandlerFactory
 	private ASelectSystemLogger _systemLogger;
 	private ASelectConfigManager _configManager;
 	private HashMap<String, Object> _htRequestHandlers;
-	private Vector _vRequestHandlers; //keeps the sequence intact
+	private Vector _vRequestHandlers; // keeps the sequence intact
 	private boolean firstRun = true;
 
 	/**
-	 * Initializes the Factory and the configured Request Handlers.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Initializes the Factory and the configured Request Handlers. <br>
 	 * <br>
+	 * <b>Description:</b> <br>
 	 * <ul>
 	 * <li>Reads the handler configurations</li>
 	 * <li>Creates IAuthnRequestHandler objects</li>
 	 * <li>Initializes the IAuthnRequestHandler objects</li>
 	 * <li>Stores the objects in a HashMap</li>
 	 * </ul>
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
 	 * <br>
-	 * Requires the following configuration:<br/><br/>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * Requires the following configuration:<br/>
+	 * <br/>
 	 * &lt;requests&gt;<br/>
 	 * &nbsp;&lt;handlers&gt;<br/>
 	 * &nbsp;&nbsp;&lt;handler<br/>
@@ -90,17 +87,18 @@ public class RequestHandlerFactory
 	 * &nbsp;&nbsp;&lt;/handler&gt;<br/>
 	 * &nbsp;&lt;/handlers&gt;<br/>
 	 * &lt;/requests&gt;<br/>
-	 * <br><br>
-	 * <b>Postconditions:</b>
 	 * <br>
-	 * - All initialized request handlers will be stored in the 
-	 * <code>_htRequestHandlers</code>
-	 * - The sequence that must be used while matching a request is stored in 
-	 * <code>_vRequestHandlers</code>
 	 * <br>
-	 * @param oServletConfig The Servlet configuration of the Parent (Servlet) object
-	 * @param oConfig The configuration object containing the request handler config
-	 * @throws ASelectException if initalization fails
+	 * <b>Postconditions:</b> <br>
+	 * - All initialized request handlers will be stored in the <code>_htRequestHandlers</code> - The sequence that must
+	 * be used while matching a request is stored in <code>_vRequestHandlers</code> <br>
+	 * 
+	 * @param oServletConfig
+	 *            The Servlet configuration of the Parent (Servlet) object
+	 * @param oConfig
+	 *            The configuration object containing the request handler config
+	 * @throws ASelectException
+	 *             if initalization fails
 	 */
 	public void init(ServletConfig oServletConfig, Object oConfig)
 		throws ASelectException
@@ -169,8 +167,8 @@ public class RequestHandlerFactory
 
 				_htRequestHandlers.put(oRequestHandler.getID(), oRequestHandler);
 
-				//The Vector contains the sequence of matching the requests
-				//The sequence is now the sequence used in config
+				// The Vector contains the sequence of matching the requests
+				// The sequence is now the sequence used in config
 				_vRequestHandlers.add(oRequestHandler);
 
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully started request handler with ID: "
@@ -189,33 +187,32 @@ public class RequestHandlerFactory
 	}
 
 	/**
-	 * Processes an incoming Servlet request.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Processes an incoming Servlet request. <br>
 	 * <br>
+	 * <b>Description:</b> <br>
 	 * This function performs the following tasks:
 	 * <ul>
 	 * <li>Search for a matching requesthandler</li>
 	 * <li>Invoke the matched requesthandler that will then process the request</li>
-	 * <li>If the requesthandler returns with a request state containing a nexthandler, then the next handler will also be invoked</li>
+	 * <li>If the requesthandler returns with a request state containing a nexthandler, then the next handler will also
+	 * be invoked</li>
 	 * </ul>
 	 * <br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
-	 * <br>
-	 * -
-	 * <br>
-	 * @param request the HttpServletRequest containing the request 
-	 * @param response the HttpServletResponse were the response will be send
-	 * @throws ASelectException if the matching request handler can't process 
-	 * the request
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param request
+	 *            the HttpServletRequest containing the request
+	 * @param response
+	 *            the HttpServletResponse were the response will be send
+	 * @throws ASelectException
+	 *             if the matching request handler can't process the request
 	 */
 	public void process(HttpServletRequest request, HttpServletResponse response)
 		throws ASelectException
@@ -249,7 +246,7 @@ public class RequestHandlerFactory
 				oRequestState = oRequestHandler.process(request, response);
 			}
 
-			//request handler chaining
+			// request handler chaining
 			while (oRequestState != null && oRequestState.hasNextHandler()) {
 				oRequestHandler = (IRequestHandler) _htRequestHandlers.get(oRequestState.getNextHandler());
 				if (oRequestHandler != null) {
@@ -270,27 +267,22 @@ public class RequestHandlerFactory
 	}
 
 	/**
-	 * Returns an instance of this object.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns an instance of this object. <br>
 	 * <br>
-	 * creates a new instance of the <code>RequestHandlerFactory</code> if the 
-	 * <code>_oRequestHandlerFactory</code> variable is <code>null</code>, else 
-	 * returns the object containing the <code>_oRequestHandlerFactory</code> 
-	 * object.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * creates a new instance of the <code>RequestHandlerFactory</code> if the <code>_oRequestHandlerFactory</code>
+	 * variable is <code>null</code>, else returns the object containing the <code>_oRequestHandlerFactory</code>
+	 * object. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * - An instance of the class according the Singleton design pattern
-	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - An instance of the class according the Singleton design pattern <br>
+	 * 
 	 * @return always the same <code>RequestHandlerFactory</code> instance
 	 */
 	public static RequestHandlerFactory getHandle()
@@ -302,24 +294,19 @@ public class RequestHandlerFactory
 	}
 
 	/**
-	 * Destroys all objects created as class instance by this object.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Destroys all objects created as class instance by this object. <br>
 	 * <br>
-	 * clears the class variables
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * clears the class variables <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br> 
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 */
 	public void destroy()
 	{
@@ -330,46 +317,42 @@ public class RequestHandlerFactory
 			IRequestHandler oRequestHandler = (IRequestHandler) entry.getValue();
 			oRequestHandler.destroy();
 		}
-		/*        Enumeration enumHandlers = _htRequestHandlers.elements();
-		 while (enumHandlers.hasMoreElements())
-		 {
-		 IAuthnRequestHandler oRequestHandler = (IAuthnRequestHandler)enumHandlers.nextElement();
-		 oRequestHandler.destroy();
-		 }*/
+		/*
+		 * Enumeration enumHandlers = _htRequestHandlers.elements(); while (enumHandlers.hasMoreElements()) {
+		 * IAuthnRequestHandler oRequestHandler = (IAuthnRequestHandler)enumHandlers.nextElement();
+		 * oRequestHandler.destroy(); }
+		 */
 	}
 
 	/**
-	 * Contructor has been made private according the Singleton pattern
+	 * Contructor has been made private according the Singleton pattern.
 	 */
 	private RequestHandlerFactory() {
-		//does nothing
+		// does nothing
 	}
 
 	/**
-	 * Matches the request URI to with the configured regular expression.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Matches the request URI to with the configured regular expression. <br>
 	 * <br>
-	 * Compares the request URI to the regular expression configured for the 
-	 * request handler
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Compares the request URI to the regular expression configured for the request handler <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <li>request != null</li>
-	 * <li>pTargetPattern != null</li>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <li>request != null</li> <li>pTargetPattern != null</li> <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param request the HttpServletRequest containing the request
-	 * @param pTargetPattern the Pattern containing the regular expression
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param request
+	 *            the HttpServletRequest containing the request
+	 * @param pTargetPattern
+	 *            the Pattern containing the regular expression
 	 * @return TRUE if request URI matches the supplied pattern
-	 * @throws ASelectException if an error ocurred while matching
+	 * @throws ASelectException
+	 *             if an error ocurred while matching
 	 */
 	private boolean matchTarget(HttpServletRequest request, Pattern pTargetPattern)
 		throws ASelectException
@@ -379,12 +362,12 @@ public class RequestHandlerFactory
 		StringBuffer sbCompareTo = new StringBuffer();
 
 		try {
-			//request info
+			// request info
 			String sContextPath = request.getContextPath();
 			String sServletPath = request.getServletPath();
 			String sQueryString = request.getQueryString();
 
-			//compare to info
+			// compare to info
 			String sRequestURI = request.getRequestURI();
 			String sCompareTo = sRequestURI.substring(sContextPath.length() + sServletPath.length());
 
@@ -395,10 +378,10 @@ public class RequestHandlerFactory
 				sbCompareTo.append(sQueryString);
 			}
 
-			//    		int len = sbCompareTo.length();
-			//    		if (len > 40) len = 40;
-			//            _systemLogger.log(Level.INFO, MODULE, sMethod, "MATCH "+pTargetPattern.toString()+"<>" +
-			//            					sbCompareTo.substring(0, len)+"...");
+			// int len = sbCompareTo.length();
+			// if (len > 40) len = 40;
+			// _systemLogger.log(Level.INFO, MODULE, sMethod, "MATCH "+pTargetPattern.toString()+"<>" +
+			// sbCompareTo.substring(0, len)+"...");
 			Matcher mTarget = pTargetPattern.matcher(sbCompareTo.toString());
 
 			bReturn = mTarget.matches();
@@ -411,6 +394,11 @@ public class RequestHandlerFactory
 		return bReturn;
 	}
 
+	/**
+	 * Gets the request handlers.
+	 * 
+	 * @return the request handlers
+	 */
 	public Vector getRequestHandlers()
 	{
 		return _vRequestHandlers;

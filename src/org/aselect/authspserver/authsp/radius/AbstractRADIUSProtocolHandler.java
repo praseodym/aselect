@@ -41,60 +41,76 @@ package org.aselect.authspserver.authsp.radius;
 
 import org.aselect.system.logging.SystemLogger;
 
+// TODO: Auto-generated Javadoc
 /**
- * Abstract Radius Protocol Handler.
- * <br><br>
+ * Abstract Radius Protocol Handler. <br>
+ * <br>
  * <b>Description:</b><br>
- * Abstract implementation of the Radius AuthSP Handler, which can be used as
- * base for other implementations of the Radius Protocol Handler (CHAP/PAP)
- * <br><br>
- * <b>Concurrency issues:</b>
+ * Abstract implementation of the Radius AuthSP Handler, which can be used as base for other implementations of the
+ * Radius Protocol Handler (CHAP/PAP) <br>
  * <br>
- * None
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * None <br>
  * 
+ * @author Alfa & Ariss
  */
-public abstract class AbstractRADIUSProtocolHandler
-    implements IRADIUSProtocolHandler
+public abstract class AbstractRADIUSProtocolHandler implements IRADIUSProtocolHandler
 {
-    /** The radius server. */
-    protected String _sRadiusServer;
-    /** The radius server port. */
-    protected int _iPort;
-    /** The shared secret. */
-    protected String _sSharedSecret;
-    /** The complete user ID. */
-    protected boolean _bFullUid;
-    /** The user ID. */
-    protected String _sUid;
-    /** The logger for system entries. */
-    protected SystemLogger _systemLogger;
+	/** The radius server. */
+	protected String _sRadiusServer;
+	/** The radius server port. */
+	protected int _iPort;
+	/** The shared secret. */
+	protected String _sSharedSecret;
+	/** The complete user ID. */
+	protected boolean _bFullUid;
+	/** The user ID. */
+	protected String _sUid;
+	/** The logger for system entries. */
+	protected SystemLogger _systemLogger;
 
-    /**
-     * Initializes the Radius Protocol Handler.
-     * <br><br>
-     * @see org.aselect.authspserver.authsp.radius.IRADIUSProtocolHandler#init(java.lang.String, int, java.lang.String, boolean, java.lang.String, org.aselect.system.logging.SystemLogger)
-     */
-    public boolean init(String sRadiusServer, int iPort,
-                        String sSharedSecret, boolean bFullUid,
-                        String sUid, SystemLogger systemLogger)
-    {
-        _sRadiusServer = sRadiusServer;
-        _iPort = iPort;
-        _sSharedSecret = sSharedSecret;
-        _bFullUid = bFullUid;
-        _sUid = sUid;
-        _systemLogger = systemLogger;
+	/**
+	 * Initializes the Radius Protocol Handler. <br>
+	 * <br>
+	 * 
+	 * @param sRadiusServer
+	 *            the s radius server
+	 * @param iPort
+	 *            the i port
+	 * @param sSharedSecret
+	 *            the s shared secret
+	 * @param bFullUid
+	 *            the b full uid
+	 * @param sUid
+	 *            the s uid
+	 * @param systemLogger
+	 *            the system logger
+	 * @return true, if inits the
+	 * @see org.aselect.authspserver.authsp.radius.IRADIUSProtocolHandler#init(java.lang.String, int, java.lang.String,
+	 *      boolean, java.lang.String, org.aselect.system.logging.SystemLogger)
+	 */
+	public boolean init(String sRadiusServer, int iPort, String sSharedSecret, boolean bFullUid, String sUid,
+			SystemLogger systemLogger)
+	{
+		_sRadiusServer = sRadiusServer;
+		_iPort = iPort;
+		_sSharedSecret = sSharedSecret;
+		_bFullUid = bFullUid;
+		_sUid = sUid;
+		_systemLogger = systemLogger;
 
-        return true;
+		return true;
 
-    }
+	}
 
-    /**
-     * Autehnticate a user with Radius.
-     * <br><br>
-     * @see org.aselect.authspserver.authsp.radius.IRADIUSProtocolHandler#authenticate(java.lang.String)
-     */
-    public abstract String authenticate(String sPassword);
+	/**
+	 * Autehnticate a user with Radius. <br>
+	 * <br>
+	 * 
+	 * @param sPassword
+	 *            the s password
+	 * @return the string
+	 * @see org.aselect.authspserver.authsp.radius.IRADIUSProtocolHandler#authenticate(java.lang.String)
+	 */
+	public abstract String authenticate(String sPassword);
 }

@@ -86,28 +86,26 @@ import org.aselect.system.storagemanager.StorageManager;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
- * Manages A-Select Server sessions.
- * <br><br>
- * <b>Description:</b>
+ * Manages A-Select Server sessions. <br>
  * <br>
+ * <b>Description:</b> <br>
  * Provides methods for managing sessions:
  * <ul>
- * 	<li>Create a session</li>
- * 	<li>Kill a session</li>
- *  <li>Retrieve and update session contexts</li>
- * 	<li>Retrieve all session contexts</li>
+ * <li>Create a session</li>
+ * <li>Kill a session</li>
+ * <li>Retrieve and update session contexts</li>
+ * <li>Retrieve all session contexts</li>
  * </ul>
- * The session contexts are stored using a <code>StorageManager</code>.
- * <br><br>
- * <i>Note: This manager is implemented as a Singleton.</i>
- * <br><br> 
- * <b>Concurrency issues:</b>
+ * The session contexts are stored using a <code>StorageManager</code>. <br>
  * <br>
- * -
+ * <i>Note: This manager is implemented as a Singleton.</i> <br>
  * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public class SessionManager extends StorageManager
 {
@@ -127,27 +125,24 @@ public class SessionManager extends StorageManager
 	private SystemLogger _systemLogger;
 
 	/**
-	 * Initializes the <code>SessionManager</code>.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Initializes the <code>SessionManager</code>. <br>
 	 * <br>
-	 * Read configuration settings and initializes the components.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Read configuration settings and initializes the components. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * The instance variables and components are initialized.
-	 * <br>
-	 * @throws ASelectException If initialization fails.
-	 * @throws ASelectConfigException If one or more mandatory configuration 
-	 * settings are missing or invalid.
+	 * <b>Postconditions:</b> <br>
+	 * The instance variables and components are initialized. <br>
+	 * 
+	 * @throws ASelectException
+	 *             If initialization fails.
+	 * @throws ASelectConfigException
+	 *             If one or more mandatory configuration settings are missing or invalid.
 	 */
 	public void init()
 		throws ASelectException, ASelectConfigException
@@ -169,7 +164,7 @@ public class SessionManager extends StorageManager
 
 			super.init(oSessionConfig, oConfigManager, _systemLogger, ASelectSAMAgent.getHandle());
 
-			//reset session counter
+			// reset session counter
 			_lSessionsCounter = 0;
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Session manager Successfully started.");
 		}
@@ -183,28 +178,24 @@ public class SessionManager extends StorageManager
 	}
 
 	/**
-	 * Returns a static handle to the <code>SessionManager</code> instance.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns a static handle to the <code>SessionManager</code> instance. <br>
 	 * <br>
+	 * <b>Description:</b> <br>
 	 * <ul>
 	 * <li>Checks if a static instance exists</li>
 	 * <li>Otherwise create static instance</li>
 	 * <li>Returns static instance</li>
 	 * </ul>
 	 * <br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
-	 * <br>
-	 * One instance of the <code>SessionManager</code> exists.
-	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * One instance of the <code>SessionManager</code> exists. <br>
+	 * 
 	 * @return A static handle to the <code>SessionManager</code>.
 	 */
 	public static SessionManager getHandle()
@@ -216,53 +207,46 @@ public class SessionManager extends StorageManager
 	}
 
 	/**
-	 * Destroy the <code>SessionManager</code>.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Destroy the <code>SessionManager</code>. <br>
 	 * <br>
-	 * Destroys the storage manager by calling <code>super.destroy()</code>
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Destroys the storage manager by calling <code>super.destroy()</code> <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
+	 * <b>Postconditions:</b> <br>
 	 * The <code>SessionManager</code> is destroyed.
 	 */
+	@Override
 	public void destroy()
 	{
 		super.destroy();
 	}
 
 	/**
-	 * Create a unique session ID and stores the <code>htSessionContext</code> using this ID.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Create a unique session ID and stores the <code>htSessionContext</code> using this ID. <br>
 	 * <br>
-	 * Stores the <code>htSessionContext</code> supplied by the caller under
-	 * a unique generated session id of 8 bytes.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Stores the <code>htSessionContext</code> supplied by the caller under a unique generated session id of 8 bytes. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <code>htSessionContext != null</code>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <code>htSessionContext != null</code> <br>
 	 * <br>
-	 * The given session is stored.
-	 * <br>
-	 * @param htSessionContext The session context parameters in a 
-	 * 	<code>HashMap</code>.
+	 * <b>Postconditions:</b> <br>
+	 * The given session is stored. <br>
+	 * 
+	 * @param htSessionContext
+	 *            The session context parameters in a <code>HashMap</code>.
 	 * @return The created session id.
-	 * @throws ASelectException If server is busy.
+	 * @throws ASelectException
+	 *             If server is busy.
 	 */
 	synchronized public String createSession(HashMap htSessionContext)
 		throws ASelectException
@@ -271,21 +255,22 @@ public class SessionManager extends StorageManager
 		String sSessionId = null;
 
 		// The sessionid must be of the type xs:NCName and at least 20 random bytes long
-		// xs:NCName starts with a letter or '_' 
+		// xs:NCName starts with a letter or '_'
 		try {
 			byte[] baRandomBytes = new byte[20];
 
 			CryptoEngine.nextRandomBytes(baRandomBytes);
-			sSessionId = "R"+Utils.byteArrayToHexString(baRandomBytes);
+			sSessionId = "R" + Utils.byteArrayToHexString(baRandomBytes);
 			while (containsKey(sSessionId)) {
 				CryptoEngine.nextRandomBytes(baRandomBytes);
-				sSessionId = "R"+Utils.byteArrayToHexString(baRandomBytes);
+				sSessionId = "R" + Utils.byteArrayToHexString(baRandomBytes);
 				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Generated new sSessionId=" + sSessionId);
 			}
 
 			Tools.initializeSensorData(_systemLogger, htSessionContext);
-			//_systemLogger.log(Level.INFO, MODULE, sMethod, "New SessionId=" + sSessionId);  // + ", htSessionContext="+htSessionContext);
-			put(sSessionId, htSessionContext);  // always insert
+			// _systemLogger.log(Level.INFO, MODULE, sMethod, "New SessionId=" + sSessionId); // +
+			// ", htSessionContext="+htSessionContext);
+			put(sSessionId, htSessionContext); // always insert
 			_lSessionsCounter++;
 		}
 		catch (ASelectStorageException e) {
@@ -306,32 +291,31 @@ public class SessionManager extends StorageManager
 	}
 
 	/**
-	 * Stores a new session context using the supplied session ID.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Stores a new session context using the supplied session ID. <br>
 	 * <br>
-	 * Writes the new session context with the given ID in the storage.
-	 * <br><br>
-	 * Use this method also instead of 
-	 * {@link SessionManager#updateSession(String, HashMap) }, if 
-	 * the session allready exists. In this case this method is faster. 
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Writes the new session context with the given ID in the storage. <br>
 	 * <br>
-	 * -
-	 * <br><br>
+	 * Use this method also instead of {@link SessionManager#updateSession(String, HashMap) }, if the session allready
+	 * exists. In this case this method is faster. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
 	 * <b>Preconditions:</b>
 	 * <ul>
-	 * 	<li><code>sSessionId != null</code></li>
-	 * 	<li><code>htSessionContext != null</code></li>
+	 * <li><code>sSessionId != null</code></li>
+	 * <li><code>htSessionContext != null</code></li>
 	 * </ul>
 	 * <br>
-	 * <b>Postconditions:</b>
+	 * <b>Postconditions:</b> <br>
+	 * The given session is stored with the new context. <br>
 	 * <br>
-	 * The given session is stored with the new context.
-	 * <br><br>
-	 * @param sSessionId The ID of the session.
-	 * @param htSessionContext The new session context.
+	 * 
+	 * @param sSessionId
+	 *            The ID of the session.
+	 * @param htSessionContext
+	 *            The new session context.
 	 * @return True if updating succeeds, otherwise false.
 	 */
 	public boolean writeSession(String sSessionId, HashMap htSessionContext)
@@ -340,7 +324,7 @@ public class SessionManager extends StorageManager
 		boolean bReturn = false;
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SessionId=" + sSessionId);
-			put(sSessionId, htSessionContext);  // insert or update
+			put(sSessionId, htSessionContext); // insert or update
 			bReturn = true;
 		}
 		catch (ASelectStorageException e) {
@@ -350,28 +334,27 @@ public class SessionManager extends StorageManager
 	}
 
 	/**
-	 * Update a session context.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Update a session context. <br>
 	 * <br>
-	 * Overwrites the new session context with the given ID in the storage.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Overwrites the new session context with the given ID in the storage. <br>
 	 * <br>
-	 * -
-	 * <br><br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
 	 * <b>Preconditions:</b>
 	 * <ul>
-	 * 	<li><code>sSessionId != null</code></li>
-	 * 	<li><code>htSessionContext != null</code></li>
+	 * <li><code>sSessionId != null</code></li>
+	 * <li><code>htSessionContext != null</code></li>
 	 * </ul>
 	 * <br>
-	 * <b>Postconditions:</b>
-	 * <br>
-	 * The given session is updated with the new context.
-	 * <br>
-	 * @param sSessionId The ID of the session.
-	 * @param htSessionContext The new session context.
+	 * <b>Postconditions:</b> <br>
+	 * The given session is updated with the new context. <br>
+	 * 
+	 * @param sSessionId
+	 *            The ID of the session.
+	 * @param htSessionContext
+	 *            The new session context.
 	 * @return True if updating succeeds, otherwise false.
 	 */
 	public boolean updateSession(String sSessionId, HashMap htSessionContext)
@@ -392,26 +375,22 @@ public class SessionManager extends StorageManager
 	}
 
 	/**
-	 * Get the session context of a session.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Get the session context of a session. <br>
 	 * <br>
-	 * Retrieve the session context (session parameters) belonging to the given
-	 * session ID.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Retrieve the session context (session parameters) belonging to the given session ID. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <code>sSessionId != null</code>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <code>sSessionId != null</code> <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sSessionId The ID of the session.
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sSessionId
+	 *            The ID of the session.
 	 * @return The session context as <code>HashMap</code>.
 	 */
 	public HashMap getSessionContext(String sSessionId)
@@ -419,8 +398,8 @@ public class SessionManager extends StorageManager
 		String sMethod = "getSessionContext";
 		HashMap htContext = null;
 		try {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "SessionId=" + sSessionId);  // + ", Context=" + htContext);
-			htContext = (HashMap)get(sSessionId);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "SessionId=" + sSessionId); // + ", Context=" + htContext);
+			htContext = (HashMap) get(sSessionId);
 		}
 		catch (ASelectStorageException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not find context for session with id: "
@@ -430,25 +409,22 @@ public class SessionManager extends StorageManager
 	}
 
 	/**
-	 * Kill a session.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Kill a session. <br>
 	 * <br>
-	 * Removes the session with the given ID from the storage manager.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Removes the session with the given ID from the storage manager. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <code>sSessionId != null</code>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <code>sSessionId != null</code> <br>
 	 * <br>
-	 * The session is removed from storage.
-	 * <br>
-	 * @param sSessionId The ID of the session to be killed.
+	 * <b>Postconditions:</b> <br>
+	 * The session is removed from storage. <br>
+	 * 
+	 * @param sSessionId
+	 *            The ID of the session to be killed.
 	 */
 	public synchronized void killSession(String sSessionId)
 	{
@@ -467,6 +443,7 @@ public class SessionManager extends StorageManager
 
 	/**
 	 * Retrieve the processing time.
+	 * 
 	 * @return The processing time.
 	 */
 	public long getProcessingTime()
@@ -476,6 +453,7 @@ public class SessionManager extends StorageManager
 
 	/**
 	 * Retrieve the number of issued sessions since startup.
+	 * 
 	 * @return The session counter.
 	 */
 	public long getCounter()
@@ -484,25 +462,20 @@ public class SessionManager extends StorageManager
 	}
 
 	/**
-	 * Private constructor.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Private constructor. <br>
 	 * <br>
-	 * Creates a new storage manager and retrieves the system logger.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Creates a new storage manager and retrieves the system logger. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
+	 * <b>Postconditions:</b> <br>
 	 * The storage manager is created.
 	 */
-	private SessionManager()
-	{
+	private SessionManager() {
 	}
 }

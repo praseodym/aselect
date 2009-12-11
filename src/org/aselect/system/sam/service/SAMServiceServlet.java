@@ -98,17 +98,17 @@ import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
- * Abstract class for the SAM Service servlets like in A-Select Server and
- * A-Select AuthSPServer. <br>
+ * Abstract class for the SAM Service servlets like in A-Select Server and A-Select AuthSPServer. <br>
  * <br>
  * <b>Description: </b> <br>
  * The SAM Service Abstract class, that contains basic information <br>
  * <br>
- * <b>Concurrency issues: </b> <br>-<br>
+ * <b>Concurrency issues: </b> <br>
+ * -<br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public abstract class SAMServiceServlet extends HttpServlet
 {
@@ -117,18 +117,15 @@ public abstract class SAMServiceServlet extends HttpServlet
 	 */
 	protected HashMap _htOIDs;
 	/**
-	 * The directory that contains the html templates: samservice.html and
-	 * samservice_status.html.
+	 * The directory that contains the html templates: samservice.html and samservice_status.html.
 	 */
 	protected String _sWorkingDir;
 	/**
-	 * Contains the samservice.html HTML template if it was found during
-	 * initialize.
+	 * Contains the samservice.html HTML template if it was found during initialize.
 	 */
 	protected String _sSAMServiceForm;
 	/**
-	 * Contains the samservice_status.html HTML template if it was found during
-	 * initialize.
+	 * Contains the samservice_status.html HTML template if it was found during initialize.
 	 */
 	protected String _sSAMServiceStatusForm;
 
@@ -143,26 +140,27 @@ public abstract class SAMServiceServlet extends HttpServlet
 	private String _sContextUrl;
 
 	/**
-	 * The initialize method for initializing the SAM Service. 
-	 * <b>Description: </b> <br>
+	 * The initialize method for initializing the SAM Service. <b>Description: </b> <br>
 	 * The following templates will be loaded:<br>
-	 * - samservice.html <br>-
-	 * - samservice_status.html <br>
+	 * - samservice.html <br>
+	 * - - samservice_status.html <br>
 	 * The <code>_htOIDs</code> will be filled with the default OID's. <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
-	 * -
-	 * <br>
+	 * - <br>
 	 * <b>Preconditions: </b> <br>
-	 * It needs an working_dir parameter in the <i>web.xml</i> containing the 
-	 * directory where the HTML template for the SAM Service can be found. 
-	 * <br>
+	 * It needs an working_dir parameter in the <i>web.xml</i> containing the directory where the HTML template for the
+	 * SAM Service can be found. <br>
 	 * <b>Postconditions: </b> <br>
-	 * -
-	 * <br>
+	 * - <br>
 	 * 
+	 * @param oServletConfig
+	 *            the o servlet config
+	 * @throws ServletException
+	 *             the servlet exception
 	 * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
 	 */
+	@Override
 	public void init(ServletConfig oServletConfig)
 		throws ServletException
 	{
@@ -197,7 +195,7 @@ public abstract class SAMServiceServlet extends HttpServlet
 				sbTemp.append(sSAMServiceForm);
 				throw new Exception(sbTemp.toString());
 			}
-			//loading the html template: samservice.html
+			// loading the html template: samservice.html
 			_sSAMServiceForm = loadTemplateFile(sSAMServiceForm);
 
 			String sSAMServiceStatusForm = _sWorkingDir + "samservice_status.html";
@@ -207,13 +205,13 @@ public abstract class SAMServiceServlet extends HttpServlet
 				sbTemp.append(sSAMServiceStatusForm);
 				throw new Exception(sbTemp.toString());
 			}
-			//loading the html template: samservice_status.html
+			// loading the html template: samservice_status.html
 			_sSAMServiceStatusForm = loadTemplateFile(sSAMServiceStatusForm);
 
 			this.getServletContext().setAttribute("inittime", new Long(System.currentTimeMillis()));
 
-			//putting all known OID's with their names from the SAMConstants in
-			//the _htOIDs
+			// putting all known OID's with their names from the SAMConstants in
+			// the _htOIDs
 			_htOIDs = new HashMap();
 			_htOIDs.put(SAMConstants.OID_SYSDESCR, SAMConstants.NAME_SYSDESCR);
 			_htOIDs.put(SAMConstants.OID_VERSION, SAMConstants.NAME_VERSION);
@@ -235,23 +233,20 @@ public abstract class SAMServiceServlet extends HttpServlet
 	}
 
 	/**
-	 * Calls the default destroy method of the super class.
-	 * <br>
+	 * Calls the default destroy method of the super class. <br>
 	 * 
 	 * @see javax.servlet.GenericServlet#destroy()
 	 */
+	@Override
 	public void destroy()
 	{
 		super.destroy();
 	}
 
 	/**
-	 * Method that enforces to set the <code>SystemLogger</code> by the sub 
-	 * class.
-	 * <br>
+	 * Method that enforces to set the <code>SystemLogger</code> by the sub class. <br>
 	 * <b>Description: </b> <br>
-	 * The SystemLogger that is returned will be used to send logging 
-	 * information to.<br>
+	 * The SystemLogger that is returned will be used to send logging information to.<br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * -<br>
@@ -267,8 +262,7 @@ public abstract class SAMServiceServlet extends HttpServlet
 	protected abstract SystemLogger getSystemLogger();
 
 	/**
-	 * Used to retrieve all SAM information.
-	 * <br>
+	 * Used to retrieve all SAM information. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
 	 * This method should be overridden to supply all known the statistics. <br>
@@ -282,14 +276,12 @@ public abstract class SAMServiceServlet extends HttpServlet
 	 * <b>Postconditions: </b> <br>
 	 * - <br>
 	 * 
-	 * @return <code>HashMap</code> that contains the OID (as key) and the OID 
-	 * value (as value).
+	 * @return <code>HashMap</code> that contains the OID (as key) and the OID value (as value).
 	 */
 	protected abstract HashMap getSAMInfo();
 
 	/**
-	 * Used to retrieve the URL of the context where this servlet is located.
-	 * <br>
+	 * Used to retrieve the URL of the context where this servlet is located. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
 	 * The URL context that will be checked if it is up.<br>
@@ -303,8 +295,7 @@ public abstract class SAMServiceServlet extends HttpServlet
 	 * <b>Postconditions: </b> <br>
 	 * -<br>
 	 * 
-	 * @return <code>String</code> representaion of the context URL of this 
-	 * servlet.
+	 * @return <code>String</code> representaion of the context URL of this servlet.
 	 */
 	protected String getContextUrl()
 	{
@@ -312,13 +303,12 @@ public abstract class SAMServiceServlet extends HttpServlet
 	}
 
 	/**
-	 * Used to check if the servlet is operational or not.
-	 * <br>
+	 * Used to check if the servlet is operational or not. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
 	 * Checks if the servlet is <br>
-	 * operational: 1 <br> or
-	 * not operational: -1 <br>
+	 * operational: 1 <br>
+	 * or not operational: -1 <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * -<br>
@@ -329,7 +319,7 @@ public abstract class SAMServiceServlet extends HttpServlet
 	 * <b>Postconditions: </b> <br>
 	 * <br>
 	 * 
-	 * @return <code>int<code> that represents if the servlet is operational (1) 
+	 * @return <code>int<code> that represents if the servlet is operational (1)
 	 * or not (-1).
 	 */
 	protected abstract int operational();
@@ -354,8 +344,7 @@ public abstract class SAMServiceServlet extends HttpServlet
 	protected abstract String getSysDescr();
 
 	/**
-	 * Used to retrieve the version of the component.
-	 * <br>
+	 * Used to retrieve the version of the component. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
 	 * Used to retrieve the A-Select component version.<br>
@@ -374,12 +363,10 @@ public abstract class SAMServiceServlet extends HttpServlet
 	protected abstract String getVersion();
 
 	/**
-	 * Returns a <code>HashMap</code> containing common statistics. 
-	 * <br>
+	 * Returns a <code>HashMap</code> containing common statistics. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * The OID's of the common statistics can be found in the SAMConstants class
-	 * . <br>
+	 * The OID's of the common statistics can be found in the SAMConstants class . <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * - <br>
@@ -390,22 +377,21 @@ public abstract class SAMServiceServlet extends HttpServlet
 	 * <b>Postconditions: </b> <br>
 	 * - <br>
 	 * 
-	 * @return <code>HashMap</code> containing the OID (as key) and OID value 
-	 * (as value).
+	 * @return <code>HashMap</code> containing the OID (as key) and OID value (as value).
 	 */
 	protected HashMap getCommonSAMInfo()
 	{
 		HashMap htCommon = new HashMap();
-		//sysDescr
+		// sysDescr
 		htCommon.put(SAMConstants.OID_SYSDESCR, getSysDescr());
 
-		//version
+		// version
 		htCommon.put(SAMConstants.OID_VERSION, getVersion());
 
-		//operational
+		// operational
 		htCommon.put(SAMConstants.OID_OPERATIONAL, "" + operational());
 
-		//uptime
+		// uptime
 		Long longInitTime = (Long) this.getServletContext().getAttribute("inittime");
 		long lTime = (System.currentTimeMillis() - longInitTime.longValue());
 		long lDay = lTime / (24 * 3600000);
@@ -423,38 +409,45 @@ public abstract class SAMServiceServlet extends HttpServlet
 		sbTemporary.append(lSec);
 		htCommon.put(SAMConstants.OID_UPTIME, sbTemporary.toString());
 
-		//cpu load
+		// cpu load
 		htCommon.put(SAMConstants.OID_LOAD, "-1");
 
-		//wwwDescr
+		// wwwDescr
 		htCommon.put(SAMConstants.OID_WWWDESCR, this.getServletContext().getServerInfo());
 
-		//cpus
+		// cpus
 		htCommon.put(SAMConstants.OID_CPUS, "" + Runtime.getRuntime().availableProcessors());
 
-		//free mem
+		// free mem
 		htCommon.put(SAMConstants.OID_FREEMEM, "" + Runtime.getRuntime().freeMemory());
 
-		//max mem
+		// max mem
 		htCommon.put(SAMConstants.OID_MAXMEM, "" + Runtime.getRuntime().maxMemory());
 
-		//total mem
+		// total mem
 		htCommon.put(SAMConstants.OID_TOTALMEM, "" + Runtime.getRuntime().totalMemory());
 
 		return htCommon;
 	}
 
 	/**
-	 * Handles incoming HTTP GET and POST requests.
+	 * Handles incoming HTTP GET and POST requests. <br>
 	 * <br>
-	 * <br>
-	 * Supports SOAP 1.1, SOAP 1.2 requests as a HTTP POST and supports HTTP GET 
-	 * with an empty query string to show the SAM statistics page or a RAW SAM 
-	 * request message.
-	 * <br>
+	 * Supports SOAP 1.1, SOAP 1.2 requests as a HTTP POST and supports HTTP GET with an empty query string to show the
+	 * SAM statistics page or a RAW SAM request message. <br>
+	 * 
+	 * @param oHttpServletRequest
+	 *            the o http servlet request
+	 * @param oHttpServletResponse
+	 *            the o http servlet response
+	 * @throws ServletException
+	 *             the servlet exception
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
 	 * @see javax.servlet.http.HttpServlet#service(javax.servlet.http.HttpServletRequest,
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
+	@Override
 	protected void service(HttpServletRequest oHttpServletRequest, HttpServletResponse oHttpServletResponse)
 		throws ServletException, IOException
 	{
@@ -467,17 +460,17 @@ public abstract class SAMServiceServlet extends HttpServlet
 			_sContextUrl = oHttpServletRequest.getContextPath();
 
 			String sHTTPMethod = oHttpServletRequest.getMethod();
-			if (sHTTPMethod.equalsIgnoreCase("GET"))//if request is a HTTP GET
+			if (sHTTPMethod.equalsIgnoreCase("GET"))// if request is a HTTP GET
 			{
 				String sQueryString = oHttpServletRequest.getQueryString();
 				if (sQueryString != null) {
 					if (sQueryString.equalsIgnoreCase("status")) {
 						oHttpServletResponse.setContentType("text/html");
-						//display status info
+						// display status info
 						showSAMStatusPage(oHttpServletResponse.getWriter(), getSAMInfo());
 					}
 					else {
-						//SAM uses RawCommunication
+						// SAM uses RawCommunication
 						oMsgCreator = new RawMessageCreator(getSystemLogger());
 						oCommunicator = new Communicator(oMsgCreator);
 						processRequest(oCommunicator, oHttpServletRequest, oHttpServletResponse);
@@ -485,21 +478,21 @@ public abstract class SAMServiceServlet extends HttpServlet
 				}
 				else {
 					oHttpServletResponse.setContentType("text/html");
-					//display status refresh page
+					// display status refresh page
 					String sTargetUrl = oHttpServletRequest.getRequestURL().append("?status").toString();
 					showSAMPage(oHttpServletResponse.getWriter(), sTargetUrl);
 				}
 			}
-			else if (sHTTPMethod.equalsIgnoreCase("POST"))//if request is a HTTP
+			else if (sHTTPMethod.equalsIgnoreCase("POST"))// if request is a HTTP
 			// POST
 			{
 				String sContentType = oHttpServletRequest.getContentType();
 				String sRequestUrl = oHttpServletRequest.getRequestURL().toString();
 
-				if (sContentType.indexOf("text/xml") > -1) {//must be a SOAP11 message
+				if (sContentType.indexOf("text/xml") > -1) {// must be a SOAP11 message
 					oMsgCreator = new SOAP11MessageCreator(sRequestUrl, "Status", getSystemLogger());
 				}
-				else if (sContentType.indexOf("application/soap+xml") > -1) {//must be a SOAP12 message
+				else if (sContentType.indexOf("application/soap+xml") > -1) {// must be a SOAP12 message
 					oMsgCreator = new SOAP12MessageCreator(sRequestUrl, "Status", getSystemLogger());
 				}
 				oCommunicator = new Communicator(oMsgCreator);
@@ -509,15 +502,14 @@ public abstract class SAMServiceServlet extends HttpServlet
 		catch (Exception e) {
 			getSystemLogger().log(Level.SEVERE, MODULE, sMethod, "Internal error", e);
 			if (!oHttpServletResponse.isCommitted()) {
-				//send response if no headers have been written
+				// send response if no headers have been written
 				oHttpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal error");
 			}
 		}
 	}
 
 	/**
-	 * Processes the incoming SAM request message. 
-	 * <br>
+	 * Processes the incoming SAM request message. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
 	 * Reads the incoming SAM message and responds with a response message.<br>
@@ -533,12 +525,14 @@ public abstract class SAMServiceServlet extends HttpServlet
 	 * <b>Postconditions: </b> <br>
 	 * -<br>
 	 * 
-	 * @param oCommunicator <code>Communicator</code> object that is used for 
-	 * reading and writing incoming and outgoing SAM messages.
-	 * @param oHttpServletRequest <code>HttpServletRequest</code> the request stream containing the incoming 
-	 * message.
-	 * @param oHttpServletResponse <code>HttpServletResponse</code> is the 
-	 * response stream that will be used to write the response message to.
+	 * @param oCommunicator
+	 *            <code>Communicator</code> object that is used for reading and writing incoming and outgoing SAM
+	 *            messages.
+	 * @param oHttpServletRequest
+	 *            <code>HttpServletRequest</code> the request stream containing the incoming message.
+	 * @param oHttpServletResponse
+	 *            <code>HttpServletResponse</code> is the response stream that will be used to write the response
+	 *            message to.
 	 */
 	private void processRequest(Communicator oCommunicator, HttpServletRequest oHttpServletRequest,
 			HttpServletResponse oHttpServletResponse)
@@ -553,7 +547,7 @@ public abstract class SAMServiceServlet extends HttpServlet
 			if (!oCommunicator.init(protRequest, protResponse)) {
 				throw new Exception("Could not parse SAM Request");
 			}
-			//read input message
+			// read input message
 			IInputMessage oInputMessage = oCommunicator.getInputMessage();
 
 			String[] saRequested = oInputMessage.getArray("get");
@@ -561,17 +555,17 @@ public abstract class SAMServiceServlet extends HttpServlet
 			HashMap htInfo = getSAMInfo();
 			HashMap htResult = new HashMap();
 			for (int i = 0; i < saRequested.length; i++) {
-				//check if wildcard, wildcards are endings with '.' or ".*"
+				// check if wildcard, wildcards are endings with '.' or ".*"
 				if (saRequested[i].endsWith(".*"))
 					saRequested[i] = saRequested[i].substring(0, saRequested[i].length() - 1);
 				if (saRequested[i].endsWith(".")) {
 					Set keys = htInfo.keySet();
 					for (Object s : keys) {
 						String sKey = (String) s;
-						//for (Enumeration enumInfo = htInfo.keys(); enumInfo.hasMoreElements();)
-						//{
-						//String sKey = (String)enumInfo.nextElement();
-						//sKey strippen
+						// for (Enumeration enumInfo = htInfo.keys(); enumInfo.hasMoreElements();)
+						// {
+						// String sKey = (String)enumInfo.nextElement();
+						// sKey strippen
 						if (sKey.startsWith(saRequested[i]))
 							htResult.put(sKey, htInfo.get(sKey));
 					}
@@ -581,20 +575,20 @@ public abstract class SAMServiceServlet extends HttpServlet
 						htResult.put(saRequested[i], htInfo.get(saRequested[i]));
 				}
 			}
-			//write output message
+			// write output message
 			IOutputMessage oOutputMessage = oCommunicator.getOutputMessage();
 
-			//convert resultTable to String[]
+			// convert resultTable to String[]
 			int i = 0;
 			int iCount = htResult.size();
 			String[] saResult = new String[iCount];
 			Set keys = htResult.keySet();
 			for (Object s : keys) {
 				String sKey = (String) s;
-				//Enumeration enumKeys = htResult.keys();
-				//for (int i = 0; i < iCount; i++)
-				//{
-				//    String sKey = (String)enumKeys.nextElement();
+				// Enumeration enumKeys = htResult.keys();
+				// for (int i = 0; i < iCount; i++)
+				// {
+				// String sKey = (String)enumKeys.nextElement();
 				StringBuffer sbResult = new StringBuffer(sKey);
 				sbResult.append("=");
 				sbResult.append((String) htResult.get(sKey));
@@ -618,10 +612,9 @@ public abstract class SAMServiceServlet extends HttpServlet
 	}
 
 	/**
-	 * Creates HTTP headers for disabling caching.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Creates HTTP headers for disabling caching. <br>
 	 * <br>
+	 * <b>Description:</b> <br>
 	 * Sets the following HTTP headers:<br>
 	 * If the request is HTTP 1.0:<br>
 	 * - Pragma = no-cache<br>
@@ -629,42 +622,42 @@ public abstract class SAMServiceServlet extends HttpServlet
 	 * - Cache-Control = no-store, no-cache, must-revalidate<br>
 	 * Set's always:<br>
 	 * - Expires = -1<br>
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
 	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
 	 * - <i>oHttpServletRequest</i> != null<br>
-	 * - <i>oHttpServletResponse</i> != null<br> 
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * - <i>oHttpServletResponse</i> != null<br>
 	 * <br>
-	 * -
 	 * <br>
-	 * @param oHttpServletRequest the HTTP(S) request.
-	 * @param oHttpServletResponse the HTTP(S) respons.
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param oHttpServletRequest
+	 *            the HTTP(S) request.
+	 * @param oHttpServletResponse
+	 *            the HTTP(S) respons.
 	 */
 	private void setDisableCachingHttpHeaders(HttpServletRequest oHttpServletRequest,
 			HttpServletResponse oHttpServletResponse)
 	{
-		//turn off caching
+		// turn off caching
 		if (oHttpServletRequest.getProtocol().equalsIgnoreCase("HTTP/1.0")) {
 			oHttpServletResponse.setHeader("Pragma", "no-cache");
 		}
 		else if (oHttpServletRequest.getProtocol().equalsIgnoreCase("HTTP/1.1")) {
 			oHttpServletResponse.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
 		}
-		oHttpServletResponse.setHeader("Expires", "-1"); //for proxy
+		oHttpServletResponse.setHeader("Expires", "-1"); // for proxy
 	}
 
 	/**
 	 * Shows the SAM status page. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * Fills the tags [oid.name] and [oid.value] template samservice_status.html
-	 *  and displays this page.<br>
+	 * Fills the tags [oid.name] and [oid.value] template samservice_status.html and displays this page.<br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * - <br>
@@ -676,10 +669,10 @@ public abstract class SAMServiceServlet extends HttpServlet
 	 * <b>Postconditions: </b> <br>
 	 * - <br>
 	 * 
-	 * @param pwOut <code>PrintWriter</code> whereto the output message can be 
-	 * written
-	 * @param htSAMInfo <code>HashMap</code> containing the SAM information 
-	 * that will be displayed in the page.
+	 * @param pwOut
+	 *            <code>PrintWriter</code> whereto the output message can be written
+	 * @param htSAMInfo
+	 *            <code>HashMap</code> containing the SAM information that will be displayed in the page.
 	 */
 	private void showSAMStatusPage(PrintWriter pwOut, HashMap htSAMInfo)
 	{
@@ -688,10 +681,10 @@ public abstract class SAMServiceServlet extends HttpServlet
 		Set keys = htSAMInfo.keySet();
 		for (Object s : keys) {
 			String sOID = (String) s;
-			//Enumeration enumInfo = htSAMInfo.keys();
-			//while (enumInfo.hasMoreElements())
-			//{
-			//  String sOID = (String)enumInfo.nextElement();
+			// Enumeration enumInfo = htSAMInfo.keys();
+			// while (enumInfo.hasMoreElements())
+			// {
+			// String sOID = (String)enumInfo.nextElement();
 
 			StringBuffer sbOIDName = new StringBuffer("[");
 			sbOIDName.append(sOID);
@@ -716,9 +709,8 @@ public abstract class SAMServiceServlet extends HttpServlet
 	 * Shows the SAM page. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * The SAM page must contain an inline Frame that displays that contains the 
-	 * SAM status info. The URL to the SAM status info page will be located in 
-	 * the tag: [samservice_status_url]<br>
+	 * The SAM page must contain an inline Frame that displays that contains the SAM status info. The URL to the SAM
+	 * status info page will be located in the tag: [samservice_status_url]<br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * - <i>pwOut</i> != null<br>
@@ -730,10 +722,10 @@ public abstract class SAMServiceServlet extends HttpServlet
 	 * <b>Postconditions: </b> <br>
 	 * - <br>
 	 * 
-	 * @param pwOut <code>PrintWriter</code> whereto the output message can be 
-	 * written
-	 * @param sIFrameUrl <code>String</code> that contains the URL to the 
-	 * samservice.html (url of this servlet + ?status)
+	 * @param pwOut
+	 *            <code>PrintWriter</code> whereto the output message can be written
+	 * @param sIFrameUrl
+	 *            <code>String</code> that contains the URL to the samservice.html (url of this servlet + ?status)
 	 */
 	private void showSAMPage(PrintWriter pwOut, String sIFrameUrl)
 	{
@@ -747,8 +739,7 @@ public abstract class SAMServiceServlet extends HttpServlet
 	 * Reads an HTML template from physical storage. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * Reades the html template with name <i>sTemplateName</i> from the working 
-	 * directory line by line.<br>
+	 * Reades the html template with name <i>sTemplateName</i> from the working directory line by line.<br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * - <br>
@@ -760,9 +751,10 @@ public abstract class SAMServiceServlet extends HttpServlet
 	 * - <br>
 	 * 
 	 * @param sTemplateName
-	 * @return a <code>String</code> containing the HTML template 
-	 * @throws Exception if the template located in <i>sTemplateName</i> can't 
-	 * be accessed or read.
+	 *            the s template name
+	 * @return a <code>String</code> containing the HTML template
+	 * @throws Exception
+	 *             if the template located in <i>sTemplateName</i> can't be accessed or read.
 	 */
 	private String loadTemplateFile(String sTemplateName)
 		throws Exception
@@ -772,7 +764,7 @@ public abstract class SAMServiceServlet extends HttpServlet
 
 		BufferedReader bfTemplate = new BufferedReader(new InputStreamReader(new FileInputStream(sTemplateName)));
 
-		//to make the html human readable
+		// to make the html human readable
 		sLineSep = "\r\n";
 		StringBuffer sbTemplate = new StringBuffer();
 		while ((sLine = bfTemplate.readLine()) != null) {

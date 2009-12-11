@@ -59,204 +59,171 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.AuthenticationLogger;
 
+// TODO: Auto-generated Javadoc
 /**
- * The authentication logger for the A-Select Server.
- * <br><br>
+ * The authentication logger for the A-Select Server. <br>
+ * <br>
  * <b>Description:</b><br>
- * A singleton authentication logger that inherits from
- * <code>org.aselect.system.logging.AuthenticationLogger</code>. This logger creates a log file that can be used for user accounting.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * A singleton authentication logger that inherits from <code>org.aselect.system.logging.AuthenticationLogger</code>.
+ * This logger creates a log file that can be used for user accounting. <br>
  * <br>
- * - The class is a singleton, so the same class is used in all the classes of 
- * the A-Select Server.
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - The class is a singleton, so the same class is used in all the classes of the A-Select Server. <br>
  * 
+ * @author Alfa & Ariss
  */
 public class ASelectAuthenticationLogger extends AuthenticationLogger
 {
-    /**
-     * The name of this module, that is used in the system logging.
-     */
-    private static final String MODULE = "ASelectAuthenticationLogger";
-    
-    // Needed to make this class a singleton.
-    private static ASelectAuthenticationLogger _oASelectAuthenticationLogger;
+	/**
+	 * The name of this module, that is used in the system logging.
+	 */
+	private static final String MODULE = "ASelectAuthenticationLogger";
 
-    /**
-     * Must be used to get an ASelectAuthenticationLogger instance.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Creates a new <code>ASelectAuthenticationLogger</code> instance if it's still <code>null</code>.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * Always the same instance of the authentication logger is returned, because it's a
-     * singleton.
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @return handle to the ASelectAuthenticationLogger
-     */
-    public static ASelectAuthenticationLogger getHandle()
-    {
-        if (_oASelectAuthenticationLogger == null)
-        {
-            _oASelectAuthenticationLogger = new ASelectAuthenticationLogger();
-        }
-        return _oASelectAuthenticationLogger;
-    }
+	// Needed to make this class a singleton.
+	private static ASelectAuthenticationLogger _oASelectAuthenticationLogger;
 
-    /**
-     * Initializes the Authentication Logger.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * <li>Reads the 'target' config section</li>
-     * <li>Calls the init of the <i>_oASelectAuthenticationLogger</i></li>
-     * <li>Reads the 'target' config section</li>
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * <li>The <i>ASelectSystemLogger</i> must be initialized.</li>
-     * <li>The <i>ASelectConfigManager</i> must be initialized.</li>
-     * <li>The <i>oAuthLogging</i> may not be <code>NULL</code>.</li>
-     * <li>The <i>sWorkingDir</i> may not be <code>NULL</code>.</li>
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * An initialized <i>_oASelectAuthenticationLogger</i>.
-     * <br>
-     * @param oAuthLogging The logger config section with id='authentication'
-     * @param sWorkingDir The A-Select working dir
-     * @throws ASelectException if initialization went wrong
-     */
-    public void init(Object oAuthLogging, String sWorkingDir) throws ASelectException
-    {
-        String sMethod = "init()";
-        String sAuthLogTarget = null;
-        Object oAuthLogTarget = null;
-        ASelectSystemLogger oASelectSystemLogger = null;
-        ASelectConfigManager oASelectConfigManager = null;
-        try
-        {
-            try
-            {
-                oASelectSystemLogger = ASelectSystemLogger.getHandle();
-                oASelectConfigManager = ASelectConfigManager.getHandle();
- 
-                try
-                {
-                    sAuthLogTarget = oASelectConfigManager.getParam(
-                        oAuthLogging, "target");
-                }
-                catch (Exception e)
-                {
-                    sAuthLogTarget = null;
+	/**
+	 * Must be used to get an ASelectAuthenticationLogger instance. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Creates a new <code>ASelectAuthenticationLogger</code> instance if it's still <code>null</code>. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * Always the same instance of the authentication logger is returned, because it's a singleton. <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @return handle to the ASelectAuthenticationLogger
+	 */
+	public static ASelectAuthenticationLogger getHandle()
+	{
+		if (_oASelectAuthenticationLogger == null) {
+			_oASelectAuthenticationLogger = new ASelectAuthenticationLogger();
+		}
+		return _oASelectAuthenticationLogger;
+	}
 
-                    oASelectSystemLogger
-                        .log(Level.WARNING, 
-                            MODULE, sMethod, 
-                            "No valid config item: 'target' in config section 'logging' with id='authentication' found.", 
-                            e);
+	/**
+	 * Initializes the Authentication Logger. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * <li>Reads the 'target' config section</li> <li>Calls the init of the <i>_oASelectAuthenticationLogger</i></li>
+	 * <li>Reads the 'target' config section</li> <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * <li>The <i>ASelectSystemLogger</i> must be initialized.</li> <li>The <i>ASelectConfigManager</i> must be
+	 * initialized.</li> <li>The <i>oAuthLogging</i> may not be <code>NULL</code>.</li> <li>The <i>sWorkingDir</i> may
+	 * not be <code>NULL</code>.</li> <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * An initialized <i>_oASelectAuthenticationLogger</i>. <br>
+	 * 
+	 * @param oAuthLogging
+	 *            The logger config section with id='authentication'
+	 * @param sWorkingDir
+	 *            The A-Select working dir
+	 * @throws ASelectException
+	 *             if initialization went wrong
+	 */
+	public void init(Object oAuthLogging, String sWorkingDir)
+		throws ASelectException
+	{
+		String sMethod = "init()";
+		String sAuthLogTarget = null;
+		Object oAuthLogTarget = null;
+		ASelectSystemLogger oASelectSystemLogger = null;
+		ASelectConfigManager oASelectConfigManager = null;
+		try {
+			try {
+				oASelectSystemLogger = ASelectSystemLogger.getHandle();
+				oASelectConfigManager = ASelectConfigManager.getHandle();
 
-                    throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
-                }
+				try {
+					sAuthLogTarget = oASelectConfigManager.getParam(oAuthLogging, "target");
+				}
+				catch (Exception e) {
+					sAuthLogTarget = null;
 
-                try
-                {
-                    oAuthLogTarget = oASelectConfigManager.getSection(
-                        oAuthLogging, "target", "id=" + sAuthLogTarget);
-                }
-                catch (Exception e)
-                {
-                    oAuthLogTarget = null;
+					oASelectSystemLogger
+							.log(
+									Level.WARNING,
+									MODULE,
+									sMethod,
+									"No valid config item: 'target' in config section 'logging' with id='authentication' found.",
+									e);
 
-                    StringBuffer sbInfo = new StringBuffer("No valid config section: 'target' with id='");
-                    sbInfo.append(sAuthLogTarget);
-                    sbInfo
-                        .append("' in config section 'logging' with id='authentication' found.");
-                    oASelectSystemLogger
-                        .log(Level.WARNING, 
-                            MODULE, sMethod, sbInfo.toString(), e);
+					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
+				}
 
-                    throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
-                }
-            }
-            catch (Exception e)
-            {
-                oASelectSystemLogger.log(Level.CONFIG, 
-                    MODULE, sMethod,
-                    "No valid config section 'logging' with id='authentication' found, using default logging settings.",
-                    e);
-            }
+				try {
+					oAuthLogTarget = oASelectConfigManager.getSection(oAuthLogging, "target", "id=" + sAuthLogTarget);
+				}
+				catch (Exception e) {
+					oAuthLogTarget = null;
 
-            if (oAuthLogTarget != null && sAuthLogTarget != null
-                && sAuthLogTarget.equalsIgnoreCase("database"))
-            {
-                _oASelectAuthenticationLogger
-                    .init("A-Select Server", oASelectConfigManager,
-                        oAuthLogTarget, oASelectSystemLogger);
-            }
-            else
-            {
-                _oASelectAuthenticationLogger.init("A-Select Server",
-                    "authentication",
-                    "org.aselect.server.log.ASelectAuthenticationLogger",
-                    oASelectConfigManager, oAuthLogTarget,
-                    oASelectSystemLogger, sWorkingDir);
-            }
-        }
-        catch (ASelectException e)
-        {
-            throw e;
-        }
-        catch (Exception e)
-        {
-            oASelectSystemLogger.log(Level.SEVERE, 
-                MODULE, sMethod,
-                "Could not initialize A-Select Authentication Logger.",
-                e);
+					StringBuffer sbInfo = new StringBuffer("No valid config section: 'target' with id='");
+					sbInfo.append(sAuthLogTarget);
+					sbInfo.append("' in config section 'logging' with id='authentication' found.");
+					oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sbInfo.toString(), e);
 
-            throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-        }
+					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
+				}
+			}
+			catch (Exception e) {
+				oASelectSystemLogger
+						.log(
+								Level.CONFIG,
+								MODULE,
+								sMethod,
+								"No valid config section 'logging' with id='authentication' found, using default logging settings.",
+								e);
+			}
 
-    }
-    
-    /**
-     * Must be private, so it can not be used.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Must be private because getHandle() must be used to retrieve an instance. 
-     * This is done for singleton purposes.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * 
-     */
-    private ASelectAuthenticationLogger() {}
-    
+			if (oAuthLogTarget != null && sAuthLogTarget != null && sAuthLogTarget.equalsIgnoreCase("database")) {
+				_oASelectAuthenticationLogger.init("A-Select Server", oASelectConfigManager, oAuthLogTarget,
+						oASelectSystemLogger);
+			}
+			else {
+				_oASelectAuthenticationLogger.init("A-Select Server", "authentication",
+						"org.aselect.server.log.ASelectAuthenticationLogger", oASelectConfigManager, oAuthLogTarget,
+						oASelectSystemLogger, sWorkingDir);
+			}
+		}
+		catch (ASelectException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod,
+					"Could not initialize A-Select Authentication Logger.", e);
+
+			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+		}
+
+	}
+
+	/**
+	 * Must be private, so it can not be used. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Must be private because getHandle() must be used to retrieve an instance. This is done for singleton purposes. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 */
+	private ASelectAuthenticationLogger() {
+	}
+
 }

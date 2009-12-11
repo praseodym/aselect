@@ -39,94 +39,93 @@ package org.aselect.authspserver.authsp.radius;
 
 import org.aselect.system.logging.SystemLogger;
 
+// TODO: Auto-generated Javadoc
 /**
- * Interface Class for a Radius Protocol Handler.
- * <br><br>
+ * Interface Class for a Radius Protocol Handler. <br>
+ * <br>
  * <b>Description:</b><br>
- * This interface class describes the functions which have to be implemented
- * by a Radius Prototcol Handler 
- * <br><br>
- * <b>Concurrency issues:</b>
+ * This interface class describes the functions which have to be implemented by a Radius Prototcol Handler <br>
  * <br>
- * None
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * None <br>
  * 
+ * @author Alfa & Ariss
  */
 public interface IRADIUSProtocolHandler
 {
 
-    /**
-     * ACCESS_REQUEST 
-     */
-    public static final byte ACCESS_REQUEST = 1;
-    
-    /**
-     * ACCESS_ACCEPT 
-     */
-    public static final byte ACCESS_ACCEPT = 2;
-    
-    /**
-     * ACCESS_REJECT
-     */
-    public static final byte ACCESS_REJECT = 3;
-    
-    /**
-     * RADIUS_ATTRIBUTE_TYPE_USER_NAME
-     */
-    public static final byte RADIUS_ATTRIBUTE_TYPE_USER_NAME = 1;
-    
-    /**
-     * RADIUS_ATTRIBUTE_TYPE_USER_PASSWORD
-     */
-    public static final byte RADIUS_ATTRIBUTE_TYPE_USER_PASSWORD = 2;
-    
-    /**
-     * RADIUS_ATTRIBUTE_TYPE_CHAP_PASSWORD
-     */
-    public static final byte RADIUS_ATTRIBUTE_TYPE_CHAP_PASSWORD = 3;
-    
-    /**
-     * RADIUS_ATTRIBUTE_TYPE_CHAP_CHALLENGE
-     */
-    public static final byte RADIUS_ATTRIBUTE_TYPE_CHAP_CHALLENGE = 60;
+	/**
+	 * ACCESS_REQUEST
+	 */
+	public static final byte ACCESS_REQUEST = 1;
 
-    /**
-     * MAX_RADIUS_PACKET_SIZE
-     */
-    public static final int MAX_RADIUS_PACKET_SIZE = 512;
+	/**
+	 * ACCESS_ACCEPT
+	 */
+	public static final byte ACCESS_ACCEPT = 2;
 
-    /**
-     * RADIUS_PORT
-     */
-    public static final int RADIUS_PORT = 1812;
+	/**
+	 * ACCESS_REJECT
+	 */
+	public static final byte ACCESS_REJECT = 3;
 
+	/**
+	 * RADIUS_ATTRIBUTE_TYPE_USER_NAME
+	 */
+	public static final byte RADIUS_ATTRIBUTE_TYPE_USER_NAME = 1;
 
-    /**
-     * Initializes the Radius Protocol Handler.
-     * <br>
-     * @param sRadiusServer
-     * @param iPort
-     * @param sSharedSecret
-     * @param bFullUid
-     * @param sUid
-     * @param systemLogger
-     * @return true
-     */
-    public boolean init(String sRadiusServer,
-                        int iPort,
-                        String sSharedSecret,
-                        boolean bFullUid,
-                        String sUid,
-                        SystemLogger systemLogger);
+	/**
+	 * RADIUS_ATTRIBUTE_TYPE_USER_PASSWORD
+	 */
+	public static final byte RADIUS_ATTRIBUTE_TYPE_USER_PASSWORD = 2;
 
+	/**
+	 * RADIUS_ATTRIBUTE_TYPE_CHAP_PASSWORD
+	 */
+	public static final byte RADIUS_ATTRIBUTE_TYPE_CHAP_PASSWORD = 3;
 
-    /**
-     * The authenticate function which must be implemented for all 
-     * Radius Protocol handlers.
-     * <br><br>
-     * @param sPassword
-     * @return Result Code
-     */
-    public String authenticate(String sPassword);
+	/**
+	 * RADIUS_ATTRIBUTE_TYPE_CHAP_CHALLENGE
+	 */
+	public static final byte RADIUS_ATTRIBUTE_TYPE_CHAP_CHALLENGE = 60;
+
+	/**
+	 * MAX_RADIUS_PACKET_SIZE
+	 */
+	public static final int MAX_RADIUS_PACKET_SIZE = 512;
+
+	/**
+	 * RADIUS_PORT
+	 */
+	public static final int RADIUS_PORT = 1812;
+
+	/**
+	 * Initializes the Radius Protocol Handler. <br>
+	 * 
+	 * @param sRadiusServer
+	 *            the s radius server
+	 * @param iPort
+	 *            the i port
+	 * @param sSharedSecret
+	 *            the s shared secret
+	 * @param bFullUid
+	 *            the b full uid
+	 * @param sUid
+	 *            the s uid
+	 * @param systemLogger
+	 *            the system logger
+	 * @return true
+	 */
+	public boolean init(String sRadiusServer, int iPort, String sSharedSecret, boolean bFullUid, String sUid,
+			SystemLogger systemLogger);
+
+	/**
+	 * The authenticate function which must be implemented for all Radius Protocol handlers. <br>
+	 * <br>
+	 * 
+	 * @param sPassword
+	 *            the s password
+	 * @return Result Code
+	 */
+	public String authenticate(String sPassword);
 }

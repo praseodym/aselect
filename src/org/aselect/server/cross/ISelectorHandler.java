@@ -39,73 +39,70 @@ import javax.servlet.http.HttpServletResponse;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 
+// TODO: Auto-generated Javadoc
 /**
- * Handler to determine the remote A-Select Server.
- * <br><br>
+ * Handler to determine the remote A-Select Server. <br>
+ * <br>
  * <b>Description:</b><br>
- * Selector handler will 'tell' A-Select which remote
- * A-Select Server should be used to set up a 
- * 'cross-authenticate' request.<br>
+ * Selector handler will 'tell' A-Select which remote A-Select Server should be used to set up a 'cross-authenticate'
+ * request.<br>
  * Handlers may use HTML forms to gather user information.<br>
  * If applicable, the handler can also pass a user-id to A-Select.<br>
- * <br><br>
- * <b>Concurrency issues:</b>
  * <br>
- * - Only one instance of a Handler is created within A-Select that will
- * be active till A-Select stops/restarts.
  * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - Only one instance of a Handler is created within A-Select that will be active till A-Select stops/restarts. <br>
  * 
+ * @author Alfa & Ariss
  */
 public interface ISelectorHandler
 {
-	/**
-	 * Handler specific initialization.
-	 * <br><br>
-	 * <b>Description:</b>
-	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
-	 * <br>
-	 * Called at startup of A-Select.
-	 * <br><br>
-	 * <b>Preconditions:</b>
-	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
-	 * <br>
-	 * -
-	 * <br>
-	 * @param oHandlerConfig
-	 * @throws ASelectConfigException
-	 * @throws ASelectException
-	 */
-	public void init(Object oHandlerConfig) throws ASelectException;
 	
 	/**
-	 * Entry point of the handler during cross-authentication.
-	 * Handler may present the user with a HTML page here to gather more
-	 * information. If done so, the function <b>must</b> return <b>null</b>.
+	 * Handler specific initialization. <br>
 	 * <br>
-	 * The HTML page should contain a form with <code>request=cross_login</code>.
+	 * <b>Description:</b> <br>
+	 * - <br>
 	 * <br>
-	 * If enough information is gathered, the function should return a HashMap
-	 * as described below.<br>
-	 * @param htServiceRequest
-	 * @param servletResponse
-	 * @param pwOut
-	 * @return HashMap containing
-	 * <ul>
-	 * <li> 'organization_id'
-	 * <li> 'user_id' (optional)
-	 * </ul>
-	 * or <b>NULL</b>
-	 * @throws ASelectException
+	 * <b>Concurrency issues:</b> <br>
+	 * Called at startup of A-Select. <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param oHandlerConfig
+	 *            the o handler config
+	 * @throws ASelectConfigException
+	 *             * @throws ASelectException the a select exception
 	 */
-	public HashMap getRemoteServerId(HashMap htServiceRequest,
-		HttpServletResponse servletResponse,
-		PrintWriter pwOut)throws ASelectException;
+	public void init(Object oHandlerConfig)
+		throws ASelectException;
+
+	/**
+	 * Entry point of the handler during cross-authentication. Handler may present the user with a HTML page here to
+	 * gather more information. If done so, the function <b>must</b> return <b>null</b>. <br>
+	 * The HTML page should contain a form with <code>request=cross_login</code>. <br>
+	 * If enough information is gathered, the function should return a HashMap as described below.<br>
+	 * 
+	 * @param htServiceRequest
+	 *            the ht service request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @param pwOut
+	 *            the pw out
+	 * @return HashMap containing
+	 *         <ul>
+	 *         <li>'organization_id'
+	 *         <li>'user_id' (optional)
+	 *         </ul>
+	 *         or <b>NULL</b>
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	public HashMap getRemoteServerId(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+		throws ASelectException;
 
 }

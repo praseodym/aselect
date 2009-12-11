@@ -35,14 +35,22 @@ import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+// TODO: Auto-generated Javadoc
 public class Saml20_ArtifactManager extends StorageManager
 {
 	private static final String MODULE = "Saml20_ArtifactManager";
 	private ASelectSystemLogger _systemLogger;
-	
+
 	// Make me a singleton
 	private static Saml20_ArtifactManager artifactManager;
 
+	/**
+	 * Gets the the artifact manager.
+	 * 
+	 * @return the the artifact manager
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	public static Saml20_ArtifactManager getTheArtifactManager()
 		throws ASelectException
 	{
@@ -52,10 +60,12 @@ public class Saml20_ArtifactManager extends StorageManager
 		}
 		return artifactManager;
 	}
-	
+
 	// Don't allow others to create me
-	private Saml20_ArtifactManager()
-	{	
+	/**
+	 * Instantiates a new saml20_ artifact manager.
+	 */
+	private Saml20_ArtifactManager() {
 	}
 
 	/**
@@ -65,9 +75,16 @@ public class Saml20_ArtifactManager extends StorageManager
 	 *            String with Artifact.
 	 * @param samlObject
 	 *            SAMLObject.
+	 * @param sAppUrl
+	 *            the s app url
+	 * @param oHttpServletResponse
+	 *            the o http servlet response
+	 * @param sRelayState
+	 *            the s relay state
 	 * @throws IOException
 	 *             If sending and storing off Artifact fails.
 	 * @throws ASelectStorageException
+	 *             the a select storage exception
 	 */
 	public void sendArtifact(String sArtifact, SAMLObject samlObject, String sAppUrl,
 			HttpServletResponse oHttpServletResponse, String sRelayState)
@@ -86,31 +103,41 @@ public class Saml20_ArtifactManager extends StorageManager
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sRedirectUrl);
 		// RH, 20081113, Set appropriate headers here
 		oHttpServletResponse.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-		oHttpServletResponse.setContentType("text/html");	
+		oHttpServletResponse.setContentType("text/html");
 		oHttpServletResponse.setHeader("Pragma", "no-cache");
-		
-		//oHttpServletResponse.sendRedirect(sRedirectUrl);
+
+		// oHttpServletResponse.sendRedirect(sRedirectUrl);
 		// OR:
 		PrintWriter out = oHttpServletResponse.getWriter();
-		String htmlResponse = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n"+
-			"<html><head><title>Redirect</title>\n"+
-			"<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">" +
-			"<meta http-equiv=\"refresh\" content=\"0;URL="+sRedirectUrl+"\">" +
-			"</head><body></body></html>";
+		String htmlResponse = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n"
+				+ "<html><head><title>Redirect</title>\n"
+				+ "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">"
+				+ "<meta http-equiv=\"refresh\" content=\"0;URL=" + sRedirectUrl + "\">"
+				+ "</head><body></body></html>";
 		out.println(htmlResponse);
 		out.close();
 	}
 
 	// We want an XMLObject out
 	// So we should put an XMLObject in
+	/**
+	 * Put artifact in storage.
+	 * 
+	 * @param key
+	 *            the key
+	 * @param samlObject
+	 *            the saml object
+	 * @throws ASelectStorageException
+	 *             the a select storage exception
+	 */
 	private void putArtifactInStorage(Object key, XMLObject samlObject)
-	throws ASelectStorageException
+		throws ASelectStorageException
 	{
 		String sMethod = "putArtifactInStorage";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "key="+key);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "key=" + key);
 
 		Element dom = samlObject.getDOM();
-		if (dom == null) {  // object was not marshalled
+		if (dom == null) { // object was not marshalled
 			try {
 				dom = SamlTools.marshallMessage(samlObject);
 			}
@@ -119,90 +146,88 @@ public class Saml20_ArtifactManager extends StorageManager
 				throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INSERT, e);
 			}
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "put key="+key);
-		
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "put key=" + key);
+
 		// Save as string because these SAML XMLObjects don't want to serialize very well
 		super.put(key, XMLHelper.nodeToString(dom));
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "put done");
-		
+
 		// debug:
-		/*HashMap htAll = super.getAll();
-        Enumeration eKeys = htAll.keys();
-        while (eKeys.hasMoreElements())
-        {
-            Object oKey = eKeys.nextElement();
-    		_systemLogger.log(Level.INFO, MODULE, sMethod, "key="+oKey);            
-            HashMap xStorageContainer = (HashMap)htAll.get(oKey);
-            Object oValue = xStorageContainer.get("contents");
-    		_systemLogger.log(Level.INFO, MODULE, sMethod, "key="+oKey+" contents="+oValue.toString());            
-        }*/
+		/*
+		 * HashMap htAll = super.getAll(); Enumeration eKeys = htAll.keys(); while (eKeys.hasMoreElements()) { Object
+		 * oKey = eKeys.nextElement(); _systemLogger.log(Level.INFO, MODULE, sMethod, "key="+oKey); HashMap
+		 * xStorageContainer = (HashMap)htAll.get(oKey); Object oValue = xStorageContainer.get("contents");
+		 * _systemLogger.log(Level.INFO, MODULE, sMethod, "key="+oKey+" contents="+oValue.toString()); }
+		 */
 	}
 
-	
 	// We want an XMLObject removed
 	// NOT USED 20090616
-	private void removeArtifactFromStorage(Object key)  // RH, 2008113, n
-	throws ASelectStorageException
+	/**
+	 * Removes the artifact from storage.
+	 * 
+	 * @param key
+	 *            the key
+	 * @throws ASelectStorageException
+	 *             the a select storage exception
+	 */
+	private void removeArtifactFromStorage(Object key)
+		// RH, 2008113, n
+		throws ASelectStorageException
 	{
 		String sMethod = "removeArtifactFromStorage";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "key="+key);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "key=" + key);
 
 		// Remove the object from underlying storage
 		super.remove(key);
-//		super.put(key, dom);
+		// super.put(key, dom);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "remove done");
-		
+
 		// debug:
-		/*HashMap htAll = super.getAll();
-        Enumeration eKeys = htAll.keys();
-        while (eKeys.hasMoreElements())
-        {
-            Object oKey = eKeys.nextElement();
-    		_systemLogger.log(Level.INFO, MODULE, sMethod, "key="+oKey);            
-            HashMap xStorageContainer = (HashMap)htAll.get(oKey);
-            Object oValue = xStorageContainer.get("contents");
-    		_systemLogger.log(Level.INFO, MODULE, sMethod, "key="+oKey+" contents="+oValue.toString());            
-        }*/
+		/*
+		 * HashMap htAll = super.getAll(); Enumeration eKeys = htAll.keys(); while (eKeys.hasMoreElements()) { Object
+		 * oKey = eKeys.nextElement(); _systemLogger.log(Level.INFO, MODULE, sMethod, "key="+oKey); HashMap
+		 * xStorageContainer = (HashMap)htAll.get(oKey); Object oValue = xStorageContainer.get("contents");
+		 * _systemLogger.log(Level.INFO, MODULE, sMethod, "key="+oKey+" contents="+oValue.toString()); }
+		 */
 	}
 
-	
-	
-	
 	/**
 	 * Gets Artifact from Storage. <br>
 	 * 
-	 * @param key Object.
+	 * @param key
+	 *            Object.
 	 * @return Object
 	 * @throws ASelectStorageException
-	 * @throws ParserConfigurationException 
-	 * @throws IOException 
-	 * @throws SAXException 
+	 *             the a select storage exception
+	 * @throws ParserConfigurationException
+	 *             the parser configuration exception
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 * @throws SAXException
+	 *             the SAX exception
 	 */
 	public XMLObject getArtifactFromStorage(Object key)
 		throws ASelectStorageException, ParserConfigurationException, SAXException, IOException
 	{
 		String sMethod = "getArtifactFromStorage";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "get key="+key);
-		
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "get key=" + key);
+
 		// debug:
-		/*HashMap htAll = super.getAll();
-        Enumeration eKeys = htAll.keys();
-        while (eKeys.hasMoreElements())
-        {
-            Object oKey = eKeys.nextElement();
-            HashMap xStorageContainer = (HashMap)htAll.get(oKey);
-            Object oValue = xStorageContainer.get("contents");
-    		_systemLogger.log(Level.INFO, MODULE, sMethod, "key="+oKey+" contents="+oValue);            
-        }*/
+		/*
+		 * HashMap htAll = super.getAll(); Enumeration eKeys = htAll.keys(); while (eKeys.hasMoreElements()) { Object
+		 * oKey = eKeys.nextElement(); HashMap xStorageContainer = (HashMap)htAll.get(oKey); Object oValue =
+		 * xStorageContainer.get("contents"); _systemLogger.log(Level.INFO, MODULE, sMethod,
+		 * "key="+oKey+" contents="+oValue); }
+		 */
 
 		// Element dom = (Element)super.get(key);
-		
-		
-		String serializedObject = (String)super.get(key);
+
+		String serializedObject = (String) super.get(key);
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 		dbFactory.setNamespaceAware(true);
-//		dbFactory.setExpandEntityReferences(false);
-//		dbFactory.setIgnoringComments(true);
+		// dbFactory.setExpandEntityReferences(false);
+		// dbFactory.setIgnoringComments(true);
 		StringReader stringReader = new StringReader(serializedObject);
 		InputSource inputSource = new InputSource(stringReader);
 
@@ -212,8 +237,8 @@ public class Saml20_ArtifactManager extends StorageManager
 		builder = dbFactory.newDocumentBuilder();
 		samlResponse = builder.parse(inputSource);
 		dom = samlResponse.getDocumentElement();
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "get dom="+dom);
-		
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "get dom=" + dom);
+
 		XMLObject xmlObject = null;
 		try {
 			xmlObject = SamlTools.unmarshallElement(dom);
@@ -244,6 +269,13 @@ public class Saml20_ArtifactManager extends StorageManager
 		return artifact.base64Encode();
 	}
 
+	/**
+	 * Creates the sh a1 hash handle.
+	 * 
+	 * @param rid
+	 *            the rid
+	 * @return the byte[]
+	 */
 	private byte[] createSHA1HashHandle(String rid)
 	{
 		MessageDigest sha1;
@@ -266,7 +298,7 @@ public class Saml20_ArtifactManager extends StorageManager
 	 *             If initialization fails.
 	 */
 	public void init()
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "init()";
 		ASelectConfigManager oASelectConfigManager = null;

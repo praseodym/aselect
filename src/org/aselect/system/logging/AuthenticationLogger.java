@@ -93,22 +93,19 @@ import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 
+// TODO: Auto-generated Javadoc
 /**
- * Authentication logger. 
- * <br>
+ * Authentication logger. <br>
  * <br>
  * <b>Description: </b> <br>
- * This class implements a logger with the purpose of logging authentication
- * message to a system logger or a database. <br>
+ * This class implements a logger with the purpose of logging authentication message to a system logger or a database. <br>
  * <br>
  * <b>Concurrency issues: </b> <br>
  * This class is thread-safe. <br>
  * <br>
- * This class only writes log items and can therefore use one resource (e.g.
- * database connection). <br>
+ * This class only writes log items and can therefore use one resource (e.g. database connection). <br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class AuthenticationLogger
 {
@@ -167,8 +164,7 @@ public class AuthenticationLogger
 	private Vector _vColumnTypes = null;
 
 	/**
-	 * The database connecton. This connection is shared among all
-	 * <code>AuthenticationLoggers</code>.
+	 * The database connecton. This connection is shared among all <code>AuthenticationLoggers</code>.
 	 */
 	private static Connection _conn = null;
 
@@ -178,56 +174,50 @@ public class AuthenticationLogger
 	private SystemLogger _systemLogger = null;
 
 	/**
-	 * Create a new default instance. 
-	 * <br>
+	 * Create a new default instance. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * Creates a new <code>AuthenticationLogger</code>. If you use this
-	 * constructor you'll need to call one of the init() methods.
+	 * Creates a new <code>AuthenticationLogger</code>. If you use this constructor you'll need to call one of the
+	 * init() methods.
 	 */
 	public AuthenticationLogger() {
 	}
 
 	/**
-	 * Initializes the Authentication logger with a file back-end.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Initializes the Authentication logger with a file back-end. <br>
 	 * <br>
-	 * <li>Reads configuration</li>
-	 * <li>Sets the <i>_bLogToDatabase</i> to FALSE</li>
-	 * <li>Creates a new <code>SystemLogger</code> object and initializes it 
-	 * with the configuration.</li>
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * <li>Reads configuration</li> <li>Sets the <i>_bLogToDatabase</i> to FALSE</li> <li>Creates a new
+	 * <code>SystemLogger</code> object and initializes it with the configuration.</li> <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <li><i>oConfigManager</i> must be initialized</li>
-	 * <li><i>oSystemLogger</i> must be initialized</li>
-	 * <li><i>oConfigManager</i> may not be <code>null</code></li>
-	 * <li><i>oLogTargetConfig</i> may not be <code>null</code></li>
-	 * <li><i>oSystemLogger</i> may not be <code>null</code></li>
-	 * <li><i>sComponent</i> may not be <code>null</code></li>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <li><i>oConfigManager</i> must be initialized</li> <li><i>oSystemLogger</i> must be initialized</li> <li>
+	 * <i>oConfigManager</i> may not be <code>null</code></li> <li><i>oLogTargetConfig</i> may not be <code>null</code></li>
+	 * <li><i>oSystemLogger</i> may not be <code>null</code></li> <li><i>sComponent</i> may not be <code>null</code></li>
 	 * <br>
-	 * Sets <i>_systemLogger</i> class vairable and initializes it.
 	 * <br>
-	 * @param sComponent The name of the A-Select component for which the 
-	 * authentication logger is used
-	 * @param sLogFileNamePrefix The log file name prefix (".log" is appended).
-	 * @param sLoggerNamespace The namespace of this system logger.
-	 * @param oConfigManager The config manager used to retrieve the 
-	 * configuration from
-	 * @param oLogTargetConfig The 'target' config section containing the file 
-	 * configuration 
-	 * @param oSystemLogger The back-up logger that must be used to log any 
-	 * errors if database logging failed
-	 * @param sWorkingDir The workingdir that must be used when no directory is 
-	 * configured
-	 * @throws ASelectException if initializing failed (missing config items)
+	 * <b>Postconditions:</b> <br>
+	 * Sets <i>_systemLogger</i> class vairable and initializes it. <br>
+	 * 
+	 * @param sComponent
+	 *            The name of the A-Select component for which the authentication logger is used
+	 * @param sLogFileNamePrefix
+	 *            The log file name prefix (".log" is appended).
+	 * @param sLoggerNamespace
+	 *            The namespace of this system logger.
+	 * @param oConfigManager
+	 *            The config manager used to retrieve the configuration from
+	 * @param oLogTargetConfig
+	 *            The 'target' config section containing the file configuration
+	 * @param oSystemLogger
+	 *            The back-up logger that must be used to log any errors if database logging failed
+	 * @param sWorkingDir
+	 *            The workingdir that must be used when no directory is configured
+	 * @throws ASelectException
+	 *             if initializing failed (missing config items)
 	 */
 	public void init(String sComponent, String sLogFileNamePrefix, String sLoggerNamespace,
 			ConfigManager oConfigManager, Object oLogTargetConfig, SystemLogger oSystemLogger, String sWorkingDir)
@@ -264,41 +254,34 @@ public class AuthenticationLogger
 	}
 
 	/**
-	 * Initializes the Authentication logger with a database back-end.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Initializes the Authentication logger with a database back-end. <br>
 	 * <br>
-	 * <li>Reads configuration</li>
-	 * <li>Tries to connect to the database</li>
-	 * <li>Retrieves the column types of the database columns that are configured</li>
-	 * <li>Creates the query for the PreparedStatement that is used by logging</li>
-	 * <li>Sets the <i>_bLogToDatabase</i> to TRUE</li>
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * <li>Reads configuration</li> <li>Tries to connect to the database</li> <li>Retrieves the column types of the
+	 * database columns that are configured</li> <li>Creates the query for the PreparedStatement that is used by logging
+	 * </li> <li>Sets the <i>_bLogToDatabase</i> to TRUE</li> <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <li><i>oConfigManager</i> must be initialized</li>
-	 * <li><i>oSystemLogger</i> must be initialized</li>
-	 * <li><i>oConfigManager</i> may not be <code>null</code></li>
-	 * <li><i>oLogTargetConfig</i> may not be <code>null</code></li>
-	 * <li><i>oSystemLogger</i> may not be <code>null</code></li>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <li><i>oConfigManager</i> must be initialized</li> <li><i>oSystemLogger</i> must be initialized</li> <li>
+	 * <i>oConfigManager</i> may not be <code>null</code></li> <li><i>oLogTargetConfig</i> may not be <code>null</code></li>
+	 * <li><i>oSystemLogger</i> may not be <code>null</code></li> <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sComponent The name of the A-Select component for which the 
-	 * authentication logger is used
-	 * @param oConfigManager The config manager used to retrieve the 
-	 * configuration from
-	 * @param oLogTargetConfig The 'target' config section containing the 
-	 * configuration 
-	 * @param oSystemLogger The back-up logger that must be used to log any 
-	 * errors if database logging failed
-	 * @throws ASelectException if initializing failed (missing config items)
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sComponent
+	 *            The name of the A-Select component for which the authentication logger is used
+	 * @param oConfigManager
+	 *            The config manager used to retrieve the configuration from
+	 * @param oLogTargetConfig
+	 *            The 'target' config section containing the configuration
+	 * @param oSystemLogger
+	 *            The back-up logger that must be used to log any errors if database logging failed
+	 * @throws ASelectException
+	 *             if initializing failed (missing config items)
 	 */
 	public void init(String sComponent, ConfigManager oConfigManager, Object oLogTargetConfig,
 			SystemLogger oSystemLogger)
@@ -307,7 +290,7 @@ public class AuthenticationLogger
 		String sMethod = "init()";
 
 		try {
-			//set default delimiter for back-up logging
+			// set default delimiter for back-up logging
 			_sDelimiter = DELIMITER;
 
 			_sLogComponent = sComponent;
@@ -318,7 +301,7 @@ public class AuthenticationLogger
 
 			readConfig(oConfigManager, oLogTargetConfig);
 
-			//test connection
+			// test connection
 			try {
 				connect();
 			}
@@ -328,13 +311,13 @@ public class AuthenticationLogger
 				throw new ASelectException(sbTemp.toString(), e);
 			}
 
-			//read column types
+			// read column types
 			_vColumnTypes = retrieveColumnTypes();
 
-			//create query string
+			// create query string
 			_sbPreparedQuery = createStatementQuery();
 
-			//setting log to database to true
+			// setting log to database to true
 			_bLogToDatabase = true;
 		}
 		catch (ASelectException e) {
@@ -347,18 +330,19 @@ public class AuthenticationLogger
 	}
 
 	/**
-	 * Write a log item. 
-	 * <br>
+	 * Write a log item. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
 	 * Write a log item with detailed information. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
 	 * <b>Preconditions: </b> <br>
 	 * The <code>AuthenticationLogger</code> is initialized. <br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param sAction
 	 *            The action that should be logged.
@@ -381,18 +365,19 @@ public class AuthenticationLogger
 	}
 
 	/**
-	 * Log a message. 
-	 * <br>
+	 * Log a message. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
 	 * Logs a simple log message. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
 	 * <b>Preconditions: </b> <br>
 	 * The <code>AuthenticationLogger</code> is initialized. <br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param sMessage
 	 *            The message to be logged.
@@ -414,41 +399,29 @@ public class AuthenticationLogger
 	}
 
 	/**
-	 * Logs all objects in the supplied object array to the logging target.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Logs all objects in the supplied object array to the logging target. <br>
 	 * <br>
-	 * <li>If the target is a file, all objects in the supplied array will be concat 
-	 * with '::' to one <code>String</code> and the string will be logged to a 
-	 * file.</li>
-	 * <li>If the target is a database, every object in the supplied array will 
-	 * be stored in a column of the configured database table.</li>
+	 * <b>Description:</b> <br>
+	 * <li>If the target is a file, all objects in the supplied array will be concat with '::' to one
+	 * <code>String</code> and the string will be logged to a file.</li> <li>If the target is a database, every object
+	 * in the supplied array will be stored in a column of the configured database table.</li> <br>
+	 * <b> Within A-Select components (UDB Connectors and AuthSP Handlers) the following components sequence will be
+	 * used.<br>
+	 * <li>A-Select component. (e.g. A-Select Server)</li> <li>Action (MODULE.method())</li> <li>IP (Users IP address)</li>
+	 * <li>User (A-Select user id)</li> <li>Organization (The A-Select organization)</li> <li>APP ID (A-Select app_id
+	 * for which the user will be authenticated)</li> <li>Message (The log message)</li> </b> <br>
 	 * <br>
-	 * <b>
-	 * Within A-Select components (UDB Connectors and AuthSP Handlers) 
-	 * the following components sequence will be used.<br>
-	 * <li>A-Select component. (e.g. A-Select Server)</li> 
-	 * <li>Action (MODULE.method())</li>
-	 * <li>IP (Users IP address)</li>
-	 * <li>User (A-Select user id)</li>
-	 * <li>Organization (The A-Select organization)</li>
-	 * <li>APP ID (A-Select app_id for which the user will be authenticated)</li>
-	 * <li>Message (The log message)</li>
-	 * </b> 
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
-	 * <br>
-	 * -
-	 * <br>
-	 * @param oLogFields All objects that should be logged
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param oLogFields
+	 *            All objects that should be logged
 	 */
 	public void log(Object[] oLogFields)
 	{
@@ -477,16 +450,16 @@ public class AuthenticationLogger
 	}
 
 	/**
-	 * Cleanup logger resources. 
-	 * <br>
+	 * Cleanup logger resources. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * Closes all openend log handlers. Disconnects the database connection if
-	 * applicable. <br>
+	 * Closes all openend log handlers. Disconnects the database connection if applicable. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
 	 * <b>Postconditions: </b>
 	 * <ul>
@@ -506,26 +479,22 @@ public class AuthenticationLogger
 	}
 
 	/**
-	 * Logs the given object array to the file.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Logs the given object array to the file. <br>
 	 * <br>
-	 * Will concat all objects to one <code>String</code> and logs the resulting 
-	 * string to the log file
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Will concat all objects to one <code>String</code> and logs the resulting string to the log file <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param oLogFields An array of objects that must be logged
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param oLogFields
+	 *            An array of objects that must be logged
 	 */
 	private void logToFile(Object[] oLogFields)
 	{
@@ -547,33 +516,27 @@ public class AuthenticationLogger
 	}
 
 	/**
-	 * Logs the given object array to the database.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Logs the given object array to the database. <br>
 	 * <br>
-	 * The first field will always be filled with the <i>sLogComponent</i> that 
-	 * is supplied at initialization.<br>
-	 * If there are more objects supplied then all ending <code>String</code> 
-	 * objects will be concat (with ',') to one <code>String</code> and will be 
-	 * written to the last database table column.<br>
-	 * If <code>NULL</code> is supplied then an SQL NULL object will be written 
-	 * to the column.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * The first field will always be filled with the <i>sLogComponent</i> that is supplied at initialization.<br>
+	 * If there are more objects supplied then all ending <code>String</code> objects will be concat (with ',') to one
+	 * <code>String</code> and will be written to the last database table column.<br>
+	 * If <code>NULL</code> is supplied then an SQL NULL object will be written to the column. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param oLogFields An array of objects that must be logged
-	 * @throws ASelectException If the the supplied object array could not be 
-	 * logged to the database. (connection lost)
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param oLogFields
+	 *            An array of objects that must be logged
+	 * @throws ASelectException
+	 *             If the the supplied object array could not be logged to the database. (connection lost)
 	 */
 	private void logToDB(Object[] oLogFields)
 		throws ASelectException
@@ -582,13 +545,13 @@ public class AuthenticationLogger
 		PreparedStatement oStatement = null;
 		try {
 			int iFields = oLogFields.length;
-			//add one, because the first column will be filled with _sLogComponent
+			// add one, because the first column will be filled with _sLogComponent
 			int iWriteFields = iFields + 1;
 			int iColumns = _vColumnTypes.size();
 			StringBuffer sbLastField = new StringBuffer();
 
-			//if more log fields are supplied, then the last log fields will be 
-			//merged in the last column
+			// if more log fields are supplied, then the last log fields will be
+			// merged in the last column
 			if (iWriteFields > iColumns) {
 				for (int i = (iColumns - 1); i < iWriteFields; i++) {
 					Object oField = oLogFields[i - 1];
@@ -635,8 +598,8 @@ public class AuthenticationLogger
 
 				}
 				else {
-					//if there are more fields in the statement then supplied to 
-					//the log method, then add NULL fields
+					// if there are more fields in the statement then supplied to
+					// the log method, then add NULL fields
 					oStatement.setNull(i, iColumnType);
 				}
 			}
@@ -684,17 +647,16 @@ public class AuthenticationLogger
 	}
 
 	/**
-	 * Closes the database connection. 
-	 * <br>
+	 * Closes the database connection. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * Closes the connection to the database if database logging is enabled.
-	 * <br>
+	 * Closes the connection to the database if database logging is enabled. <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * This method is synchronized. <br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
 	 * The database connection is closed. <br>
@@ -719,20 +681,22 @@ public class AuthenticationLogger
 	}
 
 	/**
-	 * Write an alternative log message. 
-	 * <br>
+	 * Write an alternative log message. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
 	 * Use the alternative logger if primairy logging fails. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param sMethod
-	 * 			  the method to be logged
+	 *            the method to be logged
 	 * @param sMessage
 	 *            the message to be logged.
 	 */
@@ -745,17 +709,19 @@ public class AuthenticationLogger
 	}
 
 	/**
-	 * get the current timestamp. 
-	 * <br>
+	 * get the current timestamp. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
 	 * get the current system timestamp in a logable format. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @return The current date/time in a logable format.
 	 */
@@ -784,12 +750,15 @@ public class AuthenticationLogger
 	}
 
 	/**
-	 * Reads the configuration of a database target database.
-	 * <br><br>
-	 * @param oConfigManager The config manager that is used to retrieve the 
-	 * configuration
-	 * @param oLogTargetConfig The configuration database target section 
-	 * @throws ASelectException if incorrect configuration is found
+	 * Reads the configuration of a database target database. <br>
+	 * <br>
+	 * 
+	 * @param oConfigManager
+	 *            The config manager that is used to retrieve the configuration
+	 * @param oLogTargetConfig
+	 *            The configuration database target section
+	 * @throws ASelectException
+	 *             if incorrect configuration is found
 	 */
 	private void readConfig(ConfigManager oConfigManager, Object oLogTargetConfig)
 		throws ASelectException
@@ -815,7 +784,7 @@ public class AuthenticationLogger
 			}
 
 			try {
-				//initialize driver
+				// initialize driver
 				Class.forName(_sDriver);
 			}
 			catch (Exception e) {
@@ -853,7 +822,7 @@ public class AuthenticationLogger
 				throw new ASelectException("No valid 'name' config item found in 'table' section");
 			}
 
-			//read all column names and create first part of the query
+			// read all column names and create first part of the query
 			_vColumnNames = new Vector();
 			try {
 				oColumn = oConfigManager.getSection(oTable, "column");
@@ -884,14 +853,13 @@ public class AuthenticationLogger
 	}
 
 	/**
-	 * Retrieves the column types of the configured database.
+	 * Retrieves the column types of the configured database. <br>
+	 * The columns in the configured database must match the configured column names. <br>
 	 * <br>
-	 * The columns in the configured database must match the configured column 
-	 * names.
-	 * <br><br>
-	 * @return a <code>Vector</code> containing all column types that will be 
-	 * needed for database logging
-	 * @throws ASelectException if a column type or name could not be resolved
+	 * 
+	 * @return a <code>Vector</code> containing all column types that will be needed for database logging
+	 * @throws ASelectException
+	 *             if a column type or name could not be resolved
 	 */
 	private Vector retrieveColumnTypes()
 		throws ASelectException
@@ -961,10 +929,12 @@ public class AuthenticationLogger
 	}
 
 	/**
-	 * Creates the PrepareStatement query used for logging.
-	 * <br><br>
+	 * Creates the PrepareStatement query used for logging. <br>
+	 * <br>
+	 * 
 	 * @return a <code>StringBuffer</code> containing the UPDATE query
-	 * @throws ASelectException if the query could not be created
+	 * @throws ASelectException
+	 *             if the query could not be created
 	 */
 	private StringBuffer createStatementQuery()
 		throws ASelectException
@@ -973,7 +943,7 @@ public class AuthenticationLogger
 
 		StringBuffer sbPreparedQuery = null;
 		try {
-			//read all column names and create first part of the query
+			// read all column names and create first part of the query
 			sbPreparedQuery = new StringBuffer("INSERT INTO ");
 			sbPreparedQuery.append(_sTableName);
 			sbPreparedQuery.append(" (");

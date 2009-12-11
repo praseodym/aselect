@@ -93,14 +93,12 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 
+// TODO: Auto-generated Javadoc
 /**
- * Implements the ConfigManager for the A-Select Agent package. 
- * <br><br>
- * <b>Description: </b> 
+ * Implements the ConfigManager for the A-Select Agent package. <br>
  * <br>
- * Implements the ConfigManager for the A-Select Agent package as 
- * a single pattern.
- * <br>
+ * <b>Description: </b> <br>
+ * Implements the ConfigManager for the A-Select Agent package as a single pattern. <br>
  * <br>
  * <b>Concurrency issues: </b> <br>
  * None. <br>
@@ -112,7 +110,7 @@ public class ASelectAgentConfigManager extends ConfigManager
 	private final String MODULE = "ASelectAgentConfigManager";
 
 	/**
-	 * The default signature algorithm name 
+	 * The default signature algorithm name
 	 */
 	private static final String DEFAULT_SIGNATURE_ALGORITHM = "SHA1withRSA";
 
@@ -137,12 +135,12 @@ public class ASelectAgentConfigManager extends ConfigManager
 	private boolean _bSignRequests;
 
 	/**
-	 * The signature algorithm name 
+	 * The signature algorithm name
 	 */
 	private String _sSignatureAlgorithm = null;
 
 	/**
-	 * The signature algorithm prover object 
+	 * The signature algorithm prover object
 	 */
 	private Provider _oSignatureProvider;
 
@@ -158,6 +156,7 @@ public class ASelectAgentConfigManager extends ConfigManager
 
 	/**
 	 * returns a static ASelectAgentConfigManager handle to this singleton.
+	 * 
 	 * @return A static <code>ASelectAgentConfigManager</code>.
 	 */
 	public static ASelectAgentConfigManager getHandle()
@@ -170,10 +169,13 @@ public class ASelectAgentConfigManager extends ConfigManager
 
 	/**
 	 * Initializes the configuration.
-	 *    
-	 * @param sWorkingDir The working directory.
+	 * 
+	 * @param sWorkingDir
+	 *            The working directory.
 	 * @throws ASelectConfigException
+	 *             the a select config exception
 	 * @throws Exception
+	 *             the exception
 	 */
 	public void init(String sWorkingDir)
 		throws ASelectConfigException, Exception
@@ -187,8 +189,9 @@ public class ASelectAgentConfigManager extends ConfigManager
 	}
 
 	/**
-	 * Returns signature algorithm.
-	 * <br><br>
+	 * Returns signature algorithm. <br>
+	 * <br>
+	 * 
 	 * @return a <code>String</code> representation signature algorithm
 	 */
 	public String getSignatureAlgorithm()
@@ -197,8 +200,9 @@ public class ASelectAgentConfigManager extends ConfigManager
 	}
 
 	/**
-	 * Returns signature algorithm Provider.
-	 * <br><br>
+	 * Returns signature algorithm Provider. <br>
+	 * <br>
+	 * 
 	 * @return the configured <code>Provider</code> for the signature algorithm
 	 */
 	public Provider getSignatureProvider()
@@ -207,8 +211,9 @@ public class ASelectAgentConfigManager extends ConfigManager
 	}
 
 	/**
-	 * Returns signing key.
-	 * <br><br>
+	 * Returns signing key. <br>
+	 * <br>
+	 * 
 	 * @return signing key
 	 */
 	public PrivateKey getSigningKey()
@@ -217,8 +222,9 @@ public class ASelectAgentConfigManager extends ConfigManager
 	}
 
 	/**
-	 * Returns TRUE if siging is enabled in config.
-	 * <br><br>
+	 * Returns TRUE if siging is enabled in config. <br>
+	 * <br>
+	 * 
 	 * @return FALSE if signing is disabled in config
 	 */
 	public boolean isSigningEnabled()
@@ -227,23 +233,20 @@ public class ASelectAgentConfigManager extends ConfigManager
 	}
 
 	/**
-	 * Retrieve the attribute-forwarding rules for an application.
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Retrieve the attribute-forwarding rules for an application. <br>
 	 * <br>
-	 * Returns the attribute forwarding rules for <code>sAppId</code>
-	 * in a <code>HashMap</code>. It returns:
+	 * <b>Description: </b> <br>
+	 * Returns the attribute forwarding rules for <code>sAppId</code> in a <code>HashMap</code>. It returns:
 	 * <ul>
-	 * <li>send_once: Boolean indicating whether to send once
-	 * (during verify_credentials reply) or always (during verify_ticket
-	 * reply too)
-	 * <li>prefix: String that must be prefixed to each attribute
-	 * when they are forwarded
+	 * <li>send_once: Boolean indicating whether to send once (during verify_credentials reply) or always (during
+	 * verify_ticket reply too)
+	 * <li>prefix: String that must be prefixed to each attribute when they are forwarded
 	 * <li>attributes: A String Array containing the attribute masks.
 	 * </ul>
-	 * @param sAppId 
-	 * @return HashMap The forwarding rules, or <code>null</code> when
-	 * no rules where found.
+	 * 
+	 * @param sAppId
+	 *            the s app id
+	 * @return HashMap The forwarding rules, or <code>null</code> when no rules where found.
 	 */
 	public HashMap getAttributeForwardingRule(String sAppId)
 	{
@@ -259,8 +262,14 @@ public class ASelectAgentConfigManager extends ConfigManager
 	private ASelectAgentConfigManager() {
 	}
 
+	/**
+	 * Load crypto.
+	 * 
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private void loadCrypto()
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "loadCrypto()";
 
@@ -307,7 +316,7 @@ public class ASelectAgentConfigManager extends ConfigManager
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
-			while (oCryptoProvider != null) //for all providers
+			while (oCryptoProvider != null) // for all providers
 			{
 				String sProviderID = null;
 				try {
@@ -344,7 +353,7 @@ public class ASelectAgentConfigManager extends ConfigManager
 			}
 		}
 
-		//Obtain algorithm for generating/verifying signatures
+		// Obtain algorithm for generating/verifying signatures
 		readSignatureConfig(oCryptoSection, htProviders);
 
 		// Retrieve signing parameter
@@ -379,6 +388,16 @@ public class ASelectAgentConfigManager extends ConfigManager
 		}
 	}
 
+	/**
+	 * Load default private key.
+	 * 
+	 * @param sKeystorePath
+	 *            the s keystore path
+	 * @param sPassword
+	 *            the s password
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private void loadDefaultPrivateKey(String sKeystorePath, String sPassword)
 		throws ASelectException
 	{
@@ -398,6 +417,16 @@ public class ASelectAgentConfigManager extends ConfigManager
 		}
 	}
 
+	/**
+	 * Read signature config.
+	 * 
+	 * @param oCryptoSection
+	 *            the o crypto section
+	 * @param htProviders
+	 *            the ht providers
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private void readSignatureConfig(Object oCryptoSection, HashMap htProviders)
 		throws ASelectException
 	{
@@ -417,7 +446,7 @@ public class ASelectAgentConfigManager extends ConfigManager
 		}
 
 		if (oSection != null) {
-			//retrieve algorithm
+			// retrieve algorithm
 			try {
 				_sSignatureAlgorithm = getParam(oSection, "algorithm");
 			}
@@ -432,7 +461,7 @@ public class ASelectAgentConfigManager extends ConfigManager
 		}
 
 		if (oSection != null) {
-			//retrieve provider
+			// retrieve provider
 			try {
 				sProvider = getParam(oSection, "provider");
 			}
@@ -440,7 +469,7 @@ public class ASelectAgentConfigManager extends ConfigManager
 				sProvider = null;
 
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod, "Could not retrieve 'provider' config section"
-								+ " in crypto config section. Using default provider.", e);
+						+ " in crypto config section. Using default provider.", e);
 			}
 
 			if (sProvider != null) {

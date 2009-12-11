@@ -20,19 +20,39 @@ import javax.servlet.ServletConfig;
 import org.aselect.server.request.handler.*;
 import org.aselect.system.exception.ASelectException;
 
+// TODO: Auto-generated Javadoc
 //
 //
 public class Idff12_ArtifactResolver extends SamlArtifactResolver
 {
-    protected final static String MODULE = "Idff12_ArtResolver";
+	protected final static String MODULE = "Idff12_ArtResolver";
 	public final static String SESSION_ID_PREFIX = "idff12_";
 
-	protected String getSessionIdPrefix() { return SESSION_ID_PREFIX; }
-    protected boolean useConfigToCreateSamlBuilder() { return true; }
-
-    public void init(ServletConfig oServletConfig, Object oConfig)
-	throws ASelectException
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.ProtoRequestHandler#getSessionIdPrefix()
+	 */
+	@Override
+	protected String getSessionIdPrefix()
 	{
-	    super.init(oServletConfig, oConfig);
+		return SESSION_ID_PREFIX;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.ProtoRequestHandler#useConfigToCreateSamlBuilder()
+	 */
+	@Override
+	protected boolean useConfigToCreateSamlBuilder()
+	{
+		return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.SamlArtifactResolver#init(javax.servlet.ServletConfig, java.lang.Object)
+	 */
+	@Override
+	public void init(ServletConfig oServletConfig, Object oConfig)
+		throws ASelectException
+	{
+		super.init(oServletConfig, oConfig);
 	}
 }

@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.xsaml20.sp;
 
 import java.io.IOException;
@@ -18,6 +29,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 import org.aselect.server.log.ASelectSystemLogger;
 
+// TODO: Auto-generated Javadoc
 // public class Xsaml20_SessionSync extends ProtoRequestHandler // RH, 20080603, o
 public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 {
@@ -39,6 +51,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 	 * @throws ASelectException
 	 *             If initialisation fails.
 	 */
+	@Override
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
 		throws ASelectException
 	{
@@ -64,7 +77,8 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 			_sFederationUrl = _configManager.getParam(oHandlerConfig, "federation_url");
 		}
 		catch (ASelectConfigException e) {
-			// 20091207: _systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'federation_url' found in 'handler' section", e);
+			// 20091207: _systemLogger.log(Level.WARNING, MODULE, sMethod,
+			// "No config item 'federation_url' found in 'handler' section", e);
 			// 20091207: throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 
@@ -90,6 +104,10 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.xsaml20.Saml20_BaseHandler#destroy()
+	 */
+	@Override
 	public void destroy()
 	{
 	}
@@ -102,24 +120,26 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 	 *            The HttpServletRequest.
 	 * @param response
 	 *            The HttpServletResponse.
+	 * @return the request state
 	 * @throws ASelectException
 	 *             If processing of request fails.synchronizeSession
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-	throws ASelectException
+		throws ASelectException
 	{
 		String errorCode = Errors.ERROR_ASELECT_SUCCESS;
 		String _sMethod = "process";
 
-		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SP Session Sync Handler, SpUrl=" + _sSpUrl +
-				" MessageType=" + _sMessageType);
+		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SP Session Sync Handler, SpUrl=" + _sSpUrl + " MessageType="
+				+ _sMessageType);
 
 		// get credentials from url
 		String sEncryptedTgt = request.getParameter("credentials");
 
 		// Do we need to send an update to the federation?
 		if (sEncryptedTgt != null) {
-			_systemLogger.log(Level.INFO, MODULE, _sMethod, "Do session synchronization signature verification=" + is_bVerifySignature());
+			_systemLogger.log(Level.INFO, MODULE, _sMethod, "Do session synchronization signature verification="
+					+ is_bVerifySignature());
 			String sTgT = Utils.decodeCredentials(sEncryptedTgt, _oSystemLogger);
 			if (sTgT == null) {
 				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Can not decode credentials");
@@ -130,34 +150,37 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 				_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "Unknown TGT");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT);
 			}
-			String sFederationUrl = (String)htTGTContext.get("federation_url");
-			if (sFederationUrl == null) sFederationUrl = _sFederationUrl;  // TODO: remove, only here for backward compatibility
+			String sFederationUrl = (String) htTGTContext.get("federation_url");
+			if (sFederationUrl == null)
+				sFederationUrl = _sFederationUrl; // TODO: remove, only here for backward compatibility
 			if (sFederationUrl == null || sFederationUrl.equals("")) {
 				_systemLogger.log(Level.SEVERE, MODULE, _sMethod, "No \"federation_url\" available in TGT");
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 			}
-			
+
 			PublicKey pkey = null;
 			if (is_bVerifySignature()) {
 				// Check signature of session synchronization here
 				MetaDataManagerSp metadataManager = MetaDataManagerSp.getHandle();
 				pkey = metadataManager.getSigningKeyFromMetadata(sFederationUrl);
 				if (pkey == null || "".equals(pkey)) {
-					_systemLogger.log(Level.SEVERE, MODULE, _sMethod, "No public valid key in metadata for: " + sFederationUrl);
+					_systemLogger.log(Level.SEVERE, MODULE, _sMethod, "No public valid key in metadata for: "
+							+ sFederationUrl);
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
 			}
-			
-			String sSessionSyncUrl = MetaDataManagerSp.getHandle().getSessionSyncURL(sFederationUrl);  // "/saml20_session_sync";
+
+			String sSessionSyncUrl = MetaDataManagerSp.getHandle().getSessionSyncURL(sFederationUrl); // "/saml20_session_sync";
 			_systemLogger.log(Level.INFO, MODULE, _sMethod, "Metadata session sync url=" + sSessionSyncUrl);
-			if (sSessionSyncUrl == null) sSessionSyncUrl = _sFederationUrl;  // 20091030: backward compatibility
+			if (sSessionSyncUrl == null)
+				sSessionSyncUrl = _sFederationUrl; // 20091030: backward compatibility
 			if (sSessionSyncUrl == null || sSessionSyncUrl.equals("")) {
 				_systemLogger.log(Level.SEVERE, MODULE, _sMethod, "No session sync url found in metadata");
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 			}
-			SessionSyncRequestSender ss_req = new SessionSyncRequestSender(_oSystemLogger, _sSpUrl,
-					updateInterval, _sMessageType, sSessionSyncUrl, pkey, getMaxNotBefore(), getMaxNotOnOrAfter(), is_bVerifyInterval());
-			errorCode = ss_req.synchronizeSession(sTgT, htTGTContext, /*true, coded*/ true/*upgrade*/);
+			SessionSyncRequestSender ss_req = new SessionSyncRequestSender(_oSystemLogger, _sSpUrl, updateInterval,
+					_sMessageType, sSessionSyncUrl, pkey, getMaxNotBefore(), getMaxNotOnOrAfter(), is_bVerifyInterval());
+			errorCode = ss_req.synchronizeSession(sTgT, htTGTContext, /* true, coded */true/* upgrade */);
 		}
 		else {
 			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SP - No credentials available");

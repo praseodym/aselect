@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.xsaml20.idp;
 
 import java.io.IOException;
@@ -54,6 +65,7 @@ import org.opensaml.xml.XMLObjectBuilderFactory;
 import org.opensaml.xml.schema.XSString;
 import org.opensaml.xml.util.XMLHelper;
 
+// TODO: Auto-generated Javadoc
 // Example configuration
 // <handler id="saml20_sso"
 //    class="org.aselect.server.request.handler.xsaml20.idp.Xsaml20_SSO"
@@ -62,33 +74,41 @@ import org.opensaml.xml.util.XMLHelper;
 //
 public class Xsaml20_SSO extends Saml20_BrowserHandler
 {
-    private final static String MODULE = "Xsaml20_SSO";
+	private final static String MODULE = "Xsaml20_SSO";
 	private final static String RETURN_SUFFIX = "_return";
-    private final String AUTHNREQUEST = "AuthnRequest";
-    
-    public Issuer retrieveIssuer(String elementName, SignableSAMLObject samlMessage)
-    {
-	    if (elementName.equals(AUTHNREQUEST)) {
+	private final String AUTHNREQUEST = "AuthnRequest";
+
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.xsaml20.Saml20_BrowserHandler#retrieveIssuer(java.lang.String, org.opensaml.common.SignableSAMLObject)
+	 */
+	public Issuer retrieveIssuer(String elementName, SignableSAMLObject samlMessage)
+	{
+		if (elementName.equals(AUTHNREQUEST)) {
 			AuthnRequest authnRequest = (AuthnRequest) samlMessage;
 			return authnRequest.getIssuer();
 		}
 		return null;
-    }
+	}
 
 	/**
-	 * Overrides the default
+	 * Overrides the default.
 	 * 
-	 * @param request - HttpServletRequest
-	 * @param response - HttpServletResponse
+	 * @param request
+	 *            - HttpServletRequest
+	 * @param response
+	 *            - HttpServletResponse
 	 * @return RequestState
-	 */	
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 		throws ASelectException
 	{
 		String sMethod = "process()";
 		String sPathInfo = request.getPathInfo();
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "==== Path="+sPathInfo+" RequestQuery: " + request.getQueryString());
-		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request received === Path="+sPathInfo);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "==== Path=" + sPathInfo + " RequestQuery: "
+				+ request.getQueryString());
+		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request received === Path=" + sPathInfo);
 
 		if (sPathInfo.endsWith(RETURN_SUFFIX)) {
 			processReturn(request, response);
@@ -97,7 +117,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			handleSAMLMessage(request, response);
 		}
 		else {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Request: "+request.getQueryString()+" is not recognized");
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Request: " + request.getQueryString()
+					+ " is not recognized");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
 		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request handled ");
@@ -105,24 +126,30 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	}
 
 	/**
+	 * Handle specific saml20 request.
+	 * 
 	 * @param httpRequest
+	 *            the http request
 	 * @param httpResponse
+	 *            the http response
 	 * @param samlMessage
+	 *            the saml message
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	@SuppressWarnings("unchecked")
 	protected void handleSpecificSaml20Request(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
 			SignableSAMLObject samlMessage)
-	throws ASelectException
+		throws ASelectException
 	{
-		String sMethod = "handleSpecificSaml20Request "+Thread.currentThread().getId();
-		AuthnRequest authnRequest = (AuthnRequest)samlMessage;
+		String sMethod = "handleSpecificSaml20Request " + Thread.currentThread().getId();
+		AuthnRequest authnRequest = (AuthnRequest) samlMessage;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
 
 		try {
-			String sRelayState = (String)httpRequest.getParameter("RelayState");
+			String sRelayState = (String) httpRequest.getParameter("RelayState");
 			if (sRelayState != null && sRelayState.equals("[RelayState]"))
-				sRelayState = null;  // 20091118, Bauke: ignore "empty" RelayState (came from logout_info.html)
+				sRelayState = null; // 20091118, Bauke: ignore "empty" RelayState (came from logout_info.html)
 			Response errorResponse = validateAuthnRequest(authnRequest, httpRequest);
 			if (errorResponse != null) {
 				_systemLogger.log(Audit.SEVERE, MODULE, sMethod, "validateAuthnRequest failed");
@@ -131,10 +158,10 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			}
 			// The message is OK
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> SAML AuthnRequest received");
-			String sAppId = authnRequest.getIssuer().getValue();  // authnRequest.getProviderName();
+			String sAppId = authnRequest.getIssuer().getValue(); // authnRequest.getProviderName();
 			String sSPRid = authnRequest.getID();
 			String sIssuer = authnRequest.getIssuer().getValue();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "==== SPRid="+sSPRid+" RelayState="+sRelayState);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "==== SPRid=" + sSPRid + " RelayState=" + sRelayState);
 
 			boolean bForcedAuthn = authnRequest.isForceAuthn();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "ForceAuthn = " + bForcedAuthn);
@@ -144,15 +171,15 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "AssertionConsumerServiceURL not found");
 				throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
 			}
-			
+
 			// Start an authenticate request
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "performAuthenticateRequest AppId=" + sAppId);
-			HashMap htResponse = performAuthenticateRequest(_sASelectServerUrl, 
-					httpRequest.getPathInfo(), RETURN_SUFFIX, sAppId, true /*check sig*/, _oClientCommunicator);
+			HashMap htResponse = performAuthenticateRequest(_sASelectServerUrl, httpRequest.getPathInfo(),
+					RETURN_SUFFIX, sAppId, true /* check sig */, _oClientCommunicator);
 
 			String sASelectServerUrl = (String) htResponse.get("as_url");
 			String sIDPRid = (String) htResponse.get("rid");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Supplied rid="+sIDPRid+" response="+htResponse);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Supplied rid=" + sIDPRid + " response=" + htResponse);
 
 			// The new sessionhttpRequest
 			HashMap htSession = _oSessionManager.getSessionContext(sIDPRid);
@@ -162,47 +189,51 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			htSession.put("sp_issuer", sIssuer);
 			htSession.put("sp_assert_url", sAssertionConsumerServiceURL);
 			htSession.put("forced_uid", "saml20_user");
-			
+
 			// RH, 20081117, strictly speaking forced_logon != forced_authenticate
 			// 20090613, Bauke: 'forced_login' is used as API parameter (a String value)
-			//           'forced_authenticate' is used in the Session (a Boolean value),
-			//           the meaning of both is the identical
+			// 'forced_authenticate' is used in the Session (a Boolean value),
+			// the meaning of both is the identical
 			if (bForcedAuthn) {
 				htSession.put("forced_authenticate", new Boolean(bForcedAuthn));
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "'forced_authenticate' in htSession set to: " + bForcedAuthn);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "'forced_authenticate' in htSession set to: "
+						+ bForcedAuthn);
 			}
 
 			// The betrouwbaarheidsniveau is stored in the session context
 			RequestedAuthnContext requestedAuthnContext = authnRequest.getRequestedAuthnContext();
-			String sBetrouwbaarheidsNiveau = SecurityLevel.getBetrouwbaarheidsNiveau(requestedAuthnContext, _systemLogger);
+			String sBetrouwbaarheidsNiveau = SecurityLevel.getBetrouwbaarheidsNiveau(requestedAuthnContext,
+					_systemLogger);
 			if (sBetrouwbaarheidsNiveau.equals(SecurityLevel.BN_NOT_FOUND)) {
 				// We've got a security level but is not known
 				String sStatusMessage = "The requested AuthnContext isn't present in the configuration";
-				errorResponse = errorResponse(sSPRid, sAssertionConsumerServiceURL,
-								StatusCode.NO_AUTHN_CONTEXT_URI, sStatusMessage);
+				errorResponse = errorResponse(sSPRid, sAssertionConsumerServiceURL, StatusCode.NO_AUTHN_CONTEXT_URI,
+						sStatusMessage);
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sStatusMessage);
 				sendErrorArtifact(errorResponse, authnRequest, httpResponse, sRelayState);
 				return;
 			}
 			// debug
-			/*org.opensaml.saml2.core.Subject mySubj = authnRequest.getSubject();
-			if (mySubj != null) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Subject.BaseID="+mySubj.getBaseID()+
-						" Subject.NameID="+mySubj.getNameID());
-			}*/
+			/*
+			 * org.opensaml.saml2.core.Subject mySubj = authnRequest.getSubject(); if (mySubj != null) {
+			 * _systemLogger.log(Level.INFO, MODULE, sMethod, "Subject.BaseID="+mySubj.getBaseID()+
+			 * " Subject.NameID="+mySubj.getNameID()); }
+			 */
 
-			// 20090110, Bauke changed requested_betrouwbaarheidsniveau  to required_level
+			// 20090110, Bauke changed requested_betrouwbaarheidsniveau to required_level
 			htSession.put("required_level", sBetrouwbaarheidsNiveau);
-			htSession.put("level", Integer.parseInt(sBetrouwbaarheidsNiveau));  // 20090111, Bauke added
+			htSession.put("level", Integer.parseInt(sBetrouwbaarheidsNiveau)); // 20090111, Bauke added
 			_oSessionManager.updateSession(sIDPRid, htSession);
 
 			// redirect with A-Select request=login1
 			StringBuffer sbURL = new StringBuffer(sASelectServerUrl);
 			sbURL.append("&rid=").append(sIDPRid);
 			sbURL.append("&a-select-server=").append(_sASelectServerID);
-			if (bForcedAuthn) sbURL.append("&forced_logon=").append(bForcedAuthn);
+			if (bForcedAuthn)
+				sbURL.append("&forced_logon=").append(bForcedAuthn);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sbURL.toString());
-			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Challenge for credentials, redirect to:"  + sbURL.toString());
+			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Challenge for credentials, redirect to:"
+					+ sbURL.toString());
 			httpResponse.sendRedirect(sbURL.toString());
 		}
 		catch (ASelectException e) {
@@ -216,15 +247,24 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> SAML AuthnRequest handled");
 	}
 
+	/**
+	 * Gets the assertion consumer service url.
+	 * 
+	 * @param samlMessage
+	 *            the saml message
+	 * @return the assertion consumer service url
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private String getAssertionConsumerServiceURL(SignableSAMLObject samlMessage)
-	throws ASelectException
+		throws ASelectException
 	{
-		String sMethod = "getAssertionConsumerServiceURL "+Thread.currentThread().getId();
-		
+		String sMethod = "getAssertionConsumerServiceURL " + Thread.currentThread().getId();
+
 		String elementName = samlMessage.getElementQName().getLocalPart();
 		Issuer issuer = retrieveIssuer(elementName, samlMessage);
 		if (issuer == null) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "SAMLMessage: "+elementName+" was not recognized");
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "SAMLMessage: " + elementName + " was not recognized");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
 		String sAssertionConsumerServiceURL = null;
@@ -232,47 +272,39 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		String sElementName = AssertionConsumerService.DEFAULT_ELEMENT_LOCAL_NAME;
 		String sBindingName = SAMLConstants.SAML2_ARTIFACT_BINDING_URI;
 
-		//_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta");
+		// _systemLogger.log(Level.INFO, MODULE, sMethod, "Meta");
 		MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
-		
-		/*try {  // TEST
-			sAssertionConsumerServiceURL = metadataManager.getLocation("https://www.sp.com:9443/sps/IBM-Overheid/saml20",
-					"AssertionConsumerService", "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Location="+sAssertionConsumerServiceURL);
-		} catch (ASelectException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to get location: "+e.getMessage());
-		}
-		try {  // TEST
-			sAssertionConsumerServiceURL = metadataManager.getLocation("https://portal.sunlabs.nl:444/opensso",
-					"AssertionConsumerService", "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Location="+sAssertionConsumerServiceURL);
-		} catch (ASelectException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to get location: "+e.getMessage());
-		}
-		try {  // TEST
-			sAssertionConsumerServiceURL = metadataManager.getLocation("https://siam.s-hertogenbosch.nl/aselectserver/server",
-					"AssertionConsumerService", "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Location="+sAssertionConsumerServiceURL);
-		} catch (ASelectException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to get location: "+e.getMessage());
-		}
-		try {  // TEST
-			sAssertionConsumerServiceURL = metadataManager.getLocation("http://fed.amsterdamlaan.net/fed/sp",
-					"AssertionConsumerService", "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Location="+sAssertionConsumerServiceURL);
-		} catch (ASelectException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to get location: "+e.getMessage());
-		}*/
-		
+
+		/*
+		 * try { // TEST sAssertionConsumerServiceURL =
+		 * metadataManager.getLocation("https://www.sp.com:9443/sps/IBM-Overheid/saml20", "AssertionConsumerService",
+		 * "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact"); _systemLogger.log(Level.INFO, MODULE, sMethod,
+		 * "Location="+sAssertionConsumerServiceURL); } catch (ASelectException e) { _systemLogger.log(Level.WARNING,
+		 * MODULE, sMethod, "Failed to get location: "+e.getMessage()); } try { // TEST sAssertionConsumerServiceURL =
+		 * metadataManager.getLocation("https://portal.sunlabs.nl:444/opensso", "AssertionConsumerService",
+		 * "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact"); _systemLogger.log(Level.INFO, MODULE, sMethod,
+		 * "Location="+sAssertionConsumerServiceURL); } catch (ASelectException e) { _systemLogger.log(Level.WARNING,
+		 * MODULE, sMethod, "Failed to get location: "+e.getMessage()); } try { // TEST sAssertionConsumerServiceURL =
+		 * metadataManager.getLocation("https://siam.s-hertogenbosch.nl/aselectserver/server",
+		 * "AssertionConsumerService", "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact");
+		 * _systemLogger.log(Level.INFO, MODULE, sMethod, "Location="+sAssertionConsumerServiceURL); } catch
+		 * (ASelectException e) { _systemLogger.log(Level.WARNING, MODULE, sMethod,
+		 * "Failed to get location: "+e.getMessage()); } try { // TEST sAssertionConsumerServiceURL =
+		 * metadataManager.getLocation("http://fed.amsterdamlaan.net/fed/sp", "AssertionConsumerService",
+		 * "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact"); _systemLogger.log(Level.INFO, MODULE, sMethod,
+		 * "Location="+sAssertionConsumerServiceURL); } catch (ASelectException e) { _systemLogger.log(Level.WARNING,
+		 * MODULE, sMethod, "Failed to get location: "+e.getMessage()); }
+		 */
+
 		try {
 			sAssertionConsumerServiceURL = metadataManager.getLocation(sEntityId, sElementName, sBindingName);
 		}
 		catch (ASelectException e) {
 			// Metadata retrieval failed so get it from the message
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to get location: "+e.getMessage());
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to get location: " + e.getMessage());
 		}
 
-		//_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta1 OK "+sAssertionConsumerServiceURL);
+		// _systemLogger.log(Level.INFO, MODULE, sMethod, "Meta1 OK "+sAssertionConsumerServiceURL);
 		if (sAssertionConsumerServiceURL == null) {
 			if (elementName.equals(AUTHNREQUEST)) {
 				AuthnRequest authnRequest = (AuthnRequest) samlMessage;
@@ -280,14 +312,30 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				sAssertionConsumerServiceURL = authnRequest.getAssertionConsumerServiceURL();
 			}
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Return "+sAssertionConsumerServiceURL);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Return " + sAssertionConsumerServiceURL);
 		return sAssertionConsumerServiceURL;
 	}
 
 	// This is an error response
-	private void sendErrorArtifact(Response errorResponse, AuthnRequest authnRequest,
-					HttpServletResponse httpResponse, String sRelayState)
-	throws IOException, ASelectException
+	/**
+	 * Send error artifact.
+	 * 
+	 * @param errorResponse
+	 *            the error response
+	 * @param authnRequest
+	 *            the authn request
+	 * @param httpResponse
+	 *            the http response
+	 * @param sRelayState
+	 *            the s relay state
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	private void sendErrorArtifact(Response errorResponse, AuthnRequest authnRequest, HttpServletResponse httpResponse,
+			String sRelayState)
+		throws IOException, ASelectException
 	{
 		String sMethod = "sendErrorArtifact()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
@@ -301,7 +349,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		// So in this case send a message to the browser
 		String sAssertionConsumerServiceURL = getAssertionConsumerServiceURL(authnRequest);
 		if (sAssertionConsumerServiceURL != null) {
-			artifactManager.sendArtifact(sArtifact, errorResponse, sAssertionConsumerServiceURL, httpResponse, sRelayState);
+			artifactManager.sendArtifact(sArtifact, errorResponse, sAssertionConsumerServiceURL, httpResponse,
+					sRelayState);
 		}
 		else {
 			String errorMessage = "Something wrong in SAML communication";
@@ -313,60 +362,72 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 	// We're returning from the AuthSP
 	// RequestQuery: aselect_credentials=7HxCWBudn...W8bAU3OY&rid=4B9FF1406696C0C8&a-select-server=umcn_aselect_server1
+	/**
+	 * Process return.
+	 * 
+	 * @param httpRequest
+	 *            the http request
+	 * @param httpResponse
+	 *            the http response
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private void processReturn(HttpServletRequest httpRequest, HttpServletResponse httpResponse)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "processReturn()";
-        HashMap htTGTContext = null;
-        HashMap htSessionContext = null;
+		HashMap htTGTContext = null;
+		HashMap htSessionContext = null;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
 		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Handle return from the AuthSP");
-		
+
 		try {
 			// We have to return to the calling SP using a SAML Artifact
 			// If a TgT is present the session has been deleted
-	        String sRid = (String) httpRequest.getParameter("rid");
+			String sRid = (String) httpRequest.getParameter("rid");
 			String sTgt = (String) httpRequest.getParameter("aselect_credentials");
 			if (sTgt != null && !sTgt.equals("")) {
 				sTgt = decryptCredentials(sTgt);
-		        htTGTContext = getContextFromTgt(sTgt, false);  // Don't check expiration
+				htTGTContext = getContextFromTgt(sTgt, false); // Don't check expiration
 			}
 			else {
 				htSessionContext = _oSessionManager.getSessionContext(sRid);
 			}
 
 			// One of them must be available
-	        if (htTGTContext == null && htSessionContext == null) {
-	        	_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Neither TGT context nor Session context are available");
-	        	throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-	        }
+			if (htTGTContext == null && htSessionContext == null) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod,
+						"Neither TGT context nor Session context are available");
+				throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+			}
 
-	        String sAssertUrl = null;
-	        if (htTGTContext != null)
-	        	sAssertUrl = (String)htTGTContext.get("sp_assert_url");
-	        if (sAssertUrl == null && htSessionContext != null)
-		        sAssertUrl = (String)htSessionContext.get("sp_assert_url");
-	        if (sAssertUrl == null) {
-	    		_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Return url \"sp_assert_url\" is missing");
-	            throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-	        }
+			String sAssertUrl = null;
+			if (htTGTContext != null)
+				sAssertUrl = (String) htTGTContext.get("sp_assert_url");
+			if (sAssertUrl == null && htSessionContext != null)
+				sAssertUrl = (String) htSessionContext.get("sp_assert_url");
+			if (sAssertUrl == null) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Return url \"sp_assert_url\" is missing");
+				throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+			}
 
-	        // 20090603, Bauke: Only take RelayState from the session (not from TgT)
-	        // If RelayState was given, it must be available in the Session Context.
-	        String sRelayState = null;
-	        if (htSessionContext != null)
-	        	sRelayState = (String)htSessionContext.get("RelayState");
-	        else
-	        	sRelayState = (String)htTGTContext.get("RelayState");
-	        
-	        // And off you go!
-			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Redirecting with artifact to: "+ sAssertUrl);
+			// 20090603, Bauke: Only take RelayState from the session (not from TgT)
+			// If RelayState was given, it must be available in the Session Context.
+			String sRelayState = null;
+			if (htSessionContext != null)
+				sRelayState = (String) htSessionContext.get("RelayState");
+			else
+				sRelayState = (String) htTGTContext.get("RelayState");
+
+			// And off you go!
+			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Redirecting with artifact to: " + sAssertUrl);
 			sendSAMLArtifactRedirect(sAssertUrl, sRid, htSessionContext, sTgt, htTGTContext, httpResponse, sRelayState);
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Return from  AuthSP handled");
 
 			// Cleanup for a forced_authenticate session
-			Boolean bForcedAuthn = (Boolean)htTGTContext.get("forced_authenticate");
-			if (bForcedAuthn == null) bForcedAuthn = false;
+			Boolean bForcedAuthn = (Boolean) htTGTContext.get("forced_authenticate");
+			if (bForcedAuthn == null)
+				bForcedAuthn = false;
 			if (bForcedAuthn && htTGTContext != null) {
 				TGTManager tgtManager = TGTManager.getHandle();
 				tgtManager.remove(sTgt);
@@ -389,10 +450,30 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	// If htTGTContext is null we have to create an error <Response>
 	// no Assertion, just <Status>
 	//
+	/**
+	 * Send saml artifact redirect.
+	 * 
+	 * @param sAppUrl
+	 *            the s app url
+	 * @param sRid
+	 *            the s rid
+	 * @param htSessionContext
+	 *            the ht session context
+	 * @param sTgt
+	 *            the s tgt
+	 * @param htTGTContext
+	 *            the ht tgt context
+	 * @param oHttpServletResponse
+	 *            the o http servlet response
+	 * @param sRelayState
+	 *            the s relay state
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	@SuppressWarnings("unchecked")
-	private void sendSAMLArtifactRedirect(String sAppUrl, String sRid, HashMap htSessionContext,
-				String sTgt, HashMap htTGTContext, HttpServletResponse oHttpServletResponse, String sRelayState)
-	throws ASelectException
+	private void sendSAMLArtifactRedirect(String sAppUrl, String sRid, HashMap htSessionContext, String sTgt,
+			HashMap htTGTContext, HttpServletResponse oHttpServletResponse, String sRelayState)
+		throws ASelectException
 	{
 		String sMethod = "sendSAMLArtifactRedirect";
 		boolean isSuccessResponse = (htTGTContext != null);
@@ -402,24 +483,26 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		String sRedirectUrl = "";
 		try {
 			DateTime tStamp = new DateTime(); // We will use one timestamp
-			
+
 			XMLObjectBuilderFactory builderFactory = Configuration.getBuilderFactory();
 			XMLObjectBuilder stringBuilder = builderFactory.getBuilder(XSString.TYPE_NAME);
 
 			String sSPRid = null;
 			if (htSessionContext != null)
 				sSPRid = (String) htSessionContext.get("sp_rid");
-			
+
 			if (htTGTContext != null) {
 
 				sSPRid = (String) htTGTContext.get("sp_rid");
 				String sAuthspLevel = (String) htTGTContext.get("betrouwbaarheidsniveau");
-				if (sAuthspLevel==null) sAuthspLevel = (String) htTGTContext.get("authsp_level");
+				if (sAuthspLevel == null)
+					sAuthspLevel = (String) htTGTContext.get("authsp_level");
 				String sUid = (String) htTGTContext.get("uid");
 				String sCtxRid = (String) htTGTContext.get("rid");
 				String sSubjectLocalityAddress = (String) htTGTContext.get("client_ip");
-				String sAssertionID = SamlTools.generateIdentifier(_systemLogger, MODULE); 
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "CHECK ctxRid="+sCtxRid+" rid="+sRid +" client_ip="+sSubjectLocalityAddress);
+				String sAssertionID = SamlTools.generateIdentifier(_systemLogger, MODULE);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "CHECK ctxRid=" + sCtxRid + " rid=" + sRid
+						+ " client_ip=" + sSubjectLocalityAddress);
 
 				// ---- Attributes
 				// Create an attribute statement builder
@@ -430,65 +513,63 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				// Create an attribute builder
 				SAMLObjectBuilder<Attribute> attributeBuilder = (SAMLObjectBuilder<Attribute>) builderFactory
 						.getBuilder(Attribute.DEFAULT_ELEMENT_NAME);
-				
-		        // Gather attributes, including the attributes from the ticket context
-		        HashMap htAttributes = getAttributesFromTgtAndGatherer(htTGTContext);
-		        String sAllAttributes = _saml11Builder.serializeAttributes(htAttributes);
-		    	
-		        // 20090910, Bauke: new mechanism to pass the attributes
-		        HashMap htAllAttributes = new HashMap();
-		        htAllAttributes.put("attributes", sAllAttributes);
-		        htAllAttributes.put("uid", sUid);
-		        htAllAttributes.put("betrouwbaarheidsniveau", sAuthspLevel);
-		        
+
+				// Gather attributes, including the attributes from the ticket context
+				HashMap htAttributes = getAttributesFromTgtAndGatherer(htTGTContext);
+				String sAllAttributes = _saml11Builder.serializeAttributes(htAttributes);
+
+				// 20090910, Bauke: new mechanism to pass the attributes
+				HashMap htAllAttributes = new HashMap();
+				htAllAttributes.put("attributes", sAllAttributes);
+				htAllAttributes.put("uid", sUid);
+				htAllAttributes.put("betrouwbaarheidsniveau", sAuthspLevel);
+
 				Set keys = htAllAttributes.keySet();
 				for (Object s : keys) {
-					String sKey = (String)s;
+					String sKey = (String) s;
 					Object oValue = htAllAttributes.get(sKey);
-					
+
 					if (!(oValue instanceof String))
 						continue;
-		        	String sValue = (String)oValue;
-		        	
+					String sValue = (String) oValue;
+
 					Attribute theAttribute = attributeBuilder.buildObject();
 					theAttribute.setName(sKey);
-			        XSString theAttributeValue = (XSString) stringBuilder.buildObject(
+					XSString theAttributeValue = (XSString) stringBuilder.buildObject(
 							AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
 					theAttributeValue.setValue(sValue);
 					theAttribute.getAttributeValues().add(theAttributeValue);
-					attributeStatement.getAttributes().add(theAttribute);  // add this attribute
-		        }
+					attributeStatement.getAttributes().add(theAttribute); // add this attribute
+				}
 
 				/*
-				// 200909, Bauke: replaced by the attribute gatherer solution
-				Attribute attributeAuthspLevel = attributeBuilder.buildObject();
-				attributeAuthspLevel.setName("betrouwbaarheidsniveau");
-		        XSString attributeAuthspLevelValue = (XSString) stringBuilder.buildObject(
-						AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
-				attributeAuthspLevelValue.setValue(sAuthspLevel);
-				attributeAuthspLevel.getAttributeValues().add(attributeAuthspLevelValue);
-				attributeStatement.getAttributes().add(attributeAuthspLevel);  // add this attribute
-	
-				Attribute attributeUid = attributeBuilder.buildObject();
-				attributeUid.setName("uid");
-				XSString attributeUidValue = (XSString) stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
-				attributeUidValue.setValue(sUid);
-				attributeUid.getAttributeValues().add(attributeUidValue);
-				attributeStatement.getAttributes().add(attributeUid);
-				*/
-				
+				 * // 200909, Bauke: replaced by the attribute gatherer solution Attribute attributeAuthspLevel =
+				 * attributeBuilder.buildObject(); attributeAuthspLevel.setName("betrouwbaarheidsniveau"); XSString
+				 * attributeAuthspLevelValue = (XSString) stringBuilder.buildObject(
+				 * AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
+				 * attributeAuthspLevelValue.setValue(sAuthspLevel);
+				 * attributeAuthspLevel.getAttributeValues().add(attributeAuthspLevelValue);
+				 * attributeStatement.getAttributes().add(attributeAuthspLevel); // add this attribute Attribute
+				 * attributeUid = attributeBuilder.buildObject(); attributeUid.setName("uid"); XSString
+				 * attributeUidValue = (XSString) stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
+				 * XSString.TYPE_NAME); attributeUidValue.setValue(sUid);
+				 * attributeUid.getAttributeValues().add(attributeUidValue);
+				 * attributeStatement.getAttributes().add(attributeUid);
+				 */
+
 				// ---- AuthenticationContext
 				SAMLObjectBuilder<AuthnContextClassRef> authnContextClassRefBuilder = (SAMLObjectBuilder<AuthnContextClassRef>) builderFactory
 						.getBuilder(AuthnContextClassRef.DEFAULT_ELEMENT_NAME);
 				AuthnContextClassRef authnContextClassRef = authnContextClassRefBuilder.buildObject();
-				String sAutnContextClassRefURI = SecurityLevel.convertLevelToAuthnContextClassRefURI(sAuthspLevel, _systemLogger, MODULE);
+				String sAutnContextClassRefURI = SecurityLevel.convertLevelToAuthnContextClassRefURI(sAuthspLevel,
+						_systemLogger, MODULE);
 				authnContextClassRef.setAuthnContextClassRef(sAutnContextClassRefURI);
-	
+
 				SAMLObjectBuilder<AuthnContext> authnContextBuilder = (SAMLObjectBuilder<AuthnContext>) builderFactory
 						.getBuilder(AuthnContext.DEFAULT_ELEMENT_NAME);
 				AuthnContext authnContext = authnContextBuilder.buildObject();
 				authnContext.setAuthnContextClassRef(authnContextClassRef);
-	
+
 				SAMLObjectBuilder<AuthnStatement> authnStatementBuilder = (SAMLObjectBuilder<AuthnStatement>) builderFactory
 						.getBuilder(AuthnStatement.DEFAULT_ELEMENT_NAME);
 				AuthnStatement authnStatement = authnStatementBuilder.buildObject();
@@ -500,72 +581,75 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				// Always try to set the locality address, except when null or empty
 				if (sSubjectLocalityAddress != null && !"".equals(sSubjectLocalityAddress)) {
 					SAMLObjectBuilder<SubjectLocality> subjectLocalityBuilder = (SAMLObjectBuilder<SubjectLocality>) builderFactory
-									.getBuilder(SubjectLocality.DEFAULT_ELEMENT_NAME);
+							.getBuilder(SubjectLocality.DEFAULT_ELEMENT_NAME);
 					SubjectLocality locality = subjectLocalityBuilder.buildObject();
 					locality.setAddress(sSubjectLocalityAddress);
 					authnStatement.setSubjectLocality(locality);
 					// TODO maybe also set DNSName in locality, not requested (for now)
 				}
-			
+
 				authnStatement.setAuthnContext(authnContext);
 				SAMLObjectBuilder<Audience> audienceBuilder = (SAMLObjectBuilder<Audience>) builderFactory
 						.getBuilder(Audience.DEFAULT_ELEMENT_NAME);
 				Audience audience = audienceBuilder.buildObject();
-				audience.setAudienceURI((String) htTGTContext.get("sp_issuer"));  // 20081109 added
-	
+				audience.setAudienceURI((String) htTGTContext.get("sp_issuer")); // 20081109 added
+
 				SAMLObjectBuilder<AudienceRestriction> audienceRestrictionBuilder = (SAMLObjectBuilder<AudienceRestriction>) builderFactory
 						.getBuilder(AudienceRestriction.DEFAULT_ELEMENT_NAME);
 				AudienceRestriction audienceRestriction = audienceRestrictionBuilder.buildObject();
 				audienceRestriction.getAudiences().add(audience);
-	
+
 				SAMLObjectBuilder<SubjectConfirmationData> subjectConfirmationDataBuilder = (SAMLObjectBuilder<SubjectConfirmationData>) builderFactory
 						.getBuilder(SubjectConfirmationData.DEFAULT_ELEMENT_NAME);
 				SubjectConfirmationData subjectConfirmationData = subjectConfirmationDataBuilder.buildObject();
-				subjectConfirmationData = (SubjectConfirmationData)SamlTools.setValidityInterval(subjectConfirmationData,  tStamp, null, getMaxNotOnOrAfter());
+				subjectConfirmationData = (SubjectConfirmationData) SamlTools.setValidityInterval(
+						subjectConfirmationData, tStamp, null, getMaxNotOnOrAfter());
 				subjectConfirmationData.setRecipient((String) htTGTContext.get("sp_assert_url"));
 
 				// Bauke: added for OpenSSO 20080329
 				subjectConfirmationData.setInResponseTo(sSPRid);
-	
+
 				SAMLObjectBuilder<SubjectConfirmation> subjectConfirmationBuilder = (SAMLObjectBuilder<SubjectConfirmation>) builderFactory
 						.getBuilder(SubjectConfirmation.DEFAULT_ELEMENT_NAME);
 				SubjectConfirmation subjectConfirmation = subjectConfirmationBuilder.buildObject();
 				// The following constant is not present in the saml2 library
 				subjectConfirmation.setMethod("urn:oasis:names:tc:SAML:2.0:cm:bearer");
 				subjectConfirmation.setSubjectConfirmationData(subjectConfirmationData);
-	
+
 				SAMLObjectBuilder<NameID> nameIDBuilder = (SAMLObjectBuilder<NameID>) builderFactory
 						.getBuilder(NameID.DEFAULT_ELEMENT_NAME);
 				NameID nameID = nameIDBuilder.buildObject();
-				nameID.setFormat(NameIDType.TRANSIENT);  // was PERSISTENT
+				nameID.setFormat(NameIDType.TRANSIENT); // was PERSISTENT
 				// 20090602, Bauke Saml-core-2.0, section 2.2.2: SHOULD be omitted:
-				//nameID.setNameQualifier(_sASelectServerUrl);
-				nameID.setValue(sTgt); // back to TgT sUid);  ///*sTgt);  // REPLACES: */ (String)htTGTContext.get("uid"));
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "nameID="+Utils.firstPartOf(nameID.getValue(), 30));
-				
+				// nameID.setNameQualifier(_sASelectServerUrl);
+				nameID.setValue(sTgt); // back to TgT sUid); ///*sTgt); // REPLACES: */
+				// (String)htTGTContext.get("uid"));
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "nameID=" + Utils.firstPartOf(nameID.getValue(), 30));
+
 				SAMLObjectBuilder<Subject> subjectBuilder = (SAMLObjectBuilder<Subject>) builderFactory
 						.getBuilder(Subject.DEFAULT_ELEMENT_NAME);
 				Subject subject = subjectBuilder.buildObject();
 				subject.setNameID(nameID);
 				subject.getSubjectConfirmations().add(subjectConfirmation);
-	
+
 				SAMLObjectBuilder<Issuer> assertionIssuerBuilder = (SAMLObjectBuilder<Issuer>) builderFactory
 						.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
 				Issuer assertionIssuer = assertionIssuerBuilder.buildObject();
 				assertionIssuer.setFormat(NameIDType.ENTITY);
 				assertionIssuer.setValue(_sASelectServerUrl);
-	
+
 				SAMLObjectBuilder<Assertion> assertionBuilder = (SAMLObjectBuilder<Assertion>) builderFactory
 						.getBuilder(Assertion.DEFAULT_ELEMENT_NAME);
 				assertion = assertionBuilder.buildObject();
-	
+
 				assertion.setID(sAssertionID);
 				assertion.setIssueInstant(tStamp);
 				// Set interval conditions
-				assertion = (Assertion)SamlTools.setValidityInterval(assertion, tStamp, getMaxNotBefore(), getMaxNotOnOrAfter());
+				assertion = (Assertion) SamlTools.setValidityInterval(assertion, tStamp, getMaxNotBefore(),
+						getMaxNotOnOrAfter());
 				// and then AudienceRestrictions
-				assertion = (Assertion)SamlTools.setAudienceRestrictions(assertion, audienceRestriction);
-	
+				assertion = (Assertion) SamlTools.setAudienceRestrictions(assertion, audienceRestriction);
+
 				assertion.setVersion(SAMLVersion.VERSION_20);
 				assertion.setIssuer(assertionIssuer);
 				assertion.setSubject(subject);
@@ -577,18 +661,18 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			SAMLObjectBuilder<StatusCode> statusCodeBuilder = (SAMLObjectBuilder<StatusCode>) builderFactory
 					.getBuilder(StatusCode.DEFAULT_ELEMENT_NAME);
 			StatusCode statusCode = statusCodeBuilder.buildObject();
-			statusCode.setValue((htTGTContext==null)? StatusCode.AUTHN_FAILED_URI: StatusCode.SUCCESS_URI);
+			statusCode.setValue((htTGTContext == null) ? StatusCode.AUTHN_FAILED_URI : StatusCode.SUCCESS_URI);
 
 			SAMLObjectBuilder<Status> statusBuilder = (SAMLObjectBuilder<Status>) builderFactory
 					.getBuilder(Status.DEFAULT_ELEMENT_NAME);
 			Status status = statusBuilder.buildObject();
 			status.setStatusCode(statusCode);
 			if (htTGTContext == null) {
-				String sResultCode = (String)htSessionContext.get("result_code");
+				String sResultCode = (String) htSessionContext.get("result_code");
 				SAMLObjectBuilder<StatusMessage> statusMessageBuilder = (SAMLObjectBuilder<StatusMessage>) builderFactory
 						.getBuilder(StatusMessage.DEFAULT_ELEMENT_NAME);
 				StatusMessage msg = statusMessageBuilder.buildObject();
-				msg.setMessage((sResultCode != null)? sResultCode: "unspecified error");
+				msg.setMessage((sResultCode != null) ? sResultCode : "unspecified error");
 				status.setStatusMessage(msg);
 			}
 
@@ -603,10 +687,10 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			Response response = responseBuilder.buildObject();
 
 			response.setInResponseTo(sSPRid);
-			
-			response.setID("_"+sRid);  // 20090512, Bauke: must be NCNAME format
+
+			response.setID("_" + sRid); // 20090512, Bauke: must be NCNAME format
 			response.setIssueInstant(tStamp);
-			
+
 			response.setVersion(SAMLVersion.VERSION_20);
 			response.setStatus(status);
 			response.setIssuer(responseIssuer);
@@ -615,15 +699,15 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			}
 
 			Saml20_ArtifactManager artifactManager = Saml20_ArtifactManager.getTheArtifactManager();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "buildArtifact serverUrl="+_sASelectServerUrl+" rid="+sRid);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "buildArtifact serverUrl=" + _sASelectServerUrl + " rid="
+					+ sRid);
 			String sArtifact = artifactManager.buildArtifact(response, _sASelectServerUrl, sRid);
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "sendArtifact "+sArtifact);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "sendArtifact " + sArtifact);
 			artifactManager.sendArtifact(sArtifact, response, sAppUrl, oHttpServletResponse, sRelayState);
 		}
 		catch (IOException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"Redirect to : '" + sRedirectUrl + "' failed", e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Redirect to : '" + sRedirectUrl + "' failed", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}

@@ -75,19 +75,18 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.exception.ASelectUDBException;
 import org.aselect.system.sam.agent.SAMResource;
 
+// TODO: Auto-generated Javadoc
 /**
- * FlatFile database connector.
- * <br><br>
+ * FlatFile database connector. <br>
+ * <br>
  * <b>Description:</b><br>
- * Database connector that uses the file 'workingdir/conf/udb/flatfile_udb.conf' 
- * as physical storage. <br>
- * <br><br>
- * <b>Concurrency issues:</b>
+ * Database connector that uses the file 'workingdir/conf/udb/flatfile_udb.conf' as physical storage. <br>
  * <br>
- * -
  * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public class FlatFileConnector implements IUDBConnector
 {
@@ -101,7 +100,7 @@ public class FlatFileConnector implements IUDBConnector
 	 */
 	private ASelectConfigManager _oASelectConfigManager;
 	/**
-	 * The logger that is used for system logging 
+	 * The logger that is used for system logging
 	 */
 	private ASelectSystemLogger _oASelectSystemLogger;
 	/**
@@ -114,9 +113,13 @@ public class FlatFileConnector implements IUDBConnector
 	private Properties _propFlatFile;
 
 	/**
-	 * Initializes managers and loads the A-Select user db flatfile into a 
-	 * <code>Properties</code> object.
-	 * <br><br>
+	 * Initializes managers and loads the A-Select user db flatfile into a <code>Properties</code> object. <br>
+	 * <br>
+	 * 
+	 * @param oConfigSection
+	 *            the o config section
+	 * @throws ASelectUDBException
+	 *             the a select udb exception
 	 * @see org.aselect.server.udb.IUDBConnector#init(java.lang.Object)
 	 */
 	public void init(Object oConfigSection)
@@ -185,15 +188,17 @@ public class FlatFileConnector implements IUDBConnector
 	}
 
 	/**
-	 * Returns a hashtable with the user's record.
-	 * <br><br>
-	 * <b>Description</b>:
+	 * Returns a hashtable with the user's record. <br>
 	 * <br>
-	 * The returned hashtable contains a <code>result_code</code> and  
-	 * <code>user_authsps</code> which is a hashtable containing the AuthSP's that the user is registered for.
-	 * Within this hashtable each AuthSP has an entry with the value of the
-	 * user attributes that specific AuthSP.
-	 * <br><br>
+	 * <b>Description</b>: <br>
+	 * The returned hashtable contains a <code>result_code</code> and <code>user_authsps</code> which is a hashtable
+	 * containing the AuthSP's that the user is registered for. Within this hashtable each AuthSP has an entry with the
+	 * value of the user attributes that specific AuthSP. <br>
+	 * <br>
+	 * 
+	 * @param sUserId
+	 *            the s user id
+	 * @return the user profile
 	 * @see org.aselect.server.udb.IUDBConnector#getUserProfile(java.lang.String)
 	 */
 	public HashMap getUserProfile(String sUserId)
@@ -221,7 +226,7 @@ public class FlatFileConnector implements IUDBConnector
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_UNKNOWN_USER);
 			}
 
-			//first check if the user was enabled
+			// first check if the user was enabled
 			String sAcountEnabled = (String) _propFlatFile.get(sbAccountEnabled.toString());
 			if (!sAcountEnabled.equalsIgnoreCase("true")) {
 				logAuthentication(sUID, Errors.ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED, "denied");
@@ -306,8 +311,12 @@ public class FlatFileConnector implements IUDBConnector
 	}
 
 	/**
-	 * Check if user is A-Select enabled.
-	 * <br><br>
+	 * Check if user is A-Select enabled. <br>
+	 * <br>
+	 * 
+	 * @param sUserId
+	 *            the s user id
+	 * @return true, if checks if is user enabled
 	 * @see org.aselect.server.udb.IUDBConnector#isUserEnabled(java.lang.String)
 	 */
 	public boolean isUserEnabled(String sUserId)
@@ -316,18 +325,18 @@ public class FlatFileConnector implements IUDBConnector
 		boolean bEnabled = false;
 
 		_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "user=" + sUserId);
-		String sUID = sUserId.replace(' ', '+'); //TODO this could be removed (Erwin) 
+		String sUID = sUserId.replace(' ', '+'); // TODO this could be removed (Erwin)
 
 		StringBuffer sbAccountEnabled = new StringBuffer("user.");
 		sbAccountEnabled.append(sUID);
 		sbAccountEnabled.append(".accountenabled");
 
-		if (_propFlatFile.containsKey(sbAccountEnabled.toString())) //user exists
+		if (_propFlatFile.containsKey(sbAccountEnabled.toString())) // user exists
 		{
-			//Check if the user was enabled
+			// Check if the user was enabled
 			String sAcountEnabled = (String) _propFlatFile.get(sbAccountEnabled.toString());
 			if (sAcountEnabled != null && sAcountEnabled.equalsIgnoreCase("true")) {
-				//account enabled
+				// account enabled
 				bEnabled = true;
 			}
 			else {
@@ -347,8 +356,14 @@ public class FlatFileConnector implements IUDBConnector
 	}
 
 	/**
-	 * Retrieve the A-Select user attributes.
-	 * <br><br>
+	 * Retrieve the A-Select user attributes. <br>
+	 * <br>
+	 * 
+	 * @param sUserId
+	 *            the s user id
+	 * @param sAuthSPId
+	 *            the s auth sp id
+	 * @return the user attributes
 	 * @see org.aselect.server.udb.IUDBConnector#getUserAttributes(java.lang.String, java.lang.String)
 	 */
 	public String getUserAttributes(String sUserId, String sAuthSPId)
@@ -366,19 +381,24 @@ public class FlatFileConnector implements IUDBConnector
 
 		sAttributesValue = (String) _propFlatFile.get(sbUserAttributes.toString());
 		if (sAttributesValue == null) {
-			StringBuffer sb = new StringBuffer("User attributes for User="+sUserId+" Authsp="+sAuthSPId+" not found.");
-			_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, sb.toString(),
-					new ASelectUDBException(Errors.ERROR_ASELECT_UDB_UNKNOWN_USER));
+			StringBuffer sb = new StringBuffer("User attributes for User=" + sUserId + " Authsp=" + sAuthSPId
+					+ " not found.");
+			_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, sb.toString(), new ASelectUDBException(
+					Errors.ERROR_ASELECT_UDB_UNKNOWN_USER));
 		}
 		return sAttributesValue;
 	}
 
 	/**
-	 * Sorts authentication logging parameters and logs them.
-	 * <br><br>
-	 * @param sUserID The A-Select user id
-	 * @param sErrorCode The error code of the error that occured
-	 * @param sMessage The authenitcation log message
+	 * Sorts authentication logging parameters and logs them. <br>
+	 * <br>
+	 * 
+	 * @param sUserID
+	 *            The A-Select user id
+	 * @param sErrorCode
+	 *            The error code of the error that occured
+	 * @param sMessage
+	 *            The authenitcation log message
 	 */
 	private void logAuthentication(String sUserID, String sErrorCode, String sMessage)
 	{

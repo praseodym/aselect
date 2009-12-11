@@ -97,36 +97,34 @@ import org.aselect.system.sam.agent.SAMAgent;
 import org.aselect.system.sam.agent.SAMResource;
 import org.aselect.system.storagemanager.IStorageHandler;
 
+// TODO: Auto-generated Javadoc
 /**
- * DBMS storage handler. 
- * <br><br>
- * <b>Description: </b> 
+ * DBMS storage handler. <br>
  * <br>
- * The JDBCStorageHandler uses a DBMS for physical storage. 
- * <br><br>
- * The DBMS is accessed through JDBC. Objects that are written to the DBMS are
- * encoded to bytes, using the <code>ObjectOutputStream</code> mechanism of
- * Java. 
- * <br><br>
- * <b>Concurrency issues: </b> 
- * <br>-<br>
+ * <b>Description: </b> <br>
+ * The JDBCStorageHandler uses a DBMS for physical storage. <br>
+ * <br>
+ * The DBMS is accessed through JDBC. Objects that are written to the DBMS are encoded to bytes, using the
+ * <code>ObjectOutputStream</code> mechanism of Java. <br>
+ * <br>
+ * <b>Concurrency issues: </b> <br>
+ * -<br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class JDBCStorageHandler implements IStorageHandler
 {
 	private static final String DEFAULT_CONNECTION_HANDLER = "org.aselect.system.db.connection.impl.NonClosingConnectionHandler";
-//	private static final String DEFAULT_CONNECTION_HANDLER = "org.aselect.system.db.connection.impl.ClosingConnectionHandler";
+	// private static final String DEFAULT_CONNECTION_HANDLER =
+	// "org.aselect.system.db.connection.impl.ClosingConnectionHandler";
 	protected static final String DEFAULTIDENTIFIERQUOTE = "\""; // use double-quote as default
 	protected String identifierQuote = DEFAULTIDENTIFIERQUOTE;
-	
 
 	/** name of this module, used for logging */
 	protected static final String MODULE = "JDBCStorageHandler";
 
-	/** The database connection.  */
-//	protected Connection _oActiveConnection;
+	/** The database connection. */
+	// protected Connection _oActiveConnection;
 
 	/** The active SAM resource. */
 	protected SAMResource _oActiveResource;
@@ -152,7 +150,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	/** The logger that is used for system entries */
 	protected SystemLogger _systemLogger;
 
-	/** The configuration.  */
+	/** The configuration. */
 	protected ConfigManager _oConfigManager;
 
 	/** The SAM agent. */
@@ -160,38 +158,46 @@ public class JDBCStorageHandler implements IStorageHandler
 
 	protected IConnectionHandler _oConnectionHandler;
 	protected Class cClass;
-	
+
 	/**
-	 * Initialize the <code>JDBCStorageHandler</code>.
-	 * <br><br>
-	 * <b>Description: </b>
-	 * Initalises the <code>JDBCStorageHandler</code>:
+	 * Initialize the <code>JDBCStorageHandler</code>. <br>
+	 * <br>
+	 * <b>Description: </b> Initalises the <code>JDBCStorageHandler</code>:
 	 * <ul>
-	 * 	<li>Set system logger and managers</li>
-	 * 	<li>Reads the necessary configuration</li>
-	 * 	<li>Initialise the database connection</li>
+	 * <li>Set system logger and managers</li>
+	 * <li>Reads the necessary configuration</li>
+	 * <li>Initialise the database connection</li>
 	 * </ul>
 	 * <br>
-	 * <b>Concurrency issues: </b> 
-	 * <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> 
+	 * <b>Preconditions: </b>
 	 * <ul>
-	 * 	<li><code>oConfigSection != null</code></li>
-	 * 	<li><code>oConfigManager != null</code></li>
-	 * 	<li><code>systemLogger != null</code></li>
-	 * 	<li><code>oSAMAgent != null</code></li>
+	 * <li><code>oConfigSection != null</code></li>
+	 * <li><code>oConfigManager != null</code></li>
+	 * <li><code>systemLogger != null</code></li>
+	 * <li><code>oSAMAgent != null</code></li>
 	 * </ul>
 	 * <br>
 	 * <b>Postconditions: </b>
 	 * <ul>
-	 * 	<li>All instance variables are set</li>
-	 * 	<li>The database is connected</li> 
-	 * </ul> 
-	 *  
+	 * <li>All instance variables are set</li>
+	 * <li>The database is connected</li>
+	 * </ul>
+	 * 
+	 * @param oConfigSection
+	 *            the o config section
+	 * @param oConfigManager
+	 *            the o config manager
+	 * @param systemLogger
+	 *            the system logger
+	 * @param oSAMAgent
+	 *            the o sam agent
+	 * @throws ASelectStorageException
+	 *             the a select storage exception
 	 * @see org.aselect.system.storagemanager.IStorageHandler#init(java.lang.Object,
-	 *      org.aselect.system.configmanager.ConfigManager,
-	 *      org.aselect.system.logging.SystemLogger,
+	 *      org.aselect.system.configmanager.ConfigManager, org.aselect.system.logging.SystemLogger,
 	 *      org.aselect.system.sam.agent.SAMAgent)
 	 */
 	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger systemLogger, SAMAgent oSAMAgent)
@@ -214,32 +220,34 @@ public class JDBCStorageHandler implements IStorageHandler
 				throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 			if (_oActiveResource == null || !_oActiveResource.live())
-					_oActiveResource = _oSAMAgent.getActiveResource(_sResourceGroup);
+				_oActiveResource = _oSAMAgent.getActiveResource(_sResourceGroup);
 			Object oResourceConfigSection = _oActiveResource.getAttributes();
 			try {
 				String _connHandler = _oConfigManager.getParam(oResourceConfigSection, "connectionhandler");
 				systemLogger.log(Level.INFO, MODULE, sMethod, "Found connectionhandler: " + _connHandler);
-//				cClass = Class.forName(_oConfigManager.getParam(oResourceConfigSection, "connectionhandler"));
+				// cClass = Class.forName(_oConfigManager.getParam(oResourceConfigSection, "connectionhandler"));
 				cClass = Class.forName(_connHandler);
 			}
 			catch (ASelectConfigException ace) {
-				systemLogger.log(Level.WARNING, MODULE, sMethod, "'class' for connectionhandler  is missing in the configuration file, using default");
+				systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"'class' for connectionhandler  is missing in the configuration file, using default");
 				cClass = Class.forName(DEFAULT_CONNECTION_HANDLER);
 			}
-			
+
 			_oConnectionHandler = (IConnectionHandler) cClass.newInstance();
-			systemLogger.log(Level.INFO, MODULE, sMethod, "Using connectionhandler: " + _oConnectionHandler.getClass().getCanonicalName());
+			systemLogger.log(Level.INFO, MODULE, sMethod, "Using connectionhandler: "
+					+ _oConnectionHandler.getClass().getCanonicalName());
 			_oConnectionHandler.Init(_oConfigManager, _systemLogger, _oSAMAgent, _sResourceGroup);
 
-			
-			  // RH, 20090604, sn
+			// RH, 20090604, sn
 			// This also prepares the connection
-			String intentifierQuoteString = getConnection().getMetaData().getIdentifierQuoteString();  // RH, 20090604, n
+			String intentifierQuoteString = getConnection().getMetaData().getIdentifierQuoteString(); // RH, 20090604, n
 			// getIdentifierQuoteString() returns " " (space) if quoting is unsupported
-			if (intentifierQuoteString != null) identifierQuote = intentifierQuoteString.trim();
+			if (intentifierQuoteString != null)
+				identifierQuote = intentifierQuoteString.trim();
 			// TODO, allow for forcing identifierQuote from config
-			  // RH, 20090604, sn
-			
+			// RH, 20090604, sn
+
 			try {
 				oTableSection = oConfigManager.getSection(oConfigSection, "table");
 			}
@@ -267,7 +275,8 @@ public class JDBCStorageHandler implements IStorageHandler
 			}
 
 			try {
-				_sContextTimestamp = identifierQuote + oConfigManager.getParam(oTableSection, "timestamp") + identifierQuote;
+				_sContextTimestamp = identifierQuote + oConfigManager.getParam(oTableSection, "timestamp")
+						+ identifierQuote;
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
@@ -279,8 +288,8 @@ public class JDBCStorageHandler implements IStorageHandler
 				_sContextKey = identifierQuote + oConfigManager.getParam(oTableSection, "key") + identifierQuote;
 			}
 			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"No valid 'key' config item in 'table' section found");
+				_systemLogger
+						.log(Level.WARNING, MODULE, sMethod, "No valid 'key' config item in 'table' section found");
 				throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -292,7 +301,7 @@ public class JDBCStorageHandler implements IStorageHandler
 						"No valid 'value' config item in 'table' section found");
 				throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
-			// getConnection();  // RH, 20090604, o
+			// getConnection(); // RH, 20090604, o
 		}
 		catch (ASelectStorageException e) {
 			throw e;
@@ -305,6 +314,12 @@ public class JDBCStorageHandler implements IStorageHandler
 
 	/**
 	 * Returns a particular object from the database.
+	 * 
+	 * @param oKey
+	 *            the o key
+	 * @return the object
+	 * @throws ASelectStorageException
+	 *             the a select storage exception
 	 * @see org.aselect.system.storagemanager.IStorageHandler#get(java.lang.Object)
 	 */
 	public Object get(Object oKey)
@@ -312,33 +327,35 @@ public class JDBCStorageHandler implements IStorageHandler
 	{
 		String sMethod = "get()";
 		Object oRet = null;
-		Connection oConnection = null;   // RH, 20090604, n
+		Connection oConnection = null; // RH, 20090604, n
 		PreparedStatement oStatement = null;
 		ResultSet oResultSet = null;
 
 		try {
-			//int iKey = 0;  // oKey.hashCode();
+			// int iKey = 0; // oKey.hashCode();
 
 			StringBuffer sbBuffer = new StringBuffer();
 			sbBuffer.append("SELECT ").append(_sContextValue).append(" ");
 			sbBuffer.append("FROM ").append(_sTableName).append(" ");
-			//sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?");  // old
-			sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?");  // new
+			// sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?"); // old
+			sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?"); // new
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
 
-			oConnection = getConnection();  // RH, 20090604, n
+			oConnection = getConnection(); // RH, 20090604, n
 			oStatement = oConnection.prepareStatement(sbBuffer.toString());
-			
-			// 20090212, Bauke: use oKey as key to the table instead of the hashvalue 
-			//oStatement.setInt(1, iKey);  // old
-			byte[] baKey = encode(oKey);  // new
-			oStatement.setBytes(1, baKey);  //new
+
+			// 20090212, Bauke: use oKey as key to the table instead of the hashvalue
+			// oStatement.setInt(1, iKey); // old
+			byte[] baKey = encode(oKey); // new
+			oStatement.setBytes(1, baKey); // new
 			oResultSet = oStatement.executeQuery();
 
-			if (oResultSet.next()) {  // record exists.
-				
-//				oRet = decode(oResultSet.getBytes(_sContextValue.replace(identifierQuote, " ").trim())); // o
-				oRet = decode(oResultSet.getBytes(_sContextValue.substring(identifierQuote.length(), _sContextValue.length() - identifierQuote.length())));
+			if (oResultSet.next()) { // record exists.
+
+				// oRet = decode(oResultSet.getBytes(_sContextValue.replace(identifierQuote, " ").trim())); // o
+				oRet = decode(oResultSet.getBytes(_sContextValue.substring(identifierQuote.length(), _sContextValue
+						.length()
+						- identifierQuote.length())));
 				_systemLogger.log(Level.FINER, MODULE, sMethod, "result=" + oRet);
 			}
 			else {
@@ -386,8 +403,14 @@ public class JDBCStorageHandler implements IStorageHandler
 	}
 
 	/**
-	 * Retrieve an object its timestamp from storage.
-	 * <br><br>
+	 * Retrieve an object its timestamp from storage. <br>
+	 * <br>
+	 * 
+	 * @param oKey
+	 *            the o key
+	 * @return the timestamp
+	 * @throws ASelectStorageException
+	 *             the a select storage exception
 	 * @see org.aselect.system.storagemanager.IStorageHandler#getTimestamp(java.lang.Object)
 	 */
 	public long getTimestamp(Object oKey)
@@ -396,25 +419,25 @@ public class JDBCStorageHandler implements IStorageHandler
 		String sMethod = "getTimestamp()";
 		long lRet = 0;
 		PreparedStatement oStatement = null;
-		Connection oConnection = null; // RH, 20090604, n 
+		Connection oConnection = null; // RH, 20090604, n
 		ResultSet oResultSet = null;
 		StringBuffer sbQuery = new StringBuffer();
-		
+
 		try {
-			int iKey = 0;  // oKey.hashCode();
+			int iKey = 0; // oKey.hashCode();
 
 			sbQuery.append("SELECT ").append(_sContextTimestamp).append(" ");
 			sbQuery.append("FROM ").append(_sTableName).append(" ");
-			// sbQuery.append("WHERE ").append(_sContextKeyHash).append(" = ?");  // old
-			sbQuery.append("WHERE ").append(_sContextKey).append(" = ?");  // new
+			// sbQuery.append("WHERE ").append(_sContextKeyHash).append(" = ?"); // old
+			sbQuery.append("WHERE ").append(_sContextKey).append(" = ?"); // new
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbQuery + " -> " + iKey + " key=" + oKey);
 
-//			Connection oConnection = getConnection(); // RH, 20090604, o
+			// Connection oConnection = getConnection(); // RH, 20090604, o
 			oConnection = getConnection(); // RH, 20090604, n
 			oStatement = oConnection.prepareStatement(sbQuery.toString());
-			// oStatement.setInt(1, iKey);  // old
-			byte[] baKey = encode(oKey);  // new
-			oStatement.setBytes(1, baKey);  //new
+			// oStatement.setInt(1, iKey); // old
+			byte[] baKey = encode(oKey); // new
+			oStatement.setBytes(1, baKey); // new
 			oResultSet = oStatement.executeQuery();
 
 			if (oResultSet.next()) // record exists.
@@ -474,10 +497,14 @@ public class JDBCStorageHandler implements IStorageHandler
 
 	/**
 	 * Returns the number of objects stored in the table.
+	 * 
+	 * @return the count
+	 * @throws ASelectStorageException
+	 *             the a select storage exception
 	 * @see org.aselect.system.storagemanager.IStorageHandler#getCount()
 	 */
 	public long getCount()
-	throws ASelectStorageException
+		throws ASelectStorageException
 	{
 		String sMethod = "getCount()";
 		long lCount = -1;
@@ -491,7 +518,7 @@ public class JDBCStorageHandler implements IStorageHandler
 			sbBuffer.append("SELECT COUNT(*) ");
 			sbBuffer.append("FROM ").append(_sTableName);
 
-			// Connection oConnection = getConnection();  // RH, 20090604, o
+			// Connection oConnection = getConnection(); // RH, 20090604, o
 			oConnection = getConnection(); // RH, 20090604, n
 			oStatement = oConnection.prepareStatement(sbBuffer.toString());
 			oResultSet = oStatement.executeQuery();
@@ -526,6 +553,9 @@ public class JDBCStorageHandler implements IStorageHandler
 	/**
 	 * Returns all the objects stored in the table.
 	 * 
+	 * @return the all
+	 * @throws ASelectStorageException
+	 *             the a select storage exception
 	 * @see org.aselect.system.storagemanager.IStorageHandler#getAll()
 	 */
 	public HashMap getAll()
@@ -544,17 +574,21 @@ public class JDBCStorageHandler implements IStorageHandler
 			sbBuffer.append("FROM ").append(_sTableName);
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer);
 
-			// Connection oConnection = getConnection();  // RH, 20090604, o
+			// Connection oConnection = getConnection(); // RH, 20090604, o
 			oConnection = getConnection(); // RH, 20090604, n
 			oStatement = oConnection.prepareStatement(sbBuffer.toString());
 			oResultSet = oStatement.executeQuery();
 
 			while (oResultSet.next()) {
-				
-//				Object oKey = decode(oResultSet.getBytes(_sContextKey.replace(identifierQuote, ' ').trim())); // o
-//				Object oValue = decode(oResultSet.getBytes(_sContextValue.replace(identifierQuote, ' ').trim())); // o
-				Object oKey = decode(oResultSet.getBytes(_sContextKey.substring(identifierQuote.length(), _sContextKey.length() - identifierQuote.length())));
-				Object oValue = decode(oResultSet.getBytes(_sContextValue.substring(identifierQuote.length(), _sContextValue.length() - identifierQuote.length())));
+
+				// Object oKey = decode(oResultSet.getBytes(_sContextKey.replace(identifierQuote, ' ').trim())); // o
+				// Object oValue = decode(oResultSet.getBytes(_sContextValue.replace(identifierQuote, ' ').trim())); //
+				// o
+				Object oKey = decode(oResultSet.getBytes(_sContextKey.substring(identifierQuote.length(), _sContextKey
+						.length()
+						- identifierQuote.length())));
+				Object oValue = decode(oResultSet.getBytes(_sContextValue.substring(identifierQuote.length(),
+						_sContextValue.length() - identifierQuote.length())));
 
 				htResponse.put(oKey, oValue);
 			}
@@ -592,8 +626,15 @@ public class JDBCStorageHandler implements IStorageHandler
 	/**
 	 * Inserts a particular object into the database.
 	 * 
-	 * @see org.aselect.system.storagemanager.IStorageHandler#put(java.lang.Object,
-	 *      java.lang.Object, java.lang.Long)
+	 * @param oKey
+	 *            the o key
+	 * @param oValue
+	 *            the o value
+	 * @param lTimestamp
+	 *            the l timestamp
+	 * @throws ASelectStorageException
+	 *             the a select storage exception
+	 * @see org.aselect.system.storagemanager.IStorageHandler#put(java.lang.Object, java.lang.Object, java.lang.Long)
 	 */
 	public void put(Object oKey, Object oValue, Long lTimestamp)
 		throws ASelectStorageException
@@ -602,9 +643,9 @@ public class JDBCStorageHandler implements IStorageHandler
 		Connection oConnection = null; // RH, 20090604, n
 		PreparedStatement oStatement = null;
 		ResultSet oResultSet = null;
-		
+
 		try {
-			int iKey = 0;  // old: oKey.hashCode();
+			int iKey = 0; // old: oKey.hashCode();
 			Timestamp oTimestamp = new Timestamp(lTimestamp.longValue());
 			byte[] baKey = encode(oKey);
 			byte[] baValue = encode(oValue);
@@ -612,24 +653,24 @@ public class JDBCStorageHandler implements IStorageHandler
 			StringBuffer sbBuffer = new StringBuffer();
 			sbBuffer.append("SELECT ").append(_sContextTimestamp).append(" ");
 			sbBuffer.append("FROM ").append(_sTableName).append(" ");
-			//sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?");  // old
-			sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?");  // new
+			// sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?"); // old
+			sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?"); // new
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
 
-			// Connection oConnection = getConnection();  // RH, 20090604, o
+			// Connection oConnection = getConnection(); // RH, 20090604, o
 			oConnection = getConnection(); // RH, 20090604, n
 			oStatement = oConnection.prepareStatement(sbBuffer.toString());
-			// oStatement.setInt(1, iKey);  // old
-			oStatement.setBytes(1, baKey);  //new
+			// oStatement.setInt(1, iKey); // old
+			oStatement.setBytes(1, baKey); // new
 			oResultSet = oStatement.executeQuery();
 
-			if (oResultSet.next()) {  // record exists.
+			if (oResultSet.next()) { // record exists.
 				sbBuffer = new StringBuffer();
 				sbBuffer.append("UPDATE ").append(_sTableName).append(" ");
-				sbBuffer.append("SET ").append(_sContextValue).append(" = ? , ")
-						               .append(_sContextTimestamp).append(" = ? ");
-				//sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?");  // old
-				sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?");  // new
+				sbBuffer.append("SET ").append(_sContextValue).append(" = ? , ").append(_sContextTimestamp).append(
+						" = ? ");
+				// sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?"); // old
+				sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?"); // new
 				_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
 
 				try { // added 1.5.4
@@ -641,10 +682,10 @@ public class JDBCStorageHandler implements IStorageHandler
 				oStatement = oConnection.prepareStatement(sbBuffer.toString());
 				oStatement.setBytes(1, baValue);
 				oStatement.setTimestamp(2, oTimestamp);
-				//oStatement.setInt(3, iKey);  // old
-				oStatement.setBytes(3, baKey);  // new
+				// oStatement.setInt(3, iKey); // old
+				oStatement.setBytes(3, baKey); // new
 			}
-			else {  // new record.
+			else { // new record.
 				sbBuffer = new StringBuffer();
 				sbBuffer.append("INSERT INTO ").append(_sTableName).append(" ");
 				// RH, 20080714, sn
@@ -655,7 +696,7 @@ public class JDBCStorageHandler implements IStorageHandler
 				sbBuffer.append(_sContextKey).append(", ");
 				sbBuffer.append(_sContextValue).append(" ");
 				sbBuffer.append(") ");
-				// RH, 20080714, en                
+				// RH, 20080714, en
 				sbBuffer.append("VALUES (?,?,?,?)");
 				_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
 
@@ -705,6 +746,10 @@ public class JDBCStorageHandler implements IStorageHandler
 	/**
 	 * Removes a particular object from the database.
 	 * 
+	 * @param oKey
+	 *            the o key
+	 * @throws ASelectStorageException
+	 *             the a select storage exception
 	 * @see org.aselect.system.storagemanager.IStorageHandler#remove(java.lang.Object)
 	 */
 	public void remove(Object oKey)
@@ -714,32 +759,32 @@ public class JDBCStorageHandler implements IStorageHandler
 		StringBuffer sbBuffer = null;
 		Connection oConnection = null; // RH, 20090604, n
 		PreparedStatement oStatement = null;
-		int iKey = 0;  // oKey.hashCode();
+		int iKey = 0; // oKey.hashCode();
 		_systemLogger.log(Level.FINER, MODULE, sMethod, " -> " + iKey + " key=" + oKey);
 
 		try {
 			sbBuffer = new StringBuffer();
 			sbBuffer.append("DELETE FROM ").append(_sTableName).append(" ");
-			//sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?");  // old
-			sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?");  // new
+			// sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?"); // old
+			sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?"); // new
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + iKey + " key=" + oKey);
 
-			//   // RH, 20090604, so
-//			Connection oConnection = null;
-//			try {
-//				oConnection = getConnection();
-//			}
-//			catch (ASelectStorageException e) {
-//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not connect", e);
-//				throw e;
-//			}
-			  // RH, 20090604, eo
+			// // RH, 20090604, so
+			// Connection oConnection = null;
+			// try {
+			// oConnection = getConnection();
+			// }
+			// catch (ASelectStorageException e) {
+			// _systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not connect", e);
+			// throw e;
+			// }
+			// RH, 20090604, eo
 			oConnection = getConnection(); // RH, 20090604, n
-			
+
 			oStatement = oConnection.prepareStatement(sbBuffer.toString());
-			// oStatement.setInt(1, iKey);  // old
-			byte[] baKey = encode(oKey);  // new
-			oStatement.setBytes(1, baKey);  // new
+			// oStatement.setInt(1, iKey); // old
+			byte[] baKey = encode(oKey); // new
+			oStatement.setBytes(1, baKey); // new
 
 			if (oStatement.executeUpdate() == 0) {
 				StringBuffer sbError = new StringBuffer("Could not remove object: ");
@@ -774,6 +819,8 @@ public class JDBCStorageHandler implements IStorageHandler
 	/**
 	 * Removes all the stored objects from the database.
 	 * 
+	 * @throws ASelectStorageException
+	 *             the a select storage exception
 	 * @see org.aselect.system.storagemanager.IStorageHandler#removeAll()
 	 */
 	public void removeAll()
@@ -788,7 +835,7 @@ public class JDBCStorageHandler implements IStorageHandler
 			sbBuffer.append("DELETE FROM ").append(_sTableName);
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer);
 
-			// Connection oConnection = getConnection();  // RH, 20090604, o
+			// Connection oConnection = getConnection(); // RH, 20090604, o
 			oConnection = getConnection(); // RH, 20090604, n
 			oStatement = oConnection.prepareStatement(sbBuffer.toString());
 			oStatement.executeUpdate();
@@ -821,6 +868,10 @@ public class JDBCStorageHandler implements IStorageHandler
 	/**
 	 * Removes the objects from the database that have expired.
 	 * 
+	 * @param lTimestamp
+	 *            the l timestamp
+	 * @throws ASelectStorageException
+	 *             the a select storage exception
 	 * @see org.aselect.system.storagemanager.IStorageHandler#cleanup(java.lang.Long)
 	 */
 	public void cleanup(Long lTimestamp)
@@ -836,9 +887,10 @@ public class JDBCStorageHandler implements IStorageHandler
 			sbBuffer = new StringBuffer();
 			sbBuffer.append("DELETE FROM ").append(_sTableName).append(" ");
 			sbBuffer.append("WHERE ").append(_sContextTimestamp).append(" <= ?");
-			_systemLogger.log(Level.FINEST, MODULE, sMethod, "sql=" + sbBuffer + " -> " + lTimestamp); // RH, 20090127, n
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "sql=" + sbBuffer + " -> " + lTimestamp); // RH, 20090127,
+			// n
 
-			// Connection oConnection = getConnection();  // RH, 20090604, o
+			// Connection oConnection = getConnection(); // RH, 20090604, o
 			oConnection = getConnection(); // RH, 20090604, n
 			oStatement = oConnection.prepareStatement(sbBuffer.toString());
 			oStatement.setTimestamp(1, oTimestamp);
@@ -866,25 +918,31 @@ public class JDBCStorageHandler implements IStorageHandler
 
 	/**
 	 * Clean up all used recourses.
+	 * 
 	 * @see org.aselect.system.storagemanager.IStorageHandler#destroy()
 	 */
 	public void destroy()
 	{
-//		try {
-//			if (_oActiveConnection != null) {
-//				_oActiveConnection.close();
-//				_oActiveConnection = null;
-//			}
-//		}
-//		catch (Exception e) {  // Only log to system logger.
-//			_systemLogger.log(Level.FINE, MODULE, "destroy()", "An error occured while trying to destroy the module", e);
-//		}
+		// try {
+		// if (_oActiveConnection != null) {
+		// _oActiveConnection.close();
+		// _oActiveConnection = null;
+		// }
+		// }
+		// catch (Exception e) { // Only log to system logger.
+		// _systemLogger.log(Level.FINE, MODULE, "destroy()", "An error occured while trying to destroy the module", e);
+		// }
 	}
 
 	/**
 	 * Checks if the maximum items is reached. <br>
 	 * <br>
 	 * 
+	 * @param lItemCount
+	 *            the l item count
+	 * @return true, if checks if is maximum
+	 * @throws ASelectStorageException
+	 *             the a select storage exception
 	 * @see org.aselect.system.storagemanager.IStorageHandler#isMaximum(long)
 	 */
 	public boolean isMaximum(long lItemCount)
@@ -900,7 +958,7 @@ public class JDBCStorageHandler implements IStorageHandler
 		ResultSet oResultSet = null;
 
 		try {
-			// Connection oConnection = getConnection();  // RH, 20090604, o
+			// Connection oConnection = getConnection(); // RH, 20090604, o
 			oConnection = getConnection(); // RH, 20090604, n
 			oStatement = oConnection.createStatement();
 			oResultSet = oStatement.executeQuery(sbQuery.toString());
@@ -912,7 +970,8 @@ public class JDBCStorageHandler implements IStorageHandler
 				bReturn = true;
 		}
 		catch (SQLException e) {
-			StringBuffer sbError = new StringBuffer("Could not resolve the maximum number of items by executing the query: ");
+			StringBuffer sbError = new StringBuffer(
+					"Could not resolve the maximum number of items by executing the query: ");
 			sbError.append(sbQuery.toString());
 			_systemLogger.log(Level.FINE, MODULE, sMethod, sbError.toString(), e);
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_RETRIEVE, e);
@@ -939,8 +998,15 @@ public class JDBCStorageHandler implements IStorageHandler
 	}
 
 	/**
-	 * Checks if the supplied key already exists in the database
-	 * <br><br>
+	 * Checks if the supplied key already exists in the database <br>
+	 * <br>
+	 * .
+	 * 
+	 * @param oKey
+	 *            the o key
+	 * @return true, if contains key
+	 * @throws ASelectStorageException
+	 *             the a select storage exception
 	 * @see org.aselect.system.storagemanager.IStorageHandler#containsKey(java.lang.Object)
 	 */
 	public boolean containsKey(Object oKey)
@@ -951,24 +1017,24 @@ public class JDBCStorageHandler implements IStorageHandler
 		Connection oConnection = null; // RH, 20090604, n
 		PreparedStatement oStatement = null;
 		ResultSet oResultSet = null;
-		int iKey = 0;  // oKey.hashCode();
+		int iKey = 0; // oKey.hashCode();
 
 		StringBuffer sbQuery = new StringBuffer("SELECT * FROM ");
 		sbQuery.append(_sTableName);
 		sbQuery.append(" WHERE ");
-		// sbQuery.append(_sContextKeyHash);  // old // was _sContextKey in the sfs
+		// sbQuery.append(_sContextKeyHash); // old // was _sContextKey in the sfs
 		sbQuery.append(_sContextKey); // was _sContextKey in the sfs
 		// release, saml20 update
 		sbQuery.append(" = ?");
 		_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbQuery + " -> " + iKey + " key=" + oKey);
 
 		try {
-			// Connection oConnection = getConnection();  // RH, 20090604, o
+			// Connection oConnection = getConnection(); // RH, 20090604, o
 			oConnection = getConnection(); // RH, 20090604, n
 			oStatement = oConnection.prepareStatement(sbQuery.toString());
-			// oStatement.setInt(1, iKey);  // old
-			byte[] baKey = encode(oKey);  // new
-			oStatement.setBytes(1, baKey);  // new
+			// oStatement.setInt(1, iKey); // old
+			byte[] baKey = encode(oKey); // new
+			oStatement.setBytes(1, baKey); // new
 			oResultSet = oStatement.executeQuery();
 
 			if (oResultSet.next()) // record exists.
@@ -1010,14 +1076,15 @@ public class JDBCStorageHandler implements IStorageHandler
 	 * Create a database connection. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * First checks whether or not the database is still up. If not, an
-	 * alternative resource will be obtained from de SAMAgent. Second, a check
-	 * is done on the status of the database connection. If closed, a new
-	 * connection will be opened. <br>
+	 * First checks whether or not the database is still up. If not, an alternative resource will be obtained from de
+	 * SAMAgent. Second, a check is done on the status of the database connection. If closed, a new connection will be
+	 * opened. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Postconditions:</b>
 	 * <ul>
@@ -1029,168 +1096,86 @@ public class JDBCStorageHandler implements IStorageHandler
 	 * @throws ASelectStorageException
 	 *             If connecting fails.
 	 */
-	//    private Connection getConnection() throws ASelectStorageException
-	// Keep this method for backward compatibility with other/extending classes 
+	// private Connection getConnection() throws ASelectStorageException
+	// Keep this method for backward compatibility with other/extending classes
 	protected Connection getConnection()
 		throws ASelectStorageException
 	{
-		
+
 		return _oConnectionHandler.getConnection();
 		/*
-		String sMethod = "getConnection()";
-		String sPassword = null;
-		String sJDBCDriver = null;
-		String sUsername = null;
-		String sURL = null;
-		
-		Connection _oActiveConnection = null;
-		int i=1;
-		try {
-			if (_oActiveResource == null || !_oActiveResource.live()) {
-				_oActiveResource = _oSAMAgent.getActiveResource(_sResourceGroup);
-				Object oConfigSection = _oActiveResource.getAttributes();
-
-				try {
-					sJDBCDriver = _oConfigManager.getParam(oConfigSection, "driver");
-				}
-				catch (ASelectConfigException eAC) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'driver' config item found", eAC);
-					throw new ASelectStorageException(Errors.ERROR_ASELECT_NOT_FOUND, eAC);
-				}
-
-				try {
-					sUsername = _oConfigManager.getParam(oConfigSection, "username");
-				}
-				catch (ASelectConfigException eAC) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'username' config item found", eAC);
-					throw new ASelectStorageException(Errors.ERROR_ASELECT_NOT_FOUND, eAC);
-				}
-
-				try {
-					sPassword = _oConfigManager.getParam(oConfigSection, "password");
-				}
-				catch (ASelectConfigException e) {
-					sPassword = "";
-					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-							"Invalid or empty password found in config, using empty password", e);
-				}
-				try {
-					sURL = _oConfigManager.getParam(oConfigSection, "url");
-				}
-				catch (ASelectConfigException e) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'url' config item found", e);
-
-					throw new ASelectStorageException(Errors.ERROR_ASELECT_NOT_FOUND, e);
-				}
-
-				try {
-					Class.forName(sJDBCDriver);
-				}
-				catch (Exception e) {
-					StringBuffer sbFailed = new StringBuffer("Could not initialze the JDBC Driver: ");
-					sbFailed.append(sJDBCDriver);
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
-					throw new ASelectStorageException(Errors.ERROR_ASELECT_DATABASE_INIT, e);
-				}
-
-				try {
-					_oActiveConnection = DriverManager.getConnection(sURL, sUsername, sPassword);
-
-				}
-				catch (Exception e) {
-					StringBuffer sbFailed = new StringBuffer("Could not create a connection with: ");
-					sbFailed.append(sURL);
-					sbFailed.append(", driver: ");
-					sbFailed.append(sJDBCDriver);
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
-					throw new ASelectStorageException(Errors.ERROR_ASELECT_DATABASE_INIT, e);
-				}
-			}
-
-			// if (_oActiveConnection.isClosed()) {
-			if (_oActiveConnection == null) {
-				Object oConfigSection = _oActiveResource.getAttributes();
-
-				try {
-					sUsername = _oConfigManager.getParam(oConfigSection, "username");
-				}
-				catch (ASelectConfigException eAC) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'username' config item found", eAC);
-					throw new ASelectStorageException(Errors.ERROR_ASELECT_NOT_FOUND, eAC);
-				}
-
-				try {
-					sPassword = _oConfigManager.getParam(oConfigSection, "password");
-				}
-				catch (ASelectConfigException e) {
-					sPassword = "";
-					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-							"Invalid or empty password found in config, using empty password", e);
-				}
-				try {
-					sURL = _oConfigManager.getParam(oConfigSection, "url");
-				}
-				catch (ASelectConfigException e) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'url' config item found", e);
-					throw new ASelectStorageException(Errors.ERROR_ASELECT_NOT_FOUND, e);
-				}
-				try {
-					_oActiveConnection = DriverManager.getConnection(sURL, sUsername, sPassword);
-				}
-				catch (Exception e) {
-					StringBuffer sbFailed = new StringBuffer("Could not create a connection with: ");
-					sbFailed.append(sURL);
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
-					throw new ASelectStorageException(Errors.ERROR_ASELECT_DATABASE_INIT, e);
-				}
-			}
-		}
-		catch (ASelectStorageException eAS) {
-			throw eAS;
-		}
-		catch (ASelectSAMException e) {
-			_oActiveResource = null;
-			StringBuffer sbError = new StringBuffer("No resource was available, original cause: ");
-			sbError.append(e.getMessage());
-
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
-			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_CONNECTION_FAILURE, e);
-		}
-		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"An error occured while trying to connect to the database", e);
-			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_CONNECTION_FAILURE, e);
-		}
-		return _oActiveConnection;
-		*/
+		 * String sMethod = "getConnection()"; String sPassword = null; String sJDBCDriver = null; String sUsername =
+		 * null; String sURL = null; Connection _oActiveConnection = null; int i=1; try { if (_oActiveResource == null
+		 * || !_oActiveResource.live()) { _oActiveResource = _oSAMAgent.getActiveResource(_sResourceGroup); Object
+		 * oConfigSection = _oActiveResource.getAttributes(); try { sJDBCDriver =
+		 * _oConfigManager.getParam(oConfigSection, "driver"); } catch (ASelectConfigException eAC) {
+		 * _systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'driver' config item found", eAC); throw new
+		 * ASelectStorageException(Errors.ERROR_ASELECT_NOT_FOUND, eAC); } try { sUsername =
+		 * _oConfigManager.getParam(oConfigSection, "username"); } catch (ASelectConfigException eAC) {
+		 * _systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'username' config item found", eAC); throw new
+		 * ASelectStorageException(Errors.ERROR_ASELECT_NOT_FOUND, eAC); } try { sPassword =
+		 * _oConfigManager.getParam(oConfigSection, "password"); } catch (ASelectConfigException e) { sPassword = "";
+		 * _systemLogger.log(Level.CONFIG, MODULE, sMethod,
+		 * "Invalid or empty password found in config, using empty password", e); } try { sURL =
+		 * _oConfigManager.getParam(oConfigSection, "url"); } catch (ASelectConfigException e) {
+		 * _systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'url' config item found", e); throw new
+		 * ASelectStorageException(Errors.ERROR_ASELECT_NOT_FOUND, e); } try { Class.forName(sJDBCDriver); } catch
+		 * (Exception e) { StringBuffer sbFailed = new StringBuffer("Could not initialze the JDBC Driver: ");
+		 * sbFailed.append(sJDBCDriver); _systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
+		 * throw new ASelectStorageException(Errors.ERROR_ASELECT_DATABASE_INIT, e); } try { _oActiveConnection =
+		 * DriverManager.getConnection(sURL, sUsername, sPassword); } catch (Exception e) { StringBuffer sbFailed = new
+		 * StringBuffer("Could not create a connection with: "); sbFailed.append(sURL); sbFailed.append(", driver: ");
+		 * sbFailed.append(sJDBCDriver); _systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
+		 * throw new ASelectStorageException(Errors.ERROR_ASELECT_DATABASE_INIT, e); } } // if
+		 * (_oActiveConnection.isClosed()) { if (_oActiveConnection == null) { Object oConfigSection =
+		 * _oActiveResource.getAttributes(); try { sUsername = _oConfigManager.getParam(oConfigSection, "username"); }
+		 * catch (ASelectConfigException eAC) { _systemLogger.log(Level.WARNING, MODULE, sMethod,
+		 * "No valid 'username' config item found", eAC); throw new
+		 * ASelectStorageException(Errors.ERROR_ASELECT_NOT_FOUND, eAC); } try { sPassword =
+		 * _oConfigManager.getParam(oConfigSection, "password"); } catch (ASelectConfigException e) { sPassword = "";
+		 * _systemLogger.log(Level.CONFIG, MODULE, sMethod,
+		 * "Invalid or empty password found in config, using empty password", e); } try { sURL =
+		 * _oConfigManager.getParam(oConfigSection, "url"); } catch (ASelectConfigException e) {
+		 * _systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'url' config item found", e); throw new
+		 * ASelectStorageException(Errors.ERROR_ASELECT_NOT_FOUND, e); } try { _oActiveConnection =
+		 * DriverManager.getConnection(sURL, sUsername, sPassword); } catch (Exception e) { StringBuffer sbFailed = new
+		 * StringBuffer("Could not create a connection with: "); sbFailed.append(sURL); _systemLogger.log(Level.WARNING,
+		 * MODULE, sMethod, sbFailed.toString(), e); throw new
+		 * ASelectStorageException(Errors.ERROR_ASELECT_DATABASE_INIT, e); } } } catch (ASelectStorageException eAS) {
+		 * throw eAS; } catch (ASelectSAMException e) { _oActiveResource = null; StringBuffer sbError = new
+		 * StringBuffer("No resource was available, original cause: "); sbError.append(e.getMessage());
+		 * _systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e); throw new
+		 * ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_CONNECTION_FAILURE, e); } catch (Exception e) {
+		 * _systemLogger.log(Level.WARNING, MODULE, sMethod, "An error occured while trying to connect to the database",
+		 * e); throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_CONNECTION_FAILURE, e); } return
+		 * _oActiveConnection;
+		 */
 	}
 
 	/**
-	 * Encode a object for storage.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Encode a object for storage. <br>
 	 * <br>
-	 * Encodes an object so that is can be stored in the database.
-	 * <br><br>
-	 * <i>Note: This method does not log itself.</i>
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Encodes an object so that is can be stored in the database. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <i>Note: This method does not log itself.</i> <br>
 	 * <br>
-	 * <code>o != null</code>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
+	 * <b>Preconditions:</b> <br>
+	 * <code>o != null</code> <br>
 	 * <br>
-	 * @param o The object that needs to be encoded.
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param o
+	 *            The object that needs to be encoded.
 	 * @return The encoded object.
-	 * @throws IOException If encoding fails.
+	 * @throws IOException
+	 *             If encoding fails.
 	 */
-	//    private static byte[] encode(Object o) throws IOException
+	// private static byte[] encode(Object o) throws IOException
 	protected byte[] encode(Object o)
 		throws IOException
 	{
@@ -1209,32 +1194,31 @@ public class JDBCStorageHandler implements IStorageHandler
 	}
 
 	/**
-	 * Decodes an object.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Decodes an object. <br>
 	 * <br>
-	 * Decodes an object that is returned from the database.
-	 * <br><br>
-	 * <i>Note: This method does not log itself.</i>
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Decodes an object that is returned from the database. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <i>Note: This method does not log itself.</i> <br>
 	 * <br>
-	 * <code>baBytes != null</code>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
+	 * <b>Preconditions:</b> <br>
+	 * <code>baBytes != null</code> <br>
 	 * <br>
-	 * @param baBytes the bytes to be decoded.
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param baBytes
+	 *            the bytes to be decoded.
 	 * @return The decoded <code>Object</code>.
-	 * @throws IOException if decoding fails.
-	 * @throws ClassNotFoundException if decoding fails.
+	 * @throws IOException
+	 *             if decoding fails.
+	 * @throws ClassNotFoundException
+	 *             if decoding fails.
 	 */
-	//    private static Object decode(byte[] baBytes) throws IOException, ClassNotFoundException
+	// private static Object decode(byte[] baBytes) throws IOException, ClassNotFoundException
 	protected Object decode(byte[] baBytes)
 		throws IOException, ClassNotFoundException
 	{

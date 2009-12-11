@@ -78,41 +78,34 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 
+// TODO: Auto-generated Javadoc
 /**
- * Message creator which uses SOAP 1.1 messages. 
- * <br><br>
+ * Message creator which uses SOAP 1.1 messages. <br>
+ * <br>
  * <b>Description: </b> <br>
- * A SOAP 1.1 implementation of the <code>IMessageCreatorInterface</code>.
+ * A SOAP 1.1 implementation of the <code>IMessageCreatorInterface</code>. <br>
  * <br>
+ * The <code>SOAP11MessageCreator</code> parses the request message to an XML DOM object and validates it manually
+ * against the SOAP 1.1 XML Schema. If the request cannot be parsed, a SOAP Fault message will be sent directly. The XML
+ * DOM object containing the request message is used as a buffer; the object will be removed if the response message is
+ * sent. <br>
  * <br>
- * The <code>SOAP11MessageCreator</code> parses the request message to an XML
- * DOM object and validates it manually against the SOAP 1.1 XML Schema. If the
- * request cannot be parsed, a SOAP Fault message will be sent directly. The XML
- * DOM object containing the request message is used as a buffer; the object
- * will be removed if the response message is sent. <br>
+ * The parameters for the response message will be buffered in a XML Document object. This object will be serialized to
+ * a valid SOAP 1.1 response message when the <code>send()</code> method is called. <br>
  * <br>
- * The parameters for the response message will be buffered in a XML Document
- * object. This object will be serialized to a valid SOAP 1.1 response message
- * when the <code>send()</code> method is called. <br>
+ * This implementation uses the Xerces XML parser and DOM objects implementation (xercesImpl.jar and xml-apis.jar).
+ * <i>For more info about Xerces see: <a href='http://xml.apache.org/xerces-j/' target='_new'> Xerces Java Parser
+ * documentation </a> </i> <br>
  * <br>
- * This implementation uses the Xerces XML parser and DOM objects implementation
- * (xercesImpl.jar and xml-apis.jar). <i>For more info about Xerces see: <a
- * href='http://xml.apache.org/xerces-j/' target='_new'> Xerces Java Parser
- * documentation </a> </i> 
- * <br><br>
- * <i>Note: The SOAP request is not validated to the full W3C SOAP 1.1 XML
- * Schema, but only checked if the information can be retrieved from the message
- * in the way that the XML schema describes. Full schema validation can be
- * turned on by uncomment some code in <code>createInputMessage()</code>
- * method, but slows down the parsing extremely. </i> 
- * <br><br>
- * <b>Concurrency issues: </b> 
+ * <i>Note: The SOAP request is not validated to the full W3C SOAP 1.1 XML Schema, but only checked if the information
+ * can be retrieved from the message in the way that the XML schema describes. Full schema validation can be turned on
+ * by uncomment some code in <code>createInputMessage()</code> method, but slows down the parsing extremely. </i> <br>
  * <br>
- * The used Xerces implemenations are non threadsafe and therefore every SOAP
- * request requires its own <code>SOAP11MessageCreator</code>.<br>
+ * <b>Concurrency issues: </b> <br>
+ * The used Xerces implemenations are non threadsafe and therefore every SOAP request requires its own
+ * <code>SOAP11MessageCreator</code>.<br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class SOAP11MessageCreator implements IMessageCreatorInterface
 {
@@ -160,19 +153,19 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	private String _sMethodName;
 
 	/**
-	 * Creates a new instance. 
-	 * <br><br>
-	 * <b>Description: </b> <br>
-	 * Creates a new <code>SOAP11MessageCreator</code> with the given values.
-	 * All other instance variables are initalized with default values. <br>
+	 * Creates a new instance. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Description: </b> <br>
+	 * Creates a new <code>SOAP11MessageCreator</code> with the given values. All other instance variables are
+	 * initalized with default values. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
 	 * <b>Preconditions: </b> <br>
 	 * <ul>
 	 * <li><code>sMethodEnv</code> should be a valid URI.</li>
-	 * <li><code>sMethodName</code> should be a non empty <code>String</code>.
-	 * </li>
+	 * <li><code>sMethodName</code> should be a non empty <code>String</code>.</li>
 	 * <li><code>systemLogger</code> should be initialized.</li>
 	 * </ul>
 	 * <br>
@@ -186,8 +179,7 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	 * @param systemLogger
 	 *            The logger that is used to log system entries.
 	 */
-	public SOAP11MessageCreator(String sMethodEnv, String sMethodName, SystemLogger systemLogger)
-	{
+	public SOAP11MessageCreator(String sMethodEnv, String sMethodName, SystemLogger systemLogger) {
 		_sMethodEnv = sMethodEnv;
 		_sMethodName = sMethodName;
 
@@ -203,11 +195,17 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	}
 
 	/**
-	 * Initializes the <code>SOAP11MessageCreator</code>.
-	 * <br><br>
-	 * <i>note: A Fault message will be send imediately to the sender</i>
+	 * Initializes the <code>SOAP11MessageCreator</code>. <br>
 	 * <br>
+	 * <i>note: A Fault message will be send imediately to the sender</i> <br>
 	 * 
+	 * @param oRequest
+	 *            the o request
+	 * @param oResponse
+	 *            the o response
+	 * @return true, if inits the
+	 * @throws ASelectCommunicationException
+	 *             the a select communication exception
 	 * @see org.aselect.system.communication.server.IMessageCreatorInterface#init(org.aselect.system.communication.server.IProtocolRequest,
 	 *      org.aselect.system.communication.server.IProtocolResponse)
 	 */
@@ -218,61 +216,61 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 		StringBuffer sbBuffer = null;
 		String sMethod = "init()";
 
-		//set class variabeles
+		// set class variabeles
 		_oRequest = oRequest;
 		_oResponse = oResponse;
 
-		//Parse input Message
+		// Parse input Message
 		try {
 			_oInputMessage = createInputMessage();
 		}
-		catch (ASOAPException eAS) //SOAP Fault handling
+		catch (ASOAPException eAS) // SOAP Fault handling
 		{
 			int iCode = eAS.getCode();
 			String sReason = eAS.getReason();
 			String sDetail = eAS.getMessage();
 			String sCodeString = "";
 			switch (iCode) {
-			case ASOAPException.VERSION_MISMATCH: //version mismatch
+			case ASOAPException.VERSION_MISMATCH: // version mismatch
 			{
 				sCodeString = SOAPConstants.ERR_VERSION_MISMATCH;
 				break;
 			}
-			case ASOAPException.MUST_UNDERSTAND: //Must understand
+			case ASOAPException.MUST_UNDERSTAND: // Must understand
 			{
 				sCodeString = SOAPConstants.ERR_MUST_UNDERSTAND;
 				break;
 			}
-			case ASOAPException.CLIENT: //Bad request received
+			case ASOAPException.CLIENT: // Bad request received
 			{
 				sCodeString = SOAPConstants.ERR_CLIENT;
 				break;
 			}
-			case ASOAPException.SERVER: //Internal Server error
+			case ASOAPException.SERVER: // Internal Server error
 			{
 				sCodeString = SOAPConstants.ERR_SERVER;
 				break;
 			}
-			default: //Server error
+			default: // Server error
 			{
 				sCodeString = SOAPConstants.ERR_SERVER;
 				break;
 			}
 			}
-			//log error
+			// log error
 			sbBuffer = new StringBuffer("Could not parse inputmessage, cause: ");
 			sbBuffer.append(Errors.ERROR_ASELECT_USE_ERROR);
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
-			//log additional info
+			// log additional info
 			_systemLogger.log(Level.FINE, MODULE, sMethod, "Received SOAP inputmessage:\n" + _oRequest.getMessage());
 
-			//set HTTP response code
+			// set HTTP response code
 			oResponse.setProperty("Status", "" + SOAPConstants.ERR_RESPONSECODE);
-			//create default output message
+			// create default output message
 			_oOutputMessage = createOutputMessage();
-			//if error, then create fault tag and append it to the body
+			// if error, then create fault tag and append it to the body
 			_elOutputBody.appendChild(createFault(sCodeString, sReason, sDetail));
-			//a Fault message will be send imediately to the sender
+			// a Fault message will be send imediately to the sender
 			send();
 
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "SOAP fault sent: " + sCodeString + ", " + sReason + ", "
@@ -280,12 +278,12 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 		}
-		//create default output message
+		// create default output message
 		_oOutputMessage = createOutputMessage();
 
-		//the fault tag cannot be created anymore, so outputRPCBody must be
+		// the fault tag cannot be created anymore, so outputRPCBody must be
 		// added.
-		//create and add RPC body element with namespace
+		// create and add RPC body element with namespace
 		_elOutputRPCBody = _oOutputMessage.createElementNS(_sMethodEnv, SOAPConstants.NS_PREFIX_RPC + ":"
 				+ _sMethodName + "Response");
 		_elOutputBody.appendChild(_elOutputRPCBody);
@@ -295,13 +293,18 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	/**
 	 * Returns a Parameter from the input SOAP message.
 	 * 
+	 * @param sName
+	 *            the s name
+	 * @return the param
+	 * @throws ASelectCommunicationException
+	 *             the a select communication exception
 	 * @see org.aselect.system.communication.server.IInputMessage#getParam(java.lang.String)
 	 */
 	public String getParam(String sName)
 		throws ASelectCommunicationException
 	{
 		String sMethod = "getParam()";
-		//_systemLogger.log(Level.INFO, MODULE, sMethod, "param:"+sName);
+		// _systemLogger.log(Level.INFO, MODULE, sMethod, "param:"+sName);
 		if (_oInputMessage == null) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No input message available, cause: "
 					+ Errors.ERROR_ASELECT_USE_ERROR);
@@ -311,9 +314,9 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 		// get parameters with [name] from RPC SOAP body
 		NodeList nlParams = _elInputRPCBody.getElementsByTagNameNS(_sMethodEnv, sName);
 		String sValue = "";
-		if (nlParams.getLength() == 1) //exactly 1 param found with this name
+		if (nlParams.getLength() == 1) // exactly 1 param found with this name
 		{
-			//get all text nodes
+			// get all text nodes
 			Element elParam = (Element) nlParams.item(0);
 			NodeList nlValues = elParam.getChildNodes();
 			for (int c = 0; c < nlValues.getLength(); c++) {
@@ -325,7 +328,7 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 						sValue += sAdd;
 				}
 				else
-				//not a TextNode inside parameter
+				// not a TextNode inside parameter
 				{
 					StringBuffer sb = new StringBuffer("Invalid parameter in input message: ");
 					sb.append(nValue.getNodeName());
@@ -337,7 +340,7 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 			}
 		}
 		else
-		//no Param found or more then one
+		// no Param found or more then one
 		{
 			StringBuffer sb = new StringBuffer();
 			sb.append(nlParams.getLength());
@@ -354,6 +357,11 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	/**
 	 * Get array Parameter values from this SOAP 1.1 message.
 	 * 
+	 * @param sName
+	 *            the s name
+	 * @return the array
+	 * @throws ASelectCommunicationException
+	 *             the a select communication exception
 	 * @see org.aselect.system.communication.server.IInputMessage#getArray(java.lang.String)
 	 */
 	public String[] getArray(String sName)
@@ -367,11 +375,11 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 		}
 
 		String[] sa = null;
-		//get parameters with [name] from RPC SOAP body
+		// get parameters with [name] from RPC SOAP body
 		NodeList nlParams = _elInputRPCBody.getElementsByTagNameNS(_sMethodEnv, sName);
-		if (nlParams.getLength() == 1) //exactly 1 param found with this name
+		if (nlParams.getLength() == 1) // exactly 1 param found with this name
 		{
-			//resolve the array from the first occurence of the param tag
+			// resolve the array from the first occurence of the param tag
 			sa = resolveArray((Element) nlParams.item(0));
 		}
 		else {
@@ -384,20 +392,29 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 		}
 		return sa;
 	}
-	
+
 	// 20090310, Bauke: Added to support applications using the DigiD protocol to connect to the server
 	// That protocol does not URL encode it's parameters
+	/* (non-Javadoc)
+	 * @see org.aselect.system.communication.server.IOutputMessage#setParam(java.lang.String, java.lang.String, boolean)
+	 */
 	public boolean setParam(String sName, String sValue, boolean doUrlEncode)
-	throws ASelectCommunicationException
+		throws ASelectCommunicationException
 	{
 		return setParam(sName, sValue);
 	}
 
 	/**
-	 * Sets a parameter in the SOAP output message. 
+	 * Sets a parameter in the SOAP output message.
 	 * 
-	 * @see org.aselect.system.communication.server.IOutputMessage#setParam(java.lang.String,
-	 *      java.lang.String)
+	 * @param sName
+	 *            the s name
+	 * @param sValue
+	 *            the s value
+	 * @return true, if sets the param
+	 * @throws ASelectCommunicationException
+	 *             the a select communication exception
+	 * @see org.aselect.system.communication.server.IOutputMessage#setParam(java.lang.String, java.lang.String)
 	 */
 	public boolean setParam(String sName, String sValue)
 		throws ASelectCommunicationException
@@ -409,20 +426,20 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 		}
 
-		//create parameter value
+		// create parameter value
 		Text xParamValue = _oOutputMessage.createTextNode(sValue);
 
 		NodeList xParams = _elOutputRPCBody.getElementsByTagNameNS(_sMethodEnv, sName);
-		if (xParams.getLength() != 1) //not a parameter with this name yet
+		if (xParams.getLength() != 1) // not a parameter with this name yet
 		{
-			//create parameter name
+			// create parameter name
 			Element xParamName = _oOutputMessage
 					.createElementNS(_sMethodEnv, SOAPConstants.NS_PREFIX_RPC + ":" + sName);
-			//add value and name to message
+			// add value and name to message
 			xParamName.appendChild(xParamValue);
 			_elOutputRPCBody.appendChild(xParamName);
 		}
-		else { //update paramater with new value
+		else { // update paramater with new value
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Updating parameter: " + sName);
 			Element xParamName = (Element) xParams.item(0);
 			Node xOldValue = xParamName.getFirstChild();
@@ -432,10 +449,16 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	}
 
 	/**
-	 * Sets an array parameter in the SOAP output message. 
+	 * Sets an array parameter in the SOAP output message.
 	 * 
-	 * @see org.aselect.system.communication.server.IOutputMessage#setParam(java.lang.String,
-	 *      java.lang.String[])
+	 * @param sName
+	 *            the s name
+	 * @param saValue
+	 *            the sa value
+	 * @return true, if sets the param
+	 * @throws ASelectCommunicationException
+	 *             the a select communication exception
+	 * @see org.aselect.system.communication.server.IOutputMessage#setParam(java.lang.String, java.lang.String[])
 	 */
 	public boolean setParam(String sName, String[] saValue)
 		throws ASelectCommunicationException
@@ -447,36 +470,38 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 		}
 
-		//convert array to xml tags
+		// convert array to xml tags
 		Element tmpElement = arrayToXML(sName, saValue);
 
 		NodeList xParams = _elOutputRPCBody.getElementsByTagNameNS(SOAPConstants.URI_SOAP11_ENC, sName);
-		if (xParams.getLength() != 1)//new tag
+		if (xParams.getLength() != 1)// new tag
 		{
-			//append to outputRPCBody
+			// append to outputRPCBody
 			_elOutputRPCBody.appendChild(tmpElement);
 		}
 		else
-		//existing tag
+		// existing tag
 		{
-			//replace existing tag with new tag
+			// replace existing tag with new tag
 			_elOutputRPCBody.replaceChild(tmpElement, xParams.item(0));
 		}
 		return true;
 	}
 
 	/**
-	 * Sends the output message. 
-	 * <br><br>
+	 * Sends the output message. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
 	 * Performs the following steps:
 	 * <ul>
 	 * <li>creates an output format which uses new lines and tabs</li>
-	 * <li>Uses a {@link org.apache.xml.serialize.XMLSerializer }to serialize
-	 * the message.</li>
+	 * <li>Uses a {@link org.apache.xml.serialize.XMLSerializer }to serialize the message.</li>
 	 * <li>reset output and input message</li>
 	 * </ul>
 	 * 
+	 * @return true, if send
+	 * @throws ASelectCommunicationException
+	 *             the a select communication exception
 	 * @see org.aselect.system.communication.server.IOutputMessage#send()
 	 */
 	public boolean send()
@@ -489,28 +514,28 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 		}
 		try {
-			//create output format which uses new lines and tabs
+			// create output format which uses new lines and tabs
 			OutputFormat oFormat = new OutputFormat(_oOutputMessage);
 			oFormat.setLineSeparator(LineSeparator.Web);
 			oFormat.setIndenting(true);
 			oFormat.setLineWidth(80);
-			//Create serializer
+			// Create serializer
 			XMLSerializer oSerializer = new XMLSerializer(_oResponse.getOutputStream(), oFormat);
 			oSerializer.setNamespaces(true);
-			//serialize outputmessage to outputstream
+			// serialize outputmessage to outputstream
 			oSerializer.serialize(_oOutputMessage.getDocumentElement());
 
-			//clear output and input message
+			// clear output and input message
 			_oOutputMessage = null;
 			_elOutputBody = null;
 			_elOutputRPCBody = null;
-			//_elOutputHeader = null;
+			// _elOutputHeader = null;
 			_oInputMessage = null;
 
 			return true;
 		}
 		catch (IOException eIO)
-		//I/O error while serializing, should not occur
+		// I/O error while serializing, should not occur
 		{
 			StringBuffer sbBuffer = new StringBuffer("DOM object could not be serialized: ");
 			sbBuffer.append(eIO.getMessage());
@@ -526,12 +551,10 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	 */
 
 	/**
-	 * Convert array to xml tags. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Convert array to xml tags. <br>
 	 * <br>
-	 * Converts the strings in the array into a parameter with the given name as
-	 * XML <code>Element</code>.<br>
+	 * <b>Description: </b> <br>
+	 * Converts the strings in the array into a parameter with the given name as XML <code>Element</code>.<br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * The returned <code>Element</code> is not threadsafe. <br>
@@ -542,7 +565,8 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	 * <li><code>sa</code> should contain one or more valid tag values</li>
 	 * </ul>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param sTagName
 	 *            The tagname of the array parameter.
@@ -557,11 +581,11 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 
 		resultElement.setAttributeNS(_sMethodEnv, "arrayType", "xsd:string[" + sa.length + "]");
 
-		//create item tags for every array item
+		// create item tags for every array item
 		for (int i = 0; i < sa.length; i++) {
-			//create item tag (ELEMENT_NODE)
+			// create item tag (ELEMENT_NODE)
 			Element tmpElement = _oOutputMessage.createElementNS(_sMethodEnv, SOAPConstants.NS_PREFIX_RPC + ":item");
-			//create value tag (TEXT_NODE)
+			// create value tag (TEXT_NODE)
 			Text tmpTextNode = _oOutputMessage.createTextNode(sa[i]);
 			tmpElement.appendChild(tmpTextNode);
 			resultElement.appendChild(tmpElement);
@@ -571,22 +595,21 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	}
 
 	/**
-	 * Convert a array parameter to a <code>String</code> array. 
-	 * <br><br>
+	 * Convert a array parameter to a <code>String</code> array. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
 	 * Converts the XML parameter data to an array of strings. <br>
 	 * Performs the following steps:
 	 * <ul>
-	 * 	<li>Parse "arrayType"</li>
-	 * 	<li>Get number of parameter values</li>
-	 * 	<li>Get the array item tags defined inside the array tag</li>
-	 * 	<li>For all child elements:
-	 * 		<ul>
-	 * 			<li><code>if node type == ELEMENT_NODE</code> retrieve value of text
-	 * 			node</li>
-	 * 			<li>Add value to return array</li>
-	 * 		</ul>
-	 * 	</li>
+	 * <li>Parse "arrayType"</li>
+	 * <li>Get number of parameter values</li>
+	 * <li>Get the array item tags defined inside the array tag</li>
+	 * <li>For all child elements:
+	 * <ul>
+	 * <li><code>if node type == ELEMENT_NODE</code> retrieve value of text node</li>
+	 * <li>Add value to return array</li>
+	 * </ul>
+	 * </li>
 	 * </ul>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
@@ -595,11 +618,11 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	 * <b>Preconditions: </b> <br>
 	 * <code>elParam</code> should contain an array parameter. <br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param elParam
-	 *            The <code>Element</code> contaning the parameter as XML
-	 *            data.
+	 *            The <code>Element</code> contaning the parameter as XML data.
 	 * @return An array of parameter values.
 	 * @throws ASelectCommunicationException
 	 *             If resolving fails.
@@ -611,7 +634,7 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 		String[] saReturn = null;
 		String sArrayLength = null;
 
-		//parse array type
+		// parse array type
 		NamedNodeMap oNodes = elParam.getAttributes();
 		for (int attrI = 0; attrI < oNodes.getLength(); attrI++) {
 			Node nAttr = oNodes.item(0);
@@ -625,14 +648,14 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 			int iArrayIndex = 0;
 			saReturn = new String[iArrayMax];
 
-			//get the array item tags defined inside the array tag
+			// get the array item tags defined inside the array tag
 			NodeList nlItems = elParam.getChildNodes();
 			for (int i = 0; i < nlItems.getLength(); i++) {
-				//check if node type == ELEMENT_NODE
+				// check if node type == ELEMENT_NODE
 				if (nlItems.item(i).getNodeType() == Node.ELEMENT_NODE) {
 					Node tmpNode = nlItems.item(i).getFirstChild();
 					if (tmpNode.getNodeType() == Node.TEXT_NODE) {
-						//get value of text node
+						// get value of text node
 						if (iArrayIndex < iArrayMax)
 							saReturn[iArrayIndex++] = tmpNode.getNodeValue();
 					}
@@ -661,20 +684,17 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	}
 
 	/**
-	 * Creates an input message from the input. 
-	 * <br><br>
-	 * <b>Description: </b> <br>
-	 * This method parses the request data and creates an XML
-	 * <code>Document</code> containing all parameters in the SOAP 1.1
-	 * message. <br>
+	 * Creates an input message from the input. <br>
 	 * <br>
-	 * Parse and validation errors are logged and an <code>ASOAPException</code>
-	 * is thrown. <b>Concurrency issues: </b> <br>
+	 * <b>Description: </b> <br>
+	 * This method parses the request data and creates an XML <code>Document</code> containing all parameters in the
+	 * SOAP 1.1 message. <br>
+	 * <br>
+	 * Parse and validation errors are logged and an <code>ASOAPException</code> is thrown. <b>Concurrency issues: </b> <br>
 	 * The returned <code>Document</code> is not threadsafe. <br>
 	 * <br>
 	 * <b>Preconditions: </b> <br>
-	 * This method should be called in the initializing stage of the
-	 * <code>SOAP11MessageCreator</code>.<br>
+	 * This method should be called in the initializing stage of the <code>SOAP11MessageCreator</code>.<br>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
 	 * The input message instance variables contain input message XML data. <br>
@@ -691,38 +711,38 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 		String sMethod = "createInputMessage()";
 		Document oInputMessage = null;
 		try {
-			//create DocumentBuilderFactory to parse SOAP message.
+			// create DocumentBuilderFactory to parse SOAP message.
 			DocumentBuilderFactory oDbf = DocumentBuilderFactory.newInstance();
 			oDbf.setNamespaceAware(true);
 
-			//SOAP 1.1 SCHEMA VALIDATING default disabled because of
+			// SOAP 1.1 SCHEMA VALIDATING default disabled because of
 			// performance issues
-			//			xDbf.setValidating(true);
-			//			xDbf.setAttribute("http://java.sun.com/xml/jaxp/properties/schemaLanguage",
-			//							 "http://www.w3.org/2001/XMLSchema");
-			//			xDbf.setAttribute("http://java.sun.com/xml/jaxp/properties/schemaSource",
-			//							 System.getProperty("user.dir") +
-			//							 File.separator +
-			//							 "soap-envelope.xsd");
+			// xDbf.setValidating(true);
+			// xDbf.setAttribute("http://java.sun.com/xml/jaxp/properties/schemaLanguage",
+			// "http://www.w3.org/2001/XMLSchema");
+			// xDbf.setAttribute("http://java.sun.com/xml/jaxp/properties/schemaSource",
+			// System.getProperty("user.dir") +
+			// File.separator +
+			// "soap-envelope.xsd");
 
-			//Create parser
+			// Create parser
 			DocumentBuilder oParser = oDbf.newDocumentBuilder();
-			//set SOAP12 error handler which throws all errors.
+			// set SOAP12 error handler which throws all errors.
 			oParser.setErrorHandler(new SOAP11ErrorHandler());
-			//parse
+			// parse
 			oInputMessage = oParser.parse(_oRequest.getInputStream());
 		}
-		catch (org.xml.sax.SAXParseException xSPE) //Invalid XML
+		catch (org.xml.sax.SAXParseException xSPE) // Invalid XML
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Bad request, could not parse request.", xSPE);
 			throw new ASOAPException(ASOAPException.CLIENT, "Bad request", xSPE.getMessage());
 		}
-		catch (org.xml.sax.SAXException xSE) //Invalid XML
+		catch (org.xml.sax.SAXException xSE) // Invalid XML
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Bad request, could not parse request.", xSE);
 			throw new ASOAPException(ASOAPException.CLIENT, "Bad request", xSE.getMessage());
 		}
-		catch (java.io.IOException xIOE) //Invalid inputstream (i/o error)
+		catch (java.io.IOException xIOE) // Invalid inputstream (i/o error)
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Internal server error, could not open soap request.",
 					xIOE);
@@ -733,30 +753,31 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 			throw new ASOAPException(ASOAPException.SERVER, "Internal server error", xPCE.getMessage());
 		}
 
-		//retrieve root element
+		// retrieve root element
 		Element elRoot = oInputMessage.getDocumentElement();
 
-		//check envelope tag name
+		// check envelope tag name
 		String xEnvelopeName = elRoot.getLocalName();
-		if (!xEnvelopeName.equals(SOAPConstants.ELEM_ENVELOPE)) {  //invalid envelop
+		if (!xEnvelopeName.equals(SOAPConstants.ELEM_ENVELOPE)) { // invalid envelop
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Version Mismatch, invalid envelope tag name.");
-			String xDetail = null; //no detail for VerionMismatch
+			String xDetail = null; // no detail for VerionMismatch
 			throw new ASOAPException(ASOAPException.VERSION_MISMATCH, "Version Mismatch", xDetail);
 		}
-		//validate Body tag
+		// validate Body tag
 		String nameSpace = elRoot.getNamespaceURI();
-		if (nameSpace != null) {  //if encoding schema is specified, then use it.
+		if (nameSpace != null) { // if encoding schema is specified, then use it.
 			_sInputMessageSchema = nameSpace;
 			_elInputBody = getChildElementNS(elRoot, SOAPConstants.ELEM_BODY, _sInputMessageSchema);
 		}
-		else {  //no namespace is used
+		else { // no namespace is used
 			_elInputBody = getChildElement(elRoot, SOAPConstants.ELEM_BODY);
 		}
 		if (_elInputBody == null) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Bad request, No Body element found.");
-			throw new ASOAPException(ASOAPException.CLIENT, "Bad request", "SOAP message must contain mandatory Body element.");
+			throw new ASOAPException(ASOAPException.CLIENT, "Bad request",
+					"SOAP message must contain mandatory Body element.");
 		}
-		//retrieve RPCBody
+		// retrieve RPCBody
 		_elInputRPCBody = getChildElementNS(_elInputBody, _sMethodName, _sMethodEnv);
 		if (_elInputRPCBody == null) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Bad request, No correct RPC Body found while looking for: "
@@ -768,8 +789,8 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	}
 
 	/**
-	 * creates an empty SOAP output message. 
-	 * <br><br>
+	 * creates an empty SOAP output message. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
 	 * Creates a new <code>Document</code> with a empty RPC body. <br>
 	 * <br>
@@ -777,8 +798,7 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	 * The returned <code>Document</code> is not threadsafe. <br>
 	 * <br>
 	 * <b>Preconditions: </b> <br>
-	 * This method should be called in the initializing stage of the
-	 * <code>SOAP11MessageCreator</code>.<br>
+	 * This method should be called in the initializing stage of the <code>SOAP11MessageCreator</code>.<br>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
 	 * <code>_elOutputBody</code> contains an empty SOAP body. <br>
@@ -787,52 +807,50 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	 */
 	private Document createOutputMessage()
 	{
-		//set Content type of response
+		// set Content type of response
 		_oResponse.setProperty("Content-Type", SOAPConstants.CONTENT_TYPE);
-		//Create IOutputMessage
+		// Create IOutputMessage
 		Document oOutputMessage = new DocumentImpl();
-		//create envelope
+		// create envelope
 		Element elEnvelope = oOutputMessage.createElementNS(_sInputMessageSchema, SOAPConstants.NS_PREFIX_SOAP_ENV
 				+ ":" + SOAPConstants.ELEM_ENVELOPE);
 
 		elEnvelope.setAttributeNS(_sInputMessageSchema, SOAPConstants.NS_PREFIX_SOAP_ENV + ":"
 				+ SOAPConstants.ATTR_ENCODING_STYLE, SOAPConstants.URI_SOAP11_ENC);
 
-		//add envelope
+		// add envelope
 		oOutputMessage.appendChild(elEnvelope);
-		//create Body
+		// create Body
 		_elOutputBody = oOutputMessage.createElementNS(_sInputMessageSchema, SOAPConstants.NS_PREFIX_SOAP_ENV + ":"
 				+ SOAPConstants.ELEM_BODY);
-		//add body
+		// add body
 		elEnvelope.appendChild(_elOutputBody);
 
 		return oOutputMessage;
 	}
 
 	/**
-	 * Create a SOAP 1.1 Fault in the ouput message. 
-	 * <br><br>
+	 * Create a SOAP 1.1 Fault in the ouput message. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
 	 * Creates a SOAP 1.1 fault tag in the output message. <br>
 	 * <br>
-	 * <i>For more info see: <a
-	 * href='http://www.w3.org/TR/2003/REC-soap12-part0-20030624/#L11549'
-	 * target='_new'>SOAP fault handling </a> </i> <br>
+	 * <i>For more info see: <a href='http://www.w3.org/TR/2003/REC-soap12-part0-20030624/#L11549' target='_new'>SOAP
+	 * fault handling </a> </i> <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * the returned <code>Element</code> is not threadsafe. <br>
 	 * <br>
 	 * <b>Preconditions: </b> <br>
 	 * <ul>
-	 * 	<li><code>sFaultString</code> should be a valid SOAP 1.1 fault code.
-	 * 	<li><code>sReasonString</code> should be a valid SOAP 1.1 fault
-	 * 		reason.
-	 * 	<li><code>sDetailString</code> should contain additional information.
+	 * <li><code>sFaultString</code> should be a valid SOAP 1.1 fault code.
+	 * <li><code>sReasonString</code> should be a valid SOAP 1.1 fault reason.
+	 * <li><code>sDetailString</code> should contain additional information.
 	 * </ul>
 	 * <br>
 	 * <br>
-	 * <b>Postconditions: </b> 
-	 * <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param sFaultString
 	 *            The SOAP fault code as <code>String</code>.
@@ -844,51 +862,51 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	 */
 	private Element createFault(String sFaultString, String sReasonString, String sDetailString)
 	{
-		//create Fault
+		// create Fault
 		Element elFault = _oOutputMessage.createElementNS(_sInputMessageSchema, SOAPConstants.NS_PREFIX_SOAP_ENV + ":"
 				+ SOAPConstants.ELEM_FAULT);
 
-		//create Code
+		// create Code
 		Element elCode = _oOutputMessage.createElementNS(_sInputMessageSchema, SOAPConstants.NS_PREFIX_SOAP_ENV + ":"
 				+ SOAPConstants.ELEM_FAULT_CODE);
-		//add Code
+		// add Code
 		elFault.appendChild(elCode);
 
-		//Create Code value
+		// Create Code value
 		Element elValue = _oOutputMessage.createElementNS(_sInputMessageSchema, SOAPConstants.NS_PREFIX_SOAP_ENV + ":"
 				+ SOAPConstants.ELEM_FAULT_CODE_VALUE);
-		//add text to value
+		// add text to value
 		Text oValueText = _oOutputMessage.createTextNode(SOAPConstants.NS_PREFIX_SOAP_ENV + ":" + sFaultString);
 		elValue.appendChild(oValueText);
 
-		//add Value to code
+		// add Value to code
 		elCode.appendChild(elValue);
 
-		//Create reason
+		// Create reason
 		Element elReason = _oOutputMessage.createElementNS(_sInputMessageSchema, SOAPConstants.NS_PREFIX_SOAP_ENV + ":"
 				+ SOAPConstants.ELEM_FAULT_REASON);
-		//add reason
+		// add reason
 		elFault.appendChild(elReason);
 
-		//create reason contents
+		// create reason contents
 		Element elReasonContent = _oOutputMessage.createElementNS(_sInputMessageSchema,
 				SOAPConstants.NS_PREFIX_SOAP_ENV + ":Text");
 		elReasonContent.setAttribute("xml:lang", SOAPConstants.XML_LANG);
 		Text oReasonText = _oOutputMessage.createTextNode(sReasonString);
 		elReasonContent.appendChild(oReasonText);
 
-		//add reason contents
+		// add reason contents
 		elReason.appendChild(elReasonContent);
 
-		//create detail if applicable
+		// create detail if applicable
 		if (sDetailString != null) {
-			//create deatil
+			// create deatil
 			Element elDetail = _oOutputMessage.createElementNS(_sInputMessageSchema, SOAPConstants.NS_PREFIX_SOAP_ENV
 					+ ":" + SOAPConstants.ELEM_FAULT_DETAIL);
-			//add detail
+			// add detail
 			elFault.appendChild(elDetail);
 
-			//add text to detail
+			// add text to detail
 			Text oDetailText = _oOutputMessage.createTextNode(sDetailString);
 			elDetail.appendChild(oDetailText);
 		}
@@ -896,24 +914,22 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	}
 
 	/**
-	 * Get XML child element. 
-	 * <br><br>
-	 * <b>Description: </b> <br>
-	 * Get the child element with the given tagname from <code>elParent</code>.
+	 * Get XML child element. <br>
 	 * <br>
+	 * <b>Description: </b> <br>
+	 * Get the child element with the given tagname from <code>elParent</code>. <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * The returned <code>Element</code> is not threadsafe. <br>
 	 * <br>
 	 * <b>Preconditions: </b> <br>
 	 * <ul>
-	 * <li><code>elParent</code> should be a valid XML DOM
-	 * <code>Element</code>.</li>
+	 * <li><code>elParent</code> should be a valid XML DOM <code>Element</code>.</li>
 	 * <li><code>sTagname</code> should be a vaild tag name.</li>
 	 * </ul>
 	 * <br>
-	 * <b>Postconditions: </b> 
-	 * <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param elParent
 	 *            The root element from which the child element is extracted.
@@ -931,25 +947,24 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	}
 
 	/**
-	 * Get XML child element with namespace. 
-	 * <br><br>
+	 * Get XML child element with namespace. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
-	 * Get the child element with the given tagname and namespace URI from
-	 * <code>elParent</code>.<br>
+	 * Get the child element with the given tagname and namespace URI from <code>elParent</code>.<br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * The returned <code>Element</code> is not threadsafe. <br>
 	 * <br>
 	 * <b>Preconditions: </b> <br>
 	 * <ul>
-	 * 	<li><code>elParent</code> should be a valid XML DOM
-	 * 		<code>Element</code>.</li>
-	 * 	<li><code>sTagname</code> should be a vaild tag name.</li>
-	 * 	<li><code>sNamespaceURI</code> should contain a valid URI.</li>
+	 * <li><code>elParent</code> should be a valid XML DOM <code>Element</code>.</li>
+	 * <li><code>sTagname</code> should be a vaild tag name.</li>
+	 * <li><code>sNamespaceURI</code> should contain a valid URI.</li>
 	 * </ul>
 	 * <br>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param elParent
 	 *            The root element from which the child element is extracted.

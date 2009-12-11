@@ -17,18 +17,36 @@ import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.utils.BASE64Decoder;
 import org.aselect.system.utils.Tools;
 
+// TODO: Auto-generated Javadoc
 public class HtmlInfo extends HttpServlet
 {
-    protected String _sModule = "HtmlInfo";  
+	protected String _sModule = "HtmlInfo";
 	static final long serialVersionUID = 1;
-    public static final String BASICSTR = "Basic ";
-    private static final String ServletID = "HtmlInfo";
-	
+	public static final String BASICSTR = "Basic ";
+	private static final String ServletID = "HtmlInfo";
+
+	/**
+	 * Gets the my id.
+	 * 
+	 * @return the my id
+	 */
 	protected String getMyID()
 	{
 		return ServletID;
 	}
-	
+
+	/**
+	 * Handle html info.
+	 * 
+	 * @param request
+	 *            the request
+	 * @param response
+	 *            the response
+	 * @param systemLogger
+	 *            the system logger
+	 * @param htServiceRequest
+	 *            the ht service request
+	 */
 	public void handleHtmlInfo(HttpServletRequest request, HttpServletResponse response,
 			ASelectSystemLogger systemLogger, HashMap htServiceRequest)
 	{
@@ -41,22 +59,36 @@ public class HtmlInfo extends HttpServlet
 		}
 	}
 
-    public void doGet(HttpServletRequest request, HttpServletResponse response, ASelectSystemLogger systemLogger)
-    throws ServletException, IOException
+	/**
+	 * Do get.
+	 * 
+	 * @param request
+	 *            the request
+	 * @param response
+	 *            the response
+	 * @param systemLogger
+	 *            the system logger
+	 * @throws ServletException
+	 *             the servlet exception
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 */
+	public void doGet(HttpServletRequest request, HttpServletResponse response, ASelectSystemLogger systemLogger)
+		throws ServletException, IOException
 	{
-        String sMethod = "handleHtmlInfo";
+		String sMethod = "handleHtmlInfo";
 		int idx;
 		String base64coded, decoded = null, username = null, password = null;
-		String AuthHeader = (String) request.getHeader("Authorization");
+		String AuthHeader = request.getHeader("Authorization");
 		BASE64Decoder decoder = new BASE64Decoder();
 
-        systemLogger.log(Level.INFO, _sModule, sMethod, "htmlInfo { " + getMyID() + ", " +
-				Thread.currentThread().getName());
+		systemLogger.log(Level.INFO, _sModule, sMethod, "htmlInfo { " + getMyID() + ", "
+				+ Thread.currentThread().getName());
 
 		String path = request.getPathInfo();
 		String url = request.getRequestURI();
 		systemLogger.log(Level.INFO, _sModule, sMethod, "path=" + path + ", uri=" + url);
-		
+
 		response.setHeader("Pragma", "no-cache");
 		response.setContentType("text/html");
 
@@ -85,7 +117,7 @@ public class HtmlInfo extends HttpServlet
 			htmlpage.println(hdrname + ": " + Tools.htmlEncode(request.getHeader(hdrname)));
 		}
 		htmlpage.println("</pre>");
-		
+
 		// The authorization header looks like:
 		// Basic Y249TklHRSxvPURJR0lEOg==
 		if (AuthHeader != null) {
@@ -123,11 +155,11 @@ public class HtmlInfo extends HttpServlet
 			htmlpage.println(Tools.htmlEncode(parname + " = " + request.getParameter(parname)));
 		}
 		htmlpage.println("</pre>");
-		
+
 		htmlpage.println("</body>");
 		htmlpage.println("</html>");
-		
-		systemLogger.log(Level.INFO, _sModule, sMethod, "} htmlInfo " + getMyID() + ", " +
-				Thread.currentThread().getName());
+
+		systemLogger.log(Level.INFO, _sModule, sMethod, "} htmlInfo " + getMyID() + ", "
+				+ Thread.currentThread().getName());
 	}
 }

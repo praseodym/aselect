@@ -196,7 +196,6 @@ package org.aselect.server.request.handler.aselect.authentication;
 import java.security.MessageDigest;
 import java.security.PublicKey;
 import java.util.HashMap;
-import java.util.Vector;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
@@ -223,37 +222,27 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
- * Handle API requests from Applications and A-Select Agents.
- * <br><br>
- * <b>Description:</b>
+ * Handle API requests from Applications and A-Select Agents. <br>
  * <br>
+ * <b>Description:</b> <br>
  * This class processes the following incoming application API calls:
  * <ul>
- * 	<li><code>authenticate</code>
- * 	<li><code>cross_authenticate</code>
- * 	<li><code>get_app_level</code>
- * 	<li><code>kill_tgt</code>
- * 	<li><code>verify_credentials</code>
+ * <li><code>authenticate</code>
+ * <li><code>cross_authenticate</code>
+ * <li><code>get_app_level</code>
+ * <li><code>kill_tgt</code>
+ * <li><code>verify_credentials</code>
  * </ul>
  * 
- * @author Alfa & Ariss
- * 
- * 
- * 14-11-2007 - Changes:
- * - Added to support TGT refreshing,
- *   Agent will refresh TGT every time the application makes contact
- *
- * 5-3-2009
- * - Added DigiD-ization, the handler will accept the DigiD request protocol
- * 
- * @author Bauke Hiemstra - www.anoigo.nl
- * Copyright Gemeente Den Haag (http://www.denhaag.nl)
- * 
+ * @author Alfa & Ariss 14-11-2007 - Changes: - Added to support TGT refreshing, Agent will refresh TGT every time the
+ *         application makes contact 5-3-2009 - Added DigiD-ization, the handler will accept the DigiD request protocol
+ * @author Bauke Hiemstra - www.anoigo.nl Copyright Gemeente Den Haag (http://www.denhaag.nl)
  */
 public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 {
-	//The managers and engine
+	// The managers and engine
 	private TGTManager _oTGTManager;
 	private SessionManager _sessionManager;
 	private ApplicationManager _applicationManager;
@@ -263,28 +252,33 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	protected String _sServerUrl;
 
 	/**
-	 * Create a new instance.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Create a new instance. <br>
 	 * <br>
-	 * Calls {@link AbstractAPIRequestHandler#AbstractAPIRequestHandler(
-	 * RequestParser, HttpServletRequest, HttpServletResponse, String, String)}
-	 * and handles are obtained to relevant managers.
-	 * <br><br>
-	 * @param reqParser The request parser to be used.
-	 * @param servletRequest The request.
-	 * @param servletResponse The response.
-	 * @param sMyServerId The A-Select Server ID.
-	 * @param sMyOrg The A-Select Server organisation.
-	 * @throws ASelectException 
+	 * <b>Description:</b> <br>
+	 * Calls
+	 * {@link AbstractAPIRequestHandler#AbstractAPIRequestHandler(RequestParser, HttpServletRequest, HttpServletResponse, String, String)}
+	 * and handles are obtained to relevant managers. <br>
+	 * <br>
+	 * 
+	 * @param reqParser
+	 *            The request parser to be used.
+	 * @param servletRequest
+	 *            The request.
+	 * @param servletResponse
+	 *            The response.
+	 * @param sMyServerId
+	 *            The A-Select Server ID.
+	 * @param sMyOrg
+	 *            The A-Select Server organisation.
+	 * @throws ASelectException
+	 *             * @throws ASelectCommunicationException the a select communication exception
 	 */
 	public ApplicationAPIHandler(RequestParser reqParser, HttpServletRequest servletRequest,
 			HttpServletResponse servletResponse, String sMyServerId, String sMyOrg)
-	throws ASelectCommunicationException
-	{
+		throws ASelectCommunicationException {
 		super(reqParser, servletRequest, servletResponse, sMyServerId, sMyOrg);
 
-		//set variables and get handles
+		// set variables and get handles
 		_sModule = "ApplicationAPIHandler";
 		_configManager = ASelectConfigManager.getHandle();
 		_oTGTManager = TGTManager.getHandle();
@@ -310,11 +304,20 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	}
 
 	/**
-	 * Processes all incoming application API calls.
-	 * <br><br>
-	 * @see org.aselect.server.request.handler.aselect.authentication.AbstractAPIRequestHandler#processAPIRequest(
-	 * org.aselect.system.communication.server.IProtocolRequest, org.aselect.system.communication.server.IInputMessage, 
-	 * org.aselect.system.communication.server.IOutputMessage)
+	 * Processes all incoming application API calls. <br>
+	 * <br>
+	 * 
+	 * @param oProtocolRequest
+	 *            the o protocol request
+	 * @param oInputMessage
+	 *            the o input message
+	 * @param oOutputMessage
+	 *            the o output message
+	 * @throws ASelectException
+	 *             the a select exception
+	 * @see org.aselect.server.request.handler.aselect.authentication.AbstractAPIRequestHandler#processAPIRequest(org.aselect.system.communication.server.IProtocolRequest,
+	 *      org.aselect.system.communication.server.IInputMessage,
+	 *      org.aselect.system.communication.server.IOutputMessage)
 	 */
 	protected void processAPIRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
 			IOutputMessage oOutputMessage)
@@ -349,9 +352,9 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			handleUpgradeTGTRequest(oInputMessage, oOutputMessage);
 		}
 		// Not an API call:
-		//else if (sAPIRequest.equals("alive")) {
-		//	handleUpgradeTGTRequest(oInputMessage, oOutputMessage);
-		//}
+		// else if (sAPIRequest.equals("alive")) {
+		// handleUpgradeTGTRequest(oInputMessage, oOutputMessage);
+		// }
 		else {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unsupported API Call: " + sAPIRequest);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
@@ -392,16 +395,19 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		Utils.copyMsgValueToHashmap("shared_secret", hmRequest, oInputMessage);
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmRequest=" + hmRequest);
-		HashMap<String,String> hmResponse = handleAuthenticateAndCreateSession(hmRequest, null);
+		HashMap<String, String> hmResponse = handleAuthenticateAndCreateSession(hmRequest, null);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmResponse=" + hmResponse);
 
 		try {
 			String sValue = hmResponse.get("rid");
-			if (sValue != null) oOutputMessage.setParam("rid", sValue);
+			if (sValue != null)
+				oOutputMessage.setParam("rid", sValue);
 			sValue = hmResponse.get("as_url");
-			if (sValue != null) oOutputMessage.setParam("as_url", sValue);
+			if (sValue != null)
+				oOutputMessage.setParam("as_url", sValue);
 			sValue = hmResponse.get("result_code");
-			if (sValue != null) oOutputMessage.setParam("result_code", sValue);
+			if (sValue != null)
+				oOutputMessage.setParam("result_code", sValue);
 		}
 		catch (ASelectCommunicationException eAC) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not set response parameter", eAC);
@@ -410,8 +416,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	}
 
 	/**
-	 * This function handles the <code>request=get_app_level</code> request.
-	 * <br>
+	 * This function handles the <code>request=get_app_level</code> request. <br>
 	 * 
 	 * @param oInputMessage
 	 *            The input message.
@@ -463,11 +468,14 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	}
 
 	/**
-	 * This function handles the <code>request=kill_tgt</code> request.
-	 * <br>
-	 * @param oInputMessage The input message.
-	 * @param oOutputMessage The output message.
-	 * @throws ASelectException If proccessing fails.
+	 * This function handles the <code>request=kill_tgt</code> request. <br>
+	 * 
+	 * @param oInputMessage
+	 *            The input message.
+	 * @param oOutputMessage
+	 *            The output message.
+	 * @throws ASelectException
+	 *             If proccessing fails.
 	 */
 	private void handleKillTGTRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
 		throws ASelectException
@@ -476,7 +484,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		String sEncTGT = null;
 		String sASelectServer = null;
 
-		//get mandatory parameters
+		// get mandatory parameters
 		try {
 			sEncTGT = oInputMessage.getParam("tgt_blob");
 			sASelectServer = oInputMessage.getParam("a-select-server");
@@ -490,11 +498,11 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			byte[] baTgtBlobBytes = CryptoEngine.getHandle().decryptTGT(sEncTGT);
 			sTGT = Utils.byteArrayToHexString(baTgtBlobBytes);
 		}
-		catch (ASelectException eAC) {  //decrypt failed
+		catch (ASelectException eAC) { // decrypt failed
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not decrypt TGT", eAC);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID, eAC);
 		}
-		catch (IllegalArgumentException eIA) {  //HEX conversion fails
+		catch (IllegalArgumentException eIA) { // HEX conversion fails
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not decrypt TGT", eIA);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID, eIA);
 		}
@@ -506,7 +514,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT);
 		}
 
-		//check if request should be signed
+		// check if request should be signed
 		if (_applicationManager.isSigningRequired()) {
 			// Note: we should do this earlier, but we don't have an app_id until now
 			String sAppId = (String) htTGTContext.get("app_id");
@@ -516,7 +524,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "KILL TICKET context=" + htTGTContext);
 
-		//Kill the ticket granting ticket
+		// Kill the ticket granting ticket
 		_oTGTManager.remove(sTGT);
 
 		try {
@@ -529,8 +537,18 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	}
 
 	// Bauke: added to support TGT refreshing
+	/**
+	 * Handle upgrade tgt request.
+	 * 
+	 * @param oInputMessage
+	 *            the o input message
+	 * @param oOutputMessage
+	 *            the o output message
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private void handleUpgradeTGTRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "handleUpgradeTGTRequest";
 		String sEncTGT = null;
@@ -576,18 +594,18 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		catch (ASelectCommunicationException eAC) {
 		}
 		if (sLanguage != null) {
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "Request language="+sLanguage);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "Request language=" + sLanguage);
 			htTGTContext.put("language", sLanguage);
 		}
 		else {
-			sLanguage = (String)htTGTContext.get("language");
+			sLanguage = (String) htTGTContext.get("language");
 			if (sLanguage != null)
 				oOutputMessage.setParam("language", sLanguage);
 		}
-		
+
 		// 20090811, Bauke: Only saml20 needs this type of session sync
 		HashMap htResult = null;
-		String sAuthspType = (String)htTGTContext.get("authsp_type");
+		String sAuthspType = (String) htTGTContext.get("authsp_type");
 		if (sAuthspType != null && sAuthspType.equals("saml20")) {
 			// Send Session Sync to the Federation
 			htResult = SessionSyncRequestSender.getSessionSyncParameters(_systemLogger);
@@ -602,14 +620,15 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			long updateInterval = (Long) htResult.get("update_interval");
 			String sSamlMessageType = (String) htResult.get("message_type");
 			// Bauke 20091029, take federation url from TGT
-			String sFederationUrl = (String)htTGTContext.get("federation_url");
-			//if (sFederationUrl == null) sFederationUrl = (String)htResult.get("federation_url");
+			String sFederationUrl = (String) htTGTContext.get("federation_url");
+			// if (sFederationUrl == null) sFederationUrl = (String)htResult.get("federation_url");
 			String sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true);
 
 			String verify_signature = (String) htResult.get("verify_signature");
 			PublicKey pKey = null;
 			if ("true".equalsIgnoreCase(verify_signature.trim())) {
-				pKey = _metadataManager.getSigningKeyFromMetadata(sFederationUrl); // 20091029, was: _configManager.getFederationURL());
+				pKey = _metadataManager.getSigningKeyFromMetadata(sFederationUrl); // 20091029, was:
+				// _configManager.getFederationURL());
 			}
 
 			String verify_interval = (String) htResult.get("verify_interval");
@@ -621,13 +640,13 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 				l_max_notbefore = Long.parseLong((String) htResult.get("max_notbefore"));
 			if (max_notonorafter != null)
 				l_max_notonorafter = Long.parseLong((String) htResult.get("max_notonorafter"));
-		
+
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "sFederationUrl=" + sFederationUrl);
-			String sSessionSyncUrl = MetaDataManagerSp.getHandle().getSessionSyncURL(sFederationUrl);  // "/saml20_session_sync";
+			String sSessionSyncUrl = MetaDataManagerSp.getHandle().getSessionSyncURL(sFederationUrl); // "/saml20_session_sync";
 			SessionSyncRequestSender ss_req = new SessionSyncRequestSender(_systemLogger, sServerUrl, updateInterval,
-					sSamlMessageType, sSessionSyncUrl, pKey, l_max_notbefore, l_max_notonorafter,
-					("true".equalsIgnoreCase(verify_interval.trim())) ? true : false);
-			String ssReturn = ss_req.synchronizeSession(sTgT, htTGTContext, /*true, coded*/ true/*updateTGT*/);
+					sSamlMessageType, sSessionSyncUrl, pKey, l_max_notbefore, l_max_notonorafter, ("true"
+							.equalsIgnoreCase(verify_interval.trim())) ? true : false);
+			String ssReturn = ss_req.synchronizeSession(sTgT, htTGTContext, /* true, coded */true/* updateTGT */);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "ssReturn=" + ssReturn);
 		}
 		try {
@@ -641,13 +660,15 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	}
 
 	/**
-	 * This method handles the <code>request=verify_tgt</code> request. If the
-	 * tgt of the user is valid, then this method returns the information of the
-	 * user. 
-	 * <br>
-	 * @param oInputMessage The input message.
-	 * @param oOutputMessage The output message.
-	 * @throws ASelectException If proccessing fails.
+	 * This method handles the <code>request=verify_tgt</code> request. If the tgt of the user is valid, then this
+	 * method returns the information of the user. <br>
+	 * 
+	 * @param oInputMessage
+	 *            The input message.
+	 * @param oOutputMessage
+	 *            The output message.
+	 * @throws ASelectException
+	 *             If proccessing fails.
 	 */
 	//
 	// Bauke 20081201: added support for parameter "saml_attributes"
@@ -732,7 +753,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		// Check if request should be signed
 		if (_applicationManager.isSigningRequired()) {
 			// Note: we should do this earlier, but we don't have an app_id until now
-			// Another NOTE: see to it that all data is put in sData sorted  on parameter name!
+			// Another NOTE: see to it that all data is put in sData sorted on parameter name!
 			StringBuffer sbData = new StringBuffer(sASelectServer).append(sEncTgt).append(sRid);
 			if (sSamlAttributes != null)
 				sbData = sbData.append(sSamlAttributes);
@@ -791,7 +812,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		if (sSamlAttributes != null) {
 			// Comma seperated list of attribute names was given
 			String[] arrAttrNames = sSamlAttributes.split(",");
-			HashMap htSelectedAttr = SamlTools.extractFromHashtable(arrAttrNames, htAttribs, true/*include*/);
+			HashMap htSelectedAttr = SamlTools.extractFromHashtable(arrAttrNames, htAttribs, true/* include */);
 
 			// Also include the original IdP token
 			String sRemoteToken = (String) htTGTContext.get("saml_remote_token");
@@ -851,7 +872,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		// 20090622, Bauke: when we would have removed the ticket when forced_authenticate is in effect
 		// the following upgrade_tgt will fail and force a new authenication. Also note that
 		// the login1 request will not use the TgT for SSO when "forced_authenticate" is true.
-		
+
 		// Kill TGT if single sign-on is disabled
 		if (!_configManager.isSingleSignOn())
 			_oTGTManager.remove(sTGT);
@@ -897,8 +918,8 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		if (!_cryptoEngine.verifyApplicationSignature(pk, sData, sSignature))
 		// throws ERROR_ASELECT_INTERNAL_ERROR
 		{
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid signature ID: " + sAppId +
-					" signature: " + sSignature + " Key=" + pk);
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid signature ID: " + sAppId + " signature: "
+					+ sSignature + " Key=" + pk);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
 	}

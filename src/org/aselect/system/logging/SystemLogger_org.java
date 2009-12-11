@@ -95,18 +95,17 @@ import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 
+// TODO: Auto-generated Javadoc
 /**
- * The logger to write system log entries. 
- * <br><br>
- * <b>Description: </b> 
+ * The logger to write system log entries. <br>
  * <br>
- * The system logger writes system log entries to a file. 
- * <br><br>
- * <b>Concurrency issues: </b> 
- * <br>-<br>
+ * <b>Description: </b> <br>
+ * The system logger writes system log entries to a file. <br>
+ * <br>
+ * <b>Concurrency issues: </b> <br>
+ * -<br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class SystemLogger_org implements ISystemLogger
 {
@@ -134,29 +133,7 @@ public class SystemLogger_org implements ISystemLogger
 	}
 
 	/**
-	 * @deprecated use other init!
-	 * Initialize the <code>SystemLogger</code>.
-	 * <br><br>
-	 * <b>Description: </b> <br>
-	 * Performs the following steps:
-	 * <ul>
-	 * 	<li>Create new FileHandler <code></code></li>
-	 * 	<li>Open log file</li>
-	 * 	<li>Add file handler to this logger</li>
-	 * 	<li>Set default level (ALL)</li>
-	 * </ul>
-	 * <br>
-	 * <b>Concurrency issues: </b> 
-	 * <br>-<br>
-	 * <br>
-	 * <b>Preconditions: </b>
-	 * <ul>
-	 * 	<li>sLogDir != null</li>
-	 * 	<li>sLogFileNamePrefix != null</li>
-	 * </ul>
-	 * <br>
-	 * <b>Postconditions: </b> <br>
-	 * The logger is initialised. <br>
+	 * Inits the.
 	 * 
 	 * @param sLogDir
 	 *            The logging directory.
@@ -170,7 +147,30 @@ public class SystemLogger_org implements ISystemLogger
 	 *            The number of files to use for rotation.
 	 * @throws Exception
 	 *             If initialisation fails.
+	 * @deprecated use other init! Initialize the <code>SystemLogger</code>. <br>
+	 * <br>
+	 *             <b>Description: </b> <br>
+	 *             Performs the following steps:
+	 *             <ul>
+	 *             <li>Create new FileHandler <code></code></li>
+	 *             <li>Open log file</li>
+	 *             <li>Add file handler to this logger</li>
+	 *             <li>Set default level (ALL)</li>
+	 *             </ul>
+	 * <br>
+	 *             <b>Concurrency issues: </b> <br>
+	 *             -<br>
+	 * <br>
+	 *             <b>Preconditions: </b>
+	 *             <ul>
+	 *             <li>sLogDir != null</li>
+	 *             <li>sLogFileNamePrefix != null</li>
+	 *             </ul>
+	 * <br>
+	 *             <b>Postconditions: </b> <br>
+	 *             The logger is initialised. <br>
 	 */
+	@Deprecated
 	public void init(String sLogDir, String sLogFileNamePrefix, String sLoggerNamespace, int iFileLimit,
 			int iNumberOfFiles)
 		throws Exception
@@ -193,38 +193,35 @@ public class SystemLogger_org implements ISystemLogger
 	}
 
 	/**
-	 * Initializes the System logger.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Initializes the System logger. <br>
 	 * <br>
-	 * <li>Reads configuration</li>
-	 * <li>Creates a <code>FileHandler</code> object and sets it's log level.</li>
-	 * <li>Creates a <code>Logger</code> object and sets it's log level.</li>
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * <li>Reads configuration</li> <li>Creates a <code>FileHandler</code> object and sets it's log level.</li> <li>
+	 * Creates a <code>Logger</code> object and sets it's log level.</li> <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <li><i>oConfigManager</i> must be initialized</li>
-	 * <li><i>oConfigManager</i> may not be <code>null</code></li>
-	 * <li><i>oLogTargetConfig</i> may not be <code>null</code></li>
-	 * <li><i>oSystemLogger</i> may not be <code>null</code></li>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <li><i>oConfigManager</i> must be initialized</li> <li><i>oConfigManager</i> may not be <code>null</code></li>
+	 * <li><i>oLogTargetConfig</i> may not be <code>null</code></li> <li><i>oSystemLogger</i> may not be
+	 * <code>null</code></li> <br>
 	 * <br>
-	 * Sets <i>_systemLogger</i> class vairable and initializes it.
-	 * <br>
-	 * @param sLogFileNamePrefix The log file name prefix (".log" is appended).
-	 * @param sLoggerNamespace The namespace of this system logger.
-	 * @param oConfigManager The config manager used to retrieve the 
-	 * configuration from
-	 * @param oLogTargetConfig The 'target' config section containing the file 
-	 * configuration 
-	 * @param sWorkingDir The workingdir that must be used when no directory is 
-	 * configured
-	 * @throws ASelectException if initializing failed (missing config items)
+	 * <b>Postconditions:</b> <br>
+	 * Sets <i>_systemLogger</i> class vairable and initializes it. <br>
+	 * 
+	 * @param sLogFileNamePrefix
+	 *            The log file name prefix (".log" is appended).
+	 * @param sLoggerNamespace
+	 *            The namespace of this system logger.
+	 * @param oConfigManager
+	 *            The config manager used to retrieve the configuration from
+	 * @param oLogTargetConfig
+	 *            The 'target' config section containing the file configuration
+	 * @param sWorkingDir
+	 *            The workingdir that must be used when no directory is configured
+	 * @throws ASelectException
+	 *             if initializing failed (missing config items)
 	 */
 	public void init(String sLogFileNamePrefix, String sLoggerNamespace, ConfigManager oConfigManager,
 			Object oLogTargetConfig, String sWorkingDir)
@@ -236,7 +233,7 @@ public class SystemLogger_org implements ISystemLogger
 		int iLogFiles = -1;
 		StringBuffer sbSysLogDir = null;
 
-		this.log(Level.INFO, MODULE, sMethod, "dir="+sWorkingDir+" prefix="+sLogFileNamePrefix);
+		this.log(Level.INFO, MODULE, sMethod, "dir=" + sWorkingDir + " prefix=" + sLogFileNamePrefix);
 		try {
 			if (oLogTargetConfig == null) {
 				this.log(Level.CONFIG, MODULE, sMethod,
@@ -278,7 +275,7 @@ public class SystemLogger_org implements ISystemLogger
 				try {
 					String sSysLogDir = oConfigManager.getParam(oLogTargetConfig, "directory");
 
-					//prepare the logging dir variable
+					// prepare the logging dir variable
 					if (!sSysLogDir.endsWith(File.separator))
 						sSysLogDir += File.separator;
 
@@ -309,10 +306,10 @@ public class SystemLogger_org implements ISystemLogger
 				}
 			}
 
-			//logging dir
+			// logging dir
 			sbSysLogDir.append(sLogFileNamePrefix);
 
-			//check if logging dir exists, otherwise try to create
+			// check if logging dir exists, otherwise try to create
 			File fSysLogDir = new File(sbSysLogDir.toString());
 			if (!fSysLogDir.exists()) {
 				StringBuffer sbInfo = new StringBuffer("System logging dir doesn't exist, try to create directory: ");
@@ -328,18 +325,18 @@ public class SystemLogger_org implements ISystemLogger
 				}
 			}
 
-			//create log file
+			// create log file
 			StringBuffer sbLogFile = new StringBuffer(sbSysLogDir.toString());
 			sbLogFile.append(File.separator);
 			sbLogFile.append(sLogFileNamePrefix);
 			sbLogFile.append("%g.log");
 
-			//create file handler
+			// create file handler
 			FileHandler oFileHandler = new FileHandler(sbLogFile.toString(), iLogMaxSize, iLogFiles, true);
 			oFileHandler.setFormatter(new SystemLogFormatter());
 			oFileHandler.setLevel(Level.ALL);
 
-			//getlogger and set handler
+			// getlogger and set handler
 			// 1.5.4 Avoid multiple A-Select servers in the same VM all writing to the same logfile
 			// _oLogger = Logger.getLogger(sLoggerNamespace+"."+this.hashCode());
 			_oLogger = Logger.getLogger(sLoggerNamespace);
@@ -356,20 +353,19 @@ public class SystemLogger_org implements ISystemLogger
 	}
 
 	/**
-	 * Write a log item. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Write a log item. <br>
 	 * <br>
+	 * <b>Description: </b> <br>
 	 * Log the given message with the given level to the system log. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> 
-	 * <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> 
-	 * <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Postconditions: </b> 
-	 * <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param level
 	 *            The level of the log item.
@@ -381,9 +377,9 @@ public class SystemLogger_org implements ISystemLogger
 		try {
 			_oLogger.log(level, sMessage);
 		}
-		catch (Exception e) //logging to file failed
+		catch (Exception e) // logging to file failed
 		{
-			//log to system.err
+			// log to system.err
 			StringBuffer sbLogMessage = new StringBuffer("[");
 			sbLogMessage.append(new Date().toString()).append("] ");
 			sbLogMessage.append(sMessage);
@@ -392,22 +388,19 @@ public class SystemLogger_org implements ISystemLogger
 	}
 
 	/**
-	 * Write a log item with a cause. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Write a log item with a cause. <br>
 	 * <br>
-	 * Log the given message with extended information from the cause and the
-	 * given level to the system log. 
+	 * <b>Description: </b> <br>
+	 * Log the given message with extended information from the cause and the given level to the system log. <br>
 	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Concurrency issues: </b> 
-	 * <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> 
-	 * <br>-<br>
-	 * <br>
-	 * <b>Postconditions: </b> 
-	 * <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param level
 	 *            The level of the log item.
@@ -421,7 +414,7 @@ public class SystemLogger_org implements ISystemLogger
 		try {
 			_oLogger.log(level, sMessage, cause);
 		}
-		catch (Exception e) //loggen naar file mislukt
+		catch (Exception e) // loggen naar file mislukt
 		{
 			StringBuffer sbLogMessage = new StringBuffer("[");
 			sbLogMessage.append(new Date().toString()).append("] ");
@@ -433,32 +426,33 @@ public class SystemLogger_org implements ISystemLogger
 	}
 
 	/**
-	 * Write a log item with additional information.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Write a log item with additional information. <br>
 	 * <br>
-	 * Formats a log message and log this message.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Formats a log message and log this message. <br>
 	 * <br>
-	 * -
-	 * <br><br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
 	 * <b>Preconditions:</b>
 	 * <ul>
-	 * 	<li><code>level != null</code></li>
-	 * 	<li><code>sModule != null</code></li>
-	 * 	<li><code>sMethod != null</code></li>
-	 * 	<li><code>sMessage != null</code></li>
+	 * <li><code>level != null</code></li>
+	 * <li><code>sModule != null</code></li>
+	 * <li><code>sMethod != null</code></li>
+	 * <li><code>sMessage != null</code></li>
 	 * </ul>
 	 * <br>
-	 * <b>Postconditions:</b>
-	 * <br>
-	 * -
-	 * <br>
-	 * @param level The log level.
-	 * @param sModule The module name.
-	 * @param sMethod The method name.
-	 * @param sMessage The log message.
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param level
+	 *            The log level.
+	 * @param sModule
+	 *            The module name.
+	 * @param sMethod
+	 *            The method name.
+	 * @param sMessage
+	 *            The log message.
 	 */
 	public void log(Level level, String sModule, String sMethod, String sMessage)
 	{
@@ -472,34 +466,36 @@ public class SystemLogger_org implements ISystemLogger
 	}
 
 	/**
-	 * Write a log item with additional information and a cause.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Write a log item with additional information and a cause. <br>
 	 * <br>
-	 * Formats a log message and log this message including the cause.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Formats a log message and log this message including the cause. <br>
 	 * <br>
-	 * -
-	 * <br><br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
 	 * <b>Preconditions:</b>
 	 * <ul>
-	 * 	<li><code>level != null</code></li>
-	 * 	<li><code>sModule != null</code></li>
-	 * 	<li><code>sMethod != null</code></li>
-	 * 	<li><code>sMessage != null</code></li>
-	 * 	<li><code>cause != null</code></li>
+	 * <li><code>level != null</code></li>
+	 * <li><code>sModule != null</code></li>
+	 * <li><code>sMethod != null</code></li>
+	 * <li><code>sMessage != null</code></li>
+	 * <li><code>cause != null</code></li>
 	 * </ul>
 	 * <br>
-	 * <b>Postconditions:</b>
-	 * <br>
-	 * -
-	 * <br>
-	 * @param level The log level.
-	 * @param sModule The module name.
-	 * @param sMethod The method name.
-	 * @param sMessage The log message.
-	 * @param cause the logging cause.
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param level
+	 *            The log level.
+	 * @param sModule
+	 *            The module name.
+	 * @param sMethod
+	 *            The method name.
+	 * @param sMessage
+	 *            The log message.
+	 * @param cause
+	 *            the logging cause.
 	 */
 	public void log(Level level, String sModule, String sMethod, String sMessage, Throwable cause)
 	{
@@ -513,85 +509,81 @@ public class SystemLogger_org implements ISystemLogger
 	}
 
 	/**
-	 * Enable/disable debug logging. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Enable/disable debug logging. <br>
 	 * <br>
+	 * <b>Description: </b> <br>
 	 * When set to debugging, messages will be copied to the DebugLogger. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> 
-	 * <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> 
-	 * <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Postconditions: </b> 
-	 * <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param bDebug
 	 *            True if debugging should be enabled, otherwise false.
 	 * @deprecated use {@link #setLevel(Level)} instead.
 	 */
+	@Deprecated
 	public void setDebug(boolean bDebug)
 	{
 		_oLogger.setUseParentHandlers(bDebug);
 	}
 
 	/**
-	 * Set the level of the system logger.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Set the level of the system logger. <br>
 	 * <br>
-	 * Set the log level of this system logger.
-	 * The follwoing levels are valid:
-	 * <br><br>
+	 * <b>Description:</b> <br>
+	 * Set the log level of this system logger. The follwoing levels are valid: <br>
+	 * <br>
 	 * <table border=1 cellspacing=0 cellpadding=2>
 	 * <tr BGCOLOR="#CCCCFF" CLASS="TableHeadingColor">
-	 * 	<th align=left>Level</th>
-	 * 	<th align=left>Description</th>
+	 * <th align=left>Level</th>
+	 * <th align=left>Description</th>
 	 * </tr>
 	 * <tr>
-	 * 	<td><code>SEVERE</code></td>
-	 * 	<td>highest value; severe problems</td>
+	 * <td><code>SEVERE</code></td>
+	 * <td>highest value; severe problems</td>
 	 * </tr>
 	 * <tr>
-	 * 	<td><code>WARNING</code></td>
-	 * 	<td>warning messages</td>
+	 * <td><code>WARNING</code></td>
+	 * <td>warning messages</td>
 	 * </tr>
 	 * <tr>
-	 * 	<td><code>INFO</code></td>
-	 * 	<td>Information messages</td>
+	 * <td><code>INFO</code></td>
+	 * <td>Information messages</td>
 	 * </tr>
 	 * <tr>
-	 * 	<td><code>CONFIG</code></td>
-	 * 	<td>Configuration messages</td>
+	 * <td><code>CONFIG</code></td>
+	 * <td>Configuration messages</td>
 	 * </tr>
 	 * <tr>
-	 * 	<td><code>FINE</code></td>
-	 * 	<td>Extra information like received or sent data.</td>
+	 * <td><code>FINE</code></td>
+	 * <td>Extra information like received or sent data.</td>
 	 * </tr>
 	 * <tr>
-	 * 	<td><code>FINER</code></td>
-	 * 	<td>If this level is specified the logger
-	 * 		will also log stacktraces if available.
-	 *  </td>
+	 * <td><code>FINER</code></td>
+	 * <td>If this level is specified the logger will also log stacktraces if available.</td>
 	 * </tr>
 	 * </table>
 	 * <br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <code>oLevel != null</code> <br>
 	 * <br>
-	 * <code>oLevel != null</code>
-	 * <br><br>
 	 * <b>Postconditions:</b>
 	 * <ul>
-	 * 	<li>The new level is set</li>
-	 * 	<li>If <code>Level &lt;= FINER</code> bebug mode is enabled.</li>
+	 * <li>The new level is set</li>
+	 * <li>If <code>Level &lt;= FINER</code> bebug mode is enabled.</li>
 	 * </ul>
-	 * @param oLevel The new <code>Level</code> to use.
+	 * 
+	 * @param oLevel
+	 *            The new <code>Level</code> to use.
 	 */
 	public void setLevel(Level oLevel)
 	{
@@ -601,22 +593,19 @@ public class SystemLogger_org implements ISystemLogger
 	}
 
 	/**
-	 * Cleanup logger resources. 
-	 * <br><br>
+	 * Cleanup logger resources. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
-	 * Closes all openend log handlers. 
+	 * Closes all openend log handlers. <br>
 	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Concurrency issues: </b> 
-	 * <br>-<br>
-	 * <br>
-	 * <b>Preconditions: </b> 
-	 * <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
-	 * All used log handlers are closed. 
-	 * <br>
-	 *  
+	 * All used log handlers are closed. <br>
 	 */
 	public void closeHandlers()
 	{
@@ -633,32 +622,34 @@ public class SystemLogger_org implements ISystemLogger
 	}
 
 	/**
-	 * A log formatter for system log items. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * A log formatter for system log items. <br>
 	 * <br>
-	 * This formatter formats log messages with the following syntax: 
+	 * <b>Description: </b> <br>
+	 * This formatter formats log messages with the following syntax: <br>
+	 * <code>"[" [timestamp] "]" - [Level]: [message]</code> <br>
 	 * <br>
-	 * <code>"[" [timestamp] "]" - [Level]: [message]</code>
-	 * <br><br>
-	 * If dedugging is enabled (Log level &lt;= FINER) the stacktraces of 
-	 * exceptions are also logged if available.
-	 * <br><br>
-	 * <b>Concurrency issues: </b> 
-	 * <br>-<br>
+	 * If dedugging is enabled (Log level &lt;= FINER) the stacktraces of exceptions are also logged if available. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * 
 	 * @author Alfa & Ariss
-	 * 
 	 */
 	class SystemLogFormatter extends Formatter
 	{
+		
 		/**
-		 * Format the log message for system logging. 
+		 * Format the log message for system logging.
+		 * 
+		 * @param oRecord
+		 *            the o record
+		 * @return the string
 		 * @see java.util.logging.Formatter#format(java.util.logging.LogRecord)
 		 */
+		@Override
 		public String format(LogRecord oRecord)
 		{
-			//Default log message
+			// Default log message
 			StringBuffer sbBuffer = new StringBuffer("[");
 			sbBuffer.append(new Date().toString());
 			sbBuffer.append("] - ");
@@ -669,14 +660,14 @@ public class SystemLogger_org implements ISystemLogger
 				sbBuffer.append(' ');
 			sbBuffer.append(oRecord.getMessage());
 
-			//additional throwable
+			// additional throwable
 			Throwable oThrowable = oRecord.getThrown();
-			if (oThrowable != null) //throwable available
+			if (oThrowable != null) // throwable available
 			{
 				sbBuffer.append(", Cause: " + oThrowable.getMessage());
-				if (_bDebug) //debugging enabled
+				if (_bDebug) // debugging enabled
 				{
-					//additional Stacktrace
+					// additional Stacktrace
 					sbBuffer.append("\nStacktrace {\n");
 					sbBuffer.append("\t").append(oThrowable).append("\n");
 
@@ -695,6 +686,8 @@ public class SystemLogger_org implements ISystemLogger
 	}
 
 	/**
+	 * Checks if is debug.
+	 * 
 	 * @return Returns true if debug level is enabled otherwise false.
 	 */
 	public boolean isDebug()
@@ -703,20 +696,19 @@ public class SystemLogger_org implements ISystemLogger
 	}
 
 	/**
-	 * Format a detailed error message. 
-	 * <br><br>
+	 * Format a detailed error message. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
-	 * Create a detailed message which can be logged. 
+	 * Create a detailed message which can be logged. <br>
 	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Concurrency issues: </b>
-	 * <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> 
-	 * <br>-<br>
-	 * <br>
-	 * <b>Postconditions: </b> 
-	 * <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param sModule
 	 *            The module (class name) that is to be logged.
@@ -727,9 +719,9 @@ public class SystemLogger_org implements ISystemLogger
 	 * @param sErrorType
 	 *            The type of error.
 	 * @return A formatted detailed log message.
-	 * @deprecated 
-	 * 		use {@link #log(Level, String, String, String, Throwable)} instead.
+	 * @deprecated use {@link #log(Level, String, String, String, Throwable)} instead.
 	 */
+	@Deprecated
 	public static String formatDetailedError(String sModule, String sMethod, Exception e, String sErrorType)
 	{
 		StringBuffer sb = new StringBuffer();
@@ -760,20 +752,19 @@ public class SystemLogger_org implements ISystemLogger
 	}
 
 	/**
-	 * Format a internal error message. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Format a internal error message. <br>
 	 * <br>
+	 * <b>Description: </b> <br>
 	 * Create a internal error message which can be logged. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> 
-	 * <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> 
-	 * <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Postconditions: </b> 
-	 * <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param sModule
 	 *            The module (class name) that is to be logged.
@@ -782,9 +773,9 @@ public class SystemLogger_org implements ISystemLogger
 	 * @param e
 	 *            A Exception that is to be logged.
 	 * @return A formatted internal error log message.
-	 * @deprecated 
-	 * 		use {@link #log(Level, String, String, String, Throwable)} instead.
+	 * @deprecated use {@link #log(Level, String, String, String, Throwable)} instead.
 	 */
+	@Deprecated
 	public static String formatInternalError(String sModule, String sMethod, Exception e)
 	{
 		return formatDetailedError(sModule, sMethod, e, "INTERNAL ERROR");

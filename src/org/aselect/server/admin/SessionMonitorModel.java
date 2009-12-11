@@ -72,20 +72,17 @@ import org.aselect.server.session.SessionManager;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectStorageException;
 
+// TODO: Auto-generated Javadoc
 /**
- * SessionMonitorModel class used by the AdminMonitor.
- * 
- * <br>
+ * SessionMonitorModel class used by the AdminMonitor. <br>
  * <br>
  * <b>Description: </b> <br>
- * This monitor contains all the information concerning the A-Select Sessions.
- * <br>
+ * This monitor contains all the information concerning the A-Select Sessions. <br>
  * <br>
  * <b>Concurrency issues: </b> <br>
  * None <br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class SessionMonitorModel extends AbstractTableModel implements Runnable
 {
@@ -137,13 +134,10 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 	private boolean _bActive = false;
 
 	/**
-	 * SessionMonitorModel constructor.
-	 * 
-	 * <br>
+	 * SessionMonitorModel constructor. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * Initializes the SessionMonitorModel. 
-	 * <br>
+	 * Initializes the SessionMonitorModel. <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * none <br>
@@ -182,9 +176,7 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 	}
 
 	/**
-	 * This functions stops the SessionMonitor.
-	 * 
-	 * <br>
+	 * This functions stops the SessionMonitor. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
 	 * _bActive is set to false and the current thread is interupted. <br>
@@ -197,7 +189,6 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 	 * <br>
 	 * <b>Postconditions: </b> <br>
 	 * none <br>
-	 *  
 	 */
 	public void stop()
 	{
@@ -206,13 +197,10 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 	}
 
 	/**
-	 * Returns the session count.
-	 * 
-	 * <br>
+	 * Returns the session count. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * This function calls _oSessionManager.getSessionsCounter() to retrieve the
-	 * session count. <br>
+	 * This function calls _oSessionManager.getSessionsCounter() to retrieve the session count. <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * none <br>
@@ -234,6 +222,7 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 	 * Returns the current row count. <br>
 	 * <br>
 	 * 
+	 * @return the row count
 	 * @see javax.swing.table.TableModel#getRowCount()
 	 */
 	public int getRowCount()
@@ -245,6 +234,7 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 	 * Returns the current column count. <br>
 	 * <br>
 	 * 
+	 * @return the column count
 	 * @see javax.swing.table.TableModel#getColumnCount()
 	 */
 	public int getColumnCount()
@@ -256,6 +246,11 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 	 * Returns the current value at a specific row and column. <br>
 	 * <br>
 	 * 
+	 * @param iRow
+	 *            the i row
+	 * @param iColumn
+	 *            the i column
+	 * @return the value at
 	 * @see javax.swing.table.TableModel#getValueAt(int, int)
 	 */
 	public Object getValueAt(int iRow, int iColumn)
@@ -343,8 +338,12 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 	 * Returns the name of the column based on iIndex. <br>
 	 * <br>
 	 * 
+	 * @param iIndex
+	 *            the i index
+	 * @return the column name
 	 * @see javax.swing.table.TableModel#getColumnName(int)
 	 */
+	@Override
 	public String getColumnName(int iIndex)
 	{
 		return _saHeaders[iIndex];
@@ -371,14 +370,11 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 	}
 
 	/**
-	 * Retrieve the current A-Select Session information.
-	 * 
-	 * <br>
+	 * Retrieve the current A-Select Session information. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * This function retrieves the session context using
-	 * _oSessionManager.getSessionContexts() and copies the session information
-	 * into the local session array _saSessions. <br>
+	 * This function retrieves the session context using _oSessionManager.getSessionContexts() and copies the session
+	 * information into the local session array _saSessions. <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * none <br>
@@ -388,7 +384,6 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 	 * <br>
 	 * <b>Postconditions: </b> <br>
 	 * _saSessions now contains the latest session information. <br>
-	 *  
 	 */
 	private void getServerStatus()
 	{
@@ -398,9 +393,9 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 			int i = 0;
 			Set keys = _htSessionContexts.keySet();
 			for (Object s : keys) {
-				//Enumeration enumSessionContexts = _htSessionContexts.keys();
-				//while (enumSessionContexts.hasMoreElements())
-				//{
+				// Enumeration enumSessionContexts = _htSessionContexts.keys();
+				// while (enumSessionContexts.hasMoreElements())
+				// {
 				_saSessions[i++] = (String) s;
 			}
 		}

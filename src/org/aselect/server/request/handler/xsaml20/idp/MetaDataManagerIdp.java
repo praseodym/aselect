@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.xsaml20.idp;
 
 import java.util.logging.Level;
@@ -8,25 +19,29 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.w3c.dom.Element;
 
+// TODO: Auto-generated Javadoc
 /**
- * class MetaDataManagerIdp, this class is reading the aselect xml file. The
- * aselect xml file contains the metadata xml file information, this is the the
- * location of the metadata xml file, this can be a pathname or URL
+ * class MetaDataManagerIdp, this class is reading the aselect xml file. The aselect xml file contains the metadata xml
+ * file information, this is the the location of the metadata xml file, this can be a pathname or URL
  * 
  * @author Nazif Aksay
- * 
  */
 public class MetaDataManagerIdp extends AbstractMetaDataManager
 {
 	private static MetaDataManagerIdp metaDataManager = null;
 
+	/**
+	 * Instantiates a new meta data manager idp.
+	 */
 	private MetaDataManagerIdp() {
 	}
 
 	/**
-	 * Singleton
+	 * Singleton.
 	 * 
+	 * @return the handle
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	public static MetaDataManagerIdp getHandle()
 		throws ASelectException
@@ -39,13 +54,14 @@ public class MetaDataManagerIdp extends AbstractMetaDataManager
 	}
 
 	/**
-	 * Read Aselect.xml file This file contains the location of the metadata xml
-	 * file
+	 * Read Aselect.xml file This file contains the location of the metadata xml file
 	 * 
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
+	@Override
 	protected void init()
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "init()";
 		Object applications = null;
@@ -53,8 +69,8 @@ public class MetaDataManagerIdp extends AbstractMetaDataManager
 
 		super.init();
 		myRole = "IDP";
-		
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Role="+myRole);	
+
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Role=" + myRole);
 		try {
 			applications = _configManager.getSection(null, "applications");
 		}
@@ -86,9 +102,10 @@ public class MetaDataManagerIdp extends AbstractMetaDataManager
 	}
 
 	/**
+	 * This method reads the aslect.xml and puts all meta_data xml file pathnames in the metaDataUrls List
 	 * 
-	 * This method reads the aslect.xml and puts all meta_data xml file
-	 * pathnames in the metaDataUrls List
+	 * @param application
+	 *            the application
 	 */
 	protected void addMetaDataURLToList(Object application)
 	{
@@ -107,13 +124,14 @@ public class MetaDataManagerIdp extends AbstractMetaDataManager
 			return;
 		}
 		try {
-			_systemLogger.log(Level.FINE, MODULE, sMethod, "id="+sId);
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "id=" + sId);
 			metadata = (Element) _configManager.getSection(application, "meta_data");
 		}
-		catch (ASelectConfigException e) {  // ignore
+		catch (ASelectConfigException e) { // ignore
 		}
 		if (metadata != null) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "metadata="+sId+"<>"+metadata.getFirstChild().getTextContent());
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "metadata=" + sId + "<>"
+					+ metadata.getFirstChild().getTextContent());
 			metadataSPs.put(sId, metadata.getFirstChild().getTextContent());
 		}
 	}

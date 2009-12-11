@@ -64,22 +64,19 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 
+// TODO: Auto-generated Javadoc
 /**
- * The SAM Agent is used as a central location to retrieve an active resource. 
- * <br>
+ * The SAM Agent is used as a central location to retrieve an active resource. <br>
  * <br>
  * <b>Description: </b> <br>
- * SAM stands for Simple A-Select Management. SAM is designed to enable A-Select
- * to work in a redundant envirnoment. The SAMAgent is the central component,
- * for all other A-Select components, to obtain an active SAMResource. A
- * SAMResource resembles, for example, an A-Select Server or a database. <br>
+ * SAM stands for Simple A-Select Management. SAM is designed to enable A-Select to work in a redundant envirnoment. The
+ * SAMAgent is the central component, for all other A-Select components, to obtain an active SAMResource. A SAMResource
+ * resembles, for example, an A-Select Server or a database. <br>
  * <br>
  * <b>Concurrency issues: </b> <br>
- * -
- * <br>
+ * - <br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class SAMAgent
 {
@@ -96,36 +93,33 @@ public class SAMAgent
 	private SystemLogger _oSystemLogger;
 
 	/**
-	 * Default constructor
+	 * Default constructor.
 	 */
 	public SAMAgent() {
 	}
 
 	/**
-	 * This function is to initialize the SAMAgent.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * This function is to initialize the SAMAgent. <br>
 	 * <br>
-	 * Loads all configured resources within the 'samagent' config section in the 
-	 * <code>HashMap</code> <i>_htResourceGroups</i>. 
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Loads all configured resources within the 'samagent' config section in the <code>HashMap</code>
+	 * <i>_htResourceGroups</i>. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param oConfigManager The section within the configuration file in which 
-	 * the parameters for the SAMAgent can be found.
-	 * @param oSystemLogger the <code>SystemLogger</code> object that is the 
-	 * logging target
-	 * @throws ASelectSAMException if no correct configuration was found
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param oConfigManager
+	 *            The section within the configuration file in which the parameters for the SAMAgent can be found.
+	 * @param oSystemLogger
+	 *            the <code>SystemLogger</code> object that is the logging target
+	 * @throws ASelectSAMException
+	 *             if no correct configuration was found
 	 */
 	public void init(ConfigManager oConfigManager, SystemLogger oSystemLogger)
 		throws ASelectSAMException
@@ -164,7 +158,7 @@ public class SAMAgent
 				throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
-			//Remove old resource groups
+			// Remove old resource groups
 			destroy();
 
 			SAMResourceGroup oSAMResourceGroup = new SAMResourceGroup();
@@ -196,14 +190,16 @@ public class SAMAgent
 	 * Gets an active resource from a paricular group. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * Returns the active resource from the resource group with the supplied id.
+	 * Returns the active resource from the resource group with the supplied id. <br>
 	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * - <i>sID </i>!= null <br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>- <i>sID </i>!= null <br>
-	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param sID
 	 *            The identifier for a particular group of resources.
@@ -233,24 +229,19 @@ public class SAMAgent
 	}
 
 	/**
-	 * Destroys all resourcegroups (SAMResourceGroups).
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Destroys all resourcegroups (SAMResourceGroups). <br>
 	 * <br>
-	 * Destroys all SAMResourceGroups in the <i>_htResourceGroups</i> and removes them.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Destroys all SAMResourceGroups in the <i>_htResourceGroups</i> and removes them. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 */
 	public void destroy()
 	{
@@ -259,17 +250,17 @@ public class SAMAgent
 				Set keys = _htResourceGroups.keySet();
 				for (Object s : keys) {
 					String sKey = (String) s;
-					//Enumeration enumKeys = _htResourceGroups.keys();	
-					//while (enumKeys.hasMoreElements())
-					//{
-					//  String sKey = (String)enumKeys.nextElement();
+					// Enumeration enumKeys = _htResourceGroups.keys();
+					// while (enumKeys.hasMoreElements())
+					// {
+					// String sKey = (String)enumKeys.nextElement();
 					SAMResourceGroup oSAMResourceGroup = (SAMResourceGroup) _htResourceGroups.get(sKey);
 					oSAMResourceGroup.destroy();
 					oSAMResourceGroup.interrupt();
 				}
 			}
 			catch (Exception e) {
-				//SAMLOcator allready disposed
+				// SAMLOcator allready disposed
 			}
 		}
 	}

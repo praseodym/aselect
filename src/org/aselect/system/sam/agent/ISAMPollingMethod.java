@@ -35,76 +35,68 @@ import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 
+// TODO: Auto-generated Javadoc
 /**
- * The interface for polling methods. 
- * <br>
+ * The interface for polling methods. <br>
  * <br>
  * <b>Description: </b> <br>
  * The interface for polling methods that can be used by the <code>SAMAgent
- * </code>.
- * <br>
+ * </code>. <br>
  * <b>Concurrency issues: </b> <br>
- * -
- * <br>
+ * - <br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public interface ISAMPollingMethod
 {
-    /**
-     * Initialization method for the SAM polling methods.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Reads the configuration used by the polling method.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @param oResourceConfigSection the config section of the resource which 
-     * has to be polled
-     * @param oPollingMethodConfigSection The config section of the polling 
-     * method config section
-     * @param oConfigManager The config manager used to resolve the configuration
-     * @param oSystemLogger the logger used for system logging
-     * @throws ASelectSAMException if the poller could not be initialized
-     */
-    public void init(Object oResourceConfigSection, Object oPollingMethodConfigSection,
-            ConfigManager oConfigManager, SystemLogger oSystemLogger)
-            throws ASelectSAMException;
+	
+	/**
+	 * Initialization method for the SAM polling methods. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Reads the configuration used by the polling method. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param oResourceConfigSection
+	 *            the config section of the resource which has to be polled
+	 * @param oPollingMethodConfigSection
+	 *            The config section of the polling method config section
+	 * @param oConfigManager
+	 *            The config manager used to resolve the configuration
+	 * @param oSystemLogger
+	 *            the logger used for system logging
+	 * @throws ASelectSAMException
+	 *             if the poller could not be initialized
+	 */
+	public void init(Object oResourceConfigSection, Object oPollingMethodConfigSection, ConfigManager oConfigManager,
+			SystemLogger oSystemLogger)
+		throws ASelectSAMException;
 
-    /**
-     * Will poll a resource.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Checks the availability of the resource by the configured interval.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @return TRUE if the resource is available, FALSE if the resource is 
-     * unavailable.
-     */
-    public boolean poll();
+	/**
+	 * Will poll a resource. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Checks the availability of the resource by the configured interval. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @return TRUE if the resource is available, FALSE if the resource is unavailable.
+	 */
+	public boolean poll();
 
 }

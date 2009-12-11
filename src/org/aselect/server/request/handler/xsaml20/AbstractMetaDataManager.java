@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.xsaml20;
 
 import java.io.File;
@@ -50,6 +61,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+// TODO: Auto-generated Javadoc
 public abstract class AbstractMetaDataManager
 {
 	// RH, 20090616
@@ -62,29 +74,39 @@ public abstract class AbstractMetaDataManager
 	protected String protocolSupportEnumeration = SAMLConstants.SAML20P_NS; // "urn:oasis:names:tc:SAML:2.0:protocol"
 	protected ASelectConfigManager _configManager;
 	protected SystemLogger _systemLogger;
-	protected String myRole = "IDP";  // default
+	protected String myRole = "IDP"; // default
 
 	// All descriptors
-	//protected ConcurrentHashMap<String, EntityDescriptor> entityDescriptors = new ConcurrentHashMap<String, EntityDescriptor>();
+	// protected ConcurrentHashMap<String, EntityDescriptor> entityDescriptors = new ConcurrentHashMap<String,
+	// EntityDescriptor>();
 	protected ConcurrentHashMap<String, SSODescriptor> SSODescriptors = new ConcurrentHashMap<String, SSODescriptor>();
 	protected ConcurrentHashMap<String, String> metadataSPs = new ConcurrentHashMap<String, String>();
 	protected ConcurrentHashMap<String, String> sessionSyncSPs = new ConcurrentHashMap<String, String>();
-	protected ConcurrentHashMap<String, java.security.cert.X509Certificate>
-				trustedIssuers = new ConcurrentHashMap<String, java.security.cert.X509Certificate>();
+	protected ConcurrentHashMap<String, java.security.cert.X509Certificate> trustedIssuers = new ConcurrentHashMap<String, java.security.cert.X509Certificate>();
 
 	private static String _sCheckCertificates = null;
 
+	/**
+	 * Inits the.
+	 * 
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	protected void init()
-	throws ASelectException
+		throws ASelectException
 	{
 		_configManager = ASelectConfigManager.getHandle();
 		_systemLogger = ASelectSystemLogger.getHandle();
 	}
 
 	/**
+	 * Initialize meta data handling.
+	 * 
+	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	protected void initializeMetaDataHandling()
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "initializeMetaData";
 
@@ -97,11 +119,27 @@ public abstract class AbstractMetaDataManager
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not initialize bootstrap", cfge);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, cfge);
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Metadata SPs="+metadataSPs+" SessionSync SPs="+sessionSyncSPs);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Metadata SPs=" + metadataSPs + " SessionSync SPs="
+				+ sessionSyncSPs);
 	}
 
-	protected void fileSystemProvider(ChainingMetadataProvider myMetadataProvider, String sMethod, BasicParserPool ppMgr, String metadataURL)
-	throws ASelectException
+	/**
+	 * File system provider.
+	 * 
+	 * @param myMetadataProvider
+	 *            the my metadata provider
+	 * @param sMethod
+	 *            the s method
+	 * @param ppMgr
+	 *            the pp mgr
+	 * @param metadataURL
+	 *            the metadata url
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	protected void fileSystemProvider(ChainingMetadataProvider myMetadataProvider, String sMethod,
+			BasicParserPool ppMgr, String metadataURL)
+		throws ASelectException
 	{
 		File mdFile = new File(metadataURL);
 		mdFile.toURI();
@@ -119,9 +157,23 @@ public abstract class AbstractMetaDataManager
 		}
 	}
 
+	/**
+	 * Url system provider.
+	 * 
+	 * @param myMetadataProvider
+	 *            the my metadata provider
+	 * @param sMethod
+	 *            the s method
+	 * @param ppMgr
+	 *            the pp mgr
+	 * @param metadataURL
+	 *            the metadata url
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	protected void urlSystemProvider(ChainingMetadataProvider myMetadataProvider, String sMethod,
 			BasicParserPool ppMgr, String metadataURL)
-	throws ASelectException
+		throws ASelectException
 	{
 		HTTPMetadataProvider urlProvider;
 		try {
@@ -155,19 +207,25 @@ public abstract class AbstractMetaDataManager
 	}
 
 	/**
-	 * If a new SP is making contact with the IdP, we must be able to read it's metadata
-	 * Can be called any time, not necessarily at startup
-	 * Must be called before using SSODescriptors
+	 * If a new SP is making contact with the IdP, we must be able to read it's metadata Can be called any time, not
+	 * necessarily at startup Must be called before using SSODescriptors.
+	 * 
+	 * @param entityId
+	 *            the entity id
+	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	// Bauke: added
 	protected void checkMetadataProvider(String entityId)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "checkMetadataProvider";
 		String metadataURL = null;
 		ChainingMetadataProvider myMetadataProvider = new ChainingMetadataProvider();
 
-		_systemLogger.log(Level.FINE, MODULE, sMethod, "this="+this+" SSODescriptors=" + SSODescriptors); // +" entityDescriptors=" + entityDescriptors);
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "this=" + this + " SSODescriptors=" + SSODescriptors); // +" entityDescriptors="
+		// +
+		// entityDescriptors);
 		if (trustedIssuers.isEmpty() && getCheckCertificates() != null) {
 			// Load trusted ca's (SP) or trusted SP's (IdP) from trusted_issuers.keystore
 			loadTrustedIssuers();
@@ -178,77 +236,84 @@ public abstract class AbstractMetaDataManager
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId=" + entityId + " already in cache");
 			return;
 		}
-		
+
 		// Read the new metadata
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId=" + entityId + " not in cache yet");
 		metadataURL = getMetadataURL(entityId);
-//		metadataURL = metadataSPs.get((myRole.equals("SP"))? sFederationIdpKeyword: entityId);
+		// metadataURL = metadataSPs.get((myRole.equals("SP"))? sFederationIdpKeyword: entityId);
 		if (metadataURL == null) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity id: " + entityId + " is not Configured");
 			return;
 		}
-		
+
 		// Get parser pool manager
 		BasicParserPool ppMgr = new BasicParserPool();
 		ppMgr.setNamespaceAware(true);
-		
+
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "READ url=" + metadataURL);
 		if (metadataURL.toLowerCase().startsWith("http"))
 			urlSystemProvider(myMetadataProvider, sMethod, ppMgr, metadataURL);
 		else
 			fileSystemProvider(myMetadataProvider, sMethod, ppMgr, metadataURL);
 		// Result has been stored in myMetadataProvider
-		
+
 		// Add to the SSODescriptor
 		addMetadata(myMetadataProvider);
 	}
 
+	/**
+	 * Load trusted issuers.
+	 * 
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private void loadTrustedIssuers()
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "loadTrustedIssuers";
-		
-	    ASelectConfigManager _oASelectConfigManager = ASelectConfigManager.getHandle();
-        StringBuffer sbKeystoreLocation = new StringBuffer(_oASelectConfigManager.getWorkingdir());	
-		_systemLogger.log(Level.FINE, MODULE, sMethod, "WorkingDir="+sbKeystoreLocation);
-        sbKeystoreLocation.append(File.separator).append("keystores").
-        		append(File.separator).append("trusted_issuers.keystore").toString();
-		
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Read "+sbKeystoreLocation+ " Prefix=ca_ Check="+getCheckCertificates());
+
+		ASelectConfigManager _oASelectConfigManager = ASelectConfigManager.getHandle();
+		StringBuffer sbKeystoreLocation = new StringBuffer(_oASelectConfigManager.getWorkingdir());
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "WorkingDir=" + sbKeystoreLocation);
+		sbKeystoreLocation.append(File.separator).append("keystores").append(File.separator).append(
+				"trusted_issuers.keystore").toString();
+
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Read " + sbKeystoreLocation + " Prefix=ca_ Check="
+				+ getCheckCertificates());
 		try {
 			KeyStore ksASelect = KeyStore.getInstance("JKS");
 			ksASelect.load(new FileInputStream(sbKeystoreLocation.toString()), null);
-			
+
 			Enumeration<String> enumAliases = ksASelect.aliases();
 			while (enumAliases.hasMoreElements()) {
 				String sAlias = enumAliases.nextElement().toLowerCase();
-				java.security.cert.X509Certificate x509Cert = 
-						(java.security.cert.X509Certificate) ksASelect.getCertificate(sAlias);
-				_systemLogger.log(Level.FINER, MODULE, sMethod, "Alias="+sAlias);
+				java.security.cert.X509Certificate x509Cert = (java.security.cert.X509Certificate) ksASelect
+						.getCertificate(sAlias);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "Alias=" + sAlias);
 				if (checkCertificate("ca_", x509Cert))
 					trustedIssuers.put(sAlias, x509Cert);
 				else
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Alias="+sAlias+" not valid!");
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Alias=" + sAlias + " not valid!");
 			}
 		}
 		catch (NoSuchAlgorithmException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Algorithm exception, "+e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Algorithm exception, " + e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 		catch (CertificateException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Certificate exception, "+e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Certificate exception, " + e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 		catch (FileNotFoundException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Keystore cannot be found, "+e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Keystore cannot be found, " + e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 		catch (IOException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Keystore cannot be read, "+e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Keystore cannot be read, " + e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 		catch (KeyStoreException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Keystore exception: "+e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Keystore exception: " + e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 		// Make size() > 0 so this method does not get called again
@@ -261,6 +326,16 @@ public abstract class AbstractMetaDataManager
 	// Produces output on stdout!
 	// Can be called from the Operating System to cleanup the cache.
 	//
+	/**
+	 * Handle metadata provider.
+	 * 
+	 * @param out
+	 *            the out
+	 * @param entityId
+	 *            the entity id
+	 * @param sList
+	 *            the s list
+	 */
 	public void handleMetadataProvider(PrintWriter out, String entityId, boolean sList)
 	{
 		String sMethod = "handleMetadataProvider";
@@ -268,28 +343,29 @@ public abstract class AbstractMetaDataManager
 		if (sList) {
 			Set SSOkeys = SSODescriptors.keySet();
 			for (Object SSOkey : SSOkeys) {
-				out.println("EntityId="+(String)SSOkey);
+				out.println("EntityId=" + (String) SSOkey);
 			}
 			return;
 		}
 		// Remove entry from SSODescriptors
 		SSODescriptor descriptor = SSODescriptors.remove(entityId);
-		if (descriptor==null) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity "+entityId+" not found");
-			out.println("Entity "+entityId+" not found");
+		if (descriptor == null) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity " + entityId + " not found");
+			out.println("Entity " + entityId + " not found");
 		}
 	}
 
 	/**
-	 * Get issuer(entityID) and metadata file location from application.
-	 * Put these values in SSODescriptors.
-	 * The key is the entityID and the value the Descriptors
+	 * Get issuer(entityID) and metadata file location from application. Put these values in SSODescriptors. The key is
+	 * the entityID and the value the Descriptors
 	 * 
-	 * @param application
-	 * @throws ASelectException 
+	 * @param myMetadataProvider
+	 *            the my metadata provider
+	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	protected void addMetadata(ChainingMetadataProvider myMetadataProvider)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "addMetadata";
 		ArrayList<MetadataProvider> metadataProviderArray = new ArrayList<MetadataProvider>();
@@ -311,8 +387,10 @@ public abstract class AbstractMetaDataManager
 				if (entityDescriptorValue != null) {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "New Entity Descriptor: " + entityDescriptorValue
 							+ " for " + entityId);
-					SSODescriptor descriptorValueIDP = entityDescriptorValue.getIDPSSODescriptor(protocolSupportEnumeration);
-					SSODescriptor descriptorValueSP = entityDescriptorValue.getSPSSODescriptor(protocolSupportEnumeration);
+					SSODescriptor descriptorValueIDP = entityDescriptorValue
+							.getIDPSSODescriptor(protocolSupportEnumeration);
+					SSODescriptor descriptorValueSP = entityDescriptorValue
+							.getSPSSODescriptor(protocolSupportEnumeration);
 					if (descriptorValueIDP != null) {
 						if (!checkKeyDescriptor(descriptorValueIDP))
 							throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
@@ -339,12 +417,14 @@ public abstract class AbstractMetaDataManager
 			}
 		}
 	}
-	
+
 	/**
-	 * Check validity  of a metadata certificate.
-	 * Called when the metadata is read in.
-	 * Dates must be valid, and the certificate must be trusted by a
-	 * ca stored in the trusted_issuers keystore.
+	 * Check validity of a metadata certificate. Called when the metadata is read in. Dates must be valid, and the
+	 * certificate must be trusted by a ca stored in the trusted_issuers keystore.
+	 * 
+	 * @param descriptor
+	 *            the descriptor
+	 * @return true, if check key descriptor
 	 */
 	// Bauke, 20091006: Added
 	private boolean checkKeyDescriptor(SSODescriptor descriptor)
@@ -352,12 +432,12 @@ public abstract class AbstractMetaDataManager
 		String sMethod = "checkKeyDescriptor";
 		List<KeyDescriptor> keyDescriptors = descriptor.getKeyDescriptors();
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Metadata Prefix= Check="+getCheckCertificates());
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Metadata Prefix= Check=" + getCheckCertificates());
 		for (KeyDescriptor keydescriptor : keyDescriptors) {
 			UsageType useType = keydescriptor.getUse();
 			if (!useType.name().equalsIgnoreCase("SIGNING")) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Use type: " + useType + " != SIGNING");
-				continue;  // skip
+				continue; // skip
 			}
 
 			org.opensaml.xml.signature.KeyInfo keyinfo = keydescriptor.getKeyInfo();
@@ -370,14 +450,19 @@ public abstract class AbstractMetaDataManager
 					java.security.cert.X509Certificate javaCert = SamlTools.getCertificate(cert);
 					if (javaCert != null) {
 						if (checkCertificate("", javaCert)) {
-							_systemLogger.log(Level.INFO, MODULE, sMethod, "OK "+javaCert.getSubjectX500Principal().getName()+" - Issuer="+javaCert.getIssuerX500Principal().getName());
+							_systemLogger.log(Level.INFO, MODULE, sMethod, "OK "
+									+ javaCert.getSubjectX500Principal().getName() + " - Issuer="
+									+ javaCert.getIssuerX500Principal().getName());
 							return true;
 						}
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "NOT OK "+javaCert.getSubjectX500Principal().getName()+" - Issuer="+javaCert.getIssuerX500Principal().getName());
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "NOT OK "
+								+ javaCert.getSubjectX500Principal().getName() + " - Issuer="
+								+ javaCert.getIssuerX500Principal().getName());
 					}
 				}
 				catch (CertificateException e) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot retrieve the public key from metadata: ", e);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot retrieve the public key from metadata: ",
+							e);
 					return false;
 				}
 			}
@@ -387,10 +472,12 @@ public abstract class AbstractMetaDataManager
 	}
 
 	/**
-	 * Check dates and/or issuer of the given certificate
+	 * Check dates and/or issuer of the given certificate.
 	 * 
-	 * @param prefix - can be "" or "ca_", the second version checks the ca-certificate as well
-	 * @param javaCert - the certificate to be checked
+	 * @param prefix
+	 *            - can be "" or "ca_", the second version checks the ca-certificate as well
+	 * @param javaCert
+	 *            - the certificate to be checked
 	 * @return - is certificate ok?
 	 */
 	private boolean checkCertificate(String prefix, java.security.cert.X509Certificate javaCert)
@@ -398,13 +485,13 @@ public abstract class AbstractMetaDataManager
 		String sMethod = "checkCertificate";
 		String sCheckCerts = getCheckCertificates();
 
-		//_systemLogger.log(Level.INFO, MODULE, sMethod, "Prefix="+prefix+" CheckCerts="+sCheckCerts);
+		// _systemLogger.log(Level.INFO, MODULE, sMethod, "Prefix="+prefix+" CheckCerts="+sCheckCerts);
 		try {
-			if (sCheckCerts != null && sCheckCerts.contains(prefix+"dates")) {
+			if (sCheckCerts != null && sCheckCerts.contains(prefix + "dates")) {
 				javaCert.checkValidity();
-				//_systemLogger.log(Level.INFO, MODULE, sMethod, "The certificate dates are valid");
+				// _systemLogger.log(Level.INFO, MODULE, sMethod, "The certificate dates are valid");
 			}
-			if (sCheckCerts != null && sCheckCerts.contains(prefix+"issuer")) {
+			if (sCheckCerts != null && sCheckCerts.contains(prefix + "issuer")) {
 				boolean isTrusted = isCertificateTrusted(javaCert);
 				if (!isTrusted)
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "The certificate issuer is not valid");
@@ -422,20 +509,29 @@ public abstract class AbstractMetaDataManager
 			return false;
 		}
 	}
-	
+
+	/**
+	 * Checks if is certificate trusted.
+	 * 
+	 * @param clientCert
+	 *            the client cert
+	 * @return true, if is certificate trusted
+	 */
 	private boolean isCertificateTrusted(java.security.cert.X509Certificate clientCert)
 	{
 		String sMethod = "isCertificateTrusted";
-		
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Check clientCert="+clientCert.getSubjectX500Principal().getName()+
-							" - Issued by "+clientCert.getIssuerX500Principal().getName());
+
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Check clientCert="
+				+ clientCert.getSubjectX500Principal().getName() + " - Issued by "
+				+ clientCert.getIssuerX500Principal().getName());
 		Set<String> allIssuers = trustedIssuers.keySet();
 		for (String ca : allIssuers) {
 			java.security.cert.X509Certificate caCert = trustedIssuers.get(ca);
-			if (caCert == null)  // skip dummy entry
+			if (caCert == null) // skip dummy entry
 				continue;
 			if (caCert.getSubjectX500Principal().equals(clientCert.getIssuerX500Principal())) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Trusted by '"+ca+"': "+caCert.getSubjectX500Principal().getName());
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Trusted by '" + ca + "': "
+						+ caCert.getSubjectX500Principal().getName());
 				return true;
 			}
 		}
@@ -446,20 +542,21 @@ public abstract class AbstractMetaDataManager
 	 * Retrieve the signing key for the given entity id from the metadata cache.
 	 * 
 	 * @param entityId
+	 *            the entity id
 	 * @return PublicKey, is null on errors.
 	 */
 	public PublicKey getSigningKeyFromMetadata(String entityId)
 	{
 		String sMethod = "getSigningKeyFromMetadata";
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId="+entityId);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId=" + entityId);
 		try {
 			checkMetadataProvider(entityId);
 		}
 		catch (ASelectException e) {
 			return null;
 		}
-		
+
 		SSODescriptor descriptor = SSODescriptors.get(entityId);
 		if (descriptor == null) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Entity id: " + entityId + " not in SSODescriptors");
@@ -483,16 +580,19 @@ public abstract class AbstractMetaDataManager
 				try {
 					java.security.cert.X509Certificate javaCert = SamlTools.getCertificate(cert);
 					if (javaCert != null) {
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "Cert: "+javaCert.getSubjectX500Principal().getName()+
-										" - Issuer="+javaCert.getIssuerX500Principal().getName());
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "Cert: "
+								+ javaCert.getSubjectX500Principal().getName() + " - Issuer="
+								+ javaCert.getIssuerX500Principal().getName());
 						return javaCert.getPublicKey();
 					}
 					else {
-						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot retrieve the public key from metadata for entity id : " + entityId);
+						_systemLogger.log(Level.WARNING, MODULE, sMethod,
+								"Cannot retrieve the public key from metadata for entity id : " + entityId);
 					}
 				}
 				catch (CertificateException e) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot retrieve the public key from metadata: ", e);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot retrieve the public key from metadata: ",
+							e);
 				}
 			}
 		}
@@ -500,87 +600,102 @@ public abstract class AbstractMetaDataManager
 	}
 
 	/**
+	 * Gets the location.
+	 * 
 	 * @param entityId
+	 *            the entity id
 	 * @param elementName
-	 *                <BR>
-	 *                SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME <BR>
-	 *                SingleSignOnService.DEFAULT_ELEMENT_LOCAL_NAME <BR>
-	 *                ArtifactResolutionService.DEFAULT_ELEMENT_LOCAL_NAME <BR>
-	 *                AssertionConsumerService.DEFAULT_ELEMENT_LOCAL_NAME
+	 * <BR>
+	 *            SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME <BR>
+	 *            SingleSignOnService.DEFAULT_ELEMENT_LOCAL_NAME <BR>
+	 *            ArtifactResolutionService.DEFAULT_ELEMENT_LOCAL_NAME <BR>
+	 *            AssertionConsumerService.DEFAULT_ELEMENT_LOCAL_NAME
 	 * @param bindingName
-	 *                <BR>
-	 *                SAMLConstants.SAML2_SOAP11_BINDING_URI <BR>
-	 *                SAMLConstants.SAML2_REDIRECT_BINDING_URI <BR>
-	 *                SAMLConstants.SAML2_POST_BINDING_URI <BR>
-	 *                SAMLConstants.SAML2_ARTIFACT_BINDING_URI
+	 * <BR>
+	 *            SAMLConstants.SAML2_SOAP11_BINDING_URI <BR>
+	 *            SAMLConstants.SAML2_REDIRECT_BINDING_URI <BR>
+	 *            SAMLConstants.SAML2_POST_BINDING_URI <BR>
+	 *            SAMLConstants.SAML2_ARTIFACT_BINDING_URI
 	 * @return Location
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	public String getLocation(String entityId, String elementName, String bindingName)
-	throws ASelectException
+		throws ASelectException
 	{
 		String locationValue = getMDNodevalue(entityId, elementName, bindingName, "Location");
 		return locationValue;
 	}
 
 	/**
+	 * Gets the response location.
+	 * 
 	 * @param entityId
+	 *            the entity id
 	 * @param elementName
-	 *                <BR>
-	 *                SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME <BR>
-	 *                SingleSignOnService.DEFAULT_ELEMENT_LOCAL_NAME <BR>
-	 *                ArtifactResolutionService.DEFAULT_ELEMENT_LOCAL_NAME <BR>
-	 *                AssertionConsumerService.DEFAULT_ELEMENT_LOCAL_NAME
+	 * <BR>
+	 *            SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME <BR>
+	 *            SingleSignOnService.DEFAULT_ELEMENT_LOCAL_NAME <BR>
+	 *            ArtifactResolutionService.DEFAULT_ELEMENT_LOCAL_NAME <BR>
+	 *            AssertionConsumerService.DEFAULT_ELEMENT_LOCAL_NAME
 	 * @param bindingName
-	 *                <BR>
-	 *                SAMLConstants.SAML2_SOAP11_BINDING_URI <BR>
-	 *                SAMLConstants.SAML2_REDIRECT_BINDING_URI <BR>
-	 *                SAMLConstants.SAML2_POST_BINDING_URI <BR>
-	 *                SAMLConstants.SAML2_ARTIFACT_BINDING_URI
+	 * <BR>
+	 *            SAMLConstants.SAML2_SOAP11_BINDING_URI <BR>
+	 *            SAMLConstants.SAML2_REDIRECT_BINDING_URI <BR>
+	 *            SAMLConstants.SAML2_POST_BINDING_URI <BR>
+	 *            SAMLConstants.SAML2_ARTIFACT_BINDING_URI
 	 * @return ResponseLocation
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	public String getResponseLocation(String entityId, String elementName, String bindingName)
-	throws ASelectException
+		throws ASelectException
 	{
 		return getMDNodevalue(entityId, elementName, bindingName, "ResponseLocation");
 	}
 
 	/**
+	 * Gets the md nodevalue.
+	 * 
 	 * @param entityId
+	 *            the entity id
 	 * @param elementName
+	 *            the element name
 	 * @param bindingName
+	 *            the binding name
 	 * @param attrName
+	 *            the attr name
 	 * @return location
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	protected String getMDNodevalue(String entityId, String elementName, String bindingName, String attrName)
-	throws ASelectException
+		throws ASelectException
 	{
-		String sMethod = "getMDNodevalue "+Thread.currentThread().getId();
+		String sMethod = "getMDNodevalue " + Thread.currentThread().getId();
 		String location = null;
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId="+entityId+" elementName="+elementName+
-				" binding="+bindingName+" attr="+attrName);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId=" + entityId + " elementName=" + elementName
+				+ " binding=" + bindingName + " attr=" + attrName);
 		if (entityId == null)
 			return null;
 		checkMetadataProvider(entityId);
-		_systemLogger.log(Level.FINE, MODULE, sMethod, "Meta checked for "+entityId);
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "Meta checked for " + entityId);
 		SSODescriptor descriptor = SSODescriptors.get(entityId);
-		
+
 		if (descriptor != null) {
 			try {
 				Element domDescriptor = marshallDescriptor(descriptor);
-				NodeList nodeList = domDescriptor.getChildNodes();				
-				
-				//_systemLogger.log(Level.FINE, MODULE, sMethod, "Try "+nodeList.getLength()+" entries");
+				NodeList nodeList = domDescriptor.getChildNodes();
+
+				// _systemLogger.log(Level.FINE, MODULE, sMethod, "Try "+nodeList.getLength()+" entries");
 				for (int i = 0; i < nodeList.getLength(); i++) {
 					Node childNode = nodeList.item(i);
-					//_systemLogger.log(Level.FINE, MODULE, sMethod, "Node "+childNode.getLocalName());
+					// _systemLogger.log(Level.FINE, MODULE, sMethod, "Node "+childNode.getLocalName());
 					if (elementName.equals(childNode.getLocalName())) {
 						NamedNodeMap nodeMap = childNode.getAttributes();
 						String bindingMDValue = nodeMap.getNamedItem("Binding").getNodeValue();
-						//_systemLogger.log(Level.FINE, MODULE, sMethod, "Binding "+bindingMDValue);
+						// _systemLogger.log(Level.FINE, MODULE, sMethod, "Binding "+bindingMDValue);
 						if (bindingMDValue.equals(bindingName)) {
 							Node node = nodeMap.getNamedItem(attrName);
 							if (node != null) {
@@ -608,31 +723,53 @@ public abstract class AbstractMetaDataManager
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Return "+location);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Return " + location);
 		return location;
 	}
 
+	/**
+	 * Marshall descriptor.
+	 * 
+	 * @param descriptor
+	 *            the descriptor
+	 * @return the element
+	 * @throws MarshallingException
+	 *             the marshalling exception
+	 * @throws XMLParserException
+	 *             the XML parser exception
+	 */
 	private synchronized Element marshallDescriptor(XMLObject descriptor)
-	throws MarshallingException, XMLParserException
+		throws MarshallingException, XMLParserException
 	{
 		String sMethod = "marshallDescriptor";
-		
+
 		BasicParserPool parser = new BasicParserPool();
 		parser.setNamespaceAware(true);
 		MarshallerFactory marshallerFactory = Configuration.getMarshallerFactory();
 		Marshaller marshaller = marshallerFactory.getMarshaller(descriptor);
-		
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Marshall "+descriptor);
-		//_systemLogger.log(Level.INFO, MODULE, sMethod, XMLHelper.prettyPrintXML(descriptor.getDOM()));
+
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Marshall " + descriptor);
+		// _systemLogger.log(Level.INFO, MODULE, sMethod, XMLHelper.prettyPrintXML(descriptor.getDOM()));
 		Element domDescriptor = marshaller.marshall(descriptor, parser.newDocument());
 		return domDescriptor;
 	}
 
+	/**
+	 * Gets the check certificates.
+	 * 
+	 * @return the check certificates
+	 */
 	public static String getCheckCertificates()
 	{
 		return _sCheckCertificates;
 	}
 
+	/**
+	 * Sets the check certificates.
+	 * 
+	 * @param checkCertificates
+	 *            the new check certificates
+	 */
 	public static void setCheckCertificates(String checkCertificates)
 	{
 		_sCheckCertificates = checkCertificates;
@@ -642,6 +779,7 @@ public abstract class AbstractMetaDataManager
 	 * Retrieve the session sync URL for the given entity id.
 	 * 
 	 * @param entityId
+	 *            the entity id
 	 * @return The session sync URL, or null on errors.
 	 */
 	public String getSessionSyncURL(String entityId)
@@ -650,7 +788,7 @@ public abstract class AbstractMetaDataManager
 
 		String sUrl = sessionSyncSPs.get(entityId);
 		if (sUrl == null) {
-			sUrl = sessionSyncSPs.get("metadata");  // old mechanism
+			sUrl = sessionSyncSPs.get("metadata"); // old mechanism
 		}
 		if (sUrl == null) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity id: " + entityId + " not found (session sync)");
@@ -663,6 +801,7 @@ public abstract class AbstractMetaDataManager
 	 * Retrieve the session sync URL for the given entity id.
 	 * 
 	 * @param entityId
+	 *            the entity id
 	 * @return The session sync URL, or null on errors.
 	 */
 	public String getMetadataURL(String entityId)
@@ -671,7 +810,7 @@ public abstract class AbstractMetaDataManager
 
 		String sUrl = metadataSPs.get(entityId);
 		if (sUrl == null) {
-			sUrl = metadataSPs.get("metadata");  // old mechanism
+			sUrl = metadataSPs.get("metadata"); // old mechanism
 		}
 		if (sUrl == null) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity id: " + entityId + " not found (metadata)");
@@ -679,20 +818,30 @@ public abstract class AbstractMetaDataManager
 		}
 		return sUrl;
 	}
-	
+
 	// Return the number of configured IdPs
+	/**
+	 * Gets the idp count.
+	 * 
+	 * @return the idp count
+	 */
 	public int getIdpCount()
 	{
 		return metadataSPs.size();
 	}
-	
+
+	/**
+	 * Gets the default id p.
+	 * 
+	 * @return the default id p
+	 */
 	public String getDefaultIdP()
 	{
 		// Get the first one, useful when there's only one (the default)
 		Set keys = metadataSPs.keySet();
 		for (Object s : keys) {
-			String sIdP = (String)s;
-			return (sIdP.equals("metadata"))? _configManager.getFederationUrl(): sIdP;
+			String sIdP = (String) s;
+			return (sIdP.equals("metadata")) ? _configManager.getFederationUrl() : sIdP;
 		}
 		return null;
 	}

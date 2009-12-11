@@ -65,26 +65,21 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 
+// TODO: Auto-generated Javadoc
 /**
- * The SAM Resource Group is a Thread that represents a resource that will be checked 
- * every interval time. 
- * <br>
+ * The SAM Resource Group is a Thread that represents a resource that will be checked every interval time. <br>
  * <br>
  * <b>Description: </b> <br>
- * SAM stands for Simple A-Select Management. SAM is designed to enable A-Select
- * to work in a redundant envirnoment. A SAMResourceGroup resembles a group of entry
- * points (SAMResources) to a particular resource (for example a database). The
- * SAMResourceGroup will query the SAMResources periodically and keeps a list of
- * active resources. When queried by an A-Select component, through the
- * SAMAgent, the SAMResourceGroup will present the A-Select component an active
+ * SAM stands for Simple A-Select Management. SAM is designed to enable A-Select to work in a redundant envirnoment. A
+ * SAMResourceGroup resembles a group of entry points (SAMResources) to a particular resource (for example a database).
+ * The SAMResourceGroup will query the SAMResources periodically and keeps a list of active resources. When queried by
+ * an A-Select component, through the SAMAgent, the SAMResourceGroup will present the A-Select component an active
  * SAMResource. <br>
  * <br>
  * <b>Concurrency issues: </b> <br>
- * -
- * <br>
+ * - <br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class SAMResourceGroup extends Thread
 {
@@ -114,8 +109,7 @@ public class SAMResourceGroup extends Thread
 	private SystemLogger _oSystemLogger;
 
 	/**
-	 * Default status update check time, used as interval for checking resources 
-	 * in a resourcegroup.
+	 * Default status update check time, used as interval for checking resources in a resourcegroup.
 	 */
 	private final long DEFAULT_UPDATE_INTERVAL = 50;
 
@@ -125,32 +119,32 @@ public class SAMResourceGroup extends Thread
 	private long _lInterval;
 
 	/**
-	 * This function is to initialize the SAMAgent.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * This function is to initialize the SAMAgent. <br>
 	 * <br>
-	 * Reads all resources configured inside a resourcegroup from the 
-	 * configuration and initializes them.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Reads all resources configured inside a resourcegroup from the configuration and initializes them. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
+	 * <b>Preconditions:</b> <br>
 	 * - oConfigSection != null<br>
 	 * - oConfigManager != null<br>
 	 * - oSystemLogger != null<br>
-	 * <br><br>
-	 * <b>Postconditions:</b>
 	 * <br>
-	 * -
 	 * <br>
-	 * @param oConfigSection The section within the configuration file in which 
-	 * the parameters for this SAMResourceGroup can be found.
-	 * @param oConfigManager The ConfigManager used to retrieve the config from.
-	 * @param oSystemLogger The logger used for system logging
-	 * @throws ASelectSAMException if initialization fails.
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param oConfigSection
+	 *            The section within the configuration file in which the parameters for this SAMResourceGroup can be
+	 *            found.
+	 * @param oConfigManager
+	 *            The ConfigManager used to retrieve the config from.
+	 * @param oSystemLogger
+	 *            The logger used for system logging
+	 * @throws ASelectSAMException
+	 *             if initialization fails.
 	 */
 	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger oSystemLogger)
 		throws ASelectSAMException
@@ -180,7 +174,7 @@ public class SAMResourceGroup extends Thread
 			}
 			catch (Exception e) {
 
-				//the interval is not configured, using the default interval time
+				// the interval is not configured, using the default interval time
 				_lInterval = DEFAULT_UPDATE_INTERVAL;
 
 				StringBuffer sbWarning = new StringBuffer(sbError.toString());
@@ -250,29 +244,25 @@ public class SAMResourceGroup extends Thread
 	}
 
 	/**
-	 * Gets a active resource from this group.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Gets a active resource from this group. <br>
 	 * <br>
-	 * Returns the first active resource (the active resource with the highest 
-	 * priority)
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns the first active resource (the active resource with the highest priority) <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
+	 * <b>Preconditions:</b> <br>
 	 * - The class variable <i>_vActive</i> may not be <code>null</code><br>
 	 * - All objects inside the class variable <i>_vActive</i> must be <code>
-	 * SAMResource</code> objects.
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * SAMResource</code> objects. <br>
 	 * <br>
-	 * -
-	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
 	 * @return The SAMResource object of an active resource.
-	 * @throws ASelectSAMException If no active resource was found.
+	 * @throws ASelectSAMException
+	 *             If no active resource was found.
 	 */
 	public SAMResource getActiveResource()
 		throws ASelectSAMException
@@ -290,30 +280,30 @@ public class SAMResourceGroup extends Thread
 	}
 
 	/**
-	 * Returns a <code>SAMResource</code> specified by it's id.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns a <code>SAMResource</code> specified by it's id. <br>
 	 * <br>
-	 * Returns a <code>SAMResource</code> specified by it's key as it contains 
-	 * in the class variable <i>_htResources</i>.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Returns a <code>SAMResource</code> specified by it's key as it contains in the class variable
+	 * <i>_htResources</i>. <br>
 	 * <br>
+	 * <b>Concurrency issues:</b> <br>
 	 * - sKey may not be <code>null</code><br>
-	 * <br><br>
-	 * <b>Preconditions:</b>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
 	 * <br>
-	 * -
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * @param sKey The id of the resource that will be returned
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sKey
+	 *            The id of the resource that will be returned
 	 * @return The <code>SAMResource</code> object that is specified by <i>sKey</i>
-	 * @throws ASelectSAMException if no resource is found
+	 * @throws ASelectSAMException
+	 *             if no resource is found
 	 * @deprecated Use getActiveResource instead
 	 */
+	@Deprecated
 	public SAMResource getResource(String sKey)
 		throws ASelectSAMException
 	{
@@ -348,10 +338,13 @@ public class SAMResourceGroup extends Thread
 	}
 
 	/**
-	 * Default methode to start the update status <code>Thread</code>
-	 * <br><br>
+	 * Default methode to start the update status <code>Thread</code> <br>
+	 * <br>
+	 * .
+	 * 
 	 * @see java.lang.Thread#run()
 	 */
+	@Override
 	public void run()
 	{
 		while (_bRunThread) {
@@ -365,20 +358,21 @@ public class SAMResourceGroup extends Thread
 	}
 
 	/**
-	 * Destroys this resourcegroup (SAMResourceGroup) and all resources (SAMResource)
-	 * within this group.
-	 * <br><br>
+	 * Destroys this resourcegroup (SAMResourceGroup) and all resources (SAMResource) within this group. <br>
+	 * <br>
+	 * 
 	 * @see java.lang.Thread#destroy()
 	 */
+	@Override
 	public void destroy()
 	{
 		Set keys = _htResources.keySet();
 		for (Object s : keys) {
 			String sKey = (String) s;
-			//Enumeration enumKeys = _htResources.keys();
-			//while (enumKeys.hasMoreElements())
-			//{
-			//  String sKey = (String) enumKeys.nextElement();
+			// Enumeration enumKeys = _htResources.keys();
+			// while (enumKeys.hasMoreElements())
+			// {
+			// String sKey = (String) enumKeys.nextElement();
 			SAMResource oSAMResource = (SAMResource) _htResources.get(sKey);
 			oSAMResource.destroy();
 		}
@@ -386,22 +380,20 @@ public class SAMResourceGroup extends Thread
 	}
 
 	/**
-	 * Makes a pass along all SAMResources within this group and updates the
-	 * Vector of active SAMResources.
-	 * 
-	 * Every status update verifies the status of the resources in the 
-	 * configurated order. The first configured resource has the highest priority.
+	 * Makes a pass along all SAMResources within this group and updates the Vector of active SAMResources. Every status
+	 * update verifies the status of the resources in the configurated order. The first configured resource has the
+	 * highest priority.
 	 */
 	private void updateStatus()
 	{
 		Vector vLive = new Vector();
 
-        Set keys = _htResources.keySet();
+		Set keys = _htResources.keySet();
 		for (Object s : keys) {
 			String sKey = (String) s;
-//		Enumeration enumKeys = _htResources.keys();
-		//while (enumKeys.hasMoreElements()) {
-			//String sKey = (String) enumKeys.nextElement();
+			// Enumeration enumKeys = _htResources.keys();
+			// while (enumKeys.hasMoreElements()) {
+			// String sKey = (String) enumKeys.nextElement();
 			SAMResource oSAMResource = (SAMResource) _htResources.get(sKey);
 
 			if (oSAMResource.live()) {

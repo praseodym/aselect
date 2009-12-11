@@ -60,22 +60,18 @@ import org.aselect.agent.ticket.TicketManager;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectStorageException;
 
+// TODO: Auto-generated Javadoc
 /**
- * Monitors the tickets that are issued by the A-Select Agent. 
- * <br><br>
- * <b>Description: </b> 
+ * Monitors the tickets that are issued by the A-Select Agent. <br>
  * <br>
- * This method monitors the issued tickets of the A-Select Agent. This class
- * implements Runnable in which it periodically checks the TicketManager for
- * issued ticket. The data is used by the AdminMonitor for display in the GUI.
+ * <b>Description: </b> <br>
+ * This method monitors the issued tickets of the A-Select Agent. This class implements Runnable in which it
+ * periodically checks the TicketManager for issued ticket. The data is used by the AdminMonitor for display in the GUI. <br>
  * <br>
- * <br>
- * <b>Concurrency issues: </b> 
- * <br>
+ * <b>Concurrency issues: </b> <br>
  * None. <br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class TicketMonitorModel extends AbstractTableModel implements Runnable
 {
@@ -95,11 +91,10 @@ public class TicketMonitorModel extends AbstractTableModel implements Runnable
 	public static final String MODULE = "TicketMonitorModel";
 
 	/**
-	 * Initializes the class. 
-	 * <br><br>
+	 * Initializes the class. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
-	 * This method initalizes the class by initializing variables and starting
-	 * the runner thread for monitoring. <br>
+	 * This method initalizes the class by initializing variables and starting the runner thread for monitoring. <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * None. <br>
@@ -111,13 +106,12 @@ public class TicketMonitorModel extends AbstractTableModel implements Runnable
 	 * None. <br>
 	 * 
 	 * @param iCheckInterval
-	 *            the monitoring interval (in seconds) to wait for updating the
-	 *            ticket information.
-	 * 
+	 *            the monitoring interval (in seconds) to wait for updating the ticket information.
 	 * @throws ASelectConfigException
-	 * on configuration error. @ throws NumberFormatException on non-parseable
-	 *             <code>max_tickets</code> config item.
-	 * @throws NumberFormatException If 'max_tickets' parameter is incorrect.
+	 *             on configuration error. @ throws NumberFormatException on non-parseable <code>max_tickets</code>
+	 *             config item.
+	 * @throws NumberFormatException
+	 *             If 'max_tickets' parameter is incorrect.
 	 */
 	public TicketMonitorModel(int iCheckInterval)
 		throws NumberFormatException, ASelectConfigException {
@@ -150,6 +144,8 @@ public class TicketMonitorModel extends AbstractTableModel implements Runnable
 	}
 
 	/**
+	 * Gets the tickets counter.
+	 * 
 	 * @return the number of issued tickets.
 	 */
 	public long getTicketsCounter()
@@ -159,6 +155,8 @@ public class TicketMonitorModel extends AbstractTableModel implements Runnable
 
 	/**
 	 * Returns the number of rows.
+	 * 
+	 * @return the row count
 	 * @see javax.swing.table.TableModel#getRowCount()
 	 */
 	public int getRowCount()
@@ -167,7 +165,9 @@ public class TicketMonitorModel extends AbstractTableModel implements Runnable
 	}
 
 	/**
-	 * Returns the number of columns. 
+	 * Returns the number of columns.
+	 * 
+	 * @return the column count
 	 * @see javax.swing.table.TableModel#getColumnCount()
 	 */
 	public int getColumnCount()
@@ -176,10 +176,14 @@ public class TicketMonitorModel extends AbstractTableModel implements Runnable
 	}
 
 	/**
-	 * Returns the value of an information items in this model. 
+	 * Returns the value of an information items in this model.
 	 * 
-	 * @see javax.swing.table.TableModel#getValueAt(int, int)
+	 * @param iRow
+	 *            the i row
+	 * @param iColumn
+	 *            the i column
 	 * @return the String representation of the item.
+	 * @see javax.swing.table.TableModel#getValueAt(int, int)
 	 */
 	public Object getValueAt(int iRow, int iColumn)
 	{
@@ -187,11 +191,11 @@ public class TicketMonitorModel extends AbstractTableModel implements Runnable
 		HashMap htTicketContext = (HashMap) _ticketContexts.get(sTicket);
 
 		if (iColumn == 0)
-			return (String) htTicketContext.get("uid");
+			return htTicketContext.get("uid");
 		if (iColumn == 1)
-			return (String) htTicketContext.get("organization");
+			return htTicketContext.get("organization");
 		if (iColumn == 2)
-			return (String) htTicketContext.get("a-select-server");
+			return htTicketContext.get("a-select-server");
 		if (iColumn == 3) {
 			try {
 				long lTimestamp = _ticketManager.getTicketStartTime(sTicket);
@@ -212,9 +216,9 @@ public class TicketMonitorModel extends AbstractTableModel implements Runnable
 
 		}
 		if (iColumn == 5)
-			return (String) htTicketContext.get("authsp");
+			return htTicketContext.get("authsp");
 		if (iColumn == 6)
-			return (String) htTicketContext.get("authsp_level");
+			return htTicketContext.get("authsp_level");
 		if (iColumn == 7)
 			return sTicket;
 
@@ -222,17 +226,21 @@ public class TicketMonitorModel extends AbstractTableModel implements Runnable
 	}
 
 	/**
-	 * Returns the colum nname. 
+	 * Returns the colum nname.
+	 * 
+	 * @param xIndex
+	 *            the x index
+	 * @return the column name
 	 * @see javax.swing.table.TableModel#getColumnName(int)
 	 */
+	@Override
 	public String getColumnName(int xIndex)
 	{
 		return _headersStrings[xIndex];
 	}
 
 	/**
-	 * Loops and upon wakeup (monitoring interval), fetches the ticket
-	 * information from the TicketManager. 
+	 * Loops and upon wakeup (monitoring interval), fetches the ticket information from the TicketManager.
 	 * 
 	 * @see java.lang.Runnable#run()
 	 */
@@ -264,10 +272,9 @@ public class TicketMonitorModel extends AbstractTableModel implements Runnable
 		for (Object s : keys) {
 			_ticketsStrings[i++] = (String) s;
 		}
-		/*        Set xTicketContextsEnum = _ticketContexts.keySet();
-		 while (xTicketContextsEnum.hasMoreElements())
-		 {
-		 _ticketsStrings[i++] = (String)xTicketContextsEnum.nextElement();
-		 }*/
+		/*
+		 * Set xTicketContextsEnum = _ticketContexts.keySet(); while (xTicketContextsEnum.hasMoreElements()) {
+		 * _ticketsStrings[i++] = (String)xTicketContextsEnum.nextElement(); }
+		 */
 	}
 }

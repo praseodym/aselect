@@ -136,31 +136,30 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
- * A-Select Agent Main Class. 
- * <br><br>
+ * A-Select Agent Main Class. <br>
+ * <br>
  * <b>Description: </b> <br>
- * The A-Select Agent is a lightweight server that offers a convenient API for
- * applications to make use of the services of multiple A-Select Servers. 
- * <br><br>
- * The A-Select Agent also offers advanced session management that applications
- * may use. The A-Select Agent only accepts connections from applications that run on the
- * same host. 
- * <br><br>
+ * The A-Select Agent is a lightweight server that offers a convenient API for applications to make use of the services
+ * of multiple A-Select Servers. <br>
+ * <br>
+ * The A-Select Agent also offers advanced session management that applications may use. The A-Select Agent only accepts
+ * connections from applications that run on the same host. <br>
+ * <br>
  * Currently, the A-Select Agent supports the following API requests:
  * <ul>
- * 	<li><code>authenticate</code></li>
- * 	<li><code>cross_authenticate</code></li>
- * 	<li><code>verify_credentials</code></li>
- * 	<li><code>verify_ticket</code></li>
- * 	<li><code>kill_ticket</code></li>
+ * <li><code>authenticate</code></li>
+ * <li><code>cross_authenticate</code></li>
+ * <li><code>verify_credentials</code></li>
+ * <li><code>verify_ticket</code></li>
+ * <li><code>kill_ticket</code></li>
  * </ul>
  * <br>
- * <b>Concurrency issues: </b> 
- * <br>None.<br>
+ * <b>Concurrency issues: </b> <br>
+ * None.<br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class ASelectAgent
 {
@@ -237,25 +236,22 @@ public class ASelectAgent
 	private boolean _bAuthorization = false;
 
 	/**
-	 * Main entry point for starting the Agent in console mode. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Main entry point for starting the Agent in console mode. <br>
 	 * <br>
-	 * The main function instantiates an A-Select Agent and lets it start. 
-	 * It does this by calling the <code>init()</code> method and then the
-	 * <code>startServices()</code> method. 
-	 * <br><br>
-	 * If the A-Select Agent cannot start, a <code>System.exit(1)</code> is
-	 * returned. 
-	 * <br><br>
-	 * <b>Concurrency issues: </b> 
-	 * <br>None. <br>
+	 * <b>Description: </b> <br>
+	 * The main function instantiates an A-Select Agent and lets it start. It does this by calling the
+	 * <code>init()</code> method and then the <code>startServices()</code> method. <br>
 	 * <br>
-	 * <b>Preconditions: </b> 
-	 * <br>None. <br>
+	 * If the A-Select Agent cannot start, a <code>System.exit(1)</code> is returned. <br>
 	 * <br>
-	 * <b>Postconditions: </b> 
-	 * <br>None. <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * None. <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * None. <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * None. <br>
 	 * 
 	 * @param saArgs
 	 *            Commandline parameters; currently not used.
@@ -292,19 +288,17 @@ public class ASelectAgent
 	}
 
 	/**
-	 * Constructor for the A-Select Agent class. 
+	 * Constructor for the A-Select Agent class.
 	 */
 	public ASelectAgent() {
 	}
 
 	/**
-	 * Initializes the A-Select Agent. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Initializes the A-Select Agent. <br>
 	 * <br>
-	 * The A-Select Agent initializes itself by reading its configuration,
-	 * getting the handles to essential objects and initializing the logging
-	 * system. <br>
+	 * <b>Description: </b> <br>
+	 * The A-Select Agent initializes itself by reading its configuration, getting the handles to essential objects and
+	 * initializing the logging system. <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * None. <br>
@@ -315,14 +309,15 @@ public class ASelectAgent
 	 * <b>Postconditions: </b> <br>
 	 * None. <br>
 	 * 
-	 * @throws ASelectException if initialization was unsuccessful.
+	 * @throws ASelectException
+	 *             if initialization was unsuccessful.
 	 */
 	public void init()
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
-			//create logger
+			// create logger
 			_oASelectAgentSystemLogger = ASelectAgentSystemLogger.getHandle();
 
 			// get handle to the ASelectAgentConfigManager and initialize it
@@ -343,7 +338,7 @@ public class ASelectAgent
 						"Missing or invalid optional config item 'truststore', using default keystore", eAC);
 			}
 
-			//initialize system logger
+			// initialize system logger
 			Object oSysLogging = null;
 			try {
 				oSysLogging = _oASelectAgentConfigManager.getSection(_oAgentSection, "logging", "id=system");
@@ -368,7 +363,7 @@ public class ASelectAgent
 			if (!SessionManager.getHandle().init())
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 
-			//initialize the Authorization engine
+			// initialize the Authorization engine
 			Object oAuthorizationSection = null;
 			try {
 				oAuthorizationSection = _oASelectAgentConfigManager.getSection(_oAgentSection, "authorization");
@@ -434,20 +429,19 @@ public class ASelectAgent
 	}
 
 	/**
-	 * Clean up Agent. 
-	 * <br><br>
+	 * Clean up Agent. <br>
+	 * <br>
 	 * <b>Description: </b>
 	 * <ul>
-	 * 	<li>Stops the service handler.</li>
-	 * 	<li>Closes all managers and handlers.</li>
+	 * <li>Stops the service handler.</li>
+	 * <li>Closes all managers and handlers.</li>
 	 * </ul>
 	 * <br>
-	 * <b>Concurrency issues: </b> 
+	 * <b>Concurrency issues: </b> <br>
+	 * Should be called once. <br>
 	 * <br>
-	 * Should be called once. 
-	 * <br><br>
-	 * <b>Preconditions: </b> 
-	 * <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
 	 * All resources are cleared.
@@ -459,7 +453,7 @@ public class ASelectAgent
 		_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "Stopping all components.");
 		try {
 			_bActive = false;
-			//if thread waits ->interrupt and close socket
+			// if thread waits ->interrupt and close socket
 			try {
 				if (_tServiceHandler != null) {
 					_tServiceHandler.interrupt();
@@ -483,68 +477,57 @@ public class ASelectAgent
 			_oASelectAgentSystemLogger.closeHandlers();
 		}
 		catch (Exception e) {
-			//Error closing, no logging
+			// Error closing, no logging
 		}
 	}
 
 	/**
-	 * Clean up Agent GUI recourses if applicable. 
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Clean up Agent GUI recourses if applicable. <br>
 	 * <br>
-	 * Checks if GUI mode is enabled. Calls the {@link java.awt.Window#dispose()} 
-	 * method which disposes the Agent GUI.
-	 * <br><br>
-	 * <i>
-	 * 	<b>Warning:</b> Should be called as the last method in the destroying 
-	 * 	process because after calling <code>dispose()</code> the Java virtual 
-	 * 	machine (VM) may terminate.
-	 * </i>
+	 * <b>Description:</b> <br>
+	 * Checks if GUI mode is enabled. Calls the {@link java.awt.Window#dispose()} method which disposes the Agent GUI. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> 
-	 * <br>-<br>
+	 * <i> <b>Warning:</b> Should be called as the last method in the destroying process because after calling
+	 * <code>dispose()</code> the Java virtual machine (VM) may terminate. </i> <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> 
-	 * <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
 	 * The GUI is disposed, the virtual machine may terminate.
 	 */
 	public void destroyGui()
 	{
-		//clean GUI recourses
+		// clean GUI recourses
 		if (_bGui)
 			_adminMonitor.dispose();
 	}
 
 	/**
-	 * Starts the services of the A-Select Agent. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Starts the services of the A-Select Agent. <br>
 	 * <br>
-	 * This method initializes the services and tries to allocate the listening
-	 * sockets for the A-Select Agent's services. This method also starts the
-	 * GUI A-Select Monitor if it was specified in the configuration options.
-	 * <br><br>
-	 * After allocating the services the request handler threads are started.
+	 * <b>Description: </b> <br>
+	 * This method initializes the services and tries to allocate the listening sockets for the A-Select Agent's
+	 * services. This method also starts the GUI A-Select Monitor if it was specified in the configuration options. <br>
 	 * <br>
+	 * After allocating the services the request handler threads are started. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> 
+	 * <b>Concurrency issues: </b> <br>
+	 * None. <br>
 	 * <br>
-	 * None. 
-	 * <br><br>
-	 * <b>Preconditions: </b> 
-	 * <br>None.<br>
+	 * <b>Preconditions: </b> <br>
+	 * None.<br>
 	 * <br>
-	 * <b>Postconditions: </b> 
-	 * <br>
+	 * <b>Postconditions: </b> <br>
 	 * None. <br>
 	 * 
 	 * @throws Exception
 	 *             if the services could not be started.
 	 */
 	public void startServices()
-	throws Exception
+		throws Exception
 	{
 		String sMethod = "startServices()";
 		// try to allocate the listening ports on localhost.
@@ -563,7 +546,7 @@ public class ASelectAgent
 			}
 		}
 		catch (ASelectConfigException e1) {
-			//admin.gui parameter not found in config file
+			// admin.gui parameter not found in config file
 			_oASelectAgentSystemLogger.log(Level.CONFIG, MODULE, sMethod,
 					"No admin.gui parameter found in configuration (default is off).");
 		}
@@ -583,6 +566,7 @@ public class ASelectAgent
 
 	/**
 	 * Returns the TCP/IP portnumber of the A-Select Agent's Admin interface.
+	 * 
 	 * @return the portnumber of the Admin interface.
 	 */
 	public int getAdminPort()
@@ -591,7 +575,8 @@ public class ASelectAgent
 	}
 
 	/**
-	 * Returns whether A-Select Agent is active. 
+	 * Returns whether A-Select Agent is active.
+	 * 
 	 * @return true if A-Select Agent is active, otherwise false.
 	 */
 	public boolean isActive()
@@ -600,7 +585,8 @@ public class ASelectAgent
 	}
 
 	/**
-	 * Returns The A-Select Agent GUI mode. 
+	 * Returns The A-Select Agent GUI mode.
+	 * 
 	 * @return true if the A-Select Agent GUI is active, otherwise false.
 	 */
 	public boolean isInGuiMode()
@@ -609,30 +595,28 @@ public class ASelectAgent
 	}
 
 	/**
-	 * Retrieve the <code>ClientCommunicator</code>.
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Retrieve the <code>ClientCommunicator</code>. <br>
 	 * <br>
-	 * This method determines according to the configuration of the A-Select
-	 * Agent which <code>ClientCommunicator</code> should be used. 
-	 * The <code>ClientCommunicator</code> implements the communication 
-	 * protocol that the A-Select Agent uses with the A-Select Server. 
-	 * <br><br> 
-	 * Currently, the following protocols are supported: 
+	 * <b>Description: </b> <br>
+	 * This method determines according to the configuration of the A-Select Agent which <code>ClientCommunicator</code>
+	 * should be used. The <code>ClientCommunicator</code> implements the communication protocol that the A-Select Agent
+	 * uses with the A-Select Server. <br>
+	 * <br>
+	 * Currently, the following protocols are supported:
 	 * <ul>
-	 * 	<li>A-Select raw</li>
-	 * 	<li>Soap 1.1</li>
-	 * 	<li>Soap 1.2</li>
-	 * 	</ul>
+	 * <li>A-Select raw</li>
+	 * <li>Soap 1.1</li>
+	 * <li>Soap 1.2</li>
+	 * </ul>
 	 * <br>
-	 * <b>Concurrency issues: </b> 
-	 * <br>None. <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * None. <br>
 	 * <br>
-	 * <b>Preconditions: </b> 
-	 * <br>None. <br>
+	 * <b>Preconditions: </b> <br>
+	 * None. <br>
 	 * <br>
-	 * <b>Postconditions: </b> 
-	 * <br>None. <br>
+	 * <b>Postconditions: </b> <br>
+	 * None. <br>
 	 * 
 	 * @return the ClientCommunicator object to use.
 	 */
@@ -670,7 +654,7 @@ public class ASelectAgent
 			sbError.append(" , using Raw communication");
 			_oASelectAgentSystemLogger.log(Level.CONFIG, MODULE, sMethod, sbError.toString());
 
-			//raw communication is specified or something unreadable
+			// raw communication is specified or something unreadable
 			oCommunicator = new RawCommunicator(ASelectAgentSystemLogger.getHandle());
 		}
 
@@ -678,30 +662,26 @@ public class ASelectAgent
 	}
 
 	/**
-	 * Inner class that accepts API service requests. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Inner class that accepts API service requests. <br>
 	 * <br>
-	 * The APIServiceHandler class is the heart of the A-Select Agent accepting
-	 * service requests from applications. 
-	 * <br><br>
-	 * The APIServiceHandler keeps looping in its <code>run()</code> method
-	 * until the A-Select Agent shuts down (<code>_active == false</code>).
-	 * <br><br>
-	 * Upon each connection a <code>RequestHandler</code> is started 
-	 * which does the actual handling of the API request. 
-	 * <br><br>
-	 * <b>Concurrency issues: </b> 
+	 * <b>Description: </b> <br>
+	 * The APIServiceHandler class is the heart of the A-Select Agent accepting service requests from applications. <br>
 	 * <br>
+	 * The APIServiceHandler keeps looping in its <code>run()</code> method until the A-Select Agent shuts down (
+	 * <code>_active == false</code>). <br>
+	 * <br>
+	 * Upon each connection a <code>RequestHandler</code> is started which does the actual handling of the API request. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
 	 * None. <br>
 	 * 
 	 * @author Alfa & Ariss
 	 */
 	private class APIServiceHandler implements Runnable
 	{
+		
 		/**
-		 * Loop for accepting API requests and instantiating RequestHandler
-		 * objects. 
+		 * Loop for accepting API requests and instantiating RequestHandler objects.
 		 * 
 		 * @see java.lang.Runnable#run()
 		 */
@@ -718,50 +698,52 @@ public class ASelectAgent
 				try {
 					long now = System.currentTimeMillis();
 					long stamp = now % 1000000;
-					_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "Accept T=" + now + " "+stamp);
+					_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "Accept T=" + now + " " + stamp);
 					oSocket = _oServiceSocket.accept();
 					int port = oSocket.getPort();
-					_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "Create T=" + System.currentTimeMillis() + " "+stamp+" port="+port);
+					_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "Create T="
+							+ System.currentTimeMillis() + " " + stamp + " port=" + port);
 					oHandler = new RequestHandler(oSocket, _oCommunicator, _bAuthorization);
-					_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "Start  T=" + System.currentTimeMillis() + " "+stamp+" port="+port);
+					_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "Start  T="
+							+ System.currentTimeMillis() + " " + stamp + " port=" + port);
 					oHandler.start();
-					_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "StartD T=" + System.currentTimeMillis() + " "+stamp+" port="+port);
+					_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "StartD T="
+							+ System.currentTimeMillis() + " " + stamp + " port=" + port);
 				}
 				catch (Exception e) {
-					if (_bActive) {  //only log if active
+					if (_bActive) { // only log if active
 						_oASelectAgentSystemLogger.log(Level.WARNING, MODULE, sMethod, "Exception occurred", e);
 					}
 				}
 			}
-			//stopped
+			// stopped
 			_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "APIServiceHandler stopped.");
 		}
 
 	}
 
 	/**
-	 * Inner class that accepts API service requests and logs verbosely. 
-	 * <br><br>
+	 * Inner class that accepts API service requests and logs verbosely. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
-	 * See <code>APIServiceHandler</code> for more descriptive information.
+	 * See <code>APIServiceHandler</code> for more descriptive information. <br>
 	 * <br>
+	 * Upon each connection a TraceRequestHandler thread is started which does the actual handling of the API request. <br>
 	 * <br>
-	 * Upon each connection a TraceRequestHandler thread is started which does
-	 * the actual handling of the API request. <br>
-	 * <br>
-	 * <b>Concurrency issues: </b> 
-	 * <br>None. <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * None. <br>
 	 * 
 	 * @author Alfa & Ariss
 	 */
 	private class VerboseServiceHandler extends APIServiceHandler implements Runnable
 	{
+		
 		/**
-		 * Loop for accepting API requests and instantiating TraceRequestHandler
-		 * objects.
+		 * Loop for accepting API requests and instantiating TraceRequestHandler objects.
 		 * 
 		 * @see java.lang.Runnable#run()
 		 */
+		@Override
 		public void run()
 		{
 			Socket oSocket = null;
@@ -778,7 +760,7 @@ public class ASelectAgent
 					oHandler.start();
 				}
 				catch (Exception e) {
-					if (_bActive) //only log if active
+					if (_bActive) // only log if active
 					{
 						StringBuffer sbError = new StringBuffer("Exception occurred: \"");
 						sbError.append(e.getMessage());
@@ -787,28 +769,30 @@ public class ASelectAgent
 					}
 				}
 			}
-			//stopped
+			// stopped
 			sbInfo = new StringBuffer("VerboseServiceHandler stopped.");
 			_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 		}
 	}
 
 	/**
-	 * Inner class that accepts Admin service requests. 
-	 * <br><br>
+	 * Inner class that accepts Admin service requests. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
 	 * The AdminServiceHandler supports the following API requests: <br>
 	 * <code>request=stop</code> to stop the A-Select Agent. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> 
-	 * <br>None. <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * None. <br>
 	 * 
 	 * @author Alfa & Ariss
 	 */
 	private class AdminServiceHandler implements Runnable
 	{
+		
 		/**
-		 * Loop for accepting AdminAPI requests. 
+		 * Loop for accepting AdminAPI requests.
+		 * 
 		 * @see java.lang.Runnable#run()
 		 */
 		public void run()
@@ -841,10 +825,10 @@ public class ASelectAgent
 					_oASelectAgentSystemLogger.log(Level.WARNING, MODULE, sMethod, "Exception occurred", e);
 				}
 			}
-			//clean GUI recourses
+			// clean GUI recourses
 			destroyGui();
 
-			//stopped
+			// stopped
 			_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "AdminServiceHandler stopped.");
 		}
 	}

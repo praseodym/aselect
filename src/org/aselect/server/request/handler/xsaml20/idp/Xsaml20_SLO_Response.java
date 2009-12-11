@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.xsaml20.idp;
 
 import java.util.logging.Level;
@@ -22,6 +33,7 @@ import org.opensaml.ws.message.encoder.MessageEncodingException;
 import org.opensaml.xml.XMLObject;
 import org.w3c.dom.Element;
 
+// TODO: Auto-generated Javadoc
 //
 // IdP SLO Http Response Handler
 //
@@ -33,6 +45,10 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 	private int _iRedirectLogoutTimeout = 30;
 	private boolean _bTryRedirectLogoutFirst = true;
 
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.xsaml20.Saml20_BrowserHandler#destroy()
+	 */
+	@Override
 	public void destroy()
 	{
 	}
@@ -49,17 +65,18 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-	throws ASelectException
+		throws ASelectException
 	{
 		super.init(oServletConfig, oConfig);
 		String sMethod = "init()";
-		
+
 		String sTryRedirect = ASelectConfigManager.getSimpleParam(oConfig, "try_redirect_logout_first", false);
 		if (sTryRedirect != null && !sTryRedirect.equals("true"))
 			_bTryRedirectLogoutFirst = false;
 
 		try {
-			_iRedirectLogoutTimeout = new Integer(_configManager.getParam(oConfig, "redirect_logout_timeout")).intValue();
+			_iRedirectLogoutTimeout = new Integer(_configManager.getParam(oConfig, "redirect_logout_timeout"))
+					.intValue();
 		}
 		catch (ASelectConfigException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
@@ -71,23 +88,27 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 	//
 	// Signature was checked
 	//
-	protected void handleSpecificSaml20Request(HttpServletRequest httpRequest,
-					HttpServletResponse httpResponse, SignableSAMLObject samlMessage)
-	throws ASelectException
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.xsaml20.Saml20_BrowserHandler#handleSpecificSaml20Request(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse, org.opensaml.common.SignableSAMLObject)
+	 */
+	@Override
+	protected void handleSpecificSaml20Request(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
+			SignableSAMLObject samlMessage)
+		throws ASelectException
 	{
 		String sMethod = "handleSpecificSaml20Request";
-		LogoutResponse logoutResponse = (LogoutResponse)samlMessage;
+		LogoutResponse logoutResponse = (LogoutResponse) samlMessage;
 
 		// check if the logoutResponse was successful
 		String status = logoutResponse.getStatus().getStatusCode().getValue();
 		if (!status.equals(StatusCode.SUCCESS_URI)) {
 			// not much we can do about it, we continue logging out
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "LogoutResponse failed, StatusCode="+status);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "LogoutResponse failed, StatusCode=" + status);
 		}
 
 		// determine which user belongs to this response
 		String inResponseTo = logoutResponse.getInResponseTo();
-		Element element = (Element)SamlHistoryManager.getHandle().get(inResponseTo);
+		Element element = (Element) SamlHistoryManager.getHandle().get(inResponseTo);
 
 		// Get the original LogoutRequest sent by the initiating SP
 		XMLObject originalRequest = null;
@@ -105,18 +126,22 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 		LogoutRequest originalLogoutRequest = (LogoutRequest) originalRequest;
-//		String uid = originalLogoutRequest.getNameID().getValue();
-		
-        logoutNextSessionSP(httpRequest, httpResponse, originalLogoutRequest, null, null,
-				_bTryRedirectLogoutFirst, _iRedirectLogoutTimeout, null, logoutResponse.getIssuer());
+		// String uid = originalLogoutRequest.getNameID().getValue();
+
+		logoutNextSessionSP(httpRequest, httpResponse, originalLogoutRequest, null, null, _bTryRedirectLogoutFirst,
+				_iRedirectLogoutTimeout, null, logoutResponse.getIssuer());
 	}
-    
+
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.xsaml20.Saml20_BrowserHandler#retrieveIssuer(java.lang.String, org.opensaml.common.SignableSAMLObject)
+	 */
+	@Override
 	public Issuer retrieveIssuer(String elementName, SignableSAMLObject samlMessage)
-    {
+	{
 		if (elementName.equals(LOGOUTRESPONSE)) {
 			LogoutResponse logoutResponse = (LogoutResponse) samlMessage;
 			return logoutResponse.getIssuer();
 		}
 		return null;
-    }
+	}
 }

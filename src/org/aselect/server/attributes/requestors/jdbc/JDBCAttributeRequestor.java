@@ -31,6 +31,8 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.sam.agent.SAMResource;
 
 import java.sql.ResultSetMetaData;
+
+// TODO: Auto-generated Javadoc
 //import com.mysql.jdbc.ResultSetMetaData;
 
 public class JDBCAttributeRequestor extends GenericAttributeRequestor
@@ -40,14 +42,18 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 	private String _sQuery;
 	private String _sAttrNames;
 	private Vector _vTGTParameters;
-	//private HashMap _htConfigParameters;
-	//private HashMap _htReMapAttributes;
 
+	// private HashMap _htConfigParameters;
+	// private HashMap _htReMapAttributes;
+
+	/* (non-Javadoc)
+	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#init(java.lang.Object)
+	 */
 	public void init(Object oConfig)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "init()";
-		//_htReMapAttributes = new HashMap();
+		// _htReMapAttributes = new HashMap();
 
 		try {
 			try {
@@ -59,7 +65,7 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 			}
 
 			_vTGTParameters = new Vector();
-			//_htConfigParameters = new HashMap();
+			// _htConfigParameters = new HashMap();
 			Object oParameterConfiguration = null;
 			try {
 				oParameterConfiguration = _configManager.getSection(oConfig, "parameters");
@@ -78,27 +84,19 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
 							"Could not retrieve one 'parameter' in 'parameters' configuration section", eAC);
 				}
-				while (oParameter != null) {  // for all parameters
+				while (oParameter != null) { // for all parameters
 					try {
 						String sParameterName = _configManager.getParam(oParameter, "id");
 						_vTGTParameters.add(sParameterName);
 						// check if the parameter is a session parameter
-						/*boolean bSession = false;
-						try {
-							String sAttributeMapping = _configManager.getParam(oParameter, "session");
-							if (sAttributeMapping.equals("true"))
-								bSession = true;
-						}
-						catch (ASelectConfigException eAC) {
-							// bSession is already false
-						}
-
-						if (bSession)
-							_vTGTParameters.add(sParameterName);
-						else {  // retrieve value
-							String sParameterValue = _configManager.getParam(oParameter, "value");
-							_htConfigParameters.put(sParameterName, sParameterValue);
-						}*/
+						/*
+						 * boolean bSession = false; try { String sAttributeMapping =
+						 * _configManager.getParam(oParameter, "session"); if (sAttributeMapping.equals("true"))
+						 * bSession = true; } catch (ASelectConfigException eAC) { // bSession is already false } if
+						 * (bSession) _vTGTParameters.add(sParameterName); else { // retrieve value String
+						 * sParameterValue = _configManager.getParam(oParameter, "value");
+						 * _htConfigParameters.put(sParameterName, sParameterValue); }
+						 */
 
 					}
 					catch (ASelectConfigException eAC) {
@@ -121,57 +119,31 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 				_sAttrNames = _configManager.getParam(oConfig, "attribute_names");
 			}
 			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'attribute_names' parameter found in configuration", e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"No 'attribute_names' parameter found in configuration", e);
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
-			/*Object oAttributes = null;
-			try {
-				oAttributes = _configManager.getSection(oConfig, "attribute_mapping");
-			}
-			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No valid 'attribute_mapping' config section found, no mapping used", e);
-			}
+			/*
+			 * Object oAttributes = null; try { oAttributes = _configManager.getSection(oConfig, "attribute_mapping"); }
+			 * catch (ASelectConfigException e) { _systemLogger.log(Level.CONFIG, MODULE, sMethod,
+			 * "No valid 'attribute_mapping' config section found, no mapping used", e); } if (oAttributes != null) {
+			 * Object oAttribute = null; try { oAttribute = _configManager.getSection(oAttributes, "attribute"); } catch
+			 * (ASelectConfigException e) { _systemLogger.log(Level.CONFIG, MODULE, sMethod,
+			 * "Not one valid 'attribute' config section in 'attributes' section found, no mapping used", e); } while
+			 * (oAttribute != null) { String sAttributeID = null; String sAttributeMap = null; try { sAttributeID =
+			 * _configManager.getParam(oAttribute, "id"); } catch (ASelectConfigException e) {
+			 * _systemLogger.log(Level.WARNING, MODULE, sMethod,
+			 * "No valid 'id' config item in 'attribute' section found", e); throw new
+			 * ASelectAttributesException(Errors.ERROR_ASELECT_INIT_ERROR, e); } try { sAttributeMap =
+			 * _configManager.getParam(oAttribute, "map"); } catch (ASelectConfigException e) {
+			 * _systemLogger.log(Level.WARNING, MODULE, sMethod,
+			 * "No valid 'map' config item in 'attribute' section found", e); throw new
+			 * ASelectAttributesException(Errors.ERROR_ASELECT_INIT_ERROR, e); } _htReMapAttributes.put(sAttributeMap,
+			 * sAttributeID); oAttribute = _configManager.getNextSection(oAttribute); } _systemLogger.log(Level.WARNING,
+			 * MODULE, sMethod, "map="+_htReMapAttributes); }
+			 */
 
-			if (oAttributes != null) {
-				Object oAttribute = null;
-				try {
-					oAttribute = _configManager.getSection(oAttributes, "attribute");
-				}
-				catch (ASelectConfigException e) {
-					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-							"Not one valid 'attribute' config section in 'attributes' section found, no mapping used",
-							e);
-				}
-
-				while (oAttribute != null) {
-					String sAttributeID = null;
-					String sAttributeMap = null;
-					try {
-						sAttributeID = _configManager.getParam(oAttribute, "id");
-					}
-					catch (ASelectConfigException e) {
-						_systemLogger.log(Level.WARNING, MODULE, sMethod,
-								"No valid 'id' config item in 'attribute' section found", e);
-						throw new ASelectAttributesException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-					}
-
-					try {
-						sAttributeMap = _configManager.getParam(oAttribute, "map");
-					}
-					catch (ASelectConfigException e) {
-						_systemLogger.log(Level.WARNING, MODULE, sMethod,
-								"No valid 'map' config item in 'attribute' section found", e);
-						throw new ASelectAttributesException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-					}
-
-					_htReMapAttributes.put(sAttributeMap, sAttributeID);
-					oAttribute = _configManager.getNextSection(oAttribute);
-				}
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "map="+_htReMapAttributes);
-			}*/
-			
 			getConnection();
 		}
 		catch (ASelectException e) {
@@ -183,8 +155,11 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(java.util.HashMap, java.util.Vector)
+	 */
 	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes)
-	throws ASelectAttributesException
+		throws ASelectAttributesException
 	{
 		String sMethod = "getAttributes()";
 		HashMap htAttributes = new HashMap();
@@ -192,7 +167,7 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 
 		try {
 			oConnection = getConnection();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Prepare: "+_sQuery);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Prepare: " + _sQuery);
 			PreparedStatement oStatement = oConnection.prepareStatement(_sQuery);
 			ResultSet oResultSet = null;
 
@@ -202,7 +177,7 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 			while (e.hasMoreElements()) {
 				String sName = (String) e.nextElement();
 				String sValue = (String) htTGTContext.get(sName);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Param["+index+"]="+sName+" Value="+sValue);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Param[" + index + "]=" + sName + " Value=" + sValue);
 				if (sValue == null) {
 					StringBuffer sbError = new StringBuffer("Error retrieving '");
 					sbError.append(sName);
@@ -218,50 +193,46 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 			// Retrieve all columns from the result, every column is stored as an attribute
 			try {
 				oResultSet = oStatement.executeQuery();
-				ResultSetMetaData rsmt = (ResultSetMetaData)oResultSet.getMetaData();
+				ResultSetMetaData rsmt = oResultSet.getMetaData();
 				int nrColumns = rsmt.getColumnCount();
 				while (oResultSet.next()) {
 					Vector vVector = null;
-					//String sStatusKey = oResultSet.getString(1);
-					//String sStatusValue = oResultSet.getString(2);
+					// String sStatusKey = oResultSet.getString(1);
+					// String sStatusValue = oResultSet.getString(2);
 					// 20090902, Bauke replaced by a more useful mechanism
 					for (int i = 1; i <= nrColumns; i++) {
-						String sStatusKey = (i-1 < sAttrNames.length)? sAttrNames[i-1]: rsmt.getColumnName(i);
+						String sStatusKey = (i - 1 < sAttrNames.length) ? sAttrNames[i - 1] : rsmt.getColumnName(i);
 						String sStatusValue = oResultSet.getString(i);
 						if (htAttributes.containsKey(sStatusKey)) {
 							Object oTemp = htAttributes.get(sStatusKey);
-							if (oTemp instanceof Vector) {  // Already has 2 or more values
+							if (oTemp instanceof Vector) { // Already has 2 or more values
 								vVector = (Vector) oTemp;
 							}
-							else {  // Single value so far
-								if (sStatusValue.equals((String)oTemp))  // This value is already present
+							else { // Single value so far
+								if (sStatusValue.equals(oTemp)) // This value is already present
 									continue;
-								vVector = new Vector();  // Make it multi-valued
-								vVector.add((String)oTemp);
+								vVector = new Vector(); // Make it multi-valued
+								vVector.add(oTemp);
 							}
 							vVector.add(sStatusValue);
 							htAttributes.put(sStatusKey, vVector);
 						}
 						else {
-							htAttributes.put(sStatusKey, sStatusValue);  // first value
+							htAttributes.put(sStatusKey, sStatusValue); // first value
 						}
 					}
-					break;  // we don't want multi-valued attributes just now
+					break; // we don't want multi-valued attributes just now
 				}
-				
+
 				// Remap attribute names (from "map" to "id" value)
-				/*_systemLogger.log(Level.INFO, MODULE, sMethod, "htAttributes"+htAttributes+" htRemap="+_htReMapAttributes);
-				HashMap htMapped = new HashMap();
-				Set keys = htAttributes.keySet();
-				for (Object s : keys) {
-					String sStatusKey = (String) s;
-					Object sStatusValue = htAttributes.get(sStatusKey);
-					if (_htReMapAttributes.containsKey(sStatusKey)) {
-						sStatusKey = (String) _htReMapAttributes.get(sStatusKey);
-					}
-					htMapped.put(sStatusKey, sStatusValue);
-				}
-				htAttributes = htMapped;*/
+				/*
+				 * _systemLogger.log(Level.INFO, MODULE, sMethod,
+				 * "htAttributes"+htAttributes+" htRemap="+_htReMapAttributes); HashMap htMapped = new HashMap(); Set
+				 * keys = htAttributes.keySet(); for (Object s : keys) { String sStatusKey = (String) s; Object
+				 * sStatusValue = htAttributes.get(sStatusKey); if (_htReMapAttributes.containsKey(sStatusKey)) {
+				 * sStatusKey = (String) _htReMapAttributes.get(sStatusKey); } htMapped.put(sStatusKey, sStatusValue); }
+				 * htAttributes = htMapped;
+				 */
 			}
 			catch (Exception ex) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not execute query: " + _sQuery, ex);
@@ -271,7 +242,7 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 				try {// RH, 20090605, n
 					if (oResultSet != null)
 						oResultSet.close();
-					}
+				}
 				catch (Exception e2) {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Could not close resultset");
 				}
@@ -279,7 +250,7 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 				try {// RH, 20090605, n
 					if (oStatement != null)
 						oStatement.close();
-					}
+				}
 				catch (Exception e2) {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Could not close statement");
 				}
@@ -305,11 +276,21 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 		return htAttributes;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#destroy()
+	 */
 	public void destroy()
 	{
 		// Does nothing
 	}
 
+	/**
+	 * Gets the connection.
+	 * 
+	 * @return the connection
+	 * @throws ASelectSAMException
+	 *             the a select sam exception
+	 */
 	private Connection getConnection()
 		throws ASelectSAMException
 	{
@@ -334,7 +315,7 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 			throw e;
 		}
 		oResourceConfig = oSAMResource.getAttributes();
-		
+
 		try {
 			sDriver = _configManager.getParam(oResourceConfig, "driver");
 		}
@@ -375,7 +356,13 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 		}
 		catch (Exception e) {
 			sPassword = "";
-			_systemLogger.log(Level.CONFIG, MODULE, sMethod, "No or empty config item 'security_principal_password' found, using empty password. Don't use this in a live production environment.", e);
+			_systemLogger
+					.log(
+							Level.CONFIG,
+							MODULE,
+							sMethod,
+							"No or empty config item 'security_principal_password' found, using empty password. Don't use this in a live production environment.",
+							e);
 		}
 
 		try {
@@ -391,6 +378,12 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 		return oConnection;
 	}
 
+	/**
+	 * The main method.
+	 * 
+	 * @param args
+	 *            the arguments
+	 */
 	public static void main(String[] args)
 	{
 		// String url = "jdbc:mysql://localhost/aselect";

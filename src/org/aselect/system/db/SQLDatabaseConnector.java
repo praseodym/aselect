@@ -60,23 +60,20 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectDatabaseException;
 import org.aselect.system.logging.SystemLogger;
 
+// TODO: Auto-generated Javadoc
 /**
- * SQL database connection functionality. 
- * <br><br>
- * <b>Description: </b> br> Database connection and query functionality for an
- * SQL database (e.g. MySQL). <br>
+ * SQL database connection functionality. <br>
  * <br>
- * If you are using transactions safe tables (like InnoDB, BDB) you can use the
- * {@link #startTransaction(Statement)},{@link #commitTransaction(Statement)},
- * and {@link #rollbackTransaction(Statement)}methods to start, commit and
+ * <b>Description: </b> br> Database connection and query functionality for an SQL database (e.g. MySQL). <br>
+ * <br>
+ * If you are using transactions safe tables (like InnoDB, BDB) you can use the {@link #startTransaction(Statement)},
+ * {@link #commitTransaction(Statement)}, and {@link #rollbackTransaction(Statement)}methods to start, commit and
  * rollback transactions. <br>
  * <br>
  * <b>Concurrency issues: </b> <br>
- * The functionality of this class is threadsafe. All critical methods are
- * synchronized. <br>
+ * The functionality of this class is threadsafe. All critical methods are synchronized. <br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class SQLDatabaseConnector
 {
@@ -98,8 +95,8 @@ public class SQLDatabaseConnector
 	private static final String MODULE = "SQLDatabaseConnector";
 
 	/**
-	 * Create a new instance. 
-	 * <br><br>
+	 * Create a new instance. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
 	 * Create a new <code>SQLDatabaseConnector</code>:
 	 * <ul>
@@ -108,12 +105,12 @@ public class SQLDatabaseConnector
 	 * <li>Initialize database driver</li>
 	 * </ul>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
 	 * <b>Preconditions: </b>
 	 * <ul>
-	 * <li><code>systemLogger</code> is an initialized
-	 * <code>SystemLogger</code>.
+	 * <li><code>systemLogger</code> is an initialized <code>SystemLogger</code>.
 	 * <li><code>sDriverName != null</code></li>
 	 * <li><code>sUser != null</code></li>
 	 * <li><code>sPassword != null</code></li>
@@ -138,15 +135,14 @@ public class SQLDatabaseConnector
 	 */
 	public SQLDatabaseConnector(String sDriverName, String sUser, String sPassword, String sURL,
 			SystemLogger systemLogger)
-	throws ASelectDatabaseException
-	{
+		throws ASelectDatabaseException {
 		String sMethod = "SQLDatabaseConnector()";
 		_systemLogger = systemLogger;
 		_sSQLUser = sUser;
 		_sSQLPassword = sPassword;
 		_sSQLURL = sURL;
 
-		try {  // initialise database driver
+		try { // initialise database driver
 			Class.forName(sDriverName);
 		}
 		catch (ClassNotFoundException eCNF) {
@@ -160,22 +156,22 @@ public class SQLDatabaseConnector
 	}
 
 	/**
-	 * Update connection counter. 
-	 * <br><br>
+	 * Update connection counter. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
 	 * Updates the number of currently open connections. <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * This method is synchronized. <br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
 	 * The number of connections is updated. <br>
 	 * 
 	 * @param bConnect
-	 *            If true the number of open connections is increased, otherwise
-	 *            it is decreased.
+	 *            If true the number of open connections is increased, otherwise it is decreased.
 	 */
 	public synchronized void updateCount(boolean bConnect)
 	{
@@ -186,13 +182,12 @@ public class SQLDatabaseConnector
 	}
 
 	/**
-	 * Connect to the database. 
-	 * <br><br>
+	 * Connect to the database. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
 	 * This methods performs the following steps:
 	 * <ul>
-	 * <li>Create a new <code>Connection</code> if connection with database
-	 * does not exist yet</li>
+	 * <li>Create a new <code>Connection</code> if connection with database does not exist yet</li>
 	 * <li>Create e new <code>Statement</code></li>
 	 * <li>Increase connection counter</li>
 	 * </ul>
@@ -200,7 +195,8 @@ public class SQLDatabaseConnector
 	 * <b>Concurrency issues: </b> <br>
 	 * This method is synchronized. <br>
 	 * <br>
-	 * <b>Preconditions: </b> <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
 	 * There is a connection with the database. <br>
@@ -238,11 +234,10 @@ public class SQLDatabaseConnector
 	}
 
 	/**
-	 * Close the database connection. 
-	 * <br><br>
+	 * Close the database connection. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
-	 * Close the given database statement and if applicable the database
-	 * connection. <br>
+	 * Close the given database statement and if applicable the database connection. <br>
 	 * <br>
 	 * This methods performs the following steps:
 	 * <ul>
@@ -255,12 +250,10 @@ public class SQLDatabaseConnector
 	 * This method is synchronized. <br>
 	 * <br>
 	 * <b>Preconditions: </b> <br>
-	 * <code>oStmt</code> should be retrieved by calling {@link #connect()}
-	 * <br>
+	 * <code>oStmt</code> should be retrieved by calling {@link #connect()} <br>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
-	 * The connection counter is lowered. If the connection counter is 0, the
-	 * database connection is closed. <br>
+	 * The connection counter is lowered. If the connection counter is 0, the database connection is closed. <br>
 	 * 
 	 * @param oStmt
 	 *            The statement that is to be closed.
@@ -298,23 +291,23 @@ public class SQLDatabaseConnector
 	}
 
 	/**
-	 * Execute a SQL query. 
-	 * <br><br>
+	 * Execute a SQL query. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
 	 * Uses the given <code>Statement</code> to execute the given query. <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
-	 * Every thread should use its own statement. This method should be called
-	 * sequentially when using the same <code>Statement</code>.<br>
+	 * Every thread should use its own statement. This method should be called sequentially when using the same
+	 * <code>Statement</code>.<br>
 	 * <br>
 	 * <b>Preconditions: </b>
 	 * <ul>
-	 * <li><code>oStmt</code> should be retrieved by calling
-	 * {@link #connect()}</li>
+	 * <li><code>oStmt</code> should be retrieved by calling {@link #connect()}</li>
 	 * <li><code>sQuery</code> should be a correct SQL query</li>
 	 * </ul>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param oStmt
 	 *            The statement that is used for rhe execution of the query.
@@ -348,24 +341,23 @@ public class SQLDatabaseConnector
 	}
 
 	/**
-	 * Execute a SQL update query. 
-	 * <br><br>
+	 * Execute a SQL update query. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
-	 * Uses the given <code>Statement</code> to execute the given query. The
-	 * query updates data in the database. <br>
+	 * Uses the given <code>Statement</code> to execute the given query. The query updates data in the database. <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
-	 * Every thread should use its own statement. This method should be called
-	 * sequentially when using the same <code>Statement</code>.<br>
+	 * Every thread should use its own statement. This method should be called sequentially when using the same
+	 * <code>Statement</code>.<br>
 	 * <br>
 	 * <b>Preconditions: </b>
 	 * <ul>
-	 * <li><code>oStmt</code> should be retrieved by calling
-	 * {@link #connect()}</li>
+	 * <li><code>oStmt</code> should be retrieved by calling {@link #connect()}</li>
 	 * <li><code>sQuery</code> should be a correct SQL query</li>
 	 * </ul>
 	 * <br>
-	 * <b>Postconditions: </b> <br>-<br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
 	 * 
 	 * @param oStmt
 	 *            The statement that is used for the execution of the query.
@@ -402,20 +394,17 @@ public class SQLDatabaseConnector
 	}
 
 	/**
-	 * Execute the "BEGIN" command. 
-	 * <br>
+	 * Execute the "BEGIN" command. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * Excute the SQL "BEGIN" command as a query. This command marks the
-	 * beginning of a transaction. This is the recommended way to start an
-	 * ad-hoc transaction as this is SQL-99 syntax. <br>
+	 * Excute the SQL "BEGIN" command as a query. This command marks the beginning of a transaction. This is the
+	 * recommended way to start an ad-hoc transaction as this is SQL-99 syntax. <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * Every thread should use its own statement. <br>
 	 * <br>
 	 * <b>Preconditions: </b> <br>
-	 * <code>oStmt</code> should be retrieved by calling {@link #connect()}
-	 * <br>
+	 * <code>oStmt</code> should be retrieved by calling {@link #connect()} <br>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
 	 * The database has started a new transaction. <br>
@@ -446,23 +435,19 @@ public class SQLDatabaseConnector
 	}
 
 	/**
-	 * Excute the "ROLLBACK" command. 
-	 * <br>
+	 * Excute the "ROLLBACK" command. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * Excute the SQL "ROLLBACK" command as a query. Use this command if you
-	 * want to ignore the changes you have made since the beginning of your
-	 * transaction. <br>
+	 * Excute the SQL "ROLLBACK" command as a query. Use this command if you want to ignore the changes you have made
+	 * since the beginning of your transaction. <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * Every thread should use its own statement. <br>
 	 * <br>
 	 * <b>Preconditions: </b>
 	 * <ul>
-	 * <li><code>oStmt</code> should be retrieved by calling
-	 * {@link #connect()}</li>
-	 * <li>{@link #startTransaction(Statement)}should be executed before
-	 * calling this method</li>
+	 * <li><code>oStmt</code> should be retrieved by calling {@link #connect()}</li>
+	 * <li>{@link #startTransaction(Statement)}should be executed before calling this method</li>
 	 * </ul>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
@@ -494,20 +479,17 @@ public class SQLDatabaseConnector
 	}
 
 	/**
-	 * Excute the "COMMIT" command. 
-	 * <br>
+	 * Excute the "COMMIT" command. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * Excute the SQL "COMMIT" command as a query. After the "COMMIT" query the
-	 * recent changes are stored. <br>
+	 * Excute the SQL "COMMIT" command as a query. After the "COMMIT" query the recent changes are stored. <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * Every thread should use its own statement. <br>
 	 * <br>
 	 * <b>Preconditions: </b>
 	 * <ul>
-	 * <li><code>oStmt</code> should be retrieved by calling
-	 * {@link #connect()}</li>
+	 * <li><code>oStmt</code> should be retrieved by calling {@link #connect()}</li>
 	 * <li>{@link #startTransaction(Statement)}should be executed</li>
 	 * </ul>
 	 * <br>

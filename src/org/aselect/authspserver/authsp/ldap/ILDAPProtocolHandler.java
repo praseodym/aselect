@@ -39,75 +39,78 @@ package org.aselect.authspserver.authsp.ldap;
 
 import org.aselect.authspserver.log.AuthSPSystemLogger;
 
+// TODO: Auto-generated Javadoc
 /**
- * Interface for a LDAP protocol handler.
- * <br><br>
+ * Interface for a LDAP protocol handler. <br>
+ * <br>
  * <b>Description: </b> <br>
- * Specifies methods which LDAP protocol handlers should implement.
- * <br><br>
- * <b>Concurrency issues: </b> 
- * <br>-<br>
+ * Specifies methods which LDAP protocol handlers should implement. <br>
+ * <br>
+ * <b>Concurrency issues: </b> <br>
+ * -<br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public interface ILDAPProtocolHandler
 {
 
-    /**
-     * Initialize the <code>ILDAPProtocolHandler</code>. 
-     * <br><br>
-     * <b>Description: </b> <br>
-     * The implementation of this method should perform all one-time 
-     * functionality of the <code>ILDAPProtocolHandler</code>. 
-     * e.g. Retrieving handles to important managers and reading 
-     * basic configuration.
-     * <br><br>
-     * <b>Concurrency issues: </b> 
-     * <br>
-     * - 
-     * <br><br>
-     * <b>Preconditions: </b> 
-     * <br>-<br>
-     * <br>
-     * <b>Postconditions: </b> 
-     * <br>
-     * The <code>ILDAPProtocolHandler</code> is ready to authenticate.
-     *  
-     * @param sLDAPSUrl The URl to the LDAP back-end.
-     * @param sDriver The JNDI driver.
-     * @param sBaseDn The Base DN.
-     * @param sUserDn The user DN.
-     * @param bFullUid True if the full uid must be sent to the backend
-     * @param sUid The LDAP user name.
-     * @param sPrincipalDn the principal DN.
-     * @param sPrincipalPwd The principal password.
-     * @param systemLogger The logger for system entries.
-     * @return true if initialisation is successful, otherwise false.
-     */
-    public boolean init(String sLDAPSUrl, String sDriver,
-        String sBaseDn, String sUserDn, boolean bFullUid,
-        String sUid, String sPrincipalDn,
-        String sPrincipalPwd, AuthSPSystemLogger systemLogger);
+	/**
+	 * Initialize the <code>ILDAPProtocolHandler</code>. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * The implementation of this method should perform all one-time functionality of the
+	 * <code>ILDAPProtocolHandler</code>. e.g. Retrieving handles to important managers and reading basic configuration. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * The <code>ILDAPProtocolHandler</code> is ready to authenticate.
+	 * 
+	 * @param sLDAPSUrl
+	 *            The URl to the LDAP back-end.
+	 * @param sDriver
+	 *            The JNDI driver.
+	 * @param sBaseDn
+	 *            The Base DN.
+	 * @param sUserDn
+	 *            The user DN.
+	 * @param bFullUid
+	 *            True if the full uid must be sent to the backend
+	 * @param sUid
+	 *            The LDAP user name.
+	 * @param sPrincipalDn
+	 *            the principal DN.
+	 * @param sPrincipalPwd
+	 *            The principal password.
+	 * @param systemLogger
+	 *            The logger for system entries.
+	 * @return true if initialisation is successful, otherwise false.
+	 */
+	public boolean init(String sLDAPSUrl, String sDriver, String sBaseDn, String sUserDn, boolean bFullUid,
+			String sUid, String sPrincipalDn, String sPrincipalPwd, AuthSPSystemLogger systemLogger);
 
-    /**
-     * Authenticate a user with LDAP.
-     * <br><br>
-     * <b>Description: </b> 
-     * <br>
-     * Authenticate an user with a LDAP back-end.<br>
-     * <br>
-     * <b>Concurrency issues: </b> 
-     * <br>-<br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * The <code>ILDAPProtocolHandler</code> must be initialised.
-     * <br><br>
-     * <b>Postconditions: </b> 
-     * <br>-<br>
-     * 
-     * @param sPassword the password to validate.
-     * @return The authentication result code (as specified in {@link Errors}).
-     */
-    public String authenticate(String sPassword);
+	/**
+	 * Authenticate a user with LDAP. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Authenticate an user with a LDAP back-end.<br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * The <code>ILDAPProtocolHandler</code> must be initialised. <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
+	 * 
+	 * @param sPassword
+	 *            the password to validate.
+	 * @return The authentication result code (as specified in {@link Errors}).
+	 */
+	public String authenticate(String sPassword);
 }

@@ -29,18 +29,17 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.sam.agent.SAMResource;
 
+// TODO: Auto-generated Javadoc
 /**
- * -
- * <br><br>
+ * - <br>
+ * <br>
  * <b>Description:</b><br>
- * -
- * <br><br>
- * <b>Concurrency issues:</b>
+ * - <br>
  * <br>
- * None.
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * None. <br>
  * 
+ * @author Alfa & Ariss
  */
 public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 {
@@ -49,10 +48,13 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 	private HashMap _htGlobalAttributes;
 
 	/**
-	 * Initialize the <code>OpaqueAttributeRequestor</code>.
+	 * Initialize the <code>OpaqueAttributeRequestor</code>. The user id is case sensitive <br>
+	 * <br>
 	 * 
-	 * The user id is case sensitive
-	 * <br><br>
+	 * @param oConfig
+	 *            the o config
+	 * @throws ASelectException
+	 *             the a select exception
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#init(java.lang.Object)
 	 */
 	public void init(Object oConfig)
@@ -133,9 +135,18 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 	}
 
 	/**
-	 * Retrieve attributes from flatfilehandler.
-	 * <br><br>
-	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(java.util.HashMap, java.util.Vector)
+	 * Retrieve attributes from flatfilehandler. <br>
+	 * <br>
+	 * 
+	 * @param htTGTContext
+	 *            the ht tgt context
+	 * @param vAttributes
+	 *            the v attributes
+	 * @return the attributes
+	 * @throws ASelectAttributesException
+	 *             the a select attributes exception
+	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(java.util.HashMap,
+	 *      java.util.Vector)
 	 */
 	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes)
 		throws ASelectAttributesException
@@ -186,15 +197,25 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 	}
 
 	/**
-	 * Destroys the <code>FlatfileAttributeRequestor</code>.
-	 * <br><br>
+	 * Destroys the <code>FlatfileAttributeRequestor</code>. <br>
+	 * <br>
+	 * 
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#destroy()
 	 */
 	public void destroy()
 	{
-		//Does nothing
+		// Does nothing
 	}
 
+	/**
+	 * Read attributes.
+	 * 
+	 * @param oAttribute
+	 *            the o attribute
+	 * @return the hash map
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private HashMap readAttributes(Object oAttribute)
 		throws ASelectException
 	{
@@ -244,11 +265,11 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 				}
 
 				if (vValues.size() > 1) {
-					//multivalue attribute
+					// multivalue attribute
 					htReturn.put(sID, vValues);
 				}
 				else {
-					//singlevalue attribute
+					// singlevalue attribute
 					htReturn.put(sID, vValues.firstElement());
 				}
 				oAttribute = _oFlatFileManager.getNextSection(oAttribute);

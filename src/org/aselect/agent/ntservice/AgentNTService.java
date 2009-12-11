@@ -55,165 +55,145 @@ import org.aselect.agent.ASelectAgent;
 import org.aselect.agent.log.ASelectAgentSystemLogger;
 import org.aselect.system.logging.SystemLogger;
 
+// TODO: Auto-generated Javadoc
 /**
- * A-Select agent service wrapper.
- * <br><br>
+ * A-Select agent service wrapper. <br>
+ * <br>
  * <b>Description:</b><br>
- * This class can be used to use the start the A-Select Agent as a 
- * Windows service.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * This class can be used to use the start the A-Select Agent as a Windows service. <br>
  * <br>
- * none.
- * <br>
+ * <b>Concurrency issues:</b> <br>
+ * none. <br>
+ * 
  * @author Alfa & Ariss
  */
 public class AgentNTService implements IAgentEventListener
 {
-    /** The MODULE name. */
-    public static final String MODULE = "AgentNTService";
-    
-    /** The logger for system log entries. */
-    private SystemLogger _systemLogger;
+	/** The MODULE name. */
+	public static final String MODULE = "AgentNTService";
 
-    /** The instance. */
-    private ASelectAgent _oASelectAgent = null;
-    
+	/** The logger for system log entries. */
+	private SystemLogger _systemLogger;
 
-    /**
-     * main[] entry point for starting the Agent in service mode. <br>
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Instantiates an <code>AgentNTService</code>.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * none.
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * none.
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * none.
-     * <br>
-     * @param saArgs the commandline parameters.
-     */
-    public static void main(String [] saArgs)
-    {
-        new AgentNTService();
-    }
+	/** The instance. */
+	private ASelectAgent _oASelectAgent = null;
 
-    /**
-     * Create a new intance.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Instantiates an A-Select Agent and lets it start by calling the 
-     * <code>init()</code> method and then the <code>startServices()</code> 
-     * method. 
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * none.
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * The A-Select agent is started and the listeners and handling threads
-     * are started.
-     * 
-     */
-    public AgentNTService()
-    {
-        String sMethod = "AgentNTService()";
-        try
-        {
-            _systemLogger = ASelectAgentSystemLogger.getHandle();
+	/**
+	 * main[] entry point for starting the Agent in service mode. <br>
+	 * <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Instantiates an <code>AgentNTService</code>. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * none. <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * none. <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * none. <br>
+	 * 
+	 * @param saArgs
+	 *            the commandline parameters.
+	 */
+	public static void main(String[] saArgs)
+	{
+		new AgentNTService();
+	}
 
-            _oASelectAgent = new ASelectAgent();
-            _oASelectAgent.init();
-            _oASelectAgent.startServices();
+	/**
+	 * Create a new intance. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Instantiates an A-Select Agent and lets it start by calling the <code>init()</code> method and then the
+	 * <code>startServices()</code> method. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * none. <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * The A-Select agent is started and the listeners and handling threads are started.
+	 */
+	public AgentNTService() {
+		String sMethod = "AgentNTService()";
+		try {
+			_systemLogger = ASelectAgentSystemLogger.getHandle();
 
-            AgentEventManager.getInstance().addAgentEventListener(this);
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Failed to start the AgentNTService", e);
-            
-            if (_oASelectAgent != null)
-                _oASelectAgent.destroy();
-            
-            System.exit(1);
-        }
-    }
+			_oASelectAgent = new ASelectAgent();
+			_oASelectAgent.init();
+			_oASelectAgent.startServices();
 
-    /**
-     * Handles Agent events.
-     * @see org.aselect.agent.ntservice.IAgentEventListener#handleAgentEvent(org.aselect.agent.ntservice.AgentEvent)
-     */
-    public void handleAgentEvent(AgentEvent oAgentEvent)
-    {
-        String sMethod = "handleAgentEvent()";
-        if (oAgentEvent.getId() == AgentEvent.STOP)
-        {
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "received STOP event; stopping");
-            if (_oASelectAgent != null)
-                stopAgent();
-        }
-        else
-        if (oAgentEvent.getId() == AgentEvent.SHUTDOWN)
-        {
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "received SHUTDOWN event; stopping");
-            if (_oASelectAgent != null)
-                stopAgent();
-        }
-    }
+			AgentEventManager.getInstance().addAgentEventListener(this);
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Failed to start the AgentNTService", e);
 
-    /**
-     * Stops the A-Select Agent.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * This method calls the destroy method of the <code>ASelectAgent</code>
-     * and is usually called when receiving a "STOP" or "SHUTDOWN" event.
-     * <br><br> 
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * none.
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * The A-Select agent has stopped.
-     * 
-     * @see ASelectAgent#destroy()
-     */
-    private void stopAgent()
-    {
-        String sMethod = "stopAgent()";
-        try
-        {
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "Stopping Agent...");
-            //stop agent
-            _oASelectAgent.destroy();
-            //clean GUI recourses
-            _oASelectAgent.destroyGui();
-            _oASelectAgent = null;
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.INFO, MODULE, sMethod, "Could not stop Agent",e);
-            System.exit(1);
-        }
-    }
+			if (_oASelectAgent != null)
+				_oASelectAgent.destroy();
+
+			System.exit(1);
+		}
+	}
+
+	/**
+	 * Handles Agent events.
+	 * 
+	 * @param oAgentEvent
+	 *            the o agent event
+	 * @see org.aselect.agent.ntservice.IAgentEventListener#handleAgentEvent(org.aselect.agent.ntservice.AgentEvent)
+	 */
+	public void handleAgentEvent(AgentEvent oAgentEvent)
+	{
+		String sMethod = "handleAgentEvent()";
+		if (oAgentEvent.getId() == AgentEvent.STOP) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "received STOP event; stopping");
+			if (_oASelectAgent != null)
+				stopAgent();
+		}
+		else if (oAgentEvent.getId() == AgentEvent.SHUTDOWN) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "received SHUTDOWN event; stopping");
+			if (_oASelectAgent != null)
+				stopAgent();
+		}
+	}
+
+	/**
+	 * Stops the A-Select Agent. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * This method calls the destroy method of the <code>ASelectAgent</code> and is usually called when receiving a
+	 * "STOP" or "SHUTDOWN" event. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * none. <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * The A-Select agent has stopped.
+	 * 
+	 * @see ASelectAgent#destroy()
+	 */
+	private void stopAgent()
+	{
+		String sMethod = "stopAgent()";
+		try {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Stopping Agent...");
+			// stop agent
+			_oASelectAgent.destroy();
+			// clean GUI recourses
+			_oASelectAgent.destroyGui();
+			_oASelectAgent = null;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Could not stop Agent", e);
+			System.exit(1);
+		}
+	}
 
 }

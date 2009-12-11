@@ -28,7 +28,7 @@
  * Initial version.
  *
  */
- 
+
 package org.aselect.server.attributes.requestors.tgt;
 
 import java.net.URLDecoder;
@@ -44,36 +44,40 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Base64;
 
+// TODO: Auto-generated Javadoc
 /**
- * Retrieves 'remote_attributes' from TGT context.
- * <br><br>
+ * Retrieves 'remote_attributes' from TGT context. <br>
+ * <br>
  * <b>Description:</b><br>
- * An Attribute requestor which retrieves the remote_attributes parameter 
- * from a TGT context. The value of this parameter is decoded and converted 
- * to a <code>HashMap</code>.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * An Attribute requestor which retrieves the remote_attributes parameter from a TGT context. The value of this
+ * parameter is decoded and converted to a <code>HashMap</code>. <br>
  * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public class TGTAttributeRequestor extends GenericAttributeRequestor
 {
-    /** The module name. */
-    private final String MODULE = "TGTAttributeRequestor";
-    protected HashMap _htReMapAttributes;
-    protected HashMap _htDuplicate;
-   
-    /**
-     * Initialize the <code>TGTAttributeRequestor</code>
-     * <br><br>
-     * @see org.aselect.server.attributes.requestors.IAttributeRequestor#init(java.lang.Object)
-     */
-    public void init(Object oConfig)
-    throws ASelectException
-    {
+	/** The module name. */
+	private final String MODULE = "TGTAttributeRequestor";
+	protected HashMap _htReMapAttributes;
+	protected HashMap _htDuplicate;
+
+	/**
+	 * Initialize the <code>TGTAttributeRequestor</code> <br>
+	 * <br>
+	 * .
+	 * 
+	 * @param oConfig
+	 *            the o config
+	 * @throws ASelectException
+	 *             the a select exception
+	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#init(java.lang.Object)
+	 */
+	public void init(Object oConfig)
+		throws ASelectException
+	{
 		String sMethod = "init()";
 
 		_htReMapAttributes = new HashMap();
@@ -137,25 +141,31 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
 				oAttribute = _configManager.getNextSection(oAttribute);
 			}
 		}
-   }
+	}
 
-    /**
-	 * Retrieves all remote attributes that are currently in the TGT context.
-	 * <br>
+	/**
+	 * Retrieves all remote attributes that are currently in the TGT context. <br>
 	 * <br>
 	 * 
+	 * @param htTGTContext
+	 *            the ht tgt context
+	 * @param vAttributes
+	 *            the v attributes
+	 * @return the attributes
+	 * @throws ASelectAttributesException
+	 *             the a select attributes exception
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(java.util.HashMap,
 	 *      java.util.Vector)
 	 */
-    public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes) 
-    throws ASelectAttributesException
-    {
-        String sMethod = "getAttributes()";
-        HashMap htAttributes = new HashMap();       
-        
-        try {
+	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes)
+		throws ASelectAttributesException
+	{
+		String sMethod = "getAttributes()";
+		HashMap htAttributes = new HashMap();
+
+		try {
 			String sSerializedRemoteAttributes = (String) htTGTContext.get("remote_attributes");
-			if (sSerializedRemoteAttributes != null) {  // remote attributes available
+			if (sSerializedRemoteAttributes != null) { // remote attributes available
 				htAttributes = deserializeAttributes(sSerializedRemoteAttributes);
 			}
 			else {
@@ -181,21 +191,21 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Error retrieving attributes due to internal error", e);
 			throw new ASelectAttributesException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
-		return htAttributes; 
-    }
+		return htAttributes;
+	}
 
-    /**
+	/**
 	 * Clean-up the <code>TGTAttributeRequestor</code>. <br>
 	 * <br>
 	 * 
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#destroy()
 	 */
-    public void destroy()
-    {
-        // No destroy functionality
-    }
-    
-    /**
+	public void destroy()
+	{
+		// No destroy functionality
+	}
+
+	/**
 	 * Deserialize attributes and convertion to a <code>HashMap</code>.
 	 * 
 	 * @param sSerializedAttributes
@@ -204,58 +214,54 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
 	 * @throws ASelectException
 	 *             If URLDecode fails
 	 */
-    private HashMap deserializeAttributes(String sSerializedAttributes) 
-        throws ASelectException
-    {
-        String sMethod = "deSerializeAttributes()";
-        HashMap htAttributes = new HashMap();
-        if (sSerializedAttributes != null) { //Attributes available
-            try {
-                //base64 decode
-                String sDecodedUserAttrs = new String(Base64.decode(sSerializedAttributes));
-                
-                //decode & and = chars
-                String[] saAttrs = sDecodedUserAttrs.split("&");
-                for (int i = 0; i < saAttrs.length; i++)
-                {
-                    int iEqualChar = saAttrs[i].indexOf("=");
-                    String sKey = "";
-                    String sValue = "";
-                    Vector vVector = null;
-                    
-                    if (iEqualChar > 0) {
-                        sKey = URLDecoder.decode(
-                            saAttrs[i].substring(0 , iEqualChar), "UTF-8");
-                        
-                        sValue= URLDecoder.decode(
-                            saAttrs[i].substring(iEqualChar + 1), "UTF-8");
-                        
-                        if (sKey.endsWith("[]")) { //it's a multi-valued attributeStrip [] from sKey
-                            sKey = sKey.substring(0,sKey.length() - 2);
-                            
-                            if ((vVector = (Vector)htAttributes.get(sKey)) == null)
-                                vVector = new Vector();                                
-                            
-                            vVector.add(sValue);
-                        }                        
-                    }
-                    else
-                        sKey = URLDecoder.decode(saAttrs[i], "UTF-8");
-                    
-                    if (vVector != null)
-                        //store multivalue attribute
-                        htAttributes.put(sKey, vVector);
-                    else
-                        //store singlevalue attribute
-                        htAttributes.put(sKey, sValue);
-                }
-            }
-            catch (Exception e) {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-                    "Error during deserialization of attributes", e);
-                throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-            }
-        }
-        return htAttributes;
-    }
+	private HashMap deserializeAttributes(String sSerializedAttributes)
+		throws ASelectException
+	{
+		String sMethod = "deSerializeAttributes()";
+		HashMap htAttributes = new HashMap();
+		if (sSerializedAttributes != null) { // Attributes available
+			try {
+				// base64 decode
+				String sDecodedUserAttrs = new String(Base64.decode(sSerializedAttributes));
+
+				// decode & and = chars
+				String[] saAttrs = sDecodedUserAttrs.split("&");
+				for (int i = 0; i < saAttrs.length; i++) {
+					int iEqualChar = saAttrs[i].indexOf("=");
+					String sKey = "";
+					String sValue = "";
+					Vector vVector = null;
+
+					if (iEqualChar > 0) {
+						sKey = URLDecoder.decode(saAttrs[i].substring(0, iEqualChar), "UTF-8");
+
+						sValue = URLDecoder.decode(saAttrs[i].substring(iEqualChar + 1), "UTF-8");
+
+						if (sKey.endsWith("[]")) { // it's a multi-valued attributeStrip [] from sKey
+							sKey = sKey.substring(0, sKey.length() - 2);
+
+							if ((vVector = (Vector) htAttributes.get(sKey)) == null)
+								vVector = new Vector();
+
+							vVector.add(sValue);
+						}
+					}
+					else
+						sKey = URLDecoder.decode(saAttrs[i], "UTF-8");
+
+					if (vVector != null)
+						// store multivalue attribute
+						htAttributes.put(sKey, vVector);
+					else
+						// store singlevalue attribute
+						htAttributes.put(sKey, sValue);
+				}
+			}
+			catch (Exception e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error during deserialization of attributes", e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+			}
+		}
+		return htAttributes;
+	}
 }

@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.xsaml20.sp;
 
 import java.security.PublicKey;
@@ -8,7 +19,6 @@ import java.util.logging.Level;
 
 import org.aselect.server.request.handler.xsaml20.SoapLogoutRequestSender;
 import org.aselect.server.tgt.TGTManager;
-import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
@@ -21,6 +31,7 @@ import org.aselect.system.storagemanager.handler.JDBCStorageHandler;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
+// TODO: Auto-generated Javadoc
 /*
  * NOTE: Code differs from the idp-version.
  * NOTE: Code is identical to MemoryStorageHandlerTimeOut (except for class-names of course)
@@ -33,19 +44,23 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 	private ASelectSystemLogger _oSystemLogger;
 	private String _serverUrl;
 	private String _sFederationUrl = null;
-	private boolean _bVerifySignature = false; 	
+	private boolean _bVerifySignature = false;
 
+	/* (non-Javadoc)
+	 * @see org.aselect.system.storagemanager.handler.JDBCStorageHandler#init(java.lang.Object, org.aselect.system.configmanager.ConfigManager, org.aselect.system.logging.SystemLogger, org.aselect.system.sam.agent.SAMAgent)
+	 */
 	@Override
 	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger systemLogger, SAMAgent oSAMAgent)
-	throws ASelectStorageException
+		throws ASelectStorageException
 	{
 		String sMethod = "init";
 
 		super.init(oConfigSection, oConfigManager, systemLogger, oSAMAgent);
-		_oSystemLogger = (ASelectSystemLogger)systemLogger;
+		_oSystemLogger = (ASelectSystemLogger) systemLogger;
 		_oConfigManager = oConfigManager;
 		_oTGTManager = TGTManager.getHandle();
-		systemLogger.log(Level.INFO, MODULE, sMethod, "ConfigManager="+oConfigManager+" ConfigSection="+oConfigSection);
+		systemLogger.log(Level.INFO, MODULE, sMethod, "ConfigManager=" + oConfigManager + " ConfigSection="
+				+ oConfigSection);
 
 		try {
 			Object aselectSection = _oConfigManager.getSection(null, "aselect");
@@ -62,13 +77,14 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			_sFederationUrl = _oConfigManager.getParam(aselectSection, "federation_url");
 		}
 		catch (ASelectConfigException e) {
-			// 20091207: systemLogger.log(Level.INFO, MODULE, sMethod, "No config item 'federation_url' found in 'aselect' section", e);
+			// 20091207: systemLogger.log(Level.INFO, MODULE, sMethod,
+			// "No config item 'federation_url' found in 'aselect' section", e);
 			// 20091207: throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 
 		set_bVerifySignature(false);
 		try {
-            Object _oTicketSection = _oConfigManager.getSection(null, "storagemanager", "id=tgt");
+			Object _oTicketSection = _oConfigManager.getSection(null, "storagemanager", "id=tgt");
 			String sVerifySignature = _oConfigManager.getParam(_oTicketSection, "verify_signature");
 			if ("true".equalsIgnoreCase(sVerifySignature)) {
 				set_bVerifySignature(true);
@@ -76,28 +92,33 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "verify_signature = " + is_bVerifySignature());
 		}
 		catch (ASelectConfigException e) {
-			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "verify_signature not found, set to = " + is_bVerifySignature());
+			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "verify_signature not found, set to = "
+					+ is_bVerifySignature());
 		}
 	}
 
 	// Bauke: replacement
+	/* (non-Javadoc)
+	 * @see org.aselect.system.storagemanager.handler.JDBCStorageHandler#put(java.lang.Object, java.lang.Object, java.lang.Long)
+	 */
+	@Override
 	public void put(Object oKey, Object oValue, Long lTimestamp)
-	throws ASelectStorageException
+		throws ASelectStorageException
 	{
 		String _sMethod = "put";
-		HashMap htValue = (HashMap)oValue;
+		HashMap htValue = (HashMap) oValue;
 
-		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "MSHT "+this.getClass());
+		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "MSHT " + this.getClass());
 		if (!_oTGTManager.containsKey(oKey) || htValue.get("createtime") == null) {
 			long now = new Date().getTime();
 			htValue.put("createtime", String.valueOf(now));
 			htValue.put("sessionsynctime", String.valueOf(now));
 			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "ADD createtime/sessionsync/timestamp=" + now);
 		}
-		
+
 		// Special hack to prevent that the Timestamp is updated when only the "sessionsynctime" is changed
-		String upd = (String)htValue.get("updatetimestamp");
-		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "updatetimestamp="+upd);
+		String upd = (String) htValue.get("updatetimestamp");
+		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "updatetimestamp=" + upd);
 		if (upd != null && upd.equals("no")) {
 			lTimestamp = _oTGTManager.getTimestamp(oKey);
 			htValue.remove("updatetimestamp");
@@ -105,39 +126,49 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 		super.put(oKey, oValue, lTimestamp);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.aselect.system.storagemanager.handler.JDBCStorageHandler#cleanup(java.lang.Long)
+	 */
 	@Override
 	public void cleanup(Long lTimestamp)
-	throws ASelectStorageException
+		throws ASelectStorageException
 	{
 		String _sMethod = "cleanup";
 		Long now = new Date().getTime();
 
-		_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "CLEANUP { lTimestamp=" + (lTimestamp-now)+" class="+this.getClass());
+		_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "CLEANUP { lTimestamp=" + (lTimestamp - now) + " class="
+				+ this.getClass());
 		determineTimeOut();
 		// Only the TGT Manager should use this class, therefore do not call super.cleanup()
-		//super.cleanup(lTimestamp);
+		// super.cleanup(lTimestamp);
 		_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "} CLEANUP");
 	}
 
 	// When the TGT is expired, we need to send a Soap Logout Request to the Federation
+	/**
+	 * Determine time out.
+	 * 
+	 * @throws ASelectStorageException
+	 *             the a select storage exception
+	 */
 	@SuppressWarnings("unchecked")
 	private void determineTimeOut()
-	throws ASelectStorageException
+		throws ASelectStorageException
 	{
 		String _sMethod = "determineTimeOut";
 
 		HashMap allTgts = new HashMap();
 		if (_oTGTManager != null) {
-			allTgts = (HashMap) _oTGTManager.getAll();
+			allTgts = _oTGTManager.getAll();
 		}
 		if (allTgts == null)
 			return;
-		_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO _serverUrl=" + _serverUrl +
-					" - TGT Count=" + allTgts.size());
+		_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO _serverUrl=" + _serverUrl + " - TGT Count="
+				+ allTgts.size());
 		Long updateInterval = -1L;
 		try {
 			HashMap htResult = SessionSyncRequestSender.getSessionSyncParameters(_oSystemLogger);
-			updateInterval = (Long)htResult.get("update_interval");
+			updateInterval = (Long) htResult.get("update_interval");
 			if (updateInterval == null) {
 				_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "No 'update_interval' available");
 				updateInterval = -1L;
@@ -146,30 +177,33 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 		catch (ASelectException ase) {
 			throw new ASelectStorageException(ase.toString());
 		}
-		
+
 		// For all TGT's
-        Set keys = allTgts.keySet();
+		Set keys = allTgts.keySet();
 		for (Object s : keys) {
 			String key = (String) s;
 			HashMap htTGTContext = (HashMap) _oTGTManager.get(key);
-			String sNameID = (String)htTGTContext.get("name_id");
-			String sSync = (String)htTGTContext.get("sessionsynctime");
+			String sNameID = (String) htTGTContext.get("name_id");
+			String sSync = (String) htTGTContext.get("sessionsynctime");
 			Long lastSync = Long.parseLong(sSync);
-			Boolean bForcedAuthn = (Boolean)htTGTContext.get("forced_authenticate");
-			if (bForcedAuthn == null) bForcedAuthn = false;
+			Boolean bForcedAuthn = (Boolean) htTGTContext.get("forced_authenticate");
+			if (bForcedAuthn == null)
+				bForcedAuthn = false;
 			Long expireTime = _oTGTManager.getExpirationTime(key);
 			Long timeStamp = _oTGTManager.getTimestamp(key);
 			Long now = new Date().getTime();
 
 			String sKey = (key.length() > 30) ? key.substring(0, 30) + "..." : key;
-			_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO - NameID=" + sNameID + 
-					" TimeStamp="+(timeStamp-now)+" Left=" + (expireTime - now) + " lastSync=" + (lastSync-now)+" Key=" + sKey);
-			
-			String sAuthspType = (String)htTGTContext.get("authsp_type");
+			_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO - NameID=" + sNameID + " TimeStamp="
+					+ (timeStamp - now) + " Left=" + (expireTime - now) + " lastSync=" + (lastSync - now) + " Key="
+					+ sKey);
+
+			String sAuthspType = (String) htTGTContext.get("authsp_type");
 			Boolean bToFed = (sAuthspType != null && sAuthspType.equals("saml20"));
 			// Check Ticket Expiration
 			if (now >= expireTime) {
-				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SPTO Remove TGT (and send Logout), Key=" + sKey + " forced="+bForcedAuthn);
+				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SPTO Remove TGT (and send Logout), Key=" + sKey
+						+ " forced=" + bForcedAuthn);
 				_oTGTManager.remove(key);
 
 				// 20090622, Bauke, if forced_authenticate, the IdP does not have a ticket
@@ -180,20 +214,32 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			// Check Session Sync
 			// Since the last Session Sync also update the TGT's timestamp
 			// also skip a few seconds after lastSync
-			if (bToFed && updateInterval > 0 && timeStamp > lastSync+10 && now >= lastSync + updateInterval) {
+			if (bToFed && updateInterval > 0 && timeStamp > lastSync + 10 && now >= lastSync + updateInterval) {
 				// Perform a Session Sync to the Federation
 				_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO Skip this SessionSync");
 			}
 		}
 	}
 
+	/**
+	 * Send logout to federation.
+	 * 
+	 * @param sNameID
+	 *            the s name id
+	 * @param htTGTContext
+	 *            the ht tgt context
+	 * @return true, if successful
+	 * @throws ASelectStorageException
+	 *             the a select storage exception
+	 */
 	private boolean sendLogoutToFederation(String sNameID, HashMap htTGTContext)
-	throws ASelectStorageException
+		throws ASelectStorageException
 	{
 		String _sMethod = "sendLogoutToFederation";
-	
-		String sFederationUrl = (String)htTGTContext.get("federation_url");
-		if (sFederationUrl == null) sFederationUrl = _sFederationUrl;  // TODO: remove later on
+
+		String sFederationUrl = (String) htTGTContext.get("federation_url");
+		if (sFederationUrl == null)
+			sFederationUrl = _sFederationUrl; // TODO: remove later on
 		if (sFederationUrl == null || sFederationUrl.equals("")) {
 			_oSystemLogger.log(Level.SEVERE, MODULE, _sMethod, "No \"federation_url\" available in TGT");
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
@@ -220,7 +266,9 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			}
 		}
 		try {
-			logout.sendSoapLogoutRequest(url, issuerUrl, sNameID, "urn:oasis:names:tc:SAML:2.0:logout:sp-timeout", pkey);
+			logout
+					.sendSoapLogoutRequest(url, issuerUrl, sNameID, "urn:oasis:names:tc:SAML:2.0:logout:sp-timeout",
+							pkey);
 		}
 		catch (ASelectException e) {
 			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "Exception trying to send Logout message", e);
@@ -230,10 +278,24 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 		return false;
 	}
 
-	public synchronized boolean is_bVerifySignature() {
+	/**
+	 * Checks if is _b verify signature.
+	 * 
+	 * @return true, if is _b verify signature
+	 */
+	public synchronized boolean is_bVerifySignature()
+	{
 		return _bVerifySignature;
 	}
-	public synchronized void set_bVerifySignature(boolean verifySignature) {
+
+	/**
+	 * Sets the _b verify signature.
+	 * 
+	 * @param verifySignature
+	 *            the new _b verify signature
+	 */
+	public synchronized void set_bVerifySignature(boolean verifySignature)
+	{
 		_bVerifySignature = verifySignature;
 	}
 }

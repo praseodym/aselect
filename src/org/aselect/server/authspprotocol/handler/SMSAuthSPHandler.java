@@ -24,60 +24,74 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAuthSPException;
 import org.aselect.system.exception.ASelectConfigException;
 
+// TODO: Auto-generated Javadoc
 /**
- * The SMS AuthSP Handler.
- * <br><br>
+ * The SMS AuthSP Handler. <br>
+ * <br>
  * <b>Description:</b><br>
- * The SMS AuthSP Handler communicates with the SMS AuthSP by redirecting 
- * the client. 
- * <br><br>
- * <b>Concurrency issues:</b>
+ * The SMS AuthSP Handler communicates with the SMS AuthSP by redirecting the client. <br>
  * <br>
- * None
- * <br><br>
- * <b>Protocol Description</b>
+ * <b>Concurrency issues:</b> <br>
+ * None <br>
  * <br>
- * <i><a name="outgoing">Outgoing request going to the SMS AuthSP:</a></i>
- * <br>
+ * <b>Protocol Description</b> <br>
+ * <i><a name="outgoing">Outgoing request going to the SMS AuthSP:</a></i> <br>
  * <table border="1" cellspacing="0" cellpadding="3">
- * 	<tr>
- * 		<td style="" bgcolor="#EEEEFF"><b>name</b></td>
- * 		<td style="" bgcolor="#EEEEFF"><b>value</b></td>
- * 	</tr>  
- * 	<tr><td>rid</td><td>A-Select Server request id</td></tr>
- * 	<tr><td>as_url</td><td>A-Select Server url</td></tr>
- * 	<tr><td>uid</td><td>A-Select Server user ID</td></tr>
- * 	<tr><td>a-select-server</td><td>A-Select Server ID</td></tr>
- * 	<tr>
- * 		<td>signature</td>
- * 		<td>signature of all paramaters in the above sequence</td>
- * 	</tr>
+ * <tr>
+ * <td style="" bgcolor="#EEEEFF"><b>name</b></td>
+ * <td style="" bgcolor="#EEEEFF"><b>value</b></td>
+ * </tr>
+ * <tr>
+ * <td>rid</td>
+ * <td>A-Select Server request id</td>
+ * </tr>
+ * <tr>
+ * <td>as_url</td>
+ * <td>A-Select Server url</td>
+ * </tr>
+ * <tr>
+ * <td>uid</td>
+ * <td>A-Select Server user ID</td>
+ * </tr>
+ * <tr>
+ * <td>a-select-server</td>
+ * <td>A-Select Server ID</td>
+ * </tr>
+ * <tr>
+ * <td>signature</td>
+ * <td>signature of all paramaters in the above sequence</td>
+ * </tr>
  * </table>
  * <br>
- * <i><a name="incoming">
- * 	Incoming response, which is returned by the SMS AuthSP:
- * </a></i>
- * <br>
+ * <i><a name="incoming"> Incoming response, which is returned by the SMS AuthSP: </a></i> <br>
  * <table border="1" cellspacing="0" cellpadding="3">
  * <tr>
- * 	<td style="" bgcolor="#EEEEFF"><b>name</b></td>
- * 	<td style="" bgcolor="#EEEEFF"><b>value</b></td>
+ * <td style="" bgcolor="#EEEEFF"><b>name</b></td>
+ * <td style="" bgcolor="#EEEEFF"><b>value</b></td>
  * </tr>
- * <tr><td>rid</td><td>A-Select Server request id</td></tr>
- * <tr><td>result_code</td><td>AuthSP result code</td></tr>
- * <tr><td>a-select-server</td><td>A-Select Server ID</td></tr>
  * <tr>
- * 	<td>signature</td>
- * 	<td>Signature over the following data: 
- * 		<ol>
- * 			<li>rid</li>
- * 			<li>The URL that was created in 
- * 				<code>computeAuthenticationRequest()</code>
- * 			<li>result_code</li>
- * 			<li>a-select-server</li>
- * 		</ol> 
- * 	</td>
- *	</tr>
+ * <td>rid</td>
+ * <td>A-Select Server request id</td>
+ * </tr>
+ * <tr>
+ * <td>result_code</td>
+ * <td>AuthSP result code</td>
+ * </tr>
+ * <tr>
+ * <td>a-select-server</td>
+ * <td>A-Select Server ID</td>
+ * </tr>
+ * <tr>
+ * <td>signature</td>
+ * <td>Signature over the following data:
+ * <ol>
+ * <li>rid</li>
+ * <li>The URL that was created in <code>computeAuthenticationRequest()</code>
+ * <li>result_code</li>
+ * <li>a-select-server</li>
+ * </ol>
+ * </td>
+ * </tr>
  * </table>
  */
 public class SMSAuthSPHandler implements IAuthSPProtocolHandler
@@ -94,6 +108,9 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 	private static final String ERROR_SMS_ACCESS_DENIED = "800";
 	private static final String ERROR_SMS_PREFIX = "SMS";
 
+	/* (non-Javadoc)
+	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#init(java.lang.Object, java.lang.Object)
+	 */
 	public void init(Object oAuthSPConfig, Object oAuthSPResource)
 		throws ASelectAuthSPException
 	{
@@ -131,32 +148,30 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 	}
 
 	/**
-	 * Creates the authentication request URL.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Creates the authentication request URL. <br>
 	 * <br>
+	 * <b>Description:</b> <br>
 	 * This method creates a hashtable with the follwing contents:
 	 * <table border="1" cellspacing="0" cellpadding="3">
 	 * <tr>
-	 *	<td style="" bgcolor="#EEEEFF"><b>key</b></td>
-	 *	<td style="" bgcolor="#EEEEFF"><b>value</b></td>
-	 * </tr>  
-	 * <tr>
-	 * 	<td>result</td>
-	 *  <td>
-	 * 		{@link Errors#ERROR_ASELECT_SUCCESS} or an error code 
-	 * 		if creating the authentication request URL fails
-	 * 	</td>
+	 * <td style="" bgcolor="#EEEEFF"><b>key</b></td>
+	 * <td style="" bgcolor="#EEEEFF"><b>value</b></td>
 	 * </tr>
 	 * <tr>
-	 * 	<td>redirect_url</td>
-	 * 	<td>
-	 * 		The URL to the AuthSP including the protocol parameters as specified
-	 * 		if the <a href="#outgoing">class description</a>.
-	 * </td>
+	 * <td>result</td>
+	 * <td>
+	 * {@link Errors#ERROR_ASELECT_SUCCESS} or an error code if creating the authentication request URL fails</td>
+	 * </tr>
+	 * <tr>
+	 * <td>redirect_url</td>
+	 * <td>The URL to the AuthSP including the protocol parameters as specified if the <a href="#outgoing">class
+	 * description</a>.</td>
 	 * </tr>
 	 * </table>
 	 * 
+	 * @param sRid
+	 *            the s rid
+	 * @return the hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#computeAuthenticationRequest(java.lang.String)
 	 */
 	public HashMap computeAuthenticationRequest(String sRid)
@@ -176,26 +191,26 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
-			HashMap htAllowedAuthsps = (HashMap) (HashMap) htSessionContext.get("allowed_user_authsps");
+			HashMap htAllowedAuthsps = (HashMap) htSessionContext.get("allowed_user_authsps");
 			if (htAllowedAuthsps == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Allowed_user_authsps missing in session context.");
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
 
-			String sUserId = (String)htAllowedAuthsps.get(_sAuthsp);
+			String sUserId = (String) htAllowedAuthsps.get(_sAuthsp);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Allowed=" + htAllowedAuthsps + " sUserId=" + sUserId);
 			if ("".equals(sUserId)) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing SMS user attributes.");
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
-			sbBuffer = new StringBuffer((String)htSessionContext.get("my_url"));
+			sbBuffer = new StringBuffer((String) htSessionContext.get("my_url"));
 			sbBuffer.append("?authsp=").append(_sAuthsp);
 			String sAsUrl = sbBuffer.toString();
-			String sCountry = (String)htSessionContext.get("country");
+			String sCountry = (String) htSessionContext.get("country");
 			if (sCountry == null || sCountry.trim().length() < 1) {
 				sCountry = null;
 			}
-			String sLanguage = (String)htSessionContext.get("language");
+			String sLanguage = (String) htSessionContext.get("language");
 			if (sLanguage == null || sLanguage.trim().length() < 1) {
 				sLanguage = null;
 			}
@@ -250,34 +265,33 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 	}
 
 	/**
-	 * Verifies the response from the AuthSP.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Verifies the response from the AuthSP. <br>
 	 * <br>
-	 * This method verifies the response from the AuthSP. The response 
-	 * parameters are placed in <code>htAuthspResponse</code> and are 
-	 * described in the <a href="#incoming">class description</a>.
-	 * <br><br>
+	 * <b>Description:</b> <br>
+	 * This method verifies the response from the AuthSP. The response parameters are placed in
+	 * <code>htAuthspResponse</code> and are described in the <a href="#incoming">class description</a>. <br>
+	 * <br>
 	 * This method creates a hashtable with the following contents:
 	 * <table border="1" cellspacing="0" cellpadding="3">
-	 * 	<tr>
-	 *		<td style="" bgcolor="#EEEEFF"><b>key</b></td>
-	 *		<td style="" bgcolor="#EEEEFF"><b>value</b></td>
-	 * 	</tr>  
-	 * 	<tr>
-	 * 		<td>result</td>
-	 *  	<td>
-	 * 			{@link Errors#ERROR_ASELECT_SUCCESS} or an error code 
-	 * 			if the authentication response was invalid or the user was 
-	 * 			not authenticated.
-	 * 		</td>
-	 * 	</tr>
-	 * 	<tr>
-	 * 		<td>rid</td>
-	 * 		<td>The A-Select request identifier of this authentication.</td>
-	 * 	</tr>
+	 * <tr>
+	 * <td style="" bgcolor="#EEEEFF"><b>key</b></td>
+	 * <td style="" bgcolor="#EEEEFF"><b>value</b></td>
+	 * </tr>
+	 * <tr>
+	 * <td>result</td>
+	 * <td>
+	 * {@link Errors#ERROR_ASELECT_SUCCESS} or an error code if the authentication response was invalid or the user
+	 * was not authenticated.</td>
+	 * </tr>
+	 * <tr>
+	 * <td>rid</td>
+	 * <td>The A-Select request identifier of this authentication.</td>
+	 * </tr>
 	 * </table>
 	 * 
+	 * @param htAuthspResponse
+	 *            the ht authsp response
+	 * @return the hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.HashMap)
 	 */
 	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse)
@@ -285,15 +299,15 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 		String sMethod = "verifyAuthenticationResponse";
 		StringBuffer sbBuffer = null;
 		HashMap htResponse = new HashMap();
-		
+
 		htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "htAuthspRespone=" + htAuthspResponse);
 		try {
-			String sRid = (String)htAuthspResponse.get("rid");
-			String sAsUrl = (String)htAuthspResponse.get("my_url");
-			String sResultCode = (String)htAuthspResponse.get("result_code");
-			String sAsId = (String)htAuthspResponse.get("a-select-server");
-			String sSignature = (String)htAuthspResponse.get("signature");
+			String sRid = (String) htAuthspResponse.get("rid");
+			String sAsUrl = (String) htAuthspResponse.get("my_url");
+			String sResultCode = (String) htAuthspResponse.get("result_code");
+			String sAsId = (String) htAuthspResponse.get("a-select-server");
+			String sSignature = (String) htAuthspResponse.get("signature");
 			if (sRid == null || sResultCode == null || sAsId == null || sSignature == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
 						"Incorrect AuthSP response: one or more parameters missing.");
@@ -310,7 +324,8 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 			sbSignature.append(sAsId);
 			boolean bVerifies = CryptoEngine.getHandle().verifySignature(_sAuthsp, sbSignature.toString(), sSignature);
 			if (!bVerifies) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "invalid signature in response from AuthSP:"+_sAuthsp);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "invalid signature in response from AuthSP:"
+						+ _sAuthsp);
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 			}
 			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
@@ -319,16 +334,17 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 						"Incorrect AuthSP response: invalid Session (could be expired)");
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 			}
-			
-			String sUserId = (String)htSessionContext.get("sel_uid");
-			if (sUserId == null) sUserId = (String)htSessionContext.get("user_id");
-			String sOrg = (String)htSessionContext.get("organization");
-			
+
+			String sUserId = (String) htSessionContext.get("sel_uid");
+			if (sUserId == null)
+				sUserId = (String) htSessionContext.get("user_id");
+			String sOrg = (String) htSessionContext.get("organization");
+
 			// Log authentication
 			if (sResultCode.equalsIgnoreCase(ERROR_SMS_ACCESS_DENIED)) {
 				_authenticationLogger.log(new Object[] {
-					MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg,
-					(String)htSessionContext.get("app_id"), "denied"
+					MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg, (String) htSessionContext.get("app_id"),
+					"denied"
 				});
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);
 			}
@@ -339,17 +355,18 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
 			_authenticationLogger.log(new Object[] {
-				MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg,
-				(String)htSessionContext.get("app_id"), "granted"
+				MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg, (String) htSessionContext.get("app_id"),
+				"granted"
 			});
 			htResponse.put("rid", sRid);
-			
+
 			// 20090223: Since we decided on the 'uid' here, pass it on as well
 			htResponse.put("uid", sUserId);
 
 			// Bauke: pass additional attribute
 			String sSmsPhone = (String) htSessionContext.get("sms_phone");
-			if (sSmsPhone != null) htResponse.put("sms_phone", sSmsPhone);
+			if (sSmsPhone != null)
+				htResponse.put("sms_phone", sSmsPhone);
 			htResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
 		}
 		catch (ASelectAuthSPException eAA) {

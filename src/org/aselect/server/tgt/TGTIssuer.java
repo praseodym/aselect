@@ -161,24 +161,19 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
- * Issues ASelect TGT's.
- * <br><br>
+ * Issues ASelect TGT's. <br>
+ * <br>
  * <b>Description:</b><br>
- * Provides methods to issue Ticket Granting Tickets in A-Select.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * Provides methods to issue Ticket Granting Tickets in A-Select. <br>
  * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
- * 14-11-2007 - Changes:
- * - DigiD Gateway: transfer DigiD attributes
- * - Transfer select user id
- * 
- * @author Bauke Hiemstra - www.anoigo.nl
- * Copyright Gemeente Den Haag (http://www.denhaag.nl) and UMC Nijmegen (http://www.umcn.nl)
+ * @author Alfa & Ariss 14-11-2007 - Changes: - DigiD Gateway: transfer DigiD attributes - Transfer select user id
+ * @author Bauke Hiemstra - www.anoigo.nl Copyright Gemeente Den Haag (http://www.denhaag.nl) and UMC Nijmegen
+ *         (http://www.umcn.nl)
  */
 public class TGTIssuer
 {
@@ -211,10 +206,12 @@ public class TGTIssuer
 
 	/**
 	 * The default constructor.
-	 * @param sServerId The A-Select server ID.
+	 * 
+	 * @param sServerId
+	 *            The A-Select server ID.
 	 */
 	public TGTIssuer(String sServerId) {
-		//TODO All configuration reading in this class must be moved to this contructor (Martijn)
+		// TODO All configuration reading in this class must be moved to this contructor (Martijn)
 		_systemLogger = ASelectSystemLogger.getHandle();
 		_configManager = ASelectConfigManager.getHandle();
 		_cryptoEngine = CryptoEngine.getHandle();
@@ -225,42 +222,43 @@ public class TGTIssuer
 	}
 
 	/**
-	 * Creates a Cross TGT and redirects the user.
-	 * <br><br>
+	 * Creates a Cross TGT and redirects the user. <br>
+	 * <br>
 	 * <b>Description:</b>
 	 * <ul>
-	 * 	<li>Creates a specific redirect url</li>
-	 * 	<li>Sets the TGT as Cookie at the user</li>
-	 * 	<li>Kills the old session</li>
-	 *  <li>Redirect user to redirect url</li>
+	 * <li>Creates a specific redirect url</li>
+	 * <li>Sets the TGT as Cookie at the user</li>
+	 * <li>Kills the old session</li>
+	 * <li>Redirect user to redirect url</li>
 	 * </ul>
 	 * <br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
 	 * <b>Preconditions:</b>
 	 * <ul>
-	 * 	<li>The <i>SessionManager</i> must be initialized</li>
-	 * 	<li>The <i>TGTManager</i> must be initialized</li>
-	 * 	<li>The <i>ASelectConfigManager</i> must be initialized</li>
-	 * 	<li>The <i>ASelectSystemLogger</i> must be initialized</li>
-	 * 	<li>The <i>CryptoEngine</i> must be initialized</li>
+	 * <li>The <i>SessionManager</i> must be initialized</li>
+	 * <li>The <i>TGTManager</i> must be initialized</li>
+	 * <li>The <i>ASelectConfigManager</i> must be initialized</li>
+	 * <li>The <i>ASelectSystemLogger</i> must be initialized</li>
+	 * <li>The <i>CryptoEngine</i> must be initialized</li>
 	 * </ul>
 	 * <br>
-	 * <b>Postconditions:</b>
-	 * <br>
-	 * -
-	 * <br>
-	 * @param sRid The request id (session key)
-	 * @param sAuthSP The AuthSP which the used to authenticate 
-	 * @param htRemoteAttributes <code>HashMap</code> containing additional TGT 
-	 * information
-	 * @param oHttpServletResponse The servlet response that is used to redirect 
-	 * to
-	 * @param sOldTGT The aselect_credentials_tgt that is already set as a 
-	 * cookie at the user (can be null if not present)
-	 * @throws ASelectException if an error page must be shown
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sRid
+	 *            The request id (session key)
+	 * @param sAuthSP
+	 *            The AuthSP which the used to authenticate
+	 * @param htRemoteAttributes
+	 *            <code>HashMap</code> containing additional TGT information
+	 * @param oHttpServletResponse
+	 *            The servlet response that is used to redirect to
+	 * @param sOldTGT
+	 *            The aselect_credentials_tgt that is already set as a cookie at the user (can be null if not present)
+	 * @throws ASelectException
+	 *             if an error page must be shown
 	 */
 	public void issueCrossTGT(String sRid, String sAuthSP, HashMap htRemoteAttributes,
 			HttpServletResponse oHttpServletResponse, String sOldTGT)
@@ -289,7 +287,7 @@ public class TGTIssuer
 			String sAppId = (String) htSessionContext.get("app_id");
 			String sRemoteOrganization = (String) htSessionContext.get("remote_organization");
 
-			// The following parameters are retrieved from the 'remote' Server. 
+			// The following parameters are retrieved from the 'remote' Server.
 			String sUserId = (String) htRemoteAttributes.get("uid");
 			String sUserOrganization = (String) htRemoteAttributes.get("organization");
 			sLevel = (String) htRemoteAttributes.get("authsp_level");
@@ -301,7 +299,7 @@ public class TGTIssuer
 			String sRemoteAttribs = (String) htRemoteAttributes.get("attributes");
 			sArpTarget = (String) htSessionContext.get("arp_target");
 
-			//TODO Check if double encode is needed (Martijn)
+			// TODO Check if double encode is needed (Martijn)
 			if (sUserId != null) {
 				String sEncodedUserId = URLEncoder.encode(sUserId, "UTF-8");
 				sEncodedUserId = URLEncoder.encode(sEncodedUserId, "UTF-8");
@@ -322,7 +320,7 @@ public class TGTIssuer
 
 				sAppId = sbAppID.toString();
 			}
-			
+
 			HashMap htTGTContext = new HashMap();
 
 			// Bauke: copy DigiD data to the context
@@ -330,7 +328,7 @@ public class TGTIssuer
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "htRemoteAttributes=" + htRemoteAttributes);
 			Utils.copyHashmapValue("digid_uid", htTGTContext, htRemoteAttributes);
 			Utils.copyHashmapValue("digid_betrouwbaarheidsniveau", htTGTContext, htRemoteAttributes);
-			
+
 			// The Saml20 protocol needs a return address:
 			Utils.copyHashmapValue("sp_assert_url", htTGTContext, htRemoteAttributes);
 			Utils.copyHashmapValue("name_id", htTGTContext, htRemoteAttributes);
@@ -365,7 +363,7 @@ public class TGTIssuer
 			if (sClientIP != null && !"".equals(sClientIP))
 				htTGTContext.put("client_ip", sClientIP);
 			// RH, 20080619, en
-			
+
 			// 20090811, Bauke: save authsp_type for use by the Saml20 session sync
 			Utils.copyHashmapValue("authsp_type", htTGTContext, htSessionContext);
 
@@ -378,8 +376,9 @@ public class TGTIssuer
 			Utils.copyHashmapValue("language", htTGTContext, htSessionContext);
 
 			// 20090617, Bauke:forced_authenticate specials
-			Boolean bForcedAuthn = (Boolean)htSessionContext.get("forced_authenticate");
-			if (bForcedAuthn == null) bForcedAuthn = false;
+			Boolean bForcedAuthn = (Boolean) htSessionContext.get("forced_authenticate");
+			if (bForcedAuthn == null)
+				bForcedAuthn = false;
 			if (bForcedAuthn)
 				htTGTContext.put("forced_authenticate", bForcedAuthn);
 
@@ -401,13 +400,13 @@ public class TGTIssuer
 			// Create a new TGT, because there is no old TGT
 			if (htOldTGTContext == null) {
 				sTgt = _tgtManager.createTGT(htTGTContext);
-				
+
 				// Create cookie if single sign-on is enabled
 				// 20090617, Bauke: not for forced_authenticate
 				if (!bForcedAuthn && _configManager.isSingleSignOn())
 					setASelectCookie(sTgt, sUserId, oHttpServletResponse);
 			}
-			
+
 			// A tgt was just issued, report sensor data
 			Tools.calculateAndReportSensorData(_configManager, _systemLogger, htSessionContext);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
@@ -429,46 +428,47 @@ public class TGTIssuer
 	}
 
 	/**
-	 * Creates a default TGT and redirects the user.
-	 * <br><br>
+	 * Creates a default TGT and redirects the user. <br>
+	 * <br>
 	 * <b>Description:</b>
 	 * <ul>
-	 * 	<li>Creates a specific redirect url</li>
-	 * 	<li>Sets the TGT as Cookie at the user</li>
-	 * 	<li>Kills the old session</li>
-	 *  <li>Redirect user to redirect url</li>
+	 * <li>Creates a specific redirect url</li>
+	 * <li>Sets the TGT as Cookie at the user</li>
+	 * <li>Kills the old session</li>
+	 * <li>Redirect user to redirect url</li>
 	 * </ul>
 	 * <br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
 	 * <b>Preconditions:</b>
 	 * <ul>
-	 * 	<li>The <i>SessionManager</i> must be initialized</li>
-	 * 	<li>The <i>TGTManager</i> must be initialized</li>
-	 * 	<li>The <i>ASelectConfigManager</i> must be initialized</li>
-	 * 	<li>The <i>ASelectSystemLogger</i> must be initialized</li>
-	 * 	<li>The <i>CryptoEngine</i> must be initialized</li>
+	 * <li>The <i>SessionManager</i> must be initialized</li>
+	 * <li>The <i>TGTManager</i> must be initialized</li>
+	 * <li>The <i>ASelectConfigManager</i> must be initialized</li>
+	 * <li>The <i>ASelectSystemLogger</i> must be initialized</li>
+	 * <li>The <i>CryptoEngine</i> must be initialized</li>
 	 * </ul>
 	 * <br>
-	 * <b>Postconditions:</b>
-	 * <br>
-	 * -
-	 * <br>
-	 * @param sRid The request id (session key)
-	 * @param sAuthSP The AuthSP which the used to authenticate 
-	 * @param htAdditional <code>HashMap</code> containing additional TGT 
-	 * information
-	 * @param oHttpServletResponse The servlet response that is used to redirect 
-	 * to
-	 * @param sOldTGT The aselect_credentials_tgt that is already set as a 
-	 * cookie at the user (can be null if not exists)
-	 * @throws ASelectException if an error page must be shown
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sRid
+	 *            The request id (session key)
+	 * @param sAuthSP
+	 *            The AuthSP which the used to authenticate
+	 * @param htAdditional
+	 *            <code>HashMap</code> containing additional TGT information
+	 * @param oHttpServletResponse
+	 *            The servlet response that is used to redirect to
+	 * @param sOldTGT
+	 *            The aselect_credentials_tgt that is already set as a cookie at the user (can be null if not exists)
+	 * @throws ASelectException
+	 *             if an error page must be shown
 	 */
-	public void issueTGT(String sRid, String sAuthSP, HashMap htAdditional,
-					HttpServletResponse oHttpServletResponse, String sOldTGT)
-	throws ASelectException
+	public void issueTGT(String sRid, String sAuthSP, HashMap htAdditional, HttpServletResponse oHttpServletResponse,
+			String sOldTGT)
+		throws ASelectException
 	{
 		String sMethod = "issueTGT()";
 		String sArpTarget = null; // added 1.5.4
@@ -489,7 +489,7 @@ public class TGTIssuer
 				// The 'organization' in a TGT always contains the organization where the authentication was done.
 				// The 'local_organization' is needed e.g. attribute release policies
 				sLocalOrg = (String) htSessionContext.get("local_organization");
-				sAppId = "[unknown@"+sLocalOrg+"]";
+				sAppId = "[unknown@" + sLocalOrg + "]";
 			}
 
 			// Check Authentication result
@@ -505,13 +505,15 @@ public class TGTIssuer
 			HashMap htTGTContext = new HashMap();
 			htTGTContext.put("rid", sRid);
 			htTGTContext.put("app_id", sAppId);
-			if (sLocalOrg != null) htTGTContext.put("local_organization", sLocalOrg);
+			if (sLocalOrg != null)
+				htTGTContext.put("local_organization", sLocalOrg);
 
 			String sUserId = (String) htSessionContext.get("user_id");
 			htTGTContext.put("uid", sUserId);
 			String sOrganization = (String) htSessionContext.get("organization");
 			htTGTContext.put("organization", sOrganization);
-			if (sAuthSP != null) htTGTContext.put("authsp", sAuthSP);
+			if (sAuthSP != null)
+				htTGTContext.put("authsp", sAuthSP);
 			String sLevel = null;
 			if (sAuthSP != null) {
 				sLevel = (_authSPHandlerManager.getLevel(sAuthSP)).toString();
@@ -521,24 +523,28 @@ public class TGTIssuer
 					sLevel = _configManager.getParam(oAuthSP, "level");
 				}
 				catch (ASelectConfigException e) {
-					//It is a "priviliged authsp" -> use default level from context
+					// It is a "priviliged authsp" -> use default level from context
 					sLevel = ((Integer) htSessionContext.get("authsp_level")).toString();
 				}
 			}
-			if (sLevel != null) htTGTContext.put("authsp_level", sLevel);
+			if (sLevel != null)
+				htTGTContext.put("authsp_level", sLevel);
 
 			Integer intAppLevel = (Integer) htSessionContext.get("level");
 			htTGTContext.put("app_level", intAppLevel.toString());
 			HashMap htAllowedAuthsps = (HashMap) htSessionContext.get("allowed_user_authsps");
-			if (htAllowedAuthsps != null) htTGTContext.put("allowed_user_authsps", htAllowedAuthsps);
+			if (htAllowedAuthsps != null)
+				htTGTContext.put("allowed_user_authsps", htAllowedAuthsps);
 			Vector vSSOGroups = (Vector) htSessionContext.get("sso_groups");
-			if (vSSOGroups != null) htTGTContext.put("sso_groups", vSSOGroups);
+			if (vSSOGroups != null)
+				htTGTContext.put("sso_groups", vSSOGroups);
 			Utils.copyHashmapValue("arp_target", htTGTContext, htSessionContext);
 
-			String sRemoteAttrs = (String)htSessionContext.get("attributes");
-			if (sRemoteAttrs != null) htTGTContext.put("remote_attributes", sRemoteAttrs);
-			
-			//overwrite or set additional properties in the newly created tgt context
+			String sRemoteAttrs = (String) htSessionContext.get("attributes");
+			if (sRemoteAttrs != null)
+				htTGTContext.put("remote_attributes", sRemoteAttrs);
+
+			// overwrite or set additional properties in the newly created tgt context
 			if (htAdditional != null)
 				htTGTContext.putAll(htAdditional);
 
@@ -548,8 +554,9 @@ public class TGTIssuer
 			Utils.copyHashmapValue("authsp_type", htTGTContext, htSessionContext);
 
 			// 20090617, Bauke:forced_authenticate specials
-			Boolean bForcedAuthn = (Boolean)htSessionContext.get("forced_authenticate");
-			if (bForcedAuthn == null) bForcedAuthn = false;
+			Boolean bForcedAuthn = (Boolean) htSessionContext.get("forced_authenticate");
+			if (bForcedAuthn == null)
+				bForcedAuthn = false;
 			if (bForcedAuthn)
 				htTGTContext.put("forced_authenticate", bForcedAuthn);
 
@@ -611,7 +618,7 @@ public class TGTIssuer
 			Tools.calculateAndReportSensorData(_configManager, _systemLogger, htSessionContext);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
 			sendRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse);
-			
+
 			_sessionManager.killSession(sRid);
 		}
 		catch (ASelectException e) {
@@ -629,16 +636,29 @@ public class TGTIssuer
 	}
 
 	// Looks very much like code in the ApplicationBrowserHandler
-	private void ensureSessionPresence(String sUserId, HashMap htTGTContext, HashMap htSessionContext, UserSsoSession ssoSession)
+	/**
+	 * Ensure session presence.
+	 * 
+	 * @param sUserId
+	 *            the s user id
+	 * @param htTGTContext
+	 *            the ht tgt context
+	 * @param htSessionContext
+	 *            the ht session context
+	 * @param ssoSession
+	 *            the sso session
+	 */
+	private void ensureSessionPresence(String sUserId, HashMap htTGTContext, HashMap htSessionContext,
+			UserSsoSession ssoSession)
 	{
 		String sMethod = "ensureSessionPresence";
-		
+
 		String sIssuer = (String) htSessionContext.get("sp_issuer");
 		if (sIssuer != null) {
 			// SSO Sessions in effect
 			htTGTContext.put("sp_issuer", sIssuer);
 			if (ssoSession == null) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "NEW SSO session for "+sUserId+" issuer="+sIssuer);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "NEW SSO session for " + sUserId + " issuer=" + sIssuer);
 				ssoSession = new UserSsoSession(sUserId, ""); // sTgt);
 			}
 			ServiceProvider sp = new ServiceProvider(sIssuer);
@@ -649,46 +669,43 @@ public class TGTIssuer
 	}
 
 	/**
-	 * Creates an error TGT and redirects the user.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Creates an error TGT and redirects the user. <br>
 	 * <br>
-	 * Creates a new TGT containing the error code that 
-	 * occured during authentication. This error code 
-	 * will be returned to the web application during the
-	 * verify_credentials API call.
-	 * <br><br>
+	 * <b>Description:</b> <br>
+	 * Creates a new TGT containing the error code that occured during authentication. This error code will be returned
+	 * to the web application during the verify_credentials API call. <br>
+	 * <br>
 	 * <b>Description:</b>
 	 * <ul>
-	 *  <li>Creates a specific redirect url</li>
-	 *  <li>Set the error code</li>
-	 *  <li>Kills the old session</li>
-	 *  <li>Redirect user to redirect url</li>
+	 * <li>Creates a specific redirect url</li>
+	 * <li>Set the error code</li>
+	 * <li>Kills the old session</li>
+	 * <li>Redirect user to redirect url</li>
 	 * </ul>
-	 * 
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
 	 * <br>
-	 * -
-	 * <br><br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
 	 * <b>Preconditions:</b>
 	 * <ul>
-	 * 	<li>The <i>SessionManager</i> must be initialized</li>
-	 * 	<li>The <i>TGTManager</i> must be initialized</li>
-	 * 	<li>The <i>ASelectSystemLogger</i> must be initialized</li>
-	 * 	<li>The <i>CryptoEngine</i> must be initialized</li>
+	 * <li>The <i>SessionManager</i> must be initialized</li>
+	 * <li>The <i>TGTManager</i> must be initialized</li>
+	 * <li>The <i>ASelectSystemLogger</i> must be initialized</li>
+	 * <li>The <i>CryptoEngine</i> must be initialized</li>
 	 * </ul>
 	 * <br>
-	 * <b>Postconditions:</b>
-	 * <br>
-	 * -
-	 * <br>
-	 * @param sRid The request id (session key)
-	 * @param sResultCode The error code that occurred and will be returned to 
-	 * the webapplication application
-	 * @param oHttpServletResponse The servlet response that is used to redirect 
-	 * to
-	 * @throws ASelectException if an error page must be shown
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sRid
+	 *            The request id (session key)
+	 * @param sResultCode
+	 *            The error code that occurred and will be returned to the webapplication application
+	 * @param oHttpServletResponse
+	 *            The servlet response that is used to redirect to
+	 * @throws ASelectException
+	 *             if an error page must be shown
 	 */
 	public void issueErrorTGT(String sRid, String sResultCode, HttpServletResponse oHttpServletResponse)
 		throws ASelectException
@@ -755,34 +772,31 @@ public class TGTIssuer
 	}
 
 	/**
-	 * Redirect the user to the supplied application url with the given TGT and 
-	 * RID.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Redirect the user to the supplied application url with the given TGT and RID. <br>
 	 * <br>
-	 * <li>adds an & or ? to the application url</li>
-	 * <li>encrypts the given tgt</li>
-	 * <li>redirects the user</li>    
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * <li>adds an & or ? to the application url</li> <li>encrypts the given tgt</li> <li>redirects the user</li> <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <li><i>sAppUrl</i> may not be <code>null</code></li>
-	 * <li><i>sTgt</i> may not be <code>null</code></li>
-	 * <li><i>oHttpServletResponse</i> may not be <code>null</code></li>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <li><i>sAppUrl</i> may not be <code>null</code></li> <li><i>sTgt</i> may not be <code>null</code></li> <li>
+	 * <i>oHttpServletResponse</i> may not be <code>null</code></li> <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sAppUrl application url to send the redirect to
-	 * @param sTgt TGT that will be sent with the redirect
-	 * @param sRid RID that will be sent with the redirect
-	 * @param oHttpServletResponse the user that will be redirected
-	 * @throws ASelectException if the user could not be redirected
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sAppUrl
+	 *            application url to send the redirect to
+	 * @param sTgt
+	 *            TGT that will be sent with the redirect
+	 * @param sRid
+	 *            RID that will be sent with the redirect
+	 * @param oHttpServletResponse
+	 *            the user that will be redirected
+	 * @throws ASelectException
+	 *             if the user could not be redirected
 	 */
 	public void sendRedirect(String sAppUrl, String sTgt, String sRid, HttpServletResponse oHttpServletResponse)
 		throws ASelectException
@@ -809,8 +823,8 @@ public class TGTIssuer
 			oHttpServletResponse.sendRedirect(sbRedirect.toString());
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not send redirect to: "+
-					((sbRedirect==null)? "null": sbRedirect.toString()), e);
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not send redirect to: "
+					+ ((sbRedirect == null) ? "null" : sbRedirect.toString()), e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 	}
@@ -818,18 +832,28 @@ public class TGTIssuer
 	/*
 	 * Sets the A-Select Cookie (aselect_credentials) containing the A-Select credentials
 	 */
+	/**
+	 * Sets the a select cookie.
+	 * 
+	 * @param sTgt
+	 *            the s tgt
+	 * @param sUserId
+	 *            the s user id
+	 * @param oHttpServletResponse
+	 *            the o http servlet response
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	public void setASelectCookie(String sTgt, String sUserId, HttpServletResponse oHttpServletResponse)
 		throws ASelectException
 	{
 		String sMethod = "setASelectCookie()";
 		try {
-			//      DONE(Bauke) uid and a-select-server do not have to be part of the credentials (martijn)
-			/*	        StringBuffer sbCredentials = new StringBuffer("tgt=");
-			 sbCredentials.append(sTgt);
-			 sbCredentials.append("&uid=");
-			 sbCredentials.append(sUserId);
-			 sbCredentials.append("&a-select-server=");
-			 sbCredentials.append(_sServerId);
+			// DONE(Bauke) uid and a-select-server do not have to be part of the credentials (martijn)
+			/*
+			 * StringBuffer sbCredentials = new StringBuffer("tgt="); sbCredentials.append(sTgt);
+			 * sbCredentials.append("&uid="); sbCredentials.append(sUserId); sbCredentials.append("&a-select-server=");
+			 * sbCredentials.append(_sServerId);
 			 */
 			// Bauke 20080617 only store tgt value from now on
 			String sCookieDomain = _configManager.getCookieDomain();
@@ -844,9 +868,16 @@ public class TGTIssuer
 	}
 
 	/*
-	 * verifies the old tgt with new tgt context
-	 * verifies the following items: 
-	 * - app_level 
+	 * verifies the old tgt with new tgt context verifies the following items: - app_level
+	 */
+	/**
+	 * Verify tgt.
+	 * 
+	 * @param htOldTGTContext
+	 *            the ht old tgt context
+	 * @param htNewTGTContext
+	 *            the ht new tgt context
+	 * @return the hash map
 	 */
 	private HashMap verifyTGT(HashMap htOldTGTContext, HashMap htNewTGTContext)
 	{
@@ -854,15 +885,15 @@ public class TGTIssuer
 		// check if the user already has a ticket
 		// only if the application requires forced this is useful
 
-		//verify authsp_level
+		// verify authsp_level
 		String sOldAuthSPLevel = (String) htOldTGTContext.get("authsp_level");
 		String sNewAuthSPLevel = (String) htNewTGTContext.get("authsp_level");
 		if (sOldAuthSPLevel != null && sNewAuthSPLevel != null) {
 			int iOldAuthSPLevel = new Integer(sOldAuthSPLevel).intValue();
 			int iNewAuthSPLevel = new Integer(sNewAuthSPLevel).intValue();
 			if (iOldAuthSPLevel > iNewAuthSPLevel) {
-				//overwrite level, if user already has a ticket with 
-				//a higher level 
+				// overwrite level, if user already has a ticket with
+				// a higher level
 				htReturn.put("authsp_level", sOldAuthSPLevel);
 			}
 		}

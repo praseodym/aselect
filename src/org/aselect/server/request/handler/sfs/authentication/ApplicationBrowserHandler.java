@@ -371,11 +371,11 @@ import org.aselect.system.logging.AuthenticationLogger;
 import org.aselect.system.sam.agent.SAMResource;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
- * This class handles login requests coming from applications through a users browser.
- * <br><br>
- * <b>Description:</b>
+ * This class handles login requests coming from applications through a users browser. <br>
  * <br>
+ * <b>Description:</b> <br>
  * This Class handles the following requests:
  * <ul>
  * <li><code>logout</code></li>
@@ -389,9 +389,8 @@ import org.aselect.system.utils.Utils;
  * </ul>
  * <br>
  * If no request is sent the user info (if available) page is shown
- *
- * @author Alfa & Ariss
  * 
+ * @author Alfa & Ariss
  */
 public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 {
@@ -408,16 +407,19 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	private ASelectConfigManager _configManager;
 
 	/**
-	 * Constructor for ApplicationBrowserHandler.
-	 * <br>
-	 * @param servletRequest The request.
-	 * @param servletResponse The response.
-	 * @param sMyServerId The A-Select Server ID.
-	 * @param sMyOrg The A-Select Server organisation.
+	 * Constructor for ApplicationBrowserHandler. <br>
+	 * 
+	 * @param servletRequest
+	 *            The request.
+	 * @param servletResponse
+	 *            The response.
+	 * @param sMyServerId
+	 *            The A-Select Server ID.
+	 * @param sMyOrg
+	 *            The A-Select Server organisation.
 	 */
 	public ApplicationBrowserHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-			String sMyServerId, String sMyOrg)
-	{
+			String sMyServerId, String sMyOrg) {
 		super(servletRequest, servletResponse, sMyServerId, sMyOrg);
 		_sModule = "ApplicationBrowserHandler()";
 		_applicationManager = ApplicationManager.getHandle();
@@ -428,9 +430,20 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	}
 
 	/**
-	 * process application browser requests
-	 * <br><br>
-	 * @see org.aselect.server.request.handler.sfs.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.HashMap, javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
+	 * process application browser requests <br>
+	 * <br>
+	 * .
+	 * 
+	 * @param htServiceRequest
+	 *            the ht service request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @param pwOut
+	 *            the pw out
+	 * @throws ASelectException
+	 *             the a select exception
+	 * @see org.aselect.server.request.handler.sfs.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.HashMap,
+	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
 	 */
 	public void processBrowserRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 		throws ASelectException
@@ -472,7 +485,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			String sDirectAuthSP = (String) _htSessionContext.get("direct_authsp");
 			if (sDirectAuthSP != null && !(sRequest.indexOf("direct_login") >= 0)) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Probably tampered request with rid='" + sRid + "'");
+				_systemLogger
+						.log(Level.WARNING, _sModule, sMethod, "Probably tampered request with rid='" + sRid + "'");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 			// Not a direct_authsp chosen OR it's a direct_login request
@@ -505,36 +519,33 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	}
 
 	/**
-	 * Handles the <code>request=direct_login</code> requests.
-	 * 
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Handles the <code>request=direct_login</code> requests. <br>
 	 * <br>
-	 * All the requests which contains direct_login (e.g. direct_login1, direct_login2)
-	 * will be handled by this function and send to the direct authsp handler.  
-	 * <code>request=cross_login</code> instead.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * All the requests which contains direct_login (e.g. direct_login1, direct_login2) will be handled by this function
+	 * and send to the direct authsp handler. <code>request=cross_login</code> instead. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
+	 * <b>Preconditions:</b> <br>
 	 * A session with a <code>rid</code> should be created first using:
 	 * <ul>
 	 * <li><code>ApplicationRequestHandler.handleAuthenticateRequest()</code>
 	 * </ul>
-	 * <code>htLoginRequest</code> should contain this <code>rid</code> parameter.
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <code>htLoginRequest</code> should contain this <code>rid</code> parameter. <br>
 	 * <br>
-	 * -
-	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
-	 * @param htServiceRequest HashMap containing request parameters
-	 * @param servletResponse Used to send (HTTP) information back to user
-	 * @param pwOut Used to write information back to the user (HTML)
+	 * @param htServiceRequest
+	 *            HashMap containing request parameters
+	 * @param servletResponse
+	 *            Used to send (HTTP) information back to user
+	 * @param pwOut
+	 *            Used to write information back to the user (HTML)
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private void handleDirectLogin(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 		throws ASelectException
@@ -545,14 +556,15 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sRid = (String) htServiceRequest.get("rid");
 			String sAuthSPId = (String) _htSessionContext.get("direct_authsp");
 			if (sAuthSPId == null) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing 'direct_authsp' in session, rid='" + sRid + "'");
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing 'direct_authsp' in session, rid='" + sRid
+						+ "'");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 			IAuthSPDirectLoginProtocolHandler oProtocolHandler = _authspHandlerManager
 					.getAuthSPDirectLoginProtocolHandler(sAuthSPId);
 
 			// check if user already has a tgt so that he/she doesnt need to
-			// be authenticated again            
+			// be authenticated again
 			if (_configManager.isSingleSignOn() && htServiceRequest.containsKey("aselect_credentials_tgt")
 					&& htServiceRequest.containsKey("aselect_credentials_uid")
 					&& htServiceRequest.containsKey("aselect_credentials_server_id")) {
@@ -568,10 +580,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					_tgtManager.remove(sTgt);
 				}
 				else {
-					if (checkCredentials(sTgt, sUid, sServerId)) //valid credentials/level/SSO group
+					if (checkCredentials(sTgt, sUid, sServerId)) // valid credentials/level/SSO group
 					{
-						Boolean boolForced = (Boolean)_htSessionContext.get("forced_authenticate");
-						if (boolForced == null) boolForced = false;
+						Boolean boolForced = (Boolean) _htSessionContext.get("forced_authenticate");
+						if (boolForced == null)
+							boolForced = false;
 						if (!boolForced.booleanValue()) {
 							// valid tgt, no forced_authenticate
 							// redirect to application as user has already a valid tgt
@@ -617,7 +630,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					// Authenicate with same user-id that was stored in TGT
 					HashMap htTGTContext = _tgtManager.getTGT(sTgt);
 
-					// If TGT was issued in cross mode, the user now has to 
+					// If TGT was issued in cross mode, the user now has to
 					// authenticate with a higher level in cross mode again
 					String sTempOrg = (String) htTGTContext.get("proxy_organization");
 					if (sTempOrg == null)
@@ -631,8 +644,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					// User was originally authenticated at this A-Select Server
 					// The userid is already known from the TGT
 					htServiceRequest.put("user_id", sUid);
-					//showDirectLoginForm(htServiceRequest,pwOut);
-					oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId, "", "");
+					// showDirectLoginForm(htServiceRequest,pwOut);
+					oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId,
+							"", "");
 					return;
 				}
 			}
@@ -644,13 +658,14 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			String sForcedUid = (String) _htSessionContext.get("forced_uid");
 			if (sForcedUid != null) {
 				htServiceRequest.put("user_id", sForcedUid);
-				//showDirectLoginForm(htServiceRequest,pwOut);
-				oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId, "", "");
+				// showDirectLoginForm(htServiceRequest,pwOut);
+				oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId, "",
+						"");
 				return;
 			}
 			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId, "", "");
 
-			//Store changed session, for JDBC Storage Handler
+			// Store changed session, for JDBC Storage Handler
 			if (!_sessionManager.writeSession(sRid, _htSessionContext)) {
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
 			}
@@ -665,39 +680,37 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	}
 
 	/**
-	 * Handles the <code>request=login1</code> request.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Handles the <code>request=login1</code> request. <br>
 	 * <br>
-	 * First user request. If the user already has a valid TGT, the user is redirected back
-	 * to the application (or the local A-Select Server in case of cross A-Select).<br>
-	 * If no valid TGT is found, the user is presented an HTML page asking for a user name.
-	 * The HTML page implements a HTML-form that will POST a <code>request=login2</code>.
-	 * If the user is not from this organizatio, the HTML-form might POST a 
-	 * <code>request=cross_login</code> instead.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * First user request. If the user already has a valid TGT, the user is redirected back to the application (or the
+	 * local A-Select Server in case of cross A-Select).<br>
+	 * If no valid TGT is found, the user is presented an HTML page asking for a user name. The HTML page implements a
+	 * HTML-form that will POST a <code>request=login2</code>. If the user is not from this organizatio, the HTML-form
+	 * might POST a <code>request=cross_login</code> instead. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
+	 * <b>Preconditions:</b> <br>
 	 * A session with a <code>rid</code> should be created first using:
 	 * <ul>
 	 * <li><code>ApplicationRequestHandler.handleAuthenticateRequest()</code>
 	 * <li><code>ApplicationRequestHandler.handleCrossAuthenticateRequest()</code>
 	 * </ul>
-	 * <code>htLoginRequest</code> should contain this <code>rid</code> parameter.
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <code>htLoginRequest</code> should contain this <code>rid</code> parameter. <br>
 	 * <br>
-	 * -
-	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
-	 * @param htServiceRequest HashMap containing request parameters
-	 * @param servletResponse Used to send (HTTP) information back to user
-	 * @param pwOut Used to write information back to the user (HTML)
+	 * @param htServiceRequest
+	 *            HashMap containing request parameters
+	 * @param servletResponse
+	 *            Used to send (HTTP) information back to user
+	 * @param pwOut
+	 *            Used to write information back to the user (HTML)
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private void handleLogin1(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 		throws ASelectException
@@ -711,7 +724,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sRid = (String) htServiceRequest.get("rid");
 
 			// check if user already has a tgt so that he/she doesnt need to
-			// be authenticated again            
+			// be authenticated again
 			if (_configManager.isSingleSignOn() && htServiceRequest.containsKey("aselect_credentials_tgt")
 					&& htServiceRequest.containsKey("aselect_credentials_uid")
 					&& htServiceRequest.containsKey("aselect_credentials_server_id")) {
@@ -727,10 +740,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					_tgtManager.remove(sTgt);
 				}
 				else {
-					if (checkCredentials(sTgt, sUid, sServerId)) //valid credentials/level/SSO group
+					if (checkCredentials(sTgt, sUid, sServerId)) // valid credentials/level/SSO group
 					{
-						Boolean boolForced = (Boolean)_htSessionContext.get("forced_authenticate");
-						if (boolForced == null) boolForced = false;
+						Boolean boolForced = (Boolean) _htSessionContext.get("forced_authenticate");
+						if (boolForced == null)
+							boolForced = false;
 						if (!boolForced.booleanValue()) {
 							// valid tgt, no forced_authenticate
 							// redirect to application as user has already a valid tgt
@@ -776,7 +790,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					// Authenicate with same user-id that was stored in TGT
 					HashMap htTGTContext = _tgtManager.getTGT(sTgt);
 
-					// If TGT was issued in cross mode, the user now has to 
+					// If TGT was issued in cross mode, the user now has to
 					// authenticate with a higher level in cross mode again
 					String sTempOrg = (String) htTGTContext.get("proxy_organization");
 					if (sTempOrg == null)
@@ -784,7 +798,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					if (!sTempOrg.equals(_sMyOrg)) {
 						_htSessionContext.put("forced_uid", sUid);
 						_htSessionContext.put("forced_organization", sTempOrg);
-						//It isn't necessary to update the session here, because it will be done in handleCrossLogin.
+						// It isn't necessary to update the session here, because it will be done in handleCrossLogin.
 						handleCrossLogin(htServiceRequest, servletResponse, pwOut);
 						return;
 					}
@@ -846,37 +860,34 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	}
 
 	/**
-	 * Handles the <code>request=login2</code> request.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Handles the <code>request=login2</code> request. <br>
 	 * <br>
-	 * The request created by the HTML page presented by the
-	 * <code>handleLogin1</code> function, is verified here.<br>
-	 * For the entered user-id a lookup is done in the user database to 
-	 * determine all enabled AuthSP's for this user. For every AuthSP a
-	 * verification is done if it matches the required level.<br>
-	 * All valid AuthSP's are presnted to the user by means of a 'drop-down'
-	 * list in a HTML page. This HTML page will POST a <code>request=login3</code>.<br>
-	 * Depending on the A-Select configuration <code>always_show_select_form</code>
-	 * the request can be parsed to <code>handleLogin3()</code> immediately if only one
-	 * valid AuthSP is found.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * The request created by the HTML page presented by the <code>handleLogin1</code> function, is verified here.<br>
+	 * For the entered user-id a lookup is done in the user database to determine all enabled AuthSP's for this user.
+	 * For every AuthSP a verification is done if it matches the required level.<br>
+	 * All valid AuthSP's are presnted to the user by means of a 'drop-down' list in a HTML page. This HTML page will
+	 * POST a <code>request=login3</code>.<br>
+	 * Depending on the A-Select configuration <code>always_show_select_form</code> the request can be parsed to
+	 * <code>handleLogin3()</code> immediately if only one valid AuthSP is found. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param htServiceRequest HashMap containing request parameters
-	 * @param servletResponse Used to send (HTTP) information back to user
-	 * @param pwOut Used to write information back to the user (HTML)
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param htServiceRequest
+	 *            HashMap containing request parameters
+	 * @param servletResponse
+	 *            Used to send (HTTP) information back to user
+	 * @param pwOut
+	 *            Used to write information back to the user (HTML)
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private void handleLogin2(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 		throws ASelectException
@@ -928,12 +939,12 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					String sFormShow = _configManager.getParam(_configManager.getSection(null, "authsps"),
 							"always_show_select_form");
 					if (sFormShow.equalsIgnoreCase("false")) {
-						//continue with login3
-	                    Set keys = htAuthsps.keySet();
-	        			for (Object s : keys) {
-	        				htServiceRequest.put("authsp", (String)s);
-	        				break;
-	        			}
+						// continue with login3
+						Set keys = htAuthsps.keySet();
+						for (Object s : keys) {
+							htServiceRequest.put("authsp", (String) s);
+							break;
+						}
 						handleLogin3(htServiceRequest, servletResponse, pwOut);
 						return;
 					}
@@ -954,13 +965,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			String sFriendlyName = "";
 			sb = new StringBuffer();
-            Set keys = htAuthsps.keySet();
+			Set keys = htAuthsps.keySet();
 			for (Object s : keys) {
 				String sAuthspName = (String) s;
-//			Enumeration enumAuthspEnum = htAuthsps.keys();
-//			while (enumAuthspEnum.hasMoreElements()) {
+				// Enumeration enumAuthspEnum = htAuthsps.keys();
+				// while (enumAuthspEnum.hasMoreElements()) {
 				try {
-//					sAuthspName = (String) enumAuthspEnum.nextElement();
+					// sAuthspName = (String) enumAuthspEnum.nextElement();
 					Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"),
 							"authsp", "id=" + sAuthspName);
 					sFriendlyName = _configManager.getParam(authSPsection, "friendly_name");
@@ -997,36 +1008,34 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	}
 
 	/**
-	 * This methods handles the <code>request=login3</code> request.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * This methods handles the <code>request=login3</code> request. <br>
 	 * <br>
-	 * The user has now chosen a method for authentication and is ready to be
-	 * redirected to the AuthSP's authentication page. <br>
-	 * The protocol handler for the AuthSP is instantiated and that object will
-	 * compute the request for authentication (e.g., it will also sign the
-	 * request). The actual method that does this is
-	 * <code>startAuthentication</code>.<br>
-	 * If everything is ok, the user is redirected through the
-	 * <code>servletResponse.sendRedirect()</code> method with a signed
-	 * request for the AuthSP. <br>
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * The user has now chosen a method for authentication and is ready to be redirected to the AuthSP's authentication
+	 * page. <br>
+	 * The protocol handler for the AuthSP is instantiated and that object will compute the request for authentication
+	 * (e.g., it will also sign the request). The actual method that does this is <code>startAuthentication</code>.<br>
+	 * If everything is ok, the user is redirected through the <code>servletResponse.sendRedirect()</code> method with a
+	 * signed request for the AuthSP. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * @param htServiceRequest HashMap containing request parameters
-	 * @param servletResponse Used to send (HTTP) information back to user
-	 * @param pwOut Used to write information back to the user (HTML)
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param htServiceRequest
+	 *            HashMap containing request parameters
+	 * @param servletResponse
+	 *            Used to send (HTTP) information back to user
+	 * @param pwOut
+	 *            Used to write information back to the user (HTML)
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private void handleLogin3(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 		throws ASelectException
@@ -1055,7 +1064,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					sPopup = _configManager.getParam(authSPsection, "popup");
 				}
 				catch (ASelectConfigException e) {
-					//No popup configured -> sPopup is null allready
+					// No popup configured -> sPopup is null allready
 				}
 
 				if (sPopup == null || sPopup.equalsIgnoreCase("false")) {
@@ -1096,34 +1105,32 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	}
 
 	/**
-	 * This method handles the <code>request=cross_login</code> user request.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * This method handles the <code>request=cross_login</code> user request. <br>
 	 * <br>
-	 * If the user already has a tgt and it is valid for the current
-	 * application, then the user does not need be authenticated again. The user
-	 * is redirected back to the application. If the user's tgt is not valid,
-	 * then the remote A-Select Server is contacted by sending a
-	 * <code>request=cross_authenticate_aselect</code> request. If the remote A-Select
-	 * Server is contacted successfully, the user is redirected to him so that
-	 * the user can be authenticated there.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * If the user already has a tgt and it is valid for the current application, then the user does not need be
+	 * authenticated again. The user is redirected back to the application. If the user's tgt is not valid, then the
+	 * remote A-Select Server is contacted by sending a <code>request=cross_authenticate_aselect</code> request. If the
+	 * remote A-Select Server is contacted successfully, the user is redirected to him so that the user can be
+	 * authenticated there. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param htServiceRequest HashMap containing request parameters
-	 * @param servletResponse Used to send (HTTP) information back to user
-	 * @param pwOut PrintWriter that might be needed by the <code>ISelectorHandler</code>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param htServiceRequest
+	 *            HashMap containing request parameters
+	 * @param servletResponse
+	 *            Used to send (HTTP) information back to user
+	 * @param pwOut
+	 *            PrintWriter that might be needed by the <code>ISelectorHandler</code>
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private void handleCrossLogin(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 		throws ASelectException
@@ -1186,7 +1193,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					for (int i = 0; i < aCookies.length; i++) {
 						if (aCookies[i].getName().equals("aselect_home_idp")) {
 							sHomeIdpCookie = aCookies[i].getValue();
-							//remove '"' surrounding cookie if applicable
+							// remove '"' surrounding cookie if applicable
 							int iLength = sHomeIdpCookie.length();
 							if (sHomeIdpCookie.charAt(0) == '"' && sHomeIdpCookie.charAt(iLength - 1) == '"') {
 								sHomeIdpCookie = sHomeIdpCookie.substring(1, iLength - 1);
@@ -1200,7 +1207,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				}
 
 				try {
-					//CrossASelectManager oIdentificationFactory = CrossASelectManager.getHandle();
+					// CrossASelectManager oIdentificationFactory = CrossASelectManager.getHandle();
 					htIdentification = _crossASelectManager.getSelectorHandler().getRemoteServerId(htServiceRequest,
 							servletResponse, pwOut);
 				}
@@ -1270,14 +1277,15 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sbMyAppUrl.append((String) htServiceRequest.get("my_url"));
 			sbMyAppUrl.append("?local_rid=").append(sLocalRid);
 
-			RawCommunicator oCommunicator = new RawCommunicator(_systemLogger); //Default = API communciation
+			RawCommunicator oCommunicator = new RawCommunicator(_systemLogger); // Default = API communciation
 
 			HashMap htRequestTable = new HashMap();
 			HashMap htResponseTable = new HashMap();
 			htRequestTable.put("request", "authenticate");
 
 			Boolean boolForced = (Boolean) _htSessionContext.get("forced_authenticate");
-			if (boolForced == null) boolForced = false;
+			if (boolForced == null)
+				boolForced = false;
 			htRequestTable.put("forced_logon", boolForced.toString());
 			htRequestTable.put("local_as_url", sbMyAppUrl.toString());
 
@@ -1308,29 +1316,19 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				htRequestTable.put("arp_target", (String) _htSessionContext.get("arp_target"));
 			}
 			/*
-			 else
-			 {
-			 String sAppId = (String)_htSessionContext.get("app_id");
-			 if (sAppId!=null)
-			 {
-			 String sArpTarget = URLEncoder.encode(sAppId, "UTF-8")+ "@" + URLEncoder.encode(sMyOrgId, "UTF-8");
-			 htRequestTable.put("arp_target", sArpTarget);
-			 }
-			 else
-			 {
-			 _systemLogger.log(Level.CONFIG,_sModule,sMethod, "No arp_target yet defined at the local IDP");
-			 String sArpTarget = URLEncoder.encode(_sMyOrg, "UTF-8")+ "@" + URLEncoder.encode(sMyOrgId, "UTF-8");
-			 htRequestTable.put("arp_target", sArpTarget);
-			 }
-			 }
+			 * else { String sAppId = (String)_htSessionContext.get("app_id"); if (sAppId!=null) { String sArpTarget =
+			 * URLEncoder.encode(sAppId, "UTF-8")+ "@" + URLEncoder.encode(sMyOrgId, "UTF-8");
+			 * htRequestTable.put("arp_target", sArpTarget); } else { _systemLogger.log(Level.CONFIG,_sModule,sMethod,
+			 * "No arp_target yet defined at the local IDP"); String sArpTarget = URLEncoder.encode(_sMyOrg, "UTF-8")+
+			 * "@" + URLEncoder.encode(sMyOrgId, "UTF-8"); htRequestTable.put("arp_target", sArpTarget); } }
 			 */
 
-			//Store changed session, for JDBC Storage Handler
+			// Store changed session, for JDBC Storage Handler
 			if (!_sessionManager.writeSession(sLocalRid, _htSessionContext)) {
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
 			}
 
-			//check if request should be signed
+			// check if request should be signed
 			if (_crossASelectManager.useRemoteSigning()) {
 				_cryptoEngine.signRequest(htRequestTable);
 			}
@@ -1375,8 +1373,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				sbUrl.append("&rid=").append(sRemoteRid);
 				sbUrl.append("&a-select-server=").append(sRemoteServer);
 				/*
-				 if(sHomeIdp != null)
-				 sbUrl.append("&forced_organization=").append(sHomeIdp);
+				 * if(sHomeIdp != null) sbUrl.append("&forced_organization=").append(sHomeIdp);
 				 */
 				servletResponse.sendRedirect(sbUrl.toString());
 
@@ -1399,34 +1396,31 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	}
 
 	/**
-	 * This method handles the <code>request=ip_login</code> user request.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * This method handles the <code>request=ip_login</code> user request. <br>
 	 * <br>
-	 * The request can be used to authenticate user by means of the IP AuthSP
-	 * without the need to know a user-id.
-	 * If the user already has a tgt and it is valid for the current
-	 * application, then the user does not need be authenticated again. The user
-	 * is redirected back to the application.
-	 * If everything is ok, the request is forwarded to <code>handleLogin3()</code>
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * The request can be used to authenticate user by means of the IP AuthSP without the need to know a user-id. If the
+	 * user already has a tgt and it is valid for the current application, then the user does not need be authenticated
+	 * again. The user is redirected back to the application. If everything is ok, the request is forwarded to
+	 * <code>handleLogin3()</code> <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param htServiceRequest HashMap containing request parameters
-	 * @param servletResponse Used to send (HTTP) information back to user
-	 * @param pwOut Used to write information back to the user (HTML)
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param htServiceRequest
+	 *            HashMap containing request parameters
+	 * @param servletResponse
+	 *            Used to send (HTTP) information back to user
+	 * @param pwOut
+	 *            Used to write information back to the user (HTML)
 	 * @throws ASelectException
-	 * TODO add support for cross and force_authenticate (martijn)
+	 *             TODO add support for cross and force_authenticate (martijn)
 	 */
 	private void handleIPLogin1(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 		throws ASelectException
@@ -1445,9 +1439,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// check if user already has a tgt so that he/she doesnt need to
 			// be authenticated again
 
-			// TODO IP login is not used when a user already has a TGT  (Peter)
-			// IP login is not used when a user already has a TGT. The origin 
-			// ip-range will never be forced when already authenticated with an 
+			// TODO IP login is not used when a user already has a TGT (Peter)
+			// IP login is not used when a user already has a TGT. The origin
+			// ip-range will never be forced when already authenticated with an
 			// AuthSP with a higher level
 			if (_configManager.isSingleSignOn() && htServiceRequest.containsKey("aselect_credentials_tgt")
 					&& htServiceRequest.containsKey("aselect_credentials_uid")
@@ -1473,7 +1467,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							// The TGT should be created now
 							// TGTIssuer will redirect to local A-Select Server
 
-							// TODO Check if a new TGT must be created (Peter)  
+							// TODO Check if a new TGT must be created (Peter)
 							// A new TGT is created because the TGTIssuer
 							// implements the redirect with a create signature.
 							// It is not logical to create a new TGT.
@@ -1489,9 +1483,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							// issue new one but with the same lifetime as the
 							// existing one
 							HashMap htAdditional = new HashMap();
-							//FIXME StorageManager can't update timestamp, this doesn't work. (Erwin, Peter)
-							//htAdditional.put("tgt_exp_time", htTgtContext
-							//.get("tgt_exp_time"));
+							// FIXME StorageManager can't update timestamp, this doesn't work. (Erwin, Peter)
+							// htAdditional.put("tgt_exp_time", htTgtContext
+							// .get("tgt_exp_time"));
 
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 							oTGTIssuer.issueTGT(sRid, sAuthsp, htAdditional, servletResponse, null);
@@ -1504,7 +1498,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						sRedirectUrl = URLDecoder.decode(sRedirectUrl, "UTF-8");
 						sb = new StringBuffer(sRedirectUrl);
 
-						//check whether the application url contains cgi
+						// check whether the application url contains cgi
 						// parameters
 						if (sRedirectUrl.indexOf("?") > 0) {
 							sb.append("&");
@@ -1540,7 +1534,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// get the required level of the application
 			intRequiredLevel = _applicationManager.getRequiredLevel((String) _htSessionContext.get("app_id"));
 
-			//check if IP AuthSP is enabled
+			// check if IP AuthSP is enabled
 			Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp",
 					"id=Ip");
 
@@ -1550,7 +1544,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				sb = new StringBuffer(sMethod);
 				sb.append("Could not perform IP authentication. Reason : ");
 
-				//log this error in system log
+				// log this error in system log
 				if (sLevel == null) {
 					sb.append("The IP AuthSP is not (properly) configured.");
 				}
@@ -1567,7 +1561,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_htSessionContext.put("user_id", htServiceRequest.get("client_ip"));
 			_sessionManager.writeSession(sRid, _htSessionContext);
 
-			//go for IP authsp
+			// go for IP authsp
 			htServiceRequest.put("authsp", "Ip");
 			handleLogin3(htServiceRequest, servletResponse, pwOut);
 		}
@@ -1582,28 +1576,28 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	}
 
 	/**
-	 * This method handles the <code>request=logout</code> user request.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * This method handles the <code>request=logout</code> user request. <br>
 	 * <br>
-	 * The request can be used to logout a user by destroying his/her TGT.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * The request can be used to logout a user by destroying his/her TGT. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * Valid TGT
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * Valid TGT <br>
 	 * <br>
-	 * TGT is destroyed
-	 * <br>
-	 * @param htServiceRequest HashMap containing request parameters
-	 * @param servletResponse Used to send (HTTP) information back to user
-	 * @param pwOut Used to write information back to the user (HTML)
+	 * <b>Postconditions:</b> <br>
+	 * TGT is destroyed <br>
+	 * 
+	 * @param htServiceRequest
+	 *            HashMap containing request parameters
+	 * @param servletResponse
+	 *            Used to send (HTTP) information back to user
+	 * @param pwOut
+	 *            Used to write information back to the user (HTML)
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private void handleLogout(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 		throws ASelectException
@@ -1681,29 +1675,28 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	}
 
 	/**
-	 * This method handles the <code>request=create_tgt</code> user request.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * This method handles the <code>request=create_tgt</code> user request. <br>
 	 * <br>
-	 * This request can be used to create TGTs for users without actually authentication them.
-	 * This can only be used by priviliged applications which simply redirect the user
-	 * with the correct information to the A-Select-Server with the request to create a TGT.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * This request can be used to create TGTs for users without actually authentication them. This can only be used by
+	 * priviliged applications which simply redirect the user with the correct information to the A-Select-Server with
+	 * the request to create a TGT. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * Signed request and a valid public key located in the priviliged keystore
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * Signed request and a valid public key located in the priviliged keystore <br>
 	 * <br>
-	 * A TGT wil be created
-	 * <br>
-	 * @param htServiceRequest HashMap containing request parameters
-	 * @param servletResponse Used to send (HTTP) information back to user
+	 * <b>Postconditions:</b> <br>
+	 * A TGT wil be created <br>
+	 * 
+	 * @param htServiceRequest
+	 *            HashMap containing request parameters
+	 * @param servletResponse
+	 *            Used to send (HTTP) information back to user
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private void handleCreateTGT(HashMap htServiceRequest, HttpServletResponse servletResponse)
 		throws ASelectException
@@ -1712,7 +1705,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		AuthenticationLogger authenticationLogger = ASelectAuthenticationLogger.getHandle();
 
 		try {
-			//get output writer
+			// get output writer
 			// Read expected parameters
 			String sRid = (String) htServiceRequest.get("rid");
 			String sUID = (String) htServiceRequest.get("uid");
@@ -1733,15 +1726,17 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				sSignature = URLDecoder.decode(sSignature, "UTF-8");
 				sUID = URLDecoder.decode(sUID, "UTF-8");
 			}
-			catch (UnsupportedEncodingException eUE) {  // UTF-8 not supported
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error: request could not be decoded", eUE);
+			catch (UnsupportedEncodingException eUE) { // UTF-8 not supported
+				_systemLogger
+						.log(Level.WARNING, _sModule, sMethod, "Internal error: request could not be decoded", eUE);
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
 
 			StringBuffer sbBuffer = new StringBuffer();
 			sbBuffer.append(sRid).append(sUID);
 			sbBuffer.append(sPrivilegedApplication).append(sAuthspLevel);
-			if (!CryptoEngine.getHandle().verifyPrivilegedSignature(sPrivilegedApplication, sbBuffer.toString(), sSignature)) {
+			if (!CryptoEngine.getHandle().verifyPrivilegedSignature(sPrivilegedApplication, sbBuffer.toString(),
+					sSignature)) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request received: invalid signature.");
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
@@ -1753,7 +1748,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
 			}
 
-			//check authsp_level  
+			// check authsp_level
 			try {
 				int iLevel = Integer.parseInt(sAuthspLevel);
 				if (iLevel < 0) {
@@ -1767,7 +1762,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST, eNF);
 			}
 
-			//check user ID
+			// check user ID
 			IUDBConnector oUDBConnector = null;
 			try {
 				oUDBConnector = UDBConnectorFactory.getUDBConnector();
@@ -1814,17 +1809,17 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	}
 
 	/**
-	 * Get the AuthSP servers. Private method that fetches the authentication
-	 * service providers from the user database of the A-Select Servers. The
-	 * user may have been registered or entitled to use several authentication
-	 * service providers. But only the ones that satisfy the level for the
-	 * current application are returned by filtering the authsp's with lower
-	 * levels out.
+	 * Get the AuthSP servers. Private method that fetches the authentication service providers from the user database
+	 * of the A-Select Servers. The user may have been registered or entitled to use several authentication service
+	 * providers. But only the ones that satisfy the level for the current application are returned by filtering the
+	 * authsp's with lower levels out.
 	 * 
 	 * @param sRid
 	 *            The RID.
 	 * @param sUid
+	 *            the s uid
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private void getAuthsps(String sRid, String sUid)
 		throws ASelectException
@@ -1854,7 +1849,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 			htUserAuthsps = (HashMap) htUserProfile.get("user_authsps");
 			if (htUserAuthsps == null) {
-				//should never happen
+				// should never happen
 				_systemLogger.log(Level.SEVERE, _sModule, sMethod, "INTERNAL ERROR");
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
@@ -1862,16 +1857,17 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// which level is required for the application?
 			intRequiredLevel = (Integer) _htSessionContext.get("level");
 			if (intRequiredLevel == null) {
-				//'normal' request
+				// 'normal' request
 				intRequiredLevel = _applicationManager.getRequiredLevel((String) _htSessionContext.get("app_id"));
-				//TODO check if this is still necessary. (leon)
+				// TODO check if this is still necessary. (leon)
 			}
-			intMaxLevel = (Integer) _htSessionContext.get("max_level"); //'max_level' may be null
+			intMaxLevel = (Integer) _htSessionContext.get("max_level"); // 'max_level' may be null
 
 			// fetch the authsps that the user has registered for and
 			// satisfy the level for the current application
 			Vector vAllowedAuthSPs;
-			vAllowedAuthSPs = _authspHandlerManager.getConfiguredAuthSPs(intRequiredLevel, intMaxLevel);//getAllowedAuthSPs(intRequiredLevel.intValue(), htUserAuthsps);
+			vAllowedAuthSPs = _authspHandlerManager.getConfiguredAuthSPs(intRequiredLevel, intMaxLevel);// getAllowedAuthSPs(intRequiredLevel.intValue(),
+			// htUserAuthsps);
 			if (vAllowedAuthSPs == null) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "INTERNAL ERROR" + sUid);
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
@@ -1902,13 +1898,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	}
 
 	/**
-	 * This method will instantiate the protocol handler for the selected
-	 * AuthSP.
-	 * 
-	 * The protocol handler will compose a redirect url and return it. This
-	 * method will return this redirect url. Some AuthSP's will require a signed
-	 * request from the A-Select Server. The protocol handler will be
-	 * responsible for placing it.
+	 * This method will instantiate the protocol handler for the selected AuthSP. The protocol handler will compose a
+	 * redirect url and return it. This method will return this redirect url. Some AuthSP's will require a signed
+	 * request from the A-Select Server. The protocol handler will be responsible for placing it.
 	 * 
 	 * @param sRid
 	 *            The RID.
@@ -1916,6 +1908,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *            The request parameters.
 	 * @return The error code.
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private String startAuthentication(String sRid, HashMap htLoginRequest)
 		throws ASelectException
@@ -1982,12 +1975,15 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	}
 
 	/**
-	 * Private method to check whether the user's tgt is valid and satisfies the
-	 * required level for the current application.
-	 * <br>
-	 * @param sTgt The ticket granting ticket.
-	 * @param sUid The user ID.
-	 * @param sServerId The server ID.
+	 * Private method to check whether the user's tgt is valid and satisfies the required level for the current
+	 * application. <br>
+	 * 
+	 * @param sTgt
+	 *            The ticket granting ticket.
+	 * @param sUid
+	 *            The user ID.
+	 * @param sServerId
+	 *            The server ID.
 	 * @return True if credentials are valid, otherwise false.
 	 */
 	private boolean checkCredentials(String sTgt, String sUid, String sServerId)
@@ -2009,7 +2005,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			return false;
 		}
 
-		//check single sign-on groups
+		// check single sign-on groups
 		Vector vCurSSOGroups = (Vector) _htSessionContext.get("sso_groups");
 		Vector vOldSSOGroups = (Vector) htTGTContext.get("sso_groups");
 		if (vCurSSOGroups != null && vOldSSOGroups != null) {
@@ -2031,11 +2027,15 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	}
 
 	/**
-	 * Show the user info contained in the TGT context of the user. Requires a valid TGT.
-	 * <br><br>
+	 * Show the user info contained in the TGT context of the user. Requires a valid TGT. <br>
+	 * <br>
+	 * 
 	 * @param htServiceRequest
+	 *            the ht service request
 	 * @param response
+	 *            the response
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private void showUserInfo(HashMap htServiceRequest, HttpServletResponse response)
 		throws ASelectException
@@ -2044,7 +2044,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		PrintWriter pwOut = null;
 
 		try {
-			//get output writer
+			// get output writer
 			pwOut = response.getWriter();
 
 			String sUserId = (String) htServiceRequest.get("aselect_credentials_uid");

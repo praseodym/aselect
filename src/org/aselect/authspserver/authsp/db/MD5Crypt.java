@@ -1,279 +1,286 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.authspserver.authsp.db;
 
 import java.security.*;
 
+// TODO: Auto-generated Javadoc
 /**
- * A Java Implementation of the MD5Crypt function
- * Modified from the GANYMEDE network directory management system
- * released under the GNU General Public License
- * by the University of Texas at Austin 
- * http://tools.arlut.utexas.edu/gash2/
- * Original version from :Jonathan Abbey, jonabbey@arlut.utexas.edu
- * Modified by: Vladimir Silva, vladimir_silva@yahoo.com
- * Modification history:
- * 9/2005
- *      - Removed dependencies on a MD5 private implementation
- *      - Added built-in java.security.MessageDigest (MD5) support
- *      - Code cleanup
+ * A Java Implementation of the MD5Crypt function Modified from the GANYMEDE network directory management system
+ * released under the GNU General Public License by the University of Texas at Austin
+ * http://tools.arlut.utexas.edu/gash2/ Original version from :Jonathan Abbey, jonabbey@arlut.utexas.edu Modified by:
+ * Vladimir Silva, vladimir_silva@yahoo.com Modification history: 9/2005 - Removed dependencies on a MD5 private
+ * implementation - Added built-in java.security.MessageDigest (MD5) support - Code cleanup
  */
 
 public class MD5Crypt
 {
-    // Character set allowed for the salt string
-    static private final String SALTCHARS 
-        = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+	// Character set allowed for the salt string
+	static private final String SALTCHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 
-    // Character set of the encrypted password: A-Za-z0-9./ 
-    static private final String itoa64 
-        = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	// Character set of the encrypted password: A-Za-z0-9./
+	static private final String itoa64 = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-    /**
-     * Function to return a string from the set: A-Za-z0-9./
-     * @return A string of size (size) from the set A-Za-z0-9./
-     * @param size Length of the string
-     * @param v value to be converted
-     */
-    static private final String to64( long v, int size )
-    {
-        StringBuffer result = new StringBuffer();
+	/**
+	 * Function to return a string from the set: A-Za-z0-9./
+	 * 
+	 * @param size
+	 *            Length of the string
+	 * @param v
+	 *            value to be converted
+	 * @return A string of size (size) from the set A-Za-z0-9./
+	 */
+	static private final String to64(long v, int size)
+	{
+		StringBuffer result = new StringBuffer();
 
-        while ( --size >= 0 )
-        {
-            result.append( itoa64.charAt( ( int )( v & 0x3f ) ) );
-            v >>>= 6;
-        }
+		while (--size >= 0) {
+			result.append(itoa64.charAt((int) (v & 0x3f)));
+			v >>>= 6;
+		}
 
-        return result.toString();
-    }
+		return result.toString();
+	}
 
-    static private final void clearbits( byte bits[] )
-    {
-        for ( int i = 0; i < bits.length; i++ )
-        {
-            bits[i] = 0;
-        }
-    }
+	/**
+	 * Clearbits.
+	 * 
+	 * @param bits
+	 *            the bits
+	 */
+	static private final void clearbits(byte bits[])
+	{
+		for (int i = 0; i < bits.length; i++) {
+			bits[i] = 0;
+		}
+	}
 
-    /** 
-     * convert an encoded unsigned byte value 
-     * into a int with the unsigned value. 
-     */
-    static private final int bytes2u( byte inp )
-    {
-        return ( int )inp & 0xff;
-    }
+	/**
+	 * convert an encoded unsigned byte value into a int with the unsigned value.
+	 * 
+	 * @param inp
+	 *            the inp
+	 * @return the int
+	 */
+	static private final int bytes2u(byte inp)
+	{
+		return inp & 0xff;
+	}
 
-    /**
-     * LINUX/BSD MD5Crypt function
-     * @return The encrypted password as an MD5 hash
-     * @param password Password to be encrypted
-     */
-    static public final String crypt(String password) 
-    {
-        StringBuffer salt = new StringBuffer();
-        java.util.Random rnd = new java.util.Random();
-        
-        // build a random 8 chars salt        
-        while (salt.length() < 8)
-        {
-            int index = (int) (rnd.nextFloat() * SALTCHARS.length());
-            salt.append(SALTCHARS.substring(index, index+1));
-        }
-        
-        // crypt
-        return crypt(password, salt.toString(), "$1$");
-    }
+	/**
+	 * LINUX/BSD MD5Crypt function.
+	 * 
+	 * @param password
+	 *            Password to be encrypted
+	 * @return The encrypted password as an MD5 hash
+	 */
+	static public final String crypt(String password)
+	{
+		StringBuffer salt = new StringBuffer();
+		java.util.Random rnd = new java.util.Random();
 
-    /**
-     * LINUX/BSD MD5Crypt function
-     * @return The encrypted password as an MD5 hash
-     * @param salt Random string used to initialize the MD5 engine
-     * @param password Password to be encrypted
-     */
-    static public final String crypt(String password, String salt)
-    {
-        return crypt(password, salt, "$1$");
-    }
+		// build a random 8 chars salt
+		while (salt.length() < 8) {
+			int index = (int) (rnd.nextFloat() * SALTCHARS.length());
+			salt.append(SALTCHARS.substring(index, index + 1));
+		}
 
-    /**
-     * Linux/BSD MD5Crypt function
-     * @throws java.lang.Exception
-     * @return The encrypted password as an MD5 hash
-     * @param magic $1$ for Linux/BSB, $apr1$ for Apache crypt
-     * @param salt 8 byte permutation string
-     * @param password user password
-     */
-    static public final String crypt( String password, String salt, String magic ) 
-    {
+		// crypt
+		return crypt(password, salt.toString(), "$1$");
+	}
 
-        byte finalState[];
-        long l;
-        
-        /**
-         * Two MD5 hashes are used
-         */
-        MessageDigest ctx, ctx1;
-        
-        try 
-        {
-            ctx = MessageDigest.getInstance( "md5" );
-            ctx1 = MessageDigest.getInstance( "md5" );
-        } 
-        catch (NoSuchAlgorithmException ex) 
-        {
-            System.err.println(ex);
-            return null;
-        }
+	/**
+	 * LINUX/BSD MD5Crypt function.
+	 * 
+	 * @param salt
+	 *            Random string used to initialize the MD5 engine
+	 * @param password
+	 *            Password to be encrypted
+	 * @return The encrypted password as an MD5 hash
+	 */
+	static public final String crypt(String password, String salt)
+	{
+		return crypt(password, salt, "$1$");
+	}
 
-        /* Refine the Salt first */
-        /* If it starts with the magic string, then skip that */
+	/**
+	 * Linux/BSD MD5Crypt function.
+	 * 
+	 * @param magic
+	 *            $1$ for Linux/BSB, $apr1$ for Apache crypt
+	 * @param salt
+	 *            8 byte permutation string
+	 * @param password
+	 *            user password
+	 * @return The encrypted password as an MD5 hash
+	 * @throws java.lang.Exception
+	 */
+	static public final String crypt(String password, String salt, String magic)
+	{
 
-        if ( salt.startsWith( magic ) )
-        {
-            salt = salt.substring( magic.length() );
-        }
+		byte finalState[];
+		long l;
 
-        /* It stops at the first '$', max 8 chars */
+		/**
+		 * Two MD5 hashes are used
+		 */
+		MessageDigest ctx, ctx1;
 
-        if ( salt.indexOf( '$' ) != -1 )
-        {
-            salt = salt.substring( 0, salt.indexOf( '$' ) );
-        }
+		try {
+			ctx = MessageDigest.getInstance("md5");
+			ctx1 = MessageDigest.getInstance("md5");
+		}
+		catch (NoSuchAlgorithmException ex) {
+			System.err.println(ex);
+			return null;
+		}
 
-        if ( salt.length() > 8 )
-        {
-            salt = salt.substring( 0, 8 );
-        }
+		/* Refine the Salt first */
+		/* If it starts with the magic string, then skip that */
 
-        /**
-         * Transformation set #1:
-         * The password first, since that is what is most unknown
-         * Magic string
-         * Raw salt
-         */
-        ctx.update( password.getBytes() ); 
-        ctx.update( magic.getBytes() ); 
-        ctx.update( salt.getBytes() ); 
+		if (salt.startsWith(magic)) {
+			salt = salt.substring(magic.length());
+		}
 
+		/* It stops at the first '$', max 8 chars */
 
-        /* Then just as many characters of the MD5(pw,salt,pw) */
+		if (salt.indexOf('$') != -1) {
+			salt = salt.substring(0, salt.indexOf('$'));
+		}
 
-        ctx1.update( password.getBytes() );
-        ctx1.update( salt.getBytes() );
-        ctx1.update( password.getBytes() );
-        finalState = ctx1.digest(); // ctx1.Final();
+		if (salt.length() > 8) {
+			salt = salt.substring(0, 8);
+		}
 
-        for ( int pl = password.length(); pl > 0; pl -= 16 )
-        {
-            ctx.update( finalState, 0, pl > 16 ? 16 : pl );
-        }
+		/**
+		 * Transformation set #1: The password first, since that is what is most unknown Magic string Raw salt
+		 */
+		ctx.update(password.getBytes());
+		ctx.update(magic.getBytes());
+		ctx.update(salt.getBytes());
 
-        /** the original code claimed that finalState was being cleared
-        to keep dangerous bits out of memory, 
-        but doing this is also required in order to get the right output. */
+		/* Then just as many characters of the MD5(pw,salt,pw) */
 
-        clearbits( finalState );
+		ctx1.update(password.getBytes());
+		ctx1.update(salt.getBytes());
+		ctx1.update(password.getBytes());
+		finalState = ctx1.digest(); // ctx1.Final();
 
-        /* Then something really weird... */
+		for (int pl = password.length(); pl > 0; pl -= 16) {
+			ctx.update(finalState, 0, pl > 16 ? 16 : pl);
+		}
 
-        for ( int i = password.length(); i != 0; i >>>= 1 )
-        {
-            if ( ( i & 1 ) != 0 )
-            {
-                ctx.update( finalState, 0, 1 );
-            }
-            else
-            {
-                ctx.update( password.getBytes(), 0, 1 );
-            }
-        }
+		/**
+		 * the original code claimed that finalState was being cleared to keep dangerous bits out of memory, but doing
+		 * this is also required in order to get the right output.
+		 */
 
-        finalState = ctx.digest();
+		clearbits(finalState);
 
-        /** and now, just to make sure things don't run too fast 
-         * On a 60 Mhz Pentium this takes 34 msec, so you would
-        * need 30 seconds to build a 1000 entry dictionary... 
-        * (The above timings from the C version) 
-        */
+		/* Then something really weird... */
 
-        for ( int i = 0; i < 1000; i++ )
-        {
-            try {
-                ctx1 = MessageDigest.getInstance( "md5" ); 
-            }
-            catch (NoSuchAlgorithmException e0 ) { return null;}
+		for (int i = password.length(); i != 0; i >>>= 1) {
+			if ((i & 1) != 0) {
+				ctx.update(finalState, 0, 1);
+			}
+			else {
+				ctx.update(password.getBytes(), 0, 1);
+			}
+		}
 
-            if ( ( i & 1 ) != 0 )
-            {
-                ctx1.update( password.getBytes() );
-            }
-            else
-            {
-                ctx1.update( finalState, 0, 16 );
-            }
+		finalState = ctx.digest();
 
-            if ( ( i % 3 ) != 0 )
-            {
-                ctx1.update( salt.getBytes() );
-            }
+		/**
+		 * and now, just to make sure things don't run too fast On a 60 Mhz Pentium this takes 34 msec, so you would
+		 * need 30 seconds to build a 1000 entry dictionary... (The above timings from the C version)
+		 */
 
-            if ( ( i % 7 ) != 0 )
-            {
-                ctx1.update( password.getBytes() );
-            }
+		for (int i = 0; i < 1000; i++) {
+			try {
+				ctx1 = MessageDigest.getInstance("md5");
+			}
+			catch (NoSuchAlgorithmException e0) {
+				return null;
+			}
 
-            if ( ( i & 1 ) != 0 )
-            {
-                ctx1.update( finalState, 0, 16 );
-            }
-            else
-            {
-                ctx1.update( password.getBytes() );
-            }
+			if ((i & 1) != 0) {
+				ctx1.update(password.getBytes());
+			}
+			else {
+				ctx1.update(finalState, 0, 16);
+			}
 
-            finalState = ctx1.digest(); // Final();
-        }
+			if ((i % 3) != 0) {
+				ctx1.update(salt.getBytes());
+			}
 
-        /* Now make the output string */
+			if ((i % 7) != 0) {
+				ctx1.update(password.getBytes());
+			}
 
-        StringBuffer result = new StringBuffer();
+			if ((i & 1) != 0) {
+				ctx1.update(finalState, 0, 16);
+			}
+			else {
+				ctx1.update(password.getBytes());
+			}
 
-        result.append( magic );
-        result.append( salt );
-        result.append( "$" );
+			finalState = ctx1.digest(); // Final();
+		}
 
-        /**
-         * Build a 22 byte output string from the set: A-Za-z0-9./
-         */
-        l = ( bytes2u( finalState[0] ) << 16 ) 
-            | ( bytes2u( finalState[6] ) << 8 ) | bytes2u( finalState[12] );
-        result.append( to64( l, 4 ) );
+		/* Now make the output string */
 
-        l = ( bytes2u( finalState[1] ) << 16 ) 
-            | ( bytes2u( finalState[7] ) << 8 ) | bytes2u( finalState[13] );
-        result.append( to64( l, 4 ) );
+		StringBuffer result = new StringBuffer();
 
-        l = ( bytes2u( finalState[2] ) << 16 ) 
-            | ( bytes2u( finalState[8] ) << 8 ) | bytes2u( finalState[14] );
-        result.append( to64( l, 4 ) );
+		result.append(magic);
+		result.append(salt);
+		result.append("$");
 
-        l = ( bytes2u( finalState[3] ) << 16 ) 
-            | ( bytes2u( finalState[9] ) << 8 ) | bytes2u( finalState[15] );
-        result.append( to64( l, 4 ) );
+		/**
+		 * Build a 22 byte output string from the set: A-Za-z0-9./
+		 */
+		l = (bytes2u(finalState[0]) << 16) | (bytes2u(finalState[6]) << 8) | bytes2u(finalState[12]);
+		result.append(to64(l, 4));
 
-        l = ( bytes2u( finalState[4] ) << 16 ) 
-            | ( bytes2u( finalState[10] ) << 8 ) | bytes2u( finalState[5] );
-        result.append( to64( l, 4 ) );
+		l = (bytes2u(finalState[1]) << 16) | (bytes2u(finalState[7]) << 8) | bytes2u(finalState[13]);
+		result.append(to64(l, 4));
 
-        l = bytes2u( finalState[11] );
-        result.append( to64( l, 2 ) );
+		l = (bytes2u(finalState[2]) << 16) | (bytes2u(finalState[8]) << 8) | bytes2u(finalState[14]);
+		result.append(to64(l, 4));
 
-        /* Don't leave anything around in vm they could use. */
-        clearbits( finalState );
+		l = (bytes2u(finalState[3]) << 16) | (bytes2u(finalState[9]) << 8) | bytes2u(finalState[15]);
+		result.append(to64(l, 4));
 
-        return result.toString();
-    }
+		l = (bytes2u(finalState[4]) << 16) | (bytes2u(finalState[10]) << 8) | bytes2u(finalState[5]);
+		result.append(to64(l, 4));
 
+		l = bytes2u(finalState[11]);
+		result.append(to64(l, 2));
+
+		/* Don't leave anything around in vm they could use. */
+		clearbits(finalState);
+
+		return result.toString();
+	}
+
+	/**
+	 * Matches.
+	 * 
+	 * @param encryptedPassword
+	 *            the encrypted password
+	 * @param enteredPassword
+	 *            the entered password
+	 * @return true, if successful
+	 */
 	public final static boolean matches(String encryptedPassword, String enteredPassword)
 	{
 		String salt = encryptedPassword.substring(0, 3);
@@ -281,26 +288,32 @@ public class MD5Crypt
 		System.err.println("compare b newCrypt=\"" + newCrypt + " with: \"" + encryptedPassword);
 		return newCrypt.equals(encryptedPassword);
 	}
-	
-    /**
-     * Test subroutine
-     * @param args
-     */
-    static final String USAGE = "MD5Crypt <password> <salt>";
-    
-    public static void main(String[] args)
-    {
-        try 
-        {
-            if ( args.length != 2) 
-                System.err.println(USAGE);
-            else
-                System.out.println(MD5Crypt.crypt(args[0], args[1]));
-            
-        } catch (Exception ex) 
-        {
-            System.err.println(ex);
-        } 
-    }
-    
+
+	/**
+	 * Test subroutine
+	 * 
+	 * @param args
+	 */
+	static final String USAGE = "MD5Crypt <password> <salt>";
+
+	/**
+	 * The main method.
+	 * 
+	 * @param args
+	 *            the arguments
+	 */
+	public static void main(String[] args)
+	{
+		try {
+			if (args.length != 2)
+				System.err.println(USAGE);
+			else
+				System.out.println(MD5Crypt.crypt(args[0], args[1]));
+
+		}
+		catch (Exception ex) {
+			System.err.println(ex);
+		}
+	}
+
 }

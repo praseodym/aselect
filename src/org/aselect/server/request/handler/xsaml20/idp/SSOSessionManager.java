@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.xsaml20.idp;
 
 import java.util.logging.Level;
@@ -12,9 +23,10 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.storagemanager.StorageManager;
 
+// TODO: Auto-generated Javadoc
 /**
- * This class stores UserSsoSession to the configured storagemanager in a
- * key-value pair. The key is the userId, the value is the UserSsoSession.
+ * This class stores UserSsoSession to the configured storagemanager in a key-value pair. The key is the userId, the
+ * value is the UserSsoSession.
  */
 public class SSOSessionManager extends StorageManager
 {
@@ -34,11 +46,11 @@ public class SSOSessionManager extends StorageManager
 	private ASelectSystemLogger _systemLogger;
 
 	/**
-	 * Method to return an instance of the <code>SSOSessionManager</code>
-	 * instead of using the constructor. <br>
+	 * Method to return an instance of the <code>SSOSessionManager</code> instead of using the constructor. <br>
 	 * 
 	 * @return always the same <code>SSOSessionManager</code> instance.
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	public static SSOSessionManager XXXgetHandle()
 		throws ASelectException
@@ -50,6 +62,12 @@ public class SSOSessionManager extends StorageManager
 		return _oSsoSessionManager;
 	}
 
+	/**
+	 * Inits the.
+	 * 
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private void init()
 		throws ASelectException
 	{
@@ -88,30 +106,33 @@ public class SSOSessionManager extends StorageManager
 	}
 
 	/**
-	 * Stores a user SSO session. Use the TgT as key.
-	 * If the session was already present for the TgT is will be overwritten.
+	 * Stores a user SSO session. Use the TgT as key. If the session was already present for the TgT is will be
+	 * overwritten.
 	 * 
 	 * @param session
+	 *            the session
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	public void XXXputSsoSession(UserSsoSession session)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "putSsoSession()";
-		String sKey = session.getTgtId();  // used to be: getUserId();
+		String sKey = session.getTgtId(); // used to be: getUserId();
 
 		if (session == null || sKey == null) {
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INSERT);
 		}
 		try {
 			// delSsoSession(session.getUserId()); // Bauke: was NOT overwritten??
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "SESN User=" + session.getUserId()+
-					" key="+Utils.firstPartOf(sKey, 30));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "SESN User=" + session.getUserId() + " key="
+					+ Utils.firstPartOf(sKey, 30));
 			put(sKey, session);
 		}
 		catch (ASelectStorageException e) {
 			if (e.getMessage().equals(Errors.ERROR_ASELECT_STORAGE_MAXIMUM_REACHED)) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Maximum number of stored service providers reached", e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Maximum number of stored service providers reached",
+						e);
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_BUSY, e);
 			}
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not store user sso session", e);
@@ -124,9 +145,10 @@ public class SSOSessionManager extends StorageManager
 	}
 
 	/**
-	 * retrieves the UserSsoSession for this user
+	 * retrieves the UserSsoSession for this user.
 	 * 
-	 * @param sKey - the user for which to retrieve the session
+	 * @param sKey
+	 *            - the user for which to retrieve the session
 	 * @return UserSsoSession
 	 */
 	public UserSsoSession XXXgetSsoSession(String sKey)
@@ -136,7 +158,7 @@ public class SSOSessionManager extends StorageManager
 		UserSsoSession session = null;
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SESN Key=" + sKey);
-			session = (UserSsoSession)get(sKey);
+			session = (UserSsoSession) get(sKey);
 		}
 		catch (ASelectStorageException e) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "No sso session found for key=" + sKey, e);
@@ -145,9 +167,10 @@ public class SSOSessionManager extends StorageManager
 	}
 
 	/**
-	 * Removes the user and its service providers from storage
+	 * Removes the user and its service providers from storage.
 	 * 
-	 * @param sKey - the user to remove
+	 * @param sKey
+	 *            - the user to remove
 	 */
 	public void XXXdelSsoSession(String sKey)
 	{

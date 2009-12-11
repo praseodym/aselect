@@ -33,15 +33,15 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
 
+// TODO: Auto-generated Javadoc
 /**
- * Handles the A-Select <i>restart</i> request.
- * <br><br>
- * <b>Description:</b><br>
- * This class handles restart requests. It restarts the A-Select servlet that will
- * proceed to reread its configuration without having to restart the servlet container (e.g. Tomcat).
+ * Handles the A-Select <i>restart</i> request. <br>
  * <br>
- * @author Alfa & Ariss
+ * <b>Description:</b><br>
+ * This class handles restart requests. It restarts the A-Select servlet that will proceed to reread its configuration
+ * without having to restart the servlet container (e.g. Tomcat). <br>
  * 
+ * @author Alfa & Ariss
  */
 public class ASelectRestartRequestHandler extends AbstractRequestHandler
 {
@@ -49,19 +49,29 @@ public class ASelectRestartRequestHandler extends AbstractRequestHandler
 	private String _sMySharedSecret = null;
 
 	/**
-	 * Initializes the Restart request handler.
-	 * <br><br>
+	 * Initializes the Restart request handler. <br>
+	 * <br>
 	 * <b>Description:</b><br>
-	 * Reads the following configuration:<br/><br/>
+	 * Reads the following configuration:<br/>
+	 * <br/>
 	 * &lt;handler&gt;<br/>
 	 * &lt;shared_secret&gt;[shared_secret]&lt;/shared_secret&gt;<br/>
 	 * &lt;/handler&gt;<br/>
 	 * <ul>
 	 * <li><b>shared_secret</b> - The shared secret that must be sent with the request</li>
-	 * </ul>  
-	 * <br><br>
+	 * </ul>
+	 * <br>
+	 * <br>
+	 * 
+	 * @param oServletConfig
+	 *            the o servlet config
+	 * @param oConfig
+	 *            the o config
+	 * @throws ASelectException
+	 *             the a select exception
 	 * @see org.aselect.server.request.handler.AbstractRequestHandler#init(javax.servlet.ServletConfig, java.lang.Object)
 	 */
+	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
 		throws ASelectException
 	{
@@ -91,12 +101,10 @@ public class ASelectRestartRequestHandler extends AbstractRequestHandler
 
 	/**
 	 * <b>Description: </b> <br>
-	 * This method should be called if a sub class receives a restart request.
-	 * This methods calls restartServlets() which restarts
-	 * all restartable servlets in the servlet context. <br>
+	 * This method should be called if a sub class receives a restart request. This methods calls restartServlets()
+	 * which restarts all restartable servlets in the servlet context. <br>
 	 * <br>
-	 * <i>Note: The restart request should be handled by one
-	 * <code>Servlet</code> in the context. </i> <br>
+	 * <i>Note: The restart request should be handled by one <code>Servlet</code> in the context. </i> <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * This method should be called serial. <br>
@@ -110,8 +118,18 @@ public class ASelectRestartRequestHandler extends AbstractRequestHandler
 	 * <br>
 	 * <b>Postconditions: </b> <br>
 	 * All restartable servlets in the context are restarted. <br>
-	 * <br><br>
-	 * @see org.aselect.server.request.handler.AbstractRequestHandler#process(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+	 * <br>
+	 * <br>
+	 * 
+	 * @param request
+	 *            the request
+	 * @param response
+	 *            the response
+	 * @return the request state
+	 * @throws ASelectException
+	 *             the a select exception
+	 * @see org.aselect.server.request.handler.AbstractRequestHandler#process(javax.servlet.http.HttpServletRequest,
+	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 		throws ASelectException
@@ -153,18 +171,18 @@ public class ASelectRestartRequestHandler extends AbstractRequestHandler
 	}
 
 	/**
-	 * Removes class variables from memory.
-	 * <br><br>
+	 * Removes class variables from memory. <br>
+	 * <br>
+	 * 
 	 * @see org.aselect.server.request.handler.AbstractRequestHandler#destroy()
 	 */
 	public void destroy()
 	{
-		//does nothing        
+		// does nothing
 	}
 
 	/**
-	 * Restart all restartable servlets within this context. 
-	 * <br>
+	 * Restart all restartable servlets within this context. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
 	 * Restarts all servlets in the <code>Servlet</code> context:
@@ -176,12 +194,13 @@ public class ASelectRestartRequestHandler extends AbstractRequestHandler
 	 * <br>
 	 * <i>Note: this method logs possible errors. </i> <br>
 	 * <br>
-	 * <b>Preconditions: </b> 
-	 * <br>-<br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
 	 * All restartable servlets in the context are restarted. <br>
 	 * <br>
+	 * 
 	 * @return false if one or more restart requests fail, otherwise true.
 	 */
 	private synchronized boolean restartServlets()
@@ -203,10 +222,10 @@ public class ASelectRestartRequestHandler extends AbstractRequestHandler
 			Set keys = htRestartServlets.keySet();
 			for (Object s : keys) {
 				String sKey = (String) s;
-				//Enumeration enumRestartServlets = htRestartServlets.keys();
-				//while (enumRestartServlets.hasMoreElements())
-				//{
-				//	String sKey = (String)enumRestartServlets.nextElement();
+				// Enumeration enumRestartServlets = htRestartServlets.keys();
+				// while (enumRestartServlets.hasMoreElements())
+				// {
+				// String sKey = (String)enumRestartServlets.nextElement();
 				ASelectHttpServlet oASelectHttpServlet = (ASelectHttpServlet) htRestartServlets.get(sKey);
 				boolean bResult = true;
 				try {
@@ -220,7 +239,7 @@ public class ASelectRestartRequestHandler extends AbstractRequestHandler
 				sbResult.append(sKey).append(" (");
 				sbResult.append(bResult ? "OK" : "Failed");
 				sbResult.append(")");
-				//if (enumRestartServlets.hasMoreElements())
+				// if (enumRestartServlets.hasMoreElements())
 				sbResult.append(", ");
 			}
 			int len = sbResult.length();

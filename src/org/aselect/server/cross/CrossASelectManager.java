@@ -101,6 +101,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 
+// TODO: Auto-generated Javadoc
 /**
  * This class loads all necessary configuration needed to set up a 'cross' A-Select environment. <br>
  * <br>
@@ -108,13 +109,13 @@ import org.aselect.system.exception.ASelectException;
  * A singleton cross aselect manager, containing the cross aselect configuration.<br>
  * <br>
  * <b>remote_servers</b><br>
- * An A-Select Server might have configured <code>&lt;remote_servers/&gt;</code> to forward an authentication request
- * to an other A-Select Server.<br>
+ * An A-Select Server might have configured <code>&lt;remote_servers/&gt;</code> to forward an authentication request to
+ * an other A-Select Server.<br>
  * <br>
  * <b>cross_selector</b><br>
  * If there are more than one remote servers you might want to dynamically determine to which remote_server the request
- * should be forwarded. This can be realized by configuring a <code>&lt;cross_selector/&gt;</code>. This selector
- * should implement <code>ISelectorHandler</code>. Only one handler can be active and is initialized by this
+ * should be forwarded. This can be realized by configuring a <code>&lt;cross_selector/&gt;</code>. This selector should
+ * implement <code>ISelectorHandler</code>. Only one handler can be active and is initialized by this
  * CrossASelectManager.<br>
  * <br>
  * <b>local_servers</b><br>
@@ -137,14 +138,14 @@ import org.aselect.system.exception.ASelectException;
  * 
  * In the figure above, a user is authenticated at the 'Remote A-Select Server' to get access to an application that was
  * secured with the 'Local A-Select Server'.<br>
- * The 'Local Server' in this scenario has configured <code>&lt;remote_servers/&gt;</code> and acts like an
- * application. This A-Select Server may not have a user database and no connection with AuthSP's.<br>
+ * The 'Local Server' in this scenario has configured <code>&lt;remote_servers/&gt;</code> and acts like an application.
+ * This A-Select Server may not have a user database and no connection with AuthSP's.<br>
  * The 'Remote Server' in this scenario has configured <code>&lt;local_servers/&gt;</code> and is configured like a
  * 'normal' A-Select Server except that it may not have any applications configured.<br>
  * <br>
- * The 'Local Server' might have configured <code>&lt;cross_selector/&gt;</code> to dynamicaly select a 'Remote
- * Server' by using an <code>ISelectorHandler</code>. This is an optional configuration since the application is able
- * to request for a specific 'Remote Server' in it's authenticate request.<br>
+ * The 'Local Server' might have configured <code>&lt;cross_selector/&gt;</code> to dynamicaly select a 'Remote Server'
+ * by using an <code>ISelectorHandler</code>. This is an optional configuration since the application is able to request
+ * for a specific 'Remote Server' in it's authenticate request.<br>
  * <br>
  * <br>
  * An A-Select Server might have configured both <code>&lt;local_servers/&gt;</code> and
@@ -230,14 +231,16 @@ public class CrossASelectManager
 	 * Must be private, so it can not be used. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Must be private because getHandle() must be used to retrieve an instance. This is done for singleton purposes.
+	 * Must be private because getHandle() must be used to retrieve an instance. This is done for singleton purposes. <br>
 	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
-	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 */
 	private CrossASelectManager() {
 	}
@@ -251,9 +254,11 @@ public class CrossASelectManager
 	 * <b>Concurrency issues:</b> <br>
 	 * Always the same instance of the cross aselect manager is returned, because it's a singleton. <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @return A static handle to the <code>CrossASelectManager</code>.
 	 */
@@ -271,14 +276,18 @@ public class CrossASelectManager
 	 * <b>Description:</b> <br>
 	 * Must be successfully run once, before it can be used. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - Singleton <code>ASelectConfigManager</code> should be initialized.<BR> -
-	 * cross_aselect configuaration is optional. <br>
+	 * <b>Preconditions:</b> <br>
+	 * - Singleton <code>ASelectConfigManager</code> should be initialized.<BR>
+	 * - cross_aselect configuaration is optional. <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @throws ASelectConfigException
+	 *             the a select config exception
 	 */
 	public void init()
 		throws ASelectConfigException
@@ -353,6 +362,8 @@ public class CrossASelectManager
 	}
 
 	/**
+	 * Checks if is local signing required.
+	 * 
 	 * @return true if the request done by a local A-Select Server should be signed, otherwise false.
 	 */
 	public boolean isLocalSigningRequired()
@@ -361,6 +372,8 @@ public class CrossASelectManager
 	}
 
 	/**
+	 * Checks if is forced authenticate enabled.
+	 * 
 	 * @param sOrg
 	 *            The organization id that will be checked for enabled forced authentication
 	 * @return true if forced_authenticate="true", otherwise false.
@@ -382,6 +395,8 @@ public class CrossASelectManager
 	}
 
 	/**
+	 * Use remote signing.
+	 * 
 	 * @return true if the request done by a local A-Select Server to a remote A-Select Server should be signed,
 	 *         otherwise false.
 	 */
@@ -391,6 +406,8 @@ public class CrossASelectManager
 	}
 
 	/**
+	 * Remote servers enabled.
+	 * 
 	 * @return true if there are configured remote servers, otherwise false.
 	 */
 	public boolean remoteServersEnabled()
@@ -399,6 +416,8 @@ public class CrossASelectManager
 	}
 
 	/**
+	 * Checks if is cross selector enabled.
+	 * 
 	 * @return true if the dynamic remote server selection is configured, otherwise false.
 	 */
 	public boolean isCrossSelectorEnabled()
@@ -407,6 +426,8 @@ public class CrossASelectManager
 	}
 
 	/**
+	 * Local servers enabled.
+	 * 
 	 * @return true if there are configured local servers, otherwise false.
 	 */
 	public boolean localServersEnabled()
@@ -420,11 +441,14 @@ public class CrossASelectManager
 	 * <b>Description:</b> <br>
 	 * Only one <code>ISelectorHandler</code> can be active within A-Select. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @return <code>ISelectorHandler</code>
 	 */
@@ -439,11 +463,14 @@ public class CrossASelectManager
 	 * <b>Description:</b> <br>
 	 * Returns the configured value of the parameter asked for. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @param sOrgId
 	 *            <code>String</code> containing an organisation id.
@@ -492,11 +519,14 @@ public class CrossASelectManager
 	 * <b>Description:</b> <br>
 	 * Returns the configured value of the attribute asked for. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @param sOrgId
 	 *            <code>String</code> containing an local organization id.
@@ -547,11 +577,14 @@ public class CrossASelectManager
 	 * Unlike the {@link #getLocalParam(String, String)} method, this method does not complain about missing attributes
 	 * in the system log. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @param sOrgId
 	 *            <code>String</code> containing an local organization id.
@@ -599,7 +632,8 @@ public class CrossASelectManager
 	 * Will search for the public key of one of the A-Select Servers that are configured as Cross A-Select local
 	 * servers. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Preconditions:</b> <br>
 	 * <code>sLocalOrg != null</code>. <br>
@@ -623,12 +657,14 @@ public class CrossASelectManager
 	 * <b>Description:</b> <br>
 	 * Returns the value of a configuration parameter in the main configuration file of A-Select. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Preconditions:</b> <br>
 	 * Manager should be initialized. <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @param sKey
 	 *            String containing the identifier of the configuration.
@@ -652,17 +688,18 @@ public class CrossASelectManager
 	 * Retrieve Remote Server configuration. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Function that will return a <code>HashMap</code> containing all 'friendly_name' values for the configured
-	 * remote A-Select Servers. The <code>HashMap</code> is indexed by the 'organization' value of the remote A-Select
-	 * Servers.<br>
+	 * Function that will return a <code>HashMap</code> containing all 'friendly_name' values for the configured remote
+	 * A-Select Servers. The <code>HashMap</code> is indexed by the 'organization' value of the remote A-Select Servers.<br>
 	 * <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Preconditions:</b> <br>
 	 * Manager should be initialized. <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @return HashMap containing all 'friendly_name' values for the configured remote A-Select Servers. The
 	 *         <code>HashMap</code> is indexed by the 'organization' value of the remote A-Select Servers.<br>
@@ -676,14 +713,18 @@ public class CrossASelectManager
 	 * Returns configuration used as optional template tags. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Returns a <code>HashMap</code> containing information that must be showed in templates.<br/> The information
-	 * is configured per <br/> 'local_server'. <br>
+	 * Returns a <code>HashMap</code> containing information that must be showed in templates.<br/>
+	 * The information is configured per <br/>
+	 * 'local_server'. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @param sLocalOrganization
 	 *            organization ID configured in the local_server config section
@@ -698,6 +739,13 @@ public class CrossASelectManager
 		return htReturn;
 	}
 
+	/**
+	 * Load local server settings.
+	 * 
+	 * @return true, if successful
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private boolean loadLocalServerSettings()
 		throws ASelectException
 	{
@@ -707,8 +755,13 @@ public class CrossASelectManager
 			_oLocalConfigSection = _oASelectConfigManager.getSection(_oCrossConfigSection, "local_servers");
 		}
 		catch (ASelectConfigException ace) {
-			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-							"No 'local_servers' section found. This A-Select Server can not act as remote server (cross).", ace);
+			_systemLogger
+					.log(
+							Level.CONFIG,
+							MODULE,
+							sMethod,
+							"No 'local_servers' section found. This A-Select Server can not act as remote server (cross).",
+							ace);
 			return false;
 		}
 
@@ -760,7 +813,8 @@ public class CrossASelectManager
 			}
 
 			if (sOrg.equalsIgnoreCase(_sMyOrg)) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+				_systemLogger
+						.log(Level.WARNING, MODULE, sMethod,
 								"Organization conflict: The configured local organization is equal to the current A-Select Server organization.");
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 			}
@@ -814,6 +868,13 @@ public class CrossASelectManager
 		return true;
 	}
 
+	/**
+	 * Load remote server settings.
+	 * 
+	 * @return true, if successful
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private boolean loadRemoteServerSettings()
 		throws ASelectException
 	{
@@ -888,6 +949,13 @@ public class CrossASelectManager
 		return true;
 	}
 
+	/**
+	 * Load remote selector settings.
+	 * 
+	 * @return true, if successful
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private boolean loadRemoteSelectorSettings()
 		throws ASelectException
 	{
@@ -928,11 +996,14 @@ public class CrossASelectManager
 	 * Loads the public signing key for every local server in the keystore:<br>
 	 * .\keystores\cross\local_servers.keystore <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <i>sWorkingDir</i> may not be <code>null</code>. <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <i>sWorkingDir</i> may not be <code>null</code>. <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @param sWorkingDir
 	 *            contains the A-Select Server working dir specified in the web.xml.
@@ -976,6 +1047,17 @@ public class CrossASelectManager
 	}
 
 	// Load a public key from a keystore
+	/**
+	 * Load public key from keystore.
+	 * 
+	 * @param sKeystorePath
+	 *            the s keystore path
+	 * @param sAlias
+	 *            the s alias
+	 * @return the public key
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private PublicKey loadPublicKeyFromKeystore(String sKeystorePath, String sAlias)
 		throws ASelectException
 	{

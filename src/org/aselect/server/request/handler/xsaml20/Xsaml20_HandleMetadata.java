@@ -29,6 +29,7 @@ import org.aselect.server.request.handler.xsaml20.idp.MetaDataManagerIdp;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 
+// TODO: Auto-generated Javadoc
 /*
  * Calling example:
  * 	/aselectserver/server/handle_metadata?url=https://my.sp.nl/aselectserver/server/metadata.xml
@@ -38,15 +39,19 @@ public class Xsaml20_HandleMetadata extends AbstractRequestHandler
 	private final static String MODULE = "Xsaml20_HandleMetadata";
 
 	/**
-	 * Init method
-	 * <br>
-	 * @param servletConfig ServletConfig.
-	 * @param config Object.
-	 * @throws ASelectException If initialization fails.
+	 * Init method <br>
+	 * .
+	 * 
+	 * @param servletConfig
+	 *            ServletConfig.
+	 * @param config
+	 *            Object.
+	 * @throws ASelectException
+	 *             If initialization fails.
 	 */
 	@Override
 	public void init(ServletConfig servletConfig, Object config)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "init()";
 		super.init(servletConfig, config);
@@ -54,11 +59,16 @@ public class Xsaml20_HandleMetadata extends AbstractRequestHandler
 	}
 
 	/**
-	 * Process incoming request
-	 * <br>
-	 * @param request HttpServletRequest.
-	 * @param response HttpServletResponse.
-	 * @throws ASelectException If processing of meta data request fails.
+	 * Process incoming request <br>
+	 * .
+	 * 
+	 * @param request
+	 *            HttpServletRequest.
+	 * @param response
+	 *            HttpServletResponse.
+	 * @return the request state
+	 * @throws ASelectException
+	 *             If processing of meta data request fails.
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 		throws ASelectException
@@ -68,7 +78,7 @@ public class Xsaml20_HandleMetadata extends AbstractRequestHandler
 		PrintWriter out;
 
 		StringBuffer path = request.getRequestURL();
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "path="+path);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "path=" + path);
 		try {
 			out = response.getWriter();
 			response.setContentType("text/xml");
@@ -82,7 +92,7 @@ public class Xsaml20_HandleMetadata extends AbstractRequestHandler
 		int idx = path.indexOf(urlSite);
 		char nextChar = '\0';
 		if (idx >= 0) {
-			nextChar = path.charAt(idx+urlSite.length());
+			nextChar = path.charAt(idx + urlSite.length());
 		}
 		if (idx < 0 || (nextChar != ':' && nextChar != '/')) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Not called from '//localhost'");
@@ -91,8 +101,8 @@ public class Xsaml20_HandleMetadata extends AbstractRequestHandler
 		else {
 			String sList = request.getParameter("list");
 			String entityId = request.getParameter("metadata");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId="+entityId);
-			
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId=" + entityId);
+
 			if (sList == null && entityId == null) {
 				out.println("Parameter 'metadata' is missing!");
 			}
@@ -106,6 +116,9 @@ public class Xsaml20_HandleMetadata extends AbstractRequestHandler
 		return null;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.IRequestHandler#destroy()
+	 */
 	public void destroy()
 	{
 	}

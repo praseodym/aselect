@@ -39,6 +39,7 @@ import org.opensaml.SAMLAssertion;
 import org.opensaml.SAMLSubject;
 import org.opensaml.artifact.*;
 
+// TODO: Auto-generated Javadoc
 //
 // Handles Liberty Alliance ID-FF step 5 - Identity Provider
 // Process AuthnRequest
@@ -59,11 +60,27 @@ public class Idff12_SSO extends ProtoRequestHandler
 	public String _sMyAppId;
 	private String _sIstsUrl;
 
-	protected String getSessionIdPrefix() { return SESSION_ID_PREFIX; }
-    protected boolean useConfigToCreateSamlBuilder() { return true; }
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.ProtoRequestHandler#getSessionIdPrefix()
+	 */
+	protected String getSessionIdPrefix()
+	{
+		return SESSION_ID_PREFIX;
+	}
 
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.ProtoRequestHandler#useConfigToCreateSamlBuilder()
+	 */
+	protected boolean useConfigToCreateSamlBuilder()
+	{
+		return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.ProtoRequestHandler#init(javax.servlet.ServletConfig, java.lang.Object)
+	 */
 	public void init(ServletConfig oServletConfig, Object oConfig)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -77,9 +94,10 @@ public class Idff12_SSO extends ProtoRequestHandler
 			_sMyAppId = ASelectConfigManager.getParamFromSection(oConfig, "application", "id", true);
 			_sTemplate = readTemplateFromConfig(oConfig, "template");
 
-			_vIdPUrls = new Vector();  // Vector will contain 'url' key values
-		    _htIdPs = new HashMap();  // contains url->id as a <key> -> <value> pair
-			getTableFromConfig(oConfig, _vIdPUrls, _htIdPs, "identity_providers", "idp", "url",/*->*/"id", true, true);
+			_vIdPUrls = new Vector(); // Vector will contain 'url' key values
+			_htIdPs = new HashMap(); // contains url->id as a <key> -> <value> pair
+			getTableFromConfig(oConfig, _vIdPUrls, _htIdPs, "identity_providers", "idp", "url",/*->*/"id", true,
+					true);
 
 			// Retrieve List of: ProviderId's <--> SP Assertion Consumer URL's
 			_htApplications = new HashMap();
@@ -97,8 +115,13 @@ public class Idff12_SSO extends ProtoRequestHandler
 				oProvider = _configManager.getSection(oProviders, "sp");
 			}
 			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No config item 'provider' in section 'providers' found, not using any application id to provider id mapping", e);
+				_systemLogger
+						.log(
+								Level.CONFIG,
+								MODULE,
+								sMethod,
+								"No config item 'provider' in section 'providers' found, not using any application id to provider id mapping",
+								e);
 			}
 
 			while (oProvider != null) {
@@ -118,13 +141,13 @@ public class Idff12_SSO extends ProtoRequestHandler
 				}
 				catch (ASelectConfigException e) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod,
-									"No config item 'app_id' found in 'provider' section", e);
-					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR,	e);
+							"No config item 'app_id' found in 'provider' section", e);
+					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 				}
 
 				if (_htApplications.containsKey(sProviderID)) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod,
-							"Configured provider id isn't unique: "	+ sProviderID);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Configured provider id isn't unique: "
+							+ sProviderID);
 					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 				}
 				_htApplications.put(sProviderID, sAssertUrl);
@@ -139,7 +162,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-								"No config item 'server_id' found in 'aselect' section",e);
+						"No config item 'server_id' found in 'aselect' section", e);
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -149,7 +172,8 @@ public class Idff12_SSO extends ProtoRequestHandler
 				oStorageManager = _configManager.getSection(oConfig, "storagemanager", "id=assertions");
 			}
 			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.WARNING,MODULE,sMethod,"No config section 'storagemanager' with 'id=assertions' found",e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"No config section 'storagemanager' with 'id=assertions' found", e);
 				throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 			try {
@@ -158,13 +182,14 @@ public class Idff12_SSO extends ProtoRequestHandler
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "AssertionSessionManager=" + _oAssertionSessionManager);
 			}
 			catch (ASelectException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "AssertionSessionManager could not be initialized", e);
+				_systemLogger
+						.log(Level.WARNING, MODULE, sMethod, "AssertionSessionManager could not be initialized", e);
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 		}
 		catch (ASelectException e) {
 			throw e;
-		} 
+		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
@@ -181,8 +206,11 @@ public class Idff12_SSO extends ProtoRequestHandler
 	// SigAlg=http://www.w3.org/2000/09/xmldsig#rsa-sha1&
 	// Signature=i3GkJi0P0cFqSIsJapjkls60ABl...=
 	// RelayState is optional!
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.IRequestHandler#process(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "process()";
 		HashMap htTgtContext = null;
@@ -192,32 +220,32 @@ public class Idff12_SSO extends ProtoRequestHandler
 		String sUrlRid = request.getParameter("rid");
 		String sPathInfo = request.getPathInfo();
 		String sServer = null;
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "SSO PATH="+sPathInfo+
-				" "+request.getMethod()+" "+ request.getQueryString());
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "SSO PATH=" + sPathInfo + " " + request.getMethod() + " "
+				+ request.getQueryString());
 
 		HashMap htCredentials = getASelectCredentials(request);
-		_systemLogger.log(Level.INFO, MODULE, sMethod,
-				"getAselectCredentials: sUrlRid=" + sUrlRid + " Credentials=" + htCredentials);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "getAselectCredentials: sUrlRid=" + sUrlRid + " Credentials="
+				+ htCredentials);
 
 		if (htCredentials != null && !htCredentials.isEmpty()) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Credentials present");
 			sRid = (String) htCredentials.get("rid");
 			sServer = (String) htCredentials.get("a-select-server");
-			
+
 			if (sRid != null && sServer != null) {
 				if (sUrlRid == null)
 					sUrlRid = sRid;
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Rid/Server present");
 				sTgt = (String) htCredentials.get("tgt");
 				sSerAttributes = (String) htCredentials.get("attributes");
-				
+
 				htTgtContext = _tgtManager.getTGT(sTgt);
-				_systemLogger.log(Level.INFO, MODULE, sMethod,
-						"getTGT htTgtContext="+htTgtContext+", htAttributes="+sSerAttributes);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "getTGT htTgtContext=" + htTgtContext
+						+ ", htAttributes=" + sSerAttributes);
 
 				// Idff session is used to store the Caller's Assertion consumerURL and RelayState
 				htIdffSession = retrieveSessionDataFromRid(request, SESSION_ID_PREFIX);
-				
+
 				if (sPathInfo.endsWith(RETURN_SUFFIX) && htIdffSession == null) {
 					// The Idff session is only needed upon return
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Empty getSessionContext response");
@@ -225,14 +253,14 @@ public class Idff12_SSO extends ProtoRequestHandler
 				}
 			}
 		}
-		
+
 		String sRelayState = null, sProviderID = null, sAssertUrl = null;
 		String sRequestID = null;
 		String sReqMethod = request.getMethod();
 		if (sReqMethod != null && sReqMethod.equals("GET")) {
 			sRelayState = request.getParameter("RelayState");
 			sProviderID = request.getParameter("ProviderID");
-			if (sProviderID == null)  // try Oracle glitch
+			if (sProviderID == null) // try Oracle glitch
 				sProviderID = request.getParameter("providerid");
 			sRequestID = request.getParameter("RequestID");
 		}
@@ -249,17 +277,21 @@ public class Idff12_SSO extends ProtoRequestHandler
 		}
 		if (htIdffSession == null || !sPathInfo.endsWith(RETURN_SUFFIX)) {
 			htIdffSession = new HashMap();
-			if (sProviderID != null) htIdffSession.put("libProviderID", sProviderID);
-			if (sRequestID != null) htIdffSession.put("libRequestID", sRequestID);
-			if (sRelayState != null) htIdffSession.put("libRelayState", sRelayState);
-			sAssertUrl = (String)_htApplications.get(sProviderID);
+			if (sProviderID != null)
+				htIdffSession.put("libProviderID", sProviderID);
+			if (sRequestID != null)
+				htIdffSession.put("libRequestID", sRequestID);
+			if (sRelayState != null)
+				htIdffSession.put("libRelayState", sRelayState);
+			sAssertUrl = (String) _htApplications.get(sProviderID);
 			if (sAssertUrl == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unknown Provider ID: "+sProviderID);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unknown Provider ID: " + sProviderID);
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
-			if (sAssertUrl != null) htIdffSession.put("libAssertUrl", sAssertUrl);
+			if (sAssertUrl != null)
+				htIdffSession.put("libAssertUrl", sAssertUrl);
 		}
-		
+
 		try {
 			if (htTgtContext == null) { // Login required
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "LOGIN required");
@@ -268,22 +300,20 @@ public class Idff12_SSO extends ProtoRequestHandler
 				// IDP Single Sign-On Service
 				// Get the AuthnRequest(), can be GET or POST
 				// Example:
-				/* <lib:AuthnRequest RequestID="RPCUk2ll+GVz+t1lLURp51oFvJXk"
-						MajorVersion="1" MinorVersion="2" consent="urn:liberty:consent:obtained"
-						IssueInstant="2001-12-17T21:42:4Z" xmlns:lib="urn:liberty:iff:2003-08">
-					<ds:Signature> ... </ds:Signature>
-					<lib:ProviderID>http://ServiceProvider.com</lib:ProviderID>
-					<lib:NameIDPolicy>federate</lib:NameIDPolicy>
-					<lib:ForceAuthn>false</lib:ForceAuthn>
-					<lib:IsPassive>false</lib:IsPassive>
-					<lib:ProtocolProfile>http://projectliberty.org/profiles/brws-art</lib:ProtocolProfile>
-					<lib:RequestAuthnContext>
-					<lib:AuthnContextClassRef>http://projectliberty.org/schemas/authctx/classes/Password-ProtectedTransport</lib:AuthnContextClassRef>
-					<lib:AuthnContextComparison>exact</lib:AuthnContextComparison>
-					</lib:RequestAuthnContext>
-					<lib:RelayState>R0lGODlhcgGSALMAAAQCAEMmCZtuMFQxDS8b</lib:RelayState>
-					</lib:AuthnRequest>
-				*/
+				/*
+				 * <lib:AuthnRequest RequestID="RPCUk2ll+GVz+t1lLURp51oFvJXk" MajorVersion="1" MinorVersion="2"
+				 * consent="urn:liberty:consent:obtained" IssueInstant="2001-12-17T21:42:4Z"
+				 * xmlns:lib="urn:liberty:iff:2003-08"> <ds:Signature> ... </ds:Signature>
+				 * <lib:ProviderID>http://ServiceProvider.com</lib:ProviderID>
+				 * <lib:NameIDPolicy>federate</lib:NameIDPolicy> <lib:ForceAuthn>false</lib:ForceAuthn>
+				 * <lib:IsPassive>false</lib:IsPassive>
+				 * <lib:ProtocolProfile>http://projectliberty.org/profiles/brws-art</lib:ProtocolProfile>
+				 * <lib:RequestAuthnContext>
+				 * <lib:AuthnContextClassRef>http://projectliberty.org/schemas/authctx/classes/
+				 * Password-ProtectedTransport</lib:AuthnContextClassRef>
+				 * <lib:AuthnContextComparison>exact</lib:AuthnContextComparison> </lib:RequestAuthnContext>
+				 * <lib:RelayState>R0lGODlhcgGSALMAAAQCAEMmCZtuMFQxDS8b</lib:RelayState> </lib:AuthnRequest>
+				 */
 				// Analyze the ID-FF parameters: ProviderID and RelayState
 				// Check mandatory information
 				if (sProviderID == null) {
@@ -291,16 +321,16 @@ public class Idff12_SSO extends ProtoRequestHandler
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
 				if (sAssertUrl == null) {
-					_systemLogger.log(Level.FINE, MODULE, sMethod,
-							"AuthnRequest: No mapping found for ProviderID: " + sProviderID);
+					_systemLogger.log(Level.FINE, MODULE, sMethod, "AuthnRequest: No mapping found for ProviderID: "
+							+ sProviderID);
 					sAssertUrl = sProviderID;
 				}
-				//if (sRelayState == null) {
-				//	_systemLogger.log(Level.WARNING, MODULE, sMethod,"AuthnRequest: Missing parameter 'RelayState'");
-				//	throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-				//}
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "sProviderId=" + sProviderID +
-						" sRelayState=" + sRelayState);
+				// if (sRelayState == null) {
+				// _systemLogger.log(Level.WARNING, MODULE, sMethod,"AuthnRequest: Missing parameter 'RelayState'");
+				// throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+				// }
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "sProviderId=" + sProviderID + " sRelayState="
+						+ sRelayState);
 				// End of parameter handling
 
 				String sASelectURL = _sServerUrl; // extractAselectServerUrl(request);
@@ -313,25 +343,25 @@ public class Idff12_SSO extends ProtoRequestHandler
 				}
 
 				// Start an authenticate request
-				htTgtContext = performAuthenticateRequest(sASelectURL, sPathInfo, RETURN_SUFFIX,
-								_sMyAppId, true, _oClientCommunicator);
+				htTgtContext = performAuthenticateRequest(sASelectURL, sPathInfo, RETURN_SUFFIX, _sMyAppId, true,
+						_oClientCommunicator);
 
 				sRid = (String) htTgtContext.get("rid");
 				storeSessionDataWithRid(response, htIdffSession, SESSION_ID_PREFIX, sRid);
-				
+
 				// Let the user make his choice
 				// The cookie contains the previous choice
 				String sSelectedRedirectUrl = HandlerTools.getCookieValue(request, COOKIENAME, _systemLogger);
 				if (sSelectedRedirectUrl != null && !_vIdPUrls.contains(sSelectedRedirectUrl)) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod,
-							"Invalid '" + COOKIENAME+ "' cookie, unknown IdP: " + sSelectedRedirectUrl);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid '" + COOKIENAME
+							+ "' cookie, unknown IdP: " + sSelectedRedirectUrl);
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
 				String sActionUrl = sASelectURL + _sIstsUrl;
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT_ists=" + sActionUrl+
-						" RelayState="+sRelayState+" SelectedRedirectUrl="+sSelectedRedirectUrl);
-				handleShowForm(_sTemplate, sSelectedRedirectUrl, sActionUrl, sRelayState,
-						 _sProviderId, null, sASelectURL, sRid, _sASelectServerID, response);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT_ists=" + sActionUrl + " RelayState="
+						+ sRelayState + " SelectedRedirectUrl=" + sSelectedRedirectUrl);
+				handleShowForm(_sTemplate, sSelectedRedirectUrl, sActionUrl, sRelayState, _sProviderId, null,
+						sASelectURL, sRid, _sASelectServerID, response);
 				return new RequestState(null);
 			}
 
@@ -349,8 +379,8 @@ public class Idff12_SSO extends ProtoRequestHandler
 
 			byte[] bSourceId = Util.generateSourceId(_sProviderId);
 			SAMLArtifactType0003 oSAMLArtifact = new SAMLArtifactType0003(bSourceId);
-			_systemLogger.log(Level.INFO, MODULE, sMethod,
-					"OK, Artifact: SourceIdUrl=" + _sProviderId + " Artifact=" + oSAMLArtifact);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "OK, Artifact: SourceIdUrl=" + _sProviderId + " Artifact="
+					+ oSAMLArtifact);
 
 			// Taken from XSAML11RequestHandler:
 			// Create and store the SAML Assertion
@@ -363,28 +393,28 @@ public class Idff12_SSO extends ProtoRequestHandler
 
 			String sIP = request.getRemoteAddr();
 			String sHost = request.getRemoteHost();
-			sProviderID = (String)htIdffSession.get("libProviderID");
-			sRequestID = (String)htIdffSession.get("libRequestID");
-			_systemLogger.log(Level.INFO, MODULE, sMethod,"createSAMLAssertion, sIP=" + sIP +
-					", sHost=" + sHost + ", htResponse=" + htTgtContext);
+			sProviderID = (String) htIdffSession.get("libProviderID");
+			sRequestID = (String) htIdffSession.get("libRequestID");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "createSAMLAssertion, sIP=" + sIP + ", sHost=" + sHost
+					+ ", htResponse=" + htTgtContext);
 
 			// htCredentials should have a key "attributes" containing the
 			// serialzed attributes of the user
-			SAMLAssertion oSAMLAssertion = _saml11Builder.createSAMLAssertionFromCredentials(
-					sUid, sRequestID, null/*sNameIdFormat*/, sIP, sHost, SAMLSubject.CONF_ARTIFACT,
-					_sProviderId /*sProviderID*/, null/*audience*/, htCredentials);
+			SAMLAssertion oSAMLAssertion = _saml11Builder.createSAMLAssertionFromCredentials(sUid, sRequestID,
+					null/* sNameIdFormat */, sIP, sHost, SAMLSubject.CONF_ARTIFACT, _sProviderId /* sProviderID */,
+					null/* audience */, htCredentials);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "oSAMLAssertion=" + oSAMLAssertion);
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "putAssertion, Artifact=" + oSAMLArtifact);
-			_oAssertionSessionManager.putAssertion((org.opensaml.artifact.Artifact)oSAMLArtifact, oSAMLAssertion);
+			_oAssertionSessionManager.putAssertion((org.opensaml.artifact.Artifact) oSAMLArtifact, oSAMLAssertion);
 
 			// Redirect to the SP Assertion Consumer URL, pass Artifact
 			// and the RelayState (contains the Resource URL)
-			sRelayState = (String)htIdffSession.get("libRelayState");
+			sRelayState = (String) htIdffSession.get("libRelayState");
 			String sBase64 = Base64.encode(oSAMLArtifact.getBytes());
-			//_systemLogger.log(Level.INFO, MODULE, sMethod, "Base64=" + sBase64);
+			// _systemLogger.log(Level.INFO, MODULE, sMethod, "Base64=" + sBase64);
 
-			sAssertUrl = (String)htIdffSession.get("libAssertUrl");
+			sAssertUrl = (String) htIdffSession.get("libAssertUrl");
 			if (sAssertUrl == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'libAssertUrl' found in ID-FF session");
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
@@ -405,12 +435,15 @@ public class Idff12_SSO extends ProtoRequestHandler
 		return new RequestState(null);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.ProtoRequestHandler#serializeTheseAttributes(java.util.HashMap)
+	 */
 	public String serializeTheseAttributes(HashMap htAttribs)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "serializeTheseAttributes()";
 		String sSerializedAttributes = _saml11Builder.serializeAttributes(htAttribs);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "sSerializedAttributes="+sSerializedAttributes);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "sSerializedAttributes=" + sSerializedAttributes);
 		return sSerializedAttributes;
 	}
 }

@@ -26,13 +26,15 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
  * The DigidAuthSPHandler. <br>
  * <br>
  * <b>Description:</b><br>
  * The DigidAuthSPHandler communicates with the DigiD AuthSP by using redirects. <br>
  * <br>
- * <b>Concurrency issues:</b> <br> - <br>
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
  * @author Atos Origin
  */
@@ -55,11 +57,19 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 
 	/**
 	 * Initializes the DigidAuthSPHandler. <br>
-	 * Resolves the following config items:<br> - The DigidAuthSP id<br> - The url to the authsp (from the resource)<br> -
-	 * The server id from the A-Select main config<br>
+	 * Resolves the following config items:<br>
+	 * - The DigidAuthSP id<br>
+	 * - The url to the authsp (from the resource)<br>
+	 * - The server id from the A-Select main config<br>
 	 * <br>
 	 * <br>
 	 * 
+	 * @param oAuthSPConfig
+	 *            the o auth sp config
+	 * @param oAuthSPResource
+	 *            the o auth sp resource
+	 * @throws ASelectAuthSPException
+	 *             the a select auth sp exception
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#init(java.lang.Object, java.lang.Object)
 	 */
 	public void init(Object oAuthSPConfig, Object oAuthSPResource)
@@ -157,6 +167,14 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 		}
 	}
 
+	/**
+	 * Load betrouwbaarheids niveau.
+	 * 
+	 * @param oBetrouwbaarheidsNiveau
+	 *            the o betrouwbaarheids niveau
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private void loadBetrouwbaarheidsNiveau(Object oBetrouwbaarheidsNiveau)
 		throws ASelectException
 	{
@@ -201,7 +219,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 	 * <table border="1" cellspacing="0" cellpadding="3">
 	 * <tr>
 	 * <td style="" bgcolor="#EEEEFF">name</td>
-	 * <td style="" bgcolor="#EEEEFF"> value</td>
+	 * <td style="" bgcolor="#EEEEFF">value</td>
 	 * <td style="" bgcolor="#EEEEFF">encoded</td>
 	 * </tr>
 	 * <tr>
@@ -229,9 +247,13 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 	 * <td>signature of all paramaters in the above sequence</td>
 	 * <td>yes</td>
 	 * </tr>
-	 * </table> <br>
+	 * </table>
+	 * <br>
 	 * <br>
 	 * 
+	 * @param sRid
+	 *            the s rid
+	 * @return the hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#computeAuthenticationRequest(java.lang.String)
 	 */
 	@SuppressWarnings("unchecked")
@@ -353,6 +375,9 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 		return htMethodResponse;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.HashMap)
+	 */
 	@SuppressWarnings("unchecked")
 	public HashMap verifyAuthenticationResponse(HashMap htResponse)
 	{
@@ -394,7 +419,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			reqParams.put("shared_secret", sharedSecret);
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "sendMessage to " + _sAuthSPUrl + " request=" + reqParams);
-			HashMap<String,Object> response = null;
+			HashMap<String, Object> response = null;
 			try {
 				response = _oClientCommunicator.sendMessage(reqParams, _sAuthSPUrl);
 			}
@@ -416,7 +441,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			String sUid = (String) response.get("uid");
 			String sBetrouwbaarheidsniveau = (String) response.get("betrouwbaarheidsniveau");
 			if (sBetrouwbaarheidsniveau == null)
-				sBetrouwbaarheidsniveau = (String)response.get("authsp_level"); // if not DigiD
+				sBetrouwbaarheidsniveau = (String) response.get("authsp_level"); // if not DigiD
 			String sRid = (String) response.get("rid");
 			String sOrganization = (String) response.get("organization");
 			String sAppID = (String) response.get("app_id");
@@ -446,12 +471,12 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 				result.put("user_id", sUid);
 				result.put("betrouwbaarheidsniveau", sBetrouwbaarheidsniveau);
 				Utils.copyHashmapValue("attributes", result, response);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Copy attributes="+result.get("attributes"));
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Copy attributes=" + result.get("attributes"));
 				Object oAttributes = response.get("attributes");
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Set  attributes="+oAttributes);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Set  attributes=" + oAttributes);
 				if (oAttributes != null)
 					result.put("attributes", oAttributes);
-				
+
 				resultCode = Errors.ERROR_ASELECT_SUCCESS;
 				_authenticationLogger.log(new Object[] {
 					MODULE, sUid, htResponse.get("client_ip"), sOrganization, sAppID, "granted"
@@ -476,6 +501,15 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 		return result;
 	}
 
+	/**
+	 * Hashtable2 cgi message.
+	 * 
+	 * @param htInput
+	 *            the ht input
+	 * @return the string
+	 * @throws UnsupportedEncodingException
+	 *             the unsupported encoding exception
+	 */
 	private String hashtable2CGIMessage(HashMap htInput)
 		throws UnsupportedEncodingException
 	{

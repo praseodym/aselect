@@ -69,34 +69,27 @@ import java.util.logging.Level;
 
 import org.aselect.system.logging.SystemLogger;
 
+// TODO: Auto-generated Javadoc
 /**
- * Wrapper to communicate transparent to an incoming Socket request. 
- * <br><br>
- * <b>Description: </b> 
+ * Wrapper to communicate transparent to an incoming Socket request. <br>
  * <br>
- * The <code>TCPProtocolRequest</code> reads headers and other information
- * from an input stream and places this information in a HashMap. The headers
- * can be retrieved by calling the getProperty() method. 
+ * <b>Description: </b> <br>
+ * The <code>TCPProtocolRequest</code> reads headers and other information from an input stream and places this
+ * information in a HashMap. The headers can be retrieved by calling the getProperty() method. <br>
  * <br>
- * <br>
- * The <code>TCPProtocolRequest</code> can be used in the
- * <code>Communicator</code> and Message creators. The getProtocolName()
- * method can be used to switch between SOAP12 communication, currently used raw
- * communication, or other protocols that use TCP as a underlying transport
- * protocol. 
- * <br>
+ * The <code>TCPProtocolRequest</code> can be used in the <code>Communicator</code> and Message creators. The
+ * getProtocolName() method can be used to switch between SOAP12 communication, currently used raw communication, or
+ * other protocols that use TCP as a underlying transport protocol. <br>
  * <br>
  * <b>Concurrency issues: </b> <br>
- * Every request should have its own <code>TCPProtocolRequest</code> instance.
- * <br>
+ * Every request should have its own <code>TCPProtocolRequest</code> instance. <br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class TCPProtocolRequest implements IProtocolRequest
 {
 	private static String MODULE = "TCPProtocolRequest";
-	
+
 	/** The request headers */
 	private HashMap _htHeaders;
 
@@ -110,36 +103,32 @@ public class TCPProtocolRequest implements IProtocolRequest
 	private StringBuffer _sbInputBuffer;
 
 	private SystemLogger _oSystemLogger;
-	
+
 	/**
-	 * Create a new instance. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Create a new instance. <br>
 	 * <br>
-	 * Creates a new wrapper for <code>oRequestSocket</code>. All protocol
-	 * data (e.g. headers) is extracted from the socket and buffered. <br>
+	 * <b>Description: </b> <br>
+	 * Creates a new wrapper for <code>oRequestSocket</code>. All protocol data (e.g. headers) is extracted from the
+	 * socket and buffered. <br>
 	 * <br>
-	 * <b>Concurrency issues: </b> <br>-<br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
 	 * <br>
-	 * <b>Preconditions: </b> 
+	 * <b>Preconditions: </b> <br>
+	 * <code>oRequestSocket</code> should be connected to a server of some kind. Request data should be available. <br>
 	 * <br>
-	 * <code>oRequestSocket</code> should be connected to a server of some
-	 * kind. Request data should be available. <br>
-	 * <br>
-	 * <b>Postconditions: </b> 
-	 * <br>
-	 * The headers are read from the <code>Socket</code> the remaining data
-	 * (if available) is the actual request data. 
-	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * The headers are read from the <code>Socket</code> the remaining data (if available) is the actual request data. <br>
 	 * 
 	 * @param oRequestSocket
 	 *            The <CODE>Socket</CODE> with the incoming request.
+	 * @param oSystemLogger
+	 *            the o system logger
 	 * @throws IOException
 	 *             If reading from the socket fails.
 	 */
 	public TCPProtocolRequest(Socket oRequestSocket, SystemLogger oSystemLogger)
-	throws IOException
-	{
+		throws IOException {
 		_htHeaders = new HashMap();
 		_htProperties = new HashMap();
 		_sbInputBuffer = new StringBuffer();
@@ -151,6 +140,7 @@ public class TCPProtocolRequest implements IProtocolRequest
 	/**
 	 * Retrieve the name of the protocol.
 	 * 
+	 * @return the protocol name
 	 * @see org.aselect.system.communication.server.IProtocolRequest#getProtocolName()
 	 */
 	public String getProtocolName()
@@ -161,6 +151,9 @@ public class TCPProtocolRequest implements IProtocolRequest
 	/**
 	 * Retrieve a property of the request.
 	 * 
+	 * @param sName
+	 *            the s name
+	 * @return the property
 	 * @see org.aselect.system.communication.server.IProtocolRequest#getProperty(java.lang.String)
 	 */
 	public String getProperty(String sName)
@@ -182,6 +175,7 @@ public class TCPProtocolRequest implements IProtocolRequest
 	/**
 	 * Retrieve the full local address with port.
 	 * 
+	 * @return the target
 	 * @see org.aselect.system.communication.server.IProtocolRequest#getTarget()
 	 */
 	public String getTarget()
@@ -190,35 +184,32 @@ public class TCPProtocolRequest implements IProtocolRequest
 	}
 
 	/**
-	 * Get the input stream to the request after stripping the headers. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Get the input stream to the request after stripping the headers. <br>
 	 * <br>
-	 * This class returns a <code>ByteArrayInputStream</code>. The
-	 * alternative StringBufferInputStream is deprecated: 
-	 * <br>
-	 * <i>This class does not properly convert characters into bytes. As of JDK
-	 * 1.1, the preferred way to create a stream from a string is via the
-	 * <code>StringReader</code> class. </i> 
-	 * <br>
-	 * Because the <code>StringReader</code> is not an
-	 * <code>InputStream</code>,<code>ByteArrayInputStream</code> is used.
+	 * <b>Description: </b> <br>
+	 * This class returns a <code>ByteArrayInputStream</code>. The alternative StringBufferInputStream is deprecated: <br>
+	 * <i>This class does not properly convert characters into bytes. As of JDK 1.1, the preferred way to create a
+	 * stream from a string is via the <code>StringReader</code> class. </i> <br>
+	 * Because the <code>StringReader</code> is not an <code>InputStream</code>,<code>ByteArrayInputStream</code> is
+	 * used.
 	 * 
+	 * @return the input stream
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
 	 * @see org.aselect.system.communication.server.IProtocolRequest#getInputStream()
 	 * @see java.io.ByteArrayInputStream
 	 */
 	public InputStream getInputStream()
-	throws IOException
+		throws IOException
 	{
 		return new ByteArrayInputStream(_sbInputBuffer.toString().getBytes());
 	}
 
 	/**
-	 * extract request data form the <code>Socket</code>.
-	 * <br><br>
+	 * extract request data form the <code>Socket</code>. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
-	 * Reads all request data form the <code>Socket</code>. The following
-	 * steps are performed:
+	 * Reads all request data form the <code>Socket</code>. The following steps are performed:
 	 * <ul>
 	 * <li>Read the first line of the request</li>
 	 * <li>Tokenize first line with <code>StringTokenizer</code></li>
@@ -256,41 +247,41 @@ public class TCPProtocolRequest implements IProtocolRequest
 		String sRequestLine = null;
 		StringBuffer sbTarget = new StringBuffer();
 
-		//read the first line of the request
+		// read the first line of the request
 		BufferedReader oInReader = new BufferedReader(new InputStreamReader(_isInput));
 		sRequestLine = oInReader.readLine();
 
-		//sRequestLine can be null if end of stream is already reached
+		// sRequestLine can be null if end of stream is already reached
 		if (sRequestLine == null)
 			throw new EOFException(sMethod + "End of stream");
-		_oSystemLogger.log(Level.INFO, MODULE, sMethod, "RequestLine="+sRequestLine);
+		_oSystemLogger.log(Level.INFO, MODULE, sMethod, "RequestLine=" + sRequestLine);
 
-		//put string in tokenizer and switch on white space
+		// put string in tokenizer and switch on white space
 		StringTokenizer oTokenizedLine = new StringTokenizer(sRequestLine);
 		if (!oTokenizedLine.hasMoreTokens())
 			throw new ProtocolException(sMethod + "No content in request");
 
 		String sTmpString = oTokenizedLine.nextToken();
 
-		//TODO Remove redundant code (Erwin)
+		// TODO Remove redundant code (Erwin)
 		if (sTmpString.equals("POST"))
-		//message is HTTP so Headers have to be parsed
+		// message is HTTP so Headers have to be parsed
 		{
 			if (!oTokenizedLine.hasMoreTokens())
 				throw new ProtocolException(sMethod + "No URL in request");
 
-			oTokenizedLine.nextToken(); //skip target page
+			oTokenizedLine.nextToken(); // skip target page
 
 			if (!oTokenizedLine.hasMoreTokens())
 				throw new ProtocolException(sMethod + "No ProtocolName in request");
 
 			_htProperties.put("ProtocolName", oTokenizedLine.nextToken());
-			//get protocol name, target must start with http
+			// get protocol name, target must start with http
 			sbTarget.append("http:/");
 
-			//read the http headers and put them in _htHeaders
+			// read the http headers and put them in _htHeaders
 			sRequestLine = oInReader.readLine();
-			while (sRequestLine != null && !sRequestLine.equals("")) //while not end of headers
+			while (sRequestLine != null && !sRequestLine.equals("")) // while not end of headers
 			{
 				String[] saHeaderArray = sRequestLine.split(": ");
 				if (saHeaderArray.length == 2) {
@@ -299,10 +290,10 @@ public class TCPProtocolRequest implements IProtocolRequest
 				sRequestLine = oInReader.readLine();
 			}
 
-			//buffer the data part of the message.
-			//this must be done at this moment,
-			//because the inputstream must be buffered
-			//before using the xml parser
+			// buffer the data part of the message.
+			// this must be done at this moment,
+			// because the inputstream must be buffered
+			// before using the xml parser
 			sRequestLine = oInReader.readLine();
 			while (sRequestLine != null && !sRequestLine.equals("")) {
 				_sbInputBuffer.append(sRequestLine);
@@ -326,21 +317,22 @@ public class TCPProtocolRequest implements IProtocolRequest
 			_htProperties.put("QueryString", sQuery);
 			_htProperties.put("ProtocolName", "RAW");
 		}
-		else {	//message string must be a RAW QueryString
-			//put the querystring in _htProperties
+		else { // message string must be a RAW QueryString
+			// put the querystring in _htProperties
 			_htProperties.put("QueryString", sRequestLine);
 			_htProperties.put("ProtocolName", "RAW");
 		}
 
-		//read target adresss from socket
-		//results with raw request in "/127.0.0.1:1495"
+		// read target adresss from socket
+		// results with raw request in "/127.0.0.1:1495"
 		sbTarget.append(oSocket.getLocalSocketAddress().toString());
 		_htProperties.put("Target", sbTarget.toString());
 	}
 
 	/**
-	 * Get the request data. 
+	 * Get the request data.
 	 * 
+	 * @return the message
 	 * @see org.aselect.system.communication.server.IProtocolRequest#getMessage()
 	 */
 	public String getMessage()

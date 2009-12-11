@@ -59,7 +59,7 @@
  * - Initial RequestHandlerFactory
  *
  */
- 
+
 package org.aselect.server.request.handler.sfs.authentication;
 
 import java.util.logging.Level;
@@ -71,188 +71,172 @@ import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 
+// TODO: Auto-generated Javadoc
 /**
- * The request hendler factory for the A-Select Server.
- * <br><br>
+ * The request hendler factory for the A-Select Server. <br>
+ * <br>
  * <b>Description:</b><br>
- * A singleton factory, which can be used to create <code>IAuthnRequestHandler</code>
- * implementations. The factory uses a {@link RequestParser} to determine 
- * the type of request handler and constructs this type of handler.   
- * <br><br>
- * <b>Concurrency issues:</b>
+ * A singleton factory, which can be used to create <code>IAuthnRequestHandler</code> implementations. The factory uses
+ * a {@link RequestParser} to determine the type of request handler and constructs this type of handler. <br>
  * <br>
- * The class is a singleton, so the same class is used in all the classes of 
- * the A-Select Server.
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * The class is a singleton, so the same class is used in all the classes of the A-Select Server. <br>
  * 
+ * @author Alfa & Ariss
  */
 public class RequestHandlerFactory
 {
-    /** The module name */
-    private final String MODULE = "RequestHandlerFactory";
-    
-    /** The system logger */
-    private ASelectSystemLogger _systemLogger;
-    
-    /** configuration: server ID */
-    private String _sMyServerId = null;
-    
-    /** configuration: organisation */
-    private String _sMyOrg = null;
-    
-    /** The static instance. */
-    private static RequestHandlerFactory _instance;
-    
-    /**
-     * Get a static handle to the <code>RequestHandlerFactory</code> instance.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Checks if a static instance exists, otherwise it is created. This 
-     * instance is returned.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * One instance of the <code>RequestHandlerFactory</code> exists.
-     * 
-     * @return A static handle to the <code>RequestHandlerFactory</code>
-     */
-    public static RequestHandlerFactory getHandle()
-    {
-        if(_instance == null)
-            _instance = new RequestHandlerFactory();
-        return _instance;
-    }
-    
-    /**
-     * Initializes the <code>RequestHandlerFactory</code>.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Initializes the components.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * The instance variables and components are initialized.
-     * <br>     
-     * @param sServerId The A-Select Server ID.
-     * @param sOrg The A-Select server organisation.
-     */
-    public void init(String sServerId, String sOrg)
-    {
-        _sMyServerId = sServerId;
-        _sMyOrg = sOrg;
-        _systemLogger = ASelectSystemLogger.getHandle();
-    }
-    
-    
-    
-    /**
-     * Factory method for creating a request handler.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Uses a {@link RequestParser} to determine the type of request handler and 
-     * constructs this type of handler.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <ul>
-     * 	<li>The <code>RequestHandlerFactory</code> is initialised.</li>
-     * 	<li><code>servletRequest != null</code></li>
-     * 	<li><code>servletResponse != null</code></li>
-     * </ul>
-     * <br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @param servletRequest The request that was issued to the server.
-     * @param servletResponse The response to the client. 
-     * @return A request handler which can be used to process the request.
-     * @throws ASelectCommunicationException 
-     * 	If communication failed and no response was sent to the client yet.
-     */
-    public IRequestHandler createRequestHandler(HttpServletRequest servletRequest,
-        HttpServletResponse servletResponse)throws ASelectCommunicationException
-    {
-        String sMethod = "createRequestHandler()";
-        
-        IRequestHandler oRequestHandler = null;
+	/** The module name */
+	private final String MODULE = "RequestHandlerFactory";
 
-        // Process all other requests
-        RequestParser reqParser = new RequestParser(servletRequest);
-        switch(reqParser.getRequestOrigin())
-        {	            
-            case RequestParser.ORIGIN_APPLICATION:
-                
-                if (reqParser.getRequestType() == RequestParser.REQTYPE_API_CALL)
-                    oRequestHandler = new ApplicationAPIHandler(reqParser, 
-                        servletRequest, servletResponse, _sMyServerId, _sMyOrg);
-                else
-                    oRequestHandler = new ApplicationBrowserHandler(servletRequest, 
-                        servletResponse,_sMyServerId, _sMyOrg);
-            
-            break;
-            
-            case RequestParser.ORIGIN_ASELECTSERVER:
-                
-                if (reqParser.getRequestType() == RequestParser.REQTYPE_API_CALL)
-                    oRequestHandler = new ASelectAPIHandler(reqParser, 
-                        servletRequest, servletResponse, _sMyServerId, _sMyOrg);
-                else
-                    oRequestHandler = new ASelectBrowserHandler(servletRequest, 
-                        servletResponse,_sMyServerId, _sMyOrg);		        
-    		break;
-    		
-            case RequestParser.ORIGIN_AUTHSP:
-                
-                if (reqParser.getRequestType() == RequestParser.REQTYPE_API_CALL)
-                    oRequestHandler = new AuthSPAPIHandler(reqParser, 
-                        servletRequest, servletResponse, _sMyServerId, _sMyOrg);
-                else
-                    oRequestHandler = new AuthSPBrowserHandler(servletRequest, 
-                        servletResponse,_sMyServerId, _sMyOrg);
-    		break;
-    		
-            case RequestParser.ORIGIN_USER:
-                
-                if (reqParser.getRequestType() == RequestParser.REQTYPE_API_CALL)
-                    throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+	/** The system logger */
+	private ASelectSystemLogger _systemLogger;
 
-            	oRequestHandler = new ApplicationBrowserHandler(servletRequest, 
-            	    servletResponse,_sMyServerId, _sMyOrg);
-            
-            break;
-            
-            default:
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received."); 
-                throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-        }
-        
-        return oRequestHandler;
-    }
-    
-    /** private constructor. */
-    private RequestHandlerFactory(){}
+	/** configuration: server ID */
+	private String _sMyServerId = null;
+
+	/** configuration: organisation */
+	private String _sMyOrg = null;
+
+	/** The static instance. */
+	private static RequestHandlerFactory _instance;
+
+	/**
+	 * Get a static handle to the <code>RequestHandlerFactory</code> instance. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Checks if a static instance exists, otherwise it is created. This instance is returned. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * One instance of the <code>RequestHandlerFactory</code> exists.
+	 * 
+	 * @return A static handle to the <code>RequestHandlerFactory</code>
+	 */
+	public static RequestHandlerFactory getHandle()
+	{
+		if (_instance == null)
+			_instance = new RequestHandlerFactory();
+		return _instance;
+	}
+
+	/**
+	 * Initializes the <code>RequestHandlerFactory</code>. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Initializes the components. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * The instance variables and components are initialized. <br>
+	 * 
+	 * @param sServerId
+	 *            The A-Select Server ID.
+	 * @param sOrg
+	 *            The A-Select server organisation.
+	 */
+	public void init(String sServerId, String sOrg)
+	{
+		_sMyServerId = sServerId;
+		_sMyOrg = sOrg;
+		_systemLogger = ASelectSystemLogger.getHandle();
+	}
+
+	/**
+	 * Factory method for creating a request handler. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Uses a {@link RequestParser} to determine the type of request handler and constructs this type of handler. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b>
+	 * <ul>
+	 * <li>The <code>RequestHandlerFactory</code> is initialised.</li>
+	 * <li><code>servletRequest != null</code></li>
+	 * <li><code>servletResponse != null</code></li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param servletRequest
+	 *            The request that was issued to the server.
+	 * @param servletResponse
+	 *            The response to the client.
+	 * @return A request handler which can be used to process the request.
+	 * @throws ASelectCommunicationException
+	 *             If communication failed and no response was sent to the client yet.
+	 */
+	public IRequestHandler createRequestHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
+		throws ASelectCommunicationException
+	{
+		String sMethod = "createRequestHandler()";
+
+		IRequestHandler oRequestHandler = null;
+
+		// Process all other requests
+		RequestParser reqParser = new RequestParser(servletRequest);
+		switch (reqParser.getRequestOrigin()) {
+		case RequestParser.ORIGIN_APPLICATION:
+
+			if (reqParser.getRequestType() == RequestParser.REQTYPE_API_CALL)
+				oRequestHandler = new ApplicationAPIHandler(reqParser, servletRequest, servletResponse, _sMyServerId,
+						_sMyOrg);
+			else
+				oRequestHandler = new ApplicationBrowserHandler(servletRequest, servletResponse, _sMyServerId, _sMyOrg);
+
+			break;
+
+		case RequestParser.ORIGIN_ASELECTSERVER:
+
+			if (reqParser.getRequestType() == RequestParser.REQTYPE_API_CALL)
+				oRequestHandler = new ASelectAPIHandler(reqParser, servletRequest, servletResponse, _sMyServerId,
+						_sMyOrg);
+			else
+				oRequestHandler = new ASelectBrowserHandler(servletRequest, servletResponse, _sMyServerId, _sMyOrg);
+			break;
+
+		case RequestParser.ORIGIN_AUTHSP:
+
+			if (reqParser.getRequestType() == RequestParser.REQTYPE_API_CALL)
+				oRequestHandler = new AuthSPAPIHandler(reqParser, servletRequest, servletResponse, _sMyServerId,
+						_sMyOrg);
+			else
+				oRequestHandler = new AuthSPBrowserHandler(servletRequest, servletResponse, _sMyServerId, _sMyOrg);
+			break;
+
+		case RequestParser.ORIGIN_USER:
+
+			if (reqParser.getRequestType() == RequestParser.REQTYPE_API_CALL)
+				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+
+			oRequestHandler = new ApplicationBrowserHandler(servletRequest, servletResponse, _sMyServerId, _sMyOrg);
+
+			break;
+
+		default:
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received.");
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+
+		return oRequestHandler;
+	}
+
+	/**
+	 * private constructor.
+	 */
+	private RequestHandlerFactory() {
+	}
 }

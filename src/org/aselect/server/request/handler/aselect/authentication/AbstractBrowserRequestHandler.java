@@ -107,46 +107,36 @@ import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
- * Abstract browser request handler.
- * <br><br>
+ * Abstract browser request handler. <br>
+ * <br>
  * <b>Description:</b><br>
- * This class can be used as a base class for request handlers which handle browser 
- * requests. The <code>AbstractBrowserRequestHandler</code> also contains the helper
- * functions used by the different request handlers
- * <br><br>
- * <b>Concurrency issues:</b>
+ * This class can be used as a base class for request handlers which handle browser requests. The
+ * <code>AbstractBrowserRequestHandler</code> also contains the helper functions used by the different request handlers <br>
  * <br>
- * Use one <code>AbstractBrowserRequestHandler</code> implementation 
- * for a single request.
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * Use one <code>AbstractBrowserRequestHandler</code> implementation for a single request. <br>
  * 
- * 
- * 14-11-2007 - Changes:
- * - DigiD Gateway update
- * - Cookie handling update
- * 
- * @author Bauke Hiemstra - www.anoigo.nl
- * Copyright Gemeente Den Haag (http://www.denhaag.nl) and UMC Nijmegen (http://www.umcn.nl)
- * 
+ * @author Alfa & Ariss 14-11-2007 - Changes: - DigiD Gateway update - Cookie handling update
+ * @author Bauke Hiemstra - www.anoigo.nl Copyright Gemeente Den Haag (http://www.denhaag.nl) and UMC Nijmegen
+ *         (http://www.umcn.nl)
  */
-public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler
-implements IAuthnRequestHandler
+public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler implements IAuthnRequestHandler
 {
 	/** The module name. Can be overwritten in sub classes */
 	protected String _sModule = "AbstractBrowserRequestHandler";
 
 	/** The system logger is in BasicRequestHandler */
 	/** The configuration Manager is in BasicRequestManager */
-	
+
 	/** The session manager. */
 	protected SessionManager _sessionManager;
 
 	/** The TGT manager. */
 	protected TGTManager _tgtManager;
 
-	/** The  request. */
+	/** The request. */
 	protected HttpServletRequest _servletRequest;
 	/** The response. */
 	protected HttpServletResponse _servletResponse;
@@ -156,27 +146,29 @@ implements IAuthnRequestHandler
 
 	/** The origanisation */
 	protected String _sMyOrg;
-	
+
 	protected String _sUserLanguage = "";
 	protected String _sUserCountry = "";
 
 	/**
-	 * Construct an instance.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Construct an instance. <br>
 	 * <br>
-	 * Handles are obtained to relevant managers.
-	 * <br>
-	 * @param servletRequest The request.
-	 * @param servletResponse The response.
-	 * @param sMyServerId The A-Select Server ID.
-	 * @param sMyOrg The A-Select Server organisation.
+	 * <b>Description:</b> <br>
+	 * Handles are obtained to relevant managers. <br>
+	 * 
+	 * @param servletRequest
+	 *            The request.
+	 * @param servletResponse
+	 *            The response.
+	 * @param sMyServerId
+	 *            The A-Select Server ID.
+	 * @param sMyOrg
+	 *            The A-Select Server organisation.
 	 */
 	public AbstractBrowserRequestHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-			String sMyServerId, String sMyOrg)
-	{
+			String sMyServerId, String sMyOrg) {
 		String sMethod = "AbstractBrowserRequestHandler";
-		
+
 		_systemLogger = ASelectSystemLogger.getHandle();
 		_configManager = ASelectConfigManager.getHandle();
 		_sessionManager = SessionManager.getHandle();
@@ -192,16 +184,20 @@ implements IAuthnRequestHandler
 		Locale loc = servletRequest.getLocale();
 		_sUserLanguage = loc.getLanguage();
 		_sUserCountry = loc.getCountry();
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "Locale: _"+_sUserLanguage+"_"+_sUserCountry);
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "Locale: _" + _sUserLanguage + "_" + _sUserCountry);
 	}
 
 	/**
-	 * This function processes browser requests
-	 * <br><br>
+	 * This function processes browser requests <br>
+	 * <br>
+	 * .
+	 * 
+	 * @throws ASelectException
+	 *             the a select exception
 	 * @see org.aselect.server.request.handler.aselect.authentication.IAuthnRequestHandler#processRequest()
 	 */
 	public void processRequest()
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "processRequest()";
 		PrintWriter pwOut = null;
@@ -221,7 +217,8 @@ implements IAuthnRequestHandler
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ _sMyServerId=" + _sMyServerId
 						+ ", sServerId=" + sServerId);
 				if (sServerId == null) {
-					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing required parameter \"a-select-server\"");
+					_systemLogger.log(Level.WARNING, _sModule, sMethod,
+							"Missing required parameter \"a-select-server\"");
 					throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
 				else if (!sServerId.equals(_sMyServerId)) {
@@ -253,32 +250,39 @@ implements IAuthnRequestHandler
 	}
 
 	/**
-	 * Prosesses the API request.
-	 * <br><br>
-	 * @param htServiceRequest Hashttable containing request parameters
-	 * @param servletResponse Used to send information (HTTP) back to the user
-	 * @param pwOut Used to send information back to the user (HTML)
-	 * @throws ASelectException If processing fails and no response 
-	 * is send to the client.
+	 * Prosesses the API request. <br>
+	 * <br>
+	 * 
+	 * @param htServiceRequest
+	 *            Hashttable containing request parameters
+	 * @param servletResponse
+	 *            Used to send information (HTTP) back to the user
+	 * @param pwOut
+	 *            Used to send information back to the user (HTML)
+	 * @throws ASelectException
+	 *             If processing fails and no response is send to the client.
 	 */
 	abstract protected void processBrowserRequest(HashMap htServiceRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut)
 		throws ASelectException;
 
 	/**
-	 * Shows the main A-Select Error page with the approprate errors.
+	 * Shows the main A-Select Error page with the approprate errors. <br>
 	 * <br>
-	 * <br>
+	 * 
 	 * @param sErrorCode
-	 * @param htServiceRequest 
+	 *            the s error code
+	 * @param htServiceRequest
+	 *            the ht service request
 	 * @param pwOut
+	 *            the pw out
 	 */
 	protected void showErrorPage(String sErrorCode, HashMap htServiceRequest, PrintWriter pwOut)
 	{
 		String sMethod = "showErrorPage";
-		
+
 		String sErrorMessage = _configManager.getErrorMessage(sErrorCode, _sUserLanguage, _sUserCountry);
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "FORM[error] "+sErrorCode+":"+sErrorMessage);
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "FORM[error] " + sErrorCode + ":" + sErrorMessage);
 		try {
 			String sErrorForm = _configManager.getForm("error", _sUserLanguage, _sUserCountry);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error]", sErrorCode);
@@ -290,35 +294,32 @@ implements IAuthnRequestHandler
 				if (htSession != null)
 					sErrorForm = _configManager.updateTemplate(sErrorForm, _sessionManager.getSessionContext(sRid));
 			}
-			
+
 			pwOut.println(sErrorForm);
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Could not show error page with error: " + sErrorCode, e);
+			_systemLogger
+					.log(Level.SEVERE, _sModule, sMethod, "Could not show error page with error: " + sErrorCode, e);
 		}
 	}
 
 	/**
-	 * Retrieve A-Select credentials.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Retrieve A-Select credentials. <br>
 	 * <br>
-	 * Reads the A-Select credentials from a Cookie and put them into a 
-	 * <code>HashMap</code>.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Reads the A-Select credentials from a Cookie and put them into a <code>HashMap</code>. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <code>servletRequest != null</code>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <code>servletRequest != null</code> <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param servletRequest The Request which should contain the Cookie.
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param servletRequest
+	 *            The Request which should contain the Cookie.
 	 * @return The A-Slect credentials in a <code>HashMap</code>.
 	 */
 	protected HashMap getASelectCredentials(HttpServletRequest servletRequest)
@@ -333,29 +334,19 @@ implements IAuthnRequestHandler
 			return null;
 		}
 
-		/*        HashMap sCredentialsParams = Utils.convertCGIMessage(sCredentialsCookie);
-		 if (sCredentialsParams == null) {
-		 return null;
-		 }
-		 String sTgt = (String)sCredentialsParams.get("tgt");
-		 String sUserId = (String)sCredentialsParams.get("uid");
-		 String sServerId = (String)sCredentialsParams.get("a-select-server");
-		 if ((sTgt == null) || (sUserId == null) || (sServerId == null))
-		 {
-		 return null;
-		 }
-		 if (!sServerId.equals(_sMyServerId))
-		 {
-		 return null;
-		 }
+		/*
+		 * HashMap sCredentialsParams = Utils.convertCGIMessage(sCredentialsCookie); if (sCredentialsParams == null) {
+		 * return null; } String sTgt = (String)sCredentialsParams.get("tgt"); String sUserId =
+		 * (String)sCredentialsParams.get("uid"); String sServerId = (String)sCredentialsParams.get("a-select-server");
+		 * if ((sTgt == null) || (sUserId == null) || (sServerId == null)) { return null; } if
+		 * (!sServerId.equals(_sMyServerId)) { return null; }
 		 */
 		HashMap htTGTContext = _tgtManager.getTGT(sTgt);
 		if (htTGTContext == null) {
 			return null;
 		}
-		/*        if (!sUserId.equals(htTGTContext.get("uid"))) {
-		 return null;
-		 }
+		/*
+		 * if (!sUserId.equals(htTGTContext.get("uid"))) { return null; }
 		 */
 		String sUserId = (String) htTGTContext.get("uid");
 		if (sUserId == null)
@@ -369,10 +360,12 @@ implements IAuthnRequestHandler
 	}
 
 	/**
-	 * This function converts a <code>servletRequest</code> to a <code>HashMap</code> by extracting the parameters
-	 * from the <code>servletRequest</code> and inserting them into a <code>HashMap</code>.
-	 * <br><br>
-	 * @param servletRequest Contains request parameters
+	 * This function converts a <code>servletRequest</code> to a <code>HashMap</code> by extracting the parameters from
+	 * the <code>servletRequest</code> and inserting them into a <code>HashMap</code>. <br>
+	 * <br>
+	 * 
+	 * @param servletRequest
+	 *            Contains request parameters
 	 * @return HashMap containing request parameters.
 	 */
 	private HashMap createServiceRequest(HttpServletRequest servletRequest)
@@ -411,6 +404,11 @@ implements IAuthnRequestHandler
 		return htServiceRequest;
 	}
 
+	/**
+	 * Gets the _servlet request.
+	 * 
+	 * @return the _servlet request
+	 */
 	public synchronized HttpServletRequest get_servletRequest()
 	{
 		return _servletRequest;

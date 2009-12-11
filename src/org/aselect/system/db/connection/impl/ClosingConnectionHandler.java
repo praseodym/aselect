@@ -17,18 +17,19 @@ import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMAgent;
 
+// TODO: Auto-generated Javadoc
 /**
  * @author root
- *
  */
 public class ClosingConnectionHandler extends AbstractConnectionHandler
 {
 	/** name of this module, used for logging */
 	private static final String MODULE = "ClosingConnectionHandler";
 
-	
-	/* (non-Javadoc)
-	 * @see org.aselect.system.db.jdbc.AbstractConnectionHandler#Init(org.aselect.system.sam.agent.SAMAgent, java.lang.String)
+	/*
+	 * (non-Javadoc)
+	 * @see org.aselect.system.db.jdbc.AbstractConnectionHandler#Init(org.aselect.system.sam.agent.SAMAgent,
+	 * java.lang.String)
 	 */
 	@Override
 	public void Init(ConfigManager configMan, SystemLogger systemLogger, SAMAgent sam, String resourcegroup)
@@ -37,12 +38,13 @@ public class ClosingConnectionHandler extends AbstractConnectionHandler
 		super.Init(configMan, systemLogger, sam, resourcegroup);
 	}
 
-	
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
 	 * @see org.aselect.system.db.jdbc.AbstractConnectionHandler#getConnection()
 	 */
 	@Override
-	public Connection getConnection() throws ASelectStorageException
+	public Connection getConnection()
+		throws ASelectStorageException
 	{
 		// TODO Auto-generated method stub
 		super.getConnection();
@@ -51,7 +53,7 @@ public class ClosingConnectionHandler extends AbstractConnectionHandler
 		String sJDBCDriver = null;
 		String sUsername = null;
 		String sURL = null;
-		
+
 		Connection _oActiveConnection = null;
 		try {
 			if (_oActiveResource == null || !_oActiveResource.live()) {
@@ -172,8 +174,8 @@ public class ClosingConnectionHandler extends AbstractConnectionHandler
 		return _oActiveConnection;
 	}
 
-
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
 	 * @see org.aselect.system.db.jdbc.AbstractConnectionHandler#releaseConnection(java.sql.Connection)
 	 */
 	@Override
@@ -184,13 +186,15 @@ public class ClosingConnectionHandler extends AbstractConnectionHandler
 		try { // Always try to return connection to the pool (if defined)
 			if (oConnection != null) {
 				oConnection.close();
-				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Database connection closed (connection returned to pool)");
+				_systemLogger.log(Level.FINEST, MODULE, sMethod,
+						"Database connection closed (connection returned to pool)");
 			}
-			} catch (SQLException e) {
-				_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database connection (connection not returned to pool)", e);
-			}
+		}
+		catch (SQLException e) {
+			_systemLogger.log(Level.FINE, MODULE, sMethod,
+					"Could not close database connection (connection not returned to pool)", e);
+		}
 
 	}
-
 
 }

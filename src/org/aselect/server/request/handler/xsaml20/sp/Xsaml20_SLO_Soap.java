@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.xsaml20.sp;
 
 import java.io.StringReader;
@@ -17,7 +28,6 @@ import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Tools;
-import org.opensaml.Configuration;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.core.LogoutRequest;
 import org.opensaml.saml2.core.LogoutResponse;
@@ -31,6 +41,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
+// TODO: Auto-generated Javadoc
 //
 // SP Soap Logout Request Handler
 // Handles IdP requests using Soap
@@ -39,7 +50,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 {
 	private final static String MODULE = "Xsaml20_SLO_Soap";
 	private static final String LOGOUTREQUEST = "LogoutRequest";
-	//private static final String CONTENT_TYPE = "text/xml; charset=utf-8";
+	// private static final String CONTENT_TYPE = "text/xml; charset=utf-8";
 	private static final String SOAP_TYPE = "text/xml";
 
 	/**
@@ -54,15 +65,22 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
-	throws ASelectException
+		throws ASelectException
 	{
 		super.init(oServletConfig, oHandlerConfig);
 	}
 
 	/**
-	 * Dit is stap 7 van SLO. We hebben zojuist een saml LogoutRequest ontvangen
-	 * en gaan deze nu verwerken. Dit houdt in: We loggen de gebruiker hier uit
-	 * en maken hier melding van naar de federatie idp.
+	 * Dit is stap 7 van SLO. We hebben zojuist een saml LogoutRequest ontvangen en gaan deze nu verwerken. Dit houdt
+	 * in: We loggen de gebruiker hier uit en maken hier melding van naar de federatie idp.
+	 * 
+	 * @param request
+	 *            the request
+	 * @param response
+	 *            the response
+	 * @return the request state
+	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	/**
 	 * Process logout request. <br>
@@ -75,7 +93,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 	 *             If processing of logout request fails.
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "process()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
@@ -90,22 +108,26 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 		return null;
 	}
 
+	/**
+	 * Handle soap logout request.
+	 * 
+	 * @param request
+	 *            the request
+	 * @param response
+	 *            the response
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private void handleSOAPLogoutRequest(HttpServletRequest request, HttpServletResponse response)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "handleSOAPLogoutRequest";
 		try {
 			/*
-			ServletInputStream input = request.getInputStream();
-			BufferedInputStream bis = new BufferedInputStream(input);
-			char b = (char) bis.read();
-			StringBuffer sb = new StringBuffer();
-			while (bis.available() != 0) {
-				sb.append(b);
-				b = (char) bis.read();
-			}
-			String sReceivedSoap = sb.toString();
-			*/
+			 * ServletInputStream input = request.getInputStream(); BufferedInputStream bis = new
+			 * BufferedInputStream(input); char b = (char) bis.read(); StringBuffer sb = new StringBuffer(); while
+			 * (bis.available() != 0) { sb.append(b); b = (char) bis.read(); } String sReceivedSoap = sb.toString();
+			 */
 			String sReceivedSoap = Tools.stream2string(request.getInputStream()); // RH, 20080715, n
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Received Soap LogoutRequest:\n" + sReceivedSoap);
 
@@ -122,23 +144,22 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 					+ XMLHelper.nodeToString(eltLogoutRequest));
 
 			// Unmarshall to the SAMLmessage
-			UnmarshallerFactory factory = Configuration.getUnmarshallerFactory();
+			UnmarshallerFactory factory = org.opensaml.xml.Configuration.getUnmarshallerFactory();
 			Unmarshaller unmarshaller = factory.getUnmarshaller((Element) eltLogoutRequest);
 
 			LogoutRequest logoutRequest = (LogoutRequest) unmarshaller.unmarshall((Element) eltLogoutRequest);
 
-
 			MetaDataManagerSp metadataManager = MetaDataManagerSp.getHandle();
 			String sASelectServerUrl = metadataManager.getLocation(_sServerUrl,
 					LogoutRequest.DEFAULT_ELEMENT_LOCAL_NAME, SAMLConstants.SAML2_SOAP11_BINDING_URI);
-			String logoutRequestIssuer = ( logoutRequest.getIssuer() == null ||  // avoid nullpointers
-					logoutRequest.getIssuer().getValue() == null ||
-					"".equals(logoutRequest.getIssuer().getValue()) ) ? sASelectServerUrl : // if not in message, use value retrieved from metadata
-						logoutRequest.getIssuer().getValue();	// else value from message
+			String logoutRequestIssuer = (logoutRequest.getIssuer() == null || // avoid nullpointers
+					logoutRequest.getIssuer().getValue() == null || "".equals(logoutRequest.getIssuer().getValue())) ? sASelectServerUrl
+					: // if not in message, use value retrieved from metadata
+					logoutRequest.getIssuer().getValue(); // else value from message
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "LogoutRequest Resolution at " +
-					sASelectServerUrl );
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Do logoutRequest signature verification=" + is_bVerifySignature());
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "LogoutRequest Resolution at " + sASelectServerUrl);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Do logoutRequest signature verification="
+					+ is_bVerifySignature());
 			if (is_bVerifySignature()) {
 				// Check signature of LogoutRequest
 				PublicKey pkey = metadataManager.getSigningKeyFromMetadata(logoutRequestIssuer);
@@ -148,13 +169,13 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
 
-//				if (checkSignature(logoutRequest,pkey)) { // We don't need the redirection anymore
-				if (SamlTools.checkSignature(logoutRequest,pkey)) {
+				// if (checkSignature(logoutRequest,pkey)) { // We don't need the redirection anymore
+				if (SamlTools.checkSignature(logoutRequest, pkey)) {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "LogoutRequest was signed OK");
 				}
 				else {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "LogoutRequest was NOT signed OK");
-					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);  // Kick 'm out
+					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST); // Kick 'm out
 				}
 			}
 
@@ -162,9 +183,9 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 			// but first check time interval validity
 			if (is_bVerifyInterval() && !SamlTools.checkValidityInterval(logoutRequest)) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "LogoutRequest time interval was NOT valid");
-				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);  // Kick 'm out
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST); // Kick 'm out
 			}
-			
+
 			String sNameID = logoutRequest.getNameID().getValue();
 			int found = removeTgtByNameID(sNameID);
 			if (found == 0) {
@@ -177,18 +198,19 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Send Logout Response to: " + logoutRequestIssuer);
 			String statusCode = StatusCode.SUCCESS_URI;
 			String myEntityId = _sServerUrl;
-			LogoutResponse logoutResponse = SamlTools.buildLogoutResponse(myEntityId, statusCode,
-											logoutRequest.getID());
+			LogoutResponse logoutResponse = SamlTools
+					.buildLogoutResponse(myEntityId, statusCode, logoutRequest.getID());
 
 			// always sign the logoutResponse
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the logoutResponse >======" );
-			logoutResponse = (LogoutResponse)sign(logoutResponse);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the logoutResponse ======<" );
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the logoutResponse >======");
+			logoutResponse = (LogoutResponse) sign(logoutResponse);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the logoutResponse ======<");
 
 			SoapManager soapManager = new SoapManager();
 			Envelope envelope = soapManager.buildSOAPMessage(logoutResponse);
 			Element envelopeElem = SamlTools.marshallMessage(envelope);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Writing SOAP message:\n"+XMLHelper.nodeToString(envelopeElem));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Writing SOAP message:\n"
+					+ XMLHelper.nodeToString(envelopeElem));
 
 			// Bauke 20081112: used same code for all Soap messages
 			// Remy: 20081113: Move this code to HandlerTools for uniformity
@@ -200,6 +222,10 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.xsaml20.Saml20_BaseHandler#destroy()
+	 */
+	@Override
 	public void destroy()
 	{
 	}

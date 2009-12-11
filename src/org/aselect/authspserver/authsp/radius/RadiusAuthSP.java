@@ -120,44 +120,70 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Radius AuthSP. <br>
  * <br>
  * <b>Description: </b> <br>
- * The Radius AuthSP is able to authenticate users against a 
- * Radius Server/Back-end based on the <br>
+ * The Radius AuthSP is able to authenticate users against a Radius Server/Back-end based on the <br>
  * <br>
  * <b>Concurrency issues: </b> <br>
- * None 
- * <br><br>
- * <b>Protocol Description</b>
+ * None <br>
  * <br>
+ * <b>Protocol Description</b> <br>
  * <i>Incoming request from the A-Select Server (Radius Protocol Handler):</i>
  * <table border="1" cellspacing="0" cellpadding="3">
- * <tr><td style="" bgcolor="#EEEEFF"><b>name</b></td><td style="" bgcolor="#EEEEFF">
- * <b>value</b></td></tr>
- * <tr><td>rid</td><td>A-Select Server request id</td></tr>
- * <tr><td>result_code</td><td>AuthSP result code</td></tr>
- * <tr><td>a-select-server</td><td>A-Select Server ID</td></tr>
- * <tr><td>signature</td><td>Generated signature of all paramaters in the above sequence</td></tr>
+ * <tr>
+ * <td style="" bgcolor="#EEEEFF"><b>name</b></td>
+ * <td style="" bgcolor="#EEEEFF"><b>value</b></td>
+ * </tr>
+ * <tr>
+ * <td>rid</td>
+ * <td>A-Select Server request id</td>
+ * </tr>
+ * <tr>
+ * <td>result_code</td>
+ * <td>AuthSP result code</td>
+ * </tr>
+ * <tr>
+ * <td>a-select-server</td>
+ * <td>A-Select Server ID</td>
+ * </tr>
+ * <tr>
+ * <td>signature</td>
+ * <td>Generated signature of all paramaters in the above sequence</td>
+ * </tr>
  * </table>
  * <br>
  * <i>Outgoing response which will be returned to the A-Select Server (Radius Protocol Handler):</i>
  * <table border="1" cellspacing="0" cellpadding="3">
- * <tr><td style="" bgcolor="#EEEEFF"><b>name</b></td><td style="" bgcolor="#EEEEFF">
- * <b>value</b></td></tr>
- * <tr><td>rid</td><td>A-Select Server request id</td></tr>
- * <tr><td>result_code</td><td>AuthSP result code</td></tr>
- * <tr><td>a-select-server</td><td>A-Select Server ID</td></tr>
- * <tr><td>signature</td><td>Generated signature of all paramaters in the above sequence</td></tr>
+ * <tr>
+ * <td style="" bgcolor="#EEEEFF"><b>name</b></td>
+ * <td style="" bgcolor="#EEEEFF"><b>value</b></td>
+ * </tr>
+ * <tr>
+ * <td>rid</td>
+ * <td>A-Select Server request id</td>
+ * </tr>
+ * <tr>
+ * <td>result_code</td>
+ * <td>AuthSP result code</td>
+ * </tr>
+ * <tr>
+ * <td>a-select-server</td>
+ * <td>A-Select Server ID</td>
+ * </tr>
+ * <tr>
+ * <td>signature</td>
+ * <td>Generated signature of all paramaters in the above sequence</td>
+ * </tr>
  * </table>
  * <br>
- * <b>Note:</b> The Algorithm and the JCE Provider used to generate the signatures 
- * is configurable in the AuthSP Server config and must be the same as on the 
- * A-Select Server otherwise generated signatures will never be valid. 
- * <br><br>
- * @author Alfa & Ariss
+ * <b>Note:</b> The Algorithm and the JCE Provider used to generate the signatures is configurable in the AuthSP Server
+ * config and must be the same as on the A-Select Server otherwise generated signatures will never be valid. <br>
+ * <br>
  * 
+ * @author Alfa & Ariss
  */
 public class RadiusAuthSP extends ASelectHttpServlet
 {
@@ -174,22 +200,25 @@ public class RadiusAuthSP extends ASelectHttpServlet
 	private AuthSPConfigManager _configManager;
 	private Object _oAuthSPConfig;
 	private final String MODULE = "RadiusAuthSP";
-	private final String VERSION = "A-Select RADIUS AuthSP "+"1.9";
+	private final String VERSION = "A-Select RADIUS AuthSP " + "1.9";
 	private final static String DEFAULT_FAILUREHANDLING = "aselect";
 
 	/**
 	 * Initializes the Radius AuthSP. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * The Radius AuthSP uses the following components from the A-Select AuthSP
-	 * Server:
+	 * The Radius AuthSP uses the following components from the A-Select AuthSP Server:
 	 * <ul>
-	 *  <li>Retrieving the Crypto Engine from the servlet context.</li>
-	 *  <li>Reading the friendly_name and working_dir from the servlet Context.</li> 
-	 * 	<li>Loading the radius AuthSP Configuration from the AuthSP Server Config.</li>
-	 * 	<li>Loading the authenticate.html and error.html Template files.</li>
+	 * <li>Retrieving the Crypto Engine from the servlet context.</li>
+	 * <li>Reading the friendly_name and working_dir from the servlet Context.</li>
+	 * <li>Loading the radius AuthSP Configuration from the AuthSP Server Config.</li>
+	 * <li>Loading the authenticate.html and error.html Template files.</li>
 	 * </ul>
 	 * 
+	 * @param servletConfig
+	 *            the servlet config
+	 * @throws ServletException
+	 *             the servlet exception
 	 * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
 	 */
 	public void init(ServletConfig servletConfig)
@@ -202,12 +231,12 @@ public class RadiusAuthSP extends ASelectHttpServlet
 
 			_authenticationLogger = AuthSPAuthenticationLogger.getHandle();
 			_systemLogger = AuthSPSystemLogger.getHandle();
-			//log start
+			// log start
 			StringBuffer sbInfo = new StringBuffer("Starting : ");
 			sbInfo.append(MODULE);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 
-			//get (config) parameters and attributes
+			// get (config) parameters and attributes
 			_configManager = AuthSPConfigManager.getHandle();
 			String sConfigID = servletConfig.getInitParameter("config_id");
 			if (sConfigID == null) {
@@ -250,7 +279,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 				throw new ASelectException(Errors.ERROR_RADIUS_INTERNAL_ERROR, e);
 			}
 
-			//Load error properties    
+			// Load error properties
 			StringBuffer sbErrorsConfig = new StringBuffer(_sWorkingDir);
 			sbErrorsConfig.append(File.separator);
 			sbErrorsConfig.append("conf");
@@ -275,7 +304,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 			sbInfo.append(sbErrorsConfig.toString()).append("\".");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 
-			//Load HTML templates
+			// Load HTML templates
 			_sErrorHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "error.html", sConfigID,
 					_sFriendlyName, VERSION);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'error.html' template.");
@@ -283,7 +312,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 					_sFriendlyName, VERSION);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'authenticate.html' template.");
 
-			//get allowed retries and failure handling
+			// get allowed retries and failure handling
 			try {
 				_iAllowedRetries = Integer.parseInt(_configManager.getParam(_oAuthSPConfig, "allowed_retries"));
 			}
@@ -334,9 +363,18 @@ public class RadiusAuthSP extends ASelectHttpServlet
 	}
 
 	/**
-	 * Entrypoint for handling the A-Select Radius AuthSP protocol requests from
-	 * the A-Select Server. <br>
-	 * <br><br> 
+	 * Entrypoint for handling the A-Select Radius AuthSP protocol requests from the A-Select Server. <br>
+	 * <br>
+	 * <br>
+	 * 
+	 * @param servletRequest
+	 *            the servlet request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @throws ServletException
+	 *             the servlet exception
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
 	 * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest,
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
@@ -347,16 +385,16 @@ public class RadiusAuthSP extends ASelectHttpServlet
 		PrintWriter pwOut = null;
 		String sQueryString = "";
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "servletRequest="+servletRequest);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "servletRequest=" + servletRequest);
 		try {
 			servletResponse.setContentType("text/html");
 			pwOut = servletResponse.getWriter();
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 
 			sQueryString = servletRequest.getQueryString();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "query="+sQueryString);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "query=" + sQueryString);
 			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "htServiceRequest="+htServiceRequest);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "htServiceRequest=" + htServiceRequest);
 			String sMyUrl = servletRequest.getRequestURL().toString();
 			htServiceRequest.put("my_url", sMyUrl);
 
@@ -366,18 +404,18 @@ public class RadiusAuthSP extends ASelectHttpServlet
 			String sAsId = (String) htServiceRequest.get("a-select-server");
 			String sSignature = (String) htServiceRequest.get("signature");
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "uid="+sUid);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "uid=" + sUid);
 			if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sAsId == null) || (sSignature == null)) {
 				throw new ASelectException(Errors.ERROR_RADIUS_INVALID_REQUEST);
 			}
 
-			//optional country code
+			// optional country code
 			String sCountry = (String) htServiceRequest.get("country");
 			if (sCountry == null || sCountry.trim().length() < 1) {
 				sCountry = null;
 			}
 
-			//optional language code
+			// optional language code
 			String sLanguage = (String) htServiceRequest.get("language");
 			if (sLanguage == null || sLanguage.trim().length() < 1) {
 				sLanguage = null;
@@ -392,15 +430,15 @@ public class RadiusAuthSP extends ASelectHttpServlet
 			sbSignature.append(sUid);
 			sbSignature.append(sAsId);
 
-			//optional country code
+			// optional country code
 			if (sCountry != null)
 				sbSignature.append(sCountry);
 
-			//optional language code            
+			// optional language code
 			if (sLanguage != null)
 				sbSignature.append(sLanguage);
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Check signature:"+sbSignature);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Check signature:" + sbSignature);
 			if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), sSignature)) {
 				StringBuffer sbWarning = new StringBuffer("Invalid signature from A-Select Server '");
 				sbWarning.append(sAsId);
@@ -433,7 +471,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 		catch (IOException eIO) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error sending response", eIO);
 			if (!servletResponse.isCommitted()) {
-				//send response if no headers have been written
+				// send response if no headers have been written
 				servletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
 		}
@@ -451,9 +489,19 @@ public class RadiusAuthSP extends ASelectHttpServlet
 	}
 
 	/**
-	 * Private entry point of the Radius AuthSP.
-	 * <br><br>
-	 * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+	 * Private entry point of the Radius AuthSP. <br>
+	 * <br>
+	 * 
+	 * @param servletRequest
+	 *            the servlet request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @throws ServletException
+	 *             the servlet exception
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest,
+	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 		throws ServletException, java.io.IOException
@@ -461,7 +509,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 		String sMethod = "doPost()";
 		PrintWriter pwOut = null;
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "servletRequest="+servletRequest);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "servletRequest=" + servletRequest);
 		try {
 			pwOut = servletResponse.getWriter();
 			servletResponse.setContentType("text/html");
@@ -483,13 +531,13 @@ public class RadiusAuthSP extends ASelectHttpServlet
 				throw new ASelectException(Errors.ERROR_RADIUS_INVALID_REQUEST);
 			}
 
-			//optional country code
+			// optional country code
 			String sCountry = servletRequest.getParameter("country");
 			if (sCountry == null || sCountry.trim().length() < 1) {
 				sCountry = null;
 			}
 
-			//optional language code
+			// optional language code
 			String sLanguage = servletRequest.getParameter("language");
 			if (sLanguage == null || sLanguage.trim().length() < 1) {
 				sLanguage = null;
@@ -522,7 +570,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 				sbSignature.append(sCountry);
 			if (sLanguage != null)
 				sbSignature.append(sLanguage);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Check signature:"+sbSignature);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Check signature:" + sbSignature);
 			if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), sSignature)) {
 				StringBuffer sbWarning = new StringBuffer("Invalid signature from A-Select Server '");
 				sbWarning.append(sAsId);
@@ -537,7 +585,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 			try {
 				iRetriesDone = Integer.parseInt(sRetryCounter);
 			}
-			catch (NumberFormatException e) //error parsing retry_counter
+			catch (NumberFormatException e) // error parsing retry_counter
 			{
 				StringBuffer sbWarning = new StringBuffer("Invalid retry counter parameter in request '");
 				sbWarning.append(sRetryCounter);
@@ -593,15 +641,15 @@ public class RadiusAuthSP extends ASelectHttpServlet
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Sending error to client", eAS);
 			handleResult(servletRequest, servletResponse, pwOut, eAS.getMessage());
 		}
-		catch (IOException eIO) //could not send response
+		catch (IOException eIO) // could not send response
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error sending response", eIO);
 			if (!servletResponse.isCommitted()) {
-				//send response if no headers have been written
+				// send response if no headers have been written
 				servletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
 		}
-		catch (Exception e) //internal error
+		catch (Exception e) // internal error
 		{
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process request due to internal error", e);
 			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER);
@@ -615,40 +663,41 @@ public class RadiusAuthSP extends ASelectHttpServlet
 	}
 
 	/**
-	 * Determines whether or not the Radius AuthSP is restartable.
-	 * <br><br>
+	 * Determines whether or not the Radius AuthSP is restartable. <br>
+	 * <br>
+	 * 
+	 * @return true, if checks if is restartable servlet
 	 * @see org.aselect.system.servlet.ASelectHttpServlet#isRestartableServlet()
 	 */
 	protected boolean isRestartableServlet()
 	{
-		//      TODO Restart functionality has to be added (Erwin)
+		// TODO Restart functionality has to be added (Erwin)
 		return false;
 	}
 
 	/**
-	 * Outputs the HTML Authentication Form to the Client.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Outputs the HTML Authentication Form to the Client. <br>
 	 * <br>
-	 * Fills the HTML Authentication Form Template with the correct values and outputs 
-	 * it to the Client.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Fills the HTML Authentication Form Template with the correct values and outputs it to the Client. <br>
 	 * <br>
-	 * None
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * None <br>
 	 * <br>
-	 * None
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * None <br>
 	 * <br>
-	 * None
-	 * <br>
-	 * @param pwOutput Output Writer
-	 * @param sError Ocurred Error Code
-	 * @param sErrorMessage Occured Error Message
-	 * @param htServiceRequest Incoming servlet request
+	 * <b>Postconditions:</b> <br>
+	 * None <br>
+	 * 
+	 * @param pwOutput
+	 *            Output Writer
+	 * @param sError
+	 *            Ocurred Error Code
+	 * @param sErrorMessage
+	 *            Occured Error Message
+	 * @param htServiceRequest
+	 *            Incoming servlet request
 	 */
 	private void showAuthenticateForm(PrintWriter pwOutput, String sError, String sErrorMessage,
 			HashMap htServiceRequest)
@@ -675,7 +724,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[retry_counter]", sRetryCounter);
 
-		//optional country code
+		// optional country code
 		if (sCountry != null) {
 			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[country]", sCountry);
 		}
@@ -683,7 +732,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[country]", "");
 		}
 
-		//optional language code
+		// optional language code
 		if (sLanguage != null) {
 			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", sLanguage);
 		}
@@ -695,14 +744,20 @@ public class RadiusAuthSP extends ASelectHttpServlet
 	}
 
 	/**
-	 * Sends the authentication result to the A-Select PKI AuthSP protocol handler
-	 * by redirecting the user using HTTP GET. 
-	 * <br><br>
-	 * @param servletRequest Incoming request
-	 * @param servletResponse Outgoing response 
-	 * @param pwOut The output that is used, when error handling is local.
-	 * @param sResultCode The Result Code
-	 * @throws IOException If no output could be send to the client.
+	 * Sends the authentication result to the A-Select PKI AuthSP protocol handler by redirecting the user using HTTP
+	 * GET. <br>
+	 * <br>
+	 * 
+	 * @param servletRequest
+	 *            Incoming request
+	 * @param servletResponse
+	 *            Outgoing response
+	 * @param pwOut
+	 *            The output that is used, when error handling is local.
+	 * @param sResultCode
+	 *            The Result Code
+	 * @throws IOException
+	 *             If no output could be send to the client.
 	 */
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut, String sResultCode)
@@ -741,13 +796,13 @@ public class RadiusAuthSP extends ASelectHttpServlet
 						_oErrorProperties));
 			}
 		}
-		catch (ASelectException eAS) //could not generate signature
+		catch (ASelectException eAS) // could not generate signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate Radius AuthSP signature", eAS);
 			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER, _configManager
 					.getErrorMessage(sResultCode, _oErrorProperties));
 		}
-		catch (UnsupportedEncodingException eUE) //could not encode signature
+		catch (UnsupportedEncodingException eUE) // could not encode signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode Radius AuthSP signature", eUE);
 			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER, _configManager

@@ -35,39 +35,37 @@
 package org.aselect.authspserver.authsp.ldap;
 
 /**
- * Contains specific LDAP AuthSP errors.
- * <br><br>
+ * Contains specific LDAP AuthSP errors. <br>
+ * <br>
  * <b>Description:</b><br>
- * The LDAP result codes.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * The LDAP result codes. <br>
  * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
-public class Errors 
+public class Errors
 {
-    
-    /** Success. */
-    public final static String ERROR_LDAP_SUCCESS = "000";
-    
-    /** Internal error. */
-    public final static String ERROR_LDAP_INTERNAL_ERROR = "100";
-    
-    /** Invalid request. */
-    public final static String ERROR_LDAP_INVALID_REQUEST = "200";
 
-    /** LDAP server unreachable. */
-    public final static String ERROR_LDAP_COULD_NOT_REACH_LDAP_SERVER = "300";    
+	/** Success. */
+	public final static String ERROR_LDAP_SUCCESS = "000";
 
-    /** Invalid password. */
-    public final static String ERROR_LDAP_INVALID_PASSWORD = "400";    
+	/** Internal error. */
+	public final static String ERROR_LDAP_INTERNAL_ERROR = "100";
 
-    /** Access denied. */
-    public final static String ERROR_LDAP_ACCESS_DENIED = "800";
-    
-    /** Could not authneticate user. */
-    public final static String ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER = "900";
+	/** Invalid request. */
+	public final static String ERROR_LDAP_INVALID_REQUEST = "200";
+
+	/** LDAP server unreachable. */
+	public final static String ERROR_LDAP_COULD_NOT_REACH_LDAP_SERVER = "300";
+
+	/** Invalid password. */
+	public final static String ERROR_LDAP_INVALID_PASSWORD = "400";
+
+	/** Access denied. */
+	public final static String ERROR_LDAP_ACCESS_DENIED = "800";
+
+	/** Could not authneticate user. */
+	public final static String ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER = "900";
 }

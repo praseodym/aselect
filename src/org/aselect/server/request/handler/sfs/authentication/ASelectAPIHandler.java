@@ -220,21 +220,19 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
- * This class handles incoming API calls from local servers.
- * <br><br>
- * <b>Description:</b>
+ * This class handles incoming API calls from local servers. <br>
  * <br>
- * If this A-Select Servers is acting as Remote Server for
- * other A-Select Servers (cross A-Select), the following requests
- * of Local Servers are handled here:
+ * <b>Description:</b> <br>
+ * If this A-Select Servers is acting as Remote Server for other A-Select Servers (cross A-Select), the following
+ * requests of Local Servers are handled here:
  * <ul>
- * 	<li><code>authenticate</code>
- *  <li><code>verify_credentials</code>
+ * <li><code>authenticate</code>
+ * <li><code>verify_credentials</code>
  * </ul>
- *
- * @author Alfa & Ariss
  * 
+ * @author Alfa & Ariss
  */
 public class ASelectAPIHandler extends AbstractAPIRequestHandler
 {
@@ -245,20 +243,26 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 	private CryptoEngine _cryptoEngine;
 
 	/**
-	 * Create a new instance.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Create a new instance. <br>
 	 * <br>
-	 * Calls {@link AbstractAPIRequestHandler#AbstractAPIRequestHandler(
-	 * RequestParser, HttpServletRequest, HttpServletResponse, String, String)}
-	 * and handles are obtained to relevant managers.
-	 * <br><br>
-	 * @param reqParser The request parser to be used.
-	 * @param servletRequest The request.
-	 * @param servletResponse The response.
-	 * @param sMyServerId The A-Select Server ID.
-	 * @param sMyOrg The A-Select Server organisation.
-	 * @throws ASelectCommunicationException If communication fails.
+	 * <b>Description:</b> <br>
+	 * Calls
+	 * {@link AbstractAPIRequestHandler#AbstractAPIRequestHandler(RequestParser, HttpServletRequest, HttpServletResponse, String, String)}
+	 * and handles are obtained to relevant managers. <br>
+	 * <br>
+	 * 
+	 * @param reqParser
+	 *            The request parser to be used.
+	 * @param servletRequest
+	 *            The request.
+	 * @param servletResponse
+	 *            The response.
+	 * @param sMyServerId
+	 *            The A-Select Server ID.
+	 * @param sMyOrg
+	 *            The A-Select Server organisation.
+	 * @throws ASelectCommunicationException
+	 *             If communication fails.
 	 */
 	public ASelectAPIHandler(RequestParser reqParser, HttpServletRequest servletRequest,
 			HttpServletResponse servletResponse, String sMyServerId, String sMyOrg)
@@ -274,12 +278,22 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 	}
 
 	/**
-	 * Processes all incoming application API calls.
-	 * <br><br>
-	 * @see org.aselect.server.request.handler.sfs.authentication.AbstractAPIRequestHandler#processAPIRequest(
-	 * org.aselect.system.communication.server.IProtocolRequest, org.aselect.system.communication.server.IInputMessage, 
-	 * org.aselect.system.communication.server.IOutputMessage)
+	 * Processes all incoming application API calls. <br>
+	 * <br>
+	 * 
+	 * @param oProtocolRequest
+	 *            the o protocol request
+	 * @param oInputMessage
+	 *            the o input message
+	 * @param oOutputMessage
+	 *            the o output message
+	 * @throws ASelectException
+	 *             the a select exception
+	 * @see org.aselect.server.request.handler.sfs.authentication.AbstractAPIRequestHandler#processAPIRequest(org.aselect.system.communication.server.IProtocolRequest,
+	 *      org.aselect.system.communication.server.IInputMessage,
+	 *      org.aselect.system.communication.server.IOutputMessage)
 	 */
+	@Override
 	protected void processAPIRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
 			IOutputMessage oOutputMessage)
 		throws ASelectException
@@ -302,13 +316,16 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 	}
 
 	/**
-	 * This method handles the <code>request=authenticate</code> request. 
-	 * <br>
+	 * This method handles the <code>request=authenticate</code> request. <br>
 	 * 
-	 * @param oProtocolRequest The request protocol properties.
-	 * @param oInputMessage The input message.
-	 * @param oOutputMessage The output message.
-	 * @throws ASelectException If proccessing fails.
+	 * @param oProtocolRequest
+	 *            The request protocol properties.
+	 * @param oInputMessage
+	 *            The input message.
+	 * @param oOutputMessage
+	 *            The output message.
+	 * @throws ASelectException
+	 *             If proccessing fails.
 	 */
 	private void handleAuthenticateRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
 			IOutputMessage oOutputMessage)
@@ -357,7 +374,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 		catch (ASelectCommunicationException eAC) {
 			_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'remote_organization' parameter found.", eAC);
 			sRemoteServerId = null;
-			//Do nothing
+			// Do nothing
 		}
 
 		try {
@@ -388,7 +405,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 			_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'arp_target' parameter found.", eAC);
 		}
 
-		//check if the request must be handled as a forced authentication
+		// check if the request must be handled as a forced authentication
 		Boolean boolForced = null;
 		String sForcedLogon = null;
 		try {
@@ -400,7 +417,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 			_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'forced_logon' parameter found.", e);
 		}
 
-		//TODO include other optional parameters as well (remco)
+		// TODO include other optional parameters as well (remco)
 		if (_crossASelectManager.isLocalSigningRequired()) {
 			StringBuffer sbData = new StringBuffer(sASelectServer);
 			if (sArpTarget != null)
@@ -430,7 +447,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 		if (sLevel != null && Integer.parseInt(sLevel) > Integer.parseInt(sRequiredLevel))
 			sRequiredLevel = sLevel;
 
-		//Create Session
+		// Create Session
 		htSessionContext = new HashMap();
 		htSessionContext.put("local_organization", sLocalOrgId);
 		htSessionContext.put("remote_session", "true");
@@ -456,13 +473,13 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 		if (sArpTarget != null)
 			htSessionContext.put("arp_target", sArpTarget);
 
-		//need to check if the request must be handled as a forced authentication
+		// need to check if the request must be handled as a forced authentication
 		if (!boolForced.booleanValue() && _crossASelectManager.isForcedAuthenticateEnabled(sLocalOrgId)) {
 			boolForced = new Boolean(true);
 		}
 		htSessionContext.put("forced_authenticate", boolForced);
 
-		//Authentication OK
+		// Authentication OK
 		StringBuffer sbAsUrl = new StringBuffer();
 		String sAsUrl = _configManager.getRedirectURL();
 		if (sAsUrl != null)
@@ -503,13 +520,15 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 	}
 
 	/**
-	 * This method handles the <code>request=verify_credentials</code> request. If the
-	 * tgt of the user is valid, then this method returns the information of the
-	 * user to the local server. 
-	 * <br>
-	 * @param oInputMessage The input message.
-	 * @param oOutputMessage The output message.
-	 * @throws ASelectException If proccessing fails.
+	 * This method handles the <code>request=verify_credentials</code> request. If the tgt of the user is valid, then
+	 * this method returns the information of the user to the local server. <br>
+	 * 
+	 * @param oInputMessage
+	 *            The input message.
+	 * @param oOutputMessage
+	 *            The output message.
+	 * @throws ASelectException
+	 *             If proccessing fails.
 	 */
 	private void handleVerifyCredentialsRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
 		throws ASelectException
@@ -538,12 +557,12 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 			byte[] baTgtBytes = CryptoEngine.getHandle().decryptTGT(sEncTgt);
 			sTGT = Utils.byteArrayToHexString(baTgtBytes);
 		}
-		catch (ASelectException eAC) //decrypt failed
+		catch (ASelectException eAC) // decrypt failed
 		{
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "could not decrypt TGT", eAC);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID, eAC);
 		}
-		catch (Exception e) //HEX conversion fails
+		catch (Exception e) // HEX conversion fails
 		{
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "could not decrypt TGT", e);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID, e);
@@ -570,7 +589,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
 		}
 
-		//get local_organisation from TGT context.
+		// get local_organisation from TGT context.
 		String sLocalOrg = (String) htTGTContext.get("local_organization");
 
 		if (sLocalOrg == null) {
@@ -579,7 +598,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
 
-		//Check if request should be signed
+		// Check if request should be signed
 		if (_crossASelectManager.isLocalSigningRequired()) {
 			StringBuffer sbData = new StringBuffer(sASelectServer);
 			sbData.append(sEncTgt).append(sLocalOrg).append(sRid);
@@ -596,17 +615,17 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 
 		sResultCode = (String) htTGTContext.get("result_code");
 
-		if (sResultCode != null) //Resultcode available in TGT context
+		if (sResultCode != null) // Resultcode available in TGT context
 		{
-			if (sResultCode != Errors.ERROR_ASELECT_SUCCESS) //Error in context
+			if (sResultCode != Errors.ERROR_ASELECT_SUCCESS) // Error in context
 			{
 				_tgtManager.remove(sTGT);
 				throw new ASelectCommunicationException(sResultCode);
-				//message with error code and rid is send in "processAPIRequest()"
+				// message with error code and rid is send in "processAPIRequest()"
 			}
 		}
 
-		//Get other response parameters
+		// Get other response parameters
 		sUid = (String) htTGTContext.get("uid");
 		String sAuthSPLevel = (String) htTGTContext.get("authsp_level");
 		String sAuthSP = (String) htTGTContext.get("authsp");
@@ -627,8 +646,8 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 		try {
 			oOutputMessage.setParam("organization", (String) htTGTContext.get("organization"));
 			oOutputMessage.setParam("app_level", (String) htTGTContext.get("app_level"));
-			//Return both asp and authsp variables to remain compatible
-			//with A-Select 1.3 and 1.4
+			// Return both asp and authsp variables to remain compatible
+			// with A-Select 1.3 and 1.4
 			oOutputMessage.setParam("asp_level", sAuthSPLevel);
 			oOutputMessage.setParam("asp", sAuthSP);
 			oOutputMessage.setParam("authsp_level", sAuthSPLevel);
@@ -645,7 +664,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 			}
 
 			if (bUseOpaqueId) {
-				// the returned user ID must contain an opaque value 
+				// the returned user ID must contain an opaque value
 				MessageDigest oMessageDigest = null;
 				try {
 
@@ -693,13 +712,18 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 			_tgtManager.remove(sTGT);
 	}
 
-	/** 
-	 * Verify the local A-Select Server signing signature.
-	 * <br><br>
-	 * @param oInputMessage The input message.
-	 * @param sData The data to validate upon.
-	 * @param sOrg The organisation of the local A-Select Server.
-	 * @throws ASelectException If signature is invalid.
+	/**
+	 * Verify the local A-Select Server signing signature. <br>
+	 * <br>
+	 * 
+	 * @param oInputMessage
+	 *            The input message.
+	 * @param sData
+	 *            The data to validate upon.
+	 * @param sOrg
+	 *            The organisation of the local A-Select Server.
+	 * @throws ASelectException
+	 *             If signature is invalid.
 	 */
 	private void verifyLocalASelectServerSignature(IInputMessage oInputMessage, String sData, String sOrg)
 		throws ASelectException

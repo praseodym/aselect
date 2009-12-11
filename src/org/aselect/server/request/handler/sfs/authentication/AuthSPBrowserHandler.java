@@ -98,279 +98,238 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.AuthenticationLogger;
 import org.aselect.system.sam.agent.SAMResource;
 
+// TODO: Auto-generated Javadoc
 /**
- * This class handles cross-authentication requests coming
- * from a remote A-Select Server, except for the
- * <code>cross_login</code> request. 
- * It must be used as follows:
- * <br>
- * For each new incoming request, create a new 
- * <code>CrossASelectHandler</code> object and call either
- * the <code>handleCrossAuthenticateRequest()</code> or
- * the <code>handleCrossAuthenticateResponse()</code>, as
- * appropriate. 
- * <code>CrossASelectHandler</code> objects cannot be reused
- * due to concurrency issues. 
-
- * <br>
- * @author Alfa & Ariss
+ * This class handles cross-authentication requests coming from a remote A-Select Server, except for the
+ * <code>cross_login</code> request. It must be used as follows: <br>
+ * For each new incoming request, create a new <code>CrossASelectHandler</code> object and call either the
+ * <code>handleCrossAuthenticateRequest()</code> or the <code>handleCrossAuthenticateResponse()</code>, as appropriate.
+ * <code>CrossASelectHandler</code> objects cannot be reused due to concurrency issues. <br>
  * 
+ * @author Alfa & Ariss
  */
 public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 {
-    /**
-     * Constructor for AuthSPBrowserHandler.
-     * <br>
-     * @param servletRequest The request.
-     * @param servletResponse The response.
-     * @param sMyServerId The A-Select Server ID.
-     * @param sMyOrg The A-Select Server organisation.
-     */
-    public AuthSPBrowserHandler (HttpServletRequest servletRequest, 
-		HttpServletResponse servletResponse,
-		String sMyServerId, String sMyOrg)
-    {
-        super(servletRequest, 
-    		servletResponse,
-    		sMyServerId, 
-    		sMyOrg);
-        _sModule = "AuthSPBrowserHandler";
-    }
-    
-    /**
-     * process authsp browser requests
-     * <br><br>
-     * @see org.aselect.server.request.handler.sfs.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.HashMap, javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
-     */
-    public void processBrowserRequest(HashMap htServiceRequest,
-        HttpServletResponse servletResponse, PrintWriter pwOut)
-    throws ASelectException
-    {
-        String sRequest = (String) htServiceRequest.get("request");
+	
+	/**
+	 * Constructor for AuthSPBrowserHandler. <br>
+	 * 
+	 * @param servletRequest
+	 *            The request.
+	 * @param servletResponse
+	 *            The response.
+	 * @param sMyServerId
+	 *            The A-Select Server ID.
+	 * @param sMyOrg
+	 *            The A-Select Server organisation.
+	 */
+	public AuthSPBrowserHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
+			String sMyServerId, String sMyOrg) {
+		super(servletRequest, servletResponse, sMyServerId, sMyOrg);
+		_sModule = "AuthSPBrowserHandler";
+	}
 
-        if (sRequest == null &&
-            _servletRequest.getParameter("authsp") != null)
-        {
-            handleAuthSPResponse(htServiceRequest, _servletResponse);
-        }
-        else if (sRequest.equals("error"))
-        {
-            handleError(htServiceRequest, _servletResponse);
-        }
-        else
-        {
-           throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-        }
-    }
+	/**
+	 * process authsp browser requests <br>
+	 * <br>
+	 * .
+	 * 
+	 * @param htServiceRequest
+	 *            the ht service request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @param pwOut
+	 *            the pw out
+	 * @throws ASelectException
+	 *             the a select exception
+	 * @see org.aselect.server.request.handler.sfs.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.HashMap,
+	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
+	 */
+	@Override
+	public void processBrowserRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+		throws ASelectException
+	{
+		String sRequest = (String) htServiceRequest.get("request");
 
-    /**
-     * This function handles the AuthSP response and calls the correct AuthSP handler.
-     * <br><br>
-     * @param htServiceRequest HashMap containing request parameters
-     * @param servletResponse Used to send (HTTP) information back to the user
-     * @throws ASelectException
-     */
-    private void handleAuthSPResponse(HashMap htServiceRequest, 
-        HttpServletResponse servletResponse)
-    throws ASelectException
-    {
-        String sMethod = "handleAuthSPResponse()";
-        String sHandlerName = null;
-        Object authSPsection = null;
-        try
-        {
-            String sAsp = (String)htServiceRequest.get("authsp");
-            IAuthSPProtocolHandler oProtocolHandler = null;
+		if (sRequest == null && _servletRequest.getParameter("authsp") != null) {
+			handleAuthSPResponse(htServiceRequest, _servletResponse);
+		}
+		else if (sRequest.equals("error")) {
+			handleError(htServiceRequest, _servletResponse);
+		}
+		else {
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+	}
 
-            try
-            {
-                authSPsection = _configManager.getSection(_configManager
-                    .getSection(null, "authsps"), "authsp", "id=" + sAsp);
-            }
-            catch(ASelectException eA)
-            {
-                //Invalid AuthSP received
-                _systemLogger.log(Level.WARNING, _sModule, sMethod ,
-                    "Invalid \"authsp\" received: " + sAsp, eA);
-                throw new ASelectException(
-                    Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST,eA);
-            }
-            
-            try
-            {
-            	sHandlerName = _configManager.getParam(authSPsection,
-                	"handler");
-            }
-        	catch(ASelectException eA)
-            {
-                //Invalid AuthSP received
-        	    StringBuffer sbError = new StringBuffer("No handler configured for AuthSP '");
-        	    sbError.append(sAsp);
-        	    sbError.append("'");
-                _systemLogger.log(Level.SEVERE, 
-                    _sModule, sMethod ,sbError.toString(), eA);
-                throw eA;
-            }            
+	/**
+	 * This function handles the AuthSP response and calls the correct AuthSP handler. <br>
+	 * <br>
+	 * 
+	 * @param htServiceRequest
+	 *            HashMap containing request parameters
+	 * @param servletResponse
+	 *            Used to send (HTTP) information back to the user
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	private void handleAuthSPResponse(HashMap htServiceRequest, HttpServletResponse servletResponse)
+		throws ASelectException
+	{
+		String sMethod = "handleAuthSPResponse()";
+		String sHandlerName = null;
+		Object authSPsection = null;
+		try {
+			String sAsp = (String) htServiceRequest.get("authsp");
+			IAuthSPProtocolHandler oProtocolHandler = null;
 
-            try
-            {
-                Class oClass = Class.forName(sHandlerName);
-                oProtocolHandler = (IAuthSPProtocolHandler)oClass.newInstance();
+			try {
+				authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp", "id="
+						+ sAsp);
+			}
+			catch (ASelectException eA) {
+				// Invalid AuthSP received
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid \"authsp\" received: " + sAsp, eA);
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST, eA);
+			}
 
-                //get authsps config and retrieve active resource from SAMAgent
-                String sResourceGroup = _configManager.getParam(authSPsection,
-                    "resourcegroup");
-                SAMResource mySAMResource = ASelectSAMAgent.getHandle()
-                    .getActiveResource(sResourceGroup);
-                Object objAuthSPResource = mySAMResource.getAttributes();
-                oProtocolHandler.init(authSPsection, objAuthSPResource);
-            }
-            catch (Exception e)
-            {
-                StringBuffer sbMessage = new StringBuffer("could not instantiate ");
-                sbMessage.append(sHandlerName);
+			try {
+				sHandlerName = _configManager.getParam(authSPsection, "handler");
+			}
+			catch (ASelectException eA) {
+				// Invalid AuthSP received
+				StringBuffer sbError = new StringBuffer("No handler configured for AuthSP '");
+				sbError.append(sAsp);
+				sbError.append("'");
+				_systemLogger.log(Level.SEVERE, _sModule, sMethod, sbError.toString(), eA);
+				throw eA;
+			}
 
-                _systemLogger.log(Level.SEVERE, _sModule, sMethod ,sbMessage.toString(), e);
-                throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);               
-            }
+			try {
+				Class oClass = Class.forName(sHandlerName);
+				oProtocolHandler = (IAuthSPProtocolHandler) oClass.newInstance();
 
-            // let the AuthSP protocol handler verify the response from the AuthSP
-            HashMap htResponse = oProtocolHandler
-                .verifyAuthenticationResponse(htServiceRequest);
+				// get authsps config and retrieve active resource from SAMAgent
+				String sResourceGroup = _configManager.getParam(authSPsection, "resourcegroup");
+				SAMResource mySAMResource = ASelectSAMAgent.getHandle().getActiveResource(sResourceGroup);
+				Object objAuthSPResource = mySAMResource.getAttributes();
+				oProtocolHandler.init(authSPsection, objAuthSPResource);
+			}
+			catch (Exception e) {
+				StringBuffer sbMessage = new StringBuffer("could not instantiate ");
+				sbMessage.append(sHandlerName);
 
-            String sResultCode = (String)htResponse.get("result");
-            if (!(sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)))
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                    "Error in response from authsp: " + sResultCode);
-                 
-                //session can be killed. The user could not be authenticated.
-                String sRid = (String)htServiceRequest.get("rid");
-                _sessionManager.killSession(sRid);
-                
-                throw new ASelectException(sResultCode);
-            }
+				_systemLogger.log(Level.SEVERE, _sModule, sMethod, sbMessage.toString(), e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			}
 
-            // user was authenticated successfully!!!
-            String sRid = (String)htResponse.get("rid");
-            TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-            
-            String sOldTGT = (String)htServiceRequest.get("aselect_credentials_tgt");
-            tgtIssuer.issueTGT(sRid, sAsp, null, servletResponse, sOldTGT);
-        }
-        catch (ASelectException e)
-        {            
-          throw e;
-        }
-        catch (Exception e)
-        {
-            _systemLogger
-            .log(
-                Level.WARNING,
-                _sModule,
-                sMethod,
-                "Internal error.",
-                e);
-            
-            throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-        }
-    }
-    
-    /**
-     * Abort an authentication attempt and redirect the user back
-     * to the application. The application will receive the error
-     * code specified in the API call.
-     * <br><br>
-     * @param htServiceRequest HashMap containing request parameters
-     * @param servletResponse Used to send (HTTP) information back to the user
-     * @throws ASelectException
-     */
-    private void handleError(HashMap htServiceRequest,
-        HttpServletResponse servletResponse)
-    throws ASelectException
-    {
-        String sMethod = "handleError()";
-        AuthenticationLogger authenticationLogger = 
-            ASelectAuthenticationLogger.getHandle();
+			// let the AuthSP protocol handler verify the response from the AuthSP
+			HashMap htResponse = oProtocolHandler.verifyAuthenticationResponse(htServiceRequest);
 
-        try
-        {
-            // Get parameter "rid"
-            String sRid = (String)htServiceRequest.get("rid");
-            if (sRid == null)
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                    "Invalid request: parameter 'rid' is missing.");
-                throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-            }
+			String sResultCode = (String) htResponse.get("result");
+			if (!(sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS))) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Error in response from authsp: " + sResultCode);
 
-            // Get parameter "result_code"
-            String sResultCode = (String)htServiceRequest.get("result_code");
-            if (sResultCode == null) //result_code missing
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Invalid request: Parameter 'result_code' is missing.");
-                throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-            }
-            if (sResultCode.length() != 4) //result_code invalid
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Invalid request: Parameter 'result_code' is not valid.");
-                throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-            }
-            
-            try
-            {
-                Integer.parseInt(sResultCode);
-            }
-            catch(NumberFormatException eNF) //result_code not a number
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Invalid request: Parameter 'result_code' is not a number.");
-                throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-            }
+				// session can be killed. The user could not be authenticated.
+				String sRid = (String) htServiceRequest.get("rid");
+				_sessionManager.killSession(sRid);
 
-            // Get session context
-            HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
-            if (htSessionContext == null)
-            {
-                _systemLogger.log(Level.WARNING, _sModule, sMethod, 
-                "Invalid request: invalid or unknown session.");
-                throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
-            }
+				throw new ASelectException(sResultCode);
+			}
 
-            // Log cancel request
-            String sAppId = (String)htSessionContext.get("app_id");
-            String sUserId = (String)htSessionContext.get("user_id");
-            authenticationLogger.log(new Object[] {
-                						"Login", 
-                						sUserId,
-                						(String)htServiceRequest.get("client_ip"),
-                						_sMyOrg,
-                						sAppId,
-                						"denied",
-                						sResultCode});
+			// user was authenticated successfully!!!
+			String sRid = (String) htResponse.get("rid");
+			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
 
-            // Issue TGT
-            TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-            tgtIssuer.issueErrorTGT(sRid, sResultCode, servletResponse);
-        }
-        catch (ASelectException ae)
-        {
-          throw ae;
-        }
-        catch (Exception e)
-        {
-            _systemLogger
-            .log(
-                Level.WARNING,
-                _sModule,
-                sMethod,
-                "Internal error.",
-                e);
-            
-            throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-        }
-    }
+			String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
+			tgtIssuer.issueTGT(sRid, sAsp, null, servletResponse, sOldTGT);
+		}
+		catch (ASelectException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error.", e);
+
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+	}
+
+	/**
+	 * Abort an authentication attempt and redirect the user back to the application. The application will receive the
+	 * error code specified in the API call. <br>
+	 * <br>
+	 * 
+	 * @param htServiceRequest
+	 *            HashMap containing request parameters
+	 * @param servletResponse
+	 *            Used to send (HTTP) information back to the user
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	private void handleError(HashMap htServiceRequest, HttpServletResponse servletResponse)
+		throws ASelectException
+	{
+		String sMethod = "handleError()";
+		AuthenticationLogger authenticationLogger = ASelectAuthenticationLogger.getHandle();
+
+		try {
+			// Get parameter "rid"
+			String sRid = (String) htServiceRequest.get("rid");
+			if (sRid == null) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request: parameter 'rid' is missing.");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+
+			// Get parameter "result_code"
+			String sResultCode = (String) htServiceRequest.get("result_code");
+			if (sResultCode == null) // result_code missing
+			{
+				_systemLogger.log(Level.WARNING, _sModule, sMethod,
+						"Invalid request: Parameter 'result_code' is missing.");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+			if (sResultCode.length() != 4) // result_code invalid
+			{
+				_systemLogger.log(Level.WARNING, _sModule, sMethod,
+						"Invalid request: Parameter 'result_code' is not valid.");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+
+			try {
+				Integer.parseInt(sResultCode);
+			}
+			catch (NumberFormatException eNF) // result_code not a number
+			{
+				_systemLogger.log(Level.WARNING, _sModule, sMethod,
+						"Invalid request: Parameter 'result_code' is not a number.");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+
+			// Get session context
+			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+			if (htSessionContext == null) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request: invalid or unknown session.");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
+			}
+
+			// Log cancel request
+			String sAppId = (String) htSessionContext.get("app_id");
+			String sUserId = (String) htSessionContext.get("user_id");
+			authenticationLogger.log(new Object[] {
+				"Login", sUserId, (String) htServiceRequest.get("client_ip"), _sMyOrg, sAppId, "denied", sResultCode
+			});
+
+			// Issue TGT
+			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
+			tgtIssuer.issueErrorTGT(sRid, sResultCode, servletResponse);
+		}
+		catch (ASelectException ae) {
+			throw ae;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error.", e);
+
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+	}
 }
-

@@ -52,153 +52,135 @@
 
 package org.aselect.server.config;
 
-
+// TODO: Auto-generated Javadoc
 /**
- * Class containing the version of the A-Select Server.
- * <br><br>
+ * Class containing the version of the A-Select Server. <br>
+ * <br>
  * <b>Description:</b><br>
- * Methods that supply this version of the A-Select Server
- * <br><br>
- * <b>Concurrency issues:</b>
+ * Methods that supply this version of the A-Select Server <br>
  * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public class Version
 {
-    /**
-     * The component name
-     */
-    private final static String COMPONENT = "A-Select Server ";
-    
-    /**
-     * The main release version of this A-Select Server
-     */
-    private final static String VERSION = "1.9";
+	/**
+	 * The component name
+	 */
+	private final static String COMPONENT = "A-Select Server ";
 
-    /**
-     * The service pack version of this A-Select Server
-     */
-    private final static String SP      = "0";
+	/**
+	 * The main release version of this A-Select Server
+	 */
+	private final static String VERSION = "1.9";
 
-    /**
-     * The patch version of this A-Select Server
-     */
-    private final static String PATCH   = "0";
+	/**
+	 * The service pack version of this A-Select Server
+	 */
+	private final static String SP = "0";
 
-    /**
-     * Returns the main version of this A-Select Server.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Static method that returns the main version as <code>String</code>.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @return the full version of this A-Select Server
-     */
-    public static String getVersion()
-    {
-        StringBuffer sbVersion = new StringBuffer(COMPONENT);
-        sbVersion.append(VERSION);
-        sbVersion.append(getSP());
-        sbVersion.append(getPatch());
-        return  sbVersion.toString();
-    }
-    
-    /**
-     * Returns the main release of this A-Select Server.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Static method that returns the main release as <code>String</code>.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @return the full release version of this A-Select Server
-     */
-    public static String getRelease()
-    {
-        return  VERSION;
-    }
+	/**
+	 * The patch version of this A-Select Server
+	 */
+	private final static String PATCH = "0";
 
-    /**
-     * Returns the service pack version of this A-Select Server.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Static method that returns the service pack version as <code>String</code>.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @return the service pack version of this A-Select Server
-     */
-    public static String getSP()
-    {
-        if (!SP.equals("0"))
-            return "." + SP;
+	/**
+	 * Returns the main version of this A-Select Server. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Static method that returns the main version as <code>String</code>. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @return the full version of this A-Select Server
+	 */
+	public static String getVersion()
+	{
+		StringBuffer sbVersion = new StringBuffer(COMPONENT);
+		sbVersion.append(VERSION);
+		sbVersion.append(getSP());
+		sbVersion.append(getPatch());
+		return sbVersion.toString();
+	}
 
-        return "";
-    }
+	/**
+	 * Returns the main release of this A-Select Server. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Static method that returns the main release as <code>String</code>. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @return the full release version of this A-Select Server
+	 */
+	public static String getRelease()
+	{
+		return VERSION;
+	}
 
-    /**
-     * Returns the patch version of this A-Select Server.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * Static method that returns the patch version as <code>String</code>.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @return the pacth version of this A-Select Server
-     */
-    public static String getPatch()
-    {
-        if (!PATCH.equals("0"))
-            return " (p. " + PATCH + ")";
-        
-        return "";
-    }
+	/**
+	 * Returns the service pack version of this A-Select Server. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Static method that returns the service pack version as <code>String</code>. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @return the service pack version of this A-Select Server
+	 */
+	public static String getSP()
+	{
+		if (!SP.equals("0"))
+			return "." + SP;
+
+		return "";
+	}
+
+	/**
+	 * Returns the patch version of this A-Select Server. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Static method that returns the patch version as <code>String</code>. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @return the pacth version of this A-Select Server
+	 */
+	public static String getPatch()
+	{
+		if (!PATCH.equals("0"))
+			return " (p. " + PATCH + ")";
+
+		return "";
+	}
 }

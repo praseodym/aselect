@@ -24,32 +24,51 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 
+// TODO: Auto-generated Javadoc
 //
 // SAML 1.1 Browser Artifact profile
 // The Artifact Receiver (or Assertion Consumer) - Destination Site
 //
 public class XSAML11Receiver extends SamlAssertionConsumer
 {
-    private final static String MODULE = "XSAML11Receiver";
+	private final static String MODULE = "XSAML11Receiver";
 
-    protected String getSessionIdPrefix() { return ""; }
-    protected boolean useConfigToCreateSamlBuilder() { return false; }
-
-    //
-    public void init(ServletConfig oServletConfig, Object oConfig)
-	throws ASelectException
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.ProtoRequestHandler#getSessionIdPrefix()
+	 */
+	@Override
+	protected String getSessionIdPrefix()
 	{
-	    String sMethod = "init()";
-	    super.init(oServletConfig, oConfig);
-        
-        _sArtifactUrl = null;
-        try {
-            _sArtifactUrl = _configManager.getParam(oConfig, "sourcelocation");
-        }
-        catch (ASelectConfigException e)
-        {
-            _systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'source location' found", e);
-            throw new ASelectException (Errors.ERROR_ASELECT_INIT_ERROR, e);
-        }
-    }   
+		return "";
+	}
+
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.ProtoRequestHandler#useConfigToCreateSamlBuilder()
+	 */
+	@Override
+	protected boolean useConfigToCreateSamlBuilder()
+	{
+		return false;
+	}
+
+	//
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.SamlAssertionConsumer#init(javax.servlet.ServletConfig, java.lang.Object)
+	 */
+	@Override
+	public void init(ServletConfig oServletConfig, Object oConfig)
+		throws ASelectException
+	{
+		String sMethod = "init()";
+		super.init(oServletConfig, oConfig);
+
+		_sArtifactUrl = null;
+		try {
+			_sArtifactUrl = _configManager.getParam(oConfig, "sourcelocation");
+		}
+		catch (ASelectConfigException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'source location' found", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+		}
+	}
 }

@@ -29,135 +29,133 @@
 package org.aselect.system.communication.server.soap12;
 
 /**
- * SOAP 1.2 constants.
- * <br><br>
+ * SOAP 1.2 constants. <br>
+ * <br>
  * <b>Description:</b><br>
- * This class contains constants for creating SOAP messages. 
- * <br><br>
- * <b>Concurrency issues:</b>
+ * This class contains constants for creating SOAP messages. <br>
  * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public class SOAPConstants
 {
-    /** The MIME content type for SOAP 1.2 */
-    public static final String CONTENT_TYPE = "application/soap+xml; charset=utf-8";
+	/** The MIME content type for SOAP 1.2 */
+	public static final String CONTENT_TYPE = "application/soap+xml; charset=utf-8";
 
-    /** The MIME content type for SOAP 1.1 */
-    public static final String CONTENT_TYPE_11 = "text/xml; charset=utf-8";
+	/** The MIME content type for SOAP 1.1 */
+	public static final String CONTENT_TYPE_11 = "text/xml; charset=utf-8";
 
-    /** The language setting */
-    public static final String XML_LANG = "en-us";
+	/** The language setting */
+	public static final String XML_LANG = "en-us";
 
-    /** SOAP environment prefix. */
-    public static final String NS_PREFIX_SOAP_ENV = "env";
+	/** SOAP environment prefix. */
+	public static final String NS_PREFIX_SOAP_ENV = "env";
 
-    /** SOAP encryption prefix. */
-    public static final String NS_PREFIX_SOAP_ENC = "enc";
+	/** SOAP encryption prefix. */
+	public static final String NS_PREFIX_SOAP_ENC = "enc";
 
-    /** XML namespace prefix constant. */
-    public static final String NS_PREFIX_XMLNS = "xmlns";
+	/** XML namespace prefix constant. */
+	public static final String NS_PREFIX_XMLNS = "xmlns";
 
-    /** XML prefix constant. */
-    public static final String NS_PREFIX_XML = "xml";
+	/** XML prefix constant. */
+	public static final String NS_PREFIX_XML = "xml";
 
-    /** A-Select method prefix constant. */
-    public static final String NS_PREFIX_RPC = "m";
+	/** A-Select method prefix constant. */
+	public static final String NS_PREFIX_RPC = "m";
 
-    /** XML Schema instance prefix constant. */
-    public static final String NS_PREFIX_XSI = "xsi";
+	/** XML Schema instance prefix constant. */
+	public static final String NS_PREFIX_XSI = "xsi";
 
-    /** XML Schema prefix constant. */
-    public static final String NS_PREFIX_XSD = "xsd";
+	/** XML Schema prefix constant. */
+	public static final String NS_PREFIX_XSD = "xsd";
 
-    /** SOAP 1.2 URI. */
-    public static final String URI_SOAP12_ENV = "http://www.w3.org/2003/05/soap-envelope";
+	/** SOAP 1.2 URI. */
+	public static final String URI_SOAP12_ENV = "http://www.w3.org/2003/05/soap-envelope";
 
-    /** SOAP 1.1 URI. */
-    public static final String URI_SOAP11_ENV = "http://www.w3.org/2001/12/soap-envelope";
+	/** SOAP 1.1 URI. */
+	public static final String URI_SOAP11_ENV = "http://www.w3.org/2001/12/soap-envelope";
 
-    /** SOAP 1.2 Encoding URI. */
-    public static final String URI_SOAP12_ENC = "http://www.w3.org/2003/05/soap-encoding";
+	/** SOAP 1.2 Encoding URI. */
+	public static final String URI_SOAP12_ENC = "http://www.w3.org/2003/05/soap-encoding";
 
-    /** SOAP 1.2 RPC URI. */
-    public static final String URI_SOAP12_RPC = "http://www.w3.org/2003/05/soap-rpc";
+	/** SOAP 1.2 RPC URI. */
+	public static final String URI_SOAP12_RPC = "http://www.w3.org/2003/05/soap-rpc";
 
-    /** XML Schema instance URI. */
-    public static final String URI_XML_XSI = "http://www.w3.org/2001/XMLSchema-instance";
+	/** XML Schema instance URI. */
+	public static final String URI_XML_XSI = "http://www.w3.org/2001/XMLSchema-instance";
 
-    /** XML Schema URI. */
-    public static final String URI_XML_XSD = "http://www.w3.org/2001/XMLSchema";
+	/** XML Schema URI. */
+	public static final String URI_XML_XSD = "http://www.w3.org/2001/XMLSchema";
 
-    /** SOAP envelope. */
-    public static final String ELEM_ENVELOPE = "Envelope";
+	/** SOAP envelope. */
+	public static final String ELEM_ENVELOPE = "Envelope";
 
-    /** SOAP header. */
-    public static final String ELEM_HEADER = "Header";
+	/** SOAP header. */
+	public static final String ELEM_HEADER = "Header";
 
-    /** SOAP body. */
-    public static final String ELEM_BODY = "Body";
+	/** SOAP body. */
+	public static final String ELEM_BODY = "Body";
 
-    /** SOAP Fault. */
-    public static final String ELEM_FAULT = "Fault";
+	/** SOAP Fault. */
+	public static final String ELEM_FAULT = "Fault";
 
-    /** Not understood fault. */
-    public static final String ELEM_NOTUNDERSTOOD = "NotUnderstood";
+	/** Not understood fault. */
+	public static final String ELEM_NOTUNDERSTOOD = "NotUnderstood";
 
-    /** Upgrade fault. */
-    public static final String ELEM_UPGRADE = "Upgrade";
+	/** Upgrade fault. */
+	public static final String ELEM_UPGRADE = "Upgrade";
 
-    /** Supported envelope for upgrade Fault. */
-    public static final String ELEM_SUPPORTEDENVELOPE = "SupportedEnvelope";
+	/** Supported envelope for upgrade Fault. */
+	public static final String ELEM_SUPPORTEDENVELOPE = "SupportedEnvelope";
 
-    /** version mismatch error */
-    public static final String ERR_VERSION_MISMATCH = "VersionMismatch";
+	/** version mismatch error */
+	public static final String ERR_VERSION_MISMATCH = "VersionMismatch";
 
-    /** Must understand error */
-    public static final String ERR_MUST_UNDERSTAND = "MustUnderstand";
+	/** Must understand error */
+	public static final String ERR_MUST_UNDERSTAND = "MustUnderstand";
 
-    /** Data encoding unkonown */
-    public static final String ERR_DATA_ENCODING_UNKNOWN = "DataEncodingUnknown";
+	/** Data encoding unkonown */
+	public static final String ERR_DATA_ENCODING_UNKNOWN = "DataEncodingUnknown";
 
-    /** Client error */
-    public static final String ERR_CLIENT = "Sender";
+	/** Client error */
+	public static final String ERR_CLIENT = "Sender";
 
-    /** Server error */
-    public static final String ERR_SERVER = "Receiver";
+	/** Server error */
+	public static final String ERR_SERVER = "Receiver";
 
-    /** HTTP status code version mismatch */
-    public static final int STATUS_VERSION_MISMATCH = 500;
+	/** HTTP status code version mismatch */
+	public static final int STATUS_VERSION_MISMATCH = 500;
 
-    /** HTTP status code must understand */
-    public static final int STATUS_MUST_UNDERSTAND = 500;
+	/** HTTP status code must understand */
+	public static final int STATUS_MUST_UNDERSTAND = 500;
 
-    /** HTTP status code client/sender */
-    public static final int STATUS_CLIENT = 400;
+	/** HTTP status code client/sender */
+	public static final int STATUS_CLIENT = 400;
 
-    /** HTTP status code server/receiver */
-    public static final int STATUS_SERVER = 500;
+	/** HTTP status code server/receiver */
+	public static final int STATUS_SERVER = 500;
 
-    /** HTTP status code DataEncodingUnknown */
-    public static final int STATUS_DATA_ENCODING_UNKNOWN = 500;
+	/** HTTP status code DataEncodingUnknown */
+	public static final int STATUS_DATA_ENCODING_UNKNOWN = 500;
 
-    /** SOAP Fault code. */
-    public static final String ELEM_FAULT_CODE = "Code";
+	/** SOAP Fault code. */
+	public static final String ELEM_FAULT_CODE = "Code";
 
-    /** SOAP Fault code value. */
-    public static final String ELEM_FAULT_CODE_VALUE = "Value";
+	/** SOAP Fault code value. */
+	public static final String ELEM_FAULT_CODE_VALUE = "Value";
 
-    /** SOAP Fault reason. */
-    public static final String ELEM_FAULT_REASON = "Reason";
+	/** SOAP Fault reason. */
+	public static final String ELEM_FAULT_REASON = "Reason";
 
-    /** Fault String. */
-    public static final String ELEM_FAULT_STRING = "faultstring";
+	/** Fault String. */
+	public static final String ELEM_FAULT_STRING = "faultstring";
 
-    /** Fault detail. */
-    public static final String ELEM_FAULT_DETAIL = "Detail";
+	/** Fault detail. */
+	public static final String ELEM_FAULT_DETAIL = "Detail";
 
-    /** Encoding style attribute. */
-    public static final String ATTR_ENCODING_STYLE = "encodingStyle";
+	/** Encoding style attribute. */
+	public static final String ATTR_ENCODING_STYLE = "encodingStyle";
 
 }

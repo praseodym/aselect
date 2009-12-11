@@ -34,32 +34,30 @@
 package org.aselect.authspserver.authsp.ip;
 
 /**
- * Contains specific IP AuthSP errors.
- * <br><br>
+ * Contains specific IP AuthSP errors. <br>
+ * <br>
  * <b>Description:</b><br>
- * The IP result codes.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * The IP result codes. <br>
  * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public class Errors
 {
-    /** Success. */
-    public final static String ERROR_IP_SUCCESS = "000";
+	/** Success. */
+	public final static String ERROR_IP_SUCCESS = "000";
 
-    /** Internal error. */
-    public final static String ERROR_IP_INTERNAL_ERROR = "100";
+	/** Internal error. */
+	public final static String ERROR_IP_INTERNAL_ERROR = "100";
 
-    /** Invalid request. */
-    public final static String ERROR_IP_INVALID_REQUEST = "200";
+	/** Invalid request. */
+	public final static String ERROR_IP_INVALID_REQUEST = "200";
 
-    /** Access denied. */
-    public final static String ERROR_IP_ACCESS_DENIED = "800";
+	/** Access denied. */
+	public final static String ERROR_IP_ACCESS_DENIED = "800";
 
-    /** Could not authenticate. */
-    public final static String ERROR_IP_COULD_NOT_AUTHENTICATE_USER = "900";
+	/** Could not authenticate. */
+	public final static String ERROR_IP_COULD_NOT_AUTHENTICATE_USER = "900";
 }

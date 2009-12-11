@@ -265,18 +265,18 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.exception.ASelectUDBException;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
  * The configuration manager for the A-Select Server. <br>
  * <br>
  * <b>Description:</b><br>
- * A singleton configuration manager, containing the A-Select Server
- * configuration. It loads several settings in memory during initialization.
+ * A singleton configuration manager, containing the A-Select Server configuration. It loads several settings in memory
+ * during initialization. <br>
  * <br>
- * <br>
- * <b>Concurrency issues:</b> <br> - <br>
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class ASelectConfigManager extends ConfigManager
 {
@@ -306,8 +306,7 @@ public class ASelectConfigManager extends ConfigManager
 	public final static String TAG_SHOW_URL = "[requestor_url]";
 
 	/**
-	 * The main config section in XML: the root tag containing all A-Select
-	 * configuration items
+	 * The main config section in XML: the root tag containing all A-Select configuration items
 	 */
 	private Object _oASelectConfigSection;
 
@@ -327,32 +326,28 @@ public class ASelectConfigManager extends ConfigManager
 	private String _sWorkingDir;
 
 	/**
-	 * The redirect URL is the external URL of the A-Select Server, which must
-	 * be used in redirects
+	 * The redirect URL is the external URL of the A-Select Server, which must be used in redirects
 	 */
 	private String _sRedirectURL;
 
 	/**
-	 * The federation URL is the external URL of the A-Select Server, which must
-	 * be used in auth requests
+	 * The federation URL is the external URL of the A-Select Server, which must be used in auth requests
 	 */
 	private String _sFederationUrl;
 
 	/**
-	 * Contains the AuthSP keys that can be found in the local_authsp.keystore
-	 * and remote_authsp.keystore
+	 * Contains the AuthSP keys that can be found in the local_authsp.keystore and remote_authsp.keystore
 	 */
 	private HashMap _htAuthspKeys = new HashMap();
 
 	/**
-	 * Contains the error messages identified by error codes, that are
-	 * configured in the A-Select Server errors.conf file
+	 * Contains the error messages identified by error codes, that are configured in the A-Select Server errors.conf
+	 * file
 	 */
 	private Properties _propErrorMessages = new Properties();
 
 	/**
-	 * Contains the Server private key (default siging key) and it's certificate
-	 * id.
+	 * Contains the Server private key (default siging key) and it's certificate id.
 	 */
 	private HashMap _htServerCrypto = new HashMap();
 
@@ -424,22 +419,21 @@ public class ASelectConfigManager extends ConfigManager
 
 	// Additional security precaution
 	private String _sAddedSecurity = "";
-	
+
 	// <user_info>consent,save_consent,session,logout</user_info>
 	// use either "consent" or "save_consent"
 	private String _sUserInfoSettings = "";
 
 	// TODO: The Template cache
 	// Key is <template_name>_<lang> where _<lang> is optional (default entry)
-	private ConcurrentHashMap<String,String> hmCachedTemplates = new ConcurrentHashMap<String,String>();
+	private ConcurrentHashMap<String, String> hmCachedTemplates = new ConcurrentHashMap<String, String>();
 
 	// TODO: The Error Message cache
 	// Key is errors_<lang> where _<lang> is optional (default entry)
-	private ConcurrentHashMap<Properties,String> hmCachedErrorMessages = new ConcurrentHashMap<Properties,String>();
+	private ConcurrentHashMap<Properties, String> hmCachedErrorMessages = new ConcurrentHashMap<Properties, String>();
 
 	/**
-	 * Check if CrossFallback is enabled when user not is found in local
-	 * A-Select UDB.
+	 * Check if CrossFallback is enabled when user not is found in local A-Select UDB.
 	 */
 	private boolean _bCrossFallbackEnabled = false;
 
@@ -447,16 +441,16 @@ public class ASelectConfigManager extends ConfigManager
 	 * Must be used to get an ASelectConfigManager instance. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Creates a new <code>ASelectConfigManager</code> instance if it's still
-	 * <code>null</code>. <br>
+	 * Creates a new <code>ASelectConfigManager</code> instance if it's still <code>null</code>. <br>
 	 * <br>
 	 * <b>Concurrency issues:</b> <br>
-	 * Always the same instance of the config manager is returned, because it's
-	 * singleton. <br>
+	 * Always the same instance of the config manager is returned, because it's singleton. <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @return handle to the ASelectConfigManager
 	 */
@@ -473,50 +467,40 @@ public class ASelectConfigManager extends ConfigManager
 	 * <b>Description:</b> <br>
 	 * Must be successfully run once, before it can be used. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Preconditions:</b>
 	 * <ul>
-	 * <li>If SSL is used, the truststore must be set at the startup of the
-	 * servlet container.</li>
+	 * <li>If SSL is used, the truststore must be set at the startup of the servlet container.</li>
 	 * <li><code>sWorkingDir != null</code>.</li>
-	 * <li><code>sSQLDriver != null</code> if config is stored in a file
-	 * instead of in a database.</li>
-	 * <li><code>sSQLUser != null</code> if config is stored in a file
-	 * instead of in a database.</li>
-	 * <li><code>sSQLPassword != null</code> if config is stored in a file
-	 * instead of in a database.</li>
-	 * <li><code>sSQLURL != null</code> if config is stored in a file instead
-	 * of in a database.</li>
-	 * <li><code>sSQLTable != null</code> if config is stored in a file
-	 * instead of in a database.</li>
-	 * <li><code>sConfigIDName != null</code> if config is stored in a file
-	 * instead of in a database.</li>
+	 * <li><code>sSQLDriver != null</code> if config is stored in a file instead of in a database.</li>
+	 * <li><code>sSQLUser != null</code> if config is stored in a file instead of in a database.</li>
+	 * <li><code>sSQLPassword != null</code> if config is stored in a file instead of in a database.</li>
+	 * <li><code>sSQLURL != null</code> if config is stored in a file instead of in a database.</li>
+	 * <li><code>sSQLTable != null</code> if config is stored in a file instead of in a database.</li>
+	 * <li><code>sConfigIDName != null</code> if config is stored in a file instead of in a database.</li>
 	 * </ul>
 	 * <br>
 	 * <b>Postconditions:</b> <br>
 	 * The A-Select configuration is read and components are initialized. <br>
 	 * 
 	 * @param sWorkingDir
-	 *            The workingdir containing the configuration and keystores of
-	 *            the A-Select Server.
+	 *            The workingdir containing the configuration and keystores of the A-Select Server.
 	 * @param sSQLDriver
-	 *            The JDBC driver name, used when configuration is stored in a
-	 *            database.
+	 *            The JDBC driver name, used when configuration is stored in a database.
 	 * @param sSQLUser
-	 *            The JDBC user name, used when configuration is stored in a
-	 *            database.
+	 *            The JDBC user name, used when configuration is stored in a database.
 	 * @param sSQLPassword
-	 *            The JDBC password for the given user name, used when
-	 *            configuration is stored in a database.
+	 *            The JDBC password for the given user name, used when configuration is stored in a database.
 	 * @param sSQLURL
 	 *            The JDBC URL, used when configuration is stored in a database.
 	 * @param sSQLTable
-	 *            The JDBC table name in which the configuration is located;
-	 *            used when configuration is stored in a database.
+	 *            The JDBC table name in which the configuration is located; used when configuration is stored in a
+	 *            database.
 	 * @param sConfigIDName
-	 *            The JDBC configuration id to locate the configuration in the
-	 *            config table, used when configuration is stored in a database.
+	 *            The JDBC configuration id to locate the configuration in the config table, used when configuration is
+	 *            stored in a database.
 	 * @throws ASelectException
 	 *             If initialisation fails.
 	 */
@@ -595,8 +579,7 @@ public class ASelectConfigManager extends ConfigManager
 		StringBuffer sbErrorFile = new StringBuffer(sWorkingDir);
 		if (!sWorkingDir.endsWith(File.separator))
 			sbErrorFile.append(File.separator);
-		sbErrorFile.append("conf").append(File.separator).append("errors").
-					append(File.separator).append("errors.conf");
+		sbErrorFile.append("conf").append(File.separator).append("errors").append(File.separator).append("errors.conf");
 
 		File fErrors = new File(sbErrorFile.toString());
 		if (!fErrors.exists()) {
@@ -621,10 +604,11 @@ public class ASelectConfigManager extends ConfigManager
 		// read redirect URL
 		try {
 			_sRedirectURL = getParam(_oASelectConfigSection, "redirect_url");
-			new URL(_sRedirectURL);  // checks correctness
+			new URL(_sRedirectURL); // checks correctness
 		}
 		catch (ASelectConfigException e) {
-			_systemLogger.log(Level.CONFIG, MODULE, sMethod, "No configuration item 'redirect_url' defined, using default");
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+					"No configuration item 'redirect_url' defined, using default");
 		}
 		catch (MalformedURLException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
@@ -684,13 +668,16 @@ public class ASelectConfigManager extends ConfigManager
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Single sign-on is enabled");
 
 		_sCookiePath = ASelectConfigManager.getSimpleParam(_oASelectConfigSection, "cookie_path", false);
-		if (_sCookiePath == null) _sCookiePath = "/aselectserver/server";
+		if (_sCookiePath == null)
+			_sCookiePath = "/aselectserver/server";
 		if (!_sCookiePath.startsWith("/"))
 			_sCookiePath = "/" + _sCookiePath;
 		_sAddedSecurity = ASelectConfigManager.getSimpleParam(_oASelectConfigSection, "added_security", false);
-		if (_sAddedSecurity == null) _sAddedSecurity = "";
+		if (_sAddedSecurity == null)
+			_sAddedSecurity = "";
 		_sUserInfoSettings = ASelectConfigManager.getSimpleParam(_oASelectConfigSection, "user_info", false);
-		if (_sUserInfoSettings == null) _sUserInfoSettings = "";
+		if (_sUserInfoSettings == null)
+			_sUserInfoSettings = "";
 
 		// In a redundant environment a domain cookie wil be set.
 		// This way, all A-Select servers in, for example:
@@ -777,9 +764,8 @@ public class ASelectConfigManager extends ConfigManager
 	 * Returns the cookie domain, if specificaly set in the configuration. <br>
 	 * <br>
 	 * 
-	 * @return <code>null</code> if no domain is set or a <code>String</code>
-	 *         containing the cookie domain that is configured including the '.'
-	 *         as prefix.
+	 * @return <code>null</code> if no domain is set or a <code>String</code> containing the cookie domain that is
+	 *         configured including the '.' as prefix.
 	 */
 	public String getCookieDomain()
 	{
@@ -790,19 +776,18 @@ public class ASelectConfigManager extends ConfigManager
 	 * Returns the A-Select Server working dir. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Returns the A-Select Server working_dir init parameter in the web.xml.
+	 * Returns the A-Select Server working_dir init parameter in the web.xml. <br>
 	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
-	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Postconditions:</b> <br>
-	 * 
 	 * <br>
 	 * 
 	 * @return <code>String</code> containing the A-Select Server working dir.
-	 * 
 	 */
 	public String getWorkingdir()
 	{
@@ -813,27 +798,30 @@ public class ASelectConfigManager extends ConfigManager
 	 * Returns the A-Select Server redirect URL. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Returns the external URL of the A-Select Server which is used in
-	 * redirects.<br/> The optional 'redirect_url' config item is configured in
-	 * the A-Select configuration (aselect.xml). <br>
+	 * Returns the external URL of the A-Select Server which is used in redirects.<br/>
+	 * The optional 'redirect_url' config item is configured in the A-Select configuration (aselect.xml). <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Postconditions:</b> <br>
-	 * 
 	 * <br>
 	 * 
-	 * @return <code>String</code> containing the A-Select Server redirect URL
-	 *         dir.
-	 * 
+	 * @return <code>String</code> containing the A-Select Server redirect URL dir.
 	 */
 	public String getRedirectURL()
 	{
 		return _sRedirectURL;
 	}
 
+	/**
+	 * Gets the federation url.
+	 * 
+	 * @return the federation url
+	 */
 	public String getFederationUrl()
 	{
 		return _sFederationUrl;
@@ -845,11 +833,14 @@ public class ASelectConfigManager extends ConfigManager
 	 * <b>Description:</b> <br>
 	 * Returns all AuthSP settings that are loaded during startup. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @return A <code>HashMap</code> containing all AuthSP settings.
 	 */
@@ -859,24 +850,23 @@ public class ASelectConfigManager extends ConfigManager
 	}
 
 	/**
-	 * Returns the public signing key of the privileged application with the
-	 * given alias. <br>
+	 * Returns the public signing key of the privileged application with the given alias. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Returns the <code>PublicKey</code> of the privileged application that
-	 * has the supplied alias name. <br>
+	 * Returns the <code>PublicKey</code> of the privileged application that has the supplied alias name. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - Returns <code>null</code> if no public
-	 * key was found for that alias. <br>
+	 * <b>Postconditions:</b> <br>
+	 * - Returns <code>null</code> if no public key was found for that alias. <br>
 	 * 
 	 * @param sAlias
 	 *            The id of the public key.
-	 * @return The public key of a privieleged application indicated by it's
-	 *         alias.
+	 * @return The public key of a privieleged application indicated by it's alias.
 	 */
 	public PublicKey getPrivilegedPublicKey(String sAlias)
 	{
@@ -887,14 +877,16 @@ public class ASelectConfigManager extends ConfigManager
 	 * Returns the default private key of this A-Select Server. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Returns the PrivateKey that is stored in the aselect.keystore keystore.
+	 * Returns the PrivateKey that is stored in the aselect.keystore keystore. <br>
 	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
-	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @return The private key of this A-Select Server.
 	 */
@@ -907,14 +899,16 @@ public class ASelectConfigManager extends ConfigManager
 	 * Returns the certificate of this A-Select Server. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Returns the X509 certificate that is stored in the aselect.keystore
-	 * keystore. <br>
+	 * Returns the X509 certificate that is stored in the aselect.keystore keystore. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @return The certificate of this A-Select Server.
 	 */
@@ -929,11 +923,14 @@ public class ASelectConfigManager extends ConfigManager
 	 * <b>Description:</b> <br>
 	 * Returns the certificate ID of the A-Select Server private key. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @return a <code>String</code> representation of the certificate ID
 	 */
@@ -946,18 +943,23 @@ public class ASelectConfigManager extends ConfigManager
 	 * Get the error message that matches the error code that is supplied. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Returns the error message that is configured in the errors.conf file in
-	 * the A-Select Server configuration. <br>
+	 * Returns the error message that is configured in the errors.conf file in the A-Select Server configuration. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Preconditions:</b> <br>
 	 * <code>sErrorCode != null</code> <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @param sErrorCode
 	 *            An error code as configured in the errors.conf file
+	 * @param sLanguage
+	 *            the s language
+	 * @param sCountry
+	 *            the s country
 	 * @return A <code>String</code> representation of the error message
 	 */
 	// TODO: move to ConfigManager, so AuthSP can also use this functionality
@@ -966,35 +968,53 @@ public class ASelectConfigManager extends ConfigManager
 		String sMethod = "getErrorMessage";
 		String sMessage = null;
 
-		boolean langDefault = (sLanguage==null || sLanguage.equals(""));
+		boolean langDefault = (sLanguage == null || sLanguage.equals(""));
 		try {
-			Properties props = (langDefault)? _propErrorMessages: loadErrorFile(sLanguage, sCountry);
+			Properties props = (langDefault) ? _propErrorMessages : loadErrorFile(sLanguage, sCountry);
 			sMessage = props.getProperty(sErrorCode).trim();
 			if (sMessage == null)
-				sMessage = "["+sErrorCode+"].";
+				sMessage = "[" + sErrorCode + "].";
 		}
-		catch (Exception e) {  // value was probably null so trim() function failed
-			sMessage = "["+sErrorCode+"]";
+		catch (Exception e) { // value was probably null so trim() function failed
+			sMessage = "[" + sErrorCode + "]";
 		}
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "MSG-" + sMessage);
 		return sMessage;
 	}
-	
+
 	// TODO: move to ConfigManager, so AuthSP can also use this functionality
+	/**
+	 * Gets the error message.
+	 * 
+	 * @param sErrorCode
+	 *            the s error code
+	 * @return the error message
+	 */
 	public String getErrorMessage(String sErrorCode)
 	{
 		return getErrorMessage(sErrorCode, "", "");
 	}
-	
+
 	// 20090930, Bauke: added localization
 	// TODO: use a cache for the error.conf files
 	// TODO: move to ConfigManager, so AuthSP can also use this functionality
+	/**
+	 * Load error file.
+	 * 
+	 * @param sLanguage
+	 *            the s language
+	 * @param sCountry
+	 *            the s country
+	 * @return the properties
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	public Properties loadErrorFile(String sLanguage, String sCountry)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "loadErrorFile";
 		File fTemplate = null;
-		
+
 		StringBuffer sbErrorFile = new StringBuffer(getWorkingdir());
 		if (!getWorkingdir().endsWith(File.separator))
 			sbErrorFile.append(File.separator);
@@ -1003,10 +1023,10 @@ public class ASelectConfigManager extends ConfigManager
 		sbErrorFile.append("errors");
 		sbErrorFile.append(File.separator);
 		sbErrorFile.append("errors");
-	
-		boolean langDefault = (sLanguage==null || sLanguage.equals(""));
-		String sLangExt = (langDefault)? "": "_"+sLanguage.toLowerCase();
-		for ( ; ; ) {
+
+		boolean langDefault = (sLanguage == null || sLanguage.equals(""));
+		String sLangExt = (langDefault) ? "" : "_" + sLanguage.toLowerCase();
+		for (;;) {
 			StringBuffer sbFilePath = new StringBuffer(sbErrorFile);
 			sbFilePath.append(sLangExt).append(".conf");
 
@@ -1014,13 +1034,14 @@ public class ASelectConfigManager extends ConfigManager
 			fTemplate = new File(sbFilePath.toString());
 			if (fTemplate.exists())
 				break;
-			if (sLangExt.equals("")) {  // already tried the default
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error config file not found: "+sbFilePath.toString());
+			if (sLangExt.equals("")) { // already tried the default
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error config file not found: "
+						+ sbFilePath.toString());
 				throw new ASelectException(Errors.ERROR_ASELECT_NOT_FOUND);
 			}
-			sLangExt = "";  // try the default file
+			sLangExt = ""; // try the default file
 		}
-			
+
 		try {
 			Properties errorProps = new Properties();
 			errorProps.load(new FileInputStream(fTemplate));
@@ -1040,27 +1061,34 @@ public class ASelectConfigManager extends ConfigManager
 	 * Get a template of an A-Select Server form. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Returns a A-Select Server form that is located in the A-Select Server
-	 * configuration (aselectserver/conf/html/*) and can be used as a template.
+	 * Returns a A-Select Server form that is located in the A-Select Server configuration (aselectserver/conf/html/*)
+	 * and can be used as a template. <br>
 	 * <br>
-	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Preconditions:</b> <br>
 	 * <code>sForm != null</code> <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @param sForm
 	 *            The id of the form that must be returned.
+	 * @param sLanguage
+	 *            the s language
+	 * @param sCountry
+	 *            the s country
 	 * @return A <code>String</code> representation of the requested form.
-	 * @throws ASelectException 
+	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	public String getForm(String sForm, String sLanguage, String sCountry)
-	throws ASelectException
+		throws ASelectException
 	{
-		_systemLogger.log(Level.INFO, "ASelectConfigManager", "getForm", "Get FORM '" + sForm + "' _"+sLanguage+"_"+sCountry);
-		
+		_systemLogger.log(Level.INFO, "ASelectConfigManager", "getForm", "Get FORM '" + sForm + "' _" + sLanguage + "_"
+				+ sCountry);
+
 		if (sForm.equals("login"))
 			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
 
@@ -1091,27 +1119,42 @@ public class ASelectConfigManager extends ConfigManager
 		if (sForm.equals("loggedout"))
 			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
 
-		return "Form '"+sForm+"' not found.";
+		return "Form '" + sForm + "' not found.";
 	}
 
+	/**
+	 * Gets the form.
+	 * 
+	 * @param sForm
+	 *            the s form
+	 * @return the form
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	public String getForm(String sForm)
-	throws ASelectException
+		throws ASelectException
 	{
 		return getForm(sForm, "", "");
 	}
-		
+
 	/**
 	 * Updates the supplied template with optional requestor information. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Updates the supplied template with the tags:<br/> [requestor_url]<br/>
-	 * [requestor_friendly_name]<br/> [requestor_maintainer_email]<br/> <br>
+	 * Updates the supplied template with the tags:<br/>
+	 * [requestor_url]<br/>
+	 * [requestor_friendly_name]<br/>
+	 * [requestor_maintainer_email]<br/>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - sTemplate != null <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - sTemplate != null <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @param sTemplate
 	 *            the template that must be updated
@@ -1179,15 +1222,17 @@ public class ASelectConfigManager extends ConfigManager
 	 * Private constructor. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * This constructor is private comform the Singleton design pattern. Use
-	 * {@link #getHandle()} to retrieve an static instance. <br>
+	 * This constructor is private comform the Singleton design pattern. Use {@link #getHandle()} to retrieve an static
+	 * instance. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
-	 * 
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 */
 	private ASelectConfigManager() {
 	}
@@ -1196,24 +1241,23 @@ public class ASelectConfigManager extends ConfigManager
 	 * Load the default private siging key for the A-Select Server. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Loads the private signing key that is stored in the aselect.keystore in
-	 * the A-Select Server configuration. The key must be stored in the keystore
-	 * with the same ID as the A-Select Server id. <br>
+	 * Loads the private signing key that is stored in the aselect.keystore in the A-Select Server configuration. The
+	 * key must be stored in the keystore with the same ID as the A-Select Server id. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Preconditions:</b>
 	 * <ul>
-	 * <li> The keystore_password config item must be available in the A-Select
-	 * configuration and may not be empty. </li>
+	 * <li>The keystore_password config item must be available in the A-Select configuration and may not be empty.</li>
 	 * <li><code>sWorkingDir != null </code></li>
 	 * </ul>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @param sWorkingDir
-	 *            contains the A-Select Server working dir specified in the
-	 *            web.xml.
+	 *            contains the A-Select Server working dir specified in the web.xml.
 	 * @throws ASelectException
 	 *             if loading fails.
 	 */
@@ -1274,24 +1318,24 @@ public class ASelectConfigManager extends ConfigManager
 	 * Loads settings of all configured AuthSP's. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Checks if all minimum AuthSP settings for all configured AuthSPs are
-	 * available and loads their public keys. <br>
+	 * Checks if all minimum AuthSP settings for all configured AuthSPs are available and loads their public keys. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Postconditions:</b> <br>
 	 * The Authsp settings are loaded. <br>
 	 * 
 	 * @param sWorkingDir
-	 *            contains the A-Select Server working dir specified in the
-	 *            web.xml.
+	 *            contains the A-Select Server working dir specified in the web.xml.
 	 * @throws ASelectException
 	 *             id loading fails.
 	 */
 	private void loadAuthSPSettings(String sWorkingDir)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "loadAuthSPSettings()";
 		Object oAuthSP = null;
@@ -1345,15 +1389,14 @@ public class ASelectConfigManager extends ConfigManager
 	}
 
 	/**
-	 * Loads the configured AuthSP Public key of the supplied authsp config
-	 * section. <br>
+	 * Loads the configured AuthSP Public key of the supplied authsp config section. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Loads the public key of the configured AuthSP from the
-	 * remote_authsp.keystore or local_authsp.keystore and tries to load the
-	 * speicif private key if configured. <br>
+	 * Loads the public key of the configured AuthSP from the remote_authsp.keystore or local_authsp.keystore and tries
+	 * to load the speicif private key if configured. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Preconditions:</b>
 	 * <ul>
@@ -1365,8 +1408,7 @@ public class ASelectConfigManager extends ConfigManager
 	 * <code>_htAuthspKeys</code> comtains the loaded Auhsp key. <br>
 	 * 
 	 * @param sWorkingDir
-	 *            contains the A-Select Server working dir specified in the
-	 *            web.xml.
+	 *            contains the A-Select Server working dir specified in the web.xml.
 	 * @param oAuthSPSection
 	 *            The configuration section of the AuthSP that must be loaded.
 	 * @throws ASelectException
@@ -1461,16 +1503,14 @@ public class ASelectConfigManager extends ConfigManager
 	}
 
 	/**
-	 * Loads the optional specific private key for an AuthSP identified by it's
-	 * config section. <br>
+	 * Loads the optional specific private key for an AuthSP identified by it's config section. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Put's a specific private signing key in the class variable
-	 * <i>_htAuthspKeys</i>. The key must be stored in a keystore with name:
-	 * [alias]_specific.keystore. The keystore location is:
-	 * [working_dir]\keystores\[keystore] <br>
+	 * Put's a specific private signing key in the class variable <i>_htAuthspKeys</i>. The key must be stored in a
+	 * keystore with name: [alias]_specific.keystore. The keystore location is: [working_dir]\keystores\[keystore] <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Preconditions:</b>
 	 * <ul>
@@ -1479,15 +1519,12 @@ public class ASelectConfigManager extends ConfigManager
 	 * </ul>
 	 * <br>
 	 * <b>Postconditions:</b> <br>
-	 * <code>_htAuthspKeys</code> contains the loaded private key and
-	 * certificate fingerprint. <br>
+	 * <code>_htAuthspKeys</code> contains the loaded private key and certificate fingerprint. <br>
 	 * 
 	 * @param sWorkingDir
-	 *            contains the A-Select Server working dir specified in the
-	 *            web.xml.
+	 *            contains the A-Select Server working dir specified in the web.xml.
 	 * @param oAuthSPConfig
-	 *            The config section of the AuthSP that is checked for private
-	 *            message.
+	 *            The config section of the AuthSP that is checked for private message.
 	 * @throws ASelectException
 	 *             If loading fails.
 	 */
@@ -1561,12 +1598,10 @@ public class ASelectConfigManager extends ConfigManager
 	}
 
 	/**
-	 * Loads the HTML templates from the A-Select Server configuration
-	 * directory. <br>
+	 * Loads the HTML templates from the A-Select Server configuration directory. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Loads the following HTML templates from the directory:
-	 * [working_dir]\conf\html\*
+	 * Loads the following HTML templates from the directory: [working_dir]\conf\html\*
 	 * <ul>
 	 * <li>login.html</li>
 	 * <li>serverinfo.html</li>
@@ -1574,21 +1609,20 @@ public class ASelectConfigManager extends ConfigManager
 	 * <li>loggedout.html</li>
 	 * <li>error.html</li>
 	 * <li>select.html</li>
-	 * <li> popup.html</li>
+	 * <li>popup.html</li>
 	 * </ul>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Preconditions:</b> <br>
 	 * <code>sWorkingDir != null</code> <br>
 	 * <br>
 	 * <b>Postconditions:</b> <br>
-	 * The HTML templates are loaded into instance strings (e.g.
-	 * <code>_sLoginForm</code>). <br>
+	 * The HTML templates are loaded into instance strings (e.g. <code>_sLoginForm</code>). <br>
 	 * 
 	 * @param sWorkingDir
-	 *            contains the A-Select Server working dir specified in the
-	 *            web.xml.
+	 *            contains the A-Select Server working dir specified in the web.xml.
 	 * @throws ASelectException
 	 *             If loading templates fails.
 	 */
@@ -1622,32 +1656,35 @@ public class ASelectConfigManager extends ConfigManager
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}
-	
+
 	/**
-	 * Loads a template from harddisk to the supplied <code>sTemplate</code>
-	 * variable. <br>
+	 * Loads a template from harddisk to the supplied <code>sTemplate</code> variable. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
 	 * Will load the template located in the file with name :<br>
 	 * <i>sWorkingDir</i>\conf\html\<i>sFileName</i> <br>
 	 * to the variable <i>sTemplate</i>. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Preconditions:</b>
 	 * <ul>
 	 * <li><code>sWorkingDir != null</code></li>
-	 * <li> <code>sFileName</code> must contain an existing filename and may
-	 * not be <code>null</code> </li>
+	 * <li> <code>sFileName</code> must contain an existing filename and may not be <code>null</code></li>
 	 * </ul>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
-	 * @param sWorkingDir
-	 *            contains the A-Select Server working dir specified in the
-	 *            web.xml.
 	 * @param sFileName
 	 *            File name with extension of the template that must be loaded.
+	 * @param sUnUsed
+	 *            the s un used
+	 * @param sLanguage
+	 *            the s language
+	 * @param sCountry
+	 *            the s country
 	 * @return The loaded HTML template.
 	 * @throws ASelectException
 	 *             if loading fails.
@@ -1656,7 +1693,7 @@ public class ASelectConfigManager extends ConfigManager
 	// TODO: use a cache for the templates
 	// TODO: move to ConfigManager, so AuthSP can also use this functionality
 	public String loadHTMLTemplate(String sUnUsed, String sFileName, String sLanguage, String sCountry)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "loadHTMLTemplate";
 		String sLine = null;
@@ -1664,25 +1701,25 @@ public class ASelectConfigManager extends ConfigManager
 		File fTemplate = null;
 		BufferedReader brIn = null;
 
-		boolean langDefault = (sLanguage==null || sLanguage.equals(""));
+		boolean langDefault = (sLanguage == null || sLanguage.equals(""));
 		try {
-			String sLangExt = (langDefault)? "": "_"+sLanguage.toLowerCase();
-			String sHtmlExt = (!sFileName.endsWith(".html"))? ".html": "";
-			for ( ; ; ) {
+			String sLangExt = (langDefault) ? "" : "_" + sLanguage.toLowerCase();
+			String sHtmlExt = (!sFileName.endsWith(".html")) ? ".html" : "";
+			for (;;) {
 				StringBuffer sbFilePath = new StringBuffer(getWorkingdir());
 				sbFilePath.append(File.separator).append("conf").append(File.separator).append("html").append(
 						File.separator).append(sFileName).append(sLangExt).append(sHtmlExt);
-	
+
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "HTML " + sbFilePath);
 				fTemplate = new File(sbFilePath.toString());
 				if (fTemplate.exists())
 					break;
-				if (sLangExt.equals("")) {  // already tried the default
+				if (sLangExt.equals("")) { // already tried the default
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Required template not found: "
 							+ sbFilePath.toString());
 					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 				}
-				sLangExt = "";  // try the default file
+				sLangExt = ""; // try the default file
 			}
 
 			brIn = new BufferedReader(new InputStreamReader(new FileInputStream(fTemplate)));
@@ -1715,9 +1752,20 @@ public class ASelectConfigManager extends ConfigManager
 		}
 		return sTemplate;
 	}
-	
+
+	/**
+	 * Load html template.
+	 * 
+	 * @param sWorkingDir
+	 *            the s working dir
+	 * @param sFileName
+	 *            the s file name
+	 * @return the string
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	public String loadHTMLTemplate(String sWorkingDir, String sFileName)
-	throws ASelectException
+		throws ASelectException
 	{
 		return loadHTMLTemplate(sWorkingDir, sFileName, "", "");
 	}
@@ -1726,10 +1774,11 @@ public class ASelectConfigManager extends ConfigManager
 	 * Loads the configured privileged application settings. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Loads the public signing key for every privileged application that is
-	 * configured in the A-Select Server configuration. <br>
+	 * Loads the public signing key for every privileged application that is configured in the A-Select Server
+	 * configuration. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Preconditions:</b> <br>
 	 * <code>sWorkingDir != null</code> <br>
@@ -1738,8 +1787,7 @@ public class ASelectConfigManager extends ConfigManager
 	 * The privileged application setting are loaded. <br>
 	 * 
 	 * @param sWorkingDir
-	 *            contains the A-Select Server working dir specified in the
-	 *            web.xml.
+	 *            contains the A-Select Server working dir specified in the web.xml.
 	 * @throws ASelectException
 	 *             if loading fails.
 	 */
@@ -1792,10 +1840,10 @@ public class ASelectConfigManager extends ConfigManager
 	 * <b>Description:</b> <br>
 	 * Loads the privileged application public key located in the keystore:<br>
 	 * <i>sWorkingDir</i>\keystores\applications\privileged_applications.keystore<br>
-	 * and puts it, including it's certificate, in the class variable <i>
-	 * _htPrivilegedPublicKeys</i>. <br>
+	 * and puts it, including it's certificate, in the class variable <i> _htPrivilegedPublicKeys</i>. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Preconditions:</b>
 	 * <ul>
@@ -1804,15 +1852,12 @@ public class ASelectConfigManager extends ConfigManager
 	 * </ul>
 	 * <br>
 	 * <b>Postconditions:</b> <br>
-	 * <code>_htPrivilegedPublicKeys</code> contains the loaded key with the
-	 * gevin alias. <br>
+	 * <code>_htPrivilegedPublicKeys</code> contains the loaded key with the gevin alias. <br>
 	 * 
 	 * @param sWorkingDir
-	 *            contains the A-Select Server working dir specified in the
-	 *            web.xml.
+	 *            contains the A-Select Server working dir specified in the web.xml.
 	 * @param sAlias
-	 *            The alias among the privileged application key is stored in
-	 *            the keystore.
+	 *            The alias among the privileged application key is stored in the keystore.
 	 * @throws ASelectException
 	 *             If loading fails.
 	 */
@@ -1853,20 +1898,20 @@ public class ASelectConfigManager extends ConfigManager
 	 * Checks for essential config of the given authsp. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Checks if the minimum config parameters are available in the given AuthSP
-	 * section. <br>
+	 * Checks if the minimum config parameters are available in the given AuthSP section. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Preconditions:</b> <br>
 	 * <code>oAuthSPSection != null</code> <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @param oAuthSPSection
 	 *            The configuration section containing AuthSP configuration.
-	 * @return TRUE if the minimum AuthSP configuration is available in the
-	 *         supplied config section.
+	 * @return TRUE if the minimum AuthSP configuration is available in the supplied config section.
 	 */
 	private boolean checkAuthSPConfig(Object oAuthSPSection)
 	{
@@ -1926,19 +1971,20 @@ public class ASelectConfigManager extends ConfigManager
 	 * Checks if the UDB is correctly configured. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Checks if there is a UDB configured in the A-Select Serve config. It
-	 * Checks if the 'connector' config item is available in the udb section and
-	 * if their is a connector config section with 'id' config item with a
-	 * corresponding value. The connector section must also contain a 'class'
-	 * config item that contains a valid UDBConnector Class. The configuration
-	 * located in the resource tag for the udb is checked by calling the init()
+	 * Checks if there is a UDB configured in the A-Select Serve config. It Checks if the 'connector' config item is
+	 * available in the udb section and if their is a connector config section with 'id' config item with a
+	 * corresponding value. The connector section must also contain a 'class' config item that contains a valid
+	 * UDBConnector Class. The configuration located in the resource tag for the udb is checked by calling the init()
 	 * method of the UDBConnector Class. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @throws ASelectException
 	 *             if check fails.
@@ -2019,8 +2065,7 @@ public class ASelectConfigManager extends ConfigManager
 	}
 
 	/**
-	 * Checks if the minimum A-Select Server configuration is available in the
-	 * A-Select Config. <br>
+	 * Checks if the minimum A-Select Server configuration is available in the A-Select Config. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
 	 * Checks if the following main config items are available:
@@ -2031,14 +2076,17 @@ public class ASelectConfigManager extends ConfigManager
 	 * <li>'max_sessions'</li>
 	 * <li>'max_tgt'</li>
 	 * </ul>
-	 * Checks if their is a StorageManager configured with id='session' and
-	 * id='ticket' containing the 'expire' config item. <br>
+	 * Checks if their is a StorageManager configured with id='session' and id='ticket' containing the 'expire' config
+	 * item. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Preconditions:</b> <br> - <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @throws ASelectException
 	 *             if check fails.
@@ -2134,16 +2182,17 @@ public class ASelectConfigManager extends ConfigManager
 	 * Returns if cross fallback is enabled or not. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Returns true if cross fallback is enabled and false if not. If a user not
-	 * exists in the local UDB and cross fallback is enabled A-Select will try
-	 * to do an cross authentication <br>
+	 * Returns true if cross fallback is enabled and false if not. If a user not exists in the local UDB and cross
+	 * fallback is enabled A-Select will try to do an cross authentication <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Preconditions:</b> <br>
 	 * cross_aselect must be enabled with remote servers. <br>
 	 * <br>
-	 * <b>Postconditions:</b> <br> - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * 
 	 * @return true if cross fallback is enabled and false if not.
 	 */
@@ -2152,42 +2201,96 @@ public class ASelectConfigManager extends ConfigManager
 		return _bCrossFallbackEnabled;
 	}
 
+	/**
+	 * Gets the cookie path.
+	 * 
+	 * @return the cookie path
+	 */
 	public String getCookiePath()
 	{
 		return _sCookiePath;
 	}
 
+	/**
+	 * Gets the added security.
+	 * 
+	 * @return the added security
+	 */
 	public String getAddedSecurity()
 	{
 		return _sAddedSecurity;
 	}
 
+	/**
+	 * Gets the user info settings.
+	 * 
+	 * @return the user info settings
+	 */
 	public String getUserInfoSettings()
 	{
 		return _sUserInfoSettings;
 	}
 
 	// Convenience function
+	/**
+	 * Gets the param from section.
+	 * 
+	 * @param oConfig
+	 *            the o config
+	 * @param sSection
+	 *            the s section
+	 * @param sParam
+	 *            the s param
+	 * @param bMandatory
+	 *            the b mandatory
+	 * @return the param from section
+	 * @throws ASelectConfigException
+	 *             the a select config exception
+	 */
 	public static String getParamFromSection(Object oConfig, String sSection, String sParam, boolean bMandatory)
-	throws ASelectConfigException
+		throws ASelectConfigException
 	{
-		return Utils.getParamFromSection(getHandle(), ASelectSystemLogger.getHandle(),
-								oConfig, sSection, sParam, bMandatory);
+		return Utils.getParamFromSection(getHandle(), ASelectSystemLogger.getHandle(), oConfig, sSection, sParam,
+				bMandatory);
 	}
 
 	// Convenience function
+	/**
+	 * Gets the simple param.
+	 * 
+	 * @param oConfig
+	 *            the o config
+	 * @param sParam
+	 *            the s param
+	 * @param bMandatory
+	 *            the b mandatory
+	 * @return the simple param
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	public static String getSimpleParam(Object oConfig, String sParam, boolean bMandatory)
-	throws ASelectException
+		throws ASelectException
 	{
-		return Utils.getSimpleParam(getHandle(), ASelectSystemLogger.getHandle(),
-								oConfig, sParam, bMandatory);
+		return Utils.getSimpleParam(getHandle(), ASelectSystemLogger.getHandle(), oConfig, sParam, bMandatory);
 	}
 
 	// Convenience function
+	/**
+	 * Gets the simple section.
+	 * 
+	 * @param oConfig
+	 *            the o config
+	 * @param sParam
+	 *            the s param
+	 * @param bMandatory
+	 *            the b mandatory
+	 * @return the simple section
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	public static Object getSimpleSection(Object oConfig, String sParam, boolean bMandatory)
-	throws ASelectException
+		throws ASelectException
 	{
-		return Utils.getSimpleSection(getHandle(), ASelectSystemLogger.getHandle(),
-								oConfig, sParam, bMandatory);
+		return Utils.getSimpleSection(getHandle(), ASelectSystemLogger.getHandle(), oConfig, sParam, bMandatory);
 	}
 }

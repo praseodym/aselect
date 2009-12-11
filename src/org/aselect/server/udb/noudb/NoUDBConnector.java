@@ -73,19 +73,18 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.exception.ASelectUDBException;
 import org.aselect.system.sam.agent.SAMResource;
 
+// TODO: Auto-generated Javadoc
 /**
- * No-database connector.
- * <br><br>
+ * No-database connector. <br>
+ * <br>
  * <b>Description:</b><br>
- * Database connector that uses no database 
- * as physical storage. <br>
- * <br><br>
- * <b>Concurrency issues:</b>
+ * Database connector that uses no database as physical storage. <br>
  * <br>
- * -
  * <br>
- * @author R. Hanswijk
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author R. Hanswijk
  */
 public class NoUDBConnector implements IUDBConnector
 {
@@ -99,7 +98,7 @@ public class NoUDBConnector implements IUDBConnector
 	 */
 	private ASelectConfigManager _oASelectConfigManager;
 	/**
-	 * The logger that is used for system logging 
+	 * The logger that is used for system logging
 	 */
 	private ASelectSystemLogger _oASelectSystemLogger;
 	/**
@@ -112,15 +111,19 @@ public class NoUDBConnector implements IUDBConnector
 	private Properties _propFlatFile;
 
 	/**
-	 * Initializes managers and loads the A-Select user db flatfile into a 
-	 * <code>Properties</code> object.
-	 * <br><br>
+	 * Initializes managers and loads the A-Select user db flatfile into a <code>Properties</code> object. <br>
+	 * <br>
+	 * 
+	 * @param oConfigSection
+	 *            the o config section
+	 * @throws ASelectUDBException
+	 *             the a select udb exception
 	 * @see org.aselect.server.udb.IUDBConnector#init(java.lang.Object)
 	 */
 	public void init(Object oConfigSection)
 		throws ASelectUDBException
 	{
-		//String sFlatFile = null;
+		// String sFlatFile = null;
 		String sUDBResourceGroup = null;
 		String sMethod = "init()";
 		_oASelectSystemLogger = ASelectSystemLogger.getHandle();
@@ -163,15 +166,17 @@ public class NoUDBConnector implements IUDBConnector
 	}
 
 	/**
-	 * Returns a hashtable with the user's record.
-	 * <br><br>
-	 * <b>Description</b>:
+	 * Returns a hashtable with the user's record. <br>
 	 * <br>
-	 * The returned hashtable contains a <code>result_code</code> and  
-	 * <code>user_authsps</code> which is a hashtable containing the AuthSP's that the user is registered for.
-	 * Within this hashtable each AuthSP has an entry with the value of the
-	 * user attributes that specific AuthSP.
-	 * <br><br>
+	 * <b>Description</b>: <br>
+	 * The returned hashtable contains a <code>result_code</code> and <code>user_authsps</code> which is a hashtable
+	 * containing the AuthSP's that the user is registered for. Within this hashtable each AuthSP has an entry with the
+	 * value of the user attributes that specific AuthSP. <br>
+	 * <br>
+	 * 
+	 * @param sUserId
+	 *            the s user id
+	 * @return the user profile
 	 * @see org.aselect.server.udb.IUDBConnector#getUserProfile(java.lang.String)
 	 */
 	public HashMap getUserProfile(String sUserId)
@@ -214,7 +219,7 @@ public class NoUDBConnector implements IUDBConnector
 							"No config item 'id' found in 'authsp' config section.");
 					throw new ASelectUDBException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 				}
-				htUserAttributes.put(sAuthSPID, "");  // 20090422, Bauke: sUserId == null ? "" : sUserId);
+				htUserAttributes.put(sAuthSPID, ""); // 20090422, Bauke: sUserId == null ? "" : sUserId);
 				oAuthSP = _oASelectConfigManager.getNextSection(oAuthSP);
 			}
 
@@ -242,8 +247,12 @@ public class NoUDBConnector implements IUDBConnector
 	}
 
 	/**
-	 * Check if user is A-Select enabled.
-	 * <br><br>
+	 * Check if user is A-Select enabled. <br>
+	 * <br>
+	 * 
+	 * @param sUserId
+	 *            the s user id
+	 * @return true, if checks if is user enabled
 	 * @see org.aselect.server.udb.IUDBConnector#isUserEnabled(java.lang.String)
 	 */
 	public boolean isUserEnabled(String sUserId)
@@ -255,8 +264,14 @@ public class NoUDBConnector implements IUDBConnector
 	}
 
 	/**
-	 * Retrieve the A-Select user attributes.
-	 * <br><br>
+	 * Retrieve the A-Select user attributes. <br>
+	 * <br>
+	 * 
+	 * @param sUserId
+	 *            the s user id
+	 * @param sAuthSPId
+	 *            the s auth sp id
+	 * @return the user attributes
 	 * @see org.aselect.server.udb.IUDBConnector#getUserAttributes(java.lang.String, java.lang.String)
 	 */
 	public String getUserAttributes(String sUserId, String sAuthSPId)
@@ -268,11 +283,15 @@ public class NoUDBConnector implements IUDBConnector
 	}
 
 	/**
-	 * Sorts authentication logging parameters and logs them.
-	 * <br><br>
-	 * @param sUserID The A-Select user id
-	 * @param sErrorCode The error code of the error that occured
-	 * @param sMessage The authenitcation log message
+	 * Sorts authentication logging parameters and logs them. <br>
+	 * <br>
+	 * 
+	 * @param sUserID
+	 *            The A-Select user id
+	 * @param sErrorCode
+	 *            The error code of the error that occured
+	 * @param sMessage
+	 *            The authenitcation log message
 	 */
 	private void logAuthentication(String sUserID, String sErrorCode, String sMessage)
 	{

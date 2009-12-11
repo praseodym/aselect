@@ -62,18 +62,17 @@ import java.util.logging.Level;
 
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
- * The Radius Protocol Handler which handles the Radius CHAP requests.
- * <br><br>
+ * The Radius Protocol Handler which handles the Radius CHAP requests. <br>
+ * <br>
  * <b>Description:</b><br>
- * This Radius Protocol handler handles Authentication requests using Radius CHAP 
- * <br><br>
- * <b>Concurrency issues:</b>
+ * This Radius Protocol handler handles Authentication requests using Radius CHAP <br>
  * <br>
- * None
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * None <br>
  * 
+ * @author Alfa & Ariss
  */
 public class RADIUSCHAPProtocolHandler extends AbstractRADIUSProtocolHandler
 {
@@ -85,17 +84,21 @@ public class RADIUSCHAPProtocolHandler extends AbstractRADIUSProtocolHandler
 	private final String MODULE = "RADIUSPAPProtocolHandler";
 
 	/**
-	 * .
+	 * . <br>
 	 * <br>
-	 * <br>
+	 * 
+	 * @param sPassword
+	 *            the s password
+	 * @return the string
 	 * @see org.aselect.authspserver.authsp.radius.IRADIUSProtocolHandler#authenticate(java.lang.String)
 	 */
+	@Override
 	public String authenticate(String sPassword)
 	{
 		String sMethod = "authenticate()";
 		_sErrorCode = Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER;
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "CHAPP uid="+_sUid);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "CHAPP uid=" + _sUid);
 		try {
 			DatagramPacket oRADIUSPacket;
 			byte[] baRadiusPacketBuffer = new byte[MAX_RADIUS_PACKET_SIZE];
@@ -152,11 +155,15 @@ public class RADIUSCHAPProtocolHandler extends AbstractRADIUSProtocolHandler
 	}
 
 	/**
-	 * This methods composes a RADIUS <code>access-request</code> packet
-	 * and sends it to the RADIUS Server.
-	 * <br><br>
+	 * This methods composes a RADIUS <code>access-request</code> packet and sends it to the RADIUS Server. <br>
+	 * <br>
+	 * 
 	 * @param sPassword
+	 *            the s password
 	 * @param oRADIUSPacket
+	 *            the o radius packet
+	 * @throws Exception
+	 *             the exception
 	 */
 	public void composeRequest(String sPassword, DatagramPacket oRADIUSPacket)
 		throws Exception
@@ -164,7 +171,7 @@ public class RADIUSCHAPProtocolHandler extends AbstractRADIUSProtocolHandler
 		String sMethod = "composeRequest()";
 		_sErrorCode = Errors.ERROR_RADIUS_INTERNAL_ERROR;
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "uid="+_sUid);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "uid=" + _sUid);
 		try {
 			Random randomGenerator;
 			byte[] baTempBuffer;
@@ -234,9 +241,10 @@ public class RADIUSCHAPProtocolHandler extends AbstractRADIUSProtocolHandler
 	}
 
 	/**
-	 * This methods handles the response comming from the 
-	 * Radius Server.
+	 * This methods handles the response comming from the Radius Server.
+	 * 
 	 * @param oRADIUSPacket
+	 *            the o radius packet
 	 */
 	public void handleResponse(DatagramPacket oRADIUSPacket)
 	{
@@ -249,7 +257,7 @@ public class RADIUSCHAPProtocolHandler extends AbstractRADIUSProtocolHandler
 		String sMethod = "handleResponse()";
 		_sErrorCode = Errors.ERROR_RADIUS_INTERNAL_ERROR;
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "uid="+_sUid);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "uid=" + _sUid);
 		try {
 			byte[] baResponseBuffer = oRADIUSPacket.getData();
 

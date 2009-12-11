@@ -6,46 +6,56 @@
  */
 package org.aselect.authspserver.authsp.sms;
 
+// TODO: Auto-generated Javadoc
 /**
- * @author ernst-jan
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
+ * @author ernst-jan TODO To change the template for this generated type comment go to Window - Preferences - Java -
+ *         Code Style - Code Templates
  */
-public class SmsException extends Exception {
+public class SmsException extends Exception
+{
 
-   /**
-    * Comment for <code>serialVersionUID</code>
-    */
-   private static final long serialVersionUID = 8682017536264393258L;
+	/**
+	 * Comment for <code>serialVersionUID</code>
+	 */
+	private static final long serialVersionUID = 8682017536264393258L;
 
-   /**
-    * 
-    */
-   public SmsException() {
-      super();
-   }
+	/**
+	 * Instantiates a new sms exception.
+	 */
+	public SmsException() {
+		super();
+	}
 
-   /**
-    * @param message
-    */
-   public SmsException(String message) {
-      super(message);
-   }
+	/**
+	 * The Constructor.
+	 * 
+	 * @param message
+	 *            the message
+	 */
+	public SmsException(String message) {
+		super(message);
+	}
 
-   /**
-    * @param message
-    * @param cause
-    */
-   public SmsException(String message, Throwable cause) {
-      super(message, cause);
-   }
+	/**
+	 * The Constructor.
+	 * 
+	 * @param message
+	 *            the message
+	 * @param cause
+	 *            the cause
+	 */
+	public SmsException(String message, Throwable cause) {
+		super(message, cause);
+	}
 
-   /**
-    * @param cause
-    */
-   public SmsException(Throwable cause) {
-      super(cause);
-   }
+	/**
+	 * The Constructor.
+	 * 
+	 * @param cause
+	 *            the cause
+	 */
+	public SmsException(Throwable cause) {
+		super(cause);
+	}
 
 }

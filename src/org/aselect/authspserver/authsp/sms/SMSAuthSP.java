@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.authspserver.authsp.sms;
 
 import java.io.File;
@@ -30,6 +41,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
  * An A-Select AuthtSP that sends an sms with the token <br>
  * <br>
@@ -43,7 +55,8 @@ import org.aselect.system.utils.Utils;
  * <li><code>working_dir</code></li>
  * </ul>
  * <br>
- * <b>Concurrency issues:</b> <br> - <br>
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
  * @author Cristina Gavrila, BTTSD
  */
@@ -56,7 +69,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 	private final static String DEFAULT_FAILUREHANDLING = "aselect";
 
 	/** The version. */
-	public static final String VERSION = "A-Select SMS AuthSP "+"1.9";
+	public static final String VERSION = "A-Select SMS AuthSP " + "1.9";
 
 	/** The logger that logs system information. */
 	private AuthSPSystemLogger _systemLogger;
@@ -117,11 +130,14 @@ public class SMSAuthSP extends ASelectHttpServlet
 	 * <li>An error config file must exist</li>
 	 * <li>An error template file must exist</li>
 	 * <li>An authentication template file must exist</li>
-	 * <li> An SMS 'authsp' config section must be available in the
-	 * configuration of the AuthSP Server. The id of this section must be
-	 * available as 'config_id' servlet init paramater. </li>
+	 * <li>An SMS 'authsp' config section must be available in the configuration of the AuthSP Server. The id of this
+	 * section must be available as 'config_id' servlet init paramater.</li>
 	 * </ul>
 	 * 
+	 * @param oConfig
+	 *            the o config
+	 * @throws ServletException
+	 *             the servlet exception
 	 * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
 	 */
 	public void init(ServletConfig oConfig)
@@ -332,6 +348,9 @@ public class SMSAuthSP extends ASelectHttpServlet
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.aselect.system.servlet.ASelectHttpServlet#isRestartableServlet()
+	 */
 	protected boolean isRestartableServlet()
 	{
 		return false;
@@ -340,11 +359,15 @@ public class SMSAuthSP extends ASelectHttpServlet
 	/**
 	 * Process requests for the HTTP <code>GET</code> method. <br>
 	 * <br>
-	 * This could be a API call, otherwise the authentication screen is
-	 * displayed.
+	 * This could be a API call, otherwise the authentication screen is displayed.
 	 * 
-	 * @see javax.servlet.http.HttpServlet#doGet(
-	 *      javax.servlet.http.HttpServletRequest,
+	 * @param servletRequest
+	 *            the servlet request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest,
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	protected void doGet(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
@@ -471,6 +494,12 @@ public class SMSAuthSP extends ASelectHttpServlet
 	 * <br>
 	 * This should be the submitted authentication form.
 	 * 
+	 * @param servletRequest
+	 *            the servlet request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
 	 * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest,
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
@@ -560,7 +589,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 				String sResultCode = (sPassword.compareTo(generatedPass) == 0) ? (Errors.ERROR_SMS_SUCCESS)
 						: Errors.ERROR_SMS_INVALID_PASSWORD;
 
-				if (sResultCode.equals(Errors.ERROR_SMS_INVALID_PASSWORD))  // invalid password
+				if (sResultCode.equals(Errors.ERROR_SMS_INVALID_PASSWORD)) // invalid password
 				{
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Invalid password, retry=" + sRetryCounter + " < "
 							+ _iAllowedRetries);
@@ -583,7 +612,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 						showAuthenticateForm(pwOut, Errors.ERROR_SMS_INVALID_PASSWORD, _configManager.getErrorMessage(
 								Errors.ERROR_SMS_INVALID_PASSWORD, _oErrorProperties), htServiceRequest);
 					}
-					else {  // authenticate failed
+					else { // authenticate failed
 						_authenticationLogger.log(new Object[] {
 							MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied"
 						});
@@ -600,7 +629,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Success");
 					handleResult(servletRequest, servletResponse, pwOut, sResultCode);
 				}
-				else  // other error
+				else // other error
 				{
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error authenticating user, cause: "
 							+ sResultCode);
@@ -643,12 +672,10 @@ public class SMSAuthSP extends ASelectHttpServlet
 	 * Show an HTML authentication page. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Shows a authentication form with, if applicable, an error or warning
-	 * message.
+	 * Shows a authentication form with, if applicable, an error or warning message.
 	 * 
 	 * @param pwOut
-	 *            the <code>PrintWriter</code> that is the target for
-	 *            displaying the html page.
+	 *            the <code>PrintWriter</code> that is the target for displaying the html page.
 	 * @param sError
 	 *            The error that should be shown in the page.
 	 * @param sErrorMessage
@@ -700,6 +727,18 @@ public class SMSAuthSP extends ASelectHttpServlet
 		pwOut.println(sAuthenticateForm);
 	}
 
+	/**
+	 * Handle result.
+	 * 
+	 * @param servletRequest
+	 *            the servlet request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @param pwOut
+	 *            the pw out
+	 * @param sResultCode
+	 *            the s result code
+	 */
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut, String sResultCode)
 	{
@@ -731,7 +770,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 					sbTemp.append("&signature=").append(sSignature);
 
 					try {
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT "+sbTemp);
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT " + sbTemp);
 						servletResponse.sendRedirect(sbTemp.toString());
 					}
 					catch (IOException eIO) // could not send redirect
@@ -763,6 +802,16 @@ public class SMSAuthSP extends ASelectHttpServlet
 		}
 	}
 
+	/**
+	 * Generate and send.
+	 * 
+	 * @param servRequest
+	 *            the serv request
+	 * @param sRecipient
+	 *            the s recipient
+	 * @throws SmsException
+	 *             the sms exception
+	 */
 	private void generateAndSend(HttpServletRequest servRequest, String sRecipient)
 		throws SmsException
 	{
@@ -774,6 +823,11 @@ public class SMSAuthSP extends ASelectHttpServlet
 		servRequest.getSession().setAttribute("generated_secret", sSecret);
 	}
 
+	/**
+	 * Generate secret.
+	 * 
+	 * @return the string
+	 */
 	private String generateSecret()
 	{
 		double multiply = Math.pow(10.0D, (double) this._iSmsSecretLength);

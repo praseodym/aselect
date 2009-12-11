@@ -80,24 +80,24 @@ import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.storagemanager.StorageManager;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
- * Manages A-Select Agent tickets.
- * <br><br>
+ * Manages A-Select Agent tickets. <br>
+ * <br>
  * <b>Description:</b><br>
  * Provides methods for managing ticket:
  * <ul>
- *  <li>Create a ticket</li>
- *  <li>Update a ticket</li>
- *  <li>Remove a ticket</li>
+ * <li>Create a ticket</li>
+ * <li>Update a ticket</li>
+ * <li>Remove a ticket</li>
  * </ul>
- * The ticket contexts are stored using a <code>StorageManager</code>.
- * <br><br>
- * <i>Note: This manager is implemented as a Singleton.</i> 
- * <br><br>
- * <b>Concurrency issues:</b>
+ * The ticket contexts are stored using a <code>StorageManager</code>. <br>
  * <br>
- * -
+ * <i>Note: This manager is implemented as a Singleton.</i> <br>
  * <br>
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
+ * 
  * @author Alfa & Ariss
  */
 public class TicketManager
@@ -127,23 +127,18 @@ public class TicketManager
 	private static final int TICKET_LENGTH = 128; // 256;
 
 	/**
-	 * Get a static handle to the <code>TicketManager</code> instance.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Get a static handle to the <code>TicketManager</code> instance. <br>
 	 * <br>
-	 * Checks if a static instance exists, otherwise it is created. This 
-	 * instance is returned.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Checks if a static instance exists, otherwise it is created. This instance is returned. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
+	 * <b>Postconditions:</b> <br>
 	 * A static instance of the <code>TicketManager</code> exists.
 	 * 
 	 * @return A static handle to the <code>TicketManager</code>
@@ -156,24 +151,20 @@ public class TicketManager
 	}
 
 	/**
-	 * Initializes the <code>TicketManager</code>.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Initializes the <code>TicketManager</code>. <br>
 	 * <br>
-	 * Read configuration settings and initializes the components.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Read configuration settings and initializes the components. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * The instance variables and components are initialized.
-	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * The instance variables and components are initialized. <br>
+	 * 
 	 * @return true if initialization succeeds, otherwise false.
 	 */
 	public boolean init()
@@ -196,7 +187,7 @@ public class TicketManager
 			_oTicketTable.init(objTicketMngrConfig, _oConfigManager, ASelectAgentSystemLogger.getHandle(),
 					ASelectAgentSAMAgent.getHandle());
 
-			//initialize Randomgenerator
+			// initialize Randomgenerator
 			_oRandomGenerator = SecureRandom.getInstance("SHA1PRNG");
 			_oRandomGenerator.setSeed(_oRandomGenerator.generateSeed(20));
 			_lTicketsCounter = 0;
@@ -211,25 +202,19 @@ public class TicketManager
 	}
 
 	/**
-	 * Stop the <code>TicketManager</code>.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Stop the <code>TicketManager</code>. <br>
 	 * <br>
-	 * Destroys all current tickets.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Destroys all current tickets. <br>
 	 * <br>
-	 * After this method is finished, no methods may be called 
-	 * in other threads.
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * After this method is finished, no methods may be called in other threads. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
+	 * <b>Postconditions:</b> <br>
 	 * The <code>TicketManager</code> has stopped.
-	 * 
 	 */
 	public void stop()
 	{
@@ -242,26 +227,23 @@ public class TicketManager
 	}
 
 	/**
-	 * Create a Agent ticket.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Create a Agent ticket. <br>
 	 * <br>
-	 * Create a new Agent ticket which is used as a ID for the given 
-	 * ticket context. Adds the given ticket context to the storage.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Create a new Agent ticket which is used as a ID for the given ticket context. Adds the given ticket context to
+	 * the storage. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <code>htTicketContext != null</code>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <code>htTicketContext != null</code> <br>
 	 * <br>
-	 * The ticket context is added to the storage.
-	 * <br>
-	 * @param htTicketContext The ccontext to be add.
+	 * <b>Postconditions:</b> <br>
+	 * The ticket context is added to the storage. <br>
+	 * 
+	 * @param htTicketContext
+	 *            The ccontext to be add.
 	 * @return The created ticket.
 	 */
 	public String createTicket(HashMap htTicketContext)
@@ -302,28 +284,27 @@ public class TicketManager
 	}
 
 	/**
-	 * Update a ticket.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Update a ticket. <br>
 	 * <br>
-	 * Overwrites the new ticket context in the storage.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Overwrites the new ticket context in the storage. <br>
 	 * <br>
-	 * -
-	 * <br><br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
 	 * <b>Preconditions:</b>
 	 * <ul>
-	 * 	<li><code>sTicket != null</code></li>
-	 * 	<li><code>htTicketContext != null</code></li>
+	 * <li><code>sTicket != null</code></li>
+	 * <li><code>htTicketContext != null</code></li>
 	 * </ul>
 	 * <br>
-	 * <b>Postconditions:</b>
-	 * <br>
-	 * The given ticket is updated with the new context.
-	 * <br>
-	 * @param sTicket The ticket to be updated.
-	 * @param htTicketContext The new ticket context.
+	 * <b>Postconditions:</b> <br>
+	 * The given ticket is updated with the new context. <br>
+	 * 
+	 * @param sTicket
+	 *            The ticket to be updated.
+	 * @param htTicketContext
+	 *            The new ticket context.
 	 */
 	public void updateTicketContext(String sTicket, HashMap htTicketContext)
 	{
@@ -340,25 +321,22 @@ public class TicketManager
 	}
 
 	/**
-	 * Kill Agent ticket.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Kill Agent ticket. <br>
 	 * <br>
-	 * Remove the context of a given ticket from the storage.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Remove the context of a given ticket from the storage. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <code>sTicket != null</code>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <code>sTicket != null</code> <br>
 	 * <br>
-	 * The ticket context is removed from storage.
-	 * <br>
-	 * @param sTicket The ticket to be removed.
+	 * <b>Postconditions:</b> <br>
+	 * The ticket context is removed from storage. <br>
+	 * 
+	 * @param sTicket
+	 *            The ticket to be removed.
 	 * @return True if removal succeeds, otherwise false.
 	 */
 	public boolean killTicket(String sTicket)
@@ -378,25 +356,19 @@ public class TicketManager
 	}
 
 	/**
-	 * Kill all Agent tickets.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Kill all Agent tickets. <br>
 	 * <br>
-	 * Remove all ticket contexts from the storage.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Remove all ticket contexts from the storage. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * The ticket storage is empty.
-	 * <br>
-	 * 
+	 * <b>Postconditions:</b> <br>
+	 * The ticket storage is empty. <br>
 	 */
 	public void killAllTickets()
 	{
@@ -413,25 +385,22 @@ public class TicketManager
 	}
 
 	/**
-	 * Get Agent ticket context.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Get Agent ticket context. <br>
 	 * <br>
-	 * Retrieve Agent ticket context from the storage.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Retrieve Agent ticket context from the storage. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sTicket The ticket to retrieve.
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sTicket
+	 *            The ticket to retrieve.
 	 * @return The ticket context.
 	 */
 	public HashMap getTicketContext(String sTicket)
@@ -456,27 +425,25 @@ public class TicketManager
 	}
 
 	/**
-	 * Returns the ticket timeout.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns the ticket timeout. <br>
 	 * <br>
-	 * Return the ticket timeout from the given ticket.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Return the ticket timeout from the given ticket. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <code>sTicket != null</code>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <code>sTicket != null</code> <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sTicket the ticket.
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sTicket
+	 *            the ticket.
 	 * @return The expiration time of the ticket.
-	 * @throws ASelectStorageException If retrieving ticket timeout fails.
+	 * @throws ASelectStorageException
+	 *             If retrieving ticket timeout fails.
 	 */
 	public long getTicketTimeout(String sTicket)
 		throws ASelectStorageException
@@ -485,27 +452,25 @@ public class TicketManager
 	}
 
 	/**
-	 * Returns the ticket start time.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns the ticket start time. <br>
 	 * <br>
-	 * Return the ticket timestamp form the given ticket.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Return the ticket timestamp form the given ticket. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <code>sTicket != null</code>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <code>sTicket != null</code> <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sTicket the ticket.
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sTicket
+	 *            the ticket.
 	 * @return The start time of the ticket.
-	 * @throws ASelectStorageException If retrieving ticket start time fails.
+	 * @throws ASelectStorageException
+	 *             If retrieving ticket start time fails.
 	 */
 	public long getTicketStartTime(String sTicket)
 		throws ASelectStorageException
@@ -514,24 +479,20 @@ public class TicketManager
 	}
 
 	/**
-	 * Get all ticket context.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Get all ticket context. <br>
 	 * <br>
-	 * Retrieve all Agent ticket contexts from the storage.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Retrieve all Agent ticket contexts from the storage. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
 	 * @return all Agent ticket contexts in a <code>HashMap</code>.
 	 */
 	public HashMap getTicketContexts()
@@ -549,8 +510,9 @@ public class TicketManager
 		return xResponse;
 	}
 
-	/** 
-	 * Get the number of issued tickets since startup.    
+	/**
+	 * Get the number of issued tickets since startup.
+	 * 
 	 * @return The number of issued Agent tickets.
 	 */
 	public long getTicketsCounter()
@@ -559,12 +521,10 @@ public class TicketManager
 	}
 
 	/**
-	 * Private constructor.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Private constructor. <br>
 	 * <br>
-	 * retrieves a handle to the system logger.  
-	 * 
+	 * <b>Description:</b> <br>
+	 * retrieves a handle to the system logger.
 	 */
 	private TicketManager() {
 		_systemLogger = ASelectAgentSystemLogger.getHandle();

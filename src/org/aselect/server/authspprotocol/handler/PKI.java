@@ -42,79 +42,98 @@ import org.aselect.system.exception.ASelectAuthSPException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.utils.BASE64Decoder;
 
+// TODO: Auto-generated Javadoc
 /**
- * The PKI AuthSP Handler.
- * <br><br>
+ * The PKI AuthSP Handler. <br>
+ * <br>
  * <b>Description:</b><br>
- * The PKI AuthSP Handler communicates with the PKI AuthSP by redirecting
- * the client.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * The PKI AuthSP Handler communicates with the PKI AuthSP by redirecting the client. <br>
  * <br>
- * None
- * <br><br>
- * <b>Protocol Desciption</b>
+ * <b>Concurrency issues:</b> <br>
+ * None <br>
  * <br>
+ * <b>Protocol Desciption</b> <br>
  * <br>
- * <i><a name="outgoing">Outgoing request going to the PKI AuthSP:</a></i>
- * <br>
- * <table border="1" cellspacing="0" cellpadding="3">
- * 	<tr>
- * 		<td style="" bgcolor="#EEEEFF"><b>name</b></td>
- * 		<td style="" bgcolor="#EEEEFF"><b>value</b></td>
- * 	</tr>  
- * 	<tr><td>rid</td><td>A-Select Server request id</td></tr>
- * 	<tr><td>as_url</td><td>A-Select Server url</td></tr>
- * 	<tr><td>user_attribute</td><td>ASelectPkiUserAttributes (dn or blob)</td></tr>
- * 	<tr><td>a-select-server</td><td>A-Select Server ID</td></tr>
- * 	<tr><td>tf_authsp*</td><td>Two factor AuthSP</td></tr>
- * 	<tr><td>tf_url*</td><td>url of the two factor AuthSP</td></tr>
- * 	<tr><td>tf_retries*</td><td>allowed retries for the two factor AuthSP</td></tr>
- * 	<tr><td>tf_uid*</td><td>userid for the two factor AuthSP</td></tr>
- * 	<tr>
- * 		<td>signature</td>
- * 		<td>signature of all paramaters in the above sequence</td>
- * 	</tr>
- * </table>
- * * Optional and only filled if <code>two_factor_authentication</code>
- * is configured.<br>
- * <br>
- * <i><a name="incoming">
- * 	Incoming response, which is returned by the Ldap AuthSP:
- * </a></i>
- * <br>
+ * <i><a name="outgoing">Outgoing request going to the PKI AuthSP:</a></i> <br>
  * <table border="1" cellspacing="0" cellpadding="3">
  * <tr>
- * 	<td style="" bgcolor="#EEEEFF"><b>name</b></td>
- * 	<td style="" bgcolor="#EEEEFF"><b>value</b></td>
+ * <td style="" bgcolor="#EEEEFF"><b>name</b></td>
+ * <td style="" bgcolor="#EEEEFF"><b>value</b></td>
  * </tr>
- * <tr><td>rid</td><td>A-Select Server request id</td></tr>
- * <tr><td>result_code</td><td>AuthSP result code</td></tr>
- * <tr><td>a-select-server</td><td>A-Select Server ID</td></tr>
  * <tr>
- * 	<td>signature</td>
- * 	<td>Signature over the following data: 
- * 		<ol>
- * 			<li>rid</li>
- * 			<li>The URL that was created in 
- * 				<code>computeAuthenticationRequest()</code>
- * 			<li>result_code</li>
- * 			<li>a-select-server</li>
- * 		</ol> 
- * 	</td>
- *	</tr>
+ * <td>rid</td>
+ * <td>A-Select Server request id</td>
+ * </tr>
+ * <tr>
+ * <td>as_url</td>
+ * <td>A-Select Server url</td>
+ * </tr>
+ * <tr>
+ * <td>user_attribute</td>
+ * <td>ASelectPkiUserAttributes (dn or blob)</td>
+ * </tr>
+ * <tr>
+ * <td>a-select-server</td>
+ * <td>A-Select Server ID</td>
+ * </tr>
+ * <tr>
+ * <td>tf_authsp*</td>
+ * <td>Two factor AuthSP</td>
+ * </tr>
+ * <tr>
+ * <td>tf_url*</td>
+ * <td>url of the two factor AuthSP</td>
+ * </tr>
+ * <tr>
+ * <td>tf_retries*</td>
+ * <td>allowed retries for the two factor AuthSP</td>
+ * </tr>
+ * <tr>
+ * <td>tf_uid*</td>
+ * <td>userid for the two factor AuthSP</td>
+ * </tr>
+ * <tr>
+ * <td>signature</td>
+ * <td>signature of all paramaters in the above sequence</td>
+ * </tr>
+ * </table>
+ * * Optional and only filled if <code>two_factor_authentication</code> is configured.<br>
+ * <br>
+ * <i><a name="incoming"> Incoming response, which is returned by the Ldap AuthSP: </a></i> <br>
+ * <table border="1" cellspacing="0" cellpadding="3">
+ * <tr>
+ * <td style="" bgcolor="#EEEEFF"><b>name</b></td>
+ * <td style="" bgcolor="#EEEEFF"><b>value</b></td>
+ * </tr>
+ * <tr>
+ * <td>rid</td>
+ * <td>A-Select Server request id</td>
+ * </tr>
+ * <tr>
+ * <td>result_code</td>
+ * <td>AuthSP result code</td>
+ * </tr>
+ * <tr>
+ * <td>a-select-server</td>
+ * <td>A-Select Server ID</td>
+ * </tr>
+ * <tr>
+ * <td>signature</td>
+ * <td>Signature over the following data:
+ * <ol>
+ * <li>rid</li>
+ * <li>The URL that was created in <code>computeAuthenticationRequest()</code>
+ * <li>result_code</li>
+ * <li>a-select-server</li>
+ * </ol>
+ * </td>
+ * </tr>
  * </table>
  * 
  * @author Alfa & Ariss
- * @version 1.0
- * 
- * 
- * 14-11-2007 - Changes:
- * - Receive and process PKI attributes Subject DN and Issuer DN from the AuthSP server
- * 
- * @author Bauke Hiemstra - www.anoigo.nl
- * Copyright UMC Nijmegen (http://www.umcn.nl)
- * 
+ * @version 1.0 14-11-2007 - Changes: - Receive and process PKI attributes Subject DN and Issuer DN from the AuthSP
+ *          server
+ * @author Bauke Hiemstra - www.anoigo.nl Copyright UMC Nijmegen (http://www.umcn.nl)
  */
 public class PKI implements IAuthSPProtocolHandler
 {
@@ -137,21 +156,30 @@ public class PKI implements IAuthSPProtocolHandler
 	private String _sTwoFactorAuthSpUrl;
 	private String _sTwoFactorAuthSpRetries;
 
-	/** The A-Select Server server id */
-	//    private String _sServerId;
 	/**
-	 * Initialize the <code>PKI</code> AuthSP Handler.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * The A-Select Server server id.
+	 * 
+	 * @param oAuthSpConfig
+	 *            the o auth sp config
+	 * @param oAuthSpResource
+	 *            the o auth sp resource
+	 * @throws ASelectAuthSPException
+	 *             the a select auth sp exception
+	 */
+	// private String _sServerId;
+	/**
+	 * Initialize the <code>PKI</code> AuthSP Handler. <br>
 	 * <br>
+	 * <b>Description:</b> <br>
 	 * Performs the following steps:
 	 * <ul>
-	 * 	<li>Retrieve handles to required managers and loggers</li>
-	 * 	<li>Retrieve AuthSP ID from configuration</li>
-	 * 	<li>Retrieve AuthSP URL from configuration</li>
-	 *  <li>Retrieve optional Two-Factor Authentication configuration</li>
+	 * <li>Retrieve handles to required managers and loggers</li>
+	 * <li>Retrieve AuthSP ID from configuration</li>
+	 * <li>Retrieve AuthSP URL from configuration</li>
+	 * <li>Retrieve optional Two-Factor Authentication configuration</li>
 	 * </ul>
 	 * <br>
+	 * 
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#init(java.lang.Object, java.lang.Object)
 	 */
 	public void init(Object oAuthSpConfig, Object oAuthSpResource)
@@ -160,13 +188,13 @@ public class PKI implements IAuthSPProtocolHandler
 		String sMethod = "init()";
 		Object oASelectConfig = null;
 		try {
-			//retrieve handles
+			// retrieve handles
 			_oConfigManager = ASelectConfigManager.getHandle();
 			_oSessionManager = SessionManager.getHandle();
 			_authenticationLogger = ASelectAuthenticationLogger.getHandle();
 			_systemLogger = ASelectSystemLogger.getHandle();
 
-			//log start
+			// log start
 			StringBuffer sbInfo = new StringBuffer("Starting : ");
 			sbInfo.append(MODULE);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
@@ -201,7 +229,7 @@ public class PKI implements IAuthSPProtocolHandler
 				_sTwoFactorAuthSpUrl = _oConfigManager.getParam(oTwoFactorConfig, "url");
 				_sTwoFactorAuthSpRetries = _oConfigManager.getParam(oTwoFactorConfig, "retries");
 			}
-			catch (ASelectConfigException e) //no two factor authentication used.
+			catch (ASelectConfigException e) // no two factor authentication used.
 			{
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
 						"No valid two factor configuration found; two factor authentication disabled.");
@@ -218,8 +246,12 @@ public class PKI implements IAuthSPProtocolHandler
 	}
 
 	/**
-	 * Computes the request which will be sent to the PKI AuthSP.
-	 * <br><br> 
+	 * Computes the request which will be sent to the PKI AuthSP. <br>
+	 * <br>
+	 * 
+	 * @param sRid
+	 *            the s rid
+	 * @return the hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#computeAuthenticationRequest(java.lang.String)
 	 */
 	public HashMap computeAuthenticationRequest(String sRid)
@@ -311,7 +343,7 @@ public class PKI implements IAuthSPProtocolHandler
 			htResponse.put("redirect_url", sbTemp.toString());
 		}
 		catch (ASelectAuthSPException eAA) {
-			//allready logged
+			// allready logged
 			htResponse.put("result", eAA.getMessage());
 		}
 		catch (Exception e) {
@@ -325,7 +357,11 @@ public class PKI implements IAuthSPProtocolHandler
 	/**
 	 * Verifies the response comming from the PKI AuthSP <br>
 	 * <br>
+	 * .
 	 * 
+	 * @param htAuthspResponse
+	 *            the ht authsp response
+	 * @return the hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.HashMap)
 	 */
 	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse)
@@ -360,30 +396,33 @@ public class PKI implements IAuthSPProtocolHandler
 			sAsUrl = sbTemp.toString();
 			HashMap htSessionContext = _oSessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
-				//Session is expired or never existed.
+				// Session is expired or never existed.
 				sbTemp = new StringBuffer(sMethod);
 				sbTemp.append("session for RID: " + sRid + " is invalid.");
 				htResponse.put("result", Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
 				_systemLogger.log(Level.WARNING, sbTemp.toString());
 				return htResponse;
 			}
-			String sUserId = (String)htSessionContext.get("user_id");
-			String sOrg = (String)htSessionContext.get("organization");
+			String sUserId = (String) htSessionContext.get("user_id");
+			String sOrg = (String) htSessionContext.get("organization");
 
 			sSignature = URLDecoder.decode(sSignature, "UTF-8");
 			sbTemp = new StringBuffer(sRid);
 			sbTemp.append(sAsUrl).append(sResultCode).append(sAsId);
-			
-			_systemLogger.log(Level.INFO, "Coded sSubjectDN="+sSubjectDN);
-            if (sSubjectDN != null)	sbTemp.append(sSubjectDN); // Bauke: added
-            if (sIssuerDN != null) sbTemp.append(sIssuerDN); // Bauke: added
-			if (sSubjectId != null) sbTemp.append(sSubjectId); // Bauke: added
-			
+
+			_systemLogger.log(Level.INFO, "Coded sSubjectDN=" + sSubjectDN);
+			if (sSubjectDN != null)
+				sbTemp.append(sSubjectDN); // Bauke: added
+			if (sIssuerDN != null)
+				sbTemp.append(sIssuerDN); // Bauke: added
+			if (sSubjectId != null)
+				sbTemp.append(sSubjectId); // Bauke: added
+
 			boolean bVerifies = false;
-			_systemLogger.log(Level.INFO, "Verify["+sbTemp+"]");
+			_systemLogger.log(Level.INFO, "Verify[" + sbTemp + "]");
 			bVerifies = CryptoEngine.getHandle().verifySignature(_sAuthsp, sbTemp.toString(), sSignature);
-//			bVerifies = CryptoEngine.getHandle().verifySignature(_sAuthsp,
-//					URLDecoder.decode(sbTemp.toString(), "UTF-8"), sSignature);
+			// bVerifies = CryptoEngine.getHandle().verifySignature(_sAuthsp,
+			// URLDecoder.decode(sbTemp.toString(), "UTF-8"), sSignature);
 			if (!bVerifies) {
 				sbTemp = new StringBuffer(sMethod);
 				sbTemp.append("invalid signature in response from AuthSP:" + _sAuthsp);
@@ -394,13 +433,16 @@ public class PKI implements IAuthSPProtocolHandler
 			}
 
 			BASE64Decoder base64Decoder = new BASE64Decoder();
-            if (sSubjectDN != null) sSubjectDN = new String(base64Decoder.decodeBuffer(sSubjectDN));
-			if (sIssuerDN != null) sIssuerDN = new String(base64Decoder.decodeBuffer(sIssuerDN));
-			if (sSubjectId != null) sSubjectId = new String(base64Decoder.decodeBuffer(sSubjectId));
-			_systemLogger.log(Level.INFO, "Decoded sSubjectDN="+sSubjectDN);
+			if (sSubjectDN != null)
+				sSubjectDN = new String(base64Decoder.decodeBuffer(sSubjectDN));
+			if (sIssuerDN != null)
+				sIssuerDN = new String(base64Decoder.decodeBuffer(sIssuerDN));
+			if (sSubjectId != null)
+				sSubjectId = new String(base64Decoder.decodeBuffer(sSubjectId));
+			_systemLogger.log(Level.INFO, "Decoded sSubjectDN=" + sSubjectDN);
 
 			// 20090224, Bauke: When 'forced_uid' is used change the 'uid' to a more discriminating value
-			String sForcedUid = (String)htSessionContext.get("forced_uid");
+			String sForcedUid = (String) htSessionContext.get("forced_uid");
 			if (sForcedUid != null && sForcedUid.equals(sUserId) && sSubjectDN != null) {
 				sUserId = sSubjectDN;
 				htResponse.put("uid", sUserId);
@@ -408,21 +450,24 @@ public class PKI implements IAuthSPProtocolHandler
 			// Log the user authentication
 			if (sResultCode.equalsIgnoreCase(PKI_NO_ERROR)) {
 				_authenticationLogger.log(new Object[] {
-					MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg,
-					(String) htSessionContext.get("app_id"), "granted"
+					MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg, (String) htSessionContext.get("app_id"),
+					"granted"
 				});
 
 				htResponse.put("rid", sRid);
 				// Bauke: transfer additional attributes to caller
-				_systemLogger.log(Level.INFO, "to Response: sSubjectDN="+sSubjectDN);
-				if (sSubjectDN != null) htResponse.put("pki_subject_dn", sSubjectDN); // Bauke: added
-				if (sIssuerDN != null) htResponse.put("pki_issuer_dn", sIssuerDN); // Bauke: added
-				if (sSubjectId != null) htResponse.put("pki_subject_id", sSubjectId); // Bauke: added
+				_systemLogger.log(Level.INFO, "to Response: sSubjectDN=" + sSubjectDN);
+				if (sSubjectDN != null)
+					htResponse.put("pki_subject_dn", sSubjectDN); // Bauke: added
+				if (sIssuerDN != null)
+					htResponse.put("pki_issuer_dn", sIssuerDN); // Bauke: added
+				if (sSubjectId != null)
+					htResponse.put("pki_subject_id", sSubjectId); // Bauke: added
 				return htResponse;
 			}
 			_authenticationLogger.log(new Object[] {
-				MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg,
-				(String)htSessionContext.get("app_id"), "denied"
+				MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg, (String) htSessionContext.get("app_id"),
+				"denied"
 			});
 			if (sResultCode.equalsIgnoreCase(PKI_INVALID_REQUEST)) {
 				sbTemp = new StringBuffer(sMethod);

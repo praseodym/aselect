@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.xsaml20.sp;
 
 import java.io.PrintWriter;
@@ -27,6 +38,7 @@ import org.opensaml.saml2.metadata.SingleLogoutService;
 import org.opensaml.ws.transport.http.HttpServletRequestAdapter;
 import org.opensaml.xml.util.XMLHelper;
 
+// TODO: Auto-generated Javadoc
 //
 // SP Soap Logout Request Handler
 // Handles IdP requests using HTTP redirect
@@ -48,15 +60,22 @@ public class Xsaml20_SLO_Redirect extends Saml20_BaseHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
-	throws ASelectException
+		throws ASelectException
 	{
 		super.init(oServletConfig, oHandlerConfig);
 	}
 
 	/**
-	 * Dit is stap 7 van SLO. We hebben zojuist een saml LogoutRequest ontvangen
-	 * en gaan deze nu verwerken. Dit houdt in: We loggen de gebruiker hier uit
-	 * en maken hier melding van naar de federatie idp.
+	 * Dit is stap 7 van SLO. We hebben zojuist een saml LogoutRequest ontvangen en gaan deze nu verwerken. Dit houdt
+	 * in: We loggen de gebruiker hier uit en maken hier melding van naar de federatie idp.
+	 * 
+	 * @param request
+	 *            the request
+	 * @param response
+	 *            the response
+	 * @return the request state
+	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	/**
 	 * Process logout request. <br>
@@ -69,7 +88,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BaseHandler
 	 *             If processing of logout request fails.
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "process()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
@@ -77,14 +96,25 @@ public class Xsaml20_SLO_Redirect extends Saml20_BaseHandler
 			handleSAMLRequest(request, response);
 		}
 		else {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Request: "+request.getQueryString()+" not recognized");
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Request: " + request.getQueryString()
+					+ " not recognized");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
 		return null;
 	}
 
+	/**
+	 * Handle saml request.
+	 * 
+	 * @param httpRequest
+	 *            the http request
+	 * @param httpResponse
+	 *            the http response
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private void handleSAMLRequest(HttpServletRequest httpRequest, HttpServletResponse httpResponse)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "handleSAMLRequest()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
@@ -114,7 +144,8 @@ public class Xsaml20_SLO_Redirect extends Saml20_BaseHandler
 			}
 			String sEntityId = issuer.getValue();
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Do logoutRequest signature verification=" + is_bVerifySignature());
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Do logoutRequest signature verification="
+					+ is_bVerifySignature());
 			if (is_bVerifySignature()) {
 				// The SAMLRequest must be signed, if not the message can't be trusted
 				// and a responsemessage is send to the browser
@@ -176,18 +207,21 @@ public class Xsaml20_SLO_Redirect extends Saml20_BaseHandler
 	}
 
 	/**
-	 * TO: De aangesproken SP vernietigt de lokale serversessie en
-	 * clientcookie.De SP redirect de gebruiker naar de federatie-idp
-	 * logoutservice met een LogoutResponse
+	 * TO: De aangesproken SP vernietigt de lokale serversessie en clientcookie.De SP redirect de gebruiker naar de
+	 * federatie-idp logoutservice met een LogoutResponse
 	 * 
 	 * @param httpRequest
+	 *            the http request
 	 * @param httpResponse
+	 *            the http response
 	 * @param logoutRequest
+	 *            the logout request
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private void handleLogoutRequest(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
 			LogoutRequest logoutRequest)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "handleLogoutRequest()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
@@ -200,10 +234,10 @@ public class Xsaml20_SLO_Redirect extends Saml20_BaseHandler
 		}
 
 		// Delete the client cookie
-        String sCookieDomain = _configManager.getCookieDomain();
-        HandlerTools.delCookieValue(httpResponse, "aselect_credentials", sCookieDomain, _systemLogger);
+		String sCookieDomain = _configManager.getCookieDomain();
+		HandlerTools.delCookieValue(httpResponse, "aselect_credentials", sCookieDomain, _systemLogger);
 
-		// Redirect the user to the  federation-idp LogoutService with a LogoutResponse
+		// Redirect the user to the federation-idp LogoutService with a LogoutResponse
 		String issuer = logoutRequest.getIssuer().getValue();
 		String statusCode = StatusCode.SUCCESS_URI;
 		String myEntityId = _sServerUrl;
@@ -217,10 +251,14 @@ public class Xsaml20_SLO_Redirect extends Saml20_BaseHandler
 					SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME, SAMLConstants.SAML2_REDIRECT_BINDING_URI);
 		}
 		LogoutResponseSender sender = new LogoutResponseSender();
-		sender.sendLogoutResponse(logoutResponseLocation, myEntityId, statusCode,
-							logoutRequest.getID(), null, httpRequest, httpResponse);
+		sender.sendLogoutResponse(logoutResponseLocation, myEntityId, statusCode, logoutRequest.getID(), null,
+				httpRequest, httpResponse);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.xsaml20.Saml20_BaseHandler#destroy()
+	 */
+	@Override
 	public void destroy()
 	{
 	}

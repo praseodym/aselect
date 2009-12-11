@@ -17,13 +17,30 @@ package org.aselect.server.request.handler.xsaml11;
 
 import org.aselect.server.request.handler.*;
 
+// TODO: Auto-generated Javadoc
 //
 // The SAML Artifact Resolver - Source Site
 // (Also referred to as SAML Responder)
 //
 public class XSAML11Artifact extends SamlArtifactResolver
 {
-    private final static String MODULE = "XSAML11Artifact";
-	protected String getSessionIdPrefix() { return ""; }
-    protected boolean useConfigToCreateSamlBuilder() { return false; }
+	private final static String MODULE = "XSAML11Artifact";
+
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.ProtoRequestHandler#getSessionIdPrefix()
+	 */
+	@Override
+	protected String getSessionIdPrefix()
+	{
+		return "";
+	}
+
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.ProtoRequestHandler#useConfigToCreateSamlBuilder()
+	 */
+	@Override
+	protected boolean useConfigToCreateSamlBuilder()
+	{
+		return false;
+	}
 }

@@ -67,6 +67,7 @@ import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.UIManager;
+import javax.swing.WindowConstants;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
@@ -74,467 +75,453 @@ import org.aselect.server.config.Version;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.tgt.TGTManager;
 
+// TODO: Auto-generated Javadoc
 /**
- * The AdminMonitor main Class.
- * <br>
+ * The AdminMonitor main Class. <br>
  * <br>
  * <b>Description: </b> <br>
- * Provides a GUI for A-Select session and ticket management. 
- * <br><br>
- * <b>Concurrency issues: </b> 
- * <br>none <br>
+ * Provides a GUI for A-Select session and ticket management. <br>
+ * <br>
+ * <b>Concurrency issues: </b> <br>
+ * none <br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class AdminMonitor extends JFrame implements TableModelListener
 {
-    /**
-     * The module name.
-     */
-    public static final String MODULE = "AdminMonitor";
+	/**
+	 * The module name.
+	 */
+	public static final String MODULE = "AdminMonitor";
 
-    /**
-     * JTable for TGTs.
-     */
-    private JTable _oTGTsTable;
+	/**
+	 * JTable for TGTs.
+	 */
+	private JTable _oTGTsTable;
 
-    /**
-     * JLabel for TGTs.
-     */
-    private JLabel _oTGTsLabel = null;
+	/**
+	 * JLabel for TGTs.
+	 */
+	private JLabel _oTGTsLabel = null;
 
-    /**
-     * TGTMonitorModel for TGTs.
-     */
-    private TGTMonitorModel _oTGTsModel = null;
+	/**
+	 * TGTMonitorModel for TGTs.
+	 */
+	private TGTMonitorModel _oTGTsModel = null;
 
-    /**
-     * JScrollPane for TGTs.
-     */
-    private JScrollPane _oTGTsScrollPane = null;
+	/**
+	 * JScrollPane for TGTs.
+	 */
+	private JScrollPane _oTGTsScrollPane = null;
 
-    /**
-     * JTable for Sessions.
-     */
-    private JTable _oSessionsTable;
+	/**
+	 * JTable for Sessions.
+	 */
+	private JTable _oSessionsTable;
 
-    /**
-     * JLabel for Sessions.
-     */
-    private JLabel _oSessionsLabel = null;
+	/**
+	 * JLabel for Sessions.
+	 */
+	private JLabel _oSessionsLabel = null;
 
-    /**
-     * JScrollPane for Sessions.
-     */
-    private JScrollPane _oSessionsScrollPane = null;
+	/**
+	 * JScrollPane for Sessions.
+	 */
+	private JScrollPane _oSessionsScrollPane = null;
 
-    /**
-     * SessionMonitorModel for Sessions.
-     */
-    private SessionMonitorModel _oSessionsModel = null;
+	/**
+	 * SessionMonitorModel for Sessions.
+	 */
+	private SessionMonitorModel _oSessionsModel = null;
 
-    /**
-     * JButton to revoke TGT.
-     */
-    private JButton _oRevokeTGTButton = null;
+	/**
+	 * JButton to revoke TGT.
+	 */
+	private JButton _oRevokeTGTButton = null;
 
-    /**
-     * JButton to revoke all TGT.
-     */
-    private JButton _oRevokeAllTGTsButton = null;
+	/**
+	 * JButton to revoke all TGT.
+	 */
+	private JButton _oRevokeAllTGTsButton = null;
 
-    /**
-     * Default button width.
-     */
-    private int _iButtonWidth = 130;
+	/**
+	 * Default button width.
+	 */
+	private int _iButtonWidth = 130;
 
-    /**
-     * Default button height.
-     */
-    private int _iButtonHeight = 24;
+	/**
+	 * Default button height.
+	 */
+	private int _iButtonHeight = 24;
 
-    /**
-     * JButtons for Lines.
-     */
-    private JButton _oLineButton1, _oLineButton2, _oLineButton3;
+	/**
+	 * JButtons for Lines.
+	 */
+	private JButton _oLineButton1, _oLineButton2, _oLineButton3;
 
-    /**
-     * JLabel for number of TGTs and number of Sessions.
-     */
-    private JLabel _oNumberOfTGTsLabel, _oNumberOfSessionsLabel;
+	/**
+	 * JLabel for number of TGTs and number of Sessions.
+	 */
+	private JLabel _oNumberOfTGTsLabel, _oNumberOfSessionsLabel;
 
-    /**
-     * JLabels for Total Sessions, Total TGTs and Time.
-     */
-    private JLabel _oTotalSessionsLabel, _oTotalTGTsLabel,
-        _oTimeLabel;
+	/**
+	 * JLabels for Total Sessions, Total TGTs and Time.
+	 */
+	private JLabel _oTotalSessionsLabel, _oTotalTGTsLabel, _oTimeLabel;
 
-    /**
-     * Main TGTManager.
-     */
-    private TGTManager _oTGTManager = TGTManager.getHandle();
+	/**
+	 * Main TGTManager.
+	 */
+	private TGTManager _oTGTManager = TGTManager.getHandle();
 
-    /**
-     * Create a new instance. <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * Performs all default construction work:
-     * <ul>
-     * <li>Initialize the GUI</li>
-     * <li>Add tables for session and ticket monitoring</li>
-     * <li>Add all labels and buttons</li>
-     * </ul>
-     * <br>
-     * <b>Concurrency issues: </b> <br>-<br>
-     * <br>
-     * <b>Preconditions: </b> <br>-<br>
-     * <br>
-     * <b>Postconditions: </b> <br>
-     * The <code>AdminMonitor</code> is ready to be started. <br>
-     * 
-     * @throws Exception
-     *             If <code>setLookAndFeel()</code> fails.
-     *  
-     */
-    public AdminMonitor() throws Exception
-    {
-        //Initialize GUI
-        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        StringBuffer sbInfo = new StringBuffer(Version.getVersion());
-        sbInfo.append(" Admin Monitor ");
-        setTitle(sbInfo.toString());
-        setSize(800, 600);
-        setLocation(1, 1);
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        addWindowListener(new BasicWindowAdapter());
-        getContentPane().setLayout(null);
-        
-        //TGT monitor
-        _oTGTsTable = new JTable();
-        _oTGTsScrollPane = new JScrollPane(_oTGTsTable);
-        getContentPane().add(_oTGTsScrollPane);
-        _oTGTsLabel = new JLabel("Issued TGT's");
-        getContentPane().add(_oTGTsLabel);
-        
-        //Session monitor
-        _oSessionsTable = new JTable();
-        _oSessionsScrollPane = new JScrollPane(_oSessionsTable);
-        getContentPane().add(_oSessionsScrollPane);
-        _oSessionsLabel = new JLabel("Pending sessions");
-        getContentPane().add(_oSessionsLabel);
-        
-        //Buttons and labels
-        _oLineButton1 = new JButton();
-        _oLineButton1.setEnabled(false);
-        getContentPane().add(_oLineButton1);
+	/**
+	 * Create a new instance. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Performs all default construction work:
+	 * <ul>
+	 * <li>Initialize the GUI</li>
+	 * <li>Add tables for session and ticket monitoring</li>
+	 * <li>Add all labels and buttons</li>
+	 * </ul>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * -<br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * The <code>AdminMonitor</code> is ready to be started. <br>
+	 * 
+	 * @throws Exception
+	 *             If <code>setLookAndFeel()</code> fails.
+	 */
+	public AdminMonitor()
+		throws Exception {
+		// Initialize GUI
+		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		StringBuffer sbInfo = new StringBuffer(Version.getVersion());
+		sbInfo.append(" Admin Monitor ");
+		setTitle(sbInfo.toString());
+		setSize(800, 600);
+		setLocation(1, 1);
+		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		addWindowListener(new BasicWindowAdapter());
+		getContentPane().setLayout(null);
 
-        _oLineButton2 = new JButton();
-        _oLineButton2.setEnabled(false);
-        getContentPane().add(_oLineButton2);
+		// TGT monitor
+		_oTGTsTable = new JTable();
+		_oTGTsScrollPane = new JScrollPane(_oTGTsTable);
+		getContentPane().add(_oTGTsScrollPane);
+		_oTGTsLabel = new JLabel("Issued TGT's");
+		getContentPane().add(_oTGTsLabel);
 
-        _oLineButton3 = new JButton();
-        _oLineButton3.setEnabled(false);
-        getContentPane().add(_oLineButton3);
+		// Session monitor
+		_oSessionsTable = new JTable();
+		_oSessionsScrollPane = new JScrollPane(_oSessionsTable);
+		getContentPane().add(_oSessionsScrollPane);
+		_oSessionsLabel = new JLabel("Pending sessions");
+		getContentPane().add(_oSessionsLabel);
 
-        _oNumberOfSessionsLabel = new JLabel("");
-        getContentPane().add(_oNumberOfSessionsLabel);
-        _oNumberOfTGTsLabel = new JLabel("");
-        getContentPane().add(_oNumberOfTGTsLabel);
+		// Buttons and labels
+		_oLineButton1 = new JButton();
+		_oLineButton1.setEnabled(false);
+		getContentPane().add(_oLineButton1);
 
-        _oTotalSessionsLabel = new JLabel("");
-        getContentPane().add(_oTotalSessionsLabel);
+		_oLineButton2 = new JButton();
+		_oLineButton2.setEnabled(false);
+		getContentPane().add(_oLineButton2);
 
-        _oTotalTGTsLabel = new JLabel("");
-        getContentPane().add(_oTotalTGTsLabel);
-        
-        _oTimeLabel = new JLabel("");
-        getContentPane().add(_oTimeLabel);
+		_oLineButton3 = new JButton();
+		_oLineButton3.setEnabled(false);
+		getContentPane().add(_oLineButton3);
 
-        //kill all TGTs button
-        _oRevokeAllTGTsButton = new JButton("Kill All TGTs");
-        getContentPane().add(_oRevokeAllTGTsButton);
-        _oRevokeAllTGTsButton
-            .addActionListener(new RevokeAllTGTsButtonListener());
-        
-        //kill TGT button
-        _oRevokeTGTButton = new JButton("Kill TGT");
-        getContentPane().add(_oRevokeTGTButton);
-        _oRevokeTGTButton.addActionListener(new RevokeTGTButtonListener());
-        getRootPane().setDefaultButton(_oRevokeTGTButton);
-    }
-    
-    /**
-     * Function to start the AdminMonitor.
-     * <br><br>
-     * <b>Description: </b> <br>
-     * This function initializes the session and TGT monitor model, starts the 
-     * AdminMonitor and makes it visible.
-     * <br><br>
-     * <b>Concurrency issues: </b> <br>
-     * none <br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * <code>iCheckInterval > 0</code><br>
-     * <br>
-     * <b>Postconditions: </b> 
-     * <br>
-     * GUI is visible and models are running. 
-     * <br>
-     * 
-     * @param iCheckInterval
-     *            Interval in seconds that defines when AdminMonitor checks for
-     *            new information.
-     * @throws Exception
-     */
-    public void start(int iCheckInterval) throws Exception
-    {
-        
-        _oTGTsModel = new TGTMonitorModel(iCheckInterval);
-        _oTGTsModel.addTableModelListener(this);
-        _oTGTsTable.setModel(_oTGTsModel);         
+		_oNumberOfSessionsLabel = new JLabel("");
+		getContentPane().add(_oNumberOfSessionsLabel);
+		_oNumberOfTGTsLabel = new JLabel("");
+		getContentPane().add(_oNumberOfTGTsLabel);
 
-        _oSessionsModel = new SessionMonitorModel(iCheckInterval);
-        _oSessionsModel.addTableModelListener(this);
-        _oSessionsTable.setModel(_oSessionsModel);
+		_oTotalSessionsLabel = new JLabel("");
+		getContentPane().add(_oTotalSessionsLabel);
 
-        _oTimeLabel.setText("Started at " + new Date().toString());
-       
-        //make visible
-        repaint();
-        setVisible(true);
-        toFront();
-        
-        //log success
-        ASelectSystemLogger.getHandle().log(Level.INFO, MODULE, "start()", 
-        "Successfully initialized Admin monitor.");
-    }
+		_oTotalTGTsLabel = new JLabel("");
+		getContentPane().add(_oTotalTGTsLabel);
 
-    /**
-     * Function to stop the AdminMonitor.
-     * 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * This function stops the TGT and session model. 
-     * The AdminMonitor GUI is made invisible.
-     * <br><br>
-     * <b>Concurrency issues: </b> <br>
-     * none <br>
-     * <br>
-     * <b>Preconditions: </b> 
-     * <br>none <br>
-     * <br>
-     * <b>Postconditions: </b> 
-     * <br>
-     * The GUI is invisible and models are stopped.
-     * <br>
-     *  
-     */
-    public void stop()
-    {
-      
-        if (_oTGTsModel != null)
-            _oTGTsModel.stop();
+		_oTimeLabel = new JLabel("");
+		getContentPane().add(_oTimeLabel);
 
-        if (_oSessionsModel != null)
-            _oSessionsModel.stop();
-        
-        setVisible(false);       
+		// kill all TGTs button
+		_oRevokeAllTGTsButton = new JButton("Kill All TGTs");
+		getContentPane().add(_oRevokeAllTGTsButton);
+		_oRevokeAllTGTsButton.addActionListener(new RevokeAllTGTsButtonListener());
 
-        ASelectSystemLogger.getHandle().log(Level.INFO, MODULE, "stop()", 
-            "Admin monitor stopped");
-    }
+		// kill TGT button
+		_oRevokeTGTButton = new JButton("Kill TGT");
+		getContentPane().add(_oRevokeTGTButton);
+		_oRevokeTGTButton.addActionListener(new RevokeTGTButtonListener());
+		getRootPane().setDefaultButton(_oRevokeTGTButton);
+	}
 
-    /**
-     * Updates the session and TGT information in the GUI. 
-     * <br><br>
-     * @see javax.swing.event.TableModelListener#tableChanged(javax.swing.event.TableModelEvent)
-     */
-    public void tableChanged(TableModelEvent oTableModelEvent)
-    {
-        StringBuffer sbBuffer = new StringBuffer();
-        sbBuffer.append("Number of pending sessions: ");
-        sbBuffer.append(Integer.toString(_oSessionsModel.getRowCount()));
-        _oNumberOfSessionsLabel.setText(sbBuffer.toString());
+	/**
+	 * Function to start the AdminMonitor. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * This function initializes the session and TGT monitor model, starts the AdminMonitor and makes it visible. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * none <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * <code>iCheckInterval > 0</code><br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * GUI is visible and models are running. <br>
+	 * 
+	 * @param iCheckInterval
+	 *            Interval in seconds that defines when AdminMonitor checks for new information.
+	 * @throws Exception
+	 *             the exception
+	 */
+	public void start(int iCheckInterval)
+		throws Exception
+	{
 
-        sbBuffer = new StringBuffer();
-        sbBuffer.append("Number of issued TGT's: ");
-        sbBuffer.append(Integer.toString(_oTGTsModel.getRowCount()));
-        _oNumberOfTGTsLabel.setText(sbBuffer.toString());
+		_oTGTsModel = new TGTMonitorModel(iCheckInterval);
+		_oTGTsModel.addTableModelListener(this);
+		_oTGTsTable.setModel(_oTGTsModel);
 
-        sbBuffer = new StringBuffer();
-        sbBuffer.append("Total sessions handled since startup: ");
-        sbBuffer.append(_oSessionsModel.getSessionsCounter());
-        _oTotalSessionsLabel.setText(sbBuffer.toString());
+		_oSessionsModel = new SessionMonitorModel(iCheckInterval);
+		_oSessionsModel.addTableModelListener(this);
+		_oSessionsTable.setModel(_oSessionsModel);
 
-        sbBuffer = new StringBuffer();
-        sbBuffer.append("Total TGT's issued since startup: ");
-        sbBuffer.append(_oTGTsModel.getTGTCounter());
-        _oTotalTGTsLabel.setText(sbBuffer.toString());
-    }
+		_oTimeLabel.setText("Started at " + new Date().toString());
 
-    /**
-     * (re)paints all the specific AdminMonitor graphics. 
-     * @see java.awt.Component#paint(java.awt.Graphics)
-     */
-    public void paint(Graphics oGraphics)
-    {
-        int x, y, iWidth;
-        Dimension oDim = getContentPane().getSize();
+		// make visible
+		repaint();
+		setVisible(true);
+		toFront();
 
-        x = 4;
-        y = 16;
-        iWidth = oDim.width - 8;
+		// log success
+		ASelectSystemLogger.getHandle().log(Level.INFO, MODULE, "start()", "Successfully initialized Admin monitor.");
+	}
 
-        _oSessionsLabel.setBounds(x + 10, y, iWidth, 20);
-        _oSessionsScrollPane.setBounds(x, y + 24, iWidth, 120);
+	/**
+	 * Function to stop the AdminMonitor. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * This function stops the TGT and session model. The AdminMonitor GUI is made invisible. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * none <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * none <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * The GUI is invisible and models are stopped. <br>
+	 */
+	public void stop()
+	{
 
-        y = _oSessionsScrollPane.getY() + _oSessionsScrollPane.getHeight() + 20;
-        _oLineButton1.setBounds(x, y, iWidth, 2);
-        y += 12;
+		if (_oTGTsModel != null)
+			_oTGTsModel.stop();
 
-        _oTGTsLabel.setBounds(x + 10, y, iWidth, 20);
-        _oTGTsScrollPane.setBounds(x, y + 24, iWidth, oDim.height - 400);
+		if (_oSessionsModel != null)
+			_oSessionsModel.stop();
 
-        y = _oTGTsScrollPane.getY() + _oTGTsScrollPane.getHeight() + 4;
-        _oRevokeTGTButton.setBounds((iWidth - _iButtonWidth) / 2, y,
-            _iButtonWidth, _iButtonHeight);
+		setVisible(false);
 
-        x = 4;
-        y = _oRevokeTGTButton.getY() + _oRevokeTGTButton.getHeight() + 20;
-        _oLineButton2.setBounds(x, y, iWidth, 2);
-        _oLineButton3.setBounds(iWidth - _iButtonWidth - 20, y, 2, oDim.height
-            - y);
-        y += 30;
+		ASelectSystemLogger.getHandle().log(Level.INFO, MODULE, "stop()", "Admin monitor stopped");
+	}
 
-        _oRevokeAllTGTsButton.setBounds(iWidth - _iButtonWidth - 8, y,
-            _iButtonWidth, _iButtonHeight);
+	/**
+	 * Updates the session and TGT information in the GUI. <br>
+	 * <br>
+	 * 
+	 * @param oTableModelEvent
+	 *            the o table model event
+	 * @see javax.swing.event.TableModelListener#tableChanged(javax.swing.event.TableModelEvent)
+	 */
+	public void tableChanged(TableModelEvent oTableModelEvent)
+	{
+		StringBuffer sbBuffer = new StringBuffer();
+		sbBuffer.append("Number of pending sessions: ");
+		sbBuffer.append(Integer.toString(_oSessionsModel.getRowCount()));
+		_oNumberOfSessionsLabel.setText(sbBuffer.toString());
 
-        x = 8;
-        y -= 20;
-        _oNumberOfSessionsLabel.setBounds(x, y,
-            _oRevokeAllTGTsButton.getX() - 10, 20);
+		sbBuffer = new StringBuffer();
+		sbBuffer.append("Number of issued TGT's: ");
+		sbBuffer.append(Integer.toString(_oTGTsModel.getRowCount()));
+		_oNumberOfTGTsLabel.setText(sbBuffer.toString());
 
-        y += 24;
-        _oTotalSessionsLabel.setBounds(x, y, _oRevokeAllTGTsButton.getX() - 10,
-            20);
+		sbBuffer = new StringBuffer();
+		sbBuffer.append("Total sessions handled since startup: ");
+		sbBuffer.append(_oSessionsModel.getSessionsCounter());
+		_oTotalSessionsLabel.setText(sbBuffer.toString());
 
-        y += 24;
-        _oNumberOfTGTsLabel.setBounds(x, y, _oRevokeAllTGTsButton.getX() - 10,
-            20);
+		sbBuffer = new StringBuffer();
+		sbBuffer.append("Total TGT's issued since startup: ");
+		sbBuffer.append(_oTGTsModel.getTGTCounter());
+		_oTotalTGTsLabel.setText(sbBuffer.toString());
+	}
 
-        y += 24;
-        _oTotalTGTsLabel.setBounds(x, y, _oRevokeAllTGTsButton.getX() - 10, 20);
+	/**
+	 * (re)paints all the specific AdminMonitor graphics.
+	 * 
+	 * @param oGraphics
+	 *            the o graphics
+	 * @see java.awt.Component#paint(java.awt.Graphics)
+	 */
+	@Override
+	public void paint(Graphics oGraphics)
+	{
+		int x, y, iWidth;
+		Dimension oDim = getContentPane().getSize();
 
-        y += 24;
-        _oTimeLabel.setBounds(x, y, _oRevokeAllTGTsButton.getX() - 10, 20);
+		x = 4;
+		y = 16;
+		iWidth = oDim.width - 8;
 
-        super.paint(oGraphics);
-    }
+		_oSessionsLabel.setBounds(x + 10, y, iWidth, 20);
+		_oSessionsScrollPane.setBounds(x, y + 24, iWidth, 120);
 
-    /**
-     * This ActionListener is called when a user clicks on RevokeTGT.
-     * 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * This function finds the selected TGT and calls _oTGTManager.killTGT. <br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * none <br>
-     * 
-     * @author Alfa & Ariss
-     * 
-     */
-    class RevokeTGTButtonListener implements ActionListener
-    {
-        /**
-         * Find selected TGT and call _oTGTManager.killTGT. <br>
-         * <br>
-         * 
-         * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-         */
-        public void actionPerformed(ActionEvent ae)
-        {
-            try
-            {
-                int[] iRows = _oTGTsTable.getSelectedRows();
-                if (iRows == null)
-                    return;
-                for (int i = 0; i < iRows.length; i++)
-                {
-                    _oTGTManager.remove(_oTGTsModel.getValueAt(
-                        iRows[i], _oTGTsModel.getColumnCount()));
-                }
-            }
-            catch (Exception e)
-            {}
-            repaint();
-        }
-    }
+		y = _oSessionsScrollPane.getY() + _oSessionsScrollPane.getHeight() + 20;
+		_oLineButton1.setBounds(x, y, iWidth, 2);
+		y += 12;
 
-    /**
-     * This ActionListener is called when a user click on RevokeAllTGTs.
-     * 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * This function revokes all TGTs by calling _oTGTManager.killAllTGTs().
-     * <br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * none <br>
-     * 
-     * @author Alfa & Ariss
-     * 
-     */
-    class RevokeAllTGTsButtonListener implements ActionListener
-    {
-        /**
-         * revoke all TGTs by calling _oTGTManager.killAllTGTs(). <br>
-         * <br>
-         * 
-         * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-         */
-        public void actionPerformed(ActionEvent e)
-        {
-            try
-            {
-                _oTGTManager.removeAll();
-            }
-            catch (Exception x)
-            {}
-            repaint();
-        }
-    }
+		_oTGTsLabel.setBounds(x + 10, y, iWidth, 20);
+		_oTGTsScrollPane.setBounds(x, y + 24, iWidth, oDim.height - 400);
 
-    /**
-     * BasicWindowAdapter for the AdminMonitor.
-     * 
-     * <br>
-     * <br>
-     * <b>Description: </b> <br>
-     * This class does nothing. <br>
-     * <br>
-     * <b>Concurrency issues: </b> <br>
-     * none <br>
-     * 
-     * @author Alfa & Ariss
-     * 
-     */
-    class BasicWindowAdapter extends WindowAdapter
-    {
-        /**
-         * @see java.awt.event.WindowListener#windowClosing(java.awt.event.WindowEvent)
-         */
-        public void windowClosing(WindowEvent xEvent)
-        {
-            Object o = xEvent.getSource();
-            if (o == AdminMonitor.this){ 
-                //TODO stop() can be called here to stop Gui (Erwin)          
-            }
-        }
-    }
+		y = _oTGTsScrollPane.getY() + _oTGTsScrollPane.getHeight() + 4;
+		_oRevokeTGTButton.setBounds((iWidth - _iButtonWidth) / 2, y, _iButtonWidth, _iButtonHeight);
+
+		x = 4;
+		y = _oRevokeTGTButton.getY() + _oRevokeTGTButton.getHeight() + 20;
+		_oLineButton2.setBounds(x, y, iWidth, 2);
+		_oLineButton3.setBounds(iWidth - _iButtonWidth - 20, y, 2, oDim.height - y);
+		y += 30;
+
+		_oRevokeAllTGTsButton.setBounds(iWidth - _iButtonWidth - 8, y, _iButtonWidth, _iButtonHeight);
+
+		x = 8;
+		y -= 20;
+		_oNumberOfSessionsLabel.setBounds(x, y, _oRevokeAllTGTsButton.getX() - 10, 20);
+
+		y += 24;
+		_oTotalSessionsLabel.setBounds(x, y, _oRevokeAllTGTsButton.getX() - 10, 20);
+
+		y += 24;
+		_oNumberOfTGTsLabel.setBounds(x, y, _oRevokeAllTGTsButton.getX() - 10, 20);
+
+		y += 24;
+		_oTotalTGTsLabel.setBounds(x, y, _oRevokeAllTGTsButton.getX() - 10, 20);
+
+		y += 24;
+		_oTimeLabel.setBounds(x, y, _oRevokeAllTGTsButton.getX() - 10, 20);
+
+		super.paint(oGraphics);
+	}
+
+	/**
+	 * This ActionListener is called when a user clicks on RevokeTGT. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * This function finds the selected TGT and calls _oTGTManager.killTGT. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * none <br>
+	 * 
+	 * @author Alfa & Ariss
+	 */
+	class RevokeTGTButtonListener implements ActionListener
+	{
+		
+		/**
+		 * Find selected TGT and call _oTGTManager.killTGT. <br>
+		 * <br>
+		 * 
+		 * @param ae
+		 *            the ae
+		 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+		 */
+		public void actionPerformed(ActionEvent ae)
+		{
+			try {
+				int[] iRows = _oTGTsTable.getSelectedRows();
+				if (iRows == null)
+					return;
+				for (int i = 0; i < iRows.length; i++) {
+					_oTGTManager.remove(_oTGTsModel.getValueAt(iRows[i], _oTGTsModel.getColumnCount()));
+				}
+			}
+			catch (Exception e) {
+			}
+			repaint();
+		}
+	}
+
+	/**
+	 * This ActionListener is called when a user click on RevokeAllTGTs. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * This function revokes all TGTs by calling _oTGTManager.killAllTGTs(). <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * none <br>
+	 * 
+	 * @author Alfa & Ariss
+	 */
+	class RevokeAllTGTsButtonListener implements ActionListener
+	{
+		
+		/**
+		 * revoke all TGTs by calling _oTGTManager.killAllTGTs(). <br>
+		 * <br>
+		 * 
+		 * @param e
+		 *            the e
+		 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+		 */
+		public void actionPerformed(ActionEvent e)
+		{
+			try {
+				_oTGTManager.removeAll();
+			}
+			catch (Exception x) {
+			}
+			repaint();
+		}
+	}
+
+	/**
+	 * BasicWindowAdapter for the AdminMonitor. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * This class does nothing. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * none <br>
+	 * 
+	 * @author Alfa & Ariss
+	 */
+	class BasicWindowAdapter extends WindowAdapter
+	{
+		
+		/**
+		 * Window closing.
+		 * 
+		 * @param xEvent
+		 *            the x event
+		 * @see java.awt.event.WindowListener#windowClosing(java.awt.event.WindowEvent)
+		 */
+		@Override
+		public void windowClosing(WindowEvent xEvent)
+		{
+			Object o = xEvent.getSource();
+			if (o == AdminMonitor.this) {
+				// TODO stop() can be called here to stop Gui (Erwin)
+			}
+		}
+	}
 }
-

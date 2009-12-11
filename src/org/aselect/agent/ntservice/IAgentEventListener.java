@@ -32,39 +32,36 @@
 package org.aselect.agent.ntservice;
 
 /**
- * Interface for handling events in Windows Services.
- * <br><br>
+ * Interface for handling events in Windows Services. <br>
+ * <br>
  * <b>Description:</b><br>
- * Specifies the interface to handle A-Select Agent events.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * Specifies the interface to handle A-Select Agent events. <br>
  * <br>
- * -
- * <br>
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
+ * 
  * @author Alfa & Ariss
  */
 public interface IAgentEventListener
 {
-    /**
-     * Processes a <code>AgentEvent</code>.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * This method should be called if a Windows service event is received.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * none.
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * <code>oEvent != null</code>
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * @param oEvent The event that should be processed.
-     */
-    public void handleAgentEvent(AgentEvent oEvent);
+	
+	/**
+	 * Processes a <code>AgentEvent</code>. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * This method should be called if a Windows service event is received. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * none. <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * <code>oEvent != null</code> <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param oEvent
+	 *            The event that should be processed.
+	 */
+	public void handleAgentEvent(AgentEvent oEvent);
 }

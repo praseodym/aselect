@@ -60,24 +60,24 @@ import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.storagemanager.StorageManager;
 
+// TODO: Auto-generated Javadoc
 /**
- * Manages A-Select Agent sessions.
- * <br><br>
+ * Manages A-Select Agent sessions. <br>
+ * <br>
  * <b>Description:</b><br>
  * Provides methods for managing sessions:
  * <ul>
- * 	<li>Create a session</li>
- *  <li>Update a session</li>
- * 	<li>Remove a sessions</li>
+ * <li>Create a session</li>
+ * <li>Update a session</li>
+ * <li>Remove a sessions</li>
  * </ul>
- * The session contexts are stored using a <code>StorageManager</code>.
- * <br><br>
- * <i>Note: This manager is implemented as a Singleton.</i> 
- * <br><br>
- * <b>Concurrency issues:</b>
+ * The session contexts are stored using a <code>StorageManager</code>. <br>
  * <br>
- * -
+ * <i>Note: This manager is implemented as a Singleton.</i> <br>
  * <br>
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
+ * 
  * @author Alfa & Ariss
  */
 public class SessionManager
@@ -104,23 +104,18 @@ public class SessionManager
 	private long _lSessionsCounter;
 
 	/**
-	 * Get a static handle to the <code>SessionManager</code> instance.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Get a static handle to the <code>SessionManager</code> instance. <br>
 	 * <br>
-	 * Checks if a static instance exists, otherwise it is created. This 
-	 * instance is returned.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Checks if a static instance exists, otherwise it is created. This instance is returned. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
+	 * <b>Postconditions:</b> <br>
 	 * One instance of the <code>SessionManager</code> exists.
 	 * 
 	 * @return A static handle to the <code>SessionManager</code>
@@ -133,24 +128,20 @@ public class SessionManager
 	}
 
 	/**
-	 * Initializes the <code>SessionManager</code>.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Initializes the <code>SessionManager</code>. <br>
 	 * <br>
-	 * Read configuration settings and initializes the components.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Read configuration settings and initializes the components. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * The instance variables and components are initialized.
-	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * The instance variables and components are initialized. <br>
+	 * 
 	 * @return true if initialization succeeds, otherwise false.
 	 */
 	public boolean init()
@@ -175,7 +166,7 @@ public class SessionManager
 			_oSessionTable.init(objSessionMngrConfig, _oConfigManager, ASelectAgentSystemLogger.getHandle(),
 					ASelectAgentSAMAgent.getHandle());
 
-			//initilize Randomgenerator
+			// initilize Randomgenerator
 			_oRandomGenerator = SecureRandom.getInstance("SHA1PRNG");
 			_oRandomGenerator.setSeed(_oRandomGenerator.generateSeed(20));
 
@@ -191,26 +182,19 @@ public class SessionManager
 	}
 
 	/**
-	 * Stop the <code>SessionManager</code>.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Stop the <code>SessionManager</code>. <br>
 	 * <br>
-	 * Destroys all current sessions.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Destroys all current sessions. <br>
 	 * <br>
-	 * After this method is finished, no methods may be called 
-	 * in other threads.
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * After this method is finished, no methods may be called in other threads. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * The <code>SessionManager</code> has stopped.
-	 * <br>
-	 * 
+	 * <b>Postconditions:</b> <br>
+	 * The <code>SessionManager</code> has stopped. <br>
 	 */
 	public void stop()
 	{
@@ -221,28 +205,27 @@ public class SessionManager
 	}
 
 	/**
-	 * Create a session.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Create a session. <br>
 	 * <br>
-	 * Adds the given session context with the given ID to the storage.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Adds the given session context with the given ID to the storage. <br>
 	 * <br>
-	 * none.
-	 * <br><br>
+	 * <b>Concurrency issues:</b> <br>
+	 * none. <br>
+	 * <br>
 	 * <b>Preconditions:</b>
 	 * <ul>
-	 * 	<li><code>sSessionId != null</code></li>
-	 * 	<li><code>htSessionContext != null</code></li>
+	 * <li><code>sSessionId != null</code></li>
+	 * <li><code>htSessionContext != null</code></li>
 	 * </ul>
 	 * <br>
-	 * <b>Postconditions:</b>
-	 * <br>
-	 * The given session is stored.
-	 * <br>
-	 * @param sSessionId The id of the session. 
-	 * @param htSessionContext The contents of the session (context).
+	 * <b>Postconditions:</b> <br>
+	 * The given session is stored. <br>
+	 * 
+	 * @param sSessionId
+	 *            The id of the session.
+	 * @param htSessionContext
+	 *            The contents of the session (context).
 	 * @return True if creation succeeds, otherwise false.
 	 */
 	public boolean createSession(String sSessionId, HashMap htSessionContext)
@@ -277,25 +260,22 @@ public class SessionManager
 	}
 
 	/**
-	 * Kill a session.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Kill a session. <br>
 	 * <br>
-	 * Removes the session with the given ID form the storage.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Removes the session with the given ID form the storage. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <code>sSessionId != null</code>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <code>sSessionId != null</code> <br>
 	 * <br>
-	 * The session is removed from storage.
-	 * <br>
-	 * @param sSessionId The ID of the session to be removed.
+	 * <b>Postconditions:</b> <br>
+	 * The session is removed from storage. <br>
+	 * 
+	 * @param sSessionId
+	 *            The ID of the session to be removed.
 	 */
 	public void killSession(String sSessionId)
 	{
@@ -316,7 +296,8 @@ public class SessionManager
 	 * <b>Description:</b> <br>
 	 * Overwrites the new session context with the given ID in the storage. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br> - <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
 	 * <b>Preconditions:</b>
 	 * <ul>
@@ -349,8 +330,9 @@ public class SessionManager
 		return true;
 	}
 
-	/**  
-	 * Get the number of issued sessions since startup.      
+	/**
+	 * Get the number of issued sessions since startup.
+	 * 
 	 * @return The number of issued sessions.
 	 */
 	public long getSessionsCounter()
@@ -359,26 +341,22 @@ public class SessionManager
 	}
 
 	/**
-	 * Get the session context of a session.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Get the session context of a session. <br>
 	 * <br>
-	 * Retrieve the session context (session parameters) belonging to the given
-	 * session ID.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Retrieve the session context (session parameters) belonging to the given session ID. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <code>sSessionId != null</code>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <code>sSessionId != null</code> <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sSessionId The ID of the session.
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sSessionId
+	 *            The ID of the session.
 	 * @return The session context as <code>HashMap</code>.
 	 */
 	public HashMap getSessionContext(String sSessionId)
@@ -398,24 +376,20 @@ public class SessionManager
 	}
 
 	/**
-	 * Retrieve all session contexts.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Retrieve all session contexts. <br>
 	 * <br>
-	 * Retrieve all session contexts from the storage.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Retrieve all session contexts from the storage. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
 	 * @return All session contexts in a <code>HashMap</code>.
 	 */
 	public HashMap getSessionContexts()
@@ -432,27 +406,25 @@ public class SessionManager
 	}
 
 	/**
-	 * Returns then session timeout.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Returns then session timeout. <br>
 	 * <br>
-	 * Return the session timeout form the given session.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Return the session timeout form the given session. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <code>sSessionId != null</code>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <code>sSessionId != null</code> <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param sSessionId The session ID.
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sSessionId
+	 *            The session ID.
 	 * @return The expiration time of the session.
-	 * @throws ASelectStorageException If retrieving session timeout fails.
+	 * @throws ASelectStorageException
+	 *             If retrieving session timeout fails.
 	 */
 	public long getSessionTimeout(String sSessionId)
 		throws ASelectStorageException
@@ -461,12 +433,10 @@ public class SessionManager
 	}
 
 	/**
-	 * Private constructor.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Private constructor. <br>
 	 * <br>
-	 * retrieves a handle to the system logger.  
-	 * 
+	 * <b>Description:</b> <br>
+	 * retrieves a handle to the system logger.
 	 */
 	private SessionManager() {
 		_systemLogger = ASelectAgentSystemLogger.getHandle();

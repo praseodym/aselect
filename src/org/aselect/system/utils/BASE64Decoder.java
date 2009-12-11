@@ -36,47 +36,40 @@ package org.aselect.system.utils;
 // TODO: Consider using: import org.apache.commons.codec.binary.Base64;
 
 /**
- * RFC 2045 compliant Base64 decoder.
- * <br><br>
+ * RFC 2045 compliant Base64 decoder. <br>
+ * <br>
  * <b>Description:</b><br>
- * Decodes a Base64 String. Callers should instantiate this class to 
- * decode a Base64 encoded String.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * Decodes a Base64 String. Callers should instantiate this class to decode a Base64 encoded String. <br>
  * <br>
- * None.
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * None. <br>
  * 
+ * @author Alfa & Ariss
  */
 public class BASE64Decoder
 {
-    /**
-     * Decodes a Base64 input String.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * This method uses the Base64 Codec to decode the input String.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * None.
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * None.
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * None.
-     * <br>
-     * @param xEncodedString
-     * 					Base64 encoded String.
-     * @return
-     * 					byte array containing the decoded input string.
-     */
-    public byte[] decodeBuffer(String xEncodedString)
-    {
-        return Base64.decode(xEncodedString);
-    }
+	
+	/**
+	 * Decodes a Base64 input String. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * This method uses the Base64 Codec to decode the input String. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * None. <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * None. <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * None. <br>
+	 * 
+	 * @param xEncodedString
+	 *            Base64 encoded String.
+	 * @return byte array containing the decoded input string.
+	 */
+	public byte[] decodeBuffer(String xEncodedString)
+	{
+		return Base64.decode(xEncodedString);
+	}
 }

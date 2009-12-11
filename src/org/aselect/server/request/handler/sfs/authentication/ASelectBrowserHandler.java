@@ -129,477 +129,431 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.sam.agent.SAMResource;
 
+// TODO: Auto-generated Javadoc
 /**
- * This class handles requests coming from a a-select server through a users browser.
- * <br><br>
- * <b>Description:</b>
+ * This class handles requests coming from a a-select server through a users browser. <br>
  * <br>
- * If this A-Select Servers is acting as Local Server and
- * forwards authentication requests to other A-Select Servers
- * (cross A-Select), the following browser requests
- * of Remote Servers are handled here:
+ * <b>Description:</b> <br>
+ * If this A-Select Servers is acting as Local Server and forwards authentication requests to other A-Select Servers
+ * (cross A-Select), the following browser requests of Remote Servers are handled here:
  * <ul>
- * 	<li><code>aselect_credentials</code>
+ * <li><code>aselect_credentials</code>
  * </ul>
- *
- * @author Alfa & Ariss
  * 
+ * @author Alfa & Ariss
  */
 public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 {
-    private ASelectAuthenticationLogger _authenticationLogger;
-    private CrossASelectManager _crossASelectManager;
-    private CryptoEngine _cryptoEngine;
-    
-    
-    /**
-     * Constructor for ASelectBrowserHandler.
-     * <br>
-     * @param servletRequest The request.
-     * @param servletResponse The response.
-     * @param sMyServerId The A-Select Server ID.
-     * @param sMyOrg The A-Select Server organisation.
-     */
-    public ASelectBrowserHandler (HttpServletRequest servletRequest, 
-		HttpServletResponse servletResponse,
-		String sMyServerId, String sMyOrg)
-    {
-        super(servletRequest, 
-    		servletResponse,
-    		sMyServerId, 
-    		sMyOrg);
-        _sModule = "ASelectBrowserHandler";
-        _authenticationLogger = ASelectAuthenticationLogger.getHandle();
-        _crossASelectManager = CrossASelectManager.getHandle();
-        _cryptoEngine = CryptoEngine.getHandle();
-    }
+	private ASelectAuthenticationLogger _authenticationLogger;
+	private CrossASelectManager _crossASelectManager;
+	private CryptoEngine _cryptoEngine;
 
-    /**
-     * process a-select browser requests
-     * <br><br>
-     * @see org.aselect.server.request.handler.sfs.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.HashMap, javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
-     */
-    public void processBrowserRequest(HashMap htServiceRequest,
-        HttpServletResponse servletResponse, PrintWriter pwOut)
-    throws ASelectException
-    {
-        if (htServiceRequest.get("aselect_credentials") != null)
-            handleCrossAuthenticateResponse(htServiceRequest, 
-                _servletResponse);
-        else
-           throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-    }
+	/**
+	 * Constructor for ASelectBrowserHandler. <br>
+	 * 
+	 * @param servletRequest
+	 *            The request.
+	 * @param servletResponse
+	 *            The response.
+	 * @param sMyServerId
+	 *            The A-Select Server ID.
+	 * @param sMyOrg
+	 *            The A-Select Server organisation.
+	 */
+	public ASelectBrowserHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
+			String sMyServerId, String sMyOrg) {
+		super(servletRequest, servletResponse, sMyServerId, sMyOrg);
+		_sModule = "ASelectBrowserHandler";
+		_authenticationLogger = ASelectAuthenticationLogger.getHandle();
+		_crossASelectManager = CrossASelectManager.getHandle();
+		_cryptoEngine = CryptoEngine.getHandle();
+	}
 
+	/**
+	 * process a-select browser requests <br>
+	 * <br>
+	 * .
+	 * 
+	 * @param htServiceRequest
+	 *            the ht service request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @param pwOut
+	 *            the pw out
+	 * @throws ASelectException
+	 *             the a select exception
+	 * @see org.aselect.server.request.handler.sfs.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.HashMap,
+	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
+	 */
+	@Override
+	public void processBrowserRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+		throws ASelectException
+	{
+		if (htServiceRequest.get("aselect_credentials") != null)
+			handleCrossAuthenticateResponse(htServiceRequest, _servletResponse);
+		else
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+	}
 
-    /**
-     * A response of a remote server (aselect_credentials) is verified here.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * After forwarding a user to a remote server, the remote server will
-     * redirect the user back to this A-Select Server with credentials.
-     * The response and credentials are verified here.
-     * <br><br>
-     * @param htServiceRequest
-     * @param servletResponse
-     * @throws ASelectException
-     */
-    private void handleCrossAuthenticateResponse(HashMap htServiceRequest,
-        HttpServletResponse servletResponse)
-        	throws ASelectException
-    {
-        String sMethod = "handleCrossAuthenticateResponse()";
+	/**
+	 * A response of a remote server (aselect_credentials) is verified here. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * After forwarding a user to a remote server, the remote server will redirect the user back to this A-Select Server
+	 * with credentials. The response and credentials are verified here. <br>
+	 * <br>
+	 * 
+	 * @param htServiceRequest
+	 *            the ht service request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	private void handleCrossAuthenticateResponse(HashMap htServiceRequest, HttpServletResponse servletResponse)
+		throws ASelectException
+	{
+		String sMethod = "handleCrossAuthenticateResponse()";
 
-        try
-        {
-            String sRemoteRid = null;
-            String sLocalRid = null;
-            String sCredentials = null;
-            HashMap htSessionContext;
-            
-            // check parameters
-            sRemoteRid = (String)htServiceRequest.get("rid");
-            sLocalRid = (String)htServiceRequest.get("local_rid");
-            sCredentials = (String)htServiceRequest.get("aselect_credentials");
-            
-            if ((sCredentials == null) ||
-                (sRemoteRid == null) || 
-                (sLocalRid == null))
-            {
-                _systemLogger.log(Level.INFO, 
-                    					_sModule,
-                    					sMethod,
-                    					"Invalid parameters");
+		try {
+			String sRemoteRid = null;
+			String sLocalRid = null;
+			String sCredentials = null;
+			HashMap htSessionContext;
 
-                throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);               
-            }
+			// check parameters
+			sRemoteRid = (String) htServiceRequest.get("rid");
+			sLocalRid = (String) htServiceRequest.get("local_rid");
+			sCredentials = (String) htServiceRequest.get("aselect_credentials");
 
-            htSessionContext = _sessionManager
-                .getSessionContext(sLocalRid);
-            if (htSessionContext == null)
-            {
-                _systemLogger.log(Level.WARNING,
-    				_sModule,
-    				sMethod,
-    				"Unknown session in response from cross aselect server");
-                throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-            }
+			if ((sCredentials == null) || (sRemoteRid == null) || (sLocalRid == null)) {
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "Invalid parameters");
 
-            String sRemoteOrg = (String)htSessionContext.get("remote_organization");
-
-            // verify the credentials at the remote server
-            HashMap htRemoteAttributes =  verifyRemoteCredentials(sCredentials, sRemoteRid, sRemoteOrg);
-
-            // for authentication logging
-            String sOrg = (String)htRemoteAttributes.get("organization");
-            if (!sRemoteOrg.equals(sOrg))
-                sRemoteOrg = sOrg + "@" + sRemoteOrg;
-            
-            String sResultCode = (String)htRemoteAttributes.get("result_code");
-			String sUID = (String)htRemoteAttributes.get("uid");
-            if (sResultCode != null)
-			{   
-                if(sResultCode.equals(Errors.ERROR_ASELECT_SERVER_CANCEL))
-                {
-                    _authenticationLogger.log(new Object[] {
-						"Cross", 
-						sUID,
-						(String)htServiceRequest.get("client_ip"),
-						sRemoteOrg,
-						htSessionContext.get("app_id"),
-						"denied",
-						sResultCode});
-                    // Issue 'CANCEL' TGT
-                    TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-                    tgtIssuer.issueErrorTGT(sLocalRid, sResultCode
-                        , servletResponse);
-                }
-                else
-                {
-	                //remote server returned error
-	                _authenticationLogger.log(
-	                    new Object[] {
-	                    "Cross", 
-	                    sUID,
-						(String)htServiceRequest.get("client_ip"), 
-						sRemoteOrg,
-						htSessionContext.get("app_id"),
-						"denied",
-						sResultCode});
-				
-	                throw new ASelectException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);
-                }
+				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
-            else
-            {
-                // Log succesful authentication
-	            _authenticationLogger.log(
-	                	new Object[] {
-	                	"Cross", 
-	                	sUID,
-	                	(String)htServiceRequest.get("client_ip"), 
-	                	sRemoteOrg,
-	                	htSessionContext.get("app_id"),
-	                	"granted"});
-	
-	            // Issue a cross TGT since we do not know the AuthSP
-	            // and we might have received remote attributes.
-	            TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-	            String sOldTGT = (String)htServiceRequest.get("aselect_credentials_tgt");
-	            oTGTIssuer.issueCrossTGT(sLocalRid, 
-	                				null, 
-	                				htRemoteAttributes,
-	                				servletResponse,
-	                				sOldTGT);
-            }	
-        }
-	    catch (ASelectException ae)
-	    {
-	      throw ae;
-	    }
-	    catch (Exception e)
-	    {
-	        _systemLogger
-	        .log(
-	            Level.WARNING,
-	            _sModule,
-	            sMethod,
-	            "Internal error",
-	            e);
-	        
-	        throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-	    }
-    }
-    
+
+			htSessionContext = _sessionManager.getSessionContext(sLocalRid);
+			if (htSessionContext == null) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod,
+						"Unknown session in response from cross aselect server");
+				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+
+			String sRemoteOrg = (String) htSessionContext.get("remote_organization");
+
+			// verify the credentials at the remote server
+			HashMap htRemoteAttributes = verifyRemoteCredentials(sCredentials, sRemoteRid, sRemoteOrg);
+
+			// for authentication logging
+			String sOrg = (String) htRemoteAttributes.get("organization");
+			if (!sRemoteOrg.equals(sOrg))
+				sRemoteOrg = sOrg + "@" + sRemoteOrg;
+
+			String sResultCode = (String) htRemoteAttributes.get("result_code");
+			String sUID = (String) htRemoteAttributes.get("uid");
+			if (sResultCode != null) {
+				if (sResultCode.equals(Errors.ERROR_ASELECT_SERVER_CANCEL)) {
+					_authenticationLogger.log(new Object[] {
+						"Cross", sUID, (String) htServiceRequest.get("client_ip"), sRemoteOrg,
+						htSessionContext.get("app_id"), "denied", sResultCode
+					});
+					// Issue 'CANCEL' TGT
+					TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
+					tgtIssuer.issueErrorTGT(sLocalRid, sResultCode, servletResponse);
+				}
+				else {
+					// remote server returned error
+					_authenticationLogger.log(new Object[] {
+						"Cross", sUID, (String) htServiceRequest.get("client_ip"), sRemoteOrg,
+						htSessionContext.get("app_id"), "denied", sResultCode
+					});
+
+					throw new ASelectException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);
+				}
+			}
+			else {
+				// Log succesful authentication
+				_authenticationLogger.log(new Object[] {
+					"Cross", sUID, (String) htServiceRequest.get("client_ip"), sRemoteOrg,
+					htSessionContext.get("app_id"), "granted"
+				});
+
+				// Issue a cross TGT since we do not know the AuthSP
+				// and we might have received remote attributes.
+				TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
+				String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
+				oTGTIssuer.issueCrossTGT(sLocalRid, null, htRemoteAttributes, servletResponse, sOldTGT);
+			}
+		}
+		catch (ASelectException ae) {
+			throw ae;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error", e);
+
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+	}
+
 	static private HashMap _htSFSOrganizations = null;
-	
-    static public String getSFSRelay(String sOrg) throws ASelectConfigException {
-    	String sMethod = "getSFSRelay()";
-    	String sRelay = null;
-    	
+
+	/**
+	 * Gets the sFS relay.
+	 * 
+	 * @param sOrg
+	 *            the s org
+	 * @return the sFS relay
+	 * @throws ASelectConfigException
+	 *             the a select config exception
+	 */
+	static public String getSFSRelay(String sOrg)
+		throws ASelectConfigException
+	{
+		String sMethod = "getSFSRelay()";
+		String sRelay = null;
+
 		if (_htSFSOrganizations == null) {
-			
-		    ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
-		    ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
-		    String _sModule = "SFS";
-		    
+
+			ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
+			ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
+			String _sModule = "SFS";
+
 			Object oSfsConfig = null;
 			try {
 				oSfsConfig = _configManager.getSection(null, "sfs");
-			} catch (ASelectConfigException e) {
-				_systemLogger.log(Level.CONFIG, _sModule, sMethod,
-					"No extra sfs configuration found, skipping.");
 			}
-		
+			catch (ASelectConfigException e) {
+				_systemLogger.log(Level.CONFIG, _sModule, sMethod, "No extra sfs configuration found, skipping.");
+			}
+
 			_htSFSOrganizations = new HashMap();
 			if (oSfsConfig != null) {
 				try {
 					Object oIdpCfg = null;
 
 					try {
-						oIdpCfg = _configManager.getSection(oSfsConfig,
-								"idp");
-					} catch (ASelectConfigException e) {
-						_systemLogger
-								.log(Level.INFO, _sModule, sMethod,
-										"No \"idp\" entries configured in \"sfs\" section.");
+						oIdpCfg = _configManager.getSection(oSfsConfig, "idp");
+					}
+					catch (ASelectConfigException e) {
+						_systemLogger.log(Level.INFO, _sModule, sMethod,
+								"No \"idp\" entries configured in \"sfs\" section.");
 						oIdpCfg = null;
 					}
 
 					while (oIdpCfg != null) {
-						String sOrganization = _configManager.getParam(
-								oIdpCfg, "organization");
-												
+						String sOrganization = _configManager.getParam(oIdpCfg, "organization");
+
 						try {
-							String sType = _configManager.getParam(oIdpCfg,
-									"type");
+							String sType = _configManager.getParam(oIdpCfg, "type");
 							if (sType.equals("aselect")) {
-								sRelay = _configManager.getParam(oIdpCfg,
-								"relay");
+								sRelay = _configManager.getParam(oIdpCfg, "relay");
 								_htSFSOrganizations.put(sOrganization, sRelay);
 							}
-						} catch (Exception e) {
+						}
+						catch (Exception e) {
 						}
 						;
 						oIdpCfg = _configManager.getNextSection(oIdpCfg);
 
 					}
-				} catch (ASelectConfigException e) {
+				}
+				catch (ASelectConfigException e) {
 					throw e;
 				}
 			}
 		}
 
-		sRelay = (String)_htSFSOrganizations.get(sOrg);
+		sRelay = (String) _htSFSOrganizations.get(sOrg);
 
-    	return sRelay;
-    }
-    
-    /**
-     * A response of a remote server (aselect_credentials) is verified here.
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * After forwarding a user to a remote server, the remote server will
-     * redirect the user back to this A-Select Server with credentials.
-     * The response and credentials are verified here.
-     * <br><br>
-     * @param sCredentials
-     * @param sRemoteRid
-     * @param sRemoteOrg
-     * @return HashMap
-     * @throws ASelectException
-     */
-    private HashMap verifyRemoteCredentials(String sCredentials, String sRemoteRid, String sRemoteOrg)
-        	throws ASelectException
-    {
-        String sMethod = "verifyRemoteCredentials()";
-        Object oRemoteServer;
-        String sRemoteAsUrl;
-        String sRemoteServer;
-        try
-        {
-            CrossASelectManager oCrossASelectManager = CrossASelectManager.getHandle();
-            String sResourcegroup = oCrossASelectManager.getRemoteParam(sRemoteOrg, "resourcegroup");
-            if (sResourcegroup == null)
-            {
-                String sRelay = getSFSRelay(sRemoteOrg);
-                if (sRelay != null) {
-                	sResourcegroup = _crossASelectManager.getRemoteParam(sRelay, "resourcegroup");
-                	sRemoteOrg = sRelay;
-                } else {
-                    _systemLogger.log(Level.SEVERE, _sModule, sMethod,
-                            "No remote server and no relay found for: " + sRemoteOrg);                	
-                }
-            }            
-            SAMResource oSAMResource = ASelectSAMAgent.getHandle()
-                .getActiveResource(sResourcegroup);
-            oRemoteServer = oSAMResource.getAttributes();
-            sRemoteAsUrl = _configManager.getParam(oRemoteServer, "url");
-            sRemoteServer = oCrossASelectManager.getRemoteParam(sRemoteOrg, "server");
-        }
-        catch(ASelectSAMException ase)
-        {
-            _systemLogger.log(Level.SEVERE, _sModule, sMethod,
-                "Failed to read SAM", ase);
-            
-            throw ase;                
-        }
-        catch(ASelectConfigException ace)
-        {
-            _systemLogger.log(Level.SEVERE, _sModule, sMethod,
-                "Failed to read config", ace);
-            
-            throw ace;
-        }
-        RawCommunicator oCommunicator = new RawCommunicator(_systemLogger); //Default = API communciation
-        HashMap htRequestTable = new HashMap();
-        HashMap htResponseTable = new HashMap();
-        htRequestTable.put("request", "verify_credentials");
-        htRequestTable.put("rid", sRemoteRid);
-        htRequestTable.put("aselect_credentials", sCredentials);
-        htRequestTable.put("a-select-server", sRemoteServer);
-        Object oASelectConfig = ASelectConfigManager.getHandle().getSection(null, "aselect");
-        String sMyOrgId = ASelectConfigManager.getHandle().getParam(oASelectConfig, "organization");
-        htRequestTable.put("local_organization", sMyOrgId);
-        
-        if(_crossASelectManager.useRemoteSigning())
-        {
-            _cryptoEngine.signRequest(htRequestTable);
-        }
-        
-        htResponseTable = oCommunicator.sendMessage(htRequestTable, sRemoteAsUrl);
+		return sRelay;
+	}
 
-        if ( htResponseTable.isEmpty())
-        {
-            _systemLogger.log(Level.WARNING, _sModule, sMethod,
-                "Could not reach remote A-Select Server: " + sRemoteAsUrl);
-            throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-        }
-        String sResultCode = (String)htResponseTable.get("result_code");
-        if (sResultCode == null)
-        {
-            StringBuffer sbWarning = new StringBuffer("Invalid response from remote A-Select Server '");
-            sbWarning.append(sRemoteServer);
-            sbWarning.append("' (missing: 'result_code')");
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString());
-            throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-        }
-        
-        // Uid needed for authentication logging if access denied.;
-        String sUID = (String)htResponseTable.get("uid");
-        if (sUID != null)
-        {
-            //TODO tripple decoding? (Erwin)
-            try
-            {
-                sUID = URLDecoder.decode(sUID, "UTF-8");
-                sUID = URLDecoder.decode(sUID, "UTF-8");
-            }
-            catch(UnsupportedEncodingException ee)
-            {}
-        }
+	/**
+	 * A response of a remote server (aselect_credentials) is verified here. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * After forwarding a user to a remote server, the remote server will redirect the user back to this A-Select Server
+	 * with credentials. The response and credentials are verified here. <br>
+	 * <br>
+	 * 
+	 * @param sCredentials
+	 *            the s credentials
+	 * @param sRemoteRid
+	 *            the s remote rid
+	 * @param sRemoteOrg
+	 *            the s remote org
+	 * @return HashMap
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	private HashMap verifyRemoteCredentials(String sCredentials, String sRemoteRid, String sRemoteOrg)
+		throws ASelectException
+	{
+		String sMethod = "verifyRemoteCredentials()";
+		Object oRemoteServer;
+		String sRemoteAsUrl;
+		String sRemoteServer;
+		try {
+			CrossASelectManager oCrossASelectManager = CrossASelectManager.getHandle();
+			String sResourcegroup = oCrossASelectManager.getRemoteParam(sRemoteOrg, "resourcegroup");
+			if (sResourcegroup == null) {
+				String sRelay = getSFSRelay(sRemoteOrg);
+				if (sRelay != null) {
+					sResourcegroup = _crossASelectManager.getRemoteParam(sRelay, "resourcegroup");
+					sRemoteOrg = sRelay;
+				}
+				else {
+					_systemLogger.log(Level.SEVERE, _sModule, sMethod, "No remote server and no relay found for: "
+							+ sRemoteOrg);
+				}
+			}
+			SAMResource oSAMResource = ASelectSAMAgent.getHandle().getActiveResource(sResourcegroup);
+			oRemoteServer = oSAMResource.getAttributes();
+			sRemoteAsUrl = _configManager.getParam(oRemoteServer, "url");
+			sRemoteServer = oCrossASelectManager.getRemoteParam(sRemoteOrg, "server");
+		}
+		catch (ASelectSAMException ase) {
+			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to read SAM", ase);
 
-        if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS))
-        {
-            StringBuffer sbWarning = new StringBuffer("Remote A-Select Server '");
-            sbWarning.append(sRemoteServer);
-            sbWarning.append("' returned error: ");
-            sbWarning.append(sResultCode);
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString());
-            HashMap htTicketContext = new HashMap();
-            htTicketContext.put("result_code", sResultCode);
+			throw ase;
+		}
+		catch (ASelectConfigException ace) {
+			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to read config", ace);
 
-            if (sUID != null)
-            {
-                htTicketContext.put("uid", sUID);
-            }
-            else
-            {
-                htTicketContext.put("uid", "");
-            }
-            return htTicketContext;
-        }
-        
-        if (sUID == null)
-        {
-            StringBuffer sbWarning = new StringBuffer("Remote A-Select Server '");
-            sbWarning.append(sRemoteServer);
-            sbWarning.append("' did not return 'uid'");
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString());
-            throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
-        }
-        //TODO tripple decoding? (Erwin)
-        try
-        {
-            sUID = URLDecoder.decode(sUID, "UTF-8");
-            sUID = URLDecoder.decode(sUID, "UTF-8");
-        }
-        catch(UnsupportedEncodingException ee)
-        {}
+			throw ace;
+		}
+		RawCommunicator oCommunicator = new RawCommunicator(_systemLogger); // Default = API communciation
+		HashMap htRequestTable = new HashMap();
+		HashMap htResponseTable = new HashMap();
+		htRequestTable.put("request", "verify_credentials");
+		htRequestTable.put("rid", sRemoteRid);
+		htRequestTable.put("aselect_credentials", sCredentials);
+		htRequestTable.put("a-select-server", sRemoteServer);
+		Object oASelectConfig = ASelectConfigManager.getHandle().getSection(null, "aselect");
+		String sMyOrgId = ASelectConfigManager.getHandle().getParam(oASelectConfig, "organization");
+		htRequestTable.put("local_organization", sMyOrgId);
 
-        String sOrg = (String)htResponseTable.get("organization");
-        if (sOrg == null)
-        {
-            StringBuffer sbWarning = new StringBuffer("Remote A-Select Server '");
-            sbWarning.append(sRemoteServer);
-            sbWarning.append("' did not return 'organization'");
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString());
-            throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
-        }
-        String sAL = (String)htResponseTable.get("authsp_level");
-        if (sAL == null)
-        {
-            StringBuffer sbWarning = new StringBuffer("Remote A-Select Server '");
-            sbWarning.append(sRemoteServer);
-            sbWarning.append("' did not return 'authsp_level'");
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString());
-            throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
-        }
-        String sASP = (String)htResponseTable.get("authsp");
-        if (sASP == null)
-        {
-            StringBuffer sbWarning = new StringBuffer("Remote A-Select Server '");
-            sbWarning.append(sRemoteServer);
-            sbWarning.append("' did not return 'authsp'");
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString());
-            throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
-        }
-        String sAppLevel = (String)htResponseTable.get("app_level");
-        if (sAppLevel == null)
-        {
-            StringBuffer sbWarning = new StringBuffer("Remote A-Select Server '");
-            sbWarning.append(sRemoteServer);
-            sbWarning.append("' did not return 'app_level'");
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString());
-            throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
-        }
-        String sTgtExp = (String)htResponseTable.get("tgt_exp_time");
-        if (sTgtExp == null)
-        {
-            StringBuffer sbWarning = new StringBuffer("Remote A-Select Server '");
-            sbWarning.append(sRemoteServer);
-            sbWarning.append("' did not return 'tgt_exp_time'");
-            _systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString());
-            throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
-        }
+		if (_crossASelectManager.useRemoteSigning()) {
+			_cryptoEngine.signRequest(htRequestTable);
+		}
 
-        // all parameters are there; create a ticket for this user and
-        // store it in a ticket context
-        HashMap htTicketContext = new HashMap();
-        htTicketContext.put("uid", sUID);
-        htTicketContext.put("organization", sOrg);
-        htTicketContext.put("authsp_level", sAL);
-        htTicketContext.put("authsp", sASP);
-        htTicketContext.put("app_level", sAppLevel);
-        htTicketContext.put("a-select-server", sRemoteServer);
-        htTicketContext.put("tgt_exp_time", new Long(sTgtExp));
-        // The attributes parameter is optional.
-        String sAttributes = (String)htResponseTable.get("attributes");
-        if (sAttributes != null)
-            htTicketContext.put("attributes", sAttributes);
-        return htTicketContext;
+		htResponseTable = oCommunicator.sendMessage(htRequestTable, sRemoteAsUrl);
 
-    }
+		if (htResponseTable.isEmpty()) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not reach remote A-Select Server: "
+					+ sRemoteAsUrl);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		}
+		String sResultCode = (String) htResponseTable.get("result_code");
+		if (sResultCode == null) {
+			StringBuffer sbWarning = new StringBuffer("Invalid response from remote A-Select Server '");
+			sbWarning.append(sRemoteServer);
+			sbWarning.append("' (missing: 'result_code')");
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString());
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		}
+
+		// Uid needed for authentication logging if access denied.;
+		String sUID = (String) htResponseTable.get("uid");
+		if (sUID != null) {
+			// TODO tripple decoding? (Erwin)
+			try {
+				sUID = URLDecoder.decode(sUID, "UTF-8");
+				sUID = URLDecoder.decode(sUID, "UTF-8");
+			}
+			catch (UnsupportedEncodingException ee) {
+			}
+		}
+
+		if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
+			StringBuffer sbWarning = new StringBuffer("Remote A-Select Server '");
+			sbWarning.append(sRemoteServer);
+			sbWarning.append("' returned error: ");
+			sbWarning.append(sResultCode);
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString());
+			HashMap htTicketContext = new HashMap();
+			htTicketContext.put("result_code", sResultCode);
+
+			if (sUID != null) {
+				htTicketContext.put("uid", sUID);
+			}
+			else {
+				htTicketContext.put("uid", "");
+			}
+			return htTicketContext;
+		}
+
+		if (sUID == null) {
+			StringBuffer sbWarning = new StringBuffer("Remote A-Select Server '");
+			sbWarning.append(sRemoteServer);
+			sbWarning.append("' did not return 'uid'");
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString());
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
+		}
+		// TODO tripple decoding? (Erwin)
+		try {
+			sUID = URLDecoder.decode(sUID, "UTF-8");
+			sUID = URLDecoder.decode(sUID, "UTF-8");
+		}
+		catch (UnsupportedEncodingException ee) {
+		}
+
+		String sOrg = (String) htResponseTable.get("organization");
+		if (sOrg == null) {
+			StringBuffer sbWarning = new StringBuffer("Remote A-Select Server '");
+			sbWarning.append(sRemoteServer);
+			sbWarning.append("' did not return 'organization'");
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString());
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
+		}
+		String sAL = (String) htResponseTable.get("authsp_level");
+		if (sAL == null) {
+			StringBuffer sbWarning = new StringBuffer("Remote A-Select Server '");
+			sbWarning.append(sRemoteServer);
+			sbWarning.append("' did not return 'authsp_level'");
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString());
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
+		}
+		String sASP = (String) htResponseTable.get("authsp");
+		if (sASP == null) {
+			StringBuffer sbWarning = new StringBuffer("Remote A-Select Server '");
+			sbWarning.append(sRemoteServer);
+			sbWarning.append("' did not return 'authsp'");
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString());
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
+		}
+		String sAppLevel = (String) htResponseTable.get("app_level");
+		if (sAppLevel == null) {
+			StringBuffer sbWarning = new StringBuffer("Remote A-Select Server '");
+			sbWarning.append(sRemoteServer);
+			sbWarning.append("' did not return 'app_level'");
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString());
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
+		}
+		String sTgtExp = (String) htResponseTable.get("tgt_exp_time");
+		if (sTgtExp == null) {
+			StringBuffer sbWarning = new StringBuffer("Remote A-Select Server '");
+			sbWarning.append(sRemoteServer);
+			sbWarning.append("' did not return 'tgt_exp_time'");
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString());
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
+		}
+
+		// all parameters are there; create a ticket for this user and
+		// store it in a ticket context
+		HashMap htTicketContext = new HashMap();
+		htTicketContext.put("uid", sUID);
+		htTicketContext.put("organization", sOrg);
+		htTicketContext.put("authsp_level", sAL);
+		htTicketContext.put("authsp", sASP);
+		htTicketContext.put("app_level", sAppLevel);
+		htTicketContext.put("a-select-server", sRemoteServer);
+		htTicketContext.put("tgt_exp_time", new Long(sTgtExp));
+		// The attributes parameter is optional.
+		String sAttributes = (String) htResponseTable.get("attributes");
+		if (sAttributes != null)
+			htTicketContext.put("attributes", sAttributes);
+		return htTicketContext;
+
+	}
 }
-

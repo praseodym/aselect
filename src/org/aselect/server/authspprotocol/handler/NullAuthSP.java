@@ -90,18 +90,17 @@ import org.aselect.server.session.SessionManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAuthSPException;
 
+// TODO: Auto-generated Javadoc
 /**
- * The Null AuthSP handler.
- * <br><br>
+ * The Null AuthSP handler. <br>
+ * <br>
  * <b>Description:</b><br>
- * The Null AuthSP handler communicates with the Null AuthSP by using redirects. 
- * The Null AuthSP is only for testing perposes and may not be used as a real 
- * AuthSP in a production(live) environment 
- * <br><br>
- * <b>Concurrency issues:</b>
+ * The Null AuthSP handler communicates with the Null AuthSP by using redirects. The Null AuthSP is only for testing
+ * perposes and may not be used as a real AuthSP in a production(live) environment <br>
  * <br>
- * -
- * <br>
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
+ * 
  * @author Alfa & Ariss
  */
 public class NullAuthSP implements IAuthSPProtocolHandler
@@ -148,13 +147,20 @@ public class NullAuthSP implements IAuthSPProtocolHandler
 	private String _sServerId;
 
 	/**
-	 * Initializes the NullAuthSP handler.
-	 * <br>
+	 * Initializes the NullAuthSP handler. <br>
 	 * Resolves the following config items:<br>
 	 * - The AuthSP id<br>
 	 * - The url to the authsp (from the resource)<br>
 	 * - The server id from the A-Select main config<br>
-	 * <br><br>
+	 * <br>
+	 * <br>
+	 * 
+	 * @param oAuthSPConfig
+	 *            the o auth sp config
+	 * @param oAuthSPResource
+	 *            the o auth sp resource
+	 * @throws ASelectAuthSPException
+	 *             the a select auth sp exception
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#init(java.lang.Object, java.lang.Object)
 	 */
 	public void init(Object oAuthSPConfig, Object oAuthSPResource)
@@ -214,19 +220,46 @@ public class NullAuthSP implements IAuthSPProtocolHandler
 	}
 
 	/**
-	 * Sends an authentication request to the authsp.
-	 * <br>
+	 * Sends an authentication request to the authsp. <br>
 	 * The response must contain the following parameters:<br>
 	 * <table border="1" cellspacing="0" cellpadding="3">
-	 * <tr><td style="" bgcolor="#EEEEFF">name</td><td style="" bgcolor="#EEEEFF">
-	 * value</td><td style="" bgcolor="#EEEEFF">encoded</td></tr>
-	 * <tr><td>as_url</td><td>A-Select Server url</td><td>yes</td></tr>
-	 * <tr><td>rid</td><td>A-Select Server request id</td><td>no</td></tr>
-	 * <tr><td>uid</td><td>A-Select Server user ID</td><td>yes</td></tr>
-	 * <tr><td>a-select-server</td><td>A-Select Server ID</td><td>no</td></tr>
-	 * <tr><td>signature</td><td>signature of all paramaters in the above sequence</td><td>yes</td></tr>
+	 * <tr>
+	 * <td style="" bgcolor="#EEEEFF">name</td>
+	 * <td style="" bgcolor="#EEEEFF">value</td>
+	 * <td style="" bgcolor="#EEEEFF">encoded</td>
+	 * </tr>
+	 * <tr>
+	 * <td>as_url</td>
+	 * <td>A-Select Server url</td>
+	 * <td>yes</td>
+	 * </tr>
+	 * <tr>
+	 * <td>rid</td>
+	 * <td>A-Select Server request id</td>
+	 * <td>no</td>
+	 * </tr>
+	 * <tr>
+	 * <td>uid</td>
+	 * <td>A-Select Server user ID</td>
+	 * <td>yes</td>
+	 * </tr>
+	 * <tr>
+	 * <td>a-select-server</td>
+	 * <td>A-Select Server ID</td>
+	 * <td>no</td>
+	 * </tr>
+	 * <tr>
+	 * <td>signature</td>
+	 * <td>signature of all paramaters in the above sequence</td>
+	 * <td>yes</td>
+	 * </tr>
 	 * </table>
-	 * <br><br>
+	 * <br>
+	 * <br>
+	 * 
+	 * @param sRid
+	 *            the s rid
+	 * @return the hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#computeAuthenticationRequest(java.lang.String)
 	 */
 	public HashMap computeAuthenticationRequest(String sRid)
@@ -327,18 +360,41 @@ public class NullAuthSP implements IAuthSPProtocolHandler
 	}
 
 	/**
-	 * Checks the response from the NullAuthSP.
-	 * <br>
+	 * Checks the response from the NullAuthSP. <br>
 	 * The response must contain the following parameters:<br>
 	 * <table border="1" cellspacing="0" cellpadding="3">
-	 * <tr><td style="" bgcolor="#EEEEFF">name</td><td style="" bgcolor="#EEEEFF">
-	 * value</td><td style="" bgcolor="#EEEEFF">encoded</td></tr>
-	 * <tr><td>rid</td><td>A-Select Server request id</td><td>no</td></tr>
-	 * <tr><td>result_code</td><td>AuthSP result code</td><td>no</td></tr>
-	 * <tr><td>a-select-server</td><td>A-Select Server ID</td><td>no</td></tr>
-	 * <tr><td>signature</td><td>signature of all paramaters in the above sequence</td><td>yes</td></tr>
+	 * <tr>
+	 * <td style="" bgcolor="#EEEEFF">name</td>
+	 * <td style="" bgcolor="#EEEEFF">value</td>
+	 * <td style="" bgcolor="#EEEEFF">encoded</td>
+	 * </tr>
+	 * <tr>
+	 * <td>rid</td>
+	 * <td>A-Select Server request id</td>
+	 * <td>no</td>
+	 * </tr>
+	 * <tr>
+	 * <td>result_code</td>
+	 * <td>AuthSP result code</td>
+	 * <td>no</td>
+	 * </tr>
+	 * <tr>
+	 * <td>a-select-server</td>
+	 * <td>A-Select Server ID</td>
+	 * <td>no</td>
+	 * </tr>
+	 * <tr>
+	 * <td>signature</td>
+	 * <td>signature of all paramaters in the above sequence</td>
+	 * <td>yes</td>
+	 * </tr>
 	 * </table>
-	 * <br><br>
+	 * <br>
+	 * <br>
+	 * 
+	 * @param htAuthspResponse
+	 *            the ht authsp response
+	 * @return the hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.HashMap)
 	 */
 	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse)
@@ -397,13 +453,13 @@ public class NullAuthSP implements IAuthSPProtocolHandler
 			sUserId = (String) htSessionContext.get("user_id");
 			sAppID = (String) htSessionContext.get("app_id");
 
-			//must be retrieved from the session, because it can be an remote organtization 
+			// must be retrieved from the session, because it can be an remote organtization
 			sOrganization = (String) htSessionContext.get("organization");
 
 			sbMessage = new StringBuffer(sOrganization);
 			sbMessage.append(_sAuthSP).append(",");
 
-			//check if user was authenticated successfully
+			// check if user was authenticated successfully
 			if (!sResultCode.equalsIgnoreCase(ERROR_NO_ERROR)) {
 				if (sResultCode.equalsIgnoreCase(ERROR_ACCESS_DENIED)) {
 					_authenticationLogger.log(new Object[] {

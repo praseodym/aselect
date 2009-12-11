@@ -35,40 +35,37 @@ package org.aselect.authspserver.authsp.nullauthsp;
  * Null AuthSP error codes. <br>
  * <br>
  * <b>Description: </b> <br>
- * Error codes that are used by the Null AuthSP.
- * <br>
+ * Error codes that are used by the Null AuthSP. <br>
  * <br>
  * <b>Concurrency issues: </b> <br>
- * -
- * <br>
+ * - <br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class Errors
 {
-    /**
-     * No error
-     */
-    public final static String ERROR_NULL_SUCCESS = "000";
+	/**
+	 * No error
+	 */
+	public final static String ERROR_NULL_SUCCESS = "000";
 
-    /**
-     * Internal error has occurred
-     */
-    public final static String ERROR_NULL_INTERNAL = "100";
+	/**
+	 * Internal error has occurred
+	 */
+	public final static String ERROR_NULL_INTERNAL = "100";
 
-    /**
-     * An invalid request has been sent
-     */
-    public final static String ERROR_NULL_INVALID_REQUEST = "200";
-    
-    /**
-     * Access is denied
-     */
-    public final static String ERROR_NULL_ACCESS_DENIED = "800";
+	/**
+	 * An invalid request has been sent
+	 */
+	public final static String ERROR_NULL_INVALID_REQUEST = "200";
 
-    /**
-     * User could not be authenticated
-     */
-    public final static String ERROR_NULL_COULD_NOT_AUTHENTICATE_USER = "900";
+	/**
+	 * Access is denied
+	 */
+	public final static String ERROR_NULL_ACCESS_DENIED = "800";
+
+	/**
+	 * User could not be authenticated
+	 */
+	public final static String ERROR_NULL_COULD_NOT_AUTHENTICATE_USER = "900";
 }

@@ -85,18 +85,18 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.exception.ASelectUDBException;
 import org.aselect.system.sam.agent.SAMResource;
 
+// TODO: Auto-generated Javadoc
 /**
- * JDBC database connector.
- * <br><br>
+ * JDBC database connector. <br>
+ * <br>
  * <b>Description:</b><br>
  * Database connector that uses an JDBC database as physical storage. <br>
- * <br><br>
- * <b>Concurrency issues:</b>
  * <br>
- * -
  * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public class JDBCConnector implements IUDBConnector
 {
@@ -142,8 +142,13 @@ public class JDBCConnector implements IUDBConnector
 	private ASelectSAMAgent _oASelectSAMAgent;
 
 	/**
-	 * Initializes managers and opens a JDBC connection to the A-Select user db.
-	 * <br><br>
+	 * Initializes managers and opens a JDBC connection to the A-Select user db. <br>
+	 * <br>
+	 * 
+	 * @param oConfigSection
+	 *            the o config section
+	 * @throws ASelectUDBException
+	 *             the a select udb exception
 	 * @see org.aselect.server.udb.IUDBConnector#init(java.lang.Object)
 	 */
 	public void init(Object oConfigSection)
@@ -190,10 +195,10 @@ public class JDBCConnector implements IUDBConnector
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
-			//check if there is at least one active resource available
+			// check if there is at least one active resource available
 			getConnection();
 
-			//Get all enabled AuthSPs from config
+			// Get all enabled AuthSPs from config
 			try {
 				oAuthSPs = _oASelectConfigManager.getSection(null, "authsps");
 			}
@@ -241,15 +246,17 @@ public class JDBCConnector implements IUDBConnector
 	}
 
 	/**
-	 * Returns a hashtable with the user's record.
-	 * <br><br>
-	 * <b>Description</b>:
+	 * Returns a hashtable with the user's record. <br>
 	 * <br>
-	 * The returned hashtable contains a <code>result_code</code> and  
-	 * <code>user_authsps</code> which is a hashtable containing the AuthSP's that the user is registered for.
-	 * Within this hashtable each AuthSP has an entry with the value of the
-	 * user attributes that specific AuthSP.
-	 * <br><br>
+	 * <b>Description</b>: <br>
+	 * The returned hashtable contains a <code>result_code</code> and <code>user_authsps</code> which is a hashtable
+	 * containing the AuthSP's that the user is registered for. Within this hashtable each AuthSP has an entry with the
+	 * value of the user attributes that specific AuthSP. <br>
+	 * <br>
+	 * 
+	 * @param sUserId
+	 *            the s user id
+	 * @return the user profile
 	 * @see org.aselect.server.udb.IUDBConnector#getUserProfile(java.lang.String)
 	 */
 	public HashMap getUserProfile(String sUserId)
@@ -305,8 +312,8 @@ public class JDBCConnector implements IUDBConnector
 				if (sAttributeValue == null)
 					sAttributeValue = "";
 
-				//attribute must be stored in the HashMap with an uppercase 
-				//key to match the key of the _htConfiguredAuthSPs
+				// attribute must be stored in the HashMap with an uppercase
+				// key to match the key of the _htConfiguredAuthSPs
 				htUserRecord.put(sAttributeName.toUpperCase(), sAttributeValue);
 			}
 
@@ -323,20 +330,24 @@ public class JDBCConnector implements IUDBConnector
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED);
 			}
 
-			//resolve all user attributes
+			// resolve all user attributes
 			String sAttributeValue = null;
 			Set keys = htUserRecord.keySet();
 			for (Object s : keys) {
 				String sAttributeName = (String) s;
-				//Enumeration enumAttributeKeys = htUserRecord.keys();
-				//while (enumAttributeKeys.hasMoreElements())
-				//{
-				//  sAttributeName = (String)enumAttributeKeys.nextElement();
+				// Enumeration enumAttributeKeys = htUserRecord.keys();
+				// while (enumAttributeKeys.hasMoreElements())
+				// {
+				// sAttributeName = (String)enumAttributeKeys.nextElement();
 				sAttributeValue = (String) htUserRecord.get(sAttributeName);
 
-				if (sAttributeName.startsWith("ASELECT") && sAttributeName.endsWith("REGISTERED")) {//only store user attributes of authsps that are registered for the user
+				if (sAttributeName.startsWith("ASELECT") && sAttributeName.endsWith("REGISTERED")) {// only store user
+					// attributes of
+					// authsps that are
+					// registered for
+					// the user
 					if (sAttributeValue.equalsIgnoreCase("TRUE")) {
-						//The authsp id is the substring between ASELECT(7 chars) and REGISTERED(10 chars) 
+						// The authsp id is the substring between ASELECT(7 chars) and REGISTERED(10 chars)
 						String sAuthSPID = sAttributeName.substring(7, sAttributeName.length() - 10);
 
 						StringBuffer sbUserAttributes = new StringBuffer("ASELECT");
@@ -344,7 +355,7 @@ public class JDBCConnector implements IUDBConnector
 						sbUserAttributes.append("USERATTRIBUTES");
 
 						sAttributeValue = (String) htUserRecord.get(sbUserAttributes.toString());
-						//a user attbiute can be empty
+						// a user attbiute can be empty
 						if (sAttributeValue == null)
 							sAttributeValue = "";
 
@@ -371,46 +382,53 @@ public class JDBCConnector implements IUDBConnector
 			htResponse.put("result_code", Errors.ERROR_ASELECT_UDB_INTERNAL);
 		}
 		finally {
-//			try { // RH, 20090605, sn
-				if (oResultSet != null) {
-					try {
-						oResultSet.close();
-					}
-					catch (SQLException e) {
-						_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "Could not close resultset");
-					}
-					oResultSet = null;
+			// try { // RH, 20090605, sn
+			if (oResultSet != null) {
+				try {
+					oResultSet.close();
 				}
-				if (oStatement != null) {
-					try {
-						oStatement.close();
-					}
-					catch (SQLException e) {
-						_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "Could not close statement");
-					}
-					oStatement = null;
+				catch (SQLException e) {
+					_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "Could not close resultset");
 				}
-				if (oConnection != null) {
-					try {
-						oConnection.close();
-					}
-					catch (SQLException e) {
-						_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "Could not close connection");
-					}
-					oConnection = null;
+				oResultSet = null;
+			}
+			if (oStatement != null) {
+				try {
+					oStatement.close();
 				}
-//			}
-//			catch (Exception e) {
-//			} // RH, 20090605, en
-				
+				catch (SQLException e) {
+					_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "Could not close statement");
+				}
+				oStatement = null;
+			}
+			if (oConnection != null) {
+				try {
+					oConnection.close();
+				}
+				catch (SQLException e) {
+					_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "Could not close connection");
+				}
+				oConnection = null;
+			}
+			// }
+			// catch (Exception e) {
+			// } // RH, 20090605, en
+
 		}
 		return htResponse;
 	}
 
 	/**
-	 * Retrieve the A-Select user attributes.
-	 * <br><br>
-	 * @throws ASelectUDBException If database fails.
+	 * Retrieve the A-Select user attributes. <br>
+	 * <br>
+	 * 
+	 * @param sUserId
+	 *            the s user id
+	 * @param sAuthSPId
+	 *            the s auth sp id
+	 * @return the user attributes
+	 * @throws ASelectUDBException
+	 *             If database fails.
 	 * @see org.aselect.server.udb.IUDBConnector#getUserAttributes(java.lang.String, java.lang.String)
 	 */
 	public String getUserAttributes(String sUserId, String sAuthSPId)
@@ -443,9 +461,9 @@ public class JDBCConnector implements IUDBConnector
 				int iNumCols = oResultSetMetaData.getColumnCount();
 
 				for (int i = 1; i <= iNumCols; i++) {
-					//get database coulumn name
+					// get database coulumn name
 					String sColumnName = oResultSetMetaData.getColumnName(i);
-					//create attribute column name
+					// create attribute column name
 					StringBuffer sbUserAttributes = new StringBuffer("ASELECT");
 					sbUserAttributes.append(sAuthSPId);
 					sbUserAttributes.append("USERATTRIBUTES");
@@ -457,7 +475,7 @@ public class JDBCConnector implements IUDBConnector
 					}
 				}
 
-				if (sAttributes == null) //user attributes not found for AuthSP
+				if (sAttributes == null) // user attributes not found for AuthSP
 				{
 					StringBuffer sb = new StringBuffer("User attributes for AuthSP: '");
 					sb.append(sAuthSPId).append("' not found for user: '");
@@ -507,9 +525,14 @@ public class JDBCConnector implements IUDBConnector
 	}
 
 	/**
-	 * Check if user is A-Select enabled.
-	 * <br><br>
-	 * @throws ASelectUDBException If database fails.
+	 * Check if user is A-Select enabled. <br>
+	 * <br>
+	 * 
+	 * @param sUserId
+	 *            the s user id
+	 * @return true, if checks if is user enabled
+	 * @throws ASelectUDBException
+	 *             If database fails.
 	 * @see org.aselect.server.udb.IUDBConnector#isUserEnabled(java.lang.String)
 	 */
 	public boolean isUserEnabled(String sUserId)
@@ -546,13 +569,13 @@ public class JDBCConnector implements IUDBConnector
 					if (sAttributeName.equalsIgnoreCase("ASELECTACCOUNTENABLED")) {
 						String sAttributeValue = oResultSet.getString(i);
 						if (sAttributeValue != null && sAttributeValue.equalsIgnoreCase("true")) {
-							//account enabled
+							// account enabled
 							bEnabled = true;
-							i = iNumCols; //stop searching
+							i = iNumCols; // stop searching
 						}
-						else //user not enabled
+						else // user not enabled
 						{
-							i = iNumCols; //stop searching
+							i = iNumCols; // stop searching
 						}
 					}
 				}
@@ -606,12 +629,14 @@ public class JDBCConnector implements IUDBConnector
 	}
 
 	/**
-	 * Opens a new JDBC connection to the resource that is retrieved from the 
-	 * SAMAgent.
-	 * <br><br>
+	 * Opens a new JDBC connection to the resource that is retrieved from the SAMAgent. <br>
+	 * <br>
+	 * 
 	 * @return <code>Connection</code> that contains the JDBC connection
-	 * @throws ASelectUDBException if the connection could not be opened
-	 * @throws ASelectSAMException if no valid resource could be found
+	 * @throws ASelectUDBException
+	 *             if the connection could not be opened
+	 * @throws ASelectSAMException
+	 *             if no valid resource could be found
 	 */
 	private Connection getConnection()
 		throws ASelectUDBException, ASelectSAMException
@@ -649,7 +674,7 @@ public class JDBCConnector implements IUDBConnector
 		}
 
 		try {
-			//initialize driver
+			// initialize driver
 			Class.forName(sDriver);
 		}
 		catch (Exception e) {
@@ -708,11 +733,15 @@ public class JDBCConnector implements IUDBConnector
 	}
 
 	/**
-	 * Sorts authentication logging parameters and logs them.
-	 * <br><br>
-	 * @param sUserID The A-Select user id
-	 * @param sErrorCode The error code of the error that occured
-	 * @param sMessage The authentication log message
+	 * Sorts authentication logging parameters and logs them. <br>
+	 * <br>
+	 * 
+	 * @param sUserID
+	 *            The A-Select user id
+	 * @param sErrorCode
+	 *            The error code of the error that occured
+	 * @param sMessage
+	 *            The authentication log message
 	 */
 	private void logAuthentication(String sUserID, String sErrorCode, String sMessage)
 	{

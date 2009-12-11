@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.xsaml20.sp;
 
 import java.io.PrintWriter;
@@ -41,33 +52,38 @@ import org.opensaml.xml.security.x509.BasicX509Credential;
 import org.opensaml.xml.util.XMLHelper;
 import org.w3c.dom.Node;
 
+// TODO: Auto-generated Javadoc
 public class Xsaml20_ISTS extends Saml20_BaseHandler
 {
-    private final static String MODULE = "Xsaml20_ISTS";
+	private final static String MODULE = "Xsaml20_ISTS";
 	protected final String singleSignOnServiceBindingConstantREDIRECT = SAMLConstants.SAML2_REDIRECT_BINDING_URI;
 
 	private String _sServerId; // <server_id> in <aselect>
-	//private String _sFederationUrl;
+	// private String _sFederationUrl;
 	private HashMap<String, String> levelMap;
 
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.xsaml20.Saml20_BaseHandler#init(javax.servlet.ServletConfig, java.lang.Object)
+	 */
+	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "init()";
 
 		try {
-	        super.init(oServletConfig, oConfig);
-	    }
-	    catch (ASelectException e) {  // pass to caller
-	        throw e;
-	    }
-	    catch (Exception e) {
-	        _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize", e);
-	        throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-	    }
+			super.init(oServletConfig, oConfig);
+		}
+		catch (ASelectException e) { // pass to caller
+			throw e;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
 
 		_sServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
-		//_sFederationUrl = ASelectConfigManager.getSimpleParam(oConfig, "federation_url", true);
+		// _sFederationUrl = ASelectConfigManager.getSimpleParam(oConfig, "federation_url", true);
 
 		levelMap = new HashMap<String, String>();
 		Object oSecurity = null;
@@ -86,123 +102,125 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			}
 		}
 		catch (ASelectConfigException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"No valid config item 'uri' found in handler section", e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid config item 'uri' found in handler section", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}
-	
+
 	// Example configuration
 	//
 	// <handler id="saml20_ists"
-    //    class="org.aselect.server.request.handler.xsaml20.Xsaml20_ISTS"
-    //    target="/saml20_ists.*">
-    // <federation_url>https://testsiam.extern.umcn.nl/aselectserver/server</federation_url>
-	//    <security level="5" uri="urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified" />
-	//    <security level="10" uri="urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport" />
-	//    <security level="20" uri="urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorContract" />
-	//    <security level="30" uri="urn:oasis:names:tc:SAML:2.0:ac:classes:SmartcardPKI" />
+	// class="org.aselect.server.request.handler.xsaml20.Xsaml20_ISTS"
+	// target="/saml20_ists.*">
+	// <federation_url>https://testsiam.extern.umcn.nl/aselectserver/server</federation_url>
+	// <security level="5" uri="urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified" />
+	// <security level="10" uri="urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport" />
+	// <security level="20" uri="urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorContract" />
+	// <security level="30" uri="urn:oasis:names:tc:SAML:2.0:ac:classes:SmartcardPKI" />
 	// </handler>
 	//
 	// "federation_url" contains a default value used when it's not given in the request
 	//
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.IRequestHandler#process(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+	 */
 	@SuppressWarnings("unchecked")
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-    throws ASelectException
-    {
-        String sMethod = "process()";
+		throws ASelectException
+	{
+		String sMethod = "process()";
 		String sRid;
 		String sFederationUrl = null;
-		String sMyUrl = _sServerUrl;  // extractAselectServerUrl(request);
-        _systemLogger.log(Level.INFO, MODULE, sMethod, "MyUrl="+sMyUrl+" Request="+request);
-        
-        try {
-	        sRid = request.getParameter("rid");
-	        if (sRid == null) {
-	            _systemLogger.log(Level.WARNING,MODULE,sMethod, "Missing RID parameter");
-	            throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-	        }
+		String sMyUrl = _sServerUrl; // extractAselectServerUrl(request);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "MyUrl=" + sMyUrl + " Request=" + request);
 
-	        // Find the associated session context
-	        HashMap htSessionContext = _oSessionManager.getSessionContext(sRid);
-	        if (htSessionContext == null) {
-	            _systemLogger.log(Level.WARNING,MODULE,sMethod, "No session found for RID: "+sRid);	            
-	            throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-	        }
+		try {
+			sRid = request.getParameter("rid");
+			if (sRid == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing RID parameter");
+				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
 
-	        // 20091028, Bauke, let the user choose which IdP to use
-	        sFederationUrl = request.getParameter("federation_url");
-	        int cnt = MetaDataManagerSp.getHandle().getIdpCount();
-	        if (cnt == 1) {
-	        	sFederationUrl = MetaDataManagerSp.getHandle().getDefaultIdP();  // there can only be one
-	        }
-	        if (sFederationUrl == null || sFederationUrl.equals("")) {
-	        	// No Federation URL choice made yet
+			// Find the associated session context
+			HashMap htSessionContext = _oSessionManager.getSessionContext(sRid);
+			if (htSessionContext == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No session found for RID: " + sRid);
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+
+			// 20091028, Bauke, let the user choose which IdP to use
+			sFederationUrl = request.getParameter("federation_url");
+			int cnt = MetaDataManagerSp.getHandle().getIdpCount();
+			if (cnt == 1) {
+				sFederationUrl = MetaDataManagerSp.getHandle().getDefaultIdP(); // there can only be one
+			}
+			if (sFederationUrl == null || sFederationUrl.equals("")) {
+				// No Federation URL choice made yet
 				String sSelectForm = _configManager.loadHTMLTemplate(null, "idpselect", _sUserLanguage, _sUserCountry);
 				sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
-				sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", sMyUrl+"/saml20_ists");
+				sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", sMyUrl + "/saml20_ists");
 				sSelectForm = _configManager.updateTemplate(sSelectForm, htSessionContext);
-				//_systemLogger.log(Level.FINER, _sModule, sMethod, "Form select=["+sSelectForm+"]");
-		    	response.setContentType("text/html");
-				PrintWriter pwOut = response.getWriter(); 
+				// _systemLogger.log(Level.FINER, _sModule, sMethod, "Form select=["+sSelectForm+"]");
+				response.setContentType("text/html");
+				PrintWriter pwOut = response.getWriter();
 				pwOut.println(sSelectForm);
 				pwOut.close();
 				return new RequestState(null);
-				// 20091028: Original code: sFederationUrl = _sFederationUrl;  // use the default
-	        }
-	        
-	        // 20090811, Bauke: save type of Authsp to store in the TGT later on
-	        // This is needed to prevent session sync when we're not saml20
-	        htSessionContext.put("authsp_type", "saml20");
-	        htSessionContext.put("federation_url", sFederationUrl);
-			_oSessionManager.updateSession(sRid, htSessionContext);
-	        
-			/* 20090113, Bauke TRY TO SKIP THIS CODE, "remote_organization" will not be set
-			CrossASelectManager oCrossASelectManager = CrossASelectManager.getHandle();
-			// Gets from organization key/value = id/friendforced_ly_name
-			HashMap htRemoteServers = oCrossASelectManager.getRemoteServers();
-			Enumeration enRemoteOrganizationIds = htRemoteServers.keys();
-			String sRemoteOrganization = (String) enRemoteOrganizationIds.nextElement();
+				// 20091028: Original code: sFederationUrl = _sFederationUrl; // use the default
+			}
 
-			htSessionContext.put("remote_organization", sRemoteOrganization);
+			// 20090811, Bauke: save type of Authsp to store in the TGT later on
+			// This is needed to prevent session sync when we're not saml20
+			htSessionContext.put("authsp_type", "saml20");
+			htSessionContext.put("federation_url", sFederationUrl);
 			_oSessionManager.updateSession(sRid, htSessionContext);
-			*/
 
-	        _systemLogger.log(Level.INFO, MODULE, sMethod, "Get MetaData Url="+sFederationUrl);
+			/*
+			 * 20090113, Bauke TRY TO SKIP THIS CODE, "remote_organization" will not be set CrossASelectManager
+			 * oCrossASelectManager = CrossASelectManager.getHandle(); // Gets from organization key/value =
+			 * id/friendforced_ly_name HashMap htRemoteServers = oCrossASelectManager.getRemoteServers(); Enumeration
+			 * enRemoteOrganizationIds = htRemoteServers.keys(); String sRemoteOrganization = (String)
+			 * enRemoteOrganizationIds.nextElement(); htSessionContext.put("remote_organization", sRemoteOrganization);
+			 * _oSessionManager.updateSession(sRid, htSessionContext);
+			 */
+
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get MetaData Url=" + sFederationUrl);
 			MetaDataManagerSp metadataMgr = MetaDataManagerSp.getHandle();
 			// TODO maybe allow for other BINDINGs
-			String sDestination = metadataMgr.getLocation(sFederationUrl, SingleSignOnService.DEFAULT_ELEMENT_LOCAL_NAME, singleSignOnServiceBindingConstantREDIRECT);
-	        _systemLogger.log(Level.INFO, MODULE, sMethod, "Using Location retrieved from IDP="+sDestination);
+			String sDestination = metadataMgr.getLocation(sFederationUrl,
+					SingleSignOnService.DEFAULT_ELEMENT_LOCAL_NAME, singleSignOnServiceBindingConstantREDIRECT);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Using Location retrieved from IDP=" + sDestination);
 
-	        String sApplicationId = (String) htSessionContext.get("app_id");
+			String sApplicationId = (String) htSessionContext.get("app_id");
 			String sApplicationLevel = getApplicationLevel(sApplicationId);
 			String sAuthnContextClassRefURI = levelMap.get(sApplicationLevel);
 			if (sAuthnContextClassRefURI == null) {
 				// this level was not configured. Log it and inform the user
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Application Level " + sApplicationLevel + " is not configured");
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Application Level " + sApplicationLevel
+						+ " is not configured");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_APP_LEVEL);
 			}
 
 			// Send SAML request to the IDP
 			XMLObjectBuilderFactory builderFactory = Configuration.getBuilderFactory();
-			
+
 			SAMLObjectBuilder<AuthnContextClassRef> authnContextClassRefBuilder = (SAMLObjectBuilder<AuthnContextClassRef>) builderFactory
 					.getBuilder(AuthnContextClassRef.DEFAULT_ELEMENT_NAME);
 			AuthnContextClassRef authnContextClassRef = authnContextClassRefBuilder.buildObject();
-	
+
 			authnContextClassRef.setAuthnContextClassRef(sAuthnContextClassRefURI);
-	
+
 			SAMLObjectBuilder<RequestedAuthnContext> requestedAuthnContextBuilder = (SAMLObjectBuilder<RequestedAuthnContext>) builderFactory
 					.getBuilder(RequestedAuthnContext.DEFAULT_ELEMENT_NAME);
 			RequestedAuthnContext requestedAuthnContext = requestedAuthnContextBuilder.buildObject();
 			requestedAuthnContext.getAuthnContextClassRefs().add(authnContextClassRef);
 			requestedAuthnContext.setComparison(AuthnContextComparisonTypeEnumeration.EXACT);
-	
+
 			SAMLObjectBuilder<Issuer> issuerBuilder = (SAMLObjectBuilder<Issuer>) builderFactory
 					.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
 			Issuer issuer = issuerBuilder.buildObject();
 			issuer.setValue(sMyUrl);
-	
+
 			// AuthRequest
 			SAMLObjectBuilder<AuthnRequest> authnRequestbuilder = (SAMLObjectBuilder<AuthnRequest>) builderFactory
 					.getBuilder(AuthnRequest.DEFAULT_ELEMENT_NAME);
@@ -213,75 +231,87 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			DateTime tStamp = new DateTime();
 			authnRequest.setIssueInstant(tStamp);
 			// Set interval conditions
-			authnRequest = (AuthnRequest)SamlTools.setValidityInterval(authnRequest, tStamp, getMaxNotBefore(), getMaxNotOnOrAfter());
-			
+			authnRequest = (AuthnRequest) SamlTools.setValidityInterval(authnRequest, tStamp, getMaxNotBefore(),
+					getMaxNotOnOrAfter());
+
 			authnRequest.setProviderName(_sServerId);
 			authnRequest.setVersion(SAMLVersion.VERSION_20);
 			authnRequest.setIssuer(issuer);
 			authnRequest.setRequestedAuthnContext(requestedAuthnContext);
-			
+
 			// Check if we have to set the ForceAuthn attribute
 			// 20090613, Bauke: use forced_authenticate (not forced_logon)!
-			Boolean bForcedAuthn = (Boolean)htSessionContext.get("forced_authenticate");
-			if (bForcedAuthn == null) bForcedAuthn = false;
-			//String sForcedLogin = (String) htSessionContext.get("forced_logon");
-	        //if ("true".equalsIgnoreCase(sForcedLogin)) {
+			Boolean bForcedAuthn = (Boolean) htSessionContext.get("forced_authenticate");
+			if (bForcedAuthn == null)
+				bForcedAuthn = false;
+			// String sForcedLogin = (String) htSessionContext.get("forced_logon");
+			// if ("true".equalsIgnoreCase(sForcedLogin)) {
 			if (bForcedAuthn) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Setting the ForceAuthn attribute");
-	        	authnRequest.setForceAuthn(true);
-	        }
+				authnRequest.setForceAuthn(true);
+			}
 
 			SAMLObjectBuilder<Endpoint> endpointBuilder = (SAMLObjectBuilder<Endpoint>) builderFactory
 					.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);
 			Endpoint samlEndpoint = endpointBuilder.buildObject();
 			samlEndpoint.setLocation(sDestination);
 			samlEndpoint.setResponseLocation(sMyUrl);
-	
-//			HttpServletResponseAdapter outTransport = new HttpServletResponseAdapter(response); // RH 20080529, o
-			HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response, sDestination); // RH 20080529, n
+
+			// HttpServletResponseAdapter outTransport = new HttpServletResponseAdapter(response); // RH 20080529, o
+			HttpServletResponseAdapter outTransport = SamlTools
+					.createHttpServletResponseAdapter(response, sDestination); // RH 20080529, n
 			// RH, 20081113, set appropriate headers
 			outTransport.setHeader("Pragma", "no-cache");
 			outTransport.setHeader("Cache-Control", "no-cache, no-store");
-			
+
 			BasicSAMLMessageContext messageContext = new BasicSAMLMessageContext();
 			messageContext.setOutboundMessageTransport(outTransport);
 			messageContext.setOutboundSAMLMessage(authnRequest);
 			messageContext.setPeerEntityEndpoint(samlEndpoint);
-	
+
 			BasicX509Credential credential = new BasicX509Credential();
 			PrivateKey key = _configManager.getDefaultPrivateKey();
 			credential.setPrivateKey(key);
 			messageContext.setOutboundSAMLMessageSigningCredential(credential);
-			
+
 			// 20091028, Bauke: use RelayState to transport rid to the AssertionConsumer
-			messageContext.setRelayState("idp="+sFederationUrl);
-	
+			messageContext.setRelayState("idp=" + sFederationUrl);
+
 			MarshallerFactory marshallerFactory = Configuration.getMarshallerFactory();
 			Marshaller marshaller = marshallerFactory.getMarshaller(messageContext.getOutboundSAMLMessage());
 			Node nodeMessageContext = marshaller.marshall(messageContext.getOutboundSAMLMessage());
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "MessageContext:\n"
 					+ XMLHelper.prettyPrintXML(nodeMessageContext));
-	
+
 			HTTPRedirectDeflateEncoder encoder = new HTTPRedirectDeflateEncoder();
 			encoder.encode(messageContext);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Ready");
-	    }
-        catch (ASelectException e) {  // pass unchanged to the caller
-        	throw e;
-        }
-        catch (Exception e) {
-	        _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process", e);
-	        throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-	    }
+		}
+		catch (ASelectException e) { // pass unchanged to the caller
+			throw e;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
 		return new RequestState(null);
 	}
-	
+
+	/**
+	 * Gets the application level.
+	 * 
+	 * @param sApplicationId
+	 *            the s application id
+	 * @return the application level
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private String getApplicationLevel(String sApplicationId)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "getApplicationLevel()";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Id="+sApplicationId);
-		
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Id=" + sApplicationId);
+
 		Object oApplications = null;
 		try {
 			oApplications = _configManager.getSection(null, "applications");
@@ -290,7 +320,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config section 'applications' found", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-	
+
 		Object oApplication = null;
 		try {
 			oApplication = _configManager.getSection(oApplications, "application");
@@ -312,5 +342,5 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			oApplication = _configManager.getNextSection(oApplication);
 		}
 		return null;
-	}	
+	}
 }

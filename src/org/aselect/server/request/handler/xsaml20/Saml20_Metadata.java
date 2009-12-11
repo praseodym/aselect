@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.xsaml20;
 
 import java.io.File;
@@ -19,14 +30,14 @@ import org.aselect.server.request.handler.ProtoRequestHandler;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
-import org.opensaml.Configuration;
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.xml.ConfigurationException;
 import org.opensaml.xml.XMLObjectBuilderFactory;
 
+// TODO: Auto-generated Javadoc
 public class Saml20_Metadata extends ProtoRequestHandler
-{	
+{
 	private final static String MODULE = "Saml20_Metadata";
 
 	private String workingDir = null;
@@ -34,9 +45,9 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	private String signingCertificate;
 	private String publicKeyAlias;
 	private String entityIdIdp;
-	
-	private Long validUntil = null; 	// validity period after now() of metadata (seconds)
-	private Long cacheDuration = null; 	// advised period (in seconds) for peer to keep metadata in cache
+
+	private Long validUntil = null; // validity period after now() of metadata (seconds)
+	private Long cacheDuration = null; // advised period (in seconds) for peer to keep metadata in cache
 
 	// SP
 	private String assertionConsumerTarget = "";
@@ -45,7 +56,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	private String spSloHttpResponse = null;
 	private String spSloSoapLocation = null;
 	private String spSloSoapResponse = null;
-	
+
 	// IdP
 	private String idpSsoUrl = "";
 	private String idpArtifactResolverUrl = "";
@@ -62,7 +73,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	private String idpSloHttpLocation = null;
 	private String idpSloHttpResponse = null;
 	private String idpSSSoapLocation = null;
-	
+
 	protected final String PUBLIC_KEYSTORE_NAME = "aselect.keystore";
 	protected final String singleSignOnServiceBindingConstantREDIRECT = SAMLConstants.SAML2_REDIRECT_BINDING_URI;
 	protected final String artifactResolutionServiceBindingConstantSOAP = SAMLConstants.SAML2_SOAP11_BINDING_URI;
@@ -71,15 +82,19 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	protected final String singleLogoutServiceBindingConstantSOAP = SAMLConstants.SAML2_SOAP11_BINDING_URI;
 	protected final String authzServiceBindingConstantSOAP = SAMLConstants.SAML2_SOAP11_BINDING_URI;
 
-	protected XMLObjectBuilderFactory _oBuilderFactory;  // RH, 20080722, n
+	protected XMLObjectBuilderFactory _oBuilderFactory; // RH, 20080722, n
 
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.ProtoRequestHandler#init(javax.servlet.ServletConfig, java.lang.Object)
+	 */
+	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "init()";
 
 		try {
-	        super.init(oServletConfig, oConfig);
+			super.init(oServletConfig, oConfig);
 			try {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Saml Bootstrap");
 				DefaultBootstrap.bootstrap();
@@ -88,49 +103,58 @@ public class Saml20_Metadata extends ProtoRequestHandler
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "OpenSAML library could not be initialized", e);
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
-	        _systemLogger.log(Level.FINEST, MODULE, sMethod, "Bootstrap done");
-			_oBuilderFactory = Configuration.getBuilderFactory(); // RH, 20080722, n
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Bootstrap done");
+			_oBuilderFactory = org.opensaml.xml.Configuration.getBuilderFactory(); // RH, 20080722, n
 
-	        // TODO, move this to a aselect config parameter (location of keystore)
-	        // TODO, working_dir only needed for certificate, so only for signed?
+			// TODO, move this to a aselect config parameter (location of keystore)
+			// TODO, working_dir only needed for certificate, so only for signed?
 			setWorkingDir(oServletConfig.getInitParameter("working_dir")); // from web.xml
 			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Working directoy: " + getWorkingDir());
 
-            Object oASelect = null;
-            try {
-                oASelect = _configManager.getSection(null, "aselect");
-                setRedirectURL(_configManager.getParam(oASelect, "redirect_url"));
-            	// redirect_url will be used as entityIdIdp in metadata
-                setEntityIdIdp(_configManager.getParam(oASelect, "redirect_url"));
-                
-        		String sValidUntil = ASelectConfigManager.getSimpleParam(oConfig, "valid_until", false);
-        		if (sValidUntil != null) {
-        			setValidUntil(new Long( Long.parseLong(sValidUntil) * 1000));
-        		}
-        		String sCacheDuration = ASelectConfigManager.getSimpleParam(oConfig, "cache_duration", false);
-        		if (sCacheDuration != null) {
-        			setCacheDuration(new Long( Long.parseLong(sCacheDuration) * 1000));
-        		}
-            }
-            catch (ASelectConfigException e) {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'redirect_url' in section 'aselect' found", e);
-                throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-            }
-	    }
-	    catch (ASelectException e) {
-	        throw e;
-	    }
-	    catch (Exception e) {
-	        _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize", e);
-	        throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-	    }
+			Object oASelect = null;
+			try {
+				oASelect = _configManager.getSection(null, "aselect");
+				setRedirectURL(_configManager.getParam(oASelect, "redirect_url"));
+				// redirect_url will be used as entityIdIdp in metadata
+				setEntityIdIdp(_configManager.getParam(oASelect, "redirect_url"));
+
+				String sValidUntil = ASelectConfigManager.getSimpleParam(oConfig, "valid_until", false);
+				if (sValidUntil != null) {
+					setValidUntil(new Long(Long.parseLong(sValidUntil) * 1000));
+				}
+				String sCacheDuration = ASelectConfigManager.getSimpleParam(oConfig, "cache_duration", false);
+				if (sCacheDuration != null) {
+					setCacheDuration(new Long(Long.parseLong(sCacheDuration) * 1000));
+				}
+			}
+			catch (ASelectConfigException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"No config item 'redirect_url' in section 'aselect' found", e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			}
+		}
+		catch (ASelectException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
 	}
-	
+
+	/**
+	 * Read meta data public key cert.
+	 * 
+	 * @param sWorkingDir
+	 *            the s working dir
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private void readMetaDataPublicKeyCert(String sWorkingDir)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "readMetaDataPublicKeyCert";
-	
+
 		try {
 			StringBuffer sbKeystoreLocation = new StringBuffer(sWorkingDir);
 			sbKeystoreLocation.append(File.separator);
@@ -139,8 +163,8 @@ public class Saml20_Metadata extends ProtoRequestHandler
 			sbKeystoreLocation.append("keystores");
 			sbKeystoreLocation.append(File.separator);
 			sbKeystoreLocation.append(PUBLIC_KEYSTORE_NAME);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Read:"+sbKeystoreLocation);
-	
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Read:" + sbKeystoreLocation);
+
 			File fKeystore = new File(sbKeystoreLocation.toString());
 			if (!fKeystore.exists()) {
 				StringBuffer sbError = new StringBuffer("Keystore cannot be found: ");
@@ -148,24 +172,24 @@ public class Saml20_Metadata extends ProtoRequestHandler
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
 				throw new ASelectException(Errors.ERROR_ASELECT_NOT_FOUND);
 			}
-	
+
 			KeyStore ksASelect = KeyStore.getInstance("JKS");
 			ksASelect.load(new FileInputStream(sbKeystoreLocation.toString()), null);
-	
+
 			Enumeration<?> enumAliases = ksASelect.aliases();
 			while (enumAliases.hasMoreElements()) {
 				String sAlias = (String) enumAliases.nextElement();
-	
+
 				sAlias = sAlias.toLowerCase();
-				if (sAlias.equals(getPublicKeyAlias())) { //server_id van aselectidp xml federation-idp
-	
+				if (sAlias.equals(getPublicKeyAlias())) { // server_id van aselectidp xml federation-idp
+
 					java.security.cert.X509Certificate x509Cert = (java.security.cert.X509Certificate) ksASelect
 							.getCertificate(sAlias);
-	
+
 					String encodedCert = new String(Base64.encodeBase64(x509Cert.getEncoded()));
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Found public key alias for : " + getPublicKeyAlias()
-							+ " retrieved encoded signing certificate");
-	
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Found public key alias for : "
+							+ getPublicKeyAlias() + " retrieved encoded signing certificate");
+
 					setSigningCertificate(encodedCert);
 				}
 			}
@@ -173,7 +197,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No alias found for idp public key with name : "
 						+ getPublicKeyAlias());
 				throw new ASelectException(Errors.ERROR_ASELECT_CONFIG_ERROR);
-	
+
 			}
 		}
 		catch (Exception e) {
@@ -184,25 +208,44 @@ public class Saml20_Metadata extends ProtoRequestHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 	}
-	
+
 	// Override this method!
-	protected void aselectReader() // Will read all non-handler specific config parameters for metadatarequest
-	throws ASelectException
+	/**
+	 * Aselect reader.
+	 * 
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	protected void aselectReader()
+		// Will read all non-handler specific config parameters for metadatarequest
+		throws ASelectException
 	{
-		//setSingleLogoutServiceTarget(getRedirectURL()); // We use redirect_url for now
-		setPublicKeyAlias(get_sASelectServerID()); // Use server_id from aselect configuration (aselect.xml) as public key alias	
+		// setSingleLogoutServiceTarget(getRedirectURL()); // We use redirect_url for now
+		setPublicKeyAlias(get_sASelectServerID()); // Use server_id from aselect configuration (aselect.xml) as public
+		// key alias
 	}
-	
+
+	/**
+	 * Handle meta data request.
+	 * 
+	 * @param httpRequest
+	 *            the http request
+	 * @param httpResponse
+	 *            the http response
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private void handleMetaDataRequest(HttpServletRequest httpRequest, HttpServletResponse httpResponse)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "handleMetaDataRequest";
 		String mdxml = createMetaDataXML();
-	
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "metadatXML file for entityID " + getEntityIdIdp() + " " + mdxml);
-//		httpResponse.setContentType("text/xml");
+
+		_systemLogger
+				.log(Level.INFO, MODULE, sMethod, "metadatXML file for entityID " + getEntityIdIdp() + " " + mdxml);
+		// httpResponse.setContentType("text/xml");
 		httpResponse.setContentType("application/samlmetadata+xml");
-		
+
 		PrintWriter out;
 		try {
 			out = httpResponse.getWriter();
@@ -215,261 +258,591 @@ public class Saml20_Metadata extends ProtoRequestHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 	}
-	
+
+	/**
+	 * Creates the meta data xml.
+	 * 
+	 * @return the string
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	protected String createMetaDataXML()
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "createMetaDataXML";
 		String error = "This method should NOT be called directly but must be overridden!";
-        _systemLogger.log(Level.SEVERE, MODULE, sMethod, error);
-        throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		_systemLogger.log(Level.SEVERE, MODULE, sMethod, error);
+		throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.IRequestHandler#process(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-    throws ASelectException
-    {
-        String sMethod = "process()";
-        try {
-        	// TODO make these method calls more transparent
-        	// all kind of things get set that we don't know off
-        	aselectReader(); // among other things this sets the publicKeyAlias
-        	readMetaDataPublicKeyCert(getWorkingDir()); // This sets the signing certificate using the publicKeyAlias
-    		handleMetaDataRequest(request, response);
-	    }
-	    catch (Exception e) {
-	        _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process", e);
-	        throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-	    }
-	    return new RequestState(null);
+		throws ASelectException
+	{
+		String sMethod = "process()";
+		try {
+			// TODO make these method calls more transparent
+			// all kind of things get set that we don't know off
+			aselectReader(); // among other things this sets the publicKeyAlias
+			readMetaDataPublicKeyCert(getWorkingDir()); // This sets the signing certificate using the publicKeyAlias
+			handleMetaDataRequest(request, response);
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+		return new RequestState(null);
 	}
 
-	public synchronized String getEntityIdIdp() {
+	/**
+	 * Gets the entity id idp.
+	 * 
+	 * @return the entity id idp
+	 */
+	public synchronized String getEntityIdIdp()
+	{
 		return entityIdIdp;
 	}
 
-	public synchronized void setEntityIdIdp(String entityIdIdp) {
+	/**
+	 * Sets the entity id idp.
+	 * 
+	 * @param entityIdIdp
+	 *            the new entity id idp
+	 */
+	public synchronized void setEntityIdIdp(String entityIdIdp)
+	{
 		this.entityIdIdp = entityIdIdp;
 	}
 
-	public synchronized String getSpSloSoapLocation() {
+	/**
+	 * Gets the sp slo soap location.
+	 * 
+	 * @return the sp slo soap location
+	 */
+	public synchronized String getSpSloSoapLocation()
+	{
 		return spSloSoapLocation;
 	}
 
-	public synchronized void setSpSloSoapLocation(String logoutServiceLocation) {
+	/**
+	 * Sets the sp slo soap location.
+	 * 
+	 * @param logoutServiceLocation
+	 *            the new sp slo soap location
+	 */
+	public synchronized void setSpSloSoapLocation(String logoutServiceLocation)
+	{
 		spSloSoapLocation = logoutServiceLocation;
 	}
 
-	public synchronized String getArtifactResolverTarget() {
+	/**
+	 * Gets the artifact resolver target.
+	 * 
+	 * @return the artifact resolver target
+	 */
+	public synchronized String getArtifactResolverTarget()
+	{
 		return artifactResolverTarget;
 	}
 
-	public synchronized void setArtifactResolverTarget(String target) {
+	/**
+	 * Sets the artifact resolver target.
+	 * 
+	 * @param target
+	 *            the new artifact resolver target
+	 */
+	public synchronized void setArtifactResolverTarget(String target)
+	{
 		artifactResolverTarget = target;
 	}
 
-	public synchronized String getRedirectURL() {
+	/**
+	 * Gets the redirect url.
+	 * 
+	 * @return the redirect url
+	 */
+	public synchronized String getRedirectURL()
+	{
 		return redirectURL;
 	}
 
-	public synchronized void setRedirectURL(String _redirecturl) {
+	/**
+	 * Sets the redirect url.
+	 * 
+	 * @param _redirecturl
+	 *            the new redirect url
+	 */
+	public synchronized void setRedirectURL(String _redirecturl)
+	{
 		redirectURL = _redirecturl;
 	}
 
-	public synchronized String getWorkingDir() {
+	/**
+	 * Gets the working dir.
+	 * 
+	 * @return the working dir
+	 */
+	public synchronized String getWorkingDir()
+	{
 		return workingDir;
 	}
-	public synchronized void setWorkingDir(String workingDir) {
+
+	/**
+	 * Sets the working dir.
+	 * 
+	 * @param workingDir
+	 *            the new working dir
+	 */
+	public synchronized void setWorkingDir(String workingDir)
+	{
 		this.workingDir = workingDir;
 	}
 
-	public synchronized String getSigningCertificate() {
+	/**
+	 * Gets the signing certificate.
+	 * 
+	 * @return the signing certificate
+	 */
+	public synchronized String getSigningCertificate()
+	{
 		return signingCertificate;
 	}
 
-	public synchronized void setSigningCertificate(String certificate) {
+	/**
+	 * Sets the signing certificate.
+	 * 
+	 * @param certificate
+	 *            the new signing certificate
+	 */
+	public synchronized void setSigningCertificate(String certificate)
+	{
 		signingCertificate = certificate;
 	}
 
-	public synchronized String getPublicKeyAlias() {
+	/**
+	 * Gets the public key alias.
+	 * 
+	 * @return the public key alias
+	 */
+	public synchronized String getPublicKeyAlias()
+	{
 		return publicKeyAlias;
 	}
-	public synchronized void setPublicKeyAlias(String keyAlias) {
+
+	/**
+	 * Sets the public key alias.
+	 * 
+	 * @param keyAlias
+	 *            the new public key alias
+	 */
+	public synchronized void setPublicKeyAlias(String keyAlias)
+	{
 		publicKeyAlias = keyAlias;
 	}
 
-	public synchronized String getIdpSloSoapLocation() {
+	/**
+	 * Gets the idp slo soap location.
+	 * 
+	 * @return the idp slo soap location
+	 */
+	public synchronized String getIdpSloSoapLocation()
+	{
 		return idpSloSoapLocation;
 	}
-	public synchronized void setIdpSloSoapLocation(String logoutRequestTarget) {
+
+	/**
+	 * Sets the idp slo soap location.
+	 * 
+	 * @param logoutRequestTarget
+	 *            the new idp slo soap location
+	 */
+	public synchronized void setIdpSloSoapLocation(String logoutRequestTarget)
+	{
 		idpSloSoapLocation = logoutRequestTarget;
 	}
 
-	public synchronized String getSpSloHttpLocation() {
-		_systemLogger.log(Level.INFO, MODULE, "getSpSloHttpLocation", "Get "+spSloHttpLocation);
+	/**
+	 * Gets the sp slo http location.
+	 * 
+	 * @return the sp slo http location
+	 */
+	public synchronized String getSpSloHttpLocation()
+	{
+		_systemLogger.log(Level.INFO, MODULE, "getSpSloHttpLocation", "Get " + spSloHttpLocation);
 		return spSloHttpLocation;
 	}
-	public synchronized void setSpSloHttpLocation(String singleLogoutTarget) {
-		_systemLogger.log(Level.INFO, MODULE, "setSpSloHttpLocation", "Set "+singleLogoutTarget);
+
+	/**
+	 * Sets the sp slo http location.
+	 * 
+	 * @param singleLogoutTarget
+	 *            the new sp slo http location
+	 */
+	public synchronized void setSpSloHttpLocation(String singleLogoutTarget)
+	{
+		_systemLogger.log(Level.INFO, MODULE, "setSpSloHttpLocation", "Set " + singleLogoutTarget);
 		this.spSloHttpLocation = singleLogoutTarget;
 	}
 
-	public synchronized String getAssertionConsumerTarget() {
-		_systemLogger.log(Level.INFO, MODULE, "getAssertionConsumerTarget", "Get "+assertionConsumerTarget);
+	/**
+	 * Gets the assertion consumer target.
+	 * 
+	 * @return the assertion consumer target
+	 */
+	public synchronized String getAssertionConsumerTarget()
+	{
+		_systemLogger.log(Level.INFO, MODULE, "getAssertionConsumerTarget", "Get " + assertionConsumerTarget);
 		return assertionConsumerTarget;
 	}
 
-	public synchronized void setAssertionConsumerTarget(String assertionConsumerLocation) {
-		_systemLogger.log(Level.INFO, MODULE, "setAssertionConsumerTarget", "Set "+assertionConsumerLocation);
+	/**
+	 * Sets the assertion consumer target.
+	 * 
+	 * @param assertionConsumerLocation
+	 *            the new assertion consumer target
+	 */
+	public synchronized void setAssertionConsumerTarget(String assertionConsumerLocation)
+	{
+		_systemLogger.log(Level.INFO, MODULE, "setAssertionConsumerTarget", "Set " + assertionConsumerLocation);
 		this.assertionConsumerTarget = assertionConsumerLocation;
 	}
 
-	public synchronized String getSingleSignOnServiceTarget() {
+	/**
+	 * Gets the single sign on service target.
+	 * 
+	 * @return the single sign on service target
+	 */
+	public synchronized String getSingleSignOnServiceTarget()
+	{
 		return singleSignOnServiceTarget;
 	}
 
-	public synchronized void setSingleSignOnServiceTarget(String signOnServiceLocation) {
+	/**
+	 * Sets the single sign on service target.
+	 * 
+	 * @param signOnServiceLocation
+	 *            the new single sign on service target
+	 */
+	public synchronized void setSingleSignOnServiceTarget(String signOnServiceLocation)
+	{
 		singleSignOnServiceTarget = signOnServiceLocation;
 	}
 
+	/**
+	 * Gets the idp slo http location.
+	 * 
+	 * @return the idp slo http location
+	 */
 	public synchronized String getIdpSloHttpLocation()
 	{
 		return idpSloHttpLocation;
 	}
+
+	/**
+	 * Sets the idp slo http location.
+	 * 
+	 * @param sloTarget
+	 *            the new idp slo http location
+	 */
 	public synchronized void setIdpSloHttpLocation(String sloTarget)
 	{
 		this.idpSloHttpLocation = sloTarget;
 	}
 
+	/**
+	 * Gets the idp slo http response.
+	 * 
+	 * @return the idp slo http response
+	 */
 	public synchronized String getIdpSloHttpResponse()
 	{
 		return idpSloHttpResponse;
 	}
 
+	/**
+	 * Sets the idp slo http response.
+	 * 
+	 * @param idpSloHttpResponse
+	 *            the new idp slo http response
+	 */
 	public synchronized void setIdpSloHttpResponse(String idpSloHttpResponse)
 	{
 		this.idpSloHttpResponse = idpSloHttpResponse;
 	}
 
+	/**
+	 * Gets the idp slo soap response.
+	 * 
+	 * @return the idp slo soap response
+	 */
 	public String getIdpSloSoapResponse()
 	{
 		return idpSloSoapResponse;
 	}
 
+	/**
+	 * Sets the idp slo soap response.
+	 * 
+	 * @param idpSloSoapResponse
+	 *            the new idp slo soap response
+	 */
 	public void setIdpSloSoapResponse(String idpSloSoapResponse)
 	{
 		this.idpSloSoapResponse = idpSloSoapResponse;
 	}
 
+	/**
+	 * Gets the sp slo soap response.
+	 * 
+	 * @return the sp slo soap response
+	 */
 	public String getSpSloSoapResponse()
 	{
 		return spSloSoapResponse;
 	}
 
+	/**
+	 * Sets the sp slo soap response.
+	 * 
+	 * @param spSloSoapResponse
+	 *            the new sp slo soap response
+	 */
 	public void setSpSloSoapResponse(String spSloSoapResponse)
 	{
 		this.spSloSoapResponse = spSloSoapResponse;
 	}
 
+	/**
+	 * Gets the sp slo http response.
+	 * 
+	 * @return the sp slo http response
+	 */
 	public String getSpSloHttpResponse()
 	{
-		_systemLogger.log(Level.INFO, MODULE, "getSpSloHttpResponse", "Get "+spSloHttpResponse);
+		_systemLogger.log(Level.INFO, MODULE, "getSpSloHttpResponse", "Get " + spSloHttpResponse);
 		return spSloHttpResponse;
 	}
+
+	/**
+	 * Sets the sp slo http response.
+	 * 
+	 * @param spSloHttpResponse
+	 *            the new sp slo http response
+	 */
 	public void setSpSloHttpResponse(String spSloHttpResponse)
 	{
-		_systemLogger.log(Level.INFO, MODULE, "setSpSloHttpResponse", "Set "+spSloHttpResponse);
+		_systemLogger.log(Level.INFO, MODULE, "setSpSloHttpResponse", "Set " + spSloHttpResponse);
 		this.spSloHttpResponse = spSloHttpResponse;
 	}
 
-	public synchronized String getIdpSSSoapLocation() {
+	/**
+	 * Gets the idp ss soap location.
+	 * 
+	 * @return the idp ss soap location
+	 */
+	public synchronized String getIdpSSSoapLocation()
+	{
 		return idpSSSoapLocation;
 	}
 
-	public synchronized void setIdpSSSoapLocation(String idpSSSoapLocation) {
+	/**
+	 * Sets the idp ss soap location.
+	 * 
+	 * @param idpSSSoapLocation
+	 *            the new idp ss soap location
+	 */
+	public synchronized void setIdpSSSoapLocation(String idpSSSoapLocation)
+	{
 		this.idpSSSoapLocation = idpSSSoapLocation;
 	}
 
-	public synchronized Long getValidUntil() {
+	/**
+	 * Gets the valid until.
+	 * 
+	 * @return the valid until
+	 */
+	public synchronized Long getValidUntil()
+	{
 		return validUntil;
 	}
 
-	public synchronized void setValidUntil(Long validUntil) {
+	/**
+	 * Sets the valid until.
+	 * 
+	 * @param validUntil
+	 *            the new valid until
+	 */
+	public synchronized void setValidUntil(Long validUntil)
+	{
 		this.validUntil = validUntil;
 	}
 
-	public synchronized Long getCacheDuration() {
+	/**
+	 * Gets the cache duration.
+	 * 
+	 * @return the cache duration
+	 */
+	public synchronized Long getCacheDuration()
+	{
 		return cacheDuration;
 	}
 
-	public synchronized void setCacheDuration(Long cacheDuration) {
+	/**
+	 * Sets the cache duration.
+	 * 
+	 * @param cacheDuration
+	 *            the new cache duration
+	 */
+	public synchronized void setCacheDuration(Long cacheDuration)
+	{
 		this.cacheDuration = cacheDuration;
 	}
 
+	/**
+	 * Gets the idp artifact resolver url.
+	 * 
+	 * @return the idp artifact resolver url
+	 */
 	public String getIdpArtifactResolverUrl()
 	{
 		return idpArtifactResolverUrl;
 	}
 
+	/**
+	 * Sets the idp artifact resolver url.
+	 * 
+	 * @param idpArtifactResolverUrl
+	 *            the new idp artifact resolver url
+	 */
 	public void setIdpArtifactResolverUrl(String idpArtifactResolverUrl)
 	{
 		this.idpArtifactResolverUrl = idpArtifactResolverUrl;
 	}
 
+	/**
+	 * Gets the idp slo http request url.
+	 * 
+	 * @return the idp slo http request url
+	 */
 	public String getIdpSloHttpRequestUrl()
 	{
 		return idpSloHttpRequestUrl;
 	}
 
+	/**
+	 * Sets the idp slo http request url.
+	 * 
+	 * @param idpSloHttpUrl
+	 *            the new idp slo http request url
+	 */
 	public void setIdpSloHttpRequestUrl(String idpSloHttpUrl)
 	{
 		this.idpSloHttpRequestUrl = idpSloHttpUrl;
 	}
 
+	/**
+	 * Gets the idp slo soap request url.
+	 * 
+	 * @return the idp slo soap request url
+	 */
 	public String getIdpSloSoapRequestUrl()
 	{
 		return idpSloSoapRequestUrl;
 	}
 
+	/**
+	 * Sets the idp slo soap request url.
+	 * 
+	 * @param idpSloSoapUrl
+	 *            the new idp slo soap request url
+	 */
 	public void setIdpSloSoapRequestUrl(String idpSloSoapUrl)
 	{
 		this.idpSloSoapRequestUrl = idpSloSoapUrl;
 	}
 
+	/**
+	 * Gets the idp sso url.
+	 * 
+	 * @return the idp sso url
+	 */
 	public String getIdpSsoUrl()
 	{
 		return idpSsoUrl;
 	}
 
+	/**
+	 * Sets the idp sso url.
+	 * 
+	 * @param idpSsoUrl
+	 *            the new idp sso url
+	 */
 	public void setIdpSsoUrl(String idpSsoUrl)
 	{
 		this.idpSsoUrl = idpSsoUrl;
 	}
 
+	/**
+	 * Gets the idp sync url.
+	 * 
+	 * @return the idp sync url
+	 */
 	public String getIdpSyncUrl()
 	{
 		return idpSyncUrl;
 	}
 
+	/**
+	 * Sets the idp sync url.
+	 * 
+	 * @param idpSyncUrl
+	 *            the new idp sync url
+	 */
 	public void setIdpSyncUrl(String idpSyncUrl)
 	{
 		this.idpSyncUrl = idpSyncUrl;
 	}
 
+	/**
+	 * Gets the idp slo http response url.
+	 * 
+	 * @return the idp slo http response url
+	 */
 	public String getIdpSloHttpResponseUrl()
 	{
 		return idpSloHttpResponseUrl;
 	}
 
+	/**
+	 * Sets the idp slo http response url.
+	 * 
+	 * @param idpSloHttpResponseUrl
+	 *            the new idp slo http response url
+	 */
 	public void setIdpSloHttpResponseUrl(String idpSloHttpResponseUrl)
 	{
 		this.idpSloHttpResponseUrl = idpSloHttpResponseUrl;
 	}
 
+	/**
+	 * Gets the idp slo soap response url.
+	 * 
+	 * @return the idp slo soap response url
+	 */
 	public String getIdpSloSoapResponseUrl()
 	{
 		return idpSloSoapResponseUrl;
 	}
 
+	/**
+	 * Sets the idp slo soap response url.
+	 * 
+	 * @param idpSloSoapResponseUrl
+	 *            the new idp slo soap response url
+	 */
 	public void setIdpSloSoapResponseUrl(String idpSloSoapResponseUrl)
 	{
 		this.idpSloSoapResponseUrl = idpSloSoapResponseUrl;

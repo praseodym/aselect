@@ -60,6 +60,7 @@ package org.aselect.system.utils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.HashMap;
 import java.util.Set;
@@ -74,12 +75,12 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
 
+// TODO: Auto-generated Javadoc
 /**
  * Static class that implements generic, widely used utility methods. <br>
  * <br>
  * <b>Description: </b> <br>
- * The Utils class implements convenient static methods used widely by A-Select
- * components. <br>
+ * The Utils class implements convenient static methods used widely by A-Select components. <br>
  * <br>
  * <b>Concurrency issues: </b> <br>
  * None. <br>
@@ -97,16 +98,14 @@ public class Utils
 
 	/** "[]" barces UTF-8 encoded. */
 	private static final String ENCODED_BRACES = "%5B%5D";
-	
+
 	private static final String MODULE = "Utils";
 
 	/**
-	 * Returns an int from 0 to 15 corresponding to the specified hex digit.
-	 * <br>
+	 * Returns an int from 0 to 15 corresponding to the specified hex digit. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * For input 'A' this method returns 10 etc. Input is <u>case-insensitive
-	 * </u>. <br>
+	 * For input 'A' this method returns 10 etc. Input is <u>case-insensitive </u>. <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * None. <br>
@@ -139,12 +138,11 @@ public class Utils
 	 * Outputs a hex-string respresentation of a byte array. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * This method returns the hexadecimal String representation of a byte
-	 * array. <br>
+	 * This method returns the hexadecimal String representation of a byte array. <br>
 	 * <br>
 	 * Example: <br>
-	 * For input <code>[0x13, 0x2f, 0x98, 0x76]</code>, this method returns a
-	 * String object containing <code>"132F9876"</code>.<br>
+	 * For input <code>[0x13, 0x2f, 0x98, 0x76]</code>, this method returns a String object containing
+	 * <code>"132F9876"</code>.<br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * None. <br>
@@ -157,8 +155,7 @@ public class Utils
 	 * 
 	 * @param xBytes
 	 *            Source byte array.
-	 * @return a String object respresenting <code>xBytes</code> in
-	 *         hexadecimal format.
+	 * @return a String object respresenting <code>xBytes</code> in hexadecimal format.
 	 */
 	public static String byteArrayToHexString(byte[] xBytes)
 	{
@@ -178,8 +175,7 @@ public class Utils
 	 * <br>
 	 * <b>Description: </b> <br>
 	 * Example: <br>
-	 * For input <code>"132F9876"</code>, this method returns an array
-	 * containing <code>[0x13, 0x2f, 0x98, 0x76]</code>.<br>
+	 * For input <code>"132F9876"</code>, this method returns an array containing <code>[0x13, 0x2f, 0x98, 0x76]</code>.<br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * None. <br>
@@ -213,8 +209,7 @@ public class Utils
 	}
 
 	/**
-	 * Prefixes a String with another String until a specified length is
-	 * reached. <br>
+	 * Prefixes a String with another String until a specified length is reached. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
 	 * Example: <br>
@@ -278,8 +273,7 @@ public class Utils
 	 *            The string that is to be replaced.
 	 * @param xReplaceString
 	 *            The string that replaces xString.
-	 * @return A String containing all occurences of xString replaced by
-	 *         xReplaceString.
+	 * @return A String containing all occurences of xString replaced by xReplaceString.
 	 */
 	public static String replaceString(String xSrc, String xString, String xReplaceString)
 	{
@@ -301,9 +295,8 @@ public class Utils
 	 * Converts a CGI-based String to a hashtable. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * This methods converts a CGI-based String containing
-	 * <code>key=value&key=value</code> to a hashtable containing the keys and
-	 * corresponding values. <br>
+	 * This methods converts a CGI-based String containing <code>key=value&key=value</code> to a hashtable containing
+	 * the keys and corresponding values. <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * None. <br>
@@ -323,7 +316,7 @@ public class Utils
 		String xToken, xKey, xValue;
 		StringTokenizer xST = null;
 		int iPos;
-		HashMap<String,String> xResponse = new HashMap<String,String>();
+		HashMap<String, String> xResponse = new HashMap<String, String>();
 
 		if (xMessage != null) {
 			xST = new StringTokenizer(xMessage, "&");
@@ -356,19 +349,16 @@ public class Utils
 	 * Convert <code>HashMap</code> to CGI message string. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * Creates a CGI syntax message from the key/value pairs in the input
-	 * <code>HashMap</code>.<br>
+	 * Creates a CGI syntax message from the key/value pairs in the input <code>HashMap</code>.<br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * The used {@link java.util.HashMap}objects are synchronized. <br>
 	 * <br>
 	 * <b>Preconditions: </b> <br>
-	 * <code>htInput</code> should be a HashMap containing valid parameters.
-	 * <br>
+	 * <code>htInput</code> should be a HashMap containing valid parameters. <br>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
-	 * The return <code>String</code> contains the parameters in CGI syntax.
-	 * <br>
+	 * The return <code>String</code> contains the parameters in CGI syntax. <br>
 	 * 
 	 * @param htInput
 	 *            The <code>HashMap</code> to be converted.
@@ -407,21 +397,21 @@ public class Utils
 						sbBuffer.append("&");
 				}
 			}
-			//if (enumKeys.hasMoreElements()) {
+			// if (enumKeys.hasMoreElements()) {
 			// Append extra '&' after every parameter.
 			sbBuffer.append("&");
-			//}
+			// }
 		}
 		int len = sbBuffer.length();
-		return sbBuffer.substring(0, (len>0)? len-1: len);
+		return sbBuffer.substring(0, (len > 0) ? len - 1 : len);
 	}
 
 	/**
 	 * Compare a string against another string that may contain wildcards. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Compares string <code>s</code> against <code>sMask</code>, where
-	 * <code>sMask</code> may contain wildcards (* and ?). <br>
+	 * Compares string <code>s</code> against <code>sMask</code>, where <code>sMask</code> may contain wildcards (* and
+	 * ?). <br>
 	 * <br>
 	 * <b>Concurrency issues:</b> <br>
 	 * None <br>
@@ -446,7 +436,7 @@ public class Utils
 		int i = 0;
 		StringCharacterIterator iter = new StringCharacterIterator(sMask);
 
-		for (ch = iter.first(); ch != StringCharacterIterator.DONE && i < s.length(); ch = iter.next()) {
+		for (ch = iter.first(); ch != CharacterIterator.DONE && i < s.length(); ch = iter.next()) {
 			if (ch == '?')
 				i++;
 			else if (ch == '*') {
@@ -472,6 +462,15 @@ public class Utils
 	}
 
 	// Bauke: added
+	/**
+	 * First part of.
+	 * 
+	 * @param sValue
+	 *            the s value
+	 * @param max
+	 *            the max
+	 * @return the string
+	 */
 	public static String firstPartOf(String sValue, int max)
 	{
 		if (sValue == null)
@@ -479,18 +478,40 @@ public class Utils
 		int len = sValue.length();
 		return (len <= max) ? sValue : sValue.substring(0, max) + "...";
 	}
-	
-	public static Object copyHashmapValue(String sName, HashMap<String,Object> hmTo, HashMap<String,Object> hmFrom)
+
+	/**
+	 * Copy hashmap value.
+	 * 
+	 * @param sName
+	 *            the s name
+	 * @param hmTo
+	 *            the hm to
+	 * @param hmFrom
+	 *            the hm from
+	 * @return the object
+	 */
+	public static Object copyHashmapValue(String sName, HashMap<String, Object> hmTo, HashMap<String, Object> hmFrom)
 	{
 		if (hmFrom == null | hmTo == null)
 			return null;
 		Object oValue = hmFrom.get(sName);
 		if (oValue != null)
-			hmTo.put(sName, (Object)oValue);
+			hmTo.put(sName, oValue);
 		return oValue;
 	}
-	
-	public static String copyMsgValueToHashmap(String sName, HashMap<String,String> hmTo, IInputMessage imFrom)
+
+	/**
+	 * Copy msg value to hashmap.
+	 * 
+	 * @param sName
+	 *            the s name
+	 * @param hmTo
+	 *            the hm to
+	 * @param imFrom
+	 *            the im from
+	 * @return the string
+	 */
+	public static String copyMsgValueToHashmap(String sName, HashMap<String, String> hmTo, IInputMessage imFrom)
 	{
 		String sValue = null;
 		if (imFrom == null | hmTo == null)
@@ -499,7 +520,9 @@ public class Utils
 			sValue = imFrom.getParam(sName);
 			if (sValue != null)
 				hmTo.put(sName, sValue);
-		} catch(Exception e) { }
+		}
+		catch (Exception e) {
+		}
 		return sValue;
 	}
 
@@ -509,28 +532,63 @@ public class Utils
 	// Get attribute value: (oApplication, "id", true)
 	// Get tag value (need not be present): (oApplication, "friendly_name", false)
 	//
-	public static String getSimpleParam(ConfigManager oConfMgr, SystemLogger oSysLog,
-						Object oConfig, String sParam, boolean bMandatory)
-	throws ASelectException
+	/**
+	 * Gets the simple param.
+	 * 
+	 * @param oConfMgr
+	 *            the o conf mgr
+	 * @param oSysLog
+	 *            the o sys log
+	 * @param oConfig
+	 *            the o config
+	 * @param sParam
+	 *            the s param
+	 * @param bMandatory
+	 *            the b mandatory
+	 * @return the simple param
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	public static String getSimpleParam(ConfigManager oConfMgr, SystemLogger oSysLog, Object oConfig, String sParam,
+			boolean bMandatory)
+		throws ASelectException
 	{
 		final String sMethod = "getSimpleParam";
 		try {
-			return oConfMgr.getParam(oConfig, sParam);  // is not null
+			return oConfMgr.getParam(oConfig, sParam); // is not null
 		}
 		catch (ASelectConfigException e) {
 			if (!bMandatory)
 				return null;
-			oSysLog.log(Level.WARNING, MODULE, sMethod, "Config item '"+sParam+"' not found", e);
+			oSysLog.log(Level.WARNING, MODULE, sMethod, "Config item '" + sParam + "' not found", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}
-	public static int getSimpleIntParam(ConfigManager oConfMgr, SystemLogger oSysLog,
-			Object oConfig, String sParam, boolean bMandatory)
-	throws ASelectException
+
+	/**
+	 * Gets the simple int param.
+	 * 
+	 * @param oConfMgr
+	 *            the o conf mgr
+	 * @param oSysLog
+	 *            the o sys log
+	 * @param oConfig
+	 *            the o config
+	 * @param sParam
+	 *            the s param
+	 * @param bMandatory
+	 *            the b mandatory
+	 * @return the simple int param
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	public static int getSimpleIntParam(ConfigManager oConfMgr, SystemLogger oSysLog, Object oConfig, String sParam,
+			boolean bMandatory)
+		throws ASelectException
 	{
 		final String sMethod = "getSimpleIntParam";
 		String sValue = getSimpleParam(oConfMgr, oSysLog, oConfig, sParam, bMandatory);
-		
+
 		try {
 			if (sValue != null)
 				return Integer.parseInt(sValue);
@@ -541,29 +599,46 @@ public class Utils
 		catch (NumberFormatException e) {
 			if (!bMandatory)
 				return -1;
-			oSysLog.log(Level.WARNING, MODULE, sMethod, "Value of <"+sParam+"> is not an integer");
+			oSysLog.log(Level.WARNING, MODULE, sMethod, "Value of <" + sParam + "> is not an integer");
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}
-	
+
 	// Find the 'sParam' section within the 'oConfig' section
 	// 'oConfig' can be null to get one of the top level sections
 	// Example: (null, "aselect");
-	public static Object getSimpleSection(ConfigManager oConfMgr, SystemLogger oSysLog,
-			Object oConfig, String sParam, boolean bMandatory)
-	throws ASelectConfigException
+	/**
+	 * Gets the simple section.
+	 * 
+	 * @param oConfMgr
+	 *            the o conf mgr
+	 * @param oSysLog
+	 *            the o sys log
+	 * @param oConfig
+	 *            the o config
+	 * @param sParam
+	 *            the s param
+	 * @param bMandatory
+	 *            the b mandatory
+	 * @return the simple section
+	 * @throws ASelectConfigException
+	 *             the a select config exception
+	 */
+	public static Object getSimpleSection(ConfigManager oConfMgr, SystemLogger oSysLog, Object oConfig, String sParam,
+			boolean bMandatory)
+		throws ASelectConfigException
 	{
 		final String sMethod = "getSimpleSection";
 		Object oSection = null;
-		
-		oSysLog.log(Level.INFO, MODULE, sMethod, "Param="+sParam+" cfg="+oConfMgr);
+
+		oSysLog.log(Level.INFO, MODULE, sMethod, "Param=" + sParam + " cfg=" + oConfMgr);
 		try {
 			oSection = oConfMgr.getSection(oConfig, sParam);
 		}
 		catch (ASelectConfigException e) {
 			if (!bMandatory)
 				return null;
-			oSysLog.log(Level.SEVERE, MODULE, sMethod, "Cannot find "+sParam+" section in config file", e);
+			oSysLog.log(Level.SEVERE, MODULE, sMethod, "Cannot find " + sParam + " section in config file", e);
 			throw e;
 		}
 		return oSection;
@@ -576,9 +651,28 @@ public class Utils
 	// Get attribute value: (oConfig, "application", "id")
 	// Get tag value: (null, "aselect", "redirect_url")
 	//
-	public static String getParamFromSection(ConfigManager oConfMgr, SystemLogger oSysLog,
-						Object oConfig, String sSection, String sParam, boolean bMandatory)
-	throws ASelectConfigException
+	/**
+	 * Gets the param from section.
+	 * 
+	 * @param oConfMgr
+	 *            the o conf mgr
+	 * @param oSysLog
+	 *            the o sys log
+	 * @param oConfig
+	 *            the o config
+	 * @param sSection
+	 *            the s section
+	 * @param sParam
+	 *            the s param
+	 * @param bMandatory
+	 *            the b mandatory
+	 * @return the param from section
+	 * @throws ASelectConfigException
+	 *             the a select config exception
+	 */
+	public static String getParamFromSection(ConfigManager oConfMgr, SystemLogger oSysLog, Object oConfig,
+			String sSection, String sParam, boolean bMandatory)
+		throws ASelectConfigException
 	{
 		final String sMethod = "getParamFromSection";
 		try {
@@ -588,53 +682,95 @@ public class Utils
 		catch (ASelectConfigException e) {
 			if (!bMandatory)
 				return null;
-			oSysLog.log(Level.WARNING, MODULE, sMethod,	"Could not retrieve '"+sParam+"' parameter in '"+sSection+"' section", e);
+			oSysLog.log(Level.WARNING, MODULE, sMethod, "Could not retrieve '" + sParam + "' parameter in '" + sSection
+					+ "' section", e);
 			throw e;
 		}
 	}
-	
+
 	// Find section with given attribute name and value.
 	// If oConfig is null the global section is used.
 	// Example: (oConfig, "logging", "id=system")
-	public static Object getSectionFromSection(ConfigManager oConfMgr, SystemLogger oSysLog,
-			Object oConfig, String sParam, String sValue, boolean bMandatory)
-	throws ASelectConfigException
+	/**
+	 * Gets the section from section.
+	 * 
+	 * @param oConfMgr
+	 *            the o conf mgr
+	 * @param oSysLog
+	 *            the o sys log
+	 * @param oConfig
+	 *            the o config
+	 * @param sParam
+	 *            the s param
+	 * @param sValue
+	 *            the s value
+	 * @param bMandatory
+	 *            the b mandatory
+	 * @return the section from section
+	 * @throws ASelectConfigException
+	 *             the a select config exception
+	 */
+	public static Object getSectionFromSection(ConfigManager oConfMgr, SystemLogger oSysLog, Object oConfig,
+			String sParam, String sValue, boolean bMandatory)
+		throws ASelectConfigException
 	{
 		final String sMethod = "getSectionFromSection";
 		Object oLogSection = null;
-		
+
 		try {
 			oLogSection = oConfMgr.getSection(oConfig, sParam, sValue);
 		}
 		catch (Exception e) {
 			if (!bMandatory)
 				return null;
-			oSysLog.log(Level.SEVERE, MODULE, sMethod, "No valid "+sParam+" section with "+sValue+" found", e);
+			oSysLog.log(Level.SEVERE, MODULE, sMethod, "No valid " + sParam + " section with " + sValue + " found", e);
 			throw new ASelectConfigException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 		return oLogSection;
 	}
-	
+
 	// Localization
 	// If no language/country is present in 'htSessionContext',
 	// store the given values in it.
-	public static void transferLocalization(HashMap<String,Object> htSessionContext, String sUserLanguage, String sUserCountry)
+	/**
+	 * Transfer localization.
+	 * 
+	 * @param htSessionContext
+	 *            the ht session context
+	 * @param sUserLanguage
+	 *            the s user language
+	 * @param sUserCountry
+	 *            the s user country
+	 */
+	public static void transferLocalization(HashMap<String, Object> htSessionContext, String sUserLanguage,
+			String sUserCountry)
 	{
 		if (htSessionContext == null)
 			return;
-		String sloc = (String)htSessionContext.get("language");
-		if ((sloc==null || sloc.equals("")) && sUserLanguage!=null && !sUserLanguage.equals(""))
+		String sloc = (String) htSessionContext.get("language");
+		if ((sloc == null || sloc.equals("")) && sUserLanguage != null && !sUserLanguage.equals(""))
 			htSessionContext.put("language", sUserLanguage);
-		sloc = (String)htSessionContext.get("country");
-		if ((sloc==null || sloc.equals("")) && sUserCountry!=null && !sUserCountry.equals(""))
+		sloc = (String) htSessionContext.get("country");
+		if ((sloc == null || sloc.equals("")) && sUserCountry != null && !sUserCountry.equals(""))
 			htSessionContext.put("country", sUserCountry);
 	}
 
 	/*
 	 * Methode decode the credentials passed.
 	 */
+	/**
+	 * Decode credentials.
+	 * 
+	 * @param credentials
+	 *            the credentials
+	 * @param oSysLog
+	 *            the o sys log
+	 * @return the string
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	public static String decodeCredentials(String credentials, SystemLogger oSysLog)
-	throws ASelectException
+		throws ASelectException
 	{
 		String _sMethod = "decodeCredentials";
 		String decodedCredentials = null;

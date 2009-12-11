@@ -58,13 +58,13 @@ import org.aselect.agent.session.SessionManager;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectStorageException;
 
+// TODO: Auto-generated Javadoc
 /**
  * Monitors the pending authentication sessions of the A-Select Agent. <br>
  * <br>
  * <b>Description: </b> <br>
- * This method monitors the pending authentication sessions of the A-Select
- * Agent. This class implements Runnable in which it periodically checks the
- * SessionManager for pending sessions. The data is used by the AdminMonitor for
+ * This method monitors the pending authentication sessions of the A-Select Agent. This class implements Runnable in
+ * which it periodically checks the SessionManager for pending sessions. The data is used by the AdminMonitor for
  * display in the GUI. <br>
  * <br>
  * <b>Concurrency issues: </b> <br>
@@ -93,8 +93,7 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 	 * Initializes the class. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * This method initalizes the class by initializing variables and starting
-	 * the runner thread for monitoring. <br>
+	 * This method initalizes the class by initializing variables and starting the runner thread for monitoring. <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * None. <br>
@@ -106,14 +105,12 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 	 * None. <br>
 	 * 
 	 * @param iCheckInterval
-	 *            the monitoring interval (in seconds) to wait for updating the
-	 *            sessions information.
+	 *            the monitoring interval (in seconds) to wait for updating the sessions information.
 	 * @throws ASelectConfigException
 	 *             on error.
 	 */
 	public SessionMonitorModel(int iCheckInterval)
-	throws ASelectConfigException
-	{
+		throws ASelectConfigException {
 		_sessionManager = SessionManager.getHandle();
 		_configManager = ASelectAgentConfigManager.getHandle();
 		_active = false;
@@ -145,6 +142,8 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 	}
 
 	/**
+	 * Gets the sessions counter.
+	 * 
 	 * @return the number of pending sessions.
 	 */
 	public long getSessionsCounter()
@@ -155,6 +154,7 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 	/**
 	 * Returns the number of rows.
 	 * 
+	 * @return the row count
 	 * @see javax.swing.table.TableModel#getRowCount()
 	 */
 	public int getRowCount()
@@ -165,6 +165,7 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 	/**
 	 * Returns the number of columns.
 	 * 
+	 * @return the column count
 	 * @see javax.swing.table.TableModel#getColumnCount()
 	 */
 	public int getColumnCount()
@@ -175,8 +176,12 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 	/**
 	 * Returns the value of an information items in this model.
 	 * 
-	 * @see javax.swing.table.TableModel#getValueAt(int, int)
+	 * @param iRow
+	 *            the i row
+	 * @param iColumn
+	 *            the i column
 	 * @return the String representation of the item.
+	 * @see javax.swing.table.TableModel#getValueAt(int, int)
 	 */
 	public Object getValueAt(int iRow, int iColumn)
 	{
@@ -184,9 +189,9 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 		HashMap xSessionContext = (HashMap) _sessionContexts.get(sSession);
 
 		if (iColumn == 0)
-			return (String) xSessionContext.get("rid");
+			return xSessionContext.get("rid");
 		if (iColumn == 1)
-			return (String) xSessionContext.get("a-select-server");
+			return xSessionContext.get("a-select-server");
 		if (iColumn == 2) {
 			long lTimestamp = 0;
 			try {
@@ -198,9 +203,9 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 			}
 		}
 		if (iColumn == 3)
-			return (String) xSessionContext.get("app_id");
+			return xSessionContext.get("app_id");
 		if (iColumn == 4)
-			return (String) xSessionContext.get("user_type");
+			return xSessionContext.get("user_type");
 
 		return null;
 	}
@@ -208,8 +213,12 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 	/**
 	 * Returns the column name.
 	 * 
+	 * @param iIndex
+	 *            the i index
+	 * @return the column name
 	 * @see javax.swing.table.TableModel#getColumnName(int)
 	 */
+	@Override
 	public String getColumnName(int iIndex)
 	{
 		return _headersStrings[iIndex];
@@ -218,8 +227,7 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 	/**
 	 * Perfoms the Gui update. <br>
 	 * <br>
-	 * Loops and upon wakeup (monitoring interval), fetches the pending sessions
-	 * information from the SessionManger.
+	 * Loops and upon wakeup (monitoring interval), fetches the pending sessions information from the SessionManger.
 	 * 
 	 * @see java.lang.Runnable#run()
 	 */
@@ -252,9 +260,8 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 			_sessionsStrings[i++] = (String) s;
 		}
 		/*
-		 * Enumeration xSessionContextsEnum = _sessionContexts.keys(); while
-		 * (xSessionContextsEnum.hasMoreElements()) { _sessionsStrings[i++] =
-		 * (String)xSessionContextsEnum.nextElement(); }
+		 * Enumeration xSessionContextsEnum = _sessionContexts.keys(); while (xSessionContextsEnum.hasMoreElements()) {
+		 * _sessionsStrings[i++] = (String)xSessionContextsEnum.nextElement(); }
 		 */
 	}
 }

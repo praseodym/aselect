@@ -105,24 +105,20 @@ import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.BASE64Encoder;
 
+// TODO: Auto-generated Javadoc
 /**
- * Abstract API request handler.
- * <br><br>
+ * Abstract API request handler. <br>
+ * <br>
  * <b>Description:</b><br>
- * This class can be used as a base class for request handlers which handle API 
- * requests. The <code>AbstractAPIRequestHandler</code> creates an appropriate 
- * message creator.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * This class can be used as a base class for request handlers which handle API requests. The
+ * <code>AbstractAPIRequestHandler</code> creates an appropriate message creator. <br>
  * <br>
- * Use one <code>AbstractAPIRequestHandler</code> implementation 
- * for a single request.
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * Use one <code>AbstractAPIRequestHandler</code> implementation for a single request. <br>
  * 
+ * @author Alfa & Ariss
  */
-public abstract class AbstractAPIRequestHandler extends BasicRequestHandler
-implements IAuthnRequestHandler
+public abstract class AbstractAPIRequestHandler extends BasicRequestHandler implements IAuthnRequestHandler
 {
 	/** The module name. Can be overwritten in sub classes */
 	protected String _sModule = "AbstractAPIRequestHandler";
@@ -142,23 +138,27 @@ implements IAuthnRequestHandler
 	protected String _sMyOrg;
 
 	/**
-	 * Construct a instance.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Construct a instance. <br>
 	 * <br>
-	 * Handles are obtained to relevant managers and determines the protocol.
-	 * <br>
-	 * @param reqParser The request parser to be used.
-	 * @param servletRequest The request.
-	 * @param servletResponse The response.
-	 * @param sMyServerId The A-Select Server ID.
-	 * @param sMyOrg The A-Select Server organisation.
-	 * @throws ASelectCommunicationException If communication fails.
+	 * <b>Description:</b> <br>
+	 * Handles are obtained to relevant managers and determines the protocol. <br>
+	 * 
+	 * @param reqParser
+	 *            The request parser to be used.
+	 * @param servletRequest
+	 *            The request.
+	 * @param servletResponse
+	 *            The response.
+	 * @param sMyServerId
+	 *            The A-Select Server ID.
+	 * @param sMyOrg
+	 *            The A-Select Server organisation.
+	 * @throws ASelectCommunicationException
+	 *             If communication fails.
 	 */
 	public AbstractAPIRequestHandler(RequestParser reqParser, HttpServletRequest servletRequest,
 			HttpServletResponse servletResponse, String sMyServerId, String sMyOrg)
-	throws ASelectCommunicationException
-	{
+		throws ASelectCommunicationException {
 		String sMethod = "AbstractAPIRequestHandler()";
 
 		_systemLogger = ASelectSystemLogger.getHandle();
@@ -167,7 +167,7 @@ implements IAuthnRequestHandler
 		_sMyServerId = sMyServerId;
 		_sMyOrg = sMyOrg;
 
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "Protocol="+reqParser.getRequestProtocol());
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "Protocol=" + reqParser.getRequestProtocol());
 		switch (reqParser.getRequestProtocol()) {
 		case RequestParser.PROTOCOL_SOAP11:
 			_messageCreator = new SOAP11MessageCreator(_servletRequest.getRequestURL().toString(), "ASelect",
@@ -187,26 +187,26 @@ implements IAuthnRequestHandler
 	}
 
 	/**
-	 * Main process function.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Main process function. <br>
 	 * <br>
-	 * Creates a <code>Communicator</code> and calls  
+	 * <b>Description:</b> <br>
+	 * Creates a <code>Communicator</code> and calls
 	 * {@link #processAPIRequest(IProtocolRequest, IInputMessage, IOutputMessage)}
-	 * @throws ASelectException if communication fails and no response 
-	 * is send to the client.
+	 * 
+	 * @throws ASelectException
+	 *             if communication fails and no response is send to the client.
 	 */
 	public void processRequest()
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "processRequest()";
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "processRequest");
 
-		//create protocol wrappers
+		// create protocol wrappers
 		IProtocolRequest protocolRequest = new ServletRequestWrapper(_servletRequest);
 		IProtocolResponse protocolResponse = new ServletResponseWrapper(_servletResponse);
 
-		//create the communicator with the messagecreator
+		// create the communicator with the messagecreator
 		Communicator communicator = new Communicator(_messageCreator);
 		try {
 			if (communicator.init(protocolRequest, protocolResponse)) {
@@ -215,7 +215,7 @@ implements IAuthnRequestHandler
 
 				try {
 					String sServerId = null;
-					
+
 					try {
 						sServerId = inputMessage.getParam("a-select-server");
 					}
@@ -224,7 +224,7 @@ implements IAuthnRequestHandler
 								"Missing required parameter \"a-select-server\"");
 						throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 					}
-					_systemLogger.log(Level.FINER, _sModule, sMethod, "a-select-server="+sServerId);
+					_systemLogger.log(Level.FINER, _sModule, sMethod, "a-select-server=" + sServerId);
 					if (!sServerId.equals(_sMyServerId)) {
 						_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid \"a-select-server\" parameter: "
 								+ sServerId);
@@ -257,10 +257,10 @@ implements IAuthnRequestHandler
 
 				communicator.send();
 			}
-			else {  //could not init
+			else { // could not init
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Can't initialize Message Creator object: "
 						+ _messageCreator.getClass().getName());
-				//error is sent in communicator.
+				// error is sent in communicator.
 			}
 		}
 		catch (ASelectException eAS) {
@@ -274,37 +274,43 @@ implements IAuthnRequestHandler
 	}
 
 	/**
-	 * Prosesses the API request.
-	 * <br><br>
-	 * @param oProtocolRequest The request protocol properties.
-	 * @param oInputMessage The input message.
-	 * @param oOutputMessage The output message.
-	 * @throws ASelectException If processing fails and no response 
-	 * is send to the client.
+	 * Prosesses the API request. <br>
+	 * <br>
+	 * 
+	 * @param oProtocolRequest
+	 *            The request protocol properties.
+	 * @param oInputMessage
+	 *            The input message.
+	 * @param oOutputMessage
+	 *            The output message.
+	 * @throws ASelectException
+	 *             If processing fails and no response is send to the client.
 	 */
 	abstract protected void processAPIRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
 			IOutputMessage oOutputMessage)
 		throws ASelectException;
 
 	/**
-	 * Serialize attributes contained in a hashtable.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Serialize attributes contained in a hashtable. <br>
 	 * <br>
+	 * <b>Description:</b> <br>
 	 * This method serializes attributes contained in a hashtable:
 	 * <ul>
 	 * <li>They are formatted as attr1=value1&attr2=value2;...
-	 * <li>If a "&amp;" or a "=" appears in either the attribute name
-	 * or value, they are transformed to %26 or %3d respectively.
+	 * <li>If a "&amp;" or a "=" appears in either the attribute name or value, they are transformed to %26 or %3d
+	 * respectively.
 	 * <li>The end result is base64 encoded.
 	 * </ul>
 	 * <br>
-	 * @param htAttributes HashMap containing all attributes
+	 * 
+	 * @param htAttributes
+	 *            HashMap containing all attributes
 	 * @return Serialized representation of the attributes
-	 * @throws ASelectException If serialization fails.
+	 * @throws ASelectException
+	 *             If serialization fails.
 	 */
-	protected String serializeAttributes(HashMap<String,Object> htAttributes)
-	throws ASelectException
+	protected String serializeAttributes(HashMap<String, Object> htAttributes)
+		throws ASelectException
 	{
 		final String sMethod = "serializeAttributes()";
 		try {
@@ -314,11 +320,11 @@ implements IAuthnRequestHandler
 			Set keys = htAttributes.keySet();
 			for (Object s : keys) {
 				String sKey = (String) s;
-//			for (Enumeration e = htAttributes.key(); e.hasMoreElements();) {
-//				String sKey = (String) e.nextElement();
+				// for (Enumeration e = htAttributes.key(); e.hasMoreElements();) {
+				// String sKey = (String) e.nextElement();
 				Object oValue = htAttributes.get(sKey);
 
-				if (oValue instanceof Vector) {//it's a multivalue attribute
+				if (oValue instanceof Vector) {// it's a multivalue attribute
 					Vector vValue = (Vector) oValue;
 
 					sKey = URLEncoder.encode(sKey + "[]", "UTF-8");
@@ -326,7 +332,7 @@ implements IAuthnRequestHandler
 					while (eEnum.hasMoreElements()) {
 						String sValue = (String) eEnum.nextElement();
 
-						//add: key[]=value 
+						// add: key[]=value
 						sb.append(sKey);
 						sb.append("=");
 						sb.append(URLEncoder.encode(sValue, "UTF-8"));
@@ -335,19 +341,19 @@ implements IAuthnRequestHandler
 							sb.append("&");
 					}
 				}
-				else if (oValue instanceof String) {//it's a single value attribute
+				else if (oValue instanceof String) {// it's a single value attribute
 					String sValue = (String) oValue;
 
 					sb.append(URLEncoder.encode(sKey, "UTF-8"));
 					sb.append("=");
 					sb.append(URLEncoder.encode(sValue, "UTF-8"));
 				}
-				//if (e.hasMoreElements())
+				// if (e.hasMoreElements())
 				sb.append("&");
 			}
 			int len = sb.length();
 			BASE64Encoder b64enc = new BASE64Encoder();
-			return b64enc.encode(sb.substring(0,len-1).getBytes("UTF-8"));
+			return b64enc.encode(sb.substring(0, len - 1).getBytes("UTF-8"));
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not serialize attributes", e);
@@ -355,6 +361,11 @@ implements IAuthnRequestHandler
 		}
 	}
 
+	/**
+	 * Gets the _servlet request.
+	 * 
+	 * @return the _servlet request
+	 */
 	public synchronized HttpServletRequest get_servletRequest()
 	{
 		return _servletRequest;

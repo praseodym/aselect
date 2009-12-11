@@ -36,6 +36,7 @@ import org.aselect.system.utils.Tools;
 import org.opensaml.*;
 import org.w3c.dom.Node;
 
+// TODO: Auto-generated Javadoc
 //
 //
 //
@@ -51,9 +52,26 @@ public class Saml11Builder
 	private String _sASelectServerID = "";
 	private String SESSION_ID_PREFIX = "";
 
+	/**
+	 * Instantiates a new saml11 builder.
+	 */
 	public Saml11Builder() {
 	}
 
+	/**
+	 * Instantiates a new saml11 builder.
+	 * 
+	 * @param nameSpace
+	 *            the name space
+	 * @param sendAttr
+	 *            the send attr
+	 * @param expTime
+	 *            the exp time
+	 * @param serverID
+	 *            the server id
+	 * @param sesPrefix
+	 *            the ses prefix
+	 */
 	public Saml11Builder(String nameSpace, boolean sendAttr, long expTime, String serverID, String sesPrefix) {
 		_sAttributeNamespace = nameSpace;
 		_bSendAttributeStatement = sendAttr;
@@ -62,6 +80,15 @@ public class Saml11Builder
 		SESSION_ID_PREFIX = sesPrefix;
 	}
 
+	/**
+	 * Creates the assertion from string.
+	 * 
+	 * @param s
+	 *            the s
+	 * @return the sAML assertion
+	 * @throws SAMLException
+	 *             the SAML exception
+	 */
 	public SAMLAssertion createAssertionFromString(String s)
 		throws SAMLException
 	{
@@ -71,6 +98,31 @@ public class Saml11Builder
 		return p;
 	}
 
+	/**
+	 * Creates the saml assertion from credentials.
+	 * 
+	 * @param sUid
+	 *            the s uid
+	 * @param sRequestID
+	 *            the s request id
+	 * @param sNameIdFormat
+	 *            the s name id format
+	 * @param sIP
+	 *            the s ip
+	 * @param sHost
+	 *            the s host
+	 * @param sConfirmationMethod
+	 *            the s confirmation method
+	 * @param sProviderId
+	 *            the s provider id
+	 * @param sAudience
+	 *            the s audience
+	 * @param htInfo
+	 *            the ht info
+	 * @return the sAML assertion
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	public SAMLAssertion createSAMLAssertionFromCredentials(String sUid, String sRequestID, String sNameIdFormat,
 			String sIP, String sHost, String sConfirmationMethod, String sProviderId, String sAudience, HashMap htInfo)
 		throws ASelectException
@@ -114,13 +166,13 @@ public class Saml11Builder
 
 			if (sRequestID != null) {
 				// Add InResponseTo="<sRequestID>"
-				//_systemLogger.log(Level.INFO, MODULE, sMethod, "Generated Assertion="+oSAMLAssertion);
+				// _systemLogger.log(Level.INFO, MODULE, sMethod, "Generated Assertion="+oSAMLAssertion);
 				Node n = oSAMLAssertion.toDOM();
 				Tools.addAttributeToElement(n, _systemLogger, "Assertion", "InResponseTo", sRequestID);
-				//_systemLogger.log(Level.INFO, MODULE, sMethod, "Modified Assertion="+oSAMLAssertion);
+				// _systemLogger.log(Level.INFO, MODULE, sMethod, "Modified Assertion="+oSAMLAssertion);
 			}
 
-			//stores all SAML information to build SAML queries in the TGT Manager storage
+			// stores all SAML information to build SAML queries in the TGT Manager storage
 			storeSessionInformation(sUid, sProviderId, sAppID, sAuthSPID, htAttributes);
 			return oSAMLAssertion;
 		}
@@ -130,6 +182,31 @@ public class Saml11Builder
 		}
 	}
 
+	/**
+	 * Creates the my saml assertion.
+	 * 
+	 * @param sProviderId
+	 *            the s provider id
+	 * @param sUid
+	 *            the s uid
+	 * @param sNameIdFormat
+	 *            the s name id format
+	 * @param sIP
+	 *            the s ip
+	 * @param sHost
+	 *            the s host
+	 * @param sConfirmationMethod
+	 *            the s confirmation method
+	 * @param sAudience
+	 *            the s audience
+	 * @param htAttributes
+	 *            the ht attributes
+	 * @return the sAML assertion
+	 * @throws ASelectException
+	 *             the a select exception
+	 * @throws SAMLException
+	 *             the SAML exception
+	 */
 	public SAMLAssertion createMySAMLAssertion(String sProviderId, String sUid, String sNameIdFormat, String sIP,
 			String sHost, String sConfirmationMethod, String sAudience, HashMap htAttributes)
 		throws ASelectException, SAMLException
@@ -150,7 +227,7 @@ public class Saml11Builder
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "sUid=" + sUid);
 			SAMLAttributeStatement oSAMLAttributeStatement = generateSAMLAttributeStatement(sUid, sNameIdFormat,
 					htAttributes);
-			//_systemLogger.log(Level.INFO, MODULE, sMethod, "oSAMLAttributeStatement="+oSAMLAttributeStatement);
+			// _systemLogger.log(Level.INFO, MODULE, sMethod, "oSAMLAttributeStatement="+oSAMLAttributeStatement);
 			if (oSAMLAttributeStatement != null)
 				vSAMLStatements.add(oSAMLAttributeStatement);
 		}
@@ -175,6 +252,25 @@ public class Saml11Builder
 		return oSAMLAssertion;
 	}
 
+	/**
+	 * Generate saml authentication statement.
+	 * 
+	 * @param sUid
+	 *            the s uid
+	 * @param sNameIdFormat
+	 *            the s name id format
+	 * @param sIP
+	 *            the s ip
+	 * @param sHost
+	 *            the s host
+	 * @param dCurrent
+	 *            the d current
+	 * @param sConfirmationMethod
+	 *            the s confirmation method
+	 * @return the sAML authentication statement
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private SAMLAuthenticationStatement generateSAMLAuthenticationStatement(String sUid, String sNameIdFormat,
 			String sIP, String sHost, Date dCurrent, String sConfirmationMethod)
 		throws ASelectException
@@ -183,7 +279,7 @@ public class Saml11Builder
 		SAMLAuthenticationStatement oSAMLAuthenticationStatement = null;
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "IDENT Uid=" + sUid + " ServerID=" + _sASelectServerID);
-			SAMLNameIdentifier oSAMLNameIdentifier = new SAMLNameIdentifier(sUid, null/*qualifier*/, // _sASelectServerID,
+			SAMLNameIdentifier oSAMLNameIdentifier = new SAMLNameIdentifier(sUid, null/* qualifier */, // _sASelectServerID,
 					(sNameIdFormat == null) ? SAMLNameIdentifier.FORMAT_UNSPECIFIED : sNameIdFormat);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SUBJECT oSAMLNameIdentifier=" + oSAMLNameIdentifier);
 
@@ -191,11 +287,12 @@ public class Saml11Builder
 			oSAMLSubject.addConfirmationMethod(SAMLSubject.CONF_BEARER); // sConfirmationMethod
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "AUTH oSAMLSubject=" + oSAMLSubject);
 
-			oSAMLAuthenticationStatement = new SAMLAuthenticationStatement(oSAMLSubject, // The subject 
-					sConfirmationMethod, // SAMLAuthenticationStatement.AuthenticationMethod_Password, // Authentication method
+			oSAMLAuthenticationStatement = new SAMLAuthenticationStatement(oSAMLSubject, // The subject
+					sConfirmationMethod, // SAMLAuthenticationStatement.AuthenticationMethod_Password, // Authentication
+					// method
 					dCurrent, // Issue instant
-					null, // sIP,                    // The subject's IP
-					null, // sHost,                  // The subject's hostname
+					null, // sIP, // The subject's IP
+					null, // sHost, // The subject's hostname
 					null); // Authority bindings
 		}
 		catch (Exception e) {
@@ -206,6 +303,19 @@ public class Saml11Builder
 		return oSAMLAuthenticationStatement;
 	}
 
+	/**
+	 * Generate saml attribute statement.
+	 * 
+	 * @param sUid
+	 *            the s uid
+	 * @param sNameIdFormat
+	 *            the s name id format
+	 * @param htAttributes
+	 *            the ht attributes
+	 * @return the sAML attribute statement
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private SAMLAttributeStatement generateSAMLAttributeStatement(String sUid, String sNameIdFormat,
 			HashMap htAttributes)
 		throws ASelectException
@@ -219,10 +329,10 @@ public class Saml11Builder
 			for (Object s : keys) {
 				String sKey = (String) s;
 
-				//Enumeration enumAttributeNames = htAttributes.keys();
-				//while (enumAttributeNames.hasMoreElements())
-				//{
-				//    String sKey = (String)enumAttributeNames.nextElement();
+				// Enumeration enumAttributeNames = htAttributes.keys();
+				// while (enumAttributeNames.hasMoreElements())
+				// {
+				// String sKey = (String)enumAttributeNames.nextElement();
 				Object oValue = htAttributes.get(sKey);
 				oSAMLAttribute = createSAMLAttribute(sKey, oValue, _sAttributeNamespace);
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Attr Key=" + sKey + ", oValue=" + oValue); // +", oSAMLAttribute="+oSAMLAttribute);
@@ -234,8 +344,7 @@ public class Saml11Builder
 			oSAMLAttribute = createSAMLAttribute("Group", "ClaimAppMapping", "http://schemas.xmlsoap.org/claims");
 			vAttributes.add(oSAMLAttribute);
 
-			SAMLNameIdentifier oSAMLNameIdentifier = new SAMLNameIdentifier(sUid,
-					null/*qualifier: _sASelectServerID*/,
+			SAMLNameIdentifier oSAMLNameIdentifier = new SAMLNameIdentifier(sUid, null/* qualifier: _sASelectServerID */,
 					(sNameIdFormat == null) ? SAMLNameIdentifier.FORMAT_UNSPECIFIED : sNameIdFormat);
 
 			SAMLSubject oSAMLSubject = new SAMLSubject(oSAMLNameIdentifier, null, null, null);
@@ -251,6 +360,22 @@ public class Saml11Builder
 	}
 
 	// Store Session info with the UserID
+	/**
+	 * Store session information.
+	 * 
+	 * @param sUid
+	 *            the s uid
+	 * @param sProviderId
+	 *            the s provider id
+	 * @param sAppID
+	 *            the s app id
+	 * @param sAuthSPID
+	 *            the s auth spid
+	 * @param htAttributes
+	 *            the ht attributes
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private void storeSessionInformation(String sUid, String sProviderId, String sAppID, String sAuthSPID,
 			HashMap htAttributes)
 		throws ASelectException
@@ -276,8 +401,8 @@ public class Saml11Builder
 				}
 
 				if (sProviderId != null && htAttributes != null) {
-					//store authentication information in session
-					//put attribute collection in TGTManager with id=saml11_[A-Select_username]
+					// store authentication information in session
+					// put attribute collection in TGTManager with id=saml11_[A-Select_username]
 
 					HashMap htAttribs = new HashMap();
 					htAttribs.put(sProviderId, htAttributes);
@@ -324,19 +449,28 @@ public class Saml11Builder
 	}
 
 	// From AbstractAPIRequestHandler()
+	/**
+	 * Deserialize attributes.
+	 * 
+	 * @param sSerializedAttributes
+	 *            the s serialized attributes
+	 * @return the hash map
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	public HashMap deserializeAttributes(String sSerializedAttributes)
 		throws ASelectException
 	{
 		String sMethod = "deSerializeAttributes()";
 		HashMap htAttributes = new HashMap();
-		if (sSerializedAttributes != null) //Attributes available
+		if (sSerializedAttributes != null) // Attributes available
 		{
 			try {
-				//base64 decode
+				// base64 decode
 				BASE64Decoder base64Decoder = new BASE64Decoder();
 				String sDecodedUserAttrs = new String(base64Decoder.decodeBuffer(sSerializedAttributes));
 
-				//decode & and = chars
+				// decode & and = chars
 				String[] saAttrs = sDecodedUserAttrs.split("&");
 				for (int i = 0; i < saAttrs.length; i++) {
 					int iEqualChar = saAttrs[i].indexOf("=");
@@ -349,7 +483,7 @@ public class Saml11Builder
 
 						sValue = URLDecoder.decode(saAttrs[i].substring(iEqualChar + 1), "UTF-8");
 
-						if (sKey.endsWith("[]")) { //it's a multi-valued attribute
+						if (sKey.endsWith("[]")) { // it's a multi-valued attribute
 							// Strip [] from sKey
 							sKey = sKey.substring(0, sKey.length() - 2);
 
@@ -363,10 +497,10 @@ public class Saml11Builder
 						sKey = URLDecoder.decode(saAttrs[i], "UTF-8");
 
 					if (vVector != null)
-						//store multivalue attribute
+						// store multivalue attribute
 						htAttributes.put(sKey, vVector);
 					else
-						//store singlevalue attribute
+						// store singlevalue attribute
 						htAttributes.put(sKey, sValue);
 				}
 			}
@@ -379,6 +513,15 @@ public class Saml11Builder
 	}
 
 	// From AbstractAPIRequestHandler()
+	/**
+	 * Serialize attributes.
+	 * 
+	 * @param htAttributes
+	 *            the ht attributes
+	 * @return the string
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	public String serializeAttributes(HashMap htAttributes)
 		throws ASelectException
 	{
@@ -391,12 +534,12 @@ public class Saml11Builder
 			Set keys = htAttributes.keySet();
 			for (Object s : keys) {
 				String sKey = (String) s;
-				//for (Enumeration e = htAttributes.keys(); e.hasMoreElements(); )
-				//{
-				//    String sKey = (String)e.nextElement();
+				// for (Enumeration e = htAttributes.keys(); e.hasMoreElements(); )
+				// {
+				// String sKey = (String)e.nextElement();
 				Object oValue = htAttributes.get(sKey);
 
-				if (oValue instanceof Vector) {//it's a multivalue attribute
+				if (oValue instanceof Vector) {// it's a multivalue attribute
 					Vector vValue = (Vector) oValue;
 
 					sKey = URLEncoder.encode(sKey + "[]", "UTF-8");
@@ -404,7 +547,7 @@ public class Saml11Builder
 					while (eEnum.hasMoreElements()) {
 						String sValue = (String) eEnum.nextElement();
 
-						//add: key[]=value 
+						// add: key[]=value
 						sb.append(sKey);
 						sb.append("=");
 						sb.append(URLEncoder.encode(sValue, "UTF-8"));
@@ -413,7 +556,7 @@ public class Saml11Builder
 							sb.append("&");
 					}
 				}
-				else if (oValue instanceof String) {//it's a single value attribute
+				else if (oValue instanceof String) {// it's a single value attribute
 					String sValue = (String) oValue;
 
 					sb.append(URLEncoder.encode(sKey, "UTF-8"));
@@ -421,11 +564,11 @@ public class Saml11Builder
 					sb.append(URLEncoder.encode(sValue, "UTF-8"));
 				}
 
-				//if (e.hasMoreElements())
+				// if (e.hasMoreElements())
 				sb.append("&");
 			}
 			int len = sb.length();
-			String result = sb.substring(0, len-1);
+			String result = sb.substring(0, len - 1);
 			BASE64Encoder b64enc = new BASE64Encoder();
 			return b64enc.encode(result.getBytes("UTF-8"));
 		}
@@ -436,6 +579,19 @@ public class Saml11Builder
 	}
 
 	// Bauke: TODO: createSAMLAttribute() html-escapes the attribute value
+	/**
+	 * Creates the saml attribute.
+	 * 
+	 * @param sName
+	 *            the s name
+	 * @param oValue
+	 *            the o value
+	 * @param sNameSpace
+	 *            the s name space
+	 * @return the sAML attribute
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private SAMLAttribute createSAMLAttribute(String sName, Object oValue, String sNameSpace)
 		throws ASelectException
 	{

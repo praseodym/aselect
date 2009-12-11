@@ -56,17 +56,16 @@ import org.aselect.authspserver.log.AuthSPSystemLogger;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.BASE64Encoder;
-import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
-import org.opensaml.xml.util.Base64;
 
+// TODO: Auto-generated Javadoc
 /**
- * PKI AuthSP. 
- * <br><br>
+ * PKI AuthSP. <br>
+ * <br>
  * <b>Description: </b> <br>
- * The PKI AuthSP implements PKI-based authentication for A-Select 1.4.1 through 
- * CA validation, Backend validation and optionally 2-Factor authentication. 
- * <br><br>
+ * The PKI AuthSP implements PKI-based authentication for A-Select 1.4.1 through CA validation, Backend validation and
+ * optionally 2-Factor authentication. <br>
+ * <br>
  * <b>Requirements: </b> <br>
  * <ul>
  * <li>A-Select AuthSP Server 1.4.1 or higher</li>
@@ -74,16 +73,9 @@ import org.opensaml.xml.util.Base64;
  * <b>Concurrency issues: </b> <br>
  * None <br>
  * 
- * @author Alfa & Ariss
- * 
- * 
- * 14-11-2007 - Changes:
- * - pass Subject DN and Issuer DN from the card to the A-select server
- * - optionally skip the Subject DN check, controled by the <subject_validation> parameter
- * 
- * @author Bauke Hiemstra - www.anoigo.nl
- * Copyright UMC Nijmegen (http://www.umcn.nl)
- *
+ * @author Alfa & Ariss 14-11-2007 - Changes: - pass Subject DN and Issuer DN from the card to the A-select server -
+ *         optionally skip the Subject DN check, controled by the <subject_validation> parameter
+ * @author Bauke Hiemstra - www.anoigo.nl Copyright UMC Nijmegen (http://www.umcn.nl)
  */
 public class PKIAuthSP extends HttpServlet
 {
@@ -111,7 +103,12 @@ public class PKIAuthSP extends HttpServlet
 	/**
 	 * Initializes the PKI AuthSP <br>
 	 * <br>
+	 * .
 	 * 
+	 * @param oServletConfig
+	 *            the o servlet config
+	 * @throws ServletException
+	 *             the servlet exception
 	 * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
 	 */
 	public void init(ServletConfig oServletConfig)
@@ -123,36 +120,36 @@ public class PKIAuthSP extends HttpServlet
 
 			ServletContext oServletContext = oServletConfig.getServletContext();
 
-			//	        _sLoggingDir = oServletConfig.getInitParameter("logging_dir");
+			// _sLoggingDir = oServletConfig.getInitParameter("logging_dir");
 			try {
-				//	            if (_sLoggingDir == null)
-				//	            {
-				//	                throw new ServletException("logging_dir attribute not found");
-				//	            }
-				//	            File oLoggingDir = new File(_sLoggingDir);
-				//	            if (!oLoggingDir.isDirectory())
-				//	            {
-				//	                throw new ServletException("logging_dir: " + _sLoggingDir
-				//	                    + " didn\'t exist");
-				//	            }
-				//	            sbTemp = new StringBuffer(_sLoggingDir);
-				//	            sbTemp.append(File.separator);
-				//	            sbTemp.append("system");
-				//	            oLoggingDir = new File(sbTemp.toString());
-				//	            if (!oLoggingDir.isDirectory())
-				//	            {
-				//	                oLoggingDir.mkdir();
-				//	            }
+				// if (_sLoggingDir == null)
+				// {
+				// throw new ServletException("logging_dir attribute not found");
+				// }
+				// File oLoggingDir = new File(_sLoggingDir);
+				// if (!oLoggingDir.isDirectory())
+				// {
+				// throw new ServletException("logging_dir: " + _sLoggingDir
+				// + " didn\'t exist");
+				// }
+				// sbTemp = new StringBuffer(_sLoggingDir);
+				// sbTemp.append(File.separator);
+				// sbTemp.append("system");
+				// oLoggingDir = new File(sbTemp.toString());
+				// if (!oLoggingDir.isDirectory())
+				// {
+				// oLoggingDir.mkdir();
+				// }
 				_systemLogger = AuthSPSystemLogger.getHandle();
 				//	
-				//	            sbTemp = new StringBuffer(_sLoggingDir);
-				//	            sbTemp.append(File.separator);
-				//	            sbTemp.append("authentication");
-				//	            oLoggingDir = new File(sbTemp.toString());
-				//	            if (!oLoggingDir.isDirectory())
-				//	            {
-				//	                oLoggingDir.mkdir();
-				//	            }
+				// sbTemp = new StringBuffer(_sLoggingDir);
+				// sbTemp.append(File.separator);
+				// sbTemp.append("authentication");
+				// oLoggingDir = new File(sbTemp.toString());
+				// if (!oLoggingDir.isDirectory())
+				// {
+				// oLoggingDir.mkdir();
+				// }
 				_authenticationLogger = AuthSPAuthenticationLogger.getHandle();
 			}
 			catch (Exception e) {
@@ -167,7 +164,7 @@ public class PKIAuthSP extends HttpServlet
 			}
 			_oConfigManager = AuthSPConfigManager.getHandle();
 
-			//Retrieve configuration
+			// Retrieve configuration
 			String sConfigID = oServletConfig.getInitParameter("config_id");
 			if (sConfigID == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'config_id' found as init-parameter in web.xml.");
@@ -218,6 +215,7 @@ public class PKIAuthSP extends HttpServlet
 
 	/**
 	 * Destroys the PKIManager with all its threads.
+	 * 
 	 * @see javax.servlet.GenericServlet#destroy()
 	 */
 	public void destroy()
@@ -228,8 +226,8 @@ public class PKIAuthSP extends HttpServlet
 	}
 
 	/**
-	 * Initializes the HTML Templates. 
-	 * <br><br>
+	 * Initializes the HTML Templates. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
 	 * Initialize the Error and the Two Factor HTML Templates<br>
 	 * <br>
@@ -242,7 +240,8 @@ public class PKIAuthSP extends HttpServlet
 	 * <b>Postconditions: </b> <br>
 	 * None<br>
 	 * 
-	 * @throws ServletException when a template file can't be found or read.
+	 * @throws ServletException
+	 *             when a template file can't be found or read.
 	 */
 	public void initHtmlTemplates()
 		throws ServletException
@@ -289,8 +288,17 @@ public class PKIAuthSP extends HttpServlet
 	}
 
 	/**
-	 * Entrypoint for handling 2-Factor user input form.
-	 * <br><br>
+	 * Entrypoint for handling 2-Factor user input form. <br>
+	 * <br>
+	 * 
+	 * @param servletRequest
+	 *            the servlet request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @throws ServletException
+	 *             the servlet exception
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
 	 * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest,
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
@@ -355,8 +363,15 @@ public class PKIAuthSP extends HttpServlet
 	}
 
 	/**
-	 * Entrypoint for handling the A-Select PKI AuthSP protocol requests. 
-	 * <br><br>
+	 * Entrypoint for handling the A-Select PKI AuthSP protocol requests. <br>
+	 * <br>
+	 * 
+	 * @param servletRequest
+	 *            the servlet request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @throws ServletException
+	 *             the servlet exception
 	 * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest,
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
@@ -380,14 +395,14 @@ public class PKIAuthSP extends HttpServlet
 
 			boolean isSignatureValid = verifySignature(sRid, sAsUrl, sUserAttributes, sAsId, sTFAuthSpName,
 					sTFAuthSpUrl, sTFAuthSpRetries, sTFAuthSpUserAttributes, sSignature);
-			//check if incoming request is valid.
+			// check if incoming request is valid.
 			if (!isSignatureValid) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Invalid signature");
 				throw new ASelectException(Errors.PKI_INVALID_REQUEST);
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Valid Signature");
 
-			//Two-Factor Authentication is enabled.
+			// Two-Factor Authentication is enabled.
 			if (sTFAuthSpName != null) {
 				HashMap htParams = new HashMap();
 				htParams.put("as_url", sAsUrl);
@@ -411,12 +426,11 @@ public class PKIAuthSP extends HttpServlet
 	}
 
 	/**
-	 * Handles the PKI authentication. 
-	 * <br><br>
+	 * Handles the PKI authentication. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
-	 * After the request is handled by doGet and/or doPost
-	 * and eventually 2-Factor authentication is handled successfully
-	 * the PKI part of the authentication will be handled by this function<br>
+	 * After the request is handled by doGet and/or doPost and eventually 2-Factor authentication is handled
+	 * successfully the PKI part of the authentication will be handled by this function<br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * -<br>
@@ -427,10 +441,12 @@ public class PKIAuthSP extends HttpServlet
 	 * <b>Postconditions: </b> <br>
 	 * <br>
 	 * 
-	 * 
-	 * @param servletRequest Incoming Request
-	 * @param servletResponse Outgoing Response
-	 * @throws ServletException If something goes wrong with the handle result
+	 * @param servletRequest
+	 *            Incoming Request
+	 * @param servletResponse
+	 *            Outgoing Response
+	 * @throws ServletException
+	 *             If something goes wrong with the handle result
 	 */
 	public void handleAuthenticate(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 		throws ServletException
@@ -466,7 +482,7 @@ public class PKIAuthSP extends HttpServlet
 			catch (ASelectConfigException e) {
 			}
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get certificate for '" + sUserAttributes+"'");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get certificate for '" + sUserAttributes + "'");
 			// Get Client Certificate from user
 			oCerts = (X509Certificate[]) servletRequest.getAttribute("javax.servlet.request.X509Certificate");
 			if (oCerts == null || oCerts.length <= 0) {
@@ -589,11 +605,10 @@ public class PKIAuthSP extends HttpServlet
 	}
 
 	/**
-	 * Validates the the binary blob of the incoming client certificate.
-	 * <br><br>
+	 * Validates the the binary blob of the incoming client certificate. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
-	 * Validates if the the binary blob of a client certificate is equals with the
-	 * one stored in the back-end<br>
+	 * Validates if the the binary blob of a client certificate is equals with the one stored in the back-end<br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * None <br>
@@ -604,12 +619,15 @@ public class PKIAuthSP extends HttpServlet
 	 * <b>Postconditions: </b> <br>
 	 * none<br>
 	 * 
-	 * @param oConfig The binary blob configuration 
-	 * @param sSubjectDn The Id used as index in the backend
-	 * @param oClientCert The incoming client certificate 
-	 * @return true if oClientCert is equals with the one stored in the back-end 
+	 * @param oConfig
+	 *            The binary blob configuration
+	 * @param sSubjectDn
+	 *            The Id used as index in the backend
+	 * @param oClientCert
+	 *            The incoming client certificate
+	 * @return true if oClientCert is equals with the one stored in the back-end
 	 * @throws ASelectException
-	 * 
+	 *             the a select exception
 	 */
 	public boolean validateBinaryBlob(Object oConfig, String sSubjectDn, X509Certificate oClientCert)
 		throws ASelectException
@@ -647,25 +665,32 @@ public class PKIAuthSP extends HttpServlet
 	}
 
 	/**
-	 * Sends the authentication result to the A-Select PKI AuthSP protocol handler
-	 * by redirecting the user using HTTP GET. 
+	 * Sends the authentication result to the A-Select PKI AuthSP protocol handler by redirecting the user using HTTP
+	 * GET. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * None <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * sResultCode != null<br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * none <br>
 	 * 
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
-	 * <br>
-	 * None
-	 * <br><br>
-	 * <b>Preconditions:</b>
-	 * <br>
-	 * sResultCode != null<br><br>
-	 * <b>Postconditions:</b>
-	 * <br>
-	 * none
-	 * <br>
-	 * @param servletRequest the incoming request
-	 * @param servletResponse the outgoing response
-	 * @param sResultCode the Result Code
-	 * @throws ServletException if something goes wrong during handling the response
+	 * @param servletRequest
+	 *            the incoming request
+	 * @param servletResponse
+	 *            the outgoing response
+	 * @param sResultCode
+	 *            the Result Code
+	 * @param sSubjectDN
+	 *            the s subject dn
+	 * @param sIssuerDN
+	 *            the s issuer dn
+	 * @param sSubjectId
+	 *            the s subject id
+	 * @throws ServletException
+	 *             if something goes wrong during handling the response
 	 */
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			String sResultCode, String sSubjectDN, String sIssuerDN, String sSubjectId)
@@ -693,7 +718,7 @@ public class PKIAuthSP extends HttpServlet
 			}
 			return;
 		}
-		
+
 		String sSignature = null;
 		try {
 			// Bauke, 20091002: Base64 encoded to pass non ASCII characters
@@ -703,11 +728,14 @@ public class PKIAuthSP extends HttpServlet
 			sSubjectId = base64Encoder.encode(sSubjectId.getBytes("UTF-8"));
 			sbTemp = new StringBuffer(sRid);
 			sbTemp.append(sAsUrl).append(sResultCode).append(sAsId);
-			if (sSubjectDN != null) sbTemp.append(sSubjectDN); // Bauke: added
-			if (sIssuerDN != null) sbTemp.append(sIssuerDN); // Bauke: added
-			if (sSubjectId != null) sbTemp.append(sSubjectId); // Bauke: added
+			if (sSubjectDN != null)
+				sbTemp.append(sSubjectDN); // Bauke: added
+			if (sIssuerDN != null)
+				sbTemp.append(sIssuerDN); // Bauke: added
+			if (sSubjectId != null)
+				sbTemp.append(sSubjectId); // Bauke: added
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign["+sbTemp+"]");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign[" + sbTemp + "]");
 			sSignature = _oCryptoEngine.generateSignature(sbTemp.toString());
 			if (sSignature == null) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Error occured during signature creation");
@@ -728,24 +756,27 @@ public class PKIAuthSP extends HttpServlet
 		sbTemp.append("&rid=").append(sRid);
 		sbTemp.append("&result_code=").append(sResultCode);
 		sbTemp.append("&a-select-server=").append(sAsId);
-		if (sSubjectDN != null) sbTemp.append("&pki_subject_dn=").append(sSubjectDN); // Bauke: added
-		if (sIssuerDN != null) sbTemp.append("&pki_issuer_dn=").append(sIssuerDN); // Bauke: added
-		if (sSubjectId != null) sbTemp.append("&pki_subject_id=").append(sSubjectId); // Bauke: added
+		if (sSubjectDN != null)
+			sbTemp.append("&pki_subject_dn=").append(sSubjectDN); // Bauke: added
+		if (sIssuerDN != null)
+			sbTemp.append("&pki_issuer_dn=").append(sIssuerDN); // Bauke: added
+		if (sSubjectId != null)
+			sbTemp.append("&pki_subject_id=").append(sSubjectId); // Bauke: added
 		sbTemp.append("&signature=").append(sSignature);
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT: " + sbTemp);
 			servletResponse.sendRedirect(sbTemp.toString());
 
-			if (sResultCode.equals(Errors.PKI_CLIENT_CERT_SUCCESS)) //user
+			if (sResultCode.equals(Errors.PKI_CLIENT_CERT_SUCCESS)) // user
 			// authenticated
 			{
-				//Authentication successfull
+				// Authentication successfull
 				_authenticationLogger.log(new Object[] {
 					MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "granted"
 				});
 			}
 			else {
-				//authenticate failed
+				// authenticate failed
 				_authenticationLogger.log(new Object[] {
 					MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied: " + sResultCode
 				});
@@ -759,33 +790,41 @@ public class PKIAuthSP extends HttpServlet
 	}
 
 	/**
-	 * Verifies the signature of an incoming request. 
-	 * <br><br>
+	 * Verifies the signature of an incoming request. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
-	 * Uses the default crypto engine of the AuthSP Server. 
-	 * <br><br>
+	 * Uses the default crypto engine of the AuthSP Server. <br>
+	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * none <br>
 	 * <br>
 	 * <b>Preconditions: </b> <br>
-	 * none
-	 * <br>
+	 * none <br>
 	 * <br>
 	 * <b>Postconditions: </b> <br>
 	 * bValid is set<br>
 	 * 
-	 * @param sRid Contains the A-Select Request Id.
-	 * @param sAsUrl The url of the A-Select Server.
-	 * @param sUserAttributes The necessary user attributes.
-	 * @param sAsId  The A-Select Server Id.
-	 * @param sTFAuthSpName The name of the 2-Factor AuthSp.
-	 * @param sTFAuthSpUrl The Url of the 2-Factor AuthSp.
-	 * @param sTFAuthSpRetries The number of retries left for the 2-Factor AuthSp.
-	 * @param sTFAuthSpUserAttributes The necessary user attributes for the 2-Factor AuthSp..
-	 * @param sSignature The signature of the request parameters
+	 * @param sRid
+	 *            Contains the A-Select Request Id.
+	 * @param sAsUrl
+	 *            The url of the A-Select Server.
+	 * @param sUserAttributes
+	 *            The necessary user attributes.
+	 * @param sAsId
+	 *            The A-Select Server Id.
+	 * @param sTFAuthSpName
+	 *            The name of the 2-Factor AuthSp.
+	 * @param sTFAuthSpUrl
+	 *            The Url of the 2-Factor AuthSp.
+	 * @param sTFAuthSpRetries
+	 *            The number of retries left for the 2-Factor AuthSp.
+	 * @param sTFAuthSpUserAttributes
+	 *            The necessary user attributes for the 2-Factor AuthSp..
+	 * @param sSignature
+	 *            The signature of the request parameters
 	 * @return true if signature is valid and false otherwise.
-	 * @throws ASelectException if sRid, sAsUrl, sUserAttributes, sAsId, 
-	 * sSignature are null
+	 * @throws ASelectException
+	 *             if sRid, sAsUrl, sUserAttributes, sAsId, sSignature are null
 	 */
 	private boolean verifySignature(String sRid, String sAsUrl, String sUserAttributes, String sAsId,
 			String sTFAuthSpName, String sTFAuthSpUrl, String sTFAuthSpRetries, String sTFAuthSpUserAttributes,
@@ -814,11 +853,11 @@ public class PKIAuthSP extends HttpServlet
 	}
 
 	/**
-	 * Handles the 2-Factor Authentication Request. 
-	 * <br><br>
+	 * Handles the 2-Factor Authentication Request. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
-	 * Handles the 2-Factor Authentication by redirecting the user to a HTML page
-	 * where the user can submit his/her password<br>
+	 * Handles the 2-Factor Authentication by redirecting the user to a HTML page where the user can submit his/her
+	 * password<br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * none<br>
@@ -830,11 +869,16 @@ public class PKIAuthSP extends HttpServlet
 	 * none <br>
 	 * 
 	 * @param servletRequest
+	 *            the servlet request
 	 * @param servletResponse
-	 * @param sRid contains the A-Select Request Id
-	 * @param htSessionInfo contains nessecary information which will be used if 
-	 * the user comes back to the authsp after submitting its password.
+	 *            the servlet response
+	 * @param sRid
+	 *            contains the A-Select Request Id
+	 * @param htSessionInfo
+	 *            contains nessecary information which will be used if the user comes back to the authsp after
+	 *            submitting its password.
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private void handleTFAuthenticationRequest(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			String sRid, HashMap htSessionInfo)
@@ -884,11 +928,11 @@ public class PKIAuthSP extends HttpServlet
 	}
 
 	/**
-	 * Verifies the 2-Factor Authentication.
-	 * <br><br>
+	 * Verifies the 2-Factor Authentication. <br>
+	 * <br>
 	 * <b>Description: </b> <br>
-	 * Verfies the 2-Factor Authentication user credentials by sending an HTTP GET
-	 * API call to a username/password AuthSP.<br>
+	 * Verfies the 2-Factor Authentication user credentials by sending an HTTP GET API call to a username/password
+	 * AuthSP.<br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * none<br>
@@ -899,13 +943,17 @@ public class PKIAuthSP extends HttpServlet
 	 * <b>Postconditions: </b> <br>
 	 * none <br>
 	 * 
-	 * @param sRid contains the A-Select Request Id
-	 * @param sTFAuthSpUrl contains the url of the 2-Factor AuthSP
-	 * @param sTFAuthSpUserAttributes contains the necessary userattributes, 
-	 * such as Uid
-	 * @param sPassword contains the password 
+	 * @param sRid
+	 *            contains the A-Select Request Id
+	 * @param sTFAuthSpUrl
+	 *            contains the url of the 2-Factor AuthSP
+	 * @param sTFAuthSpUserAttributes
+	 *            contains the necessary userattributes, such as Uid
+	 * @param sPassword
+	 *            contains the password
 	 * @return true if 2-Factor authentication was successful and false otherwise
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private boolean verifyTFAuthentication(String sRid, String sTFAuthSpUrl, String sTFAuthSpUserAttributes,
 			String sPassword)
@@ -914,7 +962,7 @@ public class PKIAuthSP extends HttpServlet
 		String sMethod = "verifyTFAuthentication()";
 		boolean bAuthenticated = false;
 		try {
-			//create API call URL
+			// create API call URL
 			sTFAuthSpUserAttributes = URLEncoder.encode(sTFAuthSpUserAttributes, "UTF-8");
 
 			StringBuffer sbRequest = new StringBuffer(sTFAuthSpUrl);
@@ -940,7 +988,7 @@ public class PKIAuthSP extends HttpServlet
 
 			}
 			sResponseCode.trim();
-			if (sResponseCode.equals("000")) //authentication succeeded
+			if (sResponseCode.equals("000")) // authentication succeeded
 			{
 				bAuthenticated = true;
 			}
@@ -957,19 +1005,19 @@ public class PKIAuthSP extends HttpServlet
 	}
 
 	/**
-	 * Calls a URL using HTTP GET.
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * Calls a URL using HTTP GET. <br>
 	 * <br>
-	 * sUrl may not be null
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * sUrl may not be null <br>
 	 * <br>
-	 * sResponse may not be null
-	 * <br>
-	 * @param sUrl Url including query string.
+	 * <b>Postconditions:</b> <br>
+	 * sResponse may not be null <br>
+	 * 
+	 * @param sUrl
+	 *            Url including query string.
 	 * @return sResponse the response of the HTTP Get request.
-	 * @throws IOException when connection is failed.
+	 * @throws IOException
+	 *             when connection is failed.
 	 */
 	private String send(String sUrl)
 		throws IOException
@@ -982,50 +1030,50 @@ public class PKIAuthSP extends HttpServlet
 	}
 
 	/**
-	 * Outputs a HTML page to the client.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Outputs a HTML page to the client. <br>
 	 * <br>
-	 * Sends a page to the user's browser and sets the required HTTP headers.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Sends a page to the user's browser and sets the required HTTP headers. <br>
 	 * <br>
-	 * None
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * None <br>
 	 * <br>
-	 * sTemplate, servletRequest and servletResponse may not be null
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * sTemplate, servletRequest and servletResponse may not be null <br>
 	 * <br>
-	 * None
-	 * <br>
-	 * @param sTemplate The Template to send back
-	 * @param servletRequest 
+	 * <b>Postconditions:</b> <br>
+	 * None <br>
+	 * 
+	 * @param sTemplate
+	 *            The Template to send back
+	 * @param servletRequest
+	 *            the servlet request
 	 * @param servletResponse
-	 * @throws IOException when something goes wrong
+	 *            the servlet response
+	 * @throws IOException
+	 *             when something goes wrong
 	 */
 	private void sendPage(String sTemplate, HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 		throws IOException
 	{
-		//disable caching
-		if (servletRequest.getProtocol().equals("HTTP/1.1"))//HTTP 1.1 protocol
+		// disable caching
+		if (servletRequest.getProtocol().equals("HTTP/1.1"))// HTTP 1.1 protocol
 		// used
 		{
 			servletResponse.setHeader("Cache-Control", "no-cache, must-revalidate");
 		}
 		else
-		//other protocol versions
+		// other protocol versions
 		{
 			servletResponse.setHeader("Pragma", "no-cache");
 		}
-		servletResponse.setHeader("Expires", "0"); //date in the past
+		servletResponse.setHeader("Expires", "0"); // date in the past
 
-		//sent content type and length
+		// sent content type and length
 		servletResponse.setContentType("text/html");
 		servletResponse.setContentLength(sTemplate.length());
 
-		//write to output
+		// write to output
 		servletResponse.getWriter().write(sTemplate);
 	}
 }

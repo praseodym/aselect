@@ -1,3 +1,14 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.xsaml20;
 
 import java.net.MalformedURLException;
@@ -22,26 +33,32 @@ public class SoapLogoutResponseSender
 	private ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
 
 	/**
-	 * Send Logout Response.
-	 * <br>
-	 * @param serviceProvider String with SP url.
-	 * @param issuerUrl String with Issuer url.
-	 * @param user String with user id.
-	 * @param statusCodeValue String with ???.
-	 * @param inResponseTo String with ???.
-	 * @throws ASelectException If sending fails.
+	 * Send Logout Response. <br>
+	 * 
+	 * @param serviceProvider
+	 *            String with SP url.
+	 * @param issuerUrl
+	 *            String with Issuer url.
+	 * @param user
+	 *            String with user id.
+	 * @param statusCodeValue
+	 *            String with ???.
+	 * @param inResponseTo
+	 *            String with ???.
+	 * @throws ASelectException
+	 *             If sending fails.
 	 */
 	public void sendSoapLogoutResponse(String serviceProvider, String issuerUrl, String user, String statusCodeValue,
 			String inResponseTo)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "sendSoapLogoutResponse";
 		LogoutResponse logoutResponse = SamlTools.buildLogoutResponse(issuerUrl, statusCodeValue, inResponseTo);
 
 		// Always sign the LogoutResponse
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the logoutResponse >======" );
-		logoutResponse = (LogoutResponse)SamlTools.sign(logoutResponse);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the logoutResponse ======<" );
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the logoutResponse >======");
+		logoutResponse = (LogoutResponse) SamlTools.sign(logoutResponse);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the logoutResponse ======<");
 
 		if (serviceProvider == null)
 			return;
@@ -51,8 +68,8 @@ public class SoapLogoutResponseSender
 		Element envelopeElem = null;
 		try {
 			envelopeElem = SamlTools.marshallMessage(envelope);
-			//String msg = XMLHelper.prettyPrintXML(envelopeElem);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sending message:\n"+XMLHelper.nodeToString(envelopeElem));
+			// String msg = XMLHelper.prettyPrintXML(envelopeElem);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sending message:\n" + XMLHelper.nodeToString(envelopeElem));
 		}
 		catch (MessageEncodingException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
@@ -65,22 +82,22 @@ public class SoapLogoutResponseSender
 					SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME, SAMLConstants.SAML2_SOAP11_BINDING_URI);
 			if (responseLocation == null) {
 				responseLocation = metadataManager.getLocation(serviceProvider,
-					SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME, SAMLConstants.SAML2_SOAP11_BINDING_URI);
+						SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME, SAMLConstants.SAML2_SOAP11_BINDING_URI);
 			}
 
 			// Send the SOAP message, we don't expect an answer
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "responseLocation="+responseLocation);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "responseLocation=" + responseLocation);
 			if (responseLocation != null)
 				soapManager.sendSOAP(XMLHelper.nodeToString(envelopeElem), responseLocation);
 			else
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "No location to send to, skipped!");
 		}
 		catch (MalformedURLException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Bad URL: "+e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Bad URL: " + e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unexpected "+e.getClass()+" exception: "+e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unexpected " + e.getClass() + " exception: " + e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 	}

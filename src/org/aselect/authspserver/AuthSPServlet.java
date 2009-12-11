@@ -118,19 +118,17 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.servlet.ASelectHttpServlet;
 
+// TODO: Auto-generated Javadoc
 /**
- * The A-Select AuthSP Server. 
- * <br>
+ * The A-Select AuthSP Server. <br>
  * <br>
  * <b>Description: </b> <br>
- * Its function is to load shared A-Select AuthSP components in the servlet 
- * context.
- * <br><br>
- * <b>Concurrency issues: </b> 
- * <br>-<br>
+ * Its function is to load shared A-Select AuthSP components in the servlet context. <br>
+ * <br>
+ * <b>Concurrency issues: </b> <br>
+ * -<br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class AuthSPServlet extends ASelectHttpServlet
 {
@@ -169,16 +167,19 @@ public class AuthSPServlet extends ASelectHttpServlet
 	/**
 	 * Initializes the A-Select AuthSP Server.
 	 * <ul>
-	 * 	<li>Loads config from database or file</li>
-	 * 	<li>Creates a system logger</li>
-	 * 	<li>Checks if their is enough config to make the servlet restartable.</li>
-	 * 	<li>Puts CryptoEngine, friendly_name and working_dir into 
-	 * 		the servletcontext.
-	 * 	</li>
+	 * <li>Loads config from database or file</li>
+	 * <li>Creates a system logger</li>
+	 * <li>Checks if their is enough config to make the servlet restartable.</li>
+	 * <li>Puts CryptoEngine, friendly_name and working_dir into the servletcontext.</li>
 	 * </ul>
 	 * 
+	 * @param oServletConfig
+	 *            the o servlet config
+	 * @throws ServletException
+	 *             the servlet exception
 	 * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
 	 */
+	@Override
 	public void init(ServletConfig oServletConfig)
 		throws ServletException
 	{
@@ -189,17 +190,17 @@ public class AuthSPServlet extends ASelectHttpServlet
 
 		try {
 			super.init(oServletConfig);
-			if (_systemLogger != null) //reinit
+			if (_systemLogger != null) // reinit
 				_systemLogger.closeHandlers();
 			else
 				_systemLogger = AuthSPSystemLogger.getHandle();
 
-			if (_authenticationLogger != null) //reinit
+			if (_authenticationLogger != null) // reinit
 				_authenticationLogger.closeHandlers();
 			else
 				_authenticationLogger = AuthSPAuthenticationLogger.getHandle();
 
-			//reading all parameters from the servlet context
+			// reading all parameters from the servlet context
 			ServletContext oServletContext = oServletConfig.getServletContext();
 			sWorkingDir = oServletConfig.getInitParameter("working_dir");
 			if (sWorkingDir == null) {
@@ -214,7 +215,7 @@ public class AuthSPServlet extends ASelectHttpServlet
 			String sSqlPassword = oServletConfig.getInitParameter("sql_password");
 			String sSqlTable = oServletConfig.getInitParameter("sql_table");
 
-			//prepare the working dir variable
+			// prepare the working dir variable
 			if (!sWorkingDir.endsWith(File.separator))
 				sWorkingDir += File.separator;
 			sWorkingDir += "authspserver";
@@ -228,7 +229,7 @@ public class AuthSPServlet extends ASelectHttpServlet
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 			}
 
-			//initialize configmanager
+			// initialize configmanager
 			AuthSPConfigManager oAuthSPConfigManager = AuthSPConfigManager.getHandle();
 
 			if (sSqlDriver != null || sSqlPassword != null || sSqlURL != null || sSqlTable != null) {
@@ -270,7 +271,7 @@ public class AuthSPServlet extends ASelectHttpServlet
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
 			}
 
-			//initialize system logger
+			// initialize system logger
 			Object oSysLogging = null;
 			try {
 				oSysLogging = oAuthSPConfigManager.getSection(oAuthSPServerConfig, "logging", "id=system");
@@ -287,7 +288,7 @@ public class AuthSPServlet extends ASelectHttpServlet
 			sbInfo.append(Version.getVersion());
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 
-			//initialize authentication logger
+			// initialize authentication logger
 			Object oAuthLogging = null;
 			try {
 				oAuthLogging = oAuthSPConfigManager.getSection(oAuthSPServerConfig, "logging", "id=authentication");
@@ -315,8 +316,8 @@ public class AuthSPServlet extends ASelectHttpServlet
 				_bRestartable = false;
 			}
 
-			//Remove the instances, if their already is one. 
-			//For restarting purposes.
+			// Remove the instances, if their already is one.
+			// For restarting purposes.
 			if (oServletContext.getAttribute("CryptoEngine") != null) {
 				oServletContext.removeAttribute("CryptoEngine");
 			}
@@ -358,7 +359,7 @@ public class AuthSPServlet extends ASelectHttpServlet
 			oServletContext.setAttribute("friendly_name", sFriendlyName);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "The friendly_name is set to the servlet context.");
 
-			//initializes the SAM Agent needed by the session manager configuration
+			// initializes the SAM Agent needed by the session manager configuration
 			AuthSPSAMAgent.getHandle().init();
 
 			_oAuthSPSessionManager = AuthSPSessionManager.getHandle();
@@ -383,34 +384,42 @@ public class AuthSPServlet extends ASelectHttpServlet
 	}
 
 	/**
-	 * Returns a short description of the servlet.
-	 * <br><br>
+	 * Returns a short description of the servlet. <br>
+	 * <br>
+	 * 
+	 * @return the servlet info
 	 * @see javax.servlet.Servlet#getServletInfo()
 	 */
+	@Override
 	public String getServletInfo()
 	{
 		return MODULE + " - loads AuthSP engine";
 	}
 
 	/**
-	 * If the servlet is restartable, the request=restart is supported in the 
-	 * querystring.
-	 * <br>
+	 * If the servlet is restartable, the request=restart is supported in the querystring. <br>
 	 * <br>
 	 * 
+	 * @param oHttpServletRequest
+	 *            the o http servlet request
+	 * @param oHttpServletResponse
+	 *            the o http servlet response
+	 * @throws ServletException
+	 *             the servlet exception
 	 * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest,
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
+	@Override
 	public void doGet(HttpServletRequest oHttpServletRequest, HttpServletResponse oHttpServletResponse)
 		throws ServletException
 	{
 		_systemLogger.log(Level.INFO, MODULE, "AUTHSP GET {", "" + _bRestartable);
 
 		if (_bRestartable) {
-			//turn off caching
+			// turn off caching
 			super.setDisableCachingHttpHeaders(oHttpServletRequest, oHttpServletResponse);
 
-			//handle request=restart
+			// handle request=restart
 			String sRequest = oHttpServletRequest.getParameter("request");
 			if (sRequest != null) {
 				_systemLogger.log(Level.INFO, MODULE, "GET ", "" + sRequest);
@@ -434,12 +443,12 @@ public class AuthSPServlet extends ASelectHttpServlet
 	}
 
 	/**
-	 * Destroys the servlet and closes the <code>SystemLogger</code> handlers.
-	 * <br>
+	 * Destroys the servlet and closes the <code>SystemLogger</code> handlers. <br>
 	 * <br>
 	 * 
 	 * @see javax.servlet.Servlet#destroy()
 	 */
+	@Override
 	public void destroy()
 	{
 		closeResources();
@@ -449,13 +458,11 @@ public class AuthSPServlet extends ASelectHttpServlet
 	}
 
 	/**
-	 * Closes the AuthSP Server resources.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Closes the AuthSP Server resources. <br>
 	 * <br>
-	 * Closes the SAM agent and session manager if they aren't closed already. 
-	 * <br><br>
-	 * 
+	 * <b>Description:</b> <br>
+	 * Closes the SAM agent and session manager if they aren't closed already. <br>
+	 * <br>
 	 */
 	private void closeResources()
 	{
@@ -467,13 +474,11 @@ public class AuthSPServlet extends ASelectHttpServlet
 	}
 
 	/**
-	 * Closes the Logging Handlers.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Closes the Logging Handlers. <br>
 	 * <br>
-	 * Closes the System and Authentication Loggers if they aren't already. 
-	 * <br><br>
-	 * 
+	 * <b>Description:</b> <br>
+	 * Closes the System and Authentication Loggers if they aren't already. <br>
+	 * <br>
 	 */
 	private void closeLoggers()
 	{
@@ -488,27 +493,31 @@ public class AuthSPServlet extends ASelectHttpServlet
 	}
 
 	/**
-	 * The AuthSP server is not restartable by default.
-	 * <br><br>
-	 * the AuthSP server will process the "request=restart" and will restart 
-	 * itself. After that the other restartable servlets in the context are 
-	 * restarted.
-	 * <br><br>
+	 * The AuthSP server is not restartable by default. <br>
+	 * <br>
+	 * the AuthSP server will process the "request=restart" and will restart itself. After that the other restartable
+	 * servlets in the context are restarted. <br>
+	 * <br>
 	 * This ensures that the AuthSP server is restarted before the AuthSP's.
 	 * 
+	 * @return true, if checks if is restartable servlet
 	 * @see org.aselect.system.servlet.ASelectHttpServlet#isRestartableServlet()
 	 */
+	@Override
 	protected boolean isRestartableServlet()
 	{
 		return false;
 	}
 
 	/**
-	 * First restarts this AuthSP Server and then the restartable 
-	 * servlets in the context.
+	 * First restarts this AuthSP Server and then the restartable servlets in the context.
 	 * 
+	 * @param logger
+	 *            the logger
+	 * @return true, if restart servlets
 	 * @see org.aselect.system.servlet.ASelectHttpServlet#restartServlets(org.aselect.system.logging.SystemLogger)
 	 */
+	@Override
 	protected synchronized boolean restartServlets(SystemLogger logger)
 	{
 		String sMethod = "restartServlets()";
@@ -518,12 +527,12 @@ public class AuthSPServlet extends ASelectHttpServlet
 			StringBuffer sbResult = new StringBuffer("Restart: ");
 			ServletConfig oConfig = getServletConfig();
 
-			//Set restart attribute
+			// Set restart attribute
 			oConfig.getServletContext().setAttribute("restarting_servlets", "true");
-			//Get other restartable Servlets
+			// Get other restartable Servlets
 			HashMap htRestartServlets = (HashMap) oConfig.getServletContext().getAttribute("restartable_servlets");
 
-			//restart the AuthSP Server itself
+			// restart the AuthSP Server itself
 			try {
 				this.init(oConfig);
 			}
@@ -534,15 +543,15 @@ public class AuthSPServlet extends ASelectHttpServlet
 			sbResult.append(bEndResult ? "OK" : "Failed");
 			sbResult.append(")");
 
-			//restart the other restartable servlets.             
+			// restart the other restartable servlets.
 			if (bEndResult && htRestartServlets != null) {
 				boolean bResult = true;
 				Set keys = htRestartServlets.keySet();
 				for (Object s : keys) {
 					String sKey = (String) s;
-					//for (Enumeration e = htRestartServlets.keys(); e.hasMoreElements();)
-					//{
-					//    String sKey = (String)e.nextElement();
+					// for (Enumeration e = htRestartServlets.keys(); e.hasMoreElements();)
+					// {
+					// String sKey = (String)e.nextElement();
 					sbResult.append(", ");
 					ASelectHttpServlet servlet = (ASelectHttpServlet) htRestartServlets.get(sKey);
 					try {
@@ -555,8 +564,8 @@ public class AuthSPServlet extends ASelectHttpServlet
 					sbResult.append(sKey).append(" (");
 					sbResult.append(bResult ? "OK" : "Failed");
 					sbResult.append(")");
-//					if (e.hasMoreElements())
-	//					sbResult.append(", ");
+					// if (e.hasMoreElements())
+					// sbResult.append(", ");
 				}
 			}
 			logger.log(Level.INFO, MODULE, sMethod, sbResult.toString());

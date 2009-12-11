@@ -76,19 +76,17 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.logging.SystemLogger;
 
+// TODO: Auto-generated Javadoc
 /**
- * Message creator which uses CGI messages.
- * <br><br>
+ * Message creator which uses CGI messages. <br>
+ * <br>
  * <b>Description:</b><br>
- * The RAW implementation of <CODE>IMessageCreatorInterface</CODE>. 
- * Processes and sends CGI URL encoded API calls.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * The RAW implementation of <CODE>IMessageCreatorInterface</CODE>. Processes and sends CGI URL encoded API calls. <br>
  * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public class RawMessageCreator implements IMessageCreatorInterface
 {
@@ -113,64 +111,62 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	private final String MODULE = "RawMessageCreator";
 
 	/**
-	 * Creates a new instance.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Creates a new instance. <br>
 	 * <br>
-	 * Creates a new <code>RawMessageCreator</code>. Sets the logger.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Creates a new <code>RawMessageCreator</code>. Sets the logger. <br>
 	 * <br>
-	 * For every request a instance of <code>RawMessageCreator</code>
-	 * should be created.
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * For every request a instance of <code>RawMessageCreator</code> should be created. <br>
 	 * <br>
-	 * <code>systemLogger</code> should be initialized.
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <code>systemLogger</code> should be initialized. <br>
 	 * <br>
+	 * <b>Postconditions:</b> <br>
 	 * The system logger is set.
 	 * 
-	 * @param systemLogger The logger that should be 
-	 * used for system log entries.
+	 * @param systemLogger
+	 *            The logger that should be used for system log entries.
 	 */
-	public RawMessageCreator(SystemLogger systemLogger)
-	{
+	public RawMessageCreator(SystemLogger systemLogger) {
 		_sbOutputMessage = null;
 		_systemLogger = systemLogger;
 	}
 
 	/**
-	 * Initializes the RawMessageCreator.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Initializes the RawMessageCreator. <br>
 	 * <br>
+	 * <b>Description:</b> <br>
 	 * Initializes the <code>RawMessageCreator</code>:
 	 * <ul>
-	 * 	<li>Get query string from request.</li>
-	 * 	<li>Parse query string to input message.</li>
-	 * 	<li>Create new output message.</li>
+	 * <li>Get query string from request.</li>
+	 * <li>Parse query string to input message.</li>
+	 * <li>Create new output message.</li>
 	 * </ul>
 	 * <br>
-	 * This method should be the first that is called.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * This method should be the first that is called. <br>
 	 * <br>
-	 * Initialize should be performed once.
-	 * <br><br>
+	 * <b>Concurrency issues:</b> <br>
+	 * Initialize should be performed once. <br>
+	 * <br>
 	 * <b>Preconditions:</b>
 	 * <ul>
-	 * 	<li><code>oRequest</code> should contain a valid request.</li>
-	 * 	<li><code>oResponse</code> should contain a valid response.</li>
+	 * <li><code>oRequest</code> should contain a valid request.</li>
+	 * <li><code>oResponse</code> should contain a valid response.</li>
 	 * </ul>
 	 * <br>
-	 * <b>Postconditions:</b>
-	 * <br>
-	 * The input message is parsed and a empty response message is ready.
-	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * The input message is parsed and a empty response message is ready. <br>
 	 * 
-	 * @see org.aselect.system.communication.server.IMessageCreatorInterface#init(org.aselect.system.communication.server.IProtocolRequest, org.aselect.system.communication.server.IProtocolResponse)
+	 * @param oRequest
+	 *            the o request
+	 * @param oResponse
+	 *            the o response
+	 * @return true, if inits the
+	 * @throws ASelectCommunicationException
+	 *             the a select communication exception
+	 * @see org.aselect.system.communication.server.IMessageCreatorInterface#init(org.aselect.system.communication.server.IProtocolRequest,
+	 *      org.aselect.system.communication.server.IProtocolResponse)
 	 */
 	public boolean init(IProtocolRequest oRequest, IProtocolResponse oResponse)
 		throws ASelectCommunicationException
@@ -182,7 +178,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 
 		String sQueryString = _oRequest.getProperty("QueryString");
 		if (sQueryString != null) {
-			//parse string to _htInputTable
+			// parse string to _htInputTable
 			_htInputTable = new HashMap();
 			try {
 				_htInputTable = convertCGIMessage(sQueryString);
@@ -196,13 +192,13 @@ public class RawMessageCreator implements IMessageCreatorInterface
 				_sbOutputMessage = new StringBuffer();
 				bRetVal = true;
 			}
-			else {  //query string couldn't be converted
+			else { // query string couldn't be converted
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
 						"Can't convert QueryString to HashMap, empty input message.");
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 			}
 		}
-		else {	//no query string given
+		else { // no query string given
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request, no QueryString");
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 		}
@@ -211,6 +207,12 @@ public class RawMessageCreator implements IMessageCreatorInterface
 
 	/**
 	 * get a parameter from a CGI query string message.
+	 * 
+	 * @param sName
+	 *            the s name
+	 * @return the param
+	 * @throws ASelectCommunicationException
+	 *             the a select communication exception
 	 * @see org.aselect.system.communication.server.IInputMessage#getParam(java.lang.String)
 	 */
 	public String getParam(String sName)
@@ -219,20 +221,20 @@ public class RawMessageCreator implements IMessageCreatorInterface
 		String sMethod = "getParam()";
 		StringBuffer sbBuffer = null;
 		String sRetVal = null;
-		//_systemLogger.log(Level.INFO, MODULE, sMethod, "param:"+sName);
+		// _systemLogger.log(Level.INFO, MODULE, sMethod, "param:"+sName);
 		if (sName != null) {
-			if (_htInputTable.containsKey(sName)) //check if name exists
+			if (_htInputTable.containsKey(sName)) // check if name exists
 			{
 				sRetVal = (String) _htInputTable.get(sName);
 			}
-			else {  //name does not exist in request message
+			else { // name does not exist in request message
 				sbBuffer = new StringBuffer("Can't find parameter name: ");
 				sbBuffer.append(sName);
 				_systemLogger.log(Level.FINE, MODULE, sMethod, sbBuffer.toString());
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 			}
 		}
-		else {  //no name given as parameter
+		else { // no name given as parameter
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No parameter name supplied");
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 		}
@@ -241,6 +243,12 @@ public class RawMessageCreator implements IMessageCreatorInterface
 
 	/**
 	 * get an array parameter from a CGI query string message.
+	 * 
+	 * @param sName
+	 *            the s name
+	 * @return the array
+	 * @throws ASelectCommunicationException
+	 *             the a select communication exception
 	 * @see org.aselect.system.communication.server.IInputMessage#getArray(java.lang.String)
 	 */
 	public String[] getArray(String sName)
@@ -251,7 +259,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 		String[] saRetVal = null;
 
 		if (sName != null) {
-			if (_htInputTable.containsKey(sName)) {  //check if name exists
+			if (_htInputTable.containsKey(sName)) { // check if name exists
 				try {
 					saRetVal = (String[]) _htInputTable.get(sName);
 				}
@@ -265,14 +273,14 @@ public class RawMessageCreator implements IMessageCreatorInterface
 				}
 
 			}
-			else {  //name does not exist in request message
+			else { // name does not exist in request message
 				sbBuffer = new StringBuffer("Can't find parameter: ");
 				sbBuffer.append(sName).append(ENCODED_BRACES);
 				_systemLogger.log(Level.FINE, MODULE, sMethod, sbBuffer.toString());
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 			}
 		}
-		else {  //no name given as parameter
+		else { // no name given as parameter
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No parameter name supplied.");
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 		}
@@ -281,24 +289,37 @@ public class RawMessageCreator implements IMessageCreatorInterface
 
 	// 20090310, Bauke: Added to support applications using the DigiD protocol to connect to the server
 	// That protocol does not URL encode it's parameters
+	/* (non-Javadoc)
+	 * @see org.aselect.system.communication.server.IOutputMessage#setParam(java.lang.String, java.lang.String)
+	 */
 	public boolean setParam(String sName, String sValue)
-	throws ASelectCommunicationException
+		throws ASelectCommunicationException
 	{
 		return setParam(sName, sValue, true);
 	}
-	
+
 	/**
 	 * set a parameter as a CGI query string message.
+	 * 
+	 * @param sName
+	 *            the s name
+	 * @param sValue
+	 *            the s value
+	 * @param doUrlEncode
+	 *            the do url encode
+	 * @return true, if sets the param
+	 * @throws ASelectCommunicationException
+	 *             the a select communication exception
 	 * @see org.aselect.system.communication.server.IOutputMessage#setParam(java.lang.String, java.lang.String)
 	 */
 	public boolean setParam(String sName, String sValue, boolean doUrlEncode)
-	throws ASelectCommunicationException
+		throws ASelectCommunicationException
 	{
 		String sMethod = "setParam()";
 		StringBuffer sbBuffer = null;
 
 		boolean bRetValue = false;
-		if (sName != null && sValue != null) //name and value may not be empty
+		if (sName != null && sValue != null) // name and value may not be empty
 		{
 			try {
 				if (doUrlEncode) {
@@ -313,7 +334,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString(), eUE);
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
-			if (_sbOutputMessage.indexOf(sName + "=") == -1) {	// if not already contains the parameter
+			if (_sbOutputMessage.indexOf(sName + "=") == -1) { // if not already contains the parameter
 				if (_sbOutputMessage.length() > 0) {
 					_sbOutputMessage.append("&" + sName + "=" + sValue);
 				}
@@ -330,7 +351,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 			}
 		}
-		else {  //no parameter given
+		else { // no parameter given
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to set empty parameter");
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 		}
@@ -339,6 +360,14 @@ public class RawMessageCreator implements IMessageCreatorInterface
 
 	/**
 	 * set an array parameter as a CGI query string message.
+	 * 
+	 * @param sName
+	 *            the s name
+	 * @param saValue
+	 *            the sa value
+	 * @return true, if sets the param
+	 * @throws ASelectCommunicationException
+	 *             the a select communication exception
 	 * @see org.aselect.system.communication.server.IOutputMessage#setParam(java.lang.String, java.lang.String[])
 	 */
 	public boolean setParam(String sName, String[] saValue)
@@ -348,7 +377,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 		StringBuffer sbBuffer = null;
 
 		boolean bRetValue = false;
-		if (sName != null && saValue != null) //name and value may not be empty
+		if (sName != null && saValue != null) // name and value may not be empty
 		{
 			if (_sbOutputMessage.indexOf(sName + ENCODED_BRACES + "=") == -1) {
 				// if not already contains the parameter
@@ -375,7 +404,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 			}
 		}
-		else {	//no parameter given
+		else { // no parameter given
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to set empty parameter.");
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 		}
@@ -383,31 +412,28 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	}
 
 	/**
-	 * Convert a CGI string.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Convert a CGI string. <br>
 	 * <br>
-	 * This method will convert a string of <code>key=value&key=value</code>
-	 * etc. tuples (aka a CGI request string) into a hashtable for much easier
-	 * processing. This method supports CGI array parameters.
-	 * <br><br>
-	 * <i>Note: The key names are all converted to lowercase.</i>
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * This method will convert a string of <code>key=value&key=value</code> etc. tuples (aka a CGI request string) into
+	 * a hashtable for much easier processing. This method supports CGI array parameters. <br>
 	 * <br>
-	 * The used <code>HashMap</code> is threadsafe.
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <i>Note: The key names are all converted to lowercase.</i> <br>
 	 * <br>
-	 * <code>sMessage</code> should be a valid request string.
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * The used <code>HashMap</code> is threadsafe. <br>
 	 * <br>
-	 * -
+	 * <b>Preconditions:</b> <br>
+	 * <code>sMessage</code> should be a valid request string. <br>
 	 * <br>
-	 * @param sMessage A CGI request string.
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sMessage
+	 *            A CGI request string.
 	 * @return The name/value pairs of the request in a <code>HashMap</code>.
-	 * @throws ASelectCommunicationException if decoding of value fails or internal error occurs.
+	 * @throws ASelectCommunicationException
+	 *             if decoding of value fails or internal error occurs.
 	 */
 	public HashMap convertCGIMessage(String sMessage)
 		throws ASelectCommunicationException
@@ -435,7 +461,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 								sValue = "";
 							}
 							if (sKey != null && sValue != null) {
-								//URL decode
+								// URL decode
 								sValue = URLDecoder.decode(sValue, "UTF-8");
 								if (sKey.endsWith(ENCODED_BRACES)) {
 									sKey = sKey.substring(0, sKey.lastIndexOf(ENCODED_BRACES));
@@ -459,10 +485,10 @@ public class RawMessageCreator implements IMessageCreatorInterface
 					Set keys = htVectors.keySet();
 					for (Object s : keys) {
 						String strArrName = (String) s;
-						//Enumeration enumVectors = htVectors.keys();
-						//while (enumVectors.hasMoreElements())
-						//{
-						//  String strArrName = (String) enumVectors.nextElement();
+						// Enumeration enumVectors = htVectors.keys();
+						// while (enumVectors.hasMoreElements())
+						// {
+						// String strArrName = (String) enumVectors.nextElement();
 						Vector vTmp = (Vector) htVectors.get(strArrName);
 						String[] arrTemp = new String[vTmp.size()];
 						arrTemp = (String[]) vTmp.toArray(arrTemp);
@@ -481,6 +507,10 @@ public class RawMessageCreator implements IMessageCreatorInterface
 
 	/**
 	 * Send the repsonse as a CGI URL encoded query string.
+	 * 
+	 * @return true, if send
+	 * @throws ASelectCommunicationException
+	 *             the a select communication exception
 	 * @see org.aselect.system.communication.server.IOutputMessage#send()
 	 */
 	public boolean send()
@@ -488,17 +518,17 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	{
 		String sMethod = "send()";
 		boolean bRetVal = false;
-		//parse xOutputTable to URL string
-		//		String xOutput = convertHashtable(xOutputTable);
+		// parse xOutputTable to URL string
+		// String xOutput = convertHashtable(xOutputTable);
 		if (_sbOutputMessage != null) {
-			//send message to ouputStream
+			// send message to ouputStream
 			bRetVal = sendMessage(_sbOutputMessage.toString());
 		}
-		else {  //couldn't convert ouput table to response string
+		else { // couldn't convert ouput table to response string
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Supplied message is empty");
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 		}
-		//erase hashtables
+		// erase hashtables
 		_htInputTable = null;
 		_sbOutputMessage = null;
 
@@ -506,28 +536,25 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	}
 
 	/**
-	 * Send the output message.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Send the output message. <br>
 	 * <br>
-	 * Sending the output message as <CODE>String</CODE> to the 
-	 * <CODE>OuputStream</CODE>.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Sending the output message as <CODE>String</CODE> to the <CODE>OuputStream</CODE>. <br>
 	 * <br>
-	 * This method should only be called once.
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * This method should only be called once. <br>
 	 * <br>
-	 * This instance is initialised.
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * This instance is initialised. <br>
 	 * <br>
-	 * The ouput message is sent.
-	 * <br>
-	 * @param sMsg The ouput message as <CODE>String</CODE>.
+	 * <b>Postconditions:</b> <br>
+	 * The ouput message is sent. <br>
+	 * 
+	 * @param sMsg
+	 *            The ouput message as <CODE>String</CODE>.
 	 * @return false if response message could not be sent, otherwise false.
-	 * @throws ASelectCommunicationException If communication fails.
+	 * @throws ASelectCommunicationException
+	 *             If communication fails.
 	 */
 	private boolean sendMessage(String sMsg)
 		throws ASelectCommunicationException
@@ -540,7 +567,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 			oStream.close();
 			bRetVal = true;
 		}
-		catch (IOException eIO) //couldn't write response to requester
+		catch (IOException eIO) // couldn't write response to requester
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error sending message", eIO);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_IO);
@@ -549,31 +576,30 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	}
 
 	/**
-	 * Convert an string array to an array paremeter.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Convert an string array to an array paremeter. <br>
 	 * <br>
-	 * Convert all given values to an CGI array parameter with
-	 * the given name.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Convert all given values to an CGI array parameter with the given name. <br>
 	 * <br>
-	 * -
-	 * <br><br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
 	 * <b>Preconditions:</b>
 	 * <ul>
-	 * 	<li><code>sName</code> should be a valid parameter name.</li>
-	 * 	<li><code>saValues</code> should contain valid paremete values.</li>
+	 * <li><code>sName</code> should be a valid parameter name.</li>
+	 * <li><code>saValues</code> should contain valid paremete values.</li>
 	 * </ul>
 	 * <br>
-	 * <b>Postconditions:</b>
-	 * <br>
-	 * -
-	 * <br>
-	 * @param sName The array paremeter name.
-	 * @param saValues The array parameter values.
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sName
+	 *            The array paremeter name.
+	 * @param saValues
+	 *            The array parameter values.
 	 * @return A StringBuffer containing the CGI string array parameter.
-	 * @throws UnsupportedEncodingException If encoding of value fails.
+	 * @throws UnsupportedEncodingException
+	 *             If encoding of value fails.
 	 */
 	private StringBuffer convertArray(String sName, String[] saValues)
 		throws UnsupportedEncodingException

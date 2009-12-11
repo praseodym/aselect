@@ -67,19 +67,18 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
- * This class handles the remote A-Select Server selection by means of a user HTML form.
- * <br><br>
- * <b>Description:</b>
+ * This class handles the remote A-Select Server selection by means of a user HTML form. <br>
  * <br>
- * This handler will present the user a 'dropdown box' containing all configured
- * remote_servers.<br>
+ * <b>Description:</b> <br>
+ * This handler will present the user a 'dropdown box' containing all configured remote_servers.<br>
  * This Class is accessed two times within an cross authentication request.<br>
  * - In the first request a HTML form is presented with a list of all configured remote servers.<br>
- * - The HTML form will post the remote server selection and will be put here in a hashtable.
- * <br><br>
- * @author Alfa & Ariss
+ * - The HTML form will post the remote server selection and will be put here in a hashtable. <br>
+ * <br>
  * 
+ * @author Alfa & Ariss
  */
 public class DefaultSelectorHandler implements ISelectorHandler
 {
@@ -96,11 +95,14 @@ public class DefaultSelectorHandler implements ISelectorHandler
 	private ASelectSystemLogger _systemLogger;
 
 	/**
-	 * Initialization of this Handler.
-	 * Initializes global class-variables that are needed within the whole handler instance.<br>
-	 * 
+	 * Initialization of this Handler. Initializes global class-variables that are needed within the whole handler
+	 * instance.<br>
 	 * <br>
 	 * 
+	 * @param oHandlerConfig
+	 *            the o handler config
+	 * @throws ASelectException
+	 *             the a select exception
 	 * @see org.aselect.server.cross.ISelectorHandler#init(java.lang.Object)
 	 */
 	public void init(Object oHandlerConfig)
@@ -124,11 +126,18 @@ public class DefaultSelectorHandler implements ISelectorHandler
 	}
 
 	/**
-	 * Returns the remote A-Select Server. 
-	 * This handler presents the user with a selection form that is used to determine the remote 
-	 * organization and returns the selected organization to the A-Select sub system.
-	 * <br>
+	 * Returns the remote A-Select Server. This handler presents the user with a selection form that is used to
+	 * determine the remote organization and returns the selected organization to the A-Select sub system. <br>
 	 * 
+	 * @param htServiceRequest
+	 *            the ht service request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @param pwOut
+	 *            the pw out
+	 * @return the remote server id
+	 * @throws ASelectException
+	 *             the a select exception
 	 * @see org.aselect.server.cross.ISelectorHandler#getRemoteServerId(java.util.HashMap,
 	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
 	 */
@@ -148,6 +157,18 @@ public class DefaultSelectorHandler implements ISelectorHandler
 		return htResult;
 	}
 
+	/**
+	 * Show select form.
+	 * 
+	 * @param htServiceRequest
+	 *            the ht service request
+	 * @param pwOut
+	 *            the pw out
+	 * @param htServers
+	 *            the ht servers
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private void showSelectForm(HashMap htServiceRequest, PrintWriter pwOut, HashMap htServers)
 		throws ASelectException
 	{
@@ -184,6 +205,13 @@ public class DefaultSelectorHandler implements ISelectorHandler
 		}
 	}
 
+	/**
+	 * Gets the remote server html.
+	 * 
+	 * @param htServers
+	 *            the ht servers
+	 * @return the remote server html
+	 */
 	private String getRemoteServerHTML(HashMap htServers)
 	{
 		String sResult = new String();
@@ -192,10 +220,10 @@ public class DefaultSelectorHandler implements ISelectorHandler
 		Set keys = htServers.keySet();
 		for (Object s : keys) {
 			String sOrganization = (String) s;
-			//Enumeration enumRemoteServers = htServers.keys();
-			//while (enumRemoteServers.hasMoreElements())
-			//{
-			//    sOrganization = (String)enumRemoteServers.nextElement();
+			// Enumeration enumRemoteServers = htServers.keys();
+			// while (enumRemoteServers.hasMoreElements())
+			// {
+			// sOrganization = (String)enumRemoteServers.nextElement();
 			sFriendlyName = (String) htServers.get(sOrganization);
 			sResult += "<OPTION VALUE='" + sOrganization + "'>" + sFriendlyName + "</OPTION>\n";
 		}
@@ -203,26 +231,22 @@ public class DefaultSelectorHandler implements ISelectorHandler
 	}
 
 	/**
-	 * Loads all HTML Templates needed.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Loads all HTML Templates needed. <br>
 	 * <br>
+	 * <b>Description:</b> <br>
 	 * At initialization all HTML templates are loaded once.<br>
-	 * @throws ASelectException
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
-	 * <br>
-	 * Run once at startup.
-	 * <br><br>
-	 * <b>Preconditions:</b>
-	 * <br>
-	 * Manager and ISelectorHandler should be initialized.
-	 * <br><br>
-	 * <b>Postconditions:</b>
-	 * <br>
-	 * Global HashMap _htHtmlTemplates variabele contains the templates.
-	 * <br>
 	 * 
+	 * @throws ASelectException
+	 * <br>
+	 * <br>
+	 *             <b>Concurrency issues:</b> <br>
+	 *             Run once at startup. <br>
+	 * <br>
+	 *             <b>Preconditions:</b> <br>
+	 *             Manager and ISelectorHandler should be initialized. <br>
+	 * <br>
+	 *             <b>Postconditions:</b> <br>
+	 *             Global HashMap _htHtmlTemplates variabele contains the templates. <br>
 	 */
 	private void loadHTMLTemplates()
 		throws ASelectException
@@ -236,38 +260,17 @@ public class DefaultSelectorHandler implements ISelectorHandler
 		_sHTMLSelectForm = Utils.replaceString(_sHTMLSelectForm, "[organization_friendly]", _sFriendlyName);
 	}
 
-/* 20090930, Bauke: use _configManager version
-	private String loadHTMLTemplate(String sLocation)
-		throws ASelectException
-	{
-		String sTemplate = new String();
-		String sLine;
-		BufferedReader brIn = null;
-		String sMethod = "loadHTMLTemplate()";
-
-		_systemLogger.log(Level.INFO, "DefaultSelectorHandler", "loadHTMLTemplate", "FORM " + sLocation);
-		try {
-			brIn = new BufferedReader(new InputStreamReader(new FileInputStream(sLocation)));
-			while ((sLine = brIn.readLine()) != null) {
-				sTemplate += sLine + "\n";
-			}
-		}
-		catch (Exception e) {
-			StringBuffer sbError = new StringBuffer("Could not load '");
-			sbError.append(sLocation).append("'HTML template.");
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-		}
-		finally {
-			try {
-				brIn.close();
-			}
-			catch (Exception e) {
-				StringBuffer sbError = new StringBuffer("Could not close '");
-				sbError.append(sLocation).append("' FileInputStream.");
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
-			}
-		}
-		return sTemplate;
-	}*/
+	/*
+	 * 20090930, Bauke: use _configManager version private String loadHTMLTemplate(String sLocation) throws
+	 * ASelectException { String sTemplate = new String(); String sLine; BufferedReader brIn = null; String sMethod =
+	 * "loadHTMLTemplate()"; _systemLogger.log(Level.INFO, "DefaultSelectorHandler", "loadHTMLTemplate", "FORM " +
+	 * sLocation); try { brIn = new BufferedReader(new InputStreamReader(new FileInputStream(sLocation))); while ((sLine
+	 * = brIn.readLine()) != null) { sTemplate += sLine + "\n"; } } catch (Exception e) { StringBuffer sbError = new
+	 * StringBuffer("Could not load '"); sbError.append(sLocation).append("'HTML template.");
+	 * _systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e); throw new
+	 * ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e); } finally { try { brIn.close(); } catch (Exception e) {
+	 * StringBuffer sbError = new StringBuffer("Could not close '");
+	 * sbError.append(sLocation).append("' FileInputStream."); _systemLogger.log(Level.WARNING, MODULE, sMethod,
+	 * sbError.toString(), e); } } return sTemplate; }
+	 */
 }

@@ -64,50 +64,43 @@ import org.aselect.system.communication.client.IClientCommunicator;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 
+// TODO: Auto-generated Javadoc
 /**
- * Verbosely traces requests and responses. 
- * <br><br>
- * <b>Description: </b> 
+ * Verbosely traces requests and responses. <br>
  * <br>
- * This class implements a verbose trace of the requests (and responses) that
- * are handled by the super RequestHandler class that implements the API of the
- * A-Select Agent. 
- * <br><br>
- * <b>Concurrency issues: </b> 
+ * <b>Description: </b> <br>
+ * This class implements a verbose trace of the requests (and responses) that are handled by the super RequestHandler
+ * class that implements the API of the A-Select Agent. <br>
  * <br>
- * None. 
- * <br>
+ * <b>Concurrency issues: </b> <br>
+ * None. <br>
  * 
  * @author Alfa & Ariss
  */
 public class TraceRequestHandler extends RequestHandler
 {
+	
 	/**
-	 * Create new instance. 
-	 * <br><br>
-	 * <b>Description: </b> 
+	 * Create new instance. <br>
 	 * <br>
-	 * Creates a new <code>TraceRequestHandler</code>.
-	 * <br><br>
-	 * <b>Concurrency issues: </b> 
+	 * <b>Description: </b> <br>
+	 * Creates a new <code>TraceRequestHandler</code>. <br>
 	 * <br>
-	 * Every request should have its own <code>TraceRequestHandler</code>.
-	 * <br><br>
-	 * <b>Preconditions: </b> 
+	 * <b>Concurrency issues: </b> <br>
+	 * Every request should have its own <code>TraceRequestHandler</code>. <br>
 	 * <br>
-	 * none. 
-	 * <br><br>
-	 * <b>Postconditions: </b> 
+	 * <b>Preconditions: </b> <br>
+	 * none. <br>
 	 * <br>
-	 * The module name is set. 
-	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * The module name is set. <br>
 	 * 
 	 * @param oSocket
 	 *            The communication socket (incoming).
 	 * @param oCommunicator
 	 *            The communicator (outgoing).
-	 * @param bAuthorization <code>true</code> if authorization is enabled, 
-	 * 	otherwise <code>false</code>.
+	 * @param bAuthorization
+	 *            <code>true</code> if authorization is enabled, otherwise <code>false</code>.
 	 * @see RequestHandler#RequestHandler(Socket, IClientCommunicator, boolean)
 	 */
 	public TraceRequestHandler(Socket oSocket, IClientCommunicator oCommunicator, boolean bAuthorization) {
@@ -117,8 +110,15 @@ public class TraceRequestHandler extends RequestHandler
 
 	/**
 	 * Send a request to the A-Select Server.
+	 * 
+	 * @param sUrl
+	 *            the s url
+	 * @param htParamsTable
+	 *            the ht params table
+	 * @return the hash map
 	 * @see org.aselect.agent.handler.RequestHandler#sendRequestToASelectServer(java.lang.String, java.util.HashMap)
 	 */
+	@Override
 	protected HashMap sendRequestToASelectServer(String sUrl, HashMap htParamsTable)
 	{
 		String sMethod = "sendRequestToASelectServer()";
@@ -149,26 +149,22 @@ public class TraceRequestHandler extends RequestHandler
 	}
 
 	/**
-	 * Create a String representation of the table.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Create a String representation of the table. <br>
 	 * <br>
-	 * Creates a <code>String</code> containg all keys and values 
-	 * from the <code>HashMap</code>.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Creates a <code>String</code> containg all keys and values from the <code>HashMap</code>. <br>
 	 * <br>
-	 * none.
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * none. <br>
 	 * <br>
-	 * <code>htTable != null</code>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <code>htTable != null</code> <br>
 	 * <br>
+	 * <b>Postconditions:</b> <br>
 	 * none.
 	 * 
-	 * @param htTable The table to be dumped.
+	 * @param htTable
+	 *            The table to be dumped.
 	 * @return The formatted table as <code>String</code>.
 	 */
 	private String dumpHashtable(HashMap htTable)
@@ -178,11 +174,11 @@ public class TraceRequestHandler extends RequestHandler
 		Set keys = htTable.keySet();
 		for (Object s : keys) {
 			String sKey = (String) s;
-			//Enumeration eKeys = htTable.keys();
-			//String sKey;
-			//while (eKeys.hasMoreElements())
-			//{
-			//sKey = (String)eKeys.nextElement();
+			// Enumeration eKeys = htTable.keys();
+			// String sKey;
+			// while (eKeys.hasMoreElements())
+			// {
+			// sKey = (String)eKeys.nextElement();
 			sDump += ("\t" + sKey + "=" + (String) htTable.get(sKey) + "\n");
 		}
 		return sDump;

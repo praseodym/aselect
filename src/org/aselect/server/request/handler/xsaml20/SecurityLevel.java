@@ -14,10 +14,11 @@ import org.opensaml.saml2.core.AuthnContextClassRef;
 import org.opensaml.saml2.core.AuthnContextComparisonTypeEnumeration;
 import org.opensaml.saml2.core.RequestedAuthnContext;
 
+// TODO: Auto-generated Javadoc
 public class SecurityLevel
 {
 	final static String MODULE = "SecurityLevel";
-	
+
 	// Saml text
 	final static String UNSPECIFIED_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified";
 	final static String PASSWORDPROTECTEDTRANSPORT_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport";
@@ -33,19 +34,32 @@ public class SecurityLevel
 
 	// 20090109: Bauke changed levels
 	final private static int MIN = 0;
-	final private static int NUL = 5;  // 1;
-	final private static int LAAG = 10;  // 2;
-	final private static int MIDDEN = 20;  // 3;
-	final private static int HOOG = 30;  //4;
-	final private static int MAX = 999;  //5;
+	final private static int NUL = 5; // 1;
+	final private static int LAAG = 10; // 2;
+	final private static int MIDDEN = 20; // 3;
+	final private static int HOOG = 30; // 4;
+	final private static int MAX = 999; // 5;
 
-	//public final static String BN_EMPTY = "empty";  // no longer 20090501
+	// public final static String BN_EMPTY = "empty"; // no longer 20090501
 	public final static String BN_NUL = "5";
 	public final static String BN_LAAG = "10";
 	public final static String BN_MIDDEN = "20";
 	public final static String BN_HOOG = "30";
 	public final static String BN_NOT_FOUND = "not_found";
 
+	/**
+	 * Convert level to authn context class ref uri.
+	 * 
+	 * @param sLevel
+	 *            the s level
+	 * @param systemLogger
+	 *            the system logger
+	 * @param sModule
+	 *            the s module
+	 * @return the string
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	public static String convertLevelToAuthnContextClassRefURI(String sLevel, ASelectSystemLogger systemLogger,
 			String sModule)
 		throws ASelectException
@@ -76,9 +90,22 @@ public class SecurityLevel
 		throw new ASelectException(Errors.ERROR_ASELECT_CONFIG_ERROR);
 	}
 
+	/**
+	 * Convert authn context class ref uri to level.
+	 * 
+	 * @param sAuthnContextClassRefURI
+	 *            the s authn context class ref uri
+	 * @param systemLogger
+	 *            the system logger
+	 * @param sModule
+	 *            the s module
+	 * @return the string
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	public static String convertAuthnContextClassRefURIToLevel(String sAuthnContextClassRefURI,
 			ASelectSystemLogger systemLogger, String sModule)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "convertLevelToAuthnContextClassRefURI()";
 
@@ -105,7 +132,17 @@ public class SecurityLevel
 		}
 	}
 
-	public static String getBetrouwbaarheidsNiveau(RequestedAuthnContext requestedAuthnContext, ASelectSystemLogger systemLogger)
+	/**
+	 * Gets the betrouwbaarheids niveau.
+	 * 
+	 * @param requestedAuthnContext
+	 *            the requested authn context
+	 * @param systemLogger
+	 *            the system logger
+	 * @return the betrouwbaarheids niveau
+	 */
+	public static String getBetrouwbaarheidsNiveau(RequestedAuthnContext requestedAuthnContext,
+			ASelectSystemLogger systemLogger)
 	{
 		String sMethod = "getBetrouwbaarheidsNiveau";
 		final int EXACT = 0;
@@ -115,7 +152,8 @@ public class SecurityLevel
 
 		if (requestedAuthnContext != null) {
 			int iComparison = EXACT;
-			AuthnContextComparisonTypeEnumeration authnContextComparisonTypeEnumeration = requestedAuthnContext.getComparison();
+			AuthnContextComparisonTypeEnumeration authnContextComparisonTypeEnumeration = requestedAuthnContext
+					.getComparison();
 			if (authnContextComparisonTypeEnumeration != null) {
 				if (authnContextComparisonTypeEnumeration.equals(AuthnContextComparisonTypeEnumeration.MINIMUM)) {
 					iComparison = MINIMUM;
@@ -193,9 +231,16 @@ public class SecurityLevel
 		}
 		// 20090501, Bauke: Since the <RequestedAuthnContext> element is optional,
 		// we return the lowest known level here. (no restriction on the level is required)
-		return BN_NUL;  // BN_EMPTY;
+		return BN_NUL; // BN_EMPTY;
 	}
 
+	/**
+	 * Gets the int betrouwbaarheids niveau.
+	 * 
+	 * @param sCurrentAuthnContextClassRef
+	 *            the s current authn context class ref
+	 * @return the int betrouwbaarheids niveau
+	 */
 	private static int getIntBetrouwbaarheidsNiveau(String sCurrentAuthnContextClassRef)
 	{
 		if (sCurrentAuthnContextClassRef.equals(UNSPECIFIED_URI))
@@ -210,6 +255,13 @@ public class SecurityLevel
 		return NOT_FOUND;
 	}
 
+	/**
+	 * Gets the betrouwbaarheids niveau.
+	 * 
+	 * @param sAuthnContextClassRef
+	 *            the s authn context class ref
+	 * @return the betrouwbaarheids niveau
+	 */
 	private static String getBetrouwbaarheidsNiveau(String sAuthnContextClassRef)
 	{
 		if (sAuthnContextClassRef.equals(UNSPECIFIED_URI))
@@ -224,6 +276,13 @@ public class SecurityLevel
 		return BN_NOT_FOUND;
 	}
 
+	/**
+	 * Gets the betrouwbaarheids niveau.
+	 * 
+	 * @param iBetrouwbaarheidsNiveau
+	 *            the i betrouwbaarheids niveau
+	 * @return the betrouwbaarheids niveau
+	 */
 	private static String getBetrouwbaarheidsNiveau(int iBetrouwbaarheidsNiveau)
 	{
 		if (iBetrouwbaarheidsNiveau == NUL)
@@ -238,20 +297,11 @@ public class SecurityLevel
 		return BN_NOT_FOUND;
 	}
 
-	/*public static int getIntBetrouwbaarheidsNiveauFromBN(String sBetrouwbaarheidsNiveau)
-	{
-		if (BN_NUL.equals(sBetrouwbaarheidsNiveau))
-			return LEVEL_NUL;
-		else if (BN_LAAG.equals(sBetrouwbaarheidsNiveau))
-			return LEVEL_LAAG;
-		else if (BN_MIDDEN.equals(sBetrouwbaarheidsNiveau))
-			return LEVEL_MIDDEN;
-		else if (BN_HOOG.equals(sBetrouwbaarheidsNiveau))
-			return LEVEL_HOOG;
-		else if (BN_EMPTY.equals(sBetrouwbaarheidsNiveau))
-			return LEVEL_NUL;
-		// if it is empty the requestor apparently does not care
-
-		return Integer.MAX_VALUE;
-	}*/
+	/*
+	 * public static int getIntBetrouwbaarheidsNiveauFromBN(String sBetrouwbaarheidsNiveau) { if
+	 * (BN_NUL.equals(sBetrouwbaarheidsNiveau)) return LEVEL_NUL; else if (BN_LAAG.equals(sBetrouwbaarheidsNiveau))
+	 * return LEVEL_LAAG; else if (BN_MIDDEN.equals(sBetrouwbaarheidsNiveau)) return LEVEL_MIDDEN; else if
+	 * (BN_HOOG.equals(sBetrouwbaarheidsNiveau)) return LEVEL_HOOG; else if (BN_EMPTY.equals(sBetrouwbaarheidsNiveau))
+	 * return LEVEL_NUL; // if it is empty the requestor apparently does not care return Integer.MAX_VALUE; }
+	 */
 }

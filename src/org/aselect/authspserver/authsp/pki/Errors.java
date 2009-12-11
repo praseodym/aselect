@@ -20,75 +20,72 @@
 package org.aselect.authspserver.authsp.pki;
 
 /**
- * Contains specific PKI AuthSP errors.
- * <br><br>
+ * Contains specific PKI AuthSP errors. <br>
+ * <br>
  * <b>Description:</b><br>
- * The PKI result codes.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * The PKI result codes. <br>
  * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public class Errors
 {
-    /**
-     * Error Code for: Client Certificate Ok
-     */
-    public static final String PKI_CLIENT_CERT_SUCCESS = "000";
+	/**
+	 * Error Code for: Client Certificate Ok
+	 */
+	public static final String PKI_CLIENT_CERT_SUCCESS = "000";
 
-    /**
-     * Error Code for: No Client Certificate Provided
-     */
-    public static final String PKI_NO_CLIENT_CERT_PROVIDED = "001";
+	/**
+	 * Error Code for: No Client Certificate Provided
+	 */
+	public static final String PKI_NO_CLIENT_CERT_PROVIDED = "001";
 
-    /**
-     * Error Code for: Client Certificate is not signed by a Trusted CA
-     */
-    public static final String PKI_CLIENT_CERT_NOT_NOT_SIGNED_BY_TRUSTED_CA = "002";
+	/**
+	 * Error Code for: Client Certificate is not signed by a Trusted CA
+	 */
+	public static final String PKI_CLIENT_CERT_NOT_NOT_SIGNED_BY_TRUSTED_CA = "002";
 
-    /**
-     * Error Code for: Client Certificate is not yet valid
-     */
-    public static final String PKI_CLIENT_CERT_NOT_YET_VALID = "003";
+	/**
+	 * Error Code for: Client Certificate is not yet valid
+	 */
+	public static final String PKI_CLIENT_CERT_NOT_YET_VALID = "003";
 
-    /**
-     * Error Code for: Client Certificate is expired
-     */
-    public static final String PKI_CLIENT_CERT_EXPIRED = "004";
+	/**
+	 * Error Code for: Client Certificate is expired
+	 */
+	public static final String PKI_CLIENT_CERT_EXPIRED = "004";
 
-    /**
-     * Error Code for: Client Certificate is Revoked
-     */
-    public static final String PKI_CLIENT_CERT_REVOKED = "005";
+	/**
+	 * Error Code for: Client Certificate is Revoked
+	 */
+	public static final String PKI_CLIENT_CERT_REVOKED = "005";
 
-    /**
-     * Error Code for: No matching binary blob
-     */
-    public static final String PKI_CLIENT_CERT_BLOB_NOT_VALID = "006";
+	/**
+	 * Error Code for: No matching binary blob
+	 */
+	public static final String PKI_CLIENT_CERT_BLOB_NOT_VALID = "006";
 
-    /**
-     * Error Code for: DN in certificate did not match the one in the ASelect
-     * UDB
-     */
-    public static final String PKI_SUBJECT_DN_NOT_VALID = "007";
+	/**
+	 * Error Code for: DN in certificate did not match the one in the ASelect UDB
+	 */
+	public static final String PKI_SUBJECT_DN_NOT_VALID = "007";
 
-    /**
-     * Error Code for: Out of retries for 2 Factor Authentication
-     */
-    public static final String PKI_2FACTOR_NO_RETRIES_LEFT = "008";
+	/**
+	 * Error Code for: Out of retries for 2 Factor Authentication
+	 */
+	public static final String PKI_2FACTOR_NO_RETRIES_LEFT = "008";
 
-    /**
-     * Error Code for: Invalid Request
-     */
-    public static final String PKI_INVALID_REQUEST = "009";
+	/**
+	 * Error Code for: Invalid Request
+	 */
+	public static final String PKI_INVALID_REQUEST = "009";
 
-    /**
-     * Error Code for: Internal Error
-     */
-    public static final String PKI_INTERNAL_SERVER_ERROR = "010";
+	/**
+	 * Error Code for: Internal Error
+	 */
+	public static final String PKI_INTERNAL_SERVER_ERROR = "010";
 
 	/**
 	 * Error Code for: Config Error occured
@@ -107,29 +104,29 @@ public class Errors
 	 * Error Code for: CRL is not signed by CA
 	 */
 	public static final String PKI_CRL_IS_NOT_SIGNED_BY_CA = "104";
-	
+
 	/**
 	 * Error Code for: Invalid Request
 	 */
-//	public static final String PKI_INVALID_REQUEST = "105";
+	// public static final String PKI_INVALID_REQUEST = "105";
 
 	/**
 	 * Error Code for: Internal Error
 	 */
-//	public static final String PKI_INTERNAL_SERVER_ERROR = "106";
-	
+	// public static final String PKI_INTERNAL_SERVER_ERROR = "106";
+
 	/**
 	 * Error Code for: No CRL Distribution Point(s) in CA Certificate
 	 */
 	public static final String PKI_NO_CRL_DISTR_POINT_IN_CA_CERT = "107";
-	
+
 	/**
-	 * Error Code for:  No CRL Found For CA
+	 * Error Code for: No CRL Found For CA
 	 */
 	public static final String PKI_NO_CRL_FOUND_FOR_CA = "108";
 
 	/**
-	 * Error Code for:  No CA Certificate in keystore is expired
+	 * Error Code for: No CA Certificate in keystore is expired
 	 */
 	public static final String PKI_CA_CERT_IS_EXPIRED = "109";
 }

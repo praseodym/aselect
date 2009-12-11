@@ -16,21 +16,22 @@ import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMAgent;
 
+// TODO: Auto-generated Javadoc
 /**
  * @author root
- *
  */
 public class NonClosingConnectionHandler extends AbstractConnectionHandler
 {
 	/** name of this module, used for logging */
 	private static final String MODULE = "NonClosingConnectionHandler";
 
-	/** The database connection.  */
+	/** The database connection. */
 	protected Connection _oActiveConnection;
 
-
-	/* (non-Javadoc)
-	 * @see org.aselect.system.db.jdbc.AbstractConnectionHandler#Init(org.aselect.system.sam.agent.SAMAgent, java.lang.String)
+	/*
+	 * (non-Javadoc)
+	 * @see org.aselect.system.db.jdbc.AbstractConnectionHandler#Init(org.aselect.system.sam.agent.SAMAgent,
+	 * java.lang.String)
 	 */
 	@Override
 	public void Init(ConfigManager configMan, SystemLogger systemLogger, SAMAgent sam, String resourcegroup)
@@ -39,12 +40,13 @@ public class NonClosingConnectionHandler extends AbstractConnectionHandler
 		super.Init(configMan, systemLogger, sam, resourcegroup);
 	}
 
-	
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
 	 * @see org.aselect.system.db.jdbc.AbstractConnectionHandler#getConnection()
 	 */
 	@Override
-	public Connection getConnection() throws ASelectStorageException
+	public Connection getConnection()
+		throws ASelectStorageException
 	{
 		// TODO Auto-generated method stub
 		super.getConnection();
@@ -171,8 +173,8 @@ public class NonClosingConnectionHandler extends AbstractConnectionHandler
 
 	}
 
-
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
 	 * @see org.aselect.system.db.jdbc.AbstractConnectionHandler#releaseConnection(java.sql.Connection)
 	 */
 	@Override
@@ -181,9 +183,10 @@ public class NonClosingConnectionHandler extends AbstractConnectionHandler
 		String sMethod = "releaseConnection()";
 
 		// We only close the connection on destroy
-		// Connection  will be reused, depends on thread-safety of JDBC Driver (which should be thread-safe)
+		// Connection will be reused, depends on thread-safety of JDBC Driver (which should be thread-safe)
 		super.releaseConnection(c);
-		_systemLogger.log(Level.FINEST, MODULE, sMethod, "Database connection kept open for next request (connection not returned to pool)");
+		_systemLogger.log(Level.FINEST, MODULE, sMethod,
+				"Database connection kept open for next request (connection not returned to pool)");
 	}
 
 	/**
@@ -198,8 +201,9 @@ public class NonClosingConnectionHandler extends AbstractConnectionHandler
 				_systemLogger.log(Level.FINE, MODULE, "destroy()", "Active connection closed");
 			}
 		}
-		catch (Exception e) {  // Only log to system logger.
-			_systemLogger.log(Level.FINE, MODULE, "destroy()", "An error occured while trying to destroy the module", e);
+		catch (Exception e) { // Only log to system logger.
+			_systemLogger
+					.log(Level.FINE, MODULE, "destroy()", "An error occured while trying to destroy the module", e);
 		}
 	}
 

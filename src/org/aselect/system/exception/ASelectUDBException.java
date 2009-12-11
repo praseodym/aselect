@@ -28,78 +28,73 @@
 
 package org.aselect.system.exception;
 
+// TODO: Auto-generated Javadoc
 /**
- * UDB exception. 
- * <br><br>
+ * UDB exception. <br>
+ * <br>
  * <b>Description: </b> <br>
- * This exception is thrown if an error occurs during communicating with the 
- * user database fails. <br>
+ * This exception is thrown if an error occurs during communicating with the user database fails. <br>
  * <br>
  * <i>Note: The message will be an error code. <br>
- * see <code>org.aselect.system.error.Errors</code> for more information. </i>
+ * see <code>org.aselect.system.error.Errors</code> for more information. </i> <br>
  * <br>
- * <br>
- * <b>Concurrency issues: </b> 
- * <br>-<br>
+ * <b>Concurrency issues: </b> <br>
+ * -<br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class ASelectUDBException extends ASelectException
 {
-    /**
-     * Creates a new instance. 
-     * <br><br>
-     * <b>Description: </b> <br>
-     * Creates and initializes a new <code>ASelectUDBException<code> 
-     * with the given code.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * -
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * <code>sCode != null</code>
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * -
-     * <br>
-     * 
-     * @param sCode The error code.
-     */
-    public ASelectUDBException (String sCode)
-    {
-        super(sCode);
-    }
+	
+	/**
+	 * Creates a new instance. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Creates and initializes a new <code>ASelectUDBException<code>
+	 * with the given code.
+	 * <br><br>
+	 * <b>Concurrency issues:</b>
+	 * <br>
+	 * -
+	 * <br><br>
+	 * <b>Preconditions:</b>
+	 * <br>
+	 * <code>sCode != null</code> <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sCode
+	 *            The error code.
+	 */
+	public ASelectUDBException(String sCode) {
+		super(sCode);
+	}
 
-    /**
-     * Create new instance with a cause. 
-     * <br><br>
-     * <b>Description: </b> <br>
-     * Creates a new <code>ASelectUDBException</code> with the given code and
-     * cause. <br>
-     * <br>
-     * <b>Concurrency issues: </b> 
-     * <br>-<br>
-     * <br>
-     * <b>Preconditions: </b>
-     * <ul>
-     * <li><code>sCode != null</code></li>
-     * <li><code>tCause != null</code></li>
-     * </ul>
-     * <br>
-     * <b>Postconditions: </b> 
-     * <br>-<br>
-     * 
-     * @param sCode
-     *            The error code.
-     * @param tCause
-     *            The error cause.
-     */
-    public ASelectUDBException (String sCode, Throwable tCause)
-    {
-        super(sCode, tCause);
-    }
+	/**
+	 * Create new instance with a cause. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Creates a new <code>ASelectUDBException</code> with the given code and cause. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
+	 * <br>
+	 * <b>Preconditions: </b>
+	 * <ul>
+	 * <li><code>sCode != null</code></li>
+	 * <li><code>tCause != null</code></li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
+	 * 
+	 * @param sCode
+	 *            The error code.
+	 * @param tCause
+	 *            The error cause.
+	 */
+	public ASelectUDBException(String sCode, Throwable tCause) {
+		super(sCode, tCause);
+	}
 }

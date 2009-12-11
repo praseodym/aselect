@@ -33,49 +33,41 @@
  */
 package org.aselect.system.utils;
 
-
 /**
- * RFC 2045 compliant Base64 encoder.
- * <br><br>
+ * RFC 2045 compliant Base64 encoder. <br>
+ * <br>
  * <b>Description:</b><br>
- * Base64 encodes a byte array. Callers should instantiate this class 
- * to encode a byte array into Base64.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * Base64 encodes a byte array. Callers should instantiate this class to encode a byte array into Base64. <br>
  * <br>
- * None.
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * None. <br>
  * 
+ * @author Alfa & Ariss
  */
 public class BASE64Encoder
 {
-    /**
-     * Encodes a byte array into a Base64 String .
-     * <br><br>
-     * <b>Description:</b>
-     * <br>
-     * This method uses the Base64 Codec to encode the input bytes.
-     * <br><br>
-     * <b>Concurrency issues:</b>
-     * <br>
-     * None.
-     * <br><br>
-     * <b>Preconditions:</b>
-     * <br>
-     * None.
-     * <br><br>
-     * <b>Postconditions:</b>
-     * <br>
-     * None.
-     * <br>
-     * @param xData
-     * 					input byte array.
-     * @return
-     * 					the Base64 encoded representation of <code>xData</code>.
-     */
-    public String encode(byte[] xData)
-    {
-        return Base64.encode(xData);
-    }
+	
+	/**
+	 * Encodes a byte array into a Base64 String . <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * This method uses the Base64 Codec to encode the input bytes. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * None. <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * None. <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * None. <br>
+	 * 
+	 * @param xData
+	 *            input byte array.
+	 * @return the Base64 encoded representation of <code>xData</code>.
+	 */
+	public String encode(byte[] xData)
+	{
+		return Base64.encode(xData);
+	}
 }

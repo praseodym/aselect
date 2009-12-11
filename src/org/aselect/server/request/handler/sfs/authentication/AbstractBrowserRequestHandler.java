@@ -111,21 +111,18 @@ import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
- * Abstract browser request handler.
- * <br><br>
+ * Abstract browser request handler. <br>
+ * <br>
  * <b>Description:</b><br>
- * This class can be used as a base class for request handlers which handle browser 
- * requests. The <code>AbstractBrowserRequestHandler</code> also contains the helper
- * functions used by the different request handlers
- * <br><br>
- * <b>Concurrency issues:</b>
+ * This class can be used as a base class for request handlers which handle browser requests. The
+ * <code>AbstractBrowserRequestHandler</code> also contains the helper functions used by the different request handlers <br>
  * <br>
- * Use one <code>AbstractBrowserRequestHandler</code> implementation 
- * for a single request.
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * Use one <code>AbstractBrowserRequestHandler</code> implementation for a single request. <br>
  * 
+ * @author Alfa & Ariss
  */
 public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 {
@@ -144,7 +141,7 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 	/** The TGT manager. */
 	protected TGTManager _tgtManager;
 
-	/** The  request. */
+	/** The request. */
 	protected HttpServletRequest _servletRequest;
 	/** The response. */
 	protected HttpServletResponse _servletResponse;
@@ -156,20 +153,22 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 	protected String _sMyOrg;
 
 	/**
-	 * Construct an instance.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Construct an instance. <br>
 	 * <br>
-	 * Handles are obtained to relevant managers.
-	 * <br>
-	 * @param servletRequest The request.
-	 * @param servletResponse The response.
-	 * @param sMyServerId The A-Select Server ID.
-	 * @param sMyOrg The A-Select Server organisation.
+	 * <b>Description:</b> <br>
+	 * Handles are obtained to relevant managers. <br>
+	 * 
+	 * @param servletRequest
+	 *            The request.
+	 * @param servletResponse
+	 *            The response.
+	 * @param sMyServerId
+	 *            The A-Select Server ID.
+	 * @param sMyOrg
+	 *            The A-Select Server organisation.
 	 */
 	public AbstractBrowserRequestHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-			String sMyServerId, String sMyOrg)
-	{
+			String sMyServerId, String sMyOrg) {
 		_configManager = ASelectConfigManager.getHandle();
 		_sessionManager = SessionManager.getHandle();
 		_tgtManager = TGTManager.getHandle();
@@ -183,8 +182,12 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 	}
 
 	/**
-	 * This function processes browser requests
-	 * <br><br>
+	 * This function processes browser requests <br>
+	 * <br>
+	 * .
+	 * 
+	 * @throws ASelectException
+	 *             the a select exception
 	 * @see org.aselect.server.request.handler.sfs.authentication.IRequestHandler#processRequest()
 	 */
 	public void processRequest()
@@ -236,25 +239,32 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 	}
 
 	/**
-	 * Prosesses the API request.
-	 * <br><br>
-	 * @param htServiceRequest Hashttable containing request parameters
-	 * @param servletResponse Used to send information (HTTP) back to the user
-	 * @param pwOut Used to send information back to the user (HTML)
-	 * @throws ASelectException If processing fails and no response 
-	 * is send to the client.
+	 * Prosesses the API request. <br>
+	 * <br>
+	 * 
+	 * @param htServiceRequest
+	 *            Hashttable containing request parameters
+	 * @param servletResponse
+	 *            Used to send information (HTTP) back to the user
+	 * @param pwOut
+	 *            Used to send information back to the user (HTML)
+	 * @throws ASelectException
+	 *             If processing fails and no response is send to the client.
 	 */
 	abstract protected void processBrowserRequest(HashMap htServiceRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut)
 		throws ASelectException;
 
 	/**
-	 * Shows the main A-Select Error page with the approprate errors.
+	 * Shows the main A-Select Error page with the approprate errors. <br>
 	 * <br>
-	 * <br>
+	 * 
 	 * @param sErrorCode
-	 * @param htServiceRequest 
+	 *            the s error code
+	 * @param htServiceRequest
+	 *            the ht service request
 	 * @param pwOut
+	 *            the pw out
 	 */
 	protected void showErrorPage(String sErrorCode, HashMap htServiceRequest, PrintWriter pwOut)
 	{
@@ -276,31 +286,28 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 			pwOut.println(sErrorForm);
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Could not show error page with error: " + sErrorCode, e);
+			_systemLogger
+					.log(Level.SEVERE, _sModule, sMethod, "Could not show error page with error: " + sErrorCode, e);
 		}
 	}
 
 	/**
-	 * Retrieve A-Select credentials.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Retrieve A-Select credentials. <br>
 	 * <br>
-	 * Reads the A-Select credentials from a Cookie and put them into a 
-	 * <code>HashMap</code>.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Reads the A-Select credentials from a Cookie and put them into a <code>HashMap</code>. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <code>servletRequest != null</code>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <code>servletRequest != null</code> <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * @param servletRequest The Request which should contain the Cookie.
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param servletRequest
+	 *            The Request which should contain the Cookie.
 	 * @return The A-Slect credentials in a <code>HashMap</code>.
 	 */
 	protected HashMap getASelectCredentials(HttpServletRequest servletRequest)
@@ -319,7 +326,7 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 		for (int i = 0; i < aCookies.length; i++) {
 			if (aCookies[i].getName().equals("aselect_credentials")) {
 				sCredentialsCookie = aCookies[i].getValue();
-				//remove '"' surrounding cookie if applicable
+				// remove '"' surrounding cookie if applicable
 				int iLength = sCredentialsCookie.length();
 				if (sCredentialsCookie.charAt(0) == '"' && sCredentialsCookie.charAt(iLength - 1) == '"') {
 					sCredentialsCookie = sCredentialsCookie.substring(1, iLength - 1);
@@ -359,10 +366,12 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 	}
 
 	/**
-	 * This function converts a <code>servletRequest</code> to a <code>HashMap</code> by extracting the parameters
-	 * from the <code>servletRequest</code> and inserting them into a <code>HashMap</code>.
-	 * <br><br>
-	 * @param servletRequest Contains request parameters
+	 * This function converts a <code>servletRequest</code> to a <code>HashMap</code> by extracting the parameters from
+	 * the <code>servletRequest</code> and inserting them into a <code>HashMap</code>. <br>
+	 * <br>
+	 * 
+	 * @param servletRequest
+	 *            Contains request parameters
 	 * @return HashMap containing request parameters.
 	 */
 	private HashMap createServiceRequest(HttpServletRequest servletRequest)

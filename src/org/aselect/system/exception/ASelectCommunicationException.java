@@ -37,76 +37,71 @@
 
 package org.aselect.system.exception;
 
+// TODO: Auto-generated Javadoc
 /**
- * Communication exception. 
- * <br><br>
- * <b>Description: </b> 
+ * Communication exception. <br>
  * <br>
- * This exception is thrown if communication fails. 
+ * <b>Description: </b> <br>
+ * This exception is thrown if communication fails. <br>
  * <br>
+ * <i>Note: The message will be an error code. <br>
+ * see <code>org.aselect.system.error.Errors</code> for more information. </i> <br>
  * <br>
- * <i>Note: The message will be an error code. 
- * <br>
- * see <code>org.aselect.system.error.Errors</code> for more information. </i>
- * <br><br>
- * <b>Concurrency issues: </b> <br>-<br>
+ * <b>Concurrency issues: </b> <br>
+ * -<br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class ASelectCommunicationException extends ASelectException
 {
-    /**
-     * Create new instance. 
-     * <br><br>
-     * <b>Description: </b> <br>
-     * Creates a new <code>ASelectCommunicationException</code> with the given
-     * code. <br>
-     * <br>
-     * <b>Concurrency issues: </b> 
-     * <br>-<br>
-     * <br>
-     * <b>Preconditions: </b> <br>
-     * <code>sCode != null</code><br>
-     * <br>
-     * <b>Postconditions: </b> 
-     * <br>-<br>
-     * 
-     * @param sCode
-     *            The error code.
-     */
-    public ASelectCommunicationException (String sCode)
-    {
-        super(sCode);
-    }
+	
+	/**
+	 * Create new instance. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Creates a new <code>ASelectCommunicationException</code> with the given code. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * <code>sCode != null</code><br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
+	 * 
+	 * @param sCode
+	 *            The error code.
+	 */
+	public ASelectCommunicationException(String sCode) {
+		super(sCode);
+	}
 
-    /**
-     * Create new instance with a cause. 
-     * <br><br>
-     * <b>Description: </b> <br>
-     * Creates a new <code>ASelectCommunicationException</code> with the given
-     * code and cause. <br>
-     * <br>
-     * <b>Concurrency issues: </b> 
-     * <br>-<br>
-     * <br>
-     * <b>Preconditions: </b>
-     * <ul>
-     * <li><code>sCode != null</code></li>
-     * <li><code>tCause != null</code></li>
-     * </ul>
-     * <br>
-     * <b>Postconditions: </b> 
-     * <br>-<br>
-     * 
-     * @param sCode
-     *            The error code.
-     * @param tCause
-     *            the error cause.
-     */
-    public ASelectCommunicationException (String sCode, Throwable tCause)
-    {
-        super(sCode, tCause);
-    }
+	/**
+	 * Create new instance with a cause. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Creates a new <code>ASelectCommunicationException</code> with the given code and cause. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
+	 * <br>
+	 * <b>Preconditions: </b>
+	 * <ul>
+	 * <li><code>sCode != null</code></li>
+	 * <li><code>tCause != null</code></li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * -<br>
+	 * 
+	 * @param sCode
+	 *            The error code.
+	 * @param tCause
+	 *            the error cause.
+	 */
+	public ASelectCommunicationException(String sCode, Throwable tCause) {
+		super(sCode, tCause);
+	}
 
 }

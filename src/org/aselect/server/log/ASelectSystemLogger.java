@@ -48,21 +48,19 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.Audit;
 import org.aselect.system.logging.SystemLogger;
 
+// TODO: Auto-generated Javadoc
 /**
- * The system logger for the A-Select Server.
- * <br><br>
+ * The system logger for the A-Select Server. <br>
+ * <br>
  * <b>Description:</b><br>
- * A singleton authentication logger that inherits from
- * <code>org.aselect.system.logging.SystemLogger</code>. This logger creates a log file containing all A-Select system logging and 
- * can be used in situations where A-Select is not functioning.  
- * <br><br>
- * <b>Concurrency issues:</b>
+ * A singleton authentication logger that inherits from <code>org.aselect.system.logging.SystemLogger</code>. This
+ * logger creates a log file containing all A-Select system logging and can be used in situations where A-Select is not
+ * functioning. <br>
  * <br>
- * - The class is a singleton, so the same class is used in all the classes of 
- * the A-Select Server.
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - The class is a singleton, so the same class is used in all the classes of the A-Select Server. <br>
  * 
+ * @author Alfa & Ariss
  */
 public class ASelectSystemLogger extends SystemLogger
 {
@@ -75,25 +73,20 @@ public class ASelectSystemLogger extends SystemLogger
 	private static ASelectSystemLogger _oASelectSystemLogger;
 
 	/**
-	 * Must be used to get an ASelectSystemLogger instance.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Must be used to get an ASelectSystemLogger instance. <br>
 	 * <br>
-	 * Creates a new <code>ASelectSystemLogger</code> instance if it's still <code>null</code>.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Creates a new <code>ASelectSystemLogger</code> instance if it's still <code>null</code>. <br>
 	 * <br>
-	 * Always the same instance of the system logger is returned, because it's a
-	 * singleton.
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * Always the same instance of the system logger is returned, because it's a singleton. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
 	 * @return handle to the ASelectAuthenticationLogger
 	 */
 	public static ASelectSystemLogger getHandle()
@@ -105,32 +98,29 @@ public class ASelectSystemLogger extends SystemLogger
 	}
 
 	/**
-	 * Initializes the System Logger.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Initializes the System Logger. <br>
 	 * <br>
-	 * <li>Reads the 'target' config section</li>
-	 * <li>Calls the init of the <i>_oASelectSystemLogger</i></li>
-	 * <li>Reads the 'target' config section</li>
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * <li>Reads the 'target' config section</li> <li>Calls the init of the <i>_oASelectSystemLogger</i></li> <li>Reads
+	 * the 'target' config section</li> <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <li>The <i>ASelectSystemLogger</i> must be initialized.</li>
-	 * <li>The <i>ASelectConfigManager</i> must be initialized.</li>
-	 * <li>The <i>oSysLogging</i> may not be <code>NULL</code>.</li>
-	 * <li>The <i>sWorkingDir</i> may not be <code>NULL</code>.</li>
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * <li>The <i>ASelectSystemLogger</i> must be initialized.</li> <li>The <i>ASelectConfigManager</i> must be
+	 * initialized.</li> <li>The <i>oSysLogging</i> may not be <code>NULL</code>.</li> <li>The <i>sWorkingDir</i> may
+	 * not be <code>NULL</code>.</li> <br>
 	 * <br>
-	 * An initialized <i>_oASelectSystemLogger</i>.
-	 * <br>
-	 * @param oSysLogging The logger config section with id='system'
-	 * @param sWorkingDir The A-Select working dir
-	 * @throws ASelectException if initialization went wrong
+	 * <b>Postconditions:</b> <br>
+	 * An initialized <i>_oASelectSystemLogger</i>. <br>
+	 * 
+	 * @param oSysLogging
+	 *            The logger config section with id='system'
+	 * @param sWorkingDir
+	 *            The A-Select working dir
+	 * @throws ASelectException
+	 *             if initialization went wrong
 	 */
 	public void init(Object oSysLogging, String sWorkingDir)
 		throws ASelectException
@@ -149,7 +139,7 @@ public class ASelectSystemLogger extends SystemLogger
 
 				try {
 					String sSysLogLevel = oASelectConfigManager.getParam(oSysLogging, "level");
-					//		            levelSysLog = Level.parse(sSysLogLevel);
+					// levelSysLog = Level.parse(sSysLogLevel);
 					levelSysLog = Audit.parse(sSysLogLevel);
 				}
 				catch (Exception e) {
@@ -203,26 +193,19 @@ public class ASelectSystemLogger extends SystemLogger
 	}
 
 	/**
-	 * Must be private, so it can not be used.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Must be private, so it can not be used. <br>
 	 * <br>
-	 * Must be private because getHandle() must be used to retrieve an instance. 
-	 * This is done for singleton purposes.
-	 * <br><br>
-	 * <b>Concurrency issues:</b>
+	 * <b>Description:</b> <br>
+	 * Must be private because getHandle() must be used to retrieve an instance. This is done for singleton purposes. <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br><br>
-	 * <b>Postconditions:</b>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * -
-	 * <br>
-	 * 
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 */
 	private ASelectSystemLogger() {
 	}

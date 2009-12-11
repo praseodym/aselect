@@ -16,6 +16,7 @@ import java.util.logging.Level;
 import org.aselect.authspserver.log.AuthSPSystemLogger;
 import org.aselect.system.utils.Tools;
 
+// TODO: Auto-generated Javadoc
 /*
  * 14-11-2007:  Adapted to the latest www.mollie.nl protocol
  * @author Bauke Hiemstra - www.anoigo.nl
@@ -29,17 +30,32 @@ public class MollieHttpSmsSender implements SmsSender
 	private final String gateway;
 
 	/**
-	 *  
+	 * Instantiates a new mollie http sms sender.
+	 * 
+	 * @param url
+	 *            the url
+	 * @param user
+	 *            the user
+	 * @param password
+	 *            the password
 	 */
-	public MollieHttpSmsSender(URL url, String user, String password)
-	{
+	public MollieHttpSmsSender(URL url, String user, String password) {
 		this(url, user, password, null);
 	}
+
 	/**
-	 *  
+	 * Instantiates a new mollie http sms sender.
+	 * 
+	 * @param url
+	 *            the url
+	 * @param user
+	 *            the user
+	 * @param password
+	 *            the password
+	 * @param gateway
+	 *            the gateway
 	 */
-	public MollieHttpSmsSender(URL url, String user, String password, String gateway)
-	{
+	public MollieHttpSmsSender(URL url, String user, String password, String gateway) {
 		super();
 		this.url = url;
 		this.user = user;
@@ -49,15 +65,14 @@ public class MollieHttpSmsSender implements SmsSender
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see org.aselect.authspserver.authsp.sms.SmsSender#sendSms(java.lang.String,
-	 *      java.lang.String, java.lang.String)
+	 * @see org.aselect.authspserver.authsp.sms.SmsSender#sendSms(java.lang.String, java.lang.String, java.lang.String)
 	 */
-	public int sendSms(String message, String from, String recipients) throws SmsException
+	public int sendSms(String message, String from, String recipients)
+		throws SmsException
 	{
 		int returncode = 15;
 		StringBuffer data = new StringBuffer();
-	    AuthSPSystemLogger _systemLogger;
+		AuthSPSystemLogger _systemLogger;
 		_systemLogger = AuthSPSystemLogger.getHandle();
 
 		try {
@@ -83,14 +98,14 @@ public class MollieHttpSmsSender implements SmsSender
 
 			// RH, 20080729, sn
 			// gateway == null, use mollies default gateway
-			if ( this.gateway != null && !"".equals(this.gateway.trim()) ) {
+			if (this.gateway != null && !"".equals(this.gateway.trim())) {
 				data.append(AMPERSAND);
 				data.append(URLEncoder.encode("gateway", "UTF-8")).append(EQUAL_SIGN);
 				data.append(URLEncoder.encode(this.gateway, "UTF-8"));
 			}
 			// RH, 20080729, en
-			
-			_systemLogger.log(Level.INFO, "Mollie", "sendSms", "url="+url.toString()+" data="+data.toString());
+
+			_systemLogger.log(Level.INFO, "Mollie", "sendSms", "url=" + url.toString() + " data=" + data.toString());
 			returncode++; // 16
 			URLConnection conn = url.openConnection();
 			returncode++; // 17
@@ -103,7 +118,7 @@ public class MollieHttpSmsSender implements SmsSender
 			// Get the response
 			BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 			String line;
-			
+
 			// Bauke: adapted to latest protocol
 			String sResult, sResultCode = "";
 			while ((line = rd.readLine()) != null) {
@@ -114,20 +129,22 @@ public class MollieHttpSmsSender implements SmsSender
 					break;
 				}
 			}
-			_systemLogger.log(Level.INFO, "Mollie", "sendSms", "resultcode="+sResultCode);
+			_systemLogger.log(Level.INFO, "Mollie", "sendSms", "resultcode=" + sResultCode);
 			if (!sResultCode.equals("10")) {
 				throw new SmsException("Mollie could not send sms, returncode from Mollie: " + sResultCode + ".");
 			}
-			
+
 			returncode++; // 19
 			wr.close();
 			rd.close();
 		}
 		catch (NumberFormatException e) {
-			throw new SmsException("Sending SMS, using \'" + this.url.toString() + "\' failed due to number format exception! " + e.getMessage(), e);
+			throw new SmsException("Sending SMS, using \'" + this.url.toString()
+					+ "\' failed due to number format exception! " + e.getMessage(), e);
 		}
 		catch (Exception e) {
-			throw new SmsException("Sending SMS, using \'" + this.url.toString() + "\' failed (progress=" + returncode + ")! " + e.getMessage(), e);
+			throw new SmsException("Sending SMS, using \'" + this.url.toString() + "\' failed (progress=" + returncode
+					+ ")! " + e.getMessage(), e);
 		}
 		return returncode;
 	}

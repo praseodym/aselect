@@ -95,351 +95,338 @@
 package org.aselect.system.error;
 
 /**
- * A-Select error codes. 
- * <br><br>
- * <b>Description: </b> 
+ * A-Select error codes. <br>
  * <br>
+ * <b>Description: </b> <br>
  * Error codes that are used within A-Select.
  * 
- * @author Alfa & Ariss
- * 
- * 
- * TODO Some fault codes are used more than once, this should be checked (Erwin)
+ * @author Alfa & Ariss TODO Some fault codes are used more than once, this should be checked (Erwin)
  */
 public class Errors
 {
-    /**
-     * Success.
-     */
-    public static final String ERROR_ASELECT_SUCCESS = "0000";
+	/**
+	 * Success.
+	 */
+	public static final String ERROR_ASELECT_SUCCESS = "0000";
 
-    /**
-     * A-Select error: The A-Select Server could not handle the request due to
-     * an internal error.
-     */
-    public final static String ERROR_ASELECT_INTERNAL_ERROR = "0001";
+	/**
+	 * A-Select error: The A-Select Server could not handle the request due to an internal error.
+	 */
+	public final static String ERROR_ASELECT_INTERNAL_ERROR = "0001";
 
-    /**
-     * A-Select error: the user does not exist in the udb
-     */
-    public final static String ERROR_ASELECT_UDB_UNKNOWN_USER = "0002";
-    
-    /**
-     * A-Select error: The A-Select Server could not authenticate the user.
-     */
-    public final static String 
-    			ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER = "0003";
-    public final static String 
-    			ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER = "0003";
-    
-    /**
-     * A-Select error: The TGT of the user was invalid.
-     */
-    public final static String ERROR_ASELECT_SERVER_TGT_NOT_VALID = "0004";
+	/**
+	 * A-Select error: the user does not exist in the udb
+	 */
+	public final static String ERROR_ASELECT_UDB_UNKNOWN_USER = "0002";
 
-    /**
-     * A-Select error: The TGT of the user has expired.
-     */
-    public final static String ERROR_ASELECT_SERVER_TGT_EXPIRED = "0005";
+	/**
+	 * A-Select error: The A-Select Server could not authenticate the user.
+	 */
+	public final static String ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER = "0003";
+	public final static String ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER = "0003";
 
-    /**
-     * A-Select error: TGT credentials are too low.
-     */
-//    public final static String ERROR_ASELECT_SERVER_TGT_TOO_LOW = "0006";
+	/**
+	 * A-Select error: The TGT of the user was invalid.
+	 */
+	public final static String ERROR_ASELECT_SERVER_TGT_NOT_VALID = "0004";
 
-    /**
-     * A-Select error: Unknown TGT.
-     */
-    public final static String ERROR_ASELECT_SERVER_UNKNOWN_TGT = "0007";
+	/**
+	 * A-Select error: The TGT of the user has expired.
+	 */
+	public final static String ERROR_ASELECT_SERVER_TGT_EXPIRED = "0005";
 
-    /**
-     * A-Select error: User account is disabled with the A-Select Server.
-     */
-    public final static String ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED = "0008";
+	/**
+	 * A-Select error: TGT credentials are too low.
+	 */
+	// public final static String ERROR_ASELECT_SERVER_TGT_TOO_LOW = "0006";
 
-    /**
-     * A-Select error: User is not allowed to get A-Select credentials due to
-     * restrictions on his/her account.
-     */
-    public final static String ERROR_ASELECT_SERVER_USER_NOT_ALLOWED = "0009";
+	/**
+	 * A-Select error: Unknown TGT.
+	 */
+	public final static String ERROR_ASELECT_SERVER_UNKNOWN_TGT = "0007";
 
-    /**
-     * A-Select error: Invalid response from an AuthSP is received.
-     */
-    public final static String ERROR_ASELECT_AUTHSP_INVALID_RESPONSE = "000a";
+	/**
+	 * A-Select error: User account is disabled with the A-Select Server.
+	 */
+	public final static String ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED = "0008";
 
-    /**
-     * A-Select error: Access denied.
-     */
-    public final static String ERROR_ASELECT_AUTHSP_ACCESS_DENIED = "000b";
-    
-    /**
-     * A-Select error: The A-Select Server received an invalid request from the
-     * A-Select Agent.
-     */
-    public final static String ERROR_ASELECT_SERVER_INVALID_REQUEST = "0030";
+	/**
+	 * A-Select error: User is not allowed to get A-Select credentials due to restrictions on his/her account.
+	 */
+	public final static String ERROR_ASELECT_SERVER_USER_NOT_ALLOWED = "0009";
 
-    /**
-     * A-Select error: Unknown application id was provided.
-     */
-    public final static String ERROR_ASELECT_SERVER_UNKNOWN_APP = "0031";
+	/**
+	 * A-Select error: Invalid response from an AuthSP is received.
+	 */
+	public final static String ERROR_ASELECT_AUTHSP_INVALID_RESPONSE = "000a";
 
-    /**
-     * A-Select error: Invalid application URL was sent to the A-Select Server.
-     */
-//    public final static String ERROR_ASELECT_SERVER_INVALID_APP_URL = "0032";
+	/**
+	 * A-Select error: Access denied.
+	 */
+	public final static String ERROR_ASELECT_AUTHSP_ACCESS_DENIED = "000b";
 
-    /**
-     * A-Select error: A-Select Server id mismatch.
-     */
-    public final static String ERROR_ASELECT_SERVER_ID_MISMATCH = "0033";
+	/**
+	 * A-Select error: The A-Select Server received an invalid request from the A-Select Agent.
+	 */
+	public final static String ERROR_ASELECT_SERVER_INVALID_REQUEST = "0030";
 
-    /**
-     * A-Select error: Unknown <code>remote_organization</code>.
-     */
-    public final static String ERROR_ASELECT_SERVER_UNKNOWN_ORG = "0034";
-    
-    /**
-     * A-Select error: Invalid <code>app level</code>.
-     */
-    public static final String ERROR_ASELECT_SERVER_INVALID_APP_LEVEL = "0035";
-    
-    /**
-     * A-Select error: The user has cancelled authentication.
-     */
-    public final static String ERROR_ASELECT_SERVER_CANCEL = "0040";
+	/**
+	 * A-Select error: Unknown application id was provided.
+	 */
+	public final static String ERROR_ASELECT_SERVER_UNKNOWN_APP = "0031";
 
-    /**
-     * A-Select error: The A-Select Server is busy and cannot handle the
-     * request.
-     */
-    public final static String ERROR_ASELECT_SERVER_BUSY = "0050";
-    
-    /**
-     * A-Select error: Internal error for UDB connectors
-     */
-    public final static String ERROR_ASELECT_UDB_INTERNAL = "0060";
-    
-    /**
-     * A-Select error: Session invalid. 
-     */
-    public final static String ERROR_ASELECT_SERVER_INVALID_SESSION = "0070";
-    
-    /**
-     * A-Select error: Session expired. 
-     */
-    public final static String ERROR_ASELECT_SERVER_SESSION_EXPIRED = "0102";
+	/**
+	 * A-Select error: Invalid application URL was sent to the A-Select Server.
+	 */
+	// public final static String ERROR_ASELECT_SERVER_INVALID_APP_URL = "0032";
 
-    // User already logged in (second browser instance)
-    public final static String ERROR_ASELECT_SERVER_USER_ALREADY_LOGGED_IN = "0104";
-    
-    /**
-     * Agent internal error.
-     */
-    public final static String ERROR_ASELECT_AGENT_INTERNAL_ERROR = "0101";
+	/**
+	 * A-Select error: A-Select Server id mismatch.
+	 */
+	public final static String ERROR_ASELECT_SERVER_ID_MISMATCH = "0033";
 
-    /**
-     * Agent error: Session expired.
-     */
-    public final static String ERROR_ASELECT_AGENT_SESSION_EXPIRED = "0102";
+	/**
+	 * A-Select error: Unknown <code>remote_organization</code>.
+	 */
+	public final static String ERROR_ASELECT_SERVER_UNKNOWN_ORG = "0034";
 
-    /**
-     * Agent error: Could not authenticate user.
-     */
-//    public final static String ERROR_ASELECT_AGENT_COULD_NOT_AUTHENTICATE_USER = "0103";
+	/**
+	 * A-Select error: Invalid <code>app level</code>.
+	 */
+	public static final String ERROR_ASELECT_SERVER_INVALID_APP_LEVEL = "0035";
 
-    /**
-     * Agent error: User's TGT is not valid.
-     */
-//    public final static String ERROR_ASELECT_AGENT_TGT_NOT_VALID = "0105";
+	/**
+	 * A-Select error: The user has cancelled authentication.
+	 */
+	public final static String ERROR_ASELECT_SERVER_CANCEL = "0040";
 
-    /**
-     * Agent error: User's TGT has expired.
-     */
-//    public final static String ERROR_ASELECT_AGENT_TGT_EXPIRED = "0106";
+	/**
+	 * A-Select error: The A-Select Server is busy and cannot handle the request.
+	 */
+	public final static String ERROR_ASELECT_SERVER_BUSY = "0050";
 
-    /**
-     * Agent error: User's TGT does not meet the level of required
-     * authentication.
-     */
-//    public final static String ERROR_ASELECT_AGENT_TGT_TOO_LOW = "0107";
+	/**
+	 * A-Select error: Internal error for UDB connectors
+	 */
+	public final static String ERROR_ASELECT_UDB_INTERNAL = "0060";
 
-    /**
-     * Agent error: Unknown TGT.
-     */
-//    public final static String ERROR_ASELECT_AGENT_UNKNOWN_TGT = "0108";
+	/**
+	 * A-Select error: Session invalid.
+	 */
+	public final static String ERROR_ASELECT_SERVER_INVALID_SESSION = "0070";
 
-    /**
-     * Agent error: User's ticket is not valid.
-     */
-    public final static String ERROR_ASELECT_AGENT_TICKET_NOT_VALID = "0109";
+	/**
+	 * A-Select error: Session expired.
+	 */
+	public final static String ERROR_ASELECT_SERVER_SESSION_EXPIRED = "0102";
 
-    /**
-     * Agent error: User's ticket has expired.
-     */
-//    public final static String ERROR_ASELECT_AGENT_TICKET_EXPIRED = "010a";
+	// User already logged in (second browser instance)
+	public final static String ERROR_ASELECT_SERVER_USER_ALREADY_LOGGED_IN = "0104";
 
-    /**
-     * Agent error: Unknown ticket.
-     */
-    public final static String ERROR_ASELECT_AGENT_UNKNOWN_TICKET = "010b";
+	/**
+	 * Agent internal error.
+	 */
+	public final static String ERROR_ASELECT_AGENT_INTERNAL_ERROR = "0101";
 
-    /**
-     * Agent error: A-Select Agent could not reach A-Select Server.
-     */
-    public final static String ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER = "010c";
+	/**
+	 * Agent error: Session expired.
+	 */
+	public final static String ERROR_ASELECT_AGENT_SESSION_EXPIRED = "0102";
 
-    /**
-     * Agent error: Maximum number of issued tickets has been reached.
-     */
-    public final static String ERROR_ASELECT_AGENT_TOO_MUCH_USERS = "010d";
-    
-    /**
-     * Agent error: Attributes mismatch (during verify_ticket)
-     */
-    public final static String ERROR_ASELECT_AGENT_CORRUPT_ATTRIBUTES = "010e";
+	/**
+	 * Agent error: Could not authenticate user.
+	 */
+	// public final static String ERROR_ASELECT_AGENT_COULD_NOT_AUTHENTICATE_USER = "0103";
 
-    /**
-     * Agent error: Invalid API request.
-     */
-    public final static String ERROR_ASELECT_AGENT_INVALID_REQUEST = "0130";
-    
-    /**
-     * Agent error: Authorization failed. 
-     */
-    public final static String ERROR_ASELECT_AGENT_AUTHORIZATION_FAILED = "0140";
-    
-    /**
-     * Agent error: Authorization not enabled. 
-     */
-    public final static String ERROR_ASELECT_AGENT_AUTHORIZATION_NOT_ENABLED = "0141";
+	/**
+	 * Agent error: User's TGT is not valid.
+	 */
+	// public final static String ERROR_ASELECT_AGENT_TGT_NOT_VALID = "0105";
 
-    /**
-     * Error: Can't open datasource
-     */
-    public static final String ERROR_ASELECT_CANT_OPEN = "4002";
-    /**
-     * Error: Can't close datasource
-     */
-    public static final String ERROR_ASELECT_CANT_CLOSE = "4003";
-    /**
-     * Error: Can't read from datasource
-     */
-    public static final String ERROR_ASELECT_READ = "4004";
-    /**
-     * Error: Does not exist
-     */
-    public static final String ERROR_ASELECT_NOT_FOUND = "4005";
-    /**
-     * Error: IO
-     */
-    public static final String ERROR_ASELECT_IO = "4006";
+	/**
+	 * Agent error: User's TGT has expired.
+	 */
+	// public final static String ERROR_ASELECT_AGENT_TGT_EXPIRED = "0106";
 
-    /**
-     * Usage error.
-     */
-    public static final String ERROR_ASELECT_USE_ERROR = "4007";
+	/**
+	 * Agent error: User's TGT does not meet the level of required authentication.
+	 */
+	// public final static String ERROR_ASELECT_AGENT_TGT_TOO_LOW = "0107";
 
-    /**
-     * Parsing failed.
-     */
-    public static final String ERROR_ASELECT_PARSE_ERROR = "4008";
+	/**
+	 * Agent error: Unknown TGT.
+	 */
+	// public final static String ERROR_ASELECT_AGENT_UNKNOWN_TGT = "0108";
 
-    /**
-     * Initialisation failed.
-     */
-    public static final String ERROR_ASELECT_INIT_ERROR = "4009";
-    
-    /**
-     * Username unknown.
-     */
-    public static final String ERROR_ASELECT_UNKNOWN_USER = "4010";
-    
-    /**
-     * Could not find the right config item failed.
-     */
-    public static final String ERROR_ASELECT_CONFIG_ERROR = "4011";
+	/**
+	 * Agent error: User's ticket is not valid.
+	 */
+	public final static String ERROR_ASELECT_AGENT_TICKET_NOT_VALID = "0109";
 
-    /**
-     * Database initialisation failed
-     */
-    public static final String ERROR_ASELECT_DATABASE_INIT = "5001";
-    
-    /**
-     * Database connection failed
-     */
-    public static final String ERROR_ASELECT_DATABASE_CONNECT = "5002";
-    
-    /**
-     * Database query failed
-     */
-    public static final String ERROR_ASELECT_DATABASE_QUERY_FAILED = "5003";
-    
-    /**
-     * Database update query failed
-     */
-    public static final String ERROR_ASELECT_DATABASE_UPDATE_FAILED = "5004";
-    
-    
-    /**
-     * Storage initialisation failed
-     */
-    public final static String ERROR_ASELECT_STORAGE_INIT = "6001";
-    
-    /**
-     * Storage retrieval failed
-     */
-    public final static String ERROR_ASELECT_STORAGE_RETRIEVE = "6002";
-    
-    /**
-     * Storage key not found
-     */
-    public final static String ERROR_ASELECT_STORAGE_NO_SUCH_KEY = "6003";
-    
-    /**
-     * Storage insertion failed
-     */
-    public final static String ERROR_ASELECT_STORAGE_INSERT = "6004"; 
-    
-    /**
-     * Storage removal failed
-     */
-    public final static String ERROR_ASELECT_STORAGE_REMOVE = "6005"; 
-    
-    /**
-     * Storage cleanup failed
-     */
-    public final static String ERROR_ASELECT_STORAGE_CLEAN_UP = "6006";
-    
-    /**
-     * Storage encoding failed
-     */
-//    public final static String ERROR_ASELECT_STORAGE_ENCODING_FAILURE = "6007";
-    
-    /**
-     * Storage decoding failed
-     */
-//    public final static String ERROR_ASELECT_STORAGE_DECODING_FAILURE = "6008";
-    
-    /**
-     * Storage connection failed
-     */
-    public final static String ERROR_ASELECT_STORAGE_CONNECTION_FAILURE = "6009";
-    
-    /**
-     * Maximum storage items reached
-     */
-    public final static String ERROR_ASELECT_STORAGE_MAXIMUM_REACHED = "6010";
-    
-    /**
-     * SAM recourse not available.
-     */
-    public final static String ERROR_ASELECT_SAM_UNAVALABLE = "7001"; 
-    
-    /**
-     * No active SAM resource.
-     */
-    public final static String ERROR_ASELECT_SAM_NO_RESOURCE_ACTIVE = "7002";
+	/**
+	 * Agent error: User's ticket has expired.
+	 */
+	// public final static String ERROR_ASELECT_AGENT_TICKET_EXPIRED = "010a";
 
-  
+	/**
+	 * Agent error: Unknown ticket.
+	 */
+	public final static String ERROR_ASELECT_AGENT_UNKNOWN_TICKET = "010b";
+
+	/**
+	 * Agent error: A-Select Agent could not reach A-Select Server.
+	 */
+	public final static String ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER = "010c";
+
+	/**
+	 * Agent error: Maximum number of issued tickets has been reached.
+	 */
+	public final static String ERROR_ASELECT_AGENT_TOO_MUCH_USERS = "010d";
+
+	/**
+	 * Agent error: Attributes mismatch (during verify_ticket)
+	 */
+	public final static String ERROR_ASELECT_AGENT_CORRUPT_ATTRIBUTES = "010e";
+
+	/**
+	 * Agent error: Invalid API request.
+	 */
+	public final static String ERROR_ASELECT_AGENT_INVALID_REQUEST = "0130";
+
+	/**
+	 * Agent error: Authorization failed.
+	 */
+	public final static String ERROR_ASELECT_AGENT_AUTHORIZATION_FAILED = "0140";
+
+	/**
+	 * Agent error: Authorization not enabled.
+	 */
+	public final static String ERROR_ASELECT_AGENT_AUTHORIZATION_NOT_ENABLED = "0141";
+
+	/**
+	 * Error: Can't open datasource
+	 */
+	public static final String ERROR_ASELECT_CANT_OPEN = "4002";
+	/**
+	 * Error: Can't close datasource
+	 */
+	public static final String ERROR_ASELECT_CANT_CLOSE = "4003";
+	/**
+	 * Error: Can't read from datasource
+	 */
+	public static final String ERROR_ASELECT_READ = "4004";
+	/**
+	 * Error: Does not exist
+	 */
+	public static final String ERROR_ASELECT_NOT_FOUND = "4005";
+	/**
+	 * Error: IO
+	 */
+	public static final String ERROR_ASELECT_IO = "4006";
+
+	/**
+	 * Usage error.
+	 */
+	public static final String ERROR_ASELECT_USE_ERROR = "4007";
+
+	/**
+	 * Parsing failed.
+	 */
+	public static final String ERROR_ASELECT_PARSE_ERROR = "4008";
+
+	/**
+	 * Initialisation failed.
+	 */
+	public static final String ERROR_ASELECT_INIT_ERROR = "4009";
+
+	/**
+	 * Username unknown.
+	 */
+	public static final String ERROR_ASELECT_UNKNOWN_USER = "4010";
+
+	/**
+	 * Could not find the right config item failed.
+	 */
+	public static final String ERROR_ASELECT_CONFIG_ERROR = "4011";
+
+	/**
+	 * Database initialisation failed
+	 */
+	public static final String ERROR_ASELECT_DATABASE_INIT = "5001";
+
+	/**
+	 * Database connection failed
+	 */
+	public static final String ERROR_ASELECT_DATABASE_CONNECT = "5002";
+
+	/**
+	 * Database query failed
+	 */
+	public static final String ERROR_ASELECT_DATABASE_QUERY_FAILED = "5003";
+
+	/**
+	 * Database update query failed
+	 */
+	public static final String ERROR_ASELECT_DATABASE_UPDATE_FAILED = "5004";
+
+	/**
+	 * Storage initialisation failed
+	 */
+	public final static String ERROR_ASELECT_STORAGE_INIT = "6001";
+
+	/**
+	 * Storage retrieval failed
+	 */
+	public final static String ERROR_ASELECT_STORAGE_RETRIEVE = "6002";
+
+	/**
+	 * Storage key not found
+	 */
+	public final static String ERROR_ASELECT_STORAGE_NO_SUCH_KEY = "6003";
+
+	/**
+	 * Storage insertion failed
+	 */
+	public final static String ERROR_ASELECT_STORAGE_INSERT = "6004";
+
+	/**
+	 * Storage removal failed
+	 */
+	public final static String ERROR_ASELECT_STORAGE_REMOVE = "6005";
+
+	/**
+	 * Storage cleanup failed
+	 */
+	public final static String ERROR_ASELECT_STORAGE_CLEAN_UP = "6006";
+
+	/**
+	 * Storage encoding failed
+	 */
+	// public final static String ERROR_ASELECT_STORAGE_ENCODING_FAILURE = "6007";
+
+	/**
+	 * Storage decoding failed
+	 */
+	// public final static String ERROR_ASELECT_STORAGE_DECODING_FAILURE = "6008";
+
+	/**
+	 * Storage connection failed
+	 */
+	public final static String ERROR_ASELECT_STORAGE_CONNECTION_FAILURE = "6009";
+
+	/**
+	 * Maximum storage items reached
+	 */
+	public final static String ERROR_ASELECT_STORAGE_MAXIMUM_REACHED = "6010";
+
+	/**
+	 * SAM recourse not available.
+	 */
+	public final static String ERROR_ASELECT_SAM_UNAVALABLE = "7001";
+
+	/**
+	 * No active SAM resource.
+	 */
+	public final static String ERROR_ASELECT_SAM_NO_RESOURCE_ACTIVE = "7002";
+
 }

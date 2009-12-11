@@ -74,6 +74,7 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.service.SAMServiceServlet;
 
+// TODO: Auto-generated Javadoc
 /**
  * The A-Select Server SAM Service servlet. <br>
  * <br>
@@ -84,335 +85,307 @@ import org.aselect.system.sam.service.SAMServiceServlet;
  * -<br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class SAMService extends SAMServiceServlet
 {
-    /** The module name. */
-    public static final String MODULE = "SAMService";
-    
-    /** The system logger. */
-    private ASelectSystemLogger _systemLogger;
-    
-    private boolean _bASelectOK;
-    
-    /**
-     * Initialize method for this Servlet, that starts the initialize of the 
-     * super class and loads all specific A-Select Server OID's to the <i>_htOIDs
-     * </i> <code>HashMap</code>
-     * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
-     */
-    public void init(ServletConfig oServletConfig) throws ServletException
-    {
-        _systemLogger = ASelectSystemLogger.getHandle();
-        super.init(oServletConfig);
+	/** The module name. */
+	public static final String MODULE = "SAMService";
 
-        _htOIDs.put(ASelectSAMConstants.OID_MAXSESSIONS,
-            ASelectSAMConstants.NAME_MAXSESSIONS);
-        _htOIDs.put(ASelectSAMConstants.OID_CURSESSIONS,
-            ASelectSAMConstants.NAME_CURSESSIONS);
-        _htOIDs.put(ASelectSAMConstants.OID_SESSIONLOAD,
-            ASelectSAMConstants.NAME_SESSIONLOAD);
-        _htOIDs.put(ASelectSAMConstants.OID_AUTHSPS,
-            ASelectSAMConstants.NAME_AUTHSPS);
-        _htOIDs.put(ASelectSAMConstants.OID_PROCESSINGTIME,
-            ASelectSAMConstants.NAME_PROCESSINGTIME);
-        _htOIDs.put(ASelectSAMConstants.OID_SESSIONCOUNT,
-            ASelectSAMConstants.NAME_SESSIONCOUNT);
-        _htOIDs.put(ASelectSAMConstants.OID_TGTCOUNT,
-            ASelectSAMConstants.NAME_TGTCOUNT);
-        _htOIDs.put(ASelectSAMConstants.OID_CURTGTS,
-            ASelectSAMConstants.NAME_CURTGTS);
-        _htOIDs.put(ASelectSAMConstants.OID_MAXTGTS,
-            ASelectSAMConstants.NAME_MAXTGTS);
-        
-        _bASelectOK = true;
-        
-        _systemLogger.log(Level.INFO, MODULE, "init()", 
-            "Successfully started SAM Service.");
-    }
+	/** The system logger. */
+	private ASelectSystemLogger _systemLogger;
 
-    /**
-     * Calls the destroy of the super class. 
-     * @see org.aselect.system.sam.service.SAMServiceServlet#destroy()
-     */
-    public void destroy()
-    {
-        super.destroy();
-    }
+	private boolean _bASelectOK;
 
-    /**
-     * Returns the A-Select SystemLogger
-     * @see org.aselect.system.sam.service.SAMServiceServlet#getSystemLogger()
-     */
-    protected SystemLogger getSystemLogger()
-    {
-        return _systemLogger;
-    }
+	/**
+	 * Initialize method for this Servlet, that starts the initialize of the super class and loads all specific A-Select
+	 * Server OID's to the <i>_htOIDs </i> <code>HashMap</code>.
+	 * 
+	 * @param oServletConfig
+	 *            the o servlet config
+	 * @throws ServletException
+	 *             the servlet exception
+	 * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
+	 */
+	@Override
+	public void init(ServletConfig oServletConfig)
+		throws ServletException
+	{
+		_systemLogger = ASelectSystemLogger.getHandle();
+		super.init(oServletConfig);
 
-    /**
-     * Adds all specific A-Select Server information to the common SAM 
-     * information.
-     * @see org.aselect.system.sam.service.SAMServiceServlet#getSAMInfo()
-     */
-    protected HashMap getSAMInfo()
-    {
-        String sMethod = "getSAMInfo()";
-        HashMap htInfo = getCommonSAMInfo();
-        long lMaxSessions = 0;
-        long lMaxTGT = 0;
-        _bASelectOK = true; //default true
-        ASelectConfigManager oASelectConfigManager = 
-            ASelectConfigManager.getHandle();
-        if (oASelectConfigManager != null)
-        {
-            try
-            {
-                Object oSessionManagerSection = oASelectConfigManager.getSection(null,
-                        "storagemanager", "id=session");
-                
-                lMaxSessions = (new Long(oASelectConfigManager.getParam(
-                        oSessionManagerSection, "max")).longValue());
-            }
-            catch (ASelectConfigException e)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod,
-                    "Can't find 'max' config item in storagemanager section with id='sessions'", e);
-            }
-            catch (NumberFormatException e)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod,
-                        "Can't convert value of 'max' config item in storagemanager with id='sessions' to a long value.");
-            }
-            catch (NullPointerException e)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod,
-                        "Can't retrieve value of 'max' config item in storagemanager with id='sessions'.");
-                _bASelectOK = false;
-            }
-            
-            
-            try
-            {
-                Object oTicketManagerSection = oASelectConfigManager.getSection(null,
-                    "storagemanager", "id=tgt");
-                
-                lMaxTGT = (new Long(oASelectConfigManager.getParam(
-                        oTicketManagerSection, "max")).longValue());
-            }
-            catch (ASelectConfigException e)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod,
-                    "Can't find 'max' config item in storagemanager section with id='tgt'", e);
-            }
-            catch (NumberFormatException e)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod,
-                    "Can't convert value of 'max' config item in storagemanager with id='tgt' to a long value.");
-            }
-            catch (NullPointerException e)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod,
-                        "Can't retrieve value of 'max' config item in storagemanager with id='tgt'.");
-                _bASelectOK = false;
-            }
-        }
+		_htOIDs.put(ASelectSAMConstants.OID_MAXSESSIONS, ASelectSAMConstants.NAME_MAXSESSIONS);
+		_htOIDs.put(ASelectSAMConstants.OID_CURSESSIONS, ASelectSAMConstants.NAME_CURSESSIONS);
+		_htOIDs.put(ASelectSAMConstants.OID_SESSIONLOAD, ASelectSAMConstants.NAME_SESSIONLOAD);
+		_htOIDs.put(ASelectSAMConstants.OID_AUTHSPS, ASelectSAMConstants.NAME_AUTHSPS);
+		_htOIDs.put(ASelectSAMConstants.OID_PROCESSINGTIME, ASelectSAMConstants.NAME_PROCESSINGTIME);
+		_htOIDs.put(ASelectSAMConstants.OID_SESSIONCOUNT, ASelectSAMConstants.NAME_SESSIONCOUNT);
+		_htOIDs.put(ASelectSAMConstants.OID_TGTCOUNT, ASelectSAMConstants.NAME_TGTCOUNT);
+		_htOIDs.put(ASelectSAMConstants.OID_CURTGTS, ASelectSAMConstants.NAME_CURTGTS);
+		_htOIDs.put(ASelectSAMConstants.OID_MAXTGTS, ASelectSAMConstants.NAME_MAXTGTS);
 
-        long lSessions = -1;
-        SessionManager oSessionManager = SessionManager.getHandle();
-        if (oSessionManager != null)
-        {
-            HashMap htSessionContexts = null;
-            try
-            {
-                htSessionContexts = oSessionManager.getAll();
-                // TODO: cheaper version: lSessions = oSessionManager.getCount();
-            }
-            catch (Exception e)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-                    "No contexts available", e);
-            }
-            if (htSessionContexts != null)
-                lSessions = htSessionContexts.size();
-        }
+		_bASelectOK = true;
 
-        //maxsessions
-        htInfo.put(ASelectSAMConstants.OID_MAXSESSIONS, "" + lMaxSessions);
+		_systemLogger.log(Level.INFO, MODULE, "init()", "Successfully started SAM Service.");
+	}
 
-        //cursessions
-        htInfo.put(ASelectSAMConstants.OID_CURSESSIONS, "" + lSessions);
+	/**
+	 * Calls the destroy of the super class.
+	 * 
+	 * @see org.aselect.system.sam.service.SAMServiceServlet#destroy()
+	 */
+	@Override
+	public void destroy()
+	{
+		super.destroy();
+	}
 
-        //sessionload
-        double dLoad = lSessions >= 0 
-        	? lSessions * ((double)100 / (double)lMaxSessions)
-        	: -1;
-        htInfo.put(ASelectSAMConstants.OID_SESSIONLOAD, "" + (int)dLoad);
+	/**
+	 * Returns the A-Select SystemLogger.
+	 * 
+	 * @return the system logger
+	 * @see org.aselect.system.sam.service.SAMServiceServlet#getSystemLogger()
+	 */
+	@Override
+	protected SystemLogger getSystemLogger()
+	{
+		return _systemLogger;
+	}
 
-        //authsps
-        htInfo.put(ASelectSAMConstants.OID_AUTHSPS, resolveAuthSPs());
+	/**
+	 * Adds all specific A-Select Server information to the common SAM information.
+	 * 
+	 * @return the SAM info
+	 * @see org.aselect.system.sam.service.SAMServiceServlet#getSAMInfo()
+	 */
+	@Override
+	protected HashMap getSAMInfo()
+	{
+		String sMethod = "getSAMInfo()";
+		HashMap htInfo = getCommonSAMInfo();
+		long lMaxSessions = 0;
+		long lMaxTGT = 0;
+		_bASelectOK = true; // default true
+		ASelectConfigManager oASelectConfigManager = ASelectConfigManager.getHandle();
+		if (oASelectConfigManager != null) {
+			try {
+				Object oSessionManagerSection = oASelectConfigManager.getSection(null, "storagemanager", "id=session");
 
-        //processingTime: last session lifetime
-        long lTime = -1;
-        if (oSessionManager != null)
-            lTime = oSessionManager.getProcessingTime();
-        htInfo.put(ASelectSAMConstants.OID_PROCESSINGTIME, "" + lTime);
+				lMaxSessions = (new Long(oASelectConfigManager.getParam(oSessionManagerSection, "max")).longValue());
+			}
+			catch (ASelectConfigException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"Can't find 'max' config item in storagemanager section with id='sessions'", e);
+			}
+			catch (NumberFormatException e) {
+				_systemLogger
+						.log(Level.WARNING, MODULE, sMethod,
+								"Can't convert value of 'max' config item in storagemanager with id='sessions' to a long value.");
+			}
+			catch (NullPointerException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"Can't retrieve value of 'max' config item in storagemanager with id='sessions'.");
+				_bASelectOK = false;
+			}
 
-        //sessionCount
-        long lSessionCount = -1;
-        oSessionManager = SessionManager.getHandle();
-        if (oSessionManager != null)
-            lSessionCount = oSessionManager.getCounter();
-        htInfo.put(ASelectSAMConstants.OID_SESSIONCOUNT, "" + lSessionCount);
+			try {
+				Object oTicketManagerSection = oASelectConfigManager.getSection(null, "storagemanager", "id=tgt");
 
-        //TGTCount
-        long lTGTCount = -1;
-        TGTManager oTGTManager = TGTManager.getHandle();
-        if (oTGTManager != null)
-            lTGTCount = oTGTManager.getTGTCounter();
-        htInfo.put(ASelectSAMConstants.OID_TGTCOUNT, "" + lTGTCount);
+				lMaxTGT = (new Long(oASelectConfigManager.getParam(oTicketManagerSection, "max")).longValue());
+			}
+			catch (ASelectConfigException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"Can't find 'max' config item in storagemanager section with id='tgt'", e);
+			}
+			catch (NumberFormatException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"Can't convert value of 'max' config item in storagemanager with id='tgt' to a long value.");
+			}
+			catch (NullPointerException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"Can't retrieve value of 'max' config item in storagemanager with id='tgt'.");
+				_bASelectOK = false;
+			}
+		}
 
-        //Active TGTs
-        long lActiveTGTs = -1;
-        oTGTManager = TGTManager.getHandle();
-        if (oTGTManager != null)
-        {
-            HashMap htTGTContexts = null;
-            try
-            {
-                htTGTContexts = oTGTManager.getAll();
-                // TODO: cheaper version: lActiveTGTs = oTGTManager.getTGTCounter();
-            }
-            catch (Exception e)
-            {
-                _systemLogger.log(Level.WARNING, MODULE, sMethod, 
-                    "No contexts available", e);
-            }
-            if (htTGTContexts != null)
-                lActiveTGTs = htTGTContexts.size();
-        }
+		long lSessions = -1;
+		SessionManager oSessionManager = SessionManager.getHandle();
+		if (oSessionManager != null) {
+			HashMap htSessionContexts = null;
+			try {
+				htSessionContexts = oSessionManager.getAll();
+				// TODO: cheaper version: lSessions = oSessionManager.getCount();
+			}
+			catch (Exception e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No contexts available", e);
+			}
+			if (htSessionContexts != null)
+				lSessions = htSessionContexts.size();
+		}
 
-        htInfo.put(ASelectSAMConstants.OID_CURTGTS, "" + lActiveTGTs);
-        htInfo.put(ASelectSAMConstants.OID_MAXTGTS, "" + lMaxTGT);
-        return htInfo;
-    }
+		// maxsessions
+		htInfo.put(ASelectSAMConstants.OID_MAXSESSIONS, "" + lMaxSessions);
 
-    /**
-     * Checks if the A-Select Server Servlet is operational. 
-     * @see org.aselect.system.sam.service.SAMServiceServlet#operational()
-     */
-    protected int operational()
-    {
-        if(!_bASelectOK)
-            return 0;
-        //checks if the A-Select Server context can be accessed.
-        ServletContext oServletContext = this.getServletContext().getContext(
-            super.getContextUrl() + "/server");
-        if (oServletContext != null)
-        {
-            return 1;
-        }
-        return 0;
-    }
+		// cursessions
+		htInfo.put(ASelectSAMConstants.OID_CURSESSIONS, "" + lSessions);
 
-    /**
-     * Returns the A-Select Server discription represented as a <code>String</code>.
-     * @see org.aselect.system.sam.service.SAMServiceServlet#getSysDescr()
-     */
-    protected String getSysDescr()
-    {
-        StringBuffer sbSysDescr = new StringBuffer("A-Select Server v");
-        sbSysDescr.append(Version.getRelease());
+		// sessionload
+		double dLoad = lSessions >= 0 ? lSessions * ((double) 100 / (double) lMaxSessions) : -1;
+		htInfo.put(ASelectSAMConstants.OID_SESSIONLOAD, "" + (int) dLoad);
 
-        String sSP = Version.getSP();
-        if (!sSP.equals(""))
-        {
-            sbSysDescr.append(" ,SP ");
-            sbSysDescr.append(sSP);
-        }
+		// authsps
+		htInfo.put(ASelectSAMConstants.OID_AUTHSPS, resolveAuthSPs());
 
-        String sPatch = Version.getPatch();
-        if (!sPatch.equals(""))
-        {
-            sbSysDescr.append(" ,Patch ");
-            sbSysDescr.append(sPatch);
-        }
+		// processingTime: last session lifetime
+		long lTime = -1;
+		if (oSessionManager != null)
+			lTime = oSessionManager.getProcessingTime();
+		htInfo.put(ASelectSAMConstants.OID_PROCESSINGTIME, "" + lTime);
 
-        return sbSysDescr.toString();
-    }
+		// sessionCount
+		long lSessionCount = -1;
+		oSessionManager = SessionManager.getHandle();
+		if (oSessionManager != null)
+			lSessionCount = oSessionManager.getCounter();
+		htInfo.put(ASelectSAMConstants.OID_SESSIONCOUNT, "" + lSessionCount);
 
-    /**
-     * Returns the A-Select Server version number.
-     * @see org.aselect.system.sam.service.SAMServiceServlet#getVersion()
-     */
-    protected String getVersion()
-    {
-        return Version.getRelease();
-    }
+		// TGTCount
+		long lTGTCount = -1;
+		TGTManager oTGTManager = TGTManager.getHandle();
+		if (oTGTManager != null)
+			lTGTCount = oTGTManager.getTGTCounter();
+		htInfo.put(ASelectSAMConstants.OID_TGTCOUNT, "" + lTGTCount);
 
-    /**
-     * Resolves which authSPs are configured for this A-Select Server. 
-     * <br><br>
-     * <b>Description: </b> 
-     * <br>
-     * Resolves the AuthSP id's from the A-Select Server configuration. <br>
-     * <br>
-     * <b>Concurrency issues: </b> 
-     * <br>
-     * - <br>
-     * <br>
-     * <b>Preconditions: </b> 
-     * <br>
-     * - <br>
-     * <br>
-     * <b>Postconditions: </b> 
-     * <br>
-     * Will return an non breaking space HTML entity (&nbsp) if no AuthSPs can 
-     * be resolved.<br>
-     * 
-     * @return <code>String</code> containing a representation of the AuthSP's 
-     * that are configured in this A-Select Server.
-     */
-    private String resolveAuthSPs()
-    {
-        String sReturn = "";
-        StringBuffer sbAuthSP = null;
+		// Active TGTs
+		long lActiveTGTs = -1;
+		oTGTManager = TGTManager.getHandle();
+		if (oTGTManager != null) {
+			HashMap htTGTContexts = null;
+			try {
+				htTGTContexts = oTGTManager.getAll();
+				// TODO: cheaper version: lActiveTGTs = oTGTManager.getTGTCounter();
+			}
+			catch (Exception e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No contexts available", e);
+			}
+			if (htTGTContexts != null)
+				lActiveTGTs = htTGTContexts.size();
+		}
 
-        try
-        {
-            ASelectConfigManager oASelectConfigManager = ASelectConfigManager
-                .getHandle();
-            Object oAuthSP = oASelectConfigManager.getSection(
-                oASelectConfigManager.getSection(null, "authsps"), "authsp");
+		htInfo.put(ASelectSAMConstants.OID_CURTGTS, "" + lActiveTGTs);
+		htInfo.put(ASelectSAMConstants.OID_MAXTGTS, "" + lMaxTGT);
+		return htInfo;
+	}
 
-            while (oAuthSP != null)
-            {
-                String sAuthSP = oASelectConfigManager.getParam(oAuthSP, "id");
-                String sLevel = oASelectConfigManager
-                    .getParam(oAuthSP, "level");
+	/**
+	 * Checks if the A-Select Server Servlet is operational.
+	 * 
+	 * @return the int
+	 * @see org.aselect.system.sam.service.SAMServiceServlet#operational()
+	 */
+	@Override
+	protected int operational()
+	{
+		if (!_bASelectOK)
+			return 0;
+		// checks if the A-Select Server context can be accessed.
+		ServletContext oServletContext = this.getServletContext().getContext(super.getContextUrl() + "/server");
+		if (oServletContext != null) {
+			return 1;
+		}
+		return 0;
+	}
 
-                if (sbAuthSP == null)
-                    sbAuthSP = new StringBuffer();
-                else
-                    sbAuthSP.append(",");
+	/**
+	 * Returns the A-Select Server discription represented as a <code>String</code>.
+	 * 
+	 * @return the sys descr
+	 * @see org.aselect.system.sam.service.SAMServiceServlet#getSysDescr()
+	 */
+	@Override
+	protected String getSysDescr()
+	{
+		StringBuffer sbSysDescr = new StringBuffer("A-Select Server v");
+		sbSysDescr.append(Version.getRelease());
 
-                sbAuthSP.append(sAuthSP);
-                sbAuthSP.append(" (level=");
-                sbAuthSP.append(sLevel);
-                sbAuthSP.append(")");
+		String sSP = Version.getSP();
+		if (!sSP.equals("")) {
+			sbSysDescr.append(" ,SP ");
+			sbSysDescr.append(sSP);
+		}
 
-                oAuthSP = oASelectConfigManager.getNextSection(oAuthSP);
-            }
+		String sPatch = Version.getPatch();
+		if (!sPatch.equals("")) {
+			sbSysDescr.append(" ,Patch ");
+			sbSysDescr.append(sPatch);
+		}
 
-            sReturn = sbAuthSP.toString();
-        }
-        catch (Exception e)
-        {
-            _systemLogger.log(Level.WARNING, MODULE, "resolveAuthSPs()", 
-                "Error retrieving AuthSP information", e);
-            sReturn = "&nbsp;";
-        }
+		return sbSysDescr.toString();
+	}
 
-        return sReturn;
-    }
+	/**
+	 * Returns the A-Select Server version number.
+	 * 
+	 * @return the version
+	 * @see org.aselect.system.sam.service.SAMServiceServlet#getVersion()
+	 */
+	@Override
+	protected String getVersion()
+	{
+		return Version.getRelease();
+	}
+
+	/**
+	 * Resolves which authSPs are configured for this A-Select Server. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Resolves the AuthSP id's from the A-Select Server configuration. <br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions: </b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * Will return an non breaking space HTML entity (&nbsp) if no AuthSPs can be resolved.<br>
+	 * 
+	 * @return <code>String</code> containing a representation of the AuthSP's that are configured in this A-Select
+	 *         Server.
+	 */
+	private String resolveAuthSPs()
+	{
+		String sReturn = "";
+		StringBuffer sbAuthSP = null;
+
+		try {
+			ASelectConfigManager oASelectConfigManager = ASelectConfigManager.getHandle();
+			Object oAuthSP = oASelectConfigManager.getSection(oASelectConfigManager.getSection(null, "authsps"),
+					"authsp");
+
+			while (oAuthSP != null) {
+				String sAuthSP = oASelectConfigManager.getParam(oAuthSP, "id");
+				String sLevel = oASelectConfigManager.getParam(oAuthSP, "level");
+
+				if (sbAuthSP == null)
+					sbAuthSP = new StringBuffer();
+				else
+					sbAuthSP.append(",");
+
+				sbAuthSP.append(sAuthSP);
+				sbAuthSP.append(" (level=");
+				sbAuthSP.append(sLevel);
+				sbAuthSP.append(")");
+
+				oAuthSP = oASelectConfigManager.getNextSection(oAuthSP);
+			}
+
+			sReturn = sbAuthSP.toString();
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, MODULE, "resolveAuthSPs()", "Error retrieving AuthSP information", e);
+			sReturn = "&nbsp;";
+		}
+
+		return sReturn;
+	}
 }

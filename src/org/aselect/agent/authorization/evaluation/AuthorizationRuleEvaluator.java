@@ -61,23 +61,19 @@ import org.aselect.system.exception.ASelectAuthorizationException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
- * Evaluator for authorization rules.
- * <br><br>
- * <b>Description:</b>
+ * Evaluator for authorization rules. <br>
  * <br>
- * The <code>AuthorizationRuleEvaluator</code> evaluates authorization 
- * rules for given user attributes. The input of the AuthorizationEvaluator 
- * is an evaluation tree created by the 
- * {@link org.aselect.agent.authorization.parsing.AuthorizationRuleParser} and 
- * the user attributes of a user.
- * <br><br>
- * <b>Concurrency issues:</b>
+ * <b>Description:</b> <br>
+ * The <code>AuthorizationRuleEvaluator</code> evaluates authorization rules for given user attributes. The input of the
+ * AuthorizationEvaluator is an evaluation tree created by the
+ * {@link org.aselect.agent.authorization.parsing.AuthorizationRuleParser} and the user attributes of a user. <br>
  * <br>
- * -
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * - <br>
  * 
+ * @author Alfa & Ariss
  */
 public class AuthorizationRuleEvaluator
 {
@@ -92,56 +88,55 @@ public class AuthorizationRuleEvaluator
 	private SystemLogger _systemLogger;
 
 	/**
-	 * Create a new <code>AuthorizationRuleEvaluator</code>.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Create a new <code>AuthorizationRuleEvaluator</code>. <br>
 	 * <br>
-	 * Create a new instance of the <code>AuthorizationRuleEvaluator</code> 
-	 * with the given logger.
-	 * <br><br>
-	 * @param systemLoger The system logger to be used.
+	 * <b>Description:</b> <br>
+	 * Create a new instance of the <code>AuthorizationRuleEvaluator</code> with the given logger. <br>
+	 * <br>
+	 * 
+	 * @param systemLoger
+	 *            The system logger to be used.
 	 */
 	public AuthorizationRuleEvaluator(SystemLogger systemLoger) {
 		_systemLogger = systemLoger;
 	}
 
 	/**
-	 * Evaluate a authorization rule.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Evaluate a authorization rule. <br>
 	 * <br>
-	 * this method uses the given evaluation tree and fills in the user 
-	 * attributes if all the expressions in the evaluation tree are 
-	 * valid for the user attributes this method returns true, otherwise false.
-	 * <br><br>
-	 * <b>Preconditions:</b>
+	 * <b>Description:</b> <br>
+	 * this method uses the given evaluation tree and fills in the user attributes if all the expressions in the
+	 * evaluation tree are valid for the user attributes this method returns true, otherwise false. <br>
 	 * <br>
-	 * -
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
 	 * <br>
-	 * <b>Postconditions:</b>
-	 * <br>
-	 * -
-	 * <br><br>
-	 * @param htAttributes The user attributes.
-	 * @param tEvaluation The evaluation tree to evaluate upon.
-	 * @return <code>true</code> if the tree evaluates to <code>true</code>
-	 * 	for the given user attributes, otherwise false.
-	 * @throws ASelectAuthorizationException If evaluating fails.
+	 * 
+	 * @param htAttributes
+	 *            The user attributes.
+	 * @param tEvaluation
+	 *            The evaluation tree to evaluate upon.
+	 * @return <code>true</code> if the tree evaluates to <code>true</code> for the given user attributes, otherwise
+	 *         false.
+	 * @throws ASelectAuthorizationException
+	 *             If evaluating fails.
 	 */
 	public boolean evaluate(HashMap htAttributes, EvaluationTree tEvaluation)
 		throws ASelectAuthorizationException
 	{
 		final String sMethod = "evaluate()";
 		boolean bAuthorized = false;
-		//check not empty
+		// check not empty
 		if (tEvaluation == null || tEvaluation.isEmpty()) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Evaluation tree not available or empty.");
 			throw new ASelectAuthorizationException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
 		}
 
-		//get token
+		// get token
 		AuthorizationRuleToken oToken = (AuthorizationRuleToken) tEvaluation._oNode;
-		//check group
+		// check group
 		_systemLogger.log(Level.FINE, MODULE, sMethod, "Group=" + oToken._iGroup);
 		switch (oToken._iGroup) {
 		case AuthorizationRuleToken.LOGIC_OPERATOR_GROUP: {
@@ -149,12 +144,12 @@ public class AuthorizationRuleEvaluator
 			break;
 		}
 		case AuthorizationRuleToken.OPERATOR_GROUP: {
-			//simple expression with operator
+			// simple expression with operator
 			bAuthorized = evaluateSimple(htAttributes, tEvaluation);
 			break;
 		}
 		case AuthorizationRuleToken.DATA_GROUP: {
-			//simple expression with just a key
+			// simple expression with just a key
 			bAuthorized = evaluateSimple(htAttributes, tEvaluation);
 			break;
 		}
@@ -169,11 +164,14 @@ public class AuthorizationRuleEvaluator
 	/**
 	 * Evaluate a simple expression.
 	 * 
-	 * @param htAttributes The user attributes.
-	 * @param tEvaluation The evaluation tree to evaluate upon.
-	 * @return <code>true</code> if the simple expression tree evaluates to 
-	 * 	<code>true</code> for the given user attributes, otherwise false.
-	 * @throws ASelectAuthorizationException If evaluating fails.
+	 * @param htAttributes
+	 *            The user attributes.
+	 * @param tEvaluation
+	 *            The evaluation tree to evaluate upon.
+	 * @return <code>true</code> if the simple expression tree evaluates to <code>true</code> for the given user
+	 *         attributes, otherwise false.
+	 * @throws ASelectAuthorizationException
+	 *             If evaluating fails.
 	 */
 	private boolean evaluateSimple(HashMap htAttributes, EvaluationTree tEvaluation)
 		throws ASelectAuthorizationException
@@ -182,22 +180,22 @@ public class AuthorizationRuleEvaluator
 		boolean bAuthorized = false;
 		AuthorizationRuleToken oToken = (AuthorizationRuleToken) tEvaluation._oNode;
 
-		if (tEvaluation.isLeaf()) //simple expression with just a key
+		if (tEvaluation.isLeaf()) // simple expression with just a key
 		{
 			_systemLogger.log(Level.FINE, MODULE, sMethod, "Leaf " + oToken.getValue());
 			bAuthorized = htAttributes.containsKey(oToken.getValue());
 		}
 		else
-		//simple expression with operator
+		// simple expression with operator
 		{
-			//Get key
+			// Get key
 			AuthorizationRuleToken oKey = (AuthorizationRuleToken) tEvaluation._tLeft._oNode;
 			String sKey = (String) oKey.getValue();
 
 			Object oValue = htAttributes.get(sKey);
 			_systemLogger.log(Level.FINE, MODULE, sMethod, "Expr key=" + sKey + " value=" + oValue);
 
-			if (oValue == null) //attribute not available
+			if (oValue == null) // attribute not available
 				bAuthorized = false;
 			else {
 
@@ -282,13 +280,16 @@ public class AuthorizationRuleEvaluator
 	/**
 	 * Evaluate a simple expression for multi-valued attributes.
 	 * 
-	 * @param oToken Authorization rule token which represents different types of tokens from an authorization rule.
-	 * @param oExpectedValue The expected authorization token.
-	 * @param vValue The multi-values to evaluate.
-	 * @return <code>true</code> if the simple expression tree evaluates to 
-	 *  <code>true</code> if one of the given values of the mutli-valued user attribute
-	 *  matches the rule, otherwise false.
-	 * @throws ASelectAuthorizationException If evaluating fails.
+	 * @param oToken
+	 *            Authorization rule token which represents different types of tokens from an authorization rule.
+	 * @param oExpectedValue
+	 *            The expected authorization token.
+	 * @param vValue
+	 *            The multi-values to evaluate.
+	 * @return <code>true</code> if the simple expression tree evaluates to <code>true</code> if one of the given values
+	 *         of the mutli-valued user attribute matches the rule, otherwise false.
+	 * @throws ASelectAuthorizationException
+	 *             If evaluating fails.
 	 */
 	private boolean evaluateSimpleMultiValuedAttribute(AuthorizationRuleToken oToken,
 			AuthorizationRuleToken oExpectedValue, Vector vValue)
@@ -400,13 +401,16 @@ public class AuthorizationRuleEvaluator
 	}
 
 	/**
-	 * Evaluate a logic expression. 
+	 * Evaluate a logic expression.
 	 * 
-	 * @param htAttributes The user attributes.
-	 * @param tEvaluation The evaluation tree to evaluate upon.
-	 * @return <code>true</code> if the logic expression tree evaluates to 
-	 * 	<code>true</code> for the given user attributes, otherwise false.
-	 * @throws ASelectAuthorizationException If evaluating fails.
+	 * @param htAttributes
+	 *            The user attributes.
+	 * @param tEvaluation
+	 *            The evaluation tree to evaluate upon.
+	 * @return <code>true</code> if the logic expression tree evaluates to <code>true</code> for the given user
+	 *         attributes, otherwise false.
+	 * @throws ASelectAuthorizationException
+	 *             If evaluating fails.
 	 */
 	private boolean evaluateLogic(HashMap htAttributes, EvaluationTree tEvaluation)
 		throws ASelectAuthorizationException
@@ -440,11 +444,14 @@ public class AuthorizationRuleEvaluator
 
 	/**
 	 * Converts a attribute value to the same type as the expected value.
-	 * @param cExpected The expected object to which the value is compared.
-	 * @param sValue De value of the attribute as String.
+	 * 
+	 * @param cExpected
+	 *            The expected object to which the value is compared.
+	 * @param sValue
+	 *            De value of the attribute as String.
 	 * @return The value as a comparable type.
-	 * @throws ASelectAuthorizationException If the value can not be converted 
-	 * 	to the same type as the expected value. 
+	 * @throws ASelectAuthorizationException
+	 *             If the value can not be converted to the same type as the expected value.
 	 */
 	private Comparable convertAttributeValue(Comparable cExpected, String sValue)
 		throws ASelectAuthorizationException
@@ -454,7 +461,7 @@ public class AuthorizationRuleEvaluator
 		Comparable cRet = null;
 
 		try {
-			//convert value
+			// convert value
 			if (cExpected instanceof IPv4Address) {
 				cRet = new IPv4Address(sValue);
 			}
@@ -462,11 +469,11 @@ public class AuthorizationRuleEvaluator
 				cRet = new IPv6Address(sValue);
 			}
 			else if (cExpected instanceof Date) {
-				//get all local datetime formats
+				// get all local datetime formats
 				Locale[] lc = DateFormat.getAvailableLocales();
 				boolean bConverted = false;
 
-				//try DateTime		                
+				// try DateTime
 				for (int i = 0; i < lc.length && !bConverted; i++) {
 					DateFormat oDateTimeFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT,
 							lc[i]);
@@ -475,10 +482,10 @@ public class AuthorizationRuleEvaluator
 						bConverted = true;
 					}
 					catch (ParseException e) {
-						//try next format
+						// try next format
 					}
 				}
-				//try Date
+				// try Date
 				for (int i = 0; i < lc.length && !bConverted; i++) {
 					DateFormat oDateFormat = DateFormat.getDateInstance(DateFormat.SHORT, lc[i]);
 					try {
@@ -486,11 +493,11 @@ public class AuthorizationRuleEvaluator
 						bConverted = true;
 					}
 					catch (ParseException e) {
-						//try next format
+						// try next format
 					}
 				}
 
-				//try Time	
+				// try Time
 				for (int i = 0; i < lc.length && !bConverted; i++) {
 					DateFormat oTimeFormat = DateFormat.getTimeInstance(DateFormat.SHORT, lc[i]);
 					try {
@@ -498,7 +505,7 @@ public class AuthorizationRuleEvaluator
 						bConverted = true;
 					}
 					catch (ParseException e) {
-						//try next format
+						// try next format
 					}
 				}
 

@@ -1,9 +1,19 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.xsaml20;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
@@ -28,12 +38,10 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.BASE64Encoder;
 import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
-import org.opensaml.Configuration;
 import org.opensaml.common.SAMLObject;
 import org.opensaml.common.SAMLObjectBuilder;
 import org.opensaml.common.SAMLVersion;
 import org.opensaml.common.SignableSAMLObject;
-import org.opensaml.common.impl.SecureRandomIdentifierGenerator;
 import org.opensaml.saml2.core.Assertion;
 import org.opensaml.saml2.core.Attribute;
 import org.opensaml.saml2.core.AttributeStatement;
@@ -80,44 +88,51 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+// TODO: Auto-generated Javadoc
 public class SamlTools
 {
 	private static final String MODULE = "SamlTools";
 
 	// 20091203, generate our own id
+	/**
+	 * Generate identifier.
+	 * 
+	 * @param systemLogger
+	 *            the system logger
+	 * @param sModule
+	 *            the s module
+	 * @return the string
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	public static String generateIdentifier(ASelectSystemLogger systemLogger, String sModule)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "generateIdentifier";
 		byte[] baRandomBytes = new byte[20];
 
 		CryptoEngine.nextRandomBytes(baRandomBytes);
-		return "I"+Utils.byteArrayToHexString(baRandomBytes);
+		return "I" + Utils.byteArrayToHexString(baRandomBytes);
 
-		/*SecureRandomIdentifierGenerator idGenerator = null;
-		try {
-			idGenerator = new SecureRandomIdentifierGenerator();
-		}
-		catch (NoSuchAlgorithmException e) {
-			if (systemLogger != null)
-				systemLogger.log(Level.WARNING, sModule, sMethod, "The SHA1PRNG algorithm is not supported by the JVM", e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-		}
-		// RH, 20081107, add a letter to this ID to make it saml NCName compliant
-//		return idGenerator.generateIdentifier();
-		return "I" + idGenerator.generateIdentifier();*/
+		/*
+		 * SecureRandomIdentifierGenerator idGenerator = null; try { idGenerator = new
+		 * SecureRandomIdentifierGenerator(); } catch (NoSuchAlgorithmException e) { if (systemLogger != null)
+		 * systemLogger.log(Level.WARNING, sModule, sMethod, "The SHA1PRNG algorithm is not supported by the JVM", e);
+		 * throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR); } // RH, 20081107, add a letter to this ID
+		 * to make it saml NCName compliant // return idGenerator.generateIdentifier(); return "I" +
+		 * idGenerator.generateIdentifier();
+		 */
 	}
 
 	/**
-	 * Helper method to detect if the HttpServletRequest is signed The
-	 * HttpServletRequest is signed if:
+	 * Helper method to detect if the HttpServletRequest is signed The HttpServletRequest is signed if:
 	 * <ul>
-	 * <li> There is a parameter 'SigAlg' witch contains the value
-	 * 'http://www.w3.org/2000/09/xmldsig#'</li>
-	 * <li> <b>And</b> there is a parameter 'Signature'</li>
+	 * <li>There is a parameter 'SigAlg' witch contains the value 'http://www.w3.org/2000/09/xmldsig#'</li>
+	 * <li><b>And</b> there is a parameter 'Signature'</li>
 	 * </ul>
 	 * 
 	 * @param httpRequest
+	 *            the http request
 	 * @return boolean
 	 */
 	@SuppressWarnings("unchecked")
@@ -139,11 +154,15 @@ public class SamlTools
 	}
 
 	/**
-	 * Helper method to verify the Signature of the httpRequest
+	 * Helper method to verify the Signature of the httpRequest.
 	 * 
-	 * @param key PublicKey
-	 * @param httpRequest HttpServletRequest
+	 * @param key
+	 *            PublicKey
+	 * @param httpRequest
+	 *            HttpServletRequest
 	 * @return boolean
+	 * @throws MessageDecodingException
+	 *             the message decoding exception
 	 */
 	@SuppressWarnings("unchecked")
 	public static boolean verifySignature(PublicKey key, HttpServletRequest httpRequest)
@@ -151,7 +170,7 @@ public class SamlTools
 	{
 		String sMethod = "verifySignature()";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
-		systemLogger.log(Level.INFO, MODULE, sMethod, "Public key="+key+" hashcode="+key.hashCode());
+		systemLogger.log(Level.INFO, MODULE, sMethod, "Public key=" + key + " hashcode=" + key.hashCode());
 
 		String signingAlgo;
 		if (key instanceof RSAPublicKey) {
@@ -168,17 +187,17 @@ public class SamlTools
 			String sData = "";
 			while (tokenizer.hasMoreTokens()) {
 				String s = tokenizer.nextToken();
-				systemLogger.log(Level.FINEST, MODULE, sMethod, "Token=["+s+"]");
+				systemLogger.log(Level.FINEST, MODULE, sMethod, "Token=[" + s + "]");
 				String sDecoded = URLDecoder.decode(s, "UTF-8");
 				if (sDecoded.equals("RelayState=[RelayState]"))
-					;   // 20091118, Bauke: ignore "empty" RelayState (came from logout_info.html)
+					; // 20091118, Bauke: ignore "empty" RelayState (came from logout_info.html)
 				else if (!s.startsWith("Signature=") && !s.startsWith("consent=")) {
 					sData += s + "&";
 				}
 			}
 			sData = sData.substring(0, sData.length() - 1); // Delete the last '&'
-			systemLogger.log(Level.FINEST, MODULE, sMethod, "Check ["+sData+"]");
-			
+			systemLogger.log(Level.FINEST, MODULE, sMethod, "Check [" + sData + "]");
+
 			java.security.Signature signature = java.security.Signature.getInstance(signingAlgo);
 			// TODO this uses SAML11, should be SAML20
 			signature.initVerify(key);
@@ -196,118 +215,144 @@ public class SamlTools
 		}
 	}
 
-    /**
-     * Check OpenSAML2 library objects for subjectLocalityAddress validity
-     * 
-     * @param obj                   The object to be checked
-     * @param refAddress            Reference (ip)address to check against
-     * @return valid                true = valid, false otherwise
-     * @throws ValidationException  Thrown if an error occurs
-     */
-        public static boolean checkLocalityAddress(SAMLObject obj, String refAddress) throws ASelectException {
-    	// TODO We might also implement checking of DNSName here
-    	boolean valid = false;
+	/**
+	 * Check OpenSAML2 library objects for subjectLocalityAddress validity.
+	 * 
+	 * @param obj
+	 *            The object to be checked
+	 * @param refAddress
+	 *            Reference (ip)address to check against
+	 * @return valid true = valid, false otherwise
+	 * @throws ValidationException
+	 *             Thrown if an error occurs
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	public static boolean checkLocalityAddress(SAMLObject obj, String refAddress)
+		throws ASelectException
+	{
+		// TODO We might also implement checking of DNSName here
+		boolean valid = false;
 		String sMethod = "checkLocalityAddress";
 		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
-	    _systemLogger.log(Level.INFO,MODULE,sMethod, "obj->"+obj + "refAddress->"+refAddress);
-	    // TODO This might be implemented more elegantly
-	    if ((obj instanceof AuthnStatement) && (refAddress!=null)) {
-	    	if ( ((AuthnStatement)obj).getSubjectLocality() != null && refAddress.equals( ((AuthnStatement)obj).getSubjectLocality().getAddress()) ) {
-	    		valid = true;
-	    	}
-	    // TODO there might be more saml2 types to implement here 
-	    } else {
-	        _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Cannot validate the object:" + obj + " with refAddress:" + refAddress);
-	        throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-	    }
-	    _systemLogger.log(Level.INFO,MODULE,sMethod, "checkLocalityAddress evaluates to: " + valid);
-        return valid;
-    }
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "obj->" + obj + "refAddress->" + refAddress);
+		// TODO This might be implemented more elegantly
+		if ((obj instanceof AuthnStatement) && (refAddress != null)) {
+			if (((AuthnStatement) obj).getSubjectLocality() != null
+					&& refAddress.equals(((AuthnStatement) obj).getSubjectLocality().getAddress())) {
+				valid = true;
+			}
+			// TODO there might be more saml2 types to implement here
+		}
+		else {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Cannot validate the object:" + obj + " with refAddress:"
+					+ refAddress);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "checkLocalityAddress evaluates to: " + valid);
+		return valid;
+	}
 
+	/**
+	 * Check OpenSAML2 library objects for timeRestrictions NotBefore and NotOnOrAfter comparing with now.
+	 * 
+	 * @param obj
+	 *            The object to be checked
+	 * @return valid true = valid, false otherwise (invalid or undetermined)
+	 * @throws ValidationException
+	 *             Thrown if an error occurs
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	public static boolean checkValidityInterval(SAMLObject obj)
+		throws ASelectException
+	{
+		return checkValidityInterval(obj, new DateTime());
+	}
 
-    /**
-     * Check OpenSAML2 library objects for timeRestrictions NotBefore and NotOnOrAfter
-     * 	comparing with now
-     * 
-     * @param obj                   The object to be checked
-     * @return valid                true = valid, false otherwise (invalid or undetermined)
-     * @throws ValidationException  Thrown if an error occurs
-     */
-    public static boolean checkValidityInterval(SAMLObject obj) throws ASelectException {
-    	return checkValidityInterval(obj, new DateTime());
-    }
-    	
-	
-    /**
-     * Check OpenSAML2 library objects for timeRestrictions NotBefore and NotOnOrAfter
-     * 
-     * @param obj                   The object to be checked
-     * @param refInstant            Reference moment in time
-     * @return valid                true = valid, false otherwise (invalid or undetermined)
-     * @throws ValidationException  Thrown if an error occurs
-     */
-    public static boolean checkValidityInterval(SAMLObject obj, DateTime refInstant)
-    throws ASelectException
-    {	
-    	boolean valid = true;
+	/**
+	 * Check OpenSAML2 library objects for timeRestrictions NotBefore and NotOnOrAfter.
+	 * 
+	 * @param obj
+	 *            The object to be checked
+	 * @param refInstant
+	 *            Reference moment in time
+	 * @return valid true = valid, false otherwise (invalid or undetermined)
+	 * @throws ValidationException
+	 *             Thrown if an error occurs
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	public static boolean checkValidityInterval(SAMLObject obj, DateTime refInstant)
+		throws ASelectException
+	{
+		boolean valid = true;
 		String sMethod = "checkValidityInterval";
 		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
-	    _systemLogger.log(Level.INFO,MODULE,sMethod, "obj->"+obj + "refInstant->"+refInstant);
-	    // TODO This might be implemented more elegantly
-	    // 		We could do it with some sort of command pattern, for now we do it the "hard" way
-	    //		We would have been happy with some common ancestor that implements Conditions or so ;-)
-    	DateTime nbf = null;
-    	DateTime nooa = null;
-	    if (obj instanceof Assertion) {
-	    	if (	((Assertion)obj).getConditions() != null 
-	    			&& ((Assertion)obj).getConditions().getNotBefore() != null	) 
-	    		nbf = ((Assertion)obj).getConditions().getNotBefore();
-	    	if (	((Assertion)obj).getConditions() != null 
-	    			&& ((Assertion)obj).getConditions().getNotOnOrAfter() != null	) 
-	    		nooa = ((Assertion)obj).getConditions().getNotOnOrAfter();
-	    } else if 
-	    	(obj instanceof AuthnRequest) {
-	    	if (	((AuthnRequest)obj).getConditions() != null 
-	    			&& ((AuthnRequest)obj).getConditions().getNotBefore() != null	) 
-	    		nbf = ((AuthnRequest)obj).getConditions().getNotBefore();
-	    	if (	((AuthnRequest)obj).getConditions() != null 
-	    			&& ((AuthnRequest)obj).getConditions().getNotOnOrAfter() != null	) 
-	    		nooa = ((AuthnRequest)obj).getConditions().getNotOnOrAfter();
-	    } else if 
-	    	(obj instanceof LogoutRequest) {
-	    		nooa = ((LogoutRequest)obj).getNotOnOrAfter();
-	    } else if 
-	    	(obj instanceof SubjectConfirmationData) {
-    			nooa = ((SubjectConfirmationData)obj).getNotOnOrAfter();
-	    		nbf = ((SubjectConfirmationData)obj).getNotBefore();
-	    }
-	    // TODO there might be more saml2 types to implement here 
-	    
-     	   // TODO Evaluate according to saml2-core (2.5.1.2 Attributes NotBefore and NotOnOrAfter)
-	    if ( nbf != null && refInstant.isBefore(nbf) ) {
-	    	valid = false;
-	    }
-	    if ( nooa != null && !refInstant.isBefore(nooa) ) {
-	    	valid = false;
-	    }
-	    _systemLogger.log(Level.INFO,MODULE,sMethod, "checkValidityInterval evaluates to: " + valid);
-        return valid;
-    }
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "obj->" + obj + "refInstant->" + refInstant);
+		// TODO This might be implemented more elegantly
+		// We could do it with some sort of command pattern, for now we do it the "hard" way
+		// We would have been happy with some common ancestor that implements Conditions or so ;-)
+		DateTime nbf = null;
+		DateTime nooa = null;
+		if (obj instanceof Assertion) {
+			if (((Assertion) obj).getConditions() != null && ((Assertion) obj).getConditions().getNotBefore() != null)
+				nbf = ((Assertion) obj).getConditions().getNotBefore();
+			if (((Assertion) obj).getConditions() != null
+					&& ((Assertion) obj).getConditions().getNotOnOrAfter() != null)
+				nooa = ((Assertion) obj).getConditions().getNotOnOrAfter();
+		}
+		else if (obj instanceof AuthnRequest) {
+			if (((AuthnRequest) obj).getConditions() != null
+					&& ((AuthnRequest) obj).getConditions().getNotBefore() != null)
+				nbf = ((AuthnRequest) obj).getConditions().getNotBefore();
+			if (((AuthnRequest) obj).getConditions() != null
+					&& ((AuthnRequest) obj).getConditions().getNotOnOrAfter() != null)
+				nooa = ((AuthnRequest) obj).getConditions().getNotOnOrAfter();
+		}
+		else if (obj instanceof LogoutRequest) {
+			nooa = ((LogoutRequest) obj).getNotOnOrAfter();
+		}
+		else if (obj instanceof SubjectConfirmationData) {
+			nooa = ((SubjectConfirmationData) obj).getNotOnOrAfter();
+			nbf = ((SubjectConfirmationData) obj).getNotBefore();
+		}
+		// TODO there might be more saml2 types to implement here
 
-    /**
-     * Set OpenSAML2 library Conditions object for timeRestrictions NotBefore and NotOnOrAfter
-     * 
-     * 
-     * @param obj                   The object to which conditions are to be added
-     * @param refInstant            Reference moment in time
-     * @return valid                Object with conditions (if not all timeRestrictions were null) otherwise return same object unmodified
-     * @throws ValidationException  Thrown if an error occurs while placing conditions
-     */
-//public static SAMLObject setValidityInterval(SAMLObject obj, DateTime refInstant, 
-//Long maxNotBefore, Long maxNotOnOrAfter, XMLObjectBuilderFactory oBuilderFactory) throws ASelectException {
-    public static SAMLObject setValidityInterval(SAMLObject obj, DateTime refInstant, Long maxNotBefore,
+		// TODO Evaluate according to saml2-core (2.5.1.2 Attributes NotBefore and NotOnOrAfter)
+		if (nbf != null && refInstant.isBefore(nbf)) {
+			valid = false;
+		}
+		if (nooa != null && !refInstant.isBefore(nooa)) {
+			valid = false;
+		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "checkValidityInterval evaluates to: " + valid);
+		return valid;
+	}
+
+	/**
+	 * Set OpenSAML2 library Conditions object for timeRestrictions NotBefore and NotOnOrAfter.
+	 * 
+	 * @param obj
+	 *            The object to which conditions are to be added
+	 * @param refInstant
+	 *            Reference moment in time
+	 * @param maxNotBefore
+	 *            the max not before
+	 * @param maxNotOnOrAfter
+	 *            the max not on or after
+	 * @return valid Object with conditions (if not all timeRestrictions were null) otherwise return same object
+	 *         unmodified
+	 * @throws ValidationException
+	 *             Thrown if an error occurs while placing conditions
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	// public static SAMLObject setValidityInterval(SAMLObject obj, DateTime refInstant,
+	// Long maxNotBefore, Long maxNotOnOrAfter, XMLObjectBuilderFactory oBuilderFactory) throws ASelectException {
+	public static SAMLObject setValidityInterval(SAMLObject obj, DateTime refInstant, Long maxNotBefore,
 			Long maxNotOnOrAfter)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "setValidityInterval";
 		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
@@ -318,7 +363,7 @@ public class SamlTools
 		if (obj instanceof Assertion) {
 			Conditions conditions = ((Assertion) obj).getConditions();
 			if (maxNotBefore != null || maxNotOnOrAfter != null) {
-				XMLObjectBuilderFactory oBuilderFactory = Configuration.getBuilderFactory();
+				XMLObjectBuilderFactory oBuilderFactory = org.opensaml.xml.Configuration.getBuilderFactory();
 				SAMLObjectBuilder<Conditions> conditionsBuilder = (SAMLObjectBuilder<Conditions>) oBuilderFactory
 						.getBuilder(Conditions.DEFAULT_ELEMENT_NAME);
 
@@ -340,7 +385,7 @@ public class SamlTools
 		if (obj instanceof AuthnRequest) {
 			Conditions conditions = ((AuthnRequest) obj).getConditions();
 			if (maxNotBefore != null || maxNotOnOrAfter != null) {
-				XMLObjectBuilderFactory oBuilderFactory = Configuration.getBuilderFactory();
+				XMLObjectBuilderFactory oBuilderFactory = org.opensaml.xml.Configuration.getBuilderFactory();
 				SAMLObjectBuilder<Conditions> conditionsBuilder = (SAMLObjectBuilder<Conditions>) oBuilderFactory
 						.getBuilder(Conditions.DEFAULT_ELEMENT_NAME);
 
@@ -378,18 +423,17 @@ public class SamlTools
 	}
 
 	/**
-	 * Set OpenSAML2 library Conditions object for timeRestrictions NotBefore
-	 * and NotOnOrAfter
+	 * Set OpenSAML2 library Conditions object for timeRestrictions NotBefore and NotOnOrAfter.
 	 * 
 	 * @param obj
 	 *            The object to which restriction are to be added
 	 * @param restriction
-	 *            AudienceRestriction to add to Condition of this object (create
-	 *            Condition if not exists
-	 * @return valid Object with restrictions/conditions (if not restriction ==
-	 *         null)
+	 *            AudienceRestriction to add to Condition of this object (create Condition if not exists
+	 * @return valid Object with restrictions/conditions (if not restriction == null)
 	 * @throws ValidationException
 	 *             Thrown if an error occurs while placing conditions
+	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	public static SAMLObject setAudienceRestrictions(SAMLObject obj, AudienceRestriction restriction)
 		throws ASelectException
@@ -404,7 +448,7 @@ public class SamlTools
 			Conditions conditions = null;
 			if (restriction != null) {
 				if (((Assertion) obj).getConditions() == null) {
-					XMLObjectBuilderFactory oBuilderFactory = Configuration.getBuilderFactory();
+					XMLObjectBuilderFactory oBuilderFactory = org.opensaml.xml.Configuration.getBuilderFactory();
 					SAMLObjectBuilder<Conditions> conditionsBuilder = (SAMLObjectBuilder<Conditions>) oBuilderFactory
 							.getBuilder(Conditions.DEFAULT_ELEMENT_NAME);
 					((Assertion) obj).setConditions(conditions);
@@ -416,10 +460,9 @@ public class SamlTools
 		} // TODO Implement other SAMLObjects
 		return obj;
 	}
-            
-            
+
 	// For the new opensaml20 library
-    /**
+	/**
 	 * Sign OpenSAML2 library objects (including both SAML versions 1 and 2).
 	 * 
 	 * @param obj
@@ -427,115 +470,147 @@ public class SamlTools
 	 * @return obj The signed object
 	 * @throws ValidationException
 	 *             Thrown if an error occurs while signing
+	 * @throws ASelectException
+	 *             the a select exception
 	 */
-    public static SignableSAMLObject sign(SignableSAMLObject obj) throws ASelectException {
-    	
+	public static SignableSAMLObject sign(SignableSAMLObject obj)
+		throws ASelectException
+	{
+
 		String sMethod = "sign(SignableSAMLObject obj)";
 		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
-		
-	    _systemLogger.log(Level.INFO,MODULE,sMethod, "obj->"+obj);
-        if (!obj.isSigned()) {
-    	    ASelectConfigManager _oASelectConfigManager = ASelectConfigManager.getHandle();
-    		PrivateKey privKey = _oASelectConfigManager.getDefaultPrivateKey();
-            Signature signature = new SignatureBuilder().buildObject();
-//          SAMLObjectContentReference contentRef = new SAMLObjectContentReference(obj);
-//          signature.getContentReferences().add(contentRef);
-    		String signingAlgo;
-    		if ("RSA".equalsIgnoreCase(privKey.getAlgorithm())) {
-    			signingAlgo = SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA1;
-    		}
-    		else {
-    			signingAlgo = SignatureConstants.ALGO_ID_SIGNATURE_ECDSA_SHA1;
-    		}
-    	    _systemLogger.log(Level.INFO,MODULE,sMethod, "using algorithm: "+signingAlgo);
-    		BasicCredential credential = new BasicCredential();
-    		credential.setPrivateKey(privKey);
-            signature.setSigningCredential(credential);
-            signature.setSignatureAlgorithm(signingAlgo);
-            signature.setCanonicalizationAlgorithm(SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
-            
-            obj.setSignature(signature);
-        	try {
-    		    Configuration.getMarshallerFactory().getMarshaller(obj).marshall(obj);
-    		}
-        	catch (MarshallingException e) {
-    	        _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Cannot marshall object for signature", e);
-    	        throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-    		}
-    	    try {
-            	Signer.signObject(signature);
-            }
-            catch (SignatureException e) {
-    	        _systemLogger.log(Level.SEVERE, MODULE, sMethod, "Cannot sign the object", e);
-    	        throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-            }
-       } else 
-	        _systemLogger.log(Level.INFO, MODULE, sMethod, "Object already signed!");
-    	   
-        return obj;
-    }
+
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "obj->" + obj);
+		if (!obj.isSigned()) {
+			ASelectConfigManager _oASelectConfigManager = ASelectConfigManager.getHandle();
+			PrivateKey privKey = _oASelectConfigManager.getDefaultPrivateKey();
+			Signature signature = new SignatureBuilder().buildObject();
+			// SAMLObjectContentReference contentRef = new SAMLObjectContentReference(obj);
+			// signature.getContentReferences().add(contentRef);
+			String signingAlgo;
+			if ("RSA".equalsIgnoreCase(privKey.getAlgorithm())) {
+				signingAlgo = SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA1;
+			}
+			else {
+				signingAlgo = SignatureConstants.ALGO_ID_SIGNATURE_ECDSA_SHA1;
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "using algorithm: " + signingAlgo);
+			BasicCredential credential = new BasicCredential();
+			credential.setPrivateKey(privKey);
+			signature.setSigningCredential(credential);
+			signature.setSignatureAlgorithm(signingAlgo);
+			signature.setCanonicalizationAlgorithm(SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
+
+			obj.setSignature(signature);
+			try {
+				org.opensaml.xml.Configuration.getMarshallerFactory().getMarshaller(obj).marshall(obj);
+			}
+			catch (MarshallingException e) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Cannot marshall object for signature", e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+			}
+			try {
+				Signer.signObject(signature);
+			}
+			catch (SignatureException e) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Cannot sign the object", e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+			}
+		}
+		else
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Object already signed!");
+
+		return obj;
+	}
 
 	// For the new opensaml20 library
 	// /*
-	public static boolean checkSignature(SignableSAMLObject ssObject, PublicKey pKey) throws ASelectException
+	/**
+	 * Check signature.
+	 * 
+	 * @param ssObject
+	 *            the ss object
+	 * @param pKey
+	 *            the key
+	 * @return true, if successful
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	public static boolean checkSignature(SignableSAMLObject ssObject, PublicKey pKey)
+		throws ASelectException
 	{
 		String sMethod = "checkSignature(SignableSAMLObject ssObject)";
-//	    ASelectConfigManager _oASelectConfigManager = ASelectConfigManager.getHandle();
+		// ASelectConfigManager _oASelectConfigManager = ASelectConfigManager.getHandle();
 		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
 		Signature sig = ssObject.getSignature();
-		
-	    _systemLogger.log(Level.INFO,MODULE,sMethod, "pkey="+pKey+" sig="+sig);
-	    if (sig == null) {
-	        _systemLogger.log(Level.WARNING, MODULE, sMethod, "Expected signature not found");
-	    	return false;
-	    }
 
-	    SAMLSignatureProfileValidator profileValidator = new SAMLSignatureProfileValidator();
-	    try {
-	        profileValidator.validate(sig);
-	    } catch (ValidationException e) {
-	        // Indicates signature did not conform to SAML Signature profile
-	        _systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot validate signature, signature did not conform to SAML Signature profile", e);
-	        return false;
-	    }
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "pkey=" + pKey + " sig=" + sig);
+		if (sig == null) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Expected signature not found");
+			return false;
+		}
+
+		SAMLSignatureProfileValidator profileValidator = new SAMLSignatureProfileValidator();
+		try {
+			profileValidator.validate(sig);
+		}
+		catch (ValidationException e) {
+			// Indicates signature did not conform to SAML Signature profile
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"Cannot validate signature, signature did not conform to SAML Signature profile", e);
+			return false;
+		}
 
 		BasicCredential credential = new BasicCredential();
 		credential.setPublicKey(pKey);
 
 		SignatureValidator sigValidator = new SignatureValidator(credential);
 		try {
-		    sigValidator.validate(sig);
-		} catch (ValidationException e) {
-		    // Indicates signature was not cryptographically valid, or possibly a processing error
-	        _systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot verify signature, signature was not cryptographically valid, or possibly a processing error");
-	        return false;
+			sigValidator.validate(sig);
+		}
+		catch (ValidationException e) {
+			// Indicates signature was not cryptographically valid, or possibly a processing error
+			_systemLogger
+					.log(Level.WARNING, MODULE, sMethod,
+							"Cannot verify signature, signature was not cryptographically valid, or possibly a processing error");
+			return false;
 		}
 		return true;
 	}
-	
+
 	/**
-	 * Build Logout Request
-	 * <br>
-	 * @param sServiceProviderUrl String with SP .
-	 * @param user String with user id.
-	 * @param issuerUrl String with Issuer .
-	 * @param reason String with logout reason.
-	 * @throws ASelectException If building logout request fails.
+	 * Build Logout Request <br>
+	 * .
+	 * 
+	 * @param sServiceProviderUrl
+	 *            String with SP .
+	 * @param issuerUrl
+	 *            String with Issuer .
+	 * @param reason
+	 *            String with logout reason.
+	 * @param sTgT
+	 *            the s tg t
+	 * @param sNameID
+	 *            the s name id
+	 * @return the logout request
+	 * @throws ASelectException
+	 *             If building logout request fails.
 	 */
 	@SuppressWarnings("unchecked")
-	public static LogoutRequest buildLogoutRequest(String sServiceProviderUrl, String sTgT, String sNameID, String issuerUrl, String reason)
+	public static LogoutRequest buildLogoutRequest(String sServiceProviderUrl, String sTgT, String sNameID,
+			String issuerUrl, String reason)
 		throws ASelectException
 	{
 		String sMethod = "buildLogoutRequest";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
-		systemLogger.log(Level.INFO, MODULE, sMethod, "provider="+sServiceProviderUrl);
+		systemLogger.log(Level.INFO, MODULE, sMethod, "provider=" + sServiceProviderUrl);
 
-		XMLObjectBuilderFactory builderFactory = Configuration.getBuilderFactory();
+		XMLObjectBuilderFactory builderFactory = org.opensaml.xml.Configuration.getBuilderFactory();
 		SAMLObjectBuilder<LogoutRequest> logoutRequestBuilder = (SAMLObjectBuilder<LogoutRequest>) builderFactory
 				.getBuilder(LogoutRequest.DEFAULT_ELEMENT_NAME);
 		LogoutRequest logoutRequest = logoutRequestBuilder.buildObject();
 		// verplichte velden
-		logoutRequest.setID((sTgT!=null)? "_"+sTgT: SamlTools.generateIdentifier(systemLogger, MODULE));
+		logoutRequest.setID((sTgT != null) ? "_" + sTgT : SamlTools.generateIdentifier(systemLogger, MODULE));
 		logoutRequest.setVersion(SAMLVersion.VERSION_20);
 		logoutRequest.setIssueInstant(new DateTime());
 
@@ -559,22 +634,28 @@ public class SamlTools
 
 		return logoutRequest;
 	}
+
 	/**
-	 * Build Logout Response.
-	 * <br>
-	 * @param issuer String with issuer.
-	 * @param statusCodeValue String with ???.
-	 * @param inResponseTo String with ???.
-	 * @throws ASelectException If building logout response fails.
+	 * Build Logout Response. <br>
+	 * 
+	 * @param issuer
+	 *            String with issuer.
+	 * @param statusCodeValue
+	 *            String with ???.
+	 * @param inResponseTo
+	 *            String with ???.
+	 * @return the logout response
+	 * @throws ASelectException
+	 *             If building logout response fails.
 	 */
 	@SuppressWarnings("unchecked")
 	public static LogoutResponse buildLogoutResponse(String issuer, String statusCodeValue, String inResponseTo)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "buildLogoutResponse()";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
-		
-		XMLObjectBuilderFactory builderFactory = Configuration.getBuilderFactory();
+
+		XMLObjectBuilderFactory builderFactory = org.opensaml.xml.Configuration.getBuilderFactory();
 		SAMLObjectBuilder<LogoutResponse> logoutResponseBuilder = (SAMLObjectBuilder<LogoutResponse>) builderFactory
 				.getBuilder(LogoutResponse.DEFAULT_ELEMENT_NAME);
 		LogoutResponse logoutResponse = logoutResponseBuilder.buildObject();
@@ -610,7 +691,7 @@ public class SamlTools
 		logoutResponse.setIssuer(issuerObject);
 		logoutResponse.setInResponseTo(inResponseTo);
 
-		MarshallerFactory factory = Configuration.getMarshallerFactory();
+		MarshallerFactory factory = org.opensaml.xml.Configuration.getMarshallerFactory();
 		Marshaller marshaller = factory.getMarshaller(logoutResponse);
 		try {
 			Node node = marshaller.marshall(logoutResponse);
@@ -623,7 +704,16 @@ public class SamlTools
 		}
 		return logoutResponse;
 	}
-	
+
+	/**
+	 * Gets the node.
+	 * 
+	 * @param node
+	 *            the node
+	 * @param sSearch
+	 *            the s search
+	 * @return the node
+	 */
 	public static Node getNode(Node node, String sSearch)
 	{
 		Node nResult = null;
@@ -644,23 +734,24 @@ public class SamlTools
 	 *            message the marshall and serialize
 	 * @return marshalled message
 	 * @throws MessageEncodingException
-	 *             thrown if the give message can not be marshalled into its DOM
-	 *             representation
+	 *             thrown if the give message can not be marshalled into its DOM representation
 	 */
 	public static Element marshallMessage(XMLObject message)
-	throws MessageEncodingException
+		throws MessageEncodingException
 	{
 		String sMethod = "marshallMessage()";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
 
 		try {
-			Marshaller marshaller = Configuration.getMarshallerFactory().getMarshaller(message);
+			Marshaller marshaller = org.opensaml.xml.Configuration.getMarshallerFactory().getMarshaller(message);
 			if (marshaller == null) {
 				systemLogger.log(Level.INFO, MODULE, sMethod,
-						"Unable to marshall message, no marshaller registered for message object: "+message.getElementQName());
+						"Unable to marshall message, no marshaller registered for message object: "
+								+ message.getElementQName());
 			}
 			Element messageElem = marshaller.marshall(message);
-			//systemLogger.log(Level.INFO, MODULE, sMethod, "Marshalled message into DOM:\n"+XMLHelper.nodeToString(messageElem));
+			// systemLogger.log(Level.INFO, MODULE, sMethod,
+			// "Marshalled message into DOM:\n"+XMLHelper.nodeToString(messageElem));
 
 			return messageElem;
 		}
@@ -669,14 +760,24 @@ public class SamlTools
 		}
 	}
 
+	/**
+	 * Unmarshall element.
+	 * 
+	 * @param element
+	 *            the element
+	 * @return the xML object
+	 * @throws MessageEncodingException
+	 *             the message encoding exception
+	 */
 	public static XMLObject unmarshallElement(Element element)
-	throws MessageEncodingException
+		throws MessageEncodingException
 	{
 		String sMethod = "unmarshallMessage()";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
 
 		try {
-			Unmarshaller unmarshaller = Configuration.getUnmarshallerFactory().getUnmarshaller(element);
+			Unmarshaller unmarshaller = org.opensaml.xml.Configuration.getUnmarshallerFactory()
+					.getUnmarshaller(element);
 			if (unmarshaller == null) {
 				systemLogger.log(Level.INFO, MODULE, sMethod,
 						"Unable to unmarshall element, no unmarshaller registered for element object: " + element);
@@ -691,62 +792,99 @@ public class SamlTools
 					"Encountered error unmarshalling element into its object representation", e);
 		}
 	}
-	
-	// Wrapper class for transition from our "old" "trunk" jars to 
+
+	// Wrapper class for transition from our "old" "trunk" jars to
 	// release version of opensaml/2.1.0, openws/1.1.0, xmltooling/1.0.1
 	// Catches old org.opensaml.xml.signature.KeyInfoHelper.getCertificate()
+	/**
+	 * Gets the certificate.
+	 * 
+	 * @param cert
+	 *            the cert
+	 * @return the certificate
+	 * @throws CertificateException
+	 *             the certificate exception
+	 */
 	public static java.security.cert.X509Certificate getCertificate(X509Certificate cert)
-	throws CertificateException
+		throws CertificateException
 	{
 		// for old libs
-//		return org.opensaml.xml.signature.KeyInfoHelper.getCertificate(cert);
+		// return org.opensaml.xml.signature.KeyInfoHelper.getCertificate(cert);
 		// for new libs
 		return org.opensaml.xml.security.keyinfo.KeyInfoHelper.getCertificate(cert);
 	}
 
-	// Wrapper class for transition from our "old" "trunk" jars to 
+	// Wrapper class for transition from our "old" "trunk" jars to
 	// release version of opensaml/2.1.0, openws/1.1.0, xmltooling/1.0.1
 	// Catches old HttpServletResponseAdapter(HttpServletResponse response) constructor
-	public static HttpServletResponseAdapter createHttpServletResponseAdapter(HttpServletResponse response, String remoteURL)
+	/**
+	 * Creates the http servlet response adapter.
+	 * 
+	 * @param response
+	 *            the response
+	 * @param remoteURL
+	 *            the remote url
+	 * @return the http servlet response adapter
+	 */
+	public static HttpServletResponseAdapter createHttpServletResponseAdapter(HttpServletResponse response,
+			String remoteURL)
 	{
 		// for old libs
-//		return new HttpServletResponseAdapter(response);
+		// return new HttpServletResponseAdapter(response);
 		// for new libs
-		return new HttpServletResponseAdapter(response, remoteURL == null ? false : remoteURL.toLowerCase().startsWith("https"));
+		return new HttpServletResponseAdapter(response, remoteURL == null ? false : remoteURL.toLowerCase().startsWith(
+				"https"));
 	}
 
 	/**
-	 * Set saml20 appropriate headers and
-	 * send the HTTP SOAP response and close the stream
-	 * @param response, the servletresponse
-	 * @param envelope, the (soapenvelope) string to send
+	 * Set saml20 appropriate headers and send the HTTP SOAP response and close the stream.
+	 * 
+	 * @param response
+	 *            , the servletresponse
+	 * @param envelope
+	 *            , the (soapenvelope) string to send
 	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
 	 */
-	public static void sendSOAPResponse(HttpServletResponse response, String envelope) throws IOException {
+	public static void sendSOAPResponse(HttpServletResponse response, String envelope)
+		throws IOException
+	{
 		final String CONTENT_TYPE = "text/xml; charset=utf-8";
-	
-		response.setContentType(CONTENT_TYPE);	
+
+		response.setContentType(CONTENT_TYPE);
 		response.setHeader("Pragma", "no-cache");
 		response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-		
-	    ServletOutputStream sos = response.getOutputStream();
+
+		ServletOutputStream sos = response.getOutputStream();
 		sos.print(envelope);
 		sos.println("\r\n\r\n");
 		sos.close();
 	}
-	
+
 	//
 	// Create a new HashMap based on an htSource
 	// If include is true only include the attributes mentioned in arrAttr
 	// Else take htSource, but exclude the attributes in arrAttr from the result.
 	//
+	/**
+	 * Extract from hashtable.
+	 * 
+	 * @param arrAttr
+	 *            the arr attr
+	 * @param htSource
+	 *            the ht source
+	 * @param include
+	 *            the include
+	 * @return the hash map
+	 */
 	public static HashMap extractFromHashtable(String[] arrAttr, HashMap<String, Object> htSource, boolean include)
 	{
 		Object oValue;
 		HashMap<String, Object> htResult = new HashMap<String, Object>();
-		
-		if (!include) htResult.putAll(htSource);
-		for (int i=0; i < arrAttr.length; i++) {
+
+		if (!include)
+			htResult.putAll(htSource);
+		for (int i = 0; i < arrAttr.length; i++) {
 			oValue = htSource.get(arrAttr[i]);
 			if (include && oValue != null)
 				htResult.put(arrAttr[i], oValue);
@@ -755,24 +893,37 @@ public class SamlTools
 		}
 		return htResult;
 	}
-	
+
 	// Create a signed and base64 encoded Saml Token
 	// containing the attributes present in htAttributes.
+	/**
+	 * Creates the attribute token.
+	 * 
+	 * @param sIssuer
+	 *            the s issuer
+	 * @param sTgt
+	 *            the s tgt
+	 * @param htAttributes
+	 *            the ht attributes
+	 * @return the string
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	public static String createAttributeToken(String sIssuer, String sTgt, HashMap htAttributes)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "createAttributeToken";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
 
-		Assertion samlAssert = SamlTools.createAttributeStatementAssertion(htAttributes,
-								sIssuer/*Issuer*/, sTgt/*Subject*/, true/*sign*/);
+		Assertion samlAssert = SamlTools.createAttributeStatementAssertion(htAttributes, sIssuer/* Issuer */,
+				sTgt/* Subject */, true/* sign */);
 		String sAssertion = XMLHelper.nodeToString(samlAssert.getDOM());
-		systemLogger.log(Level.INFO, MODULE, sMethod, "Assertion="+sAssertion);
+		systemLogger.log(Level.INFO, MODULE, sMethod, "Assertion=" + sAssertion);
 
 		try {
-	        byte[] bBase64Assertion = sAssertion.getBytes("UTF-8");
-	        BASE64Encoder b64enc = new BASE64Encoder();
-	        return b64enc.encode(bBase64Assertion);
+			byte[] bBase64Assertion = sAssertion.getBytes("UTF-8");
+			BASE64Encoder b64enc = new BASE64Encoder();
+			return b64enc.encode(bBase64Assertion);
 		}
 		catch (UnsupportedEncodingException e) {
 			systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
@@ -780,44 +931,61 @@ public class SamlTools
 		}
 	}
 
-	@SuppressWarnings({"unchecked"})
+	/**
+	 * Creates the attribute statement assertion.
+	 * 
+	 * @param parms
+	 *            the parms
+	 * @param sIssuer
+	 *            the s issuer
+	 * @param sSubject
+	 *            the s subject
+	 * @param sign
+	 *            the sign
+	 * @return the assertion
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	@SuppressWarnings( {
+		"unchecked"
+	})
 	public static Assertion createAttributeStatementAssertion(Map parms, String sIssuer, String sSubject, boolean sign)
-	throws ASelectException
-	{	
+		throws ASelectException
+	{
 		String sMethod = "createAttributeStatementAssertion()";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
 		XMLObjectBuilderFactory _oBuilderFactory;
-		_oBuilderFactory = Configuration.getBuilderFactory();
+		_oBuilderFactory = org.opensaml.xml.Configuration.getBuilderFactory();
 
 		XMLObjectBuilder stringBuilder = _oBuilderFactory.getBuilder(XSString.TYPE_NAME);
 
 		SAMLObjectBuilder<AttributeStatement> attributeStatementBuilder = (SAMLObjectBuilder<AttributeStatement>) _oBuilderFactory
-		.getBuilder(AttributeStatement.DEFAULT_ELEMENT_NAME);
-		
+				.getBuilder(AttributeStatement.DEFAULT_ELEMENT_NAME);
+
 		SAMLObjectBuilder<Assertion> assertionBuilder = (SAMLObjectBuilder<Assertion>) _oBuilderFactory
-		.getBuilder(Assertion.DEFAULT_ELEMENT_NAME);
-		
+				.getBuilder(Assertion.DEFAULT_ELEMENT_NAME);
+
 		Assertion assertion = assertionBuilder.buildObject();
 		assertion.setVersion(SAMLVersion.VERSION_20);
-		
+
 		SAMLObjectBuilder<NameID> nameIDBuilder = (SAMLObjectBuilder<NameID>) _oBuilderFactory
-		.getBuilder(NameID.DEFAULT_ELEMENT_NAME);
+				.getBuilder(NameID.DEFAULT_ELEMENT_NAME);
 		NameID nameID = nameIDBuilder.buildObject();
-		nameID.setFormat(NameIDType.TRANSIENT);  // was PERSISTENT
+		nameID.setFormat(NameIDType.TRANSIENT); // was PERSISTENT
 		nameID.setNameQualifier(sIssuer);
-		nameID.setValue(sSubject); 	
+		nameID.setValue(sSubject);
 		systemLogger.log(Level.INFO, MODULE, sMethod, nameID.getValue());
 		SAMLObjectBuilder<Subject> subjectBuilder = (SAMLObjectBuilder<Subject>) _oBuilderFactory
 				.getBuilder(Subject.DEFAULT_ELEMENT_NAME);
 		Subject subject = subjectBuilder.buildObject();
 		subject.setNameID(nameID);
-		
+
 		SAMLObjectBuilder<Issuer> assertionIssuerBuilder = (SAMLObjectBuilder<Issuer>) _oBuilderFactory
 				.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
 		Issuer assertionIssuer = assertionIssuerBuilder.buildObject();
 		assertionIssuer.setFormat(NameIDType.ENTITY);
 		assertionIssuer.setValue(sIssuer);
-		
+
 		assertion.setIssuer(assertionIssuer);
 		assertion.setSubject(subject);
 		DateTime tStamp = new DateTime();
@@ -832,36 +1000,34 @@ public class SamlTools
 		AttributeStatement attributeStatement = attributeStatementBuilder.buildObject();
 
 		SAMLObjectBuilder<Attribute> attributeBuilder = (SAMLObjectBuilder<Attribute>) _oBuilderFactory
-		.getBuilder(Attribute.DEFAULT_ELEMENT_NAME);
+				.getBuilder(Attribute.DEFAULT_ELEMENT_NAME);
 
 		Iterator itr = parms.keySet().iterator();
 		systemLogger.log(Level.INFO, MODULE, sMethod, "Start iterating through parameters");
 		while (itr.hasNext()) {
-			String parmName =  (String)itr.next();
-			
+			String parmName = (String) itr.next();
+
 			// Bauke, 20081202 replaced, cannot convert parms.get() to a String[]
-			String sValue = (String)parms.get(parmName);
-			systemLogger.log(Level.INFO, MODULE, sMethod, "parm:"+ parmName + " has value:"+ sValue);
+			String sValue = (String) parms.get(parmName);
+			systemLogger.log(Level.INFO, MODULE, sMethod, "parm:" + parmName + " has value:" + sValue);
 			Attribute attribute = attributeBuilder.buildObject();
 			attribute.setName(parmName);
-			XSString attributeValue = (XSString) stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,	XSString.TYPE_NAME);
+			XSString attributeValue = (XSString) stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
+					XSString.TYPE_NAME);
 			attributeValue.setValue(sValue);
 			attribute.getAttributeValues().add(attributeValue);
 
 			// Original code:
-			/*String[] parmValues = (String[])parms.get(parmName);
-			systemLogger.log(Level.INFO, MODULE, sMethod, "parm:"+ parmName + " has value(s):"+ parmValues);
-			
-			Attribute attribute = attributeBuilder.buildObject();
-			attribute.setName(parmName);
-			systemLogger.log(Level.INFO, MODULE, sMethod, "Now starting to iterate through " + parmValues.length + " values");
-			for (int i=0; i<parmValues.length; i++) {
-				XSString attributeValue = (XSString) stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
-						XSString.TYPE_NAME);
-				systemLogger.log(Level.INFO, MODULE, sMethod, "Found value[" + i + "]=" + parmValues[i]);
-				attributeValue.setValue(parmValues[i]);
-				attribute.getAttributeValues().add(attributeValue);
-			}*/
+			/*
+			 * String[] parmValues = (String[])parms.get(parmName); systemLogger.log(Level.INFO, MODULE, sMethod,
+			 * "parm:"+ parmName + " has value(s):"+ parmValues); Attribute attribute = attributeBuilder.buildObject();
+			 * attribute.setName(parmName); systemLogger.log(Level.INFO, MODULE, sMethod,
+			 * "Now starting to iterate through " + parmValues.length + " values"); for (int i=0; i<parmValues.length;
+			 * i++) { XSString attributeValue = (XSString)
+			 * stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
+			 * systemLogger.log(Level.INFO, MODULE, sMethod, "Found value[" + i + "]=" + parmValues[i]);
+			 * attributeValue.setValue(parmValues[i]); attribute.getAttributeValues().add(attributeValue); }
+			 */
 			attributeStatement.getAttributes().add(attribute);
 		}
 		systemLogger.log(Level.INFO, MODULE, sMethod, "Finalizing the assertion building");
@@ -869,25 +1035,34 @@ public class SamlTools
 		assertion = marshallAssertion(assertion);
 		if (sign) {
 			systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the final Assertion >======");
-			assertion = (Assertion)sign(assertion);
-			systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the Assertion ======<"+assertion);
+			assertion = (Assertion) sign(assertion);
+			systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the Assertion ======<" + assertion);
 		}
-		
-//		// Only for testing
-//		if (!SamlTools.checkSignature(assertion, _configManager.getDefaultCertificate().getPublicKey()) ) {
-//			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signing verification says signature NOT valid ?!?" );
-//		} else {
-//			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signing verification says signature is valid!" );
-//		}
+
+		// // Only for testing
+		// if (!SamlTools.checkSignature(assertion, _configManager.getDefaultCertificate().getPublicKey()) ) {
+		// _systemLogger.log(Level.INFO, MODULE, sMethod, "Signing verification says signature NOT valid ?!?" );
+		// } else {
+		// _systemLogger.log(Level.INFO, MODULE, sMethod, "Signing verification says signature is valid!" );
+		// }
 		return assertion;
 	}
-	
+
+	/**
+	 * Marshall assertion.
+	 * 
+	 * @param assertion
+	 *            the assertion
+	 * @return the assertion
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
 	private static Assertion marshallAssertion(Assertion assertion)
-	throws ASelectException
+		throws ASelectException
 	{
 		String sMethod = "marshallAssertion";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
-		MarshallerFactory factory = Configuration.getMarshallerFactory();
+		MarshallerFactory factory = org.opensaml.xml.Configuration.getMarshallerFactory();
 		Marshaller marshaller = factory.getMarshaller(assertion);
 		try {
 			Node node = marshaller.marshall(assertion);
@@ -899,5 +1074,5 @@ public class SamlTools
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 		return assertion;
-	}		
+	}
 }

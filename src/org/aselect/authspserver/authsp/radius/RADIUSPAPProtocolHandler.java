@@ -61,18 +61,17 @@ import java.util.logging.Level;
 
 import org.aselect.system.utils.Utils;
 
+// TODO: Auto-generated Javadoc
 /**
- * The Radius Protocol Handler which handles the Radius PAP requests.
- * <br><br>
+ * The Radius Protocol Handler which handles the Radius PAP requests. <br>
+ * <br>
  * <b>Description:</b><br>
- * This Radius Protocol handler handles Authentication requests using Radius PAP 
- * <br><br>
- * <b>Concurrency issues:</b>
+ * This Radius Protocol handler handles Authentication requests using Radius PAP <br>
  * <br>
- * None
- * <br>
- * @author Alfa & Ariss
+ * <b>Concurrency issues:</b> <br>
+ * None <br>
  * 
+ * @author Alfa & Ariss
  */
 public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 {
@@ -84,16 +83,21 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 	private final String MODULE = "RADIUSPAPProtocolHandler";
 
 	/**
-	 * .
-	 * <br><br>
+	 * . <br>
+	 * <br>
+	 * 
+	 * @param sPassword
+	 *            the s password
+	 * @return the string
 	 * @see org.aselect.authspserver.authsp.radius.IRADIUSProtocolHandler#authenticate(java.lang.String)
 	 */
+	@Override
 	public String authenticate(String sPassword)
 	{
 		String sMethod = "authenticate()";
 		_sErrorCode = Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER;
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "PAPP uid="+_sUid);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "PAPP uid=" + _sUid);
 		try {
 			DatagramPacket oRADIUSPacket;
 			byte xBuffer[] = new byte[MAX_RADIUS_PACKET_SIZE];
@@ -108,7 +112,7 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 			_listenSocket = new DatagramSocket();
 			oRADIUSPacket = new DatagramPacket(xBuffer, xBuffer.length);
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "compose pass="+sPassword);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "compose pass=" + sPassword);
 			composeRequest(sPassword, oRADIUSPacket);
 			if (_sErrorCode != Errors.ERROR_RADIUS_SUCCESS) {
 				try {
@@ -154,18 +158,20 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 	}
 
 	/**
-	 * This methods composes a RADIUS <code>access-request</code> packet
-	 * and sends it to the RADIUS Server.
-	 * <br><br>
+	 * This methods composes a RADIUS <code>access-request</code> packet and sends it to the RADIUS Server. <br>
+	 * <br>
+	 * 
 	 * @param sPassword
+	 *            the s password
 	 * @param oRADIUSPacket
+	 *            the o radius packet
 	 */
 	void composeRequest(String sPassword, DatagramPacket oRADIUSPacket)
 	{
 		String sMethod = "composeRequest()";
 		_sErrorCode = Errors.ERROR_RADIUS_INTERNAL_ERROR;
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "uid="+_sUid);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "uid=" + _sUid);
 		try {
 			Random randomGenerator;
 			byte[] baTempBuffer1, baTempBuffer2;
@@ -221,7 +227,7 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 			baOutputBuffer[2] = (byte) (iIndex >> 8);
 			baOutputBuffer[3] = (byte) (iIndex & 0x00ff);
 			oRADIUSPacket.setData(baOutputBuffer);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "request="+Utils.byteArrayToHexString(baOutputBuffer));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "request=" + Utils.byteArrayToHexString(baOutputBuffer));
 			_sErrorCode = Errors.ERROR_RADIUS_SUCCESS;
 		}
 		catch (Exception e) {
@@ -230,9 +236,10 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 	}
 
 	/**
-	 * This methods handles the response comming from the 
-	 * Radius Server.
+	 * This methods handles the response comming from the Radius Server.
+	 * 
 	 * @param oRADIUSPacket
+	 *            the o radius packet
 	 */
 	void handleResponse(DatagramPacket oRADIUSPacket)
 	{
@@ -245,10 +252,10 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 		String sMethod = "handleResponse()";
 		_sErrorCode = Errors.ERROR_RADIUS_INTERNAL_ERROR;
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "uid="+_sUid);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "uid=" + _sUid);
 		try {
 			byte[] baResponseBuffer = oRADIUSPacket.getData();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "request="+Utils.byteArrayToHexString(baResponseBuffer));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "request=" + Utils.byteArrayToHexString(baResponseBuffer));
 
 			// check code
 			iResponseBufferIndex = 0;

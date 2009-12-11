@@ -91,81 +91,76 @@ import org.aselect.server.session.SessionManager;
 import org.aselect.system.exception.ASelectAuthSPException;
 import org.aselect.system.exception.ASelectConfigException;
 
+// TODO: Auto-generated Javadoc
 /**
- * The Radius AuthSP Handler.
- * <br><br>
+ * The Radius AuthSP Handler. <br>
+ * <br>
  * <b>Description:</b><br>
- * The Radius AuthSP Handler communicates with the Radius AuthSP by redirecting 
- * the client. 
- * <br><br>
- * <b>Concurrency issues:</b>
+ * The Radius AuthSP Handler communicates with the Radius AuthSP by redirecting the client. <br>
  * <br>
- * None
- * <br><br>
- * <b>Protocol Description:</b>
+ * <b>Concurrency issues:</b> <br>
+ * None <br>
  * <br>
- * <i><a name="outgoing">Outgoing request going to the Radius AuthSP:</a></i>
- * <br>
+ * <b>Protocol Description:</b> <br>
+ * <i><a name="outgoing">Outgoing request going to the Radius AuthSP:</a></i> <br>
  * <table border="1" cellspacing="0" cellpadding="3">
- * 	<tr>
- * 		<td style="" bgcolor="#EEEEFF"><b>name</b></td>
- * 		<td style="" bgcolor="#EEEEFF"><b>value</b></td>
- * 	</tr>
- * 	<tr>
- * 		<td>rid</td>
- * 		<td>A-Select Server request id</td>
- * 	</tr>
- * 	<tr>
- * 		<td>as_url</td>
- * 		<td>A-Select Server url</td>
- * 	</tr>
- * 	<tr>
- * 		<td>uid</td>
- * 		<td>A-Select Server user ID</td>
- *	</tr>
- * 	<tr>
- * 		<td>a-select-server</td>
- * 		<td>A-Select Server ID</td>
- * 	</tr>
- * 	<tr>
- * 		<td>signature</td>
- * 		<td>Signature of all paramaters in the above sequence</td>
- * 	</tr>
+ * <tr>
+ * <td style="" bgcolor="#EEEEFF"><b>name</b></td>
+ * <td style="" bgcolor="#EEEEFF"><b>value</b></td>
+ * </tr>
+ * <tr>
+ * <td>rid</td>
+ * <td>A-Select Server request id</td>
+ * </tr>
+ * <tr>
+ * <td>as_url</td>
+ * <td>A-Select Server url</td>
+ * </tr>
+ * <tr>
+ * <td>uid</td>
+ * <td>A-Select Server user ID</td>
+ * </tr>
+ * <tr>
+ * <td>a-select-server</td>
+ * <td>A-Select Server ID</td>
+ * </tr>
+ * <tr>
+ * <td>signature</td>
+ * <td>Signature of all paramaters in the above sequence</td>
+ * </tr>
  * </table>
  * <br>
- * <i><a name="incoming">
- * 	Incoming response, which is returned by the Radius AuthSP:
- * </a></i>
+ * <i><a name="incoming"> Incoming response, which is returned by the Radius AuthSP: </a></i>
  * <table border="1" cellspacing="0" cellpadding="3">
- * 	<tr>
- * 		<td style="" bgcolor="#EEEEFF"><b>name</b></td>
- * 		<td style="" bgcolor="#EEEEFF"><b>value</b></td>
- * 	</tr>
- * 	<tr>
- * 		<td>rid</td>
- * 		<td>A-Select Server request id</td>
- * 	</tr>
- * 	<tr>
- * 		<td>result_code</td>
- * 		<td>AuthSP result code</td>
- * 	</tr>
- * 	<tr>
- * 		<td>a-select-server</td>
- * 		<td>A-Select Server ID</td>
- * 	</tr>
- * 	<tr>
- * 		<td>signature</td>
- * 		<td>Signature over the following data: 
- * 			<ol>
- * 				<li>rid</li>
- * 				<li>The URL that was created in 
- * 					<code>computeAuthenticationRequest()</code>
- * 				<li>result_code</li>
- * 				<li>a-select-server</li>
- * 			</ol> 
- * 		</td>
- * 	</tr>
+ * <tr>
+ * <td style="" bgcolor="#EEEEFF"><b>name</b></td>
+ * <td style="" bgcolor="#EEEEFF"><b>value</b></td>
+ * </tr>
+ * <tr>
+ * <td>rid</td>
+ * <td>A-Select Server request id</td>
+ * </tr>
+ * <tr>
+ * <td>result_code</td>
+ * <td>AuthSP result code</td>
+ * </tr>
+ * <tr>
+ * <td>a-select-server</td>
+ * <td>A-Select Server ID</td>
+ * </tr>
+ * <tr>
+ * <td>signature</td>
+ * <td>Signature over the following data:
+ * <ol>
+ * <li>rid</li>
+ * <li>The URL that was created in <code>computeAuthenticationRequest()</code>
+ * <li>result_code</li>
+ * <li>a-select-server</li>
+ * </ol>
+ * </td>
+ * </tr>
  * </table>
+ * 
  * @author Alfa & Ariss
  */
 public class Radius implements IAuthSPProtocolHandler
@@ -191,8 +186,13 @@ public class Radius implements IAuthSPProtocolHandler
 	 * <li>The server id from the A-Select main config</li>
 	 * </ul>
 	 * 
-	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#init(java.lang.Object,
-	 *      java.lang.Object)
+	 * @param authSPConfig
+	 *            the auth sp config
+	 * @param authSPResource
+	 *            the auth sp resource
+	 * @throws ASelectAuthSPException
+	 *             the a select auth sp exception
+	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#init(java.lang.Object, java.lang.Object)
 	 */
 	public void init(Object authSPConfig, Object authSPResource)
 		throws ASelectAuthSPException
@@ -257,33 +257,30 @@ public class Radius implements IAuthSPProtocolHandler
 	}
 
 	/**
-	 * Creates the Authentication Request for the Radius AuthSP, which will be send
-	 * by redirecting the user.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Creates the Authentication Request for the Radius AuthSP, which will be send by redirecting the user. <br>
 	 * <br>
+	 * <b>Description:</b> <br>
 	 * This method creates a hashtable with the follwing contents:
 	 * <table border="1" cellspacing="0" cellpadding="3">
-	 *  <tr>
-	 *	<td style="" bgcolor="#EEEEFF"><b>key</b></td>
-	 *	<td style="" bgcolor="#EEEEFF"><b>value</b></td>
-	 *  </tr>  
-	 *  <tr>
-	 * 	<td>result</td>
-	 *  <td>
-	 * 		{@link Errors#ERROR_ASELECT_SUCCESS} or an error code 
-	 * 		if creating the authentication request URL fails
-	 * 	</td>
-	 *  </tr>
-	 *  <tr>
-	 * 	<td>redirect_url</td>
-	 * 	<td>
-	 * 		The URL to the AuthSP including the protocol parameters as specified
-	 * 		in the <a href="#outgoing">class description</a>.
-	 * 	</td>
-	 *  </tr>
+	 * <tr>
+	 * <td style="" bgcolor="#EEEEFF"><b>key</b></td>
+	 * <td style="" bgcolor="#EEEEFF"><b>value</b></td>
+	 * </tr>
+	 * <tr>
+	 * <td>result</td>
+	 * <td>
+	 * {@link Errors#ERROR_ASELECT_SUCCESS} or an error code if creating the authentication request URL fails</td>
+	 * </tr>
+	 * <tr>
+	 * <td>redirect_url</td>
+	 * <td>The URL to the AuthSP including the protocol parameters as specified in the <a href="#outgoing">class
+	 * description</a>.</td>
+	 * </tr>
 	 * </table>
 	 * 
+	 * @param sRid
+	 *            the s rid
+	 * @return the hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#computeAuthenticationRequest(java.lang.String)
 	 */
 	public HashMap computeAuthenticationRequest(String sRid)
@@ -378,34 +375,33 @@ public class Radius implements IAuthSPProtocolHandler
 	}
 
 	/**
-	 * Checks the response from the Radius AuthSP.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * Checks the response from the Radius AuthSP. <br>
 	 * <br>
-	 * This method verifies the response from the AuthSP. The response 
-	 * parameters are placed in <code>htAuthspResponse</code> and are 
-	 * described in the <a href="#incoming">class description</a>.
-	 * <br><br>
+	 * <b>Description:</b> <br>
+	 * This method verifies the response from the AuthSP. The response parameters are placed in
+	 * <code>htAuthspResponse</code> and are described in the <a href="#incoming">class description</a>. <br>
+	 * <br>
 	 * This method creates a hashtable with the following contents:
 	 * <table border="1" cellspacing="0" cellpadding="3">
-	 * 	<tr>
-	 *		<td style="" bgcolor="#EEEEFF"><b>key</b></td>
-	 *		<td style="" bgcolor="#EEEEFF"><b>value</b></td>
-	 * 	</tr>  
-	 * 	<tr>
-	 * 		<td>result</td>
-	 *  	<td>
-	 * 			{@link Errors#ERROR_ASELECT_SUCCESS} or an error code 
-	 * 			if the authentication response was invalid or the user was 
-	 * 			not authenticated.
-	 * 		</td>
-	 * 	</tr>
-	 * 	<tr>
-	 * 		<td>rid</td>
-	 * 		<td>The A-Select request identifier of this authentication.</td>
-	 * 	</tr>
+	 * <tr>
+	 * <td style="" bgcolor="#EEEEFF"><b>key</b></td>
+	 * <td style="" bgcolor="#EEEEFF"><b>value</b></td>
+	 * </tr>
+	 * <tr>
+	 * <td>result</td>
+	 * <td>
+	 * {@link Errors#ERROR_ASELECT_SUCCESS} or an error code if the authentication response was invalid or the user
+	 * was not authenticated.</td>
+	 * </tr>
+	 * <tr>
+	 * <td>rid</td>
+	 * <td>The A-Select request identifier of this authentication.</td>
+	 * </tr>
 	 * </table>
 	 * 
+	 * @param htAuthspResponse
+	 *            the ht authsp response
+	 * @return the hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.HashMap)
 	 */
 	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse)
@@ -429,13 +425,13 @@ public class Radius implements IAuthSPProtocolHandler
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 			}
 
-			//create complete as_url
+			// create complete as_url
 			sbTemp = new StringBuffer(sAsUrl);
 			sbTemp.append("?authsp=");
 			sbTemp.append(_sAuthsp);
 			sAsUrl = sbTemp.toString();
 
-			//validate signature
+			// validate signature
 			sSignature = URLDecoder.decode(sSignature, "UTF-8");
 			sbTemp = new StringBuffer(sRid);
 			sbTemp.append(sAsUrl);
@@ -462,8 +458,8 @@ public class Radius implements IAuthSPProtocolHandler
 
 			if (sResultCode.equalsIgnoreCase(ERROR_RADIUS_ACCESS_DENIED)) {
 				_oASelectAuthenticationLogger.log(new Object[] {
-					MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg,
-					(String) htSessionContext.get("app_id"), "denied"
+					MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg, (String) htSessionContext.get("app_id"),
+					"denied"
 				});
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);
 			}
@@ -475,8 +471,8 @@ public class Radius implements IAuthSPProtocolHandler
 			}
 
 			_oASelectAuthenticationLogger.log(new Object[] {
-				MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg,
-				(String) htSessionContext.get("app_id"), "granted"
+				MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg, (String) htSessionContext.get("app_id"),
+				"granted"
 			});
 
 			htResponse.put("rid", sRid);

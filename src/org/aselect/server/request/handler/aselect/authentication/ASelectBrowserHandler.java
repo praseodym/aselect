@@ -122,30 +122,20 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.sam.agent.SAMResource;
 
+// TODO: Auto-generated Javadoc
 /**
- * This class handles requests coming from a a-select server through a users browser.
- * <br><br>
- * <b>Description:</b>
+ * This class handles requests coming from a a-select server through a users browser. <br>
  * <br>
- * If this A-Select Servers is acting as Local Server and
- * forwards authentication requests to other A-Select Servers
- * (cross A-Select), the following browser requests
- * of Remote Servers are handled here:
+ * <b>Description:</b> <br>
+ * If this A-Select Servers is acting as Local Server and forwards authentication requests to other A-Select Servers
+ * (cross A-Select), the following browser requests of Remote Servers are handled here:
  * <ul>
- * 	<li><code>aselect_credentials</code>
+ * <li><code>aselect_credentials</code>
  * </ul>
- *
- * @author Alfa & Ariss
  * 
- * 20080918, tolk code removed
- *
- * 14-11-2007 - Changes:
- * - DigiD Gateway integration, support tolk_fromdigid request
- *   pass DigiD attributes in the context
- * 
- * @author Bauke Hiemstra - www.anoigo.nl
- * Copyright Gemeente Den Haag (http://www.denhaag.nl)
- *
+ * @author Alfa & Ariss 20080918, tolk code removed 14-11-2007 - Changes: - DigiD Gateway integration, support
+ *         tolk_fromdigid request pass DigiD attributes in the context
+ * @author Bauke Hiemstra - www.anoigo.nl Copyright Gemeente Den Haag (http://www.denhaag.nl)
  */
 public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 {
@@ -154,12 +144,16 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 	private CryptoEngine _cryptoEngine;
 
 	/**
-	 * Constructor for ASelectBrowserHandler.
-	 * <br>
-	 * @param servletRequest The request.
-	 * @param servletResponse The response.
-	 * @param sMyServerId The A-Select Server ID.
-	 * @param sMyOrg The A-Select Server organisation.
+	 * Constructor for ASelectBrowserHandler. <br>
+	 * 
+	 * @param servletRequest
+	 *            The request.
+	 * @param servletResponse
+	 *            The response.
+	 * @param sMyServerId
+	 *            The A-Select Server ID.
+	 * @param sMyOrg
+	 *            The A-Select Server organisation.
 	 */
 	public ASelectBrowserHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			String sMyServerId, String sMyOrg) {
@@ -171,10 +165,22 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 	}
 
 	/**
-	 * process a-select browser requests
-	 * <br><br>
-	 * @see org.aselect.server.request.handler.aselect.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.HashMap, javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
+	 * process a-select browser requests <br>
+	 * <br>
+	 * .
+	 * 
+	 * @param htServiceRequest
+	 *            the ht service request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @param pwOut
+	 *            the pw out
+	 * @throws ASelectException
+	 *             the a select exception
+	 * @see org.aselect.server.request.handler.aselect.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.HashMap,
+	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
 	 */
+	@Override
 	public void processBrowserRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 		throws ASelectException
 	{
@@ -186,21 +192,25 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 	}
 
 	/**
-	 * A response of a remote server (aselect_credentials) is verified here.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * A response of a remote server (aselect_credentials) is verified here. <br>
 	 * <br>
-	 * After forwarding a user to a remote server, the remote server will
-	 * redirect the user back to this A-Select Server with credentials.
-	 * The response and credentials are verified here.
-	 * <br><br>
+	 * <b>Description:</b> <br>
+	 * After forwarding a user to a remote server, the remote server will redirect the user back to this A-Select Server
+	 * with credentials. The response and credentials are verified here. <br>
+	 * <br>
+	 * 
 	 * @param htServiceRequest
+	 *            the ht service request
 	 * @param servletResponse
+	 *            the servlet response
+	 * @param pwOut
+	 *            the pw out
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
-	private void handleCrossAuthenticateResponse(HashMap htServiceRequest,
-			HttpServletResponse servletResponse, PrintWriter pwOut)
-	throws ASelectException
+	private void handleCrossAuthenticateResponse(HashMap htServiceRequest, HttpServletResponse servletResponse,
+			PrintWriter pwOut)
+		throws ASelectException
 	{
 		String sMethod = "handleCrossAuthenticateResponse()";
 
@@ -261,7 +271,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 					tgtIssuer.issueErrorTGT(sLocalRid, sResultCode, servletResponse);
 				}
 				else {
-					//remote server returned error
+					// remote server returned error
 					_authenticationLogger.log(new Object[] {
 						"Cross", sUID, (String) htServiceRequest.get("client_ip"), sRemoteOrg,
 						htSessionContext.get("app_id"), "denied", sResultCode
@@ -293,19 +303,22 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 	}
 
 	/**
-	 * A response of a remote server (aselect_credentials) is verified here.
-	 * <br><br>
-	 * <b>Description:</b>
+	 * A response of a remote server (aselect_credentials) is verified here. <br>
 	 * <br>
-	 * After forwarding a user to a remote server, the remote server will
-	 * redirect the user back to this A-Select Server with credentials.
-	 * The response and credentials are verified here.
-	 * <br><br>
+	 * <b>Description:</b> <br>
+	 * After forwarding a user to a remote server, the remote server will redirect the user back to this A-Select Server
+	 * with credentials. The response and credentials are verified here. <br>
+	 * <br>
+	 * 
 	 * @param sCredentials
+	 *            the s credentials
 	 * @param sRemoteRid
+	 *            the s remote rid
 	 * @param sRemoteOrg
+	 *            the s remote org
 	 * @return HashMap
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
 	private HashMap verifyRemoteCredentials(String sCredentials, String sRemoteRid, String sRemoteOrg)
 		throws ASelectException
@@ -332,7 +345,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 
 			throw ace;
 		}
-		RawCommunicator oCommunicator = new RawCommunicator(_systemLogger); //Default = API communciation
+		RawCommunicator oCommunicator = new RawCommunicator(_systemLogger); // Default = API communciation
 		HashMap htRequestTable = new HashMap();
 		HashMap htResponseTable = new HashMap();
 		htRequestTable.put("request", "verify_credentials");
@@ -371,7 +384,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 		// Uid needed for authentication logging if access denied.;
 		String sUID = (String) htResponseTable.get("uid");
 		if (sUID != null) {
-			//TODO tripple decoding? (Erwin)
+			// TODO tripple decoding? (Erwin)
 			try {
 				sUID = URLDecoder.decode(sUID, "UTF-8");
 				sUID = URLDecoder.decode(sUID, "UTF-8");
@@ -405,7 +418,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString());
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
 		}
-		//TODO tripple decoding? (Erwin)
+		// TODO tripple decoding? (Erwin)
 		try {
 			sUID = URLDecoder.decode(sUID, "UTF-8");
 			sUID = URLDecoder.decode(sUID, "UTF-8");

@@ -52,151 +52,157 @@ import org.aselect.authspserver.log.AuthSPSystemLogger;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.service.SAMServiceServlet;
 
+// TODO: Auto-generated Javadoc
 /**
- * The A-Select AuthSP Server SAM Service servlet. 
- * <br>
+ * The A-Select AuthSP Server SAM Service servlet. <br>
  * <br>
  * <b>Description: </b> <br>
  * The SAM Servlet that is used for monitoring the A-Select AuthSP Server. <br>
  * <br>
- * <b>Concurrency issues: </b> <br>-<br>
+ * <b>Concurrency issues: </b> <br>
+ * -<br>
  * 
  * @author Alfa & Ariss
- * 
  */
 public class SAMService extends SAMServiceServlet
 {
-    
-    /** The module name. */
-    public static final String MODULE = "SAMService";
-    
-    /** The system logger. */
-    private AuthSPSystemLogger _systemLogger;
-    
-    /**
-     * Initialize method for this Servlet, that starts the initialize of the 
-     * super class and loads all specific A-Select Server OID's to the <i>_htOIDs
-     * </i> <code>HashMap</code>
-     * <br><br>
-     * @see org.aselect.system.sam.service.SAMServiceServlet#init(javax.servlet.ServletConfig)
-     */
-    public void init(ServletConfig oServletConfig) throws ServletException
-    {
-        _systemLogger = AuthSPSystemLogger.getHandle();
-        super.init(oServletConfig);
-        _systemLogger.log(Level.INFO, "SAMService", "init()", 
-        "Successfully started SAM Service.");
-    }
 
-    /**
-     * Calls the super class destroy method.
-     * <br>
-     * <br>
-     * @see org.aselect.system.sam.service.SAMServiceServlet#destroy()
-     */
-    public void destroy()
-    {
-        super.destroy();
-    }
+	/** The module name. */
+	public static final String MODULE = "SAMService";
 
-    /**
-     * Returns all information that can be resolved from this A-Select AuthSP 
-     * Server that is usefull for monitoring.
-     * <br><br>
-     * At this moment no specific AuthSP Server monitoring information is 
-     * available. Only the common SAM information will be returned.
-     * <br>
-     * @see org.aselect.system.sam.service.SAMServiceServlet#getSAMInfo()
-     */
-    protected HashMap getSAMInfo()
-    {
-        HashMap hInfo = getCommonSAMInfo();
+	/** The system logger. */
+	private AuthSPSystemLogger _systemLogger;
 
-        return hInfo;
-    }
+	/**
+	 * Initialize method for this Servlet, that starts the initialize of the super class and loads all specific A-Select
+	 * Server OID's to the <i>_htOIDs </i> <code>HashMap</code> <br>
+	 * <br>
+	 * .
+	 * 
+	 * @param oServletConfig
+	 *            the o servlet config
+	 * @throws ServletException
+	 *             the servlet exception
+	 * @see org.aselect.system.sam.service.SAMServiceServlet#init(javax.servlet.ServletConfig)
+	 */
+	@Override
+	public void init(ServletConfig oServletConfig)
+		throws ServletException
+	{
+		_systemLogger = AuthSPSystemLogger.getHandle();
+		super.init(oServletConfig);
+		_systemLogger.log(Level.INFO, "SAMService", "init()", "Successfully started SAM Service.");
+	}
 
-    /**
-     * Returns the AuthSP Server system logger, used for logging.
-     * <br>
-     * <br>
-     * @see org.aselect.system.sam.service.SAMServiceServlet#getSystemLogger()
-     */
-    protected SystemLogger getSystemLogger()
-    {
-        return _systemLogger;
-    }
+	/**
+	 * Calls the super class destroy method. <br>
+	 * <br>
+	 * 
+	 * @see org.aselect.system.sam.service.SAMServiceServlet#destroy()
+	 */
+	@Override
+	public void destroy()
+	{
+		super.destroy();
+	}
 
-    /**
-     * Checks if the A-Select AuthSP Server Servlet is operational.
-     * <br>
-     * <br>
-     * @see org.aselect.system.sam.service.SAMServiceServlet#operational()
-     */
-    protected int operational()
-    {
-        int iOperational = 0; //default DOWN
-        ServletContext servletContext = this.getServletContext().getContext(
-            super.getContextUrl() + "/server");    
-        if (servletContext != null)
-        {
-            Object oCryptoEngine = servletContext.getAttribute("CryptoEngine");     
-            Object oWorkingDir = servletContext.getAttribute("working_dir");
-            Object oFriendlyName = servletContext.getAttribute("friendly_name");
-            if(oCryptoEngine != null &&
-                oWorkingDir != null &&
-                oFriendlyName != null)
-            {                
-               iOperational = 1; 
-            }
-            else
-            {
-                getSystemLogger().log(Level.WARNING, MODULE, "operational()",
-                "Can't find AuthSP Server attributes in servlet context.");
-            }
-        }
-        return iOperational;
-    }
+	/**
+	 * Returns all information that can be resolved from this A-Select AuthSP Server that is usefull for monitoring. <br>
+	 * <br>
+	 * At this moment no specific AuthSP Server monitoring information is available. Only the common SAM information
+	 * will be returned. <br>
+	 * 
+	 * @return the SAM info
+	 * @see org.aselect.system.sam.service.SAMServiceServlet#getSAMInfo()
+	 */
+	@Override
+	protected HashMap getSAMInfo()
+	{
+		HashMap hInfo = getCommonSAMInfo();
 
-    /**
-     * Returns the A-Select AuthSP Server discription represented as a <code>
-     * String</code>.
-     * <br>
-     * <br>
-     * 
-     * @see org.aselect.system.sam.service.SAMServiceServlet#getSysDescr()
-     */
-    protected String getSysDescr()
-    {
-        StringBuffer sbSysDescr = new StringBuffer("A-Select AuthSP Server v");
-        sbSysDescr.append(Version.getVersion());
+		return hInfo;
+	}
 
-        String sSP = Version.getSP();
-        if (!sSP.equals(""))
-        {
-            sbSysDescr.append(" ,SP ");
-            sbSysDescr.append(sSP);
-        }
+	/**
+	 * Returns the AuthSP Server system logger, used for logging. <br>
+	 * <br>
+	 * 
+	 * @return the system logger
+	 * @see org.aselect.system.sam.service.SAMServiceServlet#getSystemLogger()
+	 */
+	@Override
+	protected SystemLogger getSystemLogger()
+	{
+		return _systemLogger;
+	}
 
-        String sPatch = Version.getPatch();
-        if (!sPatch.equals(""))
-        {
-            sbSysDescr.append(" ,Patch ");
-            sbSysDescr.append(sPatch);
-        }
+	/**
+	 * Checks if the A-Select AuthSP Server Servlet is operational. <br>
+	 * <br>
+	 * 
+	 * @return the int
+	 * @see org.aselect.system.sam.service.SAMServiceServlet#operational()
+	 */
+	@Override
+	protected int operational()
+	{
+		int iOperational = 0; // default DOWN
+		ServletContext servletContext = this.getServletContext().getContext(super.getContextUrl() + "/server");
+		if (servletContext != null) {
+			Object oCryptoEngine = servletContext.getAttribute("CryptoEngine");
+			Object oWorkingDir = servletContext.getAttribute("working_dir");
+			Object oFriendlyName = servletContext.getAttribute("friendly_name");
+			if (oCryptoEngine != null && oWorkingDir != null && oFriendlyName != null) {
+				iOperational = 1;
+			}
+			else {
+				getSystemLogger().log(Level.WARNING, MODULE, "operational()",
+						"Can't find AuthSP Server attributes in servlet context.");
+			}
+		}
+		return iOperational;
+	}
 
-        return sbSysDescr.toString();
-    }
+	/**
+	 * Returns the A-Select AuthSP Server discription represented as a <code>
+	 * String</code>. <br>
+	 * <br>
+	 * 
+	 * @return the sys descr
+	 * @see org.aselect.system.sam.service.SAMServiceServlet#getSysDescr()
+	 */
+	@Override
+	protected String getSysDescr()
+	{
+		StringBuffer sbSysDescr = new StringBuffer("A-Select AuthSP Server v");
+		sbSysDescr.append(Version.getVersion());
 
-    /**
-     * Returns the A-Select AuthSP Server version number.
-     * <br>
-     * <br>
-     * 
-     * @see org.aselect.system.sam.service.SAMServiceServlet#getVersion()
-     */
-    protected String getVersion()
-    {
-        return Version.getVersion();
-    }
+		String sSP = Version.getSP();
+		if (!sSP.equals("")) {
+			sbSysDescr.append(" ,SP ");
+			sbSysDescr.append(sSP);
+		}
+
+		String sPatch = Version.getPatch();
+		if (!sPatch.equals("")) {
+			sbSysDescr.append(" ,Patch ");
+			sbSysDescr.append(sPatch);
+		}
+
+		return sbSysDescr.toString();
+	}
+
+	/**
+	 * Returns the A-Select AuthSP Server version number. <br>
+	 * <br>
+	 * 
+	 * @return the version
+	 * @see org.aselect.system.sam.service.SAMServiceServlet#getVersion()
+	 */
+	@Override
+	protected String getVersion()
+	{
+		return Version.getVersion();
+	}
 
 }
