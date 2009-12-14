@@ -160,13 +160,11 @@ public class StorageManager
 			oHandlerSection = oConfigManager.getSection(oConfigSection, "handler");
 		}
 		catch (ASelectConfigException x) {
-			systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"'<handler />' is missing in the configuration file. value was null");
+			systemLogger.log(Level.WARNING, MODULE, sMethod, "'<handler />' is missing in the configuration file. value was null");
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INIT, x);
 		}
 
 		String sMax = null;
-
 		try {
 			sMax = oConfigManager.getParam(oConfigSection, "max");
 		}
@@ -174,9 +172,7 @@ public class StorageManager
 			// Allow for "unlimited" storage by setting sMax to -1
 			// Also Change "put" method to allow for value -1
 			systemLogger.log(Level.WARNING, MODULE, sMethod,
-			// "No valid 'max' config item found in storagemanager config section", e); // RH, 20090529, o
-					"No 'max' config item found in storagemanager config section, using unlimited", e); // RH, 20090529,
-			// n
+					"No 'max' config item found in storagemanager config section, using unlimited", e);// RH, 20090529
 			sMax = STRING_UNLIMITED;
 			// throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INIT, e); // RH, 20090529, o
 		}
@@ -185,12 +181,8 @@ public class StorageManager
 			_iMax = Integer.parseInt(sMax.trim());
 		}
 		catch (Exception e) {
-			systemLogger.log(Level.WARNING, MODULE, sMethod,
-			// formally _iMax this is not a long but an Integer
-					// "'max' config item in storagemanager config section is not a long: " + sMax, e);// RH, 20090529,
-					// o
+			systemLogger.log(Level.WARNING, MODULE, sMethod, // formally _iMax this is not a long but an Integer
 					"'max' config item in storagemanager config section is not an integer: " + sMax, e);// RH, 20090529,
-			// n
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INIT, e);
 		}
 
@@ -217,8 +209,7 @@ public class StorageManager
 		}
 
 		try {
-			oStorageHandlerSection = oConfigManager.getSection(oConfigSection, "storagehandler", "id="
-					+ sStorageHandlerId);
+			oStorageHandlerSection = oConfigManager.getSection(oConfigSection, "storagehandler", "id=" + sStorageHandlerId);
 		}
 		catch (ASelectConfigException ace) {
 			systemLogger.log(Level.WARNING, MODULE, sMethod,
@@ -243,18 +234,16 @@ public class StorageManager
 			}
 			catch (ASelectConfigException e) {
 				lInterval = 60000; // default 1 minute.
-				systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"'interval' config item not specified. Using default (1 minute)");
+				systemLogger.log(Level.CONFIG, MODULE, sMethod, "'interval' config item not specified. Using default (1 minute)");
 			}
 		}
 
-		try {
-			// If reinit -> clear old resources
+		try {	// If reinit -> clear old resources
 			destroy();
 
 			_oStorageHandler = (IStorageHandler) cClass.newInstance();
-			systemLogger.log(Level.INFO, MODULE, sMethod, "ConfigManager=" + oConfigManager + " ConfigSection="
-					+ oStorageHandlerSection + " this=" + this.getClass() + " handler=" + _oStorageHandler.getClass());
+			systemLogger.log(Level.INFO, MODULE, sMethod, "ConfigManager=" + oConfigManager + " id="+sStorageHandlerId+
+					" ConfigSection="+oStorageHandlerSection + " this=" + this.getClass() + " handler=" + _oStorageHandler.getClass());
 			_oStorageHandler.init(oStorageHandlerSection, oConfigManager, systemLogger, oSAMAgent);
 
 			// The cleaner will keep the storage clean.

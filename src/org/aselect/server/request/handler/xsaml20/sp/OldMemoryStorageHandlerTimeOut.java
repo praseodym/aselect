@@ -58,8 +58,7 @@ public class OldMemoryStorageHandlerTimeOut extends OldMemoryStorageHandler
 		_oSystemLogger = (ASelectSystemLogger) systemLogger;
 		_oConfigManager = oConfigManager;
 		_oTGTManager = TGTManager.getHandle();
-		systemLogger.log(Level.INFO, MODULE, sMethod, "ConfigManager=" + oConfigManager + " ConfigSection="
-				+ oConfigSection);
+		systemLogger.log(Level.INFO, MODULE, sMethod, "ConfigManager=" + oConfigManager + " ConfigSection="+oConfigSection);
 
 		try {
 			Object aselectSection = _oConfigManager.getSection(null, "aselect");

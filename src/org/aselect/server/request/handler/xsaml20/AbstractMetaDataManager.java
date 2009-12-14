@@ -70,7 +70,6 @@ public abstract class AbstractMetaDataManager
 	private static final String HTTP_PROXY_HOST = "http.proxyHost";
 	private static final String DEFAULT_PROXY_PORT = "8080"; // RH, 20090615, n
 	protected final String MODULE = "AbstractMetaDataManager";
-	protected final String sFederationIdpKeyword = "federation-idp";
 	protected String protocolSupportEnumeration = SAMLConstants.SAML20P_NS; // "urn:oasis:names:tc:SAML:2.0:protocol"
 	protected ASelectConfigManager _configManager;
 	protected SystemLogger _systemLogger;

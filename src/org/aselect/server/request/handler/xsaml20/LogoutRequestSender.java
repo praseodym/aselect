@@ -47,7 +47,8 @@ public class LogoutRequestSender
 	/**
 	 * Instantiates a new logout request sender.
 	 */
-	public LogoutRequestSender() {
+	public LogoutRequestSender()
+	{
 		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
 		_systemLogger = ASelectSystemLogger.getHandle();
 		privateKey = _configManager.getDefaultPrivateKey();
@@ -85,8 +86,7 @@ public class LogoutRequestSender
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Send LogoutRequest to: " + sServiceProviderUrl);
 		XMLObjectBuilderFactory builderFactory = org.opensaml.xml.Configuration.getBuilderFactory();
 
-		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(sServiceProviderUrl, sTgT, sNameID, sIssuerUrl,
-				reason);
+		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(sServiceProviderUrl, sTgT, sNameID, sIssuerUrl, reason);
 		// TODO setValidityInterval with only NotOnOrAfter, but we need this from calling object (from aselect.xml)
 		SAMLObjectBuilder<Endpoint> endpointBuilder = (SAMLObjectBuilder<Endpoint>) builderFactory
 				.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);

@@ -107,8 +107,10 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 		}
 
 		// determine which user belongs to this response
-		String inResponseTo = logoutResponse.getInResponseTo();
-		Element element = (Element) SamlHistoryManager.getHandle().get(inResponseTo);
+		String sTgT = logoutResponse.getInResponseTo();
+		if (sTgT.startsWith("_"))
+			sTgT = sTgT.substring(1);
+		Element element = (Element) SamlHistoryManager.getHandle().get(sTgT);
 
 		// Get the original LogoutRequest sent by the initiating SP
 		XMLObject originalRequest = null;

@@ -26,6 +26,7 @@ import org.aselect.system.exception.ASelectException;
 public class MetaDataManagerSp extends AbstractMetaDataManager
 {
 	private static MetaDataManagerSp metaDataManager = null;
+	private final String sFederationIdpKeyword = "federation-idp";
 
 	/**
 	 * Constructor.
@@ -83,7 +84,7 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "id=" + sId + "<>" + metadata);
 					metadataSPs.put(sId, metadata);
 				}
-				if (sId.equals("metadata")) { // 20091030: backward compat
+				if (sId.equals("metadata")) { // 20091030: backward compatibility
 					// Get from "saml20_sp_session_sync" handler
 					Object oRequestsSection = _configManager.getSection(null, "requests");
 					Object oHandlersSection = _configManager.getSection(oRequestsSection, "handlers");

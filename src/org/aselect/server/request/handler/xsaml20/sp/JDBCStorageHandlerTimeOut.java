@@ -59,16 +59,14 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 		_oSystemLogger = (ASelectSystemLogger) systemLogger;
 		_oConfigManager = oConfigManager;
 		_oTGTManager = TGTManager.getHandle();
-		systemLogger.log(Level.INFO, MODULE, sMethod, "ConfigManager=" + oConfigManager + " ConfigSection="
-				+ oConfigSection);
+		systemLogger.log(Level.INFO, MODULE, sMethod, "ConfigManager=" + oConfigManager + " ConfigSection="+oConfigSection);
 
 		try {
 			Object aselectSection = _oConfigManager.getSection(null, "aselect");
 			_serverUrl = _oConfigManager.getParam(aselectSection, "redirect_url");
 		}
 		catch (ASelectConfigException e) {
-			systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"No config item 'redirect_url' found in 'aselect' section", e);
+			systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'redirect_url' found in 'aselect' section", e);
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 		// 20091207: default if not available in TgT, only available for backward compatibility
@@ -89,10 +87,10 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			if ("true".equalsIgnoreCase(sVerifySignature)) {
 				set_bVerifySignature(true);
 			}
-			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "verify_signature = " + is_bVerifySignature());
+			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "storagemanager id=\"tgt\": verify_signature = " + is_bVerifySignature());
 		}
 		catch (ASelectConfigException e) {
-			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "verify_signature not found, set to = "
+			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "storagemanager id=\"tgt\": verify_signature not found, set to = "
 					+ is_bVerifySignature());
 		}
 	}
@@ -266,15 +264,12 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			}
 		}
 		try {
-			logout
-					.sendSoapLogoutRequest(url, issuerUrl, sNameID, "urn:oasis:names:tc:SAML:2.0:logout:sp-timeout",
-							pkey);
+			logout.sendSoapLogoutRequest(url, issuerUrl, sNameID, "urn:oasis:names:tc:SAML:2.0:logout:sp-timeout", pkey);
 		}
 		catch (ASelectException e) {
 			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "Exception trying to send Logout message", e);
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
-
 		return false;
 	}
 

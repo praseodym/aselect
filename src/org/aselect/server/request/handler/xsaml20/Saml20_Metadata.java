@@ -181,15 +181,13 @@ public class Saml20_Metadata extends ProtoRequestHandler
 				String sAlias = (String) enumAliases.nextElement();
 
 				sAlias = sAlias.toLowerCase();
-				if (sAlias.equals(getPublicKeyAlias())) { // server_id van aselectidp xml federation-idp
-
+				if (sAlias.equals(getPublicKeyAlias())) { // server_id A-Select IdP
 					java.security.cert.X509Certificate x509Cert = (java.security.cert.X509Certificate) ksASelect
 							.getCertificate(sAlias);
 
 					String encodedCert = new String(Base64.encodeBase64(x509Cert.getEncoded()));
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Found public key alias for : "
 							+ getPublicKeyAlias() + " retrieved encoded signing certificate");
-
 					setSigningCertificate(encodedCert);
 				}
 			}
@@ -197,7 +195,6 @@ public class Saml20_Metadata extends ProtoRequestHandler
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No alias found for idp public key with name : "
 						+ getPublicKeyAlias());
 				throw new ASelectException(Errors.ERROR_ASELECT_CONFIG_ERROR);
-
 			}
 		}
 		catch (Exception e) {

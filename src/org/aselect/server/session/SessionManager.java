@@ -157,8 +157,7 @@ public class SessionManager extends StorageManager
 				oSessionConfig = oConfigManager.getSection(null, "storagemanager", "id=session");
 			}
 			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"No 'storagemanager' section with id='session' found", e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'storagemanager' section with id='session' found", e);
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 

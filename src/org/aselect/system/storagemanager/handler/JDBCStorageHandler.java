@@ -229,14 +229,13 @@ public class JDBCStorageHandler implements IStorageHandler
 				cClass = Class.forName(_connHandler);
 			}
 			catch (ASelectConfigException ace) {
-				systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"'class' for connectionhandler  is missing in the configuration file, using default");
+				systemLogger.log(Level.INFO, MODULE, sMethod,
+						"No connectionhandler given in the configuration file, using '"+DEFAULT_CONNECTION_HANDLER+"'");
 				cClass = Class.forName(DEFAULT_CONNECTION_HANDLER);
 			}
 
 			_oConnectionHandler = (IConnectionHandler) cClass.newInstance();
-			systemLogger.log(Level.INFO, MODULE, sMethod, "Using connectionhandler: "
-					+ _oConnectionHandler.getClass().getCanonicalName());
+			systemLogger.log(Level.INFO, MODULE, sMethod, "Using connectionhandler: " + _oConnectionHandler.getClass().getCanonicalName());
 			_oConnectionHandler.Init(_oConfigManager, _systemLogger, _oSAMAgent, _sResourceGroup);
 
 			// RH, 20090604, sn

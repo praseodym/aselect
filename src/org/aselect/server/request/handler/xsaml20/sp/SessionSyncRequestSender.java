@@ -197,14 +197,12 @@ public class SessionSyncRequestSender
 			for (; oHandler != null;) {
 				try {
 					String sId = myConfigManager.getParam(oHandler, "id");
-					mySystemLogger.log(Level.INFO, MODULE, sMethod, "Scan handler " + sId);
+					mySystemLogger.log(Level.FINEST, MODULE, sMethod, "Scan handler " + sId);
 					if (sId.equals("saml20_sp_session_sync")) {
-						// String sFederationUrl = ASelectConfigManager.getSimpleParam(oHandler, "federation_url",
-						// true);
+						// String sFederationUrl = ASelectConfigManager.getSimpleParam(oHandler, "federation_url", true);
 						// htSessionSyncParameters.put("federation_url", sFederationUrl); // 20091030: backward compat
 
-						String _sUpdateInterval = ASelectConfigManager
-								.getSimpleParam(oHandler, "update_interval", true);
+						String _sUpdateInterval = ASelectConfigManager.getSimpleParam(oHandler, "update_interval", true);
 						Long updateInterval = Long.parseLong(_sUpdateInterval);
 						updateInterval = updateInterval * 1000;
 						mySystemLogger.log(Level.INFO, MODULE, sMethod, "Update interval on SP = " + updateInterval);
@@ -213,15 +211,11 @@ public class SessionSyncRequestSender
 						String samlMessageType = ASelectConfigManager.getSimpleParam(oHandler, "message_type", true);
 						htSessionSyncParameters.put("message_type", samlMessageType);
 
-						String verify_signature = ASelectConfigManager.getSimpleParam(oHandler, "verify_signature",
-								false);
-						htSessionSyncParameters.put("verify_signature", (verify_signature == null) ? "false"
-								: verify_signature);
+						String verify_signature = ASelectConfigManager.getSimpleParam(oHandler, "verify_signature", false);
+						htSessionSyncParameters.put("verify_signature", (verify_signature == null) ? "false": verify_signature);
 
-						String verify_interval = ASelectConfigManager
-								.getSimpleParam(oHandler, "verify_interval", false);
-						htSessionSyncParameters.put("verify_interval", (verify_interval == null) ? "false"
-								: verify_interval);
+						String verify_interval = ASelectConfigManager.getSimpleParam(oHandler, "verify_interval", false);
+						htSessionSyncParameters.put("verify_interval", (verify_interval == null) ? "false": verify_interval);
 
 						String max_notbefore = ASelectConfigManager.getSimpleParam(oHandler, "max_notbefore", false);
 						if (max_notbefore != null) {
@@ -229,8 +223,7 @@ public class SessionSyncRequestSender
 							htSessionSyncParameters.put("max_notbefore", max_notbefore);
 						}
 
-						String max_notonorafter = ASelectConfigManager.getSimpleParam(oHandler, "max_notonorafter",
-								false);
+						String max_notonorafter = ASelectConfigManager.getSimpleParam(oHandler, "max_notonorafter", false);
 						if (max_notonorafter != null) {
 							max_notonorafter = (new Long(Long.parseLong(max_notonorafter) * 1000)).toString();
 							htSessionSyncParameters.put("max_notonorafter", max_notonorafter);
@@ -245,8 +238,7 @@ public class SessionSyncRequestSender
 			}
 		}
 		catch (ASelectConfigException e) {
-			mySystemLogger
-					.log(Level.WARNING, MODULE, sMethod, "No config item 'handler' found in 'aselect' section", e);
+			mySystemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'handler' found in 'aselect' section", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 		return htSessionSyncParameters;

@@ -165,8 +165,8 @@ public class TGTManager extends StorageManager
 				throw e;
 			}
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "ConfigManager=" + oASelectConfigManager + " ConfigSection="
-					+ oTicketSection);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "ConfigManager=" + oASelectConfigManager + "id=tgt"+
+					" Section=" + oTicketSection);
 			super.init(oTicketSection, oASelectConfigManager, _systemLogger, ASelectSAMAgent.getHandle());
 
 			// reset the tgt counter
