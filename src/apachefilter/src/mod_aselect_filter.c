@@ -103,6 +103,8 @@ static const char * aselect_filter_set_use_aselect_bar(cmd_parms *parms, void *m
 static const char *aselect_filter_secure_url(cmd_parms *parms, void *mconfig, const char *arg );
 static const char *aselect_filter_pass_attributes(cmd_parms *parms, void *mconfig, const char *arg );
 static const char *aselect_filter_add_attribute(cmd_parms *parms, void *mconfig, const char *arg );
+static const char *aselect_filter_set_logfile(cmd_parms *parms, void *mconfig, const char *arg );
+static const char *aselect_filter_added_security(cmd_parms *parms, void *mconfig, const char *arg );
 
 static char * aselect_filter_attributes(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcTicket, char *pcUid, char *pcOrganization);
 static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, request_rec *pRequest,
@@ -114,24 +116,23 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 //
 
 #ifdef APACHE_13_ASELECT_FILTER
-void
-aselect_filter_init(server_rec *pServer, pool *pPool)
+void aselect_filter_init(server_rec *pServer, pool *pPool)
 #else
-int
-aselect_filter_init(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *pPool, server_rec *pServer)
+int aselect_filter_init(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *pPool, server_rec *pServer)
 #endif
 {
     int i;
     PASELECT_APPLICATION pApp;
     char pcMessage[2048];
-    PASELECT_FILTER_CONFIG  pConfig = (PASELECT_FILTER_CONFIG) 
-        ap_get_module_config(pServer->module_config, &aselect_filter_module);
+    PASELECT_FILTER_CONFIG  pConfig = (PASELECT_FILTER_CONFIG)ap_get_module_config(pServer->module_config, &aselect_filter_module);
 
     TRACE1("aselect_filter_init: %x", pServer);
     if (pConfig)
     {
-        ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
-                "ASELECT_FILTER:: initializing");
+        ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, "ASELECT_FILTER:: initializing");
+
+	// 20091223: Bauke, added
+	aselect_filter_trace_logfilename(pConfig->pcLogFileName);
 
         ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
             ap_psprintf(pPool, "ASELECT_FILTER:: A-Select Agent running on: %s:%d", 
@@ -156,21 +157,16 @@ aselect_filter_init(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *pPool, serv
         for (i=0; i<pConfig->iAppCount; i++)
         {
             pApp = &pConfig->pApplications[i];
-            ap_snprintf(pcMessage, sizeof(pcMessage),
-                "ASELECT_FILTER:: added %s at %s %s%s",
-                pApp->pcAppId,
-                pApp->pcLocation,
-                pApp->bEnabled ? "" : "(disabled)",
+            ap_snprintf(pcMessage, sizeof(pcMessage), "ASELECT_FILTER:: added %s at %s %s%s",
+                pApp->pcAppId, pApp->pcLocation, pApp->bEnabled ? "" : "(disabled)",
                 pApp->bForcedLogon ? "(forced logon)" : "");
-            ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, 
-                pServer, pcMessage);
+            ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, pcMessage);
+
             if (aselect_filter_upload_authz_rules(pConfig, pServer, pPool, pApp))
             {
                 ap_snprintf(pcMessage, sizeof(pcMessage), 
-                    "ASELECT_FILTER:: registered %d authZ rules for %s",
-                    pApp->iRuleCount, pApp->pcAppId);
-                ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, 
-                    pServer, pcMessage);
+                    "ASELECT_FILTER:: registered %d authZ rules for %s", pApp->iRuleCount, pApp->pcAppId);
+                ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, pcMessage);
             }
             else
 #endif
@@ -181,6 +177,7 @@ aselect_filter_init(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *pPool, serv
 #endif
 //      }
     }
+    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, "aselect_filter_init: done");
     TRACE("aselect_filter_init: done");
 #ifdef APACHE_20_ASELECT_FILTER
     return 0;
@@ -199,18 +196,14 @@ int aselect_filter_upload_all_rules(PASELECT_FILTER_CONFIG pConfig, server_rec *
     for (i=0; i<pConfig->iAppCount; i++)
     {
 	pApp = &pConfig->pApplications[i];
-	ap_snprintf(pcMessage, sizeof(pcMessage),
-	    "ASELECT_FILTER:: added %s at %s %s%s",
-	    pApp->pcAppId,
-	    pApp->pcLocation,
-	    pApp->bEnabled ? "" : "(disabled)",
-	    pApp->bForcedLogon ? "(forced logon)" : "");
+	ap_snprintf(pcMessage, sizeof(pcMessage), "ASELECT_FILTER:: added %s at %s %s%s",
+	    pApp->pcAppId, pApp->pcLocation, pApp->bEnabled ? "" : "(disabled)", pApp->bForcedLogon ? "(forced logon)" : "");
+
 	ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, pcMessage);
 	if (aselect_filter_upload_authz_rules(pConfig, pServer, pPool, pApp))
 	{
-	    ap_snprintf(pcMessage, sizeof(pcMessage), 
-		"ASELECT_FILTER:: registered %d authZ rules for %s",
-		pApp->iRuleCount, pApp->pcAppId);
+	    ap_snprintf(pcMessage, sizeof(pcMessage), "ASELECT_FILTER:: registered %d authZ rules for %s",
+		    pApp->iRuleCount, pApp->pcAppId);
 	    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, pcMessage);
 	}
 	else
@@ -220,8 +213,7 @@ int aselect_filter_upload_all_rules(PASELECT_FILTER_CONFIG pConfig, server_rec *
 }
 
 // Upload authorization rule for a single application
-int
-aselect_filter_upload_authz_rules(PASELECT_FILTER_CONFIG pConfig, 
+int aselect_filter_upload_authz_rules(PASELECT_FILTER_CONFIG pConfig, 
     server_rec *pServer, pool *pPool, PASELECT_APPLICATION pApp)
 {
     int i, length;
@@ -286,8 +278,7 @@ aselect_filter_upload_authz_rules(PASELECT_FILTER_CONFIG pConfig,
 //
 // Request validation of a ticket
 //
-char *
-aselect_filter_verify_ticket(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig,
+char *aselect_filter_verify_ticket(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig,
 	char *pcTicket, char *pcUID, char *pcOrganization, char *pcAttributes, char *language)
 {
     char *          pcSendMessage;
@@ -500,13 +491,11 @@ char *aselect_filter_attributes(request_rec *pRequest, pool *pPool, PASELECT_FIL
 }
 
 
-static int
-aselect_filter_verify_config(PASELECT_FILTER_CONFIG pConfig)
+static int aselect_filter_verify_config(PASELECT_FILTER_CONFIG pConfig)
 {
     if (pConfig->bConfigError)
         return ASELECT_FILTER_ERROR_CONFIG;
-    if (pConfig->pcASAIP)
-    {
+    if (pConfig->pcASAIP) {
 	if (strlen(pConfig->pcASAIP) <= 0)
             return ASELECT_FILTER_ERROR_CONFIG;
     }
@@ -532,8 +521,7 @@ aselect_filter_verify_config(PASELECT_FILTER_CONFIG pConfig)
 //
 // Main handler, will handle cookie checking and redirection
 //
-static int
-aselect_filter_handler(request_rec *pRequest)
+static int aselect_filter_handler(request_rec *pRequest)
 {
     int             iRet = FORBIDDEN;
     int             iError = ASELECT_FILTER_ERROR_OK;
@@ -573,6 +561,7 @@ aselect_filter_handler(request_rec *pRequest)
     char            *pcAttributes = NULL;
     int             bFirstParam;
     char * pcRequestLanguage = NULL;
+    char *addedSecurity = "";
 
     ap_log_error(APLOG_MARK, APLOG_INFO, pRequest->server, ap_psprintf(pRequest->pool, "XX Url - %s", pRequest->uri));
     TRACE("");
@@ -607,8 +596,7 @@ aselect_filter_handler(request_rec *pRequest)
     // check cookie, no cookie, validate_user, set cookie, check cookie, no cookie.... and so on
     
     // Read config data
-    if (!(pConfig = (PASELECT_FILTER_CONFIG) 
-        ap_get_module_config(pRequest->server->module_config, &aselect_filter_module)))
+    if (!(pConfig = (PASELECT_FILTER_CONFIG)ap_get_module_config(pRequest->server->module_config, &aselect_filter_module)))
     {
         // Something went wrong, access denied
         TRACE("could not get module config data");
@@ -635,8 +623,7 @@ aselect_filter_handler(request_rec *pRequest)
     // Check if we are in a protected dir
     // this function point the global pConfig->pCurrentApp to the requested app
     //
-    if (aselect_filter_verify_directory(pPool, pConfig, pRequest->uri) == ASELECT_FILTER_ERROR_FAILED)
-    {
+    if (aselect_filter_verify_directory(pPool, pConfig, pRequest->uri) == ASELECT_FILTER_ERROR_FAILED) {
         //
         // not in a protected dir
         // this should not be possible
@@ -646,8 +633,7 @@ aselect_filter_handler(request_rec *pRequest)
         ap_destroy_pool(pPool);   
         return DECLINED;
     }
-    else
-    {
+    else {
         TRACE2("\"%s\" is a protected dir, app_id: %s", pRequest->uri, pConfig->pCurrentApp->pcAppId);
     }
 
@@ -659,6 +645,7 @@ aselect_filter_handler(request_rec *pRequest)
         TRACE1("remote_ip: %s", pRequest->connection->remote_ip);
     }
 
+    addedSecurity = (strchr(pConfig->pcAddedSecurity, 'c')!=NULL)? " secure; HttpOnly": "";
     TRACE3("==== 1. Start iError=%d iAction=%s, iRet=%d", iError, filter_action_text(iAction), iRet);
     TRACE3("     (DECLINED=%d DONE=%d FORBIDDEN=%d)", DECLINED, DONE, FORBIDDEN);
     //
@@ -940,20 +927,20 @@ aselect_filter_handler(request_rec *pRequest)
 					{
 					    pRequest->content_type = "text/html";
 					    
-					    pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s; secure; HttpOnly", "aselectticket", pConfig->pCurrentApp->pcLocation);
+					    pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectticket", pConfig->pCurrentApp->pcLocation, addedSecurity);
 					    ap_table_add(headers_out, "Set-Cookie", pcCookie);
 					    TRACE1("Set-Cookie: %s", pcCookie);
-					    pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s; secure; HttpOnly", "aselectuid", pConfig->pCurrentApp->pcLocation);
+					    pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectuid", pConfig->pCurrentApp->pcLocation, addedSecurity);
 					    ap_table_add(headers_out, "Set-Cookie", pcCookie);
 					    TRACE1("Set-Cookie: %s", pcCookie);
-					    pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s; secure; HttpOnly", "aselectorganization", pConfig->pCurrentApp->pcLocation);
+					    pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectorganization", pConfig->pCurrentApp->pcLocation, addedSecurity);
 					    ap_table_add(headers_out, "Set-Cookie", pcCookie);
 					    TRACE1("Set-Cookie: %s", pcCookie);
-					    pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s; secure; HttpOnly", "aselectserverurl", pConfig->pCurrentApp->pcLocation);
+					    pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectserverurl", pConfig->pCurrentApp->pcLocation, addedSecurity);
 					    ap_table_add(headers_out, "Set-Cookie", pcCookie);
 					    TRACE1("Set-Cookie: %s", pcCookie);
 					    if (/*pConfig->bUseCookie ||*/ strchr(pConfig->pcPassAttributes,'c')!=0) {  // Bauke: added
-						pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s; secure; HttpOnly", "aselectattributes", pConfig->pCurrentApp->pcLocation);
+						pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectattributes", pConfig->pCurrentApp->pcLocation, addedSecurity);
 						ap_table_add(headers_out, "Set-Cookie", pcCookie);
 						TRACE1("Set-Cookie: %s", pcCookie);
 					    }
@@ -1067,7 +1054,7 @@ aselect_filter_handler(request_rec *pRequest)
                         {
                             if ((pcASUrl = aselect_filter_get_param(pPool, pcResponseAU, "as_url=", "&", TRUE)))
                             {
-                                iRet = aselect_filter_gen_top_redirect(pPool, pRequest, pcASUrl, pcASelectServer, pcRID);
+                                iRet = aselect_filter_gen_top_redirect(pPool, addedSecurity, pRequest, pcASUrl, pcASelectServer, pcRID);
                             }
                             else {
                                 iError = ASELECT_FILTER_ERROR_AGENT_RESPONSE;
@@ -1090,15 +1077,14 @@ aselect_filter_handler(request_rec *pRequest)
                 break;
 
             case ASELECT_FILTER_ACTION_SET_TICKET:
-
                 //
                 // Generate & set A-Select cookies
                 //
                 TRACE3("Action: ASELECT_FILTER_ACTION_SET_TICKET: %s - %s - %s", pcTicketOut, pcUIDOut, pcOrganizationOut);
 		if (/*pConfig->bUseCookie ||*/ strchr(pConfig->pcPassAttributes,'c')!=0) {  // Bauke: added
 		    // Pass attributes in a cookie
-		    pcCookie4 = ap_psprintf(pPool, "%s=%s; version=1; path=%s; secure; HttpOnly", "aselectattributes", 
-			(pcAttributes == NULL) ? "" : pcAttributes, pConfig->pCurrentApp->pcLocation);
+		    pcCookie4 = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectattributes", 
+			    (pcAttributes == NULL) ? "" : pcAttributes, pConfig->pCurrentApp->pcLocation, addedSecurity);
 		    TRACE1("Set-Cookie: %s", pcCookie4);
 		    ap_table_add(headers_out, "Set-Cookie", pcCookie4); 
 		}
@@ -1109,18 +1095,15 @@ aselect_filter_handler(request_rec *pRequest)
 				    pcTicketOut, pcUIDOut, pcOrganizationOut, pcRequestLanguage, headers_in);
 		}
 
-                pcCookie = ap_psprintf(pPool, "%s=%s; version=1; path=%s; secure; HttpOnly", "aselectticket", 
-                    pcTicketOut, pConfig->pCurrentApp->pcLocation);
+                pcCookie = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectticket", pcTicketOut, pConfig->pCurrentApp->pcLocation, addedSecurity);
                 TRACE1("Set-Cookie: %s", pcCookie);
                 ap_table_add(headers_out, "Set-Cookie", pcCookie); 
 
-                pcCookie2 = ap_psprintf(pPool, "%s=%s; version=1; path=%s; secure; HttpOnly", "aselectuid", 
-                    pcUIDOut, pConfig->pCurrentApp->pcLocation);
+                pcCookie2 = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectuid", pcUIDOut, pConfig->pCurrentApp->pcLocation, addedSecurity);
                 TRACE1("Set-Cookie: %s", pcCookie2);
                 ap_table_add(headers_out, "Set-Cookie", pcCookie2); 
 
-                pcCookie3 = ap_psprintf(pPool, "%s=%s; version=1; path=%s; secure; HttpOnly", "aselectorganization", 
-                    pcOrganizationOut, pConfig->pCurrentApp->pcLocation);
+                pcCookie3 = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectorganization", pcOrganizationOut, pConfig->pCurrentApp->pcLocation, addedSecurity);
                 TRACE1("Set-Cookie: %s", pcCookie3);
                 ap_table_add(headers_out, "Set-Cookie", pcCookie3); 
 
@@ -1153,8 +1136,7 @@ aselect_filter_handler(request_rec *pRequest)
                     pRequest->args = "";
                 TRACE1("--> pRequest->args='%s'",pRequest->args);
                                                                          
-                iRet = aselect_filter_gen_authcomplete_redirect(
-                    pPool, pRequest, pConfig);
+                iRet = aselect_filter_gen_authcomplete_redirect(pPool, pRequest, pConfig);
                 break;
 
             case ASELECT_FILTER_ACTION_ACCESS_DENIED:
@@ -1193,7 +1175,8 @@ aselect_filter_handler(request_rec *pRequest)
 // Bauke added: Pass attributes in the query string and/or in the header
 //
 static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, request_rec *pRequest,
-	    PASELECT_FILTER_CONFIG pConfig, char *pcTicketIn, char *pcUIDIn, char *pcOrganizationIn, char *pcRequestLanguage, table *headers_in)
+	    PASELECT_FILTER_CONFIG pConfig, char *pcTicketIn, char *pcUIDIn, char *pcOrganizationIn,
+	    char *pcRequestLanguage, table *headers_in)
 {
     TRACE4("==== Attributes iError=%d, TicketIn=%s, UidIn=%s, OrgIn=%s", iError,
 		pcTicketIn?pcTicketIn:"NULL", pcUIDIn?pcUIDIn:"NULL", pcOrganizationIn?pcOrganizationIn:"NULL");
@@ -1295,7 +1278,7 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 			if (attrName[0] == '\0')  // no HTTP header name
 			    continue;
 
-			TRACE3("Attr %s,%s,%s", digidName, ldapName, attrName);
+			//TRACE3("Attr %s,%s,%s", digidName, ldapName, attrName);
 			// attrName has a value
 			if (strcmp(attrName, "language")==0) {
 			    char *p = (pRequest->args)? strstr(pRequest->args, "language="): NULL;
@@ -1416,8 +1399,7 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 //
 // Use to create the per server configuration data
 //
-static void*
-aselect_filter_create_config(pool *pPool, server_rec *pServer)
+static void *aselect_filter_create_config(pool *pPool, server_rec *pServer)
 {
     PASELECT_FILTER_CONFIG  pConfig = NULL;
 
@@ -1426,8 +1408,7 @@ aselect_filter_create_config(pool *pPool, server_rec *pServer)
     {
         memset(pConfig, 0, sizeof(ASELECT_FILTER_CONFIG));
     }
-    else
-    {
+    else {
 	TRACE("aselect_filter_create_config::ERROR:: could not allocate memory for pConfig");
     }
 
@@ -1439,19 +1420,15 @@ aselect_filter_set_agent_address(cmd_parms *parms, void *mconfig, const char *ar
 {
     PASELECT_FILTER_CONFIG  pConfig = (PASELECT_FILTER_CONFIG) ap_get_module_config(parms->server->module_config, &aselect_filter_module);
 
-    if (pConfig)
-    {
-        if ((pConfig->pcASAIP = ap_pstrdup(parms->pool, arg)))
-        {
+    if (pConfig) {
+        if ((pConfig->pcASAIP = ap_pstrdup(parms->pool, arg))) {
             TRACE1("aselect_filter_set_agent_address:: ip: %s", pConfig->pcASAIP);
         }
-        else
-        {
+        else {
             return "A-Select ERROR: Internal error when setting A-Select IP";
         }
     }
-    else
-    {
+    else {
         return "A-Select ERROR: Internal error when setting A-Select IP";
     }
 
@@ -1689,31 +1666,62 @@ aselect_filter_add_secure_app(cmd_parms *parms, void *mconfig, const char *arg1,
     return NULL;
 }
 
+// 20091223: Bauke, added
+// Allow to switch off the Secure and HttpOnly mechanism
+//
+static const char *aselect_filter_added_security(cmd_parms *parms, void *mconfig, const char *arg)
+{
+    PASELECT_FILTER_CONFIG pConfig = (PASELECT_FILTER_CONFIG) ap_get_module_config(parms->server->module_config, &aselect_filter_module);
+    char **pAttr;
+
+    if (!pConfig) {
+	return "A-Select ERROR: Internal error during added_security";
+	return NULL;
+    }
+    strcpy(pConfig->pcAddedSecurity, "");
+    if (!arg || strstr(arg, "cookies") != NULL)  // It's the default as well
+	strcat(pConfig->pcAddedSecurity, "c");  // add Secure & HttpOnly to cookies
+    TRACE1("aselect_filter_added_security:: %s", pConfig->pcAddedSecurity);
+    return NULL;
+}
+
+// 20091223: Bauke, added
+// Specify the name and location of the log file (not mandatory)
+//
+static const char *aselect_filter_set_logfile(cmd_parms *parms, void *mconfig, const char *arg)
+{
+    PASELECT_FILTER_CONFIG pConfig = (PASELECT_FILTER_CONFIG) ap_get_module_config(parms->server->module_config, &aselect_filter_module);
+    char **pAttr;
+
+    if (!pConfig) {
+	return "A-Select ERROR: Internal error when setting log_file";
+	return NULL;
+    }
+    pConfig->pcLogFileName = (arg)? ap_pstrdup(parms->pool, arg): NULL;
+    TRACE1("aselect_filter_set_logfile:: %s", pConfig->pcLogFileName);
+    return NULL;
+}
+
 // Bauke: added
 // Read all attributes that must be passed in the HTML header from the config file
 //
-static const char *
-aselect_filter_add_attribute(cmd_parms *parms, void *mconfig, const char *arg)
+static const char *aselect_filter_add_attribute(cmd_parms *parms, void *mconfig, const char *arg)
 {
-	PASELECT_FILTER_CONFIG pConfig = (PASELECT_FILTER_CONFIG) ap_get_module_config(parms->server->module_config, &aselect_filter_module);
-	char **pAttr;
+    PASELECT_FILTER_CONFIG pConfig = (PASELECT_FILTER_CONFIG) ap_get_module_config(parms->server->module_config, &aselect_filter_module);
+    char **pAttr;
 
-        if (pConfig) {
-		if (pConfig->iAttrCount < ASELECT_FILTER_MAX_ATTR) {
-			TRACE1("aselect_filter_add_attribute:: %d", pConfig->iAttrCount);
-			pAttr = &pConfig->pAttrFilter[pConfig->iAttrCount];
-			*pAttr = ap_pstrdup(parms->pool, arg);
-			TRACE1("aselect_filter_add_attribute:: %s", *pAttr);
-			pConfig->iAttrCount++;
-                }
-                else {
-			return "A-Select ERROR: Reached max possible Attribute Filters";
-                }
-        }
-        else {
-                return "A-Select ERROR: Internal error when setting add_attribute";
-        }
-        return NULL;
+    if (!pConfig) {
+	return "A-Select ERROR: Internal error when setting add_attribute";
+	return NULL;
+    }
+    if (pConfig->iAttrCount >= ASELECT_FILTER_MAX_ATTR) {
+	return "A-Select ERROR: Reached max possible Attribute Filters";
+    }
+    pAttr = &pConfig->pAttrFilter[pConfig->iAttrCount];
+    *pAttr = ap_pstrdup(parms->pool, arg);
+    TRACE2("aselect_filter_add_attribute:: [%d] %s", pConfig->iAttrCount, *pAttr);
+    pConfig->iAttrCount++;
+    return NULL;
 }
 
 static const char *aselect_filter_set_redirection_mode(cmd_parms *parms, void *mconfig, const char *arg)
@@ -1862,8 +1870,7 @@ static const char *aselect_filter_set_html_logout_template(cmd_parms *parms, voi
         return NULL;
 }
 
-static const char *
-aselect_filter_set_use_aselect_bar(cmd_parms *parms, void *mconfig, const char *arg)
+static const char *aselect_filter_set_use_aselect_bar(cmd_parms *parms, void *mconfig, const char *arg)
 {
         PASELECT_FILTER_CONFIG  pConfig = (PASELECT_FILTER_CONFIG) ap_get_module_config(parms->server->module_config, &aselect_filter_module);
         char                    *pcUseASelectBar;
@@ -1894,7 +1901,7 @@ aselect_filter_set_use_aselect_bar(cmd_parms *parms, void *mconfig, const char *
 // Bauke 20081108: added
 // Boolean to activate URL escape sequence removal
 //
-static const char * aselect_filter_secure_url(cmd_parms *parms, void *mconfig, const char *arg)
+static const char *aselect_filter_secure_url(cmd_parms *parms, void *mconfig, const char *arg)
 {
     PASELECT_FILTER_CONFIG pConfig = (PASELECT_FILTER_CONFIG) ap_get_module_config(parms->server->module_config, &aselect_filter_module);
     char *pcSecureUrl;
@@ -1916,7 +1923,7 @@ static const char * aselect_filter_secure_url(cmd_parms *parms, void *mconfig, c
     return NULL;
 }
 
-static const char * aselect_filter_pass_attributes(cmd_parms *parms, void *mconfig, const char *arg)
+static const char *aselect_filter_pass_attributes(cmd_parms *parms, void *mconfig, const char *arg)
 {
     PASELECT_FILTER_CONFIG pConfig = (PASELECT_FILTER_CONFIG) ap_get_module_config(parms->server->module_config, &aselect_filter_module);
     char *pcPassAttr;
@@ -1957,32 +1964,23 @@ static handler_rec aselect_filter_handlers[] =
 //
 // Registered cmds to call from httpd.conf
 //
-static const command_rec
-aselect_filter_cmds[] = 
+static const command_rec aselect_filter_cmds[] = 
 {
     { "aselect_filter_set_agent_address", 
         aselect_filter_set_agent_address, 
-        NULL,
-        RSRC_CONF,
-        TAKE1,
+        NULL, RSRC_CONF, TAKE1,
         "Usage aselect_filter_set_agent_address <ip or dns name of A-Select Agent>, example: aselect_filter_set_agent_address \"localhost\"" },
     { "aselect_filter_set_agent_port", 
         aselect_filter_set_agent_port, 
-        NULL,
-        RSRC_CONF,
-        TAKE1,
+        NULL, RSRC_CONF, TAKE1,
         "Usage aselect_filter_set_agent_port <port of A-Select Agent>, example: aselect_filter_set_agent_port \"1495\"" },
     { "aselect_filter_add_secure_app",
         aselect_filter_add_secure_app,
-        NULL,
-        RSRC_CONF,
-        TAKE3,
+        NULL, RSRC_CONF, TAKE3,
         "Usage aselect_filter_add_secure_app <location> <application id> <flags>, example: aselect_filter_add_secure_app \"///secure///\" \"app1\" \"forced-logon\"" },
     { "aselect_filter_add_authz_rule",
         aselect_filter_add_authz_rule,
-        NULL,
-        RSRC_CONF,
-        TAKE3,
+        NULL, RSRC_CONF, TAKE3,
         "Usage aselect_filter_add_authz_rule <application id> <target uri> <condition>, example: aselect_filter_add_authz_rule \"app1\" \"*\" \"role=student\"" },
 
     { "aselect_filter_set_html_error_template", aselect_filter_set_html_error_template,
@@ -1996,29 +1994,33 @@ aselect_filter_cmds[] =
 
     { "aselect_filter_set_use_aselect_bar",
         aselect_filter_set_use_aselect_bar,
-        NULL,
-        RSRC_CONF,
-        TAKE1,
+        NULL, RSRC_CONF, TAKE1,
         "Usage aselect_filter_set_use_aselect_bar <on or off>, example: aselect_filter_set_use_aselect_bar on" },
     { "aselect_filter_set_redirect_mode",
         aselect_filter_set_redirection_mode,
-        NULL,
-        RSRC_CONF,
-        TAKE1,
+        NULL, RSRC_CONF, TAKE1,
         "Usage aselect_filter_redirect_mode <app | full>, example: aselect_filter_redirect_mode \"app\"" },
 
-// Bauke: added 2 entries
+// Bauke: added entries
     { "aselect_filter_secure_url", aselect_filter_secure_url,
         NULL, RSRC_CONF, TAKE1,
-        "Usage aselect_filter_secure_url < 1 | 0 >, example: aselect_filter_secure_url \"1\"" },
+        "Usage: aselect_filter_secure_url < 1 | 0 >, example: aselect_filter_secure_url \"1\"" },
 
     { "aselect_filter_pass_attributes", aselect_filter_pass_attributes,
         NULL, RSRC_CONF, TAKE1,
-        "Usage aselect_filter_pass_attributes < c | q | h >, example: aselect_filter_pass_attributes \"ch\"" },
+        "Usage: aselect_filter_pass_attributes < c | q | h >, example: aselect_filter_pass_attributes \"ch\"" },
 
     { "aselect_filter_add_attribute", aselect_filter_add_attribute,
         NULL, RSRC_CONF, TAKE1,
-        "Usage aselect_filter_add_attribute < attribute filter spec >, example: aselect_filter_add_attribute \"uid,cn,user_id\"" },
+        "Usage: aselect_filter_add_attribute < attribute filter spec >, example: aselect_filter_add_attribute \"uid,cn,user_id\"" },
+// 20091223: Bauke, added
+    { "aselect_filter_set_logfile", aselect_filter_set_logfile,
+        NULL, RSRC_CONF, TAKE1,
+        "Usage: aselect_filter_set_logfile <filename>, example: aselect_filter_set_logfile \"/tmp/aselect_filter.log\"" },
+
+    { "aselect_filter_added_security", aselect_filter_added_security,
+        NULL, RSRC_CONF, TAKE1,
+        "Usage: aselect_filter_added_security < cookies | >, example: aselect_filter_added_security \"cookies\"" },
 
     { NULL }
 };
@@ -2054,8 +2056,7 @@ module MODULE_VAR_EXPORT aselect_filter_module =
 //
 // Registered cmds to call from httpd.conf
 //
-static const command_rec
-aselect_filter_cmds[] = 
+static const command_rec aselect_filter_cmds[] = 
 {
     AP_INIT_TAKE1( "aselect_filter_set_agent_address", 
         aselect_filter_set_agent_address, 
@@ -2087,33 +2088,38 @@ aselect_filter_cmds[] =
 
     AP_INIT_TAKE1( "aselect_filter_set_use_aselect_bar",
         aselect_filter_set_use_aselect_bar,
-        NULL,
-        RSRC_CONF,
+        NULL, RSRC_CONF,
         "Usage aselect_filter_set_use_aselect_bar <on or off>, example: aselect_filter_set_use_aselect_bar on" ),
     AP_INIT_TAKE1("aselect_filter_set_redirect_mode",
         aselect_filter_set_redirection_mode,
-        NULL,
-        RSRC_CONF,
+        NULL, RSRC_CONF,
         "Usage aselect_filter_redirect_mode <app | full>, example: aselect_filter_redirect_mode \"app\""),
 
-// Bauke: added 3 entries
+// Bauke: added entries
     AP_INIT_TAKE1("aselect_filter_secure_url", aselect_filter_secure_url,
         NULL, RSRC_CONF,
-        "Usage aselect_filter_secure_url < 0 | 1 >, example: aselect_filter_secure_url \"1\""),
+        "Usage: aselect_filter_secure_url < 0 | 1 >, example: aselect_filter_secure_url \"1\""),
 
     AP_INIT_TAKE1("aselect_filter_pass_attributes", aselect_filter_pass_attributes,
         NULL, RSRC_CONF,
-        "Usage aselect_filter_pass_attributes < c | q | h >, example: aselect_filter_pass_attributes \"ch\"" ),
+        "Usage: aselect_filter_pass_attributes < c | q | h >, example: aselect_filter_pass_attributes \"ch\"" ),
 
     AP_INIT_TAKE1("aselect_filter_add_attribute", aselect_filter_add_attribute,
         NULL, RSRC_CONF,
-        "Usage aselect_filter_add_attribute < 0 | 1 >, example: aselect_filter_add_attribute \"0\""),
+        "Usage: aselect_filter_add_attribute < 0 | 1 >, example: aselect_filter_add_attribute \"0\""),
+
+    AP_INIT_TAKE1("aselect_filter_set_logfile", aselect_filter_set_logfile,
+        NULL, RSRC_CONF,
+        "Usage: aselect_filter_set_logfile <filename>, example: aselect_filter_set_logfile \"/tmp/aselect_filter.log\""),
+
+    AP_INIT_TAKE1("aselect_filter_added_security", aselect_filter_added_security,
+        NULL, RSRC_CONF,
+        "Usage: aselect_filter_added_security < cookies | >, example: aselect_filter_added_security \"cookies\"" ),
 
     { NULL }
 };
 
-void *
-aselect_filter_create_server_config( apr_pool_t *pPool, server_rec *pServer )
+void *aselect_filter_create_server_config( apr_pool_t *pPool, server_rec *pServer )
 {
     PASELECT_FILTER_CONFIG  pConfig = NULL;
 
@@ -2131,8 +2137,7 @@ aselect_filter_create_server_config( apr_pool_t *pPool, server_rec *pServer )
     return pConfig;
 }
 
-void
-aselect_filter_register_hooks( apr_pool_t *p )
+void aselect_filter_register_hooks( apr_pool_t *p )
 {
 
     TRACE( "aselect_filter_register_hooks" );
@@ -2140,8 +2145,7 @@ aselect_filter_register_hooks( apr_pool_t *p )
     ap_hook_access_checker( aselect_filter_handler, NULL, NULL, APR_HOOK_MIDDLE );
 }
 
-module AP_MODULE_DECLARE_DATA
-aselect_filter_module =
+module AP_MODULE_DECLARE_DATA aselect_filter_module =
 {
     STANDARD20_MODULE_STUFF,
     NULL,                   // per-directory config creator

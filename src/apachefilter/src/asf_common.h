@@ -241,6 +241,8 @@ typedef struct _ASELECT_FILTER_CONFIG
     char    *pAttrFilter[ASELECT_FILTER_MAX_ATTR];
     int     iAttrCount;
     char    *pcLogoutTemplate;
+    char    *pcLogFileName;
+    char    pcAddedSecurity[10];  // can contain a 'c' (cookies)
 } ASELECT_FILTER_CONFIG, *PASELECT_FILTER_CONFIG;
 
 /*
@@ -272,7 +274,7 @@ int         aselect_filter_url_decode(char *pszValue);
 void        aselect_filter_add_nocache_headers(table *headers_out);
 int         aselect_filter_gen_error_page(pool *pPool, request_rec *pRequest, int iError, char *pcErrorTemplate);
 int         aselect_filter_gen_authcomplete_redirect(pool *pPool, request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig); 
-int         aselect_filter_gen_top_redirect(pool *pPool, request_rec *pRequest, char *pcASUrl, char *pcASelectServer, char *pcRID);
+int         aselect_filter_gen_top_redirect(pool *pPool, char *addedSecurity, request_rec *pRequest, char *pcASUrl, char *pcASelectServer, char *pcRID);
 int         aselect_filter_verify_directory(pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcUri);
 char *      aselect_filter_get_cookie(pool *pPool, table *headers_in, char *pcAttribute );
 int         aselect_filter_show_barhtml(pool *pPool, request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig, char *pcASelectAppUrl);
@@ -287,6 +289,7 @@ char *filter_action_text(ASELECT_FILTER_ACTION action);
  */
 #ifdef ASELECT_FILTER_TRACE
 
+    void aselect_filter_trace_logfilename(char *fmt);
     void aselect_filter_trace(const char *fmt, ... );
     int aselect_filter_print_table(void * data, const char *key, const char *val);    
     void aselect_filter_trace2(const char *filename, int line, const char *fmt, ...);    

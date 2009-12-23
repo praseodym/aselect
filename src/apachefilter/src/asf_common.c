@@ -63,7 +63,17 @@
 //
 // Bauke: Added fall back when logfile cannot be created
 //
+// NOTE: Best to create this file in advance, the owner must be the use running the Apache filter
+// During initialization "root" is running the filter, changes during operation
+// TODO: The init stage logging should go to the Apache log file!
+//       
 static char *LogfileName = ASELECT_FILTER_TRACE_FILE;
+
+void aselect_filter_trace_logfilename(char *filename)
+{
+    if (filename)
+	LogfileName = filename;
+}
 
 //
 // Trace function, traces the time, process id and the logstring
@@ -136,7 +146,7 @@ int aselect_filter_print_table(void * data, const char *key, const char *val)
 }
 
 // Convert a hex-formatted string into an array of bytes
-char * aselect_filter_hex_to_bytes(pool *pPool, char *pcString, int *ccBytes)
+char *aselect_filter_hex_to_bytes(pool *pPool, char *pcString, int *ccBytes)
 {
     int i, length;
     char pcByte[4] = {0, 0, 0, 0};
@@ -159,8 +169,7 @@ char * aselect_filter_hex_to_bytes(pool *pPool, char *pcString, int *ccBytes)
 
 // Convert a byte buffer into a hex string. The result is stored
 // in lpResult, which must be big enough to hold the result (length*2+1 characters)
-void
-aselect_filter_bytes_to_hex(const unsigned char *pcBytes, size_t length, char *pcResult)
+void aselect_filter_bytes_to_hex(const unsigned char *pcBytes, size_t length, char *pcResult)
 {
     int i;
     char szTemp[4];
@@ -177,8 +186,7 @@ aselect_filter_bytes_to_hex(const unsigned char *pcBytes, size_t length, char *p
 //
 // Reads in a 2 byte error string and converts it to an int
 //
-int
-aselect_filter_get_error(pool *pPool, char *pcError)
+int aselect_filter_get_error(pool *pPool, char *pcError)
 {
     int iError = ASELECT_FILTER_ERROR_INTERNAL;
     char *pcTemp;
@@ -206,8 +214,7 @@ aselect_filter_get_error(pool *pPool, char *pcError)
 
 
 // Replace pcTag in pcSource with pcValue
-char *
-aselect_filter_replace_tag(pool *pPool, char *pcTag, char *pcValue, char *pcSource)
+char *aselect_filter_replace_tag(pool *pPool, char *pcTag, char *pcValue, char *pcSource)
 {
     char    *pcDest = NULL;
     int     ccDest;
@@ -251,8 +258,7 @@ aselect_filter_replace_tag(pool *pPool, char *pcTag, char *pcValue, char *pcSour
 // strips any parameters from the string
 // effectivly deletes everything after the ?
 //
-char *
-aselect_filter_strip_param(pool *pPool, char * pcASelectServerURL)
+char *aselect_filter_strip_param(pool *pPool, char * pcASelectServerURL)
 {
     char *pcReturn = NULL;
     char *pcTemp;
@@ -270,16 +276,15 @@ aselect_filter_strip_param(pool *pPool, char * pcASelectServerURL)
 // Loops until enough data is received or a "\r" is received
 // returns number of bytes received, returns -1 if error has occured
 //
-int
-aselect_filter_receive_msg(int sd, char *pcReceiveMsg, int ccReceiveMsg)
+int aselect_filter_receive_msg(int sd, char *pcReceiveMsg, int ccReceiveMsg)
 {
     int iReceived = 0;
     int iRemaining = ccReceiveMsg;
     char *pMsg = pcReceiveMsg;
     char *pLF;
-int cnt;
-static int count = 1000;
-cnt = ++count;
+    int cnt;
+    static int count = 1000;
+    cnt = ++count;
 
     TRACE3("RCV[%d] aselect_filter_receive_msg (%d): %x", cnt, ccReceiveMsg, pcReceiveMsg);
 
@@ -308,8 +313,7 @@ cnt = ++count;
 //
 // Connect to ASelect Agent send request and wait for response
 //
-char *
-aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAIP, int iASAPort, char *pcSendMessage, int ccSendMessage)
+char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAIP, int iASAPort, char *pcSendMessage, int ccSendMessage)
 {
     int                 sd;
     struct sockaddr_in  pin;
@@ -654,10 +658,7 @@ int aselect_filter_gen_error_page(pool *pPool, request_rec *pRequest, int iError
 // Generate a client-side (HTML) redirection page.
 // This function is used after a succesful "verify_credentials"
 //
-int
-aselect_filter_gen_authcomplete_redirect(pool * pPool,
-                    request_rec *pRequest,
-                    PASELECT_FILTER_CONFIG pConfig)
+int aselect_filter_gen_authcomplete_redirect(pool * pPool, request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig)
 {
     table   *headers_out = pRequest->headers_out;
     int     bArgs;
@@ -667,67 +668,62 @@ aselect_filter_gen_authcomplete_redirect(pool * pPool,
     char    *pcRedirectURL;
 
     pRequest->content_type = "text/html";
-
     aselect_filter_add_nocache_headers(headers_out);
-
     ap_send_http_header(pRequest);
    
     bArgs = (pConfig->iRedirectMode == ASELECT_FILTER_REDIRECT_FULL &&
-        pRequest->args != NULL && *pRequest->args != 0);
-    if (*pConfig->pCurrentApp->pcRedirectURL)
-    {
-        if (bArgs)
-        {
-          pcRedirectURL = pConfig->pCurrentApp->pcRedirectURL;
-          // Strip original args, or they'll appear twice          
-          if (pcSep = strchr(pcRedirectURL, '?')) *pcSep = 0;
-          pcRedirectURL = ap_psprintf(pPool, "%s%s", pcRedirectURL, pRequest->args);
+			pRequest->args != NULL && *pRequest->args != 0);
+
+    if (*pConfig->pCurrentApp->pcRedirectURL) {
+	pcRedirectURL = pConfig->pCurrentApp->pcRedirectURL;
+	TRACE2("RedirectURL=%s, Args=%s", pcRedirectURL, pRequest->args);
+        if (bArgs) {
+	    // Strip original args, or they'll appear twice          
+	    if (pcSep = strchr(pcRedirectURL, '?')) {
+		*pcSep = 0;
+	    }
+	    pcRedirectURL = ap_psprintf(pPool, "%s%s", pcRedirectURL, pRequest->args);
         }
-        else
-          pcRedirectURL = pConfig->pCurrentApp->pcRedirectURL;
-	if (pConfig->bUseASelectBar)
-	{
-          pcSep = (strchr(pcRedirectURL, '?')) ? "&" : "?";
-          pcRedirectURL = ap_psprintf(pPool, 
-	            "%s%srequest=aselect_show_bar&aselect_app_url=%s",
-	            pcRedirectURL, pcSep,
-	            aselect_filter_url_encode(pPool, pcRedirectURL));
+        else {
+	    pcRedirectURL = pConfig->pCurrentApp->pcRedirectURL;
+	}
+	TRACE2("RedirectURL=%s, UseBar=%d", pcRedirectURL, pConfig->bUseASelectBar);
+	if (pConfig->bUseASelectBar) {
+	    pcSep = (strchr(pcRedirectURL, '?')) ? "&" : "?";
+	    pcRedirectURL = ap_psprintf(pPool, "%s%srequest=aselect_show_bar&aselect_app_url=%s",
+				pcRedirectURL, pcSep, aselect_filter_url_encode(pPool, pcRedirectURL));
 	}        
+	TRACE1("---- pcRedirectURL %s", pcRedirectURL);
     }
-    else
-    {
+    else {
+	TRACE2("No RedirectURL, URI=%s, Args=%s", pRequest->uri, pRequest->args);
 	if (!bArgs)
 	    pcURI = pRequest->uri;
-	else
-	{
+	else {
 	    pcURI = ap_psprintf(pPool, "%s%s", pRequest->uri, pRequest->args);
 	    pcSep = strstr(pcURI, "a-select-server=");
-	    if (pcSep != NULL) 
-	    {
+	    if (pcSep != NULL) {
 		*(pcSep-1) = 0;
 		if (strchr(pcURI, '?') == NULL)
 		    bArgs = FALSE;
 	    }
 	}
-	if (pConfig->bUseASelectBar)
-	{
+	TRACE2("pcURI=%s, UseBar=%d", pcURI, pConfig->bUseASelectBar);
+	if (pConfig->bUseASelectBar) {
+	    // pcURI should not contain: request=aselect_show_bar&aselect_app_url=<pcURI>
 	    pcSep = bArgs ? "&" : "?";
-	    pcURL = ap_psprintf(pPool, 
-		"%s%srequest=aselect_show_bar&aselect_app_url=%s",
-		pcURI, pcSep,
-		aselect_filter_url_encode(pPool, pcURI));
+	    pcURL = ap_psprintf(pPool, "%s%srequest=aselect_show_bar&aselect_app_url=%s",
+				pcURI, pcSep, aselect_filter_url_encode(pPool, pcURI));
 	}
 	else
 	    pcURL = pcURI;
     
-	TRACE1("------- pcURL %s", pcURL);
+	TRACE1("---- pcURL %s", pcURL);
 	pcRedirectURL = ap_construct_url(pPool, pcURL, pRequest);
     }
 
     TRACE1("aselect_filter_gen_authcomplete_redirect:: redirecting to: %s", pcRedirectURL);
-    ap_rprintf(pRequest, ASELECT_FILTER_CLIENT_REDIRECT, 
-        pcRedirectURL, pcRedirectURL);
-
+    ap_rprintf(pRequest, ASELECT_FILTER_CLIENT_REDIRECT, pcRedirectURL, pcRedirectURL);
     return DONE;
 }
 
@@ -735,9 +731,7 @@ aselect_filter_gen_authcomplete_redirect(pool * pPool,
 //
 // Set top frame to redirect to a-select-server
 //
-int
-aselect_filter_gen_top_redirect(pool * pPool, request_rec *pRequest, 
-    char *pcASUrl, char *pcASelectServer, char *pcRID)
+int aselect_filter_gen_top_redirect(pool *pPool, char *addedSecurity, request_rec *pRequest, char *pcASUrl, char *pcASelectServer, char *pcRID)
 {
     table   *headers_out = pRequest->headers_out;
     char    *pcRedirectURL;
@@ -745,7 +739,6 @@ aselect_filter_gen_top_redirect(pool * pPool, request_rec *pRequest,
     char    *pcCookie;
 
     TRACE3("aselect_filter_gen_top_redirect::\"%s\",\"%s\",\"%s\"", pcASUrl, pcASelectServer, pcRID); 
-
     pRequest->content_type = "text/html";
 
     //
@@ -753,7 +746,7 @@ aselect_filter_gen_top_redirect(pool * pPool, request_rec *pRequest,
     // but first strip any parameters from the url
     //
     pcASelectServerURL = aselect_filter_strip_param(pPool, pcASUrl);
-    pcCookie = ap_psprintf(pPool, "aselectserverurl=%s; version=1; path=/; secure; HttpOnly", pcASelectServerURL);
+    pcCookie = ap_psprintf(pPool, "aselectserverurl=%s; version=1; path=/;%s", pcASelectServerURL, addedSecurity);
     ap_table_add(headers_out, "Set-Cookie", pcCookie);
     TRACE1("Set-Cookie: %s", pcCookie);
 
@@ -770,8 +763,7 @@ aselect_filter_gen_top_redirect(pool * pPool, request_rec *pRequest,
 //
 // Checks the config for the URI and if it exists return the corresponding App ID
 //
-int
-aselect_filter_verify_directory(pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcUri)
+int aselect_filter_verify_directory(pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcUri)
 {
     int iRet;
     int i = 0;
@@ -802,8 +794,7 @@ aselect_filter_verify_directory(pool *pPool, PASELECT_FILTER_CONFIG pConfig, cha
 //
 // aselect_filter_get_cookie retrieves the request cookie and returns the cookie as a string
 //
-char *
-aselect_filter_get_cookie(pool *pPool, table *headers_in, char *pcAttribute)
+char *aselect_filter_get_cookie(pool *pPool, table *headers_in, char *pcAttribute)
 {
     char        *pcValues;
     char        *pcValue = NULL;
@@ -834,9 +825,7 @@ aselect_filter_get_cookie(pool *pPool, table *headers_in, char *pcAttribute)
     return pcValue;
 }
 
-
-int
-aselect_filter_show_barhtml(pool *pPool, request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig, char *pcASelectAppURL)
+int aselect_filter_show_barhtml(pool *pPool, request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig, char *pcASelectAppURL)
 {
     table   *headers_out = pRequest->headers_out;
 
