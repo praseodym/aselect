@@ -654,6 +654,24 @@ int aselect_filter_gen_error_page(pool *pPool, request_rec *pRequest, int iError
     return iRet;
 }
 
+// 20091224, Bauke: prevent repeated addition of the same arguments
+// 'urlAndArgs' may contain: request=aselect_show_bar&aselect_app_url=<encoded_url>
+// We don't want to repeat that.
+char *constructShowBarURL(pool *pPool, char *urlAndArgs)
+{
+    char *pcSep;
+    char *pcEncodedUrl;
+
+    TRACE1("constructShowBarURL, urlAndArgs=%s", urlAndArgs);
+    if (strstr(urlAndArgs, "request=aselect_show_bar&aselect_app_url=") != NULL)
+	return urlAndArgs;
+
+    pcSep = (strchr(urlAndArgs, '?')) ? "&" : "?";
+    pcEncodedUrl = aselect_filter_url_encode(pPool, urlAndArgs);
+    urlAndArgs = ap_psprintf(pPool, "%s%srequest=aselect_show_bar&aselect_app_url=%s", urlAndArgs, pcSep, pcEncodedUrl);
+    return urlAndArgs;
+}
+
 //
 // Generate a client-side (HTML) redirection page.
 // This function is used after a succesful "verify_credentials"
@@ -676,12 +694,8 @@ int aselect_filter_gen_authcomplete_redirect(pool * pPool, request_rec *pRequest
 
     if (*pConfig->pCurrentApp->pcRedirectURL) {
 	pcRedirectURL = pConfig->pCurrentApp->pcRedirectURL;
-	TRACE2("RedirectURL=%s, Args=%s", pcRedirectURL, pRequest->args);
+	TRACE3("RedirectURL=%s, Args=%s, bArgs=%d", pcRedirectURL, pRequest->args, bArgs);
         if (bArgs) {
-	    // Strip original args, or they'll appear twice          
-	    if (pcSep = strchr(pcRedirectURL, '?')) {
-		*pcSep = 0;
-	    }
 	    pcRedirectURL = ap_psprintf(pPool, "%s%s", pcRedirectURL, pRequest->args);
         }
         else {
@@ -689,14 +703,12 @@ int aselect_filter_gen_authcomplete_redirect(pool * pPool, request_rec *pRequest
 	}
 	TRACE2("RedirectURL=%s, UseBar=%d", pcRedirectURL, pConfig->bUseASelectBar);
 	if (pConfig->bUseASelectBar) {
-	    pcSep = (strchr(pcRedirectURL, '?')) ? "&" : "?";
-	    pcRedirectURL = ap_psprintf(pPool, "%s%srequest=aselect_show_bar&aselect_app_url=%s",
-				pcRedirectURL, pcSep, aselect_filter_url_encode(pPool, pcRedirectURL));
+	    pcRedirectURL = constructShowBarURL(pPool, pcRedirectURL);
 	}        
 	TRACE1("---- pcRedirectURL %s", pcRedirectURL);
     }
     else {
-	TRACE2("No RedirectURL, URI=%s, Args=%s", pRequest->uri, pRequest->args);
+	TRACE3("No RedirectURL, URI=%s, Args=%s, bArgs=%d", pRequest->uri, pRequest->args, bArgs);
 	if (!bArgs)
 	    pcURI = pRequest->uri;
 	else {
@@ -710,10 +722,7 @@ int aselect_filter_gen_authcomplete_redirect(pool * pPool, request_rec *pRequest
 	}
 	TRACE2("pcURI=%s, UseBar=%d", pcURI, pConfig->bUseASelectBar);
 	if (pConfig->bUseASelectBar) {
-	    // pcURI should not contain: request=aselect_show_bar&aselect_app_url=<pcURI>
-	    pcSep = bArgs ? "&" : "?";
-	    pcURL = ap_psprintf(pPool, "%s%srequest=aselect_show_bar&aselect_app_url=%s",
-				pcURI, pcSep, aselect_filter_url_encode(pPool, pcURI));
+	    pcURL = constructShowBarURL(pPool, pcURI);
 	}
 	else
 	    pcURL = pcURI;

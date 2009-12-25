@@ -127,9 +127,9 @@ int aselect_filter_init(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *pPool, 
     PASELECT_FILTER_CONFIG  pConfig = (PASELECT_FILTER_CONFIG)ap_get_module_config(pServer->module_config, &aselect_filter_module);
 
     TRACE1("aselect_filter_init: %x", pServer);
+    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, "ASELECT_FILTER:: initializing");
     if (pConfig)
     {
-        ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, "ASELECT_FILTER:: initializing");
 
 	// 20091223: Bauke, added
 	aselect_filter_trace_logfilename(pConfig->pcLogFileName);
@@ -149,27 +149,7 @@ int aselect_filter_init(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *pPool, 
             ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
                 "ASELECT_FILTER:: configured to redirect to user entry point");
 
-        ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
-            "ASELECT_FILTER:: configured to use the a-select bar");
-
 	if (!aselect_filter_upload_all_rules(pConfig, pServer, pPool))
-#ifdef OLD
-        for (i=0; i<pConfig->iAppCount; i++)
-        {
-            pApp = &pConfig->pApplications[i];
-            ap_snprintf(pcMessage, sizeof(pcMessage), "ASELECT_FILTER:: added %s at %s %s%s",
-                pApp->pcAppId, pApp->pcLocation, pApp->bEnabled ? "" : "(disabled)",
-                pApp->bForcedLogon ? "(forced logon)" : "");
-            ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, pcMessage);
-
-            if (aselect_filter_upload_authz_rules(pConfig, pServer, pPool, pApp))
-            {
-                ap_snprintf(pcMessage, sizeof(pcMessage), 
-                    "ASELECT_FILTER:: registered %d authZ rules for %s", pApp->iRuleCount, pApp->pcAppId);
-                ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, pcMessage);
-            }
-            else
-#endif
 #ifdef APACHE_20_ASELECT_FILTER
                 return -1;
 #else
@@ -177,7 +157,7 @@ int aselect_filter_init(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *pPool, 
 #endif
 //      }
     }
-    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, "aselect_filter_init: done");
+    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, "ASELECT_FILTER:: done");
     TRACE("aselect_filter_init: done");
 #ifdef APACHE_20_ASELECT_FILTER
     return 0;
@@ -191,20 +171,14 @@ int aselect_filter_upload_all_rules(PASELECT_FILTER_CONFIG pConfig, server_rec *
 {
     int i;
     PASELECT_APPLICATION pApp;
-    char pcMessage[2048];
 
-    for (i=0; i<pConfig->iAppCount; i++)
-    {
+    for (i=0; i<pConfig->iAppCount; i++) {
 	pApp = &pConfig->pApplications[i];
-	ap_snprintf(pcMessage, sizeof(pcMessage), "ASELECT_FILTER:: added %s at %s %s%s",
+	TRACE4("ASELECT_FILTER:: added %s at %s %s%s",
 	    pApp->pcAppId, pApp->pcLocation, pApp->bEnabled ? "" : "(disabled)", pApp->bForcedLogon ? "(forced logon)" : "");
 
-	ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, pcMessage);
-	if (aselect_filter_upload_authz_rules(pConfig, pServer, pPool, pApp))
-	{
-	    ap_snprintf(pcMessage, sizeof(pcMessage), "ASELECT_FILTER:: registered %d authZ rules for %s",
-		    pApp->iRuleCount, pApp->pcAppId);
-	    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, pcMessage);
+	if (aselect_filter_upload_authz_rules(pConfig, pServer, pPool, pApp)) {
+	    TRACE2("ASELECT_FILTER:: registered %d authZ rules for %s", pApp->iRuleCount, pApp->pcAppId);
 	}
 	else
 	    return 0; // not ok
@@ -252,7 +226,7 @@ int aselect_filter_upload_authz_rules(PASELECT_FILTER_CONFIG pConfig,
         }
         strcat(pRequest, "\r\n");
         
-        //TRACE1("aselect_filter_upload_authz_rules: sending: %s", pRequest);
+        TRACE1("aselect_filter_upload_authz_rules: sending: %s", pRequest);
         pcResponse = aselect_filter_send_request(pServer, pPool, pConfig->pcASAIP, pConfig->iASAPort, pRequest, strlen(pRequest));
         if (pcResponse == NULL) {
             // Could not send request, error already logged
@@ -261,10 +235,7 @@ int aselect_filter_upload_authz_rules(PASELECT_FILTER_CONFIG pConfig,
         //TRACE1("aselect_filter_upload_authz_rules: response: %s", pcResponse);
         iRet = aselect_filter_get_error(pPool, pcResponse);
         if (iRet != 0) {
-            ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, 
-                ap_psprintf(pPool, "ASELECT_FILTER:: Agent returned "
-                    "error %s while uploading authorization rules", 
-                    pcResponse));
+	    TRACE1("ASELECT_FILTER:: Agent returned error %s while uploading authorization rules", pcResponse);
             return 0;
         }
     }
@@ -563,7 +534,7 @@ static int aselect_filter_handler(request_rec *pRequest)
     char * pcRequestLanguage = NULL;
     char *addedSecurity = "";
 
-    ap_log_error(APLOG_MARK, APLOG_INFO, pRequest->server, ap_psprintf(pRequest->pool, "XX Url - %s", pRequest->uri));
+    //ap_log_error(APLOG_MARK, APLOG_INFO, pRequest->server, ap_psprintf(pRequest->pool, "XX Url - %s", pRequest->uri));
     TRACE("");
     TRACE("----------------------------------------------------------- aselect_filter_handler");
     TRACE2("GET %s %s", pRequest->uri, pRequest->args);
@@ -1331,9 +1302,7 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 			    }
 			    else if (strchr(pConfig->pcPassAttributes,'h')!=0) {
 				// Pass in the header
-				TRACE2("X-Header - %s: %s", attrName, p);
-				ap_log_error(APLOG_MARK, APLOG_INFO, pRequest->server,
-					    ap_psprintf(pPool, "X-Header - %s: %s", attrName, p));
+				//TRACE2("X-Header - %s: %s", attrName, p);
 				ap_table_set(headers_in, ap_psprintf(pPool, "X-%s", attrName), p);
 			    }
 
@@ -1370,7 +1339,7 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 				}
 			    }
 			}
-			TRACE3("New arguments [%d]: %s, req=%s", i, newArgs, pRequest->args);
+			//TRACE3("New arguments [%d]: %s, req=%s", i, newArgs, pRequest->args);
 		    }
 		}
 		else {
@@ -1719,7 +1688,11 @@ static const char *aselect_filter_add_attribute(cmd_parms *parms, void *mconfig,
     }
     pAttr = &pConfig->pAttrFilter[pConfig->iAttrCount];
     *pAttr = ap_pstrdup(parms->pool, arg);
+    // Still Apache logging
     TRACE2("aselect_filter_add_attribute:: [%d] %s", pConfig->iAttrCount, *pAttr);
+    // pServer not available???
+    //ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
+            //ap_psprintf(pPool, "aselect_filter_add_attribute:: [%d] %s", pConfig->iAttrCount, *pAttr));
     pConfig->iAttrCount++;
     return NULL;
 }
@@ -1739,7 +1712,7 @@ static const char *aselect_filter_set_redirection_mode(cmd_parms *parms, void *m
                         else{
                 return "A-Select ERROR: Invalid argument to aselect_filter_set_redirect_mode";
             }
-            TRACE2("aselect_filter_set_redirect_mode:: %d (%s)", pConfig->iRedirectMode,
+	    TRACE2("aselect_filter_set_redirect_mode:: %d (%s)", pConfig->iRedirectMode,
 		    (pConfig->iRedirectMode == ASELECT_FILTER_REDIRECT_TO_APP) ? "app" : "full");
         }
         else{
