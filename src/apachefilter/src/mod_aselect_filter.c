@@ -114,7 +114,6 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 // Called once during the module initialization phase.
 // can be used to setup the filter configuration 
 //
-
 #ifdef APACHE_13_ASELECT_FILTER
 void aselect_filter_init(server_rec *pServer, pool *pPool)
 #else
@@ -130,7 +129,6 @@ int aselect_filter_init(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *pPool, 
     ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, "ASELECT_FILTER:: initializing");
     if (pConfig)
     {
-
 	// 20091223: Bauke, added
 	aselect_filter_trace_logfilename(pConfig->pcLogFileName);
 
@@ -1666,7 +1664,9 @@ static const char *aselect_filter_set_logfile(cmd_parms *parms, void *mconfig, c
 	return "A-Select ERROR: Internal error when setting log_file";
 	return NULL;
     }
+    // goes to stdout: ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, parms->server, "ASELECT_FILTER:: logfile set");
     pConfig->pcLogFileName = (arg)? ap_pstrdup(parms->pool, arg): NULL;
+    aselect_filter_trace_logfilename(pConfig->pcLogFileName);
     TRACE1("aselect_filter_set_logfile:: %s", pConfig->pcLogFileName);
     return NULL;
 }
@@ -1688,11 +1688,11 @@ static const char *aselect_filter_add_attribute(cmd_parms *parms, void *mconfig,
     }
     pAttr = &pConfig->pAttrFilter[pConfig->iAttrCount];
     *pAttr = ap_pstrdup(parms->pool, arg);
-    // Still Apache logging
+    // Use Apache logging only
     TRACE2("aselect_filter_add_attribute:: [%d] %s", pConfig->iAttrCount, *pAttr);
-    // pServer not available???
-    //ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
-            //ap_psprintf(pPool, "aselect_filter_add_attribute:: [%d] %s", pConfig->iAttrCount, *pAttr));
+    // Goes to stdout:
+    //ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, parms->server,
+     //       ap_psprintf(parms->pool, "aselect_filter_add_attribute:: [%d] %s", pConfig->iAttrCount, *pAttr));
     pConfig->iAttrCount++;
     return NULL;
 }
@@ -1987,13 +1987,13 @@ static const command_rec aselect_filter_cmds[] =
         NULL, RSRC_CONF, TAKE1,
         "Usage: aselect_filter_add_attribute < attribute filter spec >, example: aselect_filter_add_attribute \"uid,cn,user_id\"" },
 // 20091223: Bauke, added
-    { "aselect_filter_set_logfile", aselect_filter_set_logfile,
-        NULL, RSRC_CONF, TAKE1,
-        "Usage: aselect_filter_set_logfile <filename>, example: aselect_filter_set_logfile \"/tmp/aselect_filter.log\"" },
-
     { "aselect_filter_added_security", aselect_filter_added_security,
         NULL, RSRC_CONF, TAKE1,
         "Usage: aselect_filter_added_security < cookies | >, example: aselect_filter_added_security \"cookies\"" },
+
+    { "aselect_filter_set_logfile", aselect_filter_set_logfile,
+        NULL, RSRC_CONF, TAKE1,
+        "Usage: aselect_filter_set_logfile <filename>, example: aselect_filter_set_logfile \"/tmp/aselect_filter.log\"" },
 
     { NULL }
 };
@@ -2081,39 +2081,37 @@ static const command_rec aselect_filter_cmds[] =
         NULL, RSRC_CONF,
         "Usage: aselect_filter_add_attribute < 0 | 1 >, example: aselect_filter_add_attribute \"0\""),
 
-    AP_INIT_TAKE1("aselect_filter_set_logfile", aselect_filter_set_logfile,
-        NULL, RSRC_CONF,
-        "Usage: aselect_filter_set_logfile <filename>, example: aselect_filter_set_logfile \"/tmp/aselect_filter.log\""),
-
     AP_INIT_TAKE1("aselect_filter_added_security", aselect_filter_added_security,
         NULL, RSRC_CONF,
         "Usage: aselect_filter_added_security < cookies | >, example: aselect_filter_added_security \"cookies\"" ),
 
+    AP_INIT_TAKE1("aselect_filter_set_logfile", aselect_filter_set_logfile,
+        NULL, RSRC_CONF,
+        "Usage: aselect_filter_set_logfile <filename>, example: aselect_filter_set_logfile \"/tmp/aselect_filter.log\""),
+
     { NULL }
 };
 
+// Called before logfile can be set, therefore use ap_log_error()
 void *aselect_filter_create_server_config( apr_pool_t *pPool, server_rec *pServer )
 {
     PASELECT_FILTER_CONFIG  pConfig = NULL;
 
-    TRACE( "aselect_filter_create_config" );
-    if( ( pConfig = ( PASELECT_FILTER_CONFIG ) apr_palloc( pPool, sizeof( ASELECT_FILTER_CONFIG ) ) ) )
-    {
-        memset( pConfig, 0, sizeof( ASELECT_FILTER_CONFIG ) );
+    // Logs on stdout
+    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, "aselect_filter_create_config");
+    pConfig = (PASELECT_FILTER_CONFIG) apr_palloc(pPool, sizeof(ASELECT_FILTER_CONFIG));
+    if (!pConfig) {
+	ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, "aselect_filter_create_config::ERROR:: could not allocate memory for pConfig");
+        return NULL;
     }
-    else
-    {
-        TRACE( "aselect_filter_create_config::ERROR:: could not allocate memory for pConfig" );
-        pConfig = NULL;
-    }
-
+    memset( pConfig, 0, sizeof( ASELECT_FILTER_CONFIG ) );
     return pConfig;
 }
 
-void aselect_filter_register_hooks( apr_pool_t *p )
+// Called before logfile can be set
+void aselect_filter_register_hooks(apr_pool_t *p)
 {
-
-    TRACE( "aselect_filter_register_hooks" );
+    //TRACE("aselect_filter_register_hooks");
     ap_hook_post_config( aselect_filter_init, NULL, NULL, APR_HOOK_MIDDLE );
     ap_hook_access_checker( aselect_filter_handler, NULL, NULL, APR_HOOK_MIDDLE );
 }

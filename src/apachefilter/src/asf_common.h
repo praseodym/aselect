@@ -94,7 +94,8 @@ typedef apr_table_t     table;
 #define ASELECT_FILTER_MAX_APP          50          // max apps this filter can protect
 #define ASELECT_FILTER_MAX_ATTR          50         // Bauke: max attribute filters
 #define ASELECT_FILTER_MAX_RULES_PER_APP 50         // max authz rules per application
-#define ASELECT_FILTER_TRACE_FILE       "/opt/anoigo/am/aselect/log/aselect_filter.log"  // Path to trace file
+#define ASELECT_FILTER_TRACE_FILE       "/tmp/aselect_filter.log";
+// 20091227, Previous default: #define ASELECT_FILTER_TRACE_FILE       "/opt/anoigo/am/aselect/log/aselect_filter.log"  // Path to trace file
 
 /*
  * HTML template for client-side redirect. 
