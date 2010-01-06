@@ -211,9 +211,9 @@ public class ResourceSTS extends ProtoRequestHandler
 			}
 
 			HashMap htAttributes = extractAllAttributes(sPwresult);
-			String sUid = (String) htAttributes.get("digid_uid");
-			if (sUid == null)
-				sUid = (String) htAttributes.get("uid");
+			//String sUid = (String) htAttributes.get("digid_uid");
+			//if (sUid == null)
+			String sUid = (String) htAttributes.get("uid");
 			if (sUid == null)
 				sUid = (String) htAttributes.get("cn");
 			if (sUid == null) {

@@ -564,6 +564,7 @@ public class IP implements IAuthSPProtocolHandler
 			});
 
 			htResponse.put("rid", sRid);
+			htResponse.put("authsp_type", "ip");
 			htResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
 		}
 		catch (ASelectAuthSPException e) {

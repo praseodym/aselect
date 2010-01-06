@@ -469,6 +469,7 @@ public class PKI implements IAuthSPProtocolHandler
 				MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg, (String) htSessionContext.get("app_id"),
 				"denied"
 			});
+			htResponse.put("authsp_type", "pki");
 			if (sResultCode.equalsIgnoreCase(PKI_INVALID_REQUEST)) {
 				sbTemp = new StringBuffer(sMethod);
 				sbTemp.append("error from from AuthSP: ").append(sResultCode);

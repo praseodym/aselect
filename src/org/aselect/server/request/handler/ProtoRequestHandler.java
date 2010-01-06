@@ -967,9 +967,9 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	protected HashMap extractUidAndAttributes(String sAssertion)
 	{
 		HashMap htAttributes = extractAllAttributes(sAssertion);
-		String sUid = (String) htAttributes.get("digid_uid");
-		if (sUid == null)
-			sUid = (String) htAttributes.get("uid");
+		//String sUid = (String) htAttributes.get("digid_uid");
+		//if (sUid == null)
+		String sUid = (String) htAttributes.get("uid");
 		if (sUid == null)
 			sUid = (String) htAttributes.get("cn");
 		if (sUid == null) {
@@ -1087,19 +1087,17 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		HashMap htSession = null;
 
 		// Extract uid and security level
-		String sUserId = (String) htAttributes.get("digid_uid");
-		if (sUserId == null)
-			sUserId = (String) htAttributes.get("uid");
+		//String sUserId = (String) htAttributes.get("digid_uid");
+		//if (sUserId == null)
+		String sUserId = (String) htAttributes.get("uid");
 		if (sUserId == null)
 			sUserId = (String) htAttributes.get("cn");
 
-		String sSecLevel = (String) htAttributes.get("digid_betrouwbaarheidsniveau");
-		if (sSecLevel == null)
-			sSecLevel = (String) htAttributes.get("betrouwbaarheidsniveau");
-		if (sSecLevel == null)
-			sSecLevel = (String) htAttributes.get("authsp_level");
-		if (sSecLevel == null)
-			sSecLevel = "5";
+		//String sSecLevel = (String) htAttributes.get("digid_betrouwbaarheidsniveau");
+		//if (sSecLevel == null)
+		String sSecLevel = (String) htAttributes.get("betrouwbaarheidsniveau");
+		if (sSecLevel == null) sSecLevel = (String) htAttributes.get("authsp_level");
+		if (sSecLevel == null) sSecLevel = "5";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "UserId=" + sUserId + ", secLevel=" + sSecLevel);
 
 		htAttributes.put("uid", sUserId);

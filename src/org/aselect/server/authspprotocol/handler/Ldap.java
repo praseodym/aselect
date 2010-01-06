@@ -526,6 +526,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			});
 			// set response
 			htResponse.put("rid", sRid);
+			htResponse.put("authsp_type", "ldap");
 			htResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
 		}
 		catch (ASelectAuthSPException eAA) // Error occurred

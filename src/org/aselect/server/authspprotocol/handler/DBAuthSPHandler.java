@@ -361,6 +361,7 @@ public class DBAuthSPHandler implements IAuthSPProtocolHandler
 				(String) htSessionContext.get("app_id"), "granted"
 			});
 			htResponse.put("rid", sRid);
+			htResponse.put("authsp_type", "db");
 			htResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
 		}
 		catch (ASelectAuthSPException eAA) {

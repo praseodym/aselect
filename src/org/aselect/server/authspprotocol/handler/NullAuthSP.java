@@ -482,6 +482,7 @@ public class NullAuthSP implements IAuthSPProtocolHandler
 			});
 
 			htResponse.put("rid", sRid);
+			htResponse.put("authsp_type", "null");
 			sLogResultCode = Errors.ERROR_ASELECT_SUCCESS;
 			htResponse.put("result", sLogResultCode);
 		}

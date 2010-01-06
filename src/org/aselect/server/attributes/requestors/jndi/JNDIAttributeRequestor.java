@@ -196,13 +196,8 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 			}
 			catch (ASelectConfigException e) {
 				_sAuthSPUID = null;
-				_systemLogger
-						.log(
-								Level.CONFIG,
-								MODULE,
-								sMethod,
-								"No valid 'authsp_uid' config item in 'main' section found, using the A-Select UID to retrieve the attributes",
-								e);
+				_systemLogger.log(Level.CONFIG,	MODULE, sMethod,
+						"No valid 'authsp_uid' config item in 'main' section found, using the A-Select UID to retrieve the attributes",	e);
 			}
 
 			try {
@@ -251,8 +246,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				}
 				catch (ASelectConfigException e) {
 					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-							"Not one valid 'attribute' config section in 'attributes' section found, no mapping used",
-							e);
+							"Not one valid 'attribute' config section in 'attributes' section found, no mapping used", e);
 				}
 
 				while (oAttribute != null) {
@@ -282,7 +276,6 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 					oAttribute = _configManager.getNextSection(oAttribute);
 				}
 			}
-
 			// check if at least one resource is configured
 			getConnection();
 		}
@@ -327,9 +320,10 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "JNDIAttr htTGTContext=" + htTGTContext + ", _sAuthSPUID="
 				+ _sAuthSPUID + ", _sUserDN=" + _sUserDN);
-		String sDigiDUid = (String) htTGTContext.get("digid_uid");
-		if (sDigiDUid == null)
-			sDigiDUid = ""; // Bauke: circumvent udb attribute problems
+		//String sDigiDUid = (String) htTGTContext.get("digid_uid");
+		//if (sDigiDUid == null) sDigiDUid = ""; // Bauke: circumvent udb attribute problems
+		String sAuthspType = (String) htTGTContext.get("authsp_type");
+		Boolean bIsDigid = (sAuthspType != null && sAuthspType.equals("digid"));
 
 		try {
 			sUID = (String) htTGTContext.get("uid");
@@ -337,9 +331,10 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				sUID = sUID.replaceFirst("0*", "");
 			}
 
-			if (sDigiDUid.equals("") && _sAuthSPUID != null) // Bauke: no DigiD uid
+			///if (sDigiDUid.equals("") && _sAuthSPUID != null) // Bauke: no DigiD uid
+			if (!bIsDigid && _sAuthSPUID != null) // Bauke: not a DigiD authsp
 			{
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "JNDIAttr use UDB too (no DigiD uid)");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "JNDIAttr use UDB too (no DigiD authsp)");
 				IUDBConnector oUDBConnector = null;
 				try {
 					oUDBConnector = UDBConnectorFactory.getUDBConnector();
@@ -364,8 +359,6 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 					sbFailed.append(_sAuthSPUID);
 					sbFailed.append("' does not map to any configured AuthSP (authsp_id)");
 					_systemLogger.log(Level.INFO, MODULE, sMethod, sbFailed.toString());
-					// 20090129 Bauke, skip this:
-					// throw new ASelectAttributesException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 				}
 			}
 
@@ -397,7 +390,8 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 			}
 
 			// Bauke: Allow alternative user DN
-			String useDnField = (sDigiDUid.equals("")) ? _sUserDN : _sAltUserDN;
+			//String useDnField = (sDigiDUid.equals("")) ? _sUserDN : _sAltUserDN;
+			String useDnField = (bIsDigid) ? _sAltUserDN: _sUserDN;
 			sbQuery = new StringBuffer("(").append(useDnField).append("=").append(sUID).append(")");
 
 			oDirContext = getConnection();
@@ -438,10 +432,14 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				throw new ASelectAttributesException(Errors.ERROR_ASELECT_UNKNOWN_USER);
 			}
 
+			String sFullDn = null;
+			int cntResults = 0;
 			while (oSearchResults.hasMore()) {
 				SearchResult oSearchResult = (SearchResult) oSearchResults.next();
+				sFullDn = oSearchResult.getNameInNamespace();
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "Next search result " + oSearchResult + " id="
-						+ oSearchResult.getName() + " full=" + oSearchResult.getNameInNamespace());
+						+ oSearchResult.getName() + " full=" + sFullDn);
+				cntResults++;
 
 				// retrieve all requested attributes
 				oAttributes = oSearchResult.getAttributes();
@@ -482,7 +480,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 					}
 				}
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "End of Search results");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "End of Search results, number found="+cntResults);
 
 			// Bauke: 20080722: some applications want to know the base_dn and full_dn value
 			// Replaced 20080908: String sCn = (String)(htResponse.get("cn"));
@@ -500,8 +498,8 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				else if (oCn instanceof String)
 					sCn = (String) oCn;
 			}
-			if (sCn != null)
-				htResponse.put("full_dn", "cn=" + sCn + "," + _sBaseDN);
+			if (sFullDn != null)
+				htResponse.put("full_dn", sFullDn);  //"cn=" + sCn + "," + _sBaseDN);
 		}
 		catch (ASelectAttributesException e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "AttributesException", e);
@@ -566,7 +564,6 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 			StringBuffer sbFailed = new StringBuffer("No active resource found in udb resourcegroup: ");
 			sbFailed.append(_sResourceGroup);
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
-
 			throw e;
 		}
 
@@ -578,7 +575,6 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 		catch (ASelectConfigException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"No valid config item 'driver' found in connector configuration", e);
-
 			throw new ASelectUDBException(Errors.ERROR_ASELECT_CONFIG_ERROR, e);
 		}
 
@@ -588,7 +584,6 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 		catch (ASelectConfigException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"No valid config item 'security_principal_dn' found in connector resource configuration", e);
-
 			throw new ASelectUDBException(Errors.ERROR_ASELECT_CONFIG_ERROR, e);
 		}
 
@@ -596,13 +591,8 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 			sPassword = _configManager.getParam(oResourceConfig, "security_principal_password");
 		}
 		catch (ASelectConfigException e) {
-			_systemLogger
-					.log(
-							Level.CONFIG,
-							MODULE,
-							sMethod,
-							"Invalid or empty config item 'security_principal_password' found in connector resource configuration, using empty password.",
-							e);
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+					"Invalid or empty config item 'security_principal_password' found in connector resource configuration, using empty password.", e);
 		}
 
 		try {
@@ -611,7 +601,6 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 		catch (ASelectConfigException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"No valid config item 'ssl' found in connector resource configuration", e);
-
 			throw new ASelectUDBException(Errors.ERROR_ASELECT_CONFIG_ERROR, e);
 		}
 
@@ -621,21 +610,18 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 		catch (ASelectConfigException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"No valid config item 'url' found in connector resource configuration", e);
-
 			throw new ASelectUDBException(Errors.ERROR_ASELECT_CONFIG_ERROR, e);
 		}
 
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "ATTR_CTX " + sDriver + "_" + sPrincipal + "_" + sPassword
 					+ "_" + sUseSSL + "_" + sUrl);
-			oInitialDirContext = new InitialDirContext(createJNDIEnvironment(sDriver, sPrincipal, sPassword, sUseSSL,
-					sUrl));
+			oInitialDirContext = new InitialDirContext(createJNDIEnvironment(sDriver, sPrincipal, sPassword, sUseSSL, sUrl));
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not create JNDI environment", e);
 			throw new ASelectUDBException(Errors.ERROR_ASELECT_IO, e);
 		}
-
 		return oInitialDirContext;
 	}
 

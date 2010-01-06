@@ -590,15 +590,16 @@ public class AttributeGatherer
 		// Bauke: Pass Digid Attributes
 		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Add additional attributes from TGT");
 		Utils.copyHashmapValue("uid", htAttributes, htTGTContext);
-		Utils.copyHashmapValue("digid_uid", htAttributes, htTGTContext);
-		Utils.copyHashmapValue("digid_betrouwbaarheidsniveau", htAttributes, htTGTContext);
+		//Utils.copyHashmapValue("digid_uid", htAttributes, htTGTContext);
+		//Utils.copyHashmapValue("digid_betrouwbaarheidsniveau", htAttributes, htTGTContext);
 		Utils.copyHashmapValue("sel_uid", htAttributes, htTGTContext);
 
-		String fld = (String) htTGTContext.get("attributes"); // attributes from a remote system
+		// Attributes from a remote system
+		String fld = (String) htTGTContext.get("attributes");
 		if (fld != null) {
 			Saml11Builder _saml11Builder = new Saml11Builder();
 			HashMap htTgtAttributes = _saml11Builder.deserializeAttributes(fld);
-			_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER \"attributes\"=" + htTgtAttributes);
+			_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER (remote)TGT \"attributes\"=" + htTgtAttributes);
 			Set keys = htTgtAttributes.keySet();
 			for (Object s : keys) {
 				String sKey = (String) s;
@@ -609,16 +610,16 @@ public class AttributeGatherer
 			}
 		}
 
-		// Bauke: added additional attributes
+		// Bauke: added additional attributes, they take precedence over the "attribute" values
 		String sAuthsp = (String) htTGTContext.get("authsp");
-		if (sAuthsp != null)
-			htAttributes.put("sel_authsp", sAuthsp);
 		String sAuthspLevel = (String) htTGTContext.get("authsp_level");
-		if (sAuthsp != null)
+		if (sAuthsp != null) {
+			htAttributes.put("sel_authsp", sAuthsp);
 			htAttributes.put("authsp_level", sAuthspLevel);
-		if (sAuthsp != null)
 			htAttributes.put("sel_level", sAuthspLevel);
-
+		}
+		Utils.copyHashmapValue("authsp_type", htAttributes, htTGTContext);
+		
 		Utils.copyHashmapValue("client_ip", htAttributes, htTGTContext);
 		Utils.copyHashmapValue("user_agent", htAttributes, htTGTContext);
 		Utils.copyHashmapValue("language", htAttributes, htTGTContext);
@@ -671,8 +672,6 @@ public class AttributeGatherer
 
 		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Try authsp with id: " + sAuthsp); // if present
 		try {
-			// Object authSPs = _configManager.getSection(null, "authsps");
-			// Object authSPsection = _configManager.getSection(authSPs, "authsp", "id=" + sAuthsp);
 			Object authSPs = Utils.getSimpleSection(_configManager, _systemLogger, null, "authsps", true);
 			Object authSPsection = Utils.getSectionFromSection(_configManager, _systemLogger, authSPs, "authsp", "id="
 					+ sAuthsp, false);

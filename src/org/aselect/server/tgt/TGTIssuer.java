@@ -268,7 +268,6 @@ public class TGTIssuer
 		// A-Select Server. The user was authenticated at another
 		// (remote) A-Select Server.
 		String sMethod = "issueCrossTGT()";
-		String sLevel = null;
 		String sTgt = null;
 		String sArpTarget = null; // added 1.5.4
 
@@ -290,8 +289,6 @@ public class TGTIssuer
 			// The following parameters are retrieved from the 'remote' Server.
 			String sUserId = (String) htRemoteAttributes.get("uid");
 			String sUserOrganization = (String) htRemoteAttributes.get("organization");
-			sLevel = (String) htRemoteAttributes.get("authsp_level");
-			sAuthSP = (String) htRemoteAttributes.get("authsp");
 			// Attributes that where released by the 'remote' A-Select Server
 			// will be stored in the TGT.
 			// This server might have configured a 'TGTAttributeRequestor' to
@@ -326,8 +323,8 @@ public class TGTIssuer
 			// Bauke: copy DigiD data to the context
 			// Prefix the field with "digid_" so the filter can recognize them
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "htRemoteAttributes=" + htRemoteAttributes);
-			Utils.copyHashmapValue("digid_uid", htTGTContext, htRemoteAttributes);
-			Utils.copyHashmapValue("digid_betrouwbaarheidsniveau", htTGTContext, htRemoteAttributes);
+			//Utils.copyHashmapValue("digid_uid", htTGTContext, htRemoteAttributes);
+			//Utils.copyHashmapValue("digid_betrouwbaarheidsniveau", htTGTContext, htRemoteAttributes);
 
 			// The Saml20 protocol needs a return address:
 			Utils.copyHashmapValue("sp_assert_url", htTGTContext, htRemoteAttributes);
@@ -335,10 +332,11 @@ public class TGTIssuer
 			// Bauke 20081203: Store saml20 remote token in the context
 			Utils.copyHashmapValue("saml_remote_token", htTGTContext, htRemoteAttributes);
 
+			Utils.copyHashmapValue("authsp_type", htTGTContext, htRemoteAttributes);
+			Utils.copyHashmapValue("authsp_level", htTGTContext, htRemoteAttributes);
+			Utils.copyHashmapValue("authsp", htTGTContext, htRemoteAttributes);
 			htTGTContext.put("uid", sUserId);
 			htTGTContext.put("organization", sUserOrganization);
-			htTGTContext.put("authsp_level", sLevel);
-			htTGTContext.put("authsp", sAuthSP);
 			htTGTContext.put("app_level", intAppLevel.toString());
 			htTGTContext.put("app_id", sAppId);
 			htTGTContext.put("rid", sRid);

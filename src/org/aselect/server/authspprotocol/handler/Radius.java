@@ -476,6 +476,7 @@ public class Radius implements IAuthSPProtocolHandler
 			});
 
 			htResponse.put("rid", sRid);
+			htResponse.put("authsp_type", "radius");
 			htResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
 		}
 		catch (ASelectAuthSPException e) {

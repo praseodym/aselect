@@ -262,13 +262,9 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			if (sUid != null) { // For all AuthSP's that can set the user id
 				// (and thereby replace the 'siam_user' value)
 				htSessionContext.put("user_id", sUid);
-				String sSecLevel = (String) htResponse.get("betrouwbaarheidsniveau");
-				// 20090110, Bauke: changed assigned_betrouwbaarheidsniveau to assigned_level,
-				// seems not to be used anymore!
-				if (sSecLevel != null)
-					htSessionContext.put("assigned_level", sSecLevel);
 				_sessionManager.updateSession(sRid, htSessionContext);
 
+				String sSecLevel = (String) htResponse.get("betrouwbaarheidsniveau");
 				if (sSecLevel != null)
 					htAdditional.put("betrouwbaarheidsniveau", sSecLevel);
 				String sAssertUrl = (String) htSessionContext.get("sp_assert_url");
@@ -286,6 +282,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			Utils.copyHashmapValue("pki_subject_id", htAdditional, htResponse);
 			Utils.copyHashmapValue("sms_phone", htAdditional, htResponse);
 			// 20090811, Bauke: save authsp_type for use by the Saml20 session sync
+			Utils.copyHashmapValue("authsp_type", htAdditional, htResponse);
 			Utils.copyHashmapValue("authsp_type", htAdditional, htSessionContext);
 			// 20091118, Bauke: new functionality: copy attributes from AuthSP
 			Utils.copyHashmapValue("attributes", htAdditional, htResponse);

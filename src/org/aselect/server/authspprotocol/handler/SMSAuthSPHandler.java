@@ -359,6 +359,7 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 				"granted"
 			});
 			htResponse.put("rid", sRid);
+			htResponse.put("authsp_type", "sms");
 
 			// 20090223: Since we decided on the 'uid' here, pass it on as well
 			htResponse.put("uid", sUserId);

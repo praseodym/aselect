@@ -465,11 +465,11 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			if ((resultCode != null) && (sUid != null) && sServerId != null && sBetrouwbaarheidsniveau != null
 					&& (sRid != null) && (sServerId.equals(_sASelectAuthSPServerId)) && (sRid.equals(sDigidRid))
 					&& (digidLevel >= reqLevel) && (resultCode.equals(Errors.ERROR_ASELECT_SUCCESS))) {
-				result.put("rid", sLocalRid);
 				result.put("uid", sUid);
 				// Bauke: not sure which one it should be: user_id / uid
 				result.put("user_id", sUid);
 				result.put("betrouwbaarheidsniveau", sBetrouwbaarheidsniveau);
+				result.put("authsp_level", sBetrouwbaarheidsniveau);  // 20100106 added
 				Utils.copyHashmapValue("attributes", result, response);
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Copy attributes=" + result.get("attributes"));
 				Object oAttributes = response.get("attributes");
@@ -483,13 +483,14 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 				});
 			}
 			else {
-				result.put("rid", sLocalRid);
 				resultCode = ("0040".equals(resultCode)) ? Errors.ERROR_ASELECT_SERVER_CANCEL
 						: Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER;
 				_authenticationLogger.log(new Object[] {
 					MODULE, sUid, htResponse.get("client_ip"), sOrganization, sAppID, "denied"
 				});
 			}
+			result.put("rid", sLocalRid);
+			result.put("authsp_type", "digid");
 			result.put("result", resultCode);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "result=" + resultCode);
 		}
