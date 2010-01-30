@@ -352,7 +352,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing ldap user attributes.");
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Using userid " + sUserId);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Using user id: '" + sUserId + "'");
 
 			sbBuffer = new StringBuffer((String) htSessionContext.get("my_url"));
 			sbBuffer.append("?authsp=").append(_sAuthsp);

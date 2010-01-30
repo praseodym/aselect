@@ -105,7 +105,6 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.exception.ASelectUDBException;
 import org.aselect.system.sam.agent.SAMResource;
 
-// TODO: Auto-generated Javadoc
 /**
  * The JNDI Attribute Requestor. <br>
  * <br>

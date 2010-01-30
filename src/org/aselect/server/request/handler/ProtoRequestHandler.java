@@ -1333,6 +1333,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		}
 	}
 
+	
 	/**
 	 * Load public key from keystore.
 	 * 
@@ -1453,9 +1454,14 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		String _sMethod = "readHttpPostData";
 		try {
 			/*
-			 * debugging: ServletInputStream input = request.getInputStream(); BufferedInputStream bufInput = new
-			 * BufferedInputStream(input); char b = (char) bufInput.read(); StringBuffer sb = new StringBuffer(); while
-			 * (bufInput.available() != 0) { sb.append(b); b = (char) bufInput.read(); } return sb.toString();
+			 * Debugging:
+			 * ServletInputStream input = request.getInputStream();
+			 * BufferedInputStream bufInput = new BufferedInputStream(input);
+			 * char b = (char) bufInput.read();
+			 * StringBuffer sb = new StringBuffer();
+			 * while (bufInput.available() != 0)
+			 * { sb.append(b); b = (char) bufInput.read(); }
+			 * return sb.toString();
 			 */
 			return Tools.stream2string(request.getInputStream()); // RH, 20080715, n
 		}

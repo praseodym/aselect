@@ -880,13 +880,7 @@ public class CryptoEngine
 		catch (ASelectConfigException e) {
 			oSection = null;
 			_sSecureRandomAlgorithm = DEFAULT_RANDOM_ALGORITHM;
-
-			_systemLogger
-					.log(
-							Level.CONFIG,
-							MODULE,
-							sMethod,
-							"Could not retrieve 'random_generator_algorithm' config section in crypto config section. Using default algorithm and provider.");
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod, "Could not retrieve 'random_generator_algorithm' config section in crypto config section. Using default algorithm and provider.");
 		}
 
 		if (oSection != null) {
