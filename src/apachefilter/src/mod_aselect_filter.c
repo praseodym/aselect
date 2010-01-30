@@ -1286,22 +1286,23 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 			    constant = 0;
 			}
 			if (p && (*p||constant)) {
+			    char *encoded, *decoded;
 			    if (newArgs[0])
 				newArgs = ap_psprintf(pPool, "%s&%s=%s", newArgs, attrName, p);
 			    else
 				newArgs = ap_psprintf(pPool, "%s=%s", attrName, p);
 
 			    if (strcmp(attrName, "AuthHeader") == 0) {
-				char *encoded, *decoded;
 				decoded = ap_psprintf(pPool, "%s:", p);
 				aselect_filter_url_decode(decoded);
 				encoded = aselect_filter_base64_encode(pPool, decoded);
 				ap_table_set(headers_in, "Authorization", ap_psprintf(pPool, "Basic %s", encoded));
 			    }
-			    else if (strchr(pConfig->pcPassAttributes,'h')!=0) {
-				// Pass in the header
+			    else if (strchr(pConfig->pcPassAttributes,'h')!=0) { // Pass in the header
 				//TRACE2("X-Header - %s: %s", attrName, p);
-				ap_table_set(headers_in, ap_psprintf(pPool, "X-%s", attrName), p);
+				decoded = ap_pstrdup(pPool, p);
+				aselect_filter_url_decode(decoded);
+				ap_table_set(headers_in, ap_psprintf(pPool, "X-%s", attrName), decoded);
 			    }
 
 			    // A value for 'attrname' was added
