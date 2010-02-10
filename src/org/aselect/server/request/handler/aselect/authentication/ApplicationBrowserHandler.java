@@ -318,6 +318,7 @@ import org.aselect.server.request.handler.xsaml20.ServiceProvider;
 import org.aselect.server.request.handler.xsaml20.idp.UserSsoSession;
 import org.aselect.server.sam.ASelectSAMAgent;
 import org.aselect.server.tgt.TGTIssuer;
+import org.aselect.server.tgt.TGTManager;
 import org.aselect.server.udb.IUDBConnector;
 import org.aselect.server.udb.UDBConnectorFactory;
 import org.aselect.system.communication.client.raw.RawCommunicator;
@@ -332,7 +333,6 @@ import org.aselect.system.sam.agent.SAMResource;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * This class handles login requests coming from applications through a users browser. <br>
  * <br>
@@ -391,9 +391,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	}
 
 	/**
-	 * process application browser requests <br>
+	 * Process application browser requests.<br>
 	 * <br>
-	 * .
 	 * 
 	 * @param htServiceRequest
 	 *            the ht service request
@@ -407,7 +406,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
 	 */
 	public void processBrowserRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "processBrowserRequest";
 
@@ -461,6 +460,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 		else if (sRequest.equals("logout")) {
 			handleLogout(htServiceRequest, _servletResponse, pwOut);
+		}
+		else if (sRequest.equals("org_choice")) {
+			handleOrgChoice(htServiceRequest, _servletResponse);
 		}
 		else if (sRequest.equals("alive")) {
 			pwOut.println("<html><body>Server is ALIVE</body></html>");
@@ -517,6 +519,63 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	}
 
 	/**
+	 * Handles the <code>request=org_choice</code> request. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Store the user's organization choice in the TGT and redirect the user
+	 * to the application he desires.
+	 * TGT has already been issued, Rid is still present (contains the application url)
+	 * 
+	 * @param htServiceRequest
+	 *            HashMap containing request parameters
+	 * @param servletResponse
+	 *            Used to send (HTTP) information back to user
+	 * @param pwOut
+	 *            Used to write information back to the user (HTML)
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	private void handleOrgChoice(HashMap htServiceRequest, HttpServletResponse servletResponse)
+	throws ASelectException
+	{
+		String sMethod = "handleOrgChoice";
+		
+		String sRid = (String)htServiceRequest.get("rid");
+		String sOrgId = (String)htServiceRequest.get("org_id");
+		String sTgt = (String)htServiceRequest.get("aselect_credentials_tgt");
+		if (sRid == null || sOrgId == null || sTgt == null) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing request parameter");
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "OrgChoice="+sOrgId);
+
+		// Stop the user-time pause
+		Tools.pauseSensorData(_systemLogger, _htSessionContext);
+		// No need to write the session, it's used below by calculateAndReportSensorData()
+		
+		// Store the chosen organization in the TGT
+		TGTManager oTGTManager = TGTManager.getHandle();
+		HashMap<String,Object> htTGTContext = oTGTManager.getTGT(sTgt);
+		if (htTGTContext == null) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Cannot get TGT");
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+		htTGTContext.put("org_id", sOrgId);
+		oTGTManager.updateTGT(sTgt, htTGTContext);
+
+		// The tgt was just issued and updated, report sensor data
+		Tools.calculateAndReportSensorData(_configManager, _systemLogger, _htSessionContext);
+		_sessionManager.killSession(sRid);
+		
+		String sAppUrl = (String)_htSessionContext.get("app_url");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
+		
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sAppUrl);
+		TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
+		oTGTIssuer.sendRedirect(sAppUrl, sTgt, sRid, servletResponse);
+	}
+
+	/**
 	 * Handles the <code>request=direct_login</code> requests. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
@@ -546,7 +605,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void handleDirectLogin(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleDirectLogin()";
 		String sRid = null;
@@ -1017,14 +1076,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 		// "consent" or "save_consent" is present
 
-		// boolean bAskConsent = false;
-		// String sAskConsent = Utils.getSimpleParam(aselect, "request_consent", false);
-		// if (sAskConsent != null && sAskConsent.equals("true"))
-		// bAskConsent = true;
-		// _systemLogger.log(Level.INFO, _sModule, sMethod, "request_consent="+bAskConsent);
-		// if (!bAskConsent) // no need to ask for consent
-		// return true;
-
 		// We need the user's consent to continue
 		String sReqConsent = (String) htServiceRequest.get("consent");
 		if ("true".equals(sReqConsent) || "false".equals(sReqConsent)) {
@@ -1233,20 +1284,14 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			String sAuthspName = "";
 			sb = new StringBuffer();
 
-			Set keys = htAuthsps.keySet();
+			Set<String> keys = htAuthsps.keySet();
 			for (Object s : keys) {
 				sAuthspName = (String) s;
-				// Enumeration enumAuthspEnum = htAuthsps.keys();
-				// while (enumAuthspEnum.hasMoreElements()) {
 				try {
-					// sAuthspName = (String) enumAuthspEnum.nextElement();
 					Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"),
 							"authsp", "id=" + sAuthspName);
 					sFriendlyName = _configManager.getParam(authSPsection, "friendly_name");
-
-					sb.append("<OPTION VALUE=");
-					sb.append(sAuthspName);
-					sb.append(">");
+					sb.append("<OPTION VALUE=").append(sAuthspName).append(">");
 					sb.append(sFriendlyName);
 					sb.append("</OPTION>");
 				}

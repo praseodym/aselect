@@ -1058,25 +1058,24 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	}
 
 	/**
-	 * Creates the context and issue tgt.
+	 * Creates the context and issues a TGT.
 	 * 
 	 * @param response
-	 *            the response
+	 *            the HttpServletResponse
 	 * @param sRid
-	 *            the s rid
+	 *            the rid
 	 * @param sServerId
-	 *            the s server id
+	 *            the server id
 	 * @param sOrg
-	 *            the s org
+	 *            the organization name
 	 * @param sAppId
-	 *            the s app id
+	 *            the application id
 	 * @param sTgt
-	 *            the s tgt
+	 *            the TGT (can be null if not present yet)
 	 * @param htAttributes
-	 *            the ht attributes
-	 * @return the string
+	 *            the input attributes to be serialized
+	 * @return the TGT that was created
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
 	public String createContextAndIssueTGT(HttpServletResponse response, String sRid /* can be null */,
 			String sServerId, String sOrg, String sAppId, String sTgt, HashMap htAttributes)
@@ -1143,11 +1142,6 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			Tools.calculateAndReportSensorData(ASelectConfigManager.getHandle(), _systemLogger, htSession);
 			_sessionManager.killSession(sRid);
 		}
-
-		// No effect, cross functionality??:
-		// htTGTContext.put("aselect_credentials_tgt", sTgt);
-		// htTGTContext.put("aselect_credentials_uid", sUserId);
-		// htTGTContext.put("aselect_credentials_server_id", _sMyServerId);
 
 		// create cookie if single sign-on is enabled
 		if (_configManager.isSingleSignOn()) {

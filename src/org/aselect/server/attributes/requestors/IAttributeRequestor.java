@@ -105,7 +105,7 @@ public interface IAttributeRequestor
 	 *             If gathering fails.
 	 */
 	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes)
-		throws ASelectAttributesException;
+	throws ASelectAttributesException;
 
 	/**
 	 * Clean up used resources. <br>
@@ -123,4 +123,19 @@ public interface IAttributeRequestor
 	 * The <code>IAttributeRequestor</code> implementation is stopped. <br>
 	 */
 	public void destroy();
+
+	/**
+	 * Gather a user's organizations. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Use the normal gathering process to gather combinations of
+	 * organization id and organization name <br>
+	 * @param htTGTContext
+	 *         the TGT context.
+	 * @return The retrieved organizations as organization id, organization pairs.
+	 * @throws ASelectAttributesException
+	 *         If gathering fails.
+	 */
+	public HashMap<String, String> getOrganizations(HashMap htTGTContext)
+	throws ASelectAttributesException;
 }

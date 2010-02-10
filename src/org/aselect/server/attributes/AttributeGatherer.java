@@ -132,12 +132,11 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * Gather and filter user attributes. <br>
  * <br>
  * <b>Description:</b> <br>
- * This class gathers user attributes after succesful authentication using one or more configured AttributeRequestors.
+ * This class gathers user attributes after successful authentication using one or more configured AttributeRequestors.
  * It also filters out attributes based on the Attribute Release Policy. <br>
  * <br>
  * <b>Concurrency issues:</b> <br>
@@ -163,7 +162,12 @@ public class AttributeGatherer
 	 * "object"=requestor-object, "uid-source"=uid source
 	 */
 	private HashMap<String, Object> _htRequestors;
-
+	
+	/* 20100201, Bauke
+	 * Store the organization resolver object
+	 */
+	private IAttributeRequestor _organizationResolver = null;
+	
 	/**
 	 * Contains the set of release policies: key=policy-ID, value=mapping-hashtable. The mapping-hashtable consists of
 	 * key=requestor-ID, value=vector of attributes.
@@ -251,11 +255,9 @@ public class AttributeGatherer
 				_systemLogger.log(Level.CONFIG, _MODULE, sMethod, "Attribute gathering disabled.");
 			}
 
-			if (oAttributeGatheringConfig != null) {
-				// Obtain and verify requestors
+			if (oAttributeGatheringConfig != null) {  // Obtain and verify requestors
 
-				oRequestorsSection = _configManager.getSection(oAttributeGatheringConfig,
-						sConfigItem = "attribute_requestors");
+				oRequestorsSection = _configManager.getSection(oAttributeGatheringConfig, sConfigItem = "attribute_requestors");
 				_htRequestors = new HashMap();
 				Object oRequestorConfig = null;
 				try {
@@ -263,13 +265,14 @@ public class AttributeGatherer
 				}
 				catch (ASelectConfigException e) {
 				}
+				
+				// For all attribute requestors
 				while (oRequestorConfig != null) {
 					// Load/verify a single requestor from config
 					String sID = _configManager.getParam(oRequestorConfig, sConfigItem = "id");
-
-					String sRequestorClassName = _configManager.getParam(oRequestorConfig, sConfigItem = "class");
-					Class cRequestorClass;
-
+					_systemLogger.log(Level.INFO, _MODULE, sMethod, "Requestor id="+sID);
+					String sUsage = ASelectConfigManager.getSimpleParam(oRequestorConfig, sConfigItem = "usage", false);
+					
 					Object oRequestorSpecificSection;
 					try {
 						oRequestorSpecificSection = _configManager.getSection(null, "requestor", "id=" + sID);
@@ -279,11 +282,15 @@ public class AttributeGatherer
 						throw e;
 					}
 
+					String sRequestorClassName = _configManager.getParam(oRequestorConfig, sConfigItem = "class");
 					try {
-						cRequestorClass = Class.forName(sRequestorClassName);
+						Class cRequestorClass = Class.forName(sRequestorClassName);
 						IAttributeRequestor attributeRequestor = (IAttributeRequestor) cRequestorClass.newInstance();
 						attributeRequestor.init(oRequestorSpecificSection);
-						_htRequestors.put(sID, attributeRequestor);
+						if ("org".equals(sUsage))
+							_organizationResolver = attributeRequestor;
+						else
+							_htRequestors.put(sID, attributeRequestor);
 					}
 					catch (Exception e) {
 						StringBuffer sb = new StringBuffer("Class \"").append(sRequestorClassName).append(
@@ -302,14 +309,12 @@ public class AttributeGatherer
 				}
 
 				// Obtain and verify attribute release policies
-
 				oReleasePoliciesSection = _configManager.getSection(oAttributeGatheringConfig,
 						sConfigItem = "attribute_release_policies");
 				try {
 					_sDefaultReleasePolicy = _configManager.getParam(oReleasePoliciesSection, "default");
 				}
-				catch (ASelectConfigException e) {
-					// "default" release policy is optional
+				catch (ASelectConfigException e) {  // The "default" release policy is optional
 				}
 
 				Object oReleasePolicyConfig = null;
@@ -320,11 +325,12 @@ public class AttributeGatherer
 				}
 				catch (ASelectConfigException e) {
 				}
+				
+				// For all release policies
 				while (oReleasePolicyConfig != null) {
 					String sID = _configManager.getParam(oReleasePolicyConfig, sConfigItem = "id");
 					if (_htReleasePolicies.containsKey(sID)) {
-						StringBuffer sb = new StringBuffer("Release policy \"").append(sID).append(
-								"\" is defined more than once.");
+						StringBuffer sb = new StringBuffer("Release policy \"").append(sID).append("\" is defined more than once.");
 						_systemLogger.log(Level.SEVERE, _MODULE, sMethod, sb.toString());
 						throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 					}
@@ -364,13 +370,11 @@ public class AttributeGatherer
 						oReleasePolicyConfig = null;
 					}
 				}
-
-				_systemLogger.log(Level.INFO, _MODULE, sMethod, "Succesfully parsed attributes configuration.");
+				_systemLogger.log(Level.INFO, _MODULE, sMethod, "Successfully parsed attributes configuration.");
 			}
 		}
 		catch (ASelectConfigException e) {
-			StringBuffer sb = new StringBuffer("Configuration parameter or section \"").append(sConfigItem).append(
-					"\" not found.");
+			StringBuffer sb = new StringBuffer("Configuration parameter or section \"").append(sConfigItem).append("\" not found.");
 			_systemLogger.log(Level.WARNING, _MODULE, sMethod, sb.toString(), e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
@@ -383,6 +387,41 @@ public class AttributeGatherer
 		}
 	}
 
+	/**
+	 * Get Organization ID and Name combinations for the given user. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Use the gathering process to retrieve organizations.
+	 * Allows the caller to let the user choose which organization to represent.
+	 * 
+	 * @param htTGTContext
+	 *            The TGT context.
+	 * @return A <code>HashMap</code> containing the gathered organizations.
+	 * @throws ASelectException
+	 *             If attribute gathering fails.
+	 */
+	public HashMap<String,String> gatherOrganizations(HashMap htTGTContext)
+	{
+		final String sMethod = "gatherOrganizations";
+		String sUid = (String) htTGTContext.get("uid");
+		
+		if (_organizationResolver == null) {
+			_systemLogger.log(Level.INFO, _MODULE, sMethod, "No OrganizationResolver defined");
+			return null;
+		}
+
+		// Let the specific attribute gatherer do it's work
+		HashMap<String,String> hOrganizations = null;
+		try {
+			hOrganizations = _organizationResolver.getOrganizations(htTGTContext);
+		}
+		catch (ASelectAttributesException e) {
+			_systemLogger.log(Level.WARNING, _MODULE, sMethod, "Could not gather Organizations for user '"+sUid+"'", e);
+		}
+		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER-ed Organizations=" + hOrganizations);
+		return hOrganizations;
+	}
+	
 	/**
 	 * Gather all attributes for the given user. <br>
 	 * <br>
@@ -413,7 +452,7 @@ public class AttributeGatherer
 	public HashMap gatherAttributes(HashMap htTGTContext)
 		throws ASelectException
 	{
-		final String sMethod = "gatherAttributes()";
+		final String sMethod = "gatherAttributes";
 		HashMap<String, Object> htAttributes = new HashMap<String, Object>();
 		String sArpTarget = null;
 		boolean bFound = false;
@@ -428,7 +467,7 @@ public class AttributeGatherer
 		}
 
 		// Get user ID
-		String sUID = (String) htTGTContext.get("uid");
+		String sUid = (String) htTGTContext.get("uid");
 		sArpTarget = (String) htTGTContext.get("arp_target"); // added 1.5.4
 
 		if (sArpTarget != null) {
@@ -444,13 +483,20 @@ public class AttributeGatherer
 			sArpTarget = null;
 		} // end of 1.5.4
 
+		// 2010-2-10, Bauke: support gathering for a specific chosen organization
+		String sOrgId = (String)htTGTContext.get("org_id");
+		if (sOrgId != null && sOrgId.equals("")) {
+			_systemLogger.log(Level.INFO, _MODULE, sMethod, "No organization choice was made, refusing to GATHER");
+			return null;
+		}
+
 		// First, determine our release policy because this can
 		// potentially save us some work
 		String sReleasePolicy = null;
 		String sLocalOrg = (String) htTGTContext.get("local_organization");
 		String sAppID = (String) htTGTContext.get("app_id");
 
-		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER sUID=" + sUID + ", sLocalOrg=" + sLocalOrg);
+		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER sUid=" + sUid + " sLocalOrg=" + sLocalOrg + " user organization="+sOrgId);
 		if (sLocalOrg != null) {
 			// use specific attribute policy, 1.5.4
 			// Enumeration enumPolicies = _htReleasePolicies.keys();
@@ -487,8 +533,9 @@ public class AttributeGatherer
 					"' configured for application '").append(sAppID).append("'");
 			_systemLogger.log(Level.WARNING, _MODULE, sMethod, sb.toString());
 		}
-		else { // Use the configured attribute requestors to gather attributes
+		else {
 			try {
+				// Use all configured attribute requestors to gather attributes
 				Set keys = htReleasePolicy.keySet();
 				for (Object s : keys) {
 					String sRequestorID = (String) s;
@@ -497,22 +544,21 @@ public class AttributeGatherer
 
 					IAttributeRequestor attributeRequestor = (IAttributeRequestor) _htRequestors.get(sRequestorID);
 					if (attributeRequestor == null) {
-						// TODO: check this at init (Remco)
 						StringBuffer sb = new StringBuffer("Unknown requestor \"").append(sRequestorID).append("\"");
 						throw new Exception(sb.toString());
 					}
 
+					// Let the specific attribute gatherer do it's work
+					// The Attribute Requestor is responsible for using the organization's id in the gathering process
 					HashMap htAttrsFromAR = null;
 					try {
 						htAttrsFromAR = attributeRequestor.getAttributes(htTGTContext, vAttributes);
 					}
 					catch (ASelectAttributesException eA) {
-						StringBuffer sb = new StringBuffer("Could not gather attributes for user \"").append(sUID)
-								.append("\"");
+						StringBuffer sb = new StringBuffer("Could not gather attributes for user \"").append(sUid).append("\"");
 						_systemLogger.log(Level.WARNING, _MODULE, sMethod, sb.toString(), eA);
 					}
-					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER-ed Requestor=" + sRequestorID + " htAttrs="
-							+ htAttrsFromAR);
+					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER-ed Requestor=" + sRequestorID + " htAttrs="+htAttrsFromAR);
 
 					// Merge the returned attributes with our set
 					if (htAttrsFromAR != null) {

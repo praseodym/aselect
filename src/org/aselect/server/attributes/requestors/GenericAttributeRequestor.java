@@ -36,9 +36,13 @@
  */
 package org.aselect.server.attributes.requestors;
 
+import java.util.HashMap;
+import java.util.logging.Level;
+
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.sam.ASelectSAMAgent;
+import org.aselect.system.exception.ASelectAttributesException;
 
 /**
  * A base class for attribute requestors. <br>
@@ -59,6 +63,8 @@ public abstract class GenericAttributeRequestor implements IAttributeRequestor
 	protected ASelectSAMAgent _samAgent;
 	/** The logger for system entries. */
 	protected ASelectSystemLogger _systemLogger;
+
+	private static final String MODULE = "GenericAttributeRequestor";
 
 	/**
 	 * The default constructor. <br>
@@ -83,5 +89,26 @@ public abstract class GenericAttributeRequestor implements IAttributeRequestor
 		_configManager = ASelectConfigManager.getHandle();
 		_samAgent = ASelectSAMAgent.getHandle();
 		_systemLogger = ASelectSystemLogger.getHandle();
+	}
+	
+	/**
+	 * Gather a user's organizations. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Default implementation, reports not implemented <br>
+	 * Should be overridden by gatherers that want to support this feature.<br>
+	 * @param htTGTContext
+	 *         the TGT context.
+	 * @return null result.
+	 * @throws ASelectAttributesException
+	 *         If gathering fails.
+	 */
+	public HashMap<String,String> getOrganizations(HashMap htTGTContext)
+	throws ASelectAttributesException
+	{
+		final String sMethod = "getOrganizations";
+		
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Not supported by this Attribute Gatherer");
+		return null;
 	}
 }

@@ -76,6 +76,7 @@
 
 package org.aselect.server.attributes.requestors.jndi;
 
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -83,6 +84,7 @@ import java.util.Vector;
 import java.util.logging.Level;
 
 import javax.naming.Context;
+import javax.naming.NameNotFoundException;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
@@ -95,6 +97,7 @@ import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
 import org.aselect.server.attributes.requestors.GenericAttributeRequestor;
+import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.udb.IUDBConnector;
 import org.aselect.server.udb.UDBConnectorFactory;
 import org.aselect.system.error.Errors;
@@ -126,10 +129,13 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	private String _sUserDN;
 	private String _sAltUserDN; // Bauke: attribute hack
 	private String _sBaseDN;
-	private HashMap _htAttributes;
-	private HashMap _htReMapAttributes;
+	private String _sOrgDN;
+	private String _sOrgName;
+	private HashMap<String, String> _htAttributes;
+	private HashMap<String, String> _htReMapAttributes;
 	private boolean _bUseFullUid = false;
 	private boolean _bNumericalUid = false;
+	private boolean _bFullTree = false;
 
 	/**
 	 * Initializes the JNDI Attribute Requestor. <br>
@@ -149,9 +155,8 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	{
 		String sMethod = "init()";
 		Object oMain = null;
-
-		_htAttributes = new HashMap();
-		_htReMapAttributes = new HashMap();
+		_htAttributes = new HashMap<String, String>();
+		_htReMapAttributes = new HashMap<String, String>();
 
 		try {
 			try {
@@ -167,6 +172,15 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'main' config section found", e);
+				throw new ASelectAttributesException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			}
+
+			try {
+				_sBaseDN = _configManager.getParam(oMain, "base_dn");
+			}
+			catch (ASelectConfigException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+						"No valid 'base_dn' config item in 'main' section found", e);
 				throw new ASelectAttributesException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -195,7 +209,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 			}
 			catch (ASelectConfigException e) {
 				_sAuthSPUID = null;
-				_systemLogger.log(Level.CONFIG,	MODULE, sMethod,
+				_systemLogger.log(Level.INFO, MODULE, sMethod,
 						"No valid 'authsp_uid' config item in 'main' section found, using the A-Select UID to retrieve the attributes",	e);
 			}
 
@@ -214,31 +228,30 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 			catch (ASelectConfigException e) {
 				_sAltUserDN = "";
 			}
+			
+			// 20100201: Organization Resolver additional items
+			_sOrgDN = ASelectConfigManager.getSimpleParam(oMain, "org_dn", false);
+			_sOrgName = ASelectConfigManager.getSimpleParam(oMain, "org_name", false);
+			String sFullTree = ASelectConfigManager.getSimpleParam(oMain, "full_tree", false);
+			if ("true".equals(sFullTree))
+				_bFullTree = true;
 
-			try {
-				_sBaseDN = _configManager.getParam(oMain, "base_dn");
-			}
-			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"No valid 'base_dn' config item in 'main' section found", e);
-				throw new ASelectAttributesException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "JNDIConf _sBaseDN=" + _sBaseDN + ", _sUserDN=" + _sUserDN
-					+ ", _sAltUserDN=" + _sAltUserDN + ", _sAuthSPUID=" + _sAuthSPUID + ", _sResourceGroup="
-					+ _sResourceGroup);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Config _sBaseDN=" + _sBaseDN + " _sUserDN=" + _sUserDN
+					+ " _sAltUserDN=" + _sAltUserDN + " _sAuthSPUID=" + _sAuthSPUID + " _sResourceGroup="
+					+ _sResourceGroup+" org_dn="+_sOrgDN+" org_name="+_sOrgName+" full_tree="+_bFullTree);
 
 			Object oAttributes = null;
 			try {
 				oAttributes = _configManager.getSection(oConfig, "attribute_mapping");
 			}
 			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+				_systemLogger.log(Level.INFO, MODULE, sMethod,
 						"No valid 'attribute_mapping' config section found, no mapping used", e);
 			}
 
 			if (oAttributes != null) {
 
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "JNDIConf oAttributes=" + oAttributes);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "AttributeMapping oAttributes=" + oAttributes);
 				Object oAttribute = null;
 				try {
 					oAttribute = _configManager.getSection(oAttributes, "attribute");
@@ -268,7 +281,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 								"No valid 'map' config item in 'attribute' section found", e);
 						throw new ASelectAttributesException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 					}
-
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Map: id="+sAttributeID+" map="+sAttributeMap);
 					_htAttributes.put(sAttributeID, sAttributeMap);
 					_htReMapAttributes.put(sAttributeMap, sAttributeID);
 
@@ -286,6 +299,28 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 			throw new ASelectAttributesException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 	}
+	
+	/**
+	 * Gather a user's organizations. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Use the normal gathering process to gather combinations of
+	 * organization id and organization name <br>
+	 * OVerrides the default from GenericAttributeRequestor.
+	 * @param htTGTContext
+	 *         the TGT context.
+	 * @return The retrieved organizations as organization id, organization pairs.
+	 * @throws ASelectAttributesException
+	 *         If gathering fails.
+	 */
+	@Override
+	public HashMap<String,String> getOrganizations(HashMap htTGTContext)
+	throws ASelectAttributesException
+	{
+		HashMap<String,String> hOrganizations = new HashMap<String, String>();
+		gatherAttributes(htTGTContext, null, null, hOrganizations);
+		return hOrganizations;
+	}
 
 	/**
 	 * Resolves the attribute values from the JNDI backend. <br>
@@ -296,41 +331,57 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	 * <br>
 	 * 
 	 * @param htTGTContext
-	 *            the ht tgt context
+	 *            the TGT context
 	 * @param vAttributes
-	 *            the v attributes
-	 * @return the attributes
+	 *            the requested attribute names
+	 * @return the gathered attributes
 	 * @throws ASelectAttributesException
-	 *             the a select attributes exception
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(java.util.HashMap,
 	 *      java.util.Vector)
 	 */
-	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes)
-		throws ASelectAttributesException
+	public HashMap<String,Object> getAttributes(HashMap htTGTContext, Vector vAttributes)
+	throws ASelectAttributesException
 	{
-		String sMethod = "getAttributes()";
-		HashMap htResponse = new HashMap();
+		HashMap<String,Object> hAttrResponse = new HashMap<String,Object>();
+		gatherAttributes(htTGTContext, vAttributes, hAttrResponse, null);
+		return hAttrResponse;
+	}
+	
+	/**
+	 * Worker method for getAttributes() and getOrganizations()
+	 * 
+	 * @param htTGTContext - the TGT context
+	 * @param vAttributes - the requested attribute names (getAttributes only)
+	 * @param hAttrResponse - the requested attribute names (getAttributes only)
+	 * @param hOrgResponse - the organizations found for this user (getOrganizations only)
+	 * @throws ASelectAttributesException
+	 */
+	private void gatherAttributes(HashMap htTGTContext, Vector vAttributes,
+			HashMap<String,Object> hAttrResponse, HashMap<String,String> hOrgResponse)
+	throws ASelectAttributesException
+	{		
+		String sMethod = "gatherAttributes";
+		
 		DirContext oDirContext = null;
-		NamingEnumeration oSearchResults = null;
 		StringBuffer sbQuery = null;
 		Attributes oAttributes = null;
-		Vector vMappedAttributes = new Vector();
+		Vector<String> vMappedAttributes = new Vector<String>();
 		String sUID = null;
-
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "JNDIAttr htTGTContext=" + htTGTContext + ", _sAuthSPUID="
-				+ _sAuthSPUID + ", _sUserDN=" + _sUserDN);
-		//String sDigiDUid = (String) htTGTContext.get("digid_uid");
-		//if (sDigiDUid == null) sDigiDUid = ""; // Bauke: circumvent udb attribute problems
+	
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "JNDIAttr htTGTContext=" + htTGTContext +
+				", _sAuthSPUID=" + _sAuthSPUID + ", _sUserDN=" + _sUserDN);
+		
+		// Bauke: circumvent udb attribute problems
 		String sAuthspType = (String) htTGTContext.get("authsp_type");
 		Boolean bIsDigid = (sAuthspType != null && sAuthspType.equals("digid"));
 
+		NamingEnumeration<SearchResult> oSearchResults = null;
 		try {
 			sUID = (String) htTGTContext.get("uid");
 			if (_bNumericalUid) { // Uid must be treated as a number, so strip leading zeroes
 				sUID = sUID.replaceFirst("0*", "");
 			}
 
-			///if (sDigiDUid.equals("") && _sAuthSPUID != null) // Bauke: no DigiD uid
 			if (!bIsDigid && _sAuthSPUID != null) // Bauke: not a DigiD authsp
 			{
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "JNDIAttr use UDB too (no DigiD authsp)");
@@ -365,20 +416,20 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 			SearchControls oScope = new SearchControls();
 			oScope.setSearchScope(SearchControls.SUBTREE_SCOPE);
 
-			if (!vAttributes.isEmpty() && !vAttributes.firstElement().equals("*")) {
+			if (vAttributes != null && !vAttributes.isEmpty() && !vAttributes.firstElement().equals("*")) {
 				// convert the supplied attribute names to the mapped attribute names
 				Enumeration enumSuppliedAttribs = vAttributes.elements();
 				while (enumSuppliedAttribs.hasMoreElements()) {
 					String sSuppliedAttribute = (String) enumSuppliedAttribs.nextElement();
 					String sMappedAttribute = null;
 					if (_htAttributes.containsKey(sSuppliedAttribute))
-						sMappedAttribute = (String) _htAttributes.get(sSuppliedAttribute);
+						sMappedAttribute = _htAttributes.get(sSuppliedAttribute);
 					else
 						sMappedAttribute = sSuppliedAttribute;
 
 					vMappedAttributes.add(sMappedAttribute);
 				}
-				String[] saMappedAttributes = (String[]) vMappedAttributes.toArray(new String[0]);
+				String[] saMappedAttributes = vMappedAttributes.toArray(new String[0]);
 				oScope.setReturningAttributes(saMappedAttributes);
 			}
 
@@ -388,18 +439,15 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 					sUID = sUID.substring(0, iIndex);
 			}
 
-			// Bauke: Allow alternative user DN
-			//String useDnField = (sDigiDUid.equals("")) ? _sUserDN : _sAltUserDN;
+			// Bauke: Allow use of an alternative user DN when the DigiD AuthSP was used
 			String useDnField = (bIsDigid) ? _sAltUserDN: _sUserDN;
 			sbQuery = new StringBuffer("(").append(useDnField).append("=").append(sUID).append(")");
 
 			oDirContext = getConnection();
 			try {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "JNDIAttr BaseDN=" + _sBaseDN + ", sbQuery=" + sbQuery
-						+ ", oScope=" + oScope.getSearchScope());
-
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Search BaseDN=" + _sBaseDN +
+						", sbQuery=" + sbQuery + ", oScope=" + oScope.getSearchScope());
 				oSearchResults = oDirContext.search(_sBaseDN, sbQuery.toString(), oScope);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Search-ed");
 			}
 			catch (InvalidSearchFilterException e) {
 				StringBuffer sbFailed = new StringBuffer("Wrong filter: ");
@@ -420,85 +468,161 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				throw new ASelectAttributesException(Errors.ERROR_ASELECT_UNKNOWN_USER, e);
 			}
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Check Result");
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "Check Result");
 			// Check if we got a result
 			if (!oSearchResults.hasMore()) {
-				StringBuffer sbFailed = new StringBuffer("User '");
-				sbFailed.append(sUID);
-				sbFailed.append("' not found during LDAP search. The filter was: ");
-				sbFailed.append(sbQuery.toString());
+				StringBuffer sbFailed = new StringBuffer("User '").append(sUID);
+				sbFailed.append("' not found during LDAP search. The filter was: ").append(sbQuery.toString());
 				_systemLogger.log(Level.INFO, MODULE, sMethod, sbFailed.toString());
 				throw new ASelectAttributesException(Errors.ERROR_ASELECT_UNKNOWN_USER);
 			}
 
+			// 2010-2-10, Bauke: support gathering for the chosen organization
+			String sOrgId = (String) htTGTContext.get("org_id");
 			String sFullDn = null;
 			int cntResults = 0;
+			// For all search results
 			while (oSearchResults.hasMore()) {
 				SearchResult oSearchResult = (SearchResult) oSearchResults.next();
 				sFullDn = oSearchResult.getNameInNamespace();
-				_systemLogger.log(Level.FINE, MODULE, sMethod, "Next search result " + oSearchResult + " id="
-						+ oSearchResult.getName() + " full=" + sFullDn);
+				String sSearchName = oSearchResult.getName(); 
+				_systemLogger.log(Level.FINE, MODULE, sMethod, ">> id=" + sSearchName +" full=" + sFullDn + " Result=" + oSearchResult);
 				cntResults++;
 
-				// retrieve all requested attributes
+				// Compare the search result's name with the chosen organization
+				if (hAttrResponse != null && sOrgId != null) {
+					String sOrg = _sOrgDN+"="+sOrgId;
+					int iSrchLen = sSearchName.length();
+					int iLen = sOrg.length();
+					int idx = 0;
+					for ( ; ; idx += iLen) {
+						idx = sSearchName.indexOf(sOrg, idx);
+						if (idx < 0)
+							break;  // not found at al
+						// idx >= 0
+						if ((idx == 0 || sSearchName.charAt(idx-1) == ',') &&
+							(idx+iLen >= iSrchLen || sSearchName.charAt(idx+iLen) == ','))
+							break;  // yes, found
+					}
+					if (idx < 0) { // not found
+						_systemLogger.log(Level.FINE, MODULE, sMethod, "Skip id="+sSearchName);
+						continue;
+					}
+				}
+				
+				// Retrieve all requested attributes
 				oAttributes = oSearchResult.getAttributes();
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "Attrs " + oAttributes);
 
+				// For all attributes found in this search result
+				String sDnValue = null;
+				String sNameValue = null;
 				NamingEnumeration oAttrEnum = oAttributes.getAll();
 				while (oAttrEnum.hasMore()) {
 					Attribute oAttribute = (Attribute) oAttrEnum.next();
 					String sAttributeName = oAttribute.getID();
+					if (_htReMapAttributes.containsKey(sAttributeName))
+						sAttributeName = _htReMapAttributes.get(sAttributeName);
+
 					try {
 						if (oAttribute.size() > 1) {
-							Vector vMultiValues = new Vector();
-							_systemLogger.log(Level.FINEST, MODULE, sMethod, "multi");
-							for (int iCount = 0; iCount < oAttribute.size(); iCount++) {
-								Object oValue = oAttribute.get(iCount);
-								_systemLogger.log(Level.FINEST, MODULE, sMethod, "multi" + iCount + "=" + oValue);
-								vMultiValues.add(oAttribute.get(iCount));
+							if (hAttrResponse != null) {
+								Vector<Object> vMultiValues = new Vector<Object>();
+								for (int iCount = 0; iCount < oAttribute.size(); iCount++) {
+									Object oValue = oAttribute.get(iCount);
+									_systemLogger.log(Level.FINEST, MODULE, sMethod, sAttributeName+" multi" + iCount + "=" + oValue);
+									vMultiValues.add(oAttribute.get(iCount));
+								}
+								hAttrResponse.put(sAttributeName, vMultiValues);
 							}
-
-							if (_htReMapAttributes.containsKey(sAttributeName))
-								sAttributeName = (String) _htReMapAttributes.get(sAttributeName);
-
-							htResponse.put(sAttributeName, vMultiValues);
 						}
 						else {
 							String sAttributeValue = (String) oAttribute.get();
 							if (sAttributeValue == null)
 								sAttributeValue = "";
-							_systemLogger.log(Level.FINEST, MODULE, sMethod, "single=" + sAttributeValue);
-
-							if (_htReMapAttributes.containsKey(sAttributeName))
-								sAttributeName = (String) _htReMapAttributes.get(sAttributeName);
-
-							htResponse.put(sAttributeName, sAttributeValue);
+							_systemLogger.log(Level.FINEST, MODULE, sMethod, sAttributeName+" single=" + sAttributeValue);
+							if (hAttrResponse != null)
+								hAttrResponse.put(sAttributeName, sAttributeValue);
+							
+							// Check Organization ID or Name (only for single valued attributes)
+							if (_sOrgDN != null && _sOrgName != null) {
+								if (sAttributeName.equals(_sOrgDN))
+									sDnValue = sAttributeValue;
+								if (sAttributeName.equals(_sOrgName))
+									sNameValue = sAttributeValue;
+							}
 						}
 					}
 					catch (Exception e) {
 					}
 				}
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "End of Search results, number found="+cntResults);
+				
+				// Look for attributes in parent containers
+				// Example search name: cn=bauke,o=123456789
+				//
+				while (_bFullTree) {
+					int idx = sSearchName.indexOf(',');
+					if (idx < 0)  // no more parents
+						break;
+					sSearchName = sSearchName.substring(idx+1);
+					oAttributes = getLdapEntry(oDirContext, sSearchName, _sBaseDN);
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Tree Search: "+sSearchName+" Values: " + oAttributes);
+					
+					oAttrEnum = oAttributes.getAll();
+					while (oAttrEnum.hasMore()) {
+						Attribute oAttribute = (Attribute) oAttrEnum.next();
+						
+						String sAttributeName = oAttribute.getID();
+						if (_htReMapAttributes.containsKey(sAttributeName))
+							sAttributeName = _htReMapAttributes.get(sAttributeName);
 
-			// Bauke: 20080722: some applications want to know the base_dn and full_dn value
-			// Replaced 20080908: String sCn = (String)(htResponse.get("cn"));
-			htResponse.put("base_dn", _sBaseDN);
-			Object oCn = htResponse.get("cn");
-			String sCn = null;
-			if (oCn != null) {
-				// Search was on <useDnField>=<sUID>
-				if (oCn instanceof Vector) { // multi-valued attribute
-					if ("cn".equals(useDnField))
-						sCn = sUID;
-					else
-						sCn = (String) ((Vector) oCn).get(0); // just grab the first
+						// Handle the value, but only store attribute if not present yet!
+						if (oAttribute.size() > 1) {
+							if (hAttrResponse != null && !hAttrResponse.containsKey(sAttributeName)) {
+								Vector<Object> vMultiValues = new Vector<Object>();
+								for (int iCount = 0; iCount < oAttribute.size(); iCount++) {
+									Object oValue = oAttribute.get(iCount);
+									_systemLogger.log(Level.FINEST, MODULE, sMethod, "Tree "+sAttributeName+" multi" + iCount + "=" + oValue);
+									vMultiValues.add(oAttribute.get(iCount));
+								}
+								hAttrResponse.put(sAttributeName, vMultiValues);
+							}
+						}
+						else {
+							String sAttributeValue = (String)oAttribute.get();
+							if (sAttributeValue == null)
+								sAttributeValue = "";
+							
+							_systemLogger.log(Level.FINEST, MODULE, sMethod, "Tree "+sAttributeName+" single="+sAttributeValue);
+							if (hAttrResponse != null && !hAttrResponse.containsKey(sAttributeName))
+								hAttrResponse.put(sAttributeName, sAttributeValue);
+	
+							// Check Organization ID or Name (only single valued attribute)
+							if (_sOrgDN != null && _sOrgName != null) {
+								if (sAttributeName.equals(_sOrgDN))
+									sDnValue = sAttributeValue;
+								if (sAttributeName.equals(_sOrgName))
+									sNameValue = sAttributeValue;
+							}
+						}
+					}
+					// Try next parent up
 				}
-				else if (oCn instanceof String)
-					sCn = (String) oCn;
+
+				// Organization ID and Name found?
+				if (hOrgResponse != null && _sOrgDN != null && _sOrgName != null && sDnValue != null && sNameValue != null) {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "OrgDN="+sDnValue+" OrgName="+sNameValue);
+					hOrgResponse.put(sDnValue, sNameValue);
+				}
 			}
-			if (sFullDn != null)
-				htResponse.put("full_dn", sFullDn);  //"cn=" + sCn + "," + _sBaseDN);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Search End, found="+cntResults+" hOrg="+hOrgResponse);
+			
+			// 20080722: Bauke: some applications want to know the base_dn and full_dn value
+			if (hAttrResponse != null) {
+				hAttrResponse.put("base_dn", _sBaseDN);
+				if (sFullDn != null)
+					hAttrResponse.put("full_dn", sFullDn);
+			}
 		}
 		catch (ASelectAttributesException e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "AttributesException", e);
@@ -519,7 +643,22 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not close directory context", e);
 			}
 		}
-		return htResponse;
+	}
+
+	// Expect "cn=<value>" or "o=<org>" in the cn arg
+    // Return: attributes or null on errors
+	private Attributes getLdapEntry(DirContext oDirContext, String sCn, String sBaseDN)
+	{
+		String userDN = sCn + "," + sBaseDN;
+		try {
+			return oDirContext.getAttributes(userDN); // Retrieve attributes belonging to 'sCn'
+		}
+		catch (NameNotFoundException e) {
+			return null;
+		}
+		catch (NamingException e) {	// Other errors
+			return null;
+		}
 	}
 
 	/**
@@ -543,7 +682,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	 *             if no valid resource could be found
 	 */
 	private DirContext getConnection()
-		throws ASelectUDBException, ASelectSAMException
+	throws ASelectUDBException, ASelectSAMException
 	{
 		String sMethod = "getConnection()";
 
@@ -651,10 +790,10 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	 *            The connection url
 	 * @return a <code>Hastable</code> containing the JNDI environment variables
 	 */
-	private Hashtable createJNDIEnvironment(String sDriver, String sPrincipal, String sPassword, String sUseSSL,
+	private Hashtable<String, String> createJNDIEnvironment(String sDriver, String sPrincipal, String sPassword, String sUseSSL,
 			String sUrl)
 	{
-		Hashtable htEnvironment = new Hashtable(11);
+		Hashtable<String, String> htEnvironment = new Hashtable<String, String>(11);
 
 		htEnvironment.put(Context.INITIAL_CONTEXT_FACTORY, sDriver);
 		htEnvironment.put(Context.SECURITY_AUTHENTICATION, "simple");

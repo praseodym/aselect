@@ -203,7 +203,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 		PrintWriter pwOut = null;
 		HashMap htServiceRequest = null;
 		try {
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ");
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ "+_servletRequest.getMethod());
 			pwOut = _servletResponse.getWriter();
 
 			_servletResponse.setContentType("text/html");

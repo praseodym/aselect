@@ -15,7 +15,6 @@ import java.util.logging.Level;
 
 import org.aselect.lbsensor.LbSensorSystemLogger;
 
-// TODO: Auto-generated Javadoc
 public class SensorStore
 {
 	public final static String MODULE = "SensorStore";

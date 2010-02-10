@@ -18,7 +18,6 @@ import org.aselect.lbsensor.handler.SensorStore;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
 public class LbSensor
 {
 	public final static String MODULE = "LbSensor";

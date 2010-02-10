@@ -160,13 +160,11 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
 				sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", sMyUrl + "/saml20_ists");
 				sSelectForm = _configManager.updateTemplate(sSelectForm, htSessionContext);
-				// _systemLogger.log(Level.FINER, _sModule, sMethod, "Form select=["+sSelectForm+"]");
 				response.setContentType("text/html");
 				PrintWriter pwOut = response.getWriter();
 				pwOut.println(sSelectForm);
 				pwOut.close();
 				return new RequestState(null);
-				// 20091028: Original code: sFederationUrl = _sFederationUrl; // use the default
 			}
 
 			// 20090811, Bauke: save type of Authsp to store in the TGT later on
@@ -174,15 +172,6 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			htSessionContext.put("authsp_type", "saml20");
 			htSessionContext.put("federation_url", sFederationUrl);
 			_oSessionManager.updateSession(sRid, htSessionContext);
-
-			/*
-			 * 20090113, Bauke TRY TO SKIP THIS CODE, "remote_organization" will not be set CrossASelectManager
-			 * oCrossASelectManager = CrossASelectManager.getHandle(); // Gets from organization key/value =
-			 * id/friendforced_ly_name HashMap htRemoteServers = oCrossASelectManager.getRemoteServers(); Enumeration
-			 * enRemoteOrganizationIds = htRemoteServers.keys(); String sRemoteOrganization = (String)
-			 * enRemoteOrganizationIds.nextElement(); htSessionContext.put("remote_organization", sRemoteOrganization);
-			 * _oSessionManager.updateSession(sRid, htSessionContext);
-			 */
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get MetaData Url=" + sFederationUrl);
 			MetaDataManagerSp metadataMgr = MetaDataManagerSp.getHandle();
@@ -244,8 +233,6 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			Boolean bForcedAuthn = (Boolean) htSessionContext.get("forced_authenticate");
 			if (bForcedAuthn == null)
 				bForcedAuthn = false;
-			// String sForcedLogin = (String) htSessionContext.get("forced_logon");
-			// if ("true".equalsIgnoreCase(sForcedLogin)) {
 			if (bForcedAuthn) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Setting the ForceAuthn attribute");
 				authnRequest.setForceAuthn(true);

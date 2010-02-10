@@ -130,7 +130,7 @@ import org.aselect.system.utils.Utils;
  * </tr>
  * <tr>
  * <td>signature</td>
- * <td>signature of all paramaters in the above sequence</td>
+ * <td>signature of all parameters in the above sequence</td>
  * </tr>
  * </table>
  * <br>
@@ -181,7 +181,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	/** The system logger. */
 	private ASelectSystemLogger _systemLogger;
 
-	/** The Auythentication logger. */
+	/** The Authentication logger. */
 	private ASelectAuthenticationLogger _authenticationLogger;
 
 	/** The AuthSP name. */

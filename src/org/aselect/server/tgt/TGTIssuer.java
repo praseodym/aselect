@@ -140,18 +140,23 @@
 
 package org.aselect.server.tgt;
 
+import java.io.PrintWriter;
 import java.net.URLEncoder;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.server.attributes.AttributeGatherer;
 import org.aselect.server.authspprotocol.handler.AuthSPHandlerManager;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.HandlerTools;
+import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.xsaml20.ServiceProvider;
 import org.aselect.server.request.handler.xsaml20.idp.UserSsoSession;
 import org.aselect.server.session.SessionManager;
@@ -407,9 +412,10 @@ public class TGTIssuer
 
 			// A tgt was just issued, report sensor data
 			Tools.calculateAndReportSensorData(_configManager, _systemLogger, htSessionContext);
+			_sessionManager.killSession(sRid);
+			
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
 			sendRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse);
-			_sessionManager.killSession(sRid);
 		}
 		catch (ASelectException e) {
 			StringBuffer sbError = new StringBuffer("Issue TGT for request '");
@@ -464,12 +470,10 @@ public class TGTIssuer
 	 * @throws ASelectException
 	 *             if an error page must be shown
 	 */
-	public void issueTGT(String sRid, String sAuthSP, HashMap htAdditional, HttpServletResponse oHttpServletResponse,
-			String sOldTGT)
-		throws ASelectException
+	public void issueTGT(String sRid, String sAuthSP, HashMap htAdditional, HttpServletResponse oHttpServletResponse, String sOldTGT)
+	throws ASelectException
 	{
-		String sMethod = "issueTGT()";
-		String sArpTarget = null; // added 1.5.4
+		String sMethod = "issueTGT";
 
 		try {
 			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
@@ -500,7 +504,7 @@ public class TGTIssuer
 			}
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Issue TGT for RID: " + sRid);
-			HashMap htTGTContext = new HashMap();
+			HashMap<String,Object> htTGTContext = new HashMap<String,Object>();
 			htTGTContext.put("rid", sRid);
 			htTGTContext.put("app_id", sAppId);
 			if (sLocalOrg != null)
@@ -595,6 +599,29 @@ public class TGTIssuer
 			Utils.copyHashmapValue("federation_url", htTGTContext, htSessionContext);
 			// Bauke, 20091112, pass language
 			Utils.copyHashmapValue("language", htTGTContext, htSessionContext);
+			
+			// 20100210, Bauke: Organization selection is here
+			AttributeGatherer ag = AttributeGatherer.getHandle();
+			HashMap<String,String> hUserOrganizations = ag.gatherOrganizations(htTGTContext);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "UserOrgs="+hUserOrganizations);
+			
+			// No organization gathering specified: no org_id in TGT
+			// Organization gathering specified but no organization found or choice not made yet: org_id="" in TGT
+			// Choice made by the user: org_id has a value
+			// As long as org_id is present and empty no gathering will take place at all
+			boolean doOrgSelect = false;
+			if (hUserOrganizations != null) {
+				String sOrgId = "";
+				if (hUserOrganizations.size() == 1) {
+					Set<String> keySet = hUserOrganizations.keySet();
+					Iterator<String> it = keySet.iterator();
+					sOrgId = it.next();
+				}
+				else if (hUserOrganizations.size() > 1) {
+					doOrgSelect = true;
+				}
+				htTGTContext.put("org_id", sOrgId);
+			}
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Store TGT " + htTGTContext);
 			String sTgt = null;
@@ -603,7 +630,7 @@ public class TGTIssuer
 				sTgt = _tgtManager.createTGT(htTGTContext);
 
 				// Create cookie if single sign-on is enabled
-				// 20090617, Bauke: not for forced_authenticate
+				// 20090617, Bauke: but not for forced_authenticate
 				if (!bForcedAuthn && _configManager.isSingleSignOn())
 					setASelectCookie(sTgt, sUserId, oHttpServletResponse);
 			}
@@ -611,13 +638,51 @@ public class TGTIssuer
 				sTgt = sOldTGT;
 				_tgtManager.updateTGT(sOldTGT, htTGTContext);
 			}
+			
+			// 20100210, Bauke: Present the Organization selection to the user
+			// Leaves the Rid session in place, needed for the application url
+			if (doOrgSelect) {
+				Tools.pauseSensorData(_systemLogger, htSessionContext);
+				_sessionManager.update(sRid, htSessionContext); // Write session
+				// The user must choose his organization
+				String sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true);
+				String sServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
+				String sSelectForm = _configManager.loadHTMLTemplate(null, "orgselect", (String)htTGTContext.get("language"), (String)htTGTContext.get("language"));
+				
+				//String sEncryptedTgt = _cryptoEngine.encryptTGT(Utils.hexStringToByteArray(sTgt));
+				//sSelectForm = Utils.replaceString(sSelectForm, "[aselect_credentials]", sEncryptedTgt);
+				sSelectForm = Utils.replaceString(sSelectForm, "[request]", "org_choice");
+				sSelectForm = Utils.replaceString(sSelectForm, "[user_id]", sUserId);
+				sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
+				sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", sServerId);
+				sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", sServerUrl + "/org_choice");
+				
+				StringBuffer sb = new StringBuffer();
+				Set<String> keySet = hUserOrganizations.keySet();
+				Iterator<String> it = keySet.iterator();
+				while(it.hasNext()) {
+					String sOrgId = it.next();
+					String sOrgName = hUserOrganizations.get(sOrgId);
+					sb.append("<option value=").append(sOrgId).append(">").append(sOrgName);
+					sb.append("</option>");
+				}
+				sSelectForm = Utils.replaceString(sSelectForm, "[user_organizations]", sb.toString());
+				sSelectForm = _configManager.updateTemplate(sSelectForm, htSessionContext);
+				
+				oHttpServletResponse.setContentType("text/html");
+				PrintWriter pwOut = oHttpServletResponse.getWriter();
+				pwOut.println(sSelectForm);
+				pwOut.close();
+				return;
+			}
 
-			// A tgt was just issued, report sensor data
+			// No organization selection, the tgt was just issued, report sensor data
+			// remove the session and send the user to the application
 			Tools.calculateAndReportSensorData(_configManager, _systemLogger, htSessionContext);
+			_sessionManager.killSession(sRid);
+			
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
 			sendRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse);
-
-			_sessionManager.killSession(sRid);
 		}
 		catch (ASelectException e) {
 			StringBuffer sbError = new StringBuffer("Issue TGT for request '");
@@ -799,7 +864,7 @@ public class TGTIssuer
 	public void sendRedirect(String sAppUrl, String sTgt, String sRid, HttpServletResponse oHttpServletResponse)
 		throws ASelectException
 	{
-		String sMethod = "sendRedirect()";
+		String sMethod = "sendRedirect";
 		StringBuffer sbRedirect = null;
 
 		try { // Check whether the application url contains cgi parameters
@@ -810,12 +875,10 @@ public class TGTIssuer
 
 			String sEncryptedTgt = (sTgt == null) ? "" : _cryptoEngine.encryptTGT(Utils.hexStringToByteArray(sTgt));
 			sbRedirect = new StringBuffer(sAppUrl);
-			sbRedirect.append("aselect_credentials=");
-			sbRedirect.append(sEncryptedTgt);
-			sbRedirect.append("&rid=");
-			sbRedirect.append(sRid);
-			sbRedirect.append("&a-select-server=");
-			sbRedirect.append(_sServerId);
+			sbRedirect.append("aselect_credentials=").append(sEncryptedTgt);
+			if (sRid !=null)
+				sbRedirect.append("&rid=").append(sRid);
+			sbRedirect.append("&a-select-server=").append(_sServerId);
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT to: " + sbRedirect);
 			oHttpServletResponse.sendRedirect(sbRedirect.toString());
@@ -855,12 +918,10 @@ public class TGTIssuer
 			 */
 			// Bauke 20080617 only store tgt value from now on
 			String sCookieDomain = _configManager.getCookieDomain();
-			HandlerTools.putCookieValue(oHttpServletResponse, "aselect_credentials", sTgt, sCookieDomain, -1,
-					_systemLogger);
+			HandlerTools.putCookieValue(oHttpServletResponse, "aselect_credentials", sTgt, sCookieDomain, -1, _systemLogger);
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod,
-					"Could not create an A-Select cookie for user: " + sUserId, e);
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not create an A-Select cookie for user: " + sUserId, e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 	}
@@ -890,8 +951,7 @@ public class TGTIssuer
 			int iOldAuthSPLevel = new Integer(sOldAuthSPLevel).intValue();
 			int iNewAuthSPLevel = new Integer(sNewAuthSPLevel).intValue();
 			if (iOldAuthSPLevel > iNewAuthSPLevel) {
-				// overwrite level, if user already has a ticket with
-				// a higher level
+				// overwrite level, if user already has a ticket with a higher level
 				htReturn.put("authsp_level", sOldAuthSPLevel);
 			}
 		}

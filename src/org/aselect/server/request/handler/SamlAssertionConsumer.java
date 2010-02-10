@@ -204,8 +204,7 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
 			_communicator = new SOAP11Communicator("ASelectRequest", _systemLogger);
 
 			String sResults = _communicator.sendStringMessage(sSamlRequest, sArtifactUrl);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "ASSERT RESP sResults=" + sResults); // sResults.substring(0,
-			// (len<30)?len:30));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "ASSERT RESP sResults=" + sResults);
 
 			// Signature ok?
 			if (_bCheckSigning) {
@@ -235,12 +234,7 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
 				htSessionContext.put("app_id", _sMyAppId);
 				htSessionContext.put("app_url", sRedirectUrl);
 				htSessionContext.put("organization", _sMyOrg);
-				// Bauke 20081217: should already be stored, so don't set them again
-				// htSessionContext.put("client_ip", request.getRemoteAddr()); // RH, 20080617, n
-				// String sAgent = (String)request.getHeader("User-Agent");
-				// if (sAgent != null) htSessionContext.put("user_agent", sAgent);
-
-				// htSessionContext.put("level", intAppLevel);
+				
 				sSessionId = _sessionManager.createSession(htSessionContext);
 				if (sSessionId == null) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to create session");

@@ -39,8 +39,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
 import org.w3c.dom.*;
 
-// TODO: Auto-generated Javadoc
-//
 //
 public class Tools
 {

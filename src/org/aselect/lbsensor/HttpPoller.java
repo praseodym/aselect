@@ -23,7 +23,6 @@ import java.util.logging.Level;
 
 import org.aselect.lbsensor.handler.SensorStore;
 
-// TODO: Auto-generated Javadoc
 public class HttpPoller extends TimerTask
 {
 	public final static String MODULE = "HttpPoller";
@@ -84,10 +83,15 @@ public class HttpPoller extends TimerTask
 			if (!bOk)
 				_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "Server DOWN for " + _sSensorStoreId);
 
-			/*
-			 * InputStream isError = ((HttpURLConnection)serverConn).getErrorStream(); if (isError != null) { oInReader
-			 * = new BufferedReader(new InputStreamReader(isError)); for (iErr = 0; (sLine = oInReader.readLine()) !=
-			 * null; iErr++) { _oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "{"+sLine+"}"); } oInReader.close(); }
+			/* debugging
+			 * InputStream isError = ((HttpURLConnection)serverConn).getErrorStream();
+			 * if (isError != null) {
+			 *    oInReader = new BufferedReader(new InputStreamReader(isError));
+			 *    for (iErr = 0; (sLine = oInReader.readLine()) != null; iErr++) {
+			 *       _oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "{"+sLine+"}");
+			 *    }
+			 *    oInReader.close();
+			 * }
 			 * _oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "cnt="+iCnt+" err="+iErr);
 			 */
 		}
