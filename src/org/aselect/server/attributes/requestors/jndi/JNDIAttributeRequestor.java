@@ -418,6 +418,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 
 			if (vAttributes != null && !vAttributes.isEmpty() && !vAttributes.firstElement().equals("*")) {
 				// convert the supplied attribute names to the mapped attribute names
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "vAttributes="+vAttributes);
 				Enumeration enumSuppliedAttribs = vAttributes.elements();
 				while (enumSuppliedAttribs.hasMoreElements()) {
 					String sSuppliedAttribute = (String) enumSuppliedAttribs.nextElement();
@@ -429,6 +430,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 
 					vMappedAttributes.add(sMappedAttribute);
 				}
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "vMappedAttributes="+vMappedAttributes);
 				String[] saMappedAttributes = vMappedAttributes.toArray(new String[0]);
 				oScope.setReturningAttributes(saMappedAttributes);
 			}
@@ -442,11 +444,11 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 			// Bauke: Allow use of an alternative user DN when the DigiD AuthSP was used
 			String useDnField = (bIsDigid) ? _sAltUserDN: _sUserDN;
 			sbQuery = new StringBuffer("(").append(useDnField).append("=").append(sUID).append(")");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Search BaseDN=" + _sBaseDN +
+					", sbQuery=" + sbQuery + ", oScope=" + oScope.getSearchScope());
 
 			oDirContext = getConnection();
 			try {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Search BaseDN=" + _sBaseDN +
-						", sbQuery=" + sbQuery + ", oScope=" + oScope.getSearchScope());
 				oSearchResults = oDirContext.search(_sBaseDN, sbQuery.toString(), oScope);
 			}
 			catch (InvalidSearchFilterException e) {
@@ -481,6 +483,10 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 			String sOrgId = (String) htTGTContext.get("org_id");
 			String sFullDn = null;
 			int cntResults = 0;
+			if (_sOrgDN != null && _sOrgName != null) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Looking for: org_dn="+_sOrgDN+" org_name="+_sOrgName);
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "ReMapAttributes="+_htReMapAttributes);
 			// For all search results
 			while (oSearchResults.hasMore()) {
 				SearchResult oSearchResult = (SearchResult) oSearchResults.next();
@@ -521,8 +527,12 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				while (oAttrEnum.hasMore()) {
 					Attribute oAttribute = (Attribute) oAttrEnum.next();
 					String sAttributeName = oAttribute.getID();
-					if (_htReMapAttributes.containsKey(sAttributeName))
+					String sUnmappedName = sAttributeName;
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Attribute="+sAttributeName);
+					if (_htReMapAttributes.containsKey(sAttributeName)) {
 						sAttributeName = _htReMapAttributes.get(sAttributeName);
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "Map "+sUnmappedName+" to "+sAttributeName);
+					}
 
 					try {
 						if (oAttribute.size() > 1) {
@@ -546,9 +556,9 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 							
 							// Check Organization ID or Name (only for single valued attributes)
 							if (_sOrgDN != null && _sOrgName != null) {
-								if (sAttributeName.equals(_sOrgDN))
+								if (sUnmappedName.equals(_sOrgDN))
 									sDnValue = sAttributeValue;
-								if (sAttributeName.equals(_sOrgName))
+								if (sUnmappedName.equals(_sOrgName))
 									sNameValue = sAttributeValue;
 							}
 						}
@@ -556,6 +566,8 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 					catch (Exception e) {
 					}
 				}
+				if (hOrgResponse != null)
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "1. OrgDN="+sDnValue+" OrgName="+sNameValue);
 				
 				// Look for attributes in parent containers
 				// Example search name: cn=bauke,o=123456789
@@ -573,8 +585,12 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 						Attribute oAttribute = (Attribute) oAttrEnum.next();
 						
 						String sAttributeName = oAttribute.getID();
-						if (_htReMapAttributes.containsKey(sAttributeName))
+						String sUnmappedName = sAttributeName;
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "Attribute="+sAttributeName);
+						if (_htReMapAttributes.containsKey(sAttributeName)) {
 							sAttributeName = _htReMapAttributes.get(sAttributeName);
+							_systemLogger.log(Level.INFO, MODULE, sMethod, "Map "+sUnmappedName+" to "+sAttributeName);
+						}
 
 						// Handle the value, but only store attribute if not present yet!
 						if (oAttribute.size() > 1) {
@@ -599,9 +615,9 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	
 							// Check Organization ID or Name (only single valued attribute)
 							if (_sOrgDN != null && _sOrgName != null) {
-								if (sAttributeName.equals(_sOrgDN))
+								if (sUnmappedName.equals(_sOrgDN))
 									sDnValue = sAttributeValue;
-								if (sAttributeName.equals(_sOrgName))
+								if (sUnmappedName.equals(_sOrgName))
 									sNameValue = sAttributeValue;
 							}
 						}
@@ -610,12 +626,14 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				}
 
 				// Organization ID and Name found?
-				if (hOrgResponse != null && _sOrgDN != null && _sOrgName != null && sDnValue != null && sNameValue != null) {
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "OrgDN="+sDnValue+" OrgName="+sNameValue);
-					hOrgResponse.put(sDnValue, sNameValue);
+				if (hOrgResponse != null) {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "2. OrgDN="+sDnValue+" OrgName="+sNameValue);
+					if (_sOrgDN != null && _sOrgName != null && sDnValue != null && sNameValue != null) {
+						hOrgResponse.put(sDnValue, sNameValue);
+					}
 				}
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Search End, found="+cntResults+" hOrg="+hOrgResponse);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Search End, found="+cntResults+((hOrgResponse==null)? "": " hOrg="+hOrgResponse));
 			
 			// 20080722: Bauke: some applications want to know the base_dn and full_dn value
 			if (hAttrResponse != null) {
@@ -623,10 +641,6 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				if (sFullDn != null)
 					hAttrResponse.put("full_dn", sFullDn);
 			}
-		}
-		catch (ASelectAttributesException e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "AttributesException", e);
-			throw e;
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Internal error", e);
