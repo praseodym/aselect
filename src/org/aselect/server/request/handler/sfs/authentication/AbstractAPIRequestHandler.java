@@ -24,9 +24,6 @@
  * Revision 1.4  2006/05/03 10:10:18  tom
  * Removed Javadoc version
  *
- * Revision 1.3  2006/03/10 15:14:39  martijn
- * added support for multivalue attributes in serializeattributes()
- *
  * Revision 1.2  2006/03/09 12:32:52  jeroen
  * Adaptation to support multi-valued attributes
  *
@@ -63,9 +60,6 @@
  * Revision 1.6  2005/04/07 09:05:17  remco
  * Attributes (keys and values) are now URL encoded
  *
- * Revision 1.5  2005/04/07 07:38:09  erwin
- * Moved serializeAttributes() to abstract class
- *
  * Revision 1.4  2005/03/17 15:16:48  tom
  * Removed redundant code,
  * A-Select-Server ID is checked in higher function
@@ -83,11 +77,6 @@
 
 package org.aselect.server.request.handler.sfs.authentication;
 
-import java.net.URLEncoder;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.Vector;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
@@ -108,9 +97,7 @@ import org.aselect.system.communication.server.soap12.SOAP12MessageCreator;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.utils.BASE64Encoder;
 
-// TODO: Auto-generated Javadoc
 /**
  * Abstract API request handler. <br>
  * <br>
@@ -234,7 +221,6 @@ public abstract class AbstractAPIRequestHandler implements IRequestHandler
 								+ sServerId);
 						throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_ID_MISMATCH);
 					}
-
 					processAPIRequest(protocolRequest, inputMessage, outputMessage);
 				}
 				catch (ASelectException ace) {
@@ -257,12 +243,9 @@ public abstract class AbstractAPIRequestHandler implements IRequestHandler
 						throw ace2;
 					}
 				}
-
 				communicator.send();
 			}
-			else
-			// could not init
-			{
+			else {  // could not init
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Can't initialize Message Creator object: "
 						+ _messageCreator.getClass().getName());
 				// error is sent in communicator.
@@ -294,76 +277,4 @@ public abstract class AbstractAPIRequestHandler implements IRequestHandler
 	abstract protected void processAPIRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
 			IOutputMessage oOutputMessage)
 		throws ASelectException;
-
-	/**
-	 * Serialize attributes contained in a hashtable. <br>
-	 * <br>
-	 * <b>Description:</b> <br>
-	 * This method serializes attributes contained in a hashtable:
-	 * <ul>
-	 * <li>They are formatted as attr1=value1&attr2=value2;...
-	 * <li>If a "&amp;" or a "=" appears in either the attribute name or value, they are transformed to %26 or %3d
-	 * respectively.
-	 * <li>The end result is base64 encoded.
-	 * </ul>
-	 * <br>
-	 * 
-	 * @param htAttributes
-	 *            HashMap containing all attributes
-	 * @return Serialized representation of the attributes
-	 * @throws ASelectException
-	 *             If serialization fails.
-	 */
-	protected String serializeAttributes(HashMap htAttributes)
-		throws ASelectException
-	{
-		final String sMethod = "serializeAttributes()";
-		try {
-			if (htAttributes == null || htAttributes.isEmpty())
-				return null;
-			StringBuffer sb = new StringBuffer();
-			Set keys = htAttributes.keySet();
-			for (Object s : keys) {
-				String sKey = (String) s;
-				// for (Enumeration e = htAttributes.keys(); e.hasMoreElements(); )
-				// {
-				// String sKey = (String)e.nextElement();
-				Object oValue = htAttributes.get(sKey);
-
-				if (oValue instanceof Vector) {// it's a multivalue attribute
-					Vector vValue = (Vector) oValue;
-
-					sKey = URLEncoder.encode(sKey + "[]", "UTF-8");
-					Enumeration eEnum = vValue.elements();
-					while (eEnum.hasMoreElements()) {
-						String sValue = (String) eEnum.nextElement();
-
-						// add: key[]=value
-						sb.append(sKey);
-						sb.append("=");
-						sb.append(URLEncoder.encode(sValue, "UTF-8"));
-
-						if (eEnum.hasMoreElements())
-							sb.append("&");
-					}
-				}
-				else if (oValue instanceof String) {// it's a single value attribute
-					String sValue = (String) oValue;
-
-					sb.append(URLEncoder.encode(sKey, "UTF-8"));
-					sb.append("=");
-					sb.append(URLEncoder.encode(sValue, "UTF-8"));
-				}
-				// if (e.hasMoreElements())
-				sb.append("&");
-			}
-			int len = sb.length();
-			BASE64Encoder b64enc = new BASE64Encoder();
-			return b64enc.encode(sb.substring(0, len - 1).getBytes("UTF-8"));
-		}
-		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not serialize attributes", e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-		}
-	}
 }

@@ -186,6 +186,7 @@
 
 package org.aselect.agent.handler;
 
+
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URLDecoder;
@@ -197,7 +198,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.TreeSet;
-import java.util.Vector;
 import java.util.logging.Level;
 
 import org.aselect.agent.authorization.AuthorizationEngine;
@@ -226,7 +226,6 @@ import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMResource;
 import org.aselect.system.utils.*;
 
-// TODO: Auto-generated Javadoc
 /**
  * Main A-Select Agent API Request handler. <br>
  * <br>
@@ -1445,7 +1444,7 @@ public class RequestHandler extends Thread
 				// get app_id
 				String sAppId = (String) htTicketContext.get("app_id");
 				// get user attributes
-				HashMap htUserAttributes = deserializeAttributes((String) htTicketContext.get("attributes"));
+				HashMap htUserAttributes = Utils.deserializeAttributes((String) htTicketContext.get("attributes"));
 
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET attr=" + htUserAttributes);
 
@@ -2106,67 +2105,5 @@ public class RequestHandler extends Thread
 			_systemLogger.log(Level.SEVERE, MODULE, "signRequest()", "Could not sign request:", e);
 			throw new Exception("Unable to sign request.");
 		}
-	}
-
-	/**
-	 * Deserialize attributes and convertion to a <code>HashMap</code>.
-	 * 
-	 * @param sSerializedAttributes
-	 *            the serialized attributes.
-	 * @return The deserialized attributes (key,value in <code>HashMap</code>)
-	 * @throws ASelectException
-	 *             If URLDecode fails
-	 */
-	protected HashMap deserializeAttributes(String sSerializedAttributes)
-		throws ASelectException
-	{
-		String sMethod = "deSerializeAttributes()";
-		HashMap htAttributes = new HashMap();
-		if (sSerializedAttributes != null) // Attributes available
-		{
-			try {
-				// base64 decode
-				String sDecodedUserAttrs = new String(Base64.decode(sSerializedAttributes));
-
-				// decode & and = chars
-				String[] saAttrs = sDecodedUserAttrs.split("&");
-				for (int i = 0; i < saAttrs.length; i++) {
-					int iEqualChar = saAttrs[i].indexOf("=");
-					String sKey = "";
-					String sValue = "";
-					Vector vVector = null;
-
-					if (iEqualChar > 0) {
-						sKey = URLDecoder.decode(saAttrs[i].substring(0, iEqualChar), "UTF-8");
-
-						sValue = URLDecoder.decode(saAttrs[i].substring(iEqualChar + 1), "UTF-8");
-
-						if (sKey.endsWith("[]")) { // it's a multi-valued attribute
-							// Strip [] from sKey
-							sKey = sKey.substring(0, sKey.length() - 2);
-
-							if ((vVector = (Vector) htAttributes.get(sKey)) == null)
-								vVector = new Vector();
-
-							vVector.add(sValue);
-						}
-					}
-					else
-						sKey = URLDecoder.decode(saAttrs[i], "UTF-8");
-
-					if (vVector != null)
-						// store multivalue attribute
-						htAttributes.put(sKey, vVector);
-					else
-						// store singlevalue attribute
-						htAttributes.put(sKey, sValue);
-				}
-			}
-			catch (Exception e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error during deserialization of attributes", e);
-				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-			}
-		}
-		return htAttributes;
 	}
 }

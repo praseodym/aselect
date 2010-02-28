@@ -11,6 +11,13 @@
  */
 package org.aselect.server.request;
 
+import java.net.URLDecoder;
+
+import java.net.URLEncoder;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.Vector;
 import java.util.logging.Level;
 
 import javax.servlet.http.Cookie;
@@ -19,8 +26,16 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectSystemLogger;
+import org.aselect.system.error.Errors;
+import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.BASE64Decoder;
+import org.aselect.system.utils.BASE64Encoder;
 
-// TODO: Auto-generated Javadoc
+/*
+ * Generic Tools for all Handler routines
+ * 
+ * 20100228, Bauke: moved all copies of (de)serializeAttributes to HandlerTools
+ */
 public class HandlerTools
 {
 	final static String MODULE = "HandlerTools";

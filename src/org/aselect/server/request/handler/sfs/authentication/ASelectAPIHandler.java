@@ -194,6 +194,7 @@
 
 package org.aselect.server.request.handler.sfs.authentication;
 
+
 import java.security.MessageDigest;
 import java.security.PublicKey;
 import java.util.HashMap;
@@ -220,7 +221,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * This class handles incoming API calls from local servers. <br>
  * <br>
@@ -641,7 +641,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 		// Gather attributes
 		AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
 		HashMap htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
-		String sSerializedAttributes = serializeAttributes(htAttribs);
+		String sSerializedAttributes = Utils.serializeAttributes(htAttribs);
 
 		try {
 			oOutputMessage.setParam("organization", (String) htTGTContext.get("organization"));

@@ -178,6 +178,7 @@ import org.aselect.server.authspprotocol.handler.AuthSPHandlerManager;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.cross.CrossASelectManager;
 import org.aselect.server.crypto.CryptoEngine;
+import org.aselect.server.request.HandlerTools;
 import org.aselect.server.session.SessionManager;
 import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.communication.server.IInputMessage;
@@ -588,7 +589,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 		// Gather attributes
 		AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
 		HashMap htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
-		String sSerializedAttributes = serializeAttributes(htAttribs);
+		String sSerializedAttributes = Utils.serializeAttributes(htAttribs);
 
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED SerAttr=" + sSerializedAttributes);
 

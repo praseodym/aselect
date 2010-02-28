@@ -45,7 +45,6 @@ import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-// TODO: Auto-generated Javadoc
 /**
  * @author RH Handles HTTP SAML20TGTRequest, verifies signature of requester Generates and returns TGT attributes
  *         Request must contain a (base64 encoded) "token" reference in the "token" query attribute A TGT will be

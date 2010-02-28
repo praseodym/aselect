@@ -99,9 +99,6 @@
  * Revision 1.23  2005/04/07 12:13:51  martijn
  * added single sign-on groups support
  *
- * Revision 1.22  2005/04/07 07:38:09  erwin
- * Moved serializeAttributes() to abstract class
- *
  * Revision 1.21  2005/04/06 11:38:55  peter
  * Added support for optional uid in request authenticate
  *
@@ -222,7 +219,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * Handle API requests from Applications and A-Select Agents. <br>
  * <br>
@@ -823,7 +819,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			sToken = SamlTools.createAttributeToken(_sServerUrl, sTGT, htSelectedAttr);
 			htAttribs.put("saml_attribute_token", sToken);
 		}
-		String sSerializedAttributes = serializeAttributes(htAttribs);
+		String sSerializedAttributes = Utils.serializeAttributes(htAttribs);
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED SerAttr="
 				+ Utils.firstPartOf(sSerializedAttributes, 40) + " Token=" + Utils.firstPartOf(sToken, 40));
 

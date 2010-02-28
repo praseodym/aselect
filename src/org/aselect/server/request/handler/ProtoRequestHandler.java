@@ -64,7 +64,6 @@ import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 import org.opensaml.xml.validation.ValidationException;
 
-// TODO: Auto-generated Javadoc
 //
 //
 //
@@ -269,12 +268,9 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		throws ASelectException
 	{
 		String sMethod = "getAttributesFromTgtAndGatherer()";
+		
 		String sTgtAttributes = (String) htTGTContext.get("attributes");
-		if (_saml11Builder == null) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "_saml11Builder not set");
-			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-		}
-		HashMap htTgtAttributes = _saml11Builder.deserializeAttributes(sTgtAttributes);
+		HashMap htTgtAttributes = Utils.deserializeAttributes(sTgtAttributes);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Attributes from TGT-\"attributes\"=" + htTgtAttributes);
 
 		AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
@@ -1104,12 +1100,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 
 		// TODO following code should go to tgt.TGTIssuer, RH 20080617
 		HashMap htTGTContext = new HashMap();
-		if (_saml11Builder == null) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "_saml11Builder not set");
-			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-		}
-		htTGTContext.put("attributes", _saml11Builder.serializeAttributes(htAttributes));
-
+		htTGTContext.put("attributes", Utils.serializeAttributes(htAttributes));
 		htTGTContext.put("uid", sUserId);
 		htTGTContext.put("betrouwbaarheidsniveau", sSecLevel);
 		htTGTContext.put("organization", sOrg);

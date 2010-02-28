@@ -55,7 +55,6 @@ import org.opensaml.xml.util.XMLHelper;
 import org.w3c.dom.*;
 import org.xml.sax.InputSource;
 
-// TODO: Auto-generated Javadoc
 /**
  * SAML2.0 AssertionConsumer for A-Select (Service Provider side). <br>
  * <br>
@@ -80,8 +79,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 	private String _sMyServerId;
 	private String _sFederationUrl;
 	private String _sRedirectUrl; // We use as Issuer in the send SAML message
-	private boolean signingRequired = false; // OLD opensaml20 library
-	// true; // NEW opensaml20 library
+	private boolean signingRequired = false; // OLD opensaml20 library	// true; // NEW opensaml20 library
 	// TODO see when signing is actually required
 	// get from aselect.xml <applications require_signing="false | true">
 	private boolean localityAddressRequired = false; // Do we need to verify localityAddress in the AuthnStatement
@@ -119,13 +117,9 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 		_oBuilderFactory = Configuration.getBuilderFactory();
 
 		_sMyServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
-		_sFederationUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "federation_url", false); // 20091207:
-		// true);
+		_sFederationUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "federation_url", false); // 20091207: // true);
 		_sRedirectUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true); // We use as
-		// Issuer in
-		// the send
-		// SAML
-		// message
+		// Issuer in the send SAML message
 
 		String sLocalityAddressRequired = ASelectConfigManager.getSimpleParam(oHandlerConfig,
 				"locality_address_required", false);
@@ -235,9 +229,6 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 
 			// Send/Receive the SOAP message
 			String sSamlResponse = soapManager.sendSOAP(XMLHelper.nodeToString(envelopeElem), sASelectServerUrl);
-			// String sSamlResponse = URLDecoder.decode(soapManager.sendSOAP(XMLHelper.nodeToString(envelopeElem),
-			// sASelectServerUrl), "UTF-8");
-
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Received response: " + sSamlResponse);
 
 			byte[] sSamlResponseAsBytes = sSamlResponse.getBytes();
@@ -253,14 +244,9 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 			InputSource inputSource = new InputSource(stringReader);
 			Document docReceivedSoap = builder.parse(inputSource);
 			Element elementReceivedSoap = docReceivedSoap.getDocumentElement();
-			// _systemLogger.log(Level.INFO, MODULE, sMethod, "SOAP message:\n"
-			// + XMLHelper.prettyPrintXML(elementReceivedSoap));
 
 			// Remove all SOAP elements
 			Node eltArtifactResponse = SamlTools.getNode(elementReceivedSoap, "ArtifactResponse");
-
-			// _systemLogger.log(Level.INFO, MODULE, sMethod, "ArtifactResponse:\n"
-			// + XMLHelper.nodeToString(eltArtifactResponse));
 
 			// Unmarshall to the SAMLmessage
 			UnmarshallerFactory factory = Configuration.getUnmarshallerFactory();
@@ -271,8 +257,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 
 			String artifactResponseIssuer = (artifactResponse.getIssuer() == null || // avoid nullpointers
 					artifactResponse.getIssuer().getValue() == null || "".equals(artifactResponse.getIssuer()
-					.getValue())) ? sASelectServerUrl : // if not in message, use sASelectServerUrl value retrieved from
-					// metadata
+					.getValue())) ? sASelectServerUrl : // if not in message, use sASelectServerUrl value retrieved from metadata
 					artifactResponse.getIssuer().getValue(); // else value from message
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Do artifactResponse signature verification="
@@ -354,7 +339,6 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 					// This is the quickest way to get "name_id" into the Context
 
 					// Retrieve the embedded attributes
-					// HashMap htAttributes = new HashMap();
 					List<AttributeStatement> lAttrStatList = samlAssertion.getAttributeStatements();
 					Iterator<AttributeStatement> iASList = lAttrStatList.iterator();
 					while (iASList.hasNext()) {
@@ -366,8 +350,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 							String sAttrName = attr.getName();
 							XSStringImpl xsString = (XSStringImpl) attr.getOrderedChildren().get(0);
 							String sAttrValue = xsString.getValue();
-							_systemLogger
-									.log(Level.INFO, MODULE, sMethod, "Name=" + sAttrName + " Value=" + sAttrValue);
+							_systemLogger.log(Level.INFO, MODULE, sMethod, "Name=" + sAttrName + " Value=" + sAttrValue);
 							htRemoteAttributes.put(sAttrName, sAttrValue);
 						}
 					}
@@ -375,7 +358,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 							+ " local_rid=" + sLocalRid + " authsp_level=" + sAuthSpLevel + " organization/authsp="
 							+ sOrganization);
 
-					// htRemoteAttributes.put("attributes", _saml11Builder.serializeAttributes(htAttributes));
+					// htRemoteAttributes.put("attributes", HandlerTools.serializeAttributes(htAttributes));
 					htRemoteAttributes.put("remote_rid", sRemoteRid);
 					htRemoteAttributes.put("local_rid", sLocalRid);
 
@@ -386,8 +369,9 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 					// Bauke, 20081204: If we want to send the IdP token as an attribute
 					// to the application, we would need the following code:
 					/*
-					 * String sAssertion = XMLHelper.nodeToString(samlAssertion.getDOM()); _systemLogger.log(Level.INFO,
-					 * MODULE, sMethod, "sAssertion="+sAssertion); BASE64Encoder b64Enc = new BASE64Encoder();
+					 * String sAssertion = XMLHelper.nodeToString(samlAssertion.getDOM());
+					 * _systemLogger.log(Level.INFO, MODULE, sMethod, "sAssertion="+sAssertion);
+					 * BASE64Encoder b64Enc = new BASE64Encoder();
 					 * sAssertion = b64Enc.encode(sAssertion.getBytes("UTF-8"));
 					 * htRemoteAttributes.put("saml_remote_token", sAssertion);
 					 */
@@ -461,7 +445,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 			HttpServletResponse servletResponse)
 		throws ASelectException
 	{
-		String sMethod = "handleSSOResponse()";
+		String sMethod = "handleSSOResponse";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "<--");
 
 		try {

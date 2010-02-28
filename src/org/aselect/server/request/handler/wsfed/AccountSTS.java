@@ -15,6 +15,7 @@
  */
 package org.aselect.server.request.handler.wsfed;
 
+
 import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -35,7 +36,6 @@ import org.aselect.system.utils.*;
 import org.opensaml.SAMLException;
 import org.opensaml.SAMLSubject;
 
-// TODO: Auto-generated Javadoc
 //
 // Account Partner = IdP
 //
@@ -302,7 +302,7 @@ public class AccountSTS extends ProtoRequestHandler
 				}
 				String sAttributes = (String) htCredentials.get("attributes");
 				if (sAttributes != null)
-					htAttributes = _saml11Builder.deserializeAttributes(sAttributes);
+					htAttributes = Utils.deserializeAttributes(sAttributes);
 
 				String sLevel = (String) htCredentials.get("authsp_level");
 				String sTryLevel = (String) htAttributes.get("authsp_level");
@@ -420,8 +420,9 @@ public class AccountSTS extends ProtoRequestHandler
 	public String serializeTheseAttributes(HashMap htAttribs)
 		throws ASelectException
 	{
-		String sMethod = "serializeTheseAttributes()";
-		String sSerializedAttributes = _saml11Builder.serializeAttributes(htAttribs);
+		String sMethod = "serializeTheseAttributes";
+		
+		String sSerializedAttributes = Utils.serializeAttributes(htAttribs);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "sSerializedAttributes=" + sSerializedAttributes);
 		return sSerializedAttributes;
 	}

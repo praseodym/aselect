@@ -129,13 +129,13 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	private String _sUserDN;
 	private String _sAltUserDN; // Bauke: attribute hack
 	private String _sBaseDN;
+	private String _sSearchTree;
 	private String _sOrgDN;
 	private String _sOrgName;
 	private HashMap<String, String> _htAttributes;
 	private HashMap<String, String> _htReMapAttributes;
 	private boolean _bUseFullUid = false;
 	private boolean _bNumericalUid = false;
-	private boolean _bFullTree = false;
 
 	/**
 	 * Initializes the JNDI Attribute Requestor. <br>
@@ -230,23 +230,20 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 			}
 			
 			// 20100201: Organization Resolver additional items
+			// Search tree until container starts with [search_tree]=
+			_sSearchTree = ASelectConfigManager.getSimpleParam(oMain, "search_tree", false);
 			_sOrgDN = ASelectConfigManager.getSimpleParam(oMain, "org_dn", false);
 			_sOrgName = ASelectConfigManager.getSimpleParam(oMain, "org_name", false);
-			String sFullTree = ASelectConfigManager.getSimpleParam(oMain, "full_tree", false);
-			if ("true".equals(sFullTree))
-				_bFullTree = true;
-
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Config _sBaseDN=" + _sBaseDN + " _sUserDN=" + _sUserDN
 					+ " _sAltUserDN=" + _sAltUserDN + " _sAuthSPUID=" + _sAuthSPUID + " _sResourceGroup="
-					+ _sResourceGroup+" org_dn="+_sOrgDN+" org_name="+_sOrgName+" full_tree="+_bFullTree);
+					+ _sResourceGroup+" org_dn="+_sOrgDN+" org_name="+_sOrgName+" search_tree="+_sSearchTree);
 
 			Object oAttributes = null;
 			try {
 				oAttributes = _configManager.getSection(oConfig, "attribute_mapping");
 			}
 			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod,
-						"No valid 'attribute_mapping' config section found, no mapping used", e);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "No valid 'attribute_mapping' config section found, no mapping used", e);
 			}
 
 			if (oAttributes != null) {
@@ -290,9 +287,6 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 			}
 			// check if at least one resource is configured
 			getConnection();
-		}
-		catch (ASelectAttributesException e) {
-			throw e;
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not initialize the Ldap attributes requestor", e);
@@ -495,8 +489,8 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				_systemLogger.log(Level.FINE, MODULE, sMethod, ">> id=" + sSearchName +" full=" + sFullDn + " Result=" + oSearchResult);
 				cntResults++;
 
-				// Compare the search result's name with the chosen organization
-				if (hAttrResponse != null && sOrgId != null) {
+				// Compare the search result's name with the chosen organization (if specified)
+				if (_sOrgDN != null && sOrgId != null && hAttrResponse != null) {
 					String sOrg = _sOrgDN+"="+sOrgId;
 					int iSrchLen = sSearchName.length();
 					int iLen = sOrg.length();
@@ -510,11 +504,12 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 							(idx+iLen >= iSrchLen || sSearchName.charAt(idx+iLen) == ','))
 							break;  // yes, found
 					}
-					if (idx < 0) { // not found
+					if (idx < 0) {  // Not found, skip this result, since it does not match the user's organization
 						_systemLogger.log(Level.FINE, MODULE, sMethod, "Skip id="+sSearchName);
 						continue;
 					}
 				}
+				// else everything goes!
 				
 				// Retrieve all requested attributes
 				oAttributes = oSearchResult.getAttributes();
@@ -572,7 +567,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				// Look for attributes in parent containers
 				// Example search name: cn=bauke,o=123456789
 				//
-				while (_bFullTree) {
+				while (_sSearchTree != null) {
 					int idx = sSearchName.indexOf(',');
 					if (idx < 0)  // no more parents
 						break;
@@ -621,6 +616,10 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 									sNameValue = sAttributeValue;
 							}
 						}
+					}
+					if (_sSearchTree.length() > 0 && sSearchName.startsWith(_sSearchTree+"=")) {
+						_systemLogger.log(Level.FINER, MODULE, sMethod, "Finished search, sSearchname="+sSearchName);
+						break;
 					}
 					// Try next parent up
 				}

@@ -371,7 +371,6 @@ import org.aselect.system.logging.AuthenticationLogger;
 import org.aselect.system.sam.agent.SAMResource;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * This class handles login requests coming from applications through a users browser. <br>
  * <br>
@@ -621,7 +620,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 									});
 
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-							oTGTIssuer.sendRedirect(sRedirectUrl, sTgt, sRid, servletResponse);
+							String sLang = (String)htTGTContext.get("language");
+							oTGTIssuer.sendRedirect(sRedirectUrl, sTgt, sRid, servletResponse, sLang);
 							_sessionManager.killSession(sRid);
 							return;
 						}
@@ -781,7 +781,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 									});
 
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-							oTGTIssuer.sendRedirect(sRedirectUrl, sTgt, sRid, servletResponse);
+							String sLang = (String)htTGTContext.get("language");
+							oTGTIssuer.sendRedirect(sRedirectUrl, sTgt, sRid, servletResponse, sLang);
 							_sessionManager.killSession(sRid);
 							return;
 						}

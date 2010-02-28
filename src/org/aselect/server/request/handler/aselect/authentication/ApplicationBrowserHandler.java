@@ -572,7 +572,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sAppUrl);
 		TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-		oTGTIssuer.sendRedirect(sAppUrl, sTgt, sRid, servletResponse);
+		String sLang = (String)htTGTContext.get("language");
+		oTGTIssuer.sendRedirect(sAppUrl, sTgt, sRid, servletResponse, sLang);
 	}
 
 	/**
@@ -678,7 +679,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 
 							_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRedirectUrl);
-							oTGTIssuer.sendRedirect(sRedirectUrl, sTgt, sRid, servletResponse);
+							String sLang = (String)htTGTContext.get("language");
+							oTGTIssuer.sendRedirect(sRedirectUrl, sTgt, sRid, servletResponse, sLang);
 							_sessionManager.killSession(sRid);
 							return;
 						}
@@ -860,7 +862,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 										htTGTContext, sRid, spIssuer);
 							else {
 								TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-								oTGTIssuer.sendRedirect(sRedirectUrl, sTgt, sRid, servletResponse);
+								String sLang = (String)htTGTContext.get("language");
+								oTGTIssuer.sendRedirect(sRedirectUrl, sTgt, sRid, servletResponse, sLang);
 								_sessionManager.killSession(sRid);
 							}
 							return;

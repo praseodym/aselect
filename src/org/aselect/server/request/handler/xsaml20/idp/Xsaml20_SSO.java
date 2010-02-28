@@ -11,6 +11,7 @@
  */
 package org.aselect.server.request.handler.xsaml20.idp;
 
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -65,7 +66,6 @@ import org.opensaml.xml.XMLObjectBuilderFactory;
 import org.opensaml.xml.schema.XSString;
 import org.opensaml.xml.util.XMLHelper;
 
-// TODO: Auto-generated Javadoc
 // Example configuration
 // <handler id="saml20_sso"
 //    class="org.aselect.server.request.handler.xsaml20.idp.Xsaml20_SSO"
@@ -516,7 +516,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 				// Gather attributes, including the attributes from the ticket context
 				HashMap htAttributes = getAttributesFromTgtAndGatherer(htTGTContext);
-				String sAllAttributes = _saml11Builder.serializeAttributes(htAttributes);
+				String sAllAttributes = Utils.serializeAttributes(htAttributes);
 
 				// 20090910, Bauke: new mechanism to pass the attributes
 				HashMap htAllAttributes = new HashMap();

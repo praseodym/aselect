@@ -137,11 +137,10 @@
  * Added javadoc and renamed variables to the coding standard
  * 
  */
-
 package org.aselect.server.tgt;
 
 import java.io.PrintWriter;
-import java.net.URLEncoder;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
@@ -156,7 +155,6 @@ import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.HandlerTools;
-import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.xsaml20.ServiceProvider;
 import org.aselect.server.request.handler.xsaml20.idp.UserSsoSession;
 import org.aselect.server.session.SessionManager;
@@ -166,7 +164,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * Issues ASelect TGT's. <br>
  * <br>
@@ -294,43 +291,23 @@ public class TGTIssuer
 			// The following parameters are retrieved from the 'remote' Server.
 			String sUserId = (String) htRemoteAttributes.get("uid");
 			String sUserOrganization = (String) htRemoteAttributes.get("organization");
-			// Attributes that where released by the 'remote' A-Select Server
-			// will be stored in the TGT.
-			// This server might have configured a 'TGTAttributeRequestor' to
-			// release these 'remote' attributes to the application.
-			String sRemoteAttribs = (String) htRemoteAttributes.get("attributes");
 			sArpTarget = (String) htSessionContext.get("arp_target");
 
-			// TODO Check if double encode is needed (Martijn)
-			if (sUserId != null) {
-				String sEncodedUserId = URLEncoder.encode(sUserId, "UTF-8");
-				sEncodedUserId = URLEncoder.encode(sEncodedUserId, "UTF-8");
-			}
 			String sLocalOrg = null;
 			if (htSessionContext.get("remote_session") != null) {
-				// A 'local' A-Select Server forwarded the authentication
-				// request. This means that this Server is acting as a proxy server.
+				// A 'local' A-Select Server forwarded the authentication request.
+				// This means that this Server is acting as a proxy server.
 				// The application in not known by this A-Select Server.
 				sAppUrl = (String) htSessionContext.get("local_as_url");
-				// The 'organization' in a TGT always contains the organization
-				// where the authentication was done.
+				// The 'organization' in a TGT always contains the organization where the authentication was done.
 				// The 'local_organization' is needed e.g. attribute release policies
 				sLocalOrg = (String) htSessionContext.get("local_organization");
-				StringBuffer sbAppID = new StringBuffer("[unknown@");
-				sbAppID.append(sLocalOrg);
-				sbAppID.append("]");
-
+				StringBuffer sbAppID = new StringBuffer("[unknown@").append(sLocalOrg).append("]");
 				sAppId = sbAppID.toString();
 			}
 
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "htRemoteAttributes=" + htRemoteAttributes);
 			HashMap htTGTContext = new HashMap();
-
-			// Bauke: copy DigiD data to the context
-			// Prefix the field with "digid_" so the filter can recognize them
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "htRemoteAttributes=" + htRemoteAttributes);
-			//Utils.copyHashmapValue("digid_uid", htTGTContext, htRemoteAttributes);
-			//Utils.copyHashmapValue("digid_betrouwbaarheidsniveau", htTGTContext, htRemoteAttributes);
-
 			// The Saml20 protocol needs a return address:
 			Utils.copyHashmapValue("sp_assert_url", htTGTContext, htRemoteAttributes);
 			Utils.copyHashmapValue("name_id", htTGTContext, htRemoteAttributes);
@@ -353,19 +330,16 @@ public class TGTIssuer
 			// 'proxy_organization' in the TGT.
 			if (sRemoteOrganization != null && !sRemoteOrganization.equals(sUserOrganization))
 				htTGTContext.put("proxy_organization", sRemoteOrganization);
-			if (sRemoteAttribs != null)
-				htTGTContext.put("remote_attributes", sRemoteAttribs);
+
 			if (sLocalOrg != null)
 				htTGTContext.put("local_organization", sLocalOrg);
 			if (sArpTarget != null)
 				htTGTContext.put("arp_target", sArpTarget);
 
-			// RH, 20080619, sn
-			// We will now only put the client_ip in the TGT if there is a non-zero value present in the sessioncontext
+			// RH, 20080619, We will now only put the client_ip in the TGT if there is a non-zero value present in the sessioncontext
 			String sClientIP = (String) htSessionContext.get("client_ip");
 			if (sClientIP != null && !"".equals(sClientIP))
 				htTGTContext.put("client_ip", sClientIP);
-			// RH, 20080619, en
 
 			// 20090811, Bauke: save authsp_type for use by the Saml20 session sync
 			Utils.copyHashmapValue("authsp_type", htTGTContext, htSessionContext);
@@ -375,8 +349,21 @@ public class TGTIssuer
 			Utils.copyHashmapValue("user_agent", htTGTContext, htSessionContext);
 			// Bauke 20091029, for multiple saml IdPs
 			Utils.copyHashmapValue("federation_url", htTGTContext, htSessionContext);
-			// Bauke, 20091112, pass language
-			Utils.copyHashmapValue("language", htTGTContext, htSessionContext);
+
+			// Attributes that where released by the 'remote' A-Select Server will be stored in the TGT.
+			// This server might have configured a 'TGTAttributeRequestor' to
+			// release these 'remote' attributes to the application.
+			
+			// 20100228, Bauke was: htSessionContext.get("attributes")
+			String sRemoteAttributes = (htRemoteAttributes==null)? null: (String)htRemoteAttributes.get("attributes");
+			// 20100228, Bauke: changed from "remote_attributes" to "attributes"
+			HashMap htSerAttributes = (sRemoteAttributes==null)? null: Utils.deserializeAttributes(sRemoteAttributes);
+			// 20100228, Bauke: when a remote system has changed the language, copy it here
+			Utils.copyHashmapValue("language", htTGTContext, htSessionContext);  // default
+			if (htSerAttributes != null) {
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "htAttributes lang="+htSerAttributes.get("language"));
+				Utils.copyHashmapValue("language", htTGTContext, htSerAttributes);  // copy remote version over it
+			}
 
 			// 20090617, Bauke:forced_authenticate specials
 			Boolean bForcedAuthn = (Boolean) htSessionContext.get("forced_authenticate");
@@ -400,7 +387,7 @@ public class TGTIssuer
 				}
 			}
 
-			// Create a new TGT, because there is no old TGT
+			// Create a new TGT, when there is no old one
 			if (htOldTGTContext == null) {
 				sTgt = _tgtManager.createTGT(htTGTContext);
 
@@ -415,7 +402,8 @@ public class TGTIssuer
 			_sessionManager.killSession(sRid);
 			
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
-			sendRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse);
+			String sLang = (String)htTGTContext.get("language");
+			sendRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse, sLang);
 		}
 		catch (ASelectException e) {
 			StringBuffer sbError = new StringBuffer("Issue TGT for request '");
@@ -498,7 +486,8 @@ public class TGTIssuer
 			String sResult = (String) htSessionContext.get("result_code");
 			if (sResult != null && !sResult.equals(Errors.ERROR_ASELECT_SUCCESS)) {
 				// Authentication failed, but need to send decent <Response>
-				sendRedirect(sAppUrl, null, sRid, oHttpServletResponse);
+				String sLang = (String)htSessionContext.get("language");  // we have no TGT Context yet
+				sendRedirect(sAppUrl, null, sRid, oHttpServletResponse, sLang);
 				// Must be killed by sAppUrl: _sessionManager.killSession(sRid);
 				return;
 			}
@@ -525,7 +514,7 @@ public class TGTIssuer
 					sLevel = _configManager.getParam(oAuthSP, "level");
 				}
 				catch (ASelectConfigException e) {
-					// It is a "priviliged authsp" -> use default level from context
+					// It is a "privileged authsp" -> use default level from context
 					sLevel = ((Integer) htSessionContext.get("authsp_level")).toString();
 				}
 			}
@@ -541,15 +530,26 @@ public class TGTIssuer
 			if (vSSOGroups != null)
 				htTGTContext.put("sso_groups", vSSOGroups);
 			Utils.copyHashmapValue("arp_target", htTGTContext, htSessionContext);
-
-			String sRemoteAttrs = (String) htSessionContext.get("attributes");
-			if (sRemoteAttrs != null)
-				htTGTContext.put("remote_attributes", sRemoteAttrs);
-
+			
 			// overwrite or set additional properties in the newly created tgt context
-			if (htAdditional != null)
+			if (htAdditional != null) {
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "htAdditional="+htAdditional);
 				htTGTContext.putAll(htAdditional);
+			}
 
+			// 20100228, Bauke was: htSessionContext.get("attributes")
+			String sRemoteAttributes = (htAdditional==null)? null: (String) htAdditional.get("attributes");
+			// 20100228, Bauke: changed from "remote_attributes" to "attributes"
+			HashMap htSerAttributes = (sRemoteAttributes==null)? null: Utils.deserializeAttributes(sRemoteAttributes);
+			// 20100228, Bauke: when a remote system has changed the language, copy it here
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "htSessionContext lang="+htSessionContext.get("language")+"htTGTContext lang="+htTGTContext.get("language"));
+			Utils.copyHashmapValue("language", htTGTContext, htSessionContext);  // default
+			if (htSerAttributes != null) {
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "htAttributes lang="+htSerAttributes.get("language"));
+				Utils.copyHashmapValue("language", htTGTContext, htSerAttributes);  // copy remote version over it
+			}
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "htTGTContext lang="+htTGTContext.get("language"));
+			
 			// Bauke: copy from rid context
 			Utils.copyHashmapValue("sel_uid", htTGTContext, htSessionContext);
 			// 20090811, Bauke: save authsp_type for use by the Saml20 session sync
@@ -597,8 +597,6 @@ public class TGTIssuer
 			Utils.copyHashmapValue("user_agent", htTGTContext, htSessionContext);
 			// Bauke 20091029, for multiple saml IdPs
 			Utils.copyHashmapValue("federation_url", htTGTContext, htSessionContext);
-			// Bauke, 20091112, pass language
-			Utils.copyHashmapValue("language", htTGTContext, htSessionContext);
 			
 			// 20100210, Bauke: Organization selection is here
 			AttributeGatherer ag = AttributeGatherer.getHandle();
@@ -649,8 +647,6 @@ public class TGTIssuer
 				String sServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
 				String sSelectForm = _configManager.loadHTMLTemplate(null, "orgselect", (String)htTGTContext.get("language"), (String)htTGTContext.get("language"));
 				
-				//String sEncryptedTgt = _cryptoEngine.encryptTGT(Utils.hexStringToByteArray(sTgt));
-				//sSelectForm = Utils.replaceString(sSelectForm, "[aselect_credentials]", sEncryptedTgt);
 				sSelectForm = Utils.replaceString(sSelectForm, "[request]", "org_choice");
 				sSelectForm = Utils.replaceString(sSelectForm, "[user_id]", sUserId);
 				sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
@@ -682,7 +678,8 @@ public class TGTIssuer
 			_sessionManager.killSession(sRid);
 			
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
-			sendRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse);
+			String sLang = (String)htTGTContext.get("language");
+			sendRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse, sLang);
 		}
 		catch (ASelectException e) {
 			StringBuffer sbError = new StringBuffer("Issue TGT for request '");
@@ -817,7 +814,8 @@ public class TGTIssuer
 				htTGTContext.put("user_agent", sAgent);
 
 			String sTgt = oTGTManager.createTGT(htTGTContext);
-			sendRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse);
+			String sLang = (String)htTGTContext.get("language");
+			sendRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse, sLang);
 			sessionManager.killSession(sRid);
 		}
 		catch (ASelectException e) {
@@ -861,7 +859,8 @@ public class TGTIssuer
 	 * @throws ASelectException
 	 *             if the user could not be redirected
 	 */
-	public void sendRedirect(String sAppUrl, String sTgt, String sRid, HttpServletResponse oHttpServletResponse)
+	// 20100228, Bauke: added language to redirect
+	public void sendRedirect(String sAppUrl, String sTgt, String sRid, HttpServletResponse oHttpServletResponse, String sLanguage)
 		throws ASelectException
 	{
 		String sMethod = "sendRedirect";
@@ -879,6 +878,8 @@ public class TGTIssuer
 			if (sRid !=null)
 				sbRedirect.append("&rid=").append(sRid);
 			sbRedirect.append("&a-select-server=").append(_sServerId);
+			if (sLanguage != null)
+				sbRedirect.append("&language=").append(sLanguage);
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT to: " + sbRedirect);
 			oHttpServletResponse.sendRedirect(sbRedirect.toString());

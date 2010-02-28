@@ -31,7 +31,7 @@
 
 package org.aselect.server.attributes.requestors.tgt;
 
-import java.net.URLDecoder;
+
 import java.util.HashMap;
 import java.util.Set;
 import java.util.Vector;
@@ -42,9 +42,8 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAttributesException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.utils.Base64;
+import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * Retrieves 'remote_attributes' from TGT context. <br>
  * <br>
@@ -76,7 +75,7 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#init(java.lang.Object)
 	 */
 	public void init(Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 
@@ -88,8 +87,7 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
 			oAttributes = _configManager.getSection(oConfig, "attribute_mapping");
 		}
 		catch (ASelectConfigException e) {
-			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-					"No valid 'attribute_mapping' config section found, no mapping used", e);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "No valid 'attribute_mapping' config section found, no mapping used", e);
 		}
 
 		if (oAttributes != null) {
@@ -164,9 +162,10 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
 		HashMap htAttributes = new HashMap();
 
 		try {
-			String sSerializedRemoteAttributes = (String) htTGTContext.get("remote_attributes");
+			// 20100228, Bauke: changed from "remote_attributes" to "attributes"
+			String sSerializedRemoteAttributes = (String) htTGTContext.get("attributes");
 			if (sSerializedRemoteAttributes != null) { // remote attributes available
-				htAttributes = deserializeAttributes(sSerializedRemoteAttributes);
+				htAttributes = Utils.deserializeAttributes(sSerializedRemoteAttributes);
 			}
 			else {
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "No 'remote_attributes' found in TGT.");
@@ -203,65 +202,5 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
 	public void destroy()
 	{
 		// No destroy functionality
-	}
-
-	/**
-	 * Deserialize attributes and convertion to a <code>HashMap</code>.
-	 * 
-	 * @param sSerializedAttributes
-	 *            the serialized attributes.
-	 * @return The deserialized attributes (key,value in <code>HashMap</code>)
-	 * @throws ASelectException
-	 *             If URLDecode fails
-	 */
-	private HashMap deserializeAttributes(String sSerializedAttributes)
-		throws ASelectException
-	{
-		String sMethod = "deSerializeAttributes()";
-		HashMap htAttributes = new HashMap();
-		if (sSerializedAttributes != null) { // Attributes available
-			try {
-				// base64 decode
-				String sDecodedUserAttrs = new String(Base64.decode(sSerializedAttributes));
-
-				// decode & and = chars
-				String[] saAttrs = sDecodedUserAttrs.split("&");
-				for (int i = 0; i < saAttrs.length; i++) {
-					int iEqualChar = saAttrs[i].indexOf("=");
-					String sKey = "";
-					String sValue = "";
-					Vector vVector = null;
-
-					if (iEqualChar > 0) {
-						sKey = URLDecoder.decode(saAttrs[i].substring(0, iEqualChar), "UTF-8");
-
-						sValue = URLDecoder.decode(saAttrs[i].substring(iEqualChar + 1), "UTF-8");
-
-						if (sKey.endsWith("[]")) { // it's a multi-valued attributeStrip [] from sKey
-							sKey = sKey.substring(0, sKey.length() - 2);
-
-							if ((vVector = (Vector) htAttributes.get(sKey)) == null)
-								vVector = new Vector();
-
-							vVector.add(sValue);
-						}
-					}
-					else
-						sKey = URLDecoder.decode(saAttrs[i], "UTF-8");
-
-					if (vVector != null)
-						// store multivalue attribute
-						htAttributes.put(sKey, vVector);
-					else
-						// store singlevalue attribute
-						htAttributes.put(sKey, sValue);
-				}
-			}
-			catch (Exception e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error during deserialization of attributes", e);
-				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-			}
-		}
-		return htAttributes;
 	}
 }

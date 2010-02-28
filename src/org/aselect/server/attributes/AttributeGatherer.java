@@ -110,6 +110,7 @@
  */
 package org.aselect.server.attributes;
 
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Enumeration;
@@ -125,7 +126,6 @@ import org.aselect.server.attributes.requestors.IAttributeRequestor;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.cross.CrossASelectManager;
 import org.aselect.server.log.ASelectSystemLogger;
-import org.aselect.server.request.handler.Saml11Builder;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAttributesException;
 import org.aselect.system.exception.ASelectConfigException;
@@ -190,6 +190,9 @@ public class AttributeGatherer
 	 * The "id" of the default release policy
 	 */
 	private String _sDefaultReleasePolicy;
+
+	// Copy remote attributes after TGT attributes
+	String _sRemoteLast = null;
 
 	/**
 	 * Is used to acquire an instance of the AttributeGatherer. <br>
@@ -265,6 +268,8 @@ public class AttributeGatherer
 				}
 				catch (ASelectConfigException e) {
 				}
+				_sRemoteLast = ASelectConfigManager.getSimpleParam(oRequestorsSection, "remote", false);
+				_systemLogger.log(Level.INFO, _MODULE, sMethod, "sRemoteLast="+_sRemoteLast);
 				
 				// For all attribute requestors
 				while (oRequestorConfig != null) {
@@ -633,30 +638,16 @@ public class AttributeGatherer
 			}
 		}
 
-		// Bauke: Pass Digid Attributes
-		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Add additional attributes from TGT");
-		Utils.copyHashmapValue("uid", htAttributes, htTGTContext);
-		//Utils.copyHashmapValue("digid_uid", htAttributes, htTGTContext);
-		//Utils.copyHashmapValue("digid_betrouwbaarheidsniveau", htAttributes, htTGTContext);
-		Utils.copyHashmapValue("sel_uid", htAttributes, htTGTContext);
-
-		// Attributes from a remote system
-		String fld = (String) htTGTContext.get("attributes");
-		if (fld != null) {
-			Saml11Builder _saml11Builder = new Saml11Builder();
-			HashMap htTgtAttributes = _saml11Builder.deserializeAttributes(fld);
-			_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER (remote)TGT \"attributes\"=" + htTgtAttributes);
-			Set keys = htTgtAttributes.keySet();
-			for (Object s : keys) {
-				String sKey = (String) s;
-				Object oValue = htTgtAttributes.get(sKey);
-				if (!(oValue instanceof String))
-					continue;
-				htAttributes.put(sKey, (String) oValue);
-			}
-		}
+		// Considered using the TGTAttributeRequestor for this,
+		// but attribute requestors are not handled in a defined order
+		if (!"last".equals(_sRemoteLast))
+				addRemoteAttributesFromTgt(htAttributes, htTGTContext);
 
 		// Bauke: added additional attributes, they take precedence over the "attribute" values
+		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Add additional attributes from TGT");
+		Utils.copyHashmapValue("uid", htAttributes, htTGTContext);
+		Utils.copyHashmapValue("sel_uid", htAttributes, htTGTContext);
+
 		String sAuthsp = (String) htTGTContext.get("authsp");
 		String sAuthspLevel = (String) htTGTContext.get("authsp_level");
 		if (sAuthsp != null) {
@@ -715,12 +706,14 @@ public class AttributeGatherer
 			}
 		}
 		// End of additions
+		
+		if ("last".equals(_sRemoteLast))
+			addRemoteAttributesFromTgt(htAttributes, htTGTContext);
 
 		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Try authsp with id: " + sAuthsp); // if present
 		try {
 			Object authSPs = Utils.getSimpleSection(_configManager, _systemLogger, null, "authsps", true);
-			Object authSPsection = Utils.getSectionFromSection(_configManager, _systemLogger, authSPs, "authsp", "id="
-					+ sAuthsp, false);
+			Object authSPsection = Utils.getSectionFromSection(_configManager, _systemLogger, authSPs, "authsp", "id=" + sAuthsp, false);
 			if (authSPsection != null) {
 				String sHandler = _configManager.getParam(authSPsection, "handler");
 				int iDot = sHandler.lastIndexOf(".");
@@ -742,13 +735,39 @@ public class AttributeGatherer
 	}
 
 	/**
+	 * Add remote attributes from TGT.<br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Add the attributes to 'htAttributes'. They are taken from the 'attributes' field in the TGT
+	 * 
+	 * @param htAttributes - Add attributes to.
+	 * @param htTGTContext - The TGT context.
+	 * @throws ASelectException - When attribute retrieval fails.
+	 */
+	private void addRemoteAttributesFromTgt(HashMap<String, Object> htAttributes, HashMap htTGTContext)
+	throws ASelectException
+	{
+		String sMethod = "addRemoteAttributesFromTgt";
+		String fld = (String) htTGTContext.get("attributes");
+		if (fld != null) {
+			HashMap htTgtAttributes = Utils.deserializeAttributes(fld);
+			_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER (remote)TGT \"attributes\"=" + htTgtAttributes);
+			Set keys = htTgtAttributes.keySet();
+			for (Object s : keys) {
+				String sKey = (String) s;
+				Object oValue = htTgtAttributes.get(sKey);
+				//if (!(oValue instanceof String))
+				//	continue;
+				htAttributes.put(sKey, oValue);
+			}
+		}
+	}
+
+	/**
 	 * Destroys the objects in this class that need to be destroyed carefully. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
 	 * Calls the destroy of the attribute requestors in the <code>_htRequestors</code> HashMap. <br>
-	 * <br>
-	 * <b>Concurrency issues:</b> <br>
-	 * - <br>
 	 * <br>
 	 * <b>Preconditions:</b> <br>
 	 * The <code>_htRequestors</code> contains attribute requestors that aren't destroyed <br>

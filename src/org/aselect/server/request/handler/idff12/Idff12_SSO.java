@@ -15,6 +15,7 @@
  */
 package org.aselect.server.request.handler.idff12;
 
+
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Vector;
@@ -39,7 +40,6 @@ import org.opensaml.SAMLAssertion;
 import org.opensaml.SAMLSubject;
 import org.opensaml.artifact.*;
 
-// TODO: Auto-generated Javadoc
 //
 // Handles Liberty Alliance ID-FF step 5 - Identity Provider
 // Process AuthnRequest
@@ -398,8 +398,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "createSAMLAssertion, sIP=" + sIP + ", sHost=" + sHost
 					+ ", htResponse=" + htTgtContext);
 
-			// htCredentials should have a key "attributes" containing the
-			// serialzed attributes of the user
+			// htCredentials should have a key "attributes" containing the serialized attributes of the user
 			SAMLAssertion oSAMLAssertion = _saml11Builder.createSAMLAssertionFromCredentials(sUid, sRequestID,
 					null/* sNameIdFormat */, sIP, sHost, SAMLSubject.CONF_ARTIFACT, _sProviderId /* sProviderID */,
 					null/* audience */, htCredentials);
@@ -441,8 +440,9 @@ public class Idff12_SSO extends ProtoRequestHandler
 	public String serializeTheseAttributes(HashMap htAttribs)
 		throws ASelectException
 	{
-		String sMethod = "serializeTheseAttributes()";
-		String sSerializedAttributes = _saml11Builder.serializeAttributes(htAttribs);
+		String sMethod = "serializeTheseAttributes";
+		
+		String sSerializedAttributes = Utils.serializeAttributes(htAttribs);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "sSerializedAttributes=" + sSerializedAttributes);
 		return sSerializedAttributes;
 	}

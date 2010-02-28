@@ -119,9 +119,6 @@
  * Revision 1.23  2005/04/07 12:13:51  martijn
  * added single sign-on groups support
  *
- * Revision 1.22  2005/04/07 07:38:09  erwin
- * Moved serializeAttributes() to abstract class
- *
  * Revision 1.21  2005/04/06 11:38:55  peter
  * Added support for optional uid in request authenticate
  *
@@ -211,7 +208,6 @@
  * ApplicationRequestHandler and ApplicationAPIRequestHandler are now merged
  *
  */
-
 package org.aselect.server.request.handler.sfs.authentication;
 
 import java.security.MessageDigest;
@@ -239,7 +235,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * Handle API requests from Applications and A-Select Agents. <br>
  * <br>
@@ -812,7 +807,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		// Gather attributes
 		AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
 		HashMap htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
-		String sSerializedAttributes = serializeAttributes(htAttribs);
+		String sSerializedAttributes = Utils.serializeAttributes(htAttribs);
 
 		try {
 			oOutputMessage.setParam("app_id", sAppId);

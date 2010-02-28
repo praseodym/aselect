@@ -27,16 +27,17 @@ import java.util.Vector;
 import java.util.logging.Level;
 
 import org.aselect.server.log.ASelectSystemLogger;
+import org.aselect.server.request.HandlerTools;
 import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.BASE64Decoder;
 import org.aselect.system.utils.BASE64Encoder;
 import org.aselect.system.utils.Tools;
+import org.aselect.system.utils.Utils;
 import org.opensaml.*;
 import org.w3c.dom.Node;
 
-// TODO: Auto-generated Javadoc
 //
 //
 //
@@ -147,7 +148,7 @@ public class Saml11Builder
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "genAUTH sAuthSPID=" + sAuthSPID + " sAppID" + sAppID);
 			String sAttributes = (String) htInfo.get("attributes");
 			if (sAttributes != null) {
-				htAttributes = deserializeAttributes(sAttributes);
+				htAttributes = Utils.deserializeAttributes(sAttributes);
 			}
 			else {
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "No parameter 'attributes' found");
@@ -359,7 +360,6 @@ public class Saml11Builder
 		return oSAMLAttributeStatement;
 	}
 
-	// Store Session info with the UserID
 	/**
 	 * Store session information.
 	 * 
@@ -376,11 +376,10 @@ public class Saml11Builder
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private void storeSessionInformation(String sUid, String sProviderId, String sAppID, String sAuthSPID,
-			HashMap htAttributes)
-		throws ASelectException
+	private void storeSessionInformation(String sUid, String sProviderId, String sAppID, String sAuthSPID, HashMap htAttributes)
+	throws ASelectException
 	{
-		String sMethod = "storeSessionInformation()";
+		String sMethod = "storeSessionInformation";
 		try {
 			String sSAMLID = SESSION_ID_PREFIX + sUid;
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SAMLID=" + sSAMLID);
@@ -445,136 +444,6 @@ public class Saml11Builder
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not create SAMLAssertion", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-		}
-	}
-
-	// From AbstractAPIRequestHandler()
-	/**
-	 * Deserialize attributes.
-	 * 
-	 * @param sSerializedAttributes
-	 *            the s serialized attributes
-	 * @return the hash map
-	 * @throws ASelectException
-	 *             the a select exception
-	 */
-	public HashMap deserializeAttributes(String sSerializedAttributes)
-		throws ASelectException
-	{
-		String sMethod = "deSerializeAttributes()";
-		HashMap htAttributes = new HashMap();
-		if (sSerializedAttributes != null) // Attributes available
-		{
-			try {
-				// base64 decode
-				BASE64Decoder base64Decoder = new BASE64Decoder();
-				String sDecodedUserAttrs = new String(base64Decoder.decodeBuffer(sSerializedAttributes));
-
-				// decode & and = chars
-				String[] saAttrs = sDecodedUserAttrs.split("&");
-				for (int i = 0; i < saAttrs.length; i++) {
-					int iEqualChar = saAttrs[i].indexOf("=");
-					String sKey = "";
-					String sValue = "";
-					Vector vVector = null;
-
-					if (iEqualChar > 0) {
-						sKey = URLDecoder.decode(saAttrs[i].substring(0, iEqualChar), "UTF-8");
-
-						sValue = URLDecoder.decode(saAttrs[i].substring(iEqualChar + 1), "UTF-8");
-
-						if (sKey.endsWith("[]")) { // it's a multi-valued attribute
-							// Strip [] from sKey
-							sKey = sKey.substring(0, sKey.length() - 2);
-
-							if ((vVector = (Vector) htAttributes.get(sKey)) == null)
-								vVector = new Vector();
-
-							vVector.add(sValue);
-						}
-					}
-					else
-						sKey = URLDecoder.decode(saAttrs[i], "UTF-8");
-
-					if (vVector != null)
-						// store multivalue attribute
-						htAttributes.put(sKey, vVector);
-					else
-						// store singlevalue attribute
-						htAttributes.put(sKey, sValue);
-				}
-			}
-			catch (Exception e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error during deserialization of attributes", e);
-				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-			}
-		}
-		return htAttributes;
-	}
-
-	// From AbstractAPIRequestHandler()
-	/**
-	 * Serialize attributes.
-	 * 
-	 * @param htAttributes
-	 *            the ht attributes
-	 * @return the string
-	 * @throws ASelectException
-	 *             the a select exception
-	 */
-	public String serializeAttributes(HashMap htAttributes)
-		throws ASelectException
-	{
-		final String sMethod = "serializeAttributes()";
-		try {
-			if (htAttributes == null || htAttributes.isEmpty())
-				return null;
-			StringBuffer sb = new StringBuffer();
-
-			Set keys = htAttributes.keySet();
-			for (Object s : keys) {
-				String sKey = (String) s;
-				// for (Enumeration e = htAttributes.keys(); e.hasMoreElements(); )
-				// {
-				// String sKey = (String)e.nextElement();
-				Object oValue = htAttributes.get(sKey);
-
-				if (oValue instanceof Vector) {// it's a multivalue attribute
-					Vector vValue = (Vector) oValue;
-
-					sKey = URLEncoder.encode(sKey + "[]", "UTF-8");
-					Enumeration eEnum = vValue.elements();
-					while (eEnum.hasMoreElements()) {
-						String sValue = (String) eEnum.nextElement();
-
-						// add: key[]=value
-						sb.append(sKey);
-						sb.append("=");
-						sb.append(URLEncoder.encode(sValue, "UTF-8"));
-
-						if (eEnum.hasMoreElements())
-							sb.append("&");
-					}
-				}
-				else if (oValue instanceof String) {// it's a single value attribute
-					String sValue = (String) oValue;
-
-					sb.append(URLEncoder.encode(sKey, "UTF-8"));
-					sb.append("=");
-					sb.append(URLEncoder.encode(sValue, "UTF-8"));
-				}
-
-				// if (e.hasMoreElements())
-				sb.append("&");
-			}
-			int len = sb.length();
-			String result = sb.substring(0, len - 1);
-			BASE64Encoder b64enc = new BASE64Encoder();
-			return b64enc.encode(result.getBytes("UTF-8"));
-		}
-		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not serialize attributes", e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 	}
 

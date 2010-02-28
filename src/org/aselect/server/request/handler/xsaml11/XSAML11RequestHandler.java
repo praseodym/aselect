@@ -30,13 +30,13 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
+import org.aselect.system.utils.Utils;
 import org.opensaml.SAMLAssertion;
 import org.opensaml.SAMLSubject;
 import org.opensaml.artifact.SAMLArtifact;
 import org.opensaml.artifact.SAMLArtifactType0001; //import org.opensaml.artifact.SAMLArtifactType0002;
 import org.opensaml.artifact.Util;
 
-// TODO: Auto-generated Javadoc
 //
 // SAML 1.1 Browser Artifact profile
 // The Inter-site Transfer Service - Source Site
@@ -274,7 +274,7 @@ public class XSAML11RequestHandler extends ProtoRequestHandler
 		throws ASelectException
 	{
 		String sMethod = "serializeTheseAttributes()";
-		String sSerializedAttributes = _saml11Builder.serializeAttributes(htAttribs);
+		String sSerializedAttributes = Utils.serializeAttributes(htAttribs);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "sSerializedAttributes=" + sSerializedAttributes);
 		return sSerializedAttributes;
 	}

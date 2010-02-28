@@ -392,11 +392,9 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			String sDigidRid = (String) htResponse.get("rid");
 			String credentials = (String) htResponse.get("aselect_credentials");
 
-			// To determine which shared secret to use, we need to know the
-			// 'betrouwbaarheidsniveau'. This is stored in the session,
-			// which we can get via the local_rid. If its not found, we use
-			// the default betrouwbaarheidsniveau to determine the shared
-			// secret
+			// To determine which shared secret to use, we need to know the 'betrouwbaarheidsniveau'.
+			// This is stored in the session, which we can get via the local_rid.
+			// If its not found, we use the default betrouwbaarheidsniveau to determine the shared secret.
 			String sReqLevel = _sDefaultBetrouwbaarheidsNiveau;
 			String sharedSecret = _htSharedSecrets.get(_sDefaultBetrouwbaarheidsNiveau);
 			SessionManager sessionManager = SessionManager.getHandle();
