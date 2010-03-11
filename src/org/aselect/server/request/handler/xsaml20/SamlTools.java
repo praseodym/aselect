@@ -11,6 +11,7 @@
  */
 package org.aselect.server.request.handler.xsaml20;
 
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -28,6 +29,7 @@ import java.util.logging.Level;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.crypto.dsig.DigestMethod;
 
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
@@ -84,6 +86,7 @@ import org.opensaml.xml.util.Base64;
 import org.opensaml.xml.util.XMLConstants;
 import org.opensaml.xml.util.XMLHelper;
 import org.opensaml.xml.validation.ValidationException;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -474,7 +477,7 @@ public class SamlTools
 	 *             the a select exception
 	 */
 	public static SignableSAMLObject sign(SignableSAMLObject obj)
-		throws ASelectException
+	throws ASelectException
 	{
 
 		String sMethod = "sign(SignableSAMLObject obj)";
@@ -489,7 +492,7 @@ public class SamlTools
 			// signature.getContentReferences().add(contentRef);
 			String signingAlgo;
 			if ("RSA".equalsIgnoreCase(privKey.getAlgorithm())) {
-				signingAlgo = SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA1;
+				signingAlgo = SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256;
 			}
 			else {
 				signingAlgo = SignatureConstants.ALGO_ID_SIGNATURE_ECDSA_SHA1;
@@ -500,6 +503,12 @@ public class SamlTools
 			signature.setSigningCredential(credential);
 			signature.setSignatureAlgorithm(signingAlgo);
 			signature.setCanonicalizationAlgorithm(SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
+			
+			// Try to change the DigestMethod
+			//Element digestMethodElem = XMLHelper.constructElement((Document) obj,  org.opensaml.xml.signature.DigestMethod.DEFAULT_ELEMENT_NAME);
+            //XMLHelper.appendNamespaceDeclaration(digestMethodElem, XMLConstants.XMLSIG_NS, XMLConstants.XMLSIG_PREFIX);
+            //digestMethodElem.setAttributeNS(null,  org.opensaml.xml.signature.DigestMethod.ALGORITHM_ATTRIB_NAME,
+            //			SignatureConstants.ALGO_ID_DIGEST_SHA1.replace("sha1", "sha256"));
 
 			obj.setSignature(signature);
 			try {

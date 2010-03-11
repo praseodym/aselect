@@ -35,6 +35,7 @@ import org.opensaml.common.SAMLVersion;
 import org.opensaml.common.binding.BasicSAMLMessageContext;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.binding.encoding.HTTPRedirectDeflateEncoder;
+import org.opensaml.saml2.core.ArtifactResolve;
 import org.opensaml.saml2.core.AuthnContextClassRef;
 import org.opensaml.saml2.core.AuthnContextComparisonTypeEnumeration;
 import org.opensaml.saml2.core.AuthnRequest;
@@ -175,7 +176,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get MetaData Url=" + sFederationUrl);
 			MetaDataManagerSp metadataMgr = MetaDataManagerSp.getHandle();
-			// TODO maybe allow for other BINDINGs
+			// We currently have the Redirect Binding only
 			String sDestination = metadataMgr.getLocation(sFederationUrl,
 					SingleSignOnService.DEFAULT_ELEMENT_LOCAL_NAME, singleSignOnServiceBindingConstantREDIRECT);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Using Location retrieved from IDP=" + sDestination);
@@ -214,7 +215,9 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			SAMLObjectBuilder<AuthnRequest> authnRequestbuilder = (SAMLObjectBuilder<AuthnRequest>) builderFactory
 					.getBuilder(AuthnRequest.DEFAULT_ELEMENT_NAME);
 			AuthnRequest authnRequest = authnRequestbuilder.buildObject();
-			// 20091103 This is WRONG: authnRequest.setAssertionConsumerServiceURL(sMyUrl);
+			
+			// 20091103 This is WRONG:
+			//authnRequest.setAssertionConsumerServiceURL(sMyUrl);  // must be my own url
 			authnRequest.setDestination(sDestination);
 			authnRequest.setID(sRid);
 			DateTime tStamp = new DateTime();
@@ -237,6 +240,9 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Setting the ForceAuthn attribute");
 				authnRequest.setForceAuthn(true);
 			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the authnRequest >======");
+			authnRequest = (AuthnRequest)sign(authnRequest);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the authnRequest ======<");
 
 			SAMLObjectBuilder<Endpoint> endpointBuilder = (SAMLObjectBuilder<Endpoint>) builderFactory
 					.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);

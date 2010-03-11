@@ -215,7 +215,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 
 			// Do some logging for testing
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the artifactResolve >======");
-			artifactResolve = (ArtifactResolve) sign(artifactResolve);
+			artifactResolve = (ArtifactResolve)sign(artifactResolve);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the artifactResolve ======<");
 
 			// Build the SOAP message
@@ -255,13 +255,12 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 			ArtifactResponse artifactResponse = (ArtifactResponse) unmarshaller
 					.unmarshall((Element) eltArtifactResponse);
 
-			String artifactResponseIssuer = (artifactResponse.getIssuer() == null || // avoid nullpointers
+			String artifactResponseIssuer = (artifactResponse.getIssuer() == null || // avoid null pointers
 					artifactResponse.getIssuer().getValue() == null || "".equals(artifactResponse.getIssuer()
 					.getValue())) ? sASelectServerUrl : // if not in message, use sASelectServerUrl value retrieved from metadata
 					artifactResponse.getIssuer().getValue(); // else value from message
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Do artifactResponse signature verification="
-					+ is_bVerifySignature());
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Do artifactResponse signature verification="+is_bVerifySignature());
 			if (is_bVerifySignature()) {
 				// signature of artifactResponse here
 				// check signature of artifactResolve here

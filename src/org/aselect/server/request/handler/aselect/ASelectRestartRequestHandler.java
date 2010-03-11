@@ -33,7 +33,6 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
 
-// TODO: Auto-generated Javadoc
 /**
  * Handles the A-Select <i>restart</i> request. <br>
  * <br>

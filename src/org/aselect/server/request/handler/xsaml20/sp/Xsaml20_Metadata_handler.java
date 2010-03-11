@@ -42,7 +42,6 @@ import org.opensaml.xml.signature.impl.X509DataBuilder;
 import org.opensaml.xml.util.XMLHelper;
 import org.w3c.dom.Node;
 
-// TODO: Auto-generated Javadoc
 // Configuration example
 //
 // <handler id="saml20_sp_metadata"
