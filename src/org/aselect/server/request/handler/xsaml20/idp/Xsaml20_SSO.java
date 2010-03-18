@@ -106,9 +106,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	{
 		String sMethod = "process()";
 		String sPathInfo = request.getPathInfo();
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "==== Path=" + sPathInfo + " RequestQuery: "
-				+ request.getQueryString());
-		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request received === Path=" + sPathInfo);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "==== Path=" + sPathInfo + " RequestQuery: "	+ request.getQueryString());
+		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request received === Path=" + sPathInfo+" Locale="+request.getLocale().getLanguage());
 
 		if (sPathInfo.endsWith(RETURN_SUFFIX)) {
 			processReturn(request, response);

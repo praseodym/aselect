@@ -58,6 +58,8 @@
 
 package org.aselect.system.utils;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -65,11 +67,15 @@ import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Level;
 
+import javax.servlet.http.HttpServletResponse;
+
+import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.communication.server.IInputMessage;
@@ -913,6 +919,57 @@ public class Utils
 			}
 		}
 		return htAttributes;
+	}
+
+	// No organization gathering specified: no org_id in TGT
+	// Organization gathering specified but no organization found or choice not made yet: org_id="" in TGT
+	// Choice made by the user: org_id has a value
+	// As long as org_id is present and empty no gathering will take place at all
+	//
+	public static boolean handleOrganizationChoice(HashMap<String, Object> htTGTContext, HashMap<String, String> hUserOrganizations)
+	{
+		String sOrgId = "";
+		if (hUserOrganizations == null || hUserOrganizations.size() == 0)
+			return false;  // no organizations, no choice
+	
+		if (hUserOrganizations.size() == 1) {
+			Set<String> keySet = hUserOrganizations.keySet();
+			Iterator<String> it = keySet.iterator();
+			sOrgId = it.next();  // no choice needed
+		}
+		htTGTContext.put("org_id", sOrgId);  // empty or filled with the chosen org
+		return (sOrgId != null && sOrgId.equals(""));
+	}
+
+	//
+	//
+	public static String presentOrganizationChoice(ASelectConfigManager configManager, HashMap htSessionContext,
+			String sRid, String sLanguage, HashMap<String, String> hUserOrganizations)
+	throws ASelectConfigException, ASelectException, IOException
+	{
+		String sUserId = (String)htSessionContext.get("user_id");
+		String sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true);
+		String sServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
+		String sSelectForm = configManager.loadHTMLTemplate(null, "orgselect", sLanguage, sLanguage);
+		
+		sSelectForm = Utils.replaceString(sSelectForm, "[request]", "org_choice");
+		if (sUserId != null) sSelectForm = Utils.replaceString(sSelectForm, "[user_id]", sUserId);
+		sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
+		sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", sServerId);
+		sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", sServerUrl + "/org_choice");
+		
+		StringBuffer sb = new StringBuffer();
+		Set<String> keySet = hUserOrganizations.keySet();
+		Iterator<String> it = keySet.iterator();
+		while(it.hasNext()) {
+			String sOrgId = it.next();
+			String sOrgName = hUserOrganizations.get(sOrgId);
+			sb.append("<option value=").append(sOrgId).append(">").append(sOrgName);
+			sb.append("</option>");
+		}
+		sSelectForm = Utils.replaceString(sSelectForm, "[user_organizations]", sb.toString());
+		sSelectForm = configManager.updateTemplate(sSelectForm, htSessionContext);
+		return sSelectForm;
 	}
 
 }

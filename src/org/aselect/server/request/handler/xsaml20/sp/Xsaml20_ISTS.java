@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.xsaml20.Saml20_BaseHandler;
+import org.aselect.server.request.handler.xsaml20.Saml20_Metadata;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
@@ -35,7 +36,6 @@ import org.opensaml.common.SAMLVersion;
 import org.opensaml.common.binding.BasicSAMLMessageContext;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.binding.encoding.HTTPRedirectDeflateEncoder;
-import org.opensaml.saml2.core.ArtifactResolve;
 import org.opensaml.saml2.core.AuthnContextClassRef;
 import org.opensaml.saml2.core.AuthnContextComparisonTypeEnumeration;
 import org.opensaml.saml2.core.AuthnRequest;
@@ -53,15 +53,18 @@ import org.opensaml.xml.security.x509.BasicX509Credential;
 import org.opensaml.xml.util.XMLHelper;
 import org.w3c.dom.Node;
 
-// TODO: Auto-generated Javadoc
 public class Xsaml20_ISTS extends Saml20_BaseHandler
 {
 	private final static String MODULE = "Xsaml20_ISTS";
 	protected final String singleSignOnServiceBindingConstantREDIRECT = SAMLConstants.SAML2_REDIRECT_BINDING_URI;
 
-	private String _sServerId; // <server_id> in <aselect>
+	private String _sServerId = null; // <server_id> in <aselect>
 	// private String _sFederationUrl;
 	private HashMap<String, String> levelMap;
+	
+	private String _sAssertionConsumerUrl = null;
+	private String _sSpecialSettings = null;
+	private String _sRequestIssuer = null;
 
 	/* (non-Javadoc)
 	 * @see org.aselect.server.request.handler.xsaml20.Saml20_BaseHandler#init(javax.servlet.ServletConfig, java.lang.Object)
@@ -82,9 +85,11 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-
+		_sSpecialSettings = ASelectConfigManager.getSimpleParam(oConfig, "special_settings", false);
+		_sRequestIssuer = ASelectConfigManager.getSimpleParam(oConfig, "issuer", false);
+		if (_sSpecialSettings == null)
+			_sSpecialSettings = "";
 		_sServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
-		// _sFederationUrl = ASelectConfigManager.getSimpleParam(oConfig, "federation_url", true);
 
 		levelMap = new HashMap<String, String>();
 		Object oSecurity = null;
@@ -106,7 +111,34 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid config item 'uri' found in handler section", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
+		
+		// Get Assertion Consumer data from config
+		try {
+			Object oRequest = _configManager.getSection(null, "requests");
+			Object oHandlers = _configManager.getSection(oRequest, "handlers");
+			Object oHandler = _configManager.getSection(oHandlers, "handler");
+			Object oASelect = _configManager.getSection(null, "aselect");
+			String sRedirectUrl = _configManager.getParam(oASelect, "redirect_url");
+
+			for ( ; oHandler != null; oHandler = _configManager.getNextSection(oHandler)) {
+				String sId = _configManager.getParam(oHandler, "id");
+				if (sId != null && !sId.equals("saml20_assertionconsumer"))
+					continue;
+				String sTarget = _configManager.getParam(oHandler, "target");
+				if (sTarget != null) {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "id=" + sId + " target=" + sTarget);
+					sTarget = sTarget.replace("\\", "");
+					sTarget = sTarget.replace(".*", "");
+					_sAssertionConsumerUrl = sRedirectUrl + sTarget;
+				}
+			}
+		}
+		catch (ASelectConfigException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config next section 'handler' found", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+		}
 	}
+	
 
 	// Example configuration
 	//
@@ -204,27 +236,36 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 					.getBuilder(RequestedAuthnContext.DEFAULT_ELEMENT_NAME);
 			RequestedAuthnContext requestedAuthnContext = requestedAuthnContextBuilder.buildObject();
 			requestedAuthnContext.getAuthnContextClassRefs().add(authnContextClassRef);
-			requestedAuthnContext.setComparison(AuthnContextComparisonTypeEnumeration.EXACT);
-
+			
+			// 20100311, Bauke: added for eHerkenning
+			if (_sSpecialSettings.contains("minimum"))
+				requestedAuthnContext.setComparison(AuthnContextComparisonTypeEnumeration.MINIMUM);
+			else
+				requestedAuthnContext.setComparison(AuthnContextComparisonTypeEnumeration.EXACT);
+			
 			SAMLObjectBuilder<Issuer> issuerBuilder = (SAMLObjectBuilder<Issuer>) builderFactory
 					.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
 			Issuer issuer = issuerBuilder.buildObject();
-			issuer.setValue(sMyUrl);
+			// 20100311, Bauke: Alternate Issuer, added for eHerkenning
+			issuer.setValue((_sRequestIssuer!=null)? _sRequestIssuer: sMyUrl);
 
 			// AuthRequest
 			SAMLObjectBuilder<AuthnRequest> authnRequestbuilder = (SAMLObjectBuilder<AuthnRequest>) builderFactory
 					.getBuilder(AuthnRequest.DEFAULT_ELEMENT_NAME);
 			AuthnRequest authnRequest = authnRequestbuilder.buildObject();
 			
-			// 20091103 This is WRONG:
-			//authnRequest.setAssertionConsumerServiceURL(sMyUrl);  // must be my own url
+			// 20100311, Bauke: added for eHerkenning
+			// The assertion consumer url must be equal to the value in the Metadata:
+			authnRequest.setAssertionConsumerServiceURL(_sAssertionConsumerUrl);
+			authnRequest.setProtocolBinding(Saml20_Metadata.assertionConsumerServiceBindingConstantARTIFACT);
+			authnRequest.setAttributeConsumingServiceIndex(2);
+
 			authnRequest.setDestination(sDestination);
 			authnRequest.setID(sRid);
 			DateTime tStamp = new DateTime();
 			authnRequest.setIssueInstant(tStamp);
 			// Set interval conditions
-			authnRequest = (AuthnRequest) SamlTools.setValidityInterval(authnRequest, tStamp, getMaxNotBefore(),
-					getMaxNotOnOrAfter());
+			authnRequest = (AuthnRequest) SamlTools.setValidityInterval(authnRequest, tStamp, getMaxNotBefore(), getMaxNotOnOrAfter());
 
 			authnRequest.setProviderName(_sServerId);
 			authnRequest.setVersion(SAMLVersion.VERSION_20);
@@ -236,7 +277,8 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			Boolean bForcedAuthn = (Boolean) htSessionContext.get("forced_authenticate");
 			if (bForcedAuthn == null)
 				bForcedAuthn = false;
-			if (bForcedAuthn) {
+			// 20100311, Bauke: _sSpecialSettings added for eHerkenning
+			if (bForcedAuthn || _sSpecialSettings.contains("force")) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Setting the ForceAuthn attribute");
 				authnRequest.setForceAuthn(true);
 			}
@@ -249,13 +291,19 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			Endpoint samlEndpoint = endpointBuilder.buildObject();
 			samlEndpoint.setLocation(sDestination);
 			samlEndpoint.setResponseLocation(sMyUrl);
-
-			// HttpServletResponseAdapter outTransport = new HttpServletResponseAdapter(response); // RH 20080529, o
-			HttpServletResponseAdapter outTransport = SamlTools
-					.createHttpServletResponseAdapter(response, sDestination); // RH 20080529, n
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "EndPoint="+samlEndpoint+"Destination="+sDestination);
+			
+			HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response, sDestination);
+			
 			// RH, 20081113, set appropriate headers
 			outTransport.setHeader("Pragma", "no-cache");
 			outTransport.setHeader("Cache-Control", "no-cache, no-store");
+
+			// 20100317, Bauke: pass language to IdP
+			String sLang = (String)htSessionContext.get("language");
+			if (sLang != null) {
+				response.setLocale(new java.util.Locale(sLang)); // does not work
+			}
 
 			BasicSAMLMessageContext messageContext = new BasicSAMLMessageContext();
 			messageContext.setOutboundMessageTransport(outTransport);
@@ -267,15 +315,15 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			credential.setPrivateKey(key);
 			messageContext.setOutboundSAMLMessageSigningCredential(credential);
 
-			// 20091028, Bauke: use RelayState to transport rid to the AssertionConsumer
+			// 20091028, Bauke: use RelayState to transport rid to my AssertionConsumer
 			messageContext.setRelayState("idp=" + sFederationUrl);
 
 			MarshallerFactory marshallerFactory = Configuration.getMarshallerFactory();
 			Marshaller marshaller = marshallerFactory.getMarshaller(messageContext.getOutboundSAMLMessage());
 			Node nodeMessageContext = marshaller.marshall(messageContext.getOutboundSAMLMessage());
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "MessageContext:\n"
-					+ XMLHelper.prettyPrintXML(nodeMessageContext));
-
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Language="+sLang+" OutboundSAMLMessage:\n"
+								+ XMLHelper.prettyPrintXML(nodeMessageContext));
+			
 			HTTPRedirectDeflateEncoder encoder = new HTTPRedirectDeflateEncoder();
 			encoder.encode(messageContext);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Ready");

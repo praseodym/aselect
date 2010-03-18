@@ -35,10 +35,17 @@ import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.xml.ConfigurationException;
 import org.opensaml.xml.XMLObjectBuilderFactory;
 
-// TODO: Auto-generated Javadoc
 public class Saml20_Metadata extends ProtoRequestHandler
 {
 	private final static String MODULE = "Saml20_Metadata";
+
+	public final static String PUBLIC_KEYSTORE_NAME = "aselect.keystore";
+	public final static String singleSignOnServiceBindingConstantREDIRECT = SAMLConstants.SAML2_REDIRECT_BINDING_URI;
+	public final static String artifactResolutionServiceBindingConstantSOAP = SAMLConstants.SAML2_SOAP11_BINDING_URI;
+	public final static String assertionConsumerServiceBindingConstantARTIFACT = SAMLConstants.SAML2_ARTIFACT_BINDING_URI;
+	public final static String singleLogoutServiceBindingConstantREDIRECT = SAMLConstants.SAML2_REDIRECT_BINDING_URI;
+	public final static String singleLogoutServiceBindingConstantSOAP = SAMLConstants.SAML2_SOAP11_BINDING_URI;
+	public final static String authzServiceBindingConstantSOAP = SAMLConstants.SAML2_SOAP11_BINDING_URI;
 
 	private String workingDir = null;
 	private String redirectURL;
@@ -74,15 +81,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	private String idpSloHttpResponse = null;
 	private String idpSSSoapLocation = null;
 
-	protected final String PUBLIC_KEYSTORE_NAME = "aselect.keystore";
-	protected final String singleSignOnServiceBindingConstantREDIRECT = SAMLConstants.SAML2_REDIRECT_BINDING_URI;
-	protected final String artifactResolutionServiceBindingConstantSOAP = SAMLConstants.SAML2_SOAP11_BINDING_URI;
-	protected final String assertionConsumerServiceBindingConstantARTIFACT = SAMLConstants.SAML2_ARTIFACT_BINDING_URI;
-	protected final String singleLogoutServiceBindingConstantREDIRECT = SAMLConstants.SAML2_REDIRECT_BINDING_URI;
-	protected final String singleLogoutServiceBindingConstantSOAP = SAMLConstants.SAML2_SOAP11_BINDING_URI;
-	protected final String authzServiceBindingConstantSOAP = SAMLConstants.SAML2_SOAP11_BINDING_URI;
-
-	protected XMLObjectBuilderFactory _oBuilderFactory; // RH, 20080722, n
+	protected XMLObjectBuilderFactory _oBuilderFactory;
 
 	/* (non-Javadoc)
 	 * @see org.aselect.server.request.handler.ProtoRequestHandler#init(javax.servlet.ServletConfig, java.lang.Object)
@@ -209,17 +208,17 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	// Override this method!
 	/**
 	 * Aselect reader.
+	 * Will read all non-handler specific config parameters for metadata request
 	 * 
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
 	protected void aselectReader()
-		// Will read all non-handler specific config parameters for metadatarequest
-		throws ASelectException
+	throws ASelectException
 	{
 		// setSingleLogoutServiceTarget(getRedirectURL()); // We use redirect_url for now
-		setPublicKeyAlias(get_sASelectServerID()); // Use server_id from aselect configuration (aselect.xml) as public
-		// key alias
+		setPublicKeyAlias(get_sASelectServerID());
+		// Use server_id from aselect configuration (aselect.xml) as public key alias
 	}
 
 	/**
@@ -238,9 +237,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
 		String sMethod = "handleMetaDataRequest";
 		String mdxml = createMetaDataXML();
 
-		_systemLogger
-				.log(Level.INFO, MODULE, sMethod, "metadatXML file for entityID " + getEntityIdIdp() + " " + mdxml);
-		// httpResponse.setContentType("text/xml");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "metadatXML file for entityID " + getEntityIdIdp() + " " + mdxml);
 		httpResponse.setContentType("application/samlmetadata+xml");
 
 		PrintWriter out;
@@ -280,7 +277,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	{
 		String sMethod = "process()";
 		try {
-			// TODO make these method calls more transparent
+			// These method calls could be made more transparent
 			// all kind of things get set that we don't know off
 			aselectReader(); // among other things this sets the publicKeyAlias
 			readMetaDataPublicKeyCert(getWorkingDir()); // This sets the signing certificate using the publicKeyAlias

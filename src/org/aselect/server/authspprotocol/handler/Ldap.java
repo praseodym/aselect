@@ -95,7 +95,6 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Ldap AuthSP Handler. <br>
  * <br>
@@ -663,7 +662,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			String sServerId)
 		throws ASelectException
 	{
-		String sMethod = "handleDirectLogin2()";
+		String sMethod = "handleDirectLogin2";
 
 		try {
 			String sRid = null;
@@ -723,8 +722,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			String sResponseCode = ((String) htResponse.get("status"));
 			String sOrg = (String) htSessionContext.get("organization");
 			if (sResponseCode == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid response from Direct AuthSP: '" + sAuthSPId
-						+ "'.");
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid response from Direct AuthSP: '"+sAuthSPId+"'.");
 				throw new ASelectException(Errors.ERROR_ASELECT_IO);
 			}
 			else if (sResponseCode.equals(ERROR_LDAP_OK)) // authentication succeeded

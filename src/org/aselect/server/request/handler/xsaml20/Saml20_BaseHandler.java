@@ -34,7 +34,6 @@ import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 import org.opensaml.xml.ConfigurationException;
 
-// TODO: Auto-generated Javadoc
 //
 //
 public abstract class Saml20_BaseHandler extends ProtoRequestHandler
@@ -49,10 +48,8 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 	private Long maxNotBefore = null; // relaxation period before NotBefore, validity period will be extended with this
 	// value (seconds)
 	// if null value is not specified in aselect.xml
-	private Long maxNotOnOrAfter = null; // relaxation period after NotOnOrAfter, validity period will be extended with
-
-	// this value (seconds)
-
+	private Long maxNotOnOrAfter = null;
+	// relaxation period after NotOnOrAfter, validity period will be extended with this value (seconds)
 	// if null value is not specified in aselect.xml
 
 	/**

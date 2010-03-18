@@ -305,6 +305,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse; //import org.aselect.system.servlet.HtmlInfo;
 
 import org.aselect.server.application.ApplicationManager;
+import org.aselect.server.attributes.AttributeGatherer;
 import org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler;
 import org.aselect.server.authspprotocol.IAuthSPProtocolHandler;
 import org.aselect.server.authspprotocol.handler.AuthSPHandlerManager;
@@ -628,7 +629,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			IAuthSPDirectLoginProtocolHandler oProtocolHandler = _authspHandlerManager
 					.getAuthSPDirectLoginProtocolHandler(sAuthSPId);
 
-			// check if user already has a tgt so that he/she doesnt need to be authenticated again
+			// check if user already has a tgt so that he/she doesn't need to be authenticated again
 			if (_configManager.isSingleSignOn() && htServiceRequest.containsKey("aselect_credentials_tgt")
 					&& htServiceRequest.containsKey("aselect_credentials_uid")
 					&& htServiceRequest.containsKey("aselect_credentials_server_id")) {
@@ -646,40 +647,64 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					_tgtManager.remove(sTgt);
 				}
 				else {
-					if (checkCredentials(sTgt, sUid, sServerId)) // valid credentials/level/SSO group
-					{
-						Boolean boolForced = (Boolean) _htSessionContext.get("forced_authenticate");
-						if (boolForced == null)
-							boolForced = false;
-						_systemLogger.log(Level.INFO, _sModule, sMethod, "CheckCred OK forced=" + boolForced);
-						if (!boolForced.booleanValue()) {
-							// valid tgt, no forced_authenticate
-							// redirect to application as user has already a valid tgt
-							String sRedirectUrl;
-							if (_htSessionContext.get("remote_session") == null) {
-								sRedirectUrl = (String) _htSessionContext.get("app_url");
-							}
-							else {
-								sRedirectUrl = (String) _htSessionContext.get("local_as_url");
-							}
+					int rc = checkCredentials(sTgt, sUid, sServerId); // valid credentials/level/SSO group
+					if (rc >= 0) {
+						Boolean forcedAuthenticate = (Boolean) _htSessionContext.get("forced_authenticate");
+						if (forcedAuthenticate == null)
+							forcedAuthenticate = false;
+						_systemLogger.log(Level.INFO, _sModule, sMethod, "CheckCred OK forced=" + forcedAuthenticate);
+						if (!forcedAuthenticate.booleanValue()) {
+							// Valid tgt, no forced_authenticate
+							
 							// update TGT with app_id or local_organization
 							// needed for attribute gathering in verify_tgt
 							HashMap htTGTContext = _tgtManager.getTGT(sTgt);
+							
+							boolean mustChooseOrg = false;
+							HashMap<String,String> hUserOrganizations = null;
+							if (rc == 1) {  // no organization choice was made
+								// 20100318, Bauke: Organization selection is here
+								AttributeGatherer ag = AttributeGatherer.getHandle();
+								hUserOrganizations = ag.gatherOrganizations(htTGTContext);
+								
+								// Also places org_id in the TGT context:
+								mustChooseOrg = Utils.handleOrganizationChoice(htTGTContext, hUserOrganizations);
+							}
+							_systemLogger.log(Level.INFO, MODULE, sMethod, "MustChoose="+mustChooseOrg+" UserOrgs="+hUserOrganizations);
 
-							String sAppId = (String) _htSessionContext.get("app_id");
-							if (sAppId != null)
-								htTGTContext.put("app_id", sAppId);
-
-							String sLocalOrg = (String) _htSessionContext.get("local_organization");
-							if (sLocalOrg != null)
-								htTGTContext.put("local_organization", sLocalOrg);
-
+							Utils.copyHashmapValue("app_id", htTGTContext, _htSessionContext);
+							Utils.copyHashmapValue("local_organization", htTGTContext, _htSessionContext);
+							Utils.copyHashmapValue("language", htTGTContext, _htSessionContext);
+							
 							htTGTContext.put("rid", sRid);
 							_tgtManager.updateTGT(sTgt, htTGTContext);
-							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
+							
+							// 20100210, Bauke: Present the Organization selection to the user
+							// Leaves the Rid session in place, needed for the application url
+							if (rc == 1 && mustChooseOrg) {
+								Tools.pauseSensorData(_systemLogger, _htSessionContext);
+								_sessionManager.update(sRid, _htSessionContext); // Write session
+								// The user must choose his organization
+								String sSelectForm = Utils.presentOrganizationChoice(_configManager, _htSessionContext,
+										sRid, (String)htTGTContext.get("language"), hUserOrganizations);
+								servletResponse.setContentType("text/html");
+								pwOut.println(sSelectForm);
+								pwOut.close();
+								return;
+							}
 
+							// Redirect to application as user has already a valid tgt
+							String sRedirectUrl;
+							if (_htSessionContext.get("remote_session") == null) {
+								sRedirectUrl = (String)_htSessionContext.get("app_url");
+							}
+							else {
+								sRedirectUrl = (String)_htSessionContext.get("local_as_url");
+							}
 							_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRedirectUrl);
+
 							String sLang = (String)htTGTContext.get("language");
+							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 							oTGTIssuer.sendRedirect(sRedirectUrl, sTgt, sRid, servletResponse, sLang);
 							_sessionManager.killSession(sRid);
 							return;
@@ -704,8 +729,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					// The userid is already known from the TGT
 					htServiceRequest.put("user_id", sUid);
 					// showDirectLoginForm(htServiceRequest,pwOut);
-					oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId,
-							_sUserLanguage, _sUserCountry);
+					oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut,
+									_sMyServerId, _sUserLanguage, _sUserCountry);
 					return;
 				}
 			}
@@ -794,8 +819,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					_tgtManager.remove(sTgt);
 				}
 				else {
-					if (checkCredentials(sTgt, sUid, sServerId)) // valid credentials/level/SSO group
-					{
+					int rc = checkCredentials(sTgt, sUid, sServerId); // valid credentials/level/SSO group
+					if (rc >= 0) {
 						Boolean boolForced = (Boolean) _htSessionContext.get("forced_authenticate");
 						if (boolForced == null)
 							boolForced = false;
@@ -1148,7 +1173,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * The request created by the HTML page presented by the <code>handleLogin1</code> function, is verified here.<br>
 	 * For the entered user-id a lookup is done in the user database to determine all enabled AuthSP's for this user.
 	 * For every AuthSP a verification is done if it matches the required level.<br>
-	 * All valid AuthSP's are presnted to the user by means of a 'drop-down' list in a HTML page. This HTML page will
+	 * All valid AuthSP's are presented to the user by means of a 'drop-down' list in a HTML page. This HTML page will
 	 * POST a <code>request=login3</code>.<br>
 	 * Depending on the A-Select configuration <code>always_show_select_form</code> the request can be parsed to
 	 * <code>handleLogin3()</code> immediately if only one valid AuthSP is found. <br>
@@ -1710,12 +1735,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				String sServerId = (String) htServiceRequest.get("aselect_credentials_server_id");
 
 				// TODO Check if TGT already exists for user id (Peter)
-				// If a user_id was provided in the request
-				// we have to check here if the already existing
-				// TGT is for the same user-id
-				// see CVS
-				if (checkCredentials(sTgt, sUid, sServerId)) {
-
+				// If a user_id was provided in the request we have to check here if the already existing
+				// TGT is for the same user-id. see CVS
+				int rc = checkCredentials(sTgt, sUid, sServerId);
+				if (rc >= 0) {
 					// redirect to application as user has already a valid tgt
 					if (_htSessionContext.get("cross_authenticate") != null) {
 						// redirect to application as user has already a valid
@@ -1725,8 +1748,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							// The TGT should be created now, TGTIssuer will redirect to local A-Select Server
 
 							// TODO Check if a new TGT must be created (Peter)
-							// A new TGT is created because the TGTIssuer implements the redirect with a create
-							// signature.
+							// A new TGT is created because the TGTIssuer implements the redirect with a create signature.
 							// It is not logical to create a new TGT.
 							_htSessionContext.put("user_id", sUid);
 
@@ -2242,9 +2264,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *            The user ID.
 	 * @param sServerId
 	 *            The server ID.
-	 * @return True if credentials are valid, otherwise false.
+	 * @return -1 - credentials not ok, 0 - ok, 1 - ok, but no organization choice made yet.
 	 */
-	private boolean checkCredentials(String sTgt, String sUid, String sServerId)
+	private int checkCredentials(String sTgt, String sUid, String sServerId)
 	{
 		String sMethod = "checkCredentials()";
 		HashMap htTGTContext;
@@ -2253,13 +2275,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 		htTGTContext = _tgtManager.getTGT(sTgt);
 		if (htTGTContext == null) {
-			return false;
+			return -1;
 		}
 		if (!((String) htTGTContext.get("uid")).equals(sUid)) {
-			return false;
+			return -1;
 		}
 		if (!sServerId.equals(_sMyServerId)) {
-			return false;
+			return -1;
 		}
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "checkCred SSO");
 
@@ -2269,20 +2291,26 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		if (vCurSSOGroups != null && vOldSSOGroups != null) {
 			if (!vCurSSOGroups.isEmpty() && !vOldSSOGroups.isEmpty()) {
 				if (!_applicationManager.isValidSSOGroup(vCurSSOGroups, vOldSSOGroups))
-					return false;
+					return -1;
 			}
 		}
 
 		intRequiredLevel = (Integer) _htSessionContext.get("level");
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "checkCred level, requires: " + intRequiredLevel);
-
 		sTGTLevel = (String) htTGTContext.get("authsp_level");
-		if (Integer.parseInt(sTGTLevel) >= intRequiredLevel.intValue()) {
-			return true;
+		if (sTGTLevel == null || Integer.parseInt(sTGTLevel) < intRequiredLevel.intValue()) {
+			return -1;  // level is not high enough
 		}
-		// user did have a tgt but the level is not high enough
-		// so continue authenticate
-		return false;
+
+		// No organization gathering specified: no org_id in TGT
+		// Organization gathering specified but no organization found or choice not made yet: org_id="" in TGT
+		// Choice made by the user: org_id has a value
+		String sOrgId = (String)htTGTContext.get("org_id");
+		if (sOrgId != null && sOrgId.equals(""))
+			return 1;  // No organization choice was made yet
+
+		// OK!
+		return 0;
 	}
 
 	/**

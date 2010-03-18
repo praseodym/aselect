@@ -76,7 +76,6 @@
 
 package org.aselect.server.attributes.requestors.jndi;
 
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -127,7 +126,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	private String _sResourceGroup;
 	private String _sAuthSPUID;
 	private String _sUserDN;
-	private String _sAltUserDN; // Bauke: attribute hack
+	private String _sAltUserDN; // Bauke: attribute feature
 	private String _sBaseDN;
 	private String _sSearchTree;
 	private String _sOrgDN;
@@ -222,14 +221,14 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				throw new ASelectAttributesException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
-			try { // Bauke: attribute hack
+			try { // Bauke: attribute feature
 				_sAltUserDN = _configManager.getParam(oMain, "alt_user_dn");
 			}
 			catch (ASelectConfigException e) {
 				_sAltUserDN = "";
 			}
 			
-			// 20100201: Organization Resolver additional items
+			// 20100201, Bauke: Organization Resolver additional items
 			// Search tree until container starts with [search_tree]=
 			_sSearchTree = ASelectConfigManager.getSimpleParam(oMain, "search_tree", false);
 			_sOrgDN = ASelectConfigManager.getSimpleParam(oMain, "org_dn", false);
@@ -470,7 +469,8 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				StringBuffer sbFailed = new StringBuffer("User '").append(sUID);
 				sbFailed.append("' not found during LDAP search. The filter was: ").append(sbQuery.toString());
 				_systemLogger.log(Level.INFO, MODULE, sMethod, sbFailed.toString());
-				throw new ASelectAttributesException(Errors.ERROR_ASELECT_UNKNOWN_USER);
+				return;
+				// 20100318, was: throw new ASelectAttributesException(Errors.ERROR_ASELECT_UNKNOWN_USER);
 			}
 
 			// 2010-2-10, Bauke: support gathering for the chosen organization
@@ -523,7 +523,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 					Attribute oAttribute = (Attribute) oAttrEnum.next();
 					String sAttributeName = oAttribute.getID();
 					String sUnmappedName = sAttributeName;
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Attribute="+sAttributeName);
+					//_systemLogger.log(Level.FINEST, MODULE, sMethod, "Attribute="+sAttributeName);
 					if (_htReMapAttributes.containsKey(sAttributeName)) {
 						sAttributeName = _htReMapAttributes.get(sAttributeName);
 						_systemLogger.log(Level.INFO, MODULE, sMethod, "Map "+sUnmappedName+" to "+sAttributeName);
@@ -535,7 +535,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 								Vector<Object> vMultiValues = new Vector<Object>();
 								for (int iCount = 0; iCount < oAttribute.size(); iCount++) {
 									Object oValue = oAttribute.get(iCount);
-									_systemLogger.log(Level.FINEST, MODULE, sMethod, sAttributeName+" multi" + iCount + "=" + oValue);
+									//_systemLogger.log(Level.FINEST, MODULE, sMethod, sAttributeName+" multi" + iCount + "=" + oValue);
 									vMultiValues.add(oAttribute.get(iCount));
 								}
 								hAttrResponse.put(sAttributeName, vMultiValues);
@@ -545,7 +545,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 							String sAttributeValue = (String) oAttribute.get();
 							if (sAttributeValue == null)
 								sAttributeValue = "";
-							_systemLogger.log(Level.FINEST, MODULE, sMethod, sAttributeName+" single=" + sAttributeValue);
+							//_systemLogger.log(Level.FINEST, MODULE, sMethod, sAttributeName+" single=" + sAttributeValue);
 							if (hAttrResponse != null)
 								hAttrResponse.put(sAttributeName, sAttributeValue);
 							
@@ -581,7 +581,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 						
 						String sAttributeName = oAttribute.getID();
 						String sUnmappedName = sAttributeName;
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "Attribute="+sAttributeName);
+						//_systemLogger.log(Level.INFO, MODULE, sMethod, "Attribute="+sAttributeName);
 						if (_htReMapAttributes.containsKey(sAttributeName)) {
 							sAttributeName = _htReMapAttributes.get(sAttributeName);
 							_systemLogger.log(Level.INFO, MODULE, sMethod, "Map "+sUnmappedName+" to "+sAttributeName);
@@ -593,7 +593,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 								Vector<Object> vMultiValues = new Vector<Object>();
 								for (int iCount = 0; iCount < oAttribute.size(); iCount++) {
 									Object oValue = oAttribute.get(iCount);
-									_systemLogger.log(Level.FINEST, MODULE, sMethod, "Tree "+sAttributeName+" multi" + iCount + "=" + oValue);
+									//_systemLogger.log(Level.FINEST, MODULE, sMethod, "Tree "+sAttributeName+" multi" + iCount + "=" + oValue);
 									vMultiValues.add(oAttribute.get(iCount));
 								}
 								hAttrResponse.put(sAttributeName, vMultiValues);
@@ -604,7 +604,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 							if (sAttributeValue == null)
 								sAttributeValue = "";
 							
-							_systemLogger.log(Level.FINEST, MODULE, sMethod, "Tree "+sAttributeName+" single="+sAttributeValue);
+							//_systemLogger.log(Level.FINEST, MODULE, sMethod, "Tree "+sAttributeName+" single="+sAttributeValue);
 							if (hAttrResponse != null && !hAttrResponse.containsKey(sAttributeName))
 								hAttrResponse.put(sAttributeName, sAttributeValue);
 	

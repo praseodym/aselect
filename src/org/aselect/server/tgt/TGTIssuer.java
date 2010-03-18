@@ -139,6 +139,7 @@
  */
 package org.aselect.server.tgt;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 
 import java.util.HashMap;
@@ -603,25 +604,10 @@ public class TGTIssuer
 			HashMap<String,String> hUserOrganizations = ag.gatherOrganizations(htTGTContext);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "UserOrgs="+hUserOrganizations);
 			
-			// No organization gathering specified: no org_id in TGT
-			// Organization gathering specified but no organization found or choice not made yet: org_id="" in TGT
-			// Choice made by the user: org_id has a value
-			// As long as org_id is present and empty no gathering will take place at all
-			boolean doOrgSelect = false;
-			if (hUserOrganizations != null) {
-				String sOrgId = "";
-				if (hUserOrganizations.size() == 1) {
-					Set<String> keySet = hUserOrganizations.keySet();
-					Iterator<String> it = keySet.iterator();
-					sOrgId = it.next();
-				}
-				else if (hUserOrganizations.size() > 1) {
-					doOrgSelect = true;
-				}
-				htTGTContext.put("org_id", sOrgId);
-			}
+			// Also places org_id in the TGT context:
+			boolean mustChooseOrg = Utils.handleOrganizationChoice(htTGTContext, hUserOrganizations);
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Store TGT " + htTGTContext);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "MustChoose="+mustChooseOrg+" Store TGT " + htTGTContext);
 			String sTgt = null;
 			if (htOldTGTContext == null) {
 				// Create a new TGT, must set "name_id" to the sTgt value
@@ -639,31 +625,12 @@ public class TGTIssuer
 			
 			// 20100210, Bauke: Present the Organization selection to the user
 			// Leaves the Rid session in place, needed for the application url
-			if (doOrgSelect) {
+			if (mustChooseOrg) {
 				Tools.pauseSensorData(_systemLogger, htSessionContext);
 				_sessionManager.update(sRid, htSessionContext); // Write session
 				// The user must choose his organization
-				String sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true);
-				String sServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
-				String sSelectForm = _configManager.loadHTMLTemplate(null, "orgselect", (String)htTGTContext.get("language"), (String)htTGTContext.get("language"));
-				
-				sSelectForm = Utils.replaceString(sSelectForm, "[request]", "org_choice");
-				sSelectForm = Utils.replaceString(sSelectForm, "[user_id]", sUserId);
-				sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
-				sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", sServerId);
-				sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", sServerUrl + "/org_choice");
-				
-				StringBuffer sb = new StringBuffer();
-				Set<String> keySet = hUserOrganizations.keySet();
-				Iterator<String> it = keySet.iterator();
-				while(it.hasNext()) {
-					String sOrgId = it.next();
-					String sOrgName = hUserOrganizations.get(sOrgId);
-					sb.append("<option value=").append(sOrgId).append(">").append(sOrgName);
-					sb.append("</option>");
-				}
-				sSelectForm = Utils.replaceString(sSelectForm, "[user_organizations]", sb.toString());
-				sSelectForm = _configManager.updateTemplate(sSelectForm, htSessionContext);
+				String sSelectForm = Utils.presentOrganizationChoice(_configManager, htSessionContext,
+						sRid, (String)htTGTContext.get("language"), hUserOrganizations);
 				
 				oHttpServletResponse.setContentType("text/html");
 				PrintWriter pwOut = oHttpServletResponse.getWriter();

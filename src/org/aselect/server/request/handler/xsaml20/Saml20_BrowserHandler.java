@@ -50,7 +50,6 @@ import org.opensaml.xml.Configuration;
 import org.opensaml.xml.XMLObjectBuilderFactory;
 import org.opensaml.xml.util.XMLHelper;
 
-// TODO: Auto-generated Javadoc
 /**
  * SAML2.0 interface for A-Select (Identify Provider side). <br>
  * <br>
@@ -221,20 +220,6 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 		else if (sClientCommunicator.equalsIgnoreCase("raw")) {
 			_oClientCommunicator = new RawCommunicator(_systemLogger);
 		}
-		// RH, 20080602, so, is done by Saml20_BaseHandler now
-		// String sVerifySignature = null;
-		// try {
-		// sVerifySignature = _configManager.getParam(oHandlerConfig, "verify_signature");
-		// }
-		// catch (Exception e) {
-		// if (sVerifySignature != null) {
-		// throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-		// }
-		// }
-		// if (sVerifySignature != null && sVerifySignature.equalsIgnoreCase("false")) {
-		// _bVerifySignature = false;
-		// }
-		// RH, 20080602, eo, is done by Saml20_BaseHandler now
 	}
 
 	/**
@@ -295,9 +280,8 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			SignableSAMLObject samlMessage = (SignableSAMLObject) messageContext.getInboundSAMLMessage();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, XMLHelper.prettyPrintXML(samlMessage.getDOM()));
 
-			// Check the signature
-			// First we must detect which public key must be used
-			// The alias of the publickey is equal to the appId and the
+			// Check the signature. First we must detect which public key must be used
+			// The alias of the public key is equal to the appId and the
 			// appId is retrieved by the Issuer, which is the server_url
 			String elementName = samlMessage.getElementQName().getLocalPart();
 			Issuer issuer = retrieveIssuer(elementName, samlMessage);

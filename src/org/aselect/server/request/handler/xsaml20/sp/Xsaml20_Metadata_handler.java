@@ -79,16 +79,12 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 	{
 		String sMethod = "aselectReader";
 
-		Object oRequest = null;
-		Object oHandlers = null;
-		Object oHandler = null;
-
 		super.aselectReader();
 
 		try {
-			oRequest = _configManager.getSection(null, "requests");
-			oHandlers = _configManager.getSection(oRequest, "handlers");
-			oHandler = _configManager.getSection(oHandlers, "handler");
+			Object oRequest = _configManager.getSection(null, "requests");
+			Object oHandlers = _configManager.getSection(oRequest, "handlers");
+			Object oHandler = _configManager.getSection(oHandlers, "handler");
 
 			for (; oHandler != null; oHandler = _configManager.getNextSection(oHandler)) {
 				try {
@@ -234,8 +230,7 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 
 		entityDescriptor = (EntityDescriptor) SamlTools.sign(entityDescriptor);
 
-		// TODO create descriptor (PDPDescriptor?) for session sync here
-
+		// The Session Sync descriptor (PDPDescriptor?) would go here
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "entityDescriptor done");
 
 		// Marshall to the Node

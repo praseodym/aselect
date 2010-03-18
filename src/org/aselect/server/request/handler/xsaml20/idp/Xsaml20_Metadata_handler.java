@@ -47,7 +47,6 @@ import org.w3c.dom.Node;
 
 import org.opensaml.xml.util.XMLHelper;
 
-// TODO: Auto-generated Javadoc
 // Configuration example
 //
 // <handler id="saml20_idp_metadata"
@@ -107,10 +106,8 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 						continue;
 					}
 					String sTarget = _configManager.getParam(oHandler, "target");
-					String sLocalUrl = Utils
-							.getSimpleParam(_configManager, _systemLogger, oHandler, "local_url", false);
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "id=" + sId + " target=" + sTarget + "local_url="
-							+ sLocalUrl);
+					String sLocalUrl = Utils.getSimpleParam(_configManager, _systemLogger, oHandler, "local_url", false);
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "id=" + sId + " target=" + sTarget + "local_url="+sLocalUrl);
 					sTarget = sTarget.replace("\\", "");
 					sTarget = sTarget.replace(".*", "");
 
@@ -150,8 +147,7 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 			}
 		}
 		catch (ASelectConfigException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not find 'aselect' config section in config file",
-					e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not find 'aselect' config section in config file", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}

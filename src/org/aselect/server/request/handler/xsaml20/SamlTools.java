@@ -11,7 +11,6 @@
  */
 package org.aselect.server.request.handler.xsaml20;
 
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -29,7 +28,6 @@ import java.util.logging.Level;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.crypto.dsig.DigestMethod;
 
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
@@ -44,6 +42,7 @@ import org.opensaml.common.SAMLObject;
 import org.opensaml.common.SAMLObjectBuilder;
 import org.opensaml.common.SAMLVersion;
 import org.opensaml.common.SignableSAMLObject;
+import org.opensaml.common.impl.SAMLObjectContentReference;
 import org.opensaml.saml2.core.Assertion;
 import org.opensaml.saml2.core.Attribute;
 import org.opensaml.saml2.core.AttributeStatement;
@@ -68,6 +67,7 @@ import org.opensaml.ws.transport.http.HttpServletResponseAdapter;
 import org.opensaml.xml.XMLObject;
 import org.opensaml.xml.XMLObjectBuilder;
 import org.opensaml.xml.XMLObjectBuilderFactory;
+import org.opensaml.xml.encryption.EncryptionConstants;
 import org.opensaml.xml.io.Marshaller;
 import org.opensaml.xml.io.MarshallerFactory;
 import org.opensaml.xml.io.MarshallingException;
@@ -86,12 +86,10 @@ import org.opensaml.xml.util.Base64;
 import org.opensaml.xml.util.XMLConstants;
 import org.opensaml.xml.util.XMLHelper;
 import org.opensaml.xml.validation.ValidationException;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-// TODO: Auto-generated Javadoc
 public class SamlTools
 {
 	private static final String MODULE = "SamlTools";
@@ -167,7 +165,6 @@ public class SamlTools
 	 * @throws MessageDecodingException
 	 *             the message decoding exception
 	 */
-	@SuppressWarnings("unchecked")
 	public static boolean verifySignature(PublicKey key, HttpServletRequest httpRequest)
 		throws MessageDecodingException
 	{
@@ -234,18 +231,18 @@ public class SamlTools
 	public static boolean checkLocalityAddress(SAMLObject obj, String refAddress)
 		throws ASelectException
 	{
-		// TODO We might also implement checking of DNSName here
+		// We may want to check the DNSName here
 		boolean valid = false;
 		String sMethod = "checkLocalityAddress";
 		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "obj->" + obj + "refAddress->" + refAddress);
-		// TODO This might be implemented more elegantly
+		// This might be implemented more elegantly
 		if ((obj instanceof AuthnStatement) && (refAddress != null)) {
 			if (((AuthnStatement) obj).getSubjectLocality() != null
 					&& refAddress.equals(((AuthnStatement) obj).getSubjectLocality().getAddress())) {
 				valid = true;
 			}
-			// TODO there might be more saml2 types to implement here
+			// There might be more saml2 types to implement here
 		}
 		else {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Cannot validate the object:" + obj + " with refAddress:"
@@ -361,7 +358,8 @@ public class SamlTools
 		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "obj->" + obj + ", refInstant->" + refInstant
 				+ ", maxNotBefore->" + maxNotBefore + ", maxNotOnOrAfter->" + maxNotOnOrAfter);
-		// TODO Still think this is a bit clumsy, maybe implement some sort of
+		
+		// Still think this is a bit clumsy, maybe implement some sort of
 		// (command) pattern here or use generics
 		if (obj instanceof Assertion) {
 			Conditions conditions = ((Assertion) obj).getConditions();
@@ -421,7 +419,7 @@ public class SamlTools
 				((LogoutRequest) obj).setNotOnOrAfter(refInstant.plus(maxNotOnOrAfter.longValue()));
 			}
 		}// not instanceof LogoutRequest
-		// TODO Implement other SAMLObjects?
+
 		return obj;
 	}
 
@@ -445,7 +443,7 @@ public class SamlTools
 		String sMethod = "setAudienceRestrictions";
 		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "obj->" + obj + ", restriction->" + restriction);
-		// TODO Still think this is a bit clumsy, maybe implement some sort of
+		// Still think this is a bit clumsy, maybe implement some sort of
 		// (command) pattern here or use generics
 		if (obj instanceof Assertion) {
 			Conditions conditions = null;
@@ -460,7 +458,8 @@ public class SamlTools
 				}
 				((Assertion) obj).getConditions().getAudienceRestrictions().add(restriction);
 			}
-		} // TODO Implement other SAMLObjects
+		}
+		// Other SAMLObjects would go here
 		return obj;
 	}
 
@@ -479,39 +478,44 @@ public class SamlTools
 	public static SignableSAMLObject sign(SignableSAMLObject obj)
 	throws ASelectException
 	{
-
 		String sMethod = "sign(SignableSAMLObject obj)";
 		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
+		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
+		String addedSecurity = _configManager.getAddedSecurity();
+		boolean useSha256 = addedSecurity.contains("sha256");
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "obj->" + obj);
 		if (!obj.isSigned()) {
 			ASelectConfigManager _oASelectConfigManager = ASelectConfigManager.getHandle();
 			PrivateKey privKey = _oASelectConfigManager.getDefaultPrivateKey();
 			Signature signature = new SignatureBuilder().buildObject();
-			// SAMLObjectContentReference contentRef = new SAMLObjectContentReference(obj);
-			// signature.getContentReferences().add(contentRef);
 			String signingAlgo;
 			if ("RSA".equalsIgnoreCase(privKey.getAlgorithm())) {
-				signingAlgo = SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256;
+				signingAlgo = (useSha256)? SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256:
+											SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA1;
 			}
 			else {
 				signingAlgo = SignatureConstants.ALGO_ID_SIGNATURE_ECDSA_SHA1;
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "using algorithm: " + signingAlgo);
+
 			BasicCredential credential = new BasicCredential();
 			credential.setPrivateKey(privKey);
 			signature.setSigningCredential(credential);
 			signature.setSignatureAlgorithm(signingAlgo);
 			signature.setCanonicalizationAlgorithm(SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
-			
-			// Try to change the DigestMethod
-			//Element digestMethodElem = XMLHelper.constructElement((Document) obj,  org.opensaml.xml.signature.DigestMethod.DEFAULT_ELEMENT_NAME);
-            //XMLHelper.appendNamespaceDeclaration(digestMethodElem, XMLConstants.XMLSIG_NS, XMLConstants.XMLSIG_PREFIX);
-            //digestMethodElem.setAttributeNS(null,  org.opensaml.xml.signature.DigestMethod.ALGORITHM_ATTRIB_NAME,
-            //			SignatureConstants.ALGO_ID_DIGEST_SHA1.replace("sha1", "sha256"));
-
 			obj.setSignature(signature);
-			try {
+
+			// 20100315, Bauke: Set Sha256, call after setSignature, remove all ContentReferences,
+			// including the default and add a new one for Sha256 (eHerkenning)
+			if (useSha256) {
+	            SAMLObjectContentReference contentReference = new SAMLObjectContentReference(obj);
+	            contentReference.setDigestAlgorithm(EncryptionConstants.ALGO_ID_DIGEST_SHA256);
+	            signature.getContentReferences().clear();  // must be done after setSignature() (it adds a default to the list)
+	            signature.getContentReferences().add(contentReference);            
+			}
+
+            try {
 				org.opensaml.xml.Configuration.getMarshallerFactory().getMarshaller(obj).marshall(obj);
 			}
 			catch (MarshallingException e) {
@@ -817,9 +821,6 @@ public class SamlTools
 	public static java.security.cert.X509Certificate getCertificate(X509Certificate cert)
 		throws CertificateException
 	{
-		// for old libs
-		// return org.opensaml.xml.signature.KeyInfoHelper.getCertificate(cert);
-		// for new libs
 		return org.opensaml.xml.security.keyinfo.KeyInfoHelper.getCertificate(cert);
 	}
 
@@ -838,11 +839,8 @@ public class SamlTools
 	public static HttpServletResponseAdapter createHttpServletResponseAdapter(HttpServletResponse response,
 			String remoteURL)
 	{
-		// for old libs
-		// return new HttpServletResponseAdapter(response);
-		// for new libs
-		return new HttpServletResponseAdapter(response, remoteURL == null ? false : remoteURL.toLowerCase().startsWith(
-				"https"));
+		return new HttpServletResponseAdapter(response, remoteURL == null ? false :
+							remoteURL.toLowerCase().startsWith("https"));
 	}
 
 	/**

@@ -69,8 +69,7 @@ import org.xml.sax.InputSource;
  * 
  * @author Atos Origin
  */
-// public class Xsaml20_AssertionConsumer extends ProtoRequestHandler // RH, 20080602, o
-public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 20080602, n
+public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 {
 	private final static String MODULE = "Xsaml20_AssertionConsumer";
 	private XMLObjectBuilderFactory _oBuilderFactory;
@@ -79,6 +78,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 	private String _sMyServerId;
 	private String _sFederationUrl;
 	private String _sRedirectUrl; // We use as Issuer in the send SAML message
+	private String _sRequestIssuer; // But it can be set explicitly
 	private boolean signingRequired = false; // OLD opensaml20 library	// true; // NEW opensaml20 library
 	// TODO see when signing is actually required
 	// get from aselect.xml <applications require_signing="false | true">
@@ -107,7 +107,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 	 *             the a select exception
 	 */
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 
@@ -118,11 +118,12 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 
 		_sMyServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
 		_sFederationUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "federation_url", false); // 20091207: // true);
-		_sRedirectUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true); // We use as
 		// Issuer in the send SAML message
+		_sRedirectUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true); // use when "issuer" is absent
+		// 20100315: Specific issuer (eHerkenning) different from redirect_url
+		_sRequestIssuer = ASelectConfigManager.getSimpleParam(oHandlerConfig, "issuer", false);
 
-		String sLocalityAddressRequired = ASelectConfigManager.getSimpleParam(oHandlerConfig,
-				"locality_address_required", false);
+		String sLocalityAddressRequired = ASelectConfigManager.getSimpleParam(oHandlerConfig, "locality_address_required", false);
 		// if (sVerifySignature != null && sVerifySignature.equalsIgnoreCase("false")) {
 		// _bVerifySignature = false;
 		if ("true".equalsIgnoreCase(sLocalityAddressRequired)) {
@@ -131,7 +132,6 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 
 		_tgtManager = TGTManager.getHandle();
 		_authenticationLogger = ASelectAuthenticationLogger.getHandle();
-
 	}
 
 	/**
@@ -197,7 +197,6 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 					.getBuilder(ArtifactResolve.DEFAULT_ELEMENT_NAME);
 			ArtifactResolve artifactResolve = artifactResolveBuilder.buildObject();
 
-			// RH, 20081107, use SamlTools
 			artifactResolve.setID(SamlTools.generateIdentifier(_systemLogger, MODULE));
 			artifactResolve.setVersion(SAMLVersion.VERSION_20);
 			artifactResolve.setIssueInstant(new DateTime());
@@ -208,8 +207,10 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 			SAMLObjectBuilder<Issuer> assertionIssuerBuilder = (SAMLObjectBuilder<Issuer>) _oBuilderFactory
 					.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
 			Issuer assertionIssuer = assertionIssuerBuilder.buildObject();
-			assertionIssuer.setFormat(NameIDType.ENTITY);
-			assertionIssuer.setValue(_sRedirectUrl);
+			// 20100312, Bauke: eHerkenning, no format:
+			// assertionIssuer.setFormat(NameIDType.ENTITY);
+			// 20100311, Bauke: added for eHerkenning: Specific issuer id, independent of the Url
+			assertionIssuer.setValue((_sRequestIssuer != null)? _sRequestIssuer:_sRedirectUrl);
 			artifactResolve.setIssuer(assertionIssuer);
 			artifactResolve.setArtifact(artifact);
 
@@ -262,8 +263,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler // RH, 2008060
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Do artifactResponse signature verification="+is_bVerifySignature());
 			if (is_bVerifySignature()) {
-				// signature of artifactResponse here
-				// check signature of artifactResolve here
+				// Check signature of artifactResolve here
 				// We get the public key from the metadata
 				// Therefore we need a valid Issuer to lookup the entityID in the metadata
 				// We get the metadataURL from aselect.xml so we consider this safe and authentic

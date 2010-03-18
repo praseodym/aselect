@@ -242,8 +242,9 @@ public class RequestHandlerFactory
 			}
 
 			if (bMatches && oRequestHandler != null) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "MATCHED oRequestHandler=" + oRequestHandler.getID());
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "HANDLE<< oRequestHandler=" + oRequestHandler.getID());
 				oRequestState = oRequestHandler.process(request, response);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, ">>HANDLE oRequestHandler=" + oRequestHandler.getID());
 			}
 
 			// request handler chaining
