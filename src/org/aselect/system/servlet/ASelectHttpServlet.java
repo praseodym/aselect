@@ -76,7 +76,6 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * Base servlet for A-Select (core) components. <br>
  * <br>

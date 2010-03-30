@@ -230,11 +230,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			htAllAttributes.put("authsp_level", sPar);
 		}
 		sPar = (String) htTGTContext.get("authsp");
-		if (sPar != null)
-			htCredentials.put("authsp", sPar);
-		sPar = (String) htTGTContext.get("authsp");
-		if (sPar != null)
-			htCredentials.put("authsp", sPar);
+		if (sPar != null) htCredentials.put("authsp", sPar);
 
 		// Bauke, 20081209 added for ADFS / WS-Fed
 		String sPwreply = (String) htTGTContext.get("wreply");
@@ -1082,21 +1078,19 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		HashMap htSession = null;
 
 		// Extract uid and security level
-		//String sUserId = (String) htAttributes.get("digid_uid");
-		//if (sUserId == null)
 		String sUserId = (String) htAttributes.get("uid");
 		if (sUserId == null)
 			sUserId = (String) htAttributes.get("cn");
 
-		//String sSecLevel = (String) htAttributes.get("digid_betrouwbaarheidsniveau");
-		//if (sSecLevel == null)
-		String sSecLevel = (String) htAttributes.get("betrouwbaarheidsniveau");
+		String sSecLevel = (String) htAttributes.get("sel_level");
+		if (sSecLevel == null) sSecLevel = (String) htAttributes.get("betrouwbaarheidsniveau");
 		if (sSecLevel == null) sSecLevel = (String) htAttributes.get("authsp_level");
 		if (sSecLevel == null) sSecLevel = "5";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "UserId=" + sUserId + ", secLevel=" + sSecLevel);
 
 		htAttributes.put("uid", sUserId);
 		htAttributes.put("betrouwbaarheidsniveau", sSecLevel);
+		htAttributes.put("sel_level", sSecLevel);
 
 		// TODO following code should go to tgt.TGTIssuer, RH 20080617
 		HashMap htTGTContext = new HashMap();
@@ -1105,11 +1099,10 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		htTGTContext.put("betrouwbaarheidsniveau", sSecLevel);
 		htTGTContext.put("organization", sOrg);
 		htTGTContext.put("authsp_level", sSecLevel);
+		htAttributes.put("sel_level", sSecLevel);
 		htTGTContext.put("authsp", "SAML");
 		htTGTContext.put("app_id", sAppId);
 		htTGTContext.put("app_level", "2");
-		// if (sRid != null) htTGTContext.put("rid", sRid); // RH, 20080617, o
-		// RH, 20080617, sn
 		if (sRid != null) {
 			htTGTContext.put("rid", sRid);
 			htSession = _sessionManager.getSessionContext(sRid);
@@ -1119,8 +1112,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 				Utils.copyHashmapValue("authsp_type", htTGTContext, htSession);
 			}
 		}
-		// RH, 20080617, en
-
+		
 		if (sTgt == null) {
 			sTgt = _tgtManager.createTGT(htTGTContext);
 		}

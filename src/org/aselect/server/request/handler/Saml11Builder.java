@@ -15,10 +15,9 @@
  */
 package org.aselect.server.request.handler;
 
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -27,12 +26,9 @@ import java.util.Vector;
 import java.util.logging.Level;
 
 import org.aselect.server.log.ASelectSystemLogger;
-import org.aselect.server.request.HandlerTools;
 import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.utils.BASE64Decoder;
-import org.aselect.system.utils.BASE64Encoder;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 import org.opensaml.*;
@@ -157,8 +153,7 @@ public class Saml11Builder
 				htAttributes.put("authsp", sAuthSPID);
 				htAttributes.put("app_id", sAppID);
 				String sPar = (String) htInfo.get("betrouwbaarheidsniveau");
-				if (sPar != null)
-					htAttributes.put("betrouwbaarheidsniveau", sPar);
+				if (sPar != null) htAttributes.put("betrouwbaarheidsniveau", sPar);
 			}
 
 			// The real work!

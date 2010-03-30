@@ -204,7 +204,6 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
 
-// TODO: Auto-generated Javadoc
 /**
  * This is the A-Select Server main class. It is responsible for <code>init()</code>ializing and <code>destroy()</code>
  * ing all A-Select Server components, and it serves as the entry point for incoming requests (via the
@@ -514,6 +513,7 @@ public class ASelectServer extends ASelectHttpServlet
 			_systemLogger.log(Level.INFO, MODULE, sMethod, request.getRemoteHost() + " / " + request.getRequestURL()
 					+ " / " + request.getRemoteAddr());
 			_oRequestHandlerFactory.process(request, response);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Response: "+response);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "} SERVICE" + " T=" + System.currentTimeMillis() + "\n====");
 		}
 		catch (ASelectException e) {

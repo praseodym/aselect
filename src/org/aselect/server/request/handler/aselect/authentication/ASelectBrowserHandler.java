@@ -122,7 +122,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.sam.agent.SAMResource;
 
-// TODO: Auto-generated Javadoc
 /**
  * This class handles requests coming from a a-select server through a users browser. <br>
  * <br>

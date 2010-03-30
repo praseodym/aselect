@@ -98,7 +98,7 @@ public class MemoryStorageHandler implements IStorageHandler
 	 * Get a object from memory.
 	 * 
 	 * @param oKey
-	 *            the o key
+	 *            the key object
 	 * @return the object
 	 * @throws ASelectStorageException
 	 *             the a select storage exception
@@ -110,7 +110,7 @@ public class MemoryStorageHandler implements IStorageHandler
 		String sMethod = "get()";
 		Object oValue = null;
 
-		_systemLogger.log(Level.FINEST, MODULE, sMethod, "this=" + this); // +" store="+_htStorage);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "key="+oKey+" this=" + this); // +" store="+_htStorage);
 		String sTxt = Utils.firstPartOf(oKey.toString(), 30);
 		try {
 			// synchronized (_htStorage) {

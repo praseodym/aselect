@@ -330,8 +330,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					}
 					String sAuthnContextClassRefURI = samlAssertion.getAuthnStatements().get(0).getAuthnContext()
 							.getAuthnContextClassRef().getAuthnContextClassRef();
-					String sAuthSpLevel = SecurityLevel.convertAuthnContextClassRefURIToLevel(sAuthnContextClassRefURI,
-							_systemLogger, MODULE);
+					String sSelectedLevel = SecurityLevel.convertAuthnContextClassRefURIToLevel(sAuthnContextClassRefURI, _systemLogger, MODULE);
 
 					HashMap htRemoteAttributes = new HashMap();
 					htRemoteAttributes.put("name_id", sNameID);
@@ -354,14 +353,15 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 						}
 					}
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "NameID=" + sNameID + " remote_rid=" + sRemoteRid
-							+ " local_rid=" + sLocalRid + " authsp_level=" + sAuthSpLevel + " organization/authsp="
+							+ " local_rid=" + sLocalRid + " sel_level=" + sSelectedLevel + " organization/authsp="
 							+ sOrganization);
 
 					// htRemoteAttributes.put("attributes", HandlerTools.serializeAttributes(htAttributes));
 					htRemoteAttributes.put("remote_rid", sRemoteRid);
 					htRemoteAttributes.put("local_rid", sLocalRid);
 
-					htRemoteAttributes.put("authsp_level", sAuthSpLevel);
+					htRemoteAttributes.put("sel_level", sSelectedLevel);
+					htRemoteAttributes.put("authsp_level", sSelectedLevel);
 					htRemoteAttributes.put("organization", sOrganization);
 					htRemoteAttributes.put("authsp", sOrganization);
 

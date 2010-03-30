@@ -201,8 +201,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 			// The betrouwbaarheidsniveau is stored in the session context
 			RequestedAuthnContext requestedAuthnContext = authnRequest.getRequestedAuthnContext();
-			String sBetrouwbaarheidsNiveau = SecurityLevel.getBetrouwbaarheidsNiveau(requestedAuthnContext,
-					_systemLogger);
+			String sBetrouwbaarheidsNiveau = SecurityLevel.getBetrouwbaarheidsNiveau(requestedAuthnContext, _systemLogger);
 			if (sBetrouwbaarheidsNiveau.equals(SecurityLevel.BN_NOT_FOUND)) {
 				// We've got a security level but is not known
 				String sStatusMessage = "The requested AuthnContext isn't present in the configuration";
@@ -214,14 +213,16 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			}
 			// debug
 			/*
-			 * org.opensaml.saml2.core.Subject mySubj = authnRequest.getSubject(); if (mySubj != null) {
-			 * _systemLogger.log(Level.INFO, MODULE, sMethod, "Subject.BaseID="+mySubj.getBaseID()+
-			 * " Subject.NameID="+mySubj.getNameID()); }
+			 * org.opensaml.saml2.core.Subject mySubj = authnRequest.getSubject();
+			 * if (mySubj != null) {
+			 *		_systemLogger.log(Level.INFO, MODULE, sMethod, "Subject.BaseID="+mySubj.getBaseID()+
+			 * 				" Subject.NameID="+mySubj.getNameID());
+			 * }
 			 */
 
 			// 20090110, Bauke changed requested_betrouwbaarheidsniveau to required_level
 			htSession.put("required_level", sBetrouwbaarheidsNiveau);
-			htSession.put("level", Integer.parseInt(sBetrouwbaarheidsNiveau)); // 20090111, Bauke added
+			htSession.put("level", Integer.parseInt(sBetrouwbaarheidsNiveau)); // 20090111, Bauke added, NOTE: it's an Integer
 			_oSessionManager.updateSession(sIDPRid, htSession);
 
 			// redirect with A-Select request=login1
@@ -493,9 +494,9 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			if (htTGTContext != null) {
 
 				sSPRid = (String) htTGTContext.get("sp_rid");
-				String sAuthspLevel = (String) htTGTContext.get("betrouwbaarheidsniveau");
-				if (sAuthspLevel == null)
-					sAuthspLevel = (String) htTGTContext.get("authsp_level");
+				String sSelectedLevel = (String) htTGTContext.get("sel_level");
+				if (sSelectedLevel == null) sSelectedLevel = (String) htTGTContext.get("authsp_level");
+				if (sSelectedLevel == null) sSelectedLevel = (String) htTGTContext.get("betrouwbaarheidsniveau");  // To be removed
 				String sUid = (String) htTGTContext.get("uid");
 				String sCtxRid = (String) htTGTContext.get("rid");
 				String sSubjectLocalityAddress = (String) htTGTContext.get("client_ip");
@@ -521,7 +522,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				HashMap htAllAttributes = new HashMap();
 				htAllAttributes.put("attributes", sAllAttributes);
 				htAllAttributes.put("uid", sUid);
-				htAllAttributes.put("betrouwbaarheidsniveau", sAuthspLevel);
+				htAllAttributes.put("betrouwbaarheidsniveau", sSelectedLevel);
 
 				Set keys = htAllAttributes.keySet();
 				for (Object s : keys) {
@@ -542,16 +543,17 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				}
 
 				/*
-				 * // 200909, Bauke: replaced by the attribute gatherer solution Attribute attributeAuthspLevel =
-				 * attributeBuilder.buildObject(); attributeAuthspLevel.setName("betrouwbaarheidsniveau"); XSString
-				 * attributeAuthspLevelValue = (XSString) stringBuilder.buildObject(
-				 * AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
+				 * // 200909, Bauke: replaced by the attribute gatherer solution
+				 * Attribute attributeAuthspLevel = attributeBuilder.buildObject();
+				 * attributeAuthspLevel.setName("betrouwbaarheidsniveau");
+				 * XSString attributeAuthspLevelValue = (XSString) stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
 				 * attributeAuthspLevelValue.setValue(sAuthspLevel);
 				 * attributeAuthspLevel.getAttributeValues().add(attributeAuthspLevelValue);
 				 * attributeStatement.getAttributes().add(attributeAuthspLevel); // add this attribute Attribute
-				 * attributeUid = attributeBuilder.buildObject(); attributeUid.setName("uid"); XSString
-				 * attributeUidValue = (XSString) stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
-				 * XSString.TYPE_NAME); attributeUidValue.setValue(sUid);
+				 * attributeUid = attributeBuilder.buildObject();
+				 * attributeUid.setName("uid");
+				 * XSString attributeUidValue = (XSString) stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
+				 * attributeUidValue.setValue(sUid);
 				 * attributeUid.getAttributeValues().add(attributeUidValue);
 				 * attributeStatement.getAttributes().add(attributeUid);
 				 */
@@ -560,8 +562,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				SAMLObjectBuilder<AuthnContextClassRef> authnContextClassRefBuilder = (SAMLObjectBuilder<AuthnContextClassRef>) builderFactory
 						.getBuilder(AuthnContextClassRef.DEFAULT_ELEMENT_NAME);
 				AuthnContextClassRef authnContextClassRef = authnContextClassRefBuilder.buildObject();
-				String sAutnContextClassRefURI = SecurityLevel.convertLevelToAuthnContextClassRefURI(sAuthspLevel,
-						_systemLogger, MODULE);
+				String sAutnContextClassRefURI = SecurityLevel.convertLevelToAuthnContextClassRefURI(sSelectedLevel, _systemLogger, MODULE);
 				authnContextClassRef.setAuthnContextClassRef(sAutnContextClassRefURI);
 
 				SAMLObjectBuilder<AuthnContext> authnContextBuilder = (SAMLObjectBuilder<AuthnContext>) builderFactory

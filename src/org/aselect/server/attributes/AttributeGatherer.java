@@ -649,12 +649,14 @@ public class AttributeGatherer
 		Utils.copyHashmapValue("sel_uid", htAttributes, htTGTContext);
 
 		String sAuthsp = (String) htTGTContext.get("authsp");
+		if (sAuthsp != null)
+			htAttributes.put("sel_authsp", sAuthsp);
 		String sAuthspLevel = (String) htTGTContext.get("authsp_level");
 		if (sAuthsp != null) {
-			htAttributes.put("sel_authsp", sAuthsp);
 			htAttributes.put("authsp_level", sAuthspLevel);
 			htAttributes.put("sel_level", sAuthspLevel);
 		}
+		Utils.copyHashmapValue("sel_level", htAttributes, htTGTContext);  // if present, overrides authsp_level
 		Utils.copyHashmapValue("authsp_type", htAttributes, htTGTContext);
 		
 		Utils.copyHashmapValue("client_ip", htAttributes, htTGTContext);

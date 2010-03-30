@@ -282,9 +282,9 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Setting the ForceAuthn attribute");
 				authnRequest.setForceAuthn(true);
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the authnRequest >======");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the authnRequest >======"+authnRequest);
 			authnRequest = (AuthnRequest)sign(authnRequest);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the authnRequest ======<");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the authnRequest ======<"+authnRequest);
 
 			SAMLObjectBuilder<Endpoint> endpointBuilder = (SAMLObjectBuilder<Endpoint>) builderFactory
 					.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);
@@ -293,7 +293,9 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			samlEndpoint.setResponseLocation(sMyUrl);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "EndPoint="+samlEndpoint+"Destination="+sDestination);
 			
-			HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response, sDestination);
+			//HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response, sDestination);
+			HttpServletResponseAdapter outTransport = new HttpServletResponseAdapter(response,
+						(sDestination == null)? false: sDestination.toLowerCase().startsWith("https"));
 			
 			// RH, 20081113, set appropriate headers
 			outTransport.setHeader("Pragma", "no-cache");
@@ -302,7 +304,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			// 20100317, Bauke: pass language to IdP
 			String sLang = (String)htSessionContext.get("language");
 			if (sLang != null) {
-				response.setLocale(new java.util.Locale(sLang)); // does not work
+				response.setLocale(new java.util.Locale(sLang)); // pity, does not work
 			}
 
 			BasicSAMLMessageContext messageContext = new BasicSAMLMessageContext();
@@ -321,12 +323,16 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			MarshallerFactory marshallerFactory = Configuration.getMarshallerFactory();
 			Marshaller marshaller = marshallerFactory.getMarshaller(messageContext.getOutboundSAMLMessage());
 			Node nodeMessageContext = marshaller.marshall(messageContext.getOutboundSAMLMessage());
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Language="+sLang+" OutboundSAMLMessage:\n"
-								+ XMLHelper.prettyPrintXML(nodeMessageContext));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, " Language="+sLang+
+					" OutboundSAMLMessage:\n"+XMLHelper.prettyPrintXML(nodeMessageContext));
 			
+			// Brent Putman: The Redirect-DEFLATE binding encoder strips off the protocol message's ds:Signature element (if even present)
+			// before the marshalling and signing operations. Per the spec, it's not allowed to carry the signature that way.
+			// HTTPRedirectDeflateEncoder: SAML 2.0 HTTP Redirect encoder using the DEFLATE encoding method.
+			// This encoder only supports DEFLATE compression and DSA-SHA1 and RSA-SHA1 signatures.
 			HTTPRedirectDeflateEncoder encoder = new HTTPRedirectDeflateEncoder();
-			encoder.encode(messageContext);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Ready");
+			encoder.encode(messageContext);  // does a sendRedirect()
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Ready "+messageContext);
 		}
 		catch (ASelectException e) { // pass unchanged to the caller
 			throw e;

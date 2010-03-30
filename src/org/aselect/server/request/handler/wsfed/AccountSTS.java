@@ -378,9 +378,9 @@ public class AccountSTS extends ProtoRequestHandler
 
 		try {
 			String sSubjConf = SAMLSubject.CONF_BEARER; // default value
-			String sLevel = (String) htAttributes.get("betrouwbaarheidsniveau");
+			String sLevel = sLevel = (String) htAttributes.get("sel_level");
 			if (sLevel == null) sLevel = (String) htAttributes.get("authsp_level");
-			if (sLevel == null) sLevel = (String) htAttributes.get("sel_level");
+			if (sLevel == null) sLevel = (String) htAttributes.get("betrouwbaarheidsniveau");
 			if (sLevel != null) {
 				String urn = (String) _htSecLevels.get(sLevel);
 				if (urn != null)

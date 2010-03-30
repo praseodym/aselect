@@ -233,8 +233,9 @@ import org.aselect.system.utils.Utils;
  * </ul>
  * 
  * @author Alfa & Ariss 14-11-2007 - Changes: - Added to support TGT refreshing, Agent will refresh TGT every time the
- *         application makes contact 5-3-2009 - Added DigiD-ization, the handler will accept the DigiD request protocol
+ *         application makes contact
  * @author Bauke Hiemstra - www.anoigo.nl Copyright Gemeente Den Haag (http://www.denhaag.nl)
+ *         5-3-2009 - Added DigiD-ization, the handler will accept the DigiD request protocol
  */
 public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 {
@@ -664,7 +665,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 * @param oOutputMessage
 	 *            The output message.
 	 * @throws ASelectException
-	 *             If proccessing fails.
+	 *             If processing fails.
 	 */
 	//
 	// Bauke 20081201: added support for parameter "saml_attributes"
@@ -790,7 +791,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 
 		// Get other response parameters
 		sUid = (String) htTGTContext.get("uid");
-		String sAuthSPLevel = (String) htTGTContext.get("authsp_level");
+		String sAuthSPLevel = (String) htTGTContext.get("sel_level");  // 20100323: was ("authsp_level");
 		String sAuthSP = (String) htTGTContext.get("authsp");
 		long lExpTime = 0;
 		try {
@@ -830,11 +831,12 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			// Return both asp and authsp variables to remain compatible
 			// with A-Select 1.3 and 1.4
 			oOutputMessage.setParam("asp_level", sAuthSPLevel);
-			oOutputMessage.setParam("asp", sAuthSP);
 			oOutputMessage.setParam("authsp_level", sAuthSPLevel);
+			oOutputMessage.setParam("sel_level", sAuthSPLevel);  // 20100323: added
+			oOutputMessage.setParam("asp", sAuthSP);
 			oOutputMessage.setParam("authsp", sAuthSP);
 
-			// 20090303, Bauke: added for DigiD-ization
+			// 20090303, Bauke: added for DigiD-ization, return level in the configured name: <level_name>
 			String sLevelName = aApp.getLevelName();
 			if (sLevelName != null)
 				oOutputMessage.setParam(sLevelName, sAuthSPLevel);

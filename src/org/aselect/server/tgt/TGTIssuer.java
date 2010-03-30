@@ -267,9 +267,8 @@ public class TGTIssuer
 			HttpServletResponse oHttpServletResponse, String sOldTGT)
 		throws ASelectException
 	{
-		// A 'cross TGT' is issued if this Server is acting as 'local'
-		// A-Select Server. The user was authenticated at another
-		// (remote) A-Select Server.
+		// A 'cross TGT' is issued if this Server is acting as 'local' A-Select Server.
+		// The user was authenticated at another (remote) A-Select Server.
 		String sMethod = "issueCrossTGT()";
 		String sTgt = null;
 		String sArpTarget = null; // added 1.5.4
@@ -285,7 +284,6 @@ public class TGTIssuer
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Issue Cross TGT for RID: " + sRid);
 
 			String sAppUrl = (String) htSessionContext.get("app_url");
-			Integer intAppLevel = (Integer) htSessionContext.get("level");
 			String sAppId = (String) htSessionContext.get("app_id");
 			String sRemoteOrganization = (String) htSessionContext.get("remote_organization");
 
@@ -317,9 +315,11 @@ public class TGTIssuer
 
 			Utils.copyHashmapValue("authsp_type", htTGTContext, htRemoteAttributes);
 			Utils.copyHashmapValue("authsp_level", htTGTContext, htRemoteAttributes);
+			Utils.copyHashmapValue("sel_level", htTGTContext, htRemoteAttributes);
 			Utils.copyHashmapValue("authsp", htTGTContext, htRemoteAttributes);
 			htTGTContext.put("uid", sUserId);
 			htTGTContext.put("organization", sUserOrganization);
+			Integer intAppLevel = (Integer) htSessionContext.get("level");
 			htTGTContext.put("app_level", intAppLevel.toString());
 			htTGTContext.put("app_id", sAppId);
 			htTGTContext.put("rid", sRid);
@@ -378,7 +378,7 @@ public class TGTIssuer
 			if (!bForcedAuthn && sOldTGT != null) {
 				htOldTGTContext = _tgtManager.getTGT(sOldTGT);
 				if (htOldTGTContext != null) {
-					HashMap htUpdate = verifyTGT(htOldTGTContext, htTGTContext);
+					HashMap htUpdate = compareOldTGTLevels(htOldTGTContext, htTGTContext);
 					if (!htUpdate.isEmpty())
 						htTGTContext.putAll(htUpdate);
 
@@ -506,24 +506,26 @@ public class TGTIssuer
 			htTGTContext.put("organization", sOrganization);
 			if (sAuthSP != null)
 				htTGTContext.put("authsp", sAuthSP);
-			String sLevel = null;
+			String sAuthspLevel = null;
 			if (sAuthSP != null) {
-				sLevel = (_authSPHandlerManager.getLevel(sAuthSP)).toString();
+				sAuthspLevel = (_authSPHandlerManager.getLevel(sAuthSP)).toString();
 				try {
 					Object oAuthSPSSection = _configManager.getSection(null, "authsps");
 					Object oAuthSP = _configManager.getSection(oAuthSPSSection, "authsp", "id=" + sAuthSP);
-					sLevel = _configManager.getParam(oAuthSP, "level");
+					sAuthspLevel = _configManager.getParam(oAuthSP, "level");
 				}
 				catch (ASelectConfigException e) {
 					// It is a "privileged authsp" -> use default level from context
-					sLevel = ((Integer) htSessionContext.get("authsp_level")).toString();
+					sAuthspLevel = ((Integer) htSessionContext.get("authsp_level")).toString();
 				}
 			}
-			if (sLevel != null)
-				htTGTContext.put("authsp_level", sLevel);
-
+			if (sAuthspLevel != null)
+				htTGTContext.put("authsp_level", sAuthspLevel);
+			Utils.copyHashmapValue("sel_level", htTGTContext, htSessionContext);
+			
 			Integer intAppLevel = (Integer) htSessionContext.get("level");
 			htTGTContext.put("app_level", intAppLevel.toString());
+			
 			HashMap htAllowedAuthsps = (HashMap) htSessionContext.get("allowed_user_authsps");
 			if (htAllowedAuthsps != null)
 				htTGTContext.put("allowed_user_authsps", htAllowedAuthsps);
@@ -569,7 +571,7 @@ public class TGTIssuer
 			if (!bForcedAuthn && sOldTGT != null) {
 				htOldTGTContext = _tgtManager.getTGT(sOldTGT);
 				if (htOldTGTContext != null) {
-					HashMap htUpdate = verifyTGT(htOldTGTContext, htTGTContext);
+					HashMap htUpdate = compareOldTGTLevels(htOldTGTContext, htTGTContext);
 					if (!htUpdate.isEmpty())
 						htTGTContext.putAll(htUpdate);
 
@@ -894,11 +896,9 @@ public class TGTIssuer
 		}
 	}
 
-	/*
-	 * verifies the old tgt with new tgt context verifies the following items: - app_level
-	 */
 	/**
-	 * Verify tgt.
+	 * Compare old and new TGTs.
+	 * Verifies authsp_level and sel_level.
 	 * 
 	 * @param htOldTGTContext
 	 *            the ht old tgt context
@@ -906,21 +906,29 @@ public class TGTIssuer
 	 *            the ht new tgt context
 	 * @return the hash map
 	 */
-	private HashMap verifyTGT(HashMap htOldTGTContext, HashMap htNewTGTContext)
+	private HashMap compareOldTGTLevels(HashMap htOldTGTContext, HashMap htNewTGTContext)
 	{
 		HashMap htReturn = new HashMap();
-		// check if the user already has a ticket
-		// only if the application requires forced this is useful
-
-		// verify authsp_level
-		String sOldAuthSPLevel = (String) htOldTGTContext.get("authsp_level");
-		String sNewAuthSPLevel = (String) htNewTGTContext.get("authsp_level");
-		if (sOldAuthSPLevel != null && sNewAuthSPLevel != null) {
-			int iOldAuthSPLevel = new Integer(sOldAuthSPLevel).intValue();
-			int iNewAuthSPLevel = new Integer(sNewAuthSPLevel).intValue();
+		// verify authsp_level (level specified in the Auhtsp configuration)
+		String sOldValue = (String) htOldTGTContext.get("authsp_level");
+		String sNewValue = (String) htNewTGTContext.get("authsp_level");
+		if (sOldValue != null && sNewValue != null) {
+			int iOldAuthSPLevel = new Integer(sOldValue).intValue();
+			int iNewAuthSPLevel = new Integer(sNewValue).intValue();
 			if (iOldAuthSPLevel > iNewAuthSPLevel) {
-				// overwrite level, if user already has a ticket with a higher level
-				htReturn.put("authsp_level", sOldAuthSPLevel);
+				// Overwrite level, if user already has a ticket with a higher level
+				htReturn.put("authsp_level", sOldValue);
+			}
+		}
+		// 20100321, Bauke: Added sel_level (level chosen by the user)
+		sOldValue = (String) htOldTGTContext.get("sel_level");
+		sNewValue = (String) htNewTGTContext.get("sel_level");
+		if (sOldValue != null && sNewValue != null) {
+			int iOldAuthSPLevel = new Integer(sOldValue).intValue();
+			int iNewAuthSPLevel = new Integer(sNewValue).intValue();
+			if (iOldAuthSPLevel > iNewAuthSPLevel) {
+				// Overwrite level, if user already has a ticket with a higher level
+				htReturn.put("sel_level", sOldValue);
 			}
 		}
 		return htReturn;

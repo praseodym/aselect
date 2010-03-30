@@ -27,7 +27,6 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAuthSPException;
 import org.aselect.system.exception.ASelectConfigException;
 
-// TODO: Auto-generated Javadoc
 /**
  * The DB AuthSP Handler. <br>
  * <br>

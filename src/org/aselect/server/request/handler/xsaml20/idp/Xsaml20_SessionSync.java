@@ -68,7 +68,6 @@ import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-// TODO: Auto-generated Javadoc
 public class Xsaml20_SessionSync extends Saml20_BaseHandler
 {
 	private TGTManager _oTGTManager = TGTManager.getHandle();

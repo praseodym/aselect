@@ -31,7 +31,6 @@
 
 package org.aselect.server.authspprotocol.handler;
 
-// TODO: Auto-generated Javadoc
 /**
  * The AuthSPHandlers (Bean) class <br>
  * <br>

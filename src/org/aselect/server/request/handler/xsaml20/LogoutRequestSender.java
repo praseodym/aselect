@@ -37,7 +37,6 @@ import org.opensaml.xml.security.x509.BasicX509Credential;
 import org.opensaml.xml.util.XMLHelper;
 import org.w3c.dom.Node;
 
-// TODO: Auto-generated Javadoc
 public class LogoutRequestSender
 {
 	private final static String MODULE = "LogoutRequestSender";
@@ -58,9 +57,9 @@ public class LogoutRequestSender
 	 * Sends a LogoutRequest.
 	 * 
 	 * @param sServiceProviderUrl
-	 *            the s service provider url
+	 *            the service provider url
 	 * @param sNameID
-	 *            the s name id
+	 *            the name id
 	 * @param request
 	 *            the request
 	 * @param response
@@ -68,13 +67,13 @@ public class LogoutRequestSender
 	 * @param sTgT
 	 *            the s tg t
 	 * @param sIssuerUrl
-	 *            the s issuer url
+	 *            the issuer url
 	 * @param reason
 	 *            the reason
 	 * @param sLogoutReturnUrl
-	 *            the s logout return url
+	 *            the logout return url
 	 * @throws ASelectException
-	 *             the a select exception
+	 *             the A-select exception
 	 */
 	@SuppressWarnings("unchecked")
 	public void sendLogoutRequest(HttpServletRequest request, HttpServletResponse response, String sTgT,
@@ -96,8 +95,7 @@ public class LogoutRequestSender
 		String sAppUrl = request.getRequestURL().toString();
 		samlEndpoint.setResponseLocation(sAppUrl);
 
-		HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response,
-				sServiceProviderUrl);
+		HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response, sServiceProviderUrl);
 		// 20090627, Bauke: need headers too
 		outTransport.setHeader("Pragma", "no-cache");
 		outTransport.setHeader("Cache-Control", "no-cache, no-store");

@@ -94,7 +94,6 @@ import org.aselect.system.sam.agent.SAMResource;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * This class handles cross-authentication requests coming from a remote A-Select Server, except for the
  * <code>cross_login</code> request. It must be used as follows: <br>
@@ -264,17 +263,11 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 				htSessionContext.put("user_id", sUid);
 				_sessionManager.updateSession(sRid, htSessionContext);
 
-				String sSecLevel = (String) htResponse.get("betrouwbaarheidsniveau");
-				if (sSecLevel != null)
-					htAdditional.put("betrouwbaarheidsniveau", sSecLevel);
-				String sAssertUrl = (String) htSessionContext.get("sp_assert_url");
-				if (sAssertUrl != null)
-					htAdditional.put("sp_assert_url", sAssertUrl); // saml20
-				// addition
-				String sSPRid = (String) htSessionContext.get("sp_rid");
-				if (sAssertUrl != null)
-					htAdditional.put("sp_rid", sSPRid); // saml20 addition
+				Utils.copyHashmapValue("betrouwbaarheidsniveau", htAdditional, htResponse);
+				Utils.copyHashmapValue("sp_assert_url", htAdditional, htSessionContext);
+				Utils.copyHashmapValue("sp_rid", htAdditional, htSessionContext); // saml20 addition
 			}
+			Utils.copyHashmapValue("sel_level", htAdditional, htResponse);
 
 			// Bauke: transfer PKI attributes to the Context
 			Utils.copyHashmapValue("pki_subject_dn", htAdditional, htResponse);

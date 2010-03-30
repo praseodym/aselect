@@ -26,7 +26,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * The DigidAuthSPHandler. <br>
  * <br>
@@ -104,8 +103,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "AuthSPUrl=" + _sAuthSPUrl);
 
 			try {
-				_sDefaultBetrouwbaarheidsNiveau = _configManager.getParam(oAuthSPConfig,
-						"default_betrouwbaarheidsniveau");
+				_sDefaultBetrouwbaarheidsNiveau = _configManager.getParam(oAuthSPConfig, "default_betrouwbaarheidsniveau");
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
@@ -144,8 +142,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 				oBetrouwbaarheidsNiveau = _configManager.getSection(oBetrouwbaarheidsNiveaus, "betrouwbaarheidsniveau");
 			}
 			catch (ASelectConfigException e) {
-				_systemLogger
-						.log(Level.WARNING, MODULE, sMethod, "No config section 'betrouwbaarheidsniveau' found", e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config section 'betrouwbaarheidsniveau' found", e);
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 			_htBetrouwbaarheidsNiveaus = new HashMap<String, String>();
@@ -275,21 +272,17 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "htSessionContext=" + htSessionContext);
 
-			// De appId wordt bepaald adhv de hoogte van het gewenste betrouwbaarheidsniveau
-			// Deze zit in de sessioncontext
 			// 20090110, Bauke changed requested_betrouwbaarheidsniveau to required_level
 			String sBetrouwbaarheidsNiveau = (String) htSessionContext.get("required_level");
 			Integer intLevel = (Integer) htSessionContext.get("level");
-			String sAppId;
-			String sSharedSecret;
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "requested required_level=" + sBetrouwbaarheidsNiveau
 					+ " level=" + intLevel + " default level=" + _sDefaultBetrouwbaarheidsNiveau);
 			if (sBetrouwbaarheidsNiveau == null || sBetrouwbaarheidsNiveau.equals("empty")) {
 				// if betrouwbaarheidsniveau was not specified, we use the default.
 				sBetrouwbaarheidsNiveau = _sDefaultBetrouwbaarheidsNiveau;
 			}
-			sAppId = _htBetrouwbaarheidsNiveaus.get(sBetrouwbaarheidsNiveau);
-			sSharedSecret = _htSharedSecrets.get(sBetrouwbaarheidsNiveau);
+			String sAppId = _htBetrouwbaarheidsNiveaus.get(sBetrouwbaarheidsNiveau);
+			String sSharedSecret = _htSharedSecrets.get(sBetrouwbaarheidsNiveau);
 			if (sAppId == null) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No <application> found for level="
 						+ sBetrouwbaarheidsNiveau);
@@ -301,8 +294,6 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 				throw new ASelectException(Errors.ERROR_ASELECT_CONFIG_ERROR);
 			}
 
-			// String sAppUrl = (String) htSessionContext.get("my_url") + "?local_rid=" + sRid + "&authsp=" +
-			// _sAuthSPId;
 			String _sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true);
 			String sAppUrl = _sServerUrl + "?local_rid=" + sRid + "&authsp=" + _sAuthSPId;
 			String sASelectServerId = _sASelectAuthSPServerId;
@@ -328,20 +319,22 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 				throw new ASelectException(Errors.ERROR_ASELECT_IO);
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Result=" + htResponse);
+			
 			// This is what we may get from DigiD:
 			// Response={rid=120127592091747E2EEBC3F0AA366,
 			// as_url=https://as-demo.digid.nl/aselectserver/server?request=login1,
 			// result_code=0000, a-select-server=digidasdemo1}
-
 			String sResultCode = (String) htResponse.get("result_code");
 			if (!sResultCode.equals("0000")) {
 				throw new Exception("Bad result from DigiD");
 
 				/*
-				 * htResponse.put("organization", "DigiDDemo"); htResponse.put("rid", "120127592091747E2EEBC3F0AA366");
-				 * htResponse.put("a-select-server", "digidasdemo1"); htResponse.put("as_url",
-				 * "https://as-demo.digid.nl/aselectserver/server?request=login1"); htResponse.put("organization",
-				 * "DigiDDemo"); htResponse.put("result_code", "0000");
+				 * htResponse.put("organization", "DigiDDemo");
+				 * htResponse.put("rid", "120127592091747E2EEBC3F0AA366");
+				 * htResponse.put("a-select-server", "digidasdemo1");
+				 * htResponse.put("as_url", "https://as-demo.digid.nl/aselectserver/server?request=login1");
+				 * htResponse.put("organization", "DigiDDemo");
+				 * htResponse.put("result_code", "0000");
 				 */
 
 				// We regain control at:
@@ -443,8 +436,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			String sRid = (String) response.get("rid");
 			String sOrganization = (String) response.get("organization");
 			String sAppID = (String) response.get("app_id");
-			// if ("950000528".equals(sUid)) // Bauke: testing levels
-			// sBetrouwbaarheidsniveau = "20";
+			
 			//
 			// Also match sBetrouwbaarheidsniveau against the requested level
 			//
@@ -452,8 +444,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			if (sBetrouwbaarheidsniveau != null) {
 				digidLevel = Integer.parseInt(sBetrouwbaarheidsniveau);
 				reqLevel = Integer.parseInt(sReqLevel);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "digidLevel=" + digidLevel + " reqLevel=" + sReqLevel
-						+ ":" + reqLevel);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "digidLevel=" + digidLevel + " reqLevel=" + reqLevel);
 				if (digidLevel < reqLevel) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "DIGID LEVEL NOT HIGH ENOUGH (config error)");
 					throw new ASelectException(Errors.ERROR_ASELECT_CONFIG_ERROR);
@@ -463,11 +454,13 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			if ((resultCode != null) && (sUid != null) && sServerId != null && sBetrouwbaarheidsniveau != null
 					&& (sRid != null) && (sServerId.equals(_sASelectAuthSPServerId)) && (sRid.equals(sDigidRid))
 					&& (digidLevel >= reqLevel) && (resultCode.equals(Errors.ERROR_ASELECT_SUCCESS))) {
-				result.put("uid", sUid);
 				// Bauke: not sure which one it should be: user_id / uid
+				result.put("uid", sUid);
 				result.put("user_id", sUid);
 				result.put("betrouwbaarheidsniveau", sBetrouwbaarheidsniveau);
-				result.put("authsp_level", sBetrouwbaarheidsniveau);  // 20100106 added
+				// 20100106, added, but can be overwritten later by the level from the AuthSp configuration
+				result.put("authsp_level", sBetrouwbaarheidsniveau);
+				result.put("sel_level", sBetrouwbaarheidsniveau);  // 20100321, Bauke: added the level selected by the user
 				Utils.copyHashmapValue("attributes", result, response);
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Copy attributes=" + result.get("attributes"));
 				Object oAttributes = response.get("attributes");
@@ -492,10 +485,8 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			result.put("result", resultCode);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "result=" + resultCode);
 		}
-		catch (ASelectException e) {
-			if (((String) result.get("result")).equals(Errors.ERROR_ASELECT_SUCCESS)) {
-				result.put("result", e.getMessage()); // Errors.ERROR_ASELECT_INTERNAL_ERROR);
-			}
+		catch (ASelectException e) {  // do not throw an exception
+			result.put("result", e.getMessage());
 		}
 		return result;
 	}
