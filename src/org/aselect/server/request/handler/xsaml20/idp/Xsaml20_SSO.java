@@ -11,7 +11,6 @@
  */
 package org.aselect.server.request.handler.xsaml20.idp;
 
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -107,12 +106,14 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		String sMethod = "process()";
 		String sPathInfo = request.getPathInfo();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "==== Path=" + sPathInfo + " RequestQuery: "	+ request.getQueryString());
-		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request received === Path=" + sPathInfo+" Locale="+request.getLocale().getLanguage());
+		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request received === Path=" + sPathInfo+
+				" Locale="+request.getLocale().getLanguage()+" Method="+request.getMethod());
 
 		if (sPathInfo.endsWith(RETURN_SUFFIX)) {
 			processReturn(request, response);
 		}
-		else if (request.getParameter("SAMLRequest") != null) {
+		// 20100331, Bauke: added HTTP POST support
+		else if (request.getParameter("SAMLRequest") != null || "POST".equals(request.getMethod())) {
 			handleSAMLMessage(request, response);
 		}
 		else {
@@ -123,33 +124,43 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request handled ");
 		return new RequestState(null);
 	}
-
+	
+	/**
+	 * Tell caller the XML type we want recognized
+	 * Overrides the abstract method called in handleSAMLMessage().
+	 * 
+	 * @return
+	 *		the XML type
+	 */
+	protected String retrieveXmlType()
+	{
+		return AUTHNREQUEST;
+	}
+	
 	/**
 	 * Handle specific saml20 request.
+	 * Overrides the abstract method called in handleSAMLMessage().
 	 * 
 	 * @param httpRequest
-	 *            the http request
+	 *            the HTTP request
 	 * @param httpResponse
-	 *            the http response
+	 *            the HTTP response
 	 * @param samlMessage
-	 *            the saml message
+	 *            the saml message to be handled
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
 	@SuppressWarnings("unchecked")
 	protected void handleSpecificSaml20Request(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
-			SignableSAMLObject samlMessage)
+			SignableSAMLObject samlMessage, String sRelayState)
 		throws ASelectException
 	{
 		String sMethod = "handleSpecificSaml20Request " + Thread.currentThread().getId();
 		AuthnRequest authnRequest = (AuthnRequest) samlMessage;
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "PathInfo="+httpRequest.getPathInfo());
 
 		try {
-			String sRelayState = (String) httpRequest.getParameter("RelayState");
-			if (sRelayState != null && sRelayState.equals("[RelayState]"))
-				sRelayState = null; // 20091118, Bauke: ignore "empty" RelayState (came from logout_info.html)
-			Response errorResponse = validateAuthnRequest(authnRequest, httpRequest);
+			Response errorResponse = validateAuthnRequest(authnRequest, httpRequest.getRequestURL().toString());
 			if (errorResponse != null) {
 				_systemLogger.log(Audit.SEVERE, MODULE, sMethod, "validateAuthnRequest failed");
 				sendErrorArtifact(errorResponse, authnRequest, httpResponse, sRelayState);
@@ -245,6 +256,85 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> SAML AuthnRequest handled");
+	}
+	
+	/**
+	 * The incoming AuthnRequest is something like:
+	 * 
+	 * <pre>
+	 * &lt;sp:AuthnRequest
+	 * xmlns:sp=&quot;urn:oasis:names:tc:SAML:2.0:protocol&quot;
+	 * AssertionConsumerServiceURL=&quot;https://localhost:8780/SP-A&quot;
+	 * Destination=&quot;https://localhost:8880/IDP-F&quot;
+	 * ForceAuthn=&quot;false&quot;
+	 * ID=&quot;RTXXcU5moVW3OZcvnxVoc&quot;
+	 * IsPassive=&quot;false&quot;
+	 * IssueInstant=&quot;2007-08-13T11:29:11Z&quot;
+	 * ProtocolBinding=&quot;urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact&quot;
+	 * ProviderName=&quot;SP 1&quot;
+	 * Version=&quot;2.0&quot;&gt;
+	 * &lt;sa:Issuer
+	 * xmlns:sa=&quot;urn:oasis:names:tc:SAML:2.0:assertion&quot;
+	 * Format=&quot;urn:oasis:names:tc:SAML:2.0:nameid-format:entity&quot;&gt;
+	 * https://localhost:8780/sp.xml
+	 * &lt;/sa:Issuer&gt;
+	 * &lt;sp:NameIDPolicy
+	 * AllowCreate=&quot;true&quot;
+	 * Format=&quot;urn:oasis:names:tc:SAML:2.0:nameid-format:persistent&quot;&gt;
+	 * &lt;/sp:NameIDPolicy&gt;
+	 * &lt;/sp:AuthnRequest&gt;
+	 * </pre>
+	 * 
+	 * The following attributes and elements are required (from a business perspective) and are checked on presence: <br>
+	 * <br>
+	 * <ul>
+	 * <li>ProviderName</li>
+	 * </ul>
+	 * The following constraints come from the SAML Protocol: <br>
+	 * <br>
+	 * <ul>
+	 * <li>If attribute Destination is present it MUST be checked that the URI reference identifies <br>
+	 * the location at which the message was received.</li> <br>
+	 * <br>
+	 * 
+	 * @param authnRequest
+	 *            the authn request
+	 * @param httpRequest
+	 *            the http request
+	 * @return the response
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	protected Response validateAuthnRequest(AuthnRequest authnRequest, String sRequestUrl)
+		throws ASelectException
+	{
+		String sMethod = "validateAuthnRequest";
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "RequestUrl=" + sRequestUrl);
+
+		Response errorResponse = null;
+		String sInResponseTo = authnRequest.getID(); // Is required in SAMLsyntax
+		String sDestination = authnRequest.getAssertionConsumerServiceURL();
+		if (sDestination == null) {
+			sDestination = "UnknownDestination";
+		}
+		String sStatusCode = "";
+		String sStatusMessage = "";
+
+		/*
+		 * The opensaml library already checks that
+		 * the 'Destination' attribute from the AuthnRequest matches 'RequestURL'
+		 */
+		// Check validity interval here
+		if (is_bVerifyInterval() && !SamlTools.checkValidityInterval(authnRequest)) {
+			sStatusCode = StatusCode.REQUEST_DENIED_URI;
+			sStatusMessage = "The time interval in element AuthnRequest is not valid";
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sStatusMessage + " Destination="
+					+ authnRequest.getDestination() + " RequestUrl=" + sRequestUrl);
+			return errorResponse(sInResponseTo, sDestination, sStatusCode, sStatusMessage);
+		}
+
+		_systemLogger.log(Level.INFO, MODULE, sMethod, sMethod + " successful");
+		return errorResponse;
 	}
 
 	/**

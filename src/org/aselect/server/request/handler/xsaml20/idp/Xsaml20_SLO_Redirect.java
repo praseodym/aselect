@@ -39,14 +39,12 @@ import org.opensaml.saml2.core.Response;
 import org.opensaml.saml2.core.StatusCode;
 import org.opensaml.xml.util.XMLHelper;
 
-// TODO: Auto-generated Javadoc
 /**
  * IdP SLO Service Single Logout entry using HTTP-Redirect
  */
 // Example configuration
-// <handler id="saml20_slo"
+// <handler id="saml20_slo" target="/saml20_slo.*" >
 // class="org.aselect.server.request.handler.xsaml20.idp.Xsaml20_SLO_Redirect"
-// target="/saml20_slo.*" >
 // </handler>
 //
 public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
@@ -85,6 +83,18 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 	}
 
 	/**
+	 * Tell caller the XML type we want recognized
+	 * Overrides the abstract method called in handleSAMLMessage().
+	 * 
+	 * @return
+	 *		the XML type
+	 */
+	protected String retrieveXmlType()
+	{
+		return LOGOUTREQUEST;
+	}
+
+	/**
 	 * Send a LogoutRequests to one of the other involved SPs When control returns here, the next SP will be handled.
 	 * After the last one the TGT will be destroyed.
 	 * 
@@ -99,8 +109,8 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 	 */
 	@Override
 	protected void handleSpecificSaml20Request(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
-			SignableSAMLObject samlMessage)
-		throws ASelectException
+						SignableSAMLObject samlMessage, String sRelayState)
+	throws ASelectException
 	{
 		String sMethod = "handleSpecificSaml20Request";
 		String pathInfo = httpRequest.getPathInfo();
@@ -121,7 +131,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 			}
 			// Now the message is OK
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SAMLRequest=" + httpRequest.getParameter("SAMLRequest"));
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "RelayState=" + httpRequest.getParameter("RelayState"));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "RelayState=" + sRelayState);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SigAlg=" + httpRequest.getParameter("SigAlg"));
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signature=" + httpRequest.getParameter("Signature"));
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Destination=" + logoutRequest.getDestination());
@@ -134,11 +144,6 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 			HashMap htTGTContext = tgtManager.getTGT(sNameID);
 
 			// 20090525, Bauke: also save RelayState in the TGT for the logout response
-			// 20091118, Bauke: ignore "empty" RelayState (came from logout_info.html)
-			// Note: we still have it in 'httpRequest'
-			String sRelayState = httpRequest.getParameter("RelayState"); // is null if missing
-			if (sRelayState != null && sRelayState.equals("[RelayState]"))
-				sRelayState = null;
 			if (sRelayState != null)
 				htTGTContext.put("RelayState", sRelayState);
 			else

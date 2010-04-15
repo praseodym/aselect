@@ -85,6 +85,18 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 		}
 	}
 
+	/**
+	 * Tell caller the XML type we want recognized
+	 * Overrides the abstract method called in handleSAMLMessage().
+	 * 
+	 * @return
+	 *		the XML type
+	 */
+	protected String retrieveXmlType()
+	{
+		return LOGOUTRESPONSE;
+	}
+
 	//
 	// Signature was checked
 	//
@@ -93,7 +105,7 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 	 */
 	@Override
 	protected void handleSpecificSaml20Request(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
-			SignableSAMLObject samlMessage)
+			SignableSAMLObject samlMessage, String sRelayState)
 		throws ASelectException
 	{
 		String sMethod = "handleSpecificSaml20Request";

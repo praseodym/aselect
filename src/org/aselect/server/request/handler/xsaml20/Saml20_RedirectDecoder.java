@@ -25,8 +25,8 @@ public class Saml20_RedirectDecoder extends HTTPRedirectDeflateDecoder
 	private final static String MODULE = "Saml20_RedirectDecoder";
 
 	/**
-	 * Compare the message endpoint URI's specified. Overrides the default implementation to ignore https / http
-	 * differences
+	 * Compare the message endpoint URI's specified.
+	 * Overrides the default implementation to ignore https / http differences
 	 * 
 	 * @param messageDestination
 	 *            the intended message destination endpoint URI

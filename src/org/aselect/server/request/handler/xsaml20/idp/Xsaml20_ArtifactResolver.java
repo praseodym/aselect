@@ -44,7 +44,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
-// TODO: Auto-generated Javadoc
 //
 // <handler id="saml20_artifactresolver"
 //    class="org.aselect.server.request.handler.xsaml20.Xsaml20_ArtifactResolver"

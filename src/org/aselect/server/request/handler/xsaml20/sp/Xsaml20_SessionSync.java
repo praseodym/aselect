@@ -29,9 +29,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 import org.aselect.server.log.ASelectSystemLogger;
 
-// TODO: Auto-generated Javadoc
-// public class Xsaml20_SessionSync extends ProtoRequestHandler // RH, 20080603, o
-public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
+public class Xsaml20_SessionSync extends Saml20_BaseHandler
 {
 	private final static String MODULE = "Xsaml20_SessionSync";
 	private ASelectSystemLogger _oSystemLogger = _systemLogger;
@@ -152,7 +150,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler // RH, 20080603, n
 			}
 			String sFederationUrl = (String) htTGTContext.get("federation_url");
 			if (sFederationUrl == null)
-				sFederationUrl = _sFederationUrl; // TODO: remove, only here for backward compatibility
+				sFederationUrl = _sFederationUrl; // added for backward compatibility
 			if (sFederationUrl == null || sFederationUrl.equals("")) {
 				_systemLogger.log(Level.SEVERE, MODULE, _sMethod, "No \"federation_url\" available in TGT");
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);

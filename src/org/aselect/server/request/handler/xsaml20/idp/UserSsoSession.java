@@ -18,7 +18,6 @@ import java.util.List;
 //import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.handler.xsaml20.ServiceProvider;
 
-// TODO: Auto-generated Javadoc
 public class UserSsoSession implements Serializable
 {
 	private static final long serialVersionUID = -9091687141883681342L;

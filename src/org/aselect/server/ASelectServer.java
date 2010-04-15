@@ -195,6 +195,7 @@ import org.aselect.server.cross.CrossASelectManager;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectAuthenticationLogger;
 import org.aselect.server.log.ASelectSystemLogger;
+import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.RequestHandlerFactory;
 import org.aselect.server.sam.ASelectSAMAgent;
 import org.aselect.server.session.SessionManager;
@@ -509,7 +510,7 @@ public class ASelectServer extends ASelectHttpServlet
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SERVICE {" + " T=" + System.currentTimeMillis() + " "
 					+ request.getMethod() + " Query: " + request.getQueryString());
-			// ProtoRequestHandler.logCookies(request, _systemLogger);
+			//HandlerTools.logCookies(request, _systemLogger);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, request.getRemoteHost() + " / " + request.getRequestURL()
 					+ " / " + request.getRemoteAddr());
 			_oRequestHandlerFactory.process(request, response);

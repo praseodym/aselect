@@ -22,7 +22,6 @@ import org.aselect.lbsensor.*;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Tools;
 
-// TODO: Auto-generated Javadoc
 public class HttpSensor extends BasicSensorHandler
 {
 	public final static String MODULE = "HttpSensor";
@@ -105,6 +104,28 @@ public class HttpSensor extends BasicSensorHandler
 				}
 			}
 		}
+	}
+
+	// Called before processing
+	/* (non-Javadoc)
+	 * @see org.aselect.lbsensor.handler.BasicSensorHandler#processStart(java.io.BufferedWriter, java.lang.String, java.lang.String)
+	 */
+	@Override
+	protected void processStart(BufferedWriter oOutWriter, String sId)
+	throws IOException
+	{
+		// No Action
+	}
+
+	// Called before processing
+	/* (non-Javadoc)
+	 * @see org.aselect.lbsensor.handler.BasicSensorHandler#processFinish(java.io.BufferedWriter, java.lang.String, java.lang.String)
+	 */
+	@Override
+	protected void processFinish(BufferedWriter oOutWriter, String sId)
+	throws IOException
+	{
+		// No Action
 	}
 
 	// Called for each incoming character

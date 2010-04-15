@@ -49,7 +49,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
-// TODO: Auto-generated Javadoc
 //
 // IdP Soap Logout Request Handler
 // Handles request from the SP using Soap
@@ -94,13 +93,6 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 					"No config item 'redirect_url' found in 'aselect' section", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
-		// RH, 20080602, so, Is now done by Saml20_BaseHandler
-		// _bVerifySignature = true;
-		// String sVerifySignature = HandlerTools.getSimpleParam(oHandlerConfig, "verify_signature", false);
-		// if (sVerifySignature != null && sVerifySignature.equalsIgnoreCase("false")) {
-		// _bVerifySignature = false;
-		// }
-		// RH, 20080602, eo
 	}
 
 	/**

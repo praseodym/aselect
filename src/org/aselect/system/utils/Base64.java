@@ -33,7 +33,6 @@
  */
 package org.aselect.system.utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * RFC 2045 compliant Base64 Codec. <br>
  * <br>

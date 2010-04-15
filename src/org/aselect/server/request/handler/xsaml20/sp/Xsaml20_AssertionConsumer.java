@@ -79,9 +79,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 	private String _sFederationUrl;
 	private String _sRedirectUrl; // We use as Issuer in the send SAML message
 	private String _sRequestIssuer; // But it can be set explicitly
-	private boolean signingRequired = false; // OLD opensaml20 library	// true; // NEW opensaml20 library
-	// TODO see when signing is actually required
-	// get from aselect.xml <applications require_signing="false | true">
+	private boolean signingRequired = false;
+	// Get from aselect.xml <applications require_signing="false | true">
 	private boolean localityAddressRequired = false; // Do we need to verify localityAddress in the AuthnStatement
 
 	/**
@@ -207,7 +206,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 			SAMLObjectBuilder<Issuer> assertionIssuerBuilder = (SAMLObjectBuilder<Issuer>) _oBuilderFactory
 					.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
 			Issuer assertionIssuer = assertionIssuerBuilder.buildObject();
-			// 20100312, Bauke: eHerkenning, no format:
+			// 20100312, Bauke: eHerkenning, no assertion issuer format:
 			// assertionIssuer.setFormat(NameIDType.ENTITY);
 			// 20100311, Bauke: added for eHerkenning: Specific issuer id, independent of the Url
 			assertionIssuer.setValue((_sRequestIssuer != null)? _sRequestIssuer:_sRedirectUrl);
@@ -322,10 +321,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					}
 					// check subjectlocalityaddress
 					if (isLocalityAddressRequired()
-							&& !SamlTools.checkLocalityAddress(samlAssertion.getAuthnStatements().get(0), request
-									.getRemoteAddr())) {
-						_systemLogger.log(Level.SEVERE, MODULE, sMethod,
-								"AuthnStatement subjectlocalityaddress was NOT valid");
+							&& !SamlTools.checkLocalityAddress(samlAssertion.getAuthnStatements().get(0), request.getRemoteAddr())) {
+						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "AuthnStatement subjectlocalityaddress was NOT valid");
 						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 					}
 					String sAuthnContextClassRefURI = samlAssertion.getAuthnStatements().get(0).getAuthnContext()
@@ -394,8 +391,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 
 					// Choose your response (3rd is implemented below)
 					// 1. handleSSOResponse(htRemoteAttributes, request, response); // Lets application display error
-					// 2. throw new ASelectException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED); // Standard server
-					// error
+					// 2. throw new ASelectException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED); // Standard server error
 					// 3. Show error page:
 					HashMap htSessionContext = _oSessionManager.getSessionContext(sLocalRid);
 					if (htSessionContext == null) {

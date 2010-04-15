@@ -31,7 +31,6 @@ import org.aselect.lbsensor.ISensorHandler;
 import org.aselect.lbsensor.LbSensorConfigManager;
 import org.aselect.lbsensor.LbSensorSystemLogger;
 
-// TODO: Auto-generated Javadoc
 public class BasicSensorHandler implements ISensorHandler
 {
 	public final static String MODULE = "BasicSensorHandler";
@@ -118,9 +117,11 @@ public class BasicSensorHandler implements ISensorHandler
 				oInReader = new BufferedReader(new InputStreamReader(isInput));
 				oOutWriter = new BufferedWriter(new OutputStreamWriter(osOutput));
 
+				processStart(oOutWriter, _sMyId);
 				while ((n = oInReader.read()) != -1) {
 					char c = (char) n;
 					sRequestLine.append(c);
+					echoCharToStream(oOutWriter, c);
 					if (sRequestLine.toString().indexOf("\r\n") >= 0) {
 						// We have a complete line
 						int len = sRequestLine.length();
@@ -132,7 +133,6 @@ public class BasicSensorHandler implements ISensorHandler
 						}
 						sRequestLine.setLength(0);
 					}
-					echoCharToStream(oOutWriter, c);
 				}
 				if (sRequestLine.length() > 0) {
 					processLine(oOutWriter, sRequestLine.toString(), _sMyId);
@@ -157,6 +157,7 @@ public class BasicSensorHandler implements ISensorHandler
 			}
 			finally {
 				try {
+					processFinish(oOutWriter, _sMyId);
 					if (oOutWriter != null)
 						oOutWriter.close(); // flushes the output to the client
 					if (oSocket != null) {
@@ -188,7 +189,7 @@ public class BasicSensorHandler implements ISensorHandler
 	 * @param line
 	 *            the line
 	 * @param sId
-	 *            the s id
+	 *            the handler id
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
@@ -198,6 +199,38 @@ public class BasicSensorHandler implements ISensorHandler
 		String sMethod = "processLine";
 
 		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, sId + " [" + line + "]");
+	}
+
+	/**
+	 * Called before processing.
+	 * 
+	 * @param oOutWriter
+	 *            the o out writer
+	 * @param sId
+	 *            the s id
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 */
+	protected void processStart(BufferedWriter oOutWriter, String sId)
+	throws IOException
+	{
+		oOutWriter.write("---- Received data:\n\n");  // first \n somehow gets eaten by the browser
+	}
+	
+	/**
+	 * Called after processing.
+	 * 
+	 * @param oOutWriter
+	 *            the o out writer
+	 * @param sId
+	 *            the handler id
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 */
+	protected void processFinish(BufferedWriter oOutWriter, String sId)
+	throws IOException
+	{
+		oOutWriter.write("---- End of data\n");
 	}
 
 	// Override if no echoing is needed
@@ -214,6 +247,9 @@ public class BasicSensorHandler implements ISensorHandler
 	protected void echoCharToStream(BufferedWriter oOutWriter, char c)
 		throws IOException
 	{
+		//if (c=='\r') oOutWriter.write(c+"<R>");
+		//else if (c=='\n') oOutWriter.write(c+"<N>");
+		//else
 		oOutWriter.write(c);
 	}
 

@@ -325,11 +325,8 @@ public class SessionSyncRequestSender
 		return Errors.ERROR_ASELECT_SUCCESS;
 	}
 
-	/*
-	 * Methode bouwt een SAML message. En verstuurt deze naar de federatie.
-	 */
 	/**
-	 * Send saml update to federation.
+	 * Build a SAML message and sent it to the federation.
 	 * 
 	 * @param sNameID
 	 *            the s name id
@@ -522,9 +519,6 @@ public class SessionSyncRequestSender
 		return sendMessageToFederation(xacmlRequest, user, sTgT);
 	}
 
-	// Bauke:
-	// Return is true when Message was sent successful
-	//
 	/**
 	 * Send message to federation.
 	 * 
@@ -534,7 +528,8 @@ public class SessionSyncRequestSender
 	 *            the s name id
 	 * @param sTgT
 	 *            the s tg t
-	 * @return true, if successful
+	 * @return true
+	 * 		if the Message was sent successful
 	 */
 	private boolean sendMessageToFederation(String message, String sNameID, String sTgT)
 	{
@@ -554,8 +549,7 @@ public class SessionSyncRequestSender
 			try {
 				saml = determineMessageType(sResponse);
 			}
-			catch (ASelectException e) {
-				// Bad or no response from partner
+			catch (ASelectException e) {  // Bad or no response from partner
 				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Kill tgt for " + sNameID);
 				tgtmanager.remove(sTgT);
 				return false; // Bauke: no need to continue

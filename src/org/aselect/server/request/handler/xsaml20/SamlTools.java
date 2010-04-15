@@ -12,6 +12,7 @@
 package org.aselect.server.request.handler.xsaml20;
 
 import java.io.IOException;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.security.PrivateKey;
@@ -114,15 +115,6 @@ public class SamlTools
 
 		CryptoEngine.nextRandomBytes(baRandomBytes);
 		return "I" + Utils.byteArrayToHexString(baRandomBytes);
-
-		/*
-		 * SecureRandomIdentifierGenerator idGenerator = null; try { idGenerator = new
-		 * SecureRandomIdentifierGenerator(); } catch (NoSuchAlgorithmException e) { if (systemLogger != null)
-		 * systemLogger.log(Level.WARNING, sModule, sMethod, "The SHA1PRNG algorithm is not supported by the JVM", e);
-		 * throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR); } // RH, 20081107, add a letter to this ID
-		 * to make it saml NCName compliant // return idGenerator.generateIdentifier(); return "I" +
-		 * idGenerator.generateIdentifier();
-		 */
 	}
 
 	/**
@@ -155,7 +147,7 @@ public class SamlTools
 	}
 
 	/**
-	 * Helper method to verify the Signature of the httpRequest.
+	 * Helper method to verify the Signature of a HTTP GET request.
 	 * 
 	 * @param key
 	 *            PublicKey
@@ -215,6 +207,58 @@ public class SamlTools
 		}
 	}
 
+	// For the new opensaml20 library
+	/**
+	 * Check signature.
+	 * 
+	 * @param ssObject
+	 *            the SAML object to be checked
+	 * @param pKey
+	 *            the public key
+	 * @return true, if successful
+	 * @throws ASelectException
+	 */
+	public static boolean checkSignature(SignableSAMLObject ssObject, PublicKey pKey)
+		throws ASelectException
+	{
+		String sMethod = "checkSignature(SignableSAMLObject ssObject)";
+		
+		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
+		Signature sig = ssObject.getSignature();
+	
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "pkey=" + pKey + " sig=" + sig);
+		if (sig == null) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Expected signature not found");
+			return false;
+		}
+	
+		SAMLSignatureProfileValidator profileValidator = new SAMLSignatureProfileValidator();
+		try {
+			profileValidator.validate(sig);
+		}
+		catch (ValidationException e) {
+			// Indicates signature did not conform to SAML Signature profile
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"Cannot validate signature, signature did not conform to SAML Signature profile", e);
+			return false;
+		}
+	
+		BasicCredential credential = new BasicCredential();
+		credential.setPublicKey(pKey);
+	
+		SignatureValidator sigValidator = new SignatureValidator(credential);
+		try {
+			sigValidator.validate(sig);
+		}
+		catch (ValidationException e) {
+			// Indicates signature was not cryptographically valid, or possibly a processing error
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"Cannot verify signature, signature was not cryptographically valid, or possibly a processing error");
+			return false;
+		}
+		return true;
+	}
+
 	/**
 	 * Check OpenSAML2 library objects for subjectLocalityAddress validity.
 	 * 
@@ -226,7 +270,7 @@ public class SamlTools
 	 * @throws ValidationException
 	 *             Thrown if an error occurs
 	 * @throws ASelectException
-	 *             the a select exception
+	 *             the ASelect exception
 	 */
 	public static boolean checkLocalityAddress(SAMLObject obj, String refAddress)
 		throws ASelectException
@@ -284,13 +328,13 @@ public class SamlTools
 	 *             the a select exception
 	 */
 	public static boolean checkValidityInterval(SAMLObject obj, DateTime refInstant)
-		throws ASelectException
+	throws ASelectException
 	{
 		boolean valid = true;
 		String sMethod = "checkValidityInterval";
 		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "obj->" + obj + "refInstant->" + refInstant);
-		// TODO This might be implemented more elegantly
+		
 		// We could do it with some sort of command pattern, for now we do it the "hard" way
 		// We would have been happy with some common ancestor that implements Conditions or so ;-)
 		DateTime nbf = null;
@@ -317,9 +361,9 @@ public class SamlTools
 			nooa = ((SubjectConfirmationData) obj).getNotOnOrAfter();
 			nbf = ((SubjectConfirmationData) obj).getNotBefore();
 		}
-		// TODO there might be more saml2 types to implement here
+		// Other saml2 types would go here
 
-		// TODO Evaluate according to saml2-core (2.5.1.2 Attributes NotBefore and NotOnOrAfter)
+		// Refer to saml2-core (2.5.1.2 Attributes NotBefore and NotOnOrAfter)
 		if (nbf != null && refInstant.isBefore(nbf)) {
 			valid = false;
 		}
@@ -534,61 +578,6 @@ public class SamlTools
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Object already signed!");
 
 		return obj;
-	}
-
-	// For the new opensaml20 library
-	// /*
-	/**
-	 * Check signature.
-	 * 
-	 * @param ssObject
-	 *            the ss object
-	 * @param pKey
-	 *            the key
-	 * @return true, if successful
-	 * @throws ASelectException
-	 *             the a select exception
-	 */
-	public static boolean checkSignature(SignableSAMLObject ssObject, PublicKey pKey)
-		throws ASelectException
-	{
-		String sMethod = "checkSignature(SignableSAMLObject ssObject)";
-		// ASelectConfigManager _oASelectConfigManager = ASelectConfigManager.getHandle();
-		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
-		Signature sig = ssObject.getSignature();
-
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "pkey=" + pKey + " sig=" + sig);
-		if (sig == null) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Expected signature not found");
-			return false;
-		}
-
-		SAMLSignatureProfileValidator profileValidator = new SAMLSignatureProfileValidator();
-		try {
-			profileValidator.validate(sig);
-		}
-		catch (ValidationException e) {
-			// Indicates signature did not conform to SAML Signature profile
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"Cannot validate signature, signature did not conform to SAML Signature profile", e);
-			return false;
-		}
-
-		BasicCredential credential = new BasicCredential();
-		credential.setPublicKey(pKey);
-
-		SignatureValidator sigValidator = new SignatureValidator(credential);
-		try {
-			sigValidator.validate(sig);
-		}
-		catch (ValidationException e) {
-			// Indicates signature was not cryptographically valid, or possibly a processing error
-			_systemLogger
-					.log(Level.WARNING, MODULE, sMethod,
-							"Cannot verify signature, signature was not cryptographically valid, or possibly a processing error");
-			return false;
-		}
-		return true;
 	}
 
 	/**

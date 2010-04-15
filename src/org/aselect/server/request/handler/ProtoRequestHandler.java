@@ -44,6 +44,7 @@ import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
+import org.aselect.server.request.handler.xsaml20.idp.MetaDataManagerIdp;
 import org.aselect.server.session.SessionManager;
 import org.aselect.server.tgt.TGTIssuer;
 import org.aselect.server.tgt.TGTManager;
@@ -62,6 +63,7 @@ import org.opensaml.common.SignableSAMLObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
+import org.opensaml.saml2.core.AuthzDecisionQuery;
 import org.opensaml.xml.validation.ValidationException;
 
 //
@@ -1200,41 +1202,43 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 				"</wst:RequestSecurityTokenResponse>";
 	}
 
+	public void getKeyAndCheckSignature(String sIssuer, SignableSAMLObject authzDecisionQuery)
+	throws ASelectException
+	{
+		String sMethod = "getKeyAndCheckSignature";
+		
+		MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
+		PublicKey pkey = metadataManager.getSigningKeyFromMetadata(sIssuer);
+		if (pkey == null || "".equals(pkey)) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No valid public key in metadata for "+sIssuer);
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+		
+		if (checkSignature(authzDecisionQuery, pkey)) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Message was signed OK");
+		}
+		else {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Message was NOT signed OK");
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+	}
+
 	// For the new opensaml20 library
-	// /*
 	/**
 	 * Check signature.
 	 * 
 	 * @param ssObject
-	 *            the ss object
+	 *            the SAML object to be checked
 	 * @param pKey
-	 *            the key
+	 *            the public key
 	 * @return true, if successful
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
 	public boolean checkSignature(SignableSAMLObject ssObject, PublicKey pKey)
 		throws ASelectException
 	{
-		/*
-		 * "old" opensaml20 library code: ASelectConfigManager _oASelectConfigManager =
-		 * ASelectConfigManager.getHandle(); String sMethod = "checkSignature(SignableSAMLObject ssObject)"; Signature
-		 * sig = ssObject.getSignature(); _systemLogger.log(Level.INFO,MODULE,sMethod, "pkey="+pKey);
-		 * SAMLSignatureProfileValidator profileValidator = new SAMLSignatureProfileValidator(); try {
-		 * profileValidator.validate(sig); } catch (ValidationException e) { // Indicates signature did not conform to
-		 * SAML Signature profile _systemLogger.log(Level.WARNING, MODULE, sMethod,
-		 * "Cannot validate signature, signature did not conform to SAML Signature profile", e); return false; }
-		 * BasicCredential credential = new BasicCredential(); credential.setPublicKey(pKey); SignatureValidator
-		 * sigValidator = new SignatureValidator(credential); try { sigValidator.validate(sig); } catch
-		 * (ValidationException e) { // Indicates signature was not cryptographically valid, or possibly a processing
-		 * error _systemLogger.log(Level.WARNING, MODULE, sMethod,
-		 * "Cannot verify signature, signature was not cryptographically valid, or possibly a processing error"); return
-		 * false; } return true;
-		 */
 		return SamlTools.checkSignature(ssObject, pKey);
 	}
-
-	// */
 
 	// For the new opensaml20 library
 	/**
@@ -1430,17 +1434,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	{
 		String _sMethod = "readHttpPostData";
 		try {
-			/*
-			 * Debugging:
-			 * ServletInputStream input = request.getInputStream();
-			 * BufferedInputStream bufInput = new BufferedInputStream(input);
-			 * char b = (char) bufInput.read();
-			 * StringBuffer sb = new StringBuffer();
-			 * while (bufInput.available() != 0)
-			 * { sb.append(b); b = (char) bufInput.read(); }
-			 * return sb.toString();
-			 */
-			return Tools.stream2string(request.getInputStream()); // RH, 20080715, n
+			return Tools.stream2string(request.getInputStream());
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, MODULE, _sMethod, "Read POST data failed", e);

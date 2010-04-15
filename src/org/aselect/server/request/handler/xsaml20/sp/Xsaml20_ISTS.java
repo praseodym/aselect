@@ -12,6 +12,8 @@
 package org.aselect.server.request.handler.xsaml20.sp;
 
 import java.io.PrintWriter;
+
+import java.io.UnsupportedEncodingException;
 import java.security.PrivateKey;
 import java.util.HashMap;
 import java.util.logging.Level;
@@ -24,11 +26,13 @@ import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.xsaml20.Saml20_BaseHandler;
 import org.aselect.server.request.handler.xsaml20.Saml20_Metadata;
+import org.aselect.server.request.handler.xsaml20.Saml20_RedirectEncoder;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.BASE64Encoder;
 import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
 import org.opensaml.common.SAMLObjectBuilder;
@@ -59,12 +63,13 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 	protected final String singleSignOnServiceBindingConstantREDIRECT = SAMLConstants.SAML2_REDIRECT_BINDING_URI;
 
 	private String _sServerId = null; // <server_id> in <aselect>
-	// private String _sFederationUrl;
 	private HashMap<String, String> levelMap;
 	
 	private String _sAssertionConsumerUrl = null;
 	private String _sSpecialSettings = null;
 	private String _sRequestIssuer = null;
+	private String _sPostTemplate = null;
+	private String _sHttpMethod = "GET";
 
 	/* (non-Javadoc)
 	 * @see org.aselect.server.request.handler.xsaml20.Saml20_BaseHandler#init(javax.servlet.ServletConfig, java.lang.Object)
@@ -90,6 +95,15 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 		if (_sSpecialSettings == null)
 			_sSpecialSettings = "";
 		_sServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
+
+		_sHttpMethod = ASelectConfigManager.getSimpleParam(oConfig, "http_method", false);
+		if (_sHttpMethod != null && _sHttpMethod.equalsIgnoreCase("POST"))
+			_sHttpMethod = "POST";
+		else
+			_sHttpMethod = "GET";
+		
+		if (_sHttpMethod.equals("POST"))
+			_sPostTemplate = readTemplateFromConfig(oConfig, "post_template");
 
 		levelMap = new HashMap<String, String>();
 		Object oSecurity = null;
@@ -255,7 +269,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			AuthnRequest authnRequest = authnRequestbuilder.buildObject();
 			
 			// 20100311, Bauke: added for eHerkenning
-			// The assertion consumer url must be equal to the value in the Metadata:
+			// The assertion consumer url must be set to the value in the Metadata:
 			authnRequest.setAssertionConsumerServiceURL(_sAssertionConsumerUrl);
 			authnRequest.setProtocolBinding(Saml20_Metadata.assertionConsumerServiceBindingConstantARTIFACT);
 			authnRequest.setAttributeConsumingServiceIndex(2);
@@ -282,57 +296,91 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Setting the ForceAuthn attribute");
 				authnRequest.setForceAuthn(true);
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the authnRequest >======"+authnRequest);
-			authnRequest = (AuthnRequest)sign(authnRequest);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the authnRequest ======<"+authnRequest);
-
-			SAMLObjectBuilder<Endpoint> endpointBuilder = (SAMLObjectBuilder<Endpoint>) builderFactory
-					.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);
-			Endpoint samlEndpoint = endpointBuilder.buildObject();
-			samlEndpoint.setLocation(sDestination);
-			samlEndpoint.setResponseLocation(sMyUrl);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "EndPoint="+samlEndpoint+"Destination="+sDestination);
 			
-			//HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response, sDestination);
-			HttpServletResponseAdapter outTransport = new HttpServletResponseAdapter(response,
-						(sDestination == null)? false: sDestination.toLowerCase().startsWith("https"));
-			
-			// RH, 20081113, set appropriate headers
-			outTransport.setHeader("Pragma", "no-cache");
-			outTransport.setHeader("Cache-Control", "no-cache, no-store");
-
-			// 20100317, Bauke: pass language to IdP
-			String sLang = (String)htSessionContext.get("language");
-			if (sLang != null) {
-				response.setLocale(new java.util.Locale(sLang)); // pity, does not work
+			//
+			// We have the AuthnRequest, now get it to the other side
+			//
+			String addedSecurity = _configManager.getAddedSecurity();
+			boolean useSha256 = addedSecurity.contains("sha256");
+			if (_sHttpMethod.equals("GET")) {
+				// No use signing the AuthnRequest, it's even forbidden according to the Saml specs
+				// Brent Putman quote: The Redirect-DEFLATE binding encoder strips off the protocol message's ds:Signature element (if even present)
+				// before the marshalling and signing operations. Per the spec, it's not allowed to carry the signature that way.
+				SAMLObjectBuilder<Endpoint> endpointBuilder = (SAMLObjectBuilder<Endpoint>) builderFactory
+						.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);
+				Endpoint samlEndpoint = endpointBuilder.buildObject();
+				samlEndpoint.setLocation(sDestination);
+				samlEndpoint.setResponseLocation(sMyUrl);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "EndPoint="+samlEndpoint+"Destination="+sDestination);
+				
+				//HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response, sDestination);
+				HttpServletResponseAdapter outTransport = new HttpServletResponseAdapter(response,
+							(sDestination == null)? false: sDestination.toLowerCase().startsWith("https"));
+				
+				// RH, 20081113, set appropriate headers
+				outTransport.setHeader("Pragma", "no-cache");
+				outTransport.setHeader("Cache-Control", "no-cache, no-store");
+	
+				BasicSAMLMessageContext messageContext = new BasicSAMLMessageContext();
+				messageContext.setOutboundMessageTransport(outTransport);
+				messageContext.setOutboundSAMLMessage(authnRequest);
+				messageContext.setPeerEntityEndpoint(samlEndpoint);
+	
+				BasicX509Credential credential = new BasicX509Credential();
+				PrivateKey key = _configManager.getDefaultPrivateKey();
+				credential.setPrivateKey(key);
+				messageContext.setOutboundSAMLMessageSigningCredential(credential);
+	
+				// 20091028, Bauke: use RelayState to transport rid to my AssertionConsumer
+				messageContext.setRelayState("idp=" + sFederationUrl);
+	
+				MarshallerFactory marshallerFactory = Configuration.getMarshallerFactory();
+				Marshaller marshaller = marshallerFactory.getMarshaller(messageContext.getOutboundSAMLMessage());
+				Node nodeMessageContext = marshaller.marshall(messageContext.getOutboundSAMLMessage());
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "OutboundSAMLMessage:\n"+XMLHelper.prettyPrintXML(nodeMessageContext));
+				
+				if (useSha256) {
+					Saml20_RedirectEncoder encoder = new Saml20_RedirectEncoder();
+					encoder.encode(messageContext);  // does a sendRedirect()
+				}
+				else {
+					// HTTPRedirectDeflateEncoder: SAML 2.0 HTTP Redirect encoder using the DEFLATE encoding method.
+					// This encoder only supports DEFLATE compression and DSA-SHA1 and RSA-SHA1 signatures.
+					HTTPRedirectDeflateEncoder encoder = new HTTPRedirectDeflateEncoder();
+					encoder.encode(messageContext);  // does a sendRedirect()
+				}
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Ready "+messageContext);
 			}
+			else {  // POST
+				// 20100331, Bauke: added support for HTTP POST
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the authnRequest >======"+authnRequest);
+				authnRequest = (AuthnRequest)sign(authnRequest);  // only sensible for POST, checks <added_security> for sha256
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the authnRequest ======<"+authnRequest);
 
-			BasicSAMLMessageContext messageContext = new BasicSAMLMessageContext();
-			messageContext.setOutboundMessageTransport(outTransport);
-			messageContext.setOutboundSAMLMessage(authnRequest);
-			messageContext.setPeerEntityEndpoint(samlEndpoint);
+				String sAssertion = XMLHelper.nodeToString(authnRequest.getDOM());
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Assertion=" + sAssertion);
+				try {
+					byte[] bBase64Assertion = sAssertion.getBytes("UTF-8");
+					BASE64Encoder b64enc = new BASE64Encoder();
+					sAssertion = b64enc.encode(bBase64Assertion);
+				}
+				catch (UnsupportedEncodingException e) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
+					throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+				}
 
-			BasicX509Credential credential = new BasicX509Credential();
-			PrivateKey key = _configManager.getDefaultPrivateKey();
-			credential.setPrivateKey(key);
-			messageContext.setOutboundSAMLMessageSigningCredential(credential);
-
-			// 20091028, Bauke: use RelayState to transport rid to my AssertionConsumer
-			messageContext.setRelayState("idp=" + sFederationUrl);
-
-			MarshallerFactory marshallerFactory = Configuration.getMarshallerFactory();
-			Marshaller marshaller = marshallerFactory.getMarshaller(messageContext.getOutboundSAMLMessage());
-			Node nodeMessageContext = marshaller.marshall(messageContext.getOutboundSAMLMessage());
-			_systemLogger.log(Level.INFO, MODULE, sMethod, " Language="+sLang+
-					" OutboundSAMLMessage:\n"+XMLHelper.prettyPrintXML(nodeMessageContext));
-			
-			// Brent Putman: The Redirect-DEFLATE binding encoder strips off the protocol message's ds:Signature element (if even present)
-			// before the marshalling and signing operations. Per the spec, it's not allowed to carry the signature that way.
-			// HTTPRedirectDeflateEncoder: SAML 2.0 HTTP Redirect encoder using the DEFLATE encoding method.
-			// This encoder only supports DEFLATE compression and DSA-SHA1 and RSA-SHA1 signatures.
-			HTTPRedirectDeflateEncoder encoder = new HTTPRedirectDeflateEncoder();
-			encoder.encode(messageContext);  // does a sendRedirect()
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Ready "+messageContext);
+				// Let's POST the token
+				String sInputs = buildHtmlInput("RelayState", "idp=" + sFederationUrl);
+				sInputs += buildHtmlInput("SAMLResponse", sAssertion);  //Tools.htmlEncode(nodeMessageContext.getTextContent()));
+				
+				// 20100317, Bauke: pass language to IdP (does not work in the GET version)
+				String sLang = (String)htSessionContext.get("language");
+				if (sLang != null)
+					sInputs += buildHtmlInput("language",sLang);
+	
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Inputs=" + sInputs);
+				handlePostForm(_sPostTemplate, sDestination, sInputs, response);
+			}
 		}
 		catch (ASelectException e) { // pass unchanged to the caller
 			throw e;

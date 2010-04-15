@@ -43,11 +43,15 @@ import org.opensaml.common.SAMLVersion;
 import org.opensaml.common.SignableSAMLObject;
 import org.opensaml.common.binding.BasicSAMLMessageContext;
 import org.opensaml.common.xml.SAMLConstants;
+import org.opensaml.saml2.binding.decoding.HTTPPostDecoder;
 import org.opensaml.saml2.core.*;
+import org.opensaml.saml2.ecp.RelayState;
 import org.opensaml.saml2.metadata.SingleLogoutService;
+import org.opensaml.ws.message.decoder.MessageDecodingException;
 import org.opensaml.ws.transport.http.HttpServletRequestAdapter;
 import org.opensaml.xml.Configuration;
 import org.opensaml.xml.XMLObjectBuilderFactory;
+import org.opensaml.xml.security.SecurityException;
 import org.opensaml.xml.util.XMLHelper;
 
 /**
@@ -79,8 +83,15 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	public String _sASelectServerUrl; // The value of <server_url> in the <aselect> section
 	private XMLObjectBuilderFactory _oBuilderFactory;
 
-	// private boolean _bVerifySignature = true; // RH, 20080602, o, is done by Saml20_BaseHandler now
 	// Must be overridden:
+	/**
+	 * Retrieve xml type to be recognized.
+	 * 
+	 * @return the xml type
+	 */
+	abstract protected String retrieveXmlType();
+
+	// Override please
 	/**
 	 * Retrieve issuer.
 	 * 
@@ -106,7 +117,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	 *             the a select exception
 	 */
 	abstract protected void handleSpecificSaml20Request(HttpServletRequest httpRequest,
-			HttpServletResponse httpResponse, SignableSAMLObject samlMessage)
+			HttpServletResponse httpResponse, SignableSAMLObject samlMessage, String sRelayState)
 		throws ASelectException;
 
 	/**
@@ -252,75 +263,93 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 		return new RequestState(null);
 	}
 
-	// Entry point for incoming SAML requests
 	/**
-	 * Handle saml message.
+	 * Entry point for incoming SAML requests
 	 * 
 	 * @param httpRequest
-	 *            the http request
+	 *            the incoming HTTP request
 	 * @param httpResponse
-	 *            the http response
+	 *            the HTTP response
 	 * @throws ASelectException
-	 *             the a select exception
+	 *             A-Select exception
 	 */
+	// 20100331, Bauke: added HTTP POST support
 	protected void handleSAMLMessage(HttpServletRequest httpRequest, HttpServletResponse httpResponse)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleSAMLMessage";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
-		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">> SAMLMessage received");
+		boolean bIsPostRequest = "POST".equals(httpRequest.getMethod());
+		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">> SAMLMessage received POST="+bIsPostRequest);
 
+		BasicSAMLMessageContext messageContext = new BasicSAMLMessageContext();
+		messageContext.setInboundMessageTransport(new HttpServletRequestAdapter(httpRequest));
 		try {
-			BasicSAMLMessageContext messageContext = new BasicSAMLMessageContext();
-			messageContext.setInboundMessageTransport(new HttpServletRequestAdapter(httpRequest));
-
-			Saml20_RedirectDecoder decoder = new Saml20_RedirectDecoder();
-			decoder.decode(messageContext);
-
+			// Decode the message
+			if (bIsPostRequest) {
+				HTTPPostDecoder decoder = new HTTPPostDecoder();
+				decoder.decode(messageContext);
+			}
+			else {  // GET
+				Saml20_RedirectDecoder decoder = new Saml20_RedirectDecoder();  // Extension of HTTPRedirectDeflateDecode
+				decoder.decode(messageContext);
+			}
+			String sRelayState = messageContext.getRelayState();
+			// 20091118, Bauke: ignore "empty" RelayState (came from logout_info.html)
+			if (sRelayState != null && sRelayState.equals("[RelayState]"))
+				sRelayState = null;
+			
 			SignableSAMLObject samlMessage = (SignableSAMLObject) messageContext.getInboundSAMLMessage();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, XMLHelper.prettyPrintXML(samlMessage.getDOM()));
-
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "RelayState="+sRelayState+" Msg="+XMLHelper.prettyPrintXML(samlMessage.getDOM()));
+			
 			// Check the signature. First we must detect which public key must be used
 			// The alias of the public key is equal to the appId and the
 			// appId is retrieved by the Issuer, which is the server_url
 			String elementName = samlMessage.getElementQName().getLocalPart();
-			Issuer issuer = retrieveIssuer(elementName, samlMessage);
-			if (issuer == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "SAMLMessage was not recognized");
+			Issuer iIssuer = retrieveIssuer(elementName, samlMessage);
+			if (iIssuer == null || "".equals(iIssuer.getValue())) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "SAMLMessage has no Issuer");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
-
-			String sEntityId = issuer.getValue();
+			String sEntityId = iIssuer.getValue();
+			
 			if (!is_bVerifySignature()) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "No signature verification needed");
 			}
-			else { // The SAMLRequest must be signed
-				if (!SamlTools.isSigned(httpRequest)) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "SAML message must be signed.");
-					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			else {
+				// The SAMLRequest must be signed
+				if (bIsPostRequest) {  // POST, check request
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "SAML sp ===" + sEntityId+" VerifySignature=" + is_bVerifySignature());
+					if (is_bVerifySignature()) { // Check signature.
+						getKeyAndCheckSignature(sEntityId, samlMessage);  // throws an exception on error
+					}
 				}
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "SAML message IS signed.");
-
-				MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
-				PublicKey publicKey = metadataManager.getSigningKeyFromMetadata(sEntityId);
-				if (publicKey == null) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "PublicKey for entityId: " + sEntityId
-							+ " not found.");
-					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+				else { // GET, check signing of the URL
+					if (!SamlTools.isSigned(httpRequest)) {
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, "SAML message must be signed.");
+						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+					}
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "SAML message IS signed.");
+	
+					MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
+					PublicKey publicKey = metadataManager.getSigningKeyFromMetadata(sEntityId);
+					if (publicKey == null) {
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, "PublicKey for entityId: "+sEntityId+" not found.");
+						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+					}
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Found PublicKey for entityId: "+sEntityId);
+	
+					if (!SamlTools.verifySignature(publicKey, httpRequest)) {
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, "SAML message signature is not correct.");
+						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+					}
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Signature OK");
 				}
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Found PublicKey for entityId: " + sEntityId);
-				// TODO this uses SAML11, should be SAML20:
-				if (!SamlTools.verifySignature(publicKey, httpRequest)) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "SAML message signature is not correct.");
-					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-				}
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Signature OK");
 			}
 
 			// Set appropriate headers Pragma and Cache-Control
 			httpResponse.setHeader("Pragma", "no-cache");
 			httpResponse.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-			handleSpecificSaml20Request(httpRequest, httpResponse, samlMessage);
+			handleSpecificSaml20Request(httpRequest, httpResponse, samlMessage, sRelayState);
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">> SAMLMessage handled");
 		}
 		catch (ASelectException e) {
@@ -332,89 +361,6 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 		}
 	}
 
-	/**
-	 * The incoming AuthnRequest is something like:
-	 * 
-	 * <pre>
-	 * &lt;sp:AuthnRequest
-	 * xmlns:sp=&quot;urn:oasis:names:tc:SAML:2.0:protocol&quot;
-	 * AssertionConsumerServiceURL=&quot;https://localhost:8780/SP-A&quot;
-	 * Destination=&quot;https://localhost:8880/IDP-F&quot;
-	 * ForceAuthn=&quot;false&quot;
-	 * ID=&quot;RTXXcU5moVW3OZcvnxVoc&quot;
-	 * IsPassive=&quot;false&quot;
-	 * IssueInstant=&quot;2007-08-13T11:29:11Z&quot;
-	 * ProtocolBinding=&quot;urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact&quot;
-	 * ProviderName=&quot;SP 1&quot;
-	 * Version=&quot;2.0&quot;&gt;
-	 * &lt;sa:Issuer
-	 * xmlns:sa=&quot;urn:oasis:names:tc:SAML:2.0:assertion&quot;
-	 * Format=&quot;urn:oasis:names:tc:SAML:2.0:nameid-format:entity&quot;&gt;
-	 * https://localhost:8780/sp.xml
-	 * &lt;/sa:Issuer&gt;
-	 * &lt;sp:NameIDPolicy
-	 * AllowCreate=&quot;true&quot;
-	 * Format=&quot;urn:oasis:names:tc:SAML:2.0:nameid-format:persistent&quot;&gt;
-	 * &lt;/sp:NameIDPolicy&gt;
-	 * &lt;/sp:AuthnRequest&gt;
-	 * </pre>
-	 * 
-	 * The following attributes and elements are required (from a business perspective) and are checked on presence: <br>
-	 * <br>
-	 * <ul>
-	 * <li>ProviderName</li>
-	 * </ul>
-	 * The following constraints come from the SAML Protocol: <br>
-	 * <br>
-	 * <ul>
-	 * <li>If attribute Destination is present it MUST be checked that the URI reference identifies <br>
-	 * the location at which the message was received.</li> <br>
-	 * <br>
-	 * 
-	 * @param authnRequest
-	 *            the authn request
-	 * @param httpRequest
-	 *            the http request
-	 * @return the response
-	 * @throws ASelectException
-	 *             the a select exception
-	 */
-	protected Response validateAuthnRequest(AuthnRequest authnRequest, HttpServletRequest httpRequest)
-		throws ASelectException
-	{
-		String sMethod = "validateAuthnRequest()";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
-
-		Response errorResponse = null;
-		String sInResponseTo = authnRequest.getID(); // Is required in SAMLsyntax
-		String sDestination = authnRequest.getAssertionConsumerServiceURL();
-		if (sDestination == null) {
-			sDestination = "UnknownDestination";
-		}
-		String sStatusCode = "";
-		String sStatusMessage = "";
-
-		/*
-		 * Bauke 20080623: this check is already done by the opensaml library: if (authnRequest.getDestination() !=
-		 * null) { if (!httpRequest.getRequestURL().toString().equals(authnRequest.getDestination())) { sStatusCode =
-		 * StatusCode.REQUEST_DENIED_URI; sStatusMessage =
-		 * "The 'Destination' attribute found in element AuthnRequest doesn't match 'RequestURL'";
-		 * _systemLogger.log(Level.WARNING, MODULE, sMethod, sStatusMessage +
-		 * " Destination="+authnRequest.getDestination()+" RequestUrl="+httpRequest.getRequestURL()); return
-		 * errorResponse(sInResponseTo, sDestination, sStatusCode, sStatusMessage); } }
-		 */
-		// Check validity interval here
-		if (is_bVerifyInterval() && !SamlTools.checkValidityInterval(authnRequest)) {
-			sStatusCode = StatusCode.REQUEST_DENIED_URI;
-			sStatusMessage = "The time interval in element AuthnRequest is not valid";
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, sStatusMessage + " Destination="
-					+ authnRequest.getDestination() + " RequestUrl=" + httpRequest.getRequestURL());
-			return errorResponse(sInResponseTo, sDestination, sStatusCode, sStatusMessage);
-		}
-
-		_systemLogger.log(Level.INFO, MODULE, sMethod, sMethod + " successful");
-		return errorResponse;
-	}
 
 	/**
 	 * Contructs an errorResponse:
@@ -533,7 +479,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			htTGTContext = tgtManager.getTGT(sNameID);
 		}
 
-		// TODO: if one or more sessionindexes are mentioned in the logout request
+		// TODO: if one or more session indexes are mentioned in the logout request
 		// only logout the ones mentioned!!
 		// List SessionIndexes = logoutRequest.getSessionIndexes();
 		if (htTGTContext != null) {

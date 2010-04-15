@@ -13,12 +13,15 @@ package org.aselect.server.request.handler.xsaml20;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.logging.Level;
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.config.Version;
@@ -31,8 +34,16 @@ import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.utils.Utils;
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.common.xml.SAMLConstants;
+import org.opensaml.saml2.core.AuthzDecisionQuery;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 import org.opensaml.xml.ConfigurationException;
+import org.opensaml.xml.XMLObject;
+import org.opensaml.xml.io.Unmarshaller;
+import org.opensaml.xml.io.UnmarshallerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.xml.sax.InputSource;
 
 //
 //
@@ -342,5 +353,46 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 	public synchronized void setMaxNotOnOrAfter(Long maxNotOnOrAfter)
 	{
 		this.maxNotOnOrAfter = maxNotOnOrAfter;
+	}
+
+	/**
+	 * Extract XML object from document string as present in a HTTP POST request
+	 * 
+	 * @param docReceived
+	 *            the doc received
+	 * @return the authz decision query
+	 * @throws ASelectException
+	 *             the ASelect exception
+	 */
+	protected XMLObject extractXmlObject(String docReceived, String sXmlType)
+	throws ASelectException
+	{
+		String _sMethod = "handleSAMLRequest";
+		_systemLogger.log(Level.INFO, MODULE, _sMethod, "Process SAML message:\n" + docReceived);
+		XMLObject authzDecisionQuery = null;
+		try {
+			// Build XML Document
+			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+			dbFactory.setNamespaceAware(true);
+			DocumentBuilder builder = dbFactory.newDocumentBuilder();
+			StringReader stringReader = new StringReader(docReceived);
+			InputSource inputSource = new InputSource(stringReader);
+			Document parsedDocument = builder.parse(inputSource);
+			_systemLogger.log(Level.INFO, MODULE, _sMethod, "parsedDocument=" + parsedDocument);
+	
+			// Get AuthzDecision object
+			Element elementReceived = parsedDocument.getDocumentElement();
+			Node eltAuthzDecision = SamlTools.getNode(elementReceived, sXmlType);
+	
+			// Unmarshall to the SAMLmessage
+			UnmarshallerFactory factory = org.opensaml.xml.Configuration.getUnmarshallerFactory();
+			Unmarshaller unmarshaller = factory.getUnmarshaller((Element) eltAuthzDecision);
+			authzDecisionQuery = unmarshaller.unmarshall((Element) eltAuthzDecision);
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, MODULE, _sMethod, "Failed to process SAML message", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		}
+		return authzDecisionQuery;
 	}
 }

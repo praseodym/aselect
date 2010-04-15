@@ -17,7 +17,6 @@ import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.utils.BASE64Decoder;
 import org.aselect.system.utils.Tools;
 
-// TODO: Auto-generated Javadoc
 public class HtmlInfo extends HttpServlet
 {
 	protected String _sModule = "HtmlInfo";

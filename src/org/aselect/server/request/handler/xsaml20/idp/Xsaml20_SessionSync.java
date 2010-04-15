@@ -12,9 +12,9 @@
 package org.aselect.server.request.handler.xsaml20.idp;
 
 import java.io.IOException;
+
 import java.io.PrintWriter;
 import java.io.StringReader;
-import java.security.PublicKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -59,8 +59,6 @@ import org.opensaml.xml.XMLObjectBuilderFactory;
 import org.opensaml.xml.io.Marshaller;
 import org.opensaml.xml.io.MarshallerFactory;
 import org.opensaml.xml.io.MarshallingException;
-import org.opensaml.xml.io.Unmarshaller;
-import org.opensaml.xml.io.UnmarshallerFactory;
 import org.opensaml.xml.util.XMLHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -71,8 +69,8 @@ import org.xml.sax.SAXException;
 public class Xsaml20_SessionSync extends Saml20_BaseHandler
 {
 	private TGTManager _oTGTManager = TGTManager.getHandle();
-	private final static String MODULE = "Xsaml20_SessionSync";
-	private static final String AUTHZDECISIONQUERY = "AuthzDecisionQuery";
+	public final static String MODULE = "Xsaml20_SessionSync";
+	public static final String AUTHZDECISIONQUERY = "AuthzDecisionQuery";
 
 	// private static final String CONTENT_TYPE = "text/xml; charset=utf-8";
 
@@ -96,7 +94,6 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 
 	/**
 	 * Process Session Sync Request<br>
-	 * .
 	 * 
 	 * @param request
 	 *            The HttpServletRequest.
@@ -104,7 +101,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	 *            The HttpServletResponse.
 	 * @return the request state
 	 * @throws ASelectException
-	 *             If initialisation fails.
+	 *            on failure.
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 		throws ASelectException
@@ -121,9 +118,10 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 			boolean samlMessage = determineMessageType(docReceived);
 			if (samlMessage) {
 				// Handle request to get uid
-				AuthzDecisionQuery authzDecisionQuery = handleSAMLRequest(docReceived);
+				AuthzDecisionQuery authzDecisionQuery = (AuthzDecisionQuery)extractXmlObject(docReceived, AUTHZDECISIONQUERY);
+
 				sNameID = getNameIdFromSAML(authzDecisionQuery);
-				sp = getServiceProviderFromSAML(authzDecisionQuery);
+				sp = getServiceProviderFromSAML(authzDecisionQuery);  // is the Issuer
 				_systemLogger.log(Level.INFO, MODULE, _sMethod, "SAML NameID === " + sNameID + " SAML sp ===" + sp);
 
 				_systemLogger.log(Level.INFO, MODULE, _sMethod, "Signature verification=" + is_bVerifySignature());
@@ -136,19 +134,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 								"For signature verification the received message must have an Issuer");
 						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 					}
-					MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
-					PublicKey pkey = metadataManager.getSigningKeyFromMetadata(sp);
-					if (pkey == null || "".equals(pkey)) {
-						_systemLogger.log(Level.SEVERE, MODULE, _sMethod, "No public valid key in metadata");
-						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-					}
-					if (checkSignature(authzDecisionQuery, pkey)) {
-						_systemLogger.log(Level.INFO, MODULE, _sMethod, "Message was signed OK");
-					}
-					else {
-						_systemLogger.log(Level.SEVERE, MODULE, _sMethod, "Message was NOT signed OK");
-						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-					}
+					getKeyAndCheckSignature(sp, authzDecisionQuery);  // throws an exception on error
 				}
 				// check validity interval of authzDecisionQuery
 				if (is_bVerifyInterval()) {
@@ -203,38 +189,8 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 		return null;
 	}
 
-	/*
-	 * Methode haalt de credentials van de user op
-	 */
-	/*
-	 * private String getCredentials(String user) { String credentials = null; SSOSessionManager sso; try { sso =
-	 * SSOSessionManager.getHandle(); } catch (ASelectException e) { return null; } UserSsoSession session =
-	 * sso.getSsoSession(user); if (session == null) return null; credentials = session.getTgtId(); return credentials;
-	 * }
-	 */
-
-	/*
-	 * Methode update het session obj van de user
-	 */
-	/*
-	 * private void updateSSOSession(String user) throws ASelectException { SSOSessionManager sso =
-	 * SSOSessionManager.getHandle(); UserSsoSession session = sso.getSsoSession(user); sso.update(user, session); }
-	 */
-
-	/*
-	 * Methode werkt de lokale sessie tijd bij.
-	 */
-	/*
-	 * private void changeTGTSessionTime(String decodedcredentials) throws ASelectStorageException { HashMap
-	 * tgtBeforeUpdate = (HashMap) _oTGTManager.get(decodedcredentials); _oTGTManager.update(decodedcredentials,
-	 * tgtBeforeUpdate); }
-	 */
-
-	/*
-	 * Change the update time of the sp
-	 */
 	/**
-	 * Change update time sp.
+	 * Change the update time of the sp.
 	 * 
 	 * @param serviceProviderUrl
 	 *            the service provider url
@@ -316,7 +272,6 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	@SuppressWarnings("unchecked")
 	private void sendSAMLResponse(HttpServletRequest request, HttpServletResponse response, String uid, boolean permit)
 		throws ASelectException
 	{
@@ -458,51 +413,6 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	}
 
 	/*
-	 * Deze methode vangt het SAML bericht op van de sp en haalt de benodigde gegevens uit het bericht. En geeft de
-	 * gebruiker terug.
-	 */
-	/**
-	 * Handle saml request.
-	 * 
-	 * @param docReceived
-	 *            the doc received
-	 * @return the authz decision query
-	 * @throws ASelectException
-	 *             the a select exception
-	 */
-	private AuthzDecisionQuery handleSAMLRequest(String docReceived)
-		throws ASelectException
-	{
-		String _sMethod = "handleSAMLRequest";
-		_systemLogger.log(Level.INFO, MODULE, _sMethod, "Process SAML message:\n" + docReceived);
-		AuthzDecisionQuery authzDecisionQuery = null;
-		try {
-			// Build XML Document
-			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-			dbFactory.setNamespaceAware(true);
-			DocumentBuilder builder = dbFactory.newDocumentBuilder();
-			StringReader stringReader = new StringReader(docReceived);
-			InputSource inputSource = new InputSource(stringReader);
-			Document docReceivedSoap = builder.parse(inputSource);
-			_systemLogger.log(Level.INFO, MODULE, _sMethod, "docReceivedSOAP = " + docReceivedSoap);
-
-			// Get AuthzDecision obj
-			Element elementReceivedSoap = docReceivedSoap.getDocumentElement();
-			Node eltAuthzDecision = SamlTools.getNode(elementReceivedSoap, AUTHZDECISIONQUERY);
-
-			// Unmarshall to the SAMLmessage
-			UnmarshallerFactory factory = org.opensaml.xml.Configuration.getUnmarshallerFactory();
-			Unmarshaller unmarshaller = factory.getUnmarshaller((Element) eltAuthzDecision);
-			authzDecisionQuery = (AuthzDecisionQuery) unmarshaller.unmarshall((Element) eltAuthzDecision);
-		}
-		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, MODULE, _sMethod, "Failed too process SAML message", e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-		}
-		return authzDecisionQuery;
-	}
-
-	/*
 	 * Methode haalt de user id uit de SAML AuthzDecisionQuery
 	 */
 	/**
@@ -519,11 +429,8 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 		return nameId.getValue();
 	}
 
-	/*
-	 * Methode haalt de SP uit de SAML AuthzDecisionQuery
-	 */
 	/**
-	 * Gets the service provider from saml.
+	 * Gets the service provider from a SAML AuthzDecisionQuery 
 	 * 
 	 * @param authzDecisionQuery
 	 *            the authz decision query

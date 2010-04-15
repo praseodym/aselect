@@ -103,11 +103,9 @@ public class Saml20_Metadata extends ProtoRequestHandler
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Bootstrap done");
-			_oBuilderFactory = org.opensaml.xml.Configuration.getBuilderFactory(); // RH, 20080722, n
+			_oBuilderFactory = org.opensaml.xml.Configuration.getBuilderFactory();
 
-			// TODO, move this to a aselect config parameter (location of keystore)
-			// TODO, working_dir only needed for certificate, so only for signed?
-			setWorkingDir(oServletConfig.getInitParameter("working_dir")); // from web.xml
+			setWorkingDir(oServletConfig.getInitParameter("working_dir")); // from web.xml!
 			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Working directoy: " + getWorkingDir());
 
 			Object oASelect = null;

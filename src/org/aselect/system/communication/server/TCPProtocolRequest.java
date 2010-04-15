@@ -69,7 +69,6 @@ import java.util.logging.Level;
 
 import org.aselect.system.logging.SystemLogger;
 
-// TODO: Auto-generated Javadoc
 /**
  * Wrapper to communicate transparent to an incoming Socket request. <br>
  * <br>
@@ -263,10 +262,8 @@ public class TCPProtocolRequest implements IProtocolRequest
 
 		String sTmpString = oTokenizedLine.nextToken();
 
-		// TODO Remove redundant code (Erwin)
-		if (sTmpString.equals("POST"))
-		// message is HTTP so Headers have to be parsed
-		{
+		if (sTmpString.equals("POST")) {
+			// message is HTTP so Headers have to be parsed
 			if (!oTokenizedLine.hasMoreTokens())
 				throw new ProtocolException(sMethod + "No URL in request");
 

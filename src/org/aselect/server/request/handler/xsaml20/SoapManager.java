@@ -26,7 +26,6 @@ import org.opensaml.ws.soap.soap11.Body;
 import org.opensaml.ws.soap.soap11.Envelope;
 import org.opensaml.xml.XMLObjectBuilderFactory;
 
-// TODO: Auto-generated Javadoc
 public class SoapManager
 {
 	private static final String MODULE = "SoapManager";
