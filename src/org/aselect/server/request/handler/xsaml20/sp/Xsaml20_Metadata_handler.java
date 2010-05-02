@@ -69,18 +69,17 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 		}
 	}
 
+	// Get handler specific data from configuration
 	/* (non-Javadoc)
 	 * @see org.aselect.server.request.handler.xsaml20.Saml20_Metadata#aselectReader()
 	 */
 	@Override
 	protected void aselectReader()
-		// Get handler specific data from configuration
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "aselectReader";
 
 		super.aselectReader();
-
 		try {
 			Object oRequest = _configManager.getSection(null, "requests");
 			Object oHandlers = _configManager.getSection(oRequest, "handlers");
@@ -132,12 +131,11 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 	 * @see org.aselect.server.request.handler.xsaml20.Saml20_Metadata#createMetaDataXML()
 	 */
 	@Override
-	protected String createMetaDataXML()
+	protected String createMetaDataXML(String sLocalIssuer)
 		throws ASelectException
 	{
 		String sMethod = "createMetaDataXML";
 		String xmlMDRequest = null;
-
 		DateTime tStamp = new DateTime();
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Starting to build metadata");
@@ -146,7 +144,8 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 				.getBuilder(EntityDescriptor.DEFAULT_ELEMENT_NAME);
 
 		EntityDescriptor entityDescriptor = entityDescriptorBuilder.buildObject();
-		entityDescriptor.setEntityID(getEntityIdIdp());
+		// EntityID can be overruled by the caller
+		entityDescriptor.setEntityID((sLocalIssuer != null)? sLocalIssuer: getEntityIdIdp());
 		entityDescriptor.setID(SamlTools.generateIdentifier(_systemLogger, MODULE));
 
 		if (getValidUntil() != null)
@@ -228,7 +227,7 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 		ssoDescriptor.addSupportedProtocol(SAMLConstants.SAML20P_NS);
 		entityDescriptor.getRoleDescriptors().add(ssoDescriptor);
 
-		entityDescriptor = (EntityDescriptor) SamlTools.sign(entityDescriptor);
+		entityDescriptor = (EntityDescriptor) SamlTools.signSamlObject(entityDescriptor);
 
 		// The Session Sync descriptor (PDPDescriptor?) would go here
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "entityDescriptor done");

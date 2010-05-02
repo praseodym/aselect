@@ -14,6 +14,7 @@ package org.aselect.server.request.handler.xsaml20.idp;
 import java.util.logging.Level;
 
 import org.aselect.server.request.handler.xsaml20.AbstractMetaDataManager;
+import org.aselect.server.request.handler.xsaml20.PartnerData;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
@@ -132,7 +133,10 @@ public class MetaDataManagerIdp extends AbstractMetaDataManager
 		if (metadata != null) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "metadata=" + sId + "<>"
 					+ metadata.getFirstChild().getTextContent());
-			metadataSPs.put(sId, metadata.getFirstChild().getTextContent());
+			PartnerData idpData = new PartnerData(sId);
+			idpData.setMetadataUrl(metadata.getFirstChild().getTextContent());
+			storeAllIdPData.put(sId, idpData);
+			// 20100428: metadataSPs.put(sId, metadata.getFirstChild().getTextContent());
 		}
 	}
 }

@@ -355,9 +355,8 @@ public class TGTIssuer
 			// This server might have configured a 'TGTAttributeRequestor' to
 			// release these 'remote' attributes to the application.
 			
-			// 20100228, Bauke was: htSessionContext.get("attributes")
-			String sRemoteAttributes = (htRemoteAttributes==null)? null: (String)htRemoteAttributes.get("attributes");
 			// 20100228, Bauke: changed from "remote_attributes" to "attributes"
+			String sRemoteAttributes = (htRemoteAttributes==null)? null: (String)htRemoteAttributes.get("attributes");
 			HashMap htSerAttributes = (sRemoteAttributes==null)? null: Utils.deserializeAttributes(sRemoteAttributes);
 			// 20100228, Bauke: when a remote system has changed the language, copy it here
 			Utils.copyHashmapValue("language", htTGTContext, htSessionContext);  // default
@@ -540,9 +539,8 @@ public class TGTIssuer
 				htTGTContext.putAll(htAdditional);
 			}
 
-			// 20100228, Bauke was: htSessionContext.get("attributes")
-			String sRemoteAttributes = (htAdditional==null)? null: (String) htAdditional.get("attributes");
 			// 20100228, Bauke: changed from "remote_attributes" to "attributes"
+			String sRemoteAttributes = (htAdditional==null)? null: (String) htAdditional.get("attributes");
 			HashMap htSerAttributes = (sRemoteAttributes==null)? null: Utils.deserializeAttributes(sRemoteAttributes);
 			// 20100228, Bauke: when a remote system has changed the language, copy it here
 			_systemLogger.log(Level.FINE, MODULE, sMethod, "htSessionContext lang="+htSessionContext.get("language")+"htTGTContext lang="+htTGTContext.get("language"));

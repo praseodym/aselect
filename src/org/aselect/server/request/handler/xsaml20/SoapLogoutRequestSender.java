@@ -93,7 +93,7 @@ public class SoapLogoutRequestSender
 		// TODO SamlTools.setValidityInterval with only NotOnOrAfter, but we need this from calling object
 		// Always sign the logoutRequest
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the logoutRequest >======");
-		logoutRequest = (LogoutRequest) SamlTools.sign(logoutRequest);
+		logoutRequest = (LogoutRequest) SamlTools.signSamlObject(logoutRequest);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the logoutRequest ======<");
 
 		SoapManager soapManager = new SoapManager();

@@ -29,6 +29,7 @@ import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectAuthenticationLogger;
 import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.RequestState;
+import org.aselect.server.request.handler.xsaml20.PartnerData;
 import org.aselect.server.request.handler.xsaml20.Saml20_BaseHandler;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.server.request.handler.xsaml20.SecurityLevel;
@@ -78,25 +79,20 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 	private String _sMyServerId;
 	private String _sFederationUrl;
 	private String _sRedirectUrl; // We use as Issuer in the send SAML message
-	private String _sRequestIssuer; // But it can be set explicitly
+	//private String _sRequestIssuer; // But it can be set explicitly
 	private boolean signingRequired = false;
 	// Get from aselect.xml <applications require_signing="false | true">
 	private boolean localityAddressRequired = false; // Do we need to verify localityAddress in the AuthnStatement
 
+	//
+	// Example configuration:
+	// <handler id="saml20_assertionconsumer"
+	// class="org.aselect.server.request.handler.xsaml20.Xsaml20_AssertionConsumer"
+	// target="/saml20_assertion.*" >
+	// </handler>
+	//
 	/**
-	 * Initializes the request handler by reading the following configuration: <br/>
-	 * <br/>
-	 * 
-	 * <pre>
-	 * &lt;handler&gt;
-	 * &lt;server_url&gt;[server_url]&lt;/server_url&gt;
-	 * &lt;/handler&gt;
-	 * </pre>
-	 * <ul>
-	 * <li><b>server_url</b> - The url of the IDP A-Select Server</li>
-	 * </ul>
-	 * <br>
-	 * .
+	 * Initializes the request handler by reading the configuration.
 	 * 
 	 * @param oServletConfig
 	 *            the o servlet config
@@ -116,15 +112,13 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 		_oBuilderFactory = Configuration.getBuilderFactory();
 
 		_sMyServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
-		_sFederationUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "federation_url", false); // 20091207: // true);
+		_sFederationUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "federation_url", false);
 		// Issuer in the send SAML message
-		_sRedirectUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true); // use when "issuer" is absent
+		_sRedirectUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true);
 		// 20100315: Specific issuer (eHerkenning) different from redirect_url
-		_sRequestIssuer = ASelectConfigManager.getSimpleParam(oHandlerConfig, "issuer", false);
+		// 20100429: removed: _sRequestIssuer = ASelectConfigManager.getSimpleParam(oHandlerConfig, "issuer", false);
 
 		String sLocalityAddressRequired = ASelectConfigManager.getSimpleParam(oHandlerConfig, "locality_address_required", false);
-		// if (sVerifySignature != null && sVerifySignature.equalsIgnoreCase("false")) {
-		// _bVerifySignature = false;
 		if ("true".equalsIgnoreCase(sLocalityAddressRequired)) {
 			setLocalityAddressRequired(true);
 		}
@@ -144,13 +138,6 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 	 * @throws ASelectException
 	 *             on failure
 	 */
-	//
-	// Example configuration:
-	// <handler id="saml20_assertionconsumer"
-	// class="org.aselect.server.request.handler.xsaml20.Xsaml20_AssertionConsumer"
-	// target="/saml20_assertion.*" >
-	// </handler>
-	//
 	@SuppressWarnings("unchecked")
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 		throws ASelectException
@@ -175,6 +162,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
 
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "FederationUrl="+sFederationUrl);
 		try {
 			// use metadata
 			MetaDataManagerSp metadataManager = MetaDataManagerSp.getHandle();
@@ -206,16 +194,23 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 			SAMLObjectBuilder<Issuer> assertionIssuerBuilder = (SAMLObjectBuilder<Issuer>) _oBuilderFactory
 					.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
 			Issuer assertionIssuer = assertionIssuerBuilder.buildObject();
+			
 			// 20100312, Bauke: eHerkenning, no assertion issuer format:
 			// assertionIssuer.setFormat(NameIDType.ENTITY);
 			// 20100311, Bauke: added for eHerkenning: Specific issuer id, independent of the Url
-			assertionIssuer.setValue((_sRequestIssuer != null)? _sRequestIssuer:_sRedirectUrl);
+			PartnerData partnerData = MetaDataManagerSp.getHandle().getPartnerDataEntry(sFederationUrl);
+			String specialSettings = (partnerData == null)? null: partnerData.getSpecialSettings();
+			if (partnerData != null && partnerData.getLocalIssuer() != null)
+				assertionIssuer.setValue(partnerData.getLocalIssuer());
+			else
+				assertionIssuer.setValue(_sRedirectUrl);
 			artifactResolve.setIssuer(assertionIssuer);
 			artifactResolve.setArtifact(artifact);
 
 			// Do some logging for testing
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the artifactResolve >======");
-			artifactResolve = (ArtifactResolve)sign(artifactResolve);
+			boolean useSha256 = (specialSettings != null && specialSettings.contains("sha256"));
+			artifactResolve = (ArtifactResolve)SamlTools.signSamlObject(artifactResolve, useSha256? "sha256": "sha1");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the artifactResolve ======<");
 
 			// Build the SOAP message
@@ -255,10 +250,12 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 			ArtifactResponse artifactResponse = (ArtifactResponse) unmarshaller
 					.unmarshall((Element) eltArtifactResponse);
 
-			String artifactResponseIssuer = (artifactResponse.getIssuer() == null || // avoid null pointers
-					artifactResponse.getIssuer().getValue() == null || "".equals(artifactResponse.getIssuer()
-					.getValue())) ? sASelectServerUrl : // if not in message, use sASelectServerUrl value retrieved from metadata
-					artifactResponse.getIssuer().getValue(); // else value from message
+			Issuer issuer = artifactResponse.getIssuer();
+			String sIssuer = (issuer == null)? null: issuer.getValue();
+			// If issuer is not present in the response, use sASelectServerUrl value retrieved from metadata
+			// else use value from the response
+			String artifactResponseIssuer = (sIssuer == null || "".equals(sIssuer)) ?
+											sASelectServerUrl: sIssuer;
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Do artifactResponse signature verification="+is_bVerifySignature());
 			if (is_bVerifySignature()) {
@@ -271,13 +268,13 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 							"For signature verification the received message must have an Issuer");
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
+				
 				PublicKey pkey = metadataManager.getSigningKeyFromMetadata(artifactResponseIssuer);
 				if (pkey == null || "".equals(pkey)) {
 					_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No valid public key in metadata");
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
 
-				// if (checkSignature(artifactResponse, pkey )) { // We don't need the indirection anymore
 				if (SamlTools.checkSignature(artifactResponse, pkey)) {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "artifactResponse was signed OK");
 				}
@@ -287,9 +284,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				}
 			}
 
-			Object samlResponseObject = artifactResponse.getMessage();
-
 			// The object can either a Response (SSO case) or a StatusResponseType (SLO case)
+			Object samlResponseObject = artifactResponse.getMessage();
 			if (samlResponseObject instanceof Response) {
 				// SSO
 				Response samlResponse = (Response) samlResponseObject;
@@ -301,11 +297,11 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				String sLocalRid = samlResponse.getInResponseTo();
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "RemoteRid=" + sRemoteRid + " LocalRid=" + sLocalRid);
 				if (sStatusCode.equals(StatusCode.SUCCESS_URI)) {
-					_systemLogger
-							.log(Level.INFO, MODULE, sMethod, "Response was successful " + samlResponse.toString());
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Response was successful " + samlResponse.toString());
 					Assertion samlAssertion = samlResponse.getAssertions().get(0);
 					String sOrganization = samlAssertion.getIssuer().getValue();
 					String sNameID = samlAssertion.getSubject().getNameID().getValue();
+					String sNameIDQualifier = samlAssertion.getSubject().getNameID().getNameQualifier();
 					// Now check for time interval validation
 					// We only check first object from the list
 					// First the assertion itself
@@ -325,15 +321,27 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "AuthnStatement subjectlocalityaddress was NOT valid");
 						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 					}
-					String sAuthnContextClassRefURI = samlAssertion.getAuthnStatements().get(0).getAuthnContext()
-							.getAuthnContextClassRef().getAuthnContextClassRef();
-					String sSelectedLevel = SecurityLevel.convertAuthnContextClassRefURIToLevel(sAuthnContextClassRefURI, _systemLogger, MODULE);
-
-					HashMap htRemoteAttributes = new HashMap();
-					htRemoteAttributes.put("name_id", sNameID);
-					// This is the quickest way to get "name_id" into the Context
+					AuthnContext oAuthnContext = samlAssertion.getAuthnStatements().get(0).getAuthnContext();
+					String sAuthnAuthority = (String)oAuthnContext.getAuthenticatingAuthorities().get(0).getURI();
+					String sAuthnContextClassRefURI = oAuthnContext.getAuthnContextClassRef().getAuthnContextClassRef();
+					String sSelectedLevel = SecurityLevel.convertAuthnContextClassRefURIToLevel(sAuthnContextClassRefURI, _systemLogger);
+					// Check returned security level
+					HashMap htSessionContext = _oSessionManager.getSessionContext(sLocalRid);
+					if (htSessionContext == null) {
+						_systemLogger.log(Level.WARNING, MODULE, sMethod,
+								"Unknown session in response from cross aselect server");
+						throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+					}
+					Integer intAppLevel = (Integer) htSessionContext.get("level");
+					if (Integer.parseInt(sSelectedLevel) < intAppLevel) {
+						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Security level returned ("+
+										sSelectedLevel+") must be at least: "+intAppLevel);
+						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+					}
 
 					// Retrieve the embedded attributes
+					HashMap hmSamlAttributes = new HashMap();
+					String sEncodedAttributes = null;
 					List<AttributeStatement> lAttrStatList = samlAssertion.getAttributeStatements();
 					Iterator<AttributeStatement> iASList = lAttrStatList.iterator();
 					while (iASList.hasNext()) {
@@ -346,21 +354,86 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 							XSStringImpl xsString = (XSStringImpl) attr.getOrderedChildren().get(0);
 							String sAttrValue = xsString.getValue();
 							_systemLogger.log(Level.INFO, MODULE, sMethod, "Name=" + sAttrName + " Value=" + sAttrValue);
-							htRemoteAttributes.put(sAttrName, sAttrValue);
+							if ("attributes".equals(sAttrName))
+								sEncodedAttributes = sAttrValue;
+							else
+								hmSamlAttributes.put(sAttrName, sAttrValue);
 						}
 					}
+					
+					// Since the "attributes" Attribute is used for gathering, add the Saml Attributes to it
+					HashMap<String, String> hmAttributes;
+					if (sEncodedAttributes != null) {
+						hmAttributes = Utils.deserializeAttributes(sEncodedAttributes);
+					}
+					else {
+						hmAttributes = new HashMap<String, String>();
+					}
+					// Add the serialized attributes and a few specials
+					hmSamlAttributes.putAll(hmAttributes);
+					hmSamlAttributes.put("name_id", sNameID);  // "sel_level" was already set by the IdP
+					if (sAuthnAuthority != null)
+						hmSamlAttributes.put("authority", sAuthnAuthority);
+
+					// SenterNovem aqddition: OrgID = KvKnummer+Vestigingsnummer
+					// If EntityConcernedID = 00000003123456780000 and EntityConcernedSubID = 0001,
+					// OrgID = 1234567800000001
+					String sEntityId = (String)hmSamlAttributes.get("urn:nl:eherkenning:0.8def:EntityConcernedID");
+					if (sEntityId != null) {
+						int idx = sEntityId.length()-12;  // last 12 characters
+						if (idx > 0) sEntityId = sEntityId.substring(idx);
+						
+						String sEntitySubId = (String)hmSamlAttributes.get("urn:nl:eherkenning:0.8def:EntityConcernedSubID");
+						if (sEntitySubId != null) {
+							/*idx = sEntitySubId.length()-4;  // last 4 characters
+							if (idx > 0) sEntitySubId = sEntitySubId.substring(idx);
+							
+							idx = sEntityId.length()-4;  // remove last 4 characters
+							if (idx > 0) sEntityId = sEntityId.substring(0, idx);
+							// and add the SubId
+							sEntityId = sEntityId+sEntitySubId;
+							*/
+							idx = sEntitySubId.length()-12;  // last 12 characters to be on the safe side
+							if (idx > 0) sEntitySubId = sEntitySubId.substring(idx);
+							sEntityId = sEntitySubId;
+						}
+						hmSamlAttributes.put("OrgID", sEntityId);
+					}
+					
+					// SenterNovem: AuthID = Unique Persistent Identifier
+					// Use the fifth word from sAuthnAuthority (split using :) and add sNameID
+					if (sNameIDQualifier != null) {
+						String sAuthID = "";
+						String[] tokens = sNameIDQualifier.split(":");
+						if (tokens.length > 4)
+							sAuthID = tokens[4];
+						sAuthID += "_"+sNameID;  // add separator
+						hmSamlAttributes.put("AuthID", sAuthID);
+					}
+					
+					// And serialize them back to where they came from
+					sEncodedAttributes = Utils.serializeAttributes(hmSamlAttributes);
+					hmSamlAttributes.put("attributes", sEncodedAttributes);
+					
+					// This is the quickest way to get "name_id" into the Context
+					hmSamlAttributes.put("name_id", sNameID);  // also as plain attribute
+
+					// 20100422, Bauke: no uid, then use NameID
+					String sUid = (String)hmSamlAttributes.get("uid");
+					if (sUid == null || sUid.equals(""))
+						hmSamlAttributes.put("uid", sNameID);
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "NameID=" + sNameID + " remote_rid=" + sRemoteRid
 							+ " local_rid=" + sLocalRid + " sel_level=" + sSelectedLevel + " organization/authsp="
 							+ sOrganization);
 
 					// htRemoteAttributes.put("attributes", HandlerTools.serializeAttributes(htAttributes));
-					htRemoteAttributes.put("remote_rid", sRemoteRid);
-					htRemoteAttributes.put("local_rid", sLocalRid);
+					hmSamlAttributes.put("remote_rid", sRemoteRid);
+					hmSamlAttributes.put("local_rid", sLocalRid);
 
-					htRemoteAttributes.put("sel_level", sSelectedLevel);
-					htRemoteAttributes.put("authsp_level", sSelectedLevel);
-					htRemoteAttributes.put("organization", sOrganization);
-					htRemoteAttributes.put("authsp", sOrganization);
+					hmSamlAttributes.put("sel_level", sSelectedLevel);
+					hmSamlAttributes.put("authsp_level", sSelectedLevel);  // default value, issueTGT will correct this
+					hmSamlAttributes.put("organization", sOrganization);
+					hmSamlAttributes.put("authsp", sOrganization);
 
 					// Bauke, 20081204: If we want to send the IdP token as an attribute
 					// to the application, we would need the following code:
@@ -373,8 +446,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					 */
 					// End of IdP token
 
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "htRemoteAttributes=" + htRemoteAttributes);
-					handleSSOResponse(htRemoteAttributes, request, response);
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "htRemoteAttributes=" + hmSamlAttributes);
+					handleSSOResponse(htSessionContext, hmSamlAttributes, request, response);
 				}
 				else {
 					// SLO
@@ -436,31 +509,20 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private void handleSSOResponse(HashMap htRemoteAttributes, HttpServletRequest servletRequest,
-			HttpServletResponse servletResponse)
-		throws ASelectException
+	private void handleSSOResponse(HashMap htSessionContext, HashMap htRemoteAttributes,
+						HttpServletRequest servletRequest, HttpServletResponse servletResponse)
+	throws ASelectException
 	{
 		String sMethod = "handleSSOResponse";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "<--");
 
 		try {
-			String sRemoteRid = null;
-			String sLocalRid = null;
-			HashMap htSessionContext;
 			HashMap htServiceRequest = createServiceRequest(servletRequest);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "htServiceRequest=" + htServiceRequest);
 
-			sRemoteRid = (String) htRemoteAttributes.get("remote_rid");
-			sLocalRid = (String) htRemoteAttributes.get("local_rid");
-			if ((sRemoteRid == null) || (sLocalRid == null)) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Invalid parameters");
-				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-			}
-
-			htSessionContext = _oSessionManager.getSessionContext(sLocalRid);
-			if (htSessionContext == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"Unknown session in response from cross aselect server");
+			String sLocalRid = (String) htRemoteAttributes.get("local_rid");
+			if (sLocalRid == null) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Missing remote attribute: 'local_rid'");
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 

@@ -403,7 +403,7 @@ public class SessionSyncRequestSender
 
 		// Sign the sessionsync
 		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Sign the sessionSync >======");
-		authz = (AuthzDecisionQuery) SamlTools.sign(authz);
+		authz = (AuthzDecisionQuery) SamlTools.signSamlObject(authz);
 		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Signed the sessionSync ======<");
 
 		SAMLObject saml = authz;

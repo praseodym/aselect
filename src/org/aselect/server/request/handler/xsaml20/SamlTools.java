@@ -519,14 +519,20 @@ public class SamlTools
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	public static SignableSAMLObject sign(SignableSAMLObject obj)
+	public static SignableSAMLObject signSamlObject(SignableSAMLObject obj)
+	throws ASelectException
+	{
+		return signSamlObject(obj, "sha1");  // default algorithm
+	}
+	
+	public static SignableSAMLObject signSamlObject(SignableSAMLObject obj, String sAlgo)
 	throws ASelectException
 	{
 		String sMethod = "sign(SignableSAMLObject obj)";
 		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
-		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
-		String addedSecurity = _configManager.getAddedSecurity();
-		boolean useSha256 = addedSecurity.contains("sha256");
+		//ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
+		//String addedSecurity = _configManager.getAddedSecurity();
+		boolean useSha256 = sAlgo.equals("sha256");
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "obj->" + obj);
 		if (!obj.isSigned()) {
@@ -541,7 +547,8 @@ public class SamlTools
 			else {
 				signingAlgo = SignatureConstants.ALGO_ID_SIGNATURE_ECDSA_SHA1;
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "using algorithm: " + signingAlgo);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "privKey algorithm="+privKey.getAlgorithm()+
+					" use signing algorithm: " + signingAlgo);
 
 			BasicCredential credential = new BasicCredential();
 			credential.setPrivateKey(privKey);
@@ -1031,7 +1038,7 @@ public class SamlTools
 		assertion = marshallAssertion(assertion);
 		if (sign) {
 			systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the final Assertion >======");
-			assertion = (Assertion) sign(assertion);
+			assertion = (Assertion) signSamlObject(assertion);
 			systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the Assertion ======<" + assertion);
 		}
 

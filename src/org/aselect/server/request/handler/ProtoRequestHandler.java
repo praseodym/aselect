@@ -1255,7 +1255,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	public SignableSAMLObject sign(SignableSAMLObject obj)
 		throws ASelectException
 	{
-		return SamlTools.sign(obj);
+		return SamlTools.signSamlObject(obj);
 	}
 
 	// opensaml 1.0 version

@@ -14,38 +14,40 @@ import org.opensaml.saml2.core.AuthnContextClassRef;
 import org.opensaml.saml2.core.AuthnContextComparisonTypeEnumeration;
 import org.opensaml.saml2.core.RequestedAuthnContext;
 
-// TODO: Auto-generated Javadoc
 public class SecurityLevel
 {
 	final static String MODULE = "SecurityLevel";
 
 	// Saml text
-	final static String UNSPECIFIED_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified";
-	final static String PASSWORDPROTECTEDTRANSPORT_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport";
-	final static String MOBILETWOFACTORCONTRACT_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorContract";
-	final static String SMARTCARDPKI_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:SmartcardPKI";
+	final private static String UNSPECIFIED_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified";
+	final private static String PASSWORDPROTECTEDTRANSPORT_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport";
+	final private static String MOBILETWOFACTORCONTRACT_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorContract";
+	final private static String MOBILETWOFACTORUNREGISTERED_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorUnregistered";
+	final private static String SMARTCARDPKI_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:SmartcardPKI";
 
-	final static int LEVEL_NUL = 5;
-	final static int LEVEL_LAAG = 10;
-	final static int LEVEL_MIDDEN = 20;
-	final static int LEVEL_HOOG = 30;
-
-	final private static int NOT_FOUND = -1;
-
+	final private static int LEVEL_NOT_FOUND = -1;
+	final private static int LEVEL_MIN = 0;  // used for searching
+	final private static int LEVEL_NULL = 5;
+	final private static int LEVEL_LOW = 10;
+	final private static int LEVEL_BETTER = 15;
+	final private static int LEVEL_MEDIUM = 20;
+	final private static int LEVEL_HIGH = 30;
+	final private static int LEVEL_MAX = 999; // used for searching
+	
 	// 20090109: Bauke changed levels
-	final private static int MIN = 0;
-	final private static int NUL = 5; // 1;
-	final private static int LAAG = 10; // 2;
-	final private static int MIDDEN = 20; // 3;
-	final private static int HOOG = 30; // 4;
-	final private static int MAX = 999; // 5;
+	//final private static int LEVEL_NULL = 5; // 1;
+	//final private static int LEVEL_LOW = 10; // 2;
+	//final private static int LEVEL_MEDIUM = 20; // 3;
+	//final private static int LEVEL_HIGH = 30; // 4;
 
 	// public final static String BN_EMPTY = "empty"; // no longer 20090501
-	public final static String BN_NUL = "5";
-	public final static String BN_LAAG = "10";
-	public final static String BN_MIDDEN = "20";
-	public final static String BN_HOOG = "30";
-	public final static String BN_NOT_FOUND = "not_found";
+	final private static String BN_NUL = "5";
+	final private static String BN_LAAG = "10";
+	final private static String BN_BETTER = "5";
+	final private static String BN_MEDIUM = "20";
+	final private static String BN_HOOG = "30";
+	
+	final public static String BN_NOT_FOUND = "not_found";
 
 	/**
 	 * Convert level to authn context class ref uri.
@@ -60,11 +62,10 @@ public class SecurityLevel
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	public static String convertLevelToAuthnContextClassRefURI(String sLevel, ASelectSystemLogger systemLogger,
-			String sModule)
+	public static String convertLevelToAuthnContextClassRefURI(String sLevel, ASelectSystemLogger systemLogger)
 		throws ASelectException
 	{
-		String sMethod = "convertLevelToAuthnContextClassRefURI()";
+		String sMethod = "convertLevelToAuthnContextClassRefURI";
 
 		int iLevel;
 		try {
@@ -72,21 +73,23 @@ public class SecurityLevel
 		}
 		catch (Exception e) {
 			if (systemLogger != null)
-				systemLogger.log(Level.SEVERE, sModule, sMethod, "Unable to parse level value: " + sLevel, e);
+				systemLogger.log(Level.SEVERE, MODULE, sMethod, "Unable to parse level value: " + sLevel, e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 		switch (iLevel) {
-		case LEVEL_NUL:
+		case LEVEL_NULL:
 			return UNSPECIFIED_URI;
-		case LEVEL_LAAG:
+		case LEVEL_LOW:
 			return PASSWORDPROTECTEDTRANSPORT_URI;
-		case LEVEL_MIDDEN:
+		case LEVEL_BETTER:
+			return MOBILETWOFACTORUNREGISTERED_URI;
+		case LEVEL_MEDIUM:
 			return MOBILETWOFACTORCONTRACT_URI;
-		case LEVEL_HOOG:
+		case LEVEL_HIGH:
 			return SMARTCARDPKI_URI;
 		}
 		if (systemLogger != null)
-			systemLogger.log(Level.SEVERE, sModule, sMethod, "Level value: " + sLevel + " is not valid.");
+			systemLogger.log(Level.SEVERE, MODULE, sMethod, "Level value: " + sLevel + " is not valid.");
 		throw new ASelectException(Errors.ERROR_ASELECT_CONFIG_ERROR);
 	}
 
@@ -104,47 +107,48 @@ public class SecurityLevel
 	 *             the a select exception
 	 */
 	public static String convertAuthnContextClassRefURIToLevel(String sAuthnContextClassRefURI,
-			ASelectSystemLogger systemLogger, String sModule)
+			ASelectSystemLogger systemLogger)
 		throws ASelectException
 	{
-		String sMethod = "convertLevelToAuthnContextClassRefURI()";
+		String sMethod = "convertAuthnContextClassRefURIToLevel";
 
 		try {
 			if (sAuthnContextClassRefURI.equals(UNSPECIFIED_URI))
-				return String.valueOf(LEVEL_NUL);
+				return String.valueOf(LEVEL_NULL);
 			else if (sAuthnContextClassRefURI.equals(PASSWORDPROTECTEDTRANSPORT_URI))
-				return String.valueOf(LEVEL_LAAG);
+				return String.valueOf(LEVEL_LOW);
+			else if (sAuthnContextClassRefURI.equals(MOBILETWOFACTORUNREGISTERED_URI))
+				return String.valueOf(LEVEL_BETTER);
 			else if (sAuthnContextClassRefURI.equals(MOBILETWOFACTORCONTRACT_URI))
-				return String.valueOf(LEVEL_MIDDEN);
+				return String.valueOf(LEVEL_MEDIUM);
 			else if (sAuthnContextClassRefURI.equals(SMARTCARDPKI_URI))
-				return String.valueOf(LEVEL_HOOG);
+				return String.valueOf(LEVEL_HIGH);
 
 			if (systemLogger != null)
-				systemLogger.log(Level.SEVERE, sModule, sMethod, "AuthnContextClassRefURI value: "
+				systemLogger.log(Level.SEVERE, MODULE, sMethod, "AuthnContextClassRefURI value: "
 						+ sAuthnContextClassRefURI + " is not valid.");
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 		catch (Exception e) {
 			if (systemLogger != null)
-				systemLogger.log(Level.SEVERE, sModule, sMethod, "", e);
+				systemLogger.log(Level.SEVERE, MODULE, sMethod, "", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 
 		}
 	}
 
 	/**
-	 * Gets the betrouwbaarheids niveau.
+	 * Gets the Security Level.
 	 * 
 	 * @param requestedAuthnContext
 	 *            the requested authn context
 	 * @param systemLogger
 	 *            the system logger
-	 * @return the betrouwbaarheids niveau
+	 * @return the Security Level
 	 */
-	public static String getBetrouwbaarheidsNiveau(RequestedAuthnContext requestedAuthnContext,
-			ASelectSystemLogger systemLogger)
+	public static String getSecurityLevel(RequestedAuthnContext requestedAuthnContext, ASelectSystemLogger systemLogger)
 	{
-		String sMethod = "getBetrouwbaarheidsNiveau";
+		String sMethod = "getSecurityLevel";
 		final int EXACT = 0;
 		final int MINIMUM = 1;
 		final int MAXIMUM = 2;
@@ -152,8 +156,8 @@ public class SecurityLevel
 
 		if (requestedAuthnContext != null) {
 			int iComparison = EXACT;
-			AuthnContextComparisonTypeEnumeration authnContextComparisonTypeEnumeration = requestedAuthnContext
-					.getComparison();
+			AuthnContextComparisonTypeEnumeration authnContextComparisonTypeEnumeration =
+								requestedAuthnContext.getComparison();
 			if (authnContextComparisonTypeEnumeration != null) {
 				if (authnContextComparisonTypeEnumeration.equals(AuthnContextComparisonTypeEnumeration.MINIMUM)) {
 					iComparison = MINIMUM;
@@ -171,105 +175,88 @@ public class SecurityLevel
 
 			String sCurrentAuthnContextClassRef = null;
 			String sMatchedBetrouwheidsNiveau = BN_NOT_FOUND;
-			int iCurrentBetrouwheidsNiveau = NOT_FOUND;
+			int iCurrentBetrouwheidsNiveau = LEVEL_NOT_FOUND;
 
 			switch (iComparison) {
 			case EXACT:
 				while (itr.hasNext() && sMatchedBetrouwheidsNiveau == BN_NOT_FOUND) {
 					sCurrentAuthnContextClassRef = itr.next().getAuthnContextClassRef();
-					sMatchedBetrouwheidsNiveau = getBetrouwbaarheidsNiveau(sCurrentAuthnContextClassRef);
+					sMatchedBetrouwheidsNiveau = getSecurityLevelFromContext(sCurrentAuthnContextClassRef);
 				}
 				break;
 
 			case MINIMUM:
-				int iCurrentMinBetrouwheidsNiveau = MAX;
+				int iCurrentMinBetrouwheidsNiveau = LEVEL_MAX;
 				while (itr.hasNext()) {
 					sCurrentAuthnContextClassRef = itr.next().getAuthnContextClassRef();
-					iCurrentBetrouwheidsNiveau = getIntBetrouwbaarheidsNiveau(sCurrentAuthnContextClassRef);
-					if (iCurrentBetrouwheidsNiveau != NOT_FOUND
+					iCurrentBetrouwheidsNiveau = getIntSecurityLevel(sCurrentAuthnContextClassRef);
+					if (iCurrentBetrouwheidsNiveau != LEVEL_NOT_FOUND
 							&& iCurrentBetrouwheidsNiveau < iCurrentMinBetrouwheidsNiveau)
 						iCurrentMinBetrouwheidsNiveau = iCurrentBetrouwheidsNiveau;
 				}
-				sMatchedBetrouwheidsNiveau = getBetrouwbaarheidsNiveau(iCurrentMinBetrouwheidsNiveau);
+				sMatchedBetrouwheidsNiveau = getStringSecurityLevel(iCurrentMinBetrouwheidsNiveau);
 				break;
 
 			case BETTER:
-				int iCurrentBestBetrouwheidsNiveau = MIN;
+				int iCurrentBestBetrouwheidsNiveau = LEVEL_MIN;
 				while (itr.hasNext()) {
 					sCurrentAuthnContextClassRef = itr.next().getAuthnContextClassRef();
-					iCurrentBetrouwheidsNiveau = getIntBetrouwbaarheidsNiveau(sCurrentAuthnContextClassRef);
-					if (iCurrentBetrouwheidsNiveau != NOT_FOUND
+					iCurrentBetrouwheidsNiveau = getIntSecurityLevel(sCurrentAuthnContextClassRef);
+					if (iCurrentBetrouwheidsNiveau != LEVEL_NOT_FOUND
 							&& iCurrentBetrouwheidsNiveau > iCurrentBestBetrouwheidsNiveau)
 						iCurrentBestBetrouwheidsNiveau = iCurrentBetrouwheidsNiveau;
 				}
-				if (iCurrentBestBetrouwheidsNiveau == NUL)
-					iCurrentBestBetrouwheidsNiveau = LAAG;
-				else if (iCurrentBestBetrouwheidsNiveau == LAAG)
-					iCurrentBestBetrouwheidsNiveau = MIDDEN;
-				else if (iCurrentBestBetrouwheidsNiveau == MIDDEN)
-					iCurrentBestBetrouwheidsNiveau = HOOG;
-				else if (iCurrentBestBetrouwheidsNiveau == HOOG)
-					iCurrentBestBetrouwheidsNiveau = MAX;
+				if (iCurrentBestBetrouwheidsNiveau == LEVEL_NULL)
+					iCurrentBestBetrouwheidsNiveau = LEVEL_LOW;
+				else if (iCurrentBestBetrouwheidsNiveau == LEVEL_LOW)
+					iCurrentBestBetrouwheidsNiveau = LEVEL_BETTER;
+				else if (iCurrentBestBetrouwheidsNiveau == LEVEL_BETTER)
+					iCurrentBestBetrouwheidsNiveau = LEVEL_MEDIUM;
+				else if (iCurrentBestBetrouwheidsNiveau == LEVEL_MEDIUM)
+					iCurrentBestBetrouwheidsNiveau = LEVEL_HIGH;
+				else if (iCurrentBestBetrouwheidsNiveau == LEVEL_HIGH)
+					iCurrentBestBetrouwheidsNiveau = LEVEL_MAX;
 
-				sMatchedBetrouwheidsNiveau = getBetrouwbaarheidsNiveau(iCurrentBestBetrouwheidsNiveau);
+				sMatchedBetrouwheidsNiveau = getStringSecurityLevel(iCurrentBestBetrouwheidsNiveau);
 				break;
 
 			case MAXIMUM:
-				int iCurrentMaxBetrouwheidsNiveau = MIN;
+				int iCurrentMaxBetrouwheidsNiveau = LEVEL_MIN;
 				while (itr.hasNext()) {
 					sCurrentAuthnContextClassRef = itr.next().getAuthnContextClassRef();
-					iCurrentBetrouwheidsNiveau = getIntBetrouwbaarheidsNiveau(sCurrentAuthnContextClassRef);
-					if (iCurrentBetrouwheidsNiveau != NOT_FOUND
+					iCurrentBetrouwheidsNiveau = getIntSecurityLevel(sCurrentAuthnContextClassRef);
+					if (iCurrentBetrouwheidsNiveau != LEVEL_NOT_FOUND
 							&& iCurrentBetrouwheidsNiveau > iCurrentMaxBetrouwheidsNiveau)
 						iCurrentMaxBetrouwheidsNiveau = iCurrentBetrouwheidsNiveau;
 				}
-				sMatchedBetrouwheidsNiveau = getBetrouwbaarheidsNiveau(iCurrentMaxBetrouwheidsNiveau);
+				sMatchedBetrouwheidsNiveau = getStringSecurityLevel(iCurrentMaxBetrouwheidsNiveau);
 			}
 			systemLogger.log(Level.INFO, MODULE, sMethod, "Level=" + sMatchedBetrouwheidsNiveau);
-			return sMatchedBetrouwheidsNiveau;
+			return sMatchedBetrouwheidsNiveau;  // can be BN_NOTFOUND
 
 		}
 		// 20090501, Bauke: Since the <RequestedAuthnContext> element is optional,
 		// we return the lowest known level here. (no restriction on the level is required)
 		return BN_NUL; // BN_EMPTY;
 	}
-
+	
 	/**
-	 * Gets the int betrouwbaarheids niveau.
+	 * Gets the Security Level as a String
 	 * 
 	 * @param sCurrentAuthnContextClassRef
-	 *            the s current authn context class ref
-	 * @return the int betrouwbaarheids niveau
+	 *            AuthnContext class ref
+	 * @return the Security Level
 	 */
-	private static int getIntBetrouwbaarheidsNiveau(String sCurrentAuthnContextClassRef)
-	{
-		if (sCurrentAuthnContextClassRef.equals(UNSPECIFIED_URI))
-			return NUL;
-		else if (sCurrentAuthnContextClassRef.equals(PASSWORDPROTECTEDTRANSPORT_URI))
-			return LAAG;
-		else if (sCurrentAuthnContextClassRef.equals(MOBILETWOFACTORCONTRACT_URI))
-			return MIDDEN;
-		else if (sCurrentAuthnContextClassRef.equals(SMARTCARDPKI_URI))
-			return HOOG;
-
-		return NOT_FOUND;
-	}
-
-	/**
-	 * Gets the betrouwbaarheids niveau.
-	 * 
-	 * @param sAuthnContextClassRef
-	 *            the s authn context class ref
-	 * @return the betrouwbaarheids niveau
-	 */
-	private static String getBetrouwbaarheidsNiveau(String sAuthnContextClassRef)
+	private static String getSecurityLevelFromContext(String sAuthnContextClassRef)
 	{
 		if (sAuthnContextClassRef.equals(UNSPECIFIED_URI))
 			return BN_NUL;
 		else if (sAuthnContextClassRef.equals(PASSWORDPROTECTEDTRANSPORT_URI))
 			return BN_LAAG;
+		else if (sAuthnContextClassRef.equals(MOBILETWOFACTORUNREGISTERED_URI))
+			return BN_BETTER;
 		else if (sAuthnContextClassRef.equals(MOBILETWOFACTORCONTRACT_URI))
-			return BN_MIDDEN;
+			return BN_MEDIUM;
 		else if (sAuthnContextClassRef.equals(SMARTCARDPKI_URI))
 			return BN_HOOG;
 
@@ -277,31 +264,48 @@ public class SecurityLevel
 	}
 
 	/**
-	 * Gets the betrouwbaarheids niveau.
+	 * Translate the Security Level from int to String.
 	 * 
-	 * @param iBetrouwbaarheidsNiveau
-	 *            the i betrouwbaarheids niveau
-	 * @return the betrouwbaarheids niveau
+	 * @param sCurrentAuthnContextClassRef
+	 *            AuthnContext class ref
+	 * @return the Security Level
 	 */
-	private static String getBetrouwbaarheidsNiveau(int iBetrouwbaarheidsNiveau)
+	private static String getStringSecurityLevel(int iSecurityLevel)
 	{
-		if (iBetrouwbaarheidsNiveau == NUL)
+		if (iSecurityLevel == LEVEL_NULL)
 			return BN_NUL;
-		else if (iBetrouwbaarheidsNiveau == LAAG)
+		else if (iSecurityLevel == LEVEL_LOW)
 			return BN_LAAG;
-		else if (iBetrouwbaarheidsNiveau == MIDDEN)
-			return BN_MIDDEN;
-		else if (iBetrouwbaarheidsNiveau == HOOG)
+		else if (iSecurityLevel == LEVEL_BETTER)
+			return BN_BETTER;
+		else if (iSecurityLevel == LEVEL_MEDIUM)
+			return BN_MEDIUM;
+		else if (iSecurityLevel == LEVEL_HIGH)
 			return BN_HOOG;
 
 		return BN_NOT_FOUND;
 	}
 
-	/*
-	 * public static int getIntBetrouwbaarheidsNiveauFromBN(String sBetrouwbaarheidsNiveau) { if
-	 * (BN_NUL.equals(sBetrouwbaarheidsNiveau)) return LEVEL_NUL; else if (BN_LAAG.equals(sBetrouwbaarheidsNiveau))
-	 * return LEVEL_LAAG; else if (BN_MIDDEN.equals(sBetrouwbaarheidsNiveau)) return LEVEL_MIDDEN; else if
-	 * (BN_HOOG.equals(sBetrouwbaarheidsNiveau)) return LEVEL_HOOG; else if (BN_EMPTY.equals(sBetrouwbaarheidsNiveau))
-	 * return LEVEL_NUL; // if it is empty the requestor apparently does not care return Integer.MAX_VALUE; }
+	/**
+	 * Convert URI Security Level to an integer.
+	 * 
+	 * @param sCurrentAuthnContextClassRef
+	 *            AuthnContext class ref
+	 * @return the Security Level
 	 */
+	private static int getIntSecurityLevel(String sCurrentAuthnContextClassRef)
+	{
+		if (sCurrentAuthnContextClassRef.equals(UNSPECIFIED_URI))
+			return LEVEL_NULL;
+		else if (sCurrentAuthnContextClassRef.equals(PASSWORDPROTECTEDTRANSPORT_URI))
+			return LEVEL_LOW;
+		else if (sCurrentAuthnContextClassRef.equals(MOBILETWOFACTORUNREGISTERED_URI))
+			return LEVEL_BETTER;
+		else if (sCurrentAuthnContextClassRef.equals(MOBILETWOFACTORCONTRACT_URI))
+			return LEVEL_MEDIUM;
+		else if (sCurrentAuthnContextClassRef.equals(SMARTCARDPKI_URI))
+			return LEVEL_HIGH;
+
+		return LEVEL_NOT_FOUND;
+	}
 }

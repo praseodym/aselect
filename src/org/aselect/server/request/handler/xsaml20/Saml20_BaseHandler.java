@@ -12,6 +12,7 @@
 package org.aselect.server.request.handler.xsaml20;
 
 import java.io.IOException;
+
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.util.HashMap;
@@ -34,7 +35,6 @@ import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.utils.Utils;
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.common.xml.SAMLConstants;
-import org.opensaml.saml2.core.AuthzDecisionQuery;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 import org.opensaml.xml.ConfigurationException;
 import org.opensaml.xml.XMLObject;

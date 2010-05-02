@@ -75,7 +75,6 @@ import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.storagemanager.StorageManager;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * The A-Select Server TGT manager. <br>
  * <br>
@@ -221,7 +220,7 @@ public class TGTManager extends StorageManager
 		try {
 			byte[] baTGT = new byte[TGT_LENGTH];
 
-			// creates a new TGT by resolveing randombytes
+			// creates a new TGT by resolving randombytes
 			CryptoEngine.nextRandomBytes(baTGT);
 			sTGT = Utils.byteArrayToHexString(baTGT);
 

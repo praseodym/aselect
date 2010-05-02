@@ -57,7 +57,7 @@ public class SoapLogoutResponseSender
 
 		// Always sign the LogoutResponse
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the logoutResponse >======");
-		logoutResponse = (LogoutResponse) SamlTools.sign(logoutResponse);
+		logoutResponse = (LogoutResponse) SamlTools.signSamlObject(logoutResponse);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the logoutResponse ======<");
 
 		if (serviceProvider == null)

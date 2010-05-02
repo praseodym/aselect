@@ -15,10 +15,11 @@ import java.util.logging.Level;
 
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.request.handler.xsaml20.AbstractMetaDataManager;
+import org.aselect.server.request.handler.xsaml20.PartnerData;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * class MetaDataManagerIdp, this class is reading the aselect xml file. The aselect xml file contains the metadata xml
  * file information, this is the the location of the metadata xml file, this can be a pathname or URL
@@ -29,7 +30,7 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 	private final String sFederationIdpKeyword = "federation-idp";
 
 	/**
-	 * Constructor.
+	 * Private constructor --> singleton.
 	 */
 	private MetaDataManagerSp() {
 	}
@@ -68,7 +69,7 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 
 		super.init();
 		myRole = "SP";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Role=" + myRole);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Role=" + myRole + " id=" + sFederationIdpKeyword);
 
 		sam = _configManager.getSection(null, "sam");
 		agent = _configManager.getSection(sam, "agent");
@@ -76,28 +77,39 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 
 		idpSection = _configManager.getSection(metaResourcegroup, "resource");
 		while (idpSection != null) {
+			// Look for "id" "url" and "session_sync"
 			String sId = _configManager.getParam(idpSection, "id");
+			PartnerData idpData = new PartnerData(sId);
 			try {
-				String metadata = _configManager.getParam(idpSection, "url");
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "id="+sId);
+				String metadataUrl = Utils.getSimpleParam(_configManager, _systemLogger, idpSection, "url", true);
+				if (metadataUrl != null)
+					idpData.setMetadataUrl(metadataUrl);
+				
+				String specialSettings = Utils.getSimpleParam(_configManager, _systemLogger, idpSection, "special_settings", false);
+				if (specialSettings != null)
+					idpData.setSpecialSettings(specialSettings);
+				String myIssuer = Utils.getSimpleParam(_configManager, _systemLogger, idpSection, "local_issuer", false);
+				if (myIssuer != null)
+					idpData.setLocalIssuer(myIssuer);
+				
 				String sSessionSync = null;
-				if (metadata != null) {
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "id=" + sId + "<>" + metadata);
-					metadataSPs.put(sId, metadata);
-				}
 				if (sId.equals("metadata")) { // 20091030: backward compatibility
 					// Get from "saml20_sp_session_sync" handler
 					Object oRequestsSection = _configManager.getSection(null, "requests");
 					Object oHandlersSection = _configManager.getSection(oRequestsSection, "handlers");
 					Object oHandler = _configManager.getSection(oHandlersSection, "handler",
-							"id=saml20_sp_session_sync");
+											"id=saml20_sp_session_sync");
 					sSessionSync = ASelectConfigManager.getSimpleParam(oHandler, "federation_url", true);
 				}
 				else {
-					sSessionSync = _configManager.getParam(idpSection, "session_sync");
+					sSessionSync = Utils.getSimpleParam(_configManager, _systemLogger, idpSection, "session_sync", false);
 				}
 				if (sSessionSync != null) {
-					sessionSyncSPs.put(sId, sSessionSync);
+					idpData.setSessionSyncUrl(sSessionSync);
 				}
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "id=" + sId + "<>" + idpData);
+				storeAllIdPData.put(sId, idpData);
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Metadata retrieval failed", e);

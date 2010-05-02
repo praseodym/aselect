@@ -247,7 +247,7 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler
 			}
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the artifactResponse >======");
-			artifactResponse = (ArtifactResponse) SamlTools.sign(artifactResponse);
+			artifactResponse = (ArtifactResponse) SamlTools.signSamlObject(artifactResponse);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the artifactResponse ======<");
 			Envelope envelope = new SoapManager().buildSOAPMessage(artifactResponse);
 			Element envelopeElem = SamlTools.marshallMessage(envelope);

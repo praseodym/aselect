@@ -11,24 +11,10 @@
  */
 package org.aselect.server.request.handler.xsaml20;
 
-import java.math.BigInteger;
-
-
-import java.security.MessageDigest;
-import java.security.PrivateKey;
-import java.security.Signature;
 import java.util.List;
 import java.util.logging.Level;
 
-import javax.xml.crypto.dsig.SignatureMethod;
-import javax.xml.crypto.dsig.XMLSignatureFactory;
-import javax.xml.crypto.dsig.spec.SignatureMethodParameterSpec;
-
 import org.aselect.server.log.ASelectSystemLogger;
-import org.bouncycastle.crypto.CipherParameters;
-import org.bouncycastle.crypto.digests.SHA256Digest;
-import org.bouncycastle.crypto.params.RSAKeyParameters;
-import org.bouncycastle.crypto.signers.RSADigestSigner;
 import org.opensaml.common.binding.SAMLMessageContext;
 import org.opensaml.saml2.binding.encoding.HTTPRedirectDeflateEncoder;
 import org.opensaml.saml2.core.RequestAbstractType;

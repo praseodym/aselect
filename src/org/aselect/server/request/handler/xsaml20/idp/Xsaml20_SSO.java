@@ -212,7 +212,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 			// The betrouwbaarheidsniveau is stored in the session context
 			RequestedAuthnContext requestedAuthnContext = authnRequest.getRequestedAuthnContext();
-			String sBetrouwbaarheidsNiveau = SecurityLevel.getBetrouwbaarheidsNiveau(requestedAuthnContext, _systemLogger);
+			String sBetrouwbaarheidsNiveau = SecurityLevel.getSecurityLevel(requestedAuthnContext, _systemLogger);
 			if (sBetrouwbaarheidsNiveau.equals(SecurityLevel.BN_NOT_FOUND)) {
 				// We've got a security level but is not known
 				String sStatusMessage = "The requested AuthnContext isn't present in the configuration";
@@ -394,7 +394,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to get location: " + e.getMessage());
 		}
 
-		// _systemLogger.log(Level.INFO, MODULE, sMethod, "Meta1 OK "+sAssertionConsumerServiceURL);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta done acurl="+sAssertionConsumerServiceURL);
 		if (sAssertionConsumerServiceURL == null) {
 			if (elementName.equals(AUTHNREQUEST)) {
 				AuthnRequest authnRequest = (AuthnRequest) samlMessage;
@@ -652,7 +652,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				SAMLObjectBuilder<AuthnContextClassRef> authnContextClassRefBuilder = (SAMLObjectBuilder<AuthnContextClassRef>) builderFactory
 						.getBuilder(AuthnContextClassRef.DEFAULT_ELEMENT_NAME);
 				AuthnContextClassRef authnContextClassRef = authnContextClassRefBuilder.buildObject();
-				String sAutnContextClassRefURI = SecurityLevel.convertLevelToAuthnContextClassRefURI(sSelectedLevel, _systemLogger, MODULE);
+				String sAutnContextClassRefURI = SecurityLevel.convertLevelToAuthnContextClassRefURI(sSelectedLevel, _systemLogger);
 				authnContextClassRef.setAuthnContextClassRef(sAutnContextClassRefURI);
 
 				SAMLObjectBuilder<AuthnContext> authnContextBuilder = (SAMLObjectBuilder<AuthnContext>) builderFactory

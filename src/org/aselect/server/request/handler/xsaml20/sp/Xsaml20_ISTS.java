@@ -24,10 +24,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.request.RequestState;
+import org.aselect.server.request.handler.xsaml20.PartnerData;
 import org.aselect.server.request.handler.xsaml20.Saml20_BaseHandler;
 import org.aselect.server.request.handler.xsaml20.Saml20_Metadata;
 import org.aselect.server.request.handler.xsaml20.Saml20_RedirectEncoder;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
+import org.aselect.server.request.handler.xsaml20.SecurityLevel;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectConfigException;
@@ -63,14 +65,20 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 	protected final String singleSignOnServiceBindingConstantREDIRECT = SAMLConstants.SAML2_REDIRECT_BINDING_URI;
 
 	private String _sServerId = null; // <server_id> in <aselect>
-	private HashMap<String, String> levelMap;
+//	private HashMap<String, String> levelMap;
 	
 	private String _sAssertionConsumerUrl = null;
-	private String _sSpecialSettings = null;
-	private String _sRequestIssuer = null;
+//	private String _sSpecialSettings = null;
+//	private String _sRequestIssuer = null;
 	private String _sPostTemplate = null;
 	private String _sHttpMethod = "GET";
 
+	// Example configuration
+	//
+	// <handler id="saml20_ists"
+	// class="org.aselect.server.request.handler.xsaml20.Xsaml20_ISTS"
+	// target="/saml20_ists.*">
+	//
 	/* (non-Javadoc)
 	 * @see org.aselect.server.request.handler.xsaml20.Saml20_BaseHandler#init(javax.servlet.ServletConfig, java.lang.Object)
 	 */
@@ -90,10 +98,10 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-		_sSpecialSettings = ASelectConfigManager.getSimpleParam(oConfig, "special_settings", false);
-		_sRequestIssuer = ASelectConfigManager.getSimpleParam(oConfig, "issuer", false);
-		if (_sSpecialSettings == null)
-			_sSpecialSettings = "";
+//		_sSpecialSettings = ASelectConfigManager.getSimpleParam(oConfig, "special_settings", false);
+//		_sRequestIssuer = ASelectConfigManager.getSimpleParam(oConfig, "issuer", false);
+//		if (_sSpecialSettings == null)
+//			_sSpecialSettings = "";
 		_sServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
 
 		_sHttpMethod = ASelectConfigManager.getSimpleParam(oConfig, "http_method", false);
@@ -105,6 +113,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 		if (_sHttpMethod.equals("POST"))
 			_sPostTemplate = readTemplateFromConfig(oConfig, "post_template");
 
+		/* 20100429 replaced by IdP parameters
 		levelMap = new HashMap<String, String>();
 		Object oSecurity = null;
 		try {
@@ -124,7 +133,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 		catch (ASelectConfigException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid config item 'uri' found in handler section", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-		}
+		}*/
 		
 		// Get Assertion Consumer data from config
 		try {
@@ -153,27 +162,12 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 		}
 	}
 	
-
-	// Example configuration
-	//
-	// <handler id="saml20_ists"
-	// class="org.aselect.server.request.handler.xsaml20.Xsaml20_ISTS"
-	// target="/saml20_ists.*">
-	// <federation_url>https://testsiam.extern.umcn.nl/aselectserver/server</federation_url>
-	// <security level="5" uri="urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified" />
-	// <security level="10" uri="urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport" />
-	// <security level="20" uri="urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorContract" />
-	// <security level="30" uri="urn:oasis:names:tc:SAML:2.0:ac:classes:SmartcardPKI" />
-	// </handler>
-	//
-	// "federation_url" contains a default value used when it's not given in the request
-	//
 	/* (non-Javadoc)
 	 * @see org.aselect.server.request.handler.IRequestHandler#process(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
 	@SuppressWarnings("unchecked")
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		String sRid;
@@ -229,14 +223,15 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 
 			String sApplicationId = (String) htSessionContext.get("app_id");
 			String sApplicationLevel = getApplicationLevel(sApplicationId);
-			String sAuthnContextClassRefURI = levelMap.get(sApplicationLevel);
+			String sAuthnContextClassRefURI = SecurityLevel.convertLevelToAuthnContextClassRefURI(sApplicationLevel, _systemLogger);
+			// 20100428, Bauke: old: String sAuthnContextClassRefURI = levelMap.get(sApplicationLevel);
 			if (sAuthnContextClassRefURI == null) {
 				// this level was not configured. Log it and inform the user
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Application Level " + sApplicationLevel
 						+ " is not configured");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_APP_LEVEL);
 			}
-
+			
 			// Send SAML request to the IDP
 			XMLObjectBuilderFactory builderFactory = Configuration.getBuilderFactory();
 
@@ -252,7 +247,9 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			requestedAuthnContext.getAuthnContextClassRefs().add(authnContextClassRef);
 			
 			// 20100311, Bauke: added for eHerkenning
-			if (_sSpecialSettings.contains("minimum"))
+			PartnerData partnerData = MetaDataManagerSp.getHandle().getPartnerDataEntry(sFederationUrl);
+			String specialSettings = (partnerData == null)? null: partnerData.getSpecialSettings();
+			if (specialSettings != null && specialSettings.contains("minimum"))
 				requestedAuthnContext.setComparison(AuthnContextComparisonTypeEnumeration.MINIMUM);
 			else
 				requestedAuthnContext.setComparison(AuthnContextComparisonTypeEnumeration.EXACT);
@@ -261,7 +258,10 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 					.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
 			Issuer issuer = issuerBuilder.buildObject();
 			// 20100311, Bauke: Alternate Issuer, added for eHerkenning
-			issuer.setValue((_sRequestIssuer!=null)? _sRequestIssuer: sMyUrl);
+			if (partnerData != null && partnerData.getLocalIssuer() != null)
+				issuer.setValue(partnerData.getLocalIssuer());
+			else
+				issuer.setValue(sMyUrl);
 
 			// AuthRequest
 			SAMLObjectBuilder<AuthnRequest> authnRequestbuilder = (SAMLObjectBuilder<AuthnRequest>) builderFactory
@@ -291,8 +291,8 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			Boolean bForcedAuthn = (Boolean) htSessionContext.get("forced_authenticate");
 			if (bForcedAuthn == null)
 				bForcedAuthn = false;
-			// 20100311, Bauke: _sSpecialSettings added for eHerkenning
-			if (bForcedAuthn || _sSpecialSettings.contains("force")) {
+			// 20100311, Bauke: "force" special_setting added for eHerkenning
+			if (bForcedAuthn || (specialSettings != null && specialSettings.contains("force"))) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Setting the ForceAuthn attribute");
 				authnRequest.setForceAuthn(true);
 			}
@@ -300,8 +300,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			//
 			// We have the AuthnRequest, now get it to the other side
 			//
-			String addedSecurity = _configManager.getAddedSecurity();
-			boolean useSha256 = addedSecurity.contains("sha256");
+			boolean useSha256 = (specialSettings != null && specialSettings.contains("sha256"));
 			if (_sHttpMethod.equals("GET")) {
 				// No use signing the AuthnRequest, it's even forbidden according to the Saml specs
 				// Brent Putman quote: The Redirect-DEFLATE binding encoder strips off the protocol message's ds:Signature element (if even present)
@@ -354,7 +353,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			else {  // POST
 				// 20100331, Bauke: added support for HTTP POST
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the authnRequest >======"+authnRequest);
-				authnRequest = (AuthnRequest)sign(authnRequest);  // only sensible for POST, checks <added_security> for sha256
+				authnRequest = (AuthnRequest)SamlTools.signSamlObject(authnRequest, useSha256? "sha256": "sha1");
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the authnRequest ======<"+authnRequest);
 
 				String sAssertion = XMLHelper.nodeToString(authnRequest.getDOM());

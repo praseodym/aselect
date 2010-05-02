@@ -61,7 +61,10 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-// TODO: Auto-generated Javadoc
+/**
+ * @author bauke
+ *
+ */
 public abstract class AbstractMetaDataManager
 {
 	// RH, 20090616
@@ -76,12 +79,12 @@ public abstract class AbstractMetaDataManager
 	protected String myRole = "IDP"; // default
 
 	// All descriptors
-	// protected ConcurrentHashMap<String, EntityDescriptor> entityDescriptors = new ConcurrentHashMap<String,
-	// EntityDescriptor>();
 	protected ConcurrentHashMap<String, SSODescriptor> SSODescriptors = new ConcurrentHashMap<String, SSODescriptor>();
-	protected ConcurrentHashMap<String, String> metadataSPs = new ConcurrentHashMap<String, String>();
-	protected ConcurrentHashMap<String, String> sessionSyncSPs = new ConcurrentHashMap<String, String>();
+//	protected ConcurrentHashMap<String, String> metadataSPs = new ConcurrentHashMap<String, String>();
+//	protected ConcurrentHashMap<String, String> sessionSyncSPs = new ConcurrentHashMap<String, String>();
 	protected ConcurrentHashMap<String, java.security.cert.X509Certificate> trustedIssuers = new ConcurrentHashMap<String, java.security.cert.X509Certificate>();
+
+	public ConcurrentHashMap<String, PartnerData> storeAllIdPData = new ConcurrentHashMap<String, PartnerData>();
 
 	private static String _sCheckCertificates = null;
 
@@ -118,8 +121,7 @@ public abstract class AbstractMetaDataManager
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not initialize bootstrap", cfge);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, cfge);
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Metadata SPs=" + metadataSPs + " SessionSync SPs="
-				+ sessionSyncSPs);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "storeAllIdPData=" + storeAllIdPData);
 	}
 
 	/**
@@ -206,8 +208,9 @@ public abstract class AbstractMetaDataManager
 	}
 
 	/**
-	 * If a new SP is making contact with the IdP, we must be able to read it's metadata Can be called any time, not
-	 * necessarily at startup Must be called before using SSODescriptors.
+	 * If a new SP is making contact with the IdP, we must be able to read it's metadata.
+	 * Can be called any time, not necessarily at startup.
+	 * Must be called before using SSODescriptors.
 	 * 
 	 * @param entityId
 	 *            the entity id
@@ -320,13 +323,11 @@ public abstract class AbstractMetaDataManager
 			trustedIssuers.put("loading_has_been_done", null);
 	}
 
-	// Bauke: added
-	// List all entries or Remove an entity from the metadata storage
-	// Produces output on stdout!
-	// Can be called from the Operating System to cleanup the cache.
-	//
 	/**
 	 * Handle metadata provider.
+	 * List all entries or Remove an entity from the metadata storage
+	 * Produces output on stdout!
+	 * Can be called from the Operating System to cleanup the cache.
 	 * 
 	 * @param out
 	 *            the out
@@ -340,9 +341,9 @@ public abstract class AbstractMetaDataManager
 		String sMethod = "handleMetadataProvider";
 
 		if (sList) {
-			Set SSOkeys = SSODescriptors.keySet();
-			for (Object SSOkey : SSOkeys) {
-				out.println("EntityId=" + (String) SSOkey);
+			Set<String> SSOkeys = SSODescriptors.keySet();
+			for (String SSOkey : SSOkeys) {
+				out.println("EntityId=" + SSOkey);
 			}
 			return;
 		}
@@ -386,16 +387,15 @@ public abstract class AbstractMetaDataManager
 				if (entityDescriptorValue != null) {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "New Entity Descriptor: " + entityDescriptorValue
 							+ " for " + entityId);
-					SSODescriptor descriptorValueIDP = entityDescriptorValue
-							.getIDPSSODescriptor(protocolSupportEnumeration);
-					SSODescriptor descriptorValueSP = entityDescriptorValue
-							.getSPSSODescriptor(protocolSupportEnumeration);
+					// 20100501, Bauke: metadata can contain both Descriptor types, so check them both!
+					SSODescriptor descriptorValueIDP = entityDescriptorValue.getIDPSSODescriptor(protocolSupportEnumeration);
 					if (descriptorValueIDP != null) {
 						if (!checkKeyDescriptor(descriptorValueIDP))
 							throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 						SSODescriptors.put(entityId, descriptorValueIDP);
 					}
-					else if (descriptorValueSP != null) {
+					SSODescriptor descriptorValueSP = entityDescriptorValue.getSPSSODescriptor(protocolSupportEnumeration);
+					if (descriptorValueSP != null) {
 						if (!checkKeyDescriptor(descriptorValueSP))
 							throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 						SSODescriptors.put(entityId, descriptorValueSP);
@@ -784,14 +784,13 @@ public abstract class AbstractMetaDataManager
 	public String getSessionSyncURL(String entityId)
 	{
 		String sMethod = "getSessionSyncURL";
+		String sUrl = null;
 
-		String sUrl = sessionSyncSPs.get(entityId);
+		PartnerData partnerData = getPartnerDataEntry(entityId);		
+		if (partnerData != null)
+			sUrl = partnerData.getSessionSyncUrl();
 		if (sUrl == null) {
-			sUrl = sessionSyncSPs.get("metadata"); // old mechanism
-		}
-		if (sUrl == null) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity id: " + entityId + " not found (session sync)");
-			return null;
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "SessionSync not found for Entity id: "+entityId);
 		}
 		return sUrl;
 	}
@@ -806,38 +805,50 @@ public abstract class AbstractMetaDataManager
 	public String getMetadataURL(String entityId)
 	{
 		String sMethod = "getMetadataURL";
+		String sUrl = null;
 
-		String sUrl = metadataSPs.get(entityId);
-		if (sUrl == null) {
-			sUrl = metadataSPs.get("metadata"); // old mechanism
-		}
-		if (sUrl == null) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity id: " + entityId + " not found (metadata)");
-			return null;
-		}
+		PartnerData partnerData = getPartnerDataEntry(entityId);
+		if (partnerData != null)
+			sUrl = partnerData.getMetadataUrl();
+		
+		if (sUrl == null)
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Metadata not found for Entity id: "+entityId);
 		return sUrl;
 	}
 
-	// Return the number of configured IdPs
 	/**
-	 * Gets the idp count.
+	 * Get the PartnerData entry for the given entity id
+	 * 
+	 * @param entityId
+	 * @return - the entry
+	 */
+	public PartnerData getPartnerDataEntry(String entityId)
+	{
+		PartnerData partnerData = storeAllIdPData.get(entityId);
+		if (partnerData == null)
+			partnerData = storeAllIdPData.get("metadata");
+		return partnerData;
+	}
+
+	/**
+	 * Return the number of configured IdPs
 	 * 
 	 * @return the idp count
 	 */
 	public int getIdpCount()
 	{
-		return metadataSPs.size();
+		return storeAllIdPData.size();
 	}
 
 	/**
-	 * Gets the default id p.
+	 * Gets the default IdP.
 	 * 
-	 * @return the default id p
+	 * @return the default IdP
 	 */
 	public String getDefaultIdP()
 	{
 		// Get the first one, useful when there's only one (the default)
-		Set keys = metadataSPs.keySet();
+		Set<String> keys = storeAllIdPData.keySet();
 		for (Object s : keys) {
 			String sIdP = (String) s;
 			return (sIdP.equals("metadata")) ? _configManager.getFederationUrl() : sIdP;

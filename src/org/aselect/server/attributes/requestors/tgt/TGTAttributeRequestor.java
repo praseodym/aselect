@@ -45,10 +45,10 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
 /**
- * Retrieves 'remote_attributes' from TGT context. <br>
+ * Retrieves 'attributes' from TGT context. <br>
  * <br>
  * <b>Description:</b><br>
- * An Attribute requestor which retrieves the remote_attributes parameter from a TGT context. The value of this
+ * An Attribute requestor which retrieves the 'attributes' parameter from a TGT context. The value of this
  * parameter is decoded and converted to a <code>HashMap</code>. <br>
  * <br>
  * <b>Concurrency issues:</b> <br>
@@ -168,7 +168,7 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
 				htAttributes = Utils.deserializeAttributes(sSerializedRemoteAttributes);
 			}
 			else {
-				_systemLogger.log(Level.FINE, MODULE, sMethod, "No 'remote_attributes' found in TGT.");
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "No 'attributes' found in TGT.");
 			}
 			HashMap htMapped = new HashMap();
 			Set keys = htAttributes.keySet();

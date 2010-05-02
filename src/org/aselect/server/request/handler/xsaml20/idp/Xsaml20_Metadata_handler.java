@@ -158,7 +158,7 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 	 * @see org.aselect.server.request.handler.xsaml20.Saml20_Metadata#createMetaDataXML()
 	 */
 	@Override
-	protected String createMetaDataXML()
+	protected String createMetaDataXML(String sLocalIssuer)
 		throws ASelectException
 	{
 		String sMethod = "createMetaDataXML";
@@ -171,7 +171,8 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 				.getBuilder(EntityDescriptor.DEFAULT_ELEMENT_NAME);
 
 		EntityDescriptor entityDescriptor = entityDescriptorBuilder.buildObject();
-		entityDescriptor.setEntityID(getEntityIdIdp());
+		// EntityID can be overruled by the caller
+		entityDescriptor.setEntityID((sLocalIssuer != null)? sLocalIssuer: getEntityIdIdp());
 		entityDescriptor.setID(SamlTools.generateIdentifier(_systemLogger, MODULE));
 
 		if (getValidUntil() != null)
@@ -256,7 +257,7 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 		pdpDescriptor.addSupportedProtocol(SAMLConstants.SAML20P_NS);
 		entityDescriptor.getRoleDescriptors().add(pdpDescriptor);
 
-		entityDescriptor = (EntityDescriptor) SamlTools.sign(entityDescriptor);
+		entityDescriptor = (EntityDescriptor) SamlTools.signSamlObject(entityDescriptor);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Just built the entityDescriptor");
 
 		// Marshall to the Node

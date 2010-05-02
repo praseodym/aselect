@@ -484,7 +484,7 @@ public class PKIAuthSP extends HttpServlet
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get certificate for '" + sUserAttributes + "'");
 			// Get Client Certificate from user
-			oCerts = (X509Certificate[]) servletRequest.getAttribute("javax.servlet.request.X509Certificate");
+			oCerts = (X509Certificate[]) servletRequest.getAttribute("");
 			if (oCerts == null || oCerts.length <= 0) {
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "No Client Certificate Provided");
 				throw new ASelectException(Errors.PKI_NO_CLIENT_CERT_PROVIDED);
