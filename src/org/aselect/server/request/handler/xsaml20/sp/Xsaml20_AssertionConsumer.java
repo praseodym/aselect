@@ -385,30 +385,24 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 						
 						String sEntitySubId = (String)hmSamlAttributes.get("urn:nl:eherkenning:0.8def:EntityConcernedSubID");
 						if (sEntitySubId != null) {
-							/*idx = sEntitySubId.length()-4;  // last 4 characters
-							if (idx > 0) sEntitySubId = sEntitySubId.substring(idx);
-							
-							idx = sEntityId.length()-4;  // remove last 4 characters
-							if (idx > 0) sEntityId = sEntityId.substring(0, idx);
-							// and add the SubId
-							sEntityId = sEntityId+sEntitySubId;
-							*/
 							idx = sEntitySubId.length()-12;  // last 12 characters to be on the safe side
 							if (idx > 0) sEntitySubId = sEntitySubId.substring(idx);
 							sEntityId = sEntitySubId;
 						}
-						hmSamlAttributes.put("OrgID", sEntityId);
+						hmSamlAttributes.put("orgid", sEntityId);
 					}
 					
 					// SenterNovem: AuthID = Unique Persistent Identifier
 					// Use the fifth word from sAuthnAuthority (split using :) and add sNameID
 					if (sNameIDQualifier != null) {
-						String sAuthID = "";
+						String sAuthID = "", sAuthSubID = "";
 						String[] tokens = sNameIDQualifier.split(":");
 						if (tokens.length > 4)
 							sAuthID = tokens[4];
-						sAuthID += "_"+sNameID;  // add separator
-						hmSamlAttributes.put("AuthID", sAuthID);
+						if (tokens.length > 5)
+							sAuthSubID = tokens[5];
+						sAuthID += "_"+sAuthSubID+"_"+sNameID;  // add separator
+						hmSamlAttributes.put("authid", sAuthID);
 					}
 					
 					// And serialize them back to where they came from

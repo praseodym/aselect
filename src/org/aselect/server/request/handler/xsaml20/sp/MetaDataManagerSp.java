@@ -24,6 +24,10 @@ import org.aselect.system.utils.Utils;
  * class MetaDataManagerIdp, this class is reading the aselect xml file. The aselect xml file contains the metadata xml
  * file information, this is the the location of the metadata xml file, this can be a pathname or URL
  */
+/**
+ * @author bauke
+ *
+ */
 public class MetaDataManagerSp extends AbstractMetaDataManager
 {
 	private static MetaDataManagerSp metaDataManager = null;
@@ -52,6 +56,14 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 		return metaDataManager;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.xsaml20.AbstractMetaDataManager#getMyRole()
+	 */
+	public String getMyRole()
+	{
+		return "SP";
+	}
+	
 	/**
 	 * Read Aselect.xml file This file contains the location of the metadata xml file
 	 * 
@@ -68,8 +80,7 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 		Object idpSection = null;
 
 		super.init();
-		myRole = "SP";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Role=" + myRole + " id=" + sFederationIdpKeyword);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Role=" + getMyRole() + " id=" + sFederationIdpKeyword);
 
 		sam = _configManager.getSection(null, "sam");
 		agent = _configManager.getSection(sam, "agent");

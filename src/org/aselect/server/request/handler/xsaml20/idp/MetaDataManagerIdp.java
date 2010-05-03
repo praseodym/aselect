@@ -54,6 +54,14 @@ public class MetaDataManagerIdp extends AbstractMetaDataManager
 		return metaDataManager;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.aselect.server.request.handler.xsaml20.AbstractMetaDataManager#getMyRole()
+	 */
+	public String getMyRole()
+	{
+		return "IDP";
+	}
+
 	/**
 	 * Read Aselect.xml file This file contains the location of the metadata xml file
 	 * 
@@ -69,9 +77,8 @@ public class MetaDataManagerIdp extends AbstractMetaDataManager
 		Object application = null;
 
 		super.init();
-		myRole = "IDP";
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Role=" + myRole);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Role=" + getMyRole());
 		try {
 			applications = _configManager.getSection(null, "applications");
 		}

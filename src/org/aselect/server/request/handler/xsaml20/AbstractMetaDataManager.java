@@ -76,7 +76,6 @@ public abstract class AbstractMetaDataManager
 	protected String protocolSupportEnumeration = SAMLConstants.SAML20P_NS; // "urn:oasis:names:tc:SAML:2.0:protocol"
 	protected ASelectConfigManager _configManager;
 	protected SystemLogger _systemLogger;
-	protected String myRole = "IDP"; // default
 
 	// All descriptors
 	protected ConcurrentHashMap<String, SSODescriptor> SSODescriptors = new ConcurrentHashMap<String, SSODescriptor>();
@@ -87,15 +86,21 @@ public abstract class AbstractMetaDataManager
 	public ConcurrentHashMap<String, PartnerData> storeAllIdPData = new ConcurrentHashMap<String, PartnerData>();
 
 	private static String _sCheckCertificates = null;
-
+	
 	/**
-	 * Inits the.
+	 * Override to specify the classes role
+	 * 
+	 * @return - the role, either "SP" or "IDP"
+	 */
+	protected abstract String getMyRole();
+	
+	/**
+	 * Initialization method
 	 * 
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
 	protected void init()
-		throws ASelectException
+	throws ASelectException
 	{
 		_configManager = ASelectConfigManager.getHandle();
 		_systemLogger = ASelectSystemLogger.getHandle();
@@ -208,7 +213,7 @@ public abstract class AbstractMetaDataManager
 	}
 
 	/**
-	 * If a new SP is making contact with the IdP, we must be able to read it's metadata.
+	 * If a new partner (SP or IDP is making contact, we must be able to read it's metadata.
 	 * Can be called any time, not necessarily at startup.
 	 * Must be called before using SSODescriptors.
 	 * 
@@ -217,24 +222,21 @@ public abstract class AbstractMetaDataManager
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	// Bauke: added
-	protected void checkMetadataProvider(String entityId)
+	protected void ensureMetadataPresence(String entityId)
 		throws ASelectException
 	{
-		String sMethod = "checkMetadataProvider";
+		String sMethod = "ensureMetadataPresence";
 		String metadataURL = null;
 		ChainingMetadataProvider myMetadataProvider = new ChainingMetadataProvider();
 
-		_systemLogger.log(Level.FINE, MODULE, sMethod, "this=" + this + " SSODescriptors=" + SSODescriptors); // +" entityDescriptors="
-		// +
-		// entityDescriptors);
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "myRole="+getMyRole()+" entityId="+entityId+" SSODescriptors="+SSODescriptors);
 		if (trustedIssuers.isEmpty() && getCheckCertificates() != null) {
 			// Load trusted ca's (SP) or trusted SP's (IdP) from trusted_issuers.keystore
 			loadTrustedIssuers();
 		}
 		if (entityId == null)
 			return;
-		if (SSODescriptors.containsKey(entityId)) {
+		if (SSODescriptors.containsKey(makeEntityKey(entityId, null))) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId=" + entityId + " already in cache");
 			return;
 		}
@@ -242,7 +244,6 @@ public abstract class AbstractMetaDataManager
 		// Read the new metadata
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId=" + entityId + " not in cache yet");
 		metadataURL = getMetadataURL(entityId);
-		// metadataURL = metadataSPs.get((myRole.equals("SP"))? sFederationIdpKeyword: entityId);
 		if (metadataURL == null) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity id: " + entityId + " is not Configured");
 			return;
@@ -347,22 +348,23 @@ public abstract class AbstractMetaDataManager
 			}
 			return;
 		}
-		// Remove entry from SSODescriptors
-		SSODescriptor descriptor = SSODescriptors.remove(entityId);
-		if (descriptor == null) {
+		// Remove entries from SSODescriptors
+		SSODescriptor descriptorSP = SSODescriptors.remove(makeEntityKey(entityId, "SP"));
+		SSODescriptor descriptorIDP = SSODescriptors.remove(makeEntityKey(entityId, "IDP"));
+		if (descriptorSP == null && descriptorIDP == null) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Entity " + entityId + " not found");
 			out.println("Entity " + entityId + " not found");
 		}
 	}
 
 	/**
-	 * Get issuer(entityID) and metadata file location from application. Put these values in SSODescriptors. The key is
-	 * the entityID and the value the Descriptors
+	 * Get issuer(entityID) and metadata file location from application.
+	 * Put these values in SSODescriptors.
+	 * The key is the entityID and the value the Descriptors
 	 * 
 	 * @param myMetadataProvider
-	 *            the my metadata provider
+	 *            the Metadata provider
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
 	protected void addMetadata(ChainingMetadataProvider myMetadataProvider)
 		throws ASelectException
@@ -390,15 +392,17 @@ public abstract class AbstractMetaDataManager
 					// 20100501, Bauke: metadata can contain both Descriptor types, so check them both!
 					SSODescriptor descriptorValueIDP = entityDescriptorValue.getIDPSSODescriptor(protocolSupportEnumeration);
 					if (descriptorValueIDP != null) {
-						if (!checkKeyDescriptor(descriptorValueIDP))
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "IDP SSODescriptor found");
+						if (!checkKeyDescriptorCertificate(descriptorValueIDP))
 							throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
-						SSODescriptors.put(entityId, descriptorValueIDP);
+						SSODescriptors.put(makeEntityKey(entityId, "IDP"), descriptorValueIDP);
 					}
 					SSODescriptor descriptorValueSP = entityDescriptorValue.getSPSSODescriptor(protocolSupportEnumeration);
 					if (descriptorValueSP != null) {
-						if (!checkKeyDescriptor(descriptorValueSP))
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "SP SSODescriptor found");
+						if (!checkKeyDescriptorCertificate(descriptorValueSP))
 							throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
-						SSODescriptors.put(entityId, descriptorValueSP);
+						SSODescriptors.put(makeEntityKey(entityId, "SP"), descriptorValueSP);
 					}
 				}
 			}
@@ -425,13 +429,12 @@ public abstract class AbstractMetaDataManager
 	 *            the descriptor
 	 * @return true, if check key descriptor
 	 */
-	// Bauke, 20091006: Added
-	private boolean checkKeyDescriptor(SSODescriptor descriptor)
+	private boolean checkKeyDescriptorCertificate(SSODescriptor descriptor)
 	{
-		String sMethod = "checkKeyDescriptor";
+		String sMethod = "checkKeyDescriptorCertificate";
 		List<KeyDescriptor> keyDescriptors = descriptor.getKeyDescriptors();
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Metadata Prefix= Check=" + getCheckCertificates());
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "CheckCerts=" + getCheckCertificates());
 		for (KeyDescriptor keydescriptor : keyDescriptors) {
 			UsageType useType = keydescriptor.getUse();
 			if (!useType.name().equalsIgnoreCase("SIGNING")) {
@@ -460,8 +463,7 @@ public abstract class AbstractMetaDataManager
 					}
 				}
 				catch (CertificateException e) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot retrieve the public key from metadata: ",
-							e);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot retrieve the public key from metadata: ",e);
 					return false;
 				}
 			}
@@ -496,7 +498,7 @@ public abstract class AbstractMetaDataManager
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "The certificate issuer is not valid");
 				return isTrusted;
 			}
-			// TODO: CRL checking?
+			// IMPROVE: perform CRL checking?
 			return true;
 		}
 		catch (CertificateExpiredException e) {
@@ -538,6 +540,25 @@ public abstract class AbstractMetaDataManager
 	}
 
 	/**
+	 * Generate the key for the given 'entityId' in 'SSODescriptors'
+	 * The key depends on the role of the actual class.
+	 * If 'sRole' is null use the role of the partner.
+	 * 
+	 * @param entityId
+	 * @return - the generated key
+	 */
+	private String makeEntityKey(String entityId, String sRole)
+	{
+		if (sRole != null)
+			return sRole+"_"+entityId;
+		
+		if ("SP".equals(getMyRole()))
+			return "IDP_"+entityId;
+		else
+			return "SP_"+entityId;
+	}
+	
+	/**
 	 * Retrieve the signing key for the given entity id from the metadata cache.
 	 * 
 	 * @param entityId
@@ -548,15 +569,15 @@ public abstract class AbstractMetaDataManager
 	{
 		String sMethod = "getSigningKeyFromMetadata";
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId=" + entityId);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "myRole="+getMyRole()+" entityId=" + entityId);
 		try {
-			checkMetadataProvider(entityId);
+			ensureMetadataPresence(entityId);
 		}
 		catch (ASelectException e) {
 			return null;
 		}
 
-		SSODescriptor descriptor = SSODescriptors.get(entityId);
+		SSODescriptor descriptor = SSODescriptors.get(makeEntityKey(entityId, null));
 		if (descriptor == null) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Entity id: " + entityId + " not in SSODescriptors");
 			return null;
@@ -622,7 +643,7 @@ public abstract class AbstractMetaDataManager
 	public String getLocation(String entityId, String elementName, String bindingName)
 		throws ASelectException
 	{
-		String locationValue = getMDNodevalue(entityId, elementName, bindingName, "Location");
+		String locationValue = getAttrFromElementBinding(entityId, elementName, bindingName, "Location");
 		return locationValue;
 	}
 
@@ -650,11 +671,13 @@ public abstract class AbstractMetaDataManager
 	public String getResponseLocation(String entityId, String elementName, String bindingName)
 		throws ASelectException
 	{
-		return getMDNodevalue(entityId, elementName, bindingName, "ResponseLocation");
+		return getAttrFromElementBinding(entityId, elementName, bindingName, "ResponseLocation");
 	}
 
 	/**
-	 * Gets the md nodevalue.
+	 * Retrieve the value for "attrName" within the entity 'entityId'
+	 * looking for 'elementName' with binding 'bindingName'.
+	 * for 
 	 * 
 	 * @param entityId
 	 *            the entity id
@@ -663,25 +686,25 @@ public abstract class AbstractMetaDataManager
 	 * @param bindingName
 	 *            the binding name
 	 * @param attrName
-	 *            the attr name
-	 * @return location
+	 *            the attribute name we're looking for
+	 * @return 
+	 *            the attribute value
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
-	protected String getMDNodevalue(String entityId, String elementName, String bindingName, String attrName)
+	protected String getAttrFromElementBinding(String entityId, String elementName, String bindingName, String attrName)
 		throws ASelectException
 	{
-		String sMethod = "getMDNodevalue " + Thread.currentThread().getId();
+		String sMethod = "getAttrFromElementBinding " + Thread.currentThread().getId();
 		String location = null;
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId=" + entityId + " elementName=" + elementName
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "myRole="+getMyRole()+" entityId=" + entityId + " elementName=" + elementName
 				+ " binding=" + bindingName + " attr=" + attrName);
 		if (entityId == null)
 			return null;
-		checkMetadataProvider(entityId);
-		_systemLogger.log(Level.FINE, MODULE, sMethod, "Meta checked for " + entityId);
-		SSODescriptor descriptor = SSODescriptors.get(entityId);
-
+		ensureMetadataPresence(entityId);
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "Presence ensured for " + entityId);
+		
+		SSODescriptor descriptor = SSODescriptors.get(makeEntityKey(entityId, null));
 		if (descriptor != null) {
 			try {
 				Element domDescriptor = marshallDescriptor(descriptor);
