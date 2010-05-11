@@ -198,7 +198,7 @@ public class AuthSPAPIHandler extends AbstractAPIRequestHandler
 		htSessionContext = _sessionManager.getSessionContext(sSessionId);
 		if (htSessionContext == null) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid session: " + sSessionId);
-			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 		}
 
 		htSessionContext = null;

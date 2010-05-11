@@ -15,7 +15,6 @@
  */
 package org.aselect.server.request.handler.wsfed;
 
-
 import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -148,7 +147,7 @@ public class AccountSTS extends ProtoRequestHandler
 	 * @see org.aselect.server.request.handler.IRequestHandler#process(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		String sPathInfo = request.getPathInfo();
@@ -325,7 +324,7 @@ public class AccountSTS extends ProtoRequestHandler
 				// Create Token and POST it to the caller
 				HashMap htSessionData = retrieveSessionDataFromRid(request, SESSION_ID_PREFIX);
 				if (htSessionData == null)
-					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
+					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 				if ("true".equals(_sPassTransientId))
 					htAttributes.put("transient_id", sTgt);
 				return postRequestorToken(request, response, sUid, htSessionData, htAttributes);

@@ -230,7 +230,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			String sRid = (String) htResponse.get("rid"); // this is our own rid
 			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Session not found, expired? rid=" + sRid);
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Session not found");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 			}
 

@@ -87,7 +87,7 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
 			oAttributes = _configManager.getSection(oConfig, "attribute_mapping");
 		}
 		catch (ASelectConfigException e) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "No valid 'attribute_mapping' config section found, no mapping used", e);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "No valid 'attribute_mapping' config section found, no mapping used, cause="+e);
 		}
 
 		if (oAttributes != null) {
@@ -97,7 +97,7 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"Not one valid 'attribute' config section in 'attributes' section found,no mapping used", e);
+						"Not one valid 'attribute' config section in 'attributes' section found, no mapping used, cause="+e);
 			}
 
 			while (oAttribute != null) {

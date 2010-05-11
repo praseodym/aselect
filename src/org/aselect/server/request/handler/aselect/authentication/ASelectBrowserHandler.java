@@ -232,9 +232,8 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 
 			htSessionContext = _sessionManager.getSessionContext(sLocalRid);
 			if (htSessionContext == null) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod,
-						"Unknown session in response from cross aselect server");
-				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unknown session in response from cross aselect server");
+				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 			}
 
 			String sRemoteOrg = (String) htSessionContext.get("remote_organization");

@@ -16,7 +16,6 @@ import java.util.logging.Level; //import org.apache.log4j.Level;
 import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
 public interface ISystemLogger
 {
 
@@ -53,7 +52,7 @@ public interface ISystemLogger
 	 */
 	public abstract void init(String sLogFileNamePrefix, String sLoggerNamespace, ConfigManager oConfigManager,
 			Object oLogTargetConfig, String sWorkingDir)
-		throws ASelectException;
+	throws ASelectException;
 
 	/**
 	 * Write a log item. <br>

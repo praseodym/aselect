@@ -65,9 +65,8 @@ import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 
-// TODO: Auto-generated Javadoc
 /**
- * The request hendler factory for the A-Select Server. <br>
+ * The request handler factory for the A-Select Server. <br>
  * <br>
  * <b>Description:</b><br>
  * A singleton factory, which can be used to create <code>IAuthnRequestHandler</code> implementations. The factory uses
@@ -78,10 +77,10 @@ import org.aselect.system.exception.ASelectCommunicationException;
  * 
  * @author Alfa & Ariss
  */
-public class RequestHandlerFactory
+public class ASelectRequestHandlerFactory
 {
 	/** The module name */
-	private final String MODULE = "RequestHandlerFactory";
+	private final String MODULE = "ASelectRequestHandlerFactory";
 
 	/** The system logger */
 	private ASelectSystemLogger _systemLogger;
@@ -93,7 +92,7 @@ public class RequestHandlerFactory
 	private String _sMyOrg = null;
 
 	/** The static instance. */
-	private static RequestHandlerFactory _instance;
+	private static ASelectRequestHandlerFactory _instance;
 
 	/**
 	 * Get a static handle to the <code>RequestHandlerFactory</code> instance. <br>
@@ -112,15 +111,15 @@ public class RequestHandlerFactory
 	 * 
 	 * @return A static handle to the <code>RequestHandlerFactory</code>
 	 */
-	public static RequestHandlerFactory getHandle()
+	public static ASelectRequestHandlerFactory getHandle()
 	{
 		if (_instance == null)
-			_instance = new RequestHandlerFactory();
+			_instance = new ASelectRequestHandlerFactory();
 		return _instance;
 	}
 
 	/**
-	 * Initializes the <code>RequestHandlerFactory</code>. <br>
+	 * Initializes the <code>ASelectRequestHandlerFactory</code>. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
 	 * Initializes the components. <br>
@@ -137,7 +136,7 @@ public class RequestHandlerFactory
 	 * @param sServerId
 	 *            The A-Select Server ID.
 	 * @param sOrg
-	 *            The A-Select server organisation.
+	 *            The A-Select server organization.
 	 */
 	public void init(String sServerId, String sOrg)
 	{
@@ -240,6 +239,6 @@ public class RequestHandlerFactory
 	/**
 	 * private constructor.
 	 */
-	private RequestHandlerFactory() {
+	private ASelectRequestHandlerFactory() {
 	}
 }

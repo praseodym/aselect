@@ -28,7 +28,6 @@ import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 //
 // The mother of all RequestHandlers ...
 //

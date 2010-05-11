@@ -28,7 +28,6 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
 /**
  * Abstract class implementing the basic functionality of a Request handler. <br>
  * <br>

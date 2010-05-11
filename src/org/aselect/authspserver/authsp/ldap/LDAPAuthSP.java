@@ -123,7 +123,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * An A-Select AuthtSP that uses LDAP as back-end. <br>
  * <br>

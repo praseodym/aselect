@@ -428,7 +428,7 @@ public class AdminMonitor extends JFrame implements TableModelListener
 				Object objAgentSection = xASelectAgentConfigManager.getSection(null, "agent");
 				String xPort = xASelectAgentConfigManager.getParam(objAgentSection, "adminport");
 
-				Socket xSocket = new Socket("127.0.0.1", Integer.parseInt(xPort));
+				Socket xSocket = new Socket("localhost", Integer.parseInt(xPort));
 				PrintStream xOutput = new PrintStream(xSocket.getOutputStream());
 				BufferedReader xInput = new BufferedReader(new InputStreamReader(xSocket.getInputStream()));
 				xOutput.println("request=stop");

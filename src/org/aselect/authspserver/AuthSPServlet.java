@@ -118,7 +118,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.servlet.ASelectHttpServlet;
 
-// TODO: Auto-generated Javadoc
 /**
  * The A-Select AuthSP Server. <br>
  * <br>
@@ -417,7 +416,7 @@ public class AuthSPServlet extends ASelectHttpServlet
 
 		if (_bRestartable) {
 			// turn off caching
-			super.setDisableCachingHttpHeaders(oHttpServletRequest, oHttpServletResponse);
+			setDisableCachingHttpHeaders(oHttpServletRequest, oHttpServletResponse);
 
 			// handle request=restart
 			String sRequest = oHttpServletRequest.getParameter("request");

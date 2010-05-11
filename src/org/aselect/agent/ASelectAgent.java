@@ -531,8 +531,8 @@ public class ASelectAgent
 	{
 		String sMethod = "startServices()";
 		// try to allocate the listening ports on localhost.
-		_oServiceSocket = new ServerSocket(this._servicePort, 50, InetAddress.getByName("127.0.0.1"));
-		_oAdminSocket = new ServerSocket(this._adminPort, 50, InetAddress.getByName("127.0.0.1"));
+		_oServiceSocket = new ServerSocket(this._servicePort, 50, InetAddress.getByName("localhost"));
+		_oAdminSocket = new ServerSocket(this._adminPort, 50, InetAddress.getByName("localhost"));
 
 		// set default values
 		_bGui = false;

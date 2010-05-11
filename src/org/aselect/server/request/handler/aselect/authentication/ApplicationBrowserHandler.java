@@ -412,8 +412,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		String sMethod = "processBrowserRequest";
 
 		String sRequest = (String) htServiceRequest.get("request");
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplBrowREQ sRequest=" + sRequest + ", htServiceRequest="
-				+ htServiceRequest + " user language=" + _sUserLanguage);
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplBrowREQ sRequest=" + sRequest + ", htServiceRequest="+
+						htServiceRequest + " user language=" + _sUserLanguage);
 		String sReqLanguage = (String) htServiceRequest.get("language");
 		if (sReqLanguage != null && !sReqLanguage.equals("")) {
 			_sUserLanguage = sReqLanguage;
@@ -424,6 +424,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		String sRid = (String) htServiceRequest.get("rid");
 		if (sRid != null) {
 			_htSessionContext = _sessionManager.getSessionContext(sRid);
+			if (_htSessionContext == null) {
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
+			}
 			if (sReqLanguage != null && !sReqLanguage.equals("")) {
 				_htSessionContext.put("language", sReqLanguage);
 				_sessionManager.updateSession(sRid, _htSessionContext); // store language for posterity
@@ -479,7 +482,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// If a valid session is found, it will be valid during the whole servlet request handling.
 			if (_htSessionContext == null) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid RID: " + sRid);
-				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 			}
 
 			String sDirectAuthSP = (String) _htSessionContext.get("direct_authsp");
@@ -1197,7 +1200,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void handleLogin2(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sRid = null;
 		String sUid = null;
@@ -1208,6 +1211,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		try {
 			sRid = (String) htServiceRequest.get("rid");
 			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+			if (htSessionContext == null) {
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
+			}
 			String sAuthsp = (String) htSessionContext.get("forced_authsp"); // 20090111, Bauke from SessionContext not
 			// ServiceRequest
 			if (sAuthsp != null) {
@@ -2007,8 +2013,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// Get session context
 			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request received: invalid session.");
-				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Session not found");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 			}
 
 			// check authsp_level

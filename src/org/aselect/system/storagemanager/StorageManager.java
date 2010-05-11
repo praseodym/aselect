@@ -66,7 +66,6 @@ import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMAgent;
 
-// TODO: Auto-generated Javadoc
 /**
  * Store objects to some sort of physical storage. <br>
  * <br>
@@ -281,7 +280,7 @@ public class StorageManager
 	 * @see IStorageHandler#get(Object)
 	 */
 	public Object get(Object oKey)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "get";
 

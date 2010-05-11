@@ -93,6 +93,7 @@ import org.aselect.system.utils.Utils;
  * 
  * @author Alfa & Ariss
  */
+@SuppressWarnings("serial")
 public abstract class ASelectHttpServlet extends HttpServlet
 {
 	/**
@@ -186,8 +187,7 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	{
 		String sMethod = "showErrorPage";
 		ASelectSystemLogger _oAuthSPSystemLogger = ASelectSystemLogger.getHandle();
-		_oAuthSPSystemLogger
-				.log(Level.INFO, MODULE, sMethod, "FORM[" + sTemplate + "] " + sError + ":" + sErrorMessage);
+		_oAuthSPSystemLogger.log(Level.INFO, MODULE, sMethod, "FORM[" + sTemplate + "] " + sError + ":" + sErrorMessage);
 
 		String sErrorForm = new String(sTemplate);
 		sErrorForm = Utils.replaceString(sErrorForm, "[error]", sError);

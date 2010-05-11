@@ -222,7 +222,7 @@ public class TCPProtocolRequest implements IProtocolRequest
 	 * <li>put the querystring in _htProperties</li>
 	 * </ul>
 	 * </li>
-	 * <li>Read target adresss from the <code>Socket</code></li>
+	 * <li>Read target address from the <code>Socket</code></li>
 	 * </ul>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
@@ -320,7 +320,7 @@ public class TCPProtocolRequest implements IProtocolRequest
 			_htProperties.put("ProtocolName", "RAW");
 		}
 
-		// read target adresss from socket
+		// read target address from socket
 		// results with raw request in "/127.0.0.1:1495"
 		sbTarget.append(oSocket.getLocalSocketAddress().toString());
 		_htProperties.put("Target", sbTarget.toString());

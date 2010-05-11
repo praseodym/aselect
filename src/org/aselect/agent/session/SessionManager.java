@@ -60,7 +60,6 @@ import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.storagemanager.StorageManager;
 
-// TODO: Auto-generated Javadoc
 /**
  * Manages A-Select Agent sessions. <br>
  * <br>
@@ -324,7 +323,7 @@ public class SessionManager
 			}
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, "updateSessionContext()", "Exception: " + e.getMessage(), e);
+			_systemLogger.log(Level.SEVERE, MODULE, "updateSessionContext()", "Exception: " + e);
 			return false;
 		}
 		return true;
@@ -365,8 +364,7 @@ public class SessionManager
 
 		try {
 			htResponse = (HashMap) _oSessionTable.get(sSessionId);
-			_systemLogger.log(Level.INFO, MODULE, "getSessionContext()", "SessionId=" + sSessionId + ", Context="
-					+ htResponse);
+			_systemLogger.log(Level.INFO, MODULE, "getSessionContext()", "SessionId=" + sSessionId + ", Context=" + htResponse);
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, MODULE, "getSessionContext()", "Exception: " + e.getMessage());

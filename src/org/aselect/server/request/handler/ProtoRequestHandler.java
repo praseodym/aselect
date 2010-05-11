@@ -63,7 +63,6 @@ import org.opensaml.common.SignableSAMLObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
-import org.opensaml.saml2.core.AuthzDecisionQuery;
 import org.opensaml.xml.validation.ValidationException;
 
 //
@@ -544,7 +543,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	}
 
 	/**
-	 * Shows the main A-Select Error page with the approprate errors. <br>
+	 * Shows the main A-Select Error page with the appropriate errors. <br>
 	 * <br>
 	 * 
 	 * @param sErrorCode
@@ -556,7 +555,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 */
 	protected void showErrorPage(String sErrorCode, HashMap htSessionContext, PrintWriter pwOut)
 	{
-		String sMethod = "showErrorPage()";
+		String sMethod = "showErrorPage";
 
 		String sErrorMessage = _configManager.getErrorMessage(sErrorCode, _sUserLanguage, _sUserCountry);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM[error] " + sErrorCode + ":" + sErrorMessage);
@@ -835,19 +834,8 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Update Session: " + sPrefix + sRid + " htSessionMoreData="
 				+ htSessionMoreData);
 
-		// RH, 20080619, sn
-		// TODO, this method is now only used by idff and wsfed
-		// we might have to set the client_ip here as well
-		// but we need to get the client_ip address from somewhere
-		// _systemLogger.log(Level.INFO, MODULE, sMethod, "htSessionData client_ip was "+
-		// htSessionData.get("client_ip"));
-		// htSessionData.put("client_ip", ???);
-		// _systemLogger.log(Level.INFO, MODULE, sMethod, "htSessionData client_ip is now "+
-		// htSessionData.get("client_ip"));
-		// RH, 20080619, en
-
+		// IMPROVE, this method is now only used by idff and wsfed
 		// Bauke 20081209 Update the session instead of always creating a new one
-		// This will also give you the "client_ip" Remy.
 		HashMap htSessionData = _oSessionManager.getSessionContext(sPrefix + sRid);
 		if (htSessionData == null)
 			_oSessionManager.writeSession(sPrefix + sRid, htSessionMoreData);
@@ -884,7 +872,8 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		HashMap htSessionData = _oSessionManager.getSessionContext(sPrefix + sRidCookie);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "htSessionData=" + htSessionData);
 
-		htSessionData.put("session_rid", sRidCookie); // in case we need it
+		if (htSessionData != null)
+			htSessionData.put("session_rid", sRidCookie); // in case we need it
 		return htSessionData;
 	}
 
@@ -1077,7 +1066,6 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	{
 		String sMethod = "createContextAndIssueTGT()";
 		SessionManager _sessionManager = SessionManager.getHandle(); // RH, 20080617, n
-		HashMap htSession = null;
 
 		// Extract uid and security level
 		String sUserId = (String) htAttributes.get("uid");
@@ -1094,7 +1082,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		htAttributes.put("betrouwbaarheidsniveau", sSecLevel);
 		htAttributes.put("sel_level", sSecLevel);
 
-		// TODO following code should go to tgt.TGTIssuer, RH 20080617
+		// IMPROVE following code should go to tgt.TGTIssuer, RH 20080617
 		HashMap htTGTContext = new HashMap();
 		htTGTContext.put("attributes", Utils.serializeAttributes(htAttributes));
 		htTGTContext.put("uid", sUserId);
@@ -1105,6 +1093,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		htTGTContext.put("authsp", "SAML");
 		htTGTContext.put("app_id", sAppId);
 		htTGTContext.put("app_level", "2");
+		HashMap htSession = null;
 		if (sRid != null) {
 			htTGTContext.put("rid", sRid);
 			htSession = _sessionManager.getSessionContext(sRid);
@@ -1123,7 +1112,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		}
 
 		// We don't need the session any more
-		if (sRid != null) { // Bauke, 20081209 added
+		if (htSession != null) { // Bauke, 20081209 added
 			Tools.calculateAndReportSensorData(ASelectConfigManager.getHandle(), _systemLogger, htSession);
 			_sessionManager.killSession(sRid);
 		}

@@ -231,7 +231,6 @@
  * changed all variable names to naming convention and renamed and changed implementation of loadUUDBSettings() to checkUDBSettings() and removed old SIP2 checkers.
  *
  */
-
 package org.aselect.server.config;
 
 import java.io.BufferedReader;
@@ -423,11 +422,9 @@ public class ASelectConfigManager extends ConfigManager
 	// use either "consent" or "save_consent"
 	private String _sUserInfoSettings = "";
 
-	// TODO: The Template cache
 	// Key is <template_name>_<lang> where _<lang> is optional (default entry)
 	private ConcurrentHashMap<String, String> hmCachedTemplates = new ConcurrentHashMap<String, String>();
 
-	// TODO: The Error Message cache
 	// Key is errors_<lang> where _<lang> is optional (default entry)
 	private ConcurrentHashMap<Properties, String> hmCachedErrorMessages = new ConcurrentHashMap<Properties, String>();
 
@@ -1083,7 +1080,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *             the a select exception
 	 */
 	public String getForm(String sForm, String sLanguage, String sCountry)
-		throws ASelectException
+	throws ASelectException
 	{
 		_systemLogger.log(Level.INFO, "ASelectConfigManager", "getForm", "Get FORM '" + sForm + "' _" + sLanguage + "_"
 				+ sCountry);
@@ -1689,10 +1686,10 @@ public class ASelectConfigManager extends ConfigManager
 	 *             if loading fails.
 	 */
 	// 20090930, Bauke: added localization
-	// TODO: use a cache for the templates
-	// TODO: move to ConfigManager, so AuthSP can also use this functionality
+	// IMPROVE: use a cache for the templates
+	// IMPROVE: move to ConfigManager, so AuthSP can also use this functionality
 	public String loadHTMLTemplate(String sUnUsed, String sFileName, String sLanguage, String sCountry)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadHTMLTemplate";
 		String sLine = null;

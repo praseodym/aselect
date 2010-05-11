@@ -101,7 +101,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	 *             the a select exception
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		String sPathInfo = request.getPathInfo();
@@ -153,7 +153,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	@SuppressWarnings("unchecked")
 	protected void handleSpecificSaml20Request(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
 			SignableSAMLObject samlMessage, String sRelayState)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleSpecificSaml20Request " + Thread.currentThread().getId();
 		AuthnRequest authnRequest = (AuthnRequest) samlMessage;

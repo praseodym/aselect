@@ -11,6 +11,7 @@
  */
 package org.aselect.server.request.handler.xsaml20.sp;
 
+import java.awt.dnd.Autoscroll;
 import java.io.StringReader;
 import java.security.PublicKey;
 import java.util.Enumeration;
@@ -295,7 +296,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				String sStatusCode = samlResponse.getStatus().getStatusCode().getValue();
 				String sRemoteRid = samlResponse.getID();
 				String sLocalRid = samlResponse.getInResponseTo();
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "RemoteRid=" + sRemoteRid + " LocalRid=" + sLocalRid);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "RemoteRid=" + sRemoteRid +
+						" LocalRid=" + sLocalRid + " StatusCode=" + sStatusCode);
 				if (sStatusCode.equals(StatusCode.SUCCESS_URI)) {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Response was successful " + samlResponse.toString());
 					Assertion samlAssertion = samlResponse.getAssertions().get(0);
@@ -322,7 +324,10 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 					}
 					AuthnContext oAuthnContext = samlAssertion.getAuthnStatements().get(0).getAuthnContext();
-					String sAuthnAuthority = (String)oAuthnContext.getAuthenticatingAuthorities().get(0).getURI();
+					List<AuthenticatingAuthority> authAuthorities = oAuthnContext.getAuthenticatingAuthorities();
+					String sAuthnAuthority = null;
+					if (authAuthorities != null && authAuthorities.size() > 0)
+						sAuthnAuthority = (String)authAuthorities.get(0).getURI();
 					String sAuthnContextClassRefURI = oAuthnContext.getAuthnContextClassRef().getAuthnContextClassRef();
 					String sSelectedLevel = SecurityLevel.convertAuthnContextClassRefURIToLevel(sAuthnContextClassRefURI, _systemLogger);
 					// Check returned security level
@@ -389,6 +394,11 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 							if (idx > 0) sEntitySubId = sEntitySubId.substring(idx);
 							sEntityId = sEntitySubId;
 						}
+						else {  // ditch the last 4 zeroes
+							idx = sEntityId.length()-4;
+							if (idx > 0)
+								sEntityId = sEntityId.substring(0, idx);
+						}
 						hmSamlAttributes.put("orgid", sEntityId);
 					}
 					
@@ -430,7 +440,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					hmSamlAttributes.put("authsp", sOrganization);
 
 					// Bauke, 20081204: If we want to send the IdP token as an attribute
-					// to the application, we would need the following code:
+					// to the application, we will need the following code:
 					/*
 					 * String sAssertion = XMLHelper.nodeToString(samlAssertion.getDOM());
 					 * _systemLogger.log(Level.INFO, MODULE, sMethod, "sAssertion="+sAssertion);
@@ -444,17 +454,21 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					handleSSOResponse(htSessionContext, hmSamlAttributes, request, response);
 				}
 				else {
-					// SLO
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Response was not successful: " + sStatusCode);
-					HashMap htRemoteAttributes = new HashMap();
-					htRemoteAttributes.put("remote_rid", sRemoteRid);
-					htRemoteAttributes.put("local_rid", sLocalRid);
-					String sStatusMessage = samlResponse.getStatus().getStatusMessage().getMessage();
-					htRemoteAttributes.put("result_code", sStatusMessage);
+					String sErrorCode = Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER;
+					StatusMessage statMsg = samlResponse.getStatus().getStatusMessage();
+					if (statMsg != null)
+						sErrorCode = statMsg.getMessage();
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "ErrorCode=" + sErrorCode);
+					//else if (sStatusCode.equals(StatusCode.AUTHN_FAILED_URI))
+					//	sErrorCode = Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER;
 					// Expect these codes: Errors.ERROR_ASELECT_SERVER_CANCEL,
 					// Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER;
 
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "htRemoteAttributes=" + htRemoteAttributes);
+					//HashMap htRemoteAttributes = new HashMap();
+					//htRemoteAttributes.put("remote_rid", sRemoteRid);
+					//htRemoteAttributes.put("local_rid", sLocalRid);
+					//htRemoteAttributes.put("result_code", sErrorCode);
 
 					// Choose your response (3rd is implemented below)
 					// 1. handleSSOResponse(htRemoteAttributes, request, response); // Lets application display error
@@ -467,13 +481,17 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 						throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 					}
 					response.setContentType("text/html");
-					showErrorPage(sStatusMessage, htSessionContext, response.getWriter());
+					showErrorPage(sErrorCode, htSessionContext, response.getWriter());
 				}
 			}
 			else {
+				// SLO
 				_systemLogger.log(Level.WARNING, "Unexpected SAMLObject type: " + samlResponseObject.getClass());
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
+		}
+		catch (ASelectException e) {
+			throw e;
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Internal error", e);

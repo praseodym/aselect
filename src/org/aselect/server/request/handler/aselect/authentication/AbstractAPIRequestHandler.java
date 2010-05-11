@@ -68,11 +68,6 @@
 
 package org.aselect.server.request.handler.aselect.authentication;
 
-import java.net.URLEncoder;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.Vector;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
@@ -94,9 +89,7 @@ import org.aselect.system.communication.server.soap12.SOAP12MessageCreator;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.utils.BASE64Encoder;
 
-// TODO: Auto-generated Javadoc
 /**
  * Abstract API request handler. <br>
  * <br>
@@ -149,7 +142,8 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 	 */
 	public AbstractAPIRequestHandler(RequestParser reqParser, HttpServletRequest servletRequest,
 			HttpServletResponse servletResponse, String sMyServerId, String sMyOrg)
-		throws ASelectCommunicationException {
+	throws ASelectCommunicationException
+	{
 		String sMethod = "AbstractAPIRequestHandler()";
 
 		_systemLogger = ASelectSystemLogger.getHandle();
@@ -188,7 +182,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 	 *             if communication fails and no response is send to the client.
 	 */
 	public void processRequest()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "processRequest()";
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "processRequest");
@@ -248,10 +242,9 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 
 				communicator.send();
 			}
-			else { // could not init
+			else { // could not init, error wass sent in communicator.
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Can't initialize Message Creator object: "
 						+ _messageCreator.getClass().getName());
-				// error is sent in communicator.
 			}
 		}
 		catch (ASelectException eAS) {

@@ -1,5 +1,5 @@
 /*
- * * Copyright (c) Anoigo. All rights reserved.
+ ** Copyright (c) Anoigo. All rights reserved.
  *
  * A-Select is a trademark registered by SURFnet bv.
  *
@@ -20,12 +20,11 @@ import javax.servlet.http.HttpServletResponse;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.AbstractRequestHandler;
 import org.aselect.server.request.handler.aselect.authentication.IAuthnRequestHandler;
-import org.aselect.server.request.handler.aselect.authentication.RequestHandlerFactory;
+import org.aselect.server.request.handler.aselect.authentication.ASelectRequestHandlerFactory;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
 /**
  * The A-Select Authentication Profile. <br>
  * <br>
@@ -41,7 +40,7 @@ public class ASelectAuthenticationProfile extends AbstractRequestHandler
 {
 	private final static String MODULE = "ASelectAuthenticationProfile";
 
-	private RequestHandlerFactory _oRequestHandlerFactory;
+	private ASelectRequestHandlerFactory _oRequestHandlerFactory;
 	private String _sMyServerID;
 	private String _sMyOrg;
 
@@ -108,7 +107,7 @@ public class ASelectAuthenticationProfile extends AbstractRequestHandler
 				throw e;
 			}
 
-			_oRequestHandlerFactory = RequestHandlerFactory.getHandle();
+			_oRequestHandlerFactory = ASelectRequestHandlerFactory.getHandle();
 			_oRequestHandlerFactory.init(_sMyServerID, _sMyOrg);
 		}
 		catch (ASelectException e) {

@@ -1046,15 +1046,15 @@ public class PKIManager
 		public PKIAdminServer(int iPort)
 			throws ASelectException {
 			try {
-				oSocket = new ServerSocket(iPort, 0, InetAddress.getByName("127.0.0.1"));
+				oSocket = new ServerSocket(iPort, 0, InetAddress.getByName("localhost"));
 			}
 			catch (UnknownHostException e) {
-				_systemLogger.log(Level.SEVERE, MODULE, "PKIAdminServer", "127.0.0.1", e);
+				_systemLogger.log(Level.SEVERE, MODULE, "PKIAdminServer", "localhost", e);
 				throw new ASelectException(Errors.PKI_INTERNAL_SERVER_ERROR, e);
 
 			}
 			catch (IOException e) {
-				_systemLogger.log(Level.SEVERE, MODULE, "PKIAdminServer", "127.0.0.1", e);
+				_systemLogger.log(Level.SEVERE, MODULE, "PKIAdminServer", "localhost", e);
 				throw new ASelectException(Errors.PKI_INTERNAL_SERVER_ERROR, e);
 			}
 			_bActive = true;

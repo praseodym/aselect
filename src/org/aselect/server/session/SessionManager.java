@@ -86,7 +86,6 @@ import org.aselect.system.storagemanager.StorageManager;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * Manages A-Select Server sessions. <br>
  * <br>
@@ -401,9 +400,11 @@ public class SessionManager extends StorageManager
 			htContext = (HashMap) get(sSessionId);
 		}
 		catch (ASelectStorageException e) {
+			// produces a stack trace on FINEST level, when 'e' is given as a separate argument
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not find context for session with id: "
-					+ sSessionId, e);
+					+ sSessionId+" Cause="+e);
 		}
+		//_systemLogger.log(Level.INFO, MODULE, sMethod, "Return context");
 		return htContext;
 	}
 

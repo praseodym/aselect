@@ -68,5 +68,5 @@ public interface IAuthnRequestHandler
 	 *             the a select exception
 	 */
 	public void processRequest()
-		throws ASelectException;
+	throws ASelectException;
 }

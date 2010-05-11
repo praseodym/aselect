@@ -24,7 +24,6 @@ import org.aselect.system.sam.agent.SAMAgent;
 import org.aselect.system.storagemanager.IStorageHandler;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * Concurrent Memory storage handler. <br>
  * <br>
@@ -113,11 +112,11 @@ public class MemoryStorageHandler implements IStorageHandler
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, "key="+oKey+" this=" + this); // +" store="+_htStorage);
 		String sTxt = Utils.firstPartOf(oKey.toString(), 30);
 		try {
-			// synchronized (_htStorage) {
 			HashMap htStorageContainer = (HashMap) _htStorage.get(oKey);
-			oValue = htStorageContainer.get("contents");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "MSH get(" + sTxt + ") -->" + htStorageContainer);
-			// }
+			if (htStorageContainer != null) {
+				oValue = htStorageContainer.get("contents");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "MSH get(" + sTxt + ") -->" + htStorageContainer);
+			}
 		}
 		catch (NullPointerException eNP) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Not found: " + sTxt);
@@ -125,7 +124,7 @@ public class MemoryStorageHandler implements IStorageHandler
 		}
 
 		if (oValue == null) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "The supplied key is not mapped to any value, cause: "
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Key was not found, cause: "
 					+ Errors.ERROR_ASELECT_STORAGE_NO_SUCH_KEY);
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_NO_SUCH_KEY);
 		}

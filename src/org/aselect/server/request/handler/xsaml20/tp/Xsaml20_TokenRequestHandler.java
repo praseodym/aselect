@@ -43,25 +43,26 @@ import org.opensaml.xml.schema.XSString;
 import org.opensaml.xml.util.XMLHelper;
 import org.w3c.dom.Node;
 
-// TODO: Auto-generated Javadoc
 /**
- * @author RH Handles HTTP SAML20TokenRequest, verifies signature of requester Generates and returns a SAMLAssertion
- *         containing (optional) attributes provided in the request. Request must contain a "uid" reference. This "uid"
- *         will NOT be returned in the SAMLAssertion A new unique identifier will be generated and returned in the
- *         SAMLAssertion (subject) (Optionally) a TGT will be set with this "uid" and newly generated identifier for
- *         later reference SAMPLE aselect.xml <handler id="saml20_token_http_request"
- *         class="org.aselect.server.request.handler.xsaml20.tp.Xsaml20_TokenRequestHandler"
- *         target="/saml20_token_http_request.*" > <verify_signature>true</verify_signature> <!-- not yet implemented
- *         --> </handler>
+ * @author RH
+ * Handles HTTP SAML20TokenRequest, verifies signature of requester Generates and returns a SAMLAssertion
+ * containing (optional) attributes provided in the request. Request must contain a "uid" reference. This "uid"
+ * will NOT be returned in the SAMLAssertion A new unique identifier will be generated and returned in the
+ * SAMLAssertion (subject) (Optionally) a TGT will be set with this "uid" and newly generated identifier for
+ * later reference SAMPLE aselect.xml
+ * <handler id="saml20_token_http_request"
+ *	class="org.aselect.server.request.handler.xsaml20.tp.Xsaml20_TokenRequestHandler"
+ *	target="/saml20_token_http_request.*" >
+ *	<verify_signature>true</verify_signature>
+ * </handler>
  */
-
-// TODO, make this class abstract and implement specific extension class
+// IMPROVE, make this class abstract and implement specific extension class
 public class Xsaml20_TokenRequestHandler extends Saml20_BaseHandler
 {
 
-	// TODO add URL decoding on query parameters
-	// TODO change query parameters to more unique values (e.q. "anoigorequest_encoding=base64")
-	// TODO or even better, put them as parameters in de aselect.xml config file
+	// IMPROVE: add URL decoding on query parameters
+	// change query parameters to more unique values (e.q. "anoigorequest_encoding=base64")
+	// or even better, put them as parameters in de aselect.xml config file
 	private static final String PARM_NAME_SAMLREQUEST = "SAMLRequest";// only SAMLRequest=attributestatement is
 	// supported so far
 	private static final String PARM_NAME_ENCODING = "encoding"; // only encoding=base64 is supported yet

@@ -295,7 +295,6 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			_metadataManager = MetaDataManagerSp.getHandle();
 		}
 		catch (ASelectException e) {
-			// authentication.RequestHandlerFactory wants a ASelectCommunicationException
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_PARSE_ERROR + ":" + e.toString());
 		}
 	}

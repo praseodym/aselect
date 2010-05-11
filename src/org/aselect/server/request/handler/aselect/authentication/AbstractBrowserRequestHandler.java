@@ -107,7 +107,6 @@ import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * Abstract browser request handler. <br>
  * <br>
@@ -197,7 +196,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 	 * @see org.aselect.server.request.handler.aselect.authentication.IAuthnRequestHandler#processRequest()
 	 */
 	public void processRequest()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "processRequest()";
 		PrintWriter pwOut = null;
@@ -238,15 +237,11 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_IO, ioe);
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Internal error", e);
+			// produces a stack trace on FINEST level, when 'e' is given as a separate argument to log()
+			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Internal error: "+e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-		finally {
-			if (pwOut != null) {
-				pwOut.close();
-				pwOut = null;
-			}
-		}
+		// don't close pwOut, so the caller can still inform the user of an error
 	}
 
 	/**
@@ -267,7 +262,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 		throws ASelectException;
 
 	/**
-	 * Shows the main A-Select Error page with the approprate errors. <br>
+	 * Shows the main A-Select Error page with the appropriate errors. <br>
 	 * <br>
 	 * 
 	 * @param sErrorCode
@@ -284,17 +279,16 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 		String sErrorMessage = _configManager.getErrorMessage(sErrorCode, _sUserLanguage, _sUserCountry);
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "FORM[error] " + sErrorCode + ":" + sErrorMessage);
 		try {
+			HashMap htSession = null;
 			String sErrorForm = _configManager.getForm("error", _sUserLanguage, _sUserCountry);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error]", sErrorCode);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
 
 			String sRid = (String) htServiceRequest.get("rid");
 			if (sRid != null) {
-				HashMap htSession = _sessionManager.getSessionContext(sRid);
-				if (htSession != null)
-					sErrorForm = _configManager.updateTemplate(sErrorForm, _sessionManager.getSessionContext(sRid));
+				htSession = _sessionManager.getSessionContext(sRid);
 			}
-
+			sErrorForm = _configManager.updateTemplate(sErrorForm, htSession);  // accepts a null Session!
 			pwOut.println(sErrorForm);
 		}
 		catch (Exception e) {

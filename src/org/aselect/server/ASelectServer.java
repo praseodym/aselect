@@ -178,6 +178,7 @@
 package org.aselect.server;
 
 import java.io.File;
+
 import java.io.IOException;
 import java.util.logging.Level;
 
@@ -195,7 +196,6 @@ import org.aselect.server.cross.CrossASelectManager;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectAuthenticationLogger;
 import org.aselect.server.log.ASelectSystemLogger;
-import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.RequestHandlerFactory;
 import org.aselect.server.sam.ASelectSAMAgent;
 import org.aselect.server.session.SessionManager;
@@ -514,23 +514,22 @@ public class ASelectServer extends ASelectHttpServlet
 			_systemLogger.log(Level.INFO, MODULE, sMethod, request.getRemoteHost() + " / " + request.getRequestURL()
 					+ " / " + request.getRemoteAddr());
 			_oRequestHandlerFactory.process(request, response);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Response: "+response);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "} SERVICE" + " T=" + System.currentTimeMillis() + "\n====");
 		}
 		catch (ASelectException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "} SERVICE" + " T=" + System.currentTimeMillis()
-					+ " Error while processing request: " + e + "\n====");
+					+ " ASelectException while processing request: " + e + " commit="+response.isCommitted()+"\n====");
 			if (!response.isCommitted()) {
 				// send response if no headers have been written
 				if (e.getMessage().equals(Errors.ERROR_ASELECT_INTERNAL_ERROR))
-					response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+					response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);  // 500
 				else
-					response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+					response.sendError(HttpServletResponse.SC_BAD_REQUEST);  // 400
 			}
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "} SERVICE" + " T=" + System.currentTimeMillis()
-					+ " Internal error: " + e + "\n====");
+					+ " Exception occurred: " + e +  " commit="+response.isCommitted()+"\n====");
 			if (!response.isCommitted()) {
 				// send response if no headers have been written
 				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

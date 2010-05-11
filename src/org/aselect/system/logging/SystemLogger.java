@@ -17,10 +17,8 @@ import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
 public class SystemLogger implements ISystemLogger
 {
-
 	// private String className = "org.aselect.system.logging.SystemLoggerAudit";
 	private final static String DEFAULTSYSTEMLOGGER = "org.aselect.system.logging.SystemLogger_org";
 	private ISystemLogger _logger;
@@ -29,7 +27,8 @@ public class SystemLogger implements ISystemLogger
 	/**
 	 * Instantiates a new system logger.
 	 */
-	public SystemLogger() {
+	public SystemLogger()
+	{
 		try {
 			className = System.getProperty("org.aselect.system.logging.SystemLogger");
 			if (className == null)
@@ -61,7 +60,7 @@ public class SystemLogger implements ISystemLogger
 	 */
 	public void init(String logFileNamePrefix, String loggerNamespace, ConfigManager configManager,
 			Object logTargetConfig, String workingDir)
-		throws ASelectException
+	throws ASelectException
 	{
 		_logger.init(logFileNamePrefix, loggerNamespace, configManager, logTargetConfig, workingDir);
 	}

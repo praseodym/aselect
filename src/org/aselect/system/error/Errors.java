@@ -100,7 +100,7 @@ package org.aselect.system.error;
  * <b>Description: </b> <br>
  * Error codes that are used within A-Select.
  * 
- * @author Alfa & Ariss TODO Some fault codes are used more than once, this should be checked (Erwin)
+ * @author Alfa & Ariss Note: Some fault codes are used more than once, this should be checked (Erwin)
  */
 public class Errors
 {
@@ -196,7 +196,7 @@ public class Errors
 	public static final String ERROR_ASELECT_SERVER_INVALID_APP_LEVEL = "0035";
 
 	/**
-	 * A-Select error: The user has cancelled authentication.
+	 * A-Select error: The user has canceled authentication.
 	 */
 	public final static String ERROR_ASELECT_SERVER_CANCEL = "0040";
 

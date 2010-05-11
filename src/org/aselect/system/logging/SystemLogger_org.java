@@ -79,7 +79,6 @@
  * Applied code style and improved JavaDoc.
  *
  */
-
 package org.aselect.system.logging;
 
 import java.io.File;
@@ -95,7 +94,6 @@ import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
 /**
  * The logger to write system log entries. <br>
  * <br>
@@ -130,66 +128,6 @@ public class SystemLogger_org implements ISystemLogger
 	 * Default constructor.
 	 */
 	public SystemLogger_org() {
-	}
-
-	/**
-	 * Inits the.
-	 * 
-	 * @param sLogDir
-	 *            The logging directory.
-	 * @param sLogFileNamePrefix
-	 *            The log file name prefix (".log" is appended).
-	 * @param sLoggerNamespace
-	 *            The namespace of this system logger.
-	 * @param iFileLimit
-	 *            The maximum number of bytes to write to any one file.
-	 * @param iNumberOfFiles
-	 *            The number of files to use for rotation.
-	 * @throws Exception
-	 *             If initialisation fails.
-	 * @deprecated use other init! Initialize the <code>SystemLogger</code>. <br>
-	 * <br>
-	 *             <b>Description: </b> <br>
-	 *             Performs the following steps:
-	 *             <ul>
-	 *             <li>Create new FileHandler <code></code></li>
-	 *             <li>Open log file</li>
-	 *             <li>Add file handler to this logger</li>
-	 *             <li>Set default level (ALL)</li>
-	 *             </ul>
-	 * <br>
-	 *             <b>Concurrency issues: </b> <br>
-	 *             -<br>
-	 * <br>
-	 *             <b>Preconditions: </b>
-	 *             <ul>
-	 *             <li>sLogDir != null</li>
-	 *             <li>sLogFileNamePrefix != null</li>
-	 *             </ul>
-	 * <br>
-	 *             <b>Postconditions: </b> <br>
-	 *             The logger is initialised. <br>
-	 */
-	@Deprecated
-	public void init(String sLogDir, String sLogFileNamePrefix, String sLoggerNamespace, int iFileLimit,
-			int iNumberOfFiles)
-		throws Exception
-	{
-		try {
-			StringBuffer sbLogFile = new StringBuffer();
-			sbLogFile.append(sLogDir).append(File.separator).append(sLogFileNamePrefix).append("%g.log");
-
-			FileHandler oFileHandler = new FileHandler(sbLogFile.toString(), iFileLimit, iNumberOfFiles, true);
-			oFileHandler.setFormatter(new SystemLogFormatter());
-			oFileHandler.setLevel(Level.ALL);
-			_oLogger = Logger.getLogger(sLoggerNamespace);
-			_oLogger.addHandler(oFileHandler);
-			setLevel(Level.FINE);
-		}
-		catch (Exception e) {
-			System.err.println("SystemLogger: could not initialize logger -> " + e.getMessage());
-			throw e;
-		}
 	}
 
 	/**
@@ -336,7 +274,7 @@ public class SystemLogger_org implements ISystemLogger
 			oFileHandler.setFormatter(new SystemLogFormatter());
 			oFileHandler.setLevel(Level.ALL);
 
-			// getlogger and set handler
+			// get logger and set handler
 			// 1.5.4 Avoid multiple A-Select servers in the same VM all writing to the same logfile
 			// _oLogger = Logger.getLogger(sLoggerNamespace+"."+this.hashCode());
 			_oLogger = Logger.getLogger(sLoggerNamespace);

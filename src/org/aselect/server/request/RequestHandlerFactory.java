@@ -16,8 +16,12 @@
 
 package org.aselect.server.request;
 
+import java.io.IOException;
+
+import java.io.PrintWriter;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -36,7 +40,6 @@ import org.aselect.system.utils.Utils;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
 /**
  * Factory that invokes the appropriate request handler. <br>
  * <br>
@@ -215,12 +218,13 @@ public class RequestHandlerFactory
 	 *             if the matching request handler can't process the request
 	 */
 	public void process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		boolean bMatches = false;
 		IRequestHandler oRequestHandler = null;
 		RequestState oRequestState = null;
+
 		try {
 			String qry = request.getQueryString();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "TRY2MATCH " + request.getRequestURI() + ": "
@@ -251,18 +255,23 @@ public class RequestHandlerFactory
 			while (oRequestState != null && oRequestState.hasNextHandler()) {
 				oRequestHandler = (IRequestHandler) _htRequestHandlers.get(oRequestState.getNextHandler());
 				if (oRequestHandler != null) {
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "CHAIN oRequestHandler=" + oRequestHandler.getID());
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "CHAIN<< oRequestHandler=" + oRequestHandler.getID());
 					oRequestState = oRequestHandler.process(request, response);
+					_systemLogger.log(Level.INFO, MODULE, sMethod, ">>CHAIN oRequestHandler=" + oRequestHandler.getID());
 				}
 				else
 					oRequestState = null;
 			}
 		}
+		// 20100509, Bauke: added, show result page to the user, instead of a blank screen
 		catch (ASelectException e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Processing failed, ASelectException="+e);
+			showErrorPage(request, response, Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			throw e;
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize", e);
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Processing failed, Exception="+e);
+			showErrorPage(request, response, Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 	}
@@ -404,4 +413,51 @@ public class RequestHandlerFactory
 	{
 		return _vRequestHandlers;
 	}
+	
+	/**
+	 * Shows the main A-Select Error page with the appropriate errors. <br>
+	 * <br>
+	 * @param request - the HTTP request
+	 * @param response - the HTTP response
+	 * @param sErrorCode - error code to display
+	 * @throws ASelectException - on failure
+	 */
+	protected void showErrorPage(HttpServletRequest request, HttpServletResponse response, String sErrorCode)
+	throws ASelectException
+	{
+		String sMethod = "showErrorPage";
+		PrintWriter pwOut = null;
+		
+		Locale loc = request.getLocale();
+		String _sUserLanguage = loc.getLanguage();
+		String _sUserCountry = loc.getCountry();
+		String sErrorMessage = _configManager.getErrorMessage(sErrorCode, _sUserLanguage, _sUserCountry);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM[error] " + sErrorCode + ":" + sErrorMessage);
+		try {
+			String sErrorForm = _configManager.getForm("error", _sUserLanguage, _sUserCountry);
+			sErrorForm = Utils.replaceString(sErrorForm, "[error]", sErrorCode);
+			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
+			// updateTemplate() accepts a null session to remove unused special fields!
+			sErrorForm = _configManager.updateTemplate(sErrorForm, null /* no session available */);
+
+			pwOut = response.getWriter();
+			response.setContentType("text/html");
+			pwOut.println(sErrorForm);
+		}
+		catch (IOException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Display error page: IO Exception, errorCode="+sErrorCode, e);
+			throw new ASelectException(Errors.ERROR_ASELECT_IO, e);
+		}
+		catch (ASelectException e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Display error page: ASelectException, sErrorCode="+sErrorCode, e);
+			throw e;
+		}
+		finally {
+			if (pwOut != null) {
+				pwOut.close();
+				pwOut = null;
+			}
+		}
+	}
+
 }
