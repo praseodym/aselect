@@ -14,7 +14,7 @@ public class StopAgent {
 			if (args.length > 1) timeoutMs = Integer.parseInt(args[1]);
 			String msg = "request=stop";
 			if (args.length > 2) msg = args[2];
-			InetAddress addr = InetAddress.getByName("127.0.0.1");
+			InetAddress addr = InetAddress.getByName("localhost");
 			SocketAddress sockaddr = new InetSocketAddress(addr, port);
 			Socket sock = new Socket();
 			sock.connect(sockaddr, timeoutMs);

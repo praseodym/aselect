@@ -19,7 +19,9 @@ import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.namespace.QName;
 
+import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.xsaml20.Saml20_BrowserHandler;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
@@ -60,9 +62,11 @@ import org.opensaml.saml2.core.SubjectConfirmationData;
 import org.opensaml.saml2.core.SubjectLocality;
 import org.opensaml.saml2.metadata.AssertionConsumerService;
 import org.opensaml.xml.Configuration;
+import org.opensaml.xml.Namespace;
 import org.opensaml.xml.XMLObjectBuilder;
 import org.opensaml.xml.XMLObjectBuilderFactory;
 import org.opensaml.xml.schema.XSString;
+import org.opensaml.xml.util.XMLConstants;
 import org.opensaml.xml.util.XMLHelper;
 
 // Example configuration
@@ -440,7 +444,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		String sAssertionConsumerServiceURL = getAssertionConsumerServiceURL(authnRequest);
 		if (sAssertionConsumerServiceURL != null) {
 			artifactManager.sendArtifact(sArtifact, errorResponse, sAssertionConsumerServiceURL, httpResponse,
-					sRelayState);
+					sRelayState, null);
 		}
 		else {
 			String errorMessage = "Something wrong in SAML communication";
@@ -569,6 +573,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		boolean isSuccessResponse = (htTGTContext != null);
 		Assertion assertion = null;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
+		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
+		String addedPatching = _configManager.getAddedPatching();
 
 		String sRedirectUrl = "";
 		try {
@@ -596,13 +602,16 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 				// ---- Attributes
 				// Create an attribute statement builder
-				SAMLObjectBuilder<AttributeStatement> attributeStatementBuilder = (SAMLObjectBuilder<AttributeStatement>) builderFactory
-						.getBuilder(AttributeStatement.DEFAULT_ELEMENT_NAME);
+				QName qName = AttributeStatement.DEFAULT_ELEMENT_NAME;
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "AttributeStatement qName="+qName);
+				SAMLObjectBuilder<AttributeStatement> attributeStatementBuilder =
+					(SAMLObjectBuilder<AttributeStatement>) builderFactory.getBuilder(qName);
 				AttributeStatement attributeStatement = attributeStatementBuilder.buildObject();
 
 				// Create an attribute builder
-				SAMLObjectBuilder<Attribute> attributeBuilder = (SAMLObjectBuilder<Attribute>) builderFactory
-						.getBuilder(Attribute.DEFAULT_ELEMENT_NAME);
+				qName = Attribute.DEFAULT_ELEMENT_NAME;
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Attribute qName="+qName);
+				SAMLObjectBuilder<Attribute> attributeBuilder = (SAMLObjectBuilder<Attribute>) builderFactory.getBuilder(qName);
 
 				// Gather attributes, including the attributes from the ticket context
 				HashMap htAttributes = getAttributesFromTgtAndGatherer(htTGTContext);
@@ -616,18 +625,31 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 				Set keys = htAllAttributes.keySet();
 				for (Object s : keys) {
-					String sKey = (String) s;
+					String sKey = (String)s;
 					Object oValue = htAllAttributes.get(sKey);
 
 					if (!(oValue instanceof String))
 						continue;
-					String sValue = (String) oValue;
+					String sValue = (String)oValue;
 
 					Attribute theAttribute = attributeBuilder.buildObject();
 					theAttribute.setName(sKey);
-					XSString theAttributeValue = (XSString) stringBuilder.buildObject(
-							AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
+					XSString theAttributeValue = null;
+					boolean bNvlAttrName = addedPatching.contains("nvl_attrname");
+					if (bNvlAttrName) {
+						// add namespaces to the attribute
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "nvl_attrname");
+						boolean bXS = addedPatching.contains("nvl_attr_namexsd");
+						Namespace namespace = new Namespace(XMLConstants.XSD_NS, (bXS)? "xsd": XMLConstants.XSD_PREFIX);
+						theAttribute.addNamespace(namespace);
+						namespace = new Namespace(XMLConstants.XSI_NS, XMLConstants.XSI_PREFIX);
+						theAttribute.addNamespace(namespace);
+						theAttribute.setNameFormat(Attribute.BASIC);  // URI_REFERENCE);  // BASIC);
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "Novell Attribute="+theAttribute);
+					}
+					theAttributeValue = (XSString)stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
 					theAttributeValue.setValue(sValue);
+					
 					theAttribute.getAttributeValues().add(theAttributeValue);
 					attributeStatement.getAttributes().add(theAttribute); // add this attribute
 				}
@@ -675,7 +697,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 					SubjectLocality locality = subjectLocalityBuilder.buildObject();
 					locality.setAddress(sSubjectLocalityAddress);
 					authnStatement.setSubjectLocality(locality);
-					// TODO maybe also set DNSName in locality, not requested (for now)
+					// We could also set DNSName in locality, but for now, that's not requested
 				}
 
 				authnStatement.setAuthnContext(authnContext);
@@ -702,14 +724,24 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				SAMLObjectBuilder<SubjectConfirmation> subjectConfirmationBuilder = (SAMLObjectBuilder<SubjectConfirmation>) builderFactory
 						.getBuilder(SubjectConfirmation.DEFAULT_ELEMENT_NAME);
 				SubjectConfirmation subjectConfirmation = subjectConfirmationBuilder.buildObject();
-				// The following constant is not present in the saml2 library
-				subjectConfirmation.setMethod("urn:oasis:names:tc:SAML:2.0:cm:bearer");
+				subjectConfirmation.setMethod(SubjectConfirmation.METHOD_BEARER);  // "urn:oasis:names:tc:SAML:2.0:cm:bearer"
 				subjectConfirmation.setSubjectConfirmationData(subjectConfirmationData);
 
 				SAMLObjectBuilder<NameID> nameIDBuilder = (SAMLObjectBuilder<NameID>) builderFactory
 						.getBuilder(NameID.DEFAULT_ELEMENT_NAME);
 				NameID nameID = nameIDBuilder.buildObject();
-				nameID.setFormat(NameIDType.TRANSIENT); // was PERSISTENT
+				
+				// 20100525, flag added for Novell, they need PERSISTENT
+				boolean bNvlPersist = addedPatching.contains("nvl_persist");
+				if (bNvlPersist) _systemLogger.log(Level.INFO, MODULE, sMethod, "nvl_persist");
+				nameID.setFormat((bNvlPersist)? NameIDType.PERSISTENT: NameIDType.TRANSIENT); // was PERSISTENT originally
+				
+				// nvl_patch, Novell: added
+				if (addedPatching.contains("nvl_patch")) {
+					nameID.setNameQualifier(_sASelectServerUrl);  // NameQualifier
+					nameID.setSPNameQualifier((String) htTGTContext.get("sp_issuer"));  // SPNameQualifier
+				}
+				
 				// 20090602, Bauke Saml-core-2.0, section 2.2.2: SHOULD be omitted:
 				// nameID.setNameQualifier(_sASelectServerUrl);
 				nameID.setValue(sTgt); // back to TgT sUid); ///*sTgt); // REPLACES: */
@@ -735,8 +767,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				assertion.setID(sAssertionID);
 				assertion.setIssueInstant(tStamp);
 				// Set interval conditions
-				assertion = (Assertion) SamlTools.setValidityInterval(assertion, tStamp, getMaxNotBefore(),
-						getMaxNotOnOrAfter());
+				assertion = (Assertion) SamlTools.setValidityInterval(assertion, tStamp, getMaxNotBefore(), getMaxNotOnOrAfter());
 				// and then AudienceRestrictions
 				assertion = (Assertion) SamlTools.setAudienceRestrictions(assertion, audienceRestriction);
 
@@ -778,6 +809,9 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 			response.setInResponseTo(sSPRid);
 
+			// nvl_patch, Novell: add xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+			response.addNamespace(new Namespace(SAMLConstants.SAML20_NS, "saml"));
+			
 			response.setID("_" + sRid); // 20090512, Bauke: must be NCNAME format
 			response.setIssueInstant(tStamp);
 
@@ -789,12 +823,11 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			}
 
 			Saml20_ArtifactManager artifactManager = Saml20_ArtifactManager.getTheArtifactManager();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "buildArtifact serverUrl=" + _sASelectServerUrl + " rid="
-					+ sRid);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "buildArtifact serverUrl=" + _sASelectServerUrl + " rid=" + sRid);
 			String sArtifact = artifactManager.buildArtifact(response, _sASelectServerUrl, sRid);
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "sendArtifact " + sArtifact);
-			artifactManager.sendArtifact(sArtifact, response, sAppUrl, oHttpServletResponse, sRelayState);
+			artifactManager.sendArtifact(sArtifact, response, sAppUrl, oHttpServletResponse, sRelayState, addedPatching);
 		}
 		catch (IOException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Redirect to : '" + sRedirectUrl + "' failed", e);

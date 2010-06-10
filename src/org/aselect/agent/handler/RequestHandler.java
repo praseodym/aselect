@@ -186,7 +186,6 @@
 
 package org.aselect.agent.handler;
 
-
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URLDecoder;
@@ -245,13 +244,8 @@ import org.aselect.system.utils.*;
  */
 public class RequestHandler extends Thread
 {
-	/**
-	 * The module name.
-	 */
 	public String MODULE;
 
-	// TODO Are the following names correct? (Erwin)
-	// TODO should there be more default attributes? (Erwin)
 	/**
 	 * The attribute that contains the current date time.
 	 */
@@ -321,7 +315,8 @@ public class RequestHandler extends Thread
 	 * @param bAuthorization
 	 *            <code>true</code> if authorization is enabled, otherwise <code>false</code>.
 	 */
-	public RequestHandler(Socket oSocket, IClientCommunicator oCommunicator, boolean bAuthorization) {
+	public RequestHandler(Socket oSocket, IClientCommunicator oCommunicator, boolean bAuthorization)
+	{
 		MODULE = "RequestHandler";
 
 		_socket = oSocket;
@@ -471,7 +466,7 @@ public class RequestHandler extends Thread
 	 */
 	protected void processRequest(Communicator oCommunicator, int port)
 	{
-		String sMethod = "processRequest()";
+		String sMethod = "processRequest";
 
 		try {
 			// create the input and output message
@@ -482,7 +477,7 @@ public class RequestHandler extends Thread
 			try {
 				sRequest = oInputMessage.getParam("request");
 			}
-			catch (Exception eX) { // sRequest is allready null
+			catch (Exception eX) { // sRequest is already null
 			}
 
 			if (sRequest == null) {
@@ -1040,7 +1035,7 @@ public class RequestHandler extends Thread
 	private void processVerifyCredentialsRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
 		throws ASelectCommunicationException
 	{
-		String sMethod = "processVerifyCredentialsRequest()";
+		String sMethod = "processVerifyCredentialsRequest";
 		StringBuffer sbBuffer = new StringBuffer();
 
 		try {
@@ -1048,6 +1043,7 @@ public class RequestHandler extends Thread
 			String sCredentials = null;
 			String sAsId = null;
 			String sSamlAttributes = null;
+			String sAppArgs = null;
 
 			try { // check parameters
 				sRid = oInputMessage.getParam("rid");
@@ -1075,10 +1071,15 @@ public class RequestHandler extends Thread
 			try {
 				sSamlAttributes = oInputMessage.getParam("saml_attributes");
 			}
-			catch (ASelectCommunicationException eAC) { // ignore absence
+			catch (ASelectCommunicationException e) { // ignore absence
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "VerCRED rid=" + sRid + " sAsId=" + sAsId + " samlAttr="
-					+ sSamlAttributes);
+			try {
+				sAppArgs = oInputMessage.getParam("aselect_app_args");
+			}
+			catch (ASelectCommunicationException e) { // ignore absence
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "VerCRED rid=" + sRid + " server=" + sAsId +
+					" samlAttr="+sSamlAttributes+" appArgs="+sAppArgs);
 
 			// send the verify credentials request to the A-Select Server
 			HashMap htRequest = new HashMap();
@@ -1181,7 +1182,10 @@ public class RequestHandler extends Thread
 			htTicketContext.put("tgt_exp_time", new Long(sTgtExp));
 			// Bauke: added to allow upgrading the server's TGT
 			htTicketContext.put("crypted_credentials", sCredentials);
-
+			// 20100521, Bauke: added to save original application arguments
+			if (sAppArgs != null)
+				htTicketContext.put("aselect_app_args", sAppArgs);
+			
 			// The attributes parameter is optional.
 			String sAttributes = (String) htResponseParameters.get("attributes");
 			if (sAttributes != null) {
@@ -1513,9 +1517,12 @@ public class RequestHandler extends Thread
 			}
 			// END NEW CODE
 
+			String sAppArgs = (String)htTicketContext.get("aselect_app_args");
 			_ticketManager.updateTicketContext(sTicket, htTicketContext);
 			// Ticket OK, create response message
 			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
+			if (sAppArgs != null)
+				oOutputMessage.setParam("aselect_app_args", sAppArgs);
 		}
 		catch (NumberFormatException eNF) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not create response message.", eNF);

@@ -278,14 +278,10 @@ public class LDAPAuthSP extends ASelectHttpServlet
 
 			// Load error properties
 			StringBuffer sbErrorsConfig = new StringBuffer(_sWorkingDir);
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("conf");
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append(sConfigID);
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("errors");
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("errors.conf");
+			sbErrorsConfig.append(File.separator).append("conf");
+			sbErrorsConfig.append(File.separator).append(sConfigID);
+			sbErrorsConfig.append(File.separator).append("errors");
+			sbErrorsConfig.append(File.separator).append("errors.conf");
 			File fErrorsConfig = new File(sbErrorsConfig.toString());
 			if (!fErrorsConfig.exists()) {
 				StringBuffer sbFailed = new StringBuffer("The error configuration file does not exist: \"");

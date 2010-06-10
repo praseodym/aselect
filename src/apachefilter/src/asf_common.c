@@ -271,7 +271,6 @@ char *aselect_filter_strip_param(pool *pPool, char * pcASelectServerURL)
     return pcReturn;
 }
 
-
 //
 // Loops until enough data is received or a "\r" is received
 // returns number of bytes received, returns -1 if error has occured
@@ -286,15 +285,13 @@ int aselect_filter_receive_msg(int sd, char *pcReceiveMsg, int ccReceiveMsg)
     static int count = 1000;
     cnt = ++count;
 
-    TRACE3("RCV[%d] aselect_filter_receive_msg (%d): %x", cnt, ccReceiveMsg, pcReceiveMsg);
+    TRACE2("RCV[%d] aselect_filter_receive_msg (%d)", cnt, ccReceiveMsg);
 
     // Receive data while their is data or till we find a "\r"
-    while ((iRemaining > 0) && ((iReceived = recv(sd, pMsg, iRemaining, 0)) > 0))
-    {
+    while ((iRemaining > 0) && ((iReceived = recv(sd, pMsg, iRemaining, 0)) > 0)) {
         if (iReceived == -1)
             break;
-        if ((pLF = strchr(pMsg, '\r')))
-        {
+        if ((pLF = strchr(pMsg, '\r'))) {
             iRemaining -= (pLF-pMsg);
             break;
         }
@@ -305,10 +302,9 @@ int aselect_filter_receive_msg(int sd, char *pcReceiveMsg, int ccReceiveMsg)
     if (iReceived != -1)
         iReceived = ccReceiveMsg - iRemaining;
         
-    TRACE4("RCV[%d] aselect_filter_receive_msg %d: [%.*s]", cnt, iReceived, iReceived, pcReceiveMsg);
+    TRACE4("RCV[%d] aselect_filter_receive_msg %d: [%.*s]", cnt, iReceived, 40, pcReceiveMsg);
     return iReceived;
 }
-
 
 //
 // Connect to ASelect Agent send request and wait for response
@@ -329,138 +325,90 @@ char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAI
     TRACE2("ToAGENT[%d] aselect_filter_send_request { [%s]", cnt, pcSendMessage);
     memset(pcReceiveMessage, 0, ASELECT_FILTER_MAX_RECV);
 
-    //
     // Retrieve the host information
-    //
-    if ((hp = gethostbyname(pcASAIP)) != NULL) {
-        //
-        // Initialize the connection information
-        //
+    if ((hp = gethostbyname(pcASAIP)) != NULL) { // Initialize the connection information
         memset(&pin, 0, sizeof(pin));
         pin.sin_family = AF_INET;
         pin.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
         pin.sin_port = htons(iASAPort); 
     }
-    else {
-        //
-        // gethostbyname failed, so try IP address
-        //
-        memset(&pin, 0, sizeof(pin)); pin.sin_family = AF_INET; pin.sin_addr.s_addr = inet_addr(pcASAIP); pin.sin_port = htons(iASAPort);
+    else { // gethostbyname failed, so try IP address
+        memset(&pin, 0, sizeof(pin));
+	pin.sin_family = AF_INET;
+	pin.sin_addr.s_addr = inet_addr(pcASAIP);
+	pin.sin_port = htons(iASAPort);
     }
 
-    //
     // Create a socket
-    //
-    if ((sd = socket(AF_INET, SOCK_STREAM, 0)) != -1)
-    {
-        //
+    if ((sd = socket(AF_INET, SOCK_STREAM, 0)) != -1) {
         // Connect using connection information
-        //
         if (connect(sd,(struct sockaddr *) &pin, sizeof(pin)) != -1)
         {
-            //
-            // set the socket timeouts on the send and receive
-            //
+            // Set the socket timeouts on the send and receive
             // SO_SNDTIMEO - send timeout
             // SO_RCVTIMEO - receive timeout
-            //
             timeout = ASELECT_FILTER_SOCKET_TIME_OUT;
-
-            if (setsockopt(sd, SOL_SOCKET, SO_SNDTIMEO, (char*) &timeout, sizeof(timeout)) != -1)
-            {
-                //
+            if (setsockopt(sd, SOL_SOCKET, SO_SNDTIMEO, (char*) &timeout, sizeof(timeout)) != -1) {
                 // Could not connect to specified address and port
-                //
                 TRACE1("could not set socket send timeout (%d)", errno);
                 ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pServer,
                     ap_psprintf(pPool, "ASELECT_FILTER:: could not set socket send timeout (%d)", errno));
             }
 
-            if (setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, (char*) &timeout, sizeof(timeout)) != -1)
-            {
+            if (setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, (char*) &timeout, sizeof(timeout)) != -1) {
                 TRACE1("could not set socket receive timeout (%d)", errno);
                 ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pServer,
                     ap_psprintf(pPool, "ASELECT_FILTER:: could not set socket receive timeout (%d)", errno));
             }
 
-            //
             // Check if information is not too large for message
-            //
-            if ((ccSendMessage + 1) < ASELECT_FILTER_MAX_MSG)
-            {
-                //
+            if ((ccSendMessage + 1) < ASELECT_FILTER_MAX_MSG) {
                 // Send the message
-                //
-                if (send(sd, (void *) pcSendMessage, (ccSendMessage + 1), 0) > 0)
-                {
-                    //
+                if (send(sd, (void *) pcSendMessage, (ccSendMessage + 1), 0) > 0) {
                     // Message has been sent, now wait for response
-                    //
-                    if ((ccReceiveMessage = aselect_filter_receive_msg(sd, pcReceiveMessage, sizeof(pcReceiveMessage)-1)) > 0)
-                    {
+                    ccReceiveMessage = aselect_filter_receive_msg(sd, pcReceiveMessage, sizeof(pcReceiveMessage)-1);
+                    if (ccReceiveMessage > 0) {
 			TRACE1("ccReceiveMessage=%d",ccReceiveMessage);
-                        if (ccReceiveMessage == sizeof(pcReceiveMessage)-1)
-                        {
+                        if (ccReceiveMessage == sizeof(pcReceiveMessage)-1) {
                             // Received message too large
                             TRACE1("received message too large (%d)", ccReceiveMessage);
                             ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
                                 "ASELECT_FILTER:: message from A-Select Agent too large");
                         }
-                        else
-                        {
+                        else {
                             pcResponse = ap_pstrndup(pPool, pcReceiveMessage, ccReceiveMessage);
                             *(pcResponse + ccReceiveMessage) = '\0';
                         }
                     }
-                    else
-                    {
-                        //
-                        // Could not receive data
-                        //
+                    else { // Could not receive data
                         ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
                             ap_psprintf(pPool, "ASELECT_FILTER:: error while receiving data from A-Select Agent (%d)", errno));
                     }
                 }
-                else
-                {
-                    //
-                    // Could not send data
-                    //
+                else { // Could not send data
                     TRACE1("error while sending data to A-Select Agent (%d)", errno);
                     ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
                         ap_psprintf(pPool, "ASELECT_FILTER:: error while sending data to A-Select Agent (%d)", errno));
                 }
             }
-            else
-            {
-                //
-                // Message is too large for sending
-                //
+            else { // Message is too large for sending
                 TRACE("Message is too large for sending");
                 ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
                         "ASELECT_FILTER:: message is too large for sending");
             }
 
         } // connect 
-        else
-        {
-            //
-            // Could not connect to specified address and port
-            //
+        else { // Could not connect to specified address and port
             TRACE3("could connect to A-Select Agent at %s:%d (%d)", 
                 pcASAIP, iASAPort, errno);
                 ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
                 ap_psprintf(pPool, "ASELECT_FILTER:: could connect to A-Select Agent at %s:%d (%d)", pcASAIP, iASAPort, errno));
         }
-
         close(sd);
 
     } // socket
-    else
-    {
-        //
+    else {
         // Could not create socket
-        //
         ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
             ap_psprintf(pPool, "ASELECT_FILTER:: could not create socket (%d)", errno));
     }
@@ -657,18 +605,21 @@ int aselect_filter_gen_error_page(pool *pPool, request_rec *pRequest, int iError
 // 20091224, Bauke: prevent repeated addition of the same arguments
 // 'urlAndArgs' may contain: request=aselect_show_bar&aselect_app_url=<encoded_url>
 // We don't want to repeat that.
-char *constructShowBarURL(pool *pPool, char *urlAndArgs)
+static char *constructShowBarURL(pool *pPool, char *urlAndArgs)
 {
     char *pcSep;
     char *pcEncodedUrl;
+    //char *pcFormat = "request=aselect_show_bar&aselect_app_url=";
+    char *pcFormat = "request=aselect_show_bar";
 
     TRACE1("constructShowBarURL, urlAndArgs=%s", urlAndArgs);
-    if (strstr(urlAndArgs, "request=aselect_show_bar&aselect_app_url=") != NULL)
+    if (strstr(urlAndArgs, pcFormat) != NULL)
 	return urlAndArgs;
 
     pcSep = (strchr(urlAndArgs, '?')) ? "&" : "?";
     pcEncodedUrl = aselect_filter_url_encode(pPool, urlAndArgs);
-    urlAndArgs = ap_psprintf(pPool, "%s%srequest=aselect_show_bar&aselect_app_url=%s", urlAndArgs, pcSep, pcEncodedUrl);
+    // 20100521, old: urlAndArgs = ap_psprintf(pPool, "%s%s%s%s", urlAndArgs, pcSep, pcFormat, pcEncodedUrl);
+    urlAndArgs = ap_psprintf(pPool, "%s%s%s", urlAndArgs, pcSep, pcFormat);
     return urlAndArgs;
 }
 
@@ -684,6 +635,8 @@ int aselect_filter_gen_authcomplete_redirect(pool * pPool, request_rec *pRequest
     char    *pcURL;
     char    *pcSep;
     char    *pcRedirectURL;
+    char *pcFrameUrl;
+    int bFrameHtml = 0;
 
     pRequest->content_type = "text/html";
     aselect_filter_add_nocache_headers(headers_out);
@@ -694,21 +647,22 @@ int aselect_filter_gen_authcomplete_redirect(pool * pPool, request_rec *pRequest
 
     if (*pConfig->pCurrentApp->pcRedirectURL) {
 	pcRedirectURL = pConfig->pCurrentApp->pcRedirectURL;
-	TRACE3("RedirectURL=%s, Args=%s, bArgs=%d", pcRedirectURL, pRequest->args, bArgs);
+	TRACE3("1.RedirectURL=%s, Args=%s, bArgs=%d", pcRedirectURL, pRequest->args, bArgs);
         if (bArgs) {
 	    pcRedirectURL = ap_psprintf(pPool, "%s%s", pcRedirectURL, pRequest->args);
         }
         else {
 	    pcRedirectURL = pConfig->pCurrentApp->pcRedirectURL;
 	}
-	TRACE2("RedirectURL=%s, UseBar=%d", pcRedirectURL, pConfig->bUseASelectBar);
+	TRACE2("2.RedirectURL=%s, UseBar=%d", pcRedirectURL, pConfig->bUseASelectBar);
 	if (pConfig->bUseASelectBar) {
 	    pcRedirectURL = constructShowBarURL(pPool, pcRedirectURL);
+	    //bFrameHtml = 1;
+	    TRACE1("3.RedirectURL=%s", pcRedirectURL);
 	}        
-	TRACE1("---- pcRedirectURL %s", pcRedirectURL);
     }
     else {
-	TRACE3("No RedirectURL, URI=%s, Args=%s, bArgs=%d", pRequest->uri, pRequest->args, bArgs);
+	TRACE3("1.NoRedURL, URI=%s, Args=%s, bArgs=%d", pRequest->uri, pRequest->args, bArgs);
 	if (!bArgs)
 	    pcURI = pRequest->uri;
 	else {
@@ -720,19 +674,27 @@ int aselect_filter_gen_authcomplete_redirect(pool * pPool, request_rec *pRequest
 		    bArgs = FALSE;
 	    }
 	}
-	TRACE2("pcURI=%s, UseBar=%d", pcURI, pConfig->bUseASelectBar);
+	TRACE2("2.NoRedURL pcURI=%s, UseBar=%d", pcURI, pConfig->bUseASelectBar);
 	if (pConfig->bUseASelectBar) {
 	    pcURL = constructShowBarURL(pPool, pcURI);
+	    // Code below works, but cannot handle refresh page since the url does not contain: request=aselect_show_bar
+	    //pcFrameUrl = aselect_filter_url_encode(pPool, pcURI);
+	    //slash = (*pcURI == '/')? "": "/";
+	    //ap_rprintf(pRequest, ASELECT_LOGOUT_BAR_FRAME, pConfig->pCurrentApp->pcLocation, slash, pcURI);
+	    //bFrameHtml = 1;
 	}
 	else
 	    pcURL = pcURI;
     
-	TRACE1("---- pcURL %s", pcURL);
+	TRACE1("3.NoRedURL pcURL=%s", pcURL);
 	pcRedirectURL = ap_construct_url(pPool, pcURL, pRequest);
+	TRACE1("4.NoRedURL RedirectURL=%s", pcRedirectURL);
     }
 
-    TRACE1("aselect_filter_gen_authcomplete_redirect:: redirecting to: %s", pcRedirectURL);
-    ap_rprintf(pRequest, ASELECT_FILTER_CLIENT_REDIRECT, pcRedirectURL, pcRedirectURL);
+    //if (!bFrameHtml) {
+	TRACE1("aselect_filter_gen_authcomplete_redirect:: redirecting to: %s", pcRedirectURL);
+	ap_rprintf(pRequest, ASELECT_FILTER_CLIENT_REDIRECT, pcRedirectURL, pcRedirectURL);
+    //}
     return DONE;
 }
 
@@ -808,42 +770,41 @@ char *aselect_filter_get_cookie(pool *pPool, table *headers_in, char *pcAttribut
     char        *pcValues;
     char        *pcValue = NULL;
 
-    TRACE1("aselect_filter_get_cookie: %s", pcAttribute);
-    if ((pcValues = (char *) ap_table_get(headers_in, "Cookie")))
-    {
-	TRACE1("aselect_filter_get_cookie: pcValues=%s", pcValues);
-        if ((pcValue = aselect_filter_get_param(pPool, pcValues, pcAttribute, ";", FALSE)))
-        {
+    //TRACE1("GET-Cookie: %s", pcAttribute);
+    pcValues = (char *) ap_table_get(headers_in, "Cookie");
+    if (pcValues) {
+	//TRACE1("GET-Cookie: CookieValues=%s", pcValues);
+        pcValue = aselect_filter_get_param(pPool, pcValues, pcAttribute, ";", FALSE);
+        if (pcValue) {
             TRACE2("Get-Cookie: %s%s", pcAttribute, pcValue);
         }
-        else
-        {
+        else {
 	    TRACE1("Get-Cookie: not found in [%s]", pcValues);
             pcValue = NULL;
         }
     }
-    else
-    {
-	TRACE("aselect_filter_get_cookie: No Cookies");
-        //
+    else {
+	TRACE("GET-Cookie: No Cookies");
         // No cookies to read, return error
-        //
         pcValue = NULL;
     }
-
     return pcValue;
 }
 
-int aselect_filter_show_barhtml(pool *pPool, request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig, char *pcASelectAppURL)
+int aselect_filter_show_barhtml(pool *pPool, request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig,
+				char *pcASelectAppURL)
 {
-    table   *headers_out = pRequest->headers_out;
+    table *headers_out = pRequest->headers_out;
+    char *slash;
 
+    // Expect /?apparg=bla in url
     TRACE2("aselect_filter_show_barhtml: loc=%s url=%s", pConfig->pCurrentApp->pcLocation, pcASelectAppURL);
     pRequest->content_type = "text/html";
     aselect_filter_add_nocache_headers(headers_out);
 
     ap_send_http_header(pRequest);
-    ap_rprintf(pRequest, ASELECT_LOGOUT_BAR_FRAME, pConfig->pCurrentApp->pcLocation, pcASelectAppURL);
+    slash = (*pcASelectAppURL == '/')? "": "/";
+    ap_rprintf(pRequest, ASELECT_LOGOUT_BAR_FRAME, pConfig->pCurrentApp->pcLocation, slash, pcASelectAppURL);
     return DONE;
 }
 
@@ -873,7 +834,7 @@ char *aselect_filter_base64_decode(pool *pPool, const char *pszValue)
     pszValue = ap_pstrdup(pPool, pszValue);    
     memset(szDest, 0, iDestCount+1);
 
-    TRACE2("decoding %.200s into %d bytes", pszValue, iDestCount);
+    TRACE2("decoding %.50s... into %d bytes", pszValue, iDestCount);
     for (state=iDest=0; *pszValue; ++pszValue)
     {
         if (*pszValue == '=')
@@ -884,8 +845,7 @@ char *aselect_filter_base64_decode(pool *pPool, const char *pszValue)
             return NULL;
         iPos = pPos - _base64;
 
-        switch (state)
-        {
+        switch (state) {
         case 0:                             // b0: xxxxxx00
             szDest[iDest] = iPos << 2;
             break;
@@ -907,7 +867,7 @@ char *aselect_filter_base64_decode(pool *pPool, const char *pszValue)
         state = (++state) & 0x3;
     }
 
-    TRACE2("decoded %d bytes: %s", iDest, szDest);
+    TRACE2("decoded %d bytes: %.50s...", iDest, szDest);
     return szDest;
 }
 

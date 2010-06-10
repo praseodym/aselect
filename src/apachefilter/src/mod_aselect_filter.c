@@ -88,7 +88,8 @@ char *          aselect_filter_verify_ticket(request_rec *pRequest, pool *pPool,
 		char *pcOrganization, char *pcAttributes, char *language);
 char *          aselect_filter_kill_ticket(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcTicket );
 char *          aselect_filter_auth_user(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcAppUrl );
-char *          aselect_filter_verify_credentials(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcRID, char *pcCredentials );
+char *aselect_filter_verify_credentials(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig,
+		char *pcRID, char *pcCredentials, char *applicationArguments);
 static int      aselect_filter_handler(request_rec *pRequest );
 static void *   aselect_filter_create_config(pool *pPool, server_rec *pServer );
 static int      aselect_filter_verify_config(PASELECT_FILTER_CONFIG pConfig );
@@ -107,8 +108,10 @@ static const char *aselect_filter_set_logfile(cmd_parms *parms, void *mconfig, c
 static const char *aselect_filter_added_security(cmd_parms *parms, void *mconfig, const char *arg );
 
 static char * aselect_filter_attributes(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcTicket, char *pcUid, char *pcOrganization);
-static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, request_rec *pRequest,
+static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, request_rec *pRequest,
 	    PASELECT_FILTER_CONFIG pConfig, char *pcTicketIn, char *pcUIDIn, char *pcOrganizationIn, char *pcRequestLanguage, table *headers_in);
+static void aselect_filter_removeUnwantedCharacters(char *args);
+static char *aselect_filter_findNoCasePattern(const char *text, const char *pattern);
 
 //
 // Called once during the module initialization phase.
@@ -401,8 +404,11 @@ static char *getRequestedAttributes(pool *pPool, PASELECT_FILTER_CONFIG pConfig)
 // Verify the credentials
 // sends the RID and the credentials to the Aselect Agent for verification
 // Bauke 20081201: added saml_attributes
+// Bauke 20100521: added aselect_app_args
 //
-char *aselect_filter_verify_credentials(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcRID, char *pcCredentials)
+char *aselect_filter_verify_credentials(request_rec *pRequest, pool *pPool,
+	    PASELECT_FILTER_CONFIG pConfig, char *pcRID, char *pcCredentials,
+	    char *applicationArguments)
 {
     char    *pcSendMessage;
     int     ccSendMessage;
@@ -417,8 +423,11 @@ char *aselect_filter_verify_credentials(request_rec *pRequest, pool *pPool, PASE
 	// Need token later on, pass the attribute names we need
 	attrNames = getRequestedAttributes(pPool, pConfig);
     }
-    pcSendMessage = ap_psprintf(pPool, "request=verify_credentials&rid=%s&aselect_credentials=%s%s%s\r\n", 
-	    aselect_filter_url_encode(pPool, pcRID), aselect_filter_url_encode(pPool, pcCredentials),
+    // 20100521, Bauke: added, application args secured by Agent
+    pcSendMessage = ap_psprintf(pPool, "request=verify_credentials&aselect_app_args=%s&rid=%s&aselect_credentials=%s%s%s\r\n", 
+	    aselect_filter_url_encode(pPool, applicationArguments),
+	    aselect_filter_url_encode(pPool, pcRID),
+	    aselect_filter_url_encode(pPool, pcCredentials),
 	    (attrNames)? "&saml_attributes=": "", (attrNames)? attrNames: "");
     ccSendMessage = strlen(pcSendMessage);
 
@@ -486,6 +495,34 @@ static int aselect_filter_verify_config(PASELECT_FILTER_CONFIG pConfig)
     return ASELECT_FILTER_ERROR_OK;
 }
 
+// Extract parameters that must be passed to the application from all arguments
+//
+char *extractApplicationParameters(pool *pPool, char *arguments)
+{
+    char *pcStrippedParams  = NULL;
+    int bFirstParam = TRUE;
+    char *pcTmp = strtok(arguments, "?&");
+    char *pcTmp2;
+
+    while (pcTmp != NULL) {
+	// Skip these parameters:
+	if ((pcTmp2 = strstr(pcTmp, "aselect_credentials")) == NULL) {
+	    if ((pcTmp2 = strstr(pcTmp, "rid")) == NULL) {
+		if ((pcTmp2 = strstr(pcTmp, "a-select-server")) == NULL) {
+		    // The rest will pass
+		    if (bFirstParam) {
+			pcStrippedParams = ap_psprintf(pPool, "?%s", pcTmp);
+			bFirstParam = FALSE;
+		    }
+		    else
+			pcStrippedParams = ap_psprintf(pPool, "%s&%s", pcStrippedParams, pcTmp);
+		 }
+	     }
+	}
+	pcTmp = strtok(NULL, "?&");
+    }
+    return (pcStrippedParams != NULL)? pcStrippedParams: "";
+}
 
 //
 // Main handler, will handle cookie checking and redirection
@@ -529,8 +566,9 @@ static int aselect_filter_handler(request_rec *pRequest)
     char            *pcStrippedParams;
     char            *pcAttributes = NULL;
     int             bFirstParam;
-    char * pcRequestLanguage = NULL;
+    char *pcRequestLanguage = NULL;
     char *addedSecurity = "";
+    char *securedAselectAppArgs = NULL;
 
     //ap_log_error(APLOG_MARK, APLOG_INFO, pRequest->server, ap_psprintf(pRequest->pool, "XX Url - %s", pRequest->uri));
     TRACE("");
@@ -565,8 +603,8 @@ static int aselect_filter_handler(request_rec *pRequest)
     // check cookie, no cookie, validate_user, set cookie, check cookie, no cookie.... and so on
     
     // Read config data
-    if (!(pConfig = (PASELECT_FILTER_CONFIG)ap_get_module_config(pRequest->server->module_config, &aselect_filter_module)))
-    {
+    pConfig = (PASELECT_FILTER_CONFIG)ap_get_module_config(pRequest->server->module_config, &aselect_filter_module);
+    if (!pConfig) {
         // Something went wrong, access denied
         TRACE("could not get module config data");
         ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest,
@@ -588,15 +626,12 @@ static int aselect_filter_handler(request_rec *pRequest)
         }
     }
 
-    //
     // Check if we are in a protected dir
     // this function point the global pConfig->pCurrentApp to the requested app
     //
     if (aselect_filter_verify_directory(pPool, pConfig, pRequest->uri) == ASELECT_FILTER_ERROR_FAILED) {
         //
-        // not in a protected dir
-        // this should not be possible
-        // but we let the request through anyway
+        // Not in a protected dir, this should not be possible, but we let the request through anyway
         //
         TRACE1("\"%s\" is not a protected dir (or is disabled)", pRequest->uri);
         ap_destroy_pool(pPool);   
@@ -609,29 +644,28 @@ static int aselect_filter_handler(request_rec *pRequest)
     //
     // Retrieve the remote_addr
     //
-    if (pRequest->connection->remote_ip) 
-    {
+    if (pRequest->connection->remote_ip) {
         TRACE1("remote_ip: %s", pRequest->connection->remote_ip);
     }
 
     addedSecurity = (strchr(pConfig->pcAddedSecurity, 'c')!=NULL)? " secure; HttpOnly": "";
     TRACE3("==== 1. Start iError=%d iAction=%s, iRet=%d", iError, filter_action_text(iAction), iRet);
     TRACE3("     (DECLINED=%d DONE=%d FORBIDDEN=%d)", DECLINED, DONE, FORBIDDEN);
+    if (pcTicketIn = aselect_filter_get_cookie(pPool, headers_in, "JSESSIONID="))
+        TRACE1("aselect_filter_handler: JSESSIONID: %s", pcTicketIn);
     //
     // Check for application ticket
     //
-    if ((pcTicketIn = aselect_filter_get_cookie(pPool, headers_in, "aselectticket=")))
-    {
+    pcTicketIn = aselect_filter_get_cookie(pPool, headers_in, "aselectticket=");
+    if (pcTicketIn) {
         TRACE1("aselect_filter_handler: found ticket: %s", pcTicketIn);
         
-        //
         // Check for user ID
         //
         if ((pcUIDIn = aselect_filter_get_cookie(pPool, headers_in, "aselectuid=")))
         {
             TRACE1("aselect_filter_handler: found uid: %s", pcUIDIn);
-            
-            //
+           
             // Check for Organization 
             //
             if ((pcOrganizationIn = aselect_filter_get_cookie(pPool, headers_in, "aselectorganization=")))
@@ -650,14 +684,12 @@ static int aselect_filter_handler(request_rec *pRequest)
 		if (1 == 1)
                 {
                     TRACE1("aselect_filter_handler: attributes cookie: %s", pcAttributesIn? pcAttributesIn: "NULL");
-                    //
                     // Validate ticket
-                    //
 		    // Bauke: added, always send rules
 		    aselect_filter_upload_all_rules(pConfig, pRequest->server, pPool);
-
-                    if ((pcResponseVT = aselect_filter_verify_ticket(pRequest, pPool, pConfig, pcTicketIn, pcUIDIn, pcOrganizationIn, pcAttributesIn, pcRequestLanguage)))
-                    {
+                    pcResponseVT = aselect_filter_verify_ticket(pRequest, pPool, pConfig, pcTicketIn,
+					pcUIDIn, pcOrganizationIn, pcAttributesIn, pcRequestLanguage);
+                    if (pcResponseVT) {
                         iError = aselect_filter_get_error(pPool, pcResponseVT);
                         if (iError == ASELECT_FILTER_ASAGENT_ERROR_OK) {
                             // User has ticket, ACCESS GRANTED
@@ -666,6 +698,12 @@ static int aselect_filter_handler(request_rec *pRequest)
 			    if (pcTmp != NULL) {
 				TRACE1("Return language=%s", pcTmp);
 			    	pcRequestLanguage = pcTmp;
+			    }
+			    // 20100521, Bauke: added, application args secured by Agent
+			    pcTmp = aselect_filter_get_param(pPool, pcResponseVT, "aselect_app_args=", "&", TRUE);
+			    if (pcTmp != NULL) {
+				TRACE1("Return aselect_app_args=%s", pcTmp);
+				securedAselectAppArgs = pcTmp;
 			    }
                             iAction = ASELECT_FILTER_ACTION_ACCESS_GRANTED;
                             TRACE("aselect_filter_handler: User has ticket: ACCESS_GRANTED");
@@ -695,27 +733,15 @@ static int aselect_filter_handler(request_rec *pRequest)
                     iError = ASELECT_FILTER_ASAGENT_ERROR_CORRUPT_ATTRIBUTES;
                 }
             }
-            else
-            {
-                //
-                // Could not find a inst-id, check if the user has credentials 
-                //
+            else { // Could not find a inst-id, check if the user has credentials 
                 iAction = ASELECT_FILTER_ACTION_VERIFY_CREDENTIALS;
             }
         }
-        else
-        {
-            //
-            // Could not find a user-id, check if the user has credentials 
-            //
+        else { // Could not find a user-id, check if the user has credentials 
             iAction = ASELECT_FILTER_ACTION_VERIFY_CREDENTIALS;
         }
     }
-    else
-    {
-        //
-        // Could not find a application ticket, check if the user has credentials
-        //
+    else { // Could not find a application ticket, check if the user has credentials
         iAction = ASELECT_FILTER_ACTION_VERIFY_CREDENTIALS;
     }
 
@@ -727,64 +753,50 @@ static int aselect_filter_handler(request_rec *pRequest)
         //
         // Check for user credentials 
         //
-        if ((pcCredentials = aselect_filter_get_param(pPool, pRequest->args, "aselect_credentials=", "&", TRUE)))
-        {
+        pcCredentials = aselect_filter_get_param(pPool, pRequest->args, "aselect_credentials=", "&", TRUE);
+        if (pcCredentials) {
             TRACE1("aselect_credentials: %s", pcCredentials);
-
-            if ((pcRID = aselect_filter_get_param(pPool, pRequest->args, "rid=", "&", TRUE)))
-            {
-                //
+            pcRID = aselect_filter_get_param(pPool, pRequest->args, "rid=", "&", TRUE);
+            if (pcRID) {
                 // Found credentials, now verify them, if ok it returns a ticket
-                //
-                if ((pcResponseCred = aselect_filter_verify_credentials(pRequest, pPool, pConfig, pcRID, pcCredentials)))
-                {
+		securedAselectAppArgs = extractApplicationParameters(pPool, pRequest->args);
+		// 20100521, Bauke: added, application args will be secured by Agent
+                pcResponseCred = aselect_filter_verify_credentials(pRequest, pPool, pConfig, pcRID,
+				    pcCredentials, securedAselectAppArgs);
+                if (pcResponseCred) {
                     iError = aselect_filter_get_error(pPool, pcResponseCred);
                     if (iError == ASELECT_FILTER_ERROR_INTERNAL)
                         iError = ASELECT_FILTER_ERROR_AGENT_RESPONSE;
 
-                    if (iError == ASELECT_FILTER_ASAGENT_ERROR_OK)
-                    {
-                        //
+                    if (iError == ASELECT_FILTER_ASAGENT_ERROR_OK) {
                         // User credentials are ok, set application ticket and let user through
-                        //
-			TRACE1("aselect_credentials, response [%s]", pcResponseCred?pcResponseCred:"NULL");
-                        if ((pcTicketOut = aselect_filter_get_param(pPool, pcResponseCred, "ticket=", "&", TRUE)) != NULL)
-                        {
-                            //
+			TRACE1("aselect_credentials, response [%.50s...]", pcResponseCred?pcResponseCred:"NULL");
+                        pcTicketOut = aselect_filter_get_param(pPool, pcResponseCred, "ticket=", "&", TRUE);
+                        if (pcTicketOut != NULL) {
                             // Save Uid
-                            //
-                            if ((pcUIDOut = aselect_filter_get_param(pPool, pcResponseCred, "uid=", "&", TRUE)))
-                            {
-                                if ((pcOrganizationOut = aselect_filter_get_param(pPool, pcResponseCred, "organization=", "&", TRUE)))
-                                {
+                            if ((pcUIDOut = aselect_filter_get_param(pPool, pcResponseCred, "uid=", "&", TRUE))) {
+                                if ((pcOrganizationOut = aselect_filter_get_param(pPool, pcResponseCred, "organization=", "&", TRUE))) {
                                     pcAttributes = aselect_filter_get_param(pPool, pcResponseCred, "attributes=", "&", TRUE);
                                     if (pcAttributes)
                                         pcAttributes = aselect_filter_base64_decode(pPool, pcAttributes);
                                     iAction = ASELECT_FILTER_ACTION_SET_TICKET;
                                 }
-                                else
-                                {
+                                else {
                                     TRACE1("could not find organization in response: %s", pcResponseCred);
                                     iError = ASELECT_FILTER_ERROR_AGENT_RESPONSE;
                                 }
                             }
-                            else
-                            {
+                            else {
                                 TRACE1("could not find uid in response: %s", pcResponseCred);
                                 iError = ASELECT_FILTER_ERROR_AGENT_RESPONSE;
                             }
                         }
-                        else
-                        {
-                            //
-                            // Could not find ticket in response
-                            //
+                        else { // Could not find ticket in response
                             TRACE1("could not find ticket in response: %s", pcResponseCred);
                             iError = ASELECT_FILTER_ERROR_AGENT_RESPONSE;
                         }
                     }
-                    else
-                    {
+                    else {
                         TRACE1("aselect_filter_verify_tgt FAILED (%d)", iError);
                         if (iError == ASELECT_SERVER_ERROR_TGT_NOT_VALID ||
                             iError == ASELECT_SERVER_ERROR_TGT_EXPIRED ||
@@ -799,24 +811,15 @@ static int aselect_filter_handler(request_rec *pRequest)
                         }
                     }
                 }
-                else
-                {
+                else {
                     iError = ASELECT_FILTER_ERROR_AGENT_NO_RESPONSE;
                 }
             }
-            else
-            {
-                //
-                // Could not find a RID, authenticate user
-                //
+            else { // Could not find a RID, authenticate user
                 iAction = ASELECT_FILTER_ACTION_AUTH_USER;
             }
         }
-        else
-        {
-            //
-            // No Credentials present, authenticate user
-            //
+        else { // No Credentials present, authenticate user
             iAction = ASELECT_FILTER_ACTION_AUTH_USER;
         }
     }
@@ -826,42 +829,32 @@ static int aselect_filter_handler(request_rec *pRequest)
     // if we do not have an error then
     // act according to iAction
     //
-    if (iError == ASELECT_FILTER_ERROR_OK)
-    {
-        //
+    if (iError == ASELECT_FILTER_ERROR_OK) {
         // Act according to action
-        //
-        switch(iAction)
-        {
+        switch(iAction) {
             case ASELECT_FILTER_ACTION_ACCESS_GRANTED:
-
-                //
                 // User was granted access
-                //
+                // Check for known requests such as show_aselect_bar and kill_ticket
                 TRACE1("Action: ASELECT_FILTER_ACTION_ACCESS_GRANTED, args=%s", pRequest->args);
-
-                //
-                // check for requests such as show_aselect_bar and kill_ticket
-                //
-                if (pRequest->args)
-                {
-                    if ((pcRequest = aselect_filter_get_param(pPool, pRequest->args, "request=", "&", TRUE)))
-                    {
+                if (pRequest->args) {
+                    pcRequest = aselect_filter_get_param(pPool, pRequest->args, "request=", "&", TRUE);
+                    if (pcRequest) {
 			TRACE1("pcRequest=%s", pcRequest);
-                        if (strstr(pcRequest, "aselect_show_bar") && pConfig->bUseASelectBar)
-                        {
-                            //
-                            // must show the the aselect_bar
-                            //
-                            if ((pcASelectAppURL = aselect_filter_get_param(pPool, pRequest->args, "aselect_app_url=", "&", TRUE)))
-                                iRet = aselect_filter_show_barhtml(pPool, pRequest, pConfig, pcASelectAppURL);
+                        if (strstr(pcRequest, "aselect_show_bar") && pConfig->bUseASelectBar) {
+                            // Return the frame around the logout_bar and the application
+			    //Old needs 'aselect_app_url' to pass app parameters
+                            //if ((pcASelectAppURL = aselect_filter_get_param(pPool, pRequest->args, "aselect_app_url=", "&", TRUE))) 
+			    //	aselect_filter_removeUnwantedCharacters(pcASelectAppURL);
+			    //end Old
+			    if (securedAselectAppArgs != NULL)
+                                iRet = aselect_filter_show_barhtml(pPool, pRequest, pConfig, securedAselectAppArgs);
                             else
                                 iRet = aselect_filter_show_barhtml(pPool, pRequest, pConfig, pConfig->pCurrentApp->pcLocation);
+			    // iRet is now set to DONE
                         }
-                        else if (strstr(pcRequest, "aselect_generate_bar"))
-                        {
-                            // return the bar html content
-			    char *pcLogoutHTML = pConfig->pcLogoutTemplate;
+                        else if (strstr(pcRequest, "aselect_generate_bar")) {
+                            // Return the logout_bar content, containing the logout button
+			    char *pcLogoutHTML = pConfig->pcLogoutTemplate;  // configurable logout template
 
 			    TRACE1("aselect_generate_bar, logout loc=%s", pConfig->pCurrentApp->pcLocation);
                             pRequest->content_type = "text/html";
@@ -871,31 +864,20 @@ static int aselect_filter_handler(request_rec *pRequest)
 			    while (pcLogoutHTML && (strstr(pcLogoutHTML, "[action]") != NULL)) {
 				pcLogoutHTML = aselect_filter_replace_tag(pPool, "[action]", pConfig->pCurrentApp->pcLocation, pcLogoutHTML);
 			    }
-
 			    ap_rprintf(pRequest, "%s\n", (pcLogoutHTML)? pcLogoutHTML: "");
-                            // OLD ap_rprintf(pRequest, ASELECT_LOGOUT_BAR, pConfig->pCurrentApp->pcLocation);
                             iRet = DONE;
                         }
-                        else if (strstr(pcRequest, "aselect_kill_ticket"))
-                        {
-                            //
-                            // kill the user ticket
-                            //
-                            if ((pcTicket = aselect_filter_get_cookie(pPool, headers_in, "aselectticket=")))
-                            {
-                                if ((pcResponseKill = aselect_filter_kill_ticket(pRequest, pPool, pConfig, pcTicket)))
-                                {
+                        else if (strstr(pcRequest, "aselect_kill_ticket")) {
+                            // Kill the user ticket
+                            if ((pcTicket = aselect_filter_get_cookie(pPool, headers_in, "aselectticket="))) {
+                                if ((pcResponseKill = aselect_filter_kill_ticket(pRequest, pPool, pConfig, pcTicket))) {
 				    iError = aselect_filter_get_error(pPool, pcResponseKill);
 
-				    if (iError == ASELECT_FILTER_ASAGENT_ERROR_OK)
-				    {
-					//
+				    if (iError == ASELECT_FILTER_ASAGENT_ERROR_OK) {
 					// Successfully killed the ticket, now redirect to the aselect-server
-					//
 					if ((pcASelectServerURL = aselect_filter_get_cookie(pPool, headers_in, "aselectserverurl=")))
 					{
 					    pRequest->content_type = "text/html";
-					    
 					    pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectticket", pConfig->pCurrentApp->pcLocation, addedSecurity);
 					    ap_table_add(headers_out, "Set-Cookie", pcCookie);
 					    TRACE1("Set-Cookie: %s", pcCookie);
@@ -920,23 +902,20 @@ static int aselect_filter_handler(request_rec *pRequest)
 
 					    iRet = DONE;
                                         }
-                                        else
-                                        {
+                                        else {
                                             iError = ASELECT_FILTER_ERROR_NO_SUCH_COOKIE;
                                             TRACE1("aselect_filter_get_cookie(aselectserverurl) FAILED: %d", iError);
                                             ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
                                                 ap_psprintf(pPool, "ASELECT_FILTER::aselect_filter_get_cookie(aselectserverurl) FAILED: %d", iError));
                                         }
                                     }
-                                    else
-                                    {
+                                    else {
                                         TRACE1("aselect_filter_kill_ticket FAILED: %d", iError);
                                         ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
                                             ap_psprintf(pPool, "ASELECT_FILTER::aselect_filter_kill_ticket FAILED: %d", iError));
                                     }
                                 }
-                                else
-                                {
+                                else {
                                     iError = ASELECT_FILTER_ERROR_INTERNAL;
                                     TRACE1("aselect_filter_kill_ticket FAILED: %d", iError);
                                     ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
@@ -951,33 +930,30 @@ static int aselect_filter_handler(request_rec *pRequest)
                             }
                         }
                         else { // Nothing interesting in the request=param, so continue as normal
+			    TRACE("No recognized request given");
                             iRet = DECLINED;
                         }
                     }
-                    else { // No arguments we are intereste in, so continue as normal
+                    else { // No arguments we are interested in, so continue as normal
+			TRACE("No request given");
                         iRet = DECLINED;
                     }
                 }
                 else {
+		    TRACE("No arguments given");
                     iRet = DECLINED;
                 }
-
-            break;
+		break;
 
             case ASELECT_FILTER_ACTION_AUTH_USER:
-            
-                //
-                // user does not have a valid CREDENTIALS and must be authenticated by the ASelect Server
+                // User does not have a valid CREDENTIALS and must be authenticated by the ASelect Server
                 // Contact ASelect Agent to find the users ASelect Server
-                //      
 
                 TRACE("Action: ASELECT_FILTER_ACTION_AUTH_USER");
-                TRACE1("iRedirectMode: %d", pConfig->iRedirectMode);
-                if (*pConfig->pCurrentApp->pcRedirectURL)
-                {
+                TRACE2("iRedirectMode: %d redirectURL=%s", pConfig->iRedirectMode, pConfig->pCurrentApp->pcRedirectURL);
+                if (*pConfig->pCurrentApp->pcRedirectURL) {
                     TRACE1("Using fixed app_url: %s", pConfig->pCurrentApp->pcRedirectURL);
-                    if (pRequest->args != NULL)
-                    {
+                    if (pRequest->args != NULL) {
                       if (strchr(pConfig->pCurrentApp->pcRedirectURL, '?'))
                           pcAppUrl = ap_psprintf(pPool, "%s&%s", pConfig->pCurrentApp->pcRedirectURL,
                               pRequest->args);
@@ -988,12 +964,9 @@ static int aselect_filter_handler(request_rec *pRequest)
                     else
                       pcAppUrl = pConfig->pCurrentApp->pcRedirectURL;
                 }
-                else
-                {
-                  if (pConfig->iRedirectMode == ASELECT_FILTER_REDIRECT_FULL)
-                  {
-                      if (pRequest->args != NULL)
-                      {
+                else {
+                  if (pConfig->iRedirectMode == ASELECT_FILTER_REDIRECT_FULL) {
+                      if (pRequest->args != NULL) {
                           pcUrl = ap_psprintf(pPool, "%s?%s", pRequest->uri, pRequest->args);
                           pcAppUrl = ap_construct_url(pPool, pcUrl, pRequest);
                       }
@@ -1004,25 +977,32 @@ static int aselect_filter_handler(request_rec *pRequest)
                       pcAppUrl = ap_construct_url(pPool, pConfig->pCurrentApp->pcLocation, pRequest);
                 }
                 
+		// Remove: request=aselect_show_bar if present
+		if (pConfig->bUseASelectBar) {
+		    char *req = "request=aselect_show_bar";
+		    char *p = strstr(pcAppUrl, req);
+		    int len = strlen(req);
+		    if (p) {
+			TRACE1("Removed: %s", req);
+			if (p > pcAppUrl && *(p-1) == '&') {
+			    p--; len++;
+			}
+			pcAppUrl = ap_psprintf(pPool, "%.*s%s", p-pcAppUrl, pcAppUrl, p+len);
+		    }
+		}
                 TRACE1("Redirect for authentication to app_url: %s", pcAppUrl);
-
-                if ((pcResponseAU = aselect_filter_auth_user(pRequest, pPool, pConfig, pcAppUrl)))
-                {
+                if ((pcResponseAU = aselect_filter_auth_user(pRequest, pPool, pConfig, pcAppUrl))) {
                     iError = aselect_filter_get_error(pPool, pcResponseAU);
                 }
 
-                if (iError == ASELECT_FILTER_ASAGENT_ERROR_OK)
-                {
+                if (iError == ASELECT_FILTER_ASAGENT_ERROR_OK) {
                     TRACE1("response: %s", pcResponseAU);
                     //
                     // build the redirection URL from the response
                     //
-                    if ((pcRID = aselect_filter_get_param(pPool, pcResponseAU, "rid=", "&", TRUE)))
-                    {
-                        if ((pcASelectServer = aselect_filter_get_param(pPool, pcResponseAU, "a-select-server=", "&", TRUE)))
-                        {
-                            if ((pcASUrl = aselect_filter_get_param(pPool, pcResponseAU, "as_url=", "&", TRUE)))
-                            {
+                    if ((pcRID = aselect_filter_get_param(pPool, pcResponseAU, "rid=", "&", TRUE))) {
+                        if ((pcASelectServer = aselect_filter_get_param(pPool, pcResponseAU, "a-select-server=", "&", TRUE))) {
+                            if ((pcASUrl = aselect_filter_get_param(pPool, pcResponseAU, "as_url=", "&", TRUE))) {
                                 iRet = aselect_filter_gen_top_redirect(pPool, addedSecurity, pRequest, pcASUrl, pcASelectServer, pcRID);
                             }
                             else {
@@ -1042,7 +1022,6 @@ static int aselect_filter_handler(request_rec *pRequest)
                     ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
                         ap_psprintf(pPool, "ASELECT_FILTER::aselect_filter_auth_user FAILED (%d)", iError));
                 }
-            
                 break;
 
             case ASELECT_FILTER_ACTION_SET_TICKET:
@@ -1060,7 +1039,7 @@ static int aselect_filter_handler(request_rec *pRequest)
 		if (/*!pConfig->bUseCookie ||*/ strchr(pConfig->pcPassAttributes,'q')!=0 ||
 			    strchr(pConfig->pcPassAttributes,'h')!=0 || strchr(pConfig->pcPassAttributes,'t')!=0) {  // Bauke: added
 		    // Pass attributes in the html header and/or query string
-		    iError = passAttributesInUrl(iError, pcAttributes, pPool, pRequest, pConfig,
+		    iError = aselect_filter_passAttributesInUrl(iError, pcAttributes, pPool, pRequest, pConfig,
 				    pcTicketOut, pcUIDOut, pcOrganizationOut, pcRequestLanguage, headers_in);
 		}
 
@@ -1076,40 +1055,18 @@ static int aselect_filter_handler(request_rec *pRequest)
                 TRACE1("Set-Cookie: %s", pcCookie3);
                 ap_table_add(headers_out, "Set-Cookie", pcCookie3); 
 
+		// Filter out application parameters
                 TRACE2("SecureUrl=%d RequestArgs: '%s'", pConfig->bSecureUrl, pRequest->args);
-                pcStrippedParams  = NULL;
-                bFirstParam = TRUE;
-                pcTmp = strtok(pRequest->args, "?&");
-                while (pcTmp != NULL)
-                {
-		    // Skip these parameters:
-                    if ((pcTmp2 = strstr(pcTmp, "aselect_credentials")) == NULL) {
-	                if ((pcTmp2 = strstr(pcTmp, "rid")) == NULL) {
-     	                    if ((pcTmp2 = strstr(pcTmp, "a-select-server")) == NULL) {
-				// The rest will pass
-    	                        if (bFirstParam) {
-    	                            pcStrippedParams = ap_psprintf(pPool, "?%s", pcTmp);
-    	                            bFirstParam = FALSE;
-    	                        }
-    	                        else
-    	                            pcStrippedParams = ap_psprintf(pPool, "%s&%s", pcStrippedParams, pcTmp);
-    	                     }
-	                 }
-                    }
-                    pcTmp = strtok(NULL, "?&");
-                }
-
-                if (pcStrippedParams != NULL)
-                    pRequest->args = pcStrippedParams;
-                else
-                    pRequest->args = "";
-                TRACE1("--> pRequest->args='%s'",pRequest->args);
+		pRequest->args = extractApplicationParameters(pPool, pRequest->args);
+                TRACE1("Ticket SET --> pRequest->args='%s'",pRequest->args);
                                                                          
                 iRet = aselect_filter_gen_authcomplete_redirect(pPool, pRequest, pConfig);
+		// always returns DONE
                 break;
 
             case ASELECT_FILTER_ACTION_ACCESS_DENIED:
                 TRACE("Action: ACCESS_DENIED");
+		break;
 
             default:
                 // Access is denied or unknown action: ACCESS DENIED
@@ -1123,19 +1080,21 @@ static int aselect_filter_handler(request_rec *pRequest)
     }
 
     // Bauke: added
-    if (iError == ASELECT_FILTER_ERROR_OK && iAction == ASELECT_FILTER_ACTION_ACCESS_GRANTED) { /*!pConfig->bUseCookie ||*/
+    TRACE3("==== 4. Attributes iError=%d iAction=%s, iRet=%d", iError, filter_action_text(iAction), iRet);
+    // Bauke, 20100520, added: iRet != DONE
+    if (iRet !=DONE && iError == ASELECT_FILTER_ERROR_OK && iAction == ASELECT_FILTER_ACTION_ACCESS_GRANTED) { /*!pConfig->bUseCookie ||*/
 	if (strchr(pConfig->pcPassAttributes,'q')!=0 || strchr(pConfig->pcPassAttributes,'h')!=0 || strchr(pConfig->pcPassAttributes,'t')!=0) {
-	    iError = passAttributesInUrl(iError, pcAttributes, pPool, pRequest, pConfig, pcTicketIn, pcUIDIn, pcOrganizationIn, pcRequestLanguage, headers_in);
+	    iError = aselect_filter_passAttributesInUrl(iError, pcAttributes, pPool, pRequest, pConfig, pcTicketIn, pcUIDIn, pcOrganizationIn, pcRequestLanguage, headers_in);
 	}
 	//iRet = DONE;
     }
 
-    TRACE3("==== 4. Finish iError=%d iAction=%s, iRet=%d", iError, filter_action_text(iAction), iRet);
+    TRACE3("==== 5. Finish iError=%d iAction=%s, iRet=%d", iError, filter_action_text(iAction), iRet);
     //
     // Cleanup
     //
     ap_destroy_pool(pPool);
-    TRACE2("==== 5. Returning %d: %s", iRet, (iRet==DECLINED)? "DECLINED": (iRet==DONE)? "DONE": (iRet==FORBIDDEN)? "FORBIDDEN": "?");
+    TRACE2("==== 6. Returning %d: %s", iRet, (iRet==DECLINED)? "DECLINED": (iRet==DONE)? "DONE": (iRet==FORBIDDEN)? "FORBIDDEN": "?");
 
     return iRet;
 }
@@ -1143,11 +1102,11 @@ static int aselect_filter_handler(request_rec *pRequest)
 //
 // Bauke added: Pass attributes in the query string and/or in the header
 //
-static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, request_rec *pRequest,
+static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, request_rec *pRequest,
 	    PASELECT_FILTER_CONFIG pConfig, char *pcTicketIn, char *pcUIDIn, char *pcOrganizationIn,
 	    char *pcRequestLanguage, table *headers_in)
 {
-    TRACE4("==== Attributes iError=%d, TicketIn=%s, UidIn=%s, OrgIn=%s", iError,
+    TRACE4("passAttributesinUrl iError=%d, TicketIn=%s, UidIn=%s, OrgIn=%s", iError,
 		pcTicketIn?pcTicketIn:"NULL", pcUIDIn?pcUIDIn:"NULL", pcOrganizationIn?pcOrganizationIn:"NULL");
     if (pcAttributes == NULL) {
 	int i, purge, stop;
@@ -1156,7 +1115,7 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 	TRACE("Get Attributes");
 	pcResponse = aselect_filter_attributes(pRequest, pPool, pConfig, pcTicketIn, pcUIDIn, pcOrganizationIn);
 	if (pcResponse) {
-	    TRACE1("Response Attributes [%s]", pcResponse);
+	    TRACE1("Attributes Response [%.40s]", pcResponse);
 	    iError = aselect_filter_get_error(pPool, pcResponse);
 
 	    if (iError == ASELECT_FILTER_ASAGENT_ERROR_OK) {
@@ -1168,21 +1127,8 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 		    TRACE2("Start: SecureUrl=%d pRequestArgs=%s", pConfig->bSecureUrl, (pRequest->args)? pRequest->args: "NULL");
 		    TRACE1("Attributes from Agent: %s", pcAttributes);
 		    // Filter out unwanted characters in the URL
-		    for (stop=0 ; pConfig->bSecureUrl && !stop && pRequest->args; ) {
-			int len = strlen(pRequest->args);
-			aselect_filter_url_decode(pRequest->args);
-			TRACE1("Loop: %s", (pRequest->args)? pRequest->args: "NULL");
-			if (len == strlen(pRequest->args)) {
-			    char *p, *q;
-			    for (p = q = pRequest->args; *q; ) {
-				if (*q == '%' || *q == '\r' || *q == '\n' || *q == '>' || *q == '<')
-				    q++;
-				else
-				    *p++ = *q++;
-			    }
-			    *p++ = '\0';
-			    stop = 1;
-			}
+		    if (pConfig->bSecureUrl && pRequest->args) {
+		    	aselect_filter_removeUnwantedCharacters(pRequest->args);
 		    }
 		    TRACE2("End: %s, AttrCount=%d", (pRequest->args)? pRequest->args: "NULL", pConfig->iAttrCount);
 
@@ -1362,6 +1308,68 @@ static int passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, requ
 	else iError = ASELECT_FILTER_ERROR_AGENT_NO_RESPONSE;
     }
     return iError;
+}
+
+static char *aselect_filter_findNoCasePattern(const char *text, const char *pattern)
+{
+      char *pptr, *sptr, *start;
+
+      for (start = (char *)text; *start != '\0'; start++)
+      {
+            /* find start of pattern in string */
+            for ( ; ((*start!='\0') && (toupper(*start) != toupper(*pattern))); start++)
+                  ;
+            if (*start == '\0')
+                  return NULL;
+
+            pptr = (char *)pattern;
+            sptr = (char *)start;
+            while (toupper(*sptr) == toupper(*pptr)) {
+                  sptr++;
+                  pptr++;
+                  /* if end of pattern then pattern was found */
+                  if (*pptr == '\0')
+                        return (start);
+            }
+      }
+      return NULL;
+}
+
+static void aselect_filter_removeUnwantedCharacters(char *args)
+{
+    int stop, len;
+    char *p, *q;
+
+    for (stop=0 ; !stop; ) {
+	len = strlen(args);
+	aselect_filter_url_decode(args);
+	TRACE1("Loop: %s", (args)? args: "NULL");
+	if (len == strlen(args)) {
+	    for (p = q = args; *q; ) {
+		// 20100521, Bauke: " added to the list below
+		if (*q == '%' || *q == '\r' || *q == '\n' || *q == '>' || *q == '<' || *q == '"')
+		    q++;
+		else
+		    *p++ = *q++;
+	    }
+	    *p++ = '\0';
+	    stop = 1;
+	}
+    }
+    for (stop=0 ; !stop; ) {
+	len = strlen(args);
+	p = aselect_filter_findNoCasePattern(args, "script:");
+	if (p) {
+	    q = p + strlen("script:");
+	    *p++ = '_';
+	    for ( ; *q; ) {
+		*p++ = *q++;
+	    }
+	    *p++ = *q++;  // null-byte too
+	}
+	if (len == strlen(args))
+	    break;
+    }
 }
 
 //
@@ -1846,30 +1854,27 @@ static const char *aselect_filter_set_html_logout_template(cmd_parms *parms, voi
 
 static const char *aselect_filter_set_use_aselect_bar(cmd_parms *parms, void *mconfig, const char *arg)
 {
-        PASELECT_FILTER_CONFIG  pConfig = (PASELECT_FILTER_CONFIG) ap_get_module_config(parms->server->module_config, &aselect_filter_module);
-        char                    *pcUseASelectBar;
+    PASELECT_FILTER_CONFIG pConfig = (PASELECT_FILTER_CONFIG)
+	    ap_get_module_config(parms->server->module_config, &aselect_filter_module);
+    char *pcUseASelectBar;
 
-        if (pConfig)
-        {
-                if ((pcUseASelectBar = ap_pstrdup(parms->pool, arg)))
-                {
-                        TRACE1("aselect_filter_set_use_aselect_bar:: %s", pcUseASelectBar);
-                        pConfig->bUseASelectBar = FALSE;
+    TRACE1("aselect_filter_set_use_aselect_bar:: arg=%s", arg);
+    if (pConfig) {
+	if ((pcUseASelectBar = ap_pstrdup(parms->pool, arg))) {
+	    TRACE1("aselect_filter_set_use_aselect_bar:: %s", pcUseASelectBar);
+	    pConfig->bUseASelectBar = FALSE;
 
-                        if (strcasecmp(pcUseASelectBar, "1") == 0)
-                                pConfig->bUseASelectBar = TRUE;
-                }
-                else
-                {
-                        return "A-Select ERROR: Internal error when setting use_aselect_bar";
-                }
-        }
-        else
-        {
-                return "A-Select ERROR: Internal error when setting use_aselect_bar";
-        }
-
-        return NULL;
+	    if (strcasecmp(pcUseASelectBar, "1") == 0)
+		pConfig->bUseASelectBar = TRUE;
+	}
+	else {
+	    return "A-Select ERROR: Internal error when setting use_aselect_bar";
+	}
+    }
+    else {
+	return "A-Select ERROR: Internal error when setting use_aselect_bar";
+    }
+    return NULL;
 }
 
 // Bauke 20081108: added

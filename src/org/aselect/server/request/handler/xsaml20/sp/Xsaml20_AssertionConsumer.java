@@ -223,7 +223,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					+ XMLHelper.nodeToString(envelopeElem));
 			// XMLHelper.prettyPrintXML(envelopeElem));
 
-			// Send/Receive the SOAP message
+			// ------------ Send/Receive the SOAP message
 			String sSamlResponse = soapManager.sendSOAP(XMLHelper.nodeToString(envelopeElem), sASelectServerUrl);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Received response: " + sSamlResponse);
 
@@ -295,9 +295,15 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				// Detect if this is a successful or an error Response
 				String sStatusCode = samlResponse.getStatus().getStatusCode().getValue();
 				String sRemoteRid = samlResponse.getID();
+				
+				// 20100531, Bauke: Remove added timestamp to get our local RID
 				String sLocalRid = samlResponse.getInResponseTo();
+				int len = sLocalRid.length();
+				if (len > 9)
+					sLocalRid = sLocalRid.substring(0, len-9);
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "RemoteRid=" + sRemoteRid +
-						" LocalRid=" + sLocalRid + " StatusCode=" + sStatusCode);
+								" LocalRid=" + sLocalRid + " StatusCode=" + sStatusCode);
+				
 				if (sStatusCode.equals(StatusCode.SUCCESS_URI)) {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Response was successful " + samlResponse.toString());
 					Assertion samlAssertion = samlResponse.getAssertions().get(0);
@@ -460,7 +466,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					if (statMsg != null)
 						sErrorCode = statMsg.getMessage();
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "ErrorCode=" + sErrorCode);
-					//else if (sStatusCode.equals(StatusCode.AUTHN_FAILED_URI))
+					//else if (samlResponse.getStatus().getStatusCode().getStatusCode().getValue().equals(StatusCode.AUTHN_FAILED_URI))
 					//	sErrorCode = Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER;
 					// Expect these codes: Errors.ERROR_ASELECT_SERVER_CANCEL,
 					// Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER;

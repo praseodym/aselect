@@ -40,7 +40,7 @@ public abstract class BasicRequestHandler
 
 	// This code was stolen from ApplicationAPIHandler.handleAuthenticateRequest()
 	// But also slightly different versions were found in ASelectAPIHandler and the 'sfs' handlers
-	// TODO: merge
+	// Code should be merged.
 	/**
 	 * Handle authenticate and create session.
 	 * 
@@ -56,7 +56,7 @@ public abstract class BasicRequestHandler
 			String sUrlTarget)
 		throws ASelectException
 	{
-		String sMethod = "handleAuthenticateAndCreateSession()";
+		String sMethod = "handleAuthenticateAndCreateSession";
 		AuthSPHandlerManager _authSPManagerManager = AuthSPHandlerManager.getHandle();
 		SessionManager _sessionManager = SessionManager.getHandle();
 		ApplicationManager _applicationManager = ApplicationManager.getHandle();
@@ -80,7 +80,7 @@ public abstract class BasicRequestHandler
 		String sLanguage = hmInput.get("language");
 
 		// Acccept both 'forced_logon' and 'forced_authenticate' (preferred)
-		String sForcedAuthn = hmInput.get("forced_authenticate");
+		String sForcedAuthn = hmInput.get("forced_authenticate");  // a String this time
 		Boolean boolForcedAuthn = new Boolean(sForcedAuthn);
 
 		String sForcedLogon = hmInput.get("forced_logon");
@@ -128,8 +128,7 @@ public abstract class BasicRequestHandler
 		}
 		Integer intAppLevel = _applicationManager.getRequiredLevel(sAppId);
 		if (intAppLevel == null) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No level specified for application with ID: '" + sAppId
-					+ "'");
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No level specified for application with ID: '"+sAppId+"'");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_APP_LEVEL);
 		}
 		Integer intMaxAppLevel = _applicationManager.getMaxLevel(sAppId);
@@ -205,10 +204,9 @@ public abstract class BasicRequestHandler
 				htSessionContext.put("language", sLanguage.toLowerCase());
 		}
 
-		// We only want to set the client_ip on application browserrequests (see ApplicationBrwoserHandler)
+		// We only want to set the client_ip on application browserrequests (see ApplicationBrowserHandler)
 		// Bauke 20081217: Therefore the lines below should go!
-		// htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr()); // RH, 20080716, n // RH, 20080719,
-		// o
+		// htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr()); // RH, 20080716, n // RH, 20080719, o
 		// String sAgent = get_servletRequest().getHeader("User-Agent");
 		// if (sAgent != null) htSessionContext.put("user_agent", sAgent);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "CTX htSessionContext=" + htSessionContext);

@@ -35,7 +35,6 @@ import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-// TODO: Auto-generated Javadoc
 public class Saml20_ArtifactManager extends StorageManager
 {
 	private static final String MODULE = "Saml20_ArtifactManager";
@@ -87,13 +86,13 @@ public class Saml20_ArtifactManager extends StorageManager
 	 *             the a select storage exception
 	 */
 	public void sendArtifact(String sArtifact, SAMLObject samlObject, String sAppUrl,
-			HttpServletResponse oHttpServletResponse, String sRelayState)
+			HttpServletResponse oHttpServletResponse, String sRelayState, String addedPatching)
 		throws IOException, ASelectStorageException
 	{
-		String sMethod = "sendArtifact()";
+		String sMethod = "sendArtifact";
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Store");
-		putArtifactInStorage(sArtifact, samlObject);
+		putArtifactInStorage(sArtifact, samlObject, addedPatching);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Encode");
 		String uencArtifact = URLEncoder.encode(sArtifact, "UTF-8");
 		String sRedirectUrl = sAppUrl + "?SAMLart=" + uencArtifact;
@@ -130,7 +129,7 @@ public class Saml20_ArtifactManager extends StorageManager
 	 * @throws ASelectStorageException
 	 *             the a select storage exception
 	 */
-	private void putArtifactInStorage(Object key, XMLObject samlObject)
+	private void putArtifactInStorage(Object key, XMLObject samlObject, String addedPatching)
 		throws ASelectStorageException
 	{
 		String sMethod = "putArtifactInStorage";
@@ -149,7 +148,19 @@ public class Saml20_ArtifactManager extends StorageManager
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "put key=" + key);
 
 		// Save as string because these SAML XMLObjects don't want to serialize very well
-		super.put(key, XMLHelper.nodeToString(dom));
+		String sValue = XMLHelper.nodeToString(dom);
+
+		// We have <saml:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">
+		if (addedPatching.contains("nvl_attr_noxmlns")) {
+			sValue = sValue.replaceAll("AttributeValue xmlns:xs=[^ ]* xsi:type=", "AttributeValue xsi:type=");
+		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "value=" + sValue);
+		if ( addedPatching.contains("nvl_attr_noxsi")) {
+			// We have <saml:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">
+			sValue = sValue.replaceAll("AttributeValue xsi:type=", "AttributeValue type=");
+		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "value=" + sValue);
+		super.put(key, sValue);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "put done");
 
 		// debug:

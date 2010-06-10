@@ -32,8 +32,10 @@ import org.aselect.system.utils.Tools;
 import org.joda.time.DateTime;
 import org.opensaml.common.SAMLObjectBuilder;
 import org.opensaml.common.SAMLVersion;
+import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.core.*;
 import org.opensaml.ws.soap.soap11.Envelope;
+import org.opensaml.xml.Namespace;
 import org.opensaml.xml.XMLObjectBuilderFactory;
 import org.opensaml.xml.io.Unmarshaller;
 import org.opensaml.xml.io.UnmarshallerFactory;
@@ -90,9 +92,9 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
-		throws ASelectException
+	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		super.init(oServletConfig, oHandlerConfig);
 		_oBuilderFactory = org.opensaml.xml.Configuration.getBuilderFactory();
@@ -114,27 +116,13 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 		throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, request.getContentType());
 
 		try {
 			MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
-			// ServletInputStream input = request.getInputStream();
-			// BufferedInputStream bis = new BufferedInputStream(input);
-			// ByteArrayOutputStream bos = new ByteArrayOutputStream(); // RH, 20080714, n
 
-			/*
-			 * int xRead = 0; byte[] ba = new byte[512]; DataInputStream isInput = null; isInput = new
-			 * DataInputStream(request.getInputStream()); while ((xRead = isInput.read(ba)) != -1) { // append to
-			 * stringbuffer //sb.append(new String(ba, 0, xRead)); // RH, 20080714, o bos.write(ba, 0, xRead); // RH,
-			 * 20080714, n // clear the buffer Arrays.fill(ba, (byte) 0); }
-			 */
-			/*
-			 * char b = (char) bis.read(); StringBuffer sb = new StringBuffer(); sb.append(b); while (bis.available() !=
-			 * 0) { b = (char) bis.read(); sb.append(b); } String sReceivedSoap = sb.toString();
-			 */
-			String sReceivedSoap = Tools.stream2string(request.getInputStream()); // RH, 20080715, n
-
+			String sReceivedSoap = Tools.stream2string(request.getInputStream());
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Received Soap:\n" + sReceivedSoap);
 
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -235,6 +223,10 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler
 				SAMLObjectBuilder<ArtifactResponse> artifactResponseBuilder = (SAMLObjectBuilder<ArtifactResponse>) _oBuilderFactory
 						.getBuilder(ArtifactResponse.DEFAULT_ELEMENT_NAME);
 				artifactResponse = artifactResponseBuilder.buildObject();
+
+				// nvl_patch, Novell: add xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+				artifactResponse.addNamespace(new Namespace(SAMLConstants.SAML20_NS, "saml"));
+
 				artifactResponse.setID(SamlTools.generateIdentifier(_systemLogger, MODULE));
 				artifactResponse.setInResponseTo(sInResponseTo);
 				artifactResponse.setVersion(SAMLVersion.VERSION_20);

@@ -530,8 +530,6 @@ public class SamlTools
 	{
 		String sMethod = "sign(SignableSAMLObject obj)";
 		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
-		//ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
-		//String addedSecurity = _configManager.getAddedSecurity();
 		boolean useSha256 = sAlgo.equals("sha256");
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "obj->" + obj);
@@ -897,20 +895,18 @@ public class SamlTools
 		return htResult;
 	}
 
-	// Create a signed and base64 encoded Saml Token
-	// containing the attributes present in htAttributes.
 	/**
-	 * Creates the attribute token.
+	 * Create a signed and base64 encoded Saml Token
+	 * containing the attributes present in htAttributes.
 	 * 
 	 * @param sIssuer
-	 *            the s issuer
+	 *            the issuer
 	 * @param sTgt
-	 *            the s tgt
+	 *            the tgt
 	 * @param htAttributes
-	 *            the ht attributes
-	 * @return the string
+	 *            the attributes
+	 * @return the attribute token
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
 	public static String createAttributeToken(String sIssuer, String sTgt, HashMap htAttributes)
 		throws ASelectException

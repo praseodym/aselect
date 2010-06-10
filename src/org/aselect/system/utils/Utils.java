@@ -59,7 +59,6 @@
 package org.aselect.system.utils;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -72,8 +71,6 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Level;
-
-import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
@@ -262,7 +259,7 @@ public class Utils
 	}
 
 	/**
-	 * Replaces all occurences of a string in a source string. <br>
+	 * Replaces all occurrences of a string in a source string. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
 	 * Trivial. <br>
@@ -282,7 +279,7 @@ public class Utils
 	 *            The string that is to be replaced.
 	 * @param xReplaceString
 	 *            The string that replaces xString.
-	 * @return A String containing all occurences of xString replaced by xReplaceString.
+	 * @return A String containing all occurrences of xString replaced by xReplaceString.
 	 */
 	public static String replaceString(String xSrc, String xString, String xReplaceString)
 	{

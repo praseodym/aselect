@@ -377,7 +377,6 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 			boolForcedAuthn = new Boolean(sForcedAuthn);
 		}
 
-		// TODO include other optional parameters as well (remco)
 		if (_crossASelectManager.isLocalSigningRequired()) {
 			StringBuffer sbData = new StringBuffer(sASelectServer);
 			if (sCountry != null)

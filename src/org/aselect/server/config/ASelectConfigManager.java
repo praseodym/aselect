@@ -418,6 +418,9 @@ public class ASelectConfigManager extends ConfigManager
 	// Additional security precaution
 	private String _sAddedSecurity = "";
 
+	// Patching specials
+	private String _sAddedPatching = "";
+
 	// <user_info>consent,save_consent,session,logout</user_info>
 	// use either "consent" or "save_consent"
 	private String _sUserInfoSettings = "";
@@ -671,6 +674,9 @@ public class ASelectConfigManager extends ConfigManager
 		_sAddedSecurity = ASelectConfigManager.getSimpleParam(_oASelectConfigSection, "added_security", false);
 		if (_sAddedSecurity == null)
 			_sAddedSecurity = "";
+		_sAddedPatching = ASelectConfigManager.getSimpleParam(_oASelectConfigSection, "added_patching", false);
+		if (_sAddedPatching == null)
+			_sAddedPatching = "";
 		_sUserInfoSettings = ASelectConfigManager.getSimpleParam(_oASelectConfigSection, "user_info", false);
 		if (_sUserInfoSettings == null)
 			_sUserInfoSettings = "";
@@ -2215,6 +2221,16 @@ public class ASelectConfigManager extends ConfigManager
 	public String getAddedSecurity()
 	{
 		return _sAddedSecurity;
+	}
+
+	/**
+	 * Gets special patching
+	 * 
+	 * @return the parameter value
+	 */
+	public String getAddedPatching()
+	{
+		return _sAddedPatching;
 	}
 
 	/**

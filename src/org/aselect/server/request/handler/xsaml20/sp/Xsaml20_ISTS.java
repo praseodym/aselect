@@ -275,11 +275,14 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			authnRequest.setAttributeConsumingServiceIndex(2);
 
 			authnRequest.setDestination(sDestination);
-			authnRequest.setID(sRid);
 			DateTime tStamp = new DateTime();
-			authnRequest.setIssueInstant(tStamp);
 			// Set interval conditions
 			authnRequest = (AuthnRequest) SamlTools.setValidityInterval(authnRequest, tStamp, getMaxNotBefore(), getMaxNotOnOrAfter());
+
+			// 20100531, Bauke, use Rid but add part of the timestamp to make the ID unique
+			// The AssertionConsumer will strip it off to regain our Rid value
+			String timePostFix = String.format("%02d%02d%02d%03d", tStamp.getHourOfDay(), tStamp.getMinuteOfHour(), tStamp.getSecondOfMinute(), tStamp.getMillisOfSecond());
+			authnRequest.setID(sRid+timePostFix);
 
 			authnRequest.setProviderName(_sServerId);
 			authnRequest.setVersion(SAMLVersion.VERSION_20);

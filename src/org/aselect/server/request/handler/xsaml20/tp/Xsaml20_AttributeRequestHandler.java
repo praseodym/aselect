@@ -123,7 +123,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 		throws ASelectException
 	{
-		// TODO allow for direct transient ID handling
+		// SUGGEST allow for direct transient ID handling
 		String sMethod = "process()";
 		String sPathInfo = request.getPathInfo();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "==== Path=" + sPathInfo + " TokenRequestQuery: "

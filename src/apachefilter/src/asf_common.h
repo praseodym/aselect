@@ -102,10 +102,10 @@ typedef apr_table_t     table;
  * Must include two "%s", of which both are replaced by the new location
  */
 #define ASELECT_FILTER_CLIENT_REDIRECT \
-    "<HTML><HEAD><TITLE>" ASELECT_FILTER_VERSION " Redirect</TITLE>\n" \
-    "<meta http-equiv=\"Refresh\" content=\"0;url=%s\">\n" \
-    "<script language=\"JavaScript\">top.location=\"%s\";</script>\n" \
-    "</HEAD><BODY></BODY></HTML>\n"
+    "<html><head><title>" ASELECT_FILTER_VERSION " Redirect</title>\n" \
+    "<meta http-equiv=\"refresh\" content=\"0;url=%s\">\n" \
+    "<script language=\"javascript\">top.location=\"%s\";</script>\n" \
+    "</head><body></body></html>\n"
 
 // Bauke: No longer used!!
 #define ASELECT_LOGOUT_BAR \
@@ -132,11 +132,11 @@ typedef apr_table_t     table;
 	"<tr>" \
 	"<td valign=\"top\" align=\"left\"></td>" \
 	"<td valign=\"top\" align=\"right\">" \
-	"<FORM action=\"[action]\" target=\"_top\">" \
-	"<INPUT Type=\"Hidden\" Name=\"request\" value=\"aselect_kill_ticket\">" \
-	"<INPUT Type=\"Submit\" class=bttn value=\"Log out\">" \
+	"<form action=\"[action]\" target=\"_top\">" \
+	"<input type=\"hidden\" name=\"request\" value=\"aselect_kill_ticket\">" \
+	"<input type=\"submit\" class=bttn value=\"Log out\">" \
 	"<a href=\"http://www.aselect.org\"><img src=\"/aselectres/aselectlogotiny.gif\" border=0></a>&nbsp;&nbsp;" \
-	"</FORM>" \
+	"</form>" \
 	"</td>" \
 	"</tr>" \
 	"</table>" \
@@ -144,14 +144,13 @@ typedef apr_table_t     table;
 	"</html>\n"
 
 #define ASELECT_LOGOUT_BAR_FRAME \
-	"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">" \
-	"<html>" \
-	"<head>" \
-	"</head>" \
-	"<frameset rows=\"40,*\" frameborder=\"1\" bordercolor=\"#effaf6\">" \
-	"<frame src=\"%s?request=aselect_generate_bar\" name=\"aselect_bar_frame\" scrolling=\"No\" id=\"aselectframe\" noresize marginwidth=\"0\" marginheight=\"0\" frameborder=\"0\">" \
-	"<frame src=\"%s\" name=\"aselect_app_frame\" marginwidth=\"0\" marginheight=\"0\" frameborder=\"0\">" \
-	"</frameset>" \
+	"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n" \
+	"<html><head></head>\n" \
+	"<frameset rows=\"40,*\" frameborder=\"1\" bordercolor=\"#effaf6\">\n" \
+	"<frame src=\"%s?request=aselect_generate_bar\" name=\"aselect_bar_frame\" " \
+	    "scrolling=\"no\" id=\"aselectframe\" noresize marginwidth=\"0\" marginheight=\"0\" frameborder=\"0\">\n" \
+	"<frame src=\"%s%s\" name=\"aselect_app_frame\" marginwidth=\"0\" marginheight=\"0\" frameborder=\"0\">\n" \
+	"</frameset>\n" \
 	"</html>\n"
 
 /*

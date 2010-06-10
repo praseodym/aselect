@@ -814,8 +814,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 				// Check if a request was done for a different user-id
 				String sForcedUid = (String) _htSessionContext.get("forced_uid");
-				_systemLogger
-						.log(Level.INFO, _sModule, sMethod, "SSO branch uid=" + sUid + " forced_uid=" + sForcedUid);
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "SSO branch uid=" + sUid + " forced_uid=" + sForcedUid);
 				if (sForcedUid != null && !sForcedUid.equals("saml20_user") && !sForcedUid.equals("siam_user")
 						&& !sUid.equals(sForcedUid)) // user_id does not match
 				{
@@ -1043,6 +1042,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			minutesToGo -= 60 * hoursToGo;
 			sInfoForm = Utils.replaceString(sInfoForm, "[hours_left]", Long.toString(hoursToGo));
 			sInfoForm = Utils.replaceString(sInfoForm, "[minutes_left]", String.format("%02d", minutesToGo));
+		}
+		else {
+			sInfoForm = Utils.replaceString(sInfoForm, "[hours_left]", "");
+			sInfoForm = Utils.replaceString(sInfoForm, "[minutes_left]", "");
 		}
 		String sFriendlyName = ApplicationManager.getHandle().getFriendlyName(spUrl);
 		if (sFriendlyName == null)
@@ -1594,6 +1597,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			Boolean boolForced = (Boolean) _htSessionContext.get("forced_authenticate"); // a Boolean
 			if (boolForced == null)
 				boolForced = false;
+			htRequestTable.put("forced_authenticate", boolForced); // boolean
 			htRequestTable.put("forced_logon", boolForced.toString()); // and this is a String!
 			htRequestTable.put("local_as_url", sbMyAppUrl.toString());
 
