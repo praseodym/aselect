@@ -388,13 +388,23 @@ public class NullAuthSP extends ASelectHttpServlet
 		throws ServletException, java.io.IOException
 	{
 		String sMethod = "doGet()";
+		String sQueryString = "";
+		String sLanguage = null;
+		
 		servletResponse.setContentType("text/html");
 		setDisableCachingHttpHeaders(servletRequest, servletResponse);
-		String sQueryString = "";
 
 		try {
 			sQueryString = servletRequest.getQueryString();
 			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString);
+
+			sLanguage = (String) htServiceRequest.get("language");  // optional language code
+			if (sLanguage == null || sLanguage.trim().length() < 1)
+				sLanguage = null;			
+			String sCountry = (String) htServiceRequest.get("country");  // optional country code
+			if (sCountry == null || sCountry.trim().length() < 1)
+				sCountry = null;
+			
 			String sMyUrl = servletRequest.getRequestURL().toString();
 			htServiceRequest.put("my_url", sMyUrl);
 
@@ -413,17 +423,6 @@ public class NullAuthSP extends ASelectHttpServlet
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "NULL GET {" + servletRequest + " --> " + sMethod + ": "
 					+ sQueryString);
 
-			// optional country code
-			String sCountry = (String) htServiceRequest.get("country");
-			if (sCountry == null || sCountry.trim().length() < 1) {
-				sCountry = null;
-			}
-
-			// optional language code
-			String sLanguage = (String) htServiceRequest.get("language");
-			if (sLanguage == null || sLanguage.trim().length() < 1) {
-				sLanguage = null;
-			}
 
 			sAsUrl = URLDecoder.decode(sAsUrl, "UTF-8");
 			sUid = URLDecoder.decode(sUid, "UTF-8");
@@ -457,15 +456,15 @@ public class NullAuthSP extends ASelectHttpServlet
 				});
 			}
 
-			handleResult(servletRequest, servletResponse, _sAuthMode);
+			handleResult(servletRequest, servletResponse, _sAuthMode, sLanguage);
 		}
 		catch (ASelectException e) {
-			handleResult(servletRequest, servletResponse, e.getMessage());
+			handleResult(servletRequest, servletResponse, e.getMessage(), sLanguage);
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Internal error", e);
 
-			handleResult(servletRequest, servletResponse, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER);
+			handleResult(servletRequest, servletResponse, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, sLanguage);
 		}
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "} NULL GET");
 	}
@@ -487,7 +486,7 @@ public class NullAuthSP extends ASelectHttpServlet
 	 */
 	@Override
 	protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
-		throws ServletException, java.io.IOException
+	throws ServletException, java.io.IOException
 	{
 		String sMethod = "doPost";
 
@@ -496,9 +495,13 @@ public class NullAuthSP extends ASelectHttpServlet
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "NULL POST {" + servletRequest + ", qry="
 				+ servletRequest.getQueryString());
+		String sLanguage = servletRequest.getParameter("language");
+		if (sLanguage == null || sLanguage.trim().length() < 1) {
+			sLanguage = null;
+		}
 
 		try {
-			handleResult(servletRequest, servletResponse, Errors.ERROR_NULL_INVALID_REQUEST);
+			handleResult(servletRequest, servletResponse, Errors.ERROR_NULL_INVALID_REQUEST, sLanguage);
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Internal error", e);
@@ -535,8 +538,9 @@ public class NullAuthSP extends ASelectHttpServlet
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse, String sResultCode)
-		throws IOException
+	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
+								String sResultCode, String sLanguage)
+	throws IOException
 	{
 		String sMethod = "handleResult()";
 
@@ -549,7 +553,7 @@ public class NullAuthSP extends ASelectHttpServlet
 				String sAsId = servletRequest.getParameter("a-select-server");
 				if (sRid == null || sAsUrl == null || sAsId == null) {
 					showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-							_propErrorMessages));
+							_propErrorMessages), sLanguage);
 				}
 				else {
 					StringBuffer sbSignature = new StringBuffer(sRid);
@@ -571,21 +575,21 @@ public class NullAuthSP extends ASelectHttpServlet
 			}
 			else {
 				showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-						_propErrorMessages));
+						_propErrorMessages), sLanguage);
 			}
 		}
 		catch (ASelectException eAS) // could not generate signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate NULL AuthSP signature", eAS);
 			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _propErrorMessages));
+					.getErrorMessage(Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _propErrorMessages), sLanguage);
 
 		}
 		catch (UnsupportedEncodingException eUE) // could not encode signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode NULL AuthSP signature", eUE);
 			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _propErrorMessages));
+					.getErrorMessage(Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _propErrorMessages), sLanguage);
 		}
 		catch (IOException eIO) // Could not write output
 		{

@@ -43,7 +43,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * An A-Select AuthSP that uses a database as back-end. <br>
  * <br>
@@ -419,6 +418,7 @@ public class DBAuthSP extends ASelectHttpServlet
 	{
 		String sMethod = "doGet()";
 		PrintWriter pwOut = null;
+		String sLanguage = null;
 
 		try {
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
@@ -426,6 +426,13 @@ public class DBAuthSP extends ASelectHttpServlet
 
 			String sQueryString = servletRequest.getQueryString();
 			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString);
+
+			sLanguage = (String) htServiceRequest.get("language");  // optional language code
+			if (sLanguage == null || sLanguage.trim().length() < 1)
+				sLanguage = null;
+			String sCountry = (String) htServiceRequest.get("country");  // optional country code
+			if (sCountry == null || sCountry.trim().length() < 1)
+				sCountry = null;				
 
 			// check if the request is an API call
 			String sRequestName = (String) htServiceRequest.get("request");
@@ -450,18 +457,6 @@ public class DBAuthSP extends ASelectHttpServlet
 					_systemLogger.log(Level.WARNING, MODULE, sMethod,
 							"Invalid request received: one or more mandatory parameters missing.");
 					throw new ASelectException(Errors.ERROR_DB_INVALID_REQUEST);
-				}
-
-				// optional country code
-				String sCountry = (String) htServiceRequest.get("country");
-				if (sCountry == null || sCountry.trim().length() < 1) {
-					sCountry = null;
-				}
-
-				// optional language code
-				String sLanguage = (String) htServiceRequest.get("language");
-				if (sLanguage == null || sLanguage.trim().length() < 1) {
-					sLanguage = null;
 				}
 
 				servletResponse.setContentType("text/html");
@@ -503,7 +498,7 @@ public class DBAuthSP extends ASelectHttpServlet
 		}
 		catch (ASelectException eAS) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Sending error to client", eAS);
-			handleResult(servletRequest, servletResponse, pwOut, eAS.getMessage());
+			handleResult(servletRequest, servletResponse, pwOut, eAS.getMessage(), sLanguage);
 		}
 		catch (IOException eIO) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error sending response", eIO);
@@ -514,7 +509,7 @@ public class DBAuthSP extends ASelectHttpServlet
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process request due to internal error", e);
-			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_COULD_NOT_AUTHENTICATE_USER);
+			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_COULD_NOT_AUTHENTICATE_USER, sLanguage);
 		}
 		finally {
 			if (pwOut != null) {
@@ -550,6 +545,13 @@ public class DBAuthSP extends ASelectHttpServlet
 		PreparedStatement oStatement = null;
 		ResultSet oResultSet = null;
 
+		String sLanguage = servletRequest.getParameter("language");  // optional language code
+		if (sLanguage == null || sLanguage.trim().length() < 1)
+			sLanguage = null;
+		String sCountry = servletRequest.getParameter("country");  // optional country code
+		if (sCountry == null || sCountry.trim().length() < 1)
+			sCountry = null;
+
 		try {
 			servletResponse.setContentType("text/html");
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
@@ -570,19 +572,7 @@ public class DBAuthSP extends ASelectHttpServlet
 						"Invalid request received: one or more mandatory parameters missing.");
 				throw new ASelectException(Errors.ERROR_DB_INVALID_REQUEST);
 			}
-
-			// optional country code
-			String sCountry = servletRequest.getParameter("country");
-			if (sCountry == null || sCountry.trim().length() < 1) {
-				sCountry = null;
-			}
-
-			// optional language code
-			String sLanguage = servletRequest.getParameter("language");
-			if (sLanguage == null || sLanguage.trim().length() < 1) {
-				sLanguage = null;
-			}
-
+			
 			if (sPassword.trim().length() < 1) // invalid password
 			{
 				HashMap htServiceRequest = new HashMap();
@@ -650,7 +640,7 @@ public class DBAuthSP extends ASelectHttpServlet
 						_authenticationLogger.log(new Object[] {
 							MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "granted"
 						});
-						handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_SUCCESS);
+						handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_SUCCESS, sLanguage);
 					}
 					else {
 
@@ -680,7 +670,7 @@ public class DBAuthSP extends ASelectHttpServlet
 							_authenticationLogger.log(new Object[] {
 								MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied"
 							});
-							handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_INVALID_PASSWORD);
+							handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_INVALID_PASSWORD, sLanguage);
 						}
 					}
 				}
@@ -689,13 +679,13 @@ public class DBAuthSP extends ASelectHttpServlet
 				{
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error authenticating user, cause: "
 							+ Errors.ERROR_DB_COULD_NOT_REACH_DB_SERVER);
-					handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_COULD_NOT_REACH_DB_SERVER);
+					handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_COULD_NOT_REACH_DB_SERVER, sLanguage);
 				}
 			}
 		}
 		catch (ASelectException eAS) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Sending error to client", eAS);
-			handleResult(servletRequest, servletResponse, pwOut, eAS.getMessage());
+			handleResult(servletRequest, servletResponse, pwOut, eAS.getMessage(), sLanguage);
 		}
 		catch (IOException eIO) // could not send response
 		{
@@ -709,12 +699,12 @@ public class DBAuthSP extends ASelectHttpServlet
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"Invalid request received: The retry counter parameter is invalid.");
-			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_INVALID_REQUEST);
+			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_INVALID_REQUEST, sLanguage);
 		}
 		catch (Exception e) // internal error
 		{
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process request due to internal error", e);
-			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_COULD_NOT_AUTHENTICATE_USER);
+			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_COULD_NOT_AUTHENTICATE_USER, sLanguage);
 		}
 		finally {
 			try {
@@ -766,13 +756,15 @@ public class DBAuthSP extends ASelectHttpServlet
 		String sCountry = (String) htServiceRequest.get("country");
 		String sLanguage = (String) htServiceRequest.get("language");
 
-		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error]", sError);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[rid]", sRid);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[as_url]", sAsUrl);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[uid]", sUid);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[db_server]", sMyUrl);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[a-select-server]", sAsId);
+		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error]", sError);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error_message]", sErrorMessage);
+		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", sLanguage);
+		sAuthenticateForm = Utils.replaceConditional(sAuthenticateForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[signature]", sSignature);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[retry_counter]", sRetryCounter);
 
@@ -808,7 +800,7 @@ public class DBAuthSP extends ASelectHttpServlet
 	 *            the s result code
 	 */
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-			PrintWriter pwOut, String sResultCode)
+			PrintWriter pwOut, String sResultCode, String sLanguage)
 	{
 		String sMethod = "handleResult()";
 		StringBuffer sbTemp = null;
@@ -822,7 +814,7 @@ public class DBAuthSP extends ASelectHttpServlet
 				String sAsId = servletRequest.getParameter("a-select-server");
 				if (sRid == null || sAsUrl == null || sAsId == null) {
 					showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-							_oErrorProperties));
+							_oErrorProperties), sLanguage);
 				}
 				else {
 
@@ -854,21 +846,21 @@ public class DBAuthSP extends ASelectHttpServlet
 			// Local error handling
 			{
 				showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-						_oErrorProperties));
+						_oErrorProperties), sLanguage);
 			}
 		}
 		catch (ASelectException eAS) // could not generate signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate DB AuthSP signature", eAS);
 			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_DB_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(sResultCode, _oErrorProperties));
+					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage);
 		}
 		catch (UnsupportedEncodingException eUE) // could not encode
 		// signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode DB AuthSP signature", eUE);
 			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_DB_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(sResultCode, _oErrorProperties));
+					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage);
 		}
 	}
 

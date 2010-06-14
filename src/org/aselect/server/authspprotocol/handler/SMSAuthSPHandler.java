@@ -106,7 +106,6 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 
 	private static final String ERROR_SMS_OK = "000";
 	private static final String ERROR_SMS_ACCESS_DENIED = "800";
-	private static final String ERROR_SMS_PREFIX = "SMS";
 
 	/* (non-Javadoc)
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#init(java.lang.Object, java.lang.Object)

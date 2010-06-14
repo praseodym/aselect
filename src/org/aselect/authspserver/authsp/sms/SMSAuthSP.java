@@ -375,14 +375,20 @@ public class SMSAuthSP extends ASelectHttpServlet
 	{
 		String sMethod = "doGet()";
 		PrintWriter pwOut = null;
-
+		String sLanguage = null;
+		
 		try {
-			setDisableCachingHttpHeaders(servletRequest, servletResponse);
-			pwOut = servletResponse.getWriter();
-
 			String sQueryString = servletRequest.getQueryString();
 			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "GET htServiceRequest=" + htServiceRequest);
+			sLanguage = (String) htServiceRequest.get("language");  // optional language code
+			if (sLanguage == null || sLanguage.trim().length() < 1)
+				sLanguage = null;
+			String sCountry = (String) htServiceRequest.get("country");  // optional country code
+			if (sCountry == null || sCountry.trim().length() < 1)
+				sCountry = null;
+			setDisableCachingHttpHeaders(servletRequest, servletResponse);
+			pwOut = servletResponse.getWriter();
 
 			// check if the request is an API call
 			String sRequestName = (String) htServiceRequest.get("request");
@@ -406,18 +412,6 @@ public class SMSAuthSP extends ASelectHttpServlet
 					_systemLogger.log(Level.WARNING, MODULE, sMethod,
 							"Invalid request received: one or more mandatory parameters missing.");
 					throw new ASelectException(Errors.ERROR_SMS_INVALID_REQUEST);
-				}
-
-				// optional country code
-				String sCountry = (String) htServiceRequest.get("country");
-				if (sCountry == null || sCountry.trim().length() < 1) {
-					sCountry = null;
-				}
-
-				// optional language code
-				String sLanguage = (String) htServiceRequest.get("language");
-				if (sLanguage == null || sLanguage.trim().length() < 1) {
-					sLanguage = null;
 				}
 
 				servletResponse.setContentType("text/html");
@@ -463,7 +457,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 		}
 		catch (ASelectException eAS) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Sending error to client", eAS);
-			handleResult(servletRequest, servletResponse, pwOut, eAS.getMessage());
+			handleResult(servletRequest, servletResponse, pwOut, eAS.getMessage(), sLanguage);
 		}
 		catch (IOException eIO) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error sending response", eIO);
@@ -474,11 +468,11 @@ public class SMSAuthSP extends ASelectHttpServlet
 		}
 		catch (SmsException e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not send sms", e);
-			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_SMS_COULD_NOT_AUTHENTICATE_USER);
+			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_SMS_COULD_NOT_AUTHENTICATE_USER, sLanguage);
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process request due to internal error", e);
-			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_SMS_COULD_NOT_AUTHENTICATE_USER);
+			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_SMS_COULD_NOT_AUTHENTICATE_USER, sLanguage);
 		}
 		finally {
 			if (pwOut != null) {
@@ -510,9 +504,17 @@ public class SMSAuthSP extends ASelectHttpServlet
 		PrintWriter pwOut = null;
 		String sUid = null;
 		String sPassword = null;
+		String sLanguage = null;
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "POST htServiceRequest=" + servletRequest);
 		try {
+			sLanguage = servletRequest.getParameter("language");  // optional language code
+			if (sLanguage == null || sLanguage.trim().length() < 1)
+				sLanguage = null;
+			String sCountry = servletRequest.getParameter("country");  // optional country code
+			if (sCountry == null || sCountry.trim().length() < 1)
+				sCountry = null;
+			
 			servletResponse.setContentType("text/html");
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 			pwOut = servletResponse.getWriter();
@@ -533,19 +535,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 						"Invalid request received: one or more mandatory parameters missing.");
 				throw new ASelectException(Errors.ERROR_SMS_INVALID_REQUEST);
 			}
-
-			// optional country code
-			String sCountry = servletRequest.getParameter("country");
-			if (sCountry == null || sCountry.trim().length() < 1) {
-				sCountry = null;
-			}
-
-			// optional language code
-			String sLanguage = servletRequest.getParameter("language");
-			if (sLanguage == null || sLanguage.trim().length() < 1) {
-				sLanguage = null;
-			}
-
+			
 			if (sPassword.trim().length() < 1) // invalid password, retry
 			{
 				HashMap htServiceRequest = new HashMap();
@@ -616,7 +606,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 						_authenticationLogger.log(new Object[] {
 							MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied"
 						});
-						handleResult(servletRequest, servletResponse, pwOut, sResultCode);
+						handleResult(servletRequest, servletResponse, pwOut, sResultCode, sLanguage);
 					}
 				}
 				else if (sResultCode.equals(Errors.ERROR_SMS_SUCCESS)) // success
@@ -627,19 +617,19 @@ public class SMSAuthSP extends ASelectHttpServlet
 					});
 
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Success");
-					handleResult(servletRequest, servletResponse, pwOut, sResultCode);
+					handleResult(servletRequest, servletResponse, pwOut, sResultCode, sLanguage);
 				}
 				else // other error
 				{
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error authenticating user, cause: "
 							+ sResultCode);
-					handleResult(servletRequest, servletResponse, pwOut, sResultCode);
+					handleResult(servletRequest, servletResponse, pwOut, sResultCode, sLanguage);
 				}
 			}
 		}
 		catch (ASelectException eAS) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Sending error to client", eAS);
-			handleResult(servletRequest, servletResponse, pwOut, eAS.getMessage());
+			handleResult(servletRequest, servletResponse, pwOut, eAS.getMessage(), sLanguage);
 		}
 		catch (IOException eIO) // could not send response
 		{
@@ -653,12 +643,12 @@ public class SMSAuthSP extends ASelectHttpServlet
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"Invalid request received: The retry counter parameter is invalid.");
-			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_SMS_INVALID_REQUEST);
+			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_SMS_INVALID_REQUEST, sLanguage);
 		}
 		catch (Exception e) // internal error
 		{
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process request due to internal error", e);
-			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_SMS_COULD_NOT_AUTHENTICATE_USER);
+			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_SMS_COULD_NOT_AUTHENTICATE_USER, sLanguage);
 		}
 		finally {
 			if (pwOut != null) {
@@ -704,6 +694,8 @@ public class SMSAuthSP extends ASelectHttpServlet
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[sms_server]", sMyUrl);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[a-select-server]", sAsId);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error_message]", sErrorMessage);
+		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", sLanguage);
+		sAuthenticateForm = Utils.replaceConditional(sAuthenticateForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[signature]", sSignature);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[retry_counter]", sRetryCounter);
 
@@ -740,7 +732,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 	 *            the s result code
 	 */
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-			PrintWriter pwOut, String sResultCode)
+			PrintWriter pwOut, String sResultCode, String sLanguage)
 	{
 		String sMethod = "handleResult()";
 		StringBuffer sbTemp = null;
@@ -754,7 +746,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 				String sAsId = servletRequest.getParameter("a-select-server");
 				if (sRid == null || sAsUrl == null || sAsId == null) {
 					showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-							_oErrorProperties));
+							_oErrorProperties), sLanguage);
 				}
 				else {
 					sbTemp = new StringBuffer(sRid);
@@ -784,21 +776,21 @@ public class SMSAuthSP extends ASelectHttpServlet
 			else // Local error handling
 			{
 				showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-						_oErrorProperties));
+						_oErrorProperties), sLanguage);
 			}
 		}
 		catch (ASelectException eAS) // could not generate signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate SMS AuthSP signature", eAS);
 			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_SMS_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(sResultCode, _oErrorProperties));
+					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage);
 		}
 		catch (UnsupportedEncodingException eUE) // could not encode
 		// signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode SMS AuthSP signature", eUE);
 			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_SMS_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(sResultCode, _oErrorProperties));
+					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage);
 		}
 	}
 

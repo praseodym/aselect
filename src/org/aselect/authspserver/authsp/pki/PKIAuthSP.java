@@ -702,6 +702,7 @@ public class PKIAuthSP extends HttpServlet
 		String sAsUrl = servletRequest.getParameter("as_url");
 		String sAsId = servletRequest.getParameter("a-select-server");
 		String sUid = servletRequest.getParameter("uid");
+		String sLanguage = servletRequest.getParameter("language");
 
 		if (sRid == null || sAsUrl == null || sAsId == null) {
 			String sError = Errors.PKI_INVALID_REQUEST;
@@ -709,6 +710,8 @@ public class PKIAuthSP extends HttpServlet
 			String sErrorForm = new String(_sErrorHtmlTemplate);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error]", sError);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
+			sErrorForm = Utils.replaceString(sErrorForm, "[language]", sLanguage);
+			sErrorForm = Utils.replaceConditional(sErrorForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
 			try {
 				sendPage(sErrorForm, servletRequest, servletResponse);
 			}

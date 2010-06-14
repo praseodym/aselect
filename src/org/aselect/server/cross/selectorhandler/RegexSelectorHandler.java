@@ -335,14 +335,17 @@ public class RegexSelectorHandler implements ISelectorHandler
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "parameter 'my_url' not found in service request");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
+			String sLanguage = (String) htServiceRequest.get("language");
 
 			String sLoginForm = _sCrossRegexSelectorPage;
-
 			sLoginForm = Utils.replaceString(sLoginForm, "[rid]", sRid);
 			sLoginForm = Utils.replaceString(sLoginForm, "[aselect_url]", sMyUrl);
 			sLoginForm = Utils.replaceString(sLoginForm, "[request]", "cross_login");
 			sLoginForm = Utils.replaceString(sLoginForm, "[a-select-server]", _sMyServerId);
-			sLoginForm = Utils.replaceString(sLoginForm, "[error_message]", _configManager.getErrorMessage(sErrorCode));
+			String sErrorMessage = _configManager.getErrorMessage(sErrorCode);
+			sLoginForm = Utils.replaceString(sLoginForm, "[error_message]", sErrorMessage);
+			sLoginForm = Utils.replaceString(sLoginForm, "[language]", sLanguage);
+			sLoginForm = Utils.replaceConditional(sLoginForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
 
 			StringBuffer sbUrl = new StringBuffer((String) htServiceRequest.get("my_url")).append("?request=error")
 					.append("&result_code=").append(Errors.ERROR_ASELECT_SERVER_CANCEL).append("&a-select-server=")

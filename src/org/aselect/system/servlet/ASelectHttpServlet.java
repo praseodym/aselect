@@ -183,7 +183,7 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	 * @param sErrorMessage
 	 *            The error message that should be shown in the error page.
 	 */
-	public void showErrorPage(PrintWriter pwOut, String sTemplate, String sError, String sErrorMessage)
+	public void showErrorPage(PrintWriter pwOut, String sTemplate, String sError, String sErrorMessage, String sLanguage)
 	{
 		String sMethod = "showErrorPage";
 		ASelectSystemLogger _oAuthSPSystemLogger = ASelectSystemLogger.getHandle();
@@ -192,6 +192,8 @@ public abstract class ASelectHttpServlet extends HttpServlet
 		String sErrorForm = new String(sTemplate);
 		sErrorForm = Utils.replaceString(sErrorForm, "[error]", sError);
 		sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
+		sErrorForm = Utils.replaceString(sErrorForm, "[language]", sLanguage);
+		sErrorForm = Utils.replaceConditional(sErrorForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
 		pwOut.println(sErrorForm);
 	}
 

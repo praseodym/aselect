@@ -247,9 +247,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 			ServletContext servletContext = servletConfig.getServletContext();
 			_sWorkingDir = (String) servletContext.getAttribute("working_dir");
 			if (_sWorkingDir == null) {
-				_systemLogger
-						.log(Level.SEVERE, MODULE, sMethod, "working_dir attribute not found in servlet context. ");
-
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "working_dir attribute not found in servlet context. ");
 				throw new ServletException(Errors.ERROR_RADIUS_INTERNAL_ERROR);
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'working_dir'");
@@ -257,7 +255,6 @@ public class RadiusAuthSP extends ASelectHttpServlet
 			_sFriendlyName = (String) servletContext.getAttribute("friendly_name");
 			if (_sFriendlyName == null) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "friendly_name not found in servlet context. ");
-
 				throw new ServletException(Errors.ERROR_RADIUS_INTERNAL_ERROR);
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'friendly_name'.");
@@ -275,7 +272,6 @@ public class RadiusAuthSP extends ASelectHttpServlet
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No valid 'authsp' config section found with id='"
 						+ sConfigID + "'.");
-
 				throw new ASelectException(Errors.ERROR_RADIUS_INTERNAL_ERROR, e);
 			}
 
@@ -384,17 +380,26 @@ public class RadiusAuthSP extends ASelectHttpServlet
 		String sMethod = "doGet";
 		PrintWriter pwOut = null;
 		String sQueryString = "";
+		String sLanguage = null;
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "servletRequest=" + servletRequest);
 		try {
-			servletResponse.setContentType("text/html");
-			pwOut = servletResponse.getWriter();
-			setDisableCachingHttpHeaders(servletRequest, servletResponse);
-
 			sQueryString = servletRequest.getQueryString();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "query=" + sQueryString);
 			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "htServiceRequest=" + htServiceRequest);
+
+			sLanguage = (String) htServiceRequest.get("language");  // optional language code
+			if (sLanguage == null || sLanguage.trim().length() < 1)
+				sLanguage = null;
+			String sCountry = (String) htServiceRequest.get("country");  // optional country code
+			if (sCountry == null || sCountry.trim().length() < 1)
+				sCountry = null;
+
+			servletResponse.setContentType("text/html");
+			setDisableCachingHttpHeaders(servletRequest, servletResponse);
+			pwOut = servletResponse.getWriter();
+
 			String sMyUrl = servletRequest.getRequestURL().toString();
 			htServiceRequest.put("my_url", sMyUrl);
 
@@ -408,19 +413,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 			if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sAsId == null) || (sSignature == null)) {
 				throw new ASelectException(Errors.ERROR_RADIUS_INVALID_REQUEST);
 			}
-
-			// optional country code
-			String sCountry = (String) htServiceRequest.get("country");
-			if (sCountry == null || sCountry.trim().length() < 1) {
-				sCountry = null;
-			}
-
-			// optional language code
-			String sLanguage = (String) htServiceRequest.get("language");
-			if (sLanguage == null || sLanguage.trim().length() < 1) {
-				sLanguage = null;
-			}
-
+			
 			sAsUrl = URLDecoder.decode(sAsUrl, "UTF-8");
 			sUid = URLDecoder.decode(sUid, "UTF-8");
 			sSignature = URLDecoder.decode(sSignature, "UTF-8");
@@ -466,7 +459,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 		}
 		catch (ASelectException eAS) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Sending error to client", eAS);
-			handleResult(servletRequest, servletResponse, pwOut, eAS.getMessage());
+			handleResult(servletRequest, servletResponse, pwOut, eAS.getMessage(), sLanguage);
 		}
 		catch (IOException eIO) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error sending response", eIO);
@@ -477,7 +470,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process request due to internal error", e);
-			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER);
+			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER, sLanguage);
 		}
 		finally {
 			if (pwOut != null) {
@@ -510,6 +503,13 @@ public class RadiusAuthSP extends ASelectHttpServlet
 		PrintWriter pwOut = null;
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "servletRequest=" + servletRequest);
+		String sLanguage = servletRequest.getParameter("language");  // optional language code
+		if (sLanguage == null || sLanguage.trim().length() < 1)
+			sLanguage = null;
+		String sCountry = servletRequest.getParameter("country");  // optional country code
+		if (sCountry == null || sCountry.trim().length() < 1)
+			sCountry = null;
+		
 		try {
 			pwOut = servletResponse.getWriter();
 			servletResponse.setContentType("text/html");
@@ -530,19 +530,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 						"Invalid request received: one or more mandatory parameters missing.");
 				throw new ASelectException(Errors.ERROR_RADIUS_INVALID_REQUEST);
 			}
-
-			// optional country code
-			String sCountry = servletRequest.getParameter("country");
-			if (sCountry == null || sCountry.trim().length() < 1) {
-				sCountry = null;
-			}
-
-			// optional language code
-			String sLanguage = servletRequest.getParameter("language");
-			if (sLanguage == null || sLanguage.trim().length() < 1) {
-				sLanguage = null;
-			}
-
+			
 			sPassword = sPassword.trim();
 			if (sPassword.length() < 1) {
 				HashMap htServiceRequest = new HashMap();
@@ -635,11 +623,11 @@ public class RadiusAuthSP extends ASelectHttpServlet
 				});
 			}
 
-			handleResult(servletRequest, servletResponse, pwOut, sResultCode);
+			handleResult(servletRequest, servletResponse, pwOut, sResultCode, sLanguage);
 		}
 		catch (ASelectException eAS) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Sending error to client", eAS);
-			handleResult(servletRequest, servletResponse, pwOut, eAS.getMessage());
+			handleResult(servletRequest, servletResponse, pwOut, eAS.getMessage(), sLanguage);
 		}
 		catch (IOException eIO) // could not send response
 		{
@@ -652,7 +640,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 		catch (Exception e) // internal error
 		{
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process request due to internal error", e);
-			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER);
+			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER, sLanguage);
 		}
 		finally {
 			if (pwOut != null) {
@@ -721,7 +709,8 @@ public class RadiusAuthSP extends ASelectHttpServlet
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[a-select-server]", sAsId);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[signature]", sSignature);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error_message]", sErrorMessage);
-
+		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", sLanguage);
+		sAuthenticateForm = Utils.replaceConditional(sAuthenticateForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[retry_counter]", sRetryCounter);
 
 		// optional country code
@@ -760,7 +749,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 	 *             If no output could be send to the client.
 	 */
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-			PrintWriter pwOut, String sResultCode)
+			PrintWriter pwOut, String sResultCode, String sLanguage)
 		throws IOException
 	{
 		String sMethod = "handleResult()";
@@ -773,7 +762,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 				String sAsId = servletRequest.getParameter("a-select-server");
 				if (sRid == null || sAsUrl == null || sAsId == null) {
 					showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-							_oErrorProperties));
+							_oErrorProperties), sLanguage);
 				}
 				else {
 
@@ -793,20 +782,20 @@ public class RadiusAuthSP extends ASelectHttpServlet
 			}
 			else {
 				showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-						_oErrorProperties));
+						_oErrorProperties), sLanguage);
 			}
 		}
 		catch (ASelectException eAS) // could not generate signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate Radius AuthSP signature", eAS);
 			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(sResultCode, _oErrorProperties));
+					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage);
 		}
 		catch (UnsupportedEncodingException eUE) // could not encode signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode Radius AuthSP signature", eUE);
 			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(sResultCode, _oErrorProperties));
+					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage);
 		}
 	}
 }

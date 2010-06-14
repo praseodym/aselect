@@ -121,8 +121,6 @@ public class DBAuthSPHandler implements IAuthSPProtocolHandler
 
 	private static final String ERROR_DB_INVALID_CREDENTIALS = "400";
 
-	private static final String ERROR_DB_PREFIX = "DB";
-
 	/* (non-Javadoc)
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#init(java.lang.Object, java.lang.Object)
 	 */

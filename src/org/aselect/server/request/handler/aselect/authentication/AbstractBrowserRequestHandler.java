@@ -283,6 +283,8 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 			String sErrorForm = _configManager.getForm("error", _sUserLanguage, _sUserCountry);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error]", sErrorCode);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
+			sErrorForm = Utils.replaceString(sErrorForm, "[language]", _sUserLanguage);
+			sErrorForm = Utils.replaceConditional(sErrorForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
 
 			String sRid = (String) htServiceRequest.get("rid");
 			if (sRid != null) {

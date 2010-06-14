@@ -563,6 +563,8 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			String sErrorForm = _configManager.getForm("error", _sUserLanguage, _sUserCountry);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error]", sErrorCode);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
+			sErrorForm = Utils.replaceString(sErrorForm, "[language]", _sUserLanguage);
+			sErrorForm = Utils.replaceConditional(sErrorForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
 
 			sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext);
 			pwOut.println(sErrorForm);

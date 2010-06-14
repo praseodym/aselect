@@ -270,9 +270,13 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 	{
 		String sMethod = "showErrorPage()";
 		try {
+			String sLanguage = (String) htServiceRequest.get("language");
 			String sErrorForm = _configManager.getForm("error");
 			sErrorForm = Utils.replaceString(sErrorForm, "[error]", sErrorCode);
-			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", _configManager.getErrorMessage(sErrorCode));
+			String sErrorMessage = _configManager.getErrorMessage(sErrorCode);
+			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
+			sErrorForm = Utils.replaceString(sErrorForm, "[language]", sLanguage);
+			sErrorForm = Utils.replaceConditional(sErrorForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
 
 			String sRid = (String) htServiceRequest.get("rid");
 			if (sRid != null)

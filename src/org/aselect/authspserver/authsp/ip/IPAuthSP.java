@@ -353,14 +353,22 @@ public class IPAuthSP extends ASelectHttpServlet
 		String sMethod = "doGet()";
 		PrintWriter pwOut = null;
 		String sQueryString = "";
+		String sLanguage = null;
 
 		try {
+			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString);
+			sLanguage = (String) htServiceRequest.get("language");  // optional language code
+			if (sLanguage == null || sLanguage.trim().length() < 1)
+				sLanguage = null;
+			String sCountry = (String) htServiceRequest.get("country");  // optional country code
+			if (sCountry == null || sCountry.trim().length() < 1)
+				sCountry = null;
+			
 			servletResponse.setContentType("text/html");
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 			pwOut = servletResponse.getWriter();
-
 			sQueryString = servletRequest.getQueryString();
-			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString);
+
 			String sMyUrl = servletRequest.getRequestURL().toString();
 			htServiceRequest.put("my_url", sMyUrl);
 
@@ -378,17 +386,6 @@ public class IPAuthSP extends ASelectHttpServlet
 				throw new ASelectException(Errors.ERROR_IP_INVALID_REQUEST);
 			}
 
-			// optional country code
-			String sCountry = (String) htServiceRequest.get("country");
-			if (sCountry == null || sCountry.trim().length() < 1) {
-				sCountry = null;
-			}
-
-			// optional language code
-			String sLanguage = (String) htServiceRequest.get("language");
-			if (sLanguage == null || sLanguage.trim().length() < 1) {
-				sLanguage = null;
-			}
 			_oAuthSPSystemLogger.log(Level.INFO, MODULE, sMethod, "IP GET {" + servletRequest + ", sQueryString="
 					+ sQueryString);
 
@@ -438,18 +435,18 @@ public class IPAuthSP extends ASelectHttpServlet
 				});
 			}
 
-			handleResult(servletRequest, servletResponse, pwOut, sResultCode);
+			handleResult(servletRequest, servletResponse, pwOut, sResultCode, sLanguage);
 		}
 		catch (ASelectException e) {
 			_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, "Sending error to client", e);
 
-			handleResult(servletRequest, servletResponse, pwOut, e.getMessage());
+			handleResult(servletRequest, servletResponse, pwOut, e.getMessage(), sLanguage);
 		}
 		catch (Exception e) {
 			_oAuthSPSystemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process request due to internal error",
 					e);
 
-			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER);
+			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER, sLanguage);
 		}
 		finally {
 			if (pwOut != null) {
@@ -590,7 +587,7 @@ public class IPAuthSP extends ASelectHttpServlet
 	 *             If no output could be send to the client.
 	 */
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-			PrintWriter pwOut, String sResultCode)
+			PrintWriter pwOut, String sResultCode, String sLanguage)
 		throws IOException
 	{
 		String sMethod = "handleResult()";
@@ -601,7 +598,7 @@ public class IPAuthSP extends ASelectHttpServlet
 				String sAsUrl = servletRequest.getParameter("as_url");
 				if (sRid == null || sAsUrl == null) {
 					showErrorPage(pwOut, _sErrorHTMLTemplate, sResultCode, _oAuthSPConfigManager.getErrorMessage(
-							sResultCode, _propErrorMessages));
+							sResultCode, _propErrorMessages), sLanguage);
 				}
 				else {
 					StringBuffer sbSignature = new StringBuffer(sRid);
@@ -625,7 +622,7 @@ public class IPAuthSP extends ASelectHttpServlet
 			else // Local error handling
 			{
 				showErrorPage(pwOut, _sErrorHTMLTemplate, sResultCode, _oAuthSPConfigManager.getErrorMessage(
-						sResultCode, _propErrorMessages));
+						sResultCode, _propErrorMessages), sLanguage);
 			}
 		}
 		catch (ASelectException e) // could not generate signature
@@ -633,14 +630,14 @@ public class IPAuthSP extends ASelectHttpServlet
 			_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate IP AuthSP signature", e);
 			String sErrorMessage = _oAuthSPConfigManager.getErrorMessage(Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER,
 					_propErrorMessages);
-			showErrorPage(pwOut, _sErrorHTMLTemplate, Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER, sErrorMessage);
+			showErrorPage(pwOut, _sErrorHTMLTemplate, Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER, sErrorMessage, sLanguage);
 		}
 		catch (UnsupportedEncodingException e) // could not encode signature
 		{
 			_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode IP AuthSP signature", e);
 			String sErrorMessage = _oAuthSPConfigManager.getErrorMessage(Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER,
 					_propErrorMessages);
-			showErrorPage(pwOut, _sErrorHTMLTemplate, Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER, sErrorMessage);
+			showErrorPage(pwOut, _sErrorHTMLTemplate, Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER, sErrorMessage, sLanguage);
 		}
 	}
 }

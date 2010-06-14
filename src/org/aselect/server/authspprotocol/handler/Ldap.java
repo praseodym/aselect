@@ -747,13 +747,15 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 					(String) htSessionContext.get("app_id"), "denied"
 				});
 
-				String sErrorTemplate = _configManager.getForm("error", _sUserLanguage, _sUserCountry);
-				sErrorTemplate = Utils.replaceString(sErrorTemplate, "[error]", ERROR_LDAP_ACCESS_DENIED);
+				String sErrorForm = _configManager.getForm("error", _sUserLanguage, _sUserCountry);
+				sErrorForm = Utils.replaceString(sErrorForm, "[error]", ERROR_LDAP_ACCESS_DENIED);
 				String sErrorMessage = _configManager.getErrorMessage(ERROR_LDAP_PREFIX + ERROR_LDAP_ACCESS_DENIED,
 						_sUserLanguage, _sUserCountry);
-				sErrorTemplate = Utils.replaceString(sErrorTemplate, "[error_message]", sErrorMessage);
-				sErrorTemplate = _configManager.updateTemplate(sErrorTemplate, htSessionContext);
-				pwOut.println(sErrorTemplate);
+				sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
+				sErrorForm = Utils.replaceString(sErrorForm, "[language]", _sUserLanguage);
+				sErrorForm = Utils.replaceConditional(sErrorForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
+				sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext);
+				pwOut.println(sErrorForm);
 			}
 			else {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error response received: '" + sResponse
@@ -845,6 +847,8 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[user_name]", "");
 
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[error_message]", sErrorMessage);
+			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[language]", _sUserLanguage);
+			sDirectLoginForm = Utils.replaceConditional(sDirectLoginForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
 
 			StringBuffer sbUrl = new StringBuffer(sMyUrl).append("?request=error").append("&result_code=").append(
 					Errors.ERROR_ASELECT_SERVER_CANCEL).append("&a-select-server=").append(sServerId).append("&rid=")

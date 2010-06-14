@@ -296,6 +296,61 @@ public class Utils
 		}
 		return xBuffer.toString();
 	}
+	
+	/**
+	 * Replace text based on a condition. Syntax:
+	 * [<keyword>=<true_branch>,<false_branch>] Currently no escape mechanism
+	 * for the comma and right bracket.
+	 * 
+	 * @param sText
+	 * 			The source text.
+	 * @param sKeyword
+	 *            The keyword used to look for the conditional replacement.
+	 * @param bCondition
+	 *            Use the true branch of the condition?
+	 * @return result with replacements applied
+	 */
+	public static String replaceConditional(String sText, String sKeyword, boolean bCondition)
+	{
+		String sMethod = "replaceConditional";
+		String sSearch = "[" + sKeyword + ",";
+		int idx, len = sSearch.length();
+		String sResult = "";
+
+		if (sText == null)
+			return sText;
+
+		ASelectSystemLogger logger = ASelectSystemLogger.getHandle();
+		logger.log(Level.INFO, MODULE, sMethod, "Search="+sSearch);
+		while (true) {
+			idx = sText.indexOf(sSearch);
+			//logger.log(Level.INFO, MODULE, sMethod, "Text="+sText+" idx="+idx);
+			if (idx < 0)
+				break;
+			int iComma = sText.indexOf(',', idx + len);
+			int iRight = sText.indexOf(']', (iComma >= 0) ? iComma : idx + len);
+			//logger.log(Level.INFO, MODULE, sMethod, "comma="+iComma+" right="+iRight);
+			if (iRight < 0) {
+				sResult += sText.substring(0, idx + len);
+				sText = sText.substring(idx + len);
+				continue;
+			}
+			if (iComma < 0) {
+				sResult += sText.substring(0, iRight+1);
+				sText = sText.substring(iRight+1);
+				continue;
+			}
+			// Comma and right bracket found
+			if (bCondition) {  // Use the true part
+				sResult += sText.substring(0, idx) + sText.substring(idx + len, iComma);
+			}
+			else {  // Use the false part
+				sResult += sText.substring(0, idx) + sText.substring(iComma+1, iRight);
+			}
+			sText = sText.substring(iRight+1);
+		}
+		return sResult + sText;
+	}
 
 	/**
 	 * Converts a CGI-based String to a hashtable. <br>
