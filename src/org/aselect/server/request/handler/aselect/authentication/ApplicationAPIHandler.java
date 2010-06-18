@@ -573,11 +573,19 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unknown TGT");
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT);
 		}
+		try {
+			sLanguage = oInputMessage.getParam("language");
+		}
+		catch (ASelectCommunicationException eAC) {
+		}
+		
 		// check if request should be signed
 		if (_applicationManager.isSigningRequired()) {
 			// Note: we should do this earlier, but we don't have an app_id until now
 			String sAppId = (String) htTGTContext.get("app_id");
 			StringBuffer sbData = new StringBuffer(sASelectServer).append(sEncTGT);
+			if (sLanguage != null)
+				sbData = sbData.append(sLanguage);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "Signing required, sbData=" + sbData);
 			verifyApplicationSignature(oInputMessage, sbData.toString(), sAppId);
 		}
@@ -585,11 +593,6 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 
 		// 20091113, Bauke: overwrite user's preferred language taken from filter
 		// Also if the filter does not pass a language, let it know our favourite!
-		try {
-			sLanguage = oInputMessage.getParam("language");
-		}
-		catch (ASelectCommunicationException eAC) {
-		}
 		if (sLanguage != null) {
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "Request language=" + sLanguage);
 			htTGTContext.put("language", sLanguage);

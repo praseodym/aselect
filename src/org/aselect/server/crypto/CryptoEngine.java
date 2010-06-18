@@ -519,7 +519,7 @@ public class CryptoEngine
 	{
 		String sMethod = "verifyApplicationSignature()";
 		boolean bVerified = false;
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "==== VAS " + sSignature);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "==== VAS " + sSignature + " Date: "+sData);
 		try {
 			Signature oSignature = null;
 			if (_oSignatureProvider != null)

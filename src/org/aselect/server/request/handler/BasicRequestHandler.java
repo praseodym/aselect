@@ -107,10 +107,10 @@ public abstract class BasicRequestHandler
 				sbData.append(sAuthsp);
 			if (sCountry != null)
 				sbData.append(sCountry);
-			if (sForcedLogon != null)
-				sbData.append(sForcedLogon);
 			if (sForcedAuthn != null)
 				sbData.append(sForcedAuthn);
+			if (sForcedLogon != null)
+				sbData.append(sForcedLogon);
 			if (sLanguage != null)
 				sbData.append(sLanguage);
 			if (sRemoteOrg != null)
