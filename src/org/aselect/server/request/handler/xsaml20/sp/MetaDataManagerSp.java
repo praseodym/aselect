@@ -84,9 +84,14 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 
 		sam = _configManager.getSection(null, "sam");
 		agent = _configManager.getSection(sam, "agent");
-		Object metaResourcegroup = _configManager.getSection(agent, "resourcegroup", "id=" + sFederationIdpKeyword);
+		try {
+			Object metaResourcegroup = _configManager.getSection(agent, "resourcegroup", "id=" + sFederationIdpKeyword);
+			idpSection = _configManager.getSection(metaResourcegroup, "resource");
+		}
+		catch (ASelectConfigException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No resourcegroup: "+sFederationIdpKeyword+" configured");
+		}
 
-		idpSection = _configManager.getSection(metaResourcegroup, "resource");
 		while (idpSection != null) {
 			// Look for "id" "url" and "session_sync"
 			String sId = _configManager.getParam(idpSection, "id");

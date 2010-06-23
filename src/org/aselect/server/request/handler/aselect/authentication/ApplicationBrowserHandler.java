@@ -329,6 +329,7 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.exception.ASelectStorageException;
+import org.aselect.system.exception.ASelectUDBException;
 import org.aselect.system.logging.AuthenticationLogger;
 import org.aselect.system.sam.agent.SAMResource;
 import org.aselect.system.utils.Tools;
@@ -615,7 +616,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		String sMethod = "handleDirectLogin()";
 		String sRid = null;
 
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "====");
+		String sRequest = (String) htServiceRequest.get("request");
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "==== "+sRequest);
 		try {
 			sRid = (String) htServiceRequest.get("rid");
 			String sAuthSPId = (String) _htSessionContext.get("direct_authsp");
@@ -714,7 +716,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						}
 					}
 					// TGT found but not sufficient.
-					// Authenicate with same user-id that was stored in TGT
+					// Authenticate with same user-id that was stored in TGT
 					HashMap htTGTContext = _tgtManager.getTGT(sTgt);
 
 					// If TGT was issued in cross mode, the user now has to
@@ -728,6 +730,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						handleCrossLogin(htServiceRequest, servletResponse, pwOut);
 						return;
 					}
+					if ("direct_login2".equals(sRequest)) {
+						isUserAselectEnabled(sUid);  // Check the UDB using the "AselectAccountEnabled" field
+					}
 					// User was originally authenticated at this A-Select Server
 					// The userid is already known from the TGT
 					htServiceRequest.put("user_id", sUid);
@@ -737,6 +742,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					return;
 				}
 			}
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "No TGT, Continue");
 			// no TGT found or killed (other uid)
 			if (!_configManager.isUDBEnabled() || _htSessionContext.containsKey("forced_organization")) {
 				handleCrossLogin(htServiceRequest, servletResponse, pwOut);
@@ -747,8 +753,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				htServiceRequest.put("user_id", sForcedUid);
 				// showDirectLoginForm(htServiceRequest,pwOut);
 			}
-			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId,
-					_sUserLanguage, _sUserCountry);
+			if ("direct_login2".equals(sRequest)) {
+				String sUid = (String) htServiceRequest.get("user_id");
+				isUserAselectEnabled(sUid);  // Check the UDB using the "AselectAccountEnabled" field
+			}
+			
+			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut,
+											_sMyServerId, _sUserLanguage, _sUserCountry);
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -2035,20 +2046,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST, eNF);
 			}
 
-			// check user ID
-			IUDBConnector oUDBConnector = null;
-			try {
-				oUDBConnector = UDBConnectorFactory.getUDBConnector();
-			}
-			catch (ASelectException e) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to connect with UDB.", e);
-				throw e;
-			}
-
-			if (!oUDBConnector.isUserEnabled(sUID)) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request received: Unknown UID.");
-				throw new ASelectException(Errors.ERROR_ASELECT_UDB_UNKNOWN_USER);
-			}
+			isUserAselectEnabled(sUID);  // Check the UDB using the "AselectAccountEnabled" field
 
 			// Extend session context
 			htSessionContext.put("user_id", sUID);
@@ -2076,6 +2074,35 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
+	}
+
+	/**
+	 * Checks if the user is ASelect enabled.
+	 * 
+	 * @param sUID
+	 *            the uid
+	 * @throws ASelectException
+	 * @throws ASelectUDBException
+	 */
+	private void isUserAselectEnabled(String sUID)
+	throws ASelectException, ASelectUDBException
+	{
+		String sMethod = "isUserAselectEnabled";
+		IUDBConnector oUDBConnector = null;
+		
+		try {
+			oUDBConnector = UDBConnectorFactory.getUDBConnector();
+		}
+		catch (ASelectException e) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to connect to the UDB.", e);
+			throw e;
+		}
+
+		if (!oUDBConnector.isUserEnabled(sUID)) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unknown user id or user account is not enabled.");
+			throw new ASelectException(Errors.ERROR_ASELECT_UDB_UNKNOWN_USER);
+		}
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "User is enabled: "+sUID);
 	}
 
 	/**

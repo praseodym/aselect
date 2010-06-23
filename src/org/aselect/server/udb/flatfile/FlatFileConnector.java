@@ -341,16 +341,14 @@ public class FlatFileConnector implements IUDBConnector
 			}
 			else {
 				StringBuffer sb = new StringBuffer("User not A-Select enabled: '");
-				sb.append(sUserId).append("'");
-				_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, sb.toString(), new ASelectUDBException(
-						Errors.ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED));
+				sb.append(sUserId).append("' ").append(Errors.ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED);
+				_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, sb.toString());
 			}
 		}
 		else {
 			StringBuffer sb = new StringBuffer("User not found: '");
-			sb.append(sUserId).append("'");
-			_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, sb.toString(), new ASelectUDBException(
-					Errors.ERROR_ASELECT_UDB_UNKNOWN_USER));
+			sb.append(sUserId).append("' ").append(Errors.ERROR_ASELECT_UDB_UNKNOWN_USER);
+			_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, sb.toString());
 		}
 		return bEnabled;
 	}

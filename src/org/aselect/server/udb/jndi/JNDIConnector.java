@@ -623,7 +623,7 @@ public class JNDIConnector implements IUDBConnector
 
 			// Check if we got a result
 			if (oSearchResults.hasMore()) {
-				// Put all data in a hastable.
+				// Put all data in a hash table.
 				// We only handle the first returned record.
 				SearchResult oSearchResult = (SearchResult) oSearchResults.next();
 				oAttributes = oSearchResult.getAttributes();
@@ -636,11 +636,9 @@ public class JNDIConnector implements IUDBConnector
 							sAttributeValue = (String) oAttribute.get();
 						}
 						catch (Exception e) {
-							StringBuffer sb = new StringBuffer(
-									"Error retrieving A-Select account enabled attribute value for user '");
+							StringBuffer sb = new StringBuffer("Error retrieving A-Select account enabled attribute value for user '");
 							sb.append(sUserId).append("'");
 							_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sb.toString(), e);
-
 						}
 						if (sAttributeValue != null && sAttributeValue.equalsIgnoreCase("true")) {
 							// account enabled
@@ -655,9 +653,8 @@ public class JNDIConnector implements IUDBConnector
 				}
 				if (!bIsEnabled) {
 					StringBuffer sb = new StringBuffer("User not A-Select enabled: '");
-					sb.append(sUserId).append("'");
-					_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, sb.toString(), new ASelectUDBException(
-							Errors.ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED));
+					sb.append(sUserId).append("' ").append(Errors.ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED);
+					_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, sb.toString());
 				}
 			}
 			else {
