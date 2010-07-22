@@ -287,6 +287,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			authnRequest.setProviderName(_sServerId);
 			authnRequest.setVersion(SAMLVersion.VERSION_20);
 			authnRequest.setIssuer(issuer);
+			authnRequest.setIssueInstant(new DateTime());  // 20100712
 			authnRequest.setRequestedAuthnContext(requestedAuthnContext);
 
 			// Check if we have to set the ForceAuthn attribute

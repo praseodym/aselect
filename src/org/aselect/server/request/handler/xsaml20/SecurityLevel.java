@@ -29,7 +29,7 @@ public class SecurityLevel
 	final private static int LEVEL_MIN = 0;  // used for searching
 	final private static int LEVEL_NULL = 5;
 	final private static int LEVEL_LOW = 10;
-	final private static int LEVEL_BETTER = 15;
+	final private static int LEVEL_BETTER = 15;  // 20100714 was 5?!?
 	final private static int LEVEL_MEDIUM = 20;
 	final private static int LEVEL_HIGH = 30;
 	final private static int LEVEL_MAX = 999; // used for searching
@@ -43,7 +43,7 @@ public class SecurityLevel
 	// public final static String BN_EMPTY = "empty"; // no longer 20090501
 	final private static String BN_NUL = "5";
 	final private static String BN_LAAG = "10";
-	final private static String BN_BETTER = "5";
+	final private static String BN_BETTER = "15";
 	final private static String BN_MEDIUM = "20";
 	final private static String BN_HOOG = "30";
 	

@@ -731,7 +731,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						return;
 					}
 					if ("direct_login2".equals(sRequest)) {
-						isUserAselectEnabled(sUid);  // Check the UDB using the "AselectAccountEnabled" field
+						if (!isUserAselectEnabled(sUid)) {  // Check the UDB using the "AselectAccountEnabled" field
+							htServiceRequest.put("password", "");  // Force error message in handleDirectLoginRequest()
+						}
 					}
 					// User was originally authenticated at this A-Select Server
 					// The userid is already known from the TGT
@@ -755,9 +757,12 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 			if ("direct_login2".equals(sRequest)) {
 				String sUid = (String) htServiceRequest.get("user_id");
-				isUserAselectEnabled(sUid);  // Check the UDB using the "AselectAccountEnabled" field
+				if (!isUserAselectEnabled(sUid)) {  // Check the UDB using the "AselectAccountEnabled" field
+					htServiceRequest.put("password", "");  // Force error message in handleDirectLoginRequest()
+				}
 			}
 			
+			// Will issue a TGT if everything is ok
 			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut,
 											_sMyServerId, _sUserLanguage, _sUserCountry);
 		}
@@ -2084,7 +2089,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @throws ASelectException
 	 * @throws ASelectUDBException
 	 */
-	private void isUserAselectEnabled(String sUID)
+	private boolean isUserAselectEnabled(String sUID)
 	throws ASelectException, ASelectUDBException
 	{
 		String sMethod = "isUserAselectEnabled";
@@ -2100,9 +2105,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 		if (!oUDBConnector.isUserEnabled(sUID)) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unknown user id or user account is not enabled.");
-			throw new ASelectException(Errors.ERROR_ASELECT_UDB_UNKNOWN_USER);
+			//throw new ASelectException(Errors.ERROR_ASELECT_UDB_UNKNOWN_USER);
+			return false;
 		}
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "User is enabled: "+sUID);
+		return true;
 	}
 
 	/**

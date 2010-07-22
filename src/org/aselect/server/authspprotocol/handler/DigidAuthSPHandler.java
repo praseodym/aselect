@@ -107,7 +107,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"No config item 'default_shared_secret' found in 'authsp' section", e);
+						"No config item 'default_betrouwbaarheidsniveau' found in 'authsp' section", e);
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -433,6 +433,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			String sBetrouwbaarheidsniveau = (String) response.get("betrouwbaarheidsniveau");
 			if (sBetrouwbaarheidsniveau == null)
 				sBetrouwbaarheidsniveau = (String) response.get("authsp_level"); // if not DigiD
+			
 			String sRid = (String) response.get("rid");
 			String sOrganization = (String) response.get("organization");
 			String sAppID = (String) response.get("app_id");

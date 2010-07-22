@@ -154,7 +154,7 @@ public class Saml20_ArtifactManager extends StorageManager
 		if (addedPatching.contains("nvl_attr_noxmlns")) {
 			sValue = sValue.replaceAll("AttributeValue xmlns:xs=[^ ]* xsi:type=", "AttributeValue xsi:type=");
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "value=" + sValue);
+		//_systemLogger.log(Level.INFO, MODULE, sMethod, "value=" + sValue);
 		if ( addedPatching.contains("nvl_attr_noxsi")) {
 			// We have <saml:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">
 			sValue = sValue.replaceAll("AttributeValue xsi:type=", "AttributeValue type=");
