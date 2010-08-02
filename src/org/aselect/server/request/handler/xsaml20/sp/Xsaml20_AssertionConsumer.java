@@ -375,7 +375,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					// Since the "attributes" Attribute is used for gathering, add the Saml Attributes to it
 					HashMap<String, String> hmAttributes;
 					if (sEncodedAttributes != null) {
-						hmAttributes = Utils.deserializeAttributes(sEncodedAttributes);
+						hmAttributes = org.aselect.server.utils.Utils.deserializeAttributes(sEncodedAttributes);
 					}
 					else {
 						hmAttributes = new HashMap<String, String>();
@@ -422,7 +422,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					}
 					
 					// And serialize them back to where they came from
-					sEncodedAttributes = Utils.serializeAttributes(hmSamlAttributes);
+					sEncodedAttributes = org.aselect.server.utils.Utils.serializeAttributes(hmSamlAttributes);
 					hmSamlAttributes.put("attributes", sEncodedAttributes);
 					
 					// This is the quickest way to get "name_id" into the Context

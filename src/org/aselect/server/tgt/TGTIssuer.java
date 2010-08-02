@@ -357,7 +357,7 @@ public class TGTIssuer
 			
 			// 20100228, Bauke: changed from "remote_attributes" to "attributes"
 			String sRemoteAttributes = (htRemoteAttributes==null)? null: (String)htRemoteAttributes.get("attributes");
-			HashMap htSerAttributes = (sRemoteAttributes==null)? null: Utils.deserializeAttributes(sRemoteAttributes);
+			HashMap htSerAttributes = (sRemoteAttributes==null)? null: org.aselect.server.utils.Utils.deserializeAttributes(sRemoteAttributes);
 			// 20100228, Bauke: when a remote system has changed the language, copy it here
 			Utils.copyHashmapValue("language", htTGTContext, htSessionContext);  // default
 			if (htSerAttributes != null) {
@@ -541,7 +541,7 @@ public class TGTIssuer
 
 			// 20100228, Bauke: changed from "remote_attributes" to "attributes"
 			String sRemoteAttributes = (htAdditional==null)? null: (String) htAdditional.get("attributes");
-			HashMap htSerAttributes = (sRemoteAttributes==null)? null: Utils.deserializeAttributes(sRemoteAttributes);
+			HashMap htSerAttributes = (sRemoteAttributes==null)? null: org.aselect.server.utils.Utils.deserializeAttributes(sRemoteAttributes);
 			// 20100228, Bauke: when a remote system has changed the language, copy it here
 			_systemLogger.log(Level.FINE, MODULE, sMethod, "htSessionContext lang="+htSessionContext.get("language")+"htTGTContext lang="+htTGTContext.get("language"));
 			Utils.copyHashmapValue("language", htTGTContext, htSessionContext);  // default
@@ -629,7 +629,7 @@ public class TGTIssuer
 				Tools.pauseSensorData(_systemLogger, htSessionContext);
 				_sessionManager.update(sRid, htSessionContext); // Write session
 				// The user must choose his organization
-				String sSelectForm = Utils.presentOrganizationChoice(_configManager, htSessionContext,
+				String sSelectForm = org.aselect.server.utils.Utils.presentOrganizationChoice(_configManager, htSessionContext,
 						sRid, (String)htTGTContext.get("language"), hUserOrganizations);
 				
 				oHttpServletResponse.setContentType("text/html");

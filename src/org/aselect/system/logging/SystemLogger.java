@@ -13,7 +13,7 @@ package org.aselect.system.logging;
 
 import java.util.logging.Level;
 
-import org.aselect.system.configmanager.ConfigManager;
+import org.aselect.system.configmanager.IConfigManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 
@@ -58,7 +58,7 @@ public class SystemLogger implements ISystemLogger
 	/* (non-Javadoc)
 	 * @see org.aselect.system.logging.ISystemLogger#init(java.lang.String, java.lang.String, org.aselect.system.configmanager.ConfigManager, java.lang.Object, java.lang.String)
 	 */
-	public void init(String logFileNamePrefix, String loggerNamespace, ConfigManager configManager,
+	public void init(String logFileNamePrefix, String loggerNamespace, IConfigManager configManager,
 			Object logTargetConfig, String workingDir)
 	throws ASelectException
 	{

@@ -14,6 +14,7 @@ package org.aselect.system.logging;
 import java.util.logging.Level; //import org.apache.log4j.Level;
 
 import org.aselect.system.configmanager.ConfigManager;
+import org.aselect.system.configmanager.IConfigManager;
 import org.aselect.system.exception.ASelectException;
 
 public interface ISystemLogger
@@ -50,7 +51,7 @@ public interface ISystemLogger
 	 * @throws ASelectException
 	 *             if initializing failed (missing config items)
 	 */
-	public abstract void init(String sLogFileNamePrefix, String sLoggerNamespace, ConfigManager oConfigManager,
+	public abstract void init(String sLogFileNamePrefix, String sLoggerNamespace, IConfigManager oConfigManager,
 			Object oLogTargetConfig, String sWorkingDir)
 	throws ASelectException;
 

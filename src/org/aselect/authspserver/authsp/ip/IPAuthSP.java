@@ -597,8 +597,11 @@ public class IPAuthSP extends ASelectHttpServlet
 				String sRid = servletRequest.getParameter("rid");
 				String sAsUrl = servletRequest.getParameter("as_url");
 				if (sRid == null || sAsUrl == null) {
+					// RH, 20100621, Remove cyclic dependency system<->server
 					showErrorPage(pwOut, _sErrorHTMLTemplate, sResultCode, _oAuthSPConfigManager.getErrorMessage(
-							sResultCode, _propErrorMessages), sLanguage);
+//							sResultCode, _propErrorMessages), sLanguage);
+							sResultCode, _propErrorMessages), sLanguage, _oAuthSPSystemLogger);
+					
 				}
 				else {
 					StringBuffer sbSignature = new StringBuffer(sRid);
@@ -621,8 +624,10 @@ public class IPAuthSP extends ASelectHttpServlet
 			}
 			else // Local error handling
 			{
+				// RH, 20100621, Remove cyclic dependency system<->server
 				showErrorPage(pwOut, _sErrorHTMLTemplate, sResultCode, _oAuthSPConfigManager.getErrorMessage(
-						sResultCode, _propErrorMessages), sLanguage);
+//						sResultCode, _propErrorMessages), sLanguage);
+						sResultCode, _propErrorMessages), sLanguage, _oAuthSPSystemLogger);
 			}
 		}
 		catch (ASelectException e) // could not generate signature
@@ -630,14 +635,18 @@ public class IPAuthSP extends ASelectHttpServlet
 			_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate IP AuthSP signature", e);
 			String sErrorMessage = _oAuthSPConfigManager.getErrorMessage(Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER,
 					_propErrorMessages);
-			showErrorPage(pwOut, _sErrorHTMLTemplate, Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER, sErrorMessage, sLanguage);
+			// RH, 20100621, Remove cyclic dependency system<->server
+//			showErrorPage(pwOut, _sErrorHTMLTemplate, Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER, sErrorMessage, sLanguage);
+			showErrorPage(pwOut, _sErrorHTMLTemplate, Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER, sErrorMessage, sLanguage, _oAuthSPSystemLogger);
 		}
 		catch (UnsupportedEncodingException e) // could not encode signature
 		{
 			_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode IP AuthSP signature", e);
 			String sErrorMessage = _oAuthSPConfigManager.getErrorMessage(Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER,
 					_propErrorMessages);
-			showErrorPage(pwOut, _sErrorHTMLTemplate, Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER, sErrorMessage, sLanguage);
+			// RH, 20100621, Remove cyclic dependency system<->server
+//			showErrorPage(pwOut, _sErrorHTMLTemplate, Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER, sErrorMessage, sLanguage);
+			showErrorPage(pwOut, _sErrorHTMLTemplate, Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER, sErrorMessage, sLanguage, _oAuthSPSystemLogger);
 		}
 	}
 }

@@ -71,8 +71,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.aselect.server.log.ASelectSystemLogger;
+// RH, 20100621, Remove cyclic dependency system<->server
+//import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
+import org.aselect.system.logging.ISystemLogger;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.utils.Utils;
 
@@ -183,11 +185,13 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	 * @param sErrorMessage
 	 *            The error message that should be shown in the error page.
 	 */
-	public void showErrorPage(PrintWriter pwOut, String sTemplate, String sError, String sErrorMessage, String sLanguage)
+//	public void showErrorPage(PrintWriter pwOut, String sTemplate, String sError, String sErrorMessage, String sLanguage)
+	public void showErrorPage(PrintWriter pwOut, String sTemplate, String sError, String sErrorMessage, String sLanguage, ISystemLogger sLogger)
 	{
 		String sMethod = "showErrorPage";
-		ASelectSystemLogger _oAuthSPSystemLogger = ASelectSystemLogger.getHandle();
-		_oAuthSPSystemLogger.log(Level.INFO, MODULE, sMethod, "FORM[" + sTemplate + "] " + sError + ":" + sErrorMessage);
+//		ASelectSystemLogger _oAuthSPSystemLogger = ASelectSystemLogger.getHandle();
+//		_oAuthSPSystemLogger.log(Level.INFO, MODULE, sMethod, "FORM[" + sTemplate + "] " + sError + ":" + sErrorMessage);
+		sLogger.log(Level.INFO, MODULE, sMethod, "FORM[" + sTemplate + "] " + sError + ":" + sErrorMessage);
 
 		String sErrorForm = new String(sTemplate);
 		sErrorForm = Utils.replaceString(sErrorForm, "[error]", sError);

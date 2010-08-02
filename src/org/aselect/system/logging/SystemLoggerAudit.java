@@ -90,7 +90,7 @@ import java.util.logging.Level;
 
 import org.apache.log4j.Logger;
 
-import org.aselect.system.configmanager.ConfigManager;
+import org.aselect.system.configmanager.IConfigManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 
@@ -230,7 +230,7 @@ public class SystemLoggerAudit implements ISystemLogger
 	 * @throws ASelectException
 	 *             if initializing failed (missing config items)
 	 */
-	public void init(String sLogFileNamePrefix, String sLoggerNamespace, ConfigManager oConfigManager,
+	public void init(String sLogFileNamePrefix, String sLoggerNamespace, IConfigManager oConfigManager,
 			Object oLogTargetConfig, String sWorkingDir)
 		throws ASelectException
 	{

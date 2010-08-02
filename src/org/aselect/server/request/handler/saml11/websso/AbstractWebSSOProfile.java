@@ -259,7 +259,7 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "No parameter 'attributes' found");
 			}
 			else {
-				htAttributes = Utils.deserializeAttributes(sAttributes);
+				htAttributes = org.aselect.server.utils.Utils.deserializeAttributes(sAttributes);
 				if (_bSendAttributeStatement) {
 					oSAMLAttributeStatement = generateSAMLAttributeStatement(sUid, htAttributes);
 					vSAMLStatements.add(oSAMLAttributeStatement);

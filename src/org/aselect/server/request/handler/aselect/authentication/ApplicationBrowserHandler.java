@@ -690,7 +690,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 								Tools.pauseSensorData(_systemLogger, _htSessionContext);
 								_sessionManager.update(sRid, _htSessionContext); // Write session
 								// The user must choose his organization
-								String sSelectForm = Utils.presentOrganizationChoice(_configManager, _htSessionContext,
+								String sSelectForm = org.aselect.server.utils.Utils.presentOrganizationChoice(_configManager, _htSessionContext,
 										sRid, (String)htTGTContext.get("language"), hUserOrganizations);
 								servletResponse.setContentType("text/html");
 								pwOut.println(sSelectForm);

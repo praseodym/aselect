@@ -30,6 +30,7 @@ import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.*;
 import org.aselect.server.request.handler.saml11.common.AssertionSessionManager;
+import org.aselect.server.utils.Utils;
 import org.aselect.system.communication.client.IClientCommunicator;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;

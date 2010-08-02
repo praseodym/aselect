@@ -561,7 +561,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing required parameters");
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
-		String sTgT = Utils.decodeCredentials(sEncTGT, _systemLogger);
+		String sTgT = org.aselect.server.utils.Utils.decodeCredentials(sEncTGT, _systemLogger);
 		if (sTgT == null) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Can not decode credentials");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
@@ -823,7 +823,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			sToken = SamlTools.createAttributeToken(_sServerUrl, sTGT, htSelectedAttr);
 			htAttribs.put("saml_attribute_token", sToken);
 		}
-		String sSerializedAttributes = Utils.serializeAttributes(htAttribs);
+		String sSerializedAttributes = org.aselect.server.utils.Utils.serializeAttributes(htAttribs);
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED SerAttr="
 				+ Utils.firstPartOf(sSerializedAttributes, 40) + " Token=" + Utils.firstPartOf(sToken, 40));
 

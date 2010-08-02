@@ -615,7 +615,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 				// Gather attributes, including the attributes from the ticket context
 				HashMap htAttributes = getAttributesFromTgtAndGatherer(htTGTContext);
-				String sAllAttributes = Utils.serializeAttributes(htAttributes);
+				String sAllAttributes = org.aselect.server.utils.Utils.serializeAttributes(htAttributes);
 
 				// 20090910, Bauke: new mechanism to pass the attributes
 				HashMap htAllAttributes = new HashMap();

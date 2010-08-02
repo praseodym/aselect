@@ -144,7 +144,7 @@ public class Saml11Builder
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "genAUTH sAuthSPID=" + sAuthSPID + " sAppID" + sAppID);
 			String sAttributes = (String) htInfo.get("attributes");
 			if (sAttributes != null) {
-				htAttributes = Utils.deserializeAttributes(sAttributes);
+				htAttributes = org.aselect.server.utils.Utils.deserializeAttributes(sAttributes);
 			}
 			else {
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "No parameter 'attributes' found");

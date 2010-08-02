@@ -641,7 +641,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 		// Gather attributes
 		AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
 		HashMap htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
-		String sSerializedAttributes = Utils.serializeAttributes(htAttribs);
+		String sSerializedAttributes = org.aselect.server.utils.Utils.serializeAttributes(htAttribs);
 
 		try {
 			oOutputMessage.setParam("organization", (String) htTGTContext.get("organization"));

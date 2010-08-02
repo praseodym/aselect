@@ -553,7 +553,9 @@ public class NullAuthSP extends ASelectHttpServlet
 				String sAsId = servletRequest.getParameter("a-select-server");
 				if (sRid == null || sAsUrl == null || sAsId == null) {
 					showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-							_propErrorMessages), sLanguage);
+							// RH, 20100621, Remove cyclic dependency system<->server
+//							_propErrorMessages), sLanguage);
+							_propErrorMessages), sLanguage, _systemLogger);
 				}
 				else {
 					StringBuffer sbSignature = new StringBuffer(sRid);
@@ -574,22 +576,30 @@ public class NullAuthSP extends ASelectHttpServlet
 				}
 			}
 			else {
+				// RH, 20100621, Remove cyclic dependency system<->server
 				showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-						_propErrorMessages), sLanguage);
+//						_propErrorMessages), sLanguage);
+						_propErrorMessages), sLanguage, _systemLogger);
 			}
 		}
 		catch (ASelectException eAS) // could not generate signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate NULL AuthSP signature", eAS);
+			// RH, 20100621, Remove cyclic dependency system<->server
+//			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _configManager
+//					.getErrorMessage(Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _propErrorMessages), sLanguage);
 			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _propErrorMessages), sLanguage);
+					.getErrorMessage(Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _propErrorMessages), sLanguage, _systemLogger);
 
 		}
 		catch (UnsupportedEncodingException eUE) // could not encode signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode NULL AuthSP signature", eUE);
+			// RH, 20100621, Remove cyclic dependency system<->server
+//			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _configManager
+//					.getErrorMessage(Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _propErrorMessages), sLanguage);
 			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _propErrorMessages), sLanguage);
+					.getErrorMessage(Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _propErrorMessages), sLanguage, _systemLogger);
 		}
 		catch (IOException eIO) // Could not write output
 		{

@@ -28,6 +28,7 @@ import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.*;
 import org.aselect.server.tgt.TGTManager;
+import org.aselect.server.utils.Utils;
 import org.aselect.system.communication.client.IClientCommunicator;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
@@ -301,7 +302,7 @@ public class AccountSTS extends ProtoRequestHandler
 				}
 				String sAttributes = (String) htCredentials.get("attributes");
 				if (sAttributes != null)
-					htAttributes = Utils.deserializeAttributes(sAttributes);
+					htAttributes = org.aselect.server.utils.Utils.deserializeAttributes(sAttributes);
 
 				String sLevel = (String) htCredentials.get("authsp_level");
 				String sTryLevel = (String) htAttributes.get("authsp_level");

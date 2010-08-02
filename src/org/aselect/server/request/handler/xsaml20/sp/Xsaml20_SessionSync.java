@@ -138,7 +138,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 		if (sEncryptedTgt != null) {
 			_systemLogger.log(Level.INFO, MODULE, _sMethod, "Do session synchronization signature verification="
 					+ is_bVerifySignature());
-			String sTgT = Utils.decodeCredentials(sEncryptedTgt, _oSystemLogger);
+			String sTgT = org.aselect.server.utils.Utils.decodeCredentials(sEncryptedTgt, _oSystemLogger);
 			if (sTgT == null) {
 				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Can not decode credentials");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);

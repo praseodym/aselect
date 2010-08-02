@@ -588,7 +588,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 		// Gather attributes
 		AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
 		HashMap htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
-		String sSerializedAttributes = Utils.serializeAttributes(htAttribs);
+		String sSerializedAttributes = org.aselect.server.utils.Utils.serializeAttributes(htAttribs);
 
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED SerAttr=" + sSerializedAttributes);
 

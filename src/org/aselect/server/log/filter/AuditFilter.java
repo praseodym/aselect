@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.aselect.system.logging.filter;
+package org.aselect.server.log.filter;
 
 import java.io.IOException;
 import java.util.Enumeration;

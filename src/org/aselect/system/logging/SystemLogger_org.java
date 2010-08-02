@@ -91,6 +91,7 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import org.aselect.system.configmanager.ConfigManager;
+import org.aselect.system.configmanager.IConfigManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 
@@ -161,7 +162,7 @@ public class SystemLogger_org implements ISystemLogger
 	 * @throws ASelectException
 	 *             if initializing failed (missing config items)
 	 */
-	public void init(String sLogFileNamePrefix, String sLoggerNamespace, ConfigManager oConfigManager,
+	public void init(String sLogFileNamePrefix, String sLoggerNamespace, IConfigManager oConfigManager,
 			Object oLogTargetConfig, String sWorkingDir)
 		throws ASelectException
 	{

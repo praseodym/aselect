@@ -267,7 +267,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		String sMethod = "getAttributesFromTgtAndGatherer()";
 		
 		String sTgtAttributes = (String) htTGTContext.get("attributes");
-		HashMap htTgtAttributes = Utils.deserializeAttributes(sTgtAttributes);
+		HashMap htTgtAttributes = org.aselect.server.utils.Utils.deserializeAttributes(sTgtAttributes);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Attributes from TGT-\"attributes\"=" + htTgtAttributes);
 
 		AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
@@ -1086,7 +1086,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 
 		// IMPROVE following code should go to tgt.TGTIssuer, RH 20080617
 		HashMap htTGTContext = new HashMap();
-		htTGTContext.put("attributes", Utils.serializeAttributes(htAttributes));
+		htTGTContext.put("attributes", org.aselect.server.utils.Utils.serializeAttributes(htAttributes));
 		htTGTContext.put("uid", sUserId);
 		htTGTContext.put("betrouwbaarheidsniveau", sSecLevel);
 		htTGTContext.put("organization", sOrg);

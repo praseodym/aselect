@@ -197,6 +197,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.TreeSet;
+import java.util.Vector;
 import java.util.logging.Level;
 
 import org.aselect.agent.authorization.AuthorizationEngine;
@@ -205,6 +206,8 @@ import org.aselect.agent.log.ASelectAgentSystemLogger;
 import org.aselect.agent.sam.ASelectAgentSAMAgent;
 import org.aselect.agent.session.SessionManager;
 import org.aselect.agent.ticket.TicketManager;
+//import org.aselect.server.log.ASelectSystemLogger;
+//import org.aselect.server.utils.Utils;
 import org.aselect.system.communication.client.IClientCommunicator;
 import org.aselect.system.communication.server.Communicator;
 import org.aselect.system.communication.server.IInputMessage;
@@ -1194,7 +1197,7 @@ public class RequestHandler extends Thread
 				BASE64Decoder b64d = new BASE64Decoder();
 				MessageDigest md = MessageDigest.getInstance("SHA1");
 				md.update(b64d.decodeBuffer(sAttributes));
-				htTicketContext.put("attributes_hash", Utils.byteArrayToHexString(md.digest()));
+				htTicketContext.put("attributes_hash", org.aselect.system.utils.Utils.byteArrayToHexString(md.digest()));
 			}
 			else
 				htTicketContext.put("attributes_hash", new String(""));
@@ -1448,7 +1451,9 @@ public class RequestHandler extends Thread
 				// get app_id
 				String sAppId = (String) htTicketContext.get("app_id");
 				// get user attributes
-				HashMap htUserAttributes = Utils.deserializeAttributes((String) htTicketContext.get("attributes"));
+				
+//				HashMap htUserAttributes = org.aselect.server.utils.Utils.deserializeAttributes((String) htTicketContext.get("attributes"));
+				HashMap htUserAttributes = deserializeAttributes((String) htTicketContext.get("attributes"));
 
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET attr=" + htUserAttributes);
 
@@ -2113,4 +2118,66 @@ public class RequestHandler extends Thread
 			throw new Exception("Unable to sign request.");
 		}
 	}
+	
+	// RH, 20100622, sn 
+	// RH, Avoid cyclic dependency system<->server and dependency agent->server
+	/**
+	 * Deserialize attributes and convertion to a <code>HashMap</code>. <br/>
+	 * Conatins support for multivalue attributes, with name of type <code>
+	 * String</code> and value of type <code>Vector</code>.
+	 * 
+	 * @param sSerializedAttributes
+	 *            the serialized attributes.
+	 * @return The deserialized attributes (key,value in <code>HashMap</code>)
+	 * @throws ASelectException
+	 *             If URLDecode fails
+	 */
+	private HashMap deserializeAttributes(String sSerializedAttributes)
+		throws ASelectException
+	{
+		String sMethod = "deSerializeAttributes";
+		HashMap htAttributes = new HashMap();
+		if (sSerializedAttributes != null) {  // Attributes available
+			try {  // base64 decode
+				BASE64Decoder base64Decoder = new BASE64Decoder();
+				String sDecodedUserAttrs = new String(base64Decoder.decodeBuffer(sSerializedAttributes));
+	
+				// decode & and = chars
+				String[] saAttrs = sDecodedUserAttrs.split("&");
+				for (int i = 0; i < saAttrs.length; i++) {
+					int iEqualChar = saAttrs[i].indexOf("=");
+					String sKey = "";
+					String sValue = "";
+					Vector vVector = null;
+	
+					if (iEqualChar > 0) {
+						sKey = URLDecoder.decode(saAttrs[i].substring(0, iEqualChar), "UTF-8");
+						sValue = URLDecoder.decode(saAttrs[i].substring(iEqualChar + 1), "UTF-8");
+	
+						if (sKey.endsWith("[]")) { // it's a multi-valued attribute
+							// Strip [] from sKey
+							sKey = sKey.substring(0, sKey.length() - 2);
+							if ((vVector = (Vector) htAttributes.get(sKey)) == null)
+								vVector = new Vector();
+							vVector.add(sValue);
+						}
+					}
+					else
+						sKey = URLDecoder.decode(saAttrs[i], "UTF-8");
+	
+					if (vVector != null)  // store multivalue attribute
+						htAttributes.put(sKey, vVector);
+					else  // store singlevalue attribute
+						htAttributes.put(sKey, sValue);
+				}
+			}
+			catch (Exception e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error during deserialization of attributes", e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+			}
+		}
+		return htAttributes;
+	}
+	// RH, 20100622, en 
+
 }

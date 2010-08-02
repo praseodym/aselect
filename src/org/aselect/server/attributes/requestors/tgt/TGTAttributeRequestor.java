@@ -165,7 +165,7 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
 			// 20100228, Bauke: changed from "remote_attributes" to "attributes"
 			String sSerializedRemoteAttributes = (String) htTGTContext.get("attributes");
 			if (sSerializedRemoteAttributes != null) { // remote attributes available
-				htAttributes = Utils.deserializeAttributes(sSerializedRemoteAttributes);
+				htAttributes = org.aselect.server.utils.Utils.deserializeAttributes(sSerializedRemoteAttributes);
 			}
 			else {
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "No 'attributes' found in TGT.");

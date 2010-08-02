@@ -752,7 +752,7 @@ public class AttributeGatherer
 		String sMethod = "addRemoteAttributesFromTgt";
 		String fld = (String) htTGTContext.get("attributes");
 		if (fld != null) {
-			HashMap htTgtAttributes = Utils.deserializeAttributes(fld);
+			HashMap htTgtAttributes = org.aselect.server.utils.Utils.deserializeAttributes(fld);
 			_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER (remote)TGT \"attributes\"=" + htTgtAttributes);
 			Set keys = htTgtAttributes.keySet();
 			for (Object s : keys) {

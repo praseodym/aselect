@@ -13,7 +13,9 @@ import java.util.logging.Level;
 import javax.servlet.*;
 import javax.servlet.http.*;
 
-import org.aselect.server.log.ASelectSystemLogger;
+// RH, 20100621, Remove cyclic dependency system<->server
+// import org.aselect.server.log.ASelectSystemLogger;
+import org.aselect.system.logging.ISystemLogger;
 import org.aselect.system.utils.BASE64Decoder;
 import org.aselect.system.utils.Tools;
 
@@ -47,7 +49,9 @@ public class HtmlInfo extends HttpServlet
 	 *            the ht service request
 	 */
 	public void handleHtmlInfo(HttpServletRequest request, HttpServletResponse response,
-			ASelectSystemLogger systemLogger, HashMap htServiceRequest)
+			// RH, 20100621, Remove cyclic dependency system<->server
+//			ASelectSystemLogger systemLogger, HashMap htServiceRequest)
+			ISystemLogger systemLogger, HashMap htServiceRequest)
 	{
 		try {
 			doGet(request, response, systemLogger);
@@ -72,7 +76,9 @@ public class HtmlInfo extends HttpServlet
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	public void doGet(HttpServletRequest request, HttpServletResponse response, ASelectSystemLogger systemLogger)
+	// RH, 20100621, Remove cyclic dependency system<->server
+//	public void doGet(HttpServletRequest request, HttpServletResponse response, ASelectSystemLogger systemLogger)
+	public void doGet(HttpServletRequest request, HttpServletResponse response, ISystemLogger systemLogger)
 		throws ServletException, IOException
 	{
 		String sMethod = "handleHtmlInfo";

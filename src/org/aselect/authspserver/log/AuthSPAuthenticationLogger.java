@@ -178,7 +178,8 @@ public class AuthSPAuthenticationLogger extends AuthenticationLogger
 			}
 			else {
 				_oAuthSPAuthenticationLogger.init("A-Select AuthSP Server", "authentication",
-						"org.aselect.server.log.AuthSPAuthenticationLogger", oAuthSPConfigManager, oAuthLogTarget,
+//						"org.aselect.server.log.AuthSPAuthenticationLogger", oAuthSPConfigManager, oAuthLogTarget,			// RH, 20100621, o
+						"org.aselect.authspserver.log.AuthSPAuthenticationLogger", oAuthSPConfigManager, oAuthLogTarget,	// RH, 20100621, n
 						oAuthSPSystemLogger, sWorkingDir);
 			}
 		}

@@ -274,7 +274,7 @@ public class XSAML11RequestHandler extends ProtoRequestHandler
 		throws ASelectException
 	{
 		String sMethod = "serializeTheseAttributes()";
-		String sSerializedAttributes = Utils.serializeAttributes(htAttribs);
+		String sSerializedAttributes = org.aselect.server.utils.Utils.serializeAttributes(htAttribs);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "sSerializedAttributes=" + sSerializedAttributes);
 		return sSerializedAttributes;
 	}

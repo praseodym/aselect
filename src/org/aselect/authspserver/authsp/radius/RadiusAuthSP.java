@@ -762,7 +762,9 @@ public class RadiusAuthSP extends ASelectHttpServlet
 				String sAsId = servletRequest.getParameter("a-select-server");
 				if (sRid == null || sAsUrl == null || sAsId == null) {
 					showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-							_oErrorProperties), sLanguage);
+							// RH, 20100621, Remove cyclic dependency system<->server
+//							_oErrorProperties), sLanguage);
+							_oErrorProperties), sLanguage, _systemLogger);
 				}
 				else {
 
@@ -782,20 +784,28 @@ public class RadiusAuthSP extends ASelectHttpServlet
 			}
 			else {
 				showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-						_oErrorProperties), sLanguage);
+						// RH, 20100621, Remove cyclic dependency system<->server
+//						_oErrorProperties), sLanguage);
+						_oErrorProperties), sLanguage, _systemLogger);
 			}
 		}
 		catch (ASelectException eAS) // could not generate signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate Radius AuthSP signature", eAS);
+			// RH, 20100621, Remove cyclic dependency system<->server
+//			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER, _configManager
+//					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage);
 			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage);
+					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage, _systemLogger);
 		}
 		catch (UnsupportedEncodingException eUE) // could not encode signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode Radius AuthSP signature", eUE);
+			// RH, 20100621, Remove cyclic dependency system<->server
+//			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER, _configManager
+//					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage);
 			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage);
+					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage, _systemLogger);
 		}
 	}
 }
