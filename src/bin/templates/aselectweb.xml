@@ -5,6 +5,30 @@
     "http://java.sun.com/dtd/web-app_2_3.dtd">
 	
 <web-app>
+
+<!-- 
+<filter>
+   <filter-name>AuditFilter</filter-name>
+   <filter-class>org.aselect.server.log.filter.AuditFilter</filter-class>
+   <init-param>
+      <param-name>requestparm@rid</param-name>
+      <param-value>a_rid</param-value>
+   </init-param>
+   <init-param>
+      <param-name>cookie@aselect_credentials</param-name>
+      <param-value>a_aselect_credentials</param-value>
+   </init-param>
+   <init-param>
+      <param-name>tgt@aselect_credentials@uid</param-name>
+      <param-value>a_uid</param-value>
+   </init-param>
+</filter>
+<filter-mapping>
+   <filter-name>AuditFilter</filter-name>
+   <servlet-name>ASelectServer</servlet-name>
+</filter-mapping>
+-->
+
   <servlet>
     <servlet-name>ASelectServer</servlet-name>
     <servlet-class>org.aselect.server.ASelectServer</servlet-class>
@@ -34,6 +58,7 @@
       <param-value>[table_name]</param-value>
     </init-param>
 -->
+
     <load-on-startup>1</load-on-startup>
   </servlet>
   
@@ -47,7 +72,6 @@
     <load-on-startup>2</load-on-startup>
   </servlet>
 
-  
   <servlet-mapping>
     <servlet-name>ASelectServer</servlet-name>
     <url-pattern>/server/*</url-pattern>
