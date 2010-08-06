@@ -292,6 +292,14 @@ public class RequestParser
 					_iRequestOrigin = ORIGIN_AUTHSP;
 					_iRequestType = REQTYPE_API_CALL;
 				}
+				// RH, 20100895, sn, support logout GET request
+				else
+				if (_sRequest.equals("logout")) {
+					_iRequestOrigin = ORIGIN_USER;
+					_iRequestType = REQTYPE_BROWSER;
+				}
+				// RH, 20100895, en
+
 			}
 		}
 		else if (_sMethod.equalsIgnoreCase("POST")) {

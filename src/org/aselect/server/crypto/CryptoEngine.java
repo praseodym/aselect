@@ -608,7 +608,8 @@ public class CryptoEngine
 			byte[] baEncTgt = _cipher.doFinal(baData);
 			BASE64Encoder b64enc = new BASE64Encoder();
 			String sBase64rep = b64enc.encode(baEncTgt);
-			return sBase64rep.replace('+', '-').replace('=', '_');
+//			return sBase64rep.replace('+', '-').replace('=', '_');	// RH, 20100805, o
+			return sBase64rep.replace('+', '-').replace('=', '_').replace('/', '*');	// RH, 20100805, n, '/' is not nice for URLs
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "could not encrypt", e);
@@ -633,7 +634,9 @@ public class CryptoEngine
 
 		try {
 			BASE64Decoder b64dec = new BASE64Decoder();
-			byte[] baData = b64dec.decodeBuffer(sEncTgt.replace('_', '=').replace('-', '+'));
+			
+//			byte[] baData = b64dec.decodeBuffer(sEncTgt.replace('_', '=').replace('-', '+'));	// RH, 20100805, o
+			byte[] baData = b64dec.decodeBuffer(sEncTgt.replace('_', '=').replace('-', '+').replace('*', '/'));	// RH, 20100805, n, '/' is not nice for URLs
 			_cipher.init(Cipher.DECRYPT_MODE, _secretKey);
 			return _cipher.doFinal(baData);
 		}

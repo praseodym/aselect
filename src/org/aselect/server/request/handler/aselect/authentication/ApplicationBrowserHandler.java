@@ -2387,6 +2387,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[a-select-server]", _sMyServerId);
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[aselect_url]", sMyUrl);
 
+
 			String sTemp;
 			HashMap htTGTContext = _tgtManager.getTGT(sTgt);
 			try {
@@ -2404,6 +2405,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// End of SAML20 patch
 
 			sTemp = (String) htTGTContext.get("app_id");
+			// RH, 20100805, Experimental insert of friendly_name
+			String sFName = _applicationManager.getFriendlyName(sTemp);
+			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[friendly_name]", sFName);
+			
 			if (sTemp == null)
 				sTemp = "[unknown]";
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[app]", sTemp);
