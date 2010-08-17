@@ -44,8 +44,6 @@ public class SoapManager
 	public Envelope buildSOAPMessage(SAMLObject samlMessage)
 	{
 		String sMethod = "buildSOAPMessage()";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
-
 		XMLObjectBuilderFactory builderFactory = org.opensaml.xml.Configuration.getBuilderFactory();
 
 		SOAPObjectBuilder<Envelope> envBuilder = (SOAPObjectBuilder<Envelope>) builderFactory

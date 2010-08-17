@@ -221,7 +221,7 @@ public class SamlTools
 	public static boolean checkSignature(SignableSAMLObject ssObject, PublicKey pKey)
 		throws ASelectException
 	{
-		String sMethod = "checkSignature(SignableSAMLObject ssObject)";
+		String sMethod = "checkSignature";
 		
 		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
 		Signature sig = ssObject.getSignature();
@@ -251,9 +251,7 @@ public class SamlTools
 			sigValidator.validate(sig);
 		}
 		catch (ValidationException e) {
-			// Indicates signature was not cryptographically valid, or possibly a processing error
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"Cannot verify signature, signature was not cryptographically valid, or possibly a processing error");
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot verify signature, signature was not cryptographically valid");
 			return false;
 		}
 		return true;
@@ -703,7 +701,7 @@ public class SamlTools
 		try {
 			Node node = marshaller.marshall(logoutResponse);
 			String msg = XMLHelper.prettyPrintXML(node);
-			systemLogger.log(Level.INFO, MODULE, sMethod, "Built message: " + msg);
+			systemLogger.log(Level.INFO, MODULE, sMethod, "Built message:\n" + msg);
 		}
 		catch (MarshallingException e) {
 			systemLogger.log(Level.WARNING, MODULE, sMethod, "Exception marhalling message: " + e.getMessage());

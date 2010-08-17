@@ -708,7 +708,8 @@ public class PKIAuthSP extends HttpServlet
 			String sError = Errors.PKI_INVALID_REQUEST;
 			String sErrorMessage = "Invalid Request";
 			String sErrorForm = new String(_sErrorHtmlTemplate);
-			sErrorForm = Utils.replaceString(sErrorForm, "[error]", sError);
+			sErrorForm = Utils.replaceString(sErrorForm, "[error]", sError);  // obsoleted 20100817
+			sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", sError);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
 			sErrorForm = Utils.replaceString(sErrorForm, "[language]", sLanguage);
 			sErrorForm = Utils.replaceConditional(sErrorForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));

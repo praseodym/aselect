@@ -122,8 +122,8 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler
 		try {
 			MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
 
-			String sReceivedSoap = Tools.stream2string(request.getInputStream());
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Received Soap:\n" + sReceivedSoap);
+			String sReceivedSoap = Tools.stream2string(request.getInputStream());  // x_AssertionConsumer_x
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Received SOAP message:\n" + sReceivedSoap);
 
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 			dbFactory.setNamespaceAware(true);
@@ -133,14 +133,9 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler
 			InputSource inputSource = new InputSource(stringReader);
 			Document docReceivedSoap = builder.parse(inputSource);
 			Element elementReceivedSoap = docReceivedSoap.getDocumentElement();
-			// _systemLogger.log(Level.INFO, MODULE, sMethod, "SOAP message:\n"
-			// + XMLHelper.prettyPrintXML(elementReceivedSoap));
 
 			// Remove all SOAP elements
 			Node eltArtifactResolve = getNode(elementReceivedSoap, "ArtifactResolve");
-
-			// _systemLogger.log(Level.INFO, MODULE, sMethod, "ArtifactResolve:\n"
-			// + XMLHelper.nodeToString(eltArtifactResolve));
 
 			// Unmarshall to the SAMLmessage
 			UnmarshallerFactory factory = org.opensaml.xml.Configuration.getUnmarshallerFactory();
@@ -156,8 +151,8 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Do artifactResolve signature verification="
 					+ is_bVerifySignature());
 			if (is_bVerifySignature()) {
-				// check signature of artifactResolve here
-				// We get the public key from the metadata
+				// Check signature of artifactResolve here.
+				// We get the public key from the metadata.
 				// Therefore we need a valid Issuer to lookup the entityID in the metadata
 				// We get the metadataURL from aselect.xml so we consider this safe and authentic
 				if (artifactResolveIssuer == null || "".equals(artifactResolveIssuer)) {
@@ -243,12 +238,10 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the artifactResponse ======<");
 			Envelope envelope = new SoapManager().buildSOAPMessage(artifactResponse);
 			Element envelopeElem = SamlTools.marshallMessage(envelope);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Writing SOAP message:\n"
-					+ XMLHelper.nodeToString(envelopeElem));
-			// XMLHelper.prettyPrintXML(envelopeElem));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Writing SOAP message:\n" + XMLHelper.nodeToString(envelopeElem));
 
 			// Bauke: added, it's considered polite to tell the other side what we are sending
-			SamlTools.sendSOAPResponse(response, XMLHelper.nodeToString(envelopeElem));
+			SamlTools.sendSOAPResponse(response, XMLHelper.nodeToString(envelopeElem));  // x_AssertionConsumer_x
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Internal error", e);

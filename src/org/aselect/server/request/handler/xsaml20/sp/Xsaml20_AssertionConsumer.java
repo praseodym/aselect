@@ -219,16 +219,13 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 			Envelope envelope = soapManager.buildSOAPMessage(artifactResolve);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Marshall");
 			Element envelopeElem = SamlTools.marshallMessage(envelope);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Writing SOAP message:\n"
-					+ XMLHelper.nodeToString(envelopeElem));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Writing SOAP message:\n"+ XMLHelper.nodeToString(envelopeElem));
 			// XMLHelper.prettyPrintXML(envelopeElem));
 
 			// ------------ Send/Receive the SOAP message
-			String sSamlResponse = soapManager.sendSOAP(XMLHelper.nodeToString(envelopeElem), sASelectServerUrl);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Received response: " + sSamlResponse);
-
+			String sSamlResponse = soapManager.sendSOAP(XMLHelper.nodeToString(envelopeElem), sASelectServerUrl);  // x_AssertionConsumer_x
 			byte[] sSamlResponseAsBytes = sSamlResponse.getBytes();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Received response length: " + sSamlResponseAsBytes.length);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Received response: "+sSamlResponse+" length=" + sSamlResponseAsBytes.length);
 
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 			dbFactory.setNamespaceAware(true);

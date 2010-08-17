@@ -749,6 +749,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 
 				String sErrorForm = _configManager.getForm("error", _sUserLanguage, _sUserCountry);
 				sErrorForm = Utils.replaceString(sErrorForm, "[error]", ERROR_LDAP_ACCESS_DENIED);
+				sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", ERROR_LDAP_ACCESS_DENIED);
 				String sErrorMessage = _configManager.getErrorMessage(ERROR_LDAP_PREFIX + ERROR_LDAP_ACCESS_DENIED,
 						_sUserLanguage, _sUserCountry);
 				sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);

@@ -273,6 +273,7 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 			String sLanguage = (String) htServiceRequest.get("language");
 			String sErrorForm = _configManager.getForm("error");
 			sErrorForm = Utils.replaceString(sErrorForm, "[error]", sErrorCode);
+			sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", sErrorCode);
 			String sErrorMessage = _configManager.getErrorMessage(sErrorCode);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
 			sErrorForm = Utils.replaceString(sErrorForm, "[language]", sLanguage);

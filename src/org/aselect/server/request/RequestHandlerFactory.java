@@ -435,7 +435,8 @@ public class RequestHandlerFactory
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM[error] " + sErrorCode + ":" + sErrorMessage);
 		try {
 			String sErrorForm = _configManager.getForm("error", _sUserLanguage, _sUserCountry);
-			sErrorForm = Utils.replaceString(sErrorForm, "[error]", sErrorCode);
+			sErrorForm = Utils.replaceString(sErrorForm, "[error]", sErrorCode);  // obsoleted 20100817
+			sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", sErrorCode);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
 			sErrorForm = Utils.replaceString(sErrorForm, "[language]", _sUserLanguage);
 			sErrorForm = Utils.replaceConditional(sErrorForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));

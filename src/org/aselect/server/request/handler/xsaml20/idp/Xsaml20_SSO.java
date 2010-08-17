@@ -744,8 +744,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				
 				// 20090602, Bauke Saml-core-2.0, section 2.2.2: SHOULD be omitted:
 				// nameID.setNameQualifier(_sASelectServerUrl);
-				nameID.setValue(sTgt); // back to TgT sUid); ///*sTgt); // REPLACES: */
-				// (String)htTGTContext.get("uid"));
+				nameID.setValue((bNvlPersist)? sUid: sTgt);  // 20100811: depends on NameIDType
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "nameID=" + Utils.firstPartOf(nameID.getValue(), 30));
 
 				SAMLObjectBuilder<Subject> subjectBuilder = (SAMLObjectBuilder<Subject>) builderFactory

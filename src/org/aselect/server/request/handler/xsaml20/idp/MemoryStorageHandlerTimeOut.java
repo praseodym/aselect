@@ -277,9 +277,8 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 		}
-		try {
-			requestSender.sendSoapLogoutRequest(url, _serverUrl, sNameID,
-					"urn:oasis:names:tc:SAML:2.0:logout:sp-timeout", pkey);
+		try {  // Sign with our private key!
+			requestSender.sendSoapLogoutRequest(url, _serverUrl, sNameID, "urn:oasis:names:tc:SAML:2.0:logout:sp-timeout", pkey);
 		}
 		catch (ASelectException e) {
 			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "IDP - exception trying to send logout request", e);

@@ -518,9 +518,11 @@ public class TGTIssuer
 					sAuthspLevel = ((Integer) htSessionContext.get("authsp_level")).toString();
 				}
 			}
-			if (sAuthspLevel != null)
+			if (sAuthspLevel != null) {
 				htTGTContext.put("authsp_level", sAuthspLevel);
-			Utils.copyHashmapValue("sel_level", htTGTContext, htSessionContext);
+				htTGTContext.put("sel_level", sAuthspLevel);  // 20100812: set default value
+			}
+			Utils.copyHashmapValue("sel_level", htTGTContext, htSessionContext);  // possible override from session
 			
 			Integer intAppLevel = (Integer) htSessionContext.get("level");
 			htTGTContext.put("app_level", intAppLevel.toString());

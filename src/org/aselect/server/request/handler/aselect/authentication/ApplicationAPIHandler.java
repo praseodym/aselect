@@ -795,6 +795,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		// Get other response parameters
 		sUid = (String) htTGTContext.get("uid");
 		String sAuthSPLevel = (String) htTGTContext.get("sel_level");  // 20100323: was ("authsp_level");
+		if (sAuthSPLevel == null) sAuthSPLevel = (String) htTGTContext.get("authsp_level"); // 20100812: added, just in case
 		String sAuthSP = (String) htTGTContext.get("authsp");
 		long lExpTime = 0;
 		try {
@@ -831,13 +832,12 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			oOutputMessage.setParam("app_id", sAppId);
 			oOutputMessage.setParam("organization", (String) htTGTContext.get("organization"));
 			oOutputMessage.setParam("app_level", (String) htTGTContext.get("app_level"));
-			// Return both asp and authsp variables to remain compatible
-			// with A-Select 1.3 and 1.4
+			// Return both asp and authsp variables to remain compatible with A-Select 1.3 and 1.4
+			oOutputMessage.setParam("asp", sAuthSP);
 			oOutputMessage.setParam("asp_level", sAuthSPLevel);
+			oOutputMessage.setParam("authsp", sAuthSP);
 			oOutputMessage.setParam("authsp_level", sAuthSPLevel);
 			oOutputMessage.setParam("sel_level", sAuthSPLevel);  // 20100323: added
-			oOutputMessage.setParam("asp", sAuthSP);
-			oOutputMessage.setParam("authsp", sAuthSP);
 
 			// 20090303, Bauke: added for DigiD-ization, return level in the configured name: <level_name>
 			String sLevelName = aApp.getLevelName();
@@ -871,7 +871,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 
 		// 20090622, Bauke: when we would have removed the ticket when forced_authenticate is in effect
-		// the following upgrade_tgt will fail and force a new authenication. Also note that
+		// the following upgrade_tgt will fail and force a new authentication. Also note that
 		// the login1 request will not use the TgT for SSO when "forced_authenticate" is true.
 
 		// Kill TGT if single sign-on is disabled

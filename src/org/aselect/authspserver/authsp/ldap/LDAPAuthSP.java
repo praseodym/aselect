@@ -955,12 +955,13 @@ public class LDAPAuthSP extends ASelectHttpServlet
 		_systemLogger.log(Level.INFO, MODULE, "showAuthenticateForm", "FORM " + _sWorkingDir + "/"
 				+ "authenticate.html, friendly=" + _sFriendlyName);
 
-		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error]", sError);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[rid]", sRid);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[as_url]", sAsUrl);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[uid]", sUid);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[ldap_server]", sMyUrl);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[a-select-server]", sAsId);
+		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error]", sError);  // obsoleted 20100817
+		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error_code]", sError);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error_message]", sErrorMessage);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", sLanguage);
 		sAuthenticateForm = Utils.replaceConditional(sAuthenticateForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));

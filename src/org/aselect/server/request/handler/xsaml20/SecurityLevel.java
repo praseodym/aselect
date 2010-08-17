@@ -21,8 +21,8 @@ public class SecurityLevel
 	// Saml text
 	final private static String UNSPECIFIED_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified";
 	final private static String PASSWORDPROTECTEDTRANSPORT_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport";
-	final private static String MOBILETWOFACTORCONTRACT_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorContract";
 	final private static String MOBILETWOFACTORUNREGISTERED_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorUnregistered";
+	final private static String MOBILETWOFACTORCONTRACT_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorContract";
 	final private static String SMARTCARDPKI_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:SmartcardPKI";
 
 	final private static int LEVEL_NOT_FOUND = -1;

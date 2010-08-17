@@ -80,20 +80,19 @@ public class SoapLogoutRequestSender
 	 * @throws ASelectException
 	 *             If sending fails.
 	 */
-	public void sendSoapLogoutRequest(String serviceProviderUrl, String issuerUrl, String sNameID, String reason,
-			PublicKey pkey)
-		throws ASelectException
+	public void sendSoapLogoutRequest(String serviceProviderUrl, String issuerUrl, String sNameID, String reason, PublicKey pkey)
+	throws ASelectException
 	{
 		String sMethod = "sendSoapLogoutRequest";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Send backchannel LogoutRequest to " + serviceProviderUrl
 				+ " for user: " + sNameID);
 
-		LogoutRequest logoutRequest = SamlTools
-				.buildLogoutRequest(serviceProviderUrl, null, sNameID, issuerUrl, reason);
-		// TODO SamlTools.setValidityInterval with only NotOnOrAfter, but we need this from calling object
+		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(serviceProviderUrl, null, sNameID, issuerUrl, reason);
+		// IMPROVE: SamlTools.setValidityInterval with only NotOnOrAfter, but we need this from calling object
+		
 		// Always sign the logoutRequest
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the logoutRequest >======");
-		logoutRequest = (LogoutRequest) SamlTools.signSamlObject(logoutRequest);
+		logoutRequest = (LogoutRequest)SamlTools.signSamlObject(logoutRequest);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the logoutRequest ======<");
 
 		SoapManager soapManager = new SoapManager();
@@ -102,18 +101,18 @@ public class SoapLogoutRequestSender
 		Element envelopeElem = null;
 		try {
 			envelopeElem = SamlTools.marshallMessage(envelope);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sending message:\n" + XMLHelper.nodeToString(envelopeElem));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sending SOAP message:\n" + XMLHelper.nodeToString(envelopeElem));
 		}
 		catch (MessageEncodingException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Exception during marshallling of envelope");
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 
-		try {
-			// Send/Receive the SOAP message
-			String resp = soapManager.sendSOAP(XMLHelper.nodeToString(envelopeElem), serviceProviderUrl);
-			String sSamlResponse = URLDecoder.decode(resp, "UTF-8");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Received response: " + sSamlResponse);
+		try {  // Send/Receive the SOAP message
+			String sSamlResponse = soapManager.sendSOAP(XMLHelper.nodeToString(envelopeElem), serviceProviderUrl);  // x_LogoutRequest_x
+			 // 20100812: was not sent through the URL, so don't decode: 
+			// String sSamlResponse = URLDecoder.decode(resp, "UTF-8");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Received response:\n" + sSamlResponse);
 
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 			dbFactory.setNamespaceAware(true);
@@ -123,7 +122,7 @@ public class SoapLogoutRequestSender
 			Document docReceivedSoap = builder.parse(inputSource);
 			Element elementReceivedSoap = docReceivedSoap.getDocumentElement();
 			Node eltArtifactResolve = SamlTools.getNode(elementReceivedSoap, LOGOUTRESPONSE);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Artifact retrieved from response");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "LogoutResponse retrieved");
 			// XMLHelper.nodeToString(eltArtifactResolve));
 
 			// Unmarshall to the SAMLmessage
@@ -134,15 +133,15 @@ public class SoapLogoutRequestSender
 
 			if (pkey != null) { // if there is a key supplied by the calling class, check it
 				if (SamlTools.checkSignature(logoutResponse, pkey)) {
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "logoutResponse was signed OK");
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "LogoutResponse was signed OK");
 				}
 				else {
-					_systemLogger.log(Level.SEVERE, MODULE, sMethod, "logoutResponse was NOT signed OK");
+					_systemLogger.log(Level.SEVERE, MODULE, sMethod, "LogoutResponse was NOT signed OK");
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
 			}
 			else {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "no signature verification required on logoutResponse");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "No signature verification required on LogoutResponse");
 			}
 			StatusCode statusCode = logoutResponse.getStatus().getStatusCode();
 			if (!statusCode.getValue().equals(StatusCode.SUCCESS_URI)) {

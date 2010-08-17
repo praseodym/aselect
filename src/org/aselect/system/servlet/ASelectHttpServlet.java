@@ -172,7 +172,7 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	 * <b>Description:</b> <br>
 	 * The following tags will be replaced in the error template:
 	 * <ul>
-	 * <li>[error] containing the error code</li>
+	 * <li>[error_code] containing the error code</li>
 	 * <li>[error_message] containing the error message</li>
 	 * </ul>
 	 * 
@@ -194,7 +194,8 @@ public abstract class ASelectHttpServlet extends HttpServlet
 		sLogger.log(Level.INFO, MODULE, sMethod, "FORM[" + sTemplate + "] " + sError + ":" + sErrorMessage);
 
 		String sErrorForm = new String(sTemplate);
-		sErrorForm = Utils.replaceString(sErrorForm, "[error]", sError);
+		sErrorForm = Utils.replaceString(sErrorForm, "[error]", sError);  // obsoleted 20100817
+		sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", sError);
 		sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
 		sErrorForm = Utils.replaceString(sErrorForm, "[language]", sLanguage);
 		sErrorForm = Utils.replaceConditional(sErrorForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));

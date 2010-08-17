@@ -1123,8 +1123,6 @@ public class RequestHandler extends Thread
 				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
 				return;
 			}
-			// TODO tripple decoding? (Erwin)
-			sUID = URLDecoder.decode(sUID, "UTF-8");
 			sUID = URLDecoder.decode(sUID, "UTF-8");
 
 			String sOrg = (String) htResponseParameters.get("organization");

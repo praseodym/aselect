@@ -159,7 +159,6 @@ public class Saml20_ArtifactManager extends StorageManager
 			// We have <saml:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">
 			sValue = sValue.replaceAll("AttributeValue xsi:type=", "AttributeValue type=");
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "value=" + sValue);
 		super.put(key, sValue);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "put done");
 

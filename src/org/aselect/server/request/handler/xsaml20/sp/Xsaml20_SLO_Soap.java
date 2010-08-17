@@ -101,8 +101,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 			handleSOAPLogoutRequest(request, response);
 		}
 		else {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Request: " + request.getQueryString()
-					+ " is not recognized");
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Request: " + request.getQueryString() + " was not recognized");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
 		return null;
@@ -140,8 +139,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 			Document docReceivedSoap = builder.parse(inputSource);
 			Element elementReceivedSoap = docReceivedSoap.getDocumentElement();
 			Node eltLogoutRequest = SamlTools.getNode(elementReceivedSoap, LOGOUTREQUEST);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "LogoutRequest:\n"
-					+ XMLHelper.nodeToString(eltLogoutRequest));
+			//_systemLogger.log(Level.INFO, MODULE, sMethod, "LogoutRequest:\n" + XMLHelper.nodeToString(eltLogoutRequest));
 
 			// Unmarshall to the SAMLmessage
 			UnmarshallerFactory factory = org.opensaml.xml.Configuration.getUnmarshallerFactory();
@@ -153,13 +151,12 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 			String sASelectServerUrl = metadataManager.getLocation(_sServerUrl,
 					LogoutRequest.DEFAULT_ELEMENT_LOCAL_NAME, SAMLConstants.SAML2_SOAP11_BINDING_URI);
 			String logoutRequestIssuer = (logoutRequest.getIssuer() == null || // avoid nullpointers
-					logoutRequest.getIssuer().getValue() == null || "".equals(logoutRequest.getIssuer().getValue())) ? sASelectServerUrl
-					: // if not in message, use value retrieved from metadata
+					logoutRequest.getIssuer().getValue() == null ||
+					"".equals(logoutRequest.getIssuer().getValue())) ? sASelectServerUrl: // if not in message, use value retrieved from metadata
 					logoutRequest.getIssuer().getValue(); // else value from message
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "LogoutRequest Resolution at " + sASelectServerUrl);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Do logoutRequest signature verification="
-					+ is_bVerifySignature());
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "LogoutRequest issuer=" + logoutRequestIssuer);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Do LogoutRequest signature verification=" + is_bVerifySignature());
 			if (is_bVerifySignature()) {
 				// Check signature of LogoutRequest
 				PublicKey pkey = metadataManager.getSigningKeyFromMetadata(logoutRequestIssuer);
@@ -198,23 +195,19 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Send Logout Response to: " + logoutRequestIssuer);
 			String statusCode = StatusCode.SUCCESS_URI;
 			String myEntityId = _sServerUrl;
-			LogoutResponse logoutResponse = SamlTools
-					.buildLogoutResponse(myEntityId, statusCode, logoutRequest.getID());
+			LogoutResponse logoutResponse = SamlTools.buildLogoutResponse(myEntityId, statusCode, logoutRequest.getID());
 
 			// always sign the logoutResponse
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the logoutResponse >======");
-			logoutResponse = (LogoutResponse) sign(logoutResponse);
+			logoutResponse = (LogoutResponse)SamlTools.signSamlObject(logoutResponse, "sha1");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the logoutResponse ======<");
 
 			SoapManager soapManager = new SoapManager();
 			Envelope envelope = soapManager.buildSOAPMessage(logoutResponse);
 			Element envelopeElem = SamlTools.marshallMessage(envelope);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Writing SOAP message:\n"
-					+ XMLHelper.nodeToString(envelopeElem));
 
-			// Bauke 20081112: used same code for all Soap messages
-			// Remy: 20081113: Move this code to HandlerTools for uniformity
-			SamlTools.sendSOAPResponse(response, XMLHelper.nodeToString(envelopeElem));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Writing SOAP message:\n" + XMLHelper.nodeToString(envelopeElem));
+			SamlTools.sendSOAPResponse(response, XMLHelper.nodeToString(envelopeElem));  // x_LogoutRequest_x Idp
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);

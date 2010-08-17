@@ -561,7 +561,6 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 		}
 
 		sResultCode = (String) htTGTContext.get("result_code");
-
 		if (sResultCode != null) // Resultcode available in TGT context
 		{
 			if (sResultCode != Errors.ERROR_ASELECT_SUCCESS) // Error in context
@@ -588,19 +587,20 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 		// Gather attributes
 		AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
 		HashMap htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
+		
 		String sSerializedAttributes = org.aselect.server.utils.Utils.serializeAttributes(htAttribs);
-
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED SerAttr=" + sSerializedAttributes);
 
 		try {
 			oOutputMessage.setParam("organization", (String) htTGTContext.get("organization"));
 			oOutputMessage.setParam("app_level", (String) htTGTContext.get("app_level"));
-			// Return both asp and authsp variables to remain compatible
-			// with A-Select 1.3 and 1.4
-			oOutputMessage.setParam("asp_level", sAuthSPLevel);
+			// Return both asp and authsp variables to remain compatible with A-Select 1.3 and 1.4
 			oOutputMessage.setParam("asp", sAuthSP);
-			oOutputMessage.setParam("authsp_level", sAuthSPLevel);
+			oOutputMessage.setParam("asp_level", sAuthSPLevel);
 			oOutputMessage.setParam("authsp", sAuthSP);
+			oOutputMessage.setParam("authsp_level", sAuthSPLevel);
+			oOutputMessage.setParam("sel_level", sAuthSPLevel);  // 20100812: added
+			
 			oOutputMessage.setParam("uid", sUid);
 			oOutputMessage.setParam("tgt_exp_time", new Long(lExpTime).toString());
 			if (sSerializedAttributes != null)

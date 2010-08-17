@@ -109,9 +109,9 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 		throws ASelectException
 	{
-		String _sMethod = "process";
+		String sMethod = "process";
 		String sContentType = request.getContentType();
-		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Process Logout request, content=" + sContentType);
+		_oSystemLogger.log(Level.INFO, MODULE, sMethod, "Process Logout request, content=" + sContentType);
 
 		if (sContentType != null && sContentType.startsWith(SOAP_TYPE)) {
 			handleSOAPLogoutRequest(request, response);
@@ -140,7 +140,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 			 * (bis.available() != 0) { sb.append(b); b = (char) bis.read(); } String sReceivedSoap = sb.toString();
 			 */
 			String sReceivedSoap = Tools.stream2string(request.getInputStream()); // RH, 20080715, n
-			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "Received: " + sReceivedSoap);
+			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "Received SOAP:\n" + sReceivedSoap);
 
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 			dbFactory.setNamespaceAware(true);
@@ -158,20 +158,13 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 			LogoutRequest logoutRequest = (LogoutRequest) unmarshaller.unmarshall((Element) eltArtifactResolve);
 
 			// Check signature of LogoutRequest
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Do logoutRequest signature verification="
-					+ is_bVerifySignature());
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Do LogoutRequest signature verification=" + is_bVerifySignature());
 			String initiatingSP = logoutRequest.getIssuer().getValue();
 			if (is_bVerifySignature()) {
-				// Let it just generate an AselectException!!
-				// String logoutRequestIssuer = ( logoutRequest.getIssuer() == null || // avoid nullpointers
-				// logoutRequest.getIssuer().getValue() == null ||
-				// "".equals(logoutRequest.getIssuer().getValue()) ) ? null :
-				// logoutRequest.getIssuer().getValue(); // else value from message
 				MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
 				PublicKey pkey = metadataManager.getSigningKeyFromMetadata(initiatingSP);
 				if (pkey == null) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "PublicKey for entityId: " + initiatingSP
-							+ " not found.");
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "PublicKey for entityId: " + initiatingSP + " not found.");
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Found PublicKey for entityId: " + initiatingSP);
@@ -183,7 +176,6 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST); // Kick 'm out
 				}
 			}
-			// TODO SamlTools.checkValidityInterval
 			if (is_bVerifyInterval() && !SamlTools.checkValidityInterval(logoutRequest)) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "LogoutRequest time interval was NOT valid");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST); // Kick 'm out
@@ -203,19 +195,14 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 			LogoutResponse logoutResponse = SamlTools.buildLogoutResponse(_sRedirectUrl, statusCode, requestId);
 			// always sign the logoutResponse
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the logoutResponse >======");
-			logoutResponse = (LogoutResponse) sign(logoutResponse);
+			logoutResponse = (LogoutResponse)SamlTools.signSamlObject(logoutResponse, "sha1");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the logoutResponse ======<");
 
 			SoapManager soapManager = new SoapManager();
 			Envelope envelope = soapManager.buildSOAPMessage(logoutResponse);
 			Element envelopeElem = SamlTools.marshallMessage(envelope);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Send SAML response:\n"
-					+ XMLHelper.nodeToString(envelopeElem));
-			// XMLHelper.prettyPrintXML(envelopeElem));
-
-			// Bauke 20081112: used same code for all Soap messages
-			// Remy: 20081113: Move this code to HandlerTools for uniformity
-			SamlTools.sendSOAPResponse(response, XMLHelper.nodeToString(envelopeElem));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Send SAML response:\n" + XMLHelper.nodeToString(envelopeElem));
+			SamlTools.sendSOAPResponse(response, XMLHelper.nodeToString(envelopeElem));  // x_LogoutReq_x Sp
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
