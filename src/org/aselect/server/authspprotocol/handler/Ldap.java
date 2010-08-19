@@ -197,7 +197,9 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	private final static String ERROR_LDAP_INVALID_CREDENTIALS = "400";
 
 	/** Prefix in errors.conf for LDAP specific errors */
-	private final static String ERROR_LDAP_PREFIX = "LDAP";
+//	private final static String ERROR_LDAP_PREFIX = "LDAP";
+	// Prefix with number so integer check can be done on errors
+	private final static String ERROR_LDAP_PREFIX = "11";
 
 	// Localization
 	protected String _sUserLanguage = "";
@@ -748,12 +750,21 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				});
 
 				String sErrorForm = _configManager.getForm("error", _sUserLanguage, _sUserCountry);
-				sErrorForm = Utils.replaceString(sErrorForm, "[error]", ERROR_LDAP_ACCESS_DENIED);
-				sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", ERROR_LDAP_ACCESS_DENIED);
+//				sErrorForm = Utils.replaceString(sErrorForm, "[error]", ERROR_LDAP_ACCESS_DENIED);
+//				sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", ERROR_LDAP_ACCESS_DENIED);
+				sErrorForm = Utils.replaceString(sErrorForm, "[error]", ERROR_LDAP_PREFIX + ERROR_LDAP_ACCESS_DENIED);
+				sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", ERROR_LDAP_PREFIX + ERROR_LDAP_ACCESS_DENIED);
 				String sErrorMessage = _configManager.getErrorMessage(ERROR_LDAP_PREFIX + ERROR_LDAP_ACCESS_DENIED,
 						_sUserLanguage, _sUserCountry);
 				sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
 				sErrorForm = Utils.replaceString(sErrorForm, "[language]", _sUserLanguage);
+				// RH, 20100819, sn
+				//	add some extra info here
+				sErrorForm = Utils.replaceString(sErrorForm, "[country]", _sUserCountry);
+				sErrorForm = Utils.replaceString(sErrorForm, "[app]",(String) htSessionContext.get("app_id"));
+				// RH, 20100819, en
+				
+				
 				sErrorForm = Utils.replaceConditional(sErrorForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
 				sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext);
 				pwOut.println(sErrorForm);
@@ -850,7 +861,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[error_message]", sErrorMessage);
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[language]", _sUserLanguage);
 			sDirectLoginForm = Utils.replaceConditional(sDirectLoginForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
-
+			
 			StringBuffer sbUrl = new StringBuffer(sMyUrl).append("?request=error").append("&result_code=").append(
 					Errors.ERROR_ASELECT_SERVER_CANCEL).append("&a-select-server=").append(sServerId).append("&rid=")
 					.append(sRid);

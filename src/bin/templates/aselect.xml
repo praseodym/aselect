@@ -407,6 +407,23 @@
 				</authentication_methods>
 			</handler> -->
 
+			<!-- 	error_request installs a handler that presents a (application defined, see "applications" section) -->
+			<!--	html page to the user -->
+			<!-- 	default page is siamerror.html in the aselect workingdir -->
+			<!-- 	other pages can be specified per application with the error_page parameter in the "applications" section -->
+			<!--  	following request queryparameters will be replaced in the form -->
+			<!-- 	[error_code] with error_code, must be either numeric or less than 9 characters -->
+			<!-- 	[error_message] with a lookup string value from aselect server errors.conf -->
+			<!-- 	[language] with used language locale, can be supplied in querystring but will be validated -->
+			<!-- 	[country] with used country locale, can be supplied in querystring but will be validated -->
+			<!-- 	[app] with app_id from querystring after validation against applications in aselect config file -->
+		<!--  	<handler id="error_request"
+        	class="org.aselect.server.request.handler.ErrorRequestHandler"
+        	target="/error_request.*" >
+		</handler>  -->
+
+
+
 			<handler 
 				id='aselect' 
 				class='org.aselect.server.request.handler.aselect.ASelectAuthenticationProfile' 
@@ -631,6 +648,16 @@
 					of available AuthSP's for an application. This can be useful to 
 					trigger "Direct Login" for example. -->					
 			<!-- <max_level>30</max_level> -->
+			
+			<!--	"error_page" is an optional parameter to set a application specific error_page 
+					(template) if a "error_request" handler is being used 
+					an application can use this to present the user a specific error_page 
+					The value should be an html template filename (without the html extension)
+					Locales will be used. (E.g. errormyapp will load errormyapp_en_US.html if exists,
+					otherwise erromyapp_en.html or ultimately erromyapp.html)
+					This only works when the "error_request" handler is being called. --> 
+			<!-- <error_page>errormyapp</error_page> -->
+			
 		</application>
 	</applications>
 
