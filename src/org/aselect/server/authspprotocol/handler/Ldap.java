@@ -761,7 +761,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				// RH, 20100819, sn
 				//	add some extra info here
 				sErrorForm = Utils.replaceString(sErrorForm, "[country]", _sUserCountry);
-				sErrorForm = Utils.replaceString(sErrorForm, "[app]",(String) htSessionContext.get("app_id"));
+				sErrorForm = Utils.replaceString(sErrorForm, "[app_id]",(String) htSessionContext.get("app_id"));
 				// RH, 20100819, en
 				
 				

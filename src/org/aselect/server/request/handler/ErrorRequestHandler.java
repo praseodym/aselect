@@ -17,7 +17,6 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
@@ -26,10 +25,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.xml.utils.res.StringArrayWrapper;
-import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.request.RequestState;
-import org.aselect.server.request.handler.aselect.authentication.ASelectRequestHandlerFactory;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
@@ -38,11 +34,10 @@ import org.aselect.system.utils.Utils;
 public class ErrorRequestHandler extends AbstractRequestHandler
 {
 	private final static String MODULE = "ErrorRequestHandler";
-	private final static String SIAM_DEFAULT_ERROR_FILENAME = "siamerror.html";
+	private final static String SIAM_DEFAULT_ERROR_FILENAME = "error_request.html";
 	private final static int SIAM_MAX_ERROCODE_LENGTH = 8;
 	private final static List<String> VALID_LANGS = Arrays.asList(Locale.getISOLanguages()); 
 	private final static List<String> VALID_CNTRY = Arrays.asList(Locale.getISOCountries()); 
-
 	
 	/**
 	 * Init method <br>
@@ -101,6 +96,7 @@ public class ErrorRequestHandler extends AbstractRequestHandler
 		sErrorCode = (sErrorCode != null) ? sErrorCode : "";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "error_code:" +  sErrorCode);
 		try {
+			@SuppressWarnings("unused")
 			int nErrorCode = Integer.parseInt(sErrorCode);
 		}
 		catch (NumberFormatException e) {
@@ -170,13 +166,14 @@ public class ErrorRequestHandler extends AbstractRequestHandler
 					app_id = "unknown";
 				}
 			}
+			// .html will be stripped from sFileName
 			String sErrorForm = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), sFileName, loc.getLanguage(), loc.getCountry());
 			sErrorForm = Utils.replaceString(sErrorForm, "[error]", sErrorCode);  // obsoleted 20100817
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", sErrorCode);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
 			sErrorForm = Utils.replaceString(sErrorForm, "[language]", loc.getLanguage());
 			sErrorForm = Utils.replaceString(sErrorForm, "[country]", loc.getCountry());
-			sErrorForm = Utils.replaceString(sErrorForm, "[app]", app_id);
+			sErrorForm = Utils.replaceString(sErrorForm, "[app_id]", app_id);
 			sErrorForm = Utils.replaceConditional(sErrorForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
 			// updateTemplate() accepts a null session to remove unused special fields!
 			sErrorForm = _configManager.updateTemplate(sErrorForm, null /* no session available */);

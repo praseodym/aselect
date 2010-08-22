@@ -998,7 +998,6 @@ public class ASelectConfigManager extends ConfigManager
 	}
 
 	// 20090930, Bauke: added localization
-	// TODO: use a cache for the error.conf files
 	// TODO: move to ConfigManager, so AuthSP can also use this functionality
 	/**
 	 * Load error file.
@@ -1706,11 +1705,12 @@ public class ASelectConfigManager extends ConfigManager
 		boolean langDefault = (sLanguage == null || sLanguage.equals(""));
 		try {
 			String sLangExt = (langDefault) ? "" : "_" + sLanguage.toLowerCase();
-			String sHtmlExt = (!sFileName.endsWith(".html")) ? ".html" : "";
+			if (sFileName.endsWith(".html"))
+				sFileName = sFileName.substring(0, sFileName.length()-5);
 			for (;;) {
 				StringBuffer sbFilePath = new StringBuffer(getWorkingdir());
 				sbFilePath.append(File.separator).append("conf").append(File.separator).append("html").append(
-						File.separator).append(sFileName).append(sLangExt).append(sHtmlExt);
+						File.separator).append(sFileName).append(sLangExt).append(".html");
 
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "HTML " + sbFilePath);
 				fTemplate = new File(sbFilePath.toString());

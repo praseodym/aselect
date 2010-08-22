@@ -2071,7 +2071,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sTemp = (String) htTGTContext.get("app_id");
 			if (sTemp == null)
 				sTemp = "[unknown]";
-			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[app]", sTemp);
+			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[app_id]", sTemp);
 
 			sUserInfoForm = _configManager.updateTemplate(sUserInfoForm, htTGTContext);
 
