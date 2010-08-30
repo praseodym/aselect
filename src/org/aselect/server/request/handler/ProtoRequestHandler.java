@@ -565,8 +565,9 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", sErrorCode);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
 			sErrorForm = Utils.replaceString(sErrorForm, "[language]", _sUserLanguage);
-			sErrorForm = Utils.replaceConditional(sErrorForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
 
+			String sAppUrl = (String)htSessionContext.get("app_url");
+			sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), sAppUrl, _systemLogger);
 			sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext);
 			pwOut.println(sErrorForm);
 		}

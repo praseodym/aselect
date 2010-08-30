@@ -452,14 +452,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 				try {
 					Object aselect = _configManager.getSection(null, "aselect");
-					String sFriendlyName = ASelectConfigManager.getSimpleParam(aselect, "organization_friendly_name",
-							false);
+					String sFriendlyName = ASelectConfigManager.getSimpleParam(aselect, "organization_friendly_name", false);
 					sServerInfoForm = Utils.replaceString(sServerInfoForm, "[organization_friendly]", sFriendlyName);
 				}
 				catch (Exception e) {
 					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Configuration error: " + e);
 				}
-				_systemLogger.log(Level.INFO, _sModule, sMethod, "Serverinfo [" + sServerInfoForm + "]");
+				//_systemLogger.log(Level.INFO, _sModule, sMethod, "Serverinfo [" + sServerInfoForm + "]");
 				pwOut.println(sServerInfoForm);
 			}
 		}
@@ -491,6 +490,16 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				_systemLogger.log(Level.WARNING, _sModule, sMethod,
 						"'direct_authsp' found, but not a 'direct_login' request, rid='" + sRid + "'");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+			
+			// 20100828, Bauke:
+			// Allow application to force the login user name upon us
+			String sAppUrl = (String)_htSessionContext.get("app_url");
+			if (sAppUrl != null) {
+				String sSearch = Utils.getParameterValueFromUrl(sAppUrl, "set_forced_uid");
+				if (sSearch != null)
+					//_htSessionContext.put("forced_uid", sSearch);
+					_htSessionContext.put("user_id", sSearch);
 			}
 
 			if (sRequest.equals("login1")) {
@@ -1332,7 +1341,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sSelectForm = Utils.replaceString(sSelectForm, "[user_id]", sUid);
 			sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", (String) htServiceRequest.get("my_url"));
 			sSelectForm = Utils.replaceString(sSelectForm, "[request]", "login3");
-
+			String sLanguage = (String) htSessionContext.get("language");
+			String sCountry = (String) htSessionContext.get("country");
+			sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
+			sSelectForm = Utils.replaceString(sSelectForm, "[country]", sCountry);
+			
 			String sFriendlyName = "";
 			String sAuthspName = "";
 			sb = new StringBuffer();

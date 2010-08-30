@@ -750,8 +750,6 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				});
 
 				String sErrorForm = _configManager.getForm("error", _sUserLanguage, _sUserCountry);
-//				sErrorForm = Utils.replaceString(sErrorForm, "[error]", ERROR_LDAP_ACCESS_DENIED);
-//				sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", ERROR_LDAP_ACCESS_DENIED);
 				sErrorForm = Utils.replaceString(sErrorForm, "[error]", ERROR_LDAP_PREFIX + ERROR_LDAP_ACCESS_DENIED);
 				sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", ERROR_LDAP_PREFIX + ERROR_LDAP_ACCESS_DENIED);
 				String sErrorMessage = _configManager.getErrorMessage(ERROR_LDAP_PREFIX + ERROR_LDAP_ACCESS_DENIED,
@@ -764,8 +762,10 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				sErrorForm = Utils.replaceString(sErrorForm, "[app_id]",(String) htSessionContext.get("app_id"));
 				// RH, 20100819, en
 				
-				
-				sErrorForm = Utils.replaceConditional(sErrorForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
+				// Extract if_cond=... from the application URL
+				String sAppUrl = (String)htSessionContext.get("app_url");
+				sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), sAppUrl, _systemLogger);
+
 				sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext);
 				pwOut.println(sErrorForm);
 			}
@@ -814,9 +814,8 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	private void showDirectLoginForm(HashMap htServiceRequest, PrintWriter pwOut, String sServerId)
 		throws ASelectException
 	{
-		String sMethod = "showDirectLoginForm()";
+		String sMethod = "showDirectLoginForm";
 		try {
-
 			String sDirectLoginForm = _configManager.getForm("directlogin", _sUserLanguage, _sUserCountry);
 			if (sDirectLoginForm == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "template file 'directlogin.html' not found");
@@ -829,8 +828,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			}
 			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not fetch session context for rid='" + sRid
-						+ "'");
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not fetch session context for rid='"+sRid+"'");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
 			}
 			String sMyUrl = (String) htServiceRequest.get("my_url");
@@ -852,16 +850,15 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[request]", "direct_login2");
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[cross_request]", "cross_login");
 
-			String sUid = (String) htServiceRequest.get("user_id");
-			if (sUid != null)
-				sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[user_name]", sUid);
-			else
-				sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[user_name]", "");
+			String sUid = (String) htSessionContext.get("user_id");
+			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[user_id]", (sUid != null)? sUid: "");
 
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[error_message]", sErrorMessage);
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[language]", _sUserLanguage);
-			sDirectLoginForm = Utils.replaceConditional(sDirectLoginForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
-			
+			// Extract if_cond=... from the application URL
+			String sAppUrl = (String)htSessionContext.get("app_url");
+			sDirectLoginForm = Utils.handleAllConditionals(sDirectLoginForm, Utils.hasValue(sErrorMessage), sAppUrl, _systemLogger);
+
 			StringBuffer sbUrl = new StringBuffer(sMyUrl).append("?request=error").append("&result_code=").append(
 					Errors.ERROR_ASELECT_SERVER_CANCEL).append("&a-select-server=").append(sServerId).append("&rid=")
 					.append(sRid);

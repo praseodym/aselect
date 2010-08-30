@@ -279,24 +279,26 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 		String sErrorMessage = _configManager.getErrorMessage(sErrorCode, _sUserLanguage, _sUserCountry);
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "FORM[error] " + sErrorCode + ":" + sErrorMessage);
 		try {
-			HashMap htSession = null;
 			String sErrorForm = _configManager.getForm("error", _sUserLanguage, _sUserCountry);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error]", sErrorCode);  // obsoleted 20100817
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", sErrorCode);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
 			sErrorForm = Utils.replaceString(sErrorForm, "[language]", _sUserLanguage);
-			sErrorForm = Utils.replaceConditional(sErrorForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
 
+			HashMap htSessionContext = null;
 			String sRid = (String) htServiceRequest.get("rid");
 			if (sRid != null) {
-				htSession = _sessionManager.getSessionContext(sRid);
+				htSessionContext = _sessionManager.getSessionContext(sRid);
 			}
-			sErrorForm = _configManager.updateTemplate(sErrorForm, htSession);  // accepts a null Session!
+			if (htSessionContext != null) {
+				String sAppUrl = (String)htSessionContext.get("app_url");
+				sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), sAppUrl, _systemLogger);
+			}
+			sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext);  // accepts a null Session!
 			pwOut.println(sErrorForm);
 		}
 		catch (Exception e) {
-			_systemLogger
-					.log(Level.SEVERE, _sModule, sMethod, "Could not show error page with error: " + sErrorCode, e);
+			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Could not show error page with error: " + sErrorCode, e);
 		}
 	}
 

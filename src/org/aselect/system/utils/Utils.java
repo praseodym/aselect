@@ -69,11 +69,13 @@ import java.util.StringTokenizer;
 import java.util.logging.Level;
 
 //import org.aselect.server.log.ASelectSystemLogger;
+import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.communication.server.IInputMessage;
 import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.logging.ISystemLogger;
 import org.aselect.system.logging.SystemLogger;
 
 /**
@@ -292,19 +294,134 @@ public class Utils
 	}
 	
 	/**
-	 * Replace text based on a condition. Syntax:
-	 * [<keyword>=<true_branch>,<false_branch>] Currently no escape mechanism
-	 * for the comma and right bracket.
+	 * Handle all conditional keywords in a HTML form.
+	 * 
+	 * @param sText
+	 *            the HTML text
+	 * @param bErrCond
+	 *            is if_err true?
+	 * @param sAppUrl
+	 *            the application's URL
+	 * @param logger
+	 *            any logger
+	 * @return the modified HTML text
+	 */
+	public static String handleAllConditionals(String sText, boolean bErrCond, String sAppUrl, ISystemLogger logger)
+	{
+		final String sMethod = "handleAllConditionals";
+		
+		sText = Utils.replaceConditional(sText, "if_error", bErrCond, logger);
+		
+		logger.log(Level.INFO, MODULE, sMethod, "appUrl="+sAppUrl);
+		String sParCond = getParameterValueFromUrl(sAppUrl, "if_cond");
+		logger.log(Level.INFO, MODULE, sMethod, "parCond="+sParCond);
+		if (sParCond != null)
+			sText = Utils.replaceConditional(sText, "if_cond,"+sParCond, true, logger);
+		
+		// Other conditions are false
+		sText = Utils.removeAllConditionals(sText, "if_cond", logger);
+		return sText;
+	}
+
+	/**
+	 * Retrieve parameter value from the given URL.
+	 * 
+	 * @param sUrl
+	 *            the URL
+	 * @param sParamName
+	 *            the parameter name
+	 * @return the parameter value or null if not found
+	 */
+	public static String getParameterValueFromUrl(String sUrl, String sParamName)
+	{
+		if (sUrl == null)
+			return null;
+
+		String sParCond = null;
+		int iArgs = sUrl.indexOf('?');
+		if (iArgs >= 0) {
+			int iCond = sUrl.indexOf(sParamName+"=", iArgs+1);
+			if (iCond >= 0 && (sUrl.charAt(iCond-1)=='&' || sUrl.charAt(iCond-1)=='?')) {
+				iCond += sParamName.length()+1;
+				int iAmp = sUrl.indexOf('&', iCond);
+				sParCond = (iAmp<0)? sUrl.substring(iCond): sUrl.substring(iCond, iAmp);
+			}
+		}
+		return sParCond;
+	}
+	
+	/**
+	 * Replace all unused conditions. Syntax:
+	 * [&lt;condition_keyword&gt;,&lt;condition_name&gt;,&lt;true_branch&gt;,&lt;false_branch&gt;]
+	 * Currently no escape mechanism for the comma and right bracket.
 	 * 
 	 * @param sText
 	 * 			The source text.
 	 * @param sKeyword
 	 *            The keyword used to look for the conditional replacement.
-	 * @param bCondition
-	 *            Use the true branch of the condition?
 	 * @return result with replacements applied
 	 */
+	public static String removeAllConditionals(String sText, String sKeyword, ISystemLogger logger)
+	{
+		String sMethod = "removeAllConditionals";
+		String sSearch = "[" + sKeyword + ",";
+		int idx, len = sSearch.length();
+		String sResult = "";
+		
+		if (sText == null)
+			return sText;
+		if (logger!=null) logger.log(Level.INFO, MODULE, sMethod, "Search="+sSearch);
+		
+		while (true) {
+			//logger.log(Level.INFO, MODULE, sMethod, "Text="+Utils.firstPartOf(sText, 45));
+			idx = sText.indexOf(sSearch);
+			if (idx < 0)
+				break;
+			//logger.log(Level.INFO, MODULE, sMethod, "Cond="+Utils.firstPartOf(sText.substring(idx), 45)+" idx="+idx);
+			int iComma = sText.indexOf(',', idx + len);
+			int iNextComma = (iComma < 0) ? -1: sText.indexOf(',', iComma+1);
+			int iRight = (iNextComma < 0) ? -1: sText.indexOf(']', iNextComma+1);
+			//logger.log(Level.INFO, MODULE, sMethod, "comma="+iComma+" next="+iNextComma+" right="+iRight);
+			if (iRight < 0) {
+				sResult += sText.substring(0, idx + len);
+				sText = sText.substring(idx + len);
+				continue;
+			}
+			if (iNextComma < 0 || iComma < 0) {
+				sResult += sText.substring(0, iRight+1);
+				sText = sText.substring(iRight+1);
+				continue;
+			}
+			// Commas and right bracket found
+			// Use the false part
+			sResult += sText.substring(0, idx) + sText.substring(iNextComma+1, iRight);
+			sText = sText.substring(iRight+1);
+		}
+		return sResult + sText;
+	}
+	
+	/**
+	 * Replace text based on a condition (no logging).
+	 */
 	public static String replaceConditional(String sText, String sKeyword, boolean bCondition)
+	{
+		return replaceConditional(sText, sKeyword, bCondition, null);
+	}
+
+	/**
+	 * Replace text based on a condition.
+	 * Syntax: [&lt;keyword&gt;,&lt;true_branch&gt;,&lt;false_branch&gt;]
+	 * Currently no escape mechanism for the comma and right bracket.
+	 * 
+	 * @param sText
+	 * 			The source text.
+	 * @param sKeyword
+	 *          The keyword used to look for the conditional replacement.
+	 * @param bCondition
+	 *          Use the true branch of the condition?
+	 * @return result with replacements applied
+	 */
+	public static String replaceConditional(String sText, String sKeyword, boolean bCondition, ISystemLogger logger)
 	{
 		String sMethod = "replaceConditional";
 		String sSearch = "[" + sKeyword + ",";
@@ -314,20 +431,16 @@ public class Utils
 		if (sText == null)
 			return sText;
 
-		// RH, 20100622, this causes cyclic dependency server<->system
-		// 	furthermore, the logger might not be initialized yet (no init(...) done by this method)
-		//	If logging is needed, an initialized logger should be provided by the caller
-		//	therefore removed this logging
-//		ASelectSystemLogger logger = ASelectSystemLogger.getHandle();
-//		logger.log(Level.INFO, MODULE, sMethod, "Search="+sSearch);
+		// RH, 20100622, use of ASelectLogger can causes cyclic dependency server<->system
+		if (logger!=null) logger.log(Level.INFO, MODULE, sMethod, "Search="+sSearch);
 		while (true) {
 			idx = sText.indexOf(sSearch);
-			//logger.log(Level.INFO, MODULE, sMethod, "Text="+sText+" idx="+idx);
 			if (idx < 0)
 				break;
+			//if (logger!=null) logger.log(Level.INFO, MODULE, sMethod, "Text="+Utils.firstPartOf(sText.substring(idx), 15)+" idx="+idx);
 			int iComma = sText.indexOf(',', idx + len);
-			int iRight = sText.indexOf(']', (iComma >= 0) ? iComma : idx + len);
-			//logger.log(Level.INFO, MODULE, sMethod, "comma="+iComma+" right="+iRight);
+			int iRight = sText.indexOf(']', (iComma >= 0) ? iComma+1 : idx + len);
+			//if (logger!=null) logger.log(Level.INFO, MODULE, sMethod, "comma="+iComma+" right="+iRight);
 			if (iRight < 0) {
 				sResult += sText.substring(0, idx + len);
 				sText = sText.substring(idx + len);
@@ -520,7 +633,18 @@ public class Utils
 		return (i == s.length());
 	}
 
-	// Bauke: added
+	/**
+	 * Does the string have a decent value (not null and length > 0).
+	 * 
+	 * @param sText
+	 *        the string
+	 * @return true, if successful
+	 */
+	public static boolean hasValue(String sText)
+	{
+		return (sText != null && !sText.isEmpty());
+	}
+	
 	/**
 	 * First part of.
 	 * 

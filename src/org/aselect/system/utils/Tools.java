@@ -524,10 +524,9 @@ public class Tools
 		oSysLog.log(Level.INFO, MODULE, sMethod, "Result=" + htResponse);
 	}
 
-	// Convert an URL parameter string to a HashMap containing key, value pairs
-	//
 	/**
-	 * Gets the url attributes.
+	 * Convert an URL parameter string to a HashMap containing key, value pairs.
+	 * See also: HashMap convertCGIMessage(String xMessage) in Utils.
 	 * 
 	 * @param sText
 	 *            the s text
@@ -535,7 +534,7 @@ public class Tools
 	 *            the o system logger
 	 * @return the url attributes
 	 */
-	public static HashMap<String, String> getUrlAttributes(String sText, SystemLogger oSystemLogger)
+	public static HashMap<String, String>getUrlAttributes(String sText, SystemLogger oSystemLogger)
 	{
 		String sMethod = "getAttributes";
 		String sKey = "";

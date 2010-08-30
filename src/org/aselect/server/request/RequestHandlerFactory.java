@@ -439,7 +439,7 @@ public class RequestHandlerFactory
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", sErrorCode);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
 			sErrorForm = Utils.replaceString(sErrorForm, "[language]", _sUserLanguage);
-			sErrorForm = Utils.replaceConditional(sErrorForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
+			sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), null, _systemLogger);
 			// updateTemplate() accepts a null session to remove unused special fields!
 			sErrorForm = _configManager.updateTemplate(sErrorForm, null /* no session available */);
 

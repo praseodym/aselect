@@ -345,18 +345,19 @@ public class RegexSelectorHandler implements ISelectorHandler
 			String sErrorMessage = _configManager.getErrorMessage(sErrorCode);
 			sLoginForm = Utils.replaceString(sLoginForm, "[error_message]", sErrorMessage);
 			sLoginForm = Utils.replaceString(sLoginForm, "[language]", sLanguage);
-			sLoginForm = Utils.replaceConditional(sLoginForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
+			
+			HashMap htSessionContext = SessionManager.getHandle().getSessionContext(sRid);
+			String sAppUrl = (String)htSessionContext.get("app_url");
+			sLoginForm = Utils.handleAllConditionals(sLoginForm, Utils.hasValue(sErrorMessage), sAppUrl, _systemLogger);
 
 			StringBuffer sbUrl = new StringBuffer((String) htServiceRequest.get("my_url")).append("?request=error")
 					.append("&result_code=").append(Errors.ERROR_ASELECT_SERVER_CANCEL).append("&a-select-server=")
 					.append(_sMyServerId).append("&rid=").append(sRid);
 			sLoginForm = Utils.replaceString(sLoginForm, "[cancel]", sbUrl.toString());
-
 			sLoginForm = Utils.replaceString(sLoginForm, "[cross_request]", "cross_login");
 
-			HashMap htSession = SessionManager.getHandle().getSessionContext(sRid);
-			if (htSession != null)
-				sLoginForm = _configManager.updateTemplate(sLoginForm, htSession);
+			if (htSessionContext != null)
+				sLoginForm = _configManager.updateTemplate(sLoginForm, htSessionContext);
 
 			pwOut.println(sLoginForm);
 		}

@@ -185,20 +185,17 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	 * @param sErrorMessage
 	 *            The error message that should be shown in the error page.
 	 */
-//	public void showErrorPage(PrintWriter pwOut, String sTemplate, String sError, String sErrorMessage, String sLanguage)
 	public void showErrorPage(PrintWriter pwOut, String sTemplate, String sError, String sErrorMessage, String sLanguage, ISystemLogger sLogger)
 	{
 		String sMethod = "showErrorPage";
-//		ASelectSystemLogger _oAuthSPSystemLogger = ASelectSystemLogger.getHandle();
-//		_oAuthSPSystemLogger.log(Level.INFO, MODULE, sMethod, "FORM[" + sTemplate + "] " + sError + ":" + sErrorMessage);
 		sLogger.log(Level.INFO, MODULE, sMethod, "FORM[" + sTemplate + "] " + sError + ":" + sErrorMessage);
 
 		String sErrorForm = new String(sTemplate);
-		sErrorForm = Utils.replaceString(sErrorForm, "[error]", sError);  // obsoleted 20100817
+		sErrorForm = Utils.replaceString(sErrorForm, "[error]", sError);  // made obsolete 20100817
 		sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", sError);
 		sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
 		sErrorForm = Utils.replaceString(sErrorForm, "[language]", sLanguage);
-		sErrorForm = Utils.replaceConditional(sErrorForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
+		sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), null, sLogger);
 		pwOut.println(sErrorForm);
 	}
 

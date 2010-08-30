@@ -764,26 +764,11 @@ public class DBAuthSP extends ASelectHttpServlet
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error]", sError);  // obsoleted 20100817
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error_code]", sError);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error_message]", sErrorMessage);
-		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", sLanguage);
+		if (sLanguage != null) sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", sLanguage);
+		if (sCountry != null) sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[country]", sCountry);
 		sAuthenticateForm = Utils.replaceConditional(sAuthenticateForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[signature]", sSignature);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[retry_counter]", sRetryCounter);
-
-		// optional country code
-		if (sCountry != null) {
-			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[country]", sCountry);
-		}
-		else {
-			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[country]", "");
-		}
-
-		// optional language code
-		if (sLanguage != null) {
-			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", sLanguage);
-		}
-		else {
-			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", "");
-		}
 
 		pwOut.println(sAuthenticateForm);
 	}

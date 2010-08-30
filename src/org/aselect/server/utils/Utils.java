@@ -10,7 +10,6 @@
  * please contact Anoigo. (http://www.anoigo.nl) 
  */
 
-
 package org.aselect.server.utils;
 
 import java.io.IOException;
@@ -47,9 +46,25 @@ public class Utils
 {
 	private static final String MODULE = "Utils";
 
-
-	//
-	//
+	/**
+	 * Present organization choice to the user.
+	 * 
+	 * @param configManager
+	 *            the config manager
+	 * @param htSessionContext
+	 *            the session context
+	 * @param sRid
+	 *            the rid
+	 * @param sLanguage
+	 *            the language
+	 * @param hUserOrganizations
+	 *            the list of user organizations
+	 * @return the string
+	 * @throws ASelectConfigException
+	 * @throws ASelectException
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 */
 	public static String presentOrganizationChoice(ASelectConfigManager configManager, HashMap htSessionContext,
 			String sRid, String sLanguage, HashMap<String, String> hUserOrganizations)
 	throws ASelectConfigException, ASelectException, IOException
@@ -79,20 +94,14 @@ public class Utils
 		return sSelectForm;
 	}
 
-
-	/*
-	 * Methode decode the credentials passed.
-	 */
 	/**
-	 * Decode credentials.
+	 * Decode the credentials passed.
 	 * 
 	 * @param credentials
-	 *            the credentials
+	 *            the user's credentials
 	 * @param oSysLog
-	 *            the o sys log
-	 * @return the string
+	 * @return the decoded credentials
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
 	public static String decodeCredentials(String credentials, SystemLogger oSysLog)
 		throws ASelectException
@@ -110,7 +119,6 @@ public class Utils
 		}
 		return decodedCredentials;
 	}
-
 
 	/**
 	 * Serialize attributes contained in a HashMap. <br>
@@ -179,7 +187,6 @@ public class Utils
 		}
 	}
 
-
 	/**
 	 * Deserialize attributes and convertion to a <code>HashMap</code>. <br/>
 	 * Conatins support for multivalue attributes, with name of type <code>
@@ -238,5 +245,4 @@ public class Utils
 		}
 		return htAttributes;
 	}
-
 }

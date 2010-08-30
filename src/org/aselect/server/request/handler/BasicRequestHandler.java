@@ -40,7 +40,7 @@ public abstract class BasicRequestHandler
 
 	// This code was stolen from ApplicationAPIHandler.handleAuthenticateRequest()
 	// But also slightly different versions were found in ASelectAPIHandler and the 'sfs' handlers
-	// Code should be merged.
+	// Improve: Code should be merged.
 	/**
 	 * Handle authenticate and create session.
 	 * 

@@ -516,11 +516,11 @@ public class SFSSelectorHandler implements ISelectorHandler
 			sLoginForm = Utils.replaceString(sLoginForm, "[request]", "cross_login");
 			sLoginForm = Utils.replaceString(sLoginForm, "[a-select-server]", _sMyServerId);
 
+			String sErrorMessage = null;
 			if (sErrorCode != null) {
-				String sErrorMessage = _configManager.getErrorMessage(sErrorCode);
+				sErrorMessage = _configManager.getErrorMessage(sErrorCode);
 				sLoginForm = Utils.replaceString(sLoginForm, "[error_message]", sErrorMessage);
 				sLoginForm = Utils.replaceString(sLoginForm, "[language]", sLanguage);
-				sLoginForm = Utils.replaceConditional(sLoginForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
 			}
 			else {
 				sLoginForm = Utils.replaceString(sLoginForm, "[error_message]", "");
@@ -537,9 +537,12 @@ public class SFSSelectorHandler implements ISelectorHandler
 			sLoginForm = Utils.replaceString(sLoginForm, "[available_remote_servers]", getRemoteServerHTML(htServers,
 					sDefaultHomeIdp));
 
-			HashMap htSession = SessionManager.getHandle().getSessionContext(sRid);
-			if (htSession != null)
-				sLoginForm = _configManager.updateTemplate(sLoginForm, htSession);
+			HashMap htSessionContext = SessionManager.getHandle().getSessionContext(sRid);
+			String sAppUrl = (String)htSessionContext.get("app_url");
+			sLoginForm = Utils.handleAllConditionals(sLoginForm, Utils.hasValue(sErrorMessage), sAppUrl, _systemLogger);
+			sLoginForm = Utils.replaceConditional(sLoginForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
+			if (htSessionContext != null)
+				sLoginForm = _configManager.updateTemplate(sLoginForm, htSessionContext);
 
 			pwOut.println(sLoginForm);
 		}
