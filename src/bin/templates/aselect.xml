@@ -421,8 +421,25 @@
         	class="org.aselect.server.request.handler.ErrorRequestHandler"
         	target="/error_request.*" >
 		</handler>  -->
+		
 
-
+			<!-- 	openid_op implements an openid provider handler -->
+			<!-- 	that communicates with the aselect server -->
+			<!--	The aselectserver handles the actual authentication -->
+			<!--	<shared_secret> to communicate with the aselect server -->
+			<!-- 	<application> the app_id to send to to aselectserver -->
+			<!-- 	<opendpointurl> the openid endpointurl to return to from the aselectserver -->
+			<!-- 	must be the target of this handler -->
+			
+			<!-- 
+			<handler id="openid_op"
+			        class="org.aselect.server.request.handler.openid.op.OpenID_RequestHandler"
+			        target="/openidop_request.*" >
+			        <shared_secret>changeit</shared_secret>
+			        <application>app3</application>
+			        <opendpointurl>https://[the_aselect_server]/aselectserver/server/openidop_request</opendpointurl>
+			</handler>
+			 -->
 
 			<handler 
 				id='aselect' 
