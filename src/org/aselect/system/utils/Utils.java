@@ -642,7 +642,7 @@ public class Utils
 	 */
 	public static boolean hasValue(String sText)
 	{
-		return (sText != null && !sText.isEmpty());
+		return (sText != null && sText.length()>0);
 	}
 	
 	/**
