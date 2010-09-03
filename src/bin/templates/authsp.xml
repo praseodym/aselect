@@ -550,6 +550,36 @@
 	
 	</authsp>
 
+        <!--BEGINOPENIDAUTHSP-->
+        <!--    A-Select OpenID AuthSP Configuration -->
+
+        <!--    The AuthSP "id" is a unique ID for the AuthSP. This ID is configured
+                        in the web.xml of the AuthSP Server as "config_id" parameter. The
+                        AuthSP is added to the AuthSP server web.xml during installation.
+                        The default configuration ID is "openid".       -->
+                <!--    failure_handling, The failure handling parameter specifies whether errors should
+                                be returned to the A-Select server or handled by the AuthSP
+                                itself. Can be "aselect" to redirect the user back to the
+                                A-Select Server in case of an error or local if you want any
+                                errors to be displayed by the IP AuthSP.        -->
+                <!--    allowed_retries, The number of false password entries allowed before authentication
+                                fails and is terminated.        -->
+                <!--    url, The return "url" for the openid provider. -->
+                <!-- 	accepted_domains, The domains that are allowed to use this service -->
+		<!--                                 
+        <authsp id="openid">
+                <failure_handling>aselect</failure_handling>
+                <allowed_retries>3</allowed_retries>
+                <url>https://localhost/authspserver/openid/</url>
+                <accepted_domains>
+                        <domain>myopenid.com</domain>
+                        <domain>yourdomain.nl</domain>
+                </accepted_domains>
+        </authsp>
+         -->
+        <!--ENDOPENIDAUTHSP-->
+
+
 	<!-- The "SAM" is the Simple A-Select Manager, which handles the 
 		 A-Select AuthSP Server resources. -->
 	<sam>
