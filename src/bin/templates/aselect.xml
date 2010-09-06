@@ -901,6 +901,20 @@
 			</applications>
 		</authsp>	
 		-->
+		
+        <!--BEGINOPENIDAUTHSP10-->
+        <!--
+                <authsp id="OpenID" resourcegroup="openid_authsp_resources" direct_authsp="false">
+                        <level>10</level>
+                        <friendly_name>OpenID Authentication (OpenIDAuthSP)</friendly_name>
+                        <handler>org.aselect.server.authspprotocol.handler.OpenIDAuthSPHandler</handler>
+                        <popup>false</popup>
+                        <type>local</type>
+                </authsp>
+        -->
+        <!--ENDOPENIDAUTHSP10-->
+		
+		
 
 	</authsps>
 
@@ -1530,6 +1544,17 @@
 					<url>https://localhost/aselectserver/server</url>
 				</resource>	
 			</resourcegroup>
+			
+            <!--BEGINOPENID-->
+            <!-- 
+            <resourcegroup id="openid_authsp_resources" interval="30">
+                    <resource id="OPENID_1">
+                            <url>https://siam14.theopenfactory.local/authspserver/openid</url>
+                    </resource>
+            </resourcegroup>
+            -->
+            <!--ENDOPENID-->
+			
 		</agent>
 	</sam>
 
