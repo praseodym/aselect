@@ -1549,7 +1549,7 @@
             <!-- 
             <resourcegroup id="openid_authsp_resources" interval="30">
                     <resource id="OPENID_1">
-                            <url>https://siam14.theopenfactory.local/authspserver/openid</url>
+                            <url>https://[theaselectserver]/authspserver/openid</url>
                     </resource>
             </resourcegroup>
             -->
