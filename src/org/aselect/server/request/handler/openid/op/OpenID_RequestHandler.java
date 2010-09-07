@@ -38,10 +38,7 @@ import org.openid4java.message.sreg.SRegMessage;
 import org.openid4java.server.InMemoryServerAssociationStore;
 import org.openid4java.server.ServerException;
 import org.openid4java.server.ServerManager;
-
-import sun.misc.Regexp;
-
-
+//import sun.misc.Regexp;
 
 public class OpenID_RequestHandler extends AbstractRequestHandler
 {
@@ -522,7 +519,6 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 
 	public void destroy()
 	{
-		// TODO Auto-generated method stub
 		
 	}
 

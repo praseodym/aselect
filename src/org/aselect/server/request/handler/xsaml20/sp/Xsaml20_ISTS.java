@@ -35,6 +35,7 @@ import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.BASE64Encoder;
+import org.aselect.system.utils.Base64Codec;
 import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
 import org.opensaml.common.SAMLObjectBuilder;
@@ -112,28 +113,6 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 		
 		if (_sHttpMethod.equals("POST"))
 			_sPostTemplate = readTemplateFromConfig(oConfig, "post_template");
-
-		/* 20100429 replaced by IdP parameters
-		levelMap = new HashMap<String, String>();
-		Object oSecurity = null;
-		try {
-			oSecurity = _configManager.getSection(oConfig, "security");
-			String sLevel = _configManager.getParam(oSecurity, "level");
-			String sUri = _configManager.getParam(oSecurity, "uri");
-			levelMap.put(sLevel, sUri);
-
-			oSecurity = _configManager.getNextSection(oSecurity);
-			while (oSecurity != null) {
-				sLevel = _configManager.getParam(oSecurity, "level");
-				sUri = _configManager.getParam(oSecurity, "uri");
-				levelMap.put(sLevel, sUri);
-				oSecurity = _configManager.getNextSection(oSecurity);
-			}
-		}
-		catch (ASelectConfigException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid config item 'uri' found in handler section", e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-		}*/
 		
 		// Get Assertion Consumer data from config
 		try {
@@ -301,6 +280,21 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				authnRequest.setForceAuthn(true);
 			}
 			
+			// Look for aselect_specials!
+			// In app_url or in the caller's RelayState (if we're an IdP)
+			String sRelayState = "idp=" + sFederationUrl;
+			if (specialSettings != null && specialSettings.contains("relay_plus")) {
+				String sSpecials = (String)htSessionContext.get("aselect_specials");
+				if (!Utils.hasValue(sSpecials)) {
+					// First SP in the chain to the last IdP that can use the specials
+					String sAppUrl = (String)htSessionContext.get("app_url");
+					sSpecials = Utils.getParameterValueFromUrl(sAppUrl, "aselect_specials");
+				}
+				if (Utils.hasValue(sSpecials))
+					sRelayState += "&aselect_specials="+sSpecials;
+				sRelayState = Base64Codec.encode(sRelayState.getBytes());
+			}
+
 			//
 			// We have the AuthnRequest, now get it to the other side
 			//
@@ -335,7 +329,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				messageContext.setOutboundSAMLMessageSigningCredential(credential);
 	
 				// 20091028, Bauke: use RelayState to transport rid to my AssertionConsumer
-				messageContext.setRelayState("idp=" + sFederationUrl);
+				messageContext.setRelayState(sRelayState);
 	
 				MarshallerFactory marshallerFactory = Configuration.getMarshallerFactory();
 				Marshaller marshaller = marshallerFactory.getMarshaller(messageContext.getOutboundSAMLMessage());
@@ -373,7 +367,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				}
 
 				// Let's POST the token
-				String sInputs = buildHtmlInput("RelayState", "idp=" + sFederationUrl);
+				String sInputs = buildHtmlInput("RelayState", sRelayState);
 				sInputs += buildHtmlInput("SAMLResponse", sAssertion);  //Tools.htmlEncode(nodeMessageContext.getTextContent()));
 				
 				// 20100317, Bauke: pass language to IdP (does not work in the GET version)

@@ -19,7 +19,6 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 public class LbSensorConfigManager extends ConfigManager
 {
 	private final String MODULE = "LbSensorConfigManager";
@@ -77,9 +76,9 @@ public class LbSensorConfigManager extends ConfigManager
 		super.init(sb.toString(), _systemLogger);
 	}
 
-	// Convenience function
 	/**
 	 * Gets the param from section.
+	 * Convenience function
 	 * 
 	 * @param oConfig
 	 *            the o config

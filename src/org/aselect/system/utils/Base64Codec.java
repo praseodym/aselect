@@ -10,27 +10,6 @@
  * please contact SURFnet bv. (http://www.surfnet.nl)
  */
 
-/* 
- * $Id: Base64.java,v 1.4 2006/05/03 09:31:06 tom Exp $ 
- * 
- * Changelog:
- * $Log: Base64.java,v $
- * Revision 1.4  2006/05/03 09:31:06  tom
- * Removed Javadoc version
- *
- * Revision 1.3  2005/09/08 12:47:11  erwin
- * Changed version number to 1.4.2
- *
- * Revision 1.2  2005/04/07 08:32:52  remco
- * base64 decoder couldn't handle empty strings
- *
- * Revision 1.1  2005/02/22 12:03:29  martijn
- * moved org.aselect.utils to org.aselect.system.utils
- *
- * Revision 1.2  2005/01/28 10:09:44  ali
- * Javadoc toegevoegd en kleine code cleanup acties.
- *
- */
 package org.aselect.system.utils;
 
 /**
@@ -44,7 +23,7 @@ package org.aselect.system.utils;
  * 
  * @author Alfa & Ariss
  */
-public class Base64
+public class Base64Codec
 {
 	
 	/**
@@ -121,7 +100,7 @@ public class Base64
 	}
 
 	/**
-	 * Returns the carachter in the 6 lower bits of the input int. <br>
+	 * Returns the character in the 6 lower bits of the input integer. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
 	 * Returns the character represented by the lower 6 bits or one of the trailing character as specified in RFC 2045. <br>
@@ -160,30 +139,16 @@ public class Base64
 	}
 
 	/**
-	 * This method decodes a Base64 respresentation of a byte array back to a byte array.
-	 * 
-	 * @param xEncodedString
-	 *            the x encoded string
-	 * @return the byte[]
-	 */
-	/**
 	 * Decodes a Base64 encoded String. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * This method decodes an RFC 2045 Base64 encoded String. <br>
+	 * This method decodes an RFC 2045 Base64 encoded String.<br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br>
-	 * None. <br>
-	 * <br>
-	 * <b>Preconditions:</b> <br>
-	 * None. <br>
-	 * <br>
-	 * <b>Postconditions:</b> <br>
-	 * None. <br>
+	 * Example: sTxt = new String(Base64Codec.decode(sTxt));<br>
 	 * 
 	 * @param xEncodedString
 	 *            Base64 encoded String.
-	 * @return byte array contining the decoded bytes.
+	 * @return byte array containing the decoded bytes.
 	 */
 	public static byte[] decode(String xEncodedString)
 	{

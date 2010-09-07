@@ -20,7 +20,6 @@ import org.aselect.lbsensor.LbSensor;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Tools;
 
-// TODO: Auto-generated Javadoc
 public class SensorDataDispatcher extends BasicSensorHandler
 {
 	public final static String MODULE = "SensorDataDispatcher";

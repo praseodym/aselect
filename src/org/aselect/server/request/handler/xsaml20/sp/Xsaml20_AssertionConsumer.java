@@ -40,6 +40,7 @@ import org.aselect.server.tgt.TGTIssuer;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.Base64Codec;
 import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
 import org.opensaml.Configuration;
@@ -151,13 +152,17 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
 		String sRelayState = request.getParameter("RelayState");
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Received artifact: " + sReceivedArtifact + " RelayState="
-				+ sRelayState);
-		String sFederationUrl = _sFederationUrl; // default, remove later on
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Received artifact: " + sReceivedArtifact + " RelayState="+sRelayState);
+		String sFederationUrl = _sFederationUrl; // default, remove later on, can be null
 		if (sRelayState.startsWith("idp=")) {
 			sFederationUrl = sRelayState.substring(4);
 		}
-		if (sFederationUrl == null || sFederationUrl.equals("")) {
+		else {  // Could be Base64 encoded
+			sRelayState = new String(Base64Codec.decode(sRelayState));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "RelayState="+sRelayState);
+			sFederationUrl = Utils.getParameterValueFromUrl(sRelayState, "idp");
+		}
+		if (!Utils.hasValue(sFederationUrl)) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"No idp value found in RelayState (or in <federation_url> config)");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);

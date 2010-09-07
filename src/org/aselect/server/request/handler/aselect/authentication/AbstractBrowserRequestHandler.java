@@ -295,6 +295,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 				sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), sAppUrl, _systemLogger);
 			}
 			sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext);  // accepts a null Session!
+			//_systemLogger.log(Level.INFO, _sModule, sMethod, "FORM="+sErrorForm);
 			pwOut.println(sErrorForm);
 		}
 		catch (Exception e) {

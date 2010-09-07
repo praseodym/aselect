@@ -33,7 +33,7 @@
  */
 package org.aselect.system.utils;
 
-// TODO: Consider using: import org.apache.commons.codec.binary.Base64;
+// Also consider using: import org.apache.commons.codec.binary.Base64;
 
 /**
  * RFC 2045 compliant Base64 decoder. <br>
@@ -70,6 +70,6 @@ public class BASE64Decoder
 	 */
 	public byte[] decodeBuffer(String xEncodedString)
 	{
-		return Base64.decode(xEncodedString);
+		return Base64Codec.decode(xEncodedString);
 	}
 }

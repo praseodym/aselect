@@ -339,13 +339,15 @@ public class Utils
 
 		String sParCond = null;
 		int iArgs = sUrl.indexOf('?');
-		if (iArgs >= 0) {
-			int iCond = sUrl.indexOf(sParamName+"=", iArgs+1);
-			if (iCond >= 0 && (sUrl.charAt(iCond-1)=='&' || sUrl.charAt(iCond-1)=='?')) {
-				iCond += sParamName.length()+1;
-				int iAmp = sUrl.indexOf('&', iCond);
-				sParCond = (iAmp<0)? sUrl.substring(iCond): sUrl.substring(iCond, iAmp);
-			}
+		if (iArgs >= 0)
+			sUrl = sUrl.substring(iArgs);
+		
+		// sUrl now starts with the arguments
+		int iCond = sUrl.indexOf(sParamName+"=");
+		if (iCond >= 0 && (iCond == 0 || sUrl.charAt(iCond-1)=='&')) {
+			iCond += sParamName.length()+1;
+			int iAmp = sUrl.indexOf('&', iCond);
+			sParCond = (iAmp<0)? sUrl.substring(iCond): sUrl.substring(iCond, iAmp);
 		}
 		return sParCond;
 	}
@@ -642,7 +644,7 @@ public class Utils
 	 */
 	public static boolean hasValue(String sText)
 	{
-		return (sText != null && sText.length()>0);
+		return (sText != null && sText.length() > 0);  // can use !isEmpty() in Java 1.6
 	}
 	
 	/**

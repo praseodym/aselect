@@ -33,7 +33,7 @@ import org.aselect.server.request.handler.saml11.websso.AbstractWebSSOProfile;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.utils.Base64;
+import org.aselect.system.utils.Base64Codec;
 import org.aselect.system.utils.Utils;
 import org.opensaml.SAMLAssertion;
 import org.opensaml.SAMLResponse;
@@ -328,7 +328,7 @@ public class BrowserPost extends AbstractWebSSOProfile
 			sbFiner.append(sSAMLResponse);
 			_systemLogger.log(Level.FINER, MODULE, sMethod, sbFiner.toString());
 
-			String sSAMLResponseBase64 = Base64.encode(sSAMLResponse.getBytes("ASCII"));
+			String sSAMLResponseBase64 = Base64Codec.encode(sSAMLResponse.getBytes("ASCII"));
 			sHTMLResponse = Utils.replaceString(sHTMLResponse, "[samlresponse]", sSAMLResponseBase64);
 
 			pwOut.print(sHTMLResponse);

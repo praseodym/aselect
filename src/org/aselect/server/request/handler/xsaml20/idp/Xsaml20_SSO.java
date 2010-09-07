@@ -32,6 +32,7 @@ import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.Audit;
+import org.aselect.system.utils.Base64Codec;
 import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
 import org.opensaml.common.SAMLObjectBuilder;
@@ -197,8 +198,18 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 			// The new sessionhttpRequest
 			HashMap htSession = _oSessionManager.getSessionContext(sIDPRid);
-			if (sRelayState != null)
+			if (sRelayState != null) {
 				htSession.put("RelayState", sRelayState);
+				// Look for "aselect_specials" in the RelayState (is base64 encode if present)
+				if (!sRelayState.contains("idp=")) {  // it's base64 encoded
+					sRelayState = new String(Base64Codec.decode(sRelayState));
+					String sSpecials = Utils.getParameterValueFromUrl(sRelayState, "aselect_specials");
+					if (sSpecials != null) {
+						// allows to pass the specials on to the next IdP in the chain
+						htSession.put("aselect_specials", sSpecials);
+					}
+				}
+			}
 			htSession.put("sp_rid", sSPRid);
 			htSession.put("sp_issuer", sIssuer);
 			htSession.put("sp_assert_url", sAssertionConsumerServiceURL);

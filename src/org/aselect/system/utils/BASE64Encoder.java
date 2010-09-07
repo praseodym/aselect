@@ -68,6 +68,6 @@ public class BASE64Encoder
 	 */
 	public String encode(byte[] xData)
 	{
-		return Base64.encode(xData);
+		return Base64Codec.encode(xData);
 	}
 }

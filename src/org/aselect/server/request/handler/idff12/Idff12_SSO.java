@@ -15,7 +15,6 @@
  */
 package org.aselect.server.request.handler.idff12;
 
-
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Vector;
@@ -268,7 +267,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 		else if (sReqMethod != null && sReqMethod.equals("POST")) {
 			String sLareq = request.getParameter("LAREQ");
 			if (sLareq != null) {
-				String sAuthnRequest = new String(Base64.decode(sLareq));
+				String sAuthnRequest = new String(Base64Codec.decode(sLareq));
 				if (sAuthnRequest != null) {
 					sProviderID = Tools.extractFromXml(sAuthnRequest, "lib:ProviderID", true);
 					sRelayState = Tools.extractFromXml(sAuthnRequest, "lib:RelayState", true);
@@ -411,7 +410,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 			// Redirect to the SP Assertion Consumer URL, pass Artifact
 			// and the RelayState (contains the Resource URL)
 			sRelayState = (String) htIdffSession.get("libRelayState");
-			String sBase64 = Base64.encode(oSAMLArtifact.getBytes());
+			String sBase64 = Base64Codec.encode(oSAMLArtifact.getBytes());
 			// _systemLogger.log(Level.INFO, MODULE, sMethod, "Base64=" + sBase64);
 
 			sAssertUrl = (String) htIdffSession.get("libAssertUrl");

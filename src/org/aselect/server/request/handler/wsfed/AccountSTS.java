@@ -198,15 +198,11 @@ public class AccountSTS extends ProtoRequestHandler
 			htSessionData.put("wctx", sPwctx);
 
 		// Look for a possible TGT
-		// HashMap htCredentialsParams = getCredentialsFromCookie(request);
-		// Bauke 20081209: getCredentialsFromCookie now returns a string
 		String sTgt = getCredentialsFromCookie(request);
-		// if (htCredentialsParams != null) {
-		// String sTgt = (String)htCredentialsParams.get("tgt");
 		if (sTgt != null) {
 			HashMap htTGTContext = getContextFromTgt(sTgt, true); // Check expiration
-			if (htTGTContext != null) { // Valid TGT context found
-				// Update TGT timestamp
+			if (htTGTContext != null) {
+				// Valid TGT context found, Update TGT timestamp
 				_oTGTManager.updateTGT(sTgt, htTGTContext);
 				// Return to the caller
 				String sUid = (String) htTGTContext.get("uid");
@@ -214,18 +210,11 @@ public class AccountSTS extends ProtoRequestHandler
 				return postRequestorToken(request, response, sUid, htSessionData, htAllAttributes);
 			}
 		}
-		// }
-		// Start an authenticate request
 		String sASelectURL = _sServerUrl;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Start Authenticate");
 
-		// 20090606, Bauke: No longer implemented as external call
-		HashMap htResponse = performAuthenticateRequest(sASelectURL, sPathInfo, RETURN_SUFFIX, _sMyAppId, false/*
-																												 * don't
-																												 * check
-																												 * signature
-																												 */,
-				_oClientCommunicator);
+		HashMap htResponse = performAuthenticateRequest(sASelectURL, sPathInfo, RETURN_SUFFIX,
+					_sMyAppId, false/*don't check signature*/, _oClientCommunicator);
 		String sRid = (String) htResponse.get("rid");
 
 		// We need this stuff when we come back
@@ -235,8 +224,8 @@ public class AccountSTS extends ProtoRequestHandler
 		String sActionUrl = sASelectURL + _sIstsUrl;
 		String sReplyTo = sASelectURL + sPathInfo + RETURN_SUFFIX;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Form ActionUrl=" + sActionUrl);
-		handleShowForm(_sTemplate, sPwhr, sActionUrl, sPwctx, sReplyTo, Tools.samlCurrentTime(), sASelectURL, sRid,
-				_sASelectServerID, response);
+		handleShowForm(_sTemplate, sPwhr, sActionUrl, sPwctx, sReplyTo, Tools.samlCurrentTime(),
+						sASelectURL, sRid, _sASelectServerID, response);
 
 		return new RequestState(null);
 	}

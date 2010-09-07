@@ -58,7 +58,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.BASE64Encoder;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * PKI AuthSP. <br>
  * <br>
@@ -87,7 +86,6 @@ public class PKIAuthSP extends HttpServlet
 	private String _sTFHtmlTemplate = "";
 	private String _sFriendlyName = null;
 	private String _sWorkingDir = null;
-	private String _sLoggingDir = null;
 	private CryptoEngine _oCryptoEngine = null;
 
 	/** The logger that logs authentication information. */
@@ -120,36 +118,8 @@ public class PKIAuthSP extends HttpServlet
 
 			ServletContext oServletContext = oServletConfig.getServletContext();
 
-			// _sLoggingDir = oServletConfig.getInitParameter("logging_dir");
 			try {
-				// if (_sLoggingDir == null)
-				// {
-				// throw new ServletException("logging_dir attribute not found");
-				// }
-				// File oLoggingDir = new File(_sLoggingDir);
-				// if (!oLoggingDir.isDirectory())
-				// {
-				// throw new ServletException("logging_dir: " + _sLoggingDir
-				// + " didn\'t exist");
-				// }
-				// sbTemp = new StringBuffer(_sLoggingDir);
-				// sbTemp.append(File.separator);
-				// sbTemp.append("system");
-				// oLoggingDir = new File(sbTemp.toString());
-				// if (!oLoggingDir.isDirectory())
-				// {
-				// oLoggingDir.mkdir();
-				// }
 				_systemLogger = AuthSPSystemLogger.getHandle();
-				//	
-				// sbTemp = new StringBuffer(_sLoggingDir);
-				// sbTemp.append(File.separator);
-				// sbTemp.append("authentication");
-				// oLoggingDir = new File(sbTemp.toString());
-				// if (!oLoggingDir.isDirectory())
-				// {
-				// oLoggingDir.mkdir();
-				// }
 				_authenticationLogger = AuthSPAuthenticationLogger.getHandle();
 			}
 			catch (Exception e) {
@@ -484,8 +454,8 @@ public class PKIAuthSP extends HttpServlet
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get certificate for '" + sUserAttributes + "'");
 			// Get Client Certificate from user
-			oCerts = (X509Certificate[]) servletRequest.getAttribute("");
-			if (oCerts == null || oCerts.length <= 0) {
+			oCerts = (X509Certificate[])servletRequest.getAttribute("javax.servlet.request.X509Certificate");
+    		if (oCerts == null || oCerts.length <= 0) {
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "No Client Certificate Provided");
 				throw new ASelectException(Errors.PKI_NO_CLIENT_CERT_PROVIDED);
 			}
@@ -771,8 +741,7 @@ public class PKIAuthSP extends HttpServlet
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT: " + sbTemp);
 			servletResponse.sendRedirect(sbTemp.toString());
 
-			if (sResultCode.equals(Errors.PKI_CLIENT_CERT_SUCCESS)) // user
-			// authenticated
+			if (sResultCode.equals(Errors.PKI_CLIENT_CERT_SUCCESS)) // user authenticated
 			{
 				// Authentication successfull
 				_authenticationLogger.log(new Object[] {
