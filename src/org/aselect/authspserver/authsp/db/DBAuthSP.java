@@ -745,6 +745,9 @@ public class DBAuthSP extends ASelectHttpServlet
 	 */
 	private void showAuthenticateForm(PrintWriter pwOut, String sError, String sErrorMessage, HashMap htServiceRequest)
 	{
+		String sMethod = "showAuthenticateForm()";
+
+		
 		String sAuthenticateForm = new String(_sAuthenticateHtmlTemplate);
 		String sMyUrl = (String) htServiceRequest.get("my_url");
 		String sRid = (String) htServiceRequest.get("rid");
@@ -755,6 +758,20 @@ public class DBAuthSP extends ASelectHttpServlet
 		String sRetryCounter = (String) htServiceRequest.get("retry_counter");
 		String sCountry = (String) htServiceRequest.get("country");
 		String sLanguage = (String) htServiceRequest.get("language");
+
+		// RH, 20100907, sn
+		String sFriendlyName = (String) htServiceRequest.get("requestorfriendlyname");
+		if (sFriendlyName != null) {
+			try {
+				sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[requestor_friendly_name]", URLDecoder.decode(sFriendlyName, "UTF-8"));
+			}
+			catch (UnsupportedEncodingException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "UTF-8 dencoding not supported, using undecoded", e);
+				sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[requestor_friendly_name]", sFriendlyName);
+			}
+		}
+		// RH, 20100907, en
+		
 
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[rid]", sRid);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[as_url]", sAsUrl);

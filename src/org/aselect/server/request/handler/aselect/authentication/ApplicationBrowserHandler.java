@@ -368,6 +368,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	private AuthSPHandlerManager _authspHandlerManager;
 	private CryptoEngine _cryptoEngine;
 	private String _sConsentForm = null;
+	private final static String PARM_REQ_FRIENDLY_NAME = "requestorfriendlyname";
 
 	/**
 	 * Constructor for ApplicationBrowserHandler. <br>
@@ -1249,6 +1250,19 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				// Redirect to the AuthSP's ISTS
 				String sAsUrl = _configManager.getRedirectURL(); // <redirect_url> in aselect.xml
 				sAsUrl = sAsUrl + "/" + sAuthsp + "?rid=" + sRid; // e.g. saml20_ists
+				// RH, 20100907, sn, add app_id, requestor_friendly_name so authsp can use this at will
+				String sAppId = (String) htSessionContext.get("app_id");
+				String sFName = null;
+				try {
+					sFName = _applicationManager.getFriendlyName(sAppId);
+					if (sFName != null && !"".equals(sFName)) {
+						sAsUrl = sAsUrl + "&" + PARM_REQ_FRIENDLY_NAME + "="  +  URLEncoder.encode(sFName, "UTF-8");
+					}
+				} catch (ASelectException ae) {
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Redirect without FriendlyName. Could not find or encode FriendlyName for: " + sAppId );
+				}
+				// RH, 20100907, en
+				
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR to " + sAsUrl + " forced_authsp=" + sAuthsp);
 				servletResponse.sendRedirect(sAsUrl);
 				return;
@@ -1445,6 +1459,23 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				catch (ASelectConfigException e) {
 					// No popup configured -> sPopup is null allready
 				}
+				// RH, 20100907, sn, add app_id, requestor_friendly_name so authsp can use this at will
+				HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+				if (htSessionContext != null) {
+					String sAppId = (String) htSessionContext.get("app_id");
+					try {
+					String sFName = null;
+						sFName = _applicationManager.getFriendlyName(sAppId);
+						if (sFName != null && !"".equals(sFName)) {
+							sRedirectUrl = sRedirectUrl + "&" + PARM_REQ_FRIENDLY_NAME + "="  +  URLEncoder.encode(sFName, "UTF-8");
+						}
+					} catch (ASelectException ae) {
+						_systemLogger.log(Level.WARNING, _sModule, sMethod, "Redirect without FriendlyName. Could not find or encode FriendlyName for: " + sAppId );
+					}
+				} else {
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Redirect without FriendlyName. Could not find sessionContext for rid: " + sRid );
+				}
+				// RH, 20100907, en
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRedirectUrl);
 				if (sPopup == null || sPopup.equalsIgnoreCase("false")) {
 					servletResponse.sendRedirect(sRedirectUrl);

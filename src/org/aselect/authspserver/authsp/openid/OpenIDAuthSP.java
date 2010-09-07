@@ -52,8 +52,6 @@ import org.aselect.system.utils.Utils;
 import org.openid4java.discovery.DiscoveryInformation;
 import org.openid4java.message.AuthRequest;
 
-
-
 /**
  * An A-Select AuthSP that uses a openid Provider as back-end. <br>
  * <br>
@@ -636,11 +634,6 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 		String sMethod = "doPost()";
 		PrintWriter pwOut = null;
 		String sUid = null;
-//		String sPassword = null;
-		String sOpenID = null;
-		Connection oConnection = null;
-		PreparedStatement oStatement = null;
-		ResultSet oResultSet = null;
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "doPost");
 
@@ -772,7 +765,6 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Stored returnURL:" + returnURL);
 
 					hDiscovery.put("siam_url", returnURL);
-//////////////////////////////////////
 			        // TODO think about something better than "98765"
 			        // but we must NOT overwrite our aselectsession
 					try {
@@ -783,15 +775,11 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 						_systemLogger.log(Level.INFO, MODULE, sMethod, "Created session for storing discoveryinfo with id:" + sRid + "98765");
 					}
 			        
-//			        MakotoOpenIdAwareSession session = (MakotoOpenIdAwareSession)owningPage.getSession();
-//			        session.setDiscoveryInformation(discoveryInformation, true);
 			        // Create the AuthRequest
 //			        AuthRequest authRequest = RegistrationService.createOpenIdAuthRequest(discoveryInformation, getReturnToUrl());
 			        AuthRequest authRequest = RegistrationService.createOpenIdAuthRequest(discoveryInformation, returnURL);
 			        // Now take the AuthRequest and forward it on to the OP
 			        
-//			        getRequestCycle().setRedirect(false);
-//			        getResponse().redirect(authRequest.getDestinationUrl(true));
 			        // TODO we have to handle the redirect
 			        // maybe implement new handler or special request parameter in doGet
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Starting redirect with redirectURL:" + authRequest.getDestinationUrl(true));
@@ -860,6 +848,19 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 		String sRetryCounter = (String) htServiceRequest.get("retry_counter");
 		String sCountry = (String) htServiceRequest.get("country");
 		String sLanguage = (String) htServiceRequest.get("language");
+		
+		// RH, 20100907, sn
+		String sFriendlyName = (String) htServiceRequest.get("requestorfriendlyname");
+		if (sFriendlyName != null) {
+			try {
+				sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[requestor_friendly_name]", URLDecoder.decode(sFriendlyName, "UTF-8"));
+			}
+			catch (UnsupportedEncodingException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "UTF-8 dencoding not supported, using undecoded", e);
+				sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[requestor_friendly_name]", sFriendlyName);
+			}
+		}
+		// RH, 20100907, en
 
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[rid]", sRid);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[as_url]", sAsUrl);
@@ -870,7 +871,8 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "UTF-8 dencoding not supported, using undecoded", e);
 			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[uid]", sUid);
 		}
-		
+
+
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[openid_server]", sMyUrl);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[a-select-server]", sAsId);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error]", sError);  // obsoleted 20100817
@@ -1017,61 +1019,18 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 		_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received, API not supported");
 		
 		String sRid = (String) htServiceRequest.get("rid");
-		HashMap htSessionContext = null;
+//		HashMap htSessionContext = null;
 		// create response HashTable
 		StringBuffer sbResponse = new StringBuffer("&rid=");
 		// add rid to response
 		sbResponse.append(sRid);
-		int iAllowedRetries = 0;
+//		int iAllowedRetries = 0;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "sbResponse so far:" + sbResponse );
 
 		try {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received, API request not supported (yet).");
 			throw new ASelectException("Invalid request received, API not supported.");
 			
-/*			
-			if (htServiceRequest.get("request").equals("authenticate"))
-			// authenticate request
-			{
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "authenticate request" );
-				if (_sessionManager.containsKey(sRid)) {
-					htSessionContext = _sessionManager.getSessionContext(sRid);
-					try {
-						iAllowedRetries = ((Integer) htSessionContext.get("allowed_retries")).intValue();
-					}
-					catch (ClassCastException e) {
-						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to cast to Integer.", e);
-						throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR);
-					}
-				}
-				else {
-					htSessionContext = new HashMap();
-					_sessionManager.createSession(sRid, htSessionContext);
-					iAllowedRetries = _iAllowedRetries;
-				}
-
-				iAllowedRetries--;
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "new iAllowedRetries: " + iAllowedRetries );
-
-				Integer intAllowedRetries = new Integer(iAllowedRetries);
-				htSessionContext.put("allowed_retries", intAllowedRetries);
-				_sessionManager.updateSession(sRid, htSessionContext);
-				if (iAllowedRetries < 0) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No login retries left for rid: '" + sRid + "'");
-					throw new ASelectException(Errors.ERROR_DB_ACCESS_DENIED);
-				}
-
-				handleAuthenticate(htServiceRequest, servletRequest);
-
-				sbResponse.append("&").append(RESULT_CODE);
-				sbResponse.append("=").append(Errors.ERROR_DB_SUCCESS);
-				_sessionManager.remove(sRid);
-			}
-			else {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid API request received.");
-				throw new ASelectException(Errors.ERROR_DB_INVALID_REQUEST);
-			}
-			*/
 		}
 		catch (ASelectException eAS) {
 
@@ -1086,83 +1045,6 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 		pwOut.write(sbResponse.toString());
 	}
 
-	/**
-	 * Handle authenticate.
-	 * 
-	 * @param htServiceRequest
-	 *            the ht service request
-	 * @param servletRequest
-	 *            the servlet request
-	 * @throws ASelectException
-	 *             the a select exception
-	 */
-	private void handleAuthenticate(HashMap htServiceRequest, HttpServletRequest servletRequest)
-		throws ASelectException
-	{
-
-		String sMethod = "handleAuthenticate()";
-		String sResultCode = null;
-		String sUid = (String) htServiceRequest.get("uid");
-		String sPassword = (String) servletRequest.getParameter("password");
-		String sAsID = (String) htServiceRequest.get("a-select-server");
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "handleAuthenticate for user:" + sUid);
-
-		if ((sUid == null) || (sPassword == null)) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"Invalid request received: one or more mandatory parameters missing.");
-			throw new ASelectException(Errors.ERROR_DB_INVALID_REQUEST);
-		}
-
-		// authenticate user
-		Connection oConnection = getConnection();
-		PreparedStatement oStatement = null;
-		ResultSet oResultSet = null;
-		
-		if (sResultCode.equals(Errors.ERROR_DB_SUCCESS)) {
-			boolean matches = false;
-			// RH, 20090605, sn
-
-			if (matches) {
-				_authenticationLogger.log(new Object[] {
-					MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "granted"
-				});
-			}
-			else {
-				_authenticationLogger.log(new Object[] {
-					MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "denied"
-				});
-				throw new ASelectException(Errors.ERROR_DB_INVALID_PASSWORD);
-			}
-		}
-		else {
-			// no results for uid
-			_authenticationLogger.log(new Object[] {
-				MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "denied"
-			});
-			throw new ASelectException(sResultCode);
-		}
-	}
-
-	/**
-	 * Opens a new JDBC connection to the resource that is retrieved from the authsp configuration. <br>
-	 * <br>
-	 * 
-	 * @return <code>Connection</code> that contains the JDBC connection
-	 * @throws ASelectException
-	 *             if the connection could not be opened
-	 */
-	private Connection getConnection()
-		throws ASelectException
-	{
-		String sMethod = "getConnection()";
-
-		Connection oConnection = null;
-
-
-		return oConnection;
-	}
-	
-	
 	 /**
 	   * Generates the returnToUrl parameter that is passed to the OP. The
 	   * User Agent (i.e., the browser) will be directed to this page following
