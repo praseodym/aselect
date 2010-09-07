@@ -1,78 +1,19 @@
 /*
- * Copyright (c) Stichting SURF. All rights reserved.
- * 
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
  * A-Select is a trademark registered by SURFnet bv.
- * 
- * This program is distributed under the A-Select license.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
  * See the included LICENSE file for details.
- * 
- * If you did not receive a copy of the LICENSE 
- * please contact SURFnet bv. (http://www.surfnet.nl)
- */
-
-/* 
- * $Id: Ldap.java,v 1.20 2006/05/03 09:46:50 tom Exp $ 
- * 
- * Changelog:
- * $Log: Ldap.java,v $
- * Revision 1.20  2006/05/03 09:46:50  tom
- * Removed Javadoc version
  *
- * Revision 1.19  2006/04/10 11:10:05  martijn
- * fixed showing friendly_name tags in showDirectLoginForm()
- *
- * Revision 1.18  2006/04/06 11:20:35  leon
- * gets the session in showdirectloginform for maintainer tags
- *
- * Revision 1.17  2006/04/03 12:28:59  erwin
- * HTML Tags are now replaced in case of an error.
- *
- * Revision 1.16  2006/04/03 08:44:12  erwin
- * Changed signature checking (fixed bug #165)
- *
- * Revision 1.15  2006/03/28 08:19:18  leon
- * *** empty log message ***
- *
- * Revision 1.14  2006/03/20 11:33:29  martijn
- * added optional template tag support
- *
- * Revision 1.13  2006/03/20 11:32:10  leon
- * removed some old not used functions
- *
- * Revision 1.12  2006/03/20 10:15:57  leon
- * implements now the IAuthSPDirectLoginProtocolHandler
- *
- * Revision 1.11  2005/09/08 13:06:53  erwin
- * Changed version number to 1.4.2
- *
- * Revision 1.10  2005/04/01 14:17:41  martijn
- * added support for the optional attributes country and language
- *
- * Revision 1.9  2005/03/24 15:12:43  erwin
- * fixed wrong errror into ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER
- *
- * Revision 1.8  2005/03/23 10:54:16  erwin
- * use ERROR_ASELECT_SERVER_SESSION_EXPIRED instead of invalid session
- *
- * Revision 1.7  2005/03/23 10:52:03  erwin
- * Added a session expired check
- *
- * Revision 1.6  2005/03/23 09:49:21  erwin
- * - Applied code style
- * - Added javadoc
- * - Improved error handling
- * 
- *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
  */
 
 package org.aselect.server.authspprotocol.handler;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.HashMap;
@@ -87,13 +28,10 @@ import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectAuthenticationLogger;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.session.SessionManager;
-import org.aselect.server.tgt.TGTIssuer;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAuthSPException;
-import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.utils.Utils;
 
 /**
  * The OpenID AuthSP Handler. <br>
@@ -196,10 +134,6 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 
 	private final static String ERROR_OPENID_INVALID_CREDENTIALS = "400";
 
-	/** Prefix in errors.conf for LDAP specific errors */
-//	private final static String ERROR_LDAP_PREFIX = "LDAP";
-	// Prefix with number so integer check can be done on errors
-	private final static String ERROR_OPENID_PREFIX = "11";
 
 	// Localization
 	protected String _sUserLanguage = "";
@@ -349,7 +283,6 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Allowed_user_authsps missing in session context.");
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
-			/////// ????????????????? /////////////////
 			String sUserId = (String) htAllowedAuthsps.get(_sAuthsp);
 			if (sUserId == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing OpenID user attributes.");
@@ -558,6 +491,7 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 
 	/**
 	 * handles all the incoming direct login requests for the OpenID AuthSP <br>
+	 * not implemented (yet) <br>
 	 * <br>
 	 * .
 	 * 
@@ -582,33 +516,13 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 			PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
 		throws ASelectException
 	{
-		String sMethod = "handleDirectLoginRequest()";
-		String sRequest = (String) htServiceRequest.get("request");
-
-		// Localization
-		_sUserLanguage = sLanguage;
-		_sUserCountry = sCountry;
-
-		if (sRequest.equalsIgnoreCase("direct_login1")) {
-			handleDirectLogin1(htServiceRequest, pwOut, sServerId);
-		}
-		else if (sRequest.equalsIgnoreCase("direct_login2")) {
-			handleDirectLogin2(htServiceRequest, servletResponse, pwOut, sServerId);
-		}
-		else {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request :'" + sRequest + "'");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-		}
 
 	}
 
 	/**
 	 * Handles the directlogin1 request for the OpenID AuthSP. <br>
-	 * <br>
-	 * <b>Description:</b> <br>
-	 * Handles the <code>directlogin1</code> request for the OpenID AuthSP. Shows the Direct Login Form where users can
-	 * submit their username and password. <br>
-	 * <br>
+	 * Not implemented (yet)<br>
 	 * <b>Concurrency issues:</b> <br>
 	 * - <br>
 	 * <br>
@@ -630,13 +544,7 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 	private void handleDirectLogin1(HashMap htServiceRequest, PrintWriter pwOut, String sServerId)
 		throws ASelectException
 	{
-		// show direct login form
-		try {
-			showDirectLoginForm(htServiceRequest, pwOut, sServerId);
-		}
-		catch (ASelectException e) {
-			throw e;
-		}
+		throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 	}
 
 	/**
@@ -646,6 +554,7 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 	 * Handles the <code>directlogin2</code> request for the OpenID AuthSP. Verifies the request coming from the direct
 	 * login form and does an API call to the OpenID AuthSP to verify the submitted username and password. <br>
 	 * <br>
+	 * Not implemented (yet)<br>
 	 * <b>Concurrency issues:</b> <br>
 	 * - <br>
 	 * <br>
@@ -672,128 +581,13 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 	{
 		String sMethod = "handleDirectLogin2";
 
-		try {
-			String sRid = null;
-			String sUid = null;
-			String sPassword = null;
-
-			sRid = (String) htServiceRequest.get("rid");
-			sUid = (String) htServiceRequest.get("user_id");
-			sPassword = (String) htServiceRequest.get("password");
-			if (sRid == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request, missing parmeter 'rid'");
-				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-			}
-			if (sUid == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request, missing parmeter 'user_id'");
-				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-			}
-			if (sPassword == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request, missing parmeter 'password'");
-				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-			}
-
-			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
-			// check if session is valid and not expired
-			if (htSessionContext == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid session");
-				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
-			}
-			String sAuthSPId = (String) htSessionContext.get("direct_authsp"); // must be set in configuration
-			if (sAuthSPId == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Parameter 'direct_authsp' not found in session");
-				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
-			}
-			String sAuthSPUrl = _authSPHandlerManager.getUrl(sAuthSPId);
-			Integer intAuthSPLevel = _authSPHandlerManager.getLevel(sAuthSPId);
-			String sResponse = null;
-			try {
-				StringBuffer sbRequest = new StringBuffer(sAuthSPUrl);
-				sbRequest.append("?request=authenticate");
-				sbRequest.append("&rid=").append(URLEncoder.encode(sRid, "UTF-8"));
-				sbRequest.append("&user=").append(URLEncoder.encode(sUid, "UTF-8"));
-				sbRequest.append("&password=").append(URLEncoder.encode(sPassword, "UTF-8"));
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "To AUTHSP: " + sbRequest);
-				URL oServer = new URL(sbRequest.toString());
-				BufferedReader oInputReader = new BufferedReader(new InputStreamReader(oServer.openStream()), 16000);
-				sResponse = oInputReader.readLine();
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "From AUTHSP: " + sResponse);
-				oInputReader.close();
-			}
-			catch (IOException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid/No response from DirectAuthSP: '"
-						+ sAuthSPId + "'", e);
-				throw new ASelectException(Errors.ERROR_ASELECT_IO);
-			}
-
-			HashMap htResponse = Utils.convertCGIMessage(sResponse);
-			String sResponseCode = ((String) htResponse.get("status"));
-			String sOrg = (String) htSessionContext.get("organization");
-			if (sResponseCode == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid response from Direct AuthSP: '"+sAuthSPId+"'.");
-				throw new ASelectException(Errors.ERROR_ASELECT_IO);
-			}
-			else if (sResponseCode.equals(ERROR_OPENID_OK)) // authentication succeeded
-			{
-				TGTIssuer tgtIssuer = new TGTIssuer(sServerId);
-				String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
-				htSessionContext.put("user_id", sUid);
-				htSessionContext.put("authsp_level", intAuthSPLevel.toString());
-				htSessionContext.put("sel_level", intAuthSPLevel.toString());  // equal to authsp_level in this case
-				htSessionContext.put("authsp_type", "openid");
-				_sessionManager.updateSession(sRid, htSessionContext); // store too (545)
-				tgtIssuer.issueTGT(sRid, sAuthSPId, null, servletResponse, sOldTGT);
-
-				_authenticationLogger.log(new Object[] {
-					MODULE, sUid, (String) htSessionContext.get("client_ip"), sOrg,
-					(String) htSessionContext.get("app_id"), "granted"
-				});
-			}
-			else if (sResponseCode.equals(ERROR_OPENID_ACCESS_DENIED)) {
-				_authenticationLogger.log(new Object[] {
-					MODULE, sUid, (String) htSessionContext.get("client_ip"), sOrg,
-					(String) htSessionContext.get("app_id"), "denied"
-				});
-
-				String sErrorForm = _configManager.getForm("error", _sUserLanguage, _sUserCountry);
-				sErrorForm = Utils.replaceString(sErrorForm, "[error]", ERROR_OPENID_PREFIX + ERROR_OPENID_ACCESS_DENIED);
-				sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", ERROR_OPENID_PREFIX + ERROR_OPENID_ACCESS_DENIED);
-				String sErrorMessage = _configManager.getErrorMessage(ERROR_OPENID_PREFIX + ERROR_OPENID_ACCESS_DENIED,
-						_sUserLanguage, _sUserCountry);
-				sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
-				sErrorForm = Utils.replaceString(sErrorForm, "[language]", _sUserLanguage);
-				// RH, 20100819, sn
-				//	add some extra info here
-				sErrorForm = Utils.replaceString(sErrorForm, "[country]", _sUserCountry);
-				sErrorForm = Utils.replaceString(sErrorForm, "[app_id]",(String) htSessionContext.get("app_id"));
-				// RH, 20100819, en
-				
-				
-				sErrorForm = Utils.replaceConditional(sErrorForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
-				sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext);
-				pwOut.println(sErrorForm);
-			}
-			else {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error response received: '" + sResponse
-						+ "' from DirectAuthSP: '" + sAuthSPId + "'.");
-				String sErrorMessage = _configManager.getErrorMessage(ERROR_OPENID_PREFIX
-						+ ERROR_OPENID_INVALID_CREDENTIALS, _sUserLanguage, _sUserCountry);
-				htServiceRequest.put("error_message", sErrorMessage);
-				showDirectLoginForm(htServiceRequest, pwOut, sServerId);
-			}
-		}
-		catch (ASelectException e) {
-			throw e;
-		}
-		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Exception occured", e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-		}
+		throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 	}
 
 	/**
 	 * Prints the direct Login form. <br>
 	 * <br>
+	 * Not implemented (yet)<br>
 	 * <b>Description:</b> <br>
 	 * <br>
 	 * <br>
@@ -819,68 +613,7 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 		throws ASelectException
 	{
 		String sMethod = "showDirectLoginForm()";
-		try {
-
-			String sDirectLoginForm = _configManager.getForm("directlogin", _sUserLanguage, _sUserCountry);
-			if (sDirectLoginForm == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "template file 'directlogin.html' not found");
-				throw new ASelectException(Errors.ERROR_ASELECT_NOT_FOUND);
-			}
-			String sRid = (String) htServiceRequest.get("rid");
-			if (sRid == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "no parameter 'rid' found in request");
-				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-			}
-			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
-			if (htSessionContext == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not fetch session context for rid='" + sRid
-						+ "'");
-				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
-			}
-			String sMyUrl = (String) htServiceRequest.get("my_url");
-			if (sMyUrl == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "no parameter 'my_url' found in request");
-				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-			}
-
-			String sErrorMessage = (String) htServiceRequest.get("error_message");
-			if (sErrorMessage == null) {
-				sErrorMessage = "";
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM directlogin, sServerId=" + sServerId);
-
-			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[rid]", sRid);
-			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[aselect_url]", (String) htServiceRequest
-					.get("my_url"));
-			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[a-select-server]", sServerId);
-			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[request]", "direct_login2");
-			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[cross_request]", "cross_login");
-
-			String sUid = (String) htServiceRequest.get("user_id");
-			if (sUid != null)
-				sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[user_name]", sUid);
-			else
-				sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[user_name]", "");
-
-			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[error_message]", sErrorMessage);
-			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[language]", _sUserLanguage);
-			sDirectLoginForm = Utils.replaceConditional(sDirectLoginForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
-			
-			StringBuffer sbUrl = new StringBuffer(sMyUrl).append("?request=error").append("&result_code=").append(
-					Errors.ERROR_ASELECT_SERVER_CANCEL).append("&a-select-server=").append(sServerId).append("&rid=")
-					.append(sRid);
-			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[cancel]", sbUrl.toString());
-			sDirectLoginForm = _configManager.updateTemplate(sDirectLoginForm, htSessionContext);
-			pwOut.println(sDirectLoginForm);
-		}
-		catch (ASelectException e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not show direct login page", e);
-			throw e;
-		}
-		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not show direct login page", e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-		}
+		throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 	}
 
 }
