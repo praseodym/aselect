@@ -347,8 +347,8 @@ public class RegexSelectorHandler implements ISelectorHandler
 			sLoginForm = Utils.replaceString(sLoginForm, "[language]", sLanguage);
 			
 			HashMap htSessionContext = SessionManager.getHandle().getSessionContext(sRid);
-			String sAppUrl = (String)htSessionContext.get("app_url");
-			sLoginForm = Utils.handleAllConditionals(sLoginForm, Utils.hasValue(sErrorMessage), sAppUrl, _systemLogger);
+			String sSpecials = Utils.getAselectSpecials(htSessionContext, true/*decode too*/, _systemLogger);
+			sLoginForm = Utils.handleAllConditionals(sLoginForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
 
 			StringBuffer sbUrl = new StringBuffer((String) htServiceRequest.get("my_url")).append("?request=error")
 					.append("&result_code=").append(Errors.ERROR_ASELECT_SERVER_CANCEL).append("&a-select-server=")

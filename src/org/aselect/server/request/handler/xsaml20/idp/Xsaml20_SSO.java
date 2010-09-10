@@ -200,8 +200,9 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			HashMap htSession = _oSessionManager.getSessionContext(sIDPRid);
 			if (sRelayState != null) {
 				htSession.put("RelayState", sRelayState);
+				
 				// Look for "aselect_specials" in the RelayState (is base64 encode if present)
-				if (!sRelayState.contains("idp=")) {  // it's base64 encoded
+			/*	if (!sRelayState.contains("idp=")) {  // it's base64 encoded
 					sRelayState = new String(Base64Codec.decode(sRelayState));
 					String sSpecials = Utils.getParameterValueFromUrl(sRelayState, "aselect_specials");
 					if (sSpecials != null) {
@@ -209,6 +210,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 						htSession.put("aselect_specials", sSpecials);
 					}
 				}
+			*/
 			}
 			htSession.put("sp_rid", sSPRid);
 			htSession.put("sp_issuer", sIssuer);
@@ -587,7 +589,6 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
 		String addedPatching = _configManager.getAddedPatching();
 
-		String sRedirectUrl = "";
 		try {
 			DateTime tStamp = new DateTime(); // We will use one timestamp
 
@@ -840,7 +841,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			artifactManager.sendArtifact(sArtifact, response, sAppUrl, oHttpServletResponse, sRelayState, addedPatching);
 		}
 		catch (IOException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Redirect to : '" + sRedirectUrl + "' failed", e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Redirect to : '" + sAppUrl + "' failed", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}

@@ -141,7 +141,7 @@ public class Xsaml20_Logout extends Saml20_BaseHandler
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID, eIA);
 		}
 
-		// TODO: Is signing needed?
+		// Improve: Is signing needed?
 		// _systemLogger.log(Level.INFO, _sModule, sMethod, "NOTE SIGNING CHECK DISABLED");
 		/*
 		 * if (_applicationManager.isSigningRequired()) { // Note: we should do this earlier, but we don't have an
@@ -180,24 +180,6 @@ public class Xsaml20_Logout extends Saml20_BaseHandler
 		String sResultCode = ((htTGTContext == null) ? Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT
 				: Errors.ERROR_ASELECT_SUCCESS);
 		finishLogoutActions(response, sResultCode, sLogoutReturnUrl);
-
-		/*
-		 * if (sLogoutReturnUrl != null && !"".equals(sLogoutReturnUrl)) { // Redirect to the url in sRelayState String
-		 * sAmpQuest = (sLogoutReturnUrl.indexOf('?') >= 0) ? "&": "?"; String url = sLogoutReturnUrl + sAmpQuest +
-		 * "result_code=" + ((htTGTContext==null)? Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT:
-		 * Errors.ERROR_ASELECT_SUCCESS); try { _systemLogger.log(Level.INFO, _sModule, sMethod, "Redirect to "+url);
-		 * response.sendRedirect(url); } catch (IOException e) { _systemLogger.log(Level.WARNING, _sModule, sMethod,
-		 * e.getMessage(), e); } } else { PrintWriter pwOut = null; try { _sLogoutResultPage =
-		 * _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "logoutresult", _sUserLanguage,
-		 * _sUserCountry); _sLogoutResultPage = Utils.replaceString(_sLogoutResultPage, "[version]",
-		 * Version.getVersion()); _sLogoutResultPage = Utils.replaceString(_sLogoutResultPage,
-		 * "[organization_friendly]", _sFriendlyName); String sHtmlPage = Utils.replaceString(_sLogoutResultPage,
-		 * "[result_code]", Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT); pwOut = response.getWriter();
-		 * response.setContentType("text/html"); pwOut.println(sHtmlPage); return; } catch (IOException e) {
-		 * _systemLogger.log(Level.WARNING, _sModule, sMethod, e.getMessage(), e); throw new
-		 * ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e); } finally { if (pwOut != null) { pwOut.close(); } }
-		 * }
-		 */
 	}
 
 	/* (non-Javadoc)

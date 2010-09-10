@@ -762,9 +762,9 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				sErrorForm = Utils.replaceString(sErrorForm, "[app_id]",(String) htSessionContext.get("app_id"));
 				// RH, 20100819, en
 				
-				// Extract if_cond=... from the application URL
-				String sAppUrl = (String)htSessionContext.get("app_url");
-				sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), sAppUrl, _systemLogger);
+				// Bauke 20100908: Extract if_cond=... from the application URL
+				String sSpecials = Utils.getAselectSpecials(htSessionContext, true/*decode too*/, _systemLogger);
+				sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
 
 				sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext);
 				pwOut.println(sErrorForm);
@@ -856,8 +856,10 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[error_message]", sErrorMessage);
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[language]", _sUserLanguage);
 			// Extract if_cond=... from the application URL
-			String sAppUrl = (String)htSessionContext.get("app_url");
-			sDirectLoginForm = Utils.handleAllConditionals(sDirectLoginForm, Utils.hasValue(sErrorMessage), sAppUrl, _systemLogger);
+			
+			// 20100908, Bauke: conditions
+			String sSpecials = Utils.getAselectSpecials(htSessionContext, true/*decode too*/, _systemLogger);
+			sDirectLoginForm = Utils.handleAllConditionals(sDirectLoginForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
 
 			StringBuffer sbUrl = new StringBuffer(sMyUrl).append("?request=error").append("&result_code=").append(
 					Errors.ERROR_ASELECT_SERVER_CANCEL).append("&a-select-server=").append(sServerId).append("&rid=")

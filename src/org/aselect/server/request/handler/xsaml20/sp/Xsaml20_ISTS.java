@@ -180,6 +180,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
 				sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", sMyUrl + "/saml20_ists");
 				sSelectForm = _configManager.updateTemplate(sSelectForm, htSessionContext);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Template updated");
 				response.setContentType("text/html");
 				PrintWriter pwOut = response.getWriter();
 				pwOut.println(sSelectForm);
@@ -280,19 +281,22 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				authnRequest.setForceAuthn(true);
 			}
 			
-			// Look for aselect_specials!
+			// 20100908, Bauke: Look for aselect_specials!
 			// In app_url or in the caller's RelayState (if we're an IdP)
+			String sSpecials = null;
+			if (specialSettings != null && specialSettings.contains("relay_specials")) {
+				sSpecials = Utils.getAselectSpecials(htSessionContext, false/*leave base64*/, _systemLogger);
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "<special_settings>="+specialSettings+" aselect_specials="+sSpecials);
+			
+			// Create the new RelayState	
 			String sRelayState = "idp=" + sFederationUrl;
-			if (specialSettings != null && specialSettings.contains("relay_plus")) {
-				String sSpecials = (String)htSessionContext.get("aselect_specials");
-				if (!Utils.hasValue(sSpecials)) {
-					// First SP in the chain to the last IdP that can use the specials
-					String sAppUrl = (String)htSessionContext.get("app_url");
-					sSpecials = Utils.getParameterValueFromUrl(sAppUrl, "aselect_specials");
-				}
+			if (specialSettings != null && specialSettings.contains("relay_specials")) {
+				
 				if (Utils.hasValue(sSpecials))
 					sRelayState += "&aselect_specials="+sSpecials;
 				sRelayState = Base64Codec.encode(sRelayState.getBytes());
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "RelayState="+sRelayState);
 			}
 
 			//
@@ -334,7 +338,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				MarshallerFactory marshallerFactory = Configuration.getMarshallerFactory();
 				Marshaller marshaller = marshallerFactory.getMarshaller(messageContext.getOutboundSAMLMessage());
 				Node nodeMessageContext = marshaller.marshall(messageContext.getOutboundSAMLMessage());
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "OutboundSAMLMessage:\n"+XMLHelper.prettyPrintXML(nodeMessageContext));
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "RelayState="+sRelayState+" OutboundSAMLMessage:\n"+XMLHelper.prettyPrintXML(nodeMessageContext));
 				
 				if (useSha256) {
 					Saml20_RedirectEncoder encoder = new Saml20_RedirectEncoder();

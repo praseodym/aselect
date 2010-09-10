@@ -1724,6 +1724,7 @@ public class ASelectConfigManager extends ConfigManager
 				sLangExt = ""; // try the default file
 			}
 
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Read file");
 			brIn = new BufferedReader(new InputStreamReader(new FileInputStream(fTemplate)));
 			while ((sLine = brIn.readLine()) != null) {
 				sTemplate += sLine + "\n";

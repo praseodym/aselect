@@ -111,7 +111,6 @@ import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * Abstract browser request handler. <br>
  * <br>
@@ -286,13 +285,12 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 			if (sRid != null)
 				htSessionContext = SessionManager.getHandle().getSessionContext(sRid);
 			sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext);
-			String sAppUrl = (String)htSessionContext.get("app_url");
-			sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), sAppUrl, _systemLogger);
+			String sSpecials = Utils.getAselectSpecials(htSessionContext, true/*decode too*/, _systemLogger);
+			sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
 			pwOut.println(sErrorForm);
 		}
 		catch (Exception e) {
-			_systemLogger
-					.log(Level.SEVERE, _sModule, sMethod, "Could not show error page with error: " + sErrorCode, e);
+			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Could not show error page with error: " + sErrorCode, e);
 		}
 	}
 

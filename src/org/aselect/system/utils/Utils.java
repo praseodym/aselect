@@ -292,31 +292,82 @@ public class Utils
 		}
 		return xBuffer.toString();
 	}
-	
+
+	/**
+	 * Gets the aselect_specials value from RelayState of app_url.
+	 * 
+	 * @param htSessionContext
+	 *            the session context
+	 * @return the specials found or null
+	 */
+	public static String getAselectSpecials(HashMap htSessionContext, boolean decode, ISystemLogger logger)
+	{
+		String sMethod = "getAselectSpecials";
+		String sSpecials = null;
+		
+		String sRelay = (String)htSessionContext.get("RelayState");
+		if (Utils.hasValue(sRelay) && !sRelay.startsWith("idp=")) {  // try RelayState passed from SP
+			sRelay = new String(Base64Codec.decode(sRelay));
+			sSpecials = Utils.getParameterValueFromUrl(sRelay, "aselect_specials");
+			logger.log(Level.INFO, MODULE, sMethod, "sRelay="+sRelay+" sSpecials="+sSpecials);
+		}
+		if (sSpecials == null) {  // try application url
+			String sAppUrl = (String)htSessionContext.get("app_url");
+			sSpecials = Utils.getParameterValueFromUrl(sAppUrl, "aselect_specials");					
+			logger.log(Level.INFO, MODULE, sMethod, "sAppUrl="+sAppUrl+" sSpecials="+sSpecials);
+		}
+		if (decode && Utils.hasValue(sSpecials)) {
+			sSpecials = new String(Base64Codec.decode(sSpecials));
+			logger.log(Level.INFO, MODULE, sMethod, "sSpecials="+sSpecials);
+		}
+		return sSpecials;
+	}
+
 	/**
 	 * Handle all conditional keywords in a HTML form.
 	 * 
 	 * @param sText
-	 *            the HTML text
+	 *            the HTML text to examine
 	 * @param bErrCond
 	 *            is if_err true?
 	 * @param sAppUrl
-	 *            the application's URL
+	 *             if we're an SP, the application's URL
+	 * @param sRelayState
+	 *            if we're an IdP, can contain a base64 encode "aselect_specials" value,
+	 *            example content: if_cond=org_login&set_forced_uid=1234
 	 * @param logger
 	 *            any logger
 	 * @return the modified HTML text
 	 */
-	public static String handleAllConditionals(String sText, boolean bErrCond, String sAppUrl, ISystemLogger logger)
+	public static String handleAllConditionals(String sText, boolean bErrCond, String sSpecials, ISystemLogger logger)
 	{
 		final String sMethod = "handleAllConditionals";
+		//String sArgs = null;
 		
 		sText = Utils.replaceConditional(sText, "if_error", bErrCond, logger);
 		
-		logger.log(Level.INFO, MODULE, sMethod, "appUrl="+sAppUrl);
-		String sParCond = getParameterValueFromUrl(sAppUrl, "if_cond");
-		logger.log(Level.INFO, MODULE, sMethod, "parCond="+sParCond);
-		if (sParCond != null)
-			sText = Utils.replaceConditional(sText, "if_cond,"+sParCond, true, logger);
+		// if RelayState is present, we're IdP, so try that first
+		/*logger.log(Level.INFO, MODULE, sMethod, "RelayState="+sRelayState+"appUrl="+sAppUrl);
+		if (sRelayState != null) {
+			sArgs = new String(Base64Codec.decode(sRelayState));
+		}
+		else if (sAppUrl != null) {
+			sArgs = sAppUrl;
+		}
+		sSpecials = Utils.getParameterValueFromUrl(sArgs, "aselect_specials");  // likes null as first argument too!
+		if (sSpecials == null)
+			return sText;
+		
+		// We have the decoded aselect_specials now
+		sArgs = new String(Base64Codec.decode(sSpecials));
+		*/
+
+		if (sSpecials != null) {
+			String sParCond = getParameterValueFromUrl(sSpecials, "if_cond");
+			logger.log(Level.INFO, MODULE, sMethod, "parCond="+sParCond);
+			if (sParCond != null)
+				sText = Utils.replaceConditional(sText, "if_cond,"+sParCond, true, logger);
+		}
 		
 		// Other conditions are false
 		sText = Utils.removeAllConditionals(sText, "if_cond", logger);
@@ -327,11 +378,12 @@ public class Utils
 	 * Retrieve parameter value from the given URL.
 	 * 
 	 * @param sUrl
-	 *            the URL
+	 *            the URL (null allowed)
 	 * @param sParamName
 	 *            the parameter name
 	 * @return the parameter value or null if not found
 	 */
+	// Exampl: sAppUrl=https://appl.anoigo.nl/?aselect_specials=aWZfY29uZD1vcmdfbG9naW4mc2V0X2ZvcmNlZF91aWQ=
 	public static String getParameterValueFromUrl(String sUrl, String sParamName)
 	{
 		if (sUrl == null)
@@ -340,7 +392,7 @@ public class Utils
 		String sParCond = null;
 		int iArgs = sUrl.indexOf('?');
 		if (iArgs >= 0)
-			sUrl = sUrl.substring(iArgs);
+			sUrl = sUrl.substring(iArgs+1);
 		
 		// sUrl now starts with the arguments
 		int iCond = sUrl.indexOf(sParamName+"=");

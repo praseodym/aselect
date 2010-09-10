@@ -437,7 +437,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			Utils.transferLocalization(_htSessionContext, _sUserLanguage, _sUserCountry);
 			// And copy language back
 			_sUserLanguage = (String) _htSessionContext.get("language"); // override
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "After transfer user language=" + _sUserLanguage);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "After transfer: userLanguage=" + _sUserLanguage);
 		}
 
 		if (sRequest == null) {
@@ -495,9 +495,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			
 			// 20100828, Bauke:
 			// Allow application to force the login user name upon us
-			String sAppUrl = (String)_htSessionContext.get("app_url");
-			if (sAppUrl != null) {
-				String sSearch = Utils.getParameterValueFromUrl(sAppUrl, "set_forced_uid");
+			String sSpecials = Utils.getAselectSpecials(_htSessionContext, true, _systemLogger);  // decodes from base64 coded value
+			if (Utils.hasValue(sSpecials)) {
+				String sSearch = Utils.getParameterValueFromUrl(sSpecials, "set_forced_uid");
 				if (sSearch != null)
 					//_htSessionContext.put("forced_uid", sSearch);
 					_htSessionContext.put("user_id", sSearch);
@@ -633,6 +633,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			String sAuthSPId = (String) _htSessionContext.get("direct_authsp");
 			if (sAuthSPId == null) {
 				sAuthSPId = (String) htServiceRequest.get("authsp");
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "authsp from request "+sAuthSPId);
 				if (sAuthSPId != null)
 					_htSessionContext.put("direct_authsp", sAuthSPId);
 			}

@@ -538,9 +538,8 @@ public class SFSSelectorHandler implements ISelectorHandler
 					sDefaultHomeIdp));
 
 			HashMap htSessionContext = SessionManager.getHandle().getSessionContext(sRid);
-			String sAppUrl = (String)htSessionContext.get("app_url");
-			sLoginForm = Utils.handleAllConditionals(sLoginForm, Utils.hasValue(sErrorMessage), sAppUrl, _systemLogger);
-			sLoginForm = Utils.replaceConditional(sLoginForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
+			String sSpecials = Utils.getAselectSpecials(htSessionContext, true/*decode too*/, _systemLogger);
+			sLoginForm = Utils.handleAllConditionals(sLoginForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
 			if (htSessionContext != null)
 				sLoginForm = _configManager.updateTemplate(sLoginForm, htSessionContext);
 

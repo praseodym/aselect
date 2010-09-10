@@ -291,8 +291,8 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 				htSessionContext = _sessionManager.getSessionContext(sRid);
 			}
 			if (htSessionContext != null) {
-				String sAppUrl = (String)htSessionContext.get("app_url");
-				sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), sAppUrl, _systemLogger);
+				String sSpecials = Utils.getAselectSpecials(htSessionContext, true/*decode too*/, _systemLogger);
+				sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
 			}
 			sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext);  // accepts a null Session!
 			//_systemLogger.log(Level.INFO, _sModule, sMethod, "FORM="+sErrorForm);

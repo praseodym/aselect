@@ -835,7 +835,19 @@ public class TGTIssuer
 		String sMethod = "sendRedirect";
 		StringBuffer sbRedirect = null;
 
-		try { // Check whether the application url contains cgi parameters
+		try {
+			// Remove aselect_specials from the URL, not intended for the application
+			String sSpecials = Utils.getParameterValueFromUrl(sAppUrl, "aselect_specials");
+			if (Utils.hasValue(sSpecials)) {
+				sAppUrl = sAppUrl.replace("aselect_specials="+sSpecials, "");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "1="+sAppUrl);
+				sAppUrl = sAppUrl.replace("&&", "&");
+				if (sAppUrl.endsWith("&"))
+					sAppUrl = sAppUrl.substring(0, sAppUrl.length()-1);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "2="+sAppUrl);
+			}
+			
+			// Check whether the application url contains cgi parameters
 			if (sAppUrl.indexOf("?") > 0)
 				sAppUrl += "&";
 			else
@@ -844,6 +856,7 @@ public class TGTIssuer
 			String sEncryptedTgt = (sTgt == null) ? "" : _cryptoEngine.encryptTGT(Utils.hexStringToByteArray(sTgt));
 			sbRedirect = new StringBuffer(sAppUrl);
 			sbRedirect.append("aselect_credentials=").append(sEncryptedTgt);
+			// Note, this rid probably has been deleted
 			if (sRid !=null)
 				sbRedirect.append("&rid=").append(sRid);
 			sbRedirect.append("&a-select-server=").append(_sServerId);

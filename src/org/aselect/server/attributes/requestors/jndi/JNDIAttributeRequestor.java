@@ -200,7 +200,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No 'num_uid' config item in 'main' section found, using 'false'", e);
+						"No 'numerical_uid' config item in 'main' section found, using 'false'", e);
 			}
 
 			try {
