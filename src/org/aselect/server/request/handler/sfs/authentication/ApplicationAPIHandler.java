@@ -450,7 +450,8 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 
 		// check if request should be signed
-		if (_applicationManager.isSigningRequired()) {
+//		if (_applicationManager.isSigningRequired()) {	// RH, 20100910, o
+		if (_applicationManager.isSigningRequired(sAppId)) {	// RH, 20100910, n
 			// check signature
 			StringBuffer sbData = new StringBuffer(sASelectServer);
 			sbData.append(sAppId).append(sAppUrl);
@@ -590,7 +591,8 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 
 		// check if request should be signed
-		if (_applicationManager.isSigningRequired()) {
+//		if (_applicationManager.isSigningRequired()) {	// RH, 20100910, o
+		if (_applicationManager.isSigningRequired(sAppId)) {	// RH, 20100910, n
 			// check signature
 			StringBuffer sbData = new StringBuffer(sASelectServer).append(sAppId);
 			verifyApplicationSignature(oInputMessage, sbData.toString(), sAppId);
@@ -664,9 +666,12 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 
 		// check if request should be signed
-		if (_applicationManager.isSigningRequired()) {
+		String sAppId = (String) htTGTContext.get("app_id");	// RH, 20100910, n
+
+//		if (_applicationManager.isSigningRequired()) {	// RH, 20100910, o
+		if (_applicationManager.isSigningRequired(sAppId)) {	// RH, 20100910, n
 			// Note: we should do this earlier, but we don't have an app_id until now
-			String sAppId = (String) htTGTContext.get("app_id");
+//			String sAppId = (String) htTGTContext.get("app_id");	// RH, 20100910, o
 			StringBuffer sbData = new StringBuffer(sASelectServer).append(sEncTGT);
 			verifyApplicationSignature(oInputMessage, sbData.toString(), sAppId);
 		}
@@ -762,7 +767,8 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 
 		// Check if request should be signed
-		if (_applicationManager.isSigningRequired()) {
+//		if (_applicationManager.isSigningRequired()) {	// RH, 20100910, o
+		if (_applicationManager.isSigningRequired(sAppId)) {	// RH, 20100910, n
 			// Note: we should do this earlier, but we don't have an
 			// app_id until now
 

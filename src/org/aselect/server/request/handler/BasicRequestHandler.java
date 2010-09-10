@@ -87,13 +87,18 @@ public abstract class BasicRequestHandler
 		if (sForcedLogon != null)
 			boolForcedAuthn = new Boolean(sForcedLogon);
 
-		Boolean bCheckSignature = true;
-		String sCheckSignature = hmInput.get("check-signature");
-		if (sCheckSignature != null)
-			bCheckSignature = Boolean.valueOf(sCheckSignature);
+		// RH, 20100910, so
+		// This code is obsolete now
+//		Boolean bCheckSignature = true;
+//		String sCheckSignature = hmInput.get("check-signature");
+//		if (sCheckSignature != null)
+//			bCheckSignature = Boolean.valueOf(sCheckSignature);
+		// RH, 20100910, oe
 
 		// check if request should be signed
-		if (_applicationManager.isSigningRequired() && bCheckSignature) {
+		// RH, 20100910, Remove fishing leak and make signature verification configurable per application
+//		if (_applicationManager.isSigningRequired() && bCheckSignature) {		// RH, 20100910, o
+			if (_applicationManager.isSigningRequired(sAppId)) {		// RH, 20100910, n
 			String sSignature = hmInput.get("signature");
 			if (sSignature == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing required 'signature' parameter");

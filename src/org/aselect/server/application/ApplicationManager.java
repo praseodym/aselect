@@ -296,7 +296,10 @@ public class ApplicationManager
 				String sDoUrlEncode = ASelectConfigManager.getSimpleParam(oApplication, "use_url_encoding", false);
 				if (sDoUrlEncode != null)
 					bDoUrlEncode = new Boolean(sDoUrlEncode).booleanValue();
-
+				// RH, 20100909, sn
+				String sAppRequireSigning = ASelectConfigManager.getSimpleParam(oApplication, "require_signing", false);
+				// RH, 20100909, en
+				
 				// required params
 				application.setId(sAppId);
 				application.setMinLevel(intLevel);
@@ -309,6 +312,10 @@ public class ApplicationManager
 				application.setUseOpaqueUId(bUseOpaqueId);
 				application.setShowUrl(bShowUrl);
 				application.setAttributePolicy(sAttributePolicy);
+				
+				// RH, 20100909, sn
+				application.setSigningRequired(calculateRequireSigning(_bRequireSigning, sAppRequireSigning));
+				// RH, 20100909, en
 
 				// 20090305, Bauke added for DigiD-ization
 				application.setSharedSecret(sSharedSecret);
@@ -317,9 +324,18 @@ public class ApplicationManager
 				application.setLevelName(sLevelName);
 				application.setDoUrlEncode(bDoUrlEncode);
 
-				if (_bRequireSigning) {
+				// RH, 20100909, so
+//				if (_bRequireSigning) {
+//					application.setSigningKey(loadPublicKeyFromKeystore(sAppId));
+//				}
+				// RH, 20100909, eo
+
+				// RH, 20100909, sn
+				if (application.isSigningRequired()) {
 					application.setSigningKey(loadPublicKeyFromKeystore(sAppId));
 				}
+				// RH, 20100909, en
+
 				_htApplications.put(sAppId, application);
 				oApplication = _oASelectConfigManager.getNextSection(oApplication);
 			}
@@ -359,12 +375,34 @@ public class ApplicationManager
 		return _htApplications.containsKey(sAppId);
 	}
 
+
+	// RH, 20100909, sn
+	/**
+	 * Checks if signing is required. Per application
+	 * If sAppId == null, Return top-level signing_required
+	 * 
+	 * @param sAppId
+	 *            the Id of the application
+	 * @return true if signing is required, otherwise false.
+	 */
+	public boolean isSigningRequired(String sAppId)
+		throws ASelectException
+	{
+		if (sAppId == null) {
+			return _bRequireSigning;
+		} else {
+			Application oApplication = getApplication(sAppId);
+			return oApplication.isSigningRequired();
+		}
+	}
+	// RH, 20100909, en
+	
 	/**
 	 * Checks if is signing required.
 	 * 
 	 * @return true if signing is required, otherwise false.
 	 */
-	public boolean isSigningRequired()
+	public boolean isSigningRequired()	// for backward compatibility, for signing this is still used
 	{
 		return _bRequireSigning;
 	}
@@ -956,4 +994,34 @@ public class ApplicationManager
 		_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not load application public key.");
 		throw new ASelectException(Errors.ERROR_ASELECT_NOT_FOUND);
 	}
+	
+	// RH, 20100909, sn
+	/**
+	 * Calculate whether signing is required based on top and sub level requirements.
+	 * 
+	 * @param toplevelSigning
+	 *            the top level boolean variable
+	 * @param sublevelSigning
+	 *            the sub level String variable
+	 * @return boolean result of the calculation
+	 * Sub level overrules top level, top level rules when sub level == null
+	 */
+	boolean calculateRequireSigning(boolean toplevelSigning, String sublevelSigning) {
+		boolean returnValue = false;
+		if (toplevelSigning) {
+			if ( sublevelSigning == null) {
+				returnValue = true;
+			} else {
+				returnValue = new Boolean(sublevelSigning).booleanValue();
+			}
+		} else {
+			if ( sublevelSigning == null) {
+				returnValue = false;
+			} else {
+				returnValue = new Boolean(sublevelSigning).booleanValue();
+			}
+		}
+		return returnValue;
+	}
+	// RH, 20100909, en	
 }

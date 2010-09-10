@@ -439,9 +439,10 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing required parameters");
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
-
+		
 		// check if request should be signed
-		if (_applicationManager.isSigningRequired()) {
+//		if (_applicationManager.isSigningRequired()) {	// RH, 20100910, o
+			if (_applicationManager.isSigningRequired(sAppId)) {	// RH, 20100910, n
 			// check signature
 			StringBuffer sbData = new StringBuffer(sASelectServer).append(sAppId);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "sbData=" + sbData);
@@ -512,9 +513,12 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 
 		// check if request should be signed
-		if (_applicationManager.isSigningRequired()) {
+		String sAppId = (String) htTGTContext.get("app_id");	// RH, 20100910, n
+
+//		if (_applicationManager.isSigningRequired()) {	// RH, 20100910, o
+		if (_applicationManager.isSigningRequired(sAppId)) {	// RH, 20100910, n
 			// Note: we should do this earlier, but we don't have an app_id until now
-			String sAppId = (String) htTGTContext.get("app_id");
+//			String sAppId = (String) htTGTContext.get("app_id");	// RH, 20100910, o
 			StringBuffer sbData = new StringBuffer(sASelectServer).append(sEncTGT);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "sbData=" + sbData);
 			verifyApplicationSignature(oInputMessage, sbData.toString(), sAppId);
@@ -580,9 +584,11 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 		
 		// check if request should be signed
-		if (_applicationManager.isSigningRequired()) {
+		String sAppId = (String) htTGTContext.get("app_id");	// RH, 20100910, n
+//		if (_applicationManager.isSigningRequired()) {	// RH, 20100910, o
+		if (_applicationManager.isSigningRequired(sAppId)) {	// RH, 20100910, n
 			// Note: we should do this earlier, but we don't have an app_id until now
-			String sAppId = (String) htTGTContext.get("app_id");
+//			String sAppId = (String) htTGTContext.get("app_id");	// RH, 20100910, o
 			StringBuffer sbData = new StringBuffer(sASelectServer).append(sEncTGT);
 			if (sLanguage != null)
 				sbData = sbData.append(sLanguage);
@@ -751,7 +757,8 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 
 		// Check if request should be signed
-		if (_applicationManager.isSigningRequired()) {
+//		if (_applicationManager.isSigningRequired()) {	// RH, 20100910, o
+		if (_applicationManager.isSigningRequired(sAppId)) {	// RH, 20100910, n
 			// Note: we should do this earlier, but we don't have an app_id until now
 			// Another NOTE: see to it that all data is put in sData sorted on parameter name!
 			StringBuffer sbData = new StringBuffer(sASelectServer).append(sEncTgt).append(sRid);
