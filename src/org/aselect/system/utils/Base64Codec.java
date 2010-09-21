@@ -157,23 +157,29 @@ public class Base64Codec
 		if (xEncodedString.equals(""))
 			return new byte[0];
 
-		for (int i = xEncodedString.length() - 1; xEncodedString.charAt(i) == '='; i--)
-			xPad++;
-
-		int xLength = xEncodedString.length() * 6 / 8 - xPad;
-		byte[] xData = new byte[xLength];
-		int xIndex = 0;
-
-		for (int i = 0; i < xEncodedString.length(); i += 4) {
-			int xBlock = (getValue(xEncodedString.charAt(i)) << 18) + (getValue(xEncodedString.charAt(i + 1)) << 12)
-					+ (getValue(xEncodedString.charAt(i + 2)) << 6) + (getValue(xEncodedString.charAt(i + 3)));
-
-			for (int j = 0; j < 3 && xIndex + j < xData.length; j++) {
-				xData[xIndex + j] = (byte) ((xBlock >> (8 * (2 - j))) & 0xff);
+		// 20100911, Bauke, don't let this code crash on us (catch!)
+		try {
+			for (int i = xEncodedString.length() - 1; xEncodedString.charAt(i) == '='; i--)
+				xPad++;
+	
+			int xLength = xEncodedString.length() * 6 / 8 - xPad;
+			byte[] xData = new byte[xLength];
+			int xIndex = 0;
+	
+			for (int i = 0; i < xEncodedString.length(); i += 4) {
+				int xBlock = (getValue(xEncodedString.charAt(i)) << 18) + (getValue(xEncodedString.charAt(i + 1)) << 12)
+						+ (getValue(xEncodedString.charAt(i + 2)) << 6) + (getValue(xEncodedString.charAt(i + 3)));
+	
+				for (int j = 0; j < 3 && xIndex + j < xData.length; j++) {
+					xData[xIndex + j] = (byte) ((xBlock >> (8 * (2 - j))) & 0xff);
+				}
+				xIndex += 3;
 			}
-			xIndex += 3;
+			return xData;
 		}
-		return xData;
+		catch (Exception e) {
+			return new byte[0];
+		}
 	}
 
 	/**

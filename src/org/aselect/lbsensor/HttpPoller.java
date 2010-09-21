@@ -42,7 +42,8 @@ public class HttpPoller extends TimerTask
 	 * @param sSignOfLife
 	 *            the s sign of life
 	 */
-	public HttpPoller(String sSensorStoreId, String sUrl, String sSignOfLife) {
+	public HttpPoller(String sSensorStoreId, String sUrl, String sSignOfLife)
+	{
 		_sSensorStoreId = sSensorStoreId;
 		_sUrl = sUrl;
 		_sSignOfLife = sSignOfLife;
