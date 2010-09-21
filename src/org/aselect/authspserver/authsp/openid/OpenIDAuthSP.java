@@ -411,7 +411,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 					sSignature = URLDecoder.decode(sSignature, "UTF-8");
 	
 					// validate signature
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "validate signature");
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "validate signature from A-Select Server ");
 					StringBuffer sbSignature = new StringBuffer(sRid);
 					sbSignature.append(sAsUrl);
 					sbSignature.append(sUid);
@@ -878,8 +878,14 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error]", sError);  // obsoleted 20100817
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error_code]", sError);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error_message]", sErrorMessage);
-		if (sLanguage != null) sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", sLanguage);
-		if (sCountry != null) sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[country]", sCountry);
+		// RH, 20100921, so
+//		if (sLanguage != null) sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", sLanguage);
+//		if (sCountry != null) sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[country]", sCountry);
+		// RH, 20100921, eo
+		// RH, 20100921, sn
+		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", (sLanguage == null) ? "" : sLanguage);	// This "" is important for verification of signature
+		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[country]", (sCountry == null) ? "" :  sCountry);	// This "" is important for verification of signature
+		// RH, 20100921, en
 		sAuthenticateForm = Utils.replaceConditional(sAuthenticateForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[signature]", sSignature);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[retry_counter]", sRetryCounter);
