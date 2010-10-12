@@ -246,11 +246,14 @@ public class ApplicationManager
 						eAC);
 			}
 
-			if (_bRequireSigning) {
-				_sApplicationsKeystoreName = new StringBuffer(_oASelectConfigManager.getWorkingdir()).append(
-						File.separator).append("keystores").append(File.separator).append("applications").append(
-						File.separator).append("applications.keystore").toString();
-			}
+			// RH, 20100909, so
+//			if (_bRequireSigning) {
+//				_sApplicationsKeystoreName = new StringBuffer(_oASelectConfigManager.getWorkingdir()).append(
+//						File.separator).append("keystores").append(File.separator).append("applications").append(
+//						File.separator).append("applications.keystore").toString();
+//			}
+			// RH, 20100909, eo
+			
 			Object oApplication = null;
 			try { // Check if at least one application is defined
 				oApplication = _oASelectConfigManager.getSection(_oApplicationsConfigSection, "application");
@@ -332,6 +335,13 @@ public class ApplicationManager
 
 				// RH, 20100909, sn
 				if (application.isSigningRequired()) {
+					// RH, 20100909, sn
+					if (_sApplicationsKeystoreName == null || "".equals(_sApplicationsKeystoreName)) {
+						_sApplicationsKeystoreName = new StringBuffer(_oASelectConfigManager.getWorkingdir()).append(
+								File.separator).append("keystores").append(File.separator).append("applications").append(
+								File.separator).append("applications.keystore").toString();
+					}
+					// RH, 20100909, en
 					application.setSigningKey(loadPublicKeyFromKeystore(sAppId));
 				}
 				// RH, 20100909, en
