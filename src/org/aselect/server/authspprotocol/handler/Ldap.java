@@ -343,17 +343,21 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
+			
 			HashMap htAllowedAuthsps = (HashMap) htSessionContext.get("allowed_user_authsps");
 			if (htAllowedAuthsps == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Allowed_user_authsps missing in session context.");
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
+			
 			String sUserId = (String) htAllowedAuthsps.get(_sAuthsp);
 			if (sUserId == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing ldap user attributes.");
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Using user id: '" + sUserId + "'");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Using user id: '" + sUserId + "' from allowed Authsps ");
+			if ("".equals(sUserId))
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Empty user id, would be nice to use "+htSessionContext.get("user_id"));
 
 			sbBuffer = new StringBuffer((String) htSessionContext.get("my_url"));
 			sbBuffer.append("?authsp=").append(_sAuthsp);

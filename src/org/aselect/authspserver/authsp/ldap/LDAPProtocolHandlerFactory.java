@@ -203,8 +203,6 @@ public class LDAPProtocolHandlerFactory
 			int iIndex = sUid.indexOf('@');
 			String sRealm;
 			if (iIndex <= 0) {
-				// TODO this check is no longer valid when the realm is configurable (Erwin)
-
 				// Bauke: Added, default_realm, used when a user does not type a realm when logging in
 				String sDefaultRealm = oConfigManager.getParam(oConfig, "default_realm");
 				if (sDefaultRealm != null && !sDefaultRealm.equals("")) {

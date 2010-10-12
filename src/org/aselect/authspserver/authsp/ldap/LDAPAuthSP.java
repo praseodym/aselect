@@ -332,13 +332,11 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			}
 
 			if (!_sFailureHandling.equalsIgnoreCase("aselect") && !_sFailureHandling.equalsIgnoreCase("local")) {
-				StringBuffer sbWarning = new StringBuffer(
-						"Invalid 'failure_handling' parameter found in configuration: '");
+				StringBuffer sbWarning = new StringBuffer("Invalid 'failure_handling' parameter found in configuration: '");
 				sbWarning.append(_sFailureHandling);
 				sbWarning.append("', using default: aselect");
 
 				_sFailureHandling = DEFAULT_FAILUREHANDLING;
-
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbWarning.toString());
 			}
 
@@ -390,8 +388,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			// check if the request is an API call
 			String sRequestName = (String) htServiceRequest.get("request");
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "LDAP GET {" + servletRequest + " --> " + sMethod + ", "
-					+ ((sRequestName != null) ? sRequestName : "NULL") + ": " + sQueryString);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "LDAP GET { query-->" + sQueryString);
 
 			if (sRequestName != null) // API request
 			{
@@ -604,6 +601,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 					}
 					else {
 						// authenticate failed
+						// set selfBlockedTime in the directory
 						_authenticationLogger.log(new Object[] {
 							MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied"
 						});
@@ -791,14 +789,11 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "REQ " + htServiceRequest.get("request"));
 
 			if (htServiceRequest.get("request").equals("authenticate"))
-			// authenticate request
 			{
 				if (_sessionManager.containsKey(sRid)) {
 					htSessionContext = _sessionManager.getSessionContext(sRid);
-
 					try {
 						iAllowedRetries = ((Integer) htSessionContext.get("allowed_retries")).intValue();
-
 					}
 					catch (ClassCastException e) {
 						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to cast to Integer.", e);
@@ -865,7 +860,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	 *             If authenticate fails.
 	 */
 	private void handleAuthenticate(HashMap htServiceRequest, HttpServletRequest servletRequest)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleAuthenticate()";
 
@@ -890,30 +885,29 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);
 		}
 
-		try {
+		try {  // Authenticate the user
 			sUid = URLDecoder.decode(sUid, "UTF-8");
 			sPassword = URLDecoder.decode(sPassword, "UTF-8");
 
-			// authenticate user
 			ILDAPProtocolHandler oProtocolHandler = LDAPProtocolHandlerFactory.instantiateProtocolHandler(
 					_oAuthSpConfig, sUid, _systemLogger);
+			
+			// The authentication is here, handled by the actual ProtocolHandler
+			// Must check for selfBlockedTime
 			String sResultCode = oProtocolHandler.authenticate(sPassword);
-			if (sResultCode.equals(Errors.ERROR_LDAP_SUCCESS)) // user authenticated
-			{
-				// Authentication successfull
+			
+			if (sResultCode.equals(Errors.ERROR_LDAP_SUCCESS)) {  // Authentication successful
 				_authenticationLogger.log(new Object[] {
 					MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "granted"
 				});
 			}
-			else if (sResultCode.equals(Errors.ERROR_LDAP_INVALID_PASSWORD)) // invalid password
-			{
+			else if (sResultCode.equals(Errors.ERROR_LDAP_INVALID_PASSWORD)) {  // invalid password
 				_authenticationLogger.log(new Object[] {
 					MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "denied"
 				});
 				throw new ASelectException(sResultCode);
 			}
-			else // other error
-			{
+			else {  // other error
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not authenticate user, cause:" + sResultCode);
 				throw new ASelectException(sResultCode);
 			}

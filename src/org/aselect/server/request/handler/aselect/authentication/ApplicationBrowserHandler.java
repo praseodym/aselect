@@ -398,13 +398,12 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * <br>
 	 * 
 	 * @param htServiceRequest
-	 *            the ht service request
+	 *            the service request
 	 * @param servletResponse
 	 *            the servlet response
 	 * @param pwOut
-	 *            the pw out
+	 *            the output PrintWriter
 	 * @throws ASelectException
-	 *             the a select exception
 	 * @see org.aselect.server.request.handler.aselect.authentication.AbstractBrowserRequestHandler#processBrowserRequest(java.util.HashMap,
 	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
 	 */
@@ -487,6 +486,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 
 			String sDirectAuthSP = (String) _htSessionContext.get("direct_authsp");
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "direct_authsp="+sDirectAuthSP);
 			if (sDirectAuthSP != null && !(sRequest.indexOf("direct_login") >= 0)) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod,
 						"'direct_authsp' found, but not a 'direct_login' request, rid='" + sRid + "'");
@@ -627,15 +627,18 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		String sRid = null;
 
 		String sRequest = (String) htServiceRequest.get("request");
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "==== "+sRequest);
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "==== "+sRequest+" htServReq="+htServiceRequest);
 		try {
 			sRid = (String) htServiceRequest.get("rid");
 			String sAuthSPId = (String) _htSessionContext.get("direct_authsp");
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "authsp from session="+sAuthSPId);
 			if (sAuthSPId == null) {
 				sAuthSPId = (String) htServiceRequest.get("authsp");
-				_systemLogger.log(Level.INFO, _sModule, sMethod, "authsp from request "+sAuthSPId);
-				if (sAuthSPId != null)
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "authsp from request="+sAuthSPId);
+				if (sAuthSPId != null) {
 					_htSessionContext.put("direct_authsp", sAuthSPId);
+					_sessionManager.updateSession(sRid, _htSessionContext); // make persistent
+				}
 			}
 			if (sAuthSPId == null) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod,
@@ -1227,7 +1230,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @param pwOut
 	 *            Used to write information back to the user (HTML)
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
 	private void handleLogin2(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 	throws ASelectException
@@ -1277,8 +1279,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 
-			// If uid contains any spaces, they where transformed to '+'
-			// Now first set it back to spaces
+			// If uid contains spaces, they where transformed to '+'
+			// Translate them back.
 			try {
 				sUid = URLDecoder.decode(sUid, "UTF-8");
 			}
@@ -1288,6 +1290,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 
 			try {
+				// Get authsps for this user, result is a collection of authsps with a login name to be used for that authsp
+				// Stored in the session under "allowed_user_authsps"
 				getAuthsps(sRid, sUid);
 			}
 			catch (ASelectException e) {
@@ -1295,7 +1299,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					handleCrossLogin(htServiceRequest, servletResponse, pwOut);
 					return;
 				}
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to retrieve AuthSPs of user " + sUid);
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to retrieve AuthSPs for user " + sUid);
 				throw e;
 			}
 
@@ -2171,7 +2175,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void getAuthsps(String sRid, String sUid)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getAuthsps";
 		HashMap htUserAuthsps = new HashMap();
@@ -2186,6 +2190,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				throw e;
 			}
 
+			// Get user's attributes from the UDB
 			HashMap htUserProfile = oUDBConnector.getUserProfile(sUid);
 			if (!((String) htUserProfile.get("result_code")).equals(Errors.ERROR_ASELECT_SUCCESS)) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to get user profile.");
@@ -2200,7 +2205,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "uid=" + sUid + " profile=" + htUserProfile
 					+ " user_authsps=" + htUserAuthsps + " SessionContext=" + _htSessionContext);
 
-			// which level is required for the application?
+			// Which level is required for the application?
 			// 20090110, Bauke added required_level!
 			Integer intMaxLevel = (Integer) _htSessionContext.get("max_level"); // 'max_level' can be null
 			Integer intLevel = (Integer) _htSessionContext.get("level");
@@ -2210,20 +2215,17 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "required_level=" + intRequiredLevel + " level="
 					+ intLevel + " maxlevel=" + intMaxLevel);
 
-			// fetch the authsps that the user has registered for and
-			// satisfy the level for the current application
-			Vector vAllowedAuthSPs;
-			vAllowedAuthSPs = _authspHandlerManager.getConfiguredAuthSPs(intRequiredLevel, intMaxLevel);
-			// getAllowedAuthSPs(intRequiredLevel.intValue(), htUserAuthsps);
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "Configured AuthSPs=" + vAllowedAuthSPs);
-			if (vAllowedAuthSPs == null) {
+			// Fetch the authsps that the user has registered for and
+			// that satisfy the level for the current application
+			Vector vConfiguredAuthSPs = _authspHandlerManager.getConfiguredAuthSPs(intRequiredLevel, intMaxLevel);
+			if (vConfiguredAuthSPs == null) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "INTERNAL ERROR" + sUid);
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
 
 			HashMap htAllowedAuthsps = new HashMap();
-			for (int i = 0; i < vAllowedAuthSPs.size(); i++) {
-				String sAuthSP = (String) vAllowedAuthSPs.elementAt(i);
+			for (int i = 0; i < vConfiguredAuthSPs.size(); i++) {
+				String sAuthSP = (String) vConfiguredAuthSPs.elementAt(i);
 				if (htUserAuthsps.containsKey(sAuthSP)) {
 					htAllowedAuthsps.put(sAuthSP, htUserAuthsps.get(sAuthSP));
 				}
@@ -2240,17 +2242,15 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// RH, should be set through AbstractBrowserRequestHandler
 			// but this seems to be the wrong one (AbstractBrowserRequestHandler
 			// sets the idp address on the idp)
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip was "
-					+ _htSessionContext.get("client_ip"));
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip was "+
+					_htSessionContext.get("client_ip")+", set to "+get_servletRequest().getRemoteAddr());
 			_htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr());
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip is now "
-					+ _htSessionContext.get("client_ip"));
 
 			if (!_sessionManager.writeSession(sRid, _htSessionContext)) {
 				// logged in sessionmanager
 				throw new ASelectException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
 			}
-			return;// Errors.ERROR_ASELECT_SUCCESS;
+			return;
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -2306,7 +2306,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 
-		// everything seems okay -> instantiate the protocol handler for
+		// Everything seems okay -> instantiate the protocol handler for
 		// the selected authsp and let it compute a signed authentication request
 		IAuthSPProtocolHandler oProtocolHandler;
 		try {

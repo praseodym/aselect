@@ -79,21 +79,13 @@ public abstract class BasicRequestHandler
 		String sCountry = hmInput.get("country");
 		String sLanguage = hmInput.get("language");
 
-		// Acccept both 'forced_logon' and 'forced_authenticate' (preferred)
+		// Accept both 'forced_logon' and 'forced_authenticate' (preferred)
 		String sForcedAuthn = hmInput.get("forced_authenticate");  // a String this time
 		Boolean boolForcedAuthn = new Boolean(sForcedAuthn);
 
 		String sForcedLogon = hmInput.get("forced_logon");
 		if (sForcedLogon != null)
 			boolForcedAuthn = new Boolean(sForcedLogon);
-
-		// RH, 20100910, so
-		// This code is obsolete now
-//		Boolean bCheckSignature = true;
-//		String sCheckSignature = hmInput.get("check-signature");
-//		if (sCheckSignature != null)
-//			bCheckSignature = Boolean.valueOf(sCheckSignature);
-		// RH, 20100910, oe
 
 		// check if request should be signed
 		// RH, 20100910, Remove fishing leak and make signature verification configurable per application
@@ -157,7 +149,8 @@ public abstract class BasicRequestHandler
 		if (sUid == null) {
 			sUid = aApp.getForcedUid();
 		}
-
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "sAuthsp="+sAuthsp+" sUid="+sUid);
+				
 		// Create Session
 		HashMap htSessionContext = new HashMap();
 		htSessionContext.put("app_id", sAppId);
@@ -208,19 +201,7 @@ public abstract class BasicRequestHandler
 			if (sLanguage != null) // takes precedence
 				htSessionContext.put("language", sLanguage.toLowerCase());
 		}
-
-		// We only want to set the client_ip on application browserrequests (see ApplicationBrowserHandler)
-		// Bauke 20081217: Therefore the lines below should go!
-		// htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr()); // RH, 20080716, n // RH, 20080719, o
-		// String sAgent = get_servletRequest().getHeader("User-Agent");
-		// if (sAgent != null) htSessionContext.put("user_agent", sAgent);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "CTX htSessionContext=" + htSessionContext);
-
-		String sSessionId = _sessionManager.createSession(htSessionContext);
-		if (sSessionId == null) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to create session");
-			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
-		}
+		// *1
 
 		StringBuffer sbAsUrl = new StringBuffer();
 		String sAsUrl = _configManager.getRedirectURL();
@@ -229,16 +210,26 @@ public abstract class BasicRequestHandler
 		else if (sUrlTarget != null)
 			sbAsUrl.append(sUrlTarget);
 
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "appLevel="+intAppLevel+" maxAppLevel="+intMaxAppLevel);
 		Vector vAuthSPs = _authSPManagerManager.getConfiguredAuthSPs(intAppLevel, intMaxAppLevel);
 
 		// Authentication OK
+		// Single direct_authsp left?
 		if (vAuthSPs.size() == 1 && _authSPManagerManager.isDirectAuthSP((String) vAuthSPs.get(0))) {
 			// A-Select will show username and password box in one page.
 			sbAsUrl.append("?request=direct_login1");
 			htSessionContext.put("direct_authsp", vAuthSPs.get(0));
 		}
-		else {
+		else {  // multiple authsps
 			sbAsUrl.append("?request=login1");
+		}
+
+		// 20101009, Bauke: createSession was at *1 above, moved here
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "CTX htSessionContext=" + htSessionContext);
+		String sSessionId = _sessionManager.createSession(htSessionContext);
+		if (sSessionId == null) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to create session");
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
 		}
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "OUT sbAsUrl=" + sbAsUrl + ", rid=" + sSessionId);
 

@@ -52,6 +52,7 @@ import javax.naming.CommunicationException;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
+import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 import javax.naming.directory.SearchControls;
@@ -59,7 +60,6 @@ import javax.naming.directory.SearchResult;
 
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
 /**
  * A basic LDAP protocol handler. <br>
  * <br>
@@ -73,12 +73,10 @@ import org.aselect.system.exception.ASelectException;
  * @author Alfa & Ariss
  */
 public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
-{
-	
-	/**
-	 * Set the module name.
-	 */
-	public LDAPSimpleProtocolHandler() {
+{	
+	// Set the module name.
+	public LDAPSimpleProtocolHandler()
+	{
 		_sModule = "LDAPSimpleProtocolHandler";
 	}
 
@@ -104,9 +102,9 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 	 * - <br>
 	 * 
 	 * @param sPassword
-	 *            the s password
+	 *            the password
 	 * @throws ASelectException
-	 *             the a select exception
+	 *             the aselect exception
 	 * @see org.aselect.authspserver.authsp.ldap.AbstractLDAPProtocolHandler#doBind(java.lang.String)
 	 */
 	@Override
@@ -122,20 +120,15 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 
 		Hashtable htEnvironment = new Hashtable();
 
-		if (_sPrincipalDn.equals(""))
-		// If no principal dn is known, we do a simple binding
-		{
+		if (_sPrincipalDn.equals("")) {
+			// If no principal DN is known, we do a simple binding
 			htEnvironment.put(Context.PROVIDER_URL, _sLDAPUrl);
 			htEnvironment.put(Context.INITIAL_CONTEXT_FACTORY, _sDriver);
 			htEnvironment.put(Context.SECURITY_AUTHENTICATION, "simple");
 
-			sbTemp = new StringBuffer(_sUserDn);
-			sbTemp.append("=");
-			sbTemp.append(_sUid);
-			sbTemp.append(", ");
-			sbTemp.append(_sBaseDn);
+			sbTemp = new StringBuffer(_sUserDn).append("=").append(_sUid);
+			sbTemp.append(", ").append(_sBaseDn);
 			htEnvironment.put(Context.SECURITY_PRINCIPAL, sbTemp.toString());
-
 			htEnvironment.put(Context.SECURITY_CREDENTIALS, sPassword);
 
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "BIND " + _sLDAPUrl + "_" + _sDriver + "_" + "simple1"
@@ -166,9 +159,7 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 				throw new ASelectException(Errors.ERROR_LDAP_COULD_NOT_REACH_LDAP_SERVER, eC);
 			}
 			catch (NamingException eN) {
-				/*
-				 * The initial dir context could not be created.
-				 */
+				// The initial directory context could not be created.
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "An naming error has occured", eN);
 				throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR, eN);
 			}
@@ -177,21 +168,17 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 				oDirContext.close();
 			}
 			catch (Exception e) {
-
-				sbTemp = new StringBuffer("Could not close connection with '");
+				sbTemp = new StringBuffer("Could not close connection to '");
 				sbTemp.append(_sLDAPUrl);
 				sbTemp.append("'");
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, sbTemp.toString(), e);
 			}
 		}
-		else // otherwise we do a subtree search
-		{
+		else { // otherwise we do a subtree search
 			// Step 1: bind to LDAP using security principal's DN & PWD
 			htEnvironment.put(Context.PROVIDER_URL, _sLDAPUrl);
-
 			htEnvironment.put(Context.INITIAL_CONTEXT_FACTORY, _sDriver); // USED TO BE: _sLDAPUrl);
 			htEnvironment.put(Context.SECURITY_AUTHENTICATION, "simple");
-
 			htEnvironment.put(Context.SECURITY_PRINCIPAL, _sPrincipalDn);
 			htEnvironment.put(Context.SECURITY_CREDENTIALS, _sPrincipalPwd);
 
@@ -213,12 +200,9 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 				throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR, eN);
 			}
 
+			// DirContext creation using the principal DN succeeded
 			// Step 2: search for user's DN relative to base DN
-			sbTemp = new StringBuffer("(");
-			sbTemp.append(_sUserDn);
-			sbTemp.append("=");
-			sbTemp.append(_sUid);
-			sbTemp.append(")");
+			sbTemp = new StringBuffer("(").append(_sUserDn).append("=").append(_sUid).append(")");
 			sQuery = sbTemp.toString();
 
 			SearchControls oScope = new SearchControls();
@@ -253,8 +237,7 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 			try {
 				// Check if we got a result
 				if (!enumSearchResults.hasMore()) {
-					sbTemp = new StringBuffer("User '");
-					sbTemp.append(_sUid);
+					sbTemp = new StringBuffer("User '").append(_sUid);
 					sbTemp.append("' not found during LDAP search. The filter was: '");
 					sbTemp.append(sQuery).append("'.");
 					_systemLogger.log(Level.WARNING, _sModule, sMethod, sbTemp.toString());
@@ -265,9 +248,8 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 				sRelUserDn = searchResult.getName();
 				enumSearchResults.close();
 				if (sRelUserDn == null) {
-					sbTemp = new StringBuffer("no user dn was returned for '");
-					sbTemp.append(_sUid);
-					sbTemp.append("'.");
+					sbTemp = new StringBuffer("No user DN was returned for '");
+					sbTemp.append(_sUid).append("'.");
 					_systemLogger.log(Level.WARNING, _sModule, sMethod, sbTemp.toString());
 					throw new ASelectException(Errors.ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER);
 				}
@@ -280,10 +262,8 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 				throw new ASelectException(Errors.ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER);
 			}
 
-			// Step 3: bind using user's credentials
-			sbTemp = new StringBuffer(sRelUserDn);
-			sbTemp.append(",");
-			sbTemp.append(_sBaseDn);
+			// Step 3: Bind using user's credentials
+			sbTemp = new StringBuffer(sRelUserDn).append(",").append(_sBaseDn);
 
 			htEnvironment = new Hashtable();
 			htEnvironment.put(Context.PROVIDER_URL, _sLDAPUrl);
@@ -292,16 +272,18 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 			htEnvironment.put(Context.SECURITY_PRINCIPAL, sbTemp.toString());
 			htEnvironment.put(Context.SECURITY_CREDENTIALS, sPassword);
 
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "USR_BIND " + _sLDAPUrl + "_" + _sDriver + "_" + "simple3"
-					+ "_" + sbTemp.toString());
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "USR_BIND " + _sLDAPUrl + "_" + _sDriver +
+					"_" + "simple3"	+ "_" + sbTemp.toString());
 			try {
 				oDirContext = new InitialDirContext(htEnvironment);
+				Attributes attr = oDirContext.getAttributes(sbTemp.toString());
+				// Check for selfBlockedTime
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "Attributes="+attr);
 			}
 			catch (AuthenticationException e) {
 				StringBuffer sbFine = new StringBuffer("Could not authenticate user (invalid password): ");
 				sbFine.append(_sUid);
-				_systemLogger.log(Level.FINE, _sModule, sMethod, sbFine.toString(), e);
-
+				_systemLogger.log(Level.SEVERE, _sModule, sMethod, sbFine.toString(), e);
 				throw new ASelectException(Errors.ERROR_LDAP_INVALID_PASSWORD, e);
 			}
 			catch (CommunicationException eC) {
@@ -317,11 +299,11 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 				oDirContext.close();
 			}
 			catch (Exception e) {
-				sbTemp = new StringBuffer("Could not close connection with '");
-				sbTemp.append(_sLDAPUrl);
-				sbTemp.append("'");
+				sbTemp = new StringBuffer("Could not close connection to '");
+				sbTemp.append(_sLDAPUrl).append("'");
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, sbTemp.toString(), e);
 			}
 		}
+		//
 	}
 }

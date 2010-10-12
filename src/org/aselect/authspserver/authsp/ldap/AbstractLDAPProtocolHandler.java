@@ -129,7 +129,6 @@ public abstract class AbstractLDAPProtocolHandler implements ILDAPProtocolHandle
 		_sPrincipalDn = sPrincipalDn;
 		_sPrincipalPwd = sPrincipalPwd;
 		_bFullUid = bFullUid;
-
 		return true;
 	}
 

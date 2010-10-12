@@ -128,7 +128,7 @@ public class AuthSPHandlerManager
 	 *             the a select exception
 	 */
 	public void init()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -232,17 +232,14 @@ public class AuthSPHandlerManager
 	 */
 	public Vector getConfiguredAuthSPs()
 	{
+		String sMethod = "getConfiguredAuthSPs0";
 		Vector vResult = new Vector();
 
 		for (Map.Entry<String, Object> entry : _htAuthSPHandlers.entrySet()) {
 			AuthSPHandler oAuthSPHandler = (AuthSPHandler) entry.getValue();
 			vResult.add(oAuthSPHandler.getId());
 		}
-		/*
-		 * Enumeration enumElements = _htAuthSPHandlers.elements(); while(enumElements.hasMoreElements()) {
-		 * AuthSPHandler oAuthSPHandler = (AuthSPHandler)enumElements.nextElement();
-		 * vResult.add(oAuthSPHandler.getId()); }
-		 */
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Authsps="+vResult);
 		return vResult;
 	}
 
@@ -270,6 +267,7 @@ public class AuthSPHandlerManager
 	 */
 	public Vector getConfiguredAuthSPs(Integer intMinLevel, Integer intMaxLevel)
 	{
+		String sMethod = "getConfiguredAuthSPs1";
 		if (intMaxLevel == null) {
 			return getConfiguredAuthSPs(intMinLevel);
 		}
@@ -283,12 +281,7 @@ public class AuthSPHandlerManager
 			}
 		}
 
-		/*
-		 * Enumeration enumElements = _htAuthSPHandlers.elements(); while(enumElements.hasMoreElements()) {
-		 * AuthSPHandler oAuthSPHandler = (AuthSPHandler)enumElements.nextElement(); Integer intLevel =
-		 * oAuthSPHandler.getLevel(); if(intLevel.intValue() >= intMinLevel.intValue() && intLevel.intValue() <=
-		 * intMaxLevel.intValue()) { vResult.add(oAuthSPHandler.getId()); } }
-		 */
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "MinLevel="+intMinLevel+  " MaxLevel="+intMaxLevel+ " authsps="+vResult);
 		return vResult;
 	}
 
@@ -314,8 +307,9 @@ public class AuthSPHandlerManager
 	 */
 	public Vector getConfiguredAuthSPs(Integer intMinLevel)
 	{
-		Vector vResult = new Vector();
+		String sMethod = "getConfiguredAuthSPs2";
 
+		Vector vResult = new Vector();
 		for (Map.Entry<String, Object> entry : _htAuthSPHandlers.entrySet()) {
 			AuthSPHandler oAuthSPHandler = (AuthSPHandler) entry.getValue();
 			Integer intLevel = oAuthSPHandler.getLevel();
@@ -324,12 +318,7 @@ public class AuthSPHandlerManager
 			}
 		}
 
-		/*
-		 * Enumeration enumElements = _htAuthSPHandlers.elements(); while(enumElements.hasMoreElements()) {
-		 * AuthSPHandler oAuthSPHandler = (AuthSPHandler)enumElements.nextElement(); Integer intLevel =
-		 * oAuthSPHandler.getLevel(); if(intLevel.intValue() >= intMinLevel.intValue()) {
-		 * vResult.add(oAuthSPHandler.getId()); } }
-		 */
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "MinLevel="+intMinLevel+ " authsps="+vResult);
 		return vResult;
 	}
 
@@ -356,9 +345,9 @@ public class AuthSPHandlerManager
 	 *             if AuthSP with sAuthSPId not exists.
 	 */
 	public boolean isDirectAuthSP(String sAuthSPId)
-		throws ASelectException
+	throws ASelectException
 	{
-		String sMethod = "isDirectAuthSP()";
+		String sMethod = "isDirectAuthSP";
 		AuthSPHandler oAuthSPHandler = (AuthSPHandler) _htAuthSPHandlers.get(sAuthSPId);
 		if (oAuthSPHandler == null) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No AuthSPHandler found with Id: '" + sAuthSPId + "'.");
@@ -390,9 +379,9 @@ public class AuthSPHandlerManager
 	 *             the a select exception
 	 */
 	public String getFriendlyName(String sAuthSPId)
-		throws ASelectException
+	throws ASelectException
 	{
-		String sMethod = "getFriendlyName()";
+		String sMethod = "getFriendlyName";
 		AuthSPHandler oAuthSPHandler = (AuthSPHandler) _htAuthSPHandlers.get(sAuthSPId);
 		if (oAuthSPHandler == null) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No AuthSPHandler found with Id: '" + sAuthSPId + "'.");
@@ -423,9 +412,9 @@ public class AuthSPHandlerManager
 	 *             the a select exception
 	 */
 	public String getHandler(String sAuthSPId)
-		throws ASelectException
+	throws ASelectException
 	{
-		String sMethod = "getHandler()";
+		String sMethod = "getHandler";
 		AuthSPHandler oAuthSPHandler = (AuthSPHandler) _htAuthSPHandlers.get(sAuthSPId);
 		if (oAuthSPHandler == null) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No AuthSPHandler found with Id: '" + sAuthSPId + "'.");
@@ -456,7 +445,7 @@ public class AuthSPHandlerManager
 	 *             the a select exception
 	 */
 	public String getType(String sAuthSPId)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getType()";
 		AuthSPHandler oAuthSPHandler = (AuthSPHandler) _htAuthSPHandlers.get(sAuthSPId);
@@ -490,7 +479,7 @@ public class AuthSPHandlerManager
 	 *             the a select exception
 	 */
 	public Integer getLevel(String sAuthSPId)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getLevel()";
 		AuthSPHandler oAuthSPHandler = (AuthSPHandler) _htAuthSPHandlers.get(sAuthSPId);
@@ -523,7 +512,7 @@ public class AuthSPHandlerManager
 	 *             the a select exception
 	 */
 	public String getResourceGroup(String sAuthSPId)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getResourceGroup()";
 		AuthSPHandler oAuthSPHandler = (AuthSPHandler) _htAuthSPHandlers.get(sAuthSPId);
@@ -556,7 +545,7 @@ public class AuthSPHandlerManager
 	 *             the a select exception
 	 */
 	public String getUrl(String sAuthSPId)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getUrl()";
 		String sUrl = null;
@@ -614,7 +603,7 @@ public class AuthSPHandlerManager
 	 *             the a select exception
 	 */
 	public IAuthSPDirectLoginProtocolHandler getAuthSPDirectLoginProtocolHandler(String sAuthSPId)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getAuthSPAPIProtocolHandler()";
 		IAuthSPDirectLoginProtocolHandler oProtocolHandler = null;

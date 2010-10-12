@@ -277,9 +277,7 @@ public class JNDIConnector implements IUDBConnector
 				StringBuffer sbBuffer = new StringBuffer("User id contains illegal characters: ");
 				sbBuffer.append(sUserId);
 				_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, sbBuffer.toString());
-
 				logAuthentication(sUserId, Errors.ERROR_ASELECT_UDB_UNKNOWN_USER, "User unknown");
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_UNKNOWN_USER);
 			}
 
@@ -289,18 +287,13 @@ public class JNDIConnector implements IUDBConnector
 					sUserId = sUserId.substring(0, iIndex);
 			}
 
-			sbQuery = new StringBuffer("(");
-			sbQuery.append(_sUserDN);
-			sbQuery.append("=");
-			sbQuery.append(sUserId);
-			sbQuery.append(")");
-
+			sbQuery = new StringBuffer("(").append(_sUserDN).append("=").append(sUserId).append(")");
 			SearchControls oScope = new SearchControls();
 			oScope.setSearchScope(SearchControls.SUBTREE_SCOPE);
 
 			oDirContext = getConnection();
-
 			try {
+				_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "Query="+sbQuery.toString());
 				oSearchResults = oDirContext.search(_sBaseDN, sbQuery.toString(), oScope);
 			}
 			catch (NamingException e) {
@@ -308,9 +301,7 @@ public class JNDIConnector implements IUDBConnector
 				sbBuffer.append(sUserId);
 				sbBuffer.append(e.getMessage());
 				_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, sbBuffer.toString(), e);
-
 				logAuthentication(sUserId, Errors.ERROR_ASELECT_UDB_UNKNOWN_USER, "User unknown");
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_UNKNOWN_USER);
 			}
 
@@ -321,9 +312,7 @@ public class JNDIConnector implements IUDBConnector
 				sbBuffer.append("' not found during LDAP search. The filter was: ");
 				sbBuffer.append(sbQuery.toString());
 				_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, sbBuffer.toString());
-
 				logAuthentication(sUserId, Errors.ERROR_ASELECT_UDB_UNKNOWN_USER, "User unknown");
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_UNKNOWN_USER);
 			}
 
@@ -353,13 +342,11 @@ public class JNDIConnector implements IUDBConnector
 			// check if the AccountEnabled value is Set
 			if (sAttributeValue == null) {
 				logAuthentication(sUserId, Errors.ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED, "User account disabled");
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED);
 			}
 			// check if the account is enabled
 			if (sAttributeValue.equalsIgnoreCase("false")) {
 				logAuthentication(sUserId, Errors.ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED, "User account disabled");
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED);
 			}
 
@@ -367,17 +354,9 @@ public class JNDIConnector implements IUDBConnector
 			Set keys = htUserRecord.keySet();
 			for (Object s : keys) {
 				String sAttributeName = (String) s;
-				// Enumeration enumAttributeKeys = htUserRecord.keys();
-				// while (enumAttributeKeys.hasMoreElements())
-				// {
-				// sAttributeName = (String)enumAttributeKeys.nextElement();
 				sAttributeValue = (String) htUserRecord.get(sAttributeName);
-
-				if (sAttributeName.startsWith("ASELECT") && sAttributeName.endsWith("REGISTERED")) {// only store user
-					// attributes of
-					// authsps that are
-					// registered for
-					// the user
+				if (sAttributeName.startsWith("ASELECT") && sAttributeName.endsWith("REGISTERED")) {
+					// Only store user attributes of authsps that are registered for the user
 					if (sAttributeValue.equalsIgnoreCase("TRUE")) {
 						// The authsp id is the substring between ASELECT(7 chars) and REGISTERED(10 chars)
 						String sAuthSPID = sAttributeName.substring(7, sAttributeName.length() - 10);
@@ -385,15 +364,19 @@ public class JNDIConnector implements IUDBConnector
 						StringBuffer sbUserAttributes = new StringBuffer("ASELECT");
 						sbUserAttributes.append(sAuthSPID);
 						sbUserAttributes.append("USERATTRIBUTES");
-
 						sAttributeValue = (String) htUserRecord.get(sbUserAttributes.toString());
-						// a user attbiute can be empty
+						_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "Attr "+sbUserAttributes+"="+sAttributeValue);
+						
+						// The user attribute is used as a login name later on,
+						// but apparently it can be empty too!
 						if (sAttributeValue == null)
 							sAttributeValue = "";
 
 						String sCFGAuthSPID = (String) _htConfiguredAuthSPs.get(sAuthSPID);
 						if (sCFGAuthSPID != null)
 							htUserAttributes.put(sCFGAuthSPID, sAttributeValue);
+						// Result looks like: Ldap=<value of AselectLdapUserAttributes>
+						_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "Tranlated "+sAuthSPID+" to "+sCFGAuthSPID+" value="+sAttributeValue);
 					}
 				}
 			}
@@ -402,7 +385,6 @@ public class JNDIConnector implements IUDBConnector
 				StringBuffer sbBuffer = new StringBuffer("No user attributes found for user: ");
 				sbBuffer.append(sUserId);
 				_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, sbBuffer.toString());
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
 			}
 
@@ -417,7 +399,6 @@ public class JNDIConnector implements IUDBConnector
 			sbBuffer.append(sUserId);
 			sbBuffer.append(": ");
 			sbBuffer.append(e.getMessage());
-
 			_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), e);
 			htResponse.put("result_code", Errors.ERROR_ASELECT_UDB_INTERNAL);
 		}
@@ -836,19 +817,16 @@ public class JNDIConnector implements IUDBConnector
 			StringBuffer sbFailed = new StringBuffer("No active resource found in udb resourcegroup: ");
 			sbFailed.append(_sUDBResourceGroup);
 			_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
-
 			throw e;
 		}
 
 		oResourceConfig = oSAMResource.getAttributes();
-
 		try {
 			sDriver = _oASelectConfigManager.getParam(oResourceConfig, "driver");
 		}
 		catch (ASelectConfigException e) {
 			_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod,
 					"No valid config item 'driver' found in connector configuration", e);
-
 			throw new ASelectUDBException(Errors.ERROR_ASELECT_CONFIG_ERROR, e);
 		}
 
@@ -858,7 +836,6 @@ public class JNDIConnector implements IUDBConnector
 		catch (ASelectConfigException e) {
 			_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod,
 					"No valid config item 'security_principal_dn' found in connector resource configuration", e);
-
 			throw new ASelectUDBException(Errors.ERROR_ASELECT_CONFIG_ERROR, e);
 		}
 
@@ -866,11 +843,7 @@ public class JNDIConnector implements IUDBConnector
 			sPassword = _oASelectConfigManager.getParam(oResourceConfig, "security_principal_password");
 		}
 		catch (ASelectConfigException e) {
-			_oASelectSystemLogger
-					.log(
-							Level.CONFIG,
-							MODULE,
-							sMethod,
+			_oASelectSystemLogger.log(Level.CONFIG, MODULE, sMethod,
 							"Invalid or empty config item 'security_principal_password' found in connector resource configuration, using empty password.",
 							e);
 		}
@@ -881,7 +854,6 @@ public class JNDIConnector implements IUDBConnector
 		catch (ASelectConfigException e) {
 			_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod,
 					"No valid config item 'ssl' found in connector resource configuration", e);
-
 			throw new ASelectUDBException(Errors.ERROR_ASELECT_CONFIG_ERROR, e);
 		}
 
@@ -891,15 +863,13 @@ public class JNDIConnector implements IUDBConnector
 		catch (ASelectConfigException e) {
 			_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod,
 					"No valid config item 'url' found in connector resource configuration", e);
-
 			throw new ASelectUDBException(Errors.ERROR_ASELECT_CONFIG_ERROR, e);
 		}
 
 		try {
 			_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "JNDI " + sDriver + "_" + sPrincipal + "_"
 					+ sPassword + "_" + sUseSSL + "_" + sUrl);
-			oInitialDirContext = new InitialDirContext(createJNDIEnvironment(sDriver, sPrincipal, sPassword, sUseSSL,
-					sUrl));
+			oInitialDirContext = new InitialDirContext(createJNDIEnvironment(sDriver, sPrincipal, sPassword, sUseSSL, sUrl));
 		}
 		catch (Exception e) {
 			_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, "Could not create JNDI environment", e);

@@ -202,13 +202,13 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 		PrintWriter pwOut = null;
 		HashMap htServiceRequest = null;
 		try {
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ "+_servletRequest.getMethod());
 			pwOut = _servletResponse.getWriter();
 
 			_servletResponse.setContentType("text/html");
 			htServiceRequest = createServiceRequest(_servletRequest);
 			String sRequest = (String) htServiceRequest.get("request");
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ htServiceRequest=" + htServiceRequest);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ "+_servletRequest.getMethod()+
+					" htServiceRequest=" + htServiceRequest);
 
 			// only check a-select-server if request != null
 			if (sRequest != null && !sRequest.equals("alive")) {
