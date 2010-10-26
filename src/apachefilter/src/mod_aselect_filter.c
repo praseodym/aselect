@@ -126,10 +126,17 @@ int aselect_filter_init(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *pPool, 
     int i;
     PASELECT_APPLICATION pApp;
     char pcMessage[2048];
-    PASELECT_FILTER_CONFIG  pConfig = (PASELECT_FILTER_CONFIG)ap_get_module_config(pServer->module_config, &aselect_filter_module);
 
     TRACE1("aselect_filter_init: %x", pServer);
+    PASELECT_FILTER_CONFIG  pConfig = (PASELECT_FILTER_CONFIG)ap_get_module_config(pServer->module_config, &aselect_filter_module);
+
+    TRACE1("aselect_filter_init: %x read", pServer);
     ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, "ASELECT_FILTER:: initializing");
+
+	if (pConfig->pcAddedSecurity[0] == '\0')
+		strcat(pConfig->pcAddedSecurity, "c");  // add Secure & HttpOnly to cookies
+	TRACE1("aselect_filter_init: added_security=%s", pConfig->pcAddedSecurity);
+
     if (pConfig)
     {
 	// 20091223: Bauke, added
@@ -159,7 +166,7 @@ int aselect_filter_init(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *pPool, 
 //      }
     }
     ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, "ASELECT_FILTER:: done");
-    TRACE("aselect_filter_init: done");
+    TRACE1("aselect_filter_init: %x done", pServer);
 #ifdef APACHE_20_ASELECT_FILTER
     return 0;
 #endif
@@ -1648,15 +1655,15 @@ aselect_filter_add_secure_app(cmd_parms *parms, void *mconfig, const char *arg1,
 static const char *aselect_filter_added_security(cmd_parms *parms, void *mconfig, const char *arg)
 {
     PASELECT_FILTER_CONFIG pConfig = (PASELECT_FILTER_CONFIG) ap_get_module_config(parms->server->module_config, &aselect_filter_module);
-    char **pAttr;
 
+    TRACE1("aselect_filter_added_security:: arg=%s", arg);
     if (!pConfig) {
-	return "A-Select ERROR: Internal error during added_security";
-	return NULL;
+        return "A-Select ERROR: Internal error during added_security";
+        return NULL;
     }
     strcpy(pConfig->pcAddedSecurity, "");
     if (!arg || strstr(arg, "cookies") != NULL)  // It's the default as well
-	strcat(pConfig->pcAddedSecurity, "c");  // add Secure & HttpOnly to cookies
+        strcat(pConfig->pcAddedSecurity, "c");  // add Secure & HttpOnly to cookies
     TRACE1("aselect_filter_added_security:: %s", pConfig->pcAddedSecurity);
     return NULL;
 }
