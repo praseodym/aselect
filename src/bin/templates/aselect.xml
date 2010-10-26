@@ -416,7 +416,7 @@
 			<!-- 	[error_message] with a lookup string value from aselect server errors.conf -->
 			<!-- 	[language] with used language locale, can be supplied in querystring but will be validated -->
 			<!-- 	[country] with used country locale, can be supplied in querystring but will be validated -->
-			<!-- 	[app] with app_id from querystring after validation against applications in aselect config file -->
+			<!-- 	[app_id] with app_id from querystring after validation against applications in aselect config file -->
 		<!--  	<handler id="error_request"
         	class="org.aselect.server.request.handler.ErrorRequestHandler"
         	target="/error_request.*" >
