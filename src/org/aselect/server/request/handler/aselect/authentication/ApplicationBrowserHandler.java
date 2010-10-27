@@ -1242,11 +1242,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "Login2 " + htServiceRequest);
 		try {
 			sRid = (String) htServiceRequest.get("rid");
-			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
-			if (htSessionContext == null) {
-				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
-			}
-			String sAuthsp = (String) htSessionContext.get("forced_authsp"); // 20090111, Bauke from SessionContext not
+			// 20101027, Bauke:
+			// No, we already have the session context in _htSessionContext
+			//HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+			//if (htSessionContext == null) {
+			//	throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
+			//}
+			String sAuthsp = (String) _htSessionContext.get("forced_authsp"); // 20090111, Bauke from SessionContext not, 20101027 _
 			// ServiceRequest
 			if (sAuthsp != null) {
 				// Bauke 20080511: added
@@ -1254,7 +1256,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				String sAsUrl = _configManager.getRedirectURL(); // <redirect_url> in aselect.xml
 				sAsUrl = sAsUrl + "/" + sAuthsp + "?rid=" + sRid; // e.g. saml20_ists
 				// RH, 20100907, sn, add app_id, requestor_friendly_name so authsp can use this at will
-				String sAppId = (String) htSessionContext.get("app_id");
+				String sAppId = (String) _htSessionContext.get("app_id");  // 20101027 _
 				String sFName = null;
 				try {
 					sFName = _applicationManager.getFriendlyName(sAppId);
@@ -1271,7 +1273,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				return;
 			}
 			// Has done it's work if present, note that getAuthsps() will store the session
-			htSessionContext.remove("forced_uid");
+			_htSessionContext.remove("forced_uid");  // 20101027 _, solves JDBC issue where forced_uid was not removed!
 
 			sUid = (String) htServiceRequest.get("user_id");
 			if (sUid == null) {
@@ -1292,7 +1294,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			try {
 				// Get authsps for this user, result is a collection of authsps with a login name to be used for that authsp
 				// Stored in the session under "allowed_user_authsps"
-				getAuthsps(sRid, sUid);
+				getAuthsps(sRid, sUid);  // will save _htSessionContext!
 			}
 			catch (ASelectException e) {
 				if (_crossASelectManager.isCrossSelectorEnabled() && _configManager.isCrossFallBackEnabled()) {
@@ -1360,8 +1362,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sSelectForm = Utils.replaceString(sSelectForm, "[user_id]", sUid);
 			sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", (String) htServiceRequest.get("my_url"));
 			sSelectForm = Utils.replaceString(sSelectForm, "[request]", "login3");
-			String sLanguage = (String) htSessionContext.get("language");
-			String sCountry = (String) htSessionContext.get("country");
+			String sLanguage = (String) _htSessionContext.get("language");  // 20101027 _
+			String sCountry = (String) _htSessionContext.get("country");  // 20101027 _
 			sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
 			sSelectForm = Utils.replaceString(sSelectForm, "[country]", sCountry);
 			
@@ -1465,9 +1467,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					// No popup configured -> sPopup is null allready
 				}
 				// RH, 20100907, sn, add app_id, requestor_friendly_name so authsp can use this at will
-				HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
-				if (htSessionContext != null) {
-					String sAppId = (String) htSessionContext.get("app_id");
+				// 20101027, Bauke: No, the session is already available in _htSessionContext, so skip new retrieval
+				//HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+				//if (htSessionContext != null) {
+					String sAppId = (String)_htSessionContext.get("app_id");
 					try {
 					String sFName = null;
 						sFName = _applicationManager.getFriendlyName(sAppId);
@@ -1477,9 +1480,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					} catch (ASelectException ae) {
 						_systemLogger.log(Level.WARNING, _sModule, sMethod, "Redirect without FriendlyName. Could not find or encode FriendlyName for: " + sAppId );
 					}
-				} else {
-					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Redirect without FriendlyName. Could not find sessionContext for rid: " + sRid );
-				}
+				//} else {
+				//	_systemLogger.log(Level.WARNING, _sModule, sMethod, "Redirect without FriendlyName. Could not find sessionContext for rid: " + sRid );
+				//}
 				// RH, 20100907, en
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRedirectUrl);
 				if (sPopup == null || sPopup.equalsIgnoreCase("false")) {
@@ -2072,19 +2075,19 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			StringBuffer sbBuffer = new StringBuffer();
 			sbBuffer.append(sRid).append(sUID);
 			sbBuffer.append(sPrivilegedApplication).append(sAuthspLevel);
-			if (!CryptoEngine.getHandle().verifyPrivilegedSignature(sPrivilegedApplication, sbBuffer.toString(),
-					sSignature)) {
+			if (!CryptoEngine.getHandle().verifyPrivilegedSignature(sPrivilegedApplication, sbBuffer.toString(), sSignature)) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Application:" + sPrivilegedApplication
 						+ " Invalid signature:" + sSignature);
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 
 			// Get session context
-			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
-			if (htSessionContext == null) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Session not found");
-				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
-			}
+			// 20101027, Bauke: skip reading the session again, it's already available in _htSessionContext!
+			//HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+			//if (htSessionContext == null) {
+			//	_systemLogger.log(Level.WARNING, _sModule, sMethod, "Session not found");
+			//	throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
+			//}
 
 			// check authsp_level
 			try {
@@ -2103,11 +2106,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			isUserAselectEnabled(sUID);  // Check the UDB using the "AselectAccountEnabled" field
 
 			// Extend session context
-			htSessionContext.put("user_id", sUID);
-			htSessionContext.put("authsp", sPrivilegedApplication);
-			htSessionContext.put("authsp_level", sAuthspLevel);
+			_htSessionContext.put("user_id", sUID);  // 20101027 use _ht...
+			_htSessionContext.put("authsp", sPrivilegedApplication);
+			_htSessionContext.put("authsp_level", sAuthspLevel);
 
-			if (!_sessionManager.updateSession(sRid, htSessionContext)) {
+			if (!_sessionManager.updateSession(sRid, _htSessionContext)) {  // 20101027 use _ht...
 				_systemLogger.log(Level.WARNING, _sModule, sMethod,
 						"Invalid request received: could not update session.");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
