@@ -1,11 +1,21 @@
-/**
- * 	RH, 20090615
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ * 
+ * Created on 20090615
  *  This class provides a "wrapper" for the  HTTPMetadataProvider class
  *  to support a forward proxy server
  *  
  *  Unfortunately all properties in opensaml HTTPMetadataProvider are private
- *  and for most of then there are no getters/setters
- *  Life would have been much easier of there had been :P
+ *  and for most of them there are no getters/setters
+ *  Life would have been much easier if there had been :P
  *  
  *  This class should be removed as soon as opensaml supports forward proxies
  */
@@ -30,7 +40,6 @@ import org.opensaml.saml2.metadata.provider.MetadataProviderException;
 import org.opensaml.xml.XMLObject;
 import org.opensaml.xml.io.UnmarshallingException;
 
-// TODO: Auto-generated Javadoc
 /**
  * @author Remy Hanswijk
  */
