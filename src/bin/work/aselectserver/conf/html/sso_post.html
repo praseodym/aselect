@@ -1,0 +1,34 @@
+<html xmlns="https://www.w3.org/1999/xhtml">
+<head>
+	<title>Redirecting ...</title>
+<script type="text/javascript" language="JavaScript">
+function load_action()
+{
+// Setting RelayState here is a temporary solution
+// Relaystate is part of the 'input_area'
+// This form will NOT work without javascript enabled
+// Special for salesforce !!
+document.getElementsByName("RelayState")[0].value = "home/home.jsp";	// there should be only one
+// document.getElementById("submitbutton").type = "submit";
+// document.getElementById("submitbutton").style.visibility = "hidden";
+document.postform.submit();
+// setTimeout('document.postform.submit()', 5* 1000);
+}
+</script>
+</head>
+<body onload="load_action();">
+    <p>Redirecting ...</p>
+    <form method='POST' action='[form_action]' name="postform">
+    	[input_area]
+	<br>
+	<!-- 
+	<button id="submitbutton" type="hidden">OK</button>
+	 -->
+    </form>
+<noscript>
+<p>Sorry this form won't work without javascript enabled</p>
+<p>Enable javascript in your browser and press &quot;Reload Page&quot; button</p>
+<input type="button" value="Reload Page" onClick="window.location.href=window.location.href">
+</noscript>
+</body>
+</html>

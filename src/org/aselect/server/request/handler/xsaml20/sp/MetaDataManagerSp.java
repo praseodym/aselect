@@ -124,6 +124,28 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 				if (sSessionSync != null) {
 					idpData.setSessionSyncUrl(sSessionSync);
 				}
+				String destination = Utils.getSimpleParam(_configManager, _systemLogger, idpSection, "destination", false);
+				if (destination != null)
+					idpData.setDestination(destination);
+				String assertionconsumerserviceindex = Utils.getSimpleParam(_configManager, _systemLogger, idpSection, "assertionconsumerserviceindex", false);
+				if (assertionconsumerserviceindex != null)
+					idpData.setAssertionConsumerServiceindex(assertionconsumerserviceindex);
+				String attributeconsumerserviceindex = Utils.getSimpleParam(_configManager, _systemLogger, idpSection, "attributeconsumerserviceindex", false);
+				if (attributeconsumerserviceindex != null)
+					idpData.setAttributeConsumerServiceindex(attributeconsumerserviceindex);
+				String federationurl = Utils.getSimpleParam(_configManager, _systemLogger, idpSection, "federationurl", false);
+				if (federationurl != null)
+					idpData.setFederationurl(federationurl);
+
+				String addkeyname = Utils.getSimpleParam(_configManager, _systemLogger, idpSection, "addkeyname", false);
+				if (addkeyname != null)
+					idpData.setAddkeyname(addkeyname);
+				
+				String addcertificate = Utils.getSimpleParam(_configManager, _systemLogger, idpSection, "addcertificate", false);
+				if (addcertificate != null)
+					idpData.setAddcertificate(addcertificate);
+				
+				
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "id=" + sId + "<>" + idpData);
 				storeAllIdPData.put(sId, idpData);
 			}

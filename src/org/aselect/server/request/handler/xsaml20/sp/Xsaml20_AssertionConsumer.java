@@ -145,150 +145,193 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 		throws ASelectException
 	{
 		String sMethod = "process()";
+		Object samlResponseObject = null;
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
 
-		String sReceivedArtifact = request.getParameter("SAMLart");
-		if (sReceivedArtifact == null || "".equals(sReceivedArtifact)) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No artifact found in the message.");
-			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-		}
-		String sRelayState = request.getParameter("RelayState");
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Received artifact: " + sReceivedArtifact + " RelayState="+sRelayState);
-		String sFederationUrl = _sFederationUrl; // default, remove later on, can be null
-		if (sRelayState.startsWith("idp=")) {
-			sFederationUrl = sRelayState.substring(4);
-		}
-		else {  // Could be Base64 encoded
-			sRelayState = new String(Base64Codec.decode(sRelayState));
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "RelayState="+sRelayState);
-			sFederationUrl = Utils.getParameterValueFromUrl(sRelayState, "idp");
-		}
-		if (!Utils.hasValue(sFederationUrl)) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"No idp value found in RelayState (or in <federation_url> config)");
-			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-		}
-
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "FederationUrl="+sFederationUrl);
 		try {
-			// use metadata
-			MetaDataManagerSp metadataManager = MetaDataManagerSp.getHandle();
-			String sASelectServerUrl = metadataManager.getLocation(sFederationUrl,
-					ArtifactResolutionService.DEFAULT_ELEMENT_LOCAL_NAME, SAMLConstants.SAML2_SOAP11_BINDING_URI);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Artifact Resolution at " + sASelectServerUrl);
-
-			if (sASelectServerUrl == null) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Artifact NOT found");
-				throw new ASelectException(Errors.ERROR_ASELECT_NOT_FOUND);
-			}
-
-			SAMLObjectBuilder<Artifact> artifactBuilder = (SAMLObjectBuilder<Artifact>) _oBuilderFactory
-					.getBuilder(Artifact.DEFAULT_ELEMENT_NAME);
-			Artifact artifact = artifactBuilder.buildObject();
-			artifact.setArtifact(sReceivedArtifact);
-
-			SAMLObjectBuilder<ArtifactResolve> artifactResolveBuilder = (SAMLObjectBuilder<ArtifactResolve>) _oBuilderFactory
-					.getBuilder(ArtifactResolve.DEFAULT_ELEMENT_NAME);
-			ArtifactResolve artifactResolve = artifactResolveBuilder.buildObject();
-
-			artifactResolve.setID(SamlTools.generateIdentifier(_systemLogger, MODULE));
-			artifactResolve.setVersion(SAMLVersion.VERSION_20);
-			artifactResolve.setIssueInstant(new DateTime());
-
-			// We decided that the other side could retrieve public key from metadata
-			// by looking up the issuer as an entityID in the metadata
-			// So we MUST supply an Issuer (which otherwise would be optional (by SAML standards))
-			SAMLObjectBuilder<Issuer> assertionIssuerBuilder = (SAMLObjectBuilder<Issuer>) _oBuilderFactory
-					.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
-			Issuer assertionIssuer = assertionIssuerBuilder.buildObject();
-			
-			// 20100312, Bauke: eHerkenning, no assertion issuer format:
-			// assertionIssuer.setFormat(NameIDType.ENTITY);
-			// 20100311, Bauke: added for eHerkenning: Specific issuer id, independent of the Url
-			PartnerData partnerData = MetaDataManagerSp.getHandle().getPartnerDataEntry(sFederationUrl);
-			String specialSettings = (partnerData == null)? null: partnerData.getSpecialSettings();
-			if (partnerData != null && partnerData.getLocalIssuer() != null)
-				assertionIssuer.setValue(partnerData.getLocalIssuer());
-			else
-				assertionIssuer.setValue(_sRedirectUrl);
-			artifactResolve.setIssuer(assertionIssuer);
-			artifactResolve.setArtifact(artifact);
-
-			// Do some logging for testing
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the artifactResolve >======");
-			boolean useSha256 = (specialSettings != null && specialSettings.contains("sha256"));
-			artifactResolve = (ArtifactResolve)SamlTools.signSamlObject(artifactResolve, useSha256? "sha256": "sha1");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the artifactResolve ======<");
-
-			// Build the SOAP message
-			SoapManager soapManager = new SoapManager();
-			Envelope envelope = soapManager.buildSOAPMessage(artifactResolve);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Marshall");
-			Element envelopeElem = SamlTools.marshallMessage(envelope);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Writing SOAP message:\n"+ XMLHelper.nodeToString(envelopeElem));
-			// XMLHelper.prettyPrintXML(envelopeElem));
-
-			// ------------ Send/Receive the SOAP message
-			String sSamlResponse = soapManager.sendSOAP(XMLHelper.nodeToString(envelopeElem), sASelectServerUrl);  // x_AssertionConsumer_x
-			byte[] sSamlResponseAsBytes = sSamlResponse.getBytes();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Received response: "+sSamlResponse+" length=" + sSamlResponseAsBytes.length);
-
-			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-			dbFactory.setNamespaceAware(true);
-			// dbFactory.setExpandEntityReferences(false);
-			// dbFactory.setIgnoringComments(true);
-			DocumentBuilder builder = dbFactory.newDocumentBuilder();
-
-			StringReader stringReader = new StringReader(sSamlResponse);
-			InputSource inputSource = new InputSource(stringReader);
-			Document docReceivedSoap = builder.parse(inputSource);
-			Element elementReceivedSoap = docReceivedSoap.getDocumentElement();
-
-			// Remove all SOAP elements
-			Node eltArtifactResponse = SamlTools.getNode(elementReceivedSoap, "ArtifactResponse");
-
-			// Unmarshall to the SAMLmessage
-			UnmarshallerFactory factory = Configuration.getUnmarshallerFactory();
-			Unmarshaller unmarshaller = factory.getUnmarshaller((Element) eltArtifactResponse);
-
-			ArtifactResponse artifactResponse = (ArtifactResponse) unmarshaller
-					.unmarshall((Element) eltArtifactResponse);
-
-			Issuer issuer = artifactResponse.getIssuer();
-			String sIssuer = (issuer == null)? null: issuer.getValue();
-			// If issuer is not present in the response, use sASelectServerUrl value retrieved from metadata
-			// else use value from the response
-			String artifactResponseIssuer = (sIssuer == null || "".equals(sIssuer)) ?
-											sASelectServerUrl: sIssuer;
-
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Do artifactResponse signature verification="+is_bVerifySignature());
-			if (is_bVerifySignature()) {
-				// Check signature of artifactResolve here
-				// We get the public key from the metadata
-				// Therefore we need a valid Issuer to lookup the entityID in the metadata
-				// We get the metadataURL from aselect.xml so we consider this safe and authentic
-				if (artifactResponseIssuer == null || "".equals(artifactResponseIssuer)) {
-					_systemLogger.log(Level.SEVERE, MODULE, sMethod,
-							"For signature verification the received message must have an Issuer");
+			String sReceivedArtifact = request.getParameter("SAMLart");
+			///////////////////////////////////////////////////////////////
+			String sReceivedResponse = request.getParameter("SAMLResponse");
+			if ( !(sReceivedArtifact == null || "".equals(sReceivedArtifact)) ) {
+				///////////////////////////////////////////////
+				String sRelayState = request.getParameter("RelayState");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Received artifact: " + sReceivedArtifact + " RelayState="+sRelayState);
+				String sFederationUrl = _sFederationUrl; // default, remove later on, can be null
+				if (sRelayState.startsWith("idp=")) {
+					sFederationUrl = sRelayState.substring(4);
+				}
+				else {  // Could be Base64 encoded
+					sRelayState = new String(Base64Codec.decode(sRelayState));
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "RelayState="+sRelayState);
+					sFederationUrl = Utils.getParameterValueFromUrl(sRelayState, "idp");
+				}
+				if (!Utils.hasValue(sFederationUrl)) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod,
+							"No idp value found in RelayState (or in <federation_url> config)");
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
+		
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "FederationUrl="+sFederationUrl);
+				// use metadata
+				MetaDataManagerSp metadataManager = MetaDataManagerSp.getHandle();
+				String sASelectServerUrl = metadataManager.getLocation(sFederationUrl,
+						ArtifactResolutionService.DEFAULT_ELEMENT_LOCAL_NAME, SAMLConstants.SAML2_SOAP11_BINDING_URI);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Artifact Resolution at " + sASelectServerUrl);
+	
+				if (sASelectServerUrl == null) {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Artifact NOT found");
+					throw new ASelectException(Errors.ERROR_ASELECT_NOT_FOUND);
+				}
+	
+				SAMLObjectBuilder<Artifact> artifactBuilder = (SAMLObjectBuilder<Artifact>) _oBuilderFactory
+						.getBuilder(Artifact.DEFAULT_ELEMENT_NAME);
+				Artifact artifact = artifactBuilder.buildObject();
+				artifact.setArtifact(sReceivedArtifact);
+	
+				SAMLObjectBuilder<ArtifactResolve> artifactResolveBuilder = (SAMLObjectBuilder<ArtifactResolve>) _oBuilderFactory
+						.getBuilder(ArtifactResolve.DEFAULT_ELEMENT_NAME);
+				ArtifactResolve artifactResolve = artifactResolveBuilder.buildObject();
+	
+				artifactResolve.setID(SamlTools.generateIdentifier(_systemLogger, MODULE));
+				artifactResolve.setVersion(SAMLVersion.VERSION_20);
+				artifactResolve.setIssueInstant(new DateTime());
+	
+				// We decided that the other side could retrieve public key from metadata
+				// by looking up the issuer as an entityID in the metadata
+				// So we MUST supply an Issuer (which otherwise would be optional (by SAML standards))
+				SAMLObjectBuilder<Issuer> assertionIssuerBuilder = (SAMLObjectBuilder<Issuer>) _oBuilderFactory
+						.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
+				Issuer assertionIssuer = assertionIssuerBuilder.buildObject();
 				
-				PublicKey pkey = metadataManager.getSigningKeyFromMetadata(artifactResponseIssuer);
-				if (pkey == null || "".equals(pkey)) {
-					_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No valid public key in metadata");
-					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+				// 20100312, Bauke: eHerkenning, no assertion issuer format:
+				// assertionIssuer.setFormat(NameIDType.ENTITY);
+				// 20100311, Bauke: added for eHerkenning: Specific issuer id, independent of the Url
+				PartnerData partnerData = MetaDataManagerSp.getHandle().getPartnerDataEntry(sFederationUrl);
+				String specialSettings = (partnerData == null)? null: partnerData.getSpecialSettings();
+				if (partnerData != null && partnerData.getLocalIssuer() != null)
+					assertionIssuer.setValue(partnerData.getLocalIssuer());
+				else
+					assertionIssuer.setValue(_sRedirectUrl);
+				artifactResolve.setIssuer(assertionIssuer);
+				artifactResolve.setArtifact(artifact);
+	
+				// Do some logging for testing
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the artifactResolve >======");
+				boolean useSha256 = (specialSettings != null && specialSettings.contains("sha256"));
+				artifactResolve = (ArtifactResolve)SamlTools.signSamlObject(artifactResolve, useSha256? "sha256": "sha1");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the artifactResolve ======<");
+	
+				// Build the SOAP message
+				SoapManager soapManager = new SoapManager();
+				Envelope envelope = soapManager.buildSOAPMessage(artifactResolve);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Marshall");
+				Element envelopeElem = SamlTools.marshallMessage(envelope);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Writing SOAP message:\n"+ XMLHelper.nodeToString(envelopeElem));
+				// XMLHelper.prettyPrintXML(envelopeElem));
+	
+				// ------------ Send/Receive the SOAP message
+				String sSamlResponse = soapManager.sendSOAP(XMLHelper.nodeToString(envelopeElem), sASelectServerUrl);  // x_AssertionConsumer_x
+				byte[] sSamlResponseAsBytes = sSamlResponse.getBytes();
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Received response: "+sSamlResponse+" length=" + sSamlResponseAsBytes.length);
+	
+				DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+				dbFactory.setNamespaceAware(true);
+				// dbFactory.setExpandEntityReferences(false);
+				// dbFactory.setIgnoringComments(true);
+				DocumentBuilder builder = dbFactory.newDocumentBuilder();
+	
+				StringReader stringReader = new StringReader(sSamlResponse);
+				InputSource inputSource = new InputSource(stringReader);
+				Document docReceivedSoap = builder.parse(inputSource);
+				Element elementReceivedSoap = docReceivedSoap.getDocumentElement();
+	
+				// Remove all SOAP elements
+				Node eltArtifactResponse = SamlTools.getNode(elementReceivedSoap, "ArtifactResponse");
+	
+				// Unmarshall to the SAMLmessage
+				UnmarshallerFactory factory = Configuration.getUnmarshallerFactory();
+				Unmarshaller unmarshaller = factory.getUnmarshaller((Element) eltArtifactResponse);
+	
+				ArtifactResponse artifactResponse = (ArtifactResponse) unmarshaller
+						.unmarshall((Element) eltArtifactResponse);
+	
+				Issuer issuer = artifactResponse.getIssuer();
+				String sIssuer = (issuer == null)? null: issuer.getValue();
+				// If issuer is not present in the response, use sASelectServerUrl value retrieved from metadata
+				// else use value from the response
+				String artifactResponseIssuer = (sIssuer == null || "".equals(sIssuer)) ?
+												sASelectServerUrl: sIssuer;
+	
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Do artifactResponse signature verification="+is_bVerifySignature());
+				if (is_bVerifySignature()) {
+					// Check signature of artifactResolve here
+					// We get the public key from the metadata
+					// Therefore we need a valid Issuer to lookup the entityID in the metadata
+					// We get the metadataURL from aselect.xml so we consider this safe and authentic
+					if (artifactResponseIssuer == null || "".equals(artifactResponseIssuer)) {
+						_systemLogger.log(Level.SEVERE, MODULE, sMethod,
+								"For signature verification the received message must have an Issuer");
+						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+					}
+					
+					PublicKey pkey = metadataManager.getSigningKeyFromMetadata(artifactResponseIssuer);
+					if (pkey == null || "".equals(pkey)) {
+						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No valid public key in metadata");
+						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+					}
+	
+					if (SamlTools.checkSignature(artifactResponse, pkey)) {
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "artifactResponse was signed OK");
+					}
+					else {
+						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "artifactResponse was NOT signed OK");
+						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+					}
+					
 				}
-
-				if (SamlTools.checkSignature(artifactResponse, pkey)) {
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "artifactResponse was signed OK");
-				}
-				else {
-					_systemLogger.log(Level.SEVERE, MODULE, sMethod, "artifactResponse was NOT signed OK");
-					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-				}
+				samlResponseObject = artifactResponse.getMessage();
+		
+			}	
+			else if ( !(sReceivedResponse == null || "".equals(sReceivedResponse)) ) {
+				// handle http-post, can be unsolicited post as well
+				
+				 // Should be Base64 encoded
+				String sRelayState = request.getParameter("RelayState");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Received Response: " + sReceivedResponse + " RelayState="+sRelayState);
+				// RelayState should contain intended application resource URL
+				sRelayState = new String(Base64Codec.decode(sRelayState));
+				
+				sReceivedResponse = new String(Base64Codec.decode(sReceivedResponse));
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Received Response: " + sReceivedResponse + " RelayState="+sRelayState);
+				DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+				dbFactory.setNamespaceAware(true);
+				// dbFactory.setExpandEntityReferences(false);
+				// dbFactory.setIgnoringComments(true);
+				DocumentBuilder builder = dbFactory.newDocumentBuilder();
+	
+				StringReader stringReader = new StringReader(sReceivedResponse);
+				InputSource inputSource = new InputSource(stringReader);
+				Document docReceived = builder.parse(inputSource);
+//				Element elementReceived = docReceived.getDocumentElement();
+//				Node eltSAMLResponse = SamlTools.getNode(elementReceived, "Response");
+				Node eltSAMLResponse = SamlTools.getNode(docReceived, "Response");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Found node Response: " + eltSAMLResponse);
+	
+				// Unmarshall to the SAMLmessage
+				UnmarshallerFactory factory = Configuration.getUnmarshallerFactory();
+				Unmarshaller unmarshaller = factory.getUnmarshaller((Element) eltSAMLResponse);
+	
+				samlResponseObject = (Response) unmarshaller
+						.unmarshall((Element) eltSAMLResponse);
+				
+			} else {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No Artifact and no Response found in the message.");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 
+			///////
 			// The object can either a Response (SSO case) or a StatusResponseType (SLO case)
-			Object samlResponseObject = artifactResponse.getMessage();
+			///////////////////////////////////////////////////////////////////////////
 			if (samlResponseObject instanceof Response) {
 				// SSO
 				Response samlResponse = (Response) samlResponseObject;

@@ -42,6 +42,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
 
 	public final static String PUBLIC_KEYSTORE_NAME = "aselect.keystore";
 	public final static String singleSignOnServiceBindingConstantREDIRECT = SAMLConstants.SAML2_REDIRECT_BINDING_URI;
+	public final static String singleSignOnServiceBindingConstantPOST = SAMLConstants.SAML2_POST_BINDING_URI;
 	public final static String artifactResolutionServiceBindingConstantSOAP = SAMLConstants.SAML2_SOAP11_BINDING_URI;
 	public final static String assertionConsumerServiceBindingConstantARTIFACT = SAMLConstants.SAML2_ARTIFACT_BINDING_URI;
 	public final static String singleLogoutServiceBindingConstantREDIRECT = SAMLConstants.SAML2_REDIRECT_BINDING_URI;

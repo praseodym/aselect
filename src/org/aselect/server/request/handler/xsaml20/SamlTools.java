@@ -17,6 +17,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Enumeration;
@@ -39,6 +40,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.BASE64Encoder;
 import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
+import org.opensaml.Configuration;
 import org.opensaml.common.SAMLObject;
 import org.opensaml.common.SAMLObjectBuilder;
 import org.opensaml.common.SAMLVersion;
@@ -76,12 +78,15 @@ import org.opensaml.xml.io.Unmarshaller;
 import org.opensaml.xml.io.UnmarshallingException;
 import org.opensaml.xml.schema.XSString;
 import org.opensaml.xml.security.credential.BasicCredential;
+import org.opensaml.xml.security.keyinfo.KeyInfoHelper;
+import org.opensaml.xml.signature.KeyInfo;
 import org.opensaml.xml.signature.Signature;
 import org.opensaml.xml.signature.SignatureConstants;
 import org.opensaml.xml.signature.SignatureException;
 import org.opensaml.xml.signature.SignatureValidator;
 import org.opensaml.xml.signature.Signer;
 import org.opensaml.xml.signature.X509Certificate;
+import org.opensaml.xml.signature.impl.KeyInfoBuilder;
 import org.opensaml.xml.signature.impl.SignatureBuilder;
 import org.opensaml.xml.util.Base64;
 import org.opensaml.xml.util.XMLConstants;
@@ -505,6 +510,7 @@ public class SamlTools
 		return obj;
 	}
 
+	
 	// For the new opensaml20 library
 	/**
 	 * Sign OpenSAML2 library objects (including both SAML versions 1 and 2).
@@ -523,12 +529,30 @@ public class SamlTools
 		return signSamlObject(obj, "sha1");  // default algorithm
 	}
 	
+	/*
+	 * @param sAlgo
+	 *            The algorithm to use [ "sha256" | "sha1" ] defaults to "sha1"
+	 */
 	public static SignableSAMLObject signSamlObject(SignableSAMLObject obj, String sAlgo)
+	throws ASelectException
+	{
+		return signSamlObject(obj, sAlgo, false, false);
+	}
+
+	/*
+	 * @param    addKeyName         
+	 *            Add the (default) keyname in a KeyInfo element
+	 * @param    addCertificate         
+	 *            Add the (default) certificate in a KeyInfo element
+	 */
+	public static SignableSAMLObject signSamlObject(SignableSAMLObject obj, String sAlgo,
+																						boolean addKeyName, boolean addCertificate)
 	throws ASelectException
 	{
 		String sMethod = "sign(SignableSAMLObject obj)";
 		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
-		boolean useSha256 = sAlgo.equals("sha256");
+//		boolean useSha256 = sAlgo.equals("sha256");
+		boolean useSha256 = "sha256".equals(sAlgo);
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "obj->" + obj);
 		if (!obj.isSigned()) {
@@ -551,6 +575,35 @@ public class SamlTools
 			signature.setSigningCredential(credential);
 			signature.setSignatureAlgorithm(signingAlgo);
 			signature.setCanonicalizationAlgorithm(SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
+			
+			// add keyinfo
+			if (addKeyName || addCertificate) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Adding keyinfo");
+				
+				// Tried KeyInfoGenerator but.generate(credential)  always return null, so 
+				// build keyinfo manually
+				XMLObjectBuilderFactory builderFactory =	Configuration.getBuilderFactory();
+				KeyInfoBuilder keyInfoBuilder = (KeyInfoBuilder) builderFactory.getBuilder(KeyInfo.DEFAULT_ELEMENT_NAME);
+				KeyInfo keyinfo = (KeyInfo)	keyInfoBuilder.buildObject(KeyInfo.DEFAULT_ELEMENT_NAME);
+				java.security.cert.X509Certificate x509Certificate =  _oASelectConfigManager.getDefaultCertificate();
+				if ( addCertificate ) {
+					try {
+						KeyInfoHelper.addCertificate(keyinfo, x509Certificate);
+					}
+					catch (CertificateEncodingException e) {
+						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Problem adding certificate to keyinfo");
+						throw new ASelectException(e.getMessage());
+					}
+				}
+				if ( addKeyName ) {
+					KeyInfoHelper.addKeyName(keyinfo, _oASelectConfigManager.getDefaultCertId());
+				}
+				signature.setKeyInfo(keyinfo);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Added keyinfo");
+			} else {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "No keyinfo added");
+			}
+			
 			obj.setSignature(signature);
 
 			// 20100315, Bauke: Set Sha256, call after setSignature, remove all ContentReferences,
@@ -582,6 +635,7 @@ public class SamlTools
 
 		return obj;
 	}
+	
 
 	/**
 	 * Build Logout Request <br>

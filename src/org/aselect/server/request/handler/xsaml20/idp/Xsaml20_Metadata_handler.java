@@ -193,6 +193,12 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 			ssoService.setBinding(singleSignOnServiceBindingConstantREDIRECT);
 			ssoService.setLocation(getIdpSsoUrl() + getSingleSignOnServiceTarget());
 			ssoDescriptor.getSingleSignOnServices().add(ssoService);
+			// TODO maybe make this configurable
+			// add HTTP-POST binding on same handler
+			SingleSignOnService ssoServicePOST = ssoServiceBuilder.buildObject();
+			ssoServicePOST.setBinding(singleSignOnServiceBindingConstantPOST);
+			ssoServicePOST.setLocation(getIdpSsoUrl() + getSingleSignOnServiceTarget());
+			ssoDescriptor.getSingleSignOnServices().add(ssoServicePOST);
 		}
 
 		// Create the ArtifactResolutionService

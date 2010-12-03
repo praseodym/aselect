@@ -582,8 +582,20 @@ public class TGTIssuer
 
 			// Bauke: added for xsaml20
 			Utils.copyHashmapValue("sp_assert_url", htTGTContext, htSessionContext);
+			// RH, 20101104
+			Utils.copyHashmapValue("sp_reqbinding", htTGTContext, htSessionContext);
+			// RH, 20101114
+			Utils.copyHashmapValue("sp_reqsigning", htTGTContext, htSessionContext);
+			// RH, 20101116
+			Utils.copyHashmapValue("sp_audience", htTGTContext, htSessionContext);
+			// RH, 20101116
+			Utils.copyHashmapValue("sp_addkeyname", htTGTContext, htSessionContext);
+			// RH, 20101116
+			Utils.copyHashmapValue("sp_addcertificate", htTGTContext, htSessionContext);
+
 			Utils.copyHashmapValue("sp_rid", htTGTContext, htSessionContext);
 			ensureSessionPresence(sUserId, htTGTContext, htSessionContext, ssoSession);
+			
 
 			// Bauke, 20081209 added for ADFS / WS-Fed
 			Utils.copyHashmapValue("wreply", htTGTContext, htSessionContext);

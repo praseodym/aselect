@@ -23,6 +23,13 @@ public class PartnerData
 	private String sessionSyncUrl = null;
 	private String specialSettings = null;
 	private String localIssuer = null;
+	private String destination = null;
+	private String assertionconsumerserviceindex = null;
+	private String attributeconsumerserviceindex = null;
+	private String addkeyname = null;
+	private String addcertificate = null;
+	
+	private String federationurl = null;
 	
 	public PartnerData(String sId)
 	{
@@ -72,5 +79,65 @@ public class PartnerData
 
 	public void setLocalIssuer(String issuer) {
 		this.localIssuer = issuer;
+	}
+
+	public synchronized String getDestination()
+	{
+		return destination;
+	}
+
+	public synchronized void setDestination(String destination)
+	{
+		this.destination = destination;
+	}
+
+	public synchronized String getFederationurl()
+	{
+		return federationurl;
+	}
+
+	public synchronized void setFederationurl(String federationurl)
+	{
+		this.federationurl = federationurl;
+	}
+
+	public synchronized String getAssertionConsumerServiceindex()
+	{
+		return assertionconsumerserviceindex;
+	}
+
+	public synchronized void setAssertionConsumerServiceindex(String serviceindex)
+	{
+		this.assertionconsumerserviceindex = serviceindex;
+	}
+
+	public synchronized String getAddkeyname()
+	{
+		return addkeyname;
+	}
+
+	public synchronized void setAddkeyname(String addkeyname)
+	{
+		this.addkeyname = addkeyname;
+	}
+
+	public synchronized String getAddcertificate()
+	{
+		return addcertificate;
+	}
+
+	public synchronized void setAddcertificate(String addcertificate)
+	{
+		this.addcertificate = addcertificate;
+	}
+
+	public synchronized String getAttributeConsumerServiceindex()
+	{
+		return attributeconsumerserviceindex;
+	}
+
+	public synchronized void setAttributeConsumerServiceindex(String attributeconsumerserviceindex)
+	{
+		this.attributeconsumerserviceindex = attributeconsumerserviceindex;
 	}
 }

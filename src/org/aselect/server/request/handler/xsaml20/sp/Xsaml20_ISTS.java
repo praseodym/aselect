@@ -64,7 +64,8 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 {
 	private final static String MODULE = "Xsaml20_ISTS";
 	protected final String singleSignOnServiceBindingConstantREDIRECT = SAMLConstants.SAML2_REDIRECT_BINDING_URI;
-
+	protected final String singleSignOnServiceBindingConstantHTTPPOST = SAMLConstants.SAML2_POST_BINDING_URI;
+	
 	private String _sServerId = null; // <server_id> in <aselect>
 //	private HashMap<String, String> levelMap;
 	
@@ -73,6 +74,10 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 //	private String _sRequestIssuer = null;
 	private String _sPostTemplate = null;
 	private String _sHttpMethod = "GET";
+	
+	private boolean bAddKeyName = false; // Add KeyName in keyinfo to saml message when signing
+	private boolean bAddCertificate = false; // Add Certificate in keyinfo to saml message when signing
+
 
 	// Example configuration
 	//
@@ -151,6 +156,10 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 		String sMethod = "process()";
 		String sRid;
 		String sFederationUrl = null;
+		// TODO find the preferred binding either  from request or config
+//		String preferredBinding = singleSignOnServiceBindingConstantHTTPPOST;
+		String preferredBinding = singleSignOnServiceBindingConstantREDIRECT;
+
 		String sMyUrl = _sServerUrl; // extractAselectServerUrl(request);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "MyUrl=" + sMyUrl + " Request=" + request);
 
@@ -196,9 +205,17 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get MetaData Url=" + sFederationUrl);
 			MetaDataManagerSp metadataMgr = MetaDataManagerSp.getHandle();
-			// We currently have the Redirect Binding only
-			String sDestination = metadataMgr.getLocation(sFederationUrl,
-					SingleSignOnService.DEFAULT_ELEMENT_LOCAL_NAME, singleSignOnServiceBindingConstantREDIRECT);
+			// TODO set RelayState to idp URL or requested resource URL
+			// TODO maybe make "automatic" (based on metadata)  selection between POST and REDIRECT
+			// We now support the Redirect and POST Binding
+			String sDestination = null;
+			if ("POST".equalsIgnoreCase(_sHttpMethod)) {
+				sDestination = metadataMgr.getLocation(sFederationUrl,
+						SingleSignOnService.DEFAULT_ELEMENT_LOCAL_NAME, singleSignOnServiceBindingConstantHTTPPOST);
+			} else {
+				sDestination = metadataMgr.getLocation(sFederationUrl,
+						SingleSignOnService.DEFAULT_ELEMENT_LOCAL_NAME, singleSignOnServiceBindingConstantREDIRECT);
+			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Using Location retrieved from IDP=" + sDestination);
 
 			String sApplicationId = (String) htSessionContext.get("app_id");
@@ -248,11 +265,39 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 					.getBuilder(AuthnRequest.DEFAULT_ELEMENT_NAME);
 			AuthnRequest authnRequest = authnRequestbuilder.buildObject();
 			
-			// 20100311, Bauke: added for eHerkenning
-			// The assertion consumer url must be set to the value in the Metadata:
-			authnRequest.setAssertionConsumerServiceURL(_sAssertionConsumerUrl);
-			authnRequest.setProtocolBinding(Saml20_Metadata.assertionConsumerServiceBindingConstantARTIFACT);
-			authnRequest.setAttributeConsumingServiceIndex(2);
+			
+			// We should be able to set AssertionConsumerServiceIndex. This is according to saml specs mutually exclusive with
+			// ProtocolBinding end AssertionConsumerServiceURL
+			
+			if  (partnerData != null && partnerData.getAssertionConsumerServiceindex() != null) {
+				authnRequest.setAssertionConsumerServiceIndex(Integer.parseInt(partnerData.getAssertionConsumerServiceindex() ));
+			} else {	 // mutually exclusive
+				// 20100311, Bauke: added for eHerkenning
+				// The assertion consumer url must be set to the value in the Metadata:
+				// 20101112, RH, added support for POST binding
+				if (specialSettings != null && specialSettings.toUpperCase().contains("POST"))
+					authnRequest.setProtocolBinding(Saml20_Metadata.singleSignOnServiceBindingConstantPOST);
+				else	// backward compatibility, defaults to ARTIFACT
+					authnRequest.setProtocolBinding(Saml20_Metadata.assertionConsumerServiceBindingConstantARTIFACT);
+	
+				// We should be able to not set setAssertionConsumerServiceURL and let IDP get it from metadata
+				// But not sure if all idp's will handle that well
+				if (partnerData != null && partnerData.getDestination() != null) {
+					if (!"".equals(partnerData.getDestination().trim())) {	// if empty, let the idp look for the AssertionConsumerServiceURL in metadata 
+						authnRequest.setAssertionConsumerServiceURL(partnerData.getDestination());
+					}
+				}
+				else {	// backward compatibility, default to _sAssertionConsumerUrl
+					authnRequest.setAssertionConsumerServiceURL(_sAssertionConsumerUrl);
+				}
+			}
+			
+			
+			if  (partnerData != null && partnerData.getAttributeConsumerServiceindex() != null) {
+				authnRequest.setAttributeConsumingServiceIndex(Integer.parseInt(partnerData.getAttributeConsumerServiceindex() ));
+			} else {	// be backwards compatible
+				authnRequest.setAttributeConsumingServiceIndex(2);
+			}
 
 			authnRequest.setDestination(sDestination);
 			DateTime tStamp = new DateTime();
@@ -302,6 +347,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			//
 			// We have the AuthnRequest, now get it to the other side
 			//
+// TODO implement HTPPPOST binding and get back to user-agent with POST form
 			boolean useSha256 = (specialSettings != null && specialSettings.contains("sha256"));
 			if (_sHttpMethod.equals("GET")) {
 				// No use signing the AuthnRequest, it's even forbidden according to the Saml specs
@@ -355,7 +401,9 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			else {  // POST
 				// 20100331, Bauke: added support for HTTP POST
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the authnRequest >======"+authnRequest);
-				authnRequest = (AuthnRequest)SamlTools.signSamlObject(authnRequest, useSha256? "sha256": "sha1");
+//				authnRequest = (AuthnRequest)SamlTools.signSamlObject(authnRequest, useSha256? "sha256": "sha1");
+				authnRequest = (AuthnRequest)SamlTools.signSamlObject(authnRequest, useSha256? "sha256": "sha1", 
+							"true".equalsIgnoreCase(partnerData.getAddkeyname()), "true".equalsIgnoreCase(partnerData.getAddcertificate()) );
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the authnRequest ======<"+authnRequest);
 
 				String sAssertion = XMLHelper.nodeToString(authnRequest.getDOM());
@@ -371,8 +419,11 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				}
 
 				// Let's POST the token
+				
 				String sInputs = buildHtmlInput("RelayState", sRelayState);
-				sInputs += buildHtmlInput("SAMLResponse", sAssertion);  //Tools.htmlEncode(nodeMessageContext.getTextContent()));
+//				sInputs += buildHtmlInput("SAMLResponse", sAssertion);  //Tools.htmlEncode(nodeMessageContext.getTextContent()));
+				// RH, 20101104, this should be a SAMLRequest, we were just lucky the other side didn't bother   
+				sInputs += buildHtmlInput("SAMLRequest", sAssertion);  //Tools.htmlEncode(nodeMessageContext.getTextContent()));
 				
 				// 20100317, Bauke: pass language to IdP (does not work in the GET version)
 				String sLang = (String)htSessionContext.get("language");
