@@ -1,4 +1,16 @@
+/*
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
+ * A-Select is a trademark registered by SURFnet bv.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
+ * See the included LICENSE file for details.
+ *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
+ */
 package org.aselect.server.request.handler.openid.op;
+
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -40,9 +52,24 @@ import org.openid4java.server.ServerException;
 import org.openid4java.server.ServerManager;
 //import sun.misc.Regexp;
 
+/**
+ * OpenID RequestHandler. <br>
+ * <br>
+ * <b>Description:</b><br>
+ * This class serves as a an OpenID Provider request handler 
+ *  It handles authentication requests from Relying Parties
+ * <code>AbstractAPIRequestHandler</code> creates an appropriate message creator. <br>
+ * <br>
+ * <b>Concurrency issues:</b> <br>
+ * Use one <code>OpenID_RequestHandler</code> implementation for a single request. <br>
+ * 
+ * @author Remy Hanswijk
+ */
+
 public class OpenID_RequestHandler extends AbstractRequestHandler
 {
 
+	private static final String SESSIONID_POSTFIX = "54321";
 	private final static String MODULE = "OpenID_RequestHandler";
 	private ServerManager serverManager;	// Singleton per OpenID_RequestHandler
 	private String opEndpointUrl =  null;
@@ -153,8 +180,6 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 		    if (serverManager == null) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Initializing ServerManager");
 			      serverManager = new ServerManager();
-//			      setOpEndpointUrl(_configManager.getParam(oSection, sConfigItem));
-//			      setOpEndpointUrl("https://siam14.theopenfactory.local/aselectserver/server/openidop_request");
 			      setOpEndpointUrl(opEndpointUrl);
 			      serverManager.setOPEndpointUrl(getOpEndpointUrl());
 			      serverManager.setPrivateAssociations(new InMemoryServerAssociationStore());
@@ -172,7 +197,19 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 
 	}
 
-	
+	/**
+	 * Process incoming request <br>
+	 * .
+	 * 
+	 * @param request
+	 *            HttpServletRequest.
+	 * @param response
+	 *            HttpServletResponse.
+	 * @return the request state
+	 * @throws ASelectException
+	 *             If processing of  data request fails.
+	 */
+
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 		throws ASelectException
 	{		
@@ -250,7 +287,6 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 		    		}
 		    		String uid = null;
 		    		if ("http://specs.openid.net/auth/2.0/identifier_select".equals(identity)) {	// TODO get this constant somewhere from the openid4java library (probably some static somewhere
-		    			// TODO
 		    			// This should trigger a username input in  aselect
 		    			// Either by presenting a choice or an input box
 		    			// We let aselectserver handle this
@@ -290,7 +326,7 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 
 
 		    		} catch (Exception e) { 	
-						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could retrieve rid from aselectserver: " + ridAselectServer);
+						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not retrieve rid from aselectserver: " + ridAselectServer);
 						throw new ASelectCommunicationException(Errors.ERROR_ASELECT_IO, e);
 		    		} finally {
 		    			if (in != null)
@@ -309,14 +345,12 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 		    		String extractedRid = ridResponse.replaceFirst(".*rid=([^&]*).*$", "$1");
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "rid retrieved: " + extractedRid);
 
-					String sessionID =  extractedRid+ "54321";
-//					String sessionID =  "98765";
+					String sessionID =  extractedRid+ SESSIONID_POSTFIX;
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Storing requestparameters with id: " + sessionID);
 			    	Utils.logRequestParameters(requestp, _systemLogger);
 
 					HashMap<String, Object> htSessionContext = new HashMap<String, Object>();
 					htSessionContext.put("openid_requestp", requestp);
-//					_oSessionManager.writeSession(extractedRid, htSessionContext);
 					_oSessionManager.writeSession(sessionID, htSessionContext);
 					
 		    		String loginrequest= "login1";
@@ -351,11 +385,10 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 		    } else {
 		    	// This should be the aselectserver response
 		    	if (request.getParameter("aselect_credentials") != null) {
-		    		// TODO retrieve requestp from session
 			    	// handle the aselectserver response
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Handle the aselectserver response");
 
-					// TODO this can be done by getting request parametermap
+					// This could also be done by getting request parametermap
 		    		String queryData = request.getQueryString();
 		    		String extractedAselect_credentials = queryData.replaceFirst(".*aselect_credentials=([^&]*).*$", "$1");
 		    		String extractedRid = queryData.replaceFirst(".*rid=([^&]*).*$", "$1");
@@ -365,7 +398,6 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 		    		String finalReqrequest= "verify_credentials";
 //		    		String ridCheckSignature = verifySignature; // this does not help for verify_credentials if <applications>
 		    											// in aselect.xml has require_signing="true"
-
 
 		    		//Construct request data
 		    		// TODO implement signing
@@ -436,7 +468,7 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 					} 
 
 
-					String sessionID =  extractedRid + "54321";
+					String sessionID =  extractedRid + SESSIONID_POSTFIX;
 
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Retrieving requestparameters with sessionID: " + sessionID);
 
@@ -444,7 +476,7 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 			    	requestp = (ParameterList) htSessionContext.get("openid_requestp");
 			    	
 			    	Utils.logRequestParameters(requestp, _systemLogger);
-			    	// TODO we should be able to kill the session
+			    	// TODO we should be able to kill the session now
 //			       _oSessionManager.killSession(sessionID);
 
 			        String userSelectedId = null;
@@ -512,14 +544,12 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 			    	Utils.sendPlainTextResponse(response, opResponse, _systemLogger);
 		    	}
 		    }
-
-			
 		return null;
 	}
 
 	public void destroy()
 	{
-		
+
 	}
 
 
