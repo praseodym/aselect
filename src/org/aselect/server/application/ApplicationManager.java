@@ -119,11 +119,13 @@ import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.security.PublicKey;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectSystemLogger;
+import org.aselect.server.request.handler.xsaml20.SecurityLevel;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
@@ -143,6 +145,10 @@ import org.aselect.system.exception.ASelectException;
  */
 public class ApplicationManager
 {
+	// These could be drawn from saml20 libraries but we don't want this dependency here
+	private static final String AUTHN_CONTEXT_DECL_REF = "AuthnContextDeclRef";
+	private static final String AUTHN_CONTEXT_DECL = "AuthnContextDecl";
+
 	// All
 	private HashMap _htApplications;
 
@@ -161,7 +167,7 @@ public class ApplicationManager
 	// The logger that is used for system logging
 	private ASelectSystemLogger _systemLogger;
 
-	// Boolean indicating wether or not application API calls must be signed
+	// Boolean indicating whether or not application API calls must be signed
 	private boolean _bRequireSigning;
 
 	// Location of applications.keystore when signing is required.
@@ -172,6 +178,8 @@ public class ApplicationManager
 
 	private Object _oApplicationsConfigSection = null;
 
+	
+	
 	/**
 	 * Must be used to get an ApplicationManager instance. <br>
 	 * <br>
@@ -302,7 +310,32 @@ public class ApplicationManager
 				// RH, 20100909, sn
 				String sAppRequireSigning = ASelectConfigManager.getSimpleParam(oApplication, "require_signing", false);
 				// RH, 20100909, en
-				
+
+				// RH, 20101206, sn
+				String sAddedPatching = ASelectConfigManager.getSimpleParam(oApplication, "added_patching", false);
+				// RH, 20101206, en
+
+				// RH, 20101206, sn
+				HashMap<String, String> _htLevels = new HashMap<String, String>(); // contains level -> urn
+				_htLevels = ASelectConfigManager.getTableFromConfig(oApplication,  _htLevels, "authentication_method", "security", "level",/*->*/"uri",
+						false/* mandatory */, false/* unique values */);
+				// check if all levels are valid for integer conversion
+				if (_htLevels != null) {
+					Set<String> levelSet = _htLevels.keySet();
+					if ( !SecurityLevel.ALLOWEDLEVELS.containsAll(levelSet) ) {
+						throw new ASelectConfigException("Level not allowed in 'authentication_method/security' for application: " + sAppId );
+					}
+				}
+				// RH, 20101206, en
+
+				// RH, 20101217, sn
+				String sAuthnContextDeclValue = ASelectConfigManager.getSimpleParam(oApplication, "authn_context_decl",  false);
+				String sAuthnContextDeclType = ASelectConfigManager.getParamFromSection(oApplication, "authn_context_decl", "type", sAuthnContextDeclValue == null ? false : true);
+				if ( sAuthnContextDeclValue != null && !(AUTHN_CONTEXT_DECL.equals(sAuthnContextDeclType) || AUTHN_CONTEXT_DECL_REF.equals(sAuthnContextDeclType)) ) {
+					throw new ASelectConfigException("AuthnContextDeclValue=" + sAuthnContextDeclValue + ", AuthnContextDeclType=" + sAuthnContextDeclType +   ",  authn_context_decl/type should be '" +AUTHN_CONTEXT_DECL + "' or '" + AUTHN_CONTEXT_DECL_REF + "' for application: " + sAppId );
+				}
+				// RH, 20101217, en
+
 				// required params
 				application.setId(sAppId);
 				application.setMinLevel(intLevel);
@@ -345,7 +378,14 @@ public class ApplicationManager
 					application.setSigningKey(loadPublicKeyFromKeystore(sAppId));
 				}
 				// RH, 20100909, en
+				
+				application.setAddedPatching(sAddedPatching);// RH, 20101206, n
+				
+				application.setSecLevels(_htLevels); // RH, 20101214, n
 
+				application.setAuthnContextDeclValue(sAuthnContextDeclValue); // RH, 20101217, n
+				application.setAuthnContextDeclType(sAuthnContextDeclType); // RH, 20101217, n
+				
 				_htApplications.put(sAppId, application);
 				oApplication = _oASelectConfigManager.getNextSection(oApplication);
 			}
@@ -743,7 +783,7 @@ public class ApplicationManager
 	 *            <code>String</code> containing an application id.
 	 * @param sName
 	 *            <code>String</code> containing the parameter name asked for.
-	 * @return String containing the paramtere value asked for, or <code>null</code> if the attribute was not found.
+	 * @return String containing the parameter value asked for, or <code>null</code> if the attribute was not found.
 	 */
 	public String getParam(String sAppId, String sName)
 	{
@@ -1034,4 +1074,135 @@ public class ApplicationManager
 		return returnValue;
 	}
 	// RH, 20100909, en	
+
+	/**
+	 * Returns the any special patching parameters for an application. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Returns the configured patching parameters for the application. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sAppId
+	 *            <code>String</code> containing an application id.
+	 * @return String containing the patching parameters. <code>null</code> if no patching parameters were found.
+	 */
+	public String getAddedPatching(String sAppId)
+	{
+		Application oApplication;
+		try {
+			oApplication = getApplication(sAppId);
+		}
+		catch (ASelectException e) {
+			String sMethod = "getAddedPatching()";
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No application configuration found for: " + sAppId);
+			return null;
+		}
+		return oApplication.getAddedPatching();
+	}
+
+	
+	/**
+	 * Returns the application specific security level mappings. level -> urn (or any string for that matters) <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Returns the configured security level mappings for the application. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * @return the _htSecLevels
+	 */
+	public synchronized HashMap<String, String> getSecLevels(String sAppId)
+	{
+		Application oApplication;
+		try {
+			oApplication = getApplication(sAppId);
+		}
+		catch (ASelectException e) {
+			String sMethod = "getSecLevels()";
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No application configuration found for: " + sAppId);
+			return null;
+		}
+		return oApplication.getSecLevels();
+	}
+
+	/**
+	 * Returns the AuthnContextDeclValue for an application. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Returns the configured AuthnContextDeclValue  for the application. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sAppId
+	 *            <code>String</code> containing an application id.
+	 * @return String containing the AuthnContextDeclValue. <code>null</code> if no AuthnContextDeclValue was found.
+	 */
+	public String getAuthnContextDeclValue(String sAppId)
+	{
+		Application oApplication;
+		try {
+			oApplication = getApplication(sAppId);
+		}
+		catch (ASelectException e) {
+			String sMethod = "getAuthnContextDeclValue()";
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No application configuration found for: " + sAppId);
+			return null;
+		}
+		return oApplication.getAuthnContextDeclValue();
+	}
+
+	/**
+	 * Returns the AuthnContextDeclType for an application. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Returns the configured AuthnContextDeclType ( either "AuthnContextDecl" or "AuthnContextDeclRef" ) for the application. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sAppId
+	 *            <code>String</code> containing an application id.
+	 * @return String containing the AuthnContextDeclType. <code>null</code> if no AuthnContextDeclType was found.
+	 */
+	public String getAuthnContextDeclType(String sAppId)
+	{
+		Application oApplication;
+		try {
+			oApplication = getApplication(sAppId);
+		}
+		catch (ASelectException e) {
+			String sMethod = "getAuthnContextDeclType()";
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No application configuration found for: " + sAppId);
+			return null;
+		}
+		return oApplication.getAuthnContextDeclType();
+	}
+	
 }

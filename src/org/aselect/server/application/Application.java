@@ -45,7 +45,10 @@
 package org.aselect.server.application;
 
 import java.security.PublicKey;
+import java.util.HashMap;
 import java.util.Vector;
+
+import org.aselect.server.config.ASelectConfigManager;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -80,6 +83,16 @@ public class Application
 	private String _forced_authsp;
 	private String _level_name;
 	private boolean _doUrlEncode;
+	
+	private String _added_patching;	// RH, 20101207, n
+	
+	// Security level mappings for this application
+	private HashMap<String, String> _htSecLevels = null;	// RH, 20101214, n
+
+	private String _AuthnContextDeclValue;	// RH, 20101217, n
+	private String _AuthnContextDeclType;	// RH, 20101217, n
+
+
 
 	/**
 	 * Contructor which contains the default parameters for an Application <br>
@@ -507,5 +520,76 @@ public class Application
 	public void setDoUrlEncode(boolean urlEncode)
 	{
 		_doUrlEncode = urlEncode;
+	}
+
+	/**
+	 * Gets the added patching parameter. (can be delimited list of parameters)
+	 * 
+	 * @return the patching parameter
+	 */
+
+	public String getAddedPatching()
+	{
+		return _added_patching;
+	}
+
+	/**
+	 * Sets the  patching parameter. (can be delimited list of parameters)
+	 * 
+	 * @param addedPatching
+	 *            the new patching parameter
+	 */
+
+	public void setAddedPatching(String addedPatching)
+	{
+		_added_patching = addedPatching;
+	}
+
+	/**
+	 * @return the _htSecLevels
+	 */
+	public synchronized HashMap<String, String> getSecLevels()
+	{
+		return _htSecLevels;
+	}
+
+	/**
+	 * @param htSecLevels the _htSecLevels to set
+	 */
+	public synchronized void setSecLevels(HashMap<String, String> htSecLevels)
+	{
+		_htSecLevels = htSecLevels;
+	}
+
+	/**
+	 * @return the _AuthnContextDeclValue
+	 */
+	public synchronized String getAuthnContextDeclValue()
+	{
+		return _AuthnContextDeclValue;
+	}
+
+	/**
+	 * @param authnContextDeclValue the _AuthnContextDeclValue to set
+	 */
+	public synchronized void setAuthnContextDeclValue(String authnContextDeclValue)
+	{
+		_AuthnContextDeclValue = authnContextDeclValue;
+	}
+
+	/**
+	 * @return the _AuthnContextDeclType
+	 */
+	public synchronized String getAuthnContextDeclType()
+	{
+		return _AuthnContextDeclType;
+	}
+
+	/**
+	 * @param authnContextDeclType the _AuthnContextDeclType to set
+	 */
+	public synchronized void setAuthnContextDeclType(String authnContextDeclType)
+	{
+		_AuthnContextDeclType = authnContextDeclType;
 	}
 }

@@ -247,6 +247,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
@@ -2306,4 +2307,108 @@ public class ASelectConfigManager extends ConfigManager
 	{
 		return Utils.getSimpleSection(getHandle(), ASelectSystemLogger.getHandle(), oConfig, sParam, bMandatory);
 	}
+	
+	
+	/*
+	 * Read an xml config structure like: <authentication_method> <security level=5
+	 * urn="urn:oasis:names:tc:SAML:1.0:cm:unspecified"> <security level=10
+	 * urn="urn:oasis:names:tc:SAML:1.0:cm:password"> <security level=20 urn="urn:oasis:names:tc:SAML:1.0:cm:sms">
+	 * <security level=30 urn="urn:oasis:names:tc:SAML:1.0:cm:smartcard"> </authentication_method>
+	 */
+	/**
+	 * Gets the table from config.
+	 * 
+	 * @param oConfig
+	 *            the o config
+	 * @param htAllKeys_Values
+	 *            the ht all keys_ values
+	 * @param sMainSection
+	 *            the s main section
+	 * @param sSubSection
+	 *            the s sub section
+	 * @param sKeyName
+	 *            the s key name
+	 * @param sValueName
+	 *            the s value name
+	 * @param mandatory
+	 *            the mandatory
+	 * @param uniqueValues
+	 *            the unique values
+	 * @return the table from config or null if sMainSection not found in config and mandatory == false
+	 * @throws ASelectException
+	 *             the a select exception
+	 * @throws ASelectConfigException
+	 *             the a select config exception
+	 */
+	public static HashMap<String, String> getTableFromConfig(Object oConfig, HashMap<String, String> htAllKeys_Values, String sMainSection,
+			String sSubSection, String sKeyName, String sValueName, boolean mandatory, boolean uniqueValues)
+		throws ASelectException, ASelectConfigException
+	{
+		String sMethod = "getTableFromConfig";
+
+		Object oProviders = null;
+		try {
+			oProviders = getHandle().getSection(oConfig, sMainSection);
+		}
+		catch (ASelectConfigException e) {
+			if (!mandatory)
+				return null;
+			ASelectSystemLogger.getHandle().log(Level.WARNING, MODULE, sMethod, "No config section '" + sMainSection + "' found", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+		}
+
+		Object oProvider = null;
+		try {
+			oProvider = getHandle().getSection(oProviders, sSubSection);
+		}
+		catch (ASelectConfigException e) {
+			ASelectSystemLogger.getHandle().log(Level.WARNING, MODULE, sMethod, "Not even one config section '" + sSubSection
+					+ "' found in the '" + sMainSection + "' section", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+		}
+		while (oProvider != null) {
+			String sValue = null;
+			try {
+				sValue = getHandle().getParam(oProvider, sValueName);
+			}
+			catch (ASelectConfigException e) {
+				ASelectSystemLogger.getHandle().log(Level.WARNING, MODULE, sMethod, "No config item '" + sValueName + "' found in '"
+						+ sSubSection + "' section", e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			}
+
+			String sKey = null;
+			try {
+				sKey = getHandle().getParam(oProvider, sKeyName);
+			}
+			catch (ASelectConfigException e) {
+				ASelectSystemLogger.getHandle().log(Level.WARNING, MODULE, sMethod, "No config item '" + sKeyName + "' found in '"
+						+ sSubSection + "' section", e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			}
+
+			// Key must be unique
+			if (htAllKeys_Values.containsKey(sKey)) {
+				ASelectSystemLogger.getHandle().log(Level.WARNING, MODULE, sMethod, "Provider '" + sKeyName + "' is not unique: " + sKey);
+				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
+			}
+
+			if (uniqueValues) {
+				// Also check for unique values
+				if (htAllKeys_Values.containsValue(sValue)) {
+					ASelectSystemLogger.getHandle().log(Level.WARNING, MODULE, sMethod, "Provider '" + sValueName + "' isn't unique: "
+							+ sValue);
+					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
+				}
+			}
+			htAllKeys_Values.put(sKey, sValue);
+
+			oProvider = getHandle().getNextSection(oProvider);
+		}
+		return htAllKeys_Values;
+	}
+
+	
+	
+	
 }

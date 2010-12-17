@@ -15,8 +15,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -55,6 +58,8 @@ import org.opensaml.saml2.core.Audience;
 import org.opensaml.saml2.core.AudienceRestriction;
 import org.opensaml.saml2.core.AuthnContext;
 import org.opensaml.saml2.core.AuthnContextClassRef;
+import org.opensaml.saml2.core.AuthnContextDecl;
+import org.opensaml.saml2.core.AuthnContextDeclRef;
 import org.opensaml.saml2.core.AuthnRequest;
 import org.opensaml.saml2.core.AuthnStatement;
 import org.opensaml.saml2.core.Issuer;
@@ -69,6 +74,7 @@ import org.opensaml.saml2.core.Subject;
 import org.opensaml.saml2.core.SubjectConfirmation;
 import org.opensaml.saml2.core.SubjectConfirmationData;
 import org.opensaml.saml2.core.SubjectLocality;
+import org.opensaml.saml2.core.impl.AuthnContextDeclBuilder;
 import org.opensaml.saml2.metadata.AssertionConsumerService;
 import org.opensaml.xml.Configuration;
 import org.opensaml.xml.Namespace;
@@ -307,7 +313,12 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 			// The betrouwbaarheidsniveau is stored in the session context
 			RequestedAuthnContext requestedAuthnContext = authnRequest.getRequestedAuthnContext();
-			String sBetrouwbaarheidsNiveau = SecurityLevel.getSecurityLevel(requestedAuthnContext, _systemLogger);
+//			String sBetrouwbaarheidsNiveau = SecurityLevel.getSecurityLevel(requestedAuthnContext, _systemLogger);			// RH, 20101216, o
+			// RH, 20101216, sn
+			HashMap<String, String> secLevels =  ApplicationManager.getHandle().getSecLevels(sAppId);
+			String sBetrouwbaarheidsNiveau = SecurityLevel.getSecurityLevel(requestedAuthnContext, _systemLogger, secLevels);
+			// RH, 20101216, en
+
 			if (sBetrouwbaarheidsNiveau.equals(SecurityLevel.BN_NOT_FOUND)) {
 				// We've got a security level but is not known
 				String sStatusMessage = "The requested AuthnContext isn't present in the configuration";
@@ -961,9 +972,27 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 //			}
 
 		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
-		String addedPatching = _configManager.getAddedPatching();
+		// RH, 20101207, sn
+		String sAppId = null;
+		if (htTGTContext  != null)
+			sAppId = (String) htTGTContext.get("app_id");
+		if (sAppId == null && htSessionContext != null )
+			sAppId = (String) htSessionContext.get("app_id");
+		if (sAppId == null) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not retrieve app_id from context" );
+		}
 
-		Response response = buildSpecificSAMLResponse(sRid, htSessionContext, sTgt, htTGTContext, addedPatching);
+		String addedPatching = null;
+
+		if (sAppId != null) {	// application level overrules handler level configuration
+			addedPatching = ApplicationManager.getHandle().getAddedPatching(sAppId);
+		}
+		// RH, 20101207, en
+		if (addedPatching == null) {	// backward compatibility, get it from handler configuration
+			addedPatching = _configManager.getAddedPatching();
+		}
+
+		Response response = buildSpecificSAMLResponse(sRid, htSessionContext, sTgt, htTGTContext, addedPatching, sAppId);
 			
 			Saml20_ArtifactManager artifactManager = Saml20_ArtifactManager.getTheArtifactManager();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "buildArtifact serverUrl=" + _sASelectServerUrl + " rid=" + sRid);
@@ -1008,11 +1037,31 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		String sMethod = "sendSAMLResponsePOST";
 
 		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
-		String addedPatching = _configManager.getAddedPatching();
+		// RH, 20101207, sn
+		String sAppId = null;
+		if (htTGTContext  != null)
+			sAppId = (String) htTGTContext.get("app_id");
+		if (sAppId == null && htSessionContext != null )
+			sAppId = (String) htSessionContext.get("app_id");
+		if (sAppId == null) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not retrieve app_id from context" );
+		}
+
+		String addedPatching = null;
+
+		if (sAppId != null) {	// application level overrules handler level configuration
+			addedPatching = ApplicationManager.getHandle().getAddedPatching(sAppId);
+		}
+		// RH, 20101207, en
+
+		if (addedPatching == null) {	// backward compatibility, get it from handler configuration
+			addedPatching = _configManager.getAddedPatching();
+		}
+
 		// htTGTContext == null here !
-		Response response = buildSpecificSAMLResponse(sRid, htSessionContext, sTgt, htTGTContext, addedPatching);
+		Response response = buildSpecificSAMLResponse(sRid, htSessionContext, sTgt, htTGTContext, addedPatching, sAppId);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the Response >======"+response);
-		// RH, 2011101, retrieve the requested binding
+		// RH, 2011101, retrieve the requested signing
 		String sReqSigning = null;
 		if (htTGTContext  != null)
 			sReqSigning = (String) htTGTContext.get("sp_reqsigning");
@@ -1021,7 +1070,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		if (sReqSigning == null) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested signing \"sp_reqsigning\" is missing, using default" );
 		}
-		// RH, 2011116, retrieve the requested binding
+		// RH, 2011116, retrieve whether addkeyname requested
 		String sAddKeyName = null;
 		if (htTGTContext  != null)
 			sAddKeyName = (String) htTGTContext.get("sp_addkeyname");
@@ -1031,7 +1080,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested signing \"sp_addkeyname\" is missing, using default" );
 		}
 
-		// RH, 2011116, retrieve the requested binding
+		// RH, 2011116, retrieve whether addcertificate requested
 		String sAddCertificate = null;
 		if (htTGTContext  != null)
 			sAddCertificate = (String) htTGTContext.get("sp_addcertificate");
@@ -1123,7 +1172,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	 *             the a select exception
 	 */
 	@SuppressWarnings("unchecked")
-	private Response buildSpecificSAMLResponse( String sRid, HashMap htSessionContext, String sTgt, HashMap htTGTContext, String addedPatching)
+//	private Response buildSpecificSAMLResponse( String sRid, HashMap htSessionContext, String sTgt, HashMap htTGTContext, String addedPatching)
+	private Response buildSpecificSAMLResponse( String sRid, HashMap htSessionContext, String sTgt, HashMap htTGTContext, String addedPatching, String sAppId)
 		throws ASelectException
 	{
 		String sMethod = "buildSpecificSAMLResponse";
@@ -1229,7 +1279,18 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				SAMLObjectBuilder<AuthnContextClassRef> authnContextClassRefBuilder = (SAMLObjectBuilder<AuthnContextClassRef>) builderFactory
 						.getBuilder(AuthnContextClassRef.DEFAULT_ELEMENT_NAME);
 				AuthnContextClassRef authnContextClassRef = authnContextClassRefBuilder.buildObject();
-				String sAutnContextClassRefURI = SecurityLevel.convertLevelToAuthnContextClassRefURI(sSelectedLevel, _systemLogger);
+				
+//				String sAutnContextClassRefURI = SecurityLevel.convertLevelToAuthnContextClassRefURI(sSelectedLevel, _systemLogger); // RH, 20101214, o
+				// RH, 20101214, sn
+				String sAutnContextClassRefURI = null;
+				HashMap<String, String> secLevels =  ApplicationManager.getHandle().getSecLevels(sAppId);
+				if (secLevels != null) {
+					sAutnContextClassRefURI = secLevels.get(sSelectedLevel);
+				}
+				if (sAutnContextClassRefURI == null) {	// for backward compatability
+					sAutnContextClassRefURI = SecurityLevel.convertLevelToAuthnContextClassRefURI(sSelectedLevel, _systemLogger);
+				}				
+				// RH, 20101214, en
 				authnContextClassRef.setAuthnContextClassRef(sAutnContextClassRefURI);
 
 				SAMLObjectBuilder<AuthnContext> authnContextBuilder = (SAMLObjectBuilder<AuthnContext>) builderFactory
@@ -1237,6 +1298,24 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				AuthnContext authnContext = authnContextBuilder.buildObject();
 				authnContext.setAuthnContextClassRef(authnContextClassRef);
 
+				// RH, 20101217, sn
+				if ( ApplicationManager.getHandle().getAuthnContextDeclValue(sAppId) != null ) {
+					if (AuthnContextDecl.DEFAULT_ELEMENT_LOCAL_NAME.equals(ApplicationManager.getHandle().getAuthnContextDeclType(sAppId)) ) {
+						SAMLObjectBuilder<AuthnContextDecl> authnContextDeclBuilderBuilder = (SAMLObjectBuilder<AuthnContextDecl>) builderFactory
+						.getBuilder(AuthnContextDecl.DEFAULT_ELEMENT_NAME);
+						AuthnContextDecl authnContextDecl = authnContextDeclBuilderBuilder.buildObject();
+						authnContextDecl.setTextContent(ApplicationManager.getHandle().getAuthnContextDeclValue(sAppId));
+						authnContext.setAuthnContextDecl(authnContextDecl);
+					} else {
+						SAMLObjectBuilder<AuthnContextDeclRef> authnContextDeclBuilderBuilder = (SAMLObjectBuilder<AuthnContextDeclRef>) builderFactory
+						.getBuilder(AuthnContextDeclRef.DEFAULT_ELEMENT_NAME);
+						AuthnContextDeclRef authnContextDeclRef = authnContextDeclBuilderBuilder.buildObject();
+						authnContextDeclRef.setAuthnContextDeclRef(ApplicationManager.getHandle().getAuthnContextDeclValue(sAppId));
+						authnContext.setAuthnContextDeclRef(authnContextDeclRef);
+					}
+				}
+				// RH, 20101217, sn
+				
 				SAMLObjectBuilder<AuthnStatement> authnStatementBuilder = (SAMLObjectBuilder<AuthnStatement>) builderFactory
 						.getBuilder(AuthnStatement.DEFAULT_ELEMENT_NAME);
 				AuthnStatement authnStatement = authnStatementBuilder.buildObject();

@@ -472,12 +472,13 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 *             the a select exception
 	 * @throws ASelectConfigException
 	 *             the a select config exception
+	 *             
 	 */
 	protected void getTableFromConfig(Object oConfig, Vector vAllKeys, HashMap htAllKeys_Values, String sMainSection,
 			String sSubSection, String sKeyName, String sValueName, boolean mandatory, boolean uniqueValues)
 		throws ASelectException, ASelectConfigException
 	{
-		String sMethod = "getProvidersFromConfig";
+		String sMethod = "getTableFromConfig";
 
 		Object oProviders = null;
 		try {

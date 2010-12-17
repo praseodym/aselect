@@ -3,8 +3,14 @@
  */
 package org.aselect.server.request.handler.xsaml20;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Set;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 
 import org.aselect.server.log.ASelectSystemLogger;
@@ -49,6 +55,8 @@ public class SecurityLevel
 	final private static String BN_HOOG = "30";
 	
 	final public static String BN_NOT_FOUND = "not_found";
+	private static String[] aAlllowedLevels = {BN_NUL, BN_LAAG, BN_BETTER, BN_MEDIUM,  BN_HOOG} ;
+	public static Set<String> ALLOWEDLEVELS = new HashSet( Arrays.asList(aAlllowedLevels) );
 
 	/**
 	 * Convert level to authn context class ref uri.
@@ -138,6 +146,7 @@ public class SecurityLevel
 		}
 	}
 
+	
 	/**
 	 * Gets the Security Level.
 	 * 
@@ -148,6 +157,23 @@ public class SecurityLevel
 	 * @return the Security Level
 	 */
 	public static String getSecurityLevel(RequestedAuthnContext requestedAuthnContext, ASelectSystemLogger systemLogger)
+	{
+		return getSecurityLevel(requestedAuthnContext, systemLogger, null);
+	}
+	
+	/**
+	 * Gets the Security Level.
+	 * 
+	 * @param requestedAuthnContext
+	 *            the requested authn context
+	 * @param systemLogger
+	 *            the system logger
+	 * @param secLevels
+	 *            HashMap with mapping from key=level to value=AuthnContextClassRef
+	 * @return the Security Level
+	 */
+//	public static String getSecurityLevel(RequestedAuthnContext requestedAuthnContext, ASelectSystemLogger systemLogger)
+	public static String getSecurityLevel(RequestedAuthnContext requestedAuthnContext, ASelectSystemLogger systemLogger, HashMap<String, String> secLevels )
 	{
 		String sMethod = "getSecurityLevel";
 		final int EXACT = 0;
@@ -182,7 +208,9 @@ public class SecurityLevel
 			case EXACT:
 				while (itr.hasNext() && sMatchedBetrouwheidsNiveau == BN_NOT_FOUND) {
 					sCurrentAuthnContextClassRef = itr.next().getAuthnContextClassRef();
-					sMatchedBetrouwheidsNiveau = getSecurityLevelFromContext(sCurrentAuthnContextClassRef);
+//					sMatchedBetrouwheidsNiveau = getSecurityLevelFromContext(sCurrentAuthnContextClassRef);
+					sMatchedBetrouwheidsNiveau = getSecurityLevelFromContext(sCurrentAuthnContextClassRef, secLevels);
+					
 				}
 				break;
 
@@ -190,7 +218,8 @@ public class SecurityLevel
 				int iCurrentMinBetrouwheidsNiveau = LEVEL_MAX;
 				while (itr.hasNext()) {
 					sCurrentAuthnContextClassRef = itr.next().getAuthnContextClassRef();
-					iCurrentBetrouwheidsNiveau = getIntSecurityLevel(sCurrentAuthnContextClassRef);
+//					iCurrentBetrouwheidsNiveau = getIntSecurityLevel(sCurrentAuthnContextClassRef);
+					iCurrentBetrouwheidsNiveau = getIntSecurityLevel(sCurrentAuthnContextClassRef, secLevels);
 					if (iCurrentBetrouwheidsNiveau != LEVEL_NOT_FOUND
 							&& iCurrentBetrouwheidsNiveau < iCurrentMinBetrouwheidsNiveau)
 						iCurrentMinBetrouwheidsNiveau = iCurrentBetrouwheidsNiveau;
@@ -202,7 +231,8 @@ public class SecurityLevel
 				int iCurrentBestBetrouwheidsNiveau = LEVEL_MIN;
 				while (itr.hasNext()) {
 					sCurrentAuthnContextClassRef = itr.next().getAuthnContextClassRef();
-					iCurrentBetrouwheidsNiveau = getIntSecurityLevel(sCurrentAuthnContextClassRef);
+//					iCurrentBetrouwheidsNiveau = getIntSecurityLevel(sCurrentAuthnContextClassRef);
+					iCurrentBetrouwheidsNiveau = getIntSecurityLevel(sCurrentAuthnContextClassRef, secLevels);
 					if (iCurrentBetrouwheidsNiveau != LEVEL_NOT_FOUND
 							&& iCurrentBetrouwheidsNiveau > iCurrentBestBetrouwheidsNiveau)
 						iCurrentBestBetrouwheidsNiveau = iCurrentBetrouwheidsNiveau;
@@ -225,7 +255,8 @@ public class SecurityLevel
 				int iCurrentMaxBetrouwheidsNiveau = LEVEL_MIN;
 				while (itr.hasNext()) {
 					sCurrentAuthnContextClassRef = itr.next().getAuthnContextClassRef();
-					iCurrentBetrouwheidsNiveau = getIntSecurityLevel(sCurrentAuthnContextClassRef);
+//					iCurrentBetrouwheidsNiveau = getIntSecurityLevel(sCurrentAuthnContextClassRef);
+					iCurrentBetrouwheidsNiveau = getIntSecurityLevel(sCurrentAuthnContextClassRef, secLevels);
 					if (iCurrentBetrouwheidsNiveau != LEVEL_NOT_FOUND
 							&& iCurrentBetrouwheidsNiveau > iCurrentMaxBetrouwheidsNiveau)
 						iCurrentMaxBetrouwheidsNiveau = iCurrentBetrouwheidsNiveau;
@@ -264,6 +295,34 @@ public class SecurityLevel
 		return BN_NOT_FOUND;
 	}
 
+	/**
+	 * Convert contextRef to Level (as String) from supplied HashMap with key=level, value=ContextRef
+	 * 
+	 * @param sAuthnContextClassRef
+	 *           the reference to look for
+	 * @param secLevels
+	 *            HashMap with mapping from key=level to value=AuthnContextClassRef
+	 * @return the Security Level or BN_NUL if not found
+	 */
+	private static String getSecurityLevelFromContext(String sAuthnContextClassRef, HashMap<String, String> secLevels ) {
+		if (secLevels == null) {	// backward compatibility
+			return  getSecurityLevelFromContext(sAuthnContextClassRef);
+		} else {
+			String level = BN_NOT_FOUND;
+			Iterator<?> secIter = secLevels.entrySet().iterator();
+			while (secIter.hasNext()) {
+				Entry<?, ?> secEntry =  (Entry<?, ?>)secIter.next();
+				if (  sAuthnContextClassRef.equals(secEntry.getValue()) ) {
+					level = (String)secEntry.getKey();
+					break;
+				}
+			}
+			return level;
+		}
+	}
+
+	
+	
 	/**
 	 * Translate the Security Level from int to String.
 	 * 
@@ -308,5 +367,31 @@ public class SecurityLevel
 			return LEVEL_HIGH;
 
 		return LEVEL_NOT_FOUND;
+	}
+
+	/**
+	 * Convert URI Security Level to an integer.
+	 * 
+	 * @param sCurrentAuthnContextClassRef
+	 *            AuthnContext class ref
+	 * @param secLevels
+	 *            HashMap with mapping from key=level to value=AuthnContextClassRef
+	 * @return the Security Level
+	 */
+	private static int getIntSecurityLevel(String sCurrentAuthnContextClassRef, HashMap<String, String> secLevels )
+	{
+		if (secLevels == null) {	// backward compatibility
+			return  getIntSecurityLevel(sCurrentAuthnContextClassRef);
+		}  else 
+		{
+			String sLevel = getSecurityLevelFromContext(sCurrentAuthnContextClassRef, secLevels );
+			if (sLevel.equals(BN_NOT_FOUND)) {
+				return LEVEL_NOT_FOUND;
+			} else {
+				return  Integer.parseInt(sLevel);	// levels (=keys) from secLevels should be checked for integer at startup
+			}
+		}
+			
+		
 	}
 }
