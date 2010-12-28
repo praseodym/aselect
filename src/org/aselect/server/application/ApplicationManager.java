@@ -336,6 +336,10 @@ public class ApplicationManager
 				}
 				// RH, 20101217, en
 
+				// Bauke 20101125: For DigiD4Bedrijven:
+				String sUseSsn = ASelectConfigManager.getSimpleParam(oApplication, "use_ssn", false);
+				application.setUseSsn(sUseSsn);
+
 				// required params
 				application.setId(sAppId);
 				application.setMinLevel(intLevel);

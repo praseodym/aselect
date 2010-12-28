@@ -65,7 +65,7 @@ public class LogoutRequestSender
 	 * @param response
 	 *            the response
 	 * @param sTgT
-	 *            the s tg t
+	 *            the TGT
 	 * @param sIssuerUrl
 	 *            the issuer url
 	 * @param reason
@@ -132,7 +132,7 @@ public class LogoutRequestSender
 		String msg = XMLHelper.prettyPrintXML(node);
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, "About to send: " + msg);
 
-		// Store it in de history
+		// Store it in the history
 		SamlHistoryManager history = SamlHistoryManager.getHandle();
 		history.put(sTgT, logoutRequest.getDOM());
 

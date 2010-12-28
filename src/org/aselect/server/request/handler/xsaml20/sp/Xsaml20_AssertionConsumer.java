@@ -11,7 +11,6 @@
  */
 package org.aselect.server.request.handler.xsaml20.sp;
 
-import java.awt.dnd.Autoscroll;
 import java.io.StringReader;
 import java.security.PublicKey;
 import java.util.Enumeration;
@@ -431,9 +430,9 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					if (sAuthnAuthority != null)
 						hmSamlAttributes.put("authority", sAuthnAuthority);
 
-					// SenterNovem aqddition: OrgID = KvKnummer+Vestigingsnummer
-					// If EntityConcernedID = 00000003123456780000 and EntityConcernedSubID = 0001,
-					// OrgID = 1234567800000001
+					// eHerkenning addition: OrgID = KvKnummer+Vestigingsnummer
+					// If EntityConcernedID = 00000003123456780000 and EntityConcernedSubID = ...0001,
+					// then orgid = 1234567800000001
 					String sEntityId = (String)hmSamlAttributes.get("urn:nl:eherkenning:0.8def:EntityConcernedID");
 					if (sEntityId != null) {
 						int idx = sEntityId.length()-12;  // last 12 characters
@@ -453,7 +452,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 						hmSamlAttributes.put("orgid", sEntityId);
 					}
 					
-					// SenterNovem: AuthID = Unique Persistent Identifier
+					// eHerkenning: AuthID = Unique Persistent Identifier
 					// Use the fifth word from sAuthnAuthority (split using :) and add sNameID
 					if (sNameIDQualifier != null) {
 						String sAuthID = "", sAuthSubID = "";

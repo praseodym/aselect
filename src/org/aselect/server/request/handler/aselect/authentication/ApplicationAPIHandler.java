@@ -818,7 +818,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		HashMap<String, Object> htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
 		String sToken = null;
 		if (sSamlAttributes != null) {
-			// Comma seperated list of attribute names was given
+			// Comma separated list of attribute names was given
 			String[] arrAttrNames = sSamlAttributes.split(",");
 			HashMap htSelectedAttr = SamlTools.extractFromHashtable(arrAttrNames, htAttribs, true/* include */);
 
@@ -850,7 +850,39 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			String sLevelName = aApp.getLevelName();
 			if (sLevelName != null)
 				oOutputMessage.setParam(sLevelName, sAuthSPLevel);
-
+			
+			// 20101125, Bauke: added for DigiD4Bedrijven interface
+			// Controlled by <use_ssn>, possible values: full, strip or dynamic, possibly preceded by uid_
+			// e.g. uid_full
+			String sUseSsn = aApp.getUseSsn();
+			if (Utils.hasValue(sUseSsn) && (sUseSsn.endsWith("full") || sUseSsn.endsWith("strip") || sUseSsn.endsWith("dynamic"))) {
+				// retrieve ssn value from the gathered attributes
+				boolean subPresent = true;
+				String sId = (String)htAttribs.get("EntityConcernedID");
+				String sSubId = (String)htAttribs.get("EntityConcernedSubID");
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "EntityConcernedID="+sId+" EntityConcernedSubID="+sSubId);
+				String sSsn = sSubId;
+				if (!Utils.hasValue(sSsn)) {
+					subPresent = false;
+					sSsn = sId;
+				}
+				if (Utils.hasValue(sSsn)) {
+					int idx = sSsn.length()-12;  // take the last 12 characters
+					if (idx > 0) sSsn = sSsn.substring(idx);
+					
+					if (sUseSsn.endsWith("strip") || (sUseSsn.endsWith("dynamic") && !subPresent)) {  // ditch the last 4 digits
+						idx = sSsn.length()-4;
+						if (idx > 0)
+							sSsn = sSsn.substring(0, idx);
+					}
+					if (sUseSsn.startsWith("uid_")) {
+						sSsn = sUid + "-"+ sSsn;
+					}
+					_systemLogger.log(Level.INFO, _sModule, sMethod, "ssn="+sSsn);
+					oOutputMessage.setParam("ssn", sSsn);
+				}
+			}
+			
 			if (_applicationManager.isUseOpaqueUid(sAppId)) {
 				// the returned user ID must contain an opaque value
 				MessageDigest oMessageDigest = null;

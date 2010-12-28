@@ -48,9 +48,6 @@ import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Vector;
 
-import org.aselect.server.config.ASelectConfigManager;
-
-// TODO: Auto-generated Javadoc
 /**
  * The Application (Bean) class <br>
  * <br>
@@ -83,6 +80,7 @@ public class Application
 	private String _forced_authsp;
 	private String _level_name;
 	private boolean _doUrlEncode;
+	private String _useSsn;
 	
 	private String _added_patching;	// RH, 20101207, n
 	
@@ -520,6 +518,16 @@ public class Application
 	public void setDoUrlEncode(boolean urlEncode)
 	{
 		_doUrlEncode = urlEncode;
+	}
+	
+	public void setUseSsn(String sUseSsn)
+	{
+		_useSsn = sUseSsn;
+	}
+	
+	public String getUseSsn()
+	{
+		return _useSsn;
 	}
 
 	/**
