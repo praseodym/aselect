@@ -114,8 +114,7 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 					// Get from "saml20_sp_session_sync" handler
 					Object oRequestsSection = _configManager.getSection(null, "requests");
 					Object oHandlersSection = _configManager.getSection(oRequestsSection, "handlers");
-					Object oHandler = _configManager.getSection(oHandlersSection, "handler",
-											"id=saml20_sp_session_sync");
+					Object oHandler = _configManager.getSection(oHandlersSection, "handler", "id=saml20_sp_session_sync");
 					sSessionSync = ASelectConfigManager.getSimpleParam(oHandler, "federation_url", true);
 				}
 				else {
@@ -127,7 +126,7 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 				String destination = Utils.getSimpleParam(_configManager, _systemLogger, idpSection, "destination", false);
 				if (destination != null)
 					idpData.setDestination(destination);
-				String assertionconsumerserviceindex = Utils.getSimpleParam(_configManager, _systemLogger, idpSection, "assertionconsumerserviceindex", false);
+				String assertionconsumerserviceindex = Utils.getSimpleParam(_configManager, _systemLogger, idpSection, "serviceindex", false);  // "assertionconsumerserviceindex", false);
 				if (assertionconsumerserviceindex != null)
 					idpData.setAssertionConsumerServiceindex(assertionconsumerserviceindex);
 				String attributeconsumerserviceindex = Utils.getSimpleParam(_configManager, _systemLogger, idpSection, "attributeconsumerserviceindex", false);

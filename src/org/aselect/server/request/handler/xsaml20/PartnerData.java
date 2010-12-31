@@ -35,12 +35,12 @@ public class PartnerData
 	{
 		partnerID = sId;
 	}
-	
+
 	public String toString()
 	{
-		return "IdPData["+partnerID+"] meta="+metadataUrl+" sync="+sessionSyncUrl+" sec="+specialSettings;
+		return "IdPData["+partnerID+"] meta="+metadataUrl+" sync="+sessionSyncUrl+" spec="+specialSettings+" acsi="+assertionconsumerserviceindex;
 	}
-	
+
 	public String getPartnerID() {
 		return partnerID;
 	}

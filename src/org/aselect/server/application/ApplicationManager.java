@@ -130,7 +130,6 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
 /**
  * The application manager for the A-Select Server. <br>
  * <br>
@@ -225,7 +224,7 @@ public class ApplicationManager
 	 *             the a select exception
 	 */
 	public void init()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		// FIXME: Double initialization of _oApplicationsConfigSection
@@ -327,6 +326,11 @@ public class ApplicationManager
 					}
 				}
 				// RH, 20101206, en
+				
+				// 20101229, Bauke: fixed attributes to be added to a returned SAML token
+				HashMap<String, String> _htAdditionalAttributes = new HashMap<String, String>();
+				_htAdditionalAttributes = ASelectConfigManager.getTableFromConfig(oApplication, _htAdditionalAttributes,
+						"additional_attributes", "attribute", "name",/*->*/"value", false/* mandatory */, false/* unique values */);
 
 				// RH, 20101217, sn
 				String sAuthnContextDeclValue = ASelectConfigManager.getSimpleParam(oApplication, "authn_context_decl",  false);
@@ -384,8 +388,8 @@ public class ApplicationManager
 				// RH, 20100909, en
 				
 				application.setAddedPatching(sAddedPatching);// RH, 20101206, n
-				
 				application.setSecLevels(_htLevels); // RH, 20101214, n
+				application.setAdditionalAttributes(_htAdditionalAttributes); // Bauke, 20101229
 
 				application.setAuthnContextDeclValue(sAuthnContextDeclValue); // RH, 20101217, n
 				application.setAuthnContextDeclType(sAuthnContextDeclType); // RH, 20101217, n
@@ -1060,7 +1064,8 @@ public class ApplicationManager
 	 * @return boolean result of the calculation
 	 * Sub level overrules top level, top level rules when sub level == null
 	 */
-	boolean calculateRequireSigning(boolean toplevelSigning, String sublevelSigning) {
+	boolean calculateRequireSigning(boolean toplevelSigning, String sublevelSigning)
+	{
 		boolean returnValue = false;
 		if (toplevelSigning) {
 			if ( sublevelSigning == null) {
@@ -1084,15 +1089,6 @@ public class ApplicationManager
 	 * <br>
 	 * <b>Description:</b> <br>
 	 * Returns the configured patching parameters for the application. <br>
-	 * <br>
-	 * <b>Concurrency issues:</b> <br>
-	 * - <br>
-	 * <br>
-	 * <b>Preconditions:</b> <br>
-	 * - <br>
-	 * <br>
-	 * <b>Postconditions:</b> <br>
-	 * - <br>
 	 * 
 	 * @param sAppId
 	 *            <code>String</code> containing an application id.
@@ -1111,22 +1107,13 @@ public class ApplicationManager
 		}
 		return oApplication.getAddedPatching();
 	}
-
 	
 	/**
 	 * Returns the application specific security level mappings. level -> urn (or any string for that matters) <br>
 	 * <br>
 	 * <b>Description:</b> <br>
 	 * Returns the configured security level mappings for the application. <br>
-	 * <br>
-	 * <b>Concurrency issues:</b> <br>
-	 * - <br>
-	 * <br>
-	 * <b>Preconditions:</b> <br>
-	 * - <br>
-	 * <br>
-	 * <b>Postconditions:</b> <br>
-	 * - <br>
+	 *
 	 * @return the _htSecLevels
 	 */
 	public synchronized HashMap<String, String> getSecLevels(String sAppId)
@@ -1141,6 +1128,26 @@ public class ApplicationManager
 			return null;
 		}
 		return oApplication.getSecLevels();
+	}
+	
+	/**
+	 * Returns the application specific Attributes to be added to a Saml token<br>
+	 *
+	 * @return the Attributes to be added
+	 */
+	public synchronized HashMap<String, String> getAdditionalAttributes(String sAppId)
+	{
+		String sMethod = "getAdditionalAttributes";
+		Application oApplication;
+
+		try {
+			oApplication = getApplication(sAppId);
+		}
+		catch (ASelectException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No application configuration found for: " + sAppId);
+			return null;
+		}
+		return oApplication.getAdditionalAttributes();
 	}
 
 	/**

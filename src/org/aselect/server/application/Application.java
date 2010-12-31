@@ -87,13 +87,16 @@ public class Application
 	// Security level mappings for this application
 	private HashMap<String, String> _htSecLevels = null;	// RH, 20101214, n
 
+	// Fixed attributes for a SAML token
+	private HashMap<String, String> _htAdditionalAttributes = null;	// Bauke, 20101229, n
+
 	private String _AuthnContextDeclValue;	// RH, 20101217, n
 	private String _AuthnContextDeclType;	// RH, 20101217, n
 
 
 
 	/**
-	 * Contructor which contains the default parameters for an Application <br>
+	 * Constructor which contains the default parameters for an Application <br>
 	 * <br>
 	 * .
 	 * 
@@ -125,7 +128,7 @@ public class Application
 	}
 
 	/**
-	 * Default contructor.
+	 * Default constructor.
 	 */
 	public Application() {
 		_sId = null;
@@ -567,6 +570,22 @@ public class Application
 	public synchronized void setSecLevels(HashMap<String, String> htSecLevels)
 	{
 		_htSecLevels = htSecLevels;
+	}
+
+	/**
+	 * @return _htAdditionalAttributes
+	 */
+	public synchronized HashMap<String, String> getAdditionalAttributes()
+	{
+		return _htAdditionalAttributes;
+	}
+
+	/**
+	 * @param set _htAdditionalAttributes
+	 */
+	public synchronized void setAdditionalAttributes(HashMap<String, String> htAdditionalAttributes)
+	{
+		_htAdditionalAttributes = htAdditionalAttributes;
 	}
 
 	/**

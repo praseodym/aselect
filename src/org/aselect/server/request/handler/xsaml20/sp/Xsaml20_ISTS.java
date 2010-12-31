@@ -245,6 +245,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			
 			// 20100311, Bauke: added for eHerkenning
 			PartnerData partnerData = MetaDataManagerSp.getHandle().getPartnerDataEntry(sFederationUrl);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Partnerdata: "+partnerData);
 			String specialSettings = (partnerData == null)? null: partnerData.getSpecialSettings();
 			if (specialSettings != null && specialSettings.contains("minimum"))
 				requestedAuthnContext.setComparison(AuthnContextComparisonTypeEnumeration.MINIMUM);
@@ -269,9 +270,13 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			// We should be able to set AssertionConsumerServiceIndex. This is according to saml specs mutually exclusive with
 			// ProtocolBinding end AssertionConsumerServiceURL
 			
+			if (partnerData !=null)
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "acsi="+partnerData.getAssertionConsumerServiceindex());
+			
 			if  (partnerData != null && partnerData.getAssertionConsumerServiceindex() != null) {
 				authnRequest.setAssertionConsumerServiceIndex(Integer.parseInt(partnerData.getAssertionConsumerServiceindex() ));
-			} else {	 // mutually exclusive
+			}
+			else {	 // mutually exclusive
 				// 20100311, Bauke: added for eHerkenning
 				// The assertion consumer url must be set to the value in the Metadata:
 				// 20101112, RH, added support for POST binding
