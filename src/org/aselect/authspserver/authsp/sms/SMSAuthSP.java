@@ -41,7 +41,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * An A-Select AuthtSP that sends an sms with the token <br>
  * <br>
@@ -108,6 +108,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 	private String _sSmsText;
 	private String _sSmsFrom;
 	private SmsSender _oSmsSender;
+	private String _sSmsProvider;
 
 	/**
 	 * Initialization of the SMS AuthSP. <br>
@@ -336,8 +337,19 @@ public class SMSAuthSP extends ASelectHttpServlet
 
 			// _oSmsSender = new MollieHttpSmsSender(new URL(_sSmsUrl),
 			// _sSmsUser, _sSmsPassword); // RH, 20080729, o
-			_oSmsSender = new MollieHttpSmsSender(new URL(_sSmsUrl), _sSmsUser, _sSmsPassword, _sSmsGateway);
+			// _oSmsSender = new MollieHttpSmsSender(new URL(_sSmsUrl), _sSmsUser, _sSmsPassword, _sSmsGateway);	// RH, 20110103, o
 			// RH, 20080729
+			// RH, 20110103, sn
+			try {
+				_sSmsProvider = _configManager.getParam(_oAuthSpConfig, "gw_provider");
+			}
+			catch (ASelectConfigException eAC) {
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+						"No 'provider' parameter found in configuration, using default provider", eAC);
+				_sSmsProvider = null; // use default gateway
+			}
+			_oSmsSender = SmsSenderFactory.createSmsSender(new URL(_sSmsUrl), _sSmsUser, _sSmsPassword, _sSmsGateway, _sSmsProvider);
+			// RH, 20110103, en
 			sbInfo = new StringBuffer("Successfully started ");
 			sbInfo.append(VERSION).append(".");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
@@ -441,13 +453,19 @@ public class SMSAuthSP extends ASelectHttpServlet
 				}
 				htServiceRequest.put("as_url", sAsUrl);
 				htServiceRequest.put("uid", sUid);
-				htServiceRequest.put("retry_counter", "1");
+				
+				// RH, 20110104, sn
+				// add formsignature
+				String sRetryCounter =  String.valueOf(1);	// first time
+				sRetryCounter += ":" + _cryptoEngine.generateSignature( sConcat(sAsId, sUid, sRetryCounter));
+				htServiceRequest.put("retry_counter", String.valueOf(sRetryCounter));
+				// RH, 20110104, en
+//				htServiceRequest.put("retry_counter", "1");	// RH, 20110104, o
 
 				if (sCountry != null)
 					htServiceRequest.put("country", sCountry);
 				if (sLanguage != null)
 					htServiceRequest.put("language", sLanguage);
-
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "sUid=" + sUid);
 				generateAndSend(servletRequest, sUid);
 
@@ -581,6 +599,23 @@ public class SMSAuthSP extends ASelectHttpServlet
 
 				if (sResultCode.equals(Errors.ERROR_SMS_INVALID_PASSWORD)) // invalid password
 				{
+					// RH, 20110104, sn
+					// verify form signature
+					// formSignature is stored as part of the retryCounter
+					String[] sa = sRetryCounter.split(":");
+					String formSignature = sa[1];
+					sRetryCounter = sa[0];
+					String signedParms = sConcat(sAsId, sUid, sRetryCounter);
+					if ( !_cryptoEngine.verifyMySignature(signedParms, formSignature) ) {
+						StringBuffer sbWarning = new StringBuffer("Invalid signature from User form '");
+						sbWarning.append(sAsId);
+						sbWarning.append("' for user: ");
+						sbWarning.append(sUid);
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString());
+						throw new ASelectException(Errors.ERROR_SMS_INVALID_REQUEST);
+					}
+					// RH, 20110104, en
+
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Invalid password, retry=" + sRetryCounter + " < "
 							+ _iAllowedRetries);
 					int iRetriesDone = Integer.parseInt(sRetryCounter);
@@ -592,13 +627,21 @@ public class SMSAuthSP extends ASelectHttpServlet
 						htServiceRequest.put("uid", sUid);
 						htServiceRequest.put("rid", sRid);
 						htServiceRequest.put("a-select-server", sAsId);
-						htServiceRequest.put("retry_counter", String.valueOf(iRetriesDone + 1));
+						// RH, 20110104, sn
+						// add formsignature
+						sRetryCounter =  String.valueOf(iRetriesDone + 1);
+						sRetryCounter += ":" + _cryptoEngine.generateSignature( sConcat(sAsId, sUid, sRetryCounter));
+						// RH, 20110104, en
+//						htServiceRequest.put("retry_counter", String.valueOf(iRetriesDone + 1));	// RH, 20110104, o
+						htServiceRequest.put("retry_counter", sRetryCounter);	// RH, 20110104, n
 						htServiceRequest.put("signature", sSignature);
 						if (sCountry != null)
 							htServiceRequest.put("country", sCountry);
 						if (sLanguage != null)
 							htServiceRequest.put("language", sLanguage);
 						// show authentication form once again with warning message
+						
+
 						showAuthenticateForm(pwOut, Errors.ERROR_SMS_INVALID_PASSWORD, _configManager.getErrorMessage(
 								Errors.ERROR_SMS_INVALID_PASSWORD, _oErrorProperties), htServiceRequest);
 					}
@@ -856,5 +899,21 @@ public class SMSAuthSP extends ASelectHttpServlet
 		}
 		NumberFormat format = new DecimalFormat(new String(secretFormat));
 		return format.format(secretValue);
+	}
+
+	
+	/**
+	 * Simple utility to concatenate strings
+	 * Only not null params are concatenated
+	 * @param strings
+	 * 		strings to concat
+	 * @return
+	 * 		concated string
+	 */
+	private String sConcat(String...strings ) {
+		StringBuffer sb = new StringBuffer();
+	       for ( String s : strings )              
+	    	          if (s != null) sb.append(s); 
+	       return sb.toString();
 	}
 }

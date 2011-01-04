@@ -16,7 +16,6 @@ import java.util.logging.Level;
 import org.aselect.authspserver.log.AuthSPSystemLogger;
 import org.aselect.system.utils.Tools;
 
-// TODO: Auto-generated Javadoc
 /*
  * 14-11-2007:  Adapted to the latest www.mollie.nl protocol
  * @author Bauke Hiemstra - www.anoigo.nl
@@ -122,7 +121,7 @@ public class MollieHttpSmsSender implements SmsSender
 			// Bauke: adapted to latest protocol
 			String sResult, sResultCode = "";
 			while ((line = rd.readLine()) != null) {
-				System.out.println(line);
+//				System.out.println(line);	// RH, 20110104, o
 				sResult = Tools.extractFromXml(line, "resultcode", true);
 				if (sResult != null) {
 					sResultCode = sResult;
