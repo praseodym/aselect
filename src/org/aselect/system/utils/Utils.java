@@ -330,11 +330,8 @@ public class Utils
 	 *            the HTML text to examine
 	 * @param bErrCond
 	 *            is if_err true?
-	 * @param sAppUrl
-	 *             if we're an SP, the application's URL
-	 * @param sRelayState
-	 *            if we're an IdP, can contain a base64 encode "aselect_specials" value,
-	 *            example content: if_cond=org_login&set_forced_uid=1234
+	 * @param sSpecials
+	 *             the specials to look for
 	 * @param logger
 	 *            any logger
 	 * @return the modified HTML text
@@ -485,7 +482,7 @@ public class Utils
 		if (sText == null)
 			return sText;
 
-		// RH, 20100622, use of ASelectLogger can causes cyclic dependency server<->system
+		// RH, 20100622, use of ASelectLogger causes cyclic dependency server<->system
 		if (logger!=null) logger.log(Level.INFO, MODULE, sMethod, "Search="+sSearch);
 		while (true) {
 			idx = sText.indexOf(sSearch);
