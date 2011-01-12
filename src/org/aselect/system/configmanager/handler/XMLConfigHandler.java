@@ -597,7 +597,7 @@ public class XMLConfigHandler implements IConfigHandler
 			}
 		}
 		catch (Exception e) {
-			sbError.append("Error retrieving parameter: ").append(sConfigItem);
+			sbError.append("NO parameter: ").append(sConfigItem);
 			if (sId != null)
 				sbError.append(", id=").append(sId);
 			_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString());
@@ -605,7 +605,7 @@ public class XMLConfigHandler implements IConfigHandler
 		}
 
 		if (sValue == null) {
-			sbError.append("Error retrieving parameter: ").append(sConfigItem + " / " + oSection.toString());
+			sbError.append("NO parameter: ").append(sConfigItem);
 			if (sId != null)
 				sbError.append(", id=").append(sId);
 			_oSystemLogger.log(Level.FINEST, MODULE, sMethod, sbError.toString());

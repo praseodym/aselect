@@ -30,7 +30,6 @@ package org.aselect.system.communication.server;
 
 import org.aselect.system.exception.ASelectCommunicationException;
 
-// TODO: Auto-generated Javadoc
 /**
  * Defines a interface to a output message which can be used with A-Select. <br>
  * <br>
@@ -90,13 +89,17 @@ public interface IOutputMessage
 	 * @param sValue
 	 *            the s value
 	 * @param doUrlEncode
-	 *            the do url encode
+	 *            encode the URL?
 	 * @return true, if successful
 	 * @throws ASelectCommunicationException
 	 *             the a select communication exception
 	 */
 	public boolean setParam(String sName, String sValue, boolean doUrlEncode)
-		throws ASelectCommunicationException;
+	throws ASelectCommunicationException;
+	
+	// 20110112, Bauke: Make URL encoding configurable (by application)	
+	public boolean isDoUrlEncode();
+	public void setDoUrlEncode(boolean doUrlEncode);
 
 	/**
 	 * Sets a array parameter in the message. <br>
@@ -121,7 +124,7 @@ public interface IOutputMessage
 	 *            The name of the parameter
 	 * @param saValues
 	 *            The values of the parameter
-	 * @return true - if parameter succesfully set otherwise false.
+	 * @return true - if parameter successfully set otherwise false.
 	 * @throws ASelectCommunicationException
 	 *             If communication fails.
 	 */

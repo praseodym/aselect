@@ -109,6 +109,25 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	private SystemLogger _systemLogger;
 
 	private final String MODULE = "RawMessageCreator";
+	
+	// 20110112, Bauke: Make URL encoding configurable (by application)
+	private boolean doUrlEncode = true;
+
+	/**
+	 * Has Url Encoding been set?
+	 */
+	public boolean isDoUrlEncode() {
+		return doUrlEncode;
+	}
+
+	/**
+	 * Change the default setting
+	 * 
+	 * @param doUrlEncode
+	 */
+	public void setDoUrlEncode(boolean doUrlEncode) {
+		this.doUrlEncode = doUrlEncode;
+	}
 
 	/**
 	 * Creates a new instance. <br>
@@ -295,7 +314,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	public boolean setParam(String sName, String sValue)
 		throws ASelectCommunicationException
 	{
-		return setParam(sName, sValue, true);
+		return setParam(sName, sValue, isDoUrlEncode());  // 20110112: Formerly: true);
 	}
 
 	/**
@@ -315,9 +334,10 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	public boolean setParam(String sName, String sValue, boolean doUrlEncode)
 		throws ASelectCommunicationException
 	{
-		String sMethod = "setParam()";
+		String sMethod = "setParam";
 		StringBuffer sbBuffer = null;
 
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "param="+sName +" encode="+doUrlEncode);
 		boolean bRetValue = false;
 		if (sName != null && sValue != null) // name and value may not be empty
 		{

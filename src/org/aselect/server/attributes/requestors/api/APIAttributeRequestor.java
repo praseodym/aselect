@@ -170,6 +170,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 			if (sProtocol == null)
 				sProtocol = "";
 
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "communicator="+sProtocol);
 			if (sProtocol.equalsIgnoreCase("soap11")) {
 				retrieveSOAPMethodFromConfig(oMainConfiguration);
 				_communicator = new SOAP11Communicator(_sSOAPMethod, _systemLogger);

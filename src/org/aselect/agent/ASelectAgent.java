@@ -639,6 +639,7 @@ public class ASelectAgent
 			sComm = "raw";
 		}
 
+		_oASelectAgentSystemLogger.log(Level.FINE, MODULE, sMethod, "communicator="+sComm);
 		if (sComm.equalsIgnoreCase("soap11")) {
 			oCommunicator = new SOAP11Communicator("ASelect", ASelectAgentSystemLogger.getHandle());
 		}

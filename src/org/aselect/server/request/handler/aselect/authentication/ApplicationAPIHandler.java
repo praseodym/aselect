@@ -369,7 +369,6 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 * @throws ASelectException
 	 *             If proccessing fails.
 	 */
-	// 20090606, Bauke: functionality moved to BaseRequestHandler
 	private void handleAuthenticateRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
 			IOutputMessage oOutputMessage)
 		throws ASelectException

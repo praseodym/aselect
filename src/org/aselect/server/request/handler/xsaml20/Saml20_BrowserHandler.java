@@ -222,6 +222,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 		}
 
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "communicator="+sClientCommunicator);
 		if (sClientCommunicator.equalsIgnoreCase("soap11")) {
 			_oClientCommunicator = new SOAP11Communicator("ASelect", _systemLogger);
 		}

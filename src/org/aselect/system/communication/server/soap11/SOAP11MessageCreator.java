@@ -78,7 +78,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 
-// TODO: Auto-generated Javadoc
 /**
  * Message creator which uses SOAP 1.1 messages. <br>
  * <br>
@@ -151,6 +150,25 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 
 	/** SOAP 1.1 RPC method name. */
 	private String _sMethodName;
+	
+	// 20110112, Bauke: Make URL encoding configurable (by application)
+	private boolean doUrlEncode = true;
+
+	/**
+	 * Has Url Encoding been set?
+	 */
+	public boolean isDoUrlEncode() {
+		return doUrlEncode;
+	}
+
+	/**
+	 * Change the default setting
+	 * 
+	 * @param doUrlEncode
+	 */
+	public void setDoUrlEncode(boolean doUrlEncode) {
+		this.doUrlEncode = doUrlEncode;
+	}
 
 	/**
 	 * Creates a new instance. <br>

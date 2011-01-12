@@ -292,6 +292,7 @@ public class SAMAPIPollingMethod implements ISAMPollingMethod
 		if (sProtocol == null)
 			sProtocol = "";
 
+		_oSystemLogger.log(Level.FINE, MODULE, sMethod, "communicator="+sProtocol);
 		if (sProtocol.equalsIgnoreCase("soap11")) {
 			oClientCommunicator = new SOAP11Communicator("Status", _oSystemLogger);
 		}

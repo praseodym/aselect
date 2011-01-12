@@ -738,11 +738,11 @@ public class Utils
 	 * Copy msg value to hashmap.
 	 * 
 	 * @param sName
-	 *            the s name
+	 *            the parameter name
 	 * @param hmTo
-	 *            the hm to
+	 *            the HashMap to copy to
 	 * @param imFrom
-	 *            the im from
+	 *            the Input message to copy from
 	 * @return the string
 	 */
 	public static String copyMsgValueToHashmap(String sName, HashMap<String, String> hmTo, IInputMessage imFrom)

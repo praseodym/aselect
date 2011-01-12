@@ -348,6 +348,7 @@ public class SAML11RequestHandler extends AbstractRequestHandler
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 			}
 
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "communicator="+sClientCommunicator);
 			if (sClientCommunicator.equalsIgnoreCase("soap11")) {
 				_oClientCommunicator = new SOAP11Communicator("ASelect", _systemLogger);
 			}

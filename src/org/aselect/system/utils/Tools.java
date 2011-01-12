@@ -368,6 +368,8 @@ public class Tools
 		throws ASelectException
 	{
 		String sClientCommunicator = Utils.getSimpleParam(oCfgMgr, oSysLog, oConfig, "clientcommunicator", false);
+		oSysLog.log(Level.FINE, MODULE, "initClientCommunicator", "communicator="+sClientCommunicator);
+		
 		if (sClientCommunicator == null || sClientCommunicator.equalsIgnoreCase("raw")) {
 			return new RawCommunicator(oSysLog);
 		}

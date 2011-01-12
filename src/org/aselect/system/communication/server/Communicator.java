@@ -31,7 +31,6 @@ package org.aselect.system.communication.server;
 
 import org.aselect.system.exception.ASelectCommunicationException;
 
-// TODO: Auto-generated Javadoc
 /**
  * Defines a communicator which can be used with A-Select. <br>
  * <br>

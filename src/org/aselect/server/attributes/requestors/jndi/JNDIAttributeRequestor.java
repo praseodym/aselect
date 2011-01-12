@@ -178,8 +178,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				_sBaseDN = _configManager.getParam(oMain, "base_dn");
 			}
 			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"No valid 'base_dn' config item in 'main' section found", e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'base_dn' config item in 'main' section found", e);
 				throw new ASelectAttributesException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -190,7 +189,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No 'full_uid' config item in 'main' section found, using 'false'", e);
+						"No 'full_uid' config item in 'main' section found, using 'false'");
 			}
 
 			String sUseNumUid;
@@ -200,7 +199,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No 'numerical_uid' config item in 'main' section found, using 'false'", e);
+						"No 'numerical_uid' config item in 'main' section found, using 'false'");
 			}
 
 			try {
@@ -209,7 +208,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 			catch (ASelectConfigException e) {
 				_sAuthSPUID = null;
 				_systemLogger.log(Level.INFO, MODULE, sMethod,
-						"No valid 'authsp_uid' config item in 'main' section found, using the A-Select UID to retrieve the attributes",	e);
+						"No valid 'authsp_uid' config item in 'main' section found, using the A-Select UID to retrieve the attributes");
 			}
 
 			try {

@@ -136,7 +136,9 @@ public class SOAP12Communicator implements IClientCommunicator
 	 * @param systemLogger
 	 *            The <code>Logger</code> to log system log entries.
 	 */
-	public SOAP12Communicator(String sCallMethod, SystemLogger systemLogger) {
+	public SOAP12Communicator(String sCallMethod, SystemLogger systemLogger)
+	{
+		_systemLogger.log(Level.INFO, MODULE, "SOAP12Communicator", "CallMethod=" + sCallMethod);
 		_sCallMethod = sCallMethod;
 		_systemLogger = systemLogger;
 	}
@@ -149,8 +151,8 @@ public class SOAP12Communicator implements IClientCommunicator
 	 * <ul>
 	 * <li>Builds a SOAP 1.2 request message</li>
 	 * <li>Send the message to the server</li>
-	 * <li>Recieves SOAP response message from the server</li>
-	 * <li>Parse the repsonse and return the parameters it contains</li>
+	 * <li>Receives SOAP response message from the server</li>
+	 * <li>Parse the response and return the parameters it contains</li>
 	 * </ul>
 	 * 
 	 * @param htParameters
@@ -159,11 +161,11 @@ public class SOAP12Communicator implements IClientCommunicator
 	 *            the s target
 	 * @return the hash map
 	 * @throws ASelectCommunicationException
-	 *             If suplied URL is invalid.
+	 *             If supplied URL is invalid.
 	 * @see org.aselect.system.communication.client.IClientCommunicator#sendMessage(java.util.HashMap,java.lang.String)
 	 */
 	public HashMap sendMessage(HashMap htParameters, String sTarget)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		HashMap htResult = new HashMap();
 		String sMessage = null;

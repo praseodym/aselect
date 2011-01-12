@@ -84,7 +84,6 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.exception.ASelectUDBException;
 import org.aselect.system.sam.agent.SAMResource;
 
-// TODO: Auto-generated Javadoc
 /**
  * JNDI database connector. <br>
  * <br>
@@ -290,6 +289,7 @@ public class JNDIConnector implements IUDBConnector
 			sbQuery = new StringBuffer("(").append(_sUserDN).append("=").append(sUserId).append(")");
 			SearchControls oScope = new SearchControls();
 			oScope.setSearchScope(SearchControls.SUBTREE_SCOPE);
+			// No attr specification used: oScope.setReturningAttributes(attrs);*/
 
 			oDirContext = getConnection();
 			try {
@@ -321,11 +321,20 @@ public class JNDIConnector implements IUDBConnector
 			SearchResult oSearchResult = (SearchResult) oSearchResults.next();
 			oAttributes = oSearchResult.getAttributes();
 
-			for (NamingEnumeration oAttrEnum = oAttributes.getAll(); oAttrEnum.hasMore();) {
+			for (NamingEnumeration oAttrEnum = oAttributes.getAll(); oAttrEnum.hasMore(); ) {
+
+				// 20110107, Bauke: only return String attributes, and only aselect* attributes				
 				oAttribute = (Attribute) oAttrEnum.next();
 				sAttribute = oAttribute.getID();
+				if (!sAttribute.startsWith("aselect") && !sAttribute.startsWith("ASELECT"))
+					continue;
 				try {
-					sAttributeValue = (String) oAttribute.get();
+					Object objValue = oAttribute.get();
+					Class<? extends Object> c = objValue.getClass();
+					_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "AttrID="+sAttribute+" ClassName="+c.getCanonicalName());
+					if (!"java.lang.String".equals(c.getCanonicalName()))
+						continue;  // skip
+					sAttributeValue = (String)objValue;
 				}
 				catch (Exception e) {
 					sAttributeValue = "";
@@ -456,15 +465,9 @@ public class JNDIConnector implements IUDBConnector
 					sUserId = sUserId.substring(0, iIndex);
 			}
 
-			sbQuery = new StringBuffer("(");
-			sbQuery.append(_sUserDN);
-			sbQuery.append("=");
-			sbQuery.append(sUserId);
-			sbQuery.append(")");
-
+			sbQuery = new StringBuffer("(").append(_sUserDN).append("=").append(sUserId).append(")");
 			SearchControls oScope = new SearchControls();
 			oScope.setSearchScope(SearchControls.SUBTREE_SCOPE);
-
 			oDirContext = getConnection();
 
 			_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "JndiATTR BASE=" + _sBaseDN + ", QRY=" + sbQuery);
@@ -476,9 +479,7 @@ public class JNDIConnector implements IUDBConnector
 				sbBuffer.append(sUserId);
 				sbBuffer.append(e.getMessage());
 				_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, sbBuffer.toString(), e);
-
 				logAuthentication(sUserId, Errors.ERROR_ASELECT_UDB_UNKNOWN_USER, "User unknown");
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_UNKNOWN_USER);
 			}
 

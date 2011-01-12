@@ -73,6 +73,8 @@ import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.server.application.Application;
+import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.handler.BasicRequestHandler;
 import org.aselect.system.communication.server.Communicator;
@@ -118,7 +120,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 	/** The server ID */
 	protected String _sMyServerId;
 
-	/** The origanisation */
+	/** The organisation */
 	protected String _sMyOrg;
 
 	/**
@@ -136,7 +138,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 	 * @param sMyServerId
 	 *            The A-Select Server ID.
 	 * @param sMyOrg
-	 *            The A-Select Server organisation.
+	 *            The A-Select Server organization.
 	 * @throws ASelectCommunicationException
 	 *             If communication fails.
 	 */
@@ -155,12 +157,10 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "Protocol=" + reqParser.getRequestProtocol());
 		switch (reqParser.getRequestProtocol()) {
 		case RequestParser.PROTOCOL_SOAP11:
-			_messageCreator = new SOAP11MessageCreator(_servletRequest.getRequestURL().toString(), "ASelect",
-					_systemLogger);
+			_messageCreator = new SOAP11MessageCreator(_servletRequest.getRequestURL().toString(), "ASelect", _systemLogger);
 			break;
 		case RequestParser.PROTOCOL_SOAP12:
-			_messageCreator = new SOAP12MessageCreator(_servletRequest.getRequestURL().toString(), "ASelect",
-					_systemLogger);
+			_messageCreator = new SOAP12MessageCreator(_servletRequest.getRequestURL().toString(), "ASelect", _systemLogger);
 			break;
 		case RequestParser.PROTOCOL_CGI:
 			_messageCreator = new RawMessageCreator(_systemLogger);
@@ -185,13 +185,14 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 	throws ASelectException
 	{
 		String sMethod = "processRequest()";
+		ApplicationManager _applicationManager = ApplicationManager.getHandle();
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "processRequest");
 
 		// create protocol wrappers
 		IProtocolRequest protocolRequest = new ServletRequestWrapper(_servletRequest);
 		IProtocolResponse protocolResponse = new ServletResponseWrapper(_servletResponse);
 
-		// create the communicator with the messagecreator
+		// create the communicator with the message creator
 		Communicator communicator = new Communicator(_messageCreator);
 		try {
 			if (communicator.init(protocolRequest, protocolResponse)) {
@@ -200,20 +201,28 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 
 				try {
 					String sServerId = null;
+					String sAppId = null;
 
 					try {
 						sServerId = inputMessage.getParam("a-select-server");
 					}
 					catch (ASelectException ase) {
-						_systemLogger.log(Level.WARNING, _sModule, sMethod,
-								"Missing required parameter \"a-select-server\"");
+						_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing required parameter \"a-select-server\"");
 						throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 					}
 					_systemLogger.log(Level.FINER, _sModule, sMethod, "a-select-server=" + sServerId);
 					if (!sServerId.equals(_sMyServerId)) {
-						_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid \"a-select-server\" parameter: "
-								+ sServerId);
+						_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid \"a-select-server\" parameter: "+sServerId);
 						throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_ID_MISMATCH);
+					}
+					try {
+						sAppId = inputMessage.getParam("app_id");
+						Application app = _applicationManager.getApplication(sAppId);
+						boolean doUrlEncode = app.isDoUrlEncode();
+						outputMessage.setDoUrlEncode(doUrlEncode);
+					}
+					catch (ASelectException e) {
+						_systemLogger.log(Level.INFO, _sModule, sMethod, "Parameter \"app_id\" missing / not used");
 					}
 
 					_systemLogger.log(Level.FINER, _sModule, sMethod, "AbstApiREQ processAPIRequest");
@@ -224,8 +233,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 						outputMessage.setParam("result_code", ace.getMessage());
 					}
 					catch (ASelectCommunicationException ace2) {
-						_systemLogger.log(Level.WARNING, _sModule, sMethod,
-								"Error setting 'result_code' in outputmessage", ace2);
+						_systemLogger.log(Level.WARNING, _sModule, sMethod, "Error setting 'result_code' in outputmessage", ace2);
 						throw ace2;
 					}
 				}
@@ -242,7 +250,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 
 				communicator.send();
 			}
-			else { // could not init, error wass sent in communicator.
+			else { // could not init, error was sent in communicator.
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Can't initialize Message Creator object: "
 						+ _messageCreator.getClass().getName());
 			}
@@ -258,7 +266,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 	}
 
 	/**
-	 * Prosesses the API request. <br>
+	 * Processes the API request. <br>
 	 * <br>
 	 * 
 	 * @param oProtocolRequest
