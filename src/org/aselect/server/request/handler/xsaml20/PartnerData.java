@@ -11,12 +11,7 @@
  */
 package org.aselect.server.request.handler.xsaml20;
 
-import java.util.List;
 import java.util.Vector;
-
-import org.aselect.system.utils.Utils;
-
-import com.sun.net.ssl.internal.www.protocol.https.Handler;
 
 /**
  * Store all data for an IdP or SP partner
