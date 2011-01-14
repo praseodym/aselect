@@ -239,14 +239,21 @@ public class Saml20_Metadata extends ProtoRequestHandler
 		
 		// 20100429, Bauke: the caller can replace the default EntityID by the specified partner's <issuer>
 		String remoteID = httpRequest.getParameter("id");
-		if (remoteID != null) {
-			// find "id" in the partner's section
-			PartnerData partnerData = MetaDataManagerSp.getHandle().getPartnerDataEntry(remoteID);
-			if (partnerData != null)
-				sLocalIssuer = partnerData.getLocalIssuer();
-		}
-		String mdxml = createMetaDataXML(sLocalIssuer);
+		// RH, 20110111, so
+		// pushed down to SP Metadata_Handler
+//		if (remoteID != null) {
+//			// find "id" in the partner's section
+//			PartnerData partnerData = MetaDataManagerSp.getHandle().getPartnerDataEntry(remoteID);
+//			if (partnerData != null)
+//				sLocalIssuer = partnerData.getLocalIssuer();
+//		}
+//		String mdxml = createMetaDataXML(sLocalIssuer);
+		// RH, 20110111, eo
+		
+		// remoteID can be null
+		String mdxml = createMetaDataXML(remoteID);	// RH, 20110111, n
 
+		
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "metadatXML file for entityID " + getEntityIdIdp() + " " + mdxml);
 		httpResponse.setContentType("application/samlmetadata+xml");
 
@@ -265,12 +272,14 @@ public class Saml20_Metadata extends ProtoRequestHandler
 
 	/**
 	 * Creates the meta data xml.
-	 * 
+	 * @param the remoteID
+	 * 		The remote identity for whom to create the metadata. If null a default metadata xml will be created
 	 * @return the string
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	protected String createMetaDataXML(String localIssuer)
+//	protected String createMetaDataXML(String localIssuer)
+	protected String createMetaDataXML(String remoteID)
 		throws ASelectException
 	{
 		String sMethod = "createMetaDataXML";

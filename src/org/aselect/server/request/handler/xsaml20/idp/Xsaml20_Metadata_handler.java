@@ -152,13 +152,20 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 		}
 	}
 
-	// entityID is redirect_url from aselect.xml
-	// Create Metadata entries for IdP
-	/* (non-Javadoc)
+	/**
+	* Create Metadata entries for IdP
+	 * @param the remoteID
+	 * 		The remote identity for whom to create the metadata.
+	 * 		with entityID is redirect_url from aselect.xml
+	 * @return the xml metadata string
+	 * @throws ASelectException
+	 *             the a select exception
+	* (non-Javadoc)
 	 * @see org.aselect.server.request.handler.xsaml20.Saml20_Metadata#createMetaDataXML()
 	 */
 	@Override
-	protected String createMetaDataXML(String sLocalIssuer)
+//	protected String createMetaDataXML(String sLocalIssuer)
+	protected String createMetaDataXML(String sRemoteID)
 		throws ASelectException
 	{
 		String sMethod = "createMetaDataXML";
@@ -171,8 +178,10 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 				.getBuilder(EntityDescriptor.DEFAULT_ELEMENT_NAME);
 
 		EntityDescriptor entityDescriptor = entityDescriptorBuilder.buildObject();
-		// EntityID can be overruled by the caller
-		entityDescriptor.setEntityID((sLocalIssuer != null)? sLocalIssuer: getEntityIdIdp());
+		// optionally we could get another entityID from application section in aselect.xml based on remoteID
+		// but we don't use sRemoteID just yet
+//		entityDescriptor.setEntityID((sRemoteID != null)? sRemoteID: getEntityIdIdp());	// RH, 20110111, o
+		entityDescriptor.setEntityID(getEntityIdIdp());	// RH, 20110111, n
 		entityDescriptor.setID(SamlTools.generateIdentifier(_systemLogger, MODULE));
 
 		if (getValidUntil() != null)
