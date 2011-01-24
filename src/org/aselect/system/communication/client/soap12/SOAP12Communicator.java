@@ -138,9 +138,11 @@ public class SOAP12Communicator implements IClientCommunicator
 	 */
 	public SOAP12Communicator(String sCallMethod, SystemLogger systemLogger)
 	{
-		_systemLogger.log(Level.INFO, MODULE, "SOAP12Communicator", "CallMethod=" + sCallMethod);
+//		_systemLogger.log(Level.INFO, MODULE, "SOAP12Communicator", "CallMethod=" + sCallMethod);	// RH, 20110124, o
 		_sCallMethod = sCallMethod;
 		_systemLogger = systemLogger;
+		_systemLogger.log(Level.INFO, MODULE, "SOAP12Communicator", "CallMethod=" + sCallMethod);	// RH, 20110124, n
+
 	}
 
 	/**
