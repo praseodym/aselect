@@ -50,6 +50,7 @@ import java.util.logging.Level;
 
 import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
+import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 
@@ -92,7 +93,8 @@ public class SAMResource
 	/**
 	 * A <code>boolean</code> that keeps track iof the resource availability
 	 */
-	private boolean _bLive;
+//	private boolean _bLive;	//	RH, 20110202, o
+	private boolean _bLive = false;	//	RH, 20110202, n
 
 	/**
 	 * The thread that polls every interval
@@ -113,6 +115,11 @@ public class SAMResource
 	 * The polling method used for polling this resource
 	 */
 	private ISAMPollingMethod _oSAMPollingMethod;
+
+	/**
+	 * The Cost (priority factor)  for  this resource (lower cost is higher priority)
+	 */
+	private int iCost;
 
 	/**
 	 * Default constructor.
@@ -161,7 +168,7 @@ public class SAMResource
 		Object oPollingMethodSection = null;
 		Class cPollingClass = null;
 		String sConfiguredInterval = null;
-		_bLive = true;
+//		_bLive = true;	// RH, 20110202, o
 
 		try {
 			try {
@@ -173,6 +180,18 @@ public class SAMResource
 				throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
+			try {
+				setiCost( Integer.parseInt(oConfigManager.getParam(oConfigSection, "cost")));
+				_oSystemLogger.log(Level.FINEST, MODULE, sMethod,
+				"'cost' set to: " + getiCost() + " for resource: " + _sId);
+			}
+			catch (ASelectConfigException e) {
+				_oSystemLogger.log(Level.INFO, MODULE, sMethod,
+						"No 'cost'  in 'resource' section, setting to 0 (highest priority).");
+				setiCost(0);
+			}
+
+			
 			try {
 				sConfiguredPollingMethod = oConfigManager.getParam(oConfigSection, "polling");
 			}
@@ -220,6 +239,8 @@ public class SAMResource
 					_oSAMPollingMethod = (ISAMPollingMethod) cPollingClass.newInstance();
 					_oSAMPollingMethod.init(oConfigSection, oPollingMethodSection, oConfigManager, _oSystemLogger);
 
+					_bLive = _oSAMPollingMethod.poll();	//RH, 20110202, n	//	 initialize alive with first poll
+
 					_lInterval = (Long.parseLong(sConfiguredInterval) * 1000);
 
 					_bRunThread = true;
@@ -228,7 +249,9 @@ public class SAMResource
 					_oPollingThread = new PollingThread();
 					_oPollingThread.start();
 				}
-			}
+			} else {	// RH, 20110202, sn
+				_bLive = true;	// if we have no way of polling so assume alive
+			}	// RH, 20110202, en
 		}
 		catch (ASelectSAMException e) {
 			throw e;
@@ -336,6 +359,7 @@ public class SAMResource
 
 			while (_bRunThread) {
 				try {
+					
 					_bLive = _oSAMPollingMethod.poll();
 
 					if (!_bLive) {
@@ -352,5 +376,21 @@ public class SAMResource
 				}
 			}
 		}
+	}
+
+	/**
+	 * @return the iCost
+	 */
+	public synchronized int getiCost()
+	{
+		return iCost;
+	}
+
+	/**
+	 * @param iCost the iCost to set
+	 */
+	public synchronized void setiCost(int iCost)
+	{
+		this.iCost = iCost;
 	}
 }

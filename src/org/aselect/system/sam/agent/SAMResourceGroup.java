@@ -231,6 +231,7 @@ public class SAMResourceGroup extends Thread
 			updateStatus();
 
 			_bRunThread = true;
+			
 		}
 		catch (ASelectSAMException e) {
 			throw e;
@@ -395,9 +396,19 @@ public class SAMResourceGroup extends Thread
 			// while (enumKeys.hasMoreElements()) {
 			// String sKey = (String) enumKeys.nextElement();
 			SAMResource oSAMResource = (SAMResource) _htResources.get(sKey);
-
+			
 			if (oSAMResource.live()) {
-				vLive.add(oSAMResource);
+				// RH, 20110202, sn
+				// Make a priority list based on cost
+				int index = 0;
+				for (Object r : vLive ) {
+					if ( oSAMResource.getiCost() >  ((SAMResource)r).getiCost() ) {
+						index++;
+					} else break;
+				}
+				vLive.add(index, oSAMResource);
+				// RH, 20110202, en
+//				vLive.add(oSAMResource);			// RH, 20110202, o
 			}
 		}
 		_vActive = vLive;

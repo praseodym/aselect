@@ -80,6 +80,7 @@ import org.aselect.system.logging.SystemLogger;
  */
 public class SAMAgent
 {
+
 	/**
 	 * The name of the class, used for logging.
 	 */
@@ -91,6 +92,7 @@ public class SAMAgent
 	private HashMap _htResourceGroups = null;
 
 	private SystemLogger _oSystemLogger;
+	
 
 	/**
 	 * Default constructor.
@@ -212,6 +214,9 @@ public class SAMAgent
 	{
 		String sMethod = "getActiveResource()";
 		SAMResource oSAMResource = null;
+		
+		_oSystemLogger.log(Level.INFO, MODULE, sMethod, "Getting active resource for: " + sID);		// RH, 20110202, n
+
 		SAMResourceGroup oSAMResourceGroup = (SAMResourceGroup) _htResourceGroups.get(sID);
 
 		if (oSAMResourceGroup != null) {
