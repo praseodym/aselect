@@ -268,7 +268,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			
 			
 			// We should be able to set AssertionConsumerServiceIndex. This is according to saml specs mutually exclusive with
-			// ProtocolBinding end AssertionConsumerServiceURL
+			// ProtocolBinding and AssertionConsumerServiceURL
 			
 			if (partnerData !=null)
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "acsi="+partnerData.getAssertionConsumerServiceindex());

@@ -153,66 +153,78 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 
 				// Set specific metadata for this partner
 				Object metadataSection = Utils.getSimpleSection(_configManager, _systemLogger, idpSection, "metadata", false);
-				Object metaHandler = _configManager.getSection(metadataSection, "handler");
-				// get handlers to publish
-				while (metaHandler != null) {
-					String metahandlertype = Utils.getSimpleParam(_configManager, _systemLogger, metaHandler, "type", false);
-					// todo check for valid type
-					String metahandlerbinding = Utils.getSimpleParam(_configManager, _systemLogger, metaHandler, "binding", false);
-					// todo check for valid binding
-					String metahandlerisdefault = Utils.getSimpleParam(_configManager, _systemLogger, metaHandler, "isdefault", false);
-					Boolean bMetahandlerisdefault = null;
-					if (metahandlerisdefault != null) {
-						metahandlerisdefault = metahandlerisdefault.toLowerCase();
-						bMetahandlerisdefault = new Boolean(metahandlerisdefault);
+				if (metadataSection != null) {
+					// get handlers to publish
+					Object metaHandler = Utils.getSimpleSection(_configManager, _systemLogger, metadataSection, "handler", false);
+					if (metaHandler == null) {
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, "No handlers found in metadata section for: "+ sId);
 					}
-					String metahandlerindex = Utils.getSimpleParam(_configManager, _systemLogger, metaHandler, "index", false);
-					Integer iMetahandlerindex = null;
-					if (metahandlerindex != null) {
-						iMetahandlerindex = new Integer(metahandlerindex);
+					while (metaHandler != null) {
+						String metahandlertype = Utils.getSimpleParam(_configManager, _systemLogger, metaHandler, "type", false);
+						// todo check for valid type
+						String metahandlerbinding = Utils.getSimpleParam(_configManager, _systemLogger, metaHandler, "binding", false);
+						// todo check for valid binding
+						String metahandlerisdefault = Utils.getSimpleParam(_configManager, _systemLogger, metaHandler, "isdefault", false);
+						Boolean bMetahandlerisdefault = null;
+						if (metahandlerisdefault != null) {
+							metahandlerisdefault = metahandlerisdefault.toLowerCase();
+							bMetahandlerisdefault = new Boolean(metahandlerisdefault);
+						}
+						String metahandlerindex = Utils.getSimpleParam(_configManager, _systemLogger, metaHandler, "index", false);
+						Integer iMetahandlerindex = null;
+						if (metahandlerindex != null) {
+							iMetahandlerindex = new Integer(metahandlerindex);
+						}
+						String metahandlerresponselocation = Utils.getSimpleParam(_configManager, _systemLogger, metaHandler, "responselocation", false);
+	
+						idpData.getMetadata4partner().getHandlers().add(idpData.new HandlerInfo(metahandlertype,metahandlerbinding,  bMetahandlerisdefault,  iMetahandlerindex, metahandlerresponselocation) );
+						metaHandler = _configManager.getNextSection(metaHandler);
 					}
-					String metahandlerresponselocation = Utils.getSimpleParam(_configManager, _systemLogger, metaHandler, "responselocation", false);
+					
+					String metaaddkeyname = Utils.getSimpleParam(_configManager, _systemLogger, metadataSection, "addkeyname", false);
+					if (metaaddkeyname != null)
+						idpData.getMetadata4partner().setAddkeyname(metaaddkeyname);
+	
+					String metaaddcertificate = Utils.getSimpleParam(_configManager, _systemLogger, metadataSection, "addcertificate", false);
+					if (metaaddcertificate != null)
+						idpData.getMetadata4partner().setAddcertificate(metaaddcertificate);
+					String metaspecialSettings = Utils.getSimpleParam(_configManager, _systemLogger, metadataSection, "special_settings", false);
+					if (metaspecialSettings != null)
+						idpData.getMetadata4partner().setSpecialsettings(specialSettings);
+	
+	
+					Object orgSection = Utils.getSimpleSection(_configManager, _systemLogger, metadataSection, "organization", false);
+					if (orgSection != null) {
+						String metaorgname = Utils.getSimpleParam(_configManager, _systemLogger, orgSection, "organizationname", false);
+						String metaorgnamelang = Utils.getParamFromSection(_configManager, _systemLogger, orgSection, "organizationname", "lang", false);
+						String metaorgdisplname = Utils.getSimpleParam(_configManager, _systemLogger, orgSection, "organizationdisplayname", false);
+						String metaorgdisplnamelang = Utils.getParamFromSection(_configManager, _systemLogger, orgSection, "organizationdisplayname", "lang", false);
+						String metaorgurl = Utils.getSimpleParam(_configManager, _systemLogger, orgSection, "organizationurl", false);
+						String metaorgurllang = Utils.getParamFromSection(_configManager, _systemLogger, orgSection, "organizationurl", "lang", false);
+						
+						idpData.getMetadata4partner().setOrganizationInfo(metaorgname, metaorgnamelang, metaorgdisplname, metaorgdisplnamelang, metaorgurl, metaorgurllang);
+					} else {
+						_systemLogger.log(Level.CONFIG, MODULE, sMethod, "No organization found in metadata section for: "+ sId);
+					}
 
-					idpData.getMetadata4partner().getHandlers().add(idpData.new HandlerInfo(metahandlertype,metahandlerbinding,  bMetahandlerisdefault,  iMetahandlerindex, metahandlerresponselocation) );
-					metaHandler = _configManager.getNextSection(metaHandler);
+					Object contactSection = Utils.getSimpleSection(_configManager, _systemLogger, metadataSection, "contactperson", false);
+					if (contactSection != null) {
+						String metacontacttype = Utils.getSimpleParam(_configManager, _systemLogger, contactSection, "contacttype", false);
+						if (metacontacttype == null) {
+							_systemLogger.log(Level.WARNING, MODULE, sMethod, "No contacttype found in metadata section for: "+ sId + ", contacttype is mandatory if contactperson present !");
+						}
+						String metacontactname = Utils.getSimpleParam(_configManager, _systemLogger, contactSection, "givenname", false);
+						String metacontactsurname = Utils.getSimpleParam(_configManager, _systemLogger, contactSection, "surname", false);
+						String metacontactemail = Utils.getSimpleParam(_configManager, _systemLogger, contactSection, "emailaddress", false);
+						String metacontactephone = Utils.getSimpleParam(_configManager, _systemLogger, contactSection, "telephonenumber", false);
+		
+						idpData.getMetadata4partner().setContactInfo(metacontacttype, metacontactname, metacontactsurname, metacontactemail, metacontactephone);
+					} else {
+						_systemLogger.log(Level.CONFIG, MODULE, sMethod, "No contactperson found in metadata section for: "+ sId);
+					}
+				} else {
+					_systemLogger.log(Level.CONFIG, MODULE, sMethod, "No metadata section found for: "+ sId);
 				}
-				
-				// maybe push this up one level if possible or even better, move to PartnerData
-				
-				// todo  and addcertificate for metadata
-				String metaaddkeyname = Utils.getSimpleParam(_configManager, _systemLogger, metadataSection, "addkeyname", false);
-				if (metaaddkeyname != null)
-					idpData.getMetadata4partner().setAddkeyname(metaaddkeyname);
-
-				String metaaddcertificate = Utils.getSimpleParam(_configManager, _systemLogger, metadataSection, "addcertificate", false);
-				if (metaaddcertificate != null)
-					idpData.getMetadata4partner().setAddcertificate(metaaddcertificate);
-				String metaspecialSettings = Utils.getSimpleParam(_configManager, _systemLogger, metadataSection, "special_settings", false);
-				if (metaspecialSettings != null)
-					idpData.getMetadata4partner().setSpecialsettings(specialSettings);
-
-
-				Object orgSection = Utils.getSimpleSection(_configManager, _systemLogger, metadataSection, "organization", false);
-				
-				String metaorgname = Utils.getSimpleParam(_configManager, _systemLogger, orgSection, "organizationname", false);
-				String metaorgnamelang = Utils.getParamFromSection(_configManager, _systemLogger, orgSection, "organizationname", "lang", false);
-				String metaorgdisplname = Utils.getSimpleParam(_configManager, _systemLogger, orgSection, "organizationdisplayname", false);
-				String metaorgdisplnamelang = Utils.getParamFromSection(_configManager, _systemLogger, orgSection, "organizationdisplayname", "lang", false);
-				String metaorgurl = Utils.getSimpleParam(_configManager, _systemLogger, orgSection, "organizationurl", false);
-				String metaorgurllang = Utils.getParamFromSection(_configManager, _systemLogger, orgSection, "organizationurl", "lang", false);
-				
-				idpData.getMetadata4partner().setOrganizationInfo(metaorgname, metaorgnamelang, metaorgdisplname, metaorgdisplnamelang, metaorgurl, metaorgurllang);
-				
-				Object contactSection = Utils.getSimpleSection(_configManager, _systemLogger, metadataSection, "contactperson", false);
-				String metacontacttype = Utils.getSimpleParam(_configManager, _systemLogger, contactSection, "contacttype", false);
-				
-				String metacontactname = Utils.getSimpleParam(_configManager, _systemLogger, contactSection, "givenname", false);
-				String metacontactsurname = Utils.getSimpleParam(_configManager, _systemLogger, contactSection, "surname", false);
-				String metacontactemail = Utils.getSimpleParam(_configManager, _systemLogger, contactSection, "emailaddress", false);
-				String metacontactephone = Utils.getSimpleParam(_configManager, _systemLogger, contactSection, "telephonenumber", false);
-
-				idpData.getMetadata4partner().setContactInfo(metacontacttype, metacontactname, metacontactsurname, metacontactemail, metacontactephone);
-				
 				// End Set specific metadata for this partner
 
 				
