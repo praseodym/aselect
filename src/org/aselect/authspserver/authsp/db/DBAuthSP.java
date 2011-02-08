@@ -37,9 +37,14 @@ import org.aselect.authspserver.config.AuthSPConfigManager;
 import org.aselect.authspserver.crypto.CryptoEngine;
 import org.aselect.authspserver.log.AuthSPAuthenticationLogger;
 import org.aselect.authspserver.log.AuthSPSystemLogger;
+import org.aselect.authspserver.sam.AuthSPSAMAgent;
 import org.aselect.authspserver.session.AuthSPSessionManager;
+
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.exception.ASelectSAMException;
+import org.aselect.system.exception.ASelectUDBException;
+import org.aselect.system.sam.agent.SAMResource;
 import org.aselect.system.servlet.ASelectHttpServlet;
 import org.aselect.system.utils.Utils;
 
@@ -117,21 +122,22 @@ public class DBAuthSP extends ASelectHttpServlet
 
 	private int _iAllowedRetries;
 
-	// database properties
-	private String _sDriver;
-
-	private String _sUrl;
-
-	private String _sUserName;
-
-	private String _sUserPassword;
-
-	// password/query properties
-	private String _sQuery;
-
-	private String _sColumn;
-
-	private boolean _bEncrypedPassword;
+//	// database properties
+//	private String _sDriver;
+//
+//	private String _sUrl;
+//
+//	private String _sUserName;
+//
+//	private String _sUserPassword;
+//
+//	// password/query properties
+//	private String _sQuery;
+//
+//	private String _sColumn;
+//
+//	private boolean _bEncrypedPassword;
+	
 
 	/**
 	 * Initialization of the DB AuthSP. <br>
@@ -178,6 +184,7 @@ public class DBAuthSP extends ASelectHttpServlet
 			_authenticationLogger = AuthSPAuthenticationLogger.getHandle();
 			_configManager = AuthSPConfigManager.getHandle();
 			_sessionManager = AuthSPSessionManager.getHandle();
+			
 
 			// log start
 			StringBuffer sbInfo = new StringBuffer("Starting : ");
@@ -295,92 +302,94 @@ public class DBAuthSP extends ASelectHttpServlet
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbWarning.toString());
 			}
 
-			// get driver
-			try {
-				_sDriver = _configManager.getParam(_oAuthSpConfig, "driver");
-			}
-			catch (ASelectConfigException eAC) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'driver' parameter found in configuration", eAC);
-				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, eAC);
-			}
-			try {
-				// initialize driver
-				Class.forName(_sDriver);
-			}
-			catch (Exception e) {
-				StringBuffer sbFailed = new StringBuffer("Can't initialize driver: ");
-				sbFailed.append(_sDriver);
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
-				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
-			}
-
-			// get url
-			try {
-				_sUrl = _configManager.getParam(_oAuthSpConfig, "url");
-			}
-			catch (Exception e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'url' found", e);
-				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
-			}
-
-			// get user
-			try {
-				_sUserName = _configManager.getParam(_oAuthSpConfig, "user");
-			}
-			catch (Exception e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'username' found", e);
-				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
-			}
-
-			// get password
-			try {
-				_sUserPassword = _configManager.getParam(_oAuthSpConfig, "password");
-			}
-			catch (Exception e) {
-				_sUserPassword = "";
-				_systemLogger
-						.log(
-								Level.WARNING,
-								MODULE,
-								sMethod,
-								"No or empty config item 'password' found, using empty password. Don't use this in a live production environment.",
-								e);
-				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
-			}
-
-			// get password query
-			try {
-				_sQuery = _configManager.getParam(_oAuthSpConfig, "query");
-			}
-			catch (ASelectConfigException eAC) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'query' parameter found in configuration", eAC);
-				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, eAC);
-			}
-
-			// get password column name
-			try {
-				_sColumn = _configManager.getParam(_oAuthSpConfig, "column");
-			}
-			catch (ASelectConfigException eAC) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'column' parameter found in configuration", eAC);
-				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, eAC);
-			}
-
-			try {
-				String sEncryptedPassword = _configManager.getParam(_oAuthSpConfig, "encrypted");
-				_bEncrypedPassword = Boolean.parseBoolean(sEncryptedPassword);
-			}
-			catch (ASelectConfigException eAC) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"No 'encrypted' parameter found in configuration, taking default: " + DEFAULT_ENCRYPTION, eAC);
-				_bEncrypedPassword = DEFAULT_ENCRYPTION;
-			}
-			catch (Exception e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"Could not parse pasword encryption setting, taking default: " + DEFAULT_ENCRYPTION, e);
-				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
-			}
-
+			///////////////////////////////////////////////////////////
+//			// get driver
+//			try {
+//				_sDriver = _configManager.getParam(_oAuthSpConfig, "driver");
+//			}
+//			catch (ASelectConfigException eAC) {
+//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'driver' parameter found in configuration", eAC);
+//				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, eAC);
+//			}
+//			try {
+//				// initialize driver
+//				Class.forName(_sDriver);
+//			}
+//			catch (Exception e) {
+//				StringBuffer sbFailed = new StringBuffer("Can't initialize driver: ");
+//				sbFailed.append(_sDriver);
+//				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
+//				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
+//			}
+//
+//			// get url
+//			try {
+//				_sUrl = _configManager.getParam(_oAuthSpConfig, "url");
+//			}
+//			catch (Exception e) {
+//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'url' found", e);
+//				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
+//			}
+//
+//			// get user
+//			try {
+//				_sUserName = _configManager.getParam(_oAuthSpConfig, "user");
+//			}
+//			catch (Exception e) {
+//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'username' found", e);
+//				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
+//			}
+//
+//			// get password
+//			try {
+//				_sUserPassword = _configManager.getParam(_oAuthSpConfig, "password");
+//			}
+//			catch (Exception e) {
+//				_sUserPassword = "";
+//				_systemLogger
+//						.log(
+//								Level.WARNING,
+//								MODULE,
+//								sMethod,
+//								"No or empty config item 'password' found, using empty password. Don't use this in a live production environment.",
+//								e);
+//				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
+//			}
+//
+//			// get password query
+//			try {
+//				_sQuery = _configManager.getParam(_oAuthSpConfig, "query");
+//			}
+//			catch (ASelectConfigException eAC) {
+//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'query' parameter found in configuration", eAC);
+//				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, eAC);
+//			}
+//
+//			// get password column name
+//			try {
+//				_sColumn = _configManager.getParam(_oAuthSpConfig, "column");
+//			}
+//			catch (ASelectConfigException eAC) {
+//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'column' parameter found in configuration", eAC);
+//				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, eAC);
+//			}
+//
+//			try {
+//				String sEncryptedPassword = _configManager.getParam(_oAuthSpConfig, "encrypted");
+//				_bEncrypedPassword = Boolean.parseBoolean(sEncryptedPassword);
+//			}
+//			catch (ASelectConfigException eAC) {
+//				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+//						"No 'encrypted' parameter found in configuration, taking default: " + DEFAULT_ENCRYPTION, eAC);
+//				_bEncrypedPassword = DEFAULT_ENCRYPTION;
+//			}
+//			catch (Exception e) {
+//				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+//						"Could not parse pasword encryption setting, taking default: " + DEFAULT_ENCRYPTION, e);
+//				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
+//			}
+			///////////////////////////////////////////////////////////////////////////////////////////////
+			
 			sbInfo = new StringBuffer("Successfully started ");
 			sbInfo.append(VERSION).append(".");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
@@ -611,16 +620,21 @@ public class DBAuthSP extends ASelectHttpServlet
 					throw new ASelectException(Errors.ERROR_DB_INVALID_REQUEST);
 				}
 
+				DBServerParms dbSParms = new DBServerParms();
+
 				// authenticate user
-				oConnection = getConnection();
+//				oConnection = getConnection();
+				oConnection = getConnection(dbSParms);
 
 				try {
-					oStatement = oConnection.prepareStatement(_sQuery);
+//					oStatement = oConnection.prepareStatement(_sQuery);
+					oStatement = oConnection.prepareStatement(dbSParms.getQuery());
 					oStatement.setString(1, sUid);
 					oResultSet = oStatement.executeQuery();
 				}
 				catch (Exception e) {
-					_authenticationLogger.log("SEVERE", MODULE, sMethod, "Could not execute query: " + _sQuery, e
+//					_authenticationLogger.log("SEVERE", MODULE, sMethod, "Could not execute query: " + _sQuery, e
+					_authenticationLogger.log("SEVERE", MODULE, sMethod, "Could not execute query: " + dbSParms.getQuery(), e
 							.getMessage());
 					throw new ASelectException(Errors.ERROR_DB_COULD_NOT_REACH_DB_SERVER, e);
 				}
@@ -628,8 +642,10 @@ public class DBAuthSP extends ASelectHttpServlet
 				if (oResultSet.next()) {
 					boolean matches = false;
 					try {
-						String sPwd = oResultSet.getString(_sColumn);
-						matches = _bEncrypedPassword ? MD5Crypt.matches(sPwd, sPassword) : sPwd.equals(sPassword);
+//						String sPwd = oResultSet.getString(_sColumn);
+						String sPwd = oResultSet.getString(dbSParms.getPasswordcolumn());
+//						matches = _bEncrypedPassword ? MD5Crypt.matches(sPwd, sPassword) : sPwd.equals(sPassword);
+						matches = dbSParms.isEncrypedPassword() ? MD5Crypt.matches(sPwd, sPassword) : sPwd.equals(sPassword);
 					}
 					catch (Exception e) {
 						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not compare with database field: ", e);
@@ -977,18 +993,22 @@ public class DBAuthSP extends ASelectHttpServlet
 			throw new ASelectException(Errors.ERROR_DB_INVALID_REQUEST);
 		}
 
+		DBServerParms dbSParms = new DBServerParms();
 		// authenticate user
-		Connection oConnection = getConnection();
+//		Connection oConnection = getConnection();
+		Connection oConnection = getConnection(dbSParms);
 		PreparedStatement oStatement = null;
 		ResultSet oResultSet = null;
 		try {
-			oStatement = oConnection.prepareStatement(_sQuery);
+//			oStatement = oConnection.prepareStatement(_sQuery);
+			oStatement = oConnection.prepareStatement(dbSParms.getQuery());
 			oStatement.setString(1, sUid);
 			oResultSet = oStatement.executeQuery();
 			sResultCode = (oResultSet.next()) ? (Errors.ERROR_DB_SUCCESS) : Errors.ERROR_DB_INTERNAL_ERROR;
 		}
 		catch (Exception e) {
-			_authenticationLogger.log("SEVERE", MODULE, sMethod, "Could not execute query: " + _sQuery, e.getMessage());
+//			_authenticationLogger.log("SEVERE", MODULE, sMethod, "Could not execute query: " + _sQuery, e.getMessage());
+			_authenticationLogger.log("SEVERE", MODULE, sMethod, "Could not execute query: " + dbSParms.getQuery(), e.getMessage());
 			// RH, 20090605, sn
 			try {
 				oResultSet.close();
@@ -1015,9 +1035,11 @@ public class DBAuthSP extends ASelectHttpServlet
 			boolean matches = false;
 			try {
 
-				String sPwd = oResultSet.getString(_sColumn);
+//				String sPwd = oResultSet.getString(_sColumn);
+				String sPwd = oResultSet.getString(dbSParms.getPasswordcolumn());
 
-				if (_bEncrypedPassword) {
+//				if (_bEncrypedPassword) {
+				if (dbSParms.isEncrypedPassword()) {
 					matches = MD5Crypt.matches(sPwd, sPassword);
 				}
 				else {
@@ -1080,7 +1102,47 @@ public class DBAuthSP extends ASelectHttpServlet
 	 * @throws ASelectException
 	 *             if the connection could not be opened
 	 */
-	private Connection getConnection()
+//	private Connection getConnection()
+//		throws ASelectException
+//	{
+//		String sMethod = "getConnection()";
+//
+//		Connection oConnection = null;
+//
+//		try {
+//			// initialize driver
+//			Class.forName(_sDriver);
+//		}
+//		catch (Exception e) {
+//			StringBuffer sbFailed = new StringBuffer("Can't initialize driver: ");
+//			sbFailed.append(_sDriver);
+//			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
+//			throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
+//		}
+//
+//		try {
+//			oConnection = DriverManager.getConnection(_sUrl, _sUserName, _sUserPassword);
+//		}
+//		catch (SQLException e) {
+//			StringBuffer sbFailed = new StringBuffer("Could not open connection to: ");
+//			sbFailed.append(_sUrl);
+//			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
+//			throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
+//		}
+//
+//		return oConnection;
+//	}
+	
+	/**
+	 * Opens a new JDBC connection to the resource with parameters passed through serverParms. <br>
+	 * <br>
+	 * @param serverParms
+	 * 		parameter wrapper object to active resource
+	 * @return <code>Connection</code> that contains the JDBC connection
+	 * @throws ASelectException
+	 *             if the connection could not be opened
+	 */
+	private Connection getConnection(DBServerParms serverParms)
 		throws ASelectException
 	{
 		String sMethod = "getConnection()";
@@ -1089,25 +1151,279 @@ public class DBAuthSP extends ASelectHttpServlet
 
 		try {
 			// initialize driver
-			Class.forName(_sDriver);
+			Class.forName(serverParms.getDriver());
 		}
 		catch (Exception e) {
 			StringBuffer sbFailed = new StringBuffer("Can't initialize driver: ");
-			sbFailed.append(_sDriver);
+			sbFailed.append(serverParms.getDriver());
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
 			throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
 		}
 
 		try {
-			oConnection = DriverManager.getConnection(_sUrl, _sUserName, _sUserPassword);
+			oConnection = DriverManager.getConnection(serverParms.getUrl(), serverParms.getUsername(), serverParms.getPassword());
 		}
 		catch (SQLException e) {
 			StringBuffer sbFailed = new StringBuffer("Could not open connection to: ");
-			sbFailed.append(_sUrl);
+			sbFailed.append(serverParms.getUrl());
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
 			throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
 		}
 
 		return oConnection;
+	}
+
+	
+	/**
+	 *	Wrapper to hold DBServer information. <br>
+	 * On construction it finds active (actual) parameters either from resource group or config section
+	 * <br>
+	 * 
+	 * @author RH
+	 */
+	private class DBServerParms {
+		private String driver = null;
+		private String username = null;
+		private String password = null;
+		private String url = null;
+		private String query = null;
+		private String passwordcolumn = null;
+		private boolean encrypedPassword = DEFAULT_ENCRYPTION;
+		
+		
+		
+		
+		/**
+		 * Empty constructor
+		 * @throws ASelectException 
+		 */
+		public DBServerParms() throws ASelectException {
+			super();
+			setActiveParameters();
+		}
+				
+		private void  setActiveParameters() throws ASelectException
+	{
+		String sMethod = "setActiveParameters()";
+
+//		SAMResource oSAMResource = null;
+//		String sDriver = null;
+//		String sUsername = null;
+//		String sPassword = null;
+//		String sUrl = null;
+//		String sQuery = null;
+//		String sColumn = null;
+//		boolean bEncrypedPassword = DEFAULT_ENCRYPTION;
+		Object oBackendServer = _oAuthSpConfig;	// use  config section as default
+
+		
+		/////////////////////////////////////////////////////////////////
+		String sDBResourceGroup = null;
+		SAMResource activeResource = null;
+		try {
+			sDBResourceGroup = _configManager.getParam(_oAuthSpConfig, "resourcegroup");
+			try {
+				activeResource = AuthSPSAMAgent.getHandle().getActiveResource(sDBResourceGroup);
+				oBackendServer = activeResource.getAttributes();
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Using back-end server from resource: "+ _configManager.getParam(oBackendServer, "id"));
+			}
+			catch (ASelectSAMException e) {
+				// No problem, just use the "old" way (from the config section)
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "No active resource found in resourcegroup: " + sDBResourceGroup + ", using   back-end server from config section");
+			}
+		} 	catch (ASelectConfigException e) {
+			// No problem, just use the "old" way (from the config section)
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "No resourcegroup found for authsp: "+  _configManager.getParam(_oAuthSpConfig, "id") + ", using  back-end server config section");
+		}
+		////////////////////////////////////////////////////////////////////
+
+		
+		// set driver
+		try {
+			 setDriver(_configManager.getParam(oBackendServer, "driver"));
+		}
+		catch (ASelectConfigException eAC) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'driver' parameter found in configuration", eAC);
+			throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, eAC);
+		}
+		try {
+			// initialize driver
+			Class.forName(getDriver());
+		}
+		catch (Exception e) {
+			StringBuffer sbFailed = new StringBuffer("Can't initialize driver: ");
+			sbFailed.append(getDriver());
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
+			throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
+		}
+
+		// set url
+		try {
+			setUrl( _configManager.getParam(oBackendServer, "url"));
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'url' found", e);
+			throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
+		}
+
+		// set user
+		try {
+			setUsername( _configManager.getParam(oBackendServer, "user"));
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'user' found", e);
+			throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
+		}
+
+		// set password
+		try {
+			setPassword( _configManager.getParam(oBackendServer, "password"));
+		}
+		catch (Exception e) {
+			setPassword("");
+			_systemLogger
+					.log(
+							Level.WARNING,
+							MODULE,
+							sMethod,
+							"No or empty config item 'password' found, using empty password. Don't use this in a live production environment.",
+							e);
+			throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
+		}
+
+		// set password query
+		try {
+			setQuery(_configManager.getParam(oBackendServer, "query"));
+		}
+		catch (ASelectConfigException eAC) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'query' parameter found in configuration", eAC);
+			throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, eAC);
+		}
+
+		// set password column name
+		try {
+			setPasswordcolumn( _configManager.getParam(oBackendServer, "column"));
+		}
+		catch (ASelectConfigException eAC) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'column' parameter found in configuration", eAC);
+			throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, eAC);
+		}
+
+		try {
+			String sEncryptedPassword = _configManager.getParam(oBackendServer, "encrypted");
+			setEncrypedPassword(Boolean.parseBoolean(sEncryptedPassword));
+		}
+		catch (ASelectConfigException eAC) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"No 'encrypted' parameter found in configuration, taking default: " + DEFAULT_ENCRYPTION, eAC);
+			setEncrypedPassword(DEFAULT_ENCRYPTION);
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"Could not parse pasword encryption setting, taking default: " + DEFAULT_ENCRYPTION, e);
+			throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
+		}
+
+	}
+		
+		/**
+		 * @return the driver
+		 */
+		public synchronized String getDriver()
+		{
+			return driver;
+		}
+		/**
+		 * @param driver the driver to set
+		 */
+		public synchronized void setDriver(String driver)
+		{
+			this.driver = driver;
+		}
+		/**
+		 * @return the username
+		 */
+		public synchronized String getUsername()
+		{
+			return username;
+		}
+		/**
+		 * @param username the username to set
+		 */
+		public synchronized void setUsername(String username)
+		{
+			this.username = username;
+		}
+		/**
+		 * @return the password
+		 */
+		public synchronized String getPassword()
+		{
+			return password;
+		}
+		/**
+		 * @param password the password to set
+		 */
+		public synchronized void setPassword(String password)
+		{
+			this.password = password;
+		}
+		/**
+		 * @return the url
+		 */
+		public synchronized String getUrl()
+		{
+			return url;
+		}
+		/**
+		 * @param url the url to set
+		 */
+		public synchronized void setUrl(String url)
+		{
+			this.url = url;
+		}
+		/**
+		 * @return the query
+		 */
+		public synchronized String getQuery()
+		{
+			return query;
+		}
+		/**
+		 * @param query the query to set
+		 */
+		public synchronized void setQuery(String query)
+		{
+			this.query = query;
+		}
+		/**
+		 * @return the passwordcolumn
+		 */
+		public synchronized String getPasswordcolumn()
+		{
+			return passwordcolumn;
+		}
+		/**
+		 * @param passwordcolumn the passwordcolumn to set
+		 */
+		public synchronized void setPasswordcolumn(String passwordcolumn)
+		{
+			this.passwordcolumn = passwordcolumn;
+		}
+		/**
+		 * @return the encrypedPassword
+		 */
+		public synchronized boolean isEncrypedPassword()
+		{
+			return encrypedPassword;
+		}
+		/**
+		 * @param encrypedPassword the encrypedPassword to set
+		 */
+		public synchronized void setEncrypedPassword(boolean encrypedPassword)
+		{
+			this.encrypedPassword = encrypedPassword;
+		}
+
 	}
 }

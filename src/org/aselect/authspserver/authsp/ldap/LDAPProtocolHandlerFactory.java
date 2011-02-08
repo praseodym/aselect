@@ -67,9 +67,12 @@ import java.util.logging.Level;
 
 import org.aselect.authspserver.config.AuthSPConfigManager;
 import org.aselect.authspserver.log.AuthSPSystemLogger;
+import org.aselect.authspserver.sam.AuthSPSAMAgent;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
+import org.aselect.system.sam.agent.SAMResource;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -282,7 +285,26 @@ public class LDAPProtocolHandlerFactory
 					return null;
 				}
 			}
-
+			/////////////////////////////////////////////////////////////////
+			String sLDAPResourceGroup = null;
+			SAMResource activeResource = null;
+			try {
+				sLDAPResourceGroup = oConfigManager.getParam(oBackendServer, "resourcegroup");
+				try {
+					activeResource = AuthSPSAMAgent.getHandle().getActiveResource(sLDAPResourceGroup);
+					oBackendServer = activeResource.getAttributes();
+					oSystemLogger.log(Level.INFO, MODULE, sMethod, "Using back-end server from resource: "+ oConfigManager.getParam(oBackendServer, "id"));
+				}
+				catch (ASelectSAMException e) {
+					// No problem, just use the "old" way (from the config section)
+					oSystemLogger.log(Level.INFO, MODULE, sMethod, "No active resource found in resourcegroup: " + sLDAPResourceGroup + ", using  back-end server from config section");
+				}
+			} 	catch (ASelectConfigException e) {
+				// No problem, just use the "old" way (from the config section)
+				oSystemLogger.log(Level.INFO, MODULE, sMethod, "No resourcegroup found for back-end server at realm: "+ sRealm + ", using  back-end server from config section");
+			}
+			////////////////////////////////////////////////////////////////////
+			
 			String sLDAPUrl = null;
 			try {
 				sLDAPUrl = oConfigManager.getParam(oBackendServer, "url");

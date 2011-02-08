@@ -134,6 +134,7 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "BIND " + _sLDAPUrl + "_" + _sDriver + "_" + "simple1"
 					+ "_" + sbTemp.toString());
 			try {
+				/////////////////////////////////////////////////////////////////////
 				oDirContext = new InitialDirContext(htEnvironment);
 			}
 			catch (AuthenticationException e) {
