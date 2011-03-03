@@ -84,8 +84,7 @@ static const command_rec    aselect_filter_cmds[];
 
 int aselect_filter_upload_all_rules(PASELECT_FILTER_CONFIG pConfig, server_rec *pServer, pool *pPool);
 int             aselect_filter_upload_authz_rules(PASELECT_FILTER_CONFIG pConfig, server_rec *pServer, pool *pPool, PASELECT_APPLICATION pApp);
-char *          aselect_filter_verify_ticket(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcTicket, char *pcUID,
-		char *pcOrganization, char *pcAttributes, char *language);
+char *          aselect_filter_verify_ticket(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcTicket, char *pcUID, char *pcOrganization, char *pcAttributes, char *language);
 char *          aselect_filter_kill_ticket(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcTicket );
 char *          aselect_filter_auth_user(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcAppUrl );
 char *aselect_filter_verify_credentials(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig,
@@ -104,6 +103,7 @@ static const char * aselect_filter_set_use_aselect_bar(cmd_parms *parms, void *m
 static const char *aselect_filter_secure_url(cmd_parms *parms, void *mconfig, const char *arg );
 static const char *aselect_filter_pass_attributes(cmd_parms *parms, void *mconfig, const char *arg );
 static const char *aselect_filter_add_attribute(cmd_parms *parms, void *mconfig, const char *arg );
+static const char *aselect_filter_add_public_app(cmd_parms *parms, void *mconfig, const char *arg);
 static const char *aselect_filter_set_logfile(cmd_parms *parms, void *mconfig, const char *arg );
 static const char *aselect_filter_added_security(cmd_parms *parms, void *mconfig, const char *arg );
 
@@ -126,16 +126,15 @@ int aselect_filter_init(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *pPool, 
     int i;
     PASELECT_APPLICATION pApp;
     char pcMessage[2048];
-
     TRACE1("aselect_filter_init: %x", pServer);
     PASELECT_FILTER_CONFIG  pConfig = (PASELECT_FILTER_CONFIG)ap_get_module_config(pServer->module_config, &aselect_filter_module);
 
     TRACE1("aselect_filter_init: %x read", pServer);
     ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, "ASELECT_FILTER:: initializing");
 
-	if (pConfig->pcAddedSecurity[0] == '\0')
-		strcat(pConfig->pcAddedSecurity, "c");  // add Secure & HttpOnly to cookies
-	TRACE1("aselect_filter_init: added_security=%s", pConfig->pcAddedSecurity);
+    if (pConfig->pcAddedSecurity[0] == '\0')
+	strcat(pConfig->pcAddedSecurity, "c");  // add Secure & HttpOnly to cookies
+    TRACE1("aselect_filter_init: added_security=%s", pConfig->pcAddedSecurity);
 
     if (pConfig)
     {
@@ -536,7 +535,7 @@ char *extractApplicationParameters(pool *pPool, char *arguments)
 //
 static int aselect_filter_handler(request_rec *pRequest)
 {
-    int             iRet = FORBIDDEN;
+    int             iRet = FORBIDDEN; // 402
     int             iError = ASELECT_FILTER_ERROR_OK;
     int             iAction = ASELECT_FILTER_ACTION_ACCESS_DENIED;
     table           *headers_in = pRequest->headers_in;
@@ -616,48 +615,54 @@ static int aselect_filter_handler(request_rec *pRequest)
         TRACE("could not get module config data");
         ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest,
             "ASELECT_FILTER:: could not retrieve configuration data");
-
-        // Cleanup
         ap_destroy_pool(pPool);
         return iRet;
     }
     else { // Verify configuration
-	TRACE1("IP=%s", (pConfig->pcASAIP)? pConfig->pcASAIP: "NULL");
-	TRACE1("Port=%d", pConfig->iASAPort);
-        if (aselect_filter_verify_config(pConfig) != ASELECT_FILTER_ERROR_OK)
-        {
-            TRACE("invalid configuration data");
+	TRACE2("IP=%s Port=%d", (pConfig->pcASAIP)? pConfig->pcASAIP: "NULL", pConfig->iASAPort);
+        if (aselect_filter_verify_config(pConfig) != ASELECT_FILTER_ERROR_OK) {
+            TRACE("Invalid configuration data");
             ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest,
                 "ASELECT_FILTER:: invalid configuration data");
             return iRet;
         }
     }
 
+    /* Return codes are:
+       DECLINED -1 **< Module declines to handle
+       DONE -2     **< Module has served the response completely, it's safe to die() with no more output
+       OK 0        **< Module has handled this stage */
+
+    // 20110129, Bauke added public directories
+    if (aselect_filter_is_public_app(pPool, pConfig, pRequest->uri) == ASELECT_FILTER_ERROR_OK) {
+        TRACE1("\"%s\" is a public directory", pRequest->uri);
+        ap_destroy_pool(pPool);   
+	TRACE4("==== 6. Returning %d=OK %s ?%s %s", OK, pRequest->uri, pRequest->args, filter_action_text(iAction));
+        return OK;  // we don't want to do anything with this request
+    }
+
     // Check if we are in a protected dir
-    // this function point the global pConfig->pCurrentApp to the requested app
+    // This function points the global pConfig->pCurrentApp to the requested app
     //
     if (aselect_filter_verify_directory(pPool, pConfig, pRequest->uri) == ASELECT_FILTER_ERROR_FAILED) {
-        //
         // Not in a protected dir, this should not be possible, but we let the request through anyway
-        //
         TRACE1("\"%s\" is not a protected dir (or is disabled)", pRequest->uri);
         ap_destroy_pool(pPool);   
+	TRACE4("==== 6. Returning %d=DECLINED %s ?%s %s", DECLINED, pRequest->uri, pRequest->args, filter_action_text(iAction));
         return DECLINED;
-    }
-    else {
-        TRACE2("\"%s\" is a protected dir, app_id: %s", pRequest->uri, pConfig->pCurrentApp->pcAppId);
     }
 
     //
     // Retrieve the remote_addr
     //
+    TRACE2("\"%s\" is a protected dir, app_id: %s", pRequest->uri, pConfig->pCurrentApp->pcAppId);
     if (pRequest->connection->remote_ip) {
         TRACE1("remote_ip: %s", pRequest->connection->remote_ip);
     }
 
-    addedSecurity = (strchr(pConfig->pcAddedSecurity, 'c')!=NULL)? " secure; HttpOnly": "";
     TRACE3("==== 1. Start iError=%d iAction=%s, iRet=%d", iError, filter_action_text(iAction), iRet);
     TRACE3("     (DECLINED=%d DONE=%d FORBIDDEN=%d)", DECLINED, DONE, FORBIDDEN);
+    addedSecurity = (strchr(pConfig->pcAddedSecurity, 'c')!=NULL)? " secure; HttpOnly": "";
     if (pcTicketIn = aselect_filter_get_cookie(pPool, headers_in, "JSESSIONID="))
         TRACE1("aselect_filter_handler: JSESSIONID: %s", pcTicketIn);
     //
@@ -833,8 +838,7 @@ static int aselect_filter_handler(request_rec *pRequest)
     TRACE3("==== 3. Action iError=%d iAction=%s, iRet=%d", iError, filter_action_text(iAction), iRet);
 
     //
-    // if we do not have an error then
-    // act according to iAction
+    // If we do not have an error then act according to iAction
     //
     if (iError == ASELECT_FILTER_ERROR_OK) {
         // Act according to action
@@ -984,7 +988,7 @@ static int aselect_filter_handler(request_rec *pRequest)
                       pcAppUrl = ap_construct_url(pPool, pConfig->pCurrentApp->pcLocation, pRequest);
                 }
                 
-		// Remove: request=aselect_show_bar if present
+		// Remove: request=aselect_show_bar if present, otherwise we would get 2 of them
 		if (pConfig->bUseASelectBar) {
 		    char *req = "request=aselect_show_bar";
 		    char *p = strstr(pcAppUrl, req);
@@ -1080,7 +1084,6 @@ static int aselect_filter_handler(request_rec *pRequest)
 		break;
         }
     }
-
     if (iError != ASELECT_FILTER_ERROR_OK) {
         if (aselect_filter_gen_error_page(pPool, pRequest, iError, pConfig->pcErrorTemplate) == ASELECT_FILTER_ERROR_OK)
             iRet = DONE;
@@ -1089,7 +1092,7 @@ static int aselect_filter_handler(request_rec *pRequest)
     // Bauke: added
     TRACE3("==== 4. Attributes iError=%d iAction=%s, iRet=%d", iError, filter_action_text(iAction), iRet);
     // Bauke, 20100520, added: iRet != DONE
-    if (iRet !=DONE && iError == ASELECT_FILTER_ERROR_OK && iAction == ASELECT_FILTER_ACTION_ACCESS_GRANTED) { /*!pConfig->bUseCookie ||*/
+    if (iRet != DONE && iError == ASELECT_FILTER_ERROR_OK && iAction == ASELECT_FILTER_ACTION_ACCESS_GRANTED) { /*!pConfig->bUseCookie ||*/
 	if (strchr(pConfig->pcPassAttributes,'q')!=0 || strchr(pConfig->pcPassAttributes,'h')!=0 || strchr(pConfig->pcPassAttributes,'t')!=0) {
 	    iError = aselect_filter_passAttributesInUrl(iError, pcAttributes, pPool, pRequest, pConfig, pcTicketIn, pcUIDIn, pcOrganizationIn, pcRequestLanguage, headers_in);
 	}
@@ -1101,7 +1104,9 @@ static int aselect_filter_handler(request_rec *pRequest)
     // Cleanup
     //
     ap_destroy_pool(pPool);
-    TRACE2("==== 6. Returning %d: %s", iRet, (iRet==DECLINED)? "DECLINED": (iRet==DONE)? "DONE": (iRet==FORBIDDEN)? "FORBIDDEN": "?");
+    TRACE4("==== 6. Returning %d=%s %s ?%s", iRet,
+	(iRet==DECLINED)? "DECLINED": (iRet==DONE)? "DONE": (iRet==FORBIDDEN)? "FORBIDDEN": "?",
+	pRequest->uri, pRequest->args);
 
     return iRet;
 }
@@ -1142,13 +1147,14 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 		    // Perform attribute filtering!
 		    // First handle the special Saml attribute token (if present)
 		    if (strchr(pConfig->pcPassAttributes,'t')!=0) {  // Pass Saml token in header
-			char *p, *q, hdrName[40];
+			char *p, *q, hdrName[60];
 			int i, len, save;
 
 			p = aselect_filter_get_param(pPool, pcAttributes, "saml_attribute_token=", "&", TRUE/*UrlDecode*/);
+			TRACE1("token=%.100s", p);
 			// We have a base64 encoded Saml token, pass it in a custom header
 			// Note the minus signs in the header name instead of underscores
-			len = strlen(p);
+			len = (p)? strlen(p): 0;
 			for (i = 1; p && *p && len > 0; i++) {
 			    if (len > ASELECT_FILTER_MAX_HEADER_SIZE) {
 				q = p + ASELECT_FILTER_MAX_HEADER_SIZE;
@@ -1490,162 +1496,136 @@ aselect_filter_add_secure_app(cmd_parms *parms, void *mconfig, const char *arg1,
     PASELECT_FILTER_CONFIG  pConfig = (PASELECT_FILTER_CONFIG) 
         ap_get_module_config(parms->server->module_config, &aselect_filter_module);
 
-    if (pConfig)
-    {
-        if (pConfig->iAppCount < ASELECT_FILTER_MAX_APP)
-        {
-            pApp = &pConfig->pApplications[pConfig->iAppCount];
-            memset(pApp, 0, sizeof(ASELECT_APPLICATION));
-            pApp->bEnabled = 1;
-            pApp->pcUid = _empty;
-            pApp->pcAuthsp = _empty;
-            pApp->pcLanguage = _empty;
-            pApp->pcCountry = _empty;
-            pApp->pcExtra = _empty;
-            pApp->pcRemoteOrg = _empty;
-            pApp->pcRedirectURL = _empty;
-            if ( (pApp->pcLocation = ap_pstrdup(parms->pool, arg1)) &&
-                 (pApp->pcAppId = ap_pstrdup(parms->pool, arg2)) )
-            {
-                if (strcmp(arg3, "none") != 0 &&
-                    strcmp(arg3, "default") != 0)
-                {
-                    pcTok = arg3;
-                    while (*pcTok)
-                    {
-                        TRACE1("Parsing application options token %s", pcTok);
-                        if (strncmp(pcTok, "forced-logon", 12) == 0 ||
-                            strncmp(pcTok, "forced_logon", 12) == 0)
-                        {
-                            pcTok += 12;
-                            pApp->bForcedLogon = 1;
-                        }
-                        else
-                        if (strncmp(pcTok, "disabled", 8) == 0)
-                        {
-                            pcTok += 8;
-                            pApp->bEnabled = 0;
-                        }
-                        else
-                        if (strncmp(pcTok, "uid=", 4) == 0)
-                        {
-                            pcTok += 4;
-                            if ((pcEnd = strchr(pcTok, ',')))
-                                pApp->pcUid = ap_pstrndup(parms->pool, pcTok, pcEnd-pcTok);
-                            else
-                                pApp->pcUid = ap_pstrdup(parms->pool, pcTok);
-                            pcTok += strlen(pApp->pcUid);
-                            pApp->pcUid = ap_psprintf(parms->pool, "&uid=%s",
-                                aselect_filter_url_encode(parms->pool, pApp->pcUid));
-                        }
-                        else
-			/* Bauke: added to force the AuthSP choice */
-                        if (strncmp(pcTok, "authsp=", 7) == 0)
-                        {
-                            pcTok += 7;
-                            if ((pcEnd = strchr(pcTok, ',')))
-                                pApp->pcAuthsp = ap_pstrndup(parms->pool, pcTok, pcEnd-pcTok);
-                            else
-                                pApp->pcAuthsp = ap_pstrdup(parms->pool, pcTok);
-                            pcTok += strlen(pApp->pcAuthsp);
-                            pApp->pcAuthsp = ap_psprintf(parms->pool, "&authsp=%s",
-                                aselect_filter_url_encode(parms->pool, pApp->pcAuthsp));
-                        }
-                        else
-                        if (strncmp(pcTok, "language=", 9) == 0)
-                        {
-                            pcTok += 9;
-                            if ((pcEnd = strchr(pcTok, ',')))
-                                pApp->pcLanguage = ap_pstrndup(parms->pool, pcTok, pcEnd-pcTok);
-                            else
-                                pApp->pcLanguage = ap_pstrdup(parms->pool, pcTok);
-                            pcTok += strlen(pApp->pcLanguage);
-                            pApp->pcLanguage = ap_psprintf(parms->pool, "&language=%s",
-                                aselect_filter_url_encode(parms->pool, pApp->pcLanguage));
-                        }
-                        else
-                        if (strncmp(pcTok, "country=", 8) == 0)
-                        {
-                            pcTok += 8;
-                            if ((pcEnd = strchr(pcTok, ',')))
-                                pApp->pcCountry = ap_pstrndup(parms->pool, pcTok, pcEnd-pcTok);
-                            else
-                                pApp->pcCountry = ap_pstrdup(parms->pool, pcTok);
-                            pcTok += strlen(pApp->pcCountry);
-                            pApp->pcCountry = ap_psprintf(parms->pool, "&country=%s",
-                                aselect_filter_url_encode(parms->pool, pApp->pcCountry));
-                        }
-                        else
-                        if (strncmp(pcTok, "remote_organization=", 20) == 0 ||
-                            strncmp(pcTok, "remote-organization=", 20) == 0)
-                        {
-                            pcTok += 20;
-                            if ((pcEnd = strchr(pcTok, ',')))
-                                pApp->pcRemoteOrg = ap_pstrndup(parms->pool, pcTok, pcEnd-pcTok);
-                            else
-                                pApp->pcRemoteOrg = ap_pstrdup(parms->pool, pcTok);
-                            pcTok += strlen(pApp->pcRemoteOrg);
-                            pApp->pcRemoteOrg = ap_psprintf(parms->pool, "&remote_organization=%s",
-                                aselect_filter_url_encode(parms->pool, pApp->pcRemoteOrg));
-                        }
-                        else
-		  if (strncmp(pcTok, "url=", 4) == 0)
-		  {
-		      pcTok += 4;
-                            if ((pcEnd = strchr(pcTok, ',')))
-                                pApp->pcRedirectURL = ap_pstrndup(parms->pool, pcTok, pcEnd-pcTok);
-                            else
-                                pApp->pcRedirectURL = ap_pstrdup(parms->pool, pcTok);
-		      pcTok += strlen(pApp->pcRedirectURL);
-		  }
-                        else    
-                        if (strncmp(pcTok, "extra_parameters=", 17) == 0 ||
-                            strncmp(pcTok, "extra-parameters=", 17) == 0)
-                        {
-                            pcTok += 17;
-                            if ((pcEnd = strchr(pcTok, ',')))
-                                pApp->pcExtra = ap_pstrndup(parms->pool, pcTok, pcEnd-pcTok);
-                            else
-                                pApp->pcExtra = ap_pstrdup(parms->pool, pcTok);
-                            pcTok += strlen(pApp->pcExtra);
-                            pApp->pcExtra = ap_psprintf(parms->pool, "&%s",
-                                pApp->pcExtra);
-                        }
-                        else
-                        {
-                            // Unknown option
-                            return ap_psprintf(parms->pool,
-                                "A-Select ERROR: Unknown option in application %s near \"%s\"", 
-                                pApp->pcAppId, pcTok);
-                        }
-                        if (*pcTok)
-                        {
-                            if (*pcTok != ',')
-                                return ap_psprintf(parms->pool,
-                                    "A-Select ERROR: Error in application %s options, near \"%s\"", 
-                                    pApp->pcAppId, pcTok);
-                            ++pcTok;
-                        }                        
-                    }
-                }
-                // Success!
-                pConfig->iAppCount++;
-            }
-            else
-            {
-                return "A-Select ERROR: Out of memory while adding applications";
-            }
-        }
-        else
-        {
-            return "A-Select ERROR: Reached max possible application IDs";
-        }
-    }
-    else
-    {
+    if (!pConfig) {
         return "A-Select ERROR: Internal error: missing configuration object";
     }
-
+    if (pConfig->iAppCount >= ASELECT_FILTER_MAX_APP) {
+	return "A-Select ERROR: Reached max possible application IDs";
+    }
+    pApp = &pConfig->pApplications[pConfig->iAppCount];
+    memset(pApp, 0, sizeof(ASELECT_APPLICATION));
+    pApp->bEnabled = 1;
+    pApp->pcUid = _empty;
+    pApp->pcAuthsp = _empty;
+    pApp->pcLanguage = _empty;
+    pApp->pcCountry = _empty;
+    pApp->pcExtra = _empty;
+    pApp->pcRemoteOrg = _empty;
+    pApp->pcRedirectURL = _empty;
+    if (!((pApp->pcLocation = ap_pstrdup(parms->pool, arg1)) &&
+	 (pApp->pcAppId = ap_pstrdup(parms->pool, arg2)) ) ) {
+	return "A-Select ERROR: Out of memory while adding applications";
+    }
+    if (strcmp(arg3, "none") != 0 &&
+	strcmp(arg3, "default") != 0)
+    {
+	pcTok = arg3;
+	while (*pcTok) {
+	    TRACE1("Parsing application options token %s", pcTok);
+	    if (strncmp(pcTok, "forced-logon", 12) == 0 ||
+		strncmp(pcTok, "forced_logon", 12) == 0)
+	    {
+		pcTok += 12;
+		pApp->bForcedLogon = 1;
+	    }
+	    else if (strncmp(pcTok, "disabled", 8) == 0)
+	    {
+		pcTok += 8;
+		pApp->bEnabled = 0;
+	    }
+	    else if (strncmp(pcTok, "uid=", 4) == 0)
+	    {
+		pcTok += 4;
+		if ((pcEnd = strchr(pcTok, ',')))
+		    pApp->pcUid = ap_pstrndup(parms->pool, pcTok, pcEnd-pcTok);
+		else
+		    pApp->pcUid = ap_pstrdup(parms->pool, pcTok);
+		pcTok += strlen(pApp->pcUid);
+		pApp->pcUid = ap_psprintf(parms->pool, "&uid=%s",
+		    aselect_filter_url_encode(parms->pool, pApp->pcUid));
+	    }
+	    /* Bauke: added to force the AuthSP choice */
+	    else if (strncmp(pcTok, "authsp=", 7) == 0)
+	    {
+		pcTok += 7;
+		if ((pcEnd = strchr(pcTok, ',')))
+		    pApp->pcAuthsp = ap_pstrndup(parms->pool, pcTok, pcEnd-pcTok);
+		else
+		    pApp->pcAuthsp = ap_pstrdup(parms->pool, pcTok);
+		pcTok += strlen(pApp->pcAuthsp);
+		pApp->pcAuthsp = ap_psprintf(parms->pool, "&authsp=%s",
+		    aselect_filter_url_encode(parms->pool, pApp->pcAuthsp));
+	    }
+	    else if (strncmp(pcTok, "language=", 9) == 0)
+	    {
+		pcTok += 9;
+		if ((pcEnd = strchr(pcTok, ',')))
+		    pApp->pcLanguage = ap_pstrndup(parms->pool, pcTok, pcEnd-pcTok);
+		else
+		    pApp->pcLanguage = ap_pstrdup(parms->pool, pcTok);
+		pcTok += strlen(pApp->pcLanguage);
+		pApp->pcLanguage = ap_psprintf(parms->pool, "&language=%s",
+		    aselect_filter_url_encode(parms->pool, pApp->pcLanguage));
+	    }
+	    else if (strncmp(pcTok, "country=", 8) == 0)
+	    {
+		pcTok += 8;
+		if ((pcEnd = strchr(pcTok, ',')))
+		    pApp->pcCountry = ap_pstrndup(parms->pool, pcTok, pcEnd-pcTok);
+		else
+		    pApp->pcCountry = ap_pstrdup(parms->pool, pcTok);
+		pcTok += strlen(pApp->pcCountry);
+		pApp->pcCountry = ap_psprintf(parms->pool, "&country=%s",
+		    aselect_filter_url_encode(parms->pool, pApp->pcCountry));
+	    }
+	    else if (strncmp(pcTok, "remote_organization=", 20) == 0 ||
+		    strncmp(pcTok, "remote-organization=", 20) == 0)
+	    {
+		pcTok += 20;
+		if ((pcEnd = strchr(pcTok, ',')))
+		    pApp->pcRemoteOrg = ap_pstrndup(parms->pool, pcTok, pcEnd-pcTok);
+		else
+		    pApp->pcRemoteOrg = ap_pstrdup(parms->pool, pcTok);
+		pcTok += strlen(pApp->pcRemoteOrg);
+		pApp->pcRemoteOrg = ap_psprintf(parms->pool, "&remote_organization=%s",
+		    aselect_filter_url_encode(parms->pool, pApp->pcRemoteOrg));
+	    }
+	    else if (strncmp(pcTok, "url=", 4) == 0)
+	    {
+	      pcTok += 4;
+		if ((pcEnd = strchr(pcTok, ',')))
+		    pApp->pcRedirectURL = ap_pstrndup(parms->pool, pcTok, pcEnd-pcTok);
+		else
+		    pApp->pcRedirectURL = ap_pstrdup(parms->pool, pcTok);
+	      pcTok += strlen(pApp->pcRedirectURL);
+	    }
+	    else if (strncmp(pcTok, "extra_parameters=", 17) == 0 ||
+		    strncmp(pcTok, "extra-parameters=", 17) == 0) {
+		pcTok += 17;
+		if ((pcEnd = strchr(pcTok, ',')))
+		    pApp->pcExtra = ap_pstrndup(parms->pool, pcTok, pcEnd-pcTok);
+		else
+		    pApp->pcExtra = ap_pstrdup(parms->pool, pcTok);
+		pcTok += strlen(pApp->pcExtra);
+		pApp->pcExtra = ap_psprintf(parms->pool, "&%s",
+		    pApp->pcExtra);
+	    }
+	    else { // Unknown option
+		return ap_psprintf(parms->pool,
+		    "A-Select ERROR: Unknown option in application %s near \"%s\"", 
+		    pApp->pcAppId, pcTok);
+	    }
+	    if (*pcTok) {
+		if (*pcTok != ',')
+		    return ap_psprintf(parms->pool,
+			"A-Select ERROR: Error in application %s options, near \"%s\"", 
+			pApp->pcAppId, pcTok);
+		++pcTok;
+	    }                        
+	}
+    }
+    // Success!
+    pConfig->iAppCount++;
     return NULL;
 }
 
@@ -1658,12 +1638,12 @@ static const char *aselect_filter_added_security(cmd_parms *parms, void *mconfig
 
     TRACE1("aselect_filter_added_security:: arg=%s", arg);
     if (!pConfig) {
-        return "A-Select ERROR: Internal error during added_security";
-        return NULL;
+	return "A-Select ERROR: Internal error during added_security";
+	return NULL;
     }
     strcpy(pConfig->pcAddedSecurity, "");
     if (!arg || strstr(arg, "cookies") != NULL)  // It's the default as well
-        strcat(pConfig->pcAddedSecurity, "c");  // add Secure & HttpOnly to cookies
+	strcat(pConfig->pcAddedSecurity, "c");  // add Secure & HttpOnly to cookies
     TRACE1("aselect_filter_added_security:: %s", pConfig->pcAddedSecurity);
     return NULL;
 }
@@ -1692,12 +1672,12 @@ static const char *aselect_filter_set_logfile(cmd_parms *parms, void *mconfig, c
 //
 static const char *aselect_filter_add_attribute(cmd_parms *parms, void *mconfig, const char *arg)
 {
-    PASELECT_FILTER_CONFIG pConfig = (PASELECT_FILTER_CONFIG) ap_get_module_config(parms->server->module_config, &aselect_filter_module);
     char **pAttr;
+    PASELECT_FILTER_CONFIG pConfig;
 
+    pConfig = (PASELECT_FILTER_CONFIG) ap_get_module_config(parms->server->module_config, &aselect_filter_module);
     if (!pConfig) {
 	return "A-Select ERROR: Internal error when setting add_attribute";
-	return NULL;
     }
     if (pConfig->iAttrCount >= ASELECT_FILTER_MAX_ATTR) {
 	return "A-Select ERROR: Reached max possible Attribute Filters";
@@ -1710,6 +1690,28 @@ static const char *aselect_filter_add_attribute(cmd_parms *parms, void *mconfig,
     //ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, parms->server,
      //       ap_psprintf(parms->pool, "aselect_filter_add_attribute:: [%d] %s", pConfig->iAttrCount, *pAttr));
     pConfig->iAttrCount++;
+    return NULL;
+}
+
+// Bauke: 20110129: added
+// Define public applications
+//
+static const char *aselect_filter_add_public_app(cmd_parms *parms, void *mconfig, const char *arg)
+{
+    char **pPublic;
+    PASELECT_FILTER_CONFIG pConfig;
+
+    pConfig = (PASELECT_FILTER_CONFIG) ap_get_module_config(parms->server->module_config, &aselect_filter_module);
+    if (!pConfig) {
+	return "A-Select ERROR: Internal error when setting add_public app";
+    }
+    if (pConfig->iPublicAppCount >= ASELECT_FILTER_MAX_APP) {
+	return "A-Select ERROR: Reached max possible Applications";
+    }
+    pPublic = &pConfig->pPublicApps[pConfig->iPublicAppCount];
+    *pPublic = ap_pstrdup(parms->pool, arg);
+    TRACE2("aselect_filter_add_public_app:: [%d] %s", pConfig->iPublicAppCount, *pPublic);
+    pConfig->iPublicAppCount++;
     return NULL;
 }
 
@@ -1998,7 +2000,12 @@ static const command_rec aselect_filter_cmds[] =
 
     { "aselect_filter_add_attribute", aselect_filter_add_attribute,
         NULL, RSRC_CONF, TAKE1,
-        "Usage: aselect_filter_add_attribute < attribute filter spec >, example: aselect_filter_add_attribute \"uid,cn,user_id\"" },
+        "Usage: aselect_filter_add_attribute < attribute filter spec >, example: aselect_filter_add_attribute \"uid,cn,user_id\""
+    },
+    { "aselect_filter_add_public_app", aselect_filter_add_public_app,
+        NULL, RSRC_CONF, TAKE1,
+        "Usage: aselect_filter_add_public_app < app_url >, example: aselect_filter_add_public_app \"/website\""
+    },
 // 20091223: Bauke, added
     { "aselect_filter_added_security", aselect_filter_added_security,
         NULL, RSRC_CONF, TAKE1,
@@ -2037,7 +2044,7 @@ module MODULE_VAR_EXPORT aselect_filter_module =
     NULL                    // [1] post read_request handling
 };
 
-#else // #ifdef APACHE_13_ASELECT_FILTER
+#else // APACHE_20_CODE #ifdef APACHE_13_ASELECT_FILTER
 
 //
 // Registered cmds to call from httpd.conf
@@ -2094,6 +2101,10 @@ static const command_rec aselect_filter_cmds[] =
         NULL, RSRC_CONF,
         "Usage: aselect_filter_add_attribute < 0 | 1 >, example: aselect_filter_add_attribute \"0\""),
 
+    AP_INIT_TAKE1("aselect_filter_add_public_app", aselect_filter_add_public_app,
+        NULL, RSRC_CONF,
+        "Usage: aselect_filter_add_public_app < app_url >, example: aselect_filter_add_public_app \"/website\""),
+
     AP_INIT_TAKE1("aselect_filter_added_security", aselect_filter_added_security,
         NULL, RSRC_CONF,
         "Usage: aselect_filter_added_security < cookies | >, example: aselect_filter_added_security \"cookies\"" ),
@@ -2114,7 +2125,8 @@ void *aselect_filter_create_server_config( apr_pool_t *pPool, server_rec *pServe
     ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, "aselect_filter_create_config");
     pConfig = (PASELECT_FILTER_CONFIG) apr_palloc(pPool, sizeof(ASELECT_FILTER_CONFIG));
     if (!pConfig) {
-	ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, "aselect_filter_create_config::ERROR:: could not allocate memory for pConfig");
+	ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
+	    "aselect_filter_create_config::ERROR:: could not allocate memory for pConfig");
         return NULL;
     }
     memset( pConfig, 0, sizeof( ASELECT_FILTER_CONFIG ) );

@@ -692,8 +692,8 @@ int aselect_filter_gen_authcomplete_redirect(pool * pPool, request_rec *pRequest
     }
 
     //if (!bFrameHtml) {
-	TRACE1("aselect_filter_gen_authcomplete_redirect:: redirecting to: %s", pcRedirectURL);
-	ap_rprintf(pRequest, ASELECT_FILTER_CLIENT_REDIRECT, pcRedirectURL, pcRedirectURL);
+    TRACE1("aselect_filter_gen_authcomplete_redirect:: redirecting to: %s", pcRedirectURL);
+    ap_rprintf(pRequest, ASELECT_FILTER_CLIENT_REDIRECT, pcRedirectURL, pcRedirectURL);
     //}
     return DONE;
 }
@@ -730,36 +730,44 @@ int aselect_filter_gen_top_redirect(pool *pPool, char *addedSecurity, request_re
     return DONE;
 }
 
+//
+// 20110129, Bauke added public apps
+//
+int aselect_filter_is_public_app(pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcUri)
+{
+    int i;
+
+    for (i = 0; i < pConfig->iPublicAppCount; i++) {
+        TRACE3("aselect_filter_is_public_app::comparing directory(%d):\"%s\" to URI: \"%s\"", 
+		    i, pConfig->pPublicApps[i], pcUri);
+        if (strstr(pcUri, pConfig->pPublicApps[i]) != NULL) {
+	    TRACE("aselect_filter_is_public_app::match"); 
+	    return ASELECT_FILTER_ERROR_OK;
+        }
+    }
+    return ASELECT_FILTER_ERROR_FAILED;
+}
 
 //
 // Checks the config for the URI and if it exists return the corresponding App ID
 //
 int aselect_filter_verify_directory(pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcUri)
 {
-    int iRet;
-    int i = 0;
+    int i;
 
-    iRet = ASELECT_FILTER_ERROR_FAILED;
-
-    for (i = 0; i < pConfig->iAppCount; i++)
-    {
+    for (i = 0; i < pConfig->iAppCount; i++) {
         TRACE4("aselect_filter_verify_directory::comparing directory(%d):\"%s\" to URI: \"%s\", enabled=%d", 
             i, pConfig->pApplications[i].pcLocation, pcUri, pConfig->pApplications[i].bEnabled);
-        if (strstr(pcUri, pConfig->pApplications[i].pcLocation) != NULL)
-        {
-	    TRACE("aselect_filter_verify_directory::match"); 
-            if (pConfig->pApplications[i].bEnabled)
-            {
+        if (strstr(pcUri, pConfig->pApplications[i].pcLocation) != NULL) {
+            if (pConfig->pApplications[i].bEnabled) {
                 pConfig->pCurrentApp = &pConfig->pApplications[i];
                 i = pConfig->iAppCount;
-                iRet = ASELECT_FILTER_ERROR_OK;
-                break;
+                return ASELECT_FILTER_ERROR_OK;
             }
             // App found, but protection was disabled
         }
     }
-
-    return iRet;
+    return ASELECT_FILTER_ERROR_FAILED;
 }
 
 //
@@ -776,10 +784,10 @@ char *aselect_filter_get_cookie(pool *pPool, table *headers_in, char *pcAttribut
 	//TRACE1("GET-Cookie: CookieValues=%s", pcValues);
         pcValue = aselect_filter_get_param(pPool, pcValues, pcAttribute, ";", FALSE);
         if (pcValue) {
-            TRACE2("Get-Cookie: %s%s", pcAttribute, pcValue);
+            TRACE3("Get-Cookie: %s%.30s%s", pcAttribute, pcValue, (strlen(pcValue)>30)? "...": "");
         }
         else {
-	    TRACE1("Get-Cookie: not found in [%s]", pcValues);
+	    TRACE1("Get-Cookie: %s not found", pcAttribute);
             pcValue = NULL;
         }
     }

@@ -240,6 +240,8 @@ typedef struct _ASELECT_FILTER_CONFIG
     char    pcPassAttributes[10];  // can contain a combination of 'c', 'q', 'h' (cookie, query string, header)
     char    *pAttrFilter[ASELECT_FILTER_MAX_ATTR];
     int     iAttrCount;
+    char    *pPublicApps[ASELECT_FILTER_MAX_APP]; // Same maximum as pApplications
+    int     iPublicAppCount;
     char    *pcLogoutTemplate;
     char    *pcLogFileName;
     char    pcAddedSecurity[10];  // can contain a 'c' (cookies)
@@ -274,11 +276,12 @@ int         aselect_filter_url_decode(char *pszValue);
 void        aselect_filter_add_nocache_headers(table *headers_out);
 int         aselect_filter_gen_error_page(pool *pPool, request_rec *pRequest, int iError, char *pcErrorTemplate);
 int         aselect_filter_gen_authcomplete_redirect(pool *pPool, request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig); 
-int         aselect_filter_gen_top_redirect(pool *pPool, char *addedSecurity, request_rec *pRequest, char *pcASUrl, char *pcASelectServer, char *pcRID);
-int         aselect_filter_verify_directory(pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcUri);
-char *      aselect_filter_get_cookie(pool *pPool, table *headers_in, char *pcAttribute );
-int         aselect_filter_show_barhtml(pool *pPool, request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig, char *pcASelectAppUrl);
-char *      aselect_filter_base64_decode(pool *pPool, const char *pszValue);
+int aselect_filter_gen_top_redirect(pool *pPool, char *addedSecurity, request_rec *pRequest, char *pcASUrl, char *pcASelectServer, char *pcRID);
+int aselect_filter_verify_directory(pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcUri);
+int aselect_filter_is_public_app(pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcUri);
+char *aselect_filter_get_cookie(pool *pPool, table *headers_in, char *pcAttribute );
+int aselect_filter_show_barhtml(pool *pPool, request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig, char *pcASelectAppUrl);
+char *aselect_filter_base64_decode(pool *pPool, const char *pszValue);
 char *aselect_filter_base64_encode(pool *pPool, const char *pszValue);
 char *filter_action_text(ASELECT_FILTER_ACTION action);
 
