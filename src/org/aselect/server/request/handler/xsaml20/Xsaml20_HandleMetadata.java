@@ -22,14 +22,18 @@ import java.util.logging.Level;
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.AbstractRequestHandler;
 import org.aselect.server.request.handler.xsaml20.idp.MetaDataManagerIdp;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
+import org.opensaml.saml2.core.Assertion;
+import org.opensaml.saml2.core.impl.AssertionUnmarshaller;
+import org.w3c.dom.Document;
 
-// TODO: Auto-generated Javadoc
 /*
  * Calling example:
  * 	/aselectserver/server/handle_metadata?url=https://my.sp.nl/aselectserver/server/metadata.xml

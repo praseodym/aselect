@@ -149,10 +149,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 
 		try {
 			String sReceivedArtifact = request.getParameter("SAMLart");
-			///////////////////////////////////////////////////////////////
 			String sReceivedResponse = request.getParameter("SAMLResponse");
 			if ( !(sReceivedArtifact == null || "".equals(sReceivedArtifact)) ) {
-				///////////////////////////////////////////////
 				String sRelayState = request.getParameter("RelayState");
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Received artifact: " + sReceivedArtifact + " RelayState="+sRelayState);
 				String sFederationUrl = _sFederationUrl; // default, remove later on, can be null
@@ -230,8 +228,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 	
 				// ------------ Send/Receive the SOAP message
 				String sSamlResponse = soapManager.sendSOAP(XMLHelper.nodeToString(envelopeElem), sASelectServerUrl);  // x_AssertionConsumer_x
-				byte[] sSamlResponseAsBytes = sSamlResponse.getBytes();
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Received response: "+sSamlResponse+" length=" + sSamlResponseAsBytes.length);
+				//byte[] sSamlResponseAsBytes = sSamlResponse.getBytes();
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Received response: "+sSamlResponse+" length=" + sSamlResponse.length());
 	
 				DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 				dbFactory.setNamespaceAware(true);
@@ -242,7 +240,9 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				StringReader stringReader = new StringReader(sSamlResponse);
 				InputSource inputSource = new InputSource(stringReader);
 				Document docReceivedSoap = builder.parse(inputSource);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "parsed="+docReceivedSoap.toString());
 				Element elementReceivedSoap = docReceivedSoap.getDocumentElement();
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "getdoc="+elementReceivedSoap.toString());
 	
 				// Remove all SOAP elements
 				Node eltArtifactResponse = SamlTools.getNode(elementReceivedSoap, "ArtifactResponse");
@@ -250,9 +250,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				// Unmarshall to the SAMLmessage
 				UnmarshallerFactory factory = Configuration.getUnmarshallerFactory();
 				Unmarshaller unmarshaller = factory.getUnmarshaller((Element) eltArtifactResponse);
-	
-				ArtifactResponse artifactResponse = (ArtifactResponse) unmarshaller
-						.unmarshall((Element) eltArtifactResponse);
+				ArtifactResponse artifactResponse = (ArtifactResponse) unmarshaller.unmarshall((Element) eltArtifactResponse);
 	
 				Issuer issuer = artifactResponse.getIssuer();
 				String sIssuer = (issuer == null)? null: issuer.getValue();

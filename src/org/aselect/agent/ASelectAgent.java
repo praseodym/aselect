@@ -136,7 +136,6 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * A-Select Agent Main Class. <br>
  * <br>
@@ -254,14 +253,14 @@ public class ASelectAgent
 	 * None. <br>
 	 * 
 	 * @param saArgs
-	 *            Commandline parameters; currently not used.
+	 *            Command line parameters; currently not used.
 	 */
 	public static void main(String[] saArgs)
 	{
 		String sMethod = "main()";
 		ASelectAgentSystemLogger oASelectAgentSystemLogger = ASelectAgentSystemLogger.getHandle();
 		ASelectAgent oASelectAgent = null;
-
+       
 		StringBuffer sbInfo = new StringBuffer(MODULE);
 		sbInfo.append(" ").append(VERSION);
 		try {

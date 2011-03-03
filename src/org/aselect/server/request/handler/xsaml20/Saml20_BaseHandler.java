@@ -80,7 +80,6 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 		String sMethod = "init()";
 
 		super.init(oServletConfig, oHandlerConfig);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
 
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Saml Bootstrap");
@@ -112,7 +111,7 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 	}
 
 	// Unfortunately, sNameID is not equal to our tgtID (it's the Federation's)
-	// So we have to search all TGT's (for now a very inefficient implementation) TODO
+	// So we have to search all TGT's (for now a very inefficient implementation)
 	/**
 	 * Removes the tgt by name id.
 	 * 

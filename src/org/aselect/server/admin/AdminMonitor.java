@@ -75,7 +75,6 @@ import org.aselect.server.config.Version;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.tgt.TGTManager;
 
-// TODO: Auto-generated Javadoc
 /**
  * The AdminMonitor main Class. <br>
  * <br>
