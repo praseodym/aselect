@@ -545,7 +545,7 @@ public class IP implements IAuthSPProtocolHandler
 			if (!sResultCode.equalsIgnoreCase(IP_NO_ERROR)) {
 				if (sResultCode.equalsIgnoreCase(IP_ACCESS_DENIED)) {
 					_oASelectAuthenticationLogger.log(new Object[] {
-						MODULE, sUserId, htAuthSPResponse.get("client_ip"), sOrganization, sAppID, "denied"
+						MODULE, sUserId, htAuthSPResponse.get("client_ip"), sOrganization, sAppID, "denied", sResultCode
 					});
 
 					throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);

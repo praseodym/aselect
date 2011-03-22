@@ -30,10 +30,13 @@ import org.aselect.server.request.handler.xsaml20.Saml20_Metadata;
 import org.aselect.server.request.handler.xsaml20.Saml20_RedirectEncoder;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.server.request.handler.xsaml20.SecurityLevel;
+import org.aselect.server.sam.ASelectSAMAgent;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.exception.ASelectSAMException;
+import org.aselect.system.sam.agent.SAMResource;
 import org.aselect.system.utils.BASE64Encoder;
 import org.aselect.system.utils.Base64Codec;
 import org.aselect.system.utils.Utils;
@@ -67,17 +70,13 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 	protected final String singleSignOnServiceBindingConstantHTTPPOST = SAMLConstants.SAML2_POST_BINDING_URI;
 	
 	private String _sServerId = null; // <server_id> in <aselect>
-//	private HashMap<String, String> levelMap;
 	
 	private String _sAssertionConsumerUrl = null;
-//	private String _sSpecialSettings = null;
-//	private String _sRequestIssuer = null;
 	private String _sPostTemplate = null;
 	private String _sHttpMethod = "GET";
-	
-	private boolean bAddKeyName = false; // Add KeyName in keyinfo to saml message when signing
-	private boolean bAddCertificate = false; // Add Certificate in keyinfo to saml message when signing
-
+	private String _sIdpResourceGroup = null;
+	private String _sFallbackUrl = null;
+	private boolean bIdpSelectForm = false;
 
 	// Example configuration
 	//
@@ -90,10 +89,13 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
-		String sMethod = "init()";
-
+		String sMethod = "init";
+		Object sam = null;
+		Object agent = null;
+		Object idpSection = null;
+	
 		try {
 			super.init(oServletConfig, oConfig);
 		}
@@ -104,10 +106,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-//		_sSpecialSettings = ASelectConfigManager.getSimpleParam(oConfig, "special_settings", false);
-//		_sRequestIssuer = ASelectConfigManager.getSimpleParam(oConfig, "issuer", false);
-//		if (_sSpecialSettings == null)
-//			_sSpecialSettings = "";
+
 		_sServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
 
 		_sHttpMethod = ASelectConfigManager.getSimpleParam(oConfig, "http_method", false);
@@ -118,6 +117,36 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 		
 		if (_sHttpMethod.equals("POST"))
 			_sPostTemplate = readTemplateFromConfig(oConfig, "post_template");
+
+		String sIdpSelectForm = ASelectConfigManager.getSimpleParam(oConfig, "use_idp_select", false);
+		if (sIdpSelectForm != null && sIdpSelectForm.equals("true"))
+			bIdpSelectForm = true;
+
+		_sIdpResourceGroup = ASelectConfigManager.getSimpleParam(oConfig, "resourcegroup", false);
+		if (_sIdpResourceGroup == null)
+			_sIdpResourceGroup = "federation-idp";  // backward compatibility
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "IDP resourcegroup="+_sIdpResourceGroup);
+
+		_sFallbackUrl = ASelectConfigManager.getSimpleParam(oConfig, "fallback_url", false);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "fallback_url="+_sFallbackUrl);
+		
+		// Find the resourcegroup
+		sam = _configManager.getSection(null, "sam");
+		agent = _configManager.getSection(sam, "agent");
+		try {
+			Object metaResourcegroup = _configManager.getSection(agent, "resourcegroup", "id=" + _sIdpResourceGroup);
+			idpSection = _configManager.getSection(metaResourcegroup, "resource");
+		}		
+		catch (ASelectConfigException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No resourcegroup: "+_sIdpResourceGroup+" configured");
+		}
+		
+		// And pass it's resources to the metadata manager
+		MetaDataManagerSp metadataMgr = MetaDataManagerSp.getHandle();  // will create the MetaDataManager object
+		while (idpSection != null) {
+			metadataMgr.processResourceSection(idpSection);
+			idpSection = _configManager.getNextSection(idpSection);
+		}
 		
 		// Get Assertion Consumer data from config
 		try {
@@ -156,12 +185,11 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 		String sMethod = "process()";
 		String sRid;
 		String sFederationUrl = null;
-		// TODO find the preferred binding either  from request or config
 //		String preferredBinding = singleSignOnServiceBindingConstantHTTPPOST;
-		String preferredBinding = singleSignOnServiceBindingConstantREDIRECT;
+//		String preferredBinding = singleSignOnServiceBindingConstantREDIRECT;
 
 		String sMyUrl = _sServerUrl; // extractAselectServerUrl(request);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "MyUrl=" + sMyUrl + " Request=" + request);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "MyUrl=" + sMyUrl + " MyId="+getID()+ " Request=" + request);
 
 		try {
 			sRid = request.getParameter("rid");
@@ -176,26 +204,81 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No session found for RID: " + sRid);
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
-
+			//String sLanguage = (String)htSessionContext.get("language");
+			//if (sLanguage != null)
+			//	;
+			
 			// 20091028, Bauke, let the user choose which IdP to use
+			// 20110308, Bauke: changed, user chooses when "use_idp_select" is "true"
+			//     otherwise this handler uses it's own resource group to get a resource and sets "federation_url"
+			//     to the id of that resource
 			sFederationUrl = request.getParameter("federation_url");
-			int cnt = MetaDataManagerSp.getHandle().getIdpCount();
-			if (cnt == 1) {
-				sFederationUrl = MetaDataManagerSp.getHandle().getDefaultIdP(); // there can only be one
-			}
-			if (sFederationUrl == null || sFederationUrl.equals("")) {
-				// No Federation URL choice made yet
+			
+			//int cnt = MetaDataManagerSp.getHandle().getIdpCount();
+			//if (cnt == 1) {
+			//	sFederationUrl = MetaDataManagerSp.getHandle().getDefaultIdP(); // there can only be one
+			//}
+			if (bIdpSelectForm && (sFederationUrl == null || sFederationUrl.equals(""))) {
+				// No Federation URL choice made yet, allow the user to choose
 				String sSelectForm = _configManager.loadHTMLTemplate(null, "idpselect", _sUserLanguage, _sUserCountry);
 				sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
-				sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", sMyUrl + "/saml20_ists");
+				// Not backward compatible! [aselect_url] used to be server_url/handler_id,
+				// they're separated now to allow use of [aselect_url] in the traditional way too!
+				sSelectForm = Utils.replaceString(sSelectForm, "[handler_url]", sMyUrl + "/" + getID());
+				sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", sMyUrl); // 20110310 + "/" + getID());
+				sSelectForm = Utils.replaceString(sSelectForm, "[handler_id]", getID());
+				sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", _sServerId);  // 20110310
+				//sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
 				sSelectForm = _configManager.updateTemplate(sSelectForm, htSessionContext);
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Template updated");
+				response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 				response.setContentType("text/html");
+				response.setHeader("Pragma", "no-cache");
 				PrintWriter pwOut = response.getWriter();
 				pwOut.println(sSelectForm);
 				pwOut.close();
 				return new RequestState(null);
 			}
+			// federation_url was set or bIdpSelectForm is false
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "federation_url="+sFederationUrl);
+			
+			// 20110308, Bauke: new mechanism to get to the IdP using the SAM agent (allows redundant resources)
+			// User choice was made, or "federation_url" was set programmatically
+			ASelectSAMAgent samAgent = ASelectSAMAgent.getHandle();
+			SAMResource samResource = null;
+			try {
+				samResource = samAgent.getActiveResource(_sIdpResourceGroup);
+			}
+			catch (ASelectSAMException ex) {  // no active resource
+				// if a fallback is present: REDIRECT to the authsp
+				if (Utils.hasValue(_sFallbackUrl)) {
+					// Don't come back here:
+					htSessionContext.remove("forced_uid");
+					htSessionContext.remove("forced_authsp");
+					_oSessionManager.updateSession(sRid, htSessionContext);
+
+					String sRedirectUrl = _sFallbackUrl;
+					//sRedirectUrl = "[aselect_url]?request=direct_login1&rid=[rid]&authsp=Ldap&a-select-server=[a-select-server]";
+					sRedirectUrl = Utils.replaceString(sRedirectUrl, "[aselect_url]", sMyUrl);
+					sRedirectUrl = Utils.replaceString(sRedirectUrl, "[a-select-server]", _sServerId);
+					sRedirectUrl = Utils.replaceString(sRedirectUrl, "[rid]", sRid);
+					//sRedirectUrl = Utils.replaceString(sRedirectUrl, "[language]", sLanguage);
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Fallback REDIRECT to: " + sRedirectUrl);
+					
+					response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+					response.setContentType("text/html");
+					response.setHeader("Pragma", "no-cache");
+					response.sendRedirect(sRedirectUrl);
+					return new RequestState(null);
+				}
+				else {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No active resource available");
+					throw new ASelectSAMException(Errors.ERROR_ASELECT_SAM_UNAVALABLE);
+				}
+			}
+			// The result is a single resource from our own resourcegroup
+			sFederationUrl = samResource.getId();
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "IdP resource id="+sFederationUrl);
 
 			// 20090811, Bauke: save type of Authsp to store in the TGT later on
 			// This is needed to prevent session sync when we're not saml20
@@ -203,10 +286,10 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			htSessionContext.put("federation_url", sFederationUrl);
 			_oSessionManager.updateSession(sRid, htSessionContext);
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get MetaData Url=" + sFederationUrl);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get MetaData FederationUrl=" + sFederationUrl);
 			MetaDataManagerSp metadataMgr = MetaDataManagerSp.getHandle();
-			// TODO set RelayState to idp URL or requested resource URL
-			// TODO maybe make "automatic" (based on metadata)  selection between POST and REDIRECT
+			// IMPROVE set RelayState to idp URL or requested resource URL
+			// IMPROVE maybe make "automatic" (based on metadata) selection between POST and REDIRECT
 			// We now support the Redirect and POST Binding
 			String sDestination = null;
 			if ("POST".equalsIgnoreCase(_sHttpMethod)) {
@@ -265,8 +348,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			SAMLObjectBuilder<AuthnRequest> authnRequestbuilder = (SAMLObjectBuilder<AuthnRequest>) builderFactory
 					.getBuilder(AuthnRequest.DEFAULT_ELEMENT_NAME);
 			AuthnRequest authnRequest = authnRequestbuilder.buildObject();
-			
-			
+
 			// We should be able to set AssertionConsumerServiceIndex. This is according to saml specs mutually exclusive with
 			// ProtocolBinding and AssertionConsumerServiceURL
 			
@@ -296,8 +378,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 					authnRequest.setAssertionConsumerServiceURL(_sAssertionConsumerUrl);
 				}
 			}
-			
-			
+						
 			if  (partnerData != null && partnerData.getAttributeConsumerServiceindex() != null) {
 				authnRequest.setAttributeConsumingServiceIndex(Integer.parseInt(partnerData.getAttributeConsumerServiceindex() ));
 			} else {	// be backwards compatible
@@ -339,10 +420,9 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "<special_settings>="+specialSettings+" aselect_specials="+sSpecials);
 			
-			// Create the new RelayState	
+			// Create the new RelayState
 			String sRelayState = "idp=" + sFederationUrl;
-			if (specialSettings != null && specialSettings.contains("relay_specials")) {
-				
+			if (specialSettings != null && specialSettings.contains("relay_specials")) {	
 				if (Utils.hasValue(sSpecials))
 					sRelayState += "&aselect_specials="+sSpecials;
 				sRelayState = Base64Codec.encode(sRelayState.getBytes());
@@ -352,7 +432,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			//
 			// We have the AuthnRequest, now get it to the other side
 			//
-// TODO implement HTPPPOST binding and get back to user-agent with POST form
+// SUGGEST implement HTPPPOST binding and get back to user-agent with POST form
 			boolean useSha256 = (specialSettings != null && specialSettings.contains("sha256"));
 			if (_sHttpMethod.equals("GET")) {
 				// No use signing the AuthnRequest, it's even forbidden according to the Saml specs
@@ -406,7 +486,6 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			else {  // POST
 				// 20100331, Bauke: added support for HTTP POST
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the authnRequest >======"+authnRequest);
-//				authnRequest = (AuthnRequest)SamlTools.signSamlObject(authnRequest, useSha256? "sha256": "sha1");
 				authnRequest = (AuthnRequest)SamlTools.signSamlObject(authnRequest, useSha256? "sha256": "sha1", 
 							"true".equalsIgnoreCase(partnerData.getAddkeyname()), "true".equalsIgnoreCase(partnerData.getAddcertificate()) );
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the authnRequest ======<"+authnRequest);
@@ -424,7 +503,6 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				}
 
 				// Let's POST the token
-				
 				String sInputs = buildHtmlInput("RelayState", sRelayState);
 //				sInputs += buildHtmlInput("SAMLResponse", sAssertion);  //Tools.htmlEncode(nodeMessageContext.getTextContent()));
 				// RH, 20101104, this should be a SAMLRequest, we were just lucky the other side didn't bother   

@@ -423,7 +423,6 @@ public class NullAuthSP extends ASelectHttpServlet
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "NULL GET {" + servletRequest + " --> " + sMethod + ": "
 					+ sQueryString);
 
-
 			sAsUrl = URLDecoder.decode(sAsUrl, "UTF-8");
 			sUid = URLDecoder.decode(sUid, "UTF-8");
 			sSignature = URLDecoder.decode(sSignature, "UTF-8");
@@ -452,7 +451,7 @@ public class NullAuthSP extends ASelectHttpServlet
 			}
 			else {
 				_authenticationLogger.log(new Object[] {
-					MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied"
+					MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied", _sAuthMode
 				});
 			}
 

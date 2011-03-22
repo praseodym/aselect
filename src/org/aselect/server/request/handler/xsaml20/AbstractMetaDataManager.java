@@ -35,6 +35,7 @@ import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
+import org.aselect.system.utils.Utils;
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.EntityDescriptor;
@@ -113,7 +114,7 @@ public abstract class AbstractMetaDataManager
 	 *             the a select exception
 	 */
 	protected void initializeMetaDataHandling()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "initializeMetaData";
 
@@ -389,7 +390,7 @@ public abstract class AbstractMetaDataManager
 				if (entityDescriptorValue != null) {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "New Entity Descriptor: " + entityDescriptorValue
 							+ " for " + entityId);
-					// 20100501, Bauke: metadata can contain both Descriptor types, so check them both!
+					// 20100501, Bauke: metadata can contain both Descriptor types, so check both of them!
 					SSODescriptor descriptorValueIDP = entityDescriptorValue.getIDPSSODescriptor(protocolSupportEnumeration);
 					if (descriptorValueIDP != null) {
 						_systemLogger.log(Level.INFO, MODULE, sMethod, "IDP SSODescriptor found");
@@ -684,7 +685,7 @@ public abstract class AbstractMetaDataManager
 	 * @param elementName
 	 *            the element name
 	 * @param bindingName
-	 *            the binding name
+	 *            the binding name, can be empty meaning "pick any"
 	 * @param attrName
 	 *            the attribute name we're looking for
 	 * @return 
@@ -696,29 +697,39 @@ public abstract class AbstractMetaDataManager
 	{
 		String sMethod = "getAttrFromElementBinding " + Thread.currentThread().getId();
 		String location = null;
+		String sDefaultLocation = null;
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "myRole="+getMyRole()+" entityId=" + entityId + " elementName=" + elementName
 				+ " binding=" + bindingName + " attr=" + attrName);
 		if (entityId == null)
 			return null;
 		ensureMetadataPresence(entityId);
-		_systemLogger.log(Level.FINE, MODULE, sMethod, "Presence ensured for " + entityId);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Presence ensured for " + entityId);
 		
 		SSODescriptor descriptor = SSODescriptors.get(makeEntityKey(entityId, null));
-		if (descriptor != null) {
+		if (descriptor == null) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No SSODescriptor for " + entityId);
+		}
+		else {
 			try {
 				Element domDescriptor = marshallDescriptor(descriptor);
+				if (domDescriptor == null)
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "marshallDescriptor failed");
 				NodeList nodeList = domDescriptor.getChildNodes();
 
-				// _systemLogger.log(Level.FINE, MODULE, sMethod, "Try "+nodeList.getLength()+" entries");
+				//_systemLogger.log(Level.FINE, MODULE, sMethod, "Try "+nodeList.getLength()+" entries");
 				for (int i = 0; i < nodeList.getLength(); i++) {
 					Node childNode = nodeList.item(i);
-					// _systemLogger.log(Level.FINE, MODULE, sMethod, "Node "+childNode.getLocalName());
+					//_systemLogger.log(Level.FINE, MODULE, sMethod, "Node "+childNode.getLocalName());
 					if (elementName.equals(childNode.getLocalName())) {
 						NamedNodeMap nodeMap = childNode.getAttributes();
 						String bindingMDValue = nodeMap.getNamedItem("Binding").getNodeValue();
-						// _systemLogger.log(Level.FINE, MODULE, sMethod, "Binding "+bindingMDValue);
-						if (bindingMDValue.equals(bindingName)) {
+						Node nIsDefault = nodeMap.getNamedItem("isDefault");
+						boolean isDefault = false;
+						if (nIsDefault != null && "true".equals(nIsDefault.getNodeValue()))
+							isDefault = true;
+						_systemLogger.log(Level.FINE, MODULE, sMethod, "Try binding="+bindingMDValue+" isDefault="+isDefault);
+						if ((!Utils.hasValue(bindingName) && isDefault) || bindingMDValue.equals(bindingName)) {
 							Node node = nodeMap.getNamedItem(attrName);
 							if (node != null) {
 								location = node.getNodeValue();
@@ -731,6 +742,7 @@ public abstract class AbstractMetaDataManager
 										+ entityId + " elementName=" + elementName + " bindingName=" + bindingName
 										+ " attrName=" + attrName + " locatione=" + location);
 							}
+							break;  // ready
 						}
 					}
 				}

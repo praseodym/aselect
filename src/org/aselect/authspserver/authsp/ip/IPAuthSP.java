@@ -425,7 +425,7 @@ public class IPAuthSP extends ASelectHttpServlet
 			if (!sResultCode.equals(Errors.ERROR_IP_SUCCESS)) {
 				// authenticate failed
 				_oAuthSPAuthenticationLogger.log(new Object[] {
-					MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied"
+					MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied", sResultCode
 				});
 			}
 			else {

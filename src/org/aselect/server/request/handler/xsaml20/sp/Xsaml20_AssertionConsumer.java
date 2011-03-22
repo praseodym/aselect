@@ -34,6 +34,7 @@ import org.aselect.server.request.handler.xsaml20.Saml20_BaseHandler;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.server.request.handler.xsaml20.SecurityLevel;
 import org.aselect.server.request.handler.xsaml20.SoapManager;
+import org.aselect.server.session.SessionManager;
 import org.aselect.server.tgt.TGTManager;
 import org.aselect.server.tgt.TGTIssuer;
 import org.aselect.system.error.Errors;
@@ -284,10 +285,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "artifactResponse was NOT signed OK");
 						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 					}
-					
 				}
 				samlResponseObject = artifactResponse.getMessage();
-		
 			}	
 			else if ( !(sReceivedResponse == null || "".equals(sReceivedResponse)) ) {
 				// handle http-post, can be unsolicited post as well
@@ -318,10 +317,9 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				UnmarshallerFactory factory = Configuration.getUnmarshallerFactory();
 				Unmarshaller unmarshaller = factory.getUnmarshaller((Element) eltSAMLResponse);
 	
-				samlResponseObject = (Response) unmarshaller
-						.unmarshall((Element) eltSAMLResponse);
-				
-			} else {
+				samlResponseObject = (Response) unmarshaller.unmarshall((Element) eltSAMLResponse);
+			}
+			else {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No Artifact and no Response found in the message.");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
@@ -594,13 +592,14 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 
 			String sResultCode = (String) htRemoteAttributes.get("result_code");
 			String sUID = (String) htRemoteAttributes.get("uid");
+			String sFederationId = (String) htSessionContext.get("federation_url");
 			if (sResultCode != null) {
 				if (sResultCode.equals(Errors.ERROR_ASELECT_SERVER_CANCEL)
 						|| sResultCode.equals(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER)) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Cancel");
 					_authenticationLogger.log(new Object[] {
-						"Cross", sUID, (String) htServiceRequest.get("client_ip"), sRemoteOrg,
-						htSessionContext.get("app_id"), "denied", sResultCode
+						"Saml", sUID, (String) htServiceRequest.get("client_ip"), sRemoteOrg,
+						htSessionContext.get("app_id"), "denied", sFederationId, sResultCode
 					});
 					// Issue 'CANCEL' TGT
 					TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
@@ -609,16 +608,16 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				else { // remote server returned error
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error");
 					_authenticationLogger.log(new Object[] {
-						"Cross", sUID, (String) htServiceRequest.get("client_ip"), sRemoteOrg,
-						htSessionContext.get("app_id"), "denied", sResultCode
+						"Saml", sUID, (String) htServiceRequest.get("client_ip"), sRemoteOrg,
+						htSessionContext.get("app_id"), "denied", sFederationId, sResultCode
 					});
 					throw new ASelectException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);
 				}
 			}
 			else { // No result_code set, log successful authentication
 				_authenticationLogger.log(new Object[] {
-					"Cross", sUID, (String) htServiceRequest.get("client_ip"), sRemoteOrg,
-					htSessionContext.get("app_id"), "granted"
+					"Saml", sUID, (String) htServiceRequest.get("client_ip"), sRemoteOrg,
+					htSessionContext.get("app_id"), "granted", sFederationId
 				});
 
 				// Issue a cross TGT since we do not know the AuthSP

@@ -65,12 +65,11 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 
-// TODO: Auto-generated Javadoc
 /**
  * The SAM Resource Group is a Thread that represents a resource that will be checked every interval time. <br>
  * <br>
  * <b>Description: </b> <br>
- * SAM stands for Simple A-Select Management. SAM is designed to enable A-Select to work in a redundant envirnoment. A
+ * SAM stands for Simple A-Select Management. SAM is designed to enable A-Select to work in a redundant environment. A
  * SAMResourceGroup resembles a group of entry points (SAMResources) to a particular resource (for example a database).
  * The SAMResourceGroup will query the SAMResources periodically and keeps a list of active resources. When queried by
  * an A-Select component, through the SAMAgent, the SAMResourceGroup will present the A-Select component an active
@@ -224,14 +223,11 @@ public class SAMResourceGroup extends Thread
 					_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
 					throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 				}
-
 				_htResources.put(sResourceId, oSAMResource);
 			}
 
 			updateStatus();
-
 			_bRunThread = true;
-			
 		}
 		catch (ASelectSAMException e) {
 			throw e;

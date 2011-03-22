@@ -151,14 +151,8 @@ public class ASelectAuthenticationLogger extends AuthenticationLogger
 				catch (Exception e) {
 					sAuthLogTarget = null;
 
-					oASelectSystemLogger
-							.log(
-									Level.WARNING,
-									MODULE,
-									sMethod,
-									"No valid config item: 'target' in config section 'logging' with id='authentication' found.",
-									e);
-
+					oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod,
+							"No valid config item: 'target' in config section 'logging' with id='authentication' found.", e);
 					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 				}
 
@@ -172,18 +166,12 @@ public class ASelectAuthenticationLogger extends AuthenticationLogger
 					sbInfo.append(sAuthLogTarget);
 					sbInfo.append("' in config section 'logging' with id='authentication' found.");
 					oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sbInfo.toString(), e);
-
 					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 				}
 			}
 			catch (Exception e) {
-				oASelectSystemLogger
-						.log(
-								Level.CONFIG,
-								MODULE,
-								sMethod,
-								"No valid config section 'logging' with id='authentication' found, using default logging settings.",
-								e);
+				oASelectSystemLogger.log(Level.CONFIG, MODULE, sMethod,
+						"No valid config section 'logging' with id='authentication' found, using default logging settings.", e);
 			}
 
 			if (oAuthLogTarget != null && sAuthLogTarget != null && sAuthLogTarget.equalsIgnoreCase("database")) {

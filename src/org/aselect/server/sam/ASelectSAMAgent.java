@@ -39,7 +39,6 @@ import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.sam.agent.SAMAgent;
 
-// TODO: Auto-generated Javadoc
 /**
  * A singleton class for the <code>SAMAgent</code>. <br>
  * <br>

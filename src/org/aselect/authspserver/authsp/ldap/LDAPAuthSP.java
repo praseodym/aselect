@@ -603,7 +603,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 						// authenticate failed
 						// set selfBlockedTime in the directory
 						_authenticationLogger.log(new Object[] {
-							MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied"
+							MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied", Errors.ERROR_LDAP_INVALID_PASSWORD
 						});
 						handleResult(servletRequest, servletResponse, pwOut, sResultCode, sLanguage);
 					}
@@ -903,7 +903,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			}
 			else if (sResultCode.equals(Errors.ERROR_LDAP_INVALID_PASSWORD)) {  // invalid password
 				_authenticationLogger.log(new Object[] {
-					MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "denied"
+					MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "denied", Errors.ERROR_LDAP_INVALID_PASSWORD
 				});
 				throw new ASelectException(sResultCode);
 			}

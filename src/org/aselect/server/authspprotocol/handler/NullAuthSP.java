@@ -463,7 +463,7 @@ public class NullAuthSP implements IAuthSPProtocolHandler
 			if (!sResultCode.equalsIgnoreCase(ERROR_NO_ERROR)) {
 				if (sResultCode.equalsIgnoreCase(ERROR_ACCESS_DENIED)) {
 					_authenticationLogger.log(new Object[] {
-						MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrganization, sAppID, "denied"
+						MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrganization, sAppID, "denied", sResultCode
 					});
 
 					throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);

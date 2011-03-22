@@ -445,8 +445,8 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 			if (sResultCode.equalsIgnoreCase(ERROR_OPENID_ACCESS_DENIED)) { // access denied
 				// only log to authentication log
 				_authenticationLogger.log(new Object[] {
-					MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg, (String) htSessionContext.get("app_id"),
-					"denied"
+					MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg,
+					(String) htSessionContext.get("app_id"), "denied", sResultCode
 				});
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);
 			}
@@ -460,8 +460,8 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 
 			// everything OK -> log to authentication logger
 			_authenticationLogger.log(new Object[] {
-				MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg, (String) htSessionContext.get("app_id"),
-				"granted"
+				MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg,
+				(String) htSessionContext.get("app_id"), "granted"
 			});
 			// set response
 			htResponse.put("rid", sRid);

@@ -144,7 +144,6 @@ public class PartnerData
 		this.attributeconsumerserviceindex = attributeconsumerserviceindex;
 	}
 
-	
 	/**
 	 * @return the metadata4partner
 	 */
@@ -157,17 +156,21 @@ public class PartnerData
 	}
 
 	// Simple wrapper for handler info
-	public class HandlerInfo {
+	public class HandlerInfo
+	{
 		private String type = null;
 		private String binding = null;
 		private Boolean isdefault = null;
 		private Integer index =  null;
 		private String responselocation =  null;
 
-		private HandlerInfo() {	// hide this constructor
+		private HandlerInfo()
+		{
+			// hide this constructor
 		}
 
-		public HandlerInfo (		String type, String binding, Boolean isdefault, Integer index, String responselocation) {
+		public HandlerInfo(String type, String binding, Boolean isdefault, Integer index, String responselocation)
+		{
 			this.type = type;
 			this.binding = binding;
 			this.isdefault = isdefault;

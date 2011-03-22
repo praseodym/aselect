@@ -478,7 +478,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 				resultCode = ("0040".equals(resultCode)) ? Errors.ERROR_ASELECT_SERVER_CANCEL
 						: Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER;
 				_authenticationLogger.log(new Object[] {
-					MODULE, sUid, htResponse.get("client_ip"), sOrganization, sAppID, "denied"
+					MODULE, sUid, htResponse.get("client_ip"), sOrganization, sAppID, "denied", resultCode
 				});
 			}
 			result.put("rid", sLocalRid);

@@ -647,7 +647,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 					}
 					else { // authenticate failed
 						_authenticationLogger.log(new Object[] {
-							MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied"
+							MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied", Errors.ERROR_SMS_INVALID_PASSWORD
 						});
 						handleResult(servletRequest, servletResponse, pwOut, sResultCode, sLanguage);
 					}

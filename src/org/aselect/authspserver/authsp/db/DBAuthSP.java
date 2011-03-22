@@ -684,7 +684,7 @@ public class DBAuthSP extends ASelectHttpServlet
 						else {
 							// authenticate failed
 							_authenticationLogger.log(new Object[] {
-								MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied"
+								MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied", Errors.ERROR_DB_INVALID_PASSWORD
 							});
 							handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_INVALID_PASSWORD, sLanguage);
 						}
@@ -1080,7 +1080,7 @@ public class DBAuthSP extends ASelectHttpServlet
 			}
 			else {
 				_authenticationLogger.log(new Object[] {
-					MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "denied"
+					MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "denied", Errors.ERROR_DB_INVALID_PASSWORD
 				});
 				throw new ASelectException(Errors.ERROR_DB_INVALID_PASSWORD);
 			}
@@ -1088,7 +1088,7 @@ public class DBAuthSP extends ASelectHttpServlet
 		else {
 			// no results for uid
 			_authenticationLogger.log(new Object[] {
-				MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "denied"
+				MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "denied", sResultCode
 			});
 			throw new ASelectException(sResultCode);
 		}

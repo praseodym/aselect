@@ -99,8 +99,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			_sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true);
 			_sASelectServerID = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
 			_sASelectOrganization = ASelectConfigManager.getParamFromSection(null, "aselect", "organization", true);
-			_sFriendlyName = ASelectConfigManager.getParamFromSection(null, "aselect", "organization_friendly_name",
-					true);
+			_sFriendlyName = ASelectConfigManager.getParamFromSection(null, "aselect", "organization_friendly_name", true);
 
 			// Initialize assertion building, if needed
 			if (useConfigToCreateSamlBuilder())

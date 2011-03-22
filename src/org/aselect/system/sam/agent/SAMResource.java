@@ -54,12 +54,11 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 
-// TODO: Auto-generated Javadoc
 /**
  * A shield surrounding a configured resource in a resourcegroup. <br>
  * <br>
  * <b>Description: </b> <br>
- * SAM stands for Simple A-Select Management. SAM is designed to enable A-Select to work in a redundant envirnoment. A
+ * SAM stands for Simple A-Select Management. SAM is designed to enable A-Select to work in a redundant environment. A
  * SAMResource resembles a server, connection or entry point for a specific resource (e.g. an A-Select Server or a
  * database). At a given interval the SAMResource will check whether or not it's resource is still available. <br>
  * <br>
@@ -93,8 +92,7 @@ public class SAMResource
 	/**
 	 * A <code>boolean</code> that keeps track iof the resource availability
 	 */
-//	private boolean _bLive;	//	RH, 20110202, o
-	private boolean _bLive = false;	//	RH, 20110202, n
+	private boolean _bLive = false;
 
 	/**
 	 * The thread that polls every interval
@@ -168,7 +166,6 @@ public class SAMResource
 		Object oPollingMethodSection = null;
 		Class cPollingClass = null;
 		String sConfiguredInterval = null;
-//		_bLive = true;	// RH, 20110202, o
 
 		try {
 			try {
@@ -190,7 +187,6 @@ public class SAMResource
 						"No 'cost'  in 'resource' section, setting to 0 (highest priority).");
 				setiCost(0);
 			}
-
 			
 			try {
 				sConfiguredPollingMethod = oConfigManager.getParam(oConfigSection, "polling");
@@ -393,4 +389,15 @@ public class SAMResource
 	{
 		this.iCost = iCost;
 	}
+
+	/**
+	 * Gets the id of this resource.
+	 * 
+	 * @return the id
+	 */
+	public String getId()
+	{
+		return _sId;
+	}
+
 }

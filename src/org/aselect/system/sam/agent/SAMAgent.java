@@ -64,7 +64,6 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 
-// TODO: Auto-generated Javadoc
 /**
  * The SAM Agent is used as a central location to retrieve an active resource. <br>
  * <br>
@@ -163,18 +162,17 @@ public class SAMAgent
 			// Remove old resource groups
 			destroy();
 
+			_htResourceGroups = new HashMap();
+			
 			SAMResourceGroup oSAMResourceGroup = new SAMResourceGroup();
 			oSAMResourceGroup.init(oResourceGroupSection, oConfigManager, _oSystemLogger);
 			oSAMResourceGroup.start();
-
-			_htResourceGroups = new HashMap();
 			_htResourceGroups.put(oConfigManager.getParam(oResourceGroupSection, "id"), oSAMResourceGroup);
 
 			while ((oResourceGroupSection = oConfigManager.getNextSection(oResourceGroupSection)) != null) {
 				oSAMResourceGroup = new SAMResourceGroup();
 				oSAMResourceGroup.init(oResourceGroupSection, oConfigManager, _oSystemLogger);
 				oSAMResourceGroup.start();
-
 				_htResourceGroups.put(oConfigManager.getParam(oResourceGroupSection, "id"), oSAMResourceGroup);
 			}
 		}
@@ -210,13 +208,12 @@ public class SAMAgent
 	 *             if no active resource can be found
 	 */
 	public SAMResource getActiveResource(String sID)
-		throws ASelectSAMException
+	throws ASelectSAMException
 	{
 		String sMethod = "getActiveResource()";
 		SAMResource oSAMResource = null;
 		
 		_oSystemLogger.log(Level.INFO, MODULE, sMethod, "Getting active resource for: " + sID);		// RH, 20110202, n
-
 		SAMResourceGroup oSAMResourceGroup = (SAMResourceGroup) _htResourceGroups.get(sID);
 
 		if (oSAMResourceGroup != null) {
@@ -224,12 +221,10 @@ public class SAMAgent
 		}
 		else {
 			StringBuffer sbError = new StringBuffer("Resourcegroup with name '");
-			sbError.append(sID);
-			sbError.append("' does not exist");
+			sbError.append(sID).append("' does not exist");
 			_oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
 			throw new ASelectSAMException(Errors.ERROR_ASELECT_SAM_UNAVALABLE);
 		}
-
 		return oSAMResource;
 	}
 

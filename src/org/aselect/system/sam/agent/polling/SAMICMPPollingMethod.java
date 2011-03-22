@@ -81,29 +81,26 @@ public class SAMICMPPollingMethod implements ISAMPollingMethod
 	 * <br>
 	 * 
 	 * @param oResourceConfigSection
-	 *            the o resource config section
+	 *            the resource config section
 	 * @param oPollingMethodConfigSection
-	 *            the o polling method config section
+	 *            the polling method config section
 	 * @param oConfigManager
-	 *            the o config manager
+	 *            the config manager
 	 * @param oSystemLogger
-	 *            the o system logger
+	 *            the system logger
 	 * @throws ASelectSAMException
-	 *             the a select sam exception
 	 * @see org.aselect.system.sam.agent.ISAMPollingMethod#init(java.lang.Object, java.lang.Object,
 	 *      org.aselect.system.configmanager.ConfigManager, org.aselect.system.logging.SystemLogger)
 	 */
 	public void init(Object oResourceConfigSection, Object oPollingMethodConfigSection, ConfigManager oConfigManager,
 			SystemLogger oSystemLogger)
-		throws ASelectSAMException
+	throws ASelectSAMException
 	{
 		StringBuffer sbError = new StringBuffer();
-		String sMethod = "init()";
-
+		String sMethod = "init";
 		String sUrl = null;
 		String sPingCommand = null;
 		URI oUri = null;
-
 		_oSystemLogger = oSystemLogger;
 
 		try {
@@ -113,7 +110,6 @@ public class SAMICMPPollingMethod implements ISAMPollingMethod
 			catch (Exception e) {
 				sbError.append("Error retrieving config item 'url' from the resource section.");
 				_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
-
 				throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -123,27 +119,26 @@ public class SAMICMPPollingMethod implements ISAMPollingMethod
 			catch (Exception e) {
 				sbError.append("Error retrieving config item 'pingcommand' from the resource section.");
 				_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
-
 				throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
-			oUri = new URI(sUrl);
-
-			if (oUri.getScheme().equalsIgnoreCase("jdbc")) {
-				oUri = parseJDBCString(sUrl);
+			String sHost = null;
+			try {
+				oUri = new URI(sUrl);
+				if (oUri.getScheme().equalsIgnoreCase("jdbc")) {
+					oUri = parseJDBCString(sUrl);
+				}
+				if (oUri.getHost() == null) {
+					sbError.append("The configured url doesn't contain a host.");
+					_oSystemLogger.log(Level.INFO, MODULE, sMethod, sbError.toString());
+				}
+				sHost = oUri.getHost();
 			}
-
-			if (oUri.getHost() == null) {
-				sbError.append("The configured url doesn't contain a host.");
-				_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString());
-
-				throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR);
+			catch (Exception e) {
+				_oSystemLogger.log(Level.INFO, MODULE, sMethod, "URL="+sUrl+" Exeption ignored:"+e);
+				sHost = sUrl;
 			}
-
-			_sbPingCommand = new StringBuffer(sPingCommand);
-			_sbPingCommand.append(" ");
-			_sbPingCommand.append(oUri.getHost());
-
+			_sbPingCommand = new StringBuffer(sPingCommand).append(" ").append(sHost);
 		}
 		catch (ASelectSAMException e) {
 			throw e;
@@ -152,7 +147,6 @@ public class SAMICMPPollingMethod implements ISAMPollingMethod
 			sbError.append("An error occured during the initialization of the SAM ICMP Poller: ");
 			sbError.append(e.getMessage());
 			_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
-
 			throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}

@@ -383,7 +383,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *            The A-Select Server organisation.
 	 */
 	public ApplicationBrowserHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-			String sMyServerId, String sMyOrg) {
+			String sMyServerId, String sMyOrg)
+	{
 		super(servletRequest, servletResponse, sMyServerId, sMyOrg);
 		_sModule = "ApplicationBrowserHandler";
 		_systemLogger.log(Level.INFO, _sModule, _sModule, "== create == user language=" + _sUserLanguage);
@@ -582,10 +583,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		Tools.calculateAndReportSensorData(_configManager, _systemLogger, _htSessionContext);
 		_sessionManager.killSession(sRid);
 		
-		String sAppUrl = (String)_htSessionContext.get("app_url");
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
+		String sAppUrl = (String)_htSessionContext.get("app_url");	
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIRECT to " + sAppUrl);
 		
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sAppUrl);
 		TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 		String sLang = (String)htTGTContext.get("language");
 		oTGTIssuer.sendRedirect(sAppUrl, sTgt, sRid, servletResponse, sLang);

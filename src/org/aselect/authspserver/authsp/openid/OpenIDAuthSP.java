@@ -552,8 +552,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 								htServiceRequest.put("country", sCountry);
 							if (sLanguage != null)
 								htServiceRequest.put("language", sLanguage);
-							// show authentication form once again with warning
-							// message
+							// show authentication form once again with warning message
 							StringBuffer sbSignature = new StringBuffer(sRid);
 							sbSignature.append(sAsUrl);
 							sbSignature.append(sAsId);
@@ -570,7 +569,6 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 
 //							sSignature = URLEncoder.encode(sSignature, "UTF-8");
 							htServiceRequest.put("signature", sSignature);
-
 							
 							showAuthenticateForm(pwOut, Errors.ERROR_DB_INVALID_PASSWORD, _configManager
 									.getErrorMessage(Errors.ERROR_DB_INVALID_PASSWORD, _oErrorProperties),
@@ -579,7 +577,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 						else {
 							// authenticate failed
 							_authenticationLogger.log(new Object[] {
-								MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied"
+								MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied", Errors.ERROR_DB_INVALID_PASSWORD
 							});
 							// TODO change errors
 							handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_INVALID_PASSWORD, sLanguage, sUid);

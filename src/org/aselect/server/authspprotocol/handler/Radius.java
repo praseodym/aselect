@@ -459,7 +459,7 @@ public class Radius implements IAuthSPProtocolHandler
 			if (sResultCode.equalsIgnoreCase(ERROR_RADIUS_ACCESS_DENIED)) {
 				_oASelectAuthenticationLogger.log(new Object[] {
 					MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg, (String) htSessionContext.get("app_id"),
-					"denied"
+					"denied", sResultCode
 				});
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);
 			}

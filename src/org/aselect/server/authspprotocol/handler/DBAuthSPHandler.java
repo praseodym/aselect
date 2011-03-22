@@ -343,7 +343,7 @@ public class DBAuthSPHandler implements IAuthSPProtocolHandler
 			if (sResultCode.equalsIgnoreCase(ERROR_DB_ACCESS_DENIED)) {
 				_authenticationLogger.log(new Object[] {
 					"DBAuthSPHandler", sUserId, htAuthspResponse.get("client_ip"), sOrg,
-					(String) htSessionContext.get("app_id"), "denied"
+					(String) htSessionContext.get("app_id"), "denied", sResultCode
 				});
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);
 			}

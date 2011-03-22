@@ -74,7 +74,6 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.service.SAMServiceServlet;
 
-// TODO: Auto-generated Javadoc
 /**
  * The A-Select Server SAM Service servlet. <br>
  * <br>

@@ -619,7 +619,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 			}
 			else {
 				_authenticationLogger.log(new Object[] {
-					MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied"
+					MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied", sResultCode
 				});
 			}
 

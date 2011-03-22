@@ -15,11 +15,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -35,7 +31,6 @@ import org.aselect.server.request.handler.xsaml20.Saml20_Metadata;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.server.request.handler.xsaml20.SecurityLevel;
 import org.aselect.server.request.handler.xsaml20.Saml20_ArtifactManager;
-import org.aselect.server.request.handler.xsaml20.ServiceProvider;
 import org.aselect.server.session.SessionManager;
 import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
@@ -43,7 +38,6 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.Audit;
 import org.aselect.system.utils.BASE64Encoder;
-import org.aselect.system.utils.Base64Codec;
 import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
 import org.opensaml.common.SAMLObjectBuilder;
@@ -74,7 +68,6 @@ import org.opensaml.saml2.core.Subject;
 import org.opensaml.saml2.core.SubjectConfirmation;
 import org.opensaml.saml2.core.SubjectConfirmationData;
 import org.opensaml.saml2.core.SubjectLocality;
-import org.opensaml.saml2.core.impl.AuthnContextDeclBuilder;
 import org.opensaml.saml2.metadata.AssertionConsumerService;
 import org.opensaml.xml.Configuration;
 import org.opensaml.xml.Namespace;
@@ -95,7 +88,6 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	private final static String MODULE = "Xsaml20_SSO";
 	private final static String RETURN_SUFFIX = "_return";
 	private final String AUTHNREQUEST = "AuthnRequest";
-	// TODO maybe make DEFAULT_BINDING configurable
 	private String _sPostTemplate = null;
 
 
@@ -465,7 +457,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		// IDP MUST honor requested sAssertionConsumerServiceURL from AUTHNREQUEST first
 		if (AUTHNREQUEST.equals(elementName)) {
 			AuthnRequest authnRequest = (AuthnRequest) samlMessage;
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get Location from AuthnRequest");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get Location from AuthnRequest 1");
 			sAssertionConsumerServiceURL = authnRequest.getAssertionConsumerServiceURL();
 		}
 
@@ -482,43 +474,22 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		String sBindingName = null;
 		if (AUTHNREQUEST.equals(elementName)) {
 			AuthnRequest authnRequest = (AuthnRequest) samlMessage;
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get Location from AuthnRequest");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get Location from AuthnRequest 2");
 			sAssertionConsumerServiceURL = authnRequest.getAssertionConsumerServiceURL();
 			sBindingName = authnRequest.getProtocolBinding();
-			if (sBindingName ==  null || "".equals(sBindingName)) {	// Set for backward compatibility
-					sBindingName = SAMLConstants.SAML2_ARTIFACT_BINDING_URI;
-				
-			}
+			
+			// 20110315, Bauke: pass absence of requested Binding to getLocation() below
+			//if (sBindingName == null || "".equals(sBindingName)) {	// Set for backward compatibility
+			//	sBindingName = SAMLConstants.SAML2_ARTIFACT_BINDING_URI;
+			//}
 		}
 		// RH, 20101111, sn
-//		String sBindingName = SAMLConstants.SAML2_ARTIFACT_BINDING_URI;	// RH, 20101111, o
-		
 
 		// _systemLogger.log(Level.INFO, MODULE, sMethod, "Meta");
 		MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
 
-		/*
-		 * try { // TEST sAssertionConsumerServiceURL =
-		 * metadataManager.getLocation("https://www.sp.com:9443/sps/IBM-Overheid/saml20", "AssertionConsumerService",
-		 * "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact"); _systemLogger.log(Level.INFO, MODULE, sMethod,
-		 * "Location="+sAssertionConsumerServiceURL); } catch (ASelectException e) { _systemLogger.log(Level.WARNING,
-		 * MODULE, sMethod, "Failed to get location: "+e.getMessage()); } try { // TEST sAssertionConsumerServiceURL =
-		 * metadataManager.getLocation("https://portal.sunlabs.nl:444/opensso", "AssertionConsumerService",
-		 * "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact"); _systemLogger.log(Level.INFO, MODULE, sMethod,
-		 * "Location="+sAssertionConsumerServiceURL); } catch (ASelectException e) { _systemLogger.log(Level.WARNING,
-		 * MODULE, sMethod, "Failed to get location: "+e.getMessage()); } try { // TEST sAssertionConsumerServiceURL =
-		 * metadataManager.getLocation("https://siam.s-hertogenbosch.nl/aselectserver/server",
-		 * "AssertionConsumerService", "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact");
-		 * _systemLogger.log(Level.INFO, MODULE, sMethod, "Location="+sAssertionConsumerServiceURL); } catch
-		 * (ASelectException e) { _systemLogger.log(Level.WARNING, MODULE, sMethod,
-		 * "Failed to get location: "+e.getMessage()); } try { // TEST sAssertionConsumerServiceURL =
-		 * metadataManager.getLocation("http://fed.amsterdamlaan.net/fed/sp", "AssertionConsumerService",
-		 * "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact"); _systemLogger.log(Level.INFO, MODULE, sMethod,
-		 * "Location="+sAssertionConsumerServiceURL); } catch (ASelectException e) { _systemLogger.log(Level.WARNING,
-		 * MODULE, sMethod, "Failed to get location: "+e.getMessage()); }
-		 */
-		_systemLogger.log(Level.WARNING, MODULE, sMethod, "Looking fors EntityId / sElementName / sBindingName : " + 
-				sEntityId + " / " + sElementName + " / " + sBindingName + " in: " + metadataManager.getMetadataURL(sEntityId) );
+		_systemLogger.log(Level.WARNING, MODULE, sMethod, "Looking for EntityId="+sEntityId + " sElementName="+sElementName+
+				" sBindingName="+sBindingName + " in:"+metadataManager.getMetadataURL(sEntityId));
 		try {
 			sAssertionConsumerServiceURL = metadataManager.getLocation(sEntityId, sElementName, sBindingName);
 		}
@@ -526,9 +497,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			// Metadata retrieval failed so get it from the message
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to get location: " + e.getMessage());
 		}
-
-		// TODO get sAssertionConsumerServiceURL from other bindings (first from "default" then from any other present
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta done acurl="+sAssertionConsumerServiceURL);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta done ACurl="+sAssertionConsumerServiceURL);
 		
 		// RH, 20101111, so
 //		if (sAssertionConsumerServiceURL == null) {

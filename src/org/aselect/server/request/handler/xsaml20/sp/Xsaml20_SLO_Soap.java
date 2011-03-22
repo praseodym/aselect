@@ -41,7 +41,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
-// TODO: Auto-generated Javadoc
 //
 // SP Soap Logout Request Handler
 // Handles IdP requests using Soap
