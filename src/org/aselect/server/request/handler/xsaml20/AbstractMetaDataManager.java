@@ -25,6 +25,7 @@ import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -642,9 +643,9 @@ public abstract class AbstractMetaDataManager
 	 *             the a select exception
 	 */
 	public String getLocation(String entityId, String elementName, String bindingName)
-		throws ASelectException
+	throws ASelectException
 	{
-		String locationValue = getAttrFromElementBinding(entityId, elementName, bindingName, "Location");
+		String locationValue = getAttrFromElementBinding(entityId, elementName, bindingName, "Location", null);
 		return locationValue;
 	}
 
@@ -670,37 +671,62 @@ public abstract class AbstractMetaDataManager
 	 *             the a select exception
 	 */
 	public String getResponseLocation(String entityId, String elementName, String bindingName)
-		throws ASelectException
+	throws ASelectException
 	{
-		return getAttrFromElementBinding(entityId, elementName, bindingName, "ResponseLocation");
+		return getAttrFromElementBinding(entityId, elementName, bindingName, "ResponseLocation", null);
 	}
 
 	/**
-	 * Retrieve the value for "attrName" within the entity 'entityId'
-	 * looking for 'elementName' with binding 'bindingName'.
-	 * for 
+	 * Gets the location and binding.
 	 * 
 	 * @param entityId
 	 *            the entity id
 	 * @param elementName
 	 *            the element name
 	 * @param bindingName
+	 *            the binding name
+	 * @param whichLocation
+	 *            the name of the requested location
+	 * @param hmBinding
+	 *            hash map for the binding found
+	 * @return the location found
+	 * @throws ASelectException
+	 */
+	// 20110323, Bauke added to pass back binding from metadata
+	public String getLocationAndBinding(String entityId, String elementName, String bindingName,
+					String whichLocation, HashMap<String, String> hmBinding)
+	throws ASelectException
+	{
+		return getAttrFromElementBinding(entityId, elementName, bindingName, whichLocation, hmBinding);
+	}
+
+	/**
+	 * Retrieve the value for "attrName" within the entity 'entityId' looking
+	 * for 'elementName' with binding 'bindingName'.
+	 * 
+	 * @param entityId
+	 *            the entity id
+	 * @param elementName
+	 *            the element name
+	 * @param requestedBinding
 	 *            the binding name, can be empty meaning "pick any"
 	 * @param attrName
 	 *            the attribute name we're looking for
-	 * @return 
-	 *            the attribute value
+	 * @param hmBinding
+	 *            the hashmap to receive the binding
+	 * @return the requested attribute
 	 * @throws ASelectException
 	 */
-	protected String getAttrFromElementBinding(String entityId, String elementName, String bindingName, String attrName)
-		throws ASelectException
+	protected String getAttrFromElementBinding(String entityId, String elementName, String requestedBinding,
+					String attrName, HashMap<String, String> hmBinding)
+	throws ASelectException
 	{
 		String sMethod = "getAttrFromElementBinding " + Thread.currentThread().getId();
 		String location = null;
 		String sDefaultLocation = null;
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "myRole="+getMyRole()+" entityId=" + entityId + " elementName=" + elementName
-				+ " binding=" + bindingName + " attr=" + attrName);
+				+ " binding=" + requestedBinding + " attr=" + attrName);
 		if (entityId == null)
 			return null;
 		ensureMetadataPresence(entityId);
@@ -729,17 +755,21 @@ public abstract class AbstractMetaDataManager
 						if (nIsDefault != null && "true".equals(nIsDefault.getNodeValue()))
 							isDefault = true;
 						_systemLogger.log(Level.FINE, MODULE, sMethod, "Try binding="+bindingMDValue+" isDefault="+isDefault);
-						if ((!Utils.hasValue(bindingName) && isDefault) || bindingMDValue.equals(bindingName)) {
+						if ((!Utils.hasValue(requestedBinding) && isDefault) || bindingMDValue.equals(requestedBinding)) {
 							Node node = nodeMap.getNamedItem(attrName);
 							if (node != null) {
 								location = node.getNodeValue();
+								if (hmBinding != null)
+									hmBinding.put("binding", bindingMDValue);
 								_systemLogger.log(Level.INFO, MODULE, sMethod, "Found location for entityId="
-										+ entityId + " elementName=" + elementName + " bindingName=" + bindingName
-										+ " attrName=" + attrName + " location=" + location);
+										+ entityId + " elementName=" + elementName + " bindingName=" + requestedBinding
+										+ " attrName=" + attrName + " location=" + location+" binding="+bindingMDValue);
 							}
 							else {
+								if (hmBinding != null)
+									hmBinding.clear();
 								_systemLogger.log(Level.INFO, MODULE, sMethod, "Did not find location for entityId="
-										+ entityId + " elementName=" + elementName + " bindingName=" + bindingName
+										+ entityId + " elementName=" + elementName + " bindingName=" + requestedBinding
 										+ " attrName=" + attrName + " locatione=" + location);
 							}
 							break;  // ready

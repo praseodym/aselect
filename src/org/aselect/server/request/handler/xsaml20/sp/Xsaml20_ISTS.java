@@ -253,8 +253,10 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				// if a fallback is present: REDIRECT to the authsp
 				if (Utils.hasValue(_sFallbackUrl)) {
 					// Don't come back here:
-					htSessionContext.remove("forced_uid");
 					htSessionContext.remove("forced_authsp");
+					// 20110331, Bauke: Should we leave forced_uid in place?
+					// If we do, control can easily be transferred to e.g. DigiD
+					//htSessionContext.remove("forced_uid");
 					_oSessionManager.updateSession(sRid, htSessionContext);
 
 					String sRedirectUrl = _sFallbackUrl;

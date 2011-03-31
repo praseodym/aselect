@@ -685,9 +685,11 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		try {
 			sTemplate = Utils.replaceString(sTemplate, "[form_action]", sAction);
 			sTemplate = Utils.replaceString(sTemplate, "[input_area]", sInputLines);
-			_systemLogger.log(Level.FINER, MODULE, sMethod, "sTemplate=" + sTemplate);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "sTemplate=" + Utils.firstPartOf(sTemplate, 160));
 
 			response.setContentType("text/html");
+			response.setHeader("Pragma", "no-cache");
+			response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 			pwOut = response.getWriter();
 			pwOut.print(sTemplate);
 		}

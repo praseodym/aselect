@@ -2533,13 +2533,12 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * Handle login25.
 	 * 
 	 * @param htServiceRequest
-	 *            the ht service request
+	 *            the service request
 	 * @param servletResponse
 	 *            the servlet response
 	 * @param pwOut
-	 *            the pw out
+	 *            the output PrintWriter
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
 	private void handleLogin25(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 		throws ASelectException

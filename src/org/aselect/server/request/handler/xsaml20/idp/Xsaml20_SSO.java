@@ -248,14 +248,13 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			
 			//  RH, 20101101, get the requested binding, can be null
 			String sReqBinding = authnRequest.getProtocolBinding();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested binding="+sReqBinding);
-			
+			boolean bForcedAuthn = authnRequest.isForceAuthn();
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested binding="+sReqBinding+" ForceAuthn = " + bForcedAuthn);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "==== SPRid=" + sSPRid + " RelayState=" + sRelayState);
 
-			boolean bForcedAuthn = authnRequest.isForceAuthn();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "ForceAuthn = " + bForcedAuthn);
-
-			String sAssertionConsumerServiceURL = getAssertionConsumerServiceURL(samlMessage);
+			// 20110323, Bauke: retrieve binding from metadata if requested binding is not present
+			HashMap<String, String> hmBinding = new HashMap<String, String>();
+			String sAssertionConsumerServiceURL = getAssertionConsumerServiceURL(samlMessage, hmBinding);
 			if (sAssertionConsumerServiceURL == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "AssertionConsumerServiceURL not found");
 				throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
@@ -275,7 +274,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			if (sRelayState != null) {
 				htSession.put("RelayState", sRelayState);
 				
-				// Look for "aselect_specials" in the RelayState (is base64 encode if present)
+			// Look for "aselect_specials" in the RelayState (is base64 encode if present)
 			/*	if (!sRelayState.contains("idp=")) {  // it's base64 encoded
 					sRelayState = new String(Base64Codec.decode(sRelayState));
 					String sSpecials = Utils.getParameterValueFromUrl(sRelayState, "aselect_specials");
@@ -290,13 +289,14 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			htSession.put("sp_issuer", sIssuer);
 			htSession.put("sp_assert_url", sAssertionConsumerServiceURL);
 			htSession.put("forced_uid", "saml20_user");
-			// RH, 20101101, Save requested binding for when we return from authSP 
-			htSession.put("sp_reqbinding", sReqBinding);
+			// RH, 20101101, Save requested binding for when we return from authSP
+			// 20110323, Bauke: if no requested binding, take binding from metadata
+			htSession.put("sp_reqbinding", hmBinding.get("binding"));  // 20110323: sReqBinding);
 
 			// RH, 20081117, strictly speaking forced_logon != forced_authenticate
 			// 20090613, Bauke: 'forced_login' is used as API parameter (a String value)
 			// 'forced_authenticate' is used in the Session (a Boolean value),
-			// the meaning of both is the identical
+			// the meaning of both is identical
 			if (bForcedAuthn) {
 				htSession.put("forced_authenticate", new Boolean(bForcedAuthn));
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "'forced_authenticate' in htSession set to: "
@@ -440,12 +440,14 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	 * 
 	 * @param samlMessage
 	 *            the saml message
+	 * @param hmBinding
+	 *            the hashmap to receive the binding
 	 * @return the assertion consumer service url
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private String getAssertionConsumerServiceURL(SignableSAMLObject samlMessage)
-		throws ASelectException
+	private String getAssertionConsumerServiceURL(SignableSAMLObject samlMessage, HashMap<String, String> hmBinding)
+	throws ASelectException
 	{
 		String sMethod = "getAssertionConsumerServiceURL " + Thread.currentThread().getId();
 
@@ -453,70 +455,46 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		String sElementName = AssertionConsumerService.DEFAULT_ELEMENT_LOCAL_NAME;
 		String elementName = samlMessage.getElementQName().getLocalPart();
 
-		// RH, 20101111, sn
 		// IDP MUST honor requested sAssertionConsumerServiceURL from AUTHNREQUEST first
+		String sBindingName = null;
 		if (AUTHNREQUEST.equals(elementName)) {
 			AuthnRequest authnRequest = (AuthnRequest) samlMessage;
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get Location from AuthnRequest 1");
 			sAssertionConsumerServiceURL = authnRequest.getAssertionConsumerServiceURL();
-		}
-
-	if (sAssertionConsumerServiceURL == null) {	// We didn't find it in the authnrequest
-		// RH, 20101111, en
-		
-		Issuer issuer = retrieveIssuer(elementName, samlMessage);
-		if (issuer == null) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "SAMLMessage: " + elementName + " was not recognized");
-			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-		}
-		String sEntityId = issuer.getValue();
-		// RH, 20101111, sn
-		String sBindingName = null;
-		if (AUTHNREQUEST.equals(elementName)) {
-			AuthnRequest authnRequest = (AuthnRequest) samlMessage;
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get Location from AuthnRequest 2");
-			sAssertionConsumerServiceURL = authnRequest.getAssertionConsumerServiceURL();
 			sBindingName = authnRequest.getProtocolBinding();
+		}
+
+		if (sAssertionConsumerServiceURL == null) {	// We didn't find it in the authnrequest
 			
-			// 20110315, Bauke: pass absence of requested Binding to getLocation() below
-			//if (sBindingName == null || "".equals(sBindingName)) {	// Set for backward compatibility
-			//	sBindingName = SAMLConstants.SAML2_ARTIFACT_BINDING_URI;
-			//}
+			Issuer issuer = retrieveIssuer(elementName, samlMessage);
+			if (issuer == null) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "SAMLMessage: " + elementName + " was not recognized");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+			String sEntityId = issuer.getValue();
+	
+			// get from metadata
+			MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
+	
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Looking for EntityId="+sEntityId + " sElementName="+sElementName+
+					" sBindingName="+sBindingName + " in:"+metadataManager.getMetadataURL(sEntityId));
+			try {
+				// if sBindingName was null, binding was not present in the Auhtentication request
+				sAssertionConsumerServiceURL = metadataManager.getLocationAndBinding(sEntityId, sElementName,
+						sBindingName, "Location", hmBinding);
+			}
+			catch (ASelectException e) {
+				// Metadata retrieval failed so get it from the message
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to get location: " + e.getMessage());
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta done ACurl="+sAssertionConsumerServiceURL+" hmBinding="+hmBinding);
 		}
-		// RH, 20101111, sn
-
-		// _systemLogger.log(Level.INFO, MODULE, sMethod, "Meta");
-		MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
-
-		_systemLogger.log(Level.WARNING, MODULE, sMethod, "Looking for EntityId="+sEntityId + " sElementName="+sElementName+
-				" sBindingName="+sBindingName + " in:"+metadataManager.getMetadataURL(sEntityId));
-		try {
-			sAssertionConsumerServiceURL = metadataManager.getLocation(sEntityId, sElementName, sBindingName);
-		}
-		catch (ASelectException e) {
-			// Metadata retrieval failed so get it from the message
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to get location: " + e.getMessage());
-		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Meta done ACurl="+sAssertionConsumerServiceURL);
-		
-		// RH, 20101111, so
-//		if (sAssertionConsumerServiceURL == null) {
-//			if (elementName.equals(AUTHNREQUEST)) {
-//				AuthnRequest authnRequest = (AuthnRequest) samlMessage;
-//				_systemLogger.log(Level.INFO, MODULE, sMethod, "Get Location from AuthnRequest");
-//				sAssertionConsumerServiceURL = authnRequest.getAssertionConsumerServiceURL();
-//			}
-//		}
-		// RH, 20101111, eo
-	}
-
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Return " + sAssertionConsumerServiceURL);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Return " + sAssertionConsumerServiceURL+" binding="+hmBinding);
 		return sAssertionConsumerServiceURL;
 	}
 
-	// This is an error response
 	/**
-	 * Send error artifact.
+	 * Error response, send error artifact.
 	 * 
 	 * @param errorResponse
 	 *            the error response
@@ -545,7 +523,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 		// If the AssertionConsumerServiceURL is missing, redirecting the artifact is senseless
 		// So in this case send a message to the browser
-		String sAssertionConsumerServiceURL = getAssertionConsumerServiceURL(authnRequest);
+		String sAssertionConsumerServiceURL = getAssertionConsumerServiceURL(authnRequest, null);
 		if (sAssertionConsumerServiceURL != null) {
 			artifactManager.sendArtifact(sArtifact, errorResponse, sAssertionConsumerServiceURL, httpResponse,
 					sRelayState, null);
@@ -1074,7 +1052,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Base64 encoded Response=" + sResponse);
+		//_systemLogger.log(Level.INFO, MODULE, sMethod, "Base64 encoded Response=" + sResponse);
 
 		String sp_assert_url = null;
 		if (htTGTContext  != null)
@@ -1098,7 +1076,6 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 		// Let's POST the token
 		String sInputs = buildHtmlInput("RelayState", sAppUrl);	// By convention we load RelayState with appURL
-		sInputs += buildHtmlInput("SAMLResponse", sResponse);  //Tools.htmlEncode(nodeMessageContext.getTextContent()));
 
 		String sLang = null;
 		if (htTGTContext  != null)
@@ -1107,8 +1084,11 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			sLang = (String) htSessionContext.get("language");
 		if (sLang != null)
 			sInputs += buildHtmlInput("language",sLang);
+		
+		// Keep logging short:
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Template="+get_sPostTemplate()+" sInputs="+sInputs+" ...");
+		sInputs += buildHtmlInput("SAMLResponse", sResponse);  //Tools.htmlEncode(nodeMessageContext.getTextContent()));
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Inputs=" + sInputs);
 		if (get_sPostTemplate() != null) {
 			String sSelectForm = _configManager.loadHTMLTemplate(null, get_sPostTemplate(), _sUserLanguage, _sUserCountry);
 			handlePostForm(sSelectForm, sp_assert_url, sInputs, oHttpServletResponse);
