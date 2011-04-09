@@ -301,7 +301,9 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				sDestination = metadataMgr.getLocation(sFederationUrl,
 						SingleSignOnService.DEFAULT_ELEMENT_LOCAL_NAME, singleSignOnServiceBindingConstantREDIRECT);
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Using Location retrieved from IDP=" + sDestination);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Location retrieved=" + sDestination);
+			if ("".equals(sDestination))
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 
 			String sApplicationId = (String) htSessionContext.get("app_id");
 			String sApplicationLevel = getApplicationLevel(sApplicationId);
@@ -445,7 +447,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				Endpoint samlEndpoint = endpointBuilder.buildObject();
 				samlEndpoint.setLocation(sDestination);
 				samlEndpoint.setResponseLocation(sMyUrl);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "EndPoint="+samlEndpoint+"Destination="+sDestination);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "EndPoint="+samlEndpoint+" Destination="+sDestination);
 				
 				//HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response, sDestination);
 				HttpServletResponseAdapter outTransport = new HttpServletResponseAdapter(response,

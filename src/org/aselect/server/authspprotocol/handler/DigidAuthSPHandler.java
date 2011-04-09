@@ -274,9 +274,8 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 
 			// 20090110, Bauke changed requested_betrouwbaarheidsniveau to required_level
 			String sBetrouwbaarheidsNiveau = (String) htSessionContext.get("required_level");
-			Integer intLevel = (Integer) htSessionContext.get("level");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "requested required_level=" + sBetrouwbaarheidsNiveau
-					+ " level=" + intLevel + " default level=" + _sDefaultBetrouwbaarheidsNiveau);
+					+ " default level=" + _sDefaultBetrouwbaarheidsNiveau);
 			if (sBetrouwbaarheidsNiveau == null || sBetrouwbaarheidsNiveau.equals("empty")) {
 				// if betrouwbaarheidsniveau was not specified, we use the default.
 				sBetrouwbaarheidsNiveau = _sDefaultBetrouwbaarheidsNiveau;
@@ -284,8 +283,8 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			String sAppId = _htBetrouwbaarheidsNiveaus.get(sBetrouwbaarheidsNiveau);
 			String sSharedSecret = _htSharedSecrets.get(sBetrouwbaarheidsNiveau);
 			if (sAppId == null) {
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No <application> found for level="
-						+ sBetrouwbaarheidsNiveau);
+				// IMPROVE: we should get the next higher level
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No <application> found for level=" + sBetrouwbaarheidsNiveau);
 				throw new ASelectException(Errors.ERROR_ASELECT_CONFIG_ERROR);
 			}
 			if (sSharedSecret == null) {

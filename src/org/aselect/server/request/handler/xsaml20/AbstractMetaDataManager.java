@@ -584,7 +584,7 @@ public abstract class AbstractMetaDataManager
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Entity id: " + entityId + " not in SSODescriptors");
 			return null;
 		}
-
+		
 		List<KeyDescriptor> keyDescriptors = descriptor.getKeyDescriptors();
 		for (KeyDescriptor keydescriptor : keyDescriptors) {
 			UsageType useType = keydescriptor.getUse();
@@ -613,12 +613,44 @@ public abstract class AbstractMetaDataManager
 					}
 				}
 				catch (CertificateException e) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot retrieve the public key from metadata: ",
-							e);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot retrieve the public key from metadata: ",e);
 				}
 			}
 		}
 		return null;
+	}
+	
+	// 20110406, Bauke: added
+	/**
+	 * Gets the attribute from metadata.
+	 * 
+	 * @param entityId
+	 *            the entity id
+	 * @param sAttrName
+	 *            the attribute name
+	 * @return the attribute value
+	 */
+	public String getAttributeFromMetadata(String entityId, String sAttrName)
+	{
+		String sMethod = "getAttributeFromMetadata";
+
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "myRole="+getMyRole()+" entityId=" + entityId);
+		try {
+			ensureMetadataPresence(entityId);
+		}
+		catch (ASelectException e) {
+			return null;
+		}
+
+		SSODescriptor descriptor = SSODescriptors.get(makeEntityKey(entityId, null));
+		if (descriptor == null) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Entity id: " + entityId + " not in SSODescriptors");
+			return null;
+		}
+
+		String sAttrValue = descriptor.getDOM().getAttribute(sAttrName);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, sAttrName+"="+sAttrValue);
+		return sAttrValue;
 	}
 
 	/**

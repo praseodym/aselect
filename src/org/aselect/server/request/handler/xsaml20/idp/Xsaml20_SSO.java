@@ -24,7 +24,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
 
 import org.aselect.server.application.ApplicationManager;
-import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.xsaml20.Saml20_BrowserHandler;
 import org.aselect.server.request.handler.xsaml20.Saml20_Metadata;
@@ -73,6 +72,7 @@ import org.opensaml.xml.Configuration;
 import org.opensaml.xml.Namespace;
 import org.opensaml.xml.XMLObjectBuilder;
 import org.opensaml.xml.XMLObjectBuilderFactory;
+import org.opensaml.xml.io.MarshallingException;
 import org.opensaml.xml.schema.XSString;
 import org.opensaml.xml.util.XMLConstants;
 import org.opensaml.xml.util.XMLHelper;
@@ -90,7 +90,14 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	private final String AUTHNREQUEST = "AuthnRequest";
 	private String _sPostTemplate = null;
 
-
+	// Communication for processReturn()
+	private String _sAppId = null;
+	private String _sAddedPatching = null;
+	private String _sReqSigning = null;
+	private String _sAddKeyName = null;
+	private String _sAddCertificate = null;
+	boolean _bSignAssertion = false;  // must be retrieved from the metadata
+	
 	/**
 	 * Initializes the request handler by reading the following configuration: <br/>
 	 * <br/>
@@ -147,7 +154,6 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		catch (ASelectConfigException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'post_template' found", e);
 		}
-		
 	}
 	
 	
@@ -222,7 +228,6 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	 * @param samlMessage
 	 *            the saml message to be handled
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
 	@SuppressWarnings("unchecked")
 	protected void handleSpecificSaml20Request(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
@@ -260,10 +265,12 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
 			}
 
-			// Start an authenticate request
+			// Start an authenticate request, we've done signature checking already, so do not ask to do it again
+			// Also performAuthenticateRequest is an internal call, so who wants signing
+			// 20110407, Bauke: check sig set to false
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "performAuthenticateRequest AppId=" + sAppId);
 			HashMap htResponse = performAuthenticateRequest(_sASelectServerUrl, httpRequest.getPathInfo(),
-					RETURN_SUFFIX, sAppId, true /* check sig */, _oClientCommunicator);
+					RETURN_SUFFIX, sAppId, false /* check sig */, _oClientCommunicator);
 
 			String sASelectServerUrl = (String) htResponse.get("as_url");
 			String sIDPRid = (String) htResponse.get("rid");
@@ -282,8 +289,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 						// allows to pass the specials on to the next IdP in the chain
 						htSession.put("aselect_specials", sSpecials);
 					}
-				}
-			*/
+				} */
 			}
 			htSession.put("sp_rid", sSPRid);
 			htSession.put("sp_issuer", sIssuer);
@@ -475,9 +481,10 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	
 			// get from metadata
 			MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
-	
+			
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Looking for EntityId="+sEntityId + " sElementName="+sElementName+
 					" sBindingName="+sBindingName + " in:"+metadataManager.getMetadataURL(sEntityId));
+			
 			try {
 				// if sBindingName was null, binding was not present in the Auhtentication request
 				sAssertionConsumerServiceURL = metadataManager.getLocationAndBinding(sEntityId, sElementName,
@@ -595,6 +602,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				sRelayState = (String) htSessionContext.get("RelayState");
 			else
 				sRelayState = (String) htTGTContext.get("RelayState");
+
 			// RH, 2011101, retrieve the requested binding
 			String sReqBInding = null;
 			if (htTGTContext  != null)
@@ -604,17 +612,23 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			if (sReqBInding == null) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested binding \"sp_reqbinding\" is missing, using default" );
 			}
+			
+			//String sIssuer = (String)htTGTContext.get("sp_issuer");
+			//MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
+			//String sWantAssertionsSigned = metadataManager.getAttributeFromMetadata(sIssuer, "WantAssertionsSigned");
+			//_bSignAssertion = "true".equals(sWantAssertionsSigned); // Siam always sets this to true
 
 			// And off you go!
+			retrieveLocalSettings(htSessionContext, htTGTContext);  // results are placed in this object
+			
 			if (Saml20_Metadata.singleSignOnServiceBindingConstantPOST.equals(sReqBInding)) {
 				_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Redirecting with post to: " + sAssertUrl);
 				sendSAMLResponsePOST(sAssertUrl, sRid, htSessionContext, sTgt, htTGTContext, httpResponse, sRelayState);
-				
-			} else {	// use artifact as default (for backward compatibility) 
+			}
+			else {	// use artifact as default (for backward compatibility) 
 				_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Redirecting with artifact to: " + sAssertUrl);
 				sendSAMLArtifactRedirect(sAssertUrl, sRid, htSessionContext, sTgt, htTGTContext, httpResponse, sRelayState);
 			}
-			
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Return from  AuthSP handled");
 
 			// Cleanup for a forced_authenticate session
@@ -639,12 +653,9 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		}
 	}
 
-	//
-	// If htTGTContext is null we have to create an error <Response>
-	// no Assertion, just <Status>
-	//
 	/**
-	 * Send saml artifact redirect.
+	 * Send saml artifact error redirect.
+	 * If htTGTContext is null we have to create an error <Response>, send no Assertion, just <Status>
 	 * 
 	 * @param sAppUrl
 	 *            the s app url
@@ -918,33 +929,14 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 //				response.getAssertions().add(assertion);
 //			}
 
-		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
-		// RH, 20101207, sn
-		String sAppId = null;
-		if (htTGTContext  != null)
-			sAppId = (String) htTGTContext.get("app_id");
-		if (sAppId == null && htSessionContext != null )
-			sAppId = (String) htSessionContext.get("app_id");
-		if (sAppId == null) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not retrieve app_id from context" );
-		}
-
-		String addedPatching = null;
-		if (sAppId != null) {	// application level overrules handler level configuration
-			addedPatching = ApplicationManager.getHandle().getAddedPatching(sAppId);
-		}
-		// RH, 20101207, en
-		if (addedPatching == null) {	// backward compatibility, get it from handler configuration
-			addedPatching = _configManager.getAddedPatching();
-		}
-		Response response = buildSpecificSAMLResponse(sRid, htSessionContext, sTgt, htTGTContext, addedPatching, sAppId);
+		Response response = buildSpecificSAMLResponse(sRid, htSessionContext, sTgt, htTGTContext);
 			
 		Saml20_ArtifactManager artifactManager = Saml20_ArtifactManager.getTheArtifactManager();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "buildArtifact serverUrl=" + _sASelectServerUrl + " rid=" + sRid);
 		String sArtifact = artifactManager.buildArtifact(response, _sASelectServerUrl, sRid);
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "sendArtifact " + sArtifact);
-			artifactManager.sendArtifact(sArtifact, response, sAppUrl, oHttpServletResponse, sRelayState, addedPatching);
+			artifactManager.sendArtifact(sArtifact, response, sAppUrl, oHttpServletResponse, sRelayState, _sAddedPatching);
 		}
 		catch (IOException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Redirect to : '" + sAppUrl + "' failed", e);
@@ -976,71 +968,31 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	@SuppressWarnings("unchecked")
 	private void sendSAMLResponsePOST(String sAppUrl, String sRid, HashMap htSessionContext, String sTgt,
 			HashMap htTGTContext, HttpServletResponse oHttpServletResponse, String sRelayState)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "sendSAMLResponsePOST";
-
-		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
-		// RH, 20101207, sn
-		String sAppId = null;
-		if (htTGTContext  != null)
-			sAppId = (String) htTGTContext.get("app_id");
-		if (sAppId == null && htSessionContext != null )
-			sAppId = (String) htSessionContext.get("app_id");
-		if (sAppId == null) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not retrieve app_id from context" );
-		}
-
-		String addedPatching = null;
-		if (sAppId != null) {	// application level overrules handler level configuration
-			addedPatching = ApplicationManager.getHandle().getAddedPatching(sAppId);
-		}
-		// RH, 20101207, en
-
-		if (addedPatching == null) {	// backward compatibility, get it from handler configuration
-			addedPatching = _configManager.getAddedPatching();
-		}
-
-		// htTGTContext == null here !
-		Response response = buildSpecificSAMLResponse(sRid, htSessionContext, sTgt, htTGTContext, addedPatching, sAppId);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the Response >======"+response);
-		// RH, 2011101, retrieve the requested signing
-		String sReqSigning = null;
-		if (htTGTContext  != null)
-			sReqSigning = (String) htTGTContext.get("sp_reqsigning");
-		if (sReqSigning == null && htSessionContext != null )
-			sReqSigning = (String) htSessionContext.get("sp_reqsigning");
-		if (sReqSigning == null) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested signing \"sp_reqsigning\" is missing, using default" );
-		}
-		// RH, 2011116, retrieve whether addkeyname requested
-		String sAddKeyName = null;
-		if (htTGTContext  != null)
-			sAddKeyName = (String) htTGTContext.get("sp_addkeyname");
-		if (sAddKeyName == null && htSessionContext != null )
-			sAddKeyName = (String) htSessionContext.get("sp_addkeyname");
-		if (sAddKeyName == null) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested signing \"sp_addkeyname\" is missing, using default" );
-		}
-
-		// RH, 2011116, retrieve whether addcertificate requested
-		String sAddCertificate = null;
-		if (htTGTContext  != null)
-			sAddCertificate = (String) htTGTContext.get("sp_addcertificate");
-		if (sAddCertificate == null && htSessionContext != null )
-			sAddCertificate = (String) htSessionContext.get("sp_addcertificate");
-		if (sAddCertificate == null) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested signing \"sp_addcertificate\" is missing, using default" );
-		}
 		
-		boolean useSha256 = "sha256".equals(sReqSigning);	// we only support sha256 and sha1
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Signing the Response with: " +  (useSha256 ? "sha256": "sha1"));
-
-		response = (Response)SamlTools.signSamlObject(response, useSha256? "sha256": "sha1", 
-						"true".equals(sAddKeyName), "true".equals(sAddCertificate));
-//		response = (Response)SamlTools.signSamlObject(response, "sha1");
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the Response  ======<"+response);
-
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Response signing >======");
+		Response response = buildSpecificSAMLResponse(sRid, htSessionContext, sTgt, htTGTContext);
+		
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Response signing=" + _bSignAssertion+" sha="+ _sReqSigning);
+		if (_bSignAssertion) {
+			// only the assertion was signed
+			try {
+				// don't forget to marshall the response when no signing will be done here
+				org.opensaml.xml.Configuration.getMarshallerFactory().getMarshaller(response).marshall(response);
+			}
+			catch (MarshallingException e) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Cannot marshall object", e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+			}
+		}
+		else {  // No assertion signing, sign the complete response
+			response = (Response)SamlTools.signSamlObject(response, _sReqSigning, 
+							"true".equals(_sAddKeyName), "true".equals(_sAddCertificate));
+		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Response signing ======<"+response);
+		
 		String sResponse = XMLHelper.nodeToString(response.getDOM());
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Response=" + sResponse);
 		try {
@@ -1052,7 +1004,6 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
-		//_systemLogger.log(Level.INFO, MODULE, sMethod, "Base64 encoded Response=" + sResponse);
 
 		String sp_assert_url = null;
 		if (htTGTContext  != null)
@@ -1061,9 +1012,10 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			sp_assert_url = (String) htSessionContext.get("sp_assert_url");
 		if (sp_assert_url== null) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No assertion consumer url provided");
-			throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-			
+			throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);	
 		}
+
+		// Handle RelayState
 		try {
 			byte[] bBase64RelayState = sAppUrl.getBytes("UTF-8");
 			BASE64Encoder b64enc = new BASE64Encoder();
@@ -1073,10 +1025,10 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
+		if ("".equals(sRelayState))
+			sRelayState = sAppUrl;	// By convention we load RelayState with appURL
 
-		// Let's POST the token
-		String sInputs = buildHtmlInput("RelayState", sAppUrl);	// By convention we load RelayState with appURL
-
+		String sInputs = buildHtmlInput("RelayState", sRelayState);
 		String sLang = null;
 		if (htTGTContext  != null)
 			sLang = (String) htTGTContext.get("language");
@@ -1089,19 +1041,82 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Template="+get_sPostTemplate()+" sInputs="+sInputs+" ...");
 		sInputs += buildHtmlInput("SAMLResponse", sResponse);  //Tools.htmlEncode(nodeMessageContext.getTextContent()));
 
+		// Let's POST the token
 		if (get_sPostTemplate() != null) {
 			String sSelectForm = _configManager.loadHTMLTemplate(null, get_sPostTemplate(), _sUserLanguage, _sUserCountry);
 			handlePostForm(sSelectForm, sp_assert_url, sInputs, oHttpServletResponse);
-		} else {
+		}
+		else {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No POST template found");
 			throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+		}	
+	}
+
+
+	/**
+	 * Retrieve several settings for session and/or context
+	 * 
+	 * @param htSessionContext
+	 * 			the session context
+	 * @param htTGTContext
+	 * 			the ticket
+	 */
+	private void retrieveLocalSettings(HashMap htSessionContext, HashMap htTGTContext)
+	{
+		String sMethod = "retrieveLocalSettings";
+		
+		// RH, 20101207, sn
+		if (htTGTContext  != null)
+			_sAppId = (String) htTGTContext.get("app_id");
+		if (_sAppId == null && htSessionContext != null )
+			_sAppId = (String) htSessionContext.get("app_id");
+		if (_sAppId == null) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not retrieve app_id from context" );
+		}
+
+		if (_sAppId != null) {	// application level overrules handler level configuration
+			_sAddedPatching = ApplicationManager.getHandle().getAddedPatching(_sAppId);
+		}
+		// RH, 20101207, en
+		if (_sAddedPatching == null) {	// backward compatibility, get it from handler configuration
+			_sAddedPatching = _configManager.getAddedPatching();
+		}
+		_bSignAssertion = _sAddedPatching.contains("sign_assertion");  // this is an application attribute
+		
+		// RH, 2011101, retrieve the requested signing
+		if (htTGTContext  != null)
+			_sReqSigning = (String) htTGTContext.get("sp_reqsigning");
+		if (_sReqSigning == null && htSessionContext != null )
+			_sReqSigning = (String) htSessionContext.get("sp_reqsigning");
+		if (_sReqSigning == null) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested signing \"sp_reqsigning\" is missing, using default" );
 		}
 		
+		if (!"sha256".equals(_sReqSigning))  // we only support sha256 and sha1
+			_sReqSigning = "sha1";
+
+		// RH, 2011116, retrieve whether addkeyname requested
+		if (htTGTContext  != null)
+			_sAddKeyName = (String) htTGTContext.get("sp_addkeyname");
+		if (_sAddKeyName == null && htSessionContext != null )
+			_sAddKeyName = (String) htSessionContext.get("sp_addkeyname");
+		if (_sAddKeyName == null) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested signing \"sp_addkeyname\" is missing, using default" );
+		}
+
+		// RH, 2011116, retrieve whether addcertificate requested
+		if (htTGTContext  != null)
+			_sAddCertificate = (String) htTGTContext.get("sp_addcertificate");
+		if (_sAddCertificate == null && htSessionContext != null )
+			_sAddCertificate = (String) htSessionContext.get("sp_addcertificate");
+		if (_sAddCertificate == null) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested signing \"sp_addcertificate\" is missing, using default" );
+		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "SignAssertion="+_bSignAssertion+" ReqSigning="+_sReqSigning);
 	}
 	
-	
 	/**
-	 * Build a SAML response for return
+	 * Build a SAML response and return it.
 	 * 
 	 * @param sRid
 	 *            the s rid
@@ -1117,8 +1132,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	 *             the a select exception
 	 */
 	@SuppressWarnings("unchecked")
-	private Response buildSpecificSAMLResponse( String sRid, HashMap htSessionContext, String sTgt,
-					HashMap htTGTContext, String addedPatching, String sAppId)
+	private Response buildSpecificSAMLResponse(String sRid, HashMap htSessionContext, String sTgt, HashMap htTGTContext)
 	throws ASelectException
 	{
 		String sMethod = "buildSpecificSAMLResponse";
@@ -1158,7 +1172,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 			// Create an attribute builder
 			qName = Attribute.DEFAULT_ELEMENT_NAME;
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Attribute qName="+qName+" AppId="+sAppId);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Attribute qName="+qName+" AppId="+_sAppId);
 			SAMLObjectBuilder<Attribute> attributeBuilder = (SAMLObjectBuilder<Attribute>) builderFactory.getBuilder(qName);
 
 			// Gather attributes, including the attributes from the ticket context
@@ -1172,8 +1186,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			htAllAttributes.put("betrouwbaarheidsniveau", sSelectedLevel);
 
 			// 20101229, Bauke: add configurable fixed value attributes
-			if (sAppId != null) {
-				HashMap<String,String> additionalAttributes = ApplicationManager.getHandle().getAdditionalAttributes(sAppId);
+			if (_sAppId != null) {
+				HashMap<String,String> additionalAttributes = ApplicationManager.getHandle().getAdditionalAttributes(_sAppId);
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "AddAttr="+additionalAttributes);
 				if (additionalAttributes != null) {
 					Set<String> keys = additionalAttributes.keySet();
@@ -1183,25 +1197,6 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 						htAllAttributes.put(sKey, sValue);
 					}
 				}
-
-				//htAllAttributes.put("portal_id", "06020000000M2U1");
-				//htAllAttributes.put("organization_id", "00D20000000Bb8U");
-				//htAllAttributes.put("siteurl", "http://agentschapnl.force.com/");
-				
-				/*				
-				<saml:AttributeStatement>
-				<saml:Attribute Name="portal_id">
-				<saml:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-				xsi:type="xs:anyType">06020000000M2U1</saml:AttributeValue>
-				</saml:Attribute>
-				<saml:Attribute Name="organization_id">
-				<saml:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-				xsi:type="xs:anyType">00D20000000Bb8U</saml:AttributeValue></saml:Attribute>
-				<saml:Attribute Name="siteurl">
-				<saml:AttributeValue xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-				xsi:type="xs:anyType">http://agentschapnl.force.com/</saml:AttributeValue>
-				</saml:Attribute
-				*/
 			}
 			
 			Set keys = htAllAttributes.keySet();
@@ -1216,11 +1211,11 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				Attribute theAttribute = attributeBuilder.buildObject();
 				theAttribute.setName(sKey);
 				XSString theAttributeValue = null;
-				boolean bNvlAttrName = addedPatching.contains("nvl_attrname");
+				boolean bNvlAttrName = _sAddedPatching.contains("nvl_attrname");
 				if (bNvlAttrName) {
 					// add namespaces to the attribute
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "nvl_attrname");
-					boolean bXS = addedPatching.contains("nvl_attr_namexsd");
+					boolean bXS = _sAddedPatching.contains("nvl_attr_namexsd");
 					Namespace namespace = new Namespace(XMLConstants.XSD_NS, (bXS)? "xsd": XMLConstants.XSD_PREFIX);
 					theAttribute.addNamespace(namespace);
 					namespace = new Namespace(XMLConstants.XSI_NS, XMLConstants.XSI_PREFIX);
@@ -1241,10 +1236,9 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 					.getBuilder(AuthnContextClassRef.DEFAULT_ELEMENT_NAME);
 			AuthnContextClassRef authnContextClassRef = authnContextClassRefBuilder.buildObject();
 			
-//				String sAutnContextClassRefURI = SecurityLevel.convertLevelToAuthnContextClassRefURI(sSelectedLevel, _systemLogger); // RH, 20101214, o
 			// RH, 20101214, sn
 			String sAutnContextClassRefURI = null;
-			HashMap<String, String> secLevels =  ApplicationManager.getHandle().getSecLevels(sAppId);
+			HashMap<String, String> secLevels =  ApplicationManager.getHandle().getSecLevels(_sAppId);
 			if (secLevels != null) {
 				sAutnContextClassRefURI = secLevels.get(sSelectedLevel);
 			}
@@ -1260,18 +1254,18 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			authnContext.setAuthnContextClassRef(authnContextClassRef);
 
 			// RH, 20101217, sn
-			if ( ApplicationManager.getHandle().getAuthnContextDeclValue(sAppId) != null ) {
-				if (AuthnContextDecl.DEFAULT_ELEMENT_LOCAL_NAME.equals(ApplicationManager.getHandle().getAuthnContextDeclType(sAppId)) ) {
+			if ( ApplicationManager.getHandle().getAuthnContextDeclValue(_sAppId) != null ) {
+				if (AuthnContextDecl.DEFAULT_ELEMENT_LOCAL_NAME.equals(ApplicationManager.getHandle().getAuthnContextDeclType(_sAppId)) ) {
 					SAMLObjectBuilder<AuthnContextDecl> authnContextDeclBuilderBuilder = (SAMLObjectBuilder<AuthnContextDecl>) builderFactory
 					.getBuilder(AuthnContextDecl.DEFAULT_ELEMENT_NAME);
 					AuthnContextDecl authnContextDecl = authnContextDeclBuilderBuilder.buildObject();
-					authnContextDecl.setTextContent(ApplicationManager.getHandle().getAuthnContextDeclValue(sAppId));
+					authnContextDecl.setTextContent(ApplicationManager.getHandle().getAuthnContextDeclValue(_sAppId));
 					authnContext.setAuthnContextDecl(authnContextDecl);
 				} else {
 					SAMLObjectBuilder<AuthnContextDeclRef> authnContextDeclBuilderBuilder = (SAMLObjectBuilder<AuthnContextDeclRef>) builderFactory
 					.getBuilder(AuthnContextDeclRef.DEFAULT_ELEMENT_NAME);
 					AuthnContextDeclRef authnContextDeclRef = authnContextDeclBuilderBuilder.buildObject();
-					authnContextDeclRef.setAuthnContextDeclRef(ApplicationManager.getHandle().getAuthnContextDeclValue(sAppId));
+					authnContextDeclRef.setAuthnContextDeclRef(ApplicationManager.getHandle().getAuthnContextDeclValue(_sAppId));
 					authnContext.setAuthnContextDeclRef(authnContextDeclRef);
 				}
 			}
@@ -1333,12 +1327,12 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			NameID nameID = nameIDBuilder.buildObject();
 			
 			// 20100525, flag added for Novell, they need PERSISTENT
-			boolean bNvlPersist = addedPatching.contains("nvl_persist");
+			boolean bNvlPersist = _sAddedPatching.contains("nvl_persist");
 			if (bNvlPersist) _systemLogger.log(Level.INFO, MODULE, sMethod, "nvl_persist");
 			nameID.setFormat((bNvlPersist)? NameIDType.PERSISTENT: NameIDType.TRANSIENT); // was PERSISTENT originally
 			
 			// nvl_patch, Novell: added
-			if (addedPatching.contains("nvl_patch")) {
+			if (_sAddedPatching.contains("nvl_patch")) {
 				nameID.setNameQualifier(_sASelectServerUrl);  // NameQualifier
 				nameID.setSPNameQualifier((String) htTGTContext.get("sp_issuer"));  // SPNameQualifier
 			}
@@ -1376,6 +1370,13 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			assertion.setSubject(subject);
 			assertion.getAuthnStatements().add(authnStatement);
 			assertion.getAttributeStatements().add(attributeStatement);
+
+			// 20110406, Bauke: added option to only sign the assertion
+			if (_bSignAssertion) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign Assertion");
+				assertion = (Assertion)SamlTools.signSamlObject(assertion, _sReqSigning,
+						"true".equals(_sAddKeyName), "true".equals(_sAddCertificate));
+			}
 		}
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Set StatusCode");
@@ -1424,16 +1425,12 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		return response;
 	}
 
-
 	public synchronized String get_sPostTemplate()
 	{
 		return _sPostTemplate;
 	}
-
-
 	public synchronized void set_sPostTemplate(String sPostTemplate)
 	{
 		_sPostTemplate = sPostTemplate;
 	}
-	
 }

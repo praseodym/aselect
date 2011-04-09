@@ -752,9 +752,9 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		hmRequest.put("app_id", sAppId);
 		hmRequest.put("app_url", sASelectURL + sPathInfo + sReturnSuffix); // My return address
 		hmRequest.put("a-select-server", _sASelectServerID);
-		hmRequest.put("check-signature", "false"); // Boolean.toString(checkSignature));
-		// 20090423, Bauke: check-signature set to false, needs signature otherwise
-		// TODO: add signature when checkSignature is true
+		// 20110407, Bauke: use checkSignature flag:
+		hmRequest.put("check-signature", Boolean.toString(checkSignature));
+		// if checkSignature is true, caller must supply a signature as well
 
 		// 20090606: Bauke: changed external call to direct method call
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmRequest=" + hmRequest);

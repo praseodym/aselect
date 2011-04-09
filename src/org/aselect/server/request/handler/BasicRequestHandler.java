@@ -52,9 +52,8 @@ public abstract class BasicRequestHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	protected HashMap<String, String> handleAuthenticateAndCreateSession(HashMap<String, String> hmInput,
-			String sUrlTarget)
-		throws ASelectException
+	protected HashMap<String, String> handleAuthenticateAndCreateSession(HashMap<String, String> hmInput, String sUrlTarget)
+	throws ASelectException
 	{
 		String sMethod = "handleAuthenticateAndCreateSession";
 		AuthSPHandlerManager _authSPManagerManager = AuthSPHandlerManager.getHandle();
@@ -88,9 +87,14 @@ public abstract class BasicRequestHandler
 			boolForcedAuthn = new Boolean(sForcedLogon);
 
 		// check if request should be signed
+		String sCheckSignature = hmInput.get("check-signature");
+
 		// RH, 20100910, Remove fishing leak and make signature verification configurable per application
 //		if (_applicationManager.isSigningRequired() && bCheckSignature) {		// RH, 20100910, o
-			if (_applicationManager.isSigningRequired(sAppId)) {		// RH, 20100910, n
+//		if (_applicationManager.isSigningRequired(sAppId)) {		// RH, 20100910, n
+		
+		// 20110407, Bauke: use check-signature
+		if (_applicationManager.isSigningRequired(sAppId) && "true".equals(sCheckSignature)) {
 			String sSignature = hmInput.get("signature");
 			if (sSignature == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing required 'signature' parameter");

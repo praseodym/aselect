@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.xsaml20.Saml20_BaseHandler;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
@@ -37,6 +38,7 @@ import org.opensaml.saml2.core.*;
 import org.opensaml.ws.soap.soap11.Envelope;
 import org.opensaml.xml.Namespace;
 import org.opensaml.xml.XMLObjectBuilderFactory;
+import org.opensaml.xml.io.MarshallingException;
 import org.opensaml.xml.io.Unmarshaller;
 import org.opensaml.xml.io.UnmarshallerFactory;
 import org.opensaml.xml.util.XMLHelper;
@@ -233,8 +235,30 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler
 				artifactResponse.setMessage(samlResponse);
 			}
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the artifactResponse >======");
-			artifactResponse = (ArtifactResponse) SamlTools.signSamlObject(artifactResponse);
+			// Also check out Xsaml20_SSO for signing issues
+			String _sAddedPatching = null;
+			if (artifactResolveIssuer != null) {	// application level overrules handler level configuration
+				_sAddedPatching = ApplicationManager.getHandle().getAddedPatching(artifactResolveIssuer);
+			}
+			if (_sAddedPatching == null) {	// backward compatibility, get it from handler configuration
+				_sAddedPatching = _configManager.getAddedPatching();
+			}
+			boolean bSignAssertion = _sAddedPatching.contains("sign_assertion");  // this is an application attribute
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the artifactResponse >====== SignAssertion="+bSignAssertion);
+			if (bSignAssertion) {
+				// only the assertion was signed
+				try {
+					// don't forget to marshall the response when no signing will be done here
+					org.opensaml.xml.Configuration.getMarshallerFactory().getMarshaller(artifactResponse).marshall(artifactResponse);
+				}
+				catch (MarshallingException e) {
+					_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Cannot marshall object", e);
+					throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+				}
+			}
+			else {  // No assertion signing, sign the complete response
+				artifactResponse = (ArtifactResponse)SamlTools.signSamlObject(artifactResponse, "sha1", false, false); 
+			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the artifactResponse ======<");
 			Envelope envelope = new SoapManager().buildSOAPMessage(artifactResponse);
 			Element envelopeElem = SamlTools.marshallMessage(envelope);

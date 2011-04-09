@@ -546,12 +546,11 @@ public class SamlTools
 	 *            Add the (default) certificate in a KeyInfo element
 	 */
 	public static SignableSAMLObject signSamlObject(SignableSAMLObject obj, String sAlgo,
-																						boolean addKeyName, boolean addCertificate)
+										boolean addKeyName, boolean addCertificate)
 	throws ASelectException
 	{
 		String sMethod = "sign(SignableSAMLObject obj)";
 		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
-//		boolean useSha256 = sAlgo.equals("sha256");
 		boolean useSha256 = "sha256".equals(sAlgo);
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "obj->" + obj);
@@ -582,7 +581,7 @@ public class SamlTools
 				
 				// Tried KeyInfoGenerator but.generate(credential)  always return null, so 
 				// build keyinfo manually
-				XMLObjectBuilderFactory builderFactory =	Configuration.getBuilderFactory();
+				XMLObjectBuilderFactory builderFactory = Configuration.getBuilderFactory();
 				KeyInfoBuilder keyInfoBuilder = (KeyInfoBuilder) builderFactory.getBuilder(KeyInfo.DEFAULT_ELEMENT_NAME);
 				KeyInfo keyinfo = (KeyInfo)	keyInfoBuilder.buildObject(KeyInfo.DEFAULT_ELEMENT_NAME);
 				java.security.cert.X509Certificate x509Certificate =  _oASelectConfigManager.getDefaultCertificate();
@@ -600,7 +599,8 @@ public class SamlTools
 				}
 				signature.setKeyInfo(keyinfo);
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Added keyinfo");
-			} else {
+			}
+			else {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "No keyinfo added");
 			}
 			
