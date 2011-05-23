@@ -17,7 +17,10 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
@@ -426,13 +429,34 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					// eHerkenning addition: OrgID = KvKnummer+Vestigingsnummer
 					// If EntityConcernedID = 00000003123456780000 and EntityConcernedSubID = ...0001,
 					// then orgid = 1234567800000001
-					String sEntityId = (String)hmSamlAttributes.get("urn:nl:eherkenning:0.8def:EntityConcernedID");
+//					String sEntityId = (String)hmSamlAttributes.get("urn:nl:eherkenning:0.8def:EntityConcernedID");
+					// RH, 20110523, add support for other versions of eHerk
+					String sEntityId = null;
+
+					Pattern p = Pattern.compile("urn:nl:eherkenning:(.*):EntityConcernedID");
+
+					Set<String> keys = hmSamlAttributes.keySet();
+					Iterator keyIter = keys.iterator();
+					String eHerkversion = null;
+					while (keyIter.hasNext()) {
+						Matcher m = p.matcher((String)keyIter.next());
+						if (m.find())
+						{
+							sEntityId = (String)hmSamlAttributes.get(m.group());
+							eHerkversion = m.group(1);
+							_systemLogger.log(Level.INFO, MODULE, sMethod, "Found sEntityId=" + sEntityId + " eHerkversion=" + eHerkversion);
+							break;	// just take the first we find
+						}
+					}
+						
 					if (sEntityId != null) {
 						int idx = sEntityId.length()-12;  // last 12 characters
 						if (idx > 0) sEntityId = sEntityId.substring(idx);
 						
-						String sEntitySubId = (String)hmSamlAttributes.get("urn:nl:eherkenning:0.8def:EntityConcernedSubID");
+//						String sEntitySubId = (String)hmSamlAttributes.get("urn:nl:eherkenning:0.8def:EntityConcernedSubID");
+						String sEntitySubId = (String)hmSamlAttributes.get("urn:nl:eherkenning:" + eHerkversion + ":EntityConcernedSubID");
 						if (sEntitySubId != null) {
+							_systemLogger.log(Level.INFO, MODULE, sMethod, "Found sEntitySubId=" + sEntitySubId);							
 							idx = sEntitySubId.length()-12;  // last 12 characters to be on the safe side
 							if (idx > 0) sEntitySubId = sEntitySubId.substring(idx);
 							sEntityId = sEntitySubId;
