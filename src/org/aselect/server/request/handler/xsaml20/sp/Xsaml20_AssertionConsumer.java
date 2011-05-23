@@ -34,7 +34,6 @@ import org.aselect.server.request.handler.xsaml20.Saml20_BaseHandler;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.server.request.handler.xsaml20.SecurityLevel;
 import org.aselect.server.request.handler.xsaml20.SoapManager;
-import org.aselect.server.session.SessionManager;
 import org.aselect.server.tgt.TGTManager;
 import org.aselect.server.tgt.TGTIssuer;
 import org.aselect.system.error.Errors;
@@ -69,8 +68,6 @@ import org.xml.sax.InputSource;
  * </ul>
  * The SAML2.0 artifact is resolved by the requesters ArtifactResolver. The resolved artifact contains a SAML2.0
  * Response which is futher handled by this A-Select server. <br>
- * 
- * @author Atos Origin
  */
 public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 {

@@ -155,15 +155,14 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 	 * @param response
 	 *            the response
 	 * @param sTgT
-	 *            the s tg t
+	 *            the TGT
 	 * @param htTGTContext
-	 *            the ht tgt context
+	 *            the TGT context
 	 * @param sIssuer
-	 *            the s issuer
+	 *            the issuer
 	 * @param sLogoutReturnUrl
-	 *            the s logout return url
+	 *            the logout return url
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
 	protected void sendLogoutToIdP(HttpServletRequest request, HttpServletResponse response, String sTgT,
 			HashMap htTGTContext, String sIssuer, String sLogoutReturnUrl)

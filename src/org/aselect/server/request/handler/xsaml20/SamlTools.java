@@ -107,10 +107,9 @@ public class SamlTools
 	 * @param systemLogger
 	 *            the system logger
 	 * @param sModule
-	 *            the s module
+	 *            the module
 	 * @return the string
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
 	public static String generateIdentifier(ASelectSystemLogger systemLogger, String sModule)
 		throws ASelectException
@@ -393,13 +392,10 @@ public class SamlTools
 	 * @throws ValidationException
 	 *             Thrown if an error occurs while placing conditions
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
-	// public static SAMLObject setValidityInterval(SAMLObject obj, DateTime refInstant,
-	// Long maxNotBefore, Long maxNotOnOrAfter, XMLObjectBuilderFactory oBuilderFactory) throws ASelectException {
-	public static SAMLObject setValidityInterval(SAMLObject obj, DateTime refInstant, Long maxNotBefore,
-			Long maxNotOnOrAfter)
-		throws ASelectException
+	public static SAMLObject setValidityInterval(SAMLObject obj, DateTime refInstant,
+			Long maxNotBefore, Long maxNotOnOrAfter)
+	throws ASelectException
 	{
 		String sMethod = "setValidityInterval";
 		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();

@@ -29,7 +29,6 @@ import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 public class Xsaml20_Logout extends Saml20_BaseHandler
 {
 	private final static String _sModule = "Xsaml20_Logout";

@@ -62,14 +62,13 @@ public class SecurityLevel
 	 * Convert level to authn context class ref uri.
 	 * 
 	 * @param sLevel
-	 *            the s level
+	 *            the level
 	 * @param systemLogger
 	 *            the system logger
 	 * @param sModule
-	 *            the s module
+	 *            the module
 	 * @return the string
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
 	public static String convertLevelToAuthnContextClassRefURI(String sLevel, ASelectSystemLogger systemLogger)
 		throws ASelectException

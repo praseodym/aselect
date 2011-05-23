@@ -255,10 +255,9 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 * Gets the attributes from tgt and gatherer.
 	 * 
 	 * @param htTGTContext
-	 *            the ht tgt context
+	 *            the tgt context
 	 * @return the attributes from tgt and gatherer
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
 	public HashMap getAttributesFromTgtAndGatherer(HashMap htTGTContext)
 		throws ASelectException

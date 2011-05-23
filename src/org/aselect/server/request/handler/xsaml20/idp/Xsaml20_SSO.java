@@ -1254,6 +1254,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			authnContext.setAuthnContextClassRef(authnContextClassRef);
 
 			// RH, 20101217, sn
+			// Add application specific context from aselect.xml
 			if ( ApplicationManager.getHandle().getAuthnContextDeclValue(_sAppId) != null ) {
 				if (AuthnContextDecl.DEFAULT_ELEMENT_LOCAL_NAME.equals(ApplicationManager.getHandle().getAuthnContextDeclType(_sAppId)) ) {
 					SAMLObjectBuilder<AuthnContextDecl> authnContextDeclBuilderBuilder = (SAMLObjectBuilder<AuthnContextDecl>) builderFactory
@@ -1274,9 +1275,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			SAMLObjectBuilder<AuthnStatement> authnStatementBuilder = (SAMLObjectBuilder<AuthnStatement>) builderFactory
 					.getBuilder(AuthnStatement.DEFAULT_ELEMENT_NAME);
 			AuthnStatement authnStatement = authnStatementBuilder.buildObject();
-			// use same time reference for all
-			// authnStatement.setAuthnInstant(new DateTime()); // RH, 20101116, o
-			authnStatement.setAuthnInstant(tStamp); // RH, 20101116, n
+			authnStatement.setAuthnInstant(tStamp);
 			
 			// Sun doesn't like this:
 			// authnStatement.setSessionIndex((String) htTGTContext.get("sp_issuer"));
