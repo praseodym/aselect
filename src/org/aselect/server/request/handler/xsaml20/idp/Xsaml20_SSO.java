@@ -612,11 +612,6 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			if (sReqBInding == null) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested binding \"sp_reqbinding\" is missing, using default" );
 			}
-			
-			//String sIssuer = (String)htTGTContext.get("sp_issuer");
-			//MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
-			//String sWantAssertionsSigned = metadataManager.getAttributeFromMetadata(sIssuer, "WantAssertionsSigned");
-			//_bSignAssertion = "true".equals(sWantAssertionsSigned); // Siam always sets this to true
 
 			// And off you go!
 			retrieveLocalSettings(htSessionContext, htTGTContext);  // results are placed in this object
@@ -680,254 +675,6 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	throws ASelectException
 	{
 		String sMethod = "sendSAMLArtifactRedirect";
-//		boolean isSuccessResponse = (htTGTContext != null);
-//		Assertion assertion = null;
-//		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
-//		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
-//		String addedPatching = _configManager.getAddedPatching();
-//
-//			DateTime tStamp = new DateTime(); // We will use one timestamp
-//
-//			XMLObjectBuilderFactory builderFactory = Configuration.getBuilderFactory();
-//			XMLObjectBuilder stringBuilder = builderFactory.getBuilder(XSString.TYPE_NAME);
-//
-//			String sSPRid = null;
-//			if (htSessionContext != null)
-//				sSPRid = (String) htSessionContext.get("sp_rid");
-//
-//			if (htTGTContext != null) {
-//
-//				sSPRid = (String) htTGTContext.get("sp_rid");
-//				String sSelectedLevel = (String) htTGTContext.get("sel_level");
-//				if (sSelectedLevel == null) sSelectedLevel = (String) htTGTContext.get("authsp_level");
-//				if (sSelectedLevel == null) sSelectedLevel = (String) htTGTContext.get("betrouwbaarheidsniveau");  // To be removed
-//				String sUid = (String) htTGTContext.get("uid");
-//				String sCtxRid = (String) htTGTContext.get("rid");
-//				String sSubjectLocalityAddress = (String) htTGTContext.get("client_ip");
-//				String sAssertionID = SamlTools.generateIdentifier(_systemLogger, MODULE);
-//				_systemLogger.log(Level.INFO, MODULE, sMethod, "CHECK ctxRid=" + sCtxRid + " rid=" + sRid
-//						+ " client_ip=" + sSubjectLocalityAddress);
-//
-//				// ---- Attributes
-//				// Create an attribute statement builder
-//				QName qName = AttributeStatement.DEFAULT_ELEMENT_NAME;
-//				_systemLogger.log(Level.INFO, MODULE, sMethod, "AttributeStatement qName="+qName);
-//				SAMLObjectBuilder<AttributeStatement> attributeStatementBuilder =
-//					(SAMLObjectBuilder<AttributeStatement>) builderFactory.getBuilder(qName);
-//				AttributeStatement attributeStatement = attributeStatementBuilder.buildObject();
-//
-//				// Create an attribute builder
-//				qName = Attribute.DEFAULT_ELEMENT_NAME;
-//				_systemLogger.log(Level.INFO, MODULE, sMethod, "Attribute qName="+qName);
-//				SAMLObjectBuilder<Attribute> attributeBuilder = (SAMLObjectBuilder<Attribute>) builderFactory.getBuilder(qName);
-//
-//				// Gather attributes, including the attributes from the ticket context
-//				HashMap htAttributes = getAttributesFromTgtAndGatherer(htTGTContext);
-//				String sAllAttributes = org.aselect.server.utils.Utils.serializeAttributes(htAttributes);
-//
-//				// 20090910, Bauke: new mechanism to pass the attributes
-//				HashMap htAllAttributes = new HashMap();
-//				htAllAttributes.put("attributes", sAllAttributes);
-//				htAllAttributes.put("uid", sUid);
-//				htAllAttributes.put("betrouwbaarheidsniveau", sSelectedLevel);
-//
-//				Set keys = htAllAttributes.keySet();
-//				for (Object s : keys) {
-//					String sKey = (String)s;
-//					Object oValue = htAllAttributes.get(sKey);
-//
-//					if (!(oValue instanceof String))
-//						continue;
-//					String sValue = (String)oValue;
-//
-//					Attribute theAttribute = attributeBuilder.buildObject();
-//					theAttribute.setName(sKey);
-//					XSString theAttributeValue = null;
-//					boolean bNvlAttrName = addedPatching.contains("nvl_attrname");
-//					if (bNvlAttrName) {
-//						// add namespaces to the attribute
-//						_systemLogger.log(Level.INFO, MODULE, sMethod, "nvl_attrname");
-//						boolean bXS = addedPatching.contains("nvl_attr_namexsd");
-//						Namespace namespace = new Namespace(XMLConstants.XSD_NS, (bXS)? "xsd": XMLConstants.XSD_PREFIX);
-//						theAttribute.addNamespace(namespace);
-//						namespace = new Namespace(XMLConstants.XSI_NS, XMLConstants.XSI_PREFIX);
-//						theAttribute.addNamespace(namespace);
-//						theAttribute.setNameFormat(Attribute.BASIC);  // URI_REFERENCE);  // BASIC);
-//						_systemLogger.log(Level.INFO, MODULE, sMethod, "Novell Attribute="+theAttribute);
-//					}
-//					theAttributeValue = (XSString)stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
-//					theAttributeValue.setValue(sValue);
-//					
-//					theAttribute.getAttributeValues().add(theAttributeValue);
-//					attributeStatement.getAttributes().add(theAttribute); // add this attribute
-//				}
-//
-//				/*
-//				 * // 200909, Bauke: replaced by the attribute gatherer solution
-//				 * Attribute attributeAuthspLevel = attributeBuilder.buildObject();
-//				 * attributeAuthspLevel.setName("betrouwbaarheidsniveau");
-//				 * XSString attributeAuthspLevelValue = (XSString) stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
-//				 * attributeAuthspLevelValue.setValue(sAuthspLevel);
-//				 * attributeAuthspLevel.getAttributeValues().add(attributeAuthspLevelValue);
-//				 * attributeStatement.getAttributes().add(attributeAuthspLevel); // add this attribute Attribute
-//				 * attributeUid = attributeBuilder.buildObject();
-//				 * attributeUid.setName("uid");
-//				 * XSString attributeUidValue = (XSString) stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
-//				 * attributeUidValue.setValue(sUid);
-//				 * attributeUid.getAttributeValues().add(attributeUidValue);
-//				 * attributeStatement.getAttributes().add(attributeUid);
-//				 */
-//
-//				// ---- AuthenticationContext
-//				SAMLObjectBuilder<AuthnContextClassRef> authnContextClassRefBuilder = (SAMLObjectBuilder<AuthnContextClassRef>) builderFactory
-//						.getBuilder(AuthnContextClassRef.DEFAULT_ELEMENT_NAME);
-//				AuthnContextClassRef authnContextClassRef = authnContextClassRefBuilder.buildObject();
-//				String sAutnContextClassRefURI = SecurityLevel.convertLevelToAuthnContextClassRefURI(sSelectedLevel, _systemLogger);
-//				authnContextClassRef.setAuthnContextClassRef(sAutnContextClassRefURI);
-//
-//				SAMLObjectBuilder<AuthnContext> authnContextBuilder = (SAMLObjectBuilder<AuthnContext>) builderFactory
-//						.getBuilder(AuthnContext.DEFAULT_ELEMENT_NAME);
-//				AuthnContext authnContext = authnContextBuilder.buildObject();
-//				authnContext.setAuthnContextClassRef(authnContextClassRef);
-//
-//				SAMLObjectBuilder<AuthnStatement> authnStatementBuilder = (SAMLObjectBuilder<AuthnStatement>) builderFactory
-//						.getBuilder(AuthnStatement.DEFAULT_ELEMENT_NAME);
-//				AuthnStatement authnStatement = authnStatementBuilder.buildObject();
-//				authnStatement.setAuthnInstant(new DateTime());
-//				// Sun doesn't like this:
-//				// authnStatement.setSessionIndex((String) htTGTContext.get("sp_issuer"));
-//				String sSessionIndex = sAssertionID.replaceAll("_", "");
-//				authnStatement.setSessionIndex(sSessionIndex);
-//				// Always try to set the locality address, except when null or empty
-//				if (sSubjectLocalityAddress != null && !"".equals(sSubjectLocalityAddress)) {
-//					SAMLObjectBuilder<SubjectLocality> subjectLocalityBuilder = (SAMLObjectBuilder<SubjectLocality>) builderFactory
-//							.getBuilder(SubjectLocality.DEFAULT_ELEMENT_NAME);
-//					SubjectLocality locality = subjectLocalityBuilder.buildObject();
-//					locality.setAddress(sSubjectLocalityAddress);
-//					authnStatement.setSubjectLocality(locality);
-//					// We could also set DNSName in locality, but for now, that's not requested
-//				}
-//
-//				authnStatement.setAuthnContext(authnContext);
-//				SAMLObjectBuilder<Audience> audienceBuilder = (SAMLObjectBuilder<Audience>) builderFactory
-//						.getBuilder(Audience.DEFAULT_ELEMENT_NAME);
-//				Audience audience = audienceBuilder.buildObject();
-//				audience.setAudienceURI((String) htTGTContext.get("sp_issuer")); // 20081109 added
-//
-//				SAMLObjectBuilder<AudienceRestriction> audienceRestrictionBuilder = (SAMLObjectBuilder<AudienceRestriction>) builderFactory
-//						.getBuilder(AudienceRestriction.DEFAULT_ELEMENT_NAME);
-//				AudienceRestriction audienceRestriction = audienceRestrictionBuilder.buildObject();
-//				audienceRestriction.getAudiences().add(audience);
-//
-//				SAMLObjectBuilder<SubjectConfirmationData> subjectConfirmationDataBuilder = (SAMLObjectBuilder<SubjectConfirmationData>) builderFactory
-//						.getBuilder(SubjectConfirmationData.DEFAULT_ELEMENT_NAME);
-//				SubjectConfirmationData subjectConfirmationData = subjectConfirmationDataBuilder.buildObject();
-//				subjectConfirmationData = (SubjectConfirmationData) SamlTools.setValidityInterval(
-//						subjectConfirmationData, tStamp, null, getMaxNotOnOrAfter());
-//				subjectConfirmationData.setRecipient((String) htTGTContext.get("sp_assert_url"));
-//
-//				// Bauke: added for OpenSSO 20080329
-//				subjectConfirmationData.setInResponseTo(sSPRid);
-//
-//				SAMLObjectBuilder<SubjectConfirmation> subjectConfirmationBuilder = (SAMLObjectBuilder<SubjectConfirmation>) builderFactory
-//						.getBuilder(SubjectConfirmation.DEFAULT_ELEMENT_NAME);
-//				SubjectConfirmation subjectConfirmation = subjectConfirmationBuilder.buildObject();
-//				subjectConfirmation.setMethod(SubjectConfirmation.METHOD_BEARER);  // "urn:oasis:names:tc:SAML:2.0:cm:bearer"
-//				subjectConfirmation.setSubjectConfirmationData(subjectConfirmationData);
-//
-//				SAMLObjectBuilder<NameID> nameIDBuilder = (SAMLObjectBuilder<NameID>) builderFactory
-//						.getBuilder(NameID.DEFAULT_ELEMENT_NAME);
-//				NameID nameID = nameIDBuilder.buildObject();
-//				
-//				// 20100525, flag added for Novell, they need PERSISTENT
-//				boolean bNvlPersist = addedPatching.contains("nvl_persist");
-//				if (bNvlPersist) _systemLogger.log(Level.INFO, MODULE, sMethod, "nvl_persist");
-//				nameID.setFormat((bNvlPersist)? NameIDType.PERSISTENT: NameIDType.TRANSIENT); // was PERSISTENT originally
-//				
-//				// nvl_patch, Novell: added
-//				if (addedPatching.contains("nvl_patch")) {
-//					nameID.setNameQualifier(_sASelectServerUrl);  // NameQualifier
-//					nameID.setSPNameQualifier((String) htTGTContext.get("sp_issuer"));  // SPNameQualifier
-//				}
-//				
-//				// 20090602, Bauke Saml-core-2.0, section 2.2.2: SHOULD be omitted:
-//				// nameID.setNameQualifier(_sASelectServerUrl);
-//				nameID.setValue((bNvlPersist)? sUid: sTgt);  // 20100811: depends on NameIDType
-//				_systemLogger.log(Level.INFO, MODULE, sMethod, "nameID=" + Utils.firstPartOf(nameID.getValue(), 30));
-//
-//				SAMLObjectBuilder<Subject> subjectBuilder = (SAMLObjectBuilder<Subject>) builderFactory
-//						.getBuilder(Subject.DEFAULT_ELEMENT_NAME);
-//				Subject subject = subjectBuilder.buildObject();
-//				subject.setNameID(nameID);
-//				subject.getSubjectConfirmations().add(subjectConfirmation);
-//
-//				SAMLObjectBuilder<Issuer> assertionIssuerBuilder = (SAMLObjectBuilder<Issuer>) builderFactory
-//						.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
-//				Issuer assertionIssuer = assertionIssuerBuilder.buildObject();
-//				assertionIssuer.setFormat(NameIDType.ENTITY);
-//				assertionIssuer.setValue(_sASelectServerUrl);
-//
-//				SAMLObjectBuilder<Assertion> assertionBuilder = (SAMLObjectBuilder<Assertion>) builderFactory
-//						.getBuilder(Assertion.DEFAULT_ELEMENT_NAME);
-//				assertion = assertionBuilder.buildObject();
-//
-//				assertion.setID(sAssertionID);
-//				assertion.setIssueInstant(tStamp);
-//				// Set interval conditions
-//				assertion = (Assertion) SamlTools.setValidityInterval(assertion, tStamp, getMaxNotBefore(), getMaxNotOnOrAfter());
-//				// and then AudienceRestrictions
-//				assertion = (Assertion) SamlTools.setAudienceRestrictions(assertion, audienceRestriction);
-//
-//				assertion.setVersion(SAMLVersion.VERSION_20);
-//				assertion.setIssuer(assertionIssuer);
-//				assertion.setSubject(subject);
-//				assertion.getAuthnStatements().add(authnStatement);
-//				assertion.getAttributeStatements().add(attributeStatement);
-//			}
-//
-//			_systemLogger.log(Level.INFO, MODULE, sMethod, "Set StatusCode");
-//			SAMLObjectBuilder<StatusCode> statusCodeBuilder = (SAMLObjectBuilder<StatusCode>) builderFactory
-//					.getBuilder(StatusCode.DEFAULT_ELEMENT_NAME);
-//			StatusCode statusCode = statusCodeBuilder.buildObject();
-//			statusCode.setValue((htTGTContext == null) ? StatusCode.AUTHN_FAILED_URI : StatusCode.SUCCESS_URI);
-//
-//			SAMLObjectBuilder<Status> statusBuilder = (SAMLObjectBuilder<Status>) builderFactory
-//					.getBuilder(Status.DEFAULT_ELEMENT_NAME);
-//			Status status = statusBuilder.buildObject();
-//			status.setStatusCode(statusCode);
-//			if (htTGTContext == null) {
-//				String sResultCode = (String) htSessionContext.get("result_code");
-//				SAMLObjectBuilder<StatusMessage> statusMessageBuilder = (SAMLObjectBuilder<StatusMessage>) builderFactory
-//						.getBuilder(StatusMessage.DEFAULT_ELEMENT_NAME);
-//				StatusMessage msg = statusMessageBuilder.buildObject();
-//				msg.setMessage((sResultCode != null) ? sResultCode : "unspecified error");
-//				status.setStatusMessage(msg);
-//			}
-//
-//			SAMLObjectBuilder<Issuer> responseIssuerBuilder = (SAMLObjectBuilder<Issuer>) builderFactory
-//					.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
-//			Issuer responseIssuer = responseIssuerBuilder.buildObject();
-//			responseIssuer.setFormat(NameIDType.ENTITY);
-//			responseIssuer.setValue(_sASelectServerUrl);
-//
-//			SAMLObjectBuilder<Response> responseBuilder = (SAMLObjectBuilder<Response>) builderFactory
-//					.getBuilder(Response.DEFAULT_ELEMENT_NAME);
-//			Response response = responseBuilder.buildObject();
-//
-//			response.setInResponseTo(sSPRid);
-//
-//			// nvl_patch, Novell: add xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
-//			response.addNamespace(new Namespace(SAMLConstants.SAML20_NS, "saml"));
-//			
-//			response.setID("_" + sRid); // 20090512, Bauke: must be NCNAME format
-//			response.setIssueInstant(tStamp);
-//
-//			response.setVersion(SAMLVersion.VERSION_20);
-//			response.setStatus(status);
-//			response.setIssuer(responseIssuer);
-//			if (isSuccessResponse) {
-//				response.getAssertions().add(assertion);
-//			}
 
 		Response response = buildSpecificSAMLResponse(sRid, htSessionContext, sTgt, htTGTContext);
 			
@@ -1066,12 +813,20 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		String sMethod = "retrieveLocalSettings";
 		
 		// RH, 20101207, sn
-		if (htTGTContext  != null)
-			_sAppId = (String) htTGTContext.get("app_id");
-		if (_sAppId == null && htSessionContext != null )
-			_sAppId = (String) htSessionContext.get("app_id");
+		// 20110526, Bauke: prefer sp_issuer if present (which is probably always)
+		// NOTE: app_id will be set for all subsequent methods
+		if (htTGTContext != null) {
+			_sAppId = (String)htTGTContext.get("sp_issuer");
+			if (_sAppId == null)
+				_sAppId = (String) htTGTContext.get("app_id");
+		}
+		if (_sAppId == null && htSessionContext != null) {
+			_sAppId = (String)htSessionContext.get("sp_issuer");
+			if (_sAppId == null)
+				_sAppId = (String) htSessionContext.get("app_id");
+		}
 		if (_sAppId == null) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not retrieve app_id from context" );
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not retrieve app_id from any context" );
 		}
 
 		if (_sAppId != null) {	// application level overrules handler level configuration

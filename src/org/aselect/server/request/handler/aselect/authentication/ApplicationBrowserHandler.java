@@ -879,6 +879,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							Utils.copyHashmapValue("local_organization", htTGTContext, _htSessionContext);
 							// Copy sp_rid as well: xsaml20
 							Utils.copyHashmapValue("sp_rid", htTGTContext, _htSessionContext);
+							// 20110526, Bauke, copy sp_reqbinding too, it must survive SSO
+							Utils.copyHashmapValue("sp_reqbinding", htTGTContext, _htSessionContext);
 							Utils.copyHashmapValue("RelayState", htTGTContext, _htSessionContext);
 							_systemLogger.log(Level.INFO, _sModule, sMethod, "UPD rid=" + sRid);
 
@@ -964,7 +966,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// Note the current session is available through _htSessionContext
 			Utils.copyHashmapValue("client_ip", _htSessionContext, htServiceRequest);
 			Utils.copyHashmapValue("user_agent", _htSessionContext, htServiceRequest);
-			// TODO: could be that handleUserConsent() also saved the session, should be optimized
+			// IMPROVE: could be that handleUserConsent() also saved the session, should be optimized
 			_sessionManager.update(sRid, _htSessionContext); // Will also update SensorData changed in
 			// handleUserConsent()
 
