@@ -79,6 +79,9 @@ public interface IRADIUSProtocolHandler
 	 */
 	public static final byte RADIUS_ATTRIBUTE_TYPE_USER_PASSWORD = 2;
 
+	// RADIUS_ATTRIBUTE_TYPE_USER_PASSWORD
+	public static final byte RADIUS_MESSAGE_AUTHENTICATION_ATTRIBUTE = 80;
+
 	/**
 	 * RADIUS_ATTRIBUTE_TYPE_CHAP_PASSWORD
 	 */

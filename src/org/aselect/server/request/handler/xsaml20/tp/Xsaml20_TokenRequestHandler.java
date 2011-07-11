@@ -15,6 +15,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.xsaml20.Saml20_BaseHandler;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
@@ -142,7 +143,6 @@ public class Xsaml20_TokenRequestHandler extends Saml20_BaseHandler
 			handleTokenRequest(request, response);
 		}
 		catch (IOException e) {
-			// TODO Auto-generated catch block
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, e.getMessage());
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
@@ -200,7 +200,7 @@ public class Xsaml20_TokenRequestHandler extends Saml20_BaseHandler
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "TGT created:" + subject);
 			}
 			String sign = request.getParameter(PARM_NAME_REQUESTSIGNING);
-			Assertion ass = createAttributeStatementAssertion(parms, issuer, subject, "true".equalsIgnoreCase(sign));
+			Assertion ass = HandlerTools.createAttributeStatementAssertion(parms, issuer, subject, "true".equalsIgnoreCase(sign));
 			// returnstring = XMLHelper.prettyPrintXML(ass.getDOM()); // better not do this if you have signed the
 			// message!
 			returnstring = XMLHelper.nodeToString(ass.getDOM());
@@ -216,159 +216,15 @@ public class Xsaml20_TokenRequestHandler extends Saml20_BaseHandler
 
 			BASE64Encoder b64enc = new BASE64Encoder();
 			returnstring = b64enc.encode(returnstring.getBytes("UTF-8"));
-
 		}
 		else {
 			response.setContentType("application/samlassertion+xml");
-
 		}
 		if ("true".equalsIgnoreCase(urlencoding)) {
 			returnstring = URLEncoder.encode(returnstring, "UTF-8");
 			response.setContentType("application/x-www-form-urlencoded");
 		}
-
 		pwOut.write(returnstring);
 		pwOut.close();
 	}
-
-	// call with signing false
-	/*
-	 * @SuppressWarnings({"unchecked"}) private Assertion createAttributeStatementAssertion(Map parms, String sIssuer,
-	 * String sSubject) throws ASelectException { return createAttributeStatementAssertion(parms, sIssuer, sSubject,
-	 * false); }
-	 */
-
-	/**
-	 * Creates the attribute statement assertion.
-	 * 
-	 * @param parms
-	 *            the parms
-	 * @param sIssuer
-	 *            the s issuer
-	 * @param sSubject
-	 *            the s subject
-	 * @param sign
-	 *            the sign
-	 * @return the assertion
-	 * @throws ASelectException
-	 *             the a select exception
-	 */
-	@SuppressWarnings( {
-		"unchecked"
-	})
-	private Assertion createAttributeStatementAssertion(Map parms, String sIssuer, String sSubject, boolean sign)
-		throws ASelectException
-	{
-		String sMethod = "createAttributeStatementAssertion()";
-
-		XMLObjectBuilder stringBuilder = _oBuilderFactory.getBuilder(XSString.TYPE_NAME);
-
-		SAMLObjectBuilder<AttributeStatement> attributeStatementBuilder = (SAMLObjectBuilder<AttributeStatement>) _oBuilderFactory
-				.getBuilder(AttributeStatement.DEFAULT_ELEMENT_NAME);
-
-		SAMLObjectBuilder<Assertion> assertionBuilder = (SAMLObjectBuilder<Assertion>) _oBuilderFactory
-				.getBuilder(Assertion.DEFAULT_ELEMENT_NAME);
-
-		Assertion assertion = assertionBuilder.buildObject();
-		assertion.setVersion(SAMLVersion.VERSION_20);
-
-		SAMLObjectBuilder<NameID> nameIDBuilder = (SAMLObjectBuilder<NameID>) _oBuilderFactory
-				.getBuilder(NameID.DEFAULT_ELEMENT_NAME);
-		NameID nameID = nameIDBuilder.buildObject();
-		nameID.setFormat(NameIDType.TRANSIENT); // was PERSISTENT
-		nameID.setNameQualifier(sIssuer);
-		nameID.setValue(sSubject);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, nameID.getValue());
-		SAMLObjectBuilder<Subject> subjectBuilder = (SAMLObjectBuilder<Subject>) _oBuilderFactory
-				.getBuilder(Subject.DEFAULT_ELEMENT_NAME);
-		Subject subject = subjectBuilder.buildObject();
-		subject.setNameID(nameID);
-
-		SAMLObjectBuilder<Issuer> assertionIssuerBuilder = (SAMLObjectBuilder<Issuer>) _oBuilderFactory
-				.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
-		Issuer assertionIssuer = assertionIssuerBuilder.buildObject();
-		assertionIssuer.setFormat(NameIDType.ENTITY);
-		assertionIssuer.setValue(sIssuer);
-
-		assertion.setIssuer(assertionIssuer);
-		assertion.setSubject(subject);
-		DateTime tStamp = new DateTime();
-		assertion.setIssueInstant(tStamp);
-		try {
-			assertion.setID(SamlTools.generateIdentifier(_systemLogger, MODULE));
-		}
-		catch (ASelectException ase) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "failed to build SAML response", ase);
-		}
-
-		AttributeStatement attributeStatement = attributeStatementBuilder.buildObject();
-
-		SAMLObjectBuilder<Attribute> attributeBuilder = (SAMLObjectBuilder<Attribute>) _oBuilderFactory
-				.getBuilder(Attribute.DEFAULT_ELEMENT_NAME);
-
-		Iterator itr = parms.keySet().iterator();
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Start iterating through parameters");
-		while (itr.hasNext()) {
-			String parmName = (String) itr.next();
-			String[] parmValues = (String[]) parms.get(parmName);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "parm:" + parmName + " has value(s):" + parmValues);
-
-			Attribute attribute = attributeBuilder.buildObject();
-			attribute.setName(parmName);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Now starting to iterate through " + parmValues.length
-					+ " values");
-			for (int i = 0; i < parmValues.length; i++) {
-				XSString attributeValue = (XSString) stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
-						XSString.TYPE_NAME);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Found value[" + i + "]=" + parmValues[i]);
-				attributeValue.setValue(parmValues[i]);
-				attribute.getAttributeValues().add(attributeValue);
-			}
-			attributeStatement.getAttributes().add(attribute);
-		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Finalizing the assertion building");
-		assertion.getAttributeStatements().add(attributeStatement);
-		assertion = marshallAssertion(assertion);
-		if (sign) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the final Assertion >======");
-			assertion = (Assertion) sign(assertion);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the Assertion ======<");
-		}
-
-		// // Only for testing
-		// if (!SamlTools.checkSignature(assertion, _configManager.getDefaultCertificate().getPublicKey()) ) {
-		// _systemLogger.log(Level.INFO, MODULE, sMethod, "Signing verification says signature NOT valid ?!?" );
-		// } else {
-		// _systemLogger.log(Level.INFO, MODULE, sMethod, "Signing verification says signature is valid!" );
-		// }
-		return assertion;
-	}
-
-	/**
-	 * Marshall assertion.
-	 * 
-	 * @param assertion
-	 *            the assertion
-	 * @return the assertion
-	 * @throws ASelectException
-	 *             the a select exception
-	 */
-	private Assertion marshallAssertion(Assertion assertion)
-		throws ASelectException
-	{
-		String sMethod = "marshallAssertion";
-		MarshallerFactory factory = Configuration.getMarshallerFactory();
-		Marshaller marshaller = factory.getMarshaller(assertion);
-		try {
-			Node node = marshaller.marshall(assertion);
-			String msg = XMLHelper.prettyPrintXML(node);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, msg);
-		}
-		catch (MarshallingException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-		}
-		return assertion;
-	}
-
 }

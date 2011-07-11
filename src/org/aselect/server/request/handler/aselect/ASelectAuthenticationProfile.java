@@ -44,6 +44,12 @@ public class ASelectAuthenticationProfile extends AbstractRequestHandler
 	private String _sMyServerID;
 	private String _sMyOrg;
 
+	static String _sAllowLoginToken = null;
+
+	public static String get_sAllowLoginToken() {
+		return _sAllowLoginToken;
+	}
+
 	/**
 	 * Init function. <br>
 	 * <br>
@@ -75,9 +81,16 @@ public class ASelectAuthenticationProfile extends AbstractRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 		throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			super.init(oServletConfig, oConfig);
+
+
+			try {
+				_sAllowLoginToken = _configManager.getParam(oConfig, "allow_login_token");
+			}
+			catch (ASelectConfigException e) {
+			}
 
 			Object oASelect = null;
 			try {

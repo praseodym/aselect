@@ -26,7 +26,6 @@ import org.aselect.authspserver.config.AuthSPConfigManager;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.logging.SystemLogger;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Radius Protocol Handler Factory. <br>
  * <br>
@@ -68,7 +67,6 @@ public class RADIUSProtocolHandlerFactory
 			Integer iPort = (Integer) htContext.get("port");
 			String sSharedSecret = (String) htContext.get("shared_secret");
 			Boolean boolFullUid = (Boolean) htContext.get("full_uid");
-
 			String sProtocolHandlerName = (String) htContext.get("handler");
 
 			Class cProtocolHandler = Class.forName(sProtocolHandlerName);
@@ -78,10 +76,9 @@ public class RADIUSProtocolHandlerFactory
 				return null;
 			}
 			return oProtocolHandler;
-
 		}
 		catch (Exception e) {
-			oSystemLogger.log(Level.SEVERE, MODULE, sMethod, "INTERNE ERROR", e);
+			oSystemLogger.log(Level.SEVERE, MODULE, sMethod, "INTERNAL ERROR", e);
 		}
 		return null;
 	}
@@ -109,9 +106,7 @@ public class RADIUSProtocolHandlerFactory
 			if (iIndex <= 0) {
 				sbTemp = new StringBuffer("invalid user id (").append(sUid).append(") ");
 				sbTemp.append("User id should be [user]@[realm].");
-
 				oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbTemp.toString());
-
 				return null;
 			}
 
@@ -119,16 +114,13 @@ public class RADIUSProtocolHandlerFactory
 			if (sRealm.length() <= 0) {
 				sbTemp = new StringBuffer("could not determine realm for user id ");
 				sbTemp.append(sUid).append(". Should be [user]@[realm].");
-
 				oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbTemp.toString());
-
 				return null;
 			}
 
 			Object oBackendServer = null;
 			try {
 				oBackendServer = oConfigManager.getSection(oConfig, "back-end_server", "realm=" + sRealm);
-
 			}
 			catch (ASelectConfigException e) {
 				oBackendServer = null;
@@ -190,7 +182,6 @@ public class RADIUSProtocolHandlerFactory
 				sbTemp.append(sUid);
 
 				oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbTemp.toString());
-
 				return null;
 			}
 
@@ -212,7 +203,6 @@ public class RADIUSProtocolHandlerFactory
 				sbTemp = new StringBuffer("no shared_secret defined for realm ");
 				sbTemp.append(sRealm).append(" while authenticating ");
 				sbTemp.append(sUid);
-
 				oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbTemp.toString());
 				return null;
 			}
@@ -250,9 +240,7 @@ public class RADIUSProtocolHandlerFactory
 				sbTemp = new StringBuffer("no method defined for realm ");
 				sbTemp.append(sRealm).append(" while authenticating ");
 				sbTemp.append(sUid);
-
 				oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbTemp.toString());
-
 				return null;
 			}
 			String sProtocolHandlerName = null;
@@ -263,9 +251,7 @@ public class RADIUSProtocolHandlerFactory
 				sbTemp = new StringBuffer("no protocol handler defined for realm");
 				sbTemp.append(sRealm).append(" while authenticating ");
 				sbTemp.append(sUid);
-
 				oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbTemp.toString());
-
 				return null;
 			}
 
@@ -274,7 +260,6 @@ public class RADIUSProtocolHandlerFactory
 			htResponse.put("shared_secret", sSharedSecret);
 			htResponse.put("full_uid", new Boolean(bFullUid));
 			htResponse.put("handler", sProtocolHandlerName);
-
 			return htResponse;
 		}
 		catch (Exception e) {

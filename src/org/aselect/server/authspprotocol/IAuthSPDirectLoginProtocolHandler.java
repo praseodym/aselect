@@ -79,6 +79,8 @@ public interface IAuthSPDirectLoginProtocolHandler
 	public void init(String sAuthSPId)
 		throws ASelectAuthSPException;
 
+	// 20110626, Bauke: added return to indicate success
+	// needed for login_token request
 	/**
 	 * Handles the direct_login requests <br>
 	 * <br>
@@ -96,21 +98,21 @@ public interface IAuthSPDirectLoginProtocolHandler
 	 * .
 	 * 
 	 * @param htServiceRequest
-	 *            the ht service request
+	 *            the service request
 	 * @param servletResponse
 	 *            the servlet response
 	 * @param pwOut
 	 *            the pw out
 	 * @param sServerId
-	 *            the s server id
+	 *            the server id
 	 * @param sLanguage
-	 *            the s language
+	 *            the language
 	 * @param sCountry
-	 *            the s country
+	 *            the country
+	 * @return true if successful
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
-	public void handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse,
+	public boolean handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
 		throws ASelectException;
 

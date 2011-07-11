@@ -45,7 +45,6 @@ import java.util.Vector;
 import org.aselect.system.exception.ASelectAttributesException;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
 /**
  * The interface for Attribute Requestors. <br>
  * <br>
@@ -75,7 +74,7 @@ public interface IAttributeRequestor
 	 *             If configuration fails.
 	 */
 	public void init(Object oConfig)
-		throws ASelectException;
+	throws ASelectException;
 
 	/**
 	 * Retrieve the specified attributes. <br>

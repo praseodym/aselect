@@ -560,27 +560,27 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	 * .
 	 * 
 	 * @param htServiceRequest
-	 *            the ht service request
+	 *            the service request
 	 * @param servletResponse
 	 *            the servlet response
 	 * @param pwOut
 	 *            the pw out
 	 * @param sServerId
-	 *            the s server id
+	 *            the server id
 	 * @param sLanguage
-	 *            the s language
+	 *            the language
 	 * @param sCountry
-	 *            the s country
+	 *            the country
+	 * @return true if successful
 	 * @throws ASelectException
-	 *             the a select exception
 	 * @see org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler#handleDirectLoginRequest(java.util.HashMap,
 	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter, java.lang.String)
 	 */
-	public void handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse,
+	public boolean handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
 		throws ASelectException
 	{
-		String sMethod = "handleDirectLoginRequest()";
+		String sMethod = "handleDirectLoginRequest";
 		String sRequest = (String) htServiceRequest.get("request");
 
 		// Localization
@@ -589,15 +589,15 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 
 		if (sRequest.equalsIgnoreCase("direct_login1")) {
 			handleDirectLogin1(htServiceRequest, pwOut, sServerId);
+			return true;
 		}
 		else if (sRequest.equalsIgnoreCase("direct_login2")) {
-			handleDirectLogin2(htServiceRequest, servletResponse, pwOut, sServerId);
+			return handleDirectLogin2(htServiceRequest, servletResponse, pwOut, sServerId);
 		}
 		else {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request :'" + sRequest + "'");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
-
 	}
 
 	/**
@@ -654,17 +654,17 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	 * - <br>
 	 * 
 	 * @param htServiceRequest
-	 *            the ht service request
+	 *            the service request
 	 * @param servletResponse
-	 *            the servlet response
+	 *            the servlet response, can be null if no user browser is attached
 	 * @param pwOut
-	 *            the pw out
+	 *            the output print writer
 	 * @param sServerId
-	 *            the s server id
+	 *            the server id
+	 * @return true if successful
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
-	private void handleDirectLogin2(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut,
+	private boolean handleDirectLogin2(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut,
 			String sServerId)
 		throws ASelectException
 	{
@@ -733,19 +733,24 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			}
 			else if (sResponseCode.equals(ERROR_LDAP_OK)) // authentication succeeded
 			{
-				TGTIssuer tgtIssuer = new TGTIssuer(sServerId);
-				String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
+				_authenticationLogger.log(new Object[] {
+					MODULE, sUid, (String) htSessionContext.get("client_ip"), sOrg,
+					(String) htSessionContext.get("app_id"), "granted"
+				});
+				
 				htSessionContext.put("user_id", sUid);
 				htSessionContext.put("authsp_level", intAuthSPLevel.toString());
 				htSessionContext.put("sel_level", intAuthSPLevel.toString());  // equal to authsp_level in this case
 				htSessionContext.put("authsp_type", "ldap");
 				_sessionManager.updateSession(sRid, htSessionContext); // store too (545)
-				tgtIssuer.issueTGT(sRid, sAuthSPId, null, servletResponse, sOldTGT);
 
-				_authenticationLogger.log(new Object[] {
-					MODULE, sUid, (String) htSessionContext.get("client_ip"), sOrg,
-					(String) htSessionContext.get("app_id"), "granted"
-				});
+				// Only set ticket if the user's browser is listening
+				if (servletResponse != null) {
+					TGTIssuer tgtIssuer = new TGTIssuer(sServerId);
+					String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
+					tgtIssuer.issueTGT(sRid, sAuthSPId, null, servletResponse, sOldTGT);
+				}  // else no browser attached
+				return true;
 			}
 			else if (sResponseCode.equals(ERROR_LDAP_ACCESS_DENIED)) {
 				_authenticationLogger.log(new Object[] {
@@ -753,6 +758,9 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 					(String) htSessionContext.get("app_id"), "denied", sResponseCode
 				});
 
+				if (servletResponse == null)  // no browser attached
+					return false;
+				
 				String sErrorForm = _configManager.getForm("error", _sUserLanguage, _sUserCountry);
 				sErrorForm = Utils.replaceString(sErrorForm, "[error]", ERROR_LDAP_PREFIX + ERROR_LDAP_ACCESS_DENIED);
 				sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", ERROR_LDAP_PREFIX + ERROR_LDAP_ACCESS_DENIED);
@@ -776,11 +784,15 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			else {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error response received: '" + sResponse
 						+ "' from DirectAuthSP: '" + sAuthSPId + "'.");
-				String sErrorMessage = _configManager.getErrorMessage(ERROR_LDAP_PREFIX
+
+				if (servletResponse != null) {
+					String sErrorMessage = _configManager.getErrorMessage(ERROR_LDAP_PREFIX
 						+ ERROR_LDAP_INVALID_CREDENTIALS, _sUserLanguage, _sUserCountry);
-				htServiceRequest.put("error_message", sErrorMessage);
-				showDirectLoginForm(htServiceRequest, pwOut, sServerId);
+					htServiceRequest.put("error_message", sErrorMessage);
+					showDirectLoginForm(htServiceRequest, pwOut, sServerId);
+				}  // else no browser attached
 			}
+			return false;
 		}
 		catch (ASelectException e) {
 			throw e;

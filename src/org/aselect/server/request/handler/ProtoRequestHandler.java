@@ -742,7 +742,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			String sAppId, boolean checkSignature, IClientCommunicator iClientComm)
 		throws ASelectException
 	{
-		String sMethod = "performAuthenticateRequest()";
+		String sMethod = "performAuthenticateRequest";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "AUTHN { " + sASelectURL + " - " + sPathInfo + " - "
 				+ sReturnSuffix);
 

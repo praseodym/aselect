@@ -190,20 +190,24 @@
  */
 package org.aselect.server.request.handler.aselect.authentication;
 
+import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.logging.Level;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.application.Application;
 import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.attributes.AttributeGatherer;
+import org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler;
 import org.aselect.server.authspprotocol.handler.AuthSPHandlerManager;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
+import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.server.request.handler.xsaml20.sp.MetaDataManagerSp;
 import org.aselect.server.request.handler.xsaml20.sp.SessionSyncRequestSender;
@@ -218,6 +222,8 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.utils.Utils;
+import org.opensaml.DefaultBootstrap;
+import org.opensaml.xml.ConfigurationException;
 
 /**
  * Handle API requests from Applications and A-Select Agents. <br>
@@ -270,13 +276,15 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 * @throws ASelectException
 	 *             * @throws ASelectCommunicationException the a select communication exception
 	 */
-	public ApplicationAPIHandler(RequestParser reqParser, HttpServletRequest servletRequest,
-			HttpServletResponse servletResponse, String sMyServerId, String sMyOrg)
-		throws ASelectCommunicationException {
+	public ApplicationAPIHandler(RequestParser reqParser,
+			HttpServletRequest servletRequest, HttpServletResponse servletResponse,
+			String sMyServerId, String sMyOrg)
+	throws ASelectCommunicationException
+	{
 		super(reqParser, servletRequest, servletResponse, sMyServerId, sMyOrg);
 
-		// set variables and get handles
 		_sModule = "ApplicationAPIHandler";
+		// set variables and get handles
 		_configManager = ASelectConfigManager.getHandle();
 		_oTGTManager = TGTManager.getHandle();
 		_sessionManager = SessionManager.getHandle();
@@ -317,7 +325,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 */
 	protected void processAPIRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
 			IOutputMessage oOutputMessage)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "processAPIRequest";
 
@@ -827,7 +835,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 				htSelectedAttr.put("saml_remote_token", sRemoteToken);
 
 			// Add Saml Token to the attributes, must be signed and base64 encoded
-			sToken = SamlTools.createAttributeToken(_sServerUrl, sTGT, htSelectedAttr);
+			sToken = HandlerTools.createAttributeToken(_sServerUrl, sTGT, htSelectedAttr);
 			htAttribs.put("saml_attribute_token", sToken);
 		}
 		String sSerializedAttributes = org.aselect.server.utils.Utils.serializeAttributes(htAttribs);

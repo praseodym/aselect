@@ -104,6 +104,7 @@ import org.aselect.server.session.SessionManager;
 import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
+import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
@@ -165,7 +166,8 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 	 *            The A-Select Server organisation.
 	 */
 	public AbstractBrowserRequestHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-			String sMyServerId, String sMyOrg) {
+			String sMyServerId, String sMyOrg)
+	{
 		String sMethod = "AbstractBrowserRequestHandler";
 
 		_systemLogger = ASelectSystemLogger.getHandle();

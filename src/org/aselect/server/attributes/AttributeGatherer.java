@@ -110,7 +110,6 @@
  */
 package org.aselect.server.attributes;
 
-
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Enumeration;
@@ -455,14 +454,14 @@ public class AttributeGatherer
 	 *             If attribute gathering fails.
 	 */
 	public HashMap gatherAttributes(HashMap htTGTContext)
-		throws ASelectException
+	throws ASelectException
 	{
 		final String sMethod = "gatherAttributes";
 		HashMap<String, Object> htAttributes = new HashMap<String, Object>();
 		String sArpTarget = null;
 		boolean bFound = false;
 
-		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER _htReleasePolicies=" + _htReleasePolicies);
+		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER BEGIN _htReleasePolicies=" + _htReleasePolicies);
 		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER TGTContext=" + htTGTContext);
 
 		// Release policies available?
@@ -484,7 +483,7 @@ public class AttributeGatherer
 			}
 		}
 		else {
-			_systemLogger.log(Level.CONFIG, _MODULE, sMethod, "No arp_target parameter defined");
+			_systemLogger.log(Level.CONFIG, _MODULE, sMethod, "No 'arp_target' parameter defined");
 			sArpTarget = null;
 		} // end of 1.5.4
 
@@ -501,7 +500,7 @@ public class AttributeGatherer
 		String sLocalOrg = (String) htTGTContext.get("local_organization");
 		String sAppID = (String) htTGTContext.get("app_id");
 
-		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER sUid=" + sUid + " sLocalOrg=" + sLocalOrg + " user organization="+sOrgId);
+		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER == sUid=" + sUid + " sLocalOrg=" + sLocalOrg + " user organization="+sOrgId);
 		if (sLocalOrg != null) {
 			// use specific attribute policy, 1.5.4
 			// Enumeration enumPolicies = _htReleasePolicies.keys();
@@ -545,7 +544,7 @@ public class AttributeGatherer
 				for (Object s : keys) {
 					String sRequestorID = (String) s;
 					Vector vAttributes = (Vector) htReleasePolicy.get(sRequestorID);
-					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER Requestor=" + sRequestorID);
+					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER << Requestor=" + sRequestorID);
 
 					IAttributeRequestor attributeRequestor = (IAttributeRequestor) _htRequestors.get(sRequestorID);
 					if (attributeRequestor == null) {
@@ -563,7 +562,7 @@ public class AttributeGatherer
 						StringBuffer sb = new StringBuffer("Could not gather attributes for user \"").append(sUid).append("\"");
 						_systemLogger.log(Level.WARNING, _MODULE, sMethod, sb.toString(), eA);
 					}
-					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER-ed Requestor=" + sRequestorID + " htAttrs="+htAttrsFromAR);
+					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER >> Requestor=" + sRequestorID + " htAttrs="+htAttrsFromAR);
 
 					// Merge the returned attributes with our set
 					if (htAttrsFromAR != null) {
@@ -641,9 +640,9 @@ public class AttributeGatherer
 		// Considered using the TGTAttributeRequestor for this,
 		// but attribute requestors are not handled in a defined order
 		if (!"last".equals(_sRemoteLast))
-				addRemoteAttributesFromTgt(htAttributes, htTGTContext);
+			addRemoteAttributesFromTgt(htAttributes, htTGTContext);
 
-		// Bauke: added additional attributes, they take precedence over the "attribute" values
+		// Bauke: added additional attributes, they can take precedence over the values in "attributes"
 		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Add additional attributes from TGT");
 		Utils.copyHashmapValue("uid", htAttributes, htTGTContext);
 		Utils.copyHashmapValue("sel_uid", htAttributes, htTGTContext);
@@ -732,7 +731,7 @@ public class AttributeGatherer
 			htAttributes.put("handler", sAuthsp);
 		}
 
-		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER htAttributes=" + htAttributes);
+		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER END htAttributes=" + htAttributes);
 		return htAttributes;
 	}
 

@@ -33,7 +33,6 @@ import java.io.OutputStream;
 
 import javax.servlet.http.HttpServletResponse;
 
-// TODO: Auto-generated Javadoc
 /**
  * Wrapper to communicate in a transparant manner to a <CODE>HttpServletResponse</CODE>. <br>
  * <br>

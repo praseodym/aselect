@@ -177,12 +177,10 @@ public class ASelectRequestHandlerFactory
 		throws ASelectCommunicationException
 	{
 		String sMethod = "createRequestHandler()";
-
 		IAuthnRequestHandler oRequestHandler = null;
 
 		// Process all other requests
 		RequestParser reqParser = new RequestParser(servletRequest);
-
 		int orig = reqParser.getRequestOrigin();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "HANDLER Orig="
 				+ ((orig == RequestParser.ORIGIN_APPLICATION) ? "APPL"
@@ -200,24 +198,21 @@ public class ASelectRequestHandlerFactory
 		switch (reqParser.getRequestOrigin()) {
 		case RequestParser.ORIGIN_APPLICATION:
 			if (reqParser.getRequestType() == RequestParser.REQTYPE_API_CALL)
-				oRequestHandler = new ApplicationAPIHandler(reqParser, servletRequest, servletResponse, _sMyServerId,
-						_sMyOrg);
+				oRequestHandler = new ApplicationAPIHandler(reqParser, servletRequest, servletResponse, _sMyServerId, _sMyOrg);
 			else
 				oRequestHandler = new ApplicationBrowserHandler(servletRequest, servletResponse, _sMyServerId, _sMyOrg);
 			break;
 
 		case RequestParser.ORIGIN_ASELECTSERVER:
 			if (reqParser.getRequestType() == RequestParser.REQTYPE_API_CALL)
-				oRequestHandler = new ASelectAPIHandler(reqParser, servletRequest, servletResponse, _sMyServerId,
-						_sMyOrg);
+				oRequestHandler = new ASelectAPIHandler(reqParser, servletRequest, servletResponse, _sMyServerId, _sMyOrg);
 			else
 				oRequestHandler = new ASelectBrowserHandler(servletRequest, servletResponse, _sMyServerId, _sMyOrg);
 			break;
 
 		case RequestParser.ORIGIN_AUTHSP:
 			if (reqParser.getRequestType() == RequestParser.REQTYPE_API_CALL)
-				oRequestHandler = new AuthSPAPIHandler(reqParser, servletRequest, servletResponse, _sMyServerId,
-						_sMyOrg);
+				oRequestHandler = new AuthSPAPIHandler(reqParser, servletRequest, servletResponse, _sMyServerId, _sMyOrg);
 			else
 				oRequestHandler = new AuthSPBrowserHandler(servletRequest, servletResponse, _sMyServerId, _sMyOrg);
 			break;
@@ -232,7 +227,6 @@ public class ASelectRequestHandlerFactory
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received.");
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
-
 		return oRequestHandler;
 	}
 

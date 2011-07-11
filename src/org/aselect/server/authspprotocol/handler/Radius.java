@@ -91,7 +91,6 @@ import org.aselect.server.session.SessionManager;
 import org.aselect.system.exception.ASelectAuthSPException;
 import org.aselect.system.exception.ASelectConfigException;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Radius AuthSP Handler. <br>
  * <br>
@@ -340,7 +339,6 @@ public class Radius implements IAuthSPProtocolHandler
 			if (sSignature == null) {
 				sbTemp = new StringBuffer("Could not generate signature for authsp: ").append(_sAuthsp);
 				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sbTemp.toString());
-
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
 

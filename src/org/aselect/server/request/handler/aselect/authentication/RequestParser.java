@@ -254,19 +254,11 @@ public class RequestParser
 				}
 				else
 				// Redirect from application?
-				if (_sRequest.equals("login1")) {
+				if (_sRequest.equals("login1") || _sRequest.equals("cross_login")) {  // || _sRequest.equals("login_token")) {
 					_iRequestOrigin = ORIGIN_APPLICATION;
 					_iRequestType = REQTYPE_BROWSER;
 				}
-				else if (_sRequest.equals("cross_login")) {
-					_iRequestOrigin = ORIGIN_APPLICATION;
-					_iRequestType = REQTYPE_BROWSER;
-				}
-				else if (_sRequest.equals("direct_login1")) {
-					_iRequestOrigin = ORIGIN_APPLICATION;
-					_iRequestType = REQTYPE_BROWSER;
-				}
-				else if (_sRequest.equals("direct_login2")) {
+				else if (_sRequest.equals("direct_login1") || _sRequest.equals("direct_login2")) {
 					_iRequestOrigin = ORIGIN_APPLICATION;
 					_iRequestType = REQTYPE_BROWSER;
 				}
@@ -297,13 +289,13 @@ public class RequestParser
 		else if (_sMethod.equalsIgnoreCase("POST")) {
 			// Process HTTP POST request
 			String xContentType = request.getContentType();
-			if (xContentType.indexOf("text/xml") > -1) {
+			if (xContentType != null && xContentType.indexOf("text/xml") > -1) {
 				// SOAP11 request
 				_iRequestType = REQTYPE_API_CALL;
 				_iRequestOrigin = ORIGIN_APPLICATION;
 				_iRequestProtocol = PROTOCOL_SOAP11;
 			}
-			else if (xContentType.indexOf("application/soap+xml") > -1) {
+			else if (xContentType != null && xContentType.indexOf("application/soap+xml") > -1) {
 				// SOAP11 request
 				_iRequestType = REQTYPE_API_CALL;
 				_iRequestOrigin = ORIGIN_APPLICATION;

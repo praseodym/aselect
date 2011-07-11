@@ -120,7 +120,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Radius AuthSP. <br>
  * <br>
@@ -477,7 +476,6 @@ public class RadiusAuthSP extends ASelectHttpServlet
 				pwOut.close();
 				pwOut = null;
 			}
-
 		}
 	}
 
@@ -565,7 +563,6 @@ public class RadiusAuthSP extends ASelectHttpServlet
 				sbWarning.append("' for user: ");
 				sbWarning.append(sUid);
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString());
-
 				throw new ASelectException(Errors.ERROR_RADIUS_INVALID_REQUEST);
 			}
 
@@ -580,7 +577,6 @@ public class RadiusAuthSP extends ASelectHttpServlet
 				sbWarning.append("' for user: ");
 				sbWarning.append(sUid);
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString(), e);
-
 				throw new ASelectException(Errors.ERROR_RADIUS_INVALID_REQUEST, e);
 			}
 

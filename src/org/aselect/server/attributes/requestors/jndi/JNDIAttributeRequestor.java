@@ -79,6 +79,7 @@ package org.aselect.server.attributes.requestors.jndi;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -135,6 +136,10 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	private HashMap<String, String> _htReMapAttributes;
 	private boolean _bUseFullUid = false;
 	private boolean _bNumericalUid = false;
+	
+	// Store <sub_attributes> data
+	protected HashMap<String,String> _hmAttributes = new HashMap<String,String>();
+	protected HashMap<String,String> _hmSubs = new HashMap<String,String>();
 
 	/**
 	 * Initializes the JNDI Attribute Requestor. <br>
@@ -157,6 +162,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 		_htAttributes = new HashMap<String, String>();
 		_htReMapAttributes = new HashMap<String, String>();
 
+		initSubAttributes(oConfig);
 		try {
 			try {
 				_sResourceGroup = _configManager.getParam(oConfig, "resourcegroup");
@@ -289,6 +295,72 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not initialize the Ldap attributes requestor", e);
 			throw new ASelectAttributesException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+	}
+
+	/**
+	 * Read <sub_attributes> from the configuration.
+	 * 
+	 * @param oConfig
+	 *            the config object
+	 * @throws ASelectException
+	 */
+	private void initSubAttributes(Object oConfig)
+	throws ASelectException
+	{
+		final String sMethod = "initSubAttributes";
+		
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "GAR");
+		Object oSubAttributes = null;
+		try {
+			oSubAttributes = _configManager.getSection(oConfig, "sub_attributes");
+		}
+		catch (ASelectConfigException e) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "No 'sub_attributes' available");
+		}
+
+		if (oSubAttributes != null) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "oSubAttributes=" + oSubAttributes);
+			Object oSubAttribute = null;
+			try {
+				oSubAttribute = _configManager.getSection(oSubAttributes, "sub_attribute");
+			}
+			catch (ASelectConfigException e) {
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod, "No 'sub_attribute' section in 'attributes' section");
+			}
+
+			while (oSubAttribute != null) {
+				String sAttributeSub = null;
+				String sAttribute = null;
+				String sAttributeId = null;
+
+				try {
+					sAttributeId = _configManager.getParam(oSubAttribute, "id");
+				}
+				catch (ASelectConfigException e) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'id' config item in 'attribute' section found", e);
+					throw new ASelectAttributesException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+				}
+				try {
+					sAttributeSub = _configManager.getParam(oSubAttribute, "sub");
+				}
+				catch (ASelectConfigException e) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'sub' config item in 'attribute' section found", e);
+					throw new ASelectAttributesException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+				}
+				try {
+					sAttribute = _configManager.getParam(oSubAttribute, "attribute");
+				}
+				catch (ASelectConfigException e) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'attribute' config item in 'attribute' section found", e);
+					throw new ASelectAttributesException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+				}
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "GAR id="+sAttributeId+" sub="+sAttributeSub+" attribute="+sAttribute);
+				_hmSubs.put(sAttributeId, sAttributeSub);
+				_hmAttributes.put(sAttributeId, sAttribute);
+
+				oSubAttribute = _configManager.getNextSection(oSubAttribute);
+			}
 		}
 	}
 	
@@ -444,10 +516,8 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				oSearchResults = oDirContext.search(_sBaseDN, sbQuery.toString(), oScope);
 			}
 			catch (InvalidSearchFilterException e) {
-				StringBuffer sbFailed = new StringBuffer("Wrong filter: ");
-				sbFailed.append(sbQuery.toString());
-				sbFailed.append(" with attributes: ");
-				sbFailed.append(vMappedAttributes.toString());
+				StringBuffer sbFailed = new StringBuffer("Wrong filter: ").append(sbQuery.toString());
+				sbFailed.append(" with attributes: ").append(vMappedAttributes.toString());
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
 				throw new ASelectAttributesException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 			}
@@ -456,8 +526,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				throw new ASelectAttributesException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 			}
 			catch (NamingException e) {
-				StringBuffer sbFailed = new StringBuffer("User unknown: ");
-				sbFailed.append(sUID);
+				StringBuffer sbFailed = new StringBuffer("User unknown: ").append(sUID);
 				_systemLogger.log(Level.INFO, MODULE, sMethod, sbFailed.toString(), e);
 				throw new ASelectAttributesException(Errors.ERROR_ASELECT_UNKNOWN_USER, e);
 			}
@@ -563,9 +632,34 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				if (hOrgResponse != null)
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "1. OrgDN="+sDnValue+" OrgName="+sNameValue);
 				
+				// Look for attributes in sub containers specified in the <sub_containers> tag
+				for(String sSubId : _hmSubs.keySet()) {
+				    String sSubTree = _hmSubs.get(sSubId);
+				    String sSubAttribute = _hmAttributes.get(sSubId);
+				    _systemLogger.log(Level.INFO, MODULE, sMethod, "SUB id="+sSubId+" sub="+sSubTree+" attr="+sSubAttribute+" subSearch="+sSubTree+","+sSearchName);
+				    
+					oAttributes = getLdapEntry(oDirContext, sSubTree+","+sSearchName, _sBaseDN);
+					_systemLogger.log(Level.FINE, MODULE, sMethod, "Attrs " + oAttributes);
+					if (oAttributes == null)
+						continue;
+					oAttrEnum = oAttributes.getAll();
+					while (oAttrEnum.hasMore()) {
+						Attribute oAttribute = (Attribute) oAttrEnum.next();
+						String sAttributeName = oAttribute.getID();
+						if (!sSubAttribute.equals(sAttributeName))
+							continue;
+						if (oAttribute.size() == 1) {
+							String sAttributeValue = (String) oAttribute.get();
+							if (sAttributeValue == null) sAttributeValue = "";
+							_systemLogger.log(Level.INFO, MODULE, sMethod, "Attribute="+sAttributeName+" Value="+sAttributeValue);
+							if (hAttrResponse != null)
+								hAttrResponse.put(sSubId, sAttributeValue);
+						}
+					}
+				}
+
 				// Look for attributes in parent containers
 				// Example search name: cn=bauke,o=123456789
-				//
 				while (_sSearchTree != null) {
 					int idx = sSearchName.indexOf(',');
 					if (idx < 0)  // no more parents

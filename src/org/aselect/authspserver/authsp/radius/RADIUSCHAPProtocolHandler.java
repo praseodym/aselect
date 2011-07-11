@@ -62,7 +62,6 @@ import java.util.logging.Level;
 
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Radius Protocol Handler which handles the Radius CHAP requests. <br>
  * <br>
@@ -81,7 +80,7 @@ public class RADIUSCHAPProtocolHandler extends AbstractRADIUSProtocolHandler
 	private DatagramSocket _listenSocket = null;
 	private int _iSocketTimeout = 10000; // (154)
 	private String _sErrorCode;
-	private final String MODULE = "RADIUSPAPProtocolHandler";
+	private final String MODULE = "RADIUSCHAPProtocolHandler"; // 20110629: "RADIUSPAPProtocolHandler";
 
 	/**
 	 * . <br>
@@ -97,8 +96,7 @@ public class RADIUSCHAPProtocolHandler extends AbstractRADIUSProtocolHandler
 	{
 		String sMethod = "authenticate()";
 		_sErrorCode = Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER;
-
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "CHAPP uid=" + _sUid);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "CHAP uid=" + _sUid);
 		try {
 			DatagramPacket oRADIUSPacket;
 			byte[] baRadiusPacketBuffer = new byte[MAX_RADIUS_PACKET_SIZE];
@@ -150,7 +148,6 @@ public class RADIUSCHAPProtocolHandler extends AbstractRADIUSProtocolHandler
 					+ " with with RADIUS " + "server at " + _sRadiusServer + ": ", e);
 			_sErrorCode = Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER;
 		}
-
 		return _sErrorCode;
 	}
 

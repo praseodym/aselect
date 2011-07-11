@@ -76,7 +76,6 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.logging.SystemLogger;
 
-// TODO: Auto-generated Javadoc
 /**
  * Message creator which uses CGI messages. <br>
  * <br>
@@ -147,7 +146,8 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	 * @param systemLogger
 	 *            The logger that should be used for system log entries.
 	 */
-	public RawMessageCreator(SystemLogger systemLogger) {
+	public RawMessageCreator(SystemLogger systemLogger)
+	{
 		_sbOutputMessage = null;
 		_systemLogger = systemLogger;
 	}
@@ -178,12 +178,12 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	 * The input message is parsed and a empty response message is ready. <br>
 	 * 
 	 * @param oRequest
-	 *            the o request
+	 *            the request
 	 * @param oResponse
-	 *            the o response
+	 *            the response
 	 * @return true, if inits the
 	 * @throws ASelectCommunicationException
-	 *             the a select communication exception
+	 *             the select communication exception
 	 * @see org.aselect.system.communication.server.IMessageCreatorInterface#init(org.aselect.system.communication.server.IProtocolRequest,
 	 *      org.aselect.system.communication.server.IProtocolResponse)
 	 */
@@ -337,7 +337,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 		String sMethod = "setParam";
 		StringBuffer sbBuffer = null;
 
-		_systemLogger.log(Level.FINE, MODULE, sMethod, "param="+sName +" encode="+doUrlEncode);
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "param="+sName +" value="+sValue +" encode="+doUrlEncode);
 		boolean bRetValue = false;
 		if (sName != null && sValue != null) // name and value may not be empty
 		{
@@ -354,6 +354,8 @@ public class RawMessageCreator implements IMessageCreatorInterface
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString(), eUE);
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
+			if (_sbOutputMessage == null)
+				_sbOutputMessage = new StringBuffer("");
 			if (_sbOutputMessage.indexOf(sName + "=") == -1) { // if not already contains the parameter
 				if (_sbOutputMessage.length() > 0) {
 					_sbOutputMessage.append("&" + sName + "=" + sValue);

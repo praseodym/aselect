@@ -55,13 +55,17 @@ package org.aselect.authspserver.authsp.radius;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.security.Key;
 import java.security.MessageDigest;
 import java.util.Random;
 import java.util.logging.Level;
 
+import javax.crypto.Mac;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Radius Protocol Handler which handles the Radius PAP requests. <br>
  * <br>
@@ -97,7 +101,7 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 		String sMethod = "authenticate()";
 		_sErrorCode = Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER;
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "PAPP uid=" + _sUid);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "PAP uid=" + _sUid);
 		try {
 			DatagramPacket oRADIUSPacket;
 			byte xBuffer[] = new byte[MAX_RADIUS_PACKET_SIZE];
@@ -129,7 +133,7 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 			_listenSocket.send(oRADIUSPacket);
 			_listenSocket.receive(oRADIUSPacket);
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "response");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "received response");
 			handleResponse(oRADIUSPacket);
 
 			try {
@@ -162,13 +166,16 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 	 * <br>
 	 * 
 	 * @param sPassword
-	 *            the s password
+	 *            the password
 	 * @param oRADIUSPacket
-	 *            the o radius packet
+	 *            the radius packet
 	 */
+	// NOTE rfc2865 obsoletes rfc2138
+//	   An Access-Request is now required to contain either a NAS-IP-Address
+//	   or NAS-Identifier (or may contain both).
 	void composeRequest(String sPassword, DatagramPacket oRADIUSPacket)
 	{
-		String sMethod = "composeRequest()";
+		String sMethod = "composeRequest";
 		_sErrorCode = Errors.ERROR_RADIUS_INTERNAL_ERROR;
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "uid=" + _sUid);
@@ -181,6 +188,12 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 			oRADIUSPacket.setAddress(InetAddress.getByName(_sRadiusServer));
 			oRADIUSPacket.setPort(_iPort);
 
+			// 1 byte: access request
+			// 1 byte: identifier
+			// 2 bytes: length
+			// 16 bytes: random seed
+			// user attribute: type=01 len=2+uid.length uid
+			// password: type=02 len=2+16 hashed pwd
 			randomGenerator = new Random();
 			randomGenerator.nextBytes(_baRandom);
 			_bIdentifier = (byte) randomGenerator.nextInt();
@@ -203,16 +216,17 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 			baOutputBuffer[iIndex++] = RADIUS_ATTRIBUTE_TYPE_USER_PASSWORD;
 			baOutputBuffer[iIndex++] = (byte) (16 + 2);
 
-			// copy password to xBuffer1
+			// copy password to baTempBuffer2, pad with zeroes to a length of 16 bytes
 			baTempBuffer1 = sPassword.getBytes();
 			baTempBuffer2 = new byte[16];
 			for (int i = 0; i < baTempBuffer1.length; i++) {
 				baTempBuffer2[i] = baTempBuffer1[i];
 			}
-			// reset the remaining bytes to 0x00 in xBuffer1
+			// reset the remaining bytes to 0x00 in baTempBuffer2
 			for (int i = baTempBuffer1.length; i < 16; i++) {
 				baTempBuffer2[i] = (byte) 0x00;
 			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "pwd=" + Utils.byteArrayToHexString(baOutputBuffer));
 
 			// compute b1 = MD5(S + RSA) as in rfc2138
 			MessageDigest md5Object = MessageDigest.getInstance("MD5");
@@ -224,10 +238,45 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 			for (int i = 0; i < 16; i++) {
 				baOutputBuffer[iIndex++] = (byte) (baTempBuffer2[i] ^ baHash[i]);
 			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "hashpwd=" + Utils.byteArrayToHexString(baOutputBuffer));
+
+			// BEGIN NEW 20110705
+			// Add signature according ro rfc 2869
+/*			baOutputBuffer[iIndex++] = RADIUS_MESSAGE_AUTHENTICATION_ATTRIBUTE;
+			baOutputBuffer[iIndex++] = (byte)(16 + 2);
+			for (int i = 0; i < 16; i++) {  // fill with a null signature
+				baOutputBuffer[iIndex+i] = (byte)0x00;
+			}
+			
+			// Length now is iIndex+16
+			// MD5 hash the complete message and copy over the null signature
+//			md5Object.reset();
+//			md5Object.update(baOutputBuffer, 0, iIndex+16);
+//			baHash = md5Object.digest();
+
+			Mac mac = Mac.getInstance("HmacMD5");
+			// RFC 2104, key should be 64 bytes! Padded to the right with 0-bytes.
+	        SecretKeySpec key = new SecretKeySpec(_sSharedSecret.getBytes(), "HmacMD5");
+	        mac.init(key);
+			mac.update(baOutputBuffer, 0, iIndex+16);
+	        baHash = mac.doFinal();
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "baHash=" + Utils.byteArrayToHexString(baHash));
+			
+			for (int i = 0; i < 16; i++) {
+				baOutputBuffer[iIndex++] = baHash[i];
+			}
+*/			// END NEW
+			
+			// store actual length
 			baOutputBuffer[2] = (byte) (iIndex >> 8);
 			baOutputBuffer[3] = (byte) (iIndex & 0x00ff);
-			oRADIUSPacket.setData(baOutputBuffer);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "request=" + Utils.byteArrayToHexString(baOutputBuffer));
+			
+			// Cut off the buffer
+			byte[] newBuf = new byte[iIndex];
+			System.arraycopy(baOutputBuffer, 0, newBuf, 0, iIndex);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "len="+iIndex+ " request=" + Utils.byteArrayToHexString(newBuf));
+			
+			oRADIUSPacket.setData(newBuf);
 			_sErrorCode = Errors.ERROR_RADIUS_SUCCESS;
 		}
 		catch (Exception e) {
@@ -239,7 +288,7 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 	 * This methods handles the response comming from the Radius Server.
 	 * 
 	 * @param oRADIUSPacket
-	 *            the o radius packet
+	 *            the radius packet
 	 */
 	void handleResponse(DatagramPacket oRADIUSPacket)
 	{
@@ -249,7 +298,7 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 		int iLength;
 		int iResponseBufferIndex;
 
-		String sMethod = "handleResponse()";
+		String sMethod = "handleResponse";
 		_sErrorCode = Errors.ERROR_RADIUS_INTERNAL_ERROR;
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "uid=" + _sUid);
@@ -277,7 +326,7 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 
 			// length
 			iLength = ((baResponseBuffer[2] & 255) * 256) + (baResponseBuffer[3] & 255);
-
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "len="+iLength);
 			// skip length
 			iResponseBufferIndex += 2;
 
@@ -301,6 +350,8 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 			md5Object.update(_sSharedSecret.getBytes());
 			baHash = md5Object.digest();
 
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "authenticator="+Utils.byteArrayToHexString(baResponseBuffer)+
+							" hash="+Utils.byteArrayToHexString(baHash));
 			for (int i = 0; i < 16; i++) {
 				if (baAuthenticator[i] != baHash[i]) {
 					StringBuffer sbTemp = new StringBuffer("RADIUS Authenticator mismatch Server\r\n");
@@ -321,5 +372,6 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "INTERNAL ERROR", e);
 			_sErrorCode = Errors.ERROR_RADIUS_INTERNAL_ERROR;
 		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "_sErrorCode="+_sErrorCode);
 	}
 }

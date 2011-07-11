@@ -42,7 +42,10 @@ import java.util.logging.Level;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.sam.ASelectSAMAgent;
+import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAttributesException;
+import org.aselect.system.exception.ASelectConfigException;
+import org.aselect.system.exception.ASelectException;
 
 /**
  * A base class for attribute requestors. <br>
@@ -85,12 +88,13 @@ public abstract class GenericAttributeRequestor implements IAttributeRequestor
 	 * <li><code>_systemLogger != null</code></li>
 	 * </ul>
 	 */
-	public GenericAttributeRequestor() {
+	public GenericAttributeRequestor()
+	{
 		_configManager = ASelectConfigManager.getHandle();
 		_samAgent = ASelectSAMAgent.getHandle();
 		_systemLogger = ASelectSystemLogger.getHandle();
 	}
-	
+
 	/**
 	 * Gather a user's organizations. <br>
 	 * <br>

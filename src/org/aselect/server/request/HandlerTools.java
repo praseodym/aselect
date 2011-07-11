@@ -11,6 +11,10 @@
  */
 package org.aselect.server.request;
 
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.logging.Level;
 
 import javax.servlet.http.Cookie;
@@ -19,6 +23,29 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectSystemLogger;
+import org.aselect.server.request.handler.xsaml20.SamlTools;
+import org.aselect.system.error.Errors;
+import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.BASE64Encoder;
+import org.joda.time.DateTime;
+import org.opensaml.common.SAMLObjectBuilder;
+import org.opensaml.common.SAMLVersion;
+import org.opensaml.saml2.core.Assertion;
+import org.opensaml.saml2.core.Attribute;
+import org.opensaml.saml2.core.AttributeStatement;
+import org.opensaml.saml2.core.AttributeValue;
+import org.opensaml.saml2.core.Issuer;
+import org.opensaml.saml2.core.NameID;
+import org.opensaml.saml2.core.NameIDType;
+import org.opensaml.saml2.core.Subject;
+import org.opensaml.xml.XMLObjectBuilder;
+import org.opensaml.xml.XMLObjectBuilderFactory;
+import org.opensaml.xml.io.Marshaller;
+import org.opensaml.xml.io.MarshallerFactory;
+import org.opensaml.xml.io.MarshallingException;
+import org.opensaml.xml.schema.XSString;
+import org.opensaml.xml.util.XMLHelper;
+import org.w3c.dom.Node;
 
 /*
  * Generic Tools for all Handler routines
@@ -204,6 +231,181 @@ public class HandlerTools
 			logger.log(Level.INFO, MODULE, sMethod, "Cookie " + aCookies[i].getName() + "=" + aCookies[i].getValue()
 					+ ", Path=" + aCookies[i].getPath() + ", Domain=" + aCookies[i].getDomain() + ", Age="
 					+ aCookies[i].getMaxAge());
+		}
+	}
+
+	/**
+	 * Creates the attribute statement assertion.
+	 * 
+	 * @param parms
+	 *            the parms
+	 * @param sIssuer
+	 *            the issuer
+	 * @param sSubject
+	 *            the subject
+	 * @param sign
+	 *            sign the assertion?
+	 * @return the assertion
+	 * @throws ASelectException
+	 */
+	@SuppressWarnings( {
+		"unchecked"
+	})
+	public static Assertion createAttributeStatementAssertion(Map parms, String sIssuer, String sSubject, boolean sign)
+	throws ASelectException
+	{
+		String sMethod = "createAttributeStatementAssertion";
+		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
+		XMLObjectBuilderFactory _oBuilderFactory;
+		_oBuilderFactory = org.opensaml.xml.Configuration.getBuilderFactory();
+
+		systemLogger.log(Level.INFO, MODULE, sMethod, "Issuer="+sIssuer+" Subject="+sSubject);
+		XMLObjectBuilder stringBuilder = _oBuilderFactory.getBuilder(XSString.TYPE_NAME);
+
+		SAMLObjectBuilder<AttributeStatement> attributeStatementBuilder = (SAMLObjectBuilder<AttributeStatement>) _oBuilderFactory
+				.getBuilder(AttributeStatement.DEFAULT_ELEMENT_NAME);
+
+		SAMLObjectBuilder<Assertion> assertionBuilder = (SAMLObjectBuilder<Assertion>) _oBuilderFactory
+				.getBuilder(Assertion.DEFAULT_ELEMENT_NAME);
+
+		Assertion assertion = assertionBuilder.buildObject();
+		assertion.setVersion(SAMLVersion.VERSION_20);
+
+		SAMLObjectBuilder<NameID> nameIDBuilder = (SAMLObjectBuilder<NameID>) _oBuilderFactory
+				.getBuilder(NameID.DEFAULT_ELEMENT_NAME);
+		NameID nameID = nameIDBuilder.buildObject();
+		nameID.setFormat(NameIDType.TRANSIENT); // was PERSISTENT
+		nameID.setNameQualifier(sIssuer);
+		nameID.setValue(sSubject);
+		
+		systemLogger.log(Level.INFO, MODULE, sMethod, nameID.getValue());
+		SAMLObjectBuilder<Subject> subjectBuilder = (SAMLObjectBuilder<Subject>) _oBuilderFactory
+				.getBuilder(Subject.DEFAULT_ELEMENT_NAME);
+		Subject subject = subjectBuilder.buildObject();
+		subject.setNameID(nameID);
+
+		SAMLObjectBuilder<Issuer> assertionIssuerBuilder = (SAMLObjectBuilder<Issuer>) _oBuilderFactory
+				.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
+		Issuer assertionIssuer = assertionIssuerBuilder.buildObject();
+		assertionIssuer.setFormat(NameIDType.ENTITY);
+		assertionIssuer.setValue(sIssuer);
+
+		assertion.setIssuer(assertionIssuer);
+		assertion.setSubject(subject);
+		DateTime tStamp = new DateTime();
+		assertion.setIssueInstant(tStamp);
+		try {
+			assertion.setID(SamlTools.generateIdentifier(systemLogger, MODULE));
+		}
+		catch (ASelectException ase) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod, "failed to build SAML response", ase);
+		}
+
+		AttributeStatement attributeStatement = attributeStatementBuilder.buildObject();
+
+		SAMLObjectBuilder<Attribute> attributeBuilder = (SAMLObjectBuilder<Attribute>) _oBuilderFactory
+				.getBuilder(Attribute.DEFAULT_ELEMENT_NAME);
+
+		Iterator itr = parms.keySet().iterator();
+		systemLogger.log(Level.INFO, MODULE, sMethod, "Start iterating through parameters");
+		while (itr.hasNext()) {
+			String parmName = (String) itr.next();
+
+			// Bauke, 20081202 replaced, cannot convert parms.get() to a String[]
+			Object oValue = parms.get(parmName);
+			if (!(oValue instanceof String)) {
+				systemLogger.log(Level.INFO, MODULE, sMethod, "Skip, not a String: "+parmName);
+				continue;
+			}
+			String sValue = (String)parms.get(parmName);
+			systemLogger.log(Level.FINER, MODULE, sMethod, "parm:" + parmName + " has value:" + sValue);
+			Attribute attribute = attributeBuilder.buildObject();
+			attribute.setName(parmName);
+			XSString attributeValue = (XSString) stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
+					XSString.TYPE_NAME);
+			attributeValue.setValue(sValue);
+			attribute.getAttributeValues().add(attributeValue);
+
+			attributeStatement.getAttributes().add(attribute);
+		}
+		systemLogger.log(Level.INFO, MODULE, sMethod, "Finalizing the assertion building, sign="+sign);
+		assertion.getAttributeStatements().add(attributeStatement);
+		assertion = marshallAssertion(assertion);
+		if (sign) {
+			systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the final Assertion >======");
+			assertion = (Assertion)SamlTools.signSamlObject(assertion);
+			systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the Assertion ======<" + assertion);
+		}
+
+		// // Only for testing
+		// if (!SamlTools.checkSignature(assertion, _configManager.getDefaultCertificate().getPublicKey()) ) {
+		// _systemLogger.log(Level.INFO, MODULE, sMethod, "Signing verification says signature NOT valid ?!?" );
+		// } else {
+		// _systemLogger.log(Level.INFO, MODULE, sMethod, "Signing verification says signature is valid!" );
+		// }
+		return assertion;
+	}
+
+	/**
+	 * Marshall assertion.
+	 * 
+	 * @param assertion
+	 *            the assertion
+	 * @return the assertion
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	private static Assertion marshallAssertion(Assertion assertion)
+		throws ASelectException
+	{
+		String sMethod = "marshallAssertion";
+		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
+		MarshallerFactory factory = org.opensaml.xml.Configuration.getMarshallerFactory();
+		Marshaller marshaller = factory.getMarshaller(assertion);
+		try {
+			Node node = marshaller.marshall(assertion);
+			//String msg = XMLHelper.prettyPrintXML(node);
+			//systemLogger.log(Level.INFO, MODULE, sMethod, msg);
+		}
+		catch (MarshallingException e) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		}
+		return assertion;
+	}
+
+	/**
+	 * Create a signed and base64 encoded Saml Token
+	 * containing the attributes present in htAttributes.
+	 * 
+	 * @param sIssuer
+	 *            the issuer
+	 * @param sTgt
+	 *            the tgt
+	 * @param htAttributes
+	 *            the attributes
+	 * @return the attribute token
+	 * @throws ASelectException
+	 */
+	public static String createAttributeToken(String sIssuer, String sTgt, HashMap htAttributes)
+	throws ASelectException
+	{
+		String sMethod = "createAttributeToken";
+		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
+
+		Assertion samlAssert = HandlerTools.createAttributeStatementAssertion(htAttributes, sIssuer/* Issuer */,
+				sTgt/* Subject */, true/* sign */);
+		String sAssertion = XMLHelper.nodeToString(samlAssert.getDOM());
+		systemLogger.log(Level.INFO, MODULE, sMethod, "Assertion=" + sAssertion);
+
+		try {
+			byte[] bBase64Assertion = sAssertion.getBytes("UTF-8");
+			BASE64Encoder b64enc = new BASE64Encoder();
+			return b64enc.encode(bBase64Assertion);
+		}
+		catch (UnsupportedEncodingException e) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 	}
 }

@@ -564,7 +564,7 @@ public class JNDIConnector implements IUDBConnector
 	public boolean isUserEnabled(String sUserId)
 		throws ASelectUDBException
 	{
-		String sMethod = "isUserEnabled()";
+		String sMethod = "isUserEnabled";
 
 		DirContext oDirContext = null;
 		boolean bIsEnabled = false;
@@ -601,6 +601,7 @@ public class JNDIConnector implements IUDBConnector
 
 			oDirContext = getConnection();
 
+			_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "Search for "+sbQuery);
 			oSearchResults = oDirContext.search(_sBaseDN, sbQuery.toString(), oScope);
 
 			// Check if we got a result
@@ -609,6 +610,7 @@ public class JNDIConnector implements IUDBConnector
 				// We only handle the first returned record.
 				SearchResult oSearchResult = (SearchResult) oSearchResults.next();
 				oAttributes = oSearchResult.getAttributes();
+				_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "Found "+oAttributes);
 				boolean bFound = false; // attribute found
 				for (NamingEnumeration oAttrEnum = oAttributes.getAll(); oAttrEnum.hasMore() && !bFound;) {
 					oAttribute = (Attribute) oAttrEnum.next();

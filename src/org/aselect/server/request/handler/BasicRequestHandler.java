@@ -23,9 +23,12 @@ import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.session.SessionManager;
+import org.aselect.server.udb.IUDBConnector;
+import org.aselect.server.udb.UDBConnectorFactory;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.exception.ASelectUDBException;
 import org.aselect.system.utils.Utils;
 
 //
@@ -50,7 +53,7 @@ public abstract class BasicRequestHandler
 	 *            the s url target
 	 * @return the hash map< string, string>
 	 * @throws ASelectException
-	 *             the a select exception
+	 *             on any failure
 	 */
 	protected HashMap<String, String> handleAuthenticateAndCreateSession(HashMap<String, String> hmInput, String sUrlTarget)
 	throws ASelectException
@@ -141,7 +144,7 @@ public abstract class BasicRequestHandler
 			String sArg = hmInput.get("shared_secret");
 			if (sArg == null || !sSharedSecret.equals(sArg)) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Shared secret for app '" + sAppId
-						+ "' does not match or is missing");
+						+ "' does not match or is missing: "+ sArg + "!="+ sSharedSecret);
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 		}
@@ -279,5 +282,35 @@ public abstract class BasicRequestHandler
 					+ sSignature + " Key=" + pk);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
+	}
+
+	/**
+	 * Checks if the user is ASelect enabled.
+	 * 
+	 * @param sUID
+	 *            the uid
+	 * @throws ASelectException
+	 * @throws ASelectUDBException
+	 */
+	protected boolean isUserAselectEnabled(String sUID)
+	throws ASelectException, ASelectUDBException
+	{
+		String sMethod = "isUserAselectEnabled";
+		IUDBConnector oUDBConnector = null;
+		
+		try {
+			oUDBConnector = UDBConnectorFactory.getUDBConnector();
+		}
+		catch (ASelectException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to connect to the UDB.", e);
+			throw e;
+		}
+
+		if (!oUDBConnector.isUserEnabled(sUID)) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unknown user id or user account is not enabled.");
+			return false;
+		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "User is enabled: "+sUID);
+		return true;
 	}
 }

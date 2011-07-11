@@ -36,7 +36,6 @@ import java.io.InputStreamReader;
 
 import javax.servlet.http.HttpServletRequest;
 
-// TODO: Auto-generated Javadoc
 /**
  * Wrapper to communicate in a transparant manner to a <CODE>HttpServletRequest</CODE>. <br>
  * <br>

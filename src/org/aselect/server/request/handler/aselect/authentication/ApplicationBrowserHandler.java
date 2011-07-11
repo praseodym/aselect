@@ -301,6 +301,7 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse; //import org.aselect.system.servlet.HtmlInfo;
 
@@ -315,6 +316,7 @@ import org.aselect.server.cross.CrossASelectManager;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectAuthenticationLogger;
 import org.aselect.server.request.HandlerTools;
+import org.aselect.server.request.handler.aselect.ASelectAuthenticationProfile;
 import org.aselect.server.request.handler.xsaml20.ServiceProvider;
 import org.aselect.server.request.handler.xsaml20.idp.UserSsoSession;
 import org.aselect.server.sam.ASelectSAMAgent;
@@ -329,11 +331,15 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.exception.ASelectStorageException;
-import org.aselect.system.exception.ASelectUDBException;
 import org.aselect.system.logging.AuthenticationLogger;
 import org.aselect.system.sam.agent.SAMResource;
+import org.aselect.system.utils.BASE64Encoder;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
+import org.opensaml.DefaultBootstrap;
+import org.opensaml.saml2.core.Assertion;
+import org.opensaml.xml.ConfigurationException;
+import org.opensaml.xml.util.XMLHelper;
 
 /**
  * This class handles login requests coming from applications through a users browser. <br>
@@ -369,6 +375,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	private CryptoEngine _cryptoEngine;
 	private String _sConsentForm = null;
 	private final static String PARM_REQ_FRIENDLY_NAME = "requestorfriendlyname";
+	private String _sServerUrl;
+	
+	private static boolean firstTime = true;  // do Saml bootstrap only once
 
 	/**
 	 * Constructor for ApplicationBrowserHandler. <br>
@@ -381,17 +390,52 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *            The A-Select Server ID.
 	 * @param sMyOrg
 	 *            The A-Select Server organisation.
+	 * @throws ASelectException 
 	 */
 	public ApplicationBrowserHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			String sMyServerId, String sMyOrg)
 	{
 		super(servletRequest, servletResponse, sMyServerId, sMyOrg);
+		String sMethod = "ApplicationBrowserHandler";
 		_sModule = "ApplicationBrowserHandler";
 		_systemLogger.log(Level.INFO, _sModule, _sModule, "== create == user language=" + _sUserLanguage);
 		_applicationManager = ApplicationManager.getHandle();
 		_authspHandlerManager = AuthSPHandlerManager.getHandle();
 		_crossASelectManager = CrossASelectManager.getHandle();
 		_cryptoEngine = CryptoEngine.getHandle();
+		try {
+			_sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true);
+		}
+		catch (ASelectConfigException e) {
+			_sServerUrl = _sMyServerId;
+			//throw new ASelectCommunicationException(Errors.ERROR_ASELECT_CONFIG_ERROR, e);
+		}
+		if (firstTime) {
+			firstTime = false;
+			try {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Saml Bootstrap");
+				DefaultBootstrap.bootstrap();
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Bootstrap done");
+			}
+			catch (ConfigurationException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "OpenSAML library could not be initialized", e);
+			}
+		}
+	}
+	
+	/**
+	 * 
+	 * @param oServletConfig
+	 *            ServletConfig
+	 * @param oHandlerConfig
+	 *            Object
+	 * @throws ASelectException
+	 */
+	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
+	throws ASelectException
+	{
+		String sMethod = "init";	
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "I'm INIT");
 	}
 
 	/**
@@ -440,6 +484,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "After transfer: userLanguage=" + _sUserLanguage);
 		}
 
+		boolean bAllowLoginToken = "true".equals(ASelectAuthenticationProfile.get_sAllowLoginToken());
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "bAllowLoginToken="+bAllowLoginToken);
+
 		if (sRequest == null) {
 			// Show info page if nothing else to do
 			String sUrl = (String) htServiceRequest.get("my_url");
@@ -461,6 +508,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				}
 				//_systemLogger.log(Level.INFO, _sModule, sMethod, "Serverinfo [" + sServerInfoForm + "]");
 				pwOut.println(sServerInfoForm);
+				pwOut.close();
 			}
 		}
 		else if (sRequest.equals("logout")) {
@@ -471,6 +519,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 		else if (sRequest.equals("alive")) {
 			pwOut.println("<html><body>Server is ALIVE</body></html>");
+		}
+		else if (bAllowLoginToken && sRequest.equals("login_token")) {
+			handleLoginToken(htServiceRequest, _servletResponse, pwOut);
 		}
 		else {
 			// Precondition
@@ -623,7 +674,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	private void handleDirectLogin(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 	throws ASelectException
 	{
-		String sMethod = "handleDirectLogin()";
+		String sMethod = "handleDirectLogin";
 		String sRid = null;
 
 		String sRequest = (String) htServiceRequest.get("request");
@@ -1238,18 +1289,12 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	{
 		String sRid = null;
 		String sUid = null;
-		String sMethod = "handleLogin2()";
+		String sMethod = "handleLogin2";
 
 		StringBuffer sb;
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "Login2 " + htServiceRequest);
 		try {
 			sRid = (String) htServiceRequest.get("rid");
-			// 20101027, Bauke:
-			// No, we already have the session context in _htSessionContext
-			//HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
-			//if (htSessionContext == null) {
-			//	throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
-			//}
 			String sAuthsp = (String) _htSessionContext.get("forced_authsp"); // 20090111, Bauke from SessionContext not, 20101027 _
 			// ServiceRequest
 			if (sAuthsp != null) {
@@ -1466,25 +1511,18 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					sPopup = _configManager.getParam(authSPsection, "popup");
 				}
 				catch (ASelectConfigException e) {
-					// No popup configured -> sPopup is null allready
+					// No popup configured -> sPopup is null already
 				}
 				// RH, 20100907, sn, add app_id, requestor_friendly_name so authsp can use this at will
-				// 20101027, Bauke: No, the session is already available in _htSessionContext, so skip new retrieval
-				//HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
-				//if (htSessionContext != null) {
-					String sAppId = (String)_htSessionContext.get("app_id");
-					try {
-					String sFName = null;
-						sFName = _applicationManager.getFriendlyName(sAppId);
-						if (sFName != null && !"".equals(sFName)) {
-							sRedirectUrl = sRedirectUrl + "&" + PARM_REQ_FRIENDLY_NAME + "="  +  URLEncoder.encode(sFName, "UTF-8");
-						}
-					} catch (ASelectException ae) {
-						_systemLogger.log(Level.WARNING, _sModule, sMethod, "Redirect without FriendlyName. Could not find or encode FriendlyName for: " + sAppId );
+				String sAppId = (String)_htSessionContext.get("app_id");
+				try {
+					String sFName = _applicationManager.getFriendlyName(sAppId);
+					if (sFName != null && !"".equals(sFName)) {
+						sRedirectUrl = sRedirectUrl + "&" + PARM_REQ_FRIENDLY_NAME + "="  +  URLEncoder.encode(sFName, "UTF-8");
 					}
-				//} else {
-				//	_systemLogger.log(Level.WARNING, _sModule, sMethod, "Redirect without FriendlyName. Could not find sessionContext for rid: " + sRid );
-				//}
+				} catch (ASelectException ae) {
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Redirect without FriendlyName. Could not find or encode FriendlyName for: " + sAppId );
+				}
 				// RH, 20100907, en
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRedirectUrl);
 				if (sPopup == null || sPopup.equalsIgnoreCase("false")) {
@@ -1552,7 +1590,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	{
 		String sRemoteOrg = null;
 		String sUid = null;
-		String sMethod = "handleCrossLogin()";
+		String sMethod = "handleCrossLogin";
 
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "CrossLogin htServiceRequest=" + htServiceRequest);
 		try {
@@ -1788,7 +1826,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	private void handleIPLogin1(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 		throws ASelectException
 	{
-		String sMethod = "handleIPLogin1()";
+		String sMethod = "handleIPLogin1";
 		String sRid = null;
 		Integer intRequiredLevel = null;
 		String sLevel = null;
@@ -2043,7 +2081,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	private void handleCreateTGT(HashMap htServiceRequest, HttpServletResponse servletResponse)
 		throws ASelectException
 	{
-		String sMethod = "handleCreateTGTRequest()";
+		String sMethod = "handleCreateTGTRequest";
 		AuthenticationLogger authenticationLogger = ASelectAuthenticationLogger.getHandle();
 
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "CreateTGTRequest");
@@ -2133,37 +2171,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-	}
-
-	/**
-	 * Checks if the user is ASelect enabled.
-	 * 
-	 * @param sUID
-	 *            the uid
-	 * @throws ASelectException
-	 * @throws ASelectUDBException
-	 */
-	private boolean isUserAselectEnabled(String sUID)
-	throws ASelectException, ASelectUDBException
-	{
-		String sMethod = "isUserAselectEnabled";
-		IUDBConnector oUDBConnector = null;
-		
-		try {
-			oUDBConnector = UDBConnectorFactory.getUDBConnector();
-		}
-		catch (ASelectException e) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to connect to the UDB.", e);
-			throw e;
-		}
-
-		if (!oUDBConnector.isUserEnabled(sUID)) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unknown user id or user account is not enabled.");
-			//throw new ASelectException(Errors.ERROR_ASELECT_UDB_UNKNOWN_USER);
-			return false;
-		}
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "User is enabled: "+sUID);
-		return true;
 	}
 
 	/**
@@ -2362,7 +2369,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 */
 	private int checkCredentials(String sTgt, String sUid, String sServerId)
 	{
-		String sMethod = "checkCredentials()";
+		String sMethod = "checkCredentials";
 		HashMap htTGTContext;
 		String sTGTLevel;
 		Integer intRequiredLevel;
@@ -2421,7 +2428,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	private void showUserInfo(HashMap htServiceRequest, HttpServletResponse response)
 		throws ASelectException
 	{
-		String sMethod = "showUserInfo()";
+		String sMethod = "showUserInfo";
 		PrintWriter pwOut = null;
 
 		try {
@@ -2543,9 +2550,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @throws ASelectException
 	 */
 	private void handleLogin25(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
-		String sMethod = "handleLogin25()";
+		String sMethod = "handleLogin25";
 		String sRid = null;
 		String sAuthsp = null;
 		String sUid = null, sUserId = null, sForcedUid = null;
@@ -2587,5 +2594,151 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
+	}
+
+	// Example call: 
+	//   https://aselect.anoigo.nl/aselectserver/server?request=login_token&uid=bauke&password=xxx&
+	//		a-select-server=aselectserver1&app_id=app1&authsp=Ldap&shared_secret=1234		
+	/**
+	 * Login and return a Saml token as a result
+	 * 
+	 * @param htServiceRequest
+	 *            the service request
+	 * @param servletResponse
+	 *            the servlet response
+	 * @param pwOut
+	 *            the output PrintWriter
+	 * @throws ASelectException
+	 */
+	private void handleLoginToken(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+	throws ASelectException
+	{
+		final int SPLIT_HEADER = 3500;
+		String sMethod = "handleLoginToken";
+		AuthSPHandlerManager _authspHandlerManager = AuthSPHandlerManager.getHandle();
+		String sStatus = "401 Unauthorized";
+		
+		String sAppId = (String)htServiceRequest.get("app_id");
+		String sAuthSp = (String)htServiceRequest.get("authsp");
+		String sUid = (String)htServiceRequest.get("uid");
+		String sPassword = (String)htServiceRequest.get("password");
+		String sSharedSecret = (String)htServiceRequest.get("shared_secret");
+		if ("".equals(sAppId) || "".equals(sAuthSp) || "".equals(sUid) ||
+					"".equals(sPassword)|| "".equals(sSharedSecret)) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Mandatory parameter is missing");
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+
+		// Perform an authenticate request
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "AUTHN { ");
+		HashMap<String, String> hmRequest = new HashMap<String, String>();
+		hmRequest.put("request", "authenticate");
+		hmRequest.put("app_id", sAppId);
+		hmRequest.put("a-select-server", _sMyServerId);
+		hmRequest.put("app_url", "login_token");
+		hmRequest.put("shared_secret", sSharedSecret);
+		hmRequest.put("check-signature", "false");  // this is an internal call, so don't
+
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmRequest=" + hmRequest);
+		// Exception for bad shared_recret:
+		HashMap<String, String> hmResponse = handleAuthenticateAndCreateSession(hmRequest, null);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmResponse=" + hmResponse);
+
+		String sResultCode = (String) hmResponse.get("result_code");
+		if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {  // never happens (either success or exception is raised
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "} AUTHN unsuccessful, result_code=" + sResultCode);
+			throw new ASelectException(Errors.ERROR_ASELECT_IO);
+		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "} AUTHN htResponse=" + hmResponse);
+
+		// Check the UDB using the "AselectAccountEnabled" field
+		//if (!isUserAselectEnabled(sUid)) {
+		//	servletResponse.setStatus(401);
+		//	pwOut.append("<html><head><title>"+sStatus+"</title></head><body><h1>"+sStatus+"</h1></body></html>");
+		//	pwOut.close();
+		//	return;
+		//}
+
+		// Retrieve the session just created
+		String sRid = (String)hmResponse.get("rid");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Supplied rid=" + sRid);
+		HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+		if (htSessionContext == null) {
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
+		}
+		htSessionContext.put("direct_authsp", sAuthSp);  // for handleDirectLogin2
+		htSessionContext.put("organization", _sMyOrg);
+		htSessionContext.put("client_ip", "login_token");
+		_sessionManager.updateSession(sRid, htSessionContext); // store too (545)
+		
+		// Check login user and password
+		HashMap<String, String> hmDirectRequest = new HashMap<String, String>();
+		hmDirectRequest.put("request", "direct_login2");
+		hmDirectRequest.put("rid", sRid);
+		hmDirectRequest.put("user_id", sUid);
+		hmDirectRequest.put("password", sPassword);
+		
+		// Only perform user/password authentication (will update the session):
+		IAuthSPDirectLoginProtocolHandler oProtocolHandler = _authspHandlerManager.getAuthSPDirectLoginProtocolHandler(sAuthSp);
+		boolean bSuccess = oProtocolHandler.handleDirectLoginRequest(hmDirectRequest, null /*servlet response*/,
+											null /*output writer*/, _sMyServerId, "en", "nl");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Success="+bSuccess+" hm="+hmDirectRequest);
+		
+		// Pass result in the header, but only if successful
+		if (bSuccess) {
+			sStatus = "200 OK";
+			// Reload session for results
+			htSessionContext = _sessionManager.getSessionContext(sRid);
+			if (htSessionContext == null) {
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
+			}
+
+			// Gather attributes
+			HashMap hmContext = new HashMap();
+			hmContext.put("uid", sUid);
+			hmContext.put("app_id", sAppId);
+			hmContext.put("authsp", sAuthSp);
+			hmContext.put("organization", _sMyOrg);
+			Utils.copyHashmapValue("authsp_type", hmContext, htSessionContext);
+			Utils.copyHashmapValue("authsp_level", hmContext, htSessionContext);
+			
+			AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
+			HashMap<String, Object> htAttribs = oAttributeGatherer.gatherAttributes(hmContext);
+			
+			// Return Saml 20 token
+			String subject = sRid.toString(); // transientID, elsewhere the TGT value is used
+			
+			String sWantSigning = "true";  // always signing on
+			Assertion assertion = HandlerTools.createAttributeStatementAssertion(htAttribs, _sServerUrl, subject, "true".equalsIgnoreCase(sWantSigning));
+			String sResult = XMLHelper.nodeToString(assertion.getDOM());
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "sResult="+sResult);
+			
+			try {
+				BASE64Encoder b64enc = new BASE64Encoder();
+				sResult = b64enc.encode(sResult.getBytes("UTF-8"));
+			}
+			catch (UnsupportedEncodingException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			}
+			
+			// Set headers, split in chunks
+			for (int i=1; ; i++) {
+				int len = sResult.length();
+				int hdrLen = (len <= SPLIT_HEADER)? len: SPLIT_HEADER;
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "i="+i+" len="+len+" hdrLen="+hdrLen);
+				servletResponse.setHeader("X-saml-attribute-token"+Integer.toString(i), sResult.substring(0, hdrLen));
+				pwOut.flush();  // otherwise: java.lang.ArrayIndexOutOfBoundsException: 8192 when output gets large
+				if (len <= SPLIT_HEADER)
+					break;
+				sResult = sResult.substring(SPLIT_HEADER);
+			}
+		}
+		else {
+			servletResponse.setStatus(401);
+		}
+		pwOut.append("<html><head><title>"+sStatus+"</title></head><body><h1>"+sStatus+"</h1></body></html>");
+		pwOut.close();
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "done");
 	}
 }

@@ -25,7 +25,6 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
 /**
  * The A-Select Authentication Profile. <br>
  * <br>
@@ -44,7 +43,7 @@ public class ASelectAuthenticationProfile extends AbstractRequestHandler
 	private RequestHandlerFactory _oRequestHandlerFactory;
 	private String _sMyServerID;
 	private String _sMyOrg;
-
+	
 	/**
 	 * Init function. <br>
 	 * <br>
