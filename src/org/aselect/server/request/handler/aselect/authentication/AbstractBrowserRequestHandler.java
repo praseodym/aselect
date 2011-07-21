@@ -104,7 +104,6 @@ import org.aselect.server.session.SessionManager;
 import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
-import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
@@ -261,7 +260,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 	 */
 	abstract protected void processBrowserRequest(HashMap htServiceRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut)
-		throws ASelectException;
+	throws ASelectException;
 
 	/**
 	 * Shows the main A-Select Error page with the appropriate errors. <br>

@@ -22,7 +22,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.storagemanager.StorageManager;
 
-// TODO: Auto-generated Javadoc
 /**
  * This class stores SAML messages that are being send, for future reference. The messages are stored by their ID. The
  * original message can be found by looking for the in_response_to field in an incoming message. The SAML messages are

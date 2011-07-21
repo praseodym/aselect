@@ -37,7 +37,6 @@ import org.opensaml.xml.security.x509.BasicX509Credential;
 import org.opensaml.xml.util.XMLHelper;
 import org.w3c.dom.Node;
 
-// TODO: Auto-generated Javadoc
 public class LogoutResponseSender
 {
 	private final static String MODULE = "LogoutResponseSender";

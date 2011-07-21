@@ -36,7 +36,6 @@ import java.util.HashMap;
 
 import org.aselect.system.exception.ASelectAuthSPException;
 
-// TODO: Auto-generated Javadoc
 /**
  * Interface that all AuthSP protocol handlers should implement. <br>
  * <br>

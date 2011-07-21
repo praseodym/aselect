@@ -48,7 +48,6 @@ import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMAgent;
 
-// TODO: Auto-generated Javadoc
 /**
  * An interface for storage handlers. <br>
  * <br>

@@ -559,7 +559,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				handleLogin1(htServiceRequest, _servletResponse, pwOut);
 			}
 			else if (sRequest.equals("login2")) {
-				handleLogin2(htServiceRequest, _servletResponse, pwOut);
+				int rc = handleLogin2(htServiceRequest, _servletResponse, pwOut);
 			}
 			else if (sRequest.equals("login3")) {
 				handleLogin3(htServiceRequest, _servletResponse, pwOut);
@@ -1044,14 +1044,24 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sLoginForm = Utils.replaceString(sLoginForm, "[rid]", sRid);
 			sLoginForm = Utils.replaceString(sLoginForm, "[aselect_url]", (String) htServiceRequest.get("my_url"));
 			sLoginForm = Utils.replaceString(sLoginForm, "[a-select-server]", _sMyServerId);
-			sLoginForm = Utils.replaceString(sLoginForm, "[request]", "login2");
+			sLoginForm = Utils.replaceString(sLoginForm, "[request]", "login2");  // NEXT STEP
 			sLoginForm = Utils.replaceString(sLoginForm, "[cross_request]", "cross_login");
 
 			sbUrl = new StringBuffer((String) htServiceRequest.get("my_url")).append("?request=error").append(
 					"&result_code=").append(Errors.ERROR_ASELECT_SERVER_CANCEL).append("&a-select-server=").append(
 					_sMyServerId).append("&rid=").append(sRid);
 			sLoginForm = Utils.replaceString(sLoginForm, "[cancel]", sbUrl.toString());
+
+			String sErrorMessage = (String)_htSessionContext.get("error_message");
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "error_message="+sErrorMessage);
+			sLoginForm = Utils.replaceString(sLoginForm, "[error_message]", sErrorMessage);
+
 			sLoginForm = _configManager.updateTemplate(sLoginForm, _htSessionContext);
+			
+			// Bauke 20110720: Extract if_cond=... from the application URL
+			String sSpecials = Utils.getAselectSpecials(_htSessionContext, true/*decode too*/, _systemLogger);
+			sLoginForm = Utils.handleAllConditionals(sLoginForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
+			
 			servletResponse.setContentType("text/html");
 			pwOut.println(sLoginForm);
 		}
@@ -1203,8 +1213,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			if (setConsentCookie) {
 				// Remember the user's answer by setting a Consent Cookie
 				String sCookieDomain = _configManager.getCookieDomain();
-				HandlerTools.putCookieValue(servletResponse, COOKIE_NAME, "true", sCookieDomain, 157680101,
-						_systemLogger); // some 5 years
+				HandlerTools.putCookieValue(servletResponse, COOKIE_NAME, "true",
+						sCookieDomain, null, 157680101/*5 years*/, _systemLogger);
 			}
 			return true;
 		}
@@ -1284,7 +1294,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *            Used to write information back to the user (HTML)
 	 * @throws ASelectException
 	 */
-	private void handleLogin2(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+	private int handleLogin2(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 	throws ASelectException
 	{
 		String sRid = null;
@@ -1317,7 +1327,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR to " + sAsUrl + " forced_authsp=" + sAuthsp);
 				servletResponse.sendRedirect(sAsUrl);
-				return;
+				return 0;
 			}
 			// Has done it's work if present, note that getAuthsps() will store the session
 			_htSessionContext.remove("forced_uid");  // 20101027 _, solves JDBC issue where forced_uid was not removed!
@@ -1346,10 +1356,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			catch (ASelectException e) {
 				if (_crossASelectManager.isCrossSelectorEnabled() && _configManager.isCrossFallBackEnabled()) {
 					handleCrossLogin(htServiceRequest, servletResponse, pwOut);
-					return;
+					return 0;
 				}
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to retrieve AuthSPs for user " + sUid);
 				throw e;
+				// Would like to go back to login1 to give the user another chance
+				//_htSessionContext.put("error_message", Errors.ERROR_ASELECT_SERVER_USER_NOT_ALLOWED);
+				//return 1;
 			}
 
 			// Bauke: added shortcut when using "Verkeersplein" method
@@ -1371,11 +1384,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					_htSessionContext.put("user_id", sFixedUid);
 				}
 				handleLogin3(htServiceRequest, servletResponse, pwOut);
-				return;
+				return 0;
 			}
 
-			// We now have the list of authsps that the user may use
-			// Show the selectform
+			// We now have the list of authsps that the user may use. Show the selectform
 			HashMap htAuthsps = (HashMap) _htSessionContext.get("allowed_user_authsps");
 			// should the user be bothered with the selection form
 			// if it is only able to choose from 1 method?
@@ -1392,7 +1404,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							break;
 						}
 						handleLogin3(htServiceRequest, servletResponse, pwOut);
-						return;
+						return 0;
 					}
 				}
 				catch (ASelectConfigException e) {
@@ -1445,6 +1457,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sSelectForm = _configManager.updateTemplate(sSelectForm, _htSessionContext);
 			// _systemLogger.log(Level.FINER, _sModule, sMethod, "Form select=["+sSelectForm+"]");
 			pwOut.println(sSelectForm);
+			return 0;
 		}
 		catch (ASelectException ae) {
 			throw ae;
@@ -1505,8 +1518,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sRedirectUrl = startAuthentication(sRid, htServiceRequest);
 
 			try {
-				Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp",
-						"id=" + sAuthsp);
+				Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp", "id=" + sAuthsp);
 				try {
 					sPopup = _configManager.getParam(authSPsection, "popup");
 				}
@@ -1524,7 +1536,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Redirect without FriendlyName. Could not find or encode FriendlyName for: " + sAppId );
 				}
 				// RH, 20100907, en
-				_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRedirectUrl);
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIRECT " + sRedirectUrl);
 				if (sPopup == null || sPopup.equalsIgnoreCase("false")) {
 					servletResponse.sendRedirect(sRedirectUrl);
 					return;
@@ -2728,7 +2740,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				int hdrLen = (len <= SPLIT_HEADER)? len: SPLIT_HEADER;
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "i="+i+" len="+len+" hdrLen="+hdrLen);
 				servletResponse.setHeader("X-saml-attribute-token"+Integer.toString(i), sResult.substring(0, hdrLen));
-				pwOut.flush();  // otherwise: java.lang.ArrayIndexOutOfBoundsException: 8192 when output gets large
+				// pwOut.flush() at this point will only set the first header 
 				if (len <= SPLIT_HEADER)
 					break;
 				sResult = sResult.substring(SPLIT_HEADER);
@@ -2737,6 +2749,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		else {
 			servletResponse.setStatus(401);
 		}
+		pwOut.flush();  // otherwise: java.lang.ArrayIndexOutOfBoundsException: 8192 when output gets large
 		pwOut.append("<html><head><title>"+sStatus+"</title></head><body><h1>"+sStatus+"</h1></body></html>");
 		pwOut.close();
 		_systemLogger.log(Level.FINE, MODULE, sMethod, "done");

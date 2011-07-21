@@ -14,7 +14,6 @@ package org.aselect.lbsensor;
 import org.aselect.lbsensor.handler.SensorStore;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
 public interface ISensorHandler extends Runnable
 {
 	

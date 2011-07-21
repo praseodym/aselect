@@ -141,10 +141,12 @@ import org.aselect.system.utils.Utils;
  * <b>Concurrency issues:</b> <br>
  * - <br>
  * 
- * @author Alfa & Ariss TODO use communication package for API calls? (Erwin)
+ * @author Alfa & Ariss
  */
 public class LDAPAuthSP extends ASelectHttpServlet
 {
+	private static final long serialVersionUID = 1L;
+
 	/** The status parameter name for API calls. */
 	private final String RESULT_CODE = "status";
 
@@ -476,7 +478,6 @@ public class LDAPAuthSP extends ASelectHttpServlet
 				pwOut.close();
 				pwOut = null;
 			}
-
 		}
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "} LDAP GET");
 	}

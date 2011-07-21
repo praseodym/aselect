@@ -21,7 +21,6 @@ import java.util.logging.Level;
 
 import org.aselect.lbsensor.handler.SensorStore;
 
-// TODO: Auto-generated Javadoc
 public class JdbcPoller extends TimerTask
 {
 	public final static String MODULE = "JdbcPoller";

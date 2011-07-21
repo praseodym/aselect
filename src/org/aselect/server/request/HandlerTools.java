@@ -64,23 +64,24 @@ public class HandlerTools
 	 * @param response
 	 *            the response
 	 * @param sCookieName
-	 *            the s cookie name
+	 *            the cookie name
 	 * @param sCookieValue
-	 *            the s cookie value
+	 *            the cookie value
 	 * @param sCookieDomain
-	 *            the s cookie domain
+	 *            the cookie domain
 	 * @param iAge
-	 *            the i age
+	 *            the age
 	 * @param logger
 	 *            the logger
 	 */
 	public static void putCookieValue(HttpServletResponse response, String sCookieName, String sCookieValue,
-			String sCookieDomain, int iAge, ASelectSystemLogger logger)
+			String sCookieDomain, String sCookiePath, int iAge, ASelectSystemLogger logger)
 	{
 		String sMethod = "putCookieValue";
 		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
 		String addedSecurity = _configManager.getAddedSecurity();
-		String sCookiePath = _configManager.getCookiePath();
+		if (sCookiePath == null)
+			sCookiePath = _configManager.getCookiePath();
 
 		String sValue = sCookieName + "=" + sCookieValue;
 		if (sCookieDomain != null)

@@ -97,7 +97,6 @@ import org.aselect.system.sam.agent.SAMAgent;
 import org.aselect.system.sam.agent.SAMResource;
 import org.aselect.system.storagemanager.IStorageHandler;
 
-// TODO: Auto-generated Javadoc
 /**
  * DBMS storage handler. <br>
  * <br>

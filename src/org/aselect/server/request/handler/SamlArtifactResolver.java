@@ -38,7 +38,6 @@ import org.opensaml.SAMLResponse;
 import org.opensaml.artifact.*;
 import org.w3c.dom.*;
 
-// TODO: Auto-generated Javadoc
 //
 // Generic SAML Artifact Resolver
 // Receive <samlp:Request>

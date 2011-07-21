@@ -25,7 +25,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.aselect.server.request.RequestState;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
 /**
  * Interface for request handlers. <br>
  * <br>

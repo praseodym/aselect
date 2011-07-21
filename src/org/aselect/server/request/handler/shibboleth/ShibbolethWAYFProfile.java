@@ -496,7 +496,7 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 	{
 		String sMethod = "handleSubmit()";
 		try {
-			HandlerTools.putCookieValue(response, COOKIENAME, sIdP, _sCookieDomain, -1, _systemLogger);
+			HandlerTools.putCookieValue(response, COOKIENAME, sIdP, _sCookieDomain, null, -1, _systemLogger);
 			/*
 			 * Cookie oWAYFCookie = new Cookie(COOKIENAME, sIdP); if (_sCookieDomain != null)
 			 * oWAYFCookie.setDomain(_sCookieDomain); _systemLogger.log(Level.INFO, MODULE, sMethod,

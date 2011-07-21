@@ -247,7 +247,6 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Properties;
-import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
@@ -1417,7 +1416,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *             If loading fails.
 	 */
 	private void loadAuthSPPublicKey(String sWorkingDir, Object oAuthSPSection)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadAuthSPPublicKey()";
 
@@ -1429,28 +1428,22 @@ public class ASelectConfigManager extends ConfigManager
 
 		try {
 			String sAlias = this.getParam(oAuthSPSection, "id");
-			sAlias = sAlias.trim();
-			sAlias = sAlias.toLowerCase();
+			sAlias = sAlias.trim().toLowerCase();
 
 			String sAuthSPType = this.getParam(oAuthSPSection, "type");
 			sAuthSPType = sAuthSPType.toLowerCase();
 
 			if (!sAuthSPType.equals("remote") && !sAuthSPType.equals("local")) {
 				StringBuffer sbError = new StringBuffer(sAlias);
-				sbError.append(" type=");
-				sbError.append(sAuthSPType);
+				sbError.append(" type=").append(sAuthSPType);
 				sbError.append(" is illegal. Use 'local' or 'remote'.");
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString());
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 			}
 
-			sbKeystoreFile = new StringBuffer(sWorkingDir);
-			sbKeystoreFile.append(File.separator);
-			sbKeystoreFile.append("keystores");
-			sbKeystoreFile.append(File.separator);
-			sbKeystoreFile.append(sAuthSPType);
-			sbKeystoreFile.append(File.separator);
-			sbKeystoreFile.append(sAuthSPType).append("_authsp.keystore");
+			sbKeystoreFile = new StringBuffer(sWorkingDir).append(File.separator).append("keystores");
+			sbKeystoreFile.append(File.separator).append(sAuthSPType);
+			sbKeystoreFile.append(File.separator).append(sAuthSPType).append("_authsp.keystore");
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Keystore=" + sbKeystoreFile + " Alias=" + sAlias);
 			fKeystore = new File(sbKeystoreFile.toString());
@@ -1485,14 +1478,11 @@ public class ASelectConfigManager extends ConfigManager
 			while (x509Cert != null) {
 				pkAuthSP = x509Cert.getPublicKey();
 
-				StringBuffer sbKey = new StringBuffer(sAlias);
-				sbKey.append(iSequence);
-				sbKey.append(".public_key");
+				StringBuffer sbKey = new StringBuffer(sAlias).append(iSequence).append(".public_key");
 				_htAuthspKeys.put(sbKey.toString(), pkAuthSP);
 				iSequence++;
 				x509Cert = (java.security.cert.X509Certificate) ksKeyStore.getCertificate(sAlias + iSequence);
 			}
-
 			loadAuthSPSpecificPrivateKey(sWorkingDir, oAuthSPSection);
 		}
 		catch (ASelectException eAS) {

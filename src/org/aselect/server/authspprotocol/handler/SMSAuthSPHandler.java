@@ -24,7 +24,6 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAuthSPException;
 import org.aselect.system.exception.ASelectConfigException;
 
-// TODO: Auto-generated Javadoc
 /**
  * The SMS AuthSP Handler. <br>
  * <br>
@@ -105,6 +104,7 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 	private String _sAuthspUrl;
 
 	private static final String ERROR_SMS_OK = "000";
+	private static final String ERROR_SMS_INVALID_PHONE = "500";  // 20110718, bad phone number, redirect to selfservice
 	private static final String ERROR_SMS_ACCESS_DENIED = "800";
 
 	/* (non-Javadoc)
@@ -308,8 +308,7 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 			String sAsId = (String) htAuthspResponse.get("a-select-server");
 			String sSignature = (String) htAuthspResponse.get("signature");
 			if (sRid == null || sResultCode == null || sAsId == null || sSignature == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"Incorrect AuthSP response: one or more parameters missing.");
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Incorrect AuthSP response: one or more parameters missing.");
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 			}
 			sbBuffer = new StringBuffer(sAsUrl);
@@ -323,8 +322,7 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 			sbSignature.append(sAsId);
 			boolean bVerifies = CryptoEngine.getHandle().verifySignature(_sAuthsp, sbSignature.toString(), sSignature);
 			if (!bVerifies) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "invalid signature in response from AuthSP:"
-						+ _sAuthsp);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "invalid signature in response from AuthSP:" + _sAuthsp);
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 			}
 			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
@@ -340,23 +338,30 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 			String sOrg = (String) htSessionContext.get("organization");
 
 			// Log authentication
-			if (sResultCode.equalsIgnoreCase(ERROR_SMS_ACCESS_DENIED)) {
+			if (sResultCode.equalsIgnoreCase(ERROR_SMS_ACCESS_DENIED) || sResultCode.equalsIgnoreCase(ERROR_SMS_INVALID_PHONE)) {
 				_authenticationLogger.log(new Object[] {
 					MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg, (String) htSessionContext.get("app_id"),
 					"denied", sResultCode
 				});
-				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);
 			}
-			if (!sResultCode.equalsIgnoreCase(ERROR_SMS_OK)) {
-				StringBuffer sbError = new StringBuffer("AuthSP returned errorcode: ");
-				sbError.append(sResultCode);
+			else if (sResultCode.equalsIgnoreCase(ERROR_SMS_OK)) {
+				_authenticationLogger.log(new Object[] {
+					MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg, (String) htSessionContext.get("app_id"),
+					"granted"
+				});
+			}
+			
+			// Throw exceptions
+			if (sResultCode.equalsIgnoreCase(ERROR_SMS_ACCESS_DENIED))
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);
+			
+			if (!sResultCode.equalsIgnoreCase(ERROR_SMS_OK) && !sResultCode.equalsIgnoreCase(ERROR_SMS_INVALID_PHONE)) {
+				StringBuffer sbError = new StringBuffer("AuthSP returned errorcode: ").append(sResultCode);
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
-			_authenticationLogger.log(new Object[] {
-				MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg, (String) htSessionContext.get("app_id"),
-				"granted"
-			});
+			
+			// ERROR_SMS_OK or ERROR_SMS_INVALID_PHONE
 			htResponse.put("rid", sRid);
 			htResponse.put("authsp_type", "sms");
 
@@ -367,7 +372,9 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 			String sSmsPhone = (String) htSessionContext.get("sms_phone");
 			if (sSmsPhone != null)
 				htResponse.put("sms_phone", sSmsPhone);
-			htResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
+			
+			htResponse.put("result", sResultCode.equalsIgnoreCase(ERROR_SMS_OK)?
+							Errors.ERROR_ASELECT_SUCCESS: Errors.ERROR_ASELECT_AUTHSP_INVALID_PHONE);
 		}
 		catch (ASelectAuthSPException eAA) {
 			htResponse.put("result", eAA.getMessage());
@@ -377,8 +384,7 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 			htResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod,
-					"Could not verify authentication response due to internal error", e);
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not verify authentication response due to internal error", e);
 			htResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 		}
 		return htResponse;

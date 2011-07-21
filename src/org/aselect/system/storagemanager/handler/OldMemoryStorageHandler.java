@@ -64,7 +64,6 @@ import org.aselect.system.sam.agent.SAMAgent;
 import org.aselect.system.storagemanager.IStorageHandler;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * memory storage handler. <br>
  * <br>

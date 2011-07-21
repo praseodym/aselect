@@ -339,26 +339,10 @@ public class Utils
 	public static String handleAllConditionals(String sText, boolean bErrCond, String sSpecials, ISystemLogger logger)
 	{
 		final String sMethod = "handleAllConditionals";
-		//String sArgs = null;
-		
+
+		logger.log(Level.INFO, MODULE, sMethod, "error="+bErrCond+" specials="+sSpecials);
 		sText = Utils.replaceConditional(sText, "if_error", bErrCond, logger);
 		
-		// if RelayState is present, we're IdP, so try that first
-		/*logger.log(Level.INFO, MODULE, sMethod, "RelayState="+sRelayState+"appUrl="+sAppUrl);
-		if (sRelayState != null) {
-			sArgs = new String(Base64Codec.decode(sRelayState));
-		}
-		else if (sAppUrl != null) {
-			sArgs = sAppUrl;
-		}
-		sSpecials = Utils.getParameterValueFromUrl(sArgs, "aselect_specials");  // likes null as first argument too!
-		if (sSpecials == null)
-			return sText;
-		
-		// We have the decoded aselect_specials now
-		sArgs = new String(Base64Codec.decode(sSpecials));
-		*/
-
 		if (sSpecials != null) {
 			String sParCond = getParameterValueFromUrl(sSpecials, "if_cond");
 			logger.log(Level.INFO, MODULE, sMethod, "parCond="+sParCond);

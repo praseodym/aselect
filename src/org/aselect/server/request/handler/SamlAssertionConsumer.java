@@ -40,7 +40,6 @@ import org.opensaml.*;
 import org.opensaml.artifact.*;
 import org.apache.xml.security.signature.XMLSignature;
 
-// TODO: Auto-generated Javadoc
 //
 //
 public abstract class SamlAssertionConsumer extends ProtoRequestHandler

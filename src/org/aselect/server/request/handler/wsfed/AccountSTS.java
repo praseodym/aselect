@@ -389,8 +389,8 @@ public class AccountSTS extends ProtoRequestHandler
 			// Kill the cookie so it can not be used again (to prevent loops)
 			HandlerTools.delCookieValue(response, SESSION_ID_PREFIX + "rid", _sCookieDomain, _systemLogger);
 			// To support wslogout, we need to store the realm with the browser
-			HandlerTools.putCookieValue(response, SESSION_ID_PREFIX + "realm", sAudience, _sCookieDomain, -1,
-					_systemLogger);
+			HandlerTools.putCookieValue(response, SESSION_ID_PREFIX + "realm", sAudience,
+						_sCookieDomain, null, -1, _systemLogger);
 
 			// _systemLogger.log(Level.INFO, MODULE, sMethod, "Inputs=" + sInputs);
 			handlePostForm(_sPostTemplate, sPwreply, sInputs, response);

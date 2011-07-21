@@ -139,12 +139,9 @@
  */
 package org.aselect.server.tgt;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -213,8 +210,8 @@ public class TGTIssuer
 	 * @param sServerId
 	 *            The A-Select server ID.
 	 */
-	public TGTIssuer(String sServerId) {
-		// TODO All configuration reading in this class must be moved to this contructor (Martijn)
+	public TGTIssuer(String sServerId)
+	{
 		_systemLogger = ASelectSystemLogger.getHandle();
 		_configManager = ASelectConfigManager.getHandle();
 		_cryptoEngine = CryptoEngine.getHandle();
@@ -913,7 +910,7 @@ public class TGTIssuer
 			 */
 			// Bauke 20080617 only store tgt value from now on
 			String sCookieDomain = _configManager.getCookieDomain();
-			HandlerTools.putCookieValue(oHttpServletResponse, "aselect_credentials", sTgt, sCookieDomain, -1, _systemLogger);
+			HandlerTools.putCookieValue(oHttpServletResponse, "aselect_credentials", sTgt, sCookieDomain, null, -1, _systemLogger);
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not create an A-Select cookie for user: " + sUserId, e);

@@ -32,7 +32,6 @@ import org.aselect.system.storagemanager.handler.JDBCStorageHandler;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
-// TODO: Auto-generated Javadoc
 /*
  * NOTE: Code is identical to MemoryStorageHandlerTimeOut (except for class-names of course).
  *       Though it is different from the sp-version.

@@ -16,7 +16,6 @@
 
 package org.aselect.server.request;
 
-// TODO: Auto-generated Javadoc
 /**
  * RequestHandler state object. <br>
  * <br>

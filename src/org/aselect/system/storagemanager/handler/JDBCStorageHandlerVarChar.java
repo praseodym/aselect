@@ -24,7 +24,6 @@ import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.utils.BASE64Decoder;
 import org.aselect.system.utils.BASE64Encoder;
 
-// TODO: Auto-generated Javadoc
 /**
  * @deprecated class hasn't been updated and therefore may be buggy, use {@link #JDBCStorageHandler()}
  */

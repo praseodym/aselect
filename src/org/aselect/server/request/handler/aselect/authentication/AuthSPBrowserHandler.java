@@ -85,6 +85,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.authspprotocol.IAuthSPProtocolHandler;
 import org.aselect.server.log.ASelectAuthenticationLogger;
+import org.aselect.server.request.HandlerTools;
 import org.aselect.server.sam.ASelectSAMAgent;
 import org.aselect.server.tgt.TGTIssuer;
 import org.aselect.system.error.Errors;
@@ -120,7 +121,8 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	 *            The A-Select Server organisation.
 	 */
 	public AuthSPBrowserHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-			String sMyServerId, String sMyOrg) {
+			String sMyServerId, String sMyOrg)
+	{
 		super(servletRequest, servletResponse, sMyServerId, sMyOrg);
 		_sModule = "AuthSPBrowserHandler";
 	}
@@ -170,18 +172,19 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void handleAuthSPResponse(HashMap htServiceRequest, HttpServletResponse servletResponse)
-		throws ASelectException
+	throws ASelectException
 	{
-		String sMethod = "handleAuthSPResponse()";
+		String sMethod = "handleAuthSPResponse";
 		String sHandlerName = null;
+		String sCorrectionFacility = null, sCookiePrefix = "", sCookieDomain = null;
 		Object authSPsection = null;
+		
 		try {
 			String sAsp = (String) htServiceRequest.get("authsp");
 			IAuthSPProtocolHandler oProtocolHandler = null;
 
 			try {
-				authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp", "id="
-						+ sAsp);
+				authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp", "id="+sAsp);
 			}
 			catch (ASelectException eA) {
 				// Invalid AuthSP received
@@ -195,13 +198,29 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			catch (ASelectException eA) {
 				// Invalid AuthSP received
 				StringBuffer sbError = new StringBuffer("No handler configured for AuthSP '");
-				sbError.append(sAsp);
-				sbError.append("'");
+				sbError.append(sAsp).append("'");
 				_systemLogger.log(Level.SEVERE, _sModule, sMethod, sbError.toString(), eA);
 				throw eA;
 			}
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "AUTHSP authSPsection=" + authSPsection
-					+ ", sHandlerName=" + sHandlerName);
+					+ ", sHandlerName=" + sHandlerName + " id="+sAsp);
+			
+			try {
+				sCorrectionFacility = _configManager.getParam(authSPsection, "correction_facility");
+			}
+			catch (ASelectException ex) {
+			}
+			try {
+				sCookiePrefix = _configManager.getParam(authSPsection, "cookie_prefix");
+			}
+			catch (ASelectException ex) {
+			}
+			try {
+				sCookieDomain = _configManager.getParam(authSPsection, "cookie_domain");
+			}
+			catch (ASelectException ex) {
+				sCookieDomain = _configManager.getCookieDomain();
+			}
 
 			try {
 				Class oClass = Class.forName(sHandlerName);
@@ -222,11 +241,13 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Let the AuthSP protocol handler verify the response from the AuthSP
 			// htResponse will contain the result data
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "To AUTHSP, Request=" + htServiceRequest);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "AuthSP verify, Request=" + htServiceRequest);
 			HashMap htResponse = oProtocolHandler.verifyAuthenticationResponse(htServiceRequest);
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "From AUTHSP, Response=" + htResponse);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "AuthSP verify, Response=" + htResponse);
 
 			String sResultCode = (String) htResponse.get("result");
+			// Result values: ERROR_ASELECT_SUCCESS, ERROR_ASELECT_AUTHSP_INVALID_DATA (only SMS)
+
 			String sRid = (String) htResponse.get("rid"); // this is our own rid
 			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
@@ -236,7 +257,25 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Saml20: Any errors must be reported back to the SP (so no Exception throwing in that case)
 			String sIssuer = (String) htSessionContext.get("sp_issuer");
-			if (sIssuer == null && !(sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS))) {
+			if (sIssuer == null && sResultCode.equals(Errors.ERROR_ASELECT_AUTHSP_INVALID_PHONE)) {
+				
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Error in response from authsp: " + sResultCode);
+				_sessionManager.killSession(sRid);
+				
+				// redirect or:
+				//String sCorrection = "https://bppl.anoigo.nl/UserEntry.jsp?action=upd";
+				if (sCorrectionFacility == null || "".equals(sCorrectionFacility))
+					throw new ASelectException(sResultCode);
+
+				// User can possibly correct his phone number and retry
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT to: " + sCorrectionFacility);
+				String sAppUrl = (String) htSessionContext.get("app_url");
+				HandlerTools.putCookieValue(servletResponse, sCookiePrefix+"ApplicationUrl", sAppUrl,
+											sCookieDomain, "/",  600/*seconds*/, _systemLogger);
+				servletResponse.sendRedirect(sCorrectionFacility.toString());
+				return;
+			}
+			if (sIssuer == null && !sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
 				// Session can be killed. The user could not be authenticated.
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Error in response from authsp: " + sResultCode);
 				_sessionManager.killSession(sRid);

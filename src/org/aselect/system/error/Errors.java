@@ -164,6 +164,9 @@ public class Errors
 	 * A-Select error: Access denied.
 	 */
 	public final static String ERROR_ASELECT_AUTHSP_ACCESS_DENIED = "000b";
+	
+	// INVALID PHONE for the SMS authsp, redirect to 'selfservice' if so configured
+	public final static String ERROR_ASELECT_AUTHSP_INVALID_PHONE = "0010";
 
 	/**
 	 * A-Select error: The A-Select Server received an invalid request from the A-Select Agent.

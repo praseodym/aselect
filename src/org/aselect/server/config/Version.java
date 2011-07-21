@@ -52,7 +52,6 @@
 
 package org.aselect.server.config;
 
-// TODO: Auto-generated Javadoc
 /**
  * Class containing the version of the A-Select Server. <br>
  * <br>

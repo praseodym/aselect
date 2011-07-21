@@ -12,7 +12,6 @@
 package org.aselect.server.request.handler.xsaml20;
 
 import java.io.StringReader;
-import java.net.URLDecoder;
 import java.security.PublicKey;
 import java.util.logging.Level;
 
@@ -35,7 +34,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
-// TODO: Auto-generated Javadoc
 public class SoapLogoutRequestSender
 {
 	private final static String MODULE = "SoapLogoutRequestSender";

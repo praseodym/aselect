@@ -142,7 +142,7 @@ public class Idff12_ISTS extends ProtoRequestHandler
 		String sMethod = "handleSubmit()";
 		try {
 			// Store the current choice in a cookie
-			HandlerTools.putCookieValue(response, COOKIENAME, sIdPUrl, _sCookieDomain, -1, _systemLogger);
+			HandlerTools.putCookieValue(response, COOKIENAME, sIdPUrl, _sCookieDomain, null, -1, _systemLogger);
 			// Add a '?' char after the selected IdP URL
 			if (!sIdPUrl.endsWith("?"))
 				sIdPUrl = sIdPUrl + "?";

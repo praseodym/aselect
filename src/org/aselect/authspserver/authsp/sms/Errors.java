@@ -40,6 +40,9 @@ public class Errors
 	/** Invalid password. */
 	public final static String ERROR_SMS_INVALID_PASSWORD = "400";
 
+	/** Invalid destination phone number. */
+	public final static String ERROR_SMS_INVALID_PHONE = "500";
+
 	/** Access denied. */
 	public final static String ERROR_SMS_ACCESS_DENIED = "800";
 

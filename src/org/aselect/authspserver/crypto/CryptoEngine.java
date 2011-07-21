@@ -74,7 +74,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.BASE64Decoder;
 import org.aselect.system.utils.BASE64Encoder;
 
-// TODO: Auto-generated Javadoc
 /**
  * The A-Select AuthSP CryptoEngine. <br>
  * <br>
@@ -174,7 +173,8 @@ public class CryptoEngine
 	 *             if the Crypto engine can not be initialized.
 	 */
 	public CryptoEngine(String sWorkingDir, AuthSPSystemLogger oAuthSPSystemLogger)
-		throws ASelectException {
+	throws ASelectException
+	{
 		_systemLogger = oAuthSPSystemLogger;
 		_htPublicKeys = new HashMap();
 		String sMethod = "CryptoEngine()";
@@ -222,7 +222,6 @@ public class CryptoEngine
 				catch (ASelectConfigException e) {
 					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
 							"Could not find a 'provider' config section in config file. No providers specified", e);
-
 					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 				}
 
@@ -259,9 +258,7 @@ public class CryptoEngine
 					}
 
 					java.security.Security.addProvider(oProvider);
-
 					htProviders.put(sProviderID, oProvider);
-
 					oCryptoProvider = _oAuthSPConfigManager.getNextSection(oCryptoProvider);
 				}
 			}
@@ -315,7 +312,7 @@ public class CryptoEngine
 	 *             If generating fails.
 	 */
 	public synchronized String generateSignature(String sData)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "generateSignature()";
 		String sSignature = null;
@@ -500,10 +497,9 @@ public class CryptoEngine
 	 *             if any error occurs while loading the default keys
 	 */
 	private void loadDefaultKeys(String sWorkingDir)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadDefaultKeys()";
-
 		Object oAuthSPConfig = null;
 		String sPassword = null;
 
@@ -534,10 +530,8 @@ public class CryptoEngine
 			}
 
 			StringBuffer sbKeystoreLocation = new StringBuffer(sWorkingDir);
-			sbKeystoreLocation.append(File.separator);
-			sbKeystoreLocation.append("keystores");
-			sbKeystoreLocation.append(File.separator);
-			sbKeystoreLocation.append(SERVER_KEYSTORE_NAME);
+			sbKeystoreLocation.append(File.separator).append("keystores");
+			sbKeystoreLocation.append(File.separator).append(SERVER_KEYSTORE_NAME);
 
 			File fKeystore = new File(sbKeystoreLocation.toString());
 			if (!fKeystore.exists()) {
@@ -579,7 +573,7 @@ public class CryptoEngine
 	 *             if any error occurs while loading the A-Select public keys
 	 */
 	private void loadPublicKeys(String sWorkingDir)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadPublicKeys()";
 
@@ -595,7 +589,6 @@ public class CryptoEngine
 				StringBuffer sbError = new StringBuffer("Keystore cannot be found: ");
 				sbError.append(sbKeystoreLocation.toString());
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
-
 				throw new ASelectException(Errors.ERROR_ASELECT_NOT_FOUND);
 			}
 
@@ -606,8 +599,7 @@ public class CryptoEngine
 			while (enumAliases.hasMoreElements()) {
 				String sAlias = (String) enumAliases.nextElement();
 				sAlias = sAlias.toLowerCase();
-				java.security.cert.X509Certificate x509Cert = (java.security.cert.X509Certificate) ksASelect
-						.getCertificate(sAlias);
+				java.security.cert.X509Certificate x509Cert = (java.security.cert.X509Certificate) ksASelect.getCertificate(sAlias);
 				PublicKey oPublicKey = x509Cert.getPublicKey();
 				_htPublicKeys.put(sAlias, oPublicKey);
 			}
@@ -635,7 +627,7 @@ public class CryptoEngine
 	 *             the a select exception
 	 */
 	private void readSignatureConfig(Object oCryptoSection, HashMap htProviders)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "readSignatureConfig()";
 		String sProvider = null;
@@ -648,12 +640,8 @@ public class CryptoEngine
 			oSection = null;
 			_sSignatureAlgorithm = DEFAULT_SIGNATURE_ALGORITHM;
 
-			_systemLogger
-					.log(
-							Level.CONFIG,
-							MODULE,
-							sMethod,
-							"Could not retrieve 'signature_algorithm' config section in crypto config section. Using default algorithm and provider.");
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+				"Could not retrieve 'signature_algorithm' config section in crypto config section. Using default algorithm and provider.");
 		}
 
 		if (oSection != null) {
@@ -678,9 +666,8 @@ public class CryptoEngine
 			}
 			catch (ASelectConfigException e) {
 				sProvider = null;
-				_systemLogger
-						.log(Level.CONFIG, MODULE, sMethod,
-								"Could not retrieve 'provider' config section in crypto config section. Using default provider.");
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+						"Could not retrieve 'provider' config section in crypto config section. Using default provider.");
 			}
 
 			if (sProvider != null) {

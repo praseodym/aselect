@@ -8,21 +8,20 @@ package org.aselect.authspserver.authsp.sms;
  */
 public interface SmsSender
 {
-
 	/**
 	 * Send sms.
 	 * 
 	 * @param message
 	 *            the message
 	 * @param from
-	 *            the from
+	 *            the message sender id
 	 * @param recipients
-	 *            the recipients
-	 * @return the int
+	 *            the recipients (phone numbers)
+	 * @return the result, 0 = OK, 1 = bad phonenumber
+	 * 
 	 * @throws SmsException
-	 *             the sms exception
+	 *             other error conditions
 	 */
 	public int sendSms(String message, String from, String recipients)
-		throws SmsException;
-
+	throws SmsException;
 }

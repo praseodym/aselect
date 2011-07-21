@@ -43,7 +43,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.aselect.system.exception.ASelectAuthSPException;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
 /**
  * Interface that all AuthSP API protocol handlers should implement. <br>
  * <br>

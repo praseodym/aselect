@@ -50,7 +50,6 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * The configuration manager for the A-Select AuthSP Server. <br>
  * <br>
@@ -135,7 +134,7 @@ public class AuthSPConfigManager extends ConfigManager
 	 */
 	public String loadHTMLTemplate(String sWorkingDir, String sFileName, String sConfigID, String sFriendlyName,
 			String sVersion)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadHTMLTemplate()";
 		String sLine = null;
@@ -251,7 +250,8 @@ public class AuthSPConfigManager extends ConfigManager
 	 * <b>Postconditions:</b> <br>
 	 * - <br>
 	 */
-	private AuthSPConfigManager() {
+	private AuthSPConfigManager()
+	{
 		_systemLogger = AuthSPSystemLogger.getHandle();
 	}
 }

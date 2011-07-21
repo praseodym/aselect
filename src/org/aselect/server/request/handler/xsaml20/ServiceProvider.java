@@ -14,7 +14,6 @@ package org.aselect.server.request.handler.xsaml20;
 import java.io.Serializable;
 import java.util.Date;
 
-// TODO: Auto-generated Javadoc
 //
 // Store Service Provider Data
 // Used by Identity Providers

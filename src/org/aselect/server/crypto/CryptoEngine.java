@@ -113,7 +113,6 @@ import org.aselect.system.storagemanager.StorageManager;
 import org.aselect.system.utils.BASE64Decoder;
 import org.aselect.system.utils.BASE64Encoder;
 
-// TODO: Auto-generated Javadoc
 /**
  * This class contains crypto-related (helper) methods. It is thread-safe. <br>
  * 
@@ -179,7 +178,7 @@ public class CryptoEngine
 	 *             if initialization fails
 	 */
 	public void init()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 
@@ -473,7 +472,6 @@ public class CryptoEngine
 	 */
 	public synchronized boolean verifyCrossASelectSignature(PublicKey oPublicKey, String sData, String sSignature)
 	{
-
 		String sMethod = "verifyCrossASelectSignature()";
 		// PublicKey oPublicKey = null;
 		boolean bVerified = false;
@@ -599,7 +597,7 @@ public class CryptoEngine
 	 *             If encrypting fails.
 	 */
 	public synchronized String encryptTGT(byte[] baData)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "encryptTGT()";
 
@@ -628,7 +626,7 @@ public class CryptoEngine
 	 *             If decrypting fails.
 	 */
 	public synchronized byte[] decryptTGT(String sEncTgt)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "decryptTGT()";
 
@@ -719,7 +717,7 @@ public class CryptoEngine
 	 *             the a select exception
 	 */
 	private void readSignatureConfig(Object oCryptoSection, HashMap htProviders)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "readSignatureConfig()";
 		String sProvider = null;
@@ -796,7 +794,7 @@ public class CryptoEngine
 	 *             the a select exception
 	 */
 	private void readEncryptionConfig(Object oCryptoSection, HashMap htProviders)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "readEncryptionConfig()";
 		String sProvider = null;
@@ -871,7 +869,7 @@ public class CryptoEngine
 	 *             the a select exception
 	 */
 	private void readRandomGeneratorConfig(Object oCryptoSection, HashMap htProviders)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "readRandomGeneratorConfig()";
 		String sProvider = null;
@@ -957,7 +955,7 @@ public class CryptoEngine
 	 *             If signing fails.
 	 */
 	public void signRequest(HashMap htRequest)
-		throws ASelectException
+	throws ASelectException
 	{
 		try {
 			Signature oSignature = null;

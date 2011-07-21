@@ -16,7 +16,6 @@ import java.util.logging.Level;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
 
-// TODO: Auto-generated Javadoc
 public class LbSensorSystemLogger extends SystemLogger
 {
 	private static final String MODULE = "LbSensorSystemLogger";

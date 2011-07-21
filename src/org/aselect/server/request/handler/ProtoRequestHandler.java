@@ -740,7 +740,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 */
 	protected HashMap performAuthenticateRequest(String sASelectURL, String sPathInfo, String sReturnSuffix,
 			String sAppId, boolean checkSignature, IClientCommunicator iClientComm)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "performAuthenticateRequest";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "AUTHN { " + sASelectURL + " - " + sPathInfo + " - "
@@ -795,13 +795,13 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 * Decrypt credentials.
 	 * 
 	 * @param encrypted
-	 *            the encrypted
-	 * @return the string
+	 *            the encrypted credentials
+	 * @return the decrypted result
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
 	public String decryptCredentials(String encrypted)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "decryptCredentials()";
 		try {
@@ -852,7 +852,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 
 		// Also store the rid used
 		String sCookieDomain = _configManager.getCookieDomain();
-		HandlerTools.putCookieValue(response, sPrefix + "rid", sRid, sCookieDomain, -1, _systemLogger);
+		HandlerTools.putCookieValue(response, sPrefix + "rid", sRid, sCookieDomain, null, -1, _systemLogger);
 	}
 
 	/**
