@@ -170,7 +170,7 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 	 * @param oRADIUSPacket
 	 *            the radius packet
 	 */
-	// NOTE rfc2865 obsoletes rfc2138
+//	NOTE rfc2865 obsoletes rfc2138
 //	   An Access-Request is now required to contain either a NAS-IP-Address
 //	   or NAS-Identifier (or may contain both).
 	void composeRequest(String sPassword, DatagramPacket oRADIUSPacket)
@@ -240,7 +240,8 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "hashpwd=" + Utils.byteArrayToHexString(baOutputBuffer));
 
-			// BEGIN NEW 20110705
+//			BEGIN NEW 20110705, Bauke
+//			NOTE rfc2865 obsoletes rfc2138
 			// Add signature according ro rfc 2869
 /*			baOutputBuffer[iIndex++] = RADIUS_MESSAGE_AUTHENTICATION_ATTRIBUTE;
 			baOutputBuffer[iIndex++] = (byte)(16 + 2);

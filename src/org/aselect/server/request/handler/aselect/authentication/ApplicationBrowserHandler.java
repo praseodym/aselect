@@ -555,13 +555,21 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					_htSessionContext.put("user_id", sSearch);
 			}
 
-			if (sRequest.equals("login1")) {
-				handleLogin1(htServiceRequest, _servletResponse, pwOut);
+			while (true) {
+				if (sRequest.equals("login1")) {
+					handleLogin1(htServiceRequest, _servletResponse, pwOut);
+					return;
+				}
+				else if (sRequest.equals("login2")) {
+					int rc = handleLogin2(htServiceRequest, _servletResponse, pwOut);
+					if (rc != 1)
+						return;
+					sRequest = "login1";  // allow new login attempt
+				}
+				else
+					break;  // other requests
 			}
-			else if (sRequest.equals("login2")) {
-				int rc = handleLogin2(htServiceRequest, _servletResponse, pwOut);
-			}
-			else if (sRequest.equals("login3")) {
+			if (sRequest.equals("login3")) {
 				handleLogin3(htServiceRequest, _servletResponse, pwOut);
 			}
 			else if (sRequest.equals("cross_login")) {
@@ -1359,10 +1367,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					return 0;
 				}
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to retrieve AuthSPs for user " + sUid);
-				throw e;
+				//throw e;
 				// Would like to go back to login1 to give the user another chance
-				//_htSessionContext.put("error_message", Errors.ERROR_ASELECT_SERVER_USER_NOT_ALLOWED);
-				//return 1;
+				_htSessionContext.put("error_message", Errors.ERROR_ASELECT_SERVER_USER_NOT_ALLOWED);
+				return 1;
 			}
 
 			// Bauke: added shortcut when using "Verkeersplein" method

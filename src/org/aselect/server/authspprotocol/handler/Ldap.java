@@ -68,11 +68,16 @@
 package org.aselect.server.authspprotocol.handler;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.HashMap;
@@ -711,12 +716,63 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				sbRequest.append("&rid=").append(URLEncoder.encode(sRid, "UTF-8"));
 				sbRequest.append("&user=").append(URLEncoder.encode(sUid, "UTF-8"));
 				sbRequest.append("&password=").append(URLEncoder.encode(sPassword, "UTF-8"));
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "To AUTHSP: " + sbRequest);
-				URL oServer = new URL(sbRequest.toString());
-				BufferedReader oInputReader = new BufferedReader(new InputStreamReader(oServer.openStream()), 16000);
-				sResponse = oInputReader.readLine();
+				String sRequest = sbRequest.toString();
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "To AUTHSP: " + sRequest);
+							
+				// 20110721, Bauke: communicate with the AuthSP using the POST mechanism
+				String sPostIt = null;
+				Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp", "id="+sAuthSPId);
+				sPostIt = _configManager.getParam(authSPsection, "post_it");
+				if ("true".equals(sPostIt)) {
+					int idx = sRequest.indexOf('?');
+					String sUrl = (idx >= 0)? sRequest.substring(0, idx): sRequest;
+					String sArgs = (idx >= 0)? sRequest.substring(idx+1): "";
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "URL="+sUrl+" Args="+sArgs+" len="+sArgs.length());
+
+					URL oServer = new URL(sUrl + "?request=authenticate");
+					URLConnection conn = oServer.openConnection();
+					conn.setDoOutput(true);
+					
+					String sHost = sUrl, sPath = sUrl;
+					idx = sUrl.indexOf("//");
+					if (idx >= 0) {
+						idx += 2;  // host
+						sUrl = sUrl.substring(idx);
+						idx = sUrl.indexOf('/',	idx);
+					}
+					if (idx >= 0) {
+						sHost = sUrl.substring(0, idx);
+						sPath = sUrl.substring(idx);  // including '/'
+					}
+					OutputStream oStream = conn.getOutputStream();
+					BufferedWriter oOutputWriter = new BufferedWriter(new OutputStreamWriter(oStream), 16000);
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "POST "+sPath+" HTTP/1.1"+"---"+"Host: "+sHost);
+					oOutputWriter.write("POST "+sPath+" HTTP/1.1");
+					oOutputWriter.newLine();
+					oOutputWriter.write("Host: "+sHost);
+					oOutputWriter.newLine();
+					oOutputWriter.write("Content-Type: application/x-www-form-urlencoded");
+					oOutputWriter.newLine();
+					oOutputWriter.write("Content-Length: "+sArgs.length());
+					oOutputWriter.newLine();
+					oOutputWriter.write(sArgs);
+					oOutputWriter.newLine();
+					oOutputWriter.close();
+					InputStream iStream = conn.getInputStream();
+					BufferedReader oInputReader = new BufferedReader(new InputStreamReader(iStream), 16000);
+					sResponse = oInputReader.readLine();
+					oInputReader.close();
+				}
+				else {
+					URL oServer = new URL(sRequest);
+					URLConnection conn = oServer.openConnection();
+					InputStream iStream = conn.getInputStream();
+					BufferedReader oInputReader = new BufferedReader(new InputStreamReader(iStream), 16000);
+					sResponse = oInputReader.readLine();
+					oInputReader.close();
+				}
+				
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "From AUTHSP: " + sResponse);
-				oInputReader.close();
 			}
 			catch (IOException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid/No response from DirectAuthSP: '"

@@ -389,11 +389,9 @@ public class LDAPAuthSP extends ASelectHttpServlet
 
 			// check if the request is an API call
 			String sRequestName = (String) htServiceRequest.get("request");
-
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "LDAP GET { query-->" + sQueryString);
 
-			if (sRequestName != null) // API request
-			{
+			if (sRequestName != null) {  // API request
 				handleApiRequest(htServiceRequest, servletRequest, pwOut, servletResponse);
 			}
 			else // Browser request
@@ -503,9 +501,9 @@ public class LDAPAuthSP extends ASelectHttpServlet
 		PrintWriter pwOut = null;
 		String sLanguage = null;
 
+		String sRequest = servletRequest.getParameter("request");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "LDAP POST { query-->" + servletRequest.getQueryString()+" len="+servletRequest.getContentLength());
 		try {
-			servletResponse.setContentType("text/html");
-			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 			pwOut = servletResponse.getWriter();
 
 			sLanguage = servletRequest.getParameter("language");  // optional language code
@@ -523,15 +521,32 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			String sPassword = servletRequest.getParameter("password");
 			String sSignature = servletRequest.getParameter("signature");
 			String sRetryCounter = servletRequest.getParameter("retry_counter");
+			
+			if ("authenticate".equals(sRequest)) {
+				HashMap htServiceRequest = new HashMap();
+				String sUser = servletRequest.getParameter("user");
+				if (sRequest != null) htServiceRequest.put("request", sRequest);
+				if (sAsId != null) htServiceRequest.put("a-select-server", sAsId);
+				if (sRid != null) htServiceRequest.put("rid", sRid);
+				if (sUser != null) htServiceRequest.put("user", sUser);
+				if (sPassword != null) htServiceRequest.put("password", sPassword);
+				if (sSignature != null) htServiceRequest.put("signature", sSignature);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "htServiceRequest="+htServiceRequest);
+				handleApiRequest(htServiceRequest, servletRequest, pwOut, servletResponse);
+				return;
+			}
+			
+			servletResponse.setContentType("text/html");
+			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "sRequest="+sRequest+" sRid="+sRid+" sUid="+sUid+" sPassword="+sPassword);
 			if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sPassword == null) || (sAsId == null)
 					|| (sRetryCounter == null) || (sSignature == null)) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"Invalid request received: one or more mandatory parameters missing.");
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: one or more mandatory parameters missing.");
 				throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);
 			}
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "LDAP POST {" + servletRequest + " --> " + sMethod + ", "
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "LDAP POST " + servletRequest + " --> " + sMethod + ", "
 					+ sRid + ": " + sMyUrl);
 
 			if (sPassword.trim().length() < 1) // invalid password
@@ -653,9 +668,9 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			if (pwOut != null) {
 				pwOut.close();
 				pwOut = null;
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "} LDAP POST");
 			}
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "} LDAP POST");
 	}
 
 	/**

@@ -364,7 +364,7 @@ public class Utils
 	 *            the parameter name
 	 * @return the parameter value or null if not found
 	 */
-	// Exampl: sAppUrl=https://appl.anoigo.nl/?aselect_specials=aWZfY29uZD1vcmdfbG9naW4mc2V0X2ZvcmNlZF91aWQ=
+	// Example: sAppUrl=https://appl.anoigo.nl/?aselect_specials=aWZfY29uZD1vcmdfbG9naW4mc2V0X2ZvcmNlZF91aWQ=
 	public static String getParameterValueFromUrl(String sUrl, String sParamName)
 	{
 		if (sUrl == null)

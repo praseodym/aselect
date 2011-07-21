@@ -545,7 +545,7 @@ public class XMLConfigHandler implements IConfigHandler
 			throw new ASelectConfigException(Errors.ERROR_ASELECT_NOT_FOUND);
 		}
 		if (!(oSection instanceof Node)) {
-			sbError.append("Supplied section is not of type Node.");
+			sbError.append("Supplied section is not of type Node. Looking for:"+sConfigItem);
 			_oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
 			throw new ASelectConfigException(Errors.ERROR_ASELECT_NOT_FOUND);
 		}
