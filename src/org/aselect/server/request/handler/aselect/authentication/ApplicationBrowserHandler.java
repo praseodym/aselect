@@ -1062,8 +1062,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			String sErrorMessage = (String)_htSessionContext.get("error_message");
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "error_message="+sErrorMessage);
-			sLoginForm = Utils.replaceString(sLoginForm, "[error_message]", sErrorMessage);
-
+			
+			if (sErrorMessage != null) {
+				sErrorMessage = _configManager.getErrorMessage(sErrorMessage, _sUserLanguage, _sUserCountry);
+				sLoginForm = Utils.replaceString(sLoginForm, "[error_message]", sErrorMessage);
+			}
 			sLoginForm = _configManager.updateTemplate(sLoginForm, _htSessionContext);
 			
 			// Bauke 20110720: Extract if_cond=... from the application URL
@@ -1300,6 +1303,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *            Used to send (HTTP) information back to user
 	 * @param pwOut
 	 *            Used to write information back to the user (HTML)
+	 *            
+	 * @return 0 = success, 1=bad user input (back to login1)
+	 * 
 	 * @throws ASelectException
 	 */
 	private int handleLogin2(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
@@ -1457,9 +1463,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sSelectForm = Utils.replaceString(sSelectForm, "[allowed_user_authsps]", sb.toString());
 
 			// Create the Cancel action:
-			sb = new StringBuffer((String) htServiceRequest.get("my_url")).append("?request=error").append(
-					"&result_code=").append(Errors.ERROR_ASELECT_SERVER_CANCEL).append("&a-select-server=").append(
-					_sMyServerId).append("&rid=").append(sRid);
+			sb = new StringBuffer((String) htServiceRequest.get("my_url")).append("?request=error")
+					.append("&result_code=").append(Errors.ERROR_ASELECT_SERVER_CANCEL).append("&a-select-server=")
+					.append(_sMyServerId).append("&rid=").append(sRid);
 
 			sSelectForm = Utils.replaceString(sSelectForm, "[cancel]", sb.toString());
 			sSelectForm = _configManager.updateTemplate(sSelectForm, _htSessionContext);

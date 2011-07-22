@@ -294,7 +294,6 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			htSession.put("sp_rid", sSPRid);
 			htSession.put("sp_issuer", sIssuer);
 			htSession.put("sp_assert_url", sAssertionConsumerServiceURL);
-			htSession.put("forced_uid", "saml20_user");
 			// RH, 20101101, Save requested binding for when we return from authSP
 			// 20110323, Bauke: if no requested binding, take binding from metadata
 			htSession.put("sp_reqbinding", hmBinding.get("binding"));  // 20110323: sReqBinding);
@@ -326,18 +325,14 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				sendErrorArtifact(errorResponse, authnRequest, httpResponse, sRelayState);
 				return;
 			}
-			// debug
-			/*
-			 * org.opensaml.saml2.core.Subject mySubj = authnRequest.getSubject();
-			 * if (mySubj != null) {
-			 *		_systemLogger.log(Level.INFO, MODULE, sMethod, "Subject.BaseID="+mySubj.getBaseID()+
-			 * 				" Subject.NameID="+mySubj.getNameID());
-			 * }
-			 */
 
 			// 20090110, Bauke changed requested_betrouwbaarheidsniveau to required_level
 			htSession.put("required_level", sBetrouwbaarheidsNiveau);
 			htSession.put("level", Integer.parseInt(sBetrouwbaarheidsNiveau)); // 20090111, Bauke added, NOTE: it's an Integer
+			
+			// 20110722, Bauke conditional setting, should come from configuration however
+			if (Integer.parseInt(sBetrouwbaarheidsNiveau) <= 10)
+				htSession.put("forced_uid", "saml20_user");
 			_oSessionManager.updateSession(sIDPRid, htSession);
 
 			// redirect with A-Select request=login1

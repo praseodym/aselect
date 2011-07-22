@@ -246,6 +246,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "AuthSP verify, Response=" + htResponse);
 
 			String sResultCode = (String) htResponse.get("result");
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "VA result=" + sResultCode);
 			// Result values: ERROR_ASELECT_SUCCESS, ERROR_ASELECT_AUTHSP_INVALID_DATA (only SMS)
 
 			String sRid = (String) htResponse.get("rid"); // this is our own rid
@@ -257,19 +258,22 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Saml20: Any errors must be reported back to the SP (so no Exception throwing in that case)
 			String sIssuer = (String) htSessionContext.get("sp_issuer");
-			if (sIssuer == null && sResultCode.equals(Errors.ERROR_ASELECT_AUTHSP_INVALID_PHONE)) {
+			// 20110722, Bauke: also for Saml
+			if (/*sIssuer == null && */sResultCode.equals(Errors.ERROR_ASELECT_AUTHSP_INVALID_PHONE)) {
 				
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Error in response from authsp: " + sResultCode);
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "INVALID_PHONE from authsp: " + sResultCode+ " sIssuer="+sIssuer);
+				//if (sIssuer == null)  //20110722: not for Saml, need rid data later on
 				_sessionManager.killSession(sRid);
 				
-				// redirect or:
-				//String sCorrection = "https://bppl.anoigo.nl/UserEntry.jsp?action=upd";
+				// Redirect or exception
 				if (sCorrectionFacility == null || "".equals(sCorrectionFacility))
 					throw new ASelectException(sResultCode);
 
 				// User can possibly correct his phone number and retry
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT to: " + sCorrectionFacility);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT to (cor_fac): " + sCorrectionFacility);
 				String sAppUrl = (String) htSessionContext.get("app_url");
+				//20110722: if (sIssuer != null)
+				//	sAppUrl += "?request=retry&rid="+sRid;  // 20110722, Bauke: need to get data back
 				HandlerTools.putCookieValue(servletResponse, sCookiePrefix+"ApplicationUrl", sAppUrl,
 											sCookieDomain, "/",  600/*seconds*/, _systemLogger);
 				servletResponse.sendRedirect(sCorrectionFacility.toString());

@@ -222,7 +222,7 @@ public abstract class BasicRequestHandler
 
 		// Authentication OK
 		// Single direct_authsp left?
-		if (vAuthSPs.size() == 1 && _authSPManagerManager.isDirectAuthSP((String) vAuthSPs.get(0))) {
+		if (vAuthSPs.size() == 1 && _authSPManagerManager.isDirectAuthSP((String)vAuthSPs.get(0))) {
 			// A-Select will show username and password box in one page.
 			sbAsUrl.append("?request=direct_login1");
 			htSessionContext.put("direct_authsp", vAuthSPs.get(0));

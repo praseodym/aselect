@@ -472,7 +472,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 
 				// Code sent successfully
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM htServiceRequest=" + htServiceRequest);
-				showAuthenticateForm(pwOut, " ", " ", htServiceRequest);
+				showAuthenticateForm(pwOut, null, null, htServiceRequest);
 			}
 		}
 		catch (ASelectException eAS) {
@@ -572,8 +572,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 
 			if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sPassword == null) || (sAsId == null)
 					|| (sRetryCounter == null) || (sSignature == null)) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"Invalid request received: one or more mandatory parameters missing.");
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: one or more mandatory parameters missing.");
 				throw new ASelectException(Errors.ERROR_SMS_INVALID_REQUEST);
 			}
 			
@@ -591,8 +590,9 @@ public class SMSAuthSP extends ASelectHttpServlet
 				if (sLanguage != null)
 					htServiceRequest.put("language", sLanguage);
 				// show authentication form once again with warning message
-				showAuthenticateForm(pwOut, Errors.ERROR_SMS_INVALID_PASSWORD, _configManager.getErrorMessage(
-						Errors.ERROR_SMS_INVALID_PASSWORD, _oErrorProperties), htServiceRequest);
+				String sMsg = _configManager.getErrorMessage(Errors.ERROR_SMS_INVALID_PASSWORD, _oErrorProperties);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Msg="+sMsg+" props="+_oErrorProperties.toString());
+				showAuthenticateForm(pwOut, Errors.ERROR_SMS_INVALID_PASSWORD, sMsg, htServiceRequest);
 			}
 			else {
 				// generate signature
@@ -721,7 +721,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 	 * @param pwOut
 	 *            the <code>PrintWriter</code> that is the target for displaying the html page.
 	 * @param sError
-	 *            The error that should be shown in the page.
+	 *            The error that should be shown in the page. Can be null (no errors)
 	 * @param sErrorMessage
 	 *            The error message that should be shown in the page.
 	 * @param htServiceRequest
@@ -755,34 +755,27 @@ public class SMSAuthSP extends ASelectHttpServlet
 		}
 		// RH, 20100907, en
 
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "error_code="+sError+" message="+sErrorMessage);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[rid]", sRid);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[as_url]", sAsUrl);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[uid]", sUid);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[sms_server]", sMyUrl);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[a-select-server]", sAsId);
-		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error]", sError);  // obsoleted 20100817
-		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error_code]", sError);
-		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error_message]", sErrorMessage);
-		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", sLanguage);
-		sAuthenticateForm = Utils.replaceConditional(sAuthenticateForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
+		if (sError != null) {
+			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error]", sError);  // obsoleted 20100817
+			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error_code]", sError);
+		}
+		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[country]", (sCountry != null)? sCountry: "");
+		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", (sLanguage != null)? sLanguage: "");
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[signature]", sSignature);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[retry_counter]", sRetryCounter);
-
-		// optional country code
-		if (sCountry != null) {
-			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[country]", sCountry);
-		}
-		else {
-			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[country]", "");
-		}
-
-		// optional language code
-		if (sLanguage != null) {
-			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", sLanguage);
-		}
-		else {
-			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", "");
-		}
+		
+		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error_message]", sErrorMessage);
+		//sAuthenticateForm = Utils.replaceConditional(sAuthenticateForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
+		
+		// Bauke 20110721: Extract if_cond=... from the application URL
+		String sSpecials = Utils.getAselectSpecials(htServiceRequest, true/*decode too*/, _systemLogger);
+		sAuthenticateForm = Utils.handleAllConditionals(sAuthenticateForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Show Form");
 		pwOut.println(sAuthenticateForm);
