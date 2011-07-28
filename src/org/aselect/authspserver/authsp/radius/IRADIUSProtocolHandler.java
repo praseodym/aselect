@@ -88,6 +88,12 @@ public interface IRADIUSProtocolHandler
 	public static final byte RADIUS_ATTRIBUTE_TYPE_CHAP_PASSWORD = 3;
 
 	/**
+	 * RADIUS_ATTRIBUTE_TYPE_NAS_IDENTIFIER
+	 */
+	public static final byte RADIUS_ATTRIBUTE_TYPE_NAS_IDENTIFIER = 32;
+
+	
+	/**
 	 * RADIUS_ATTRIBUTE_TYPE_CHAP_CHALLENGE
 	 */
 	public static final byte RADIUS_ATTRIBUTE_TYPE_CHAP_CHALLENGE = 60;

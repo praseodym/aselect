@@ -57,6 +57,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.security.Key;
 import java.security.MessageDigest;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.logging.Level;
 
@@ -79,6 +80,7 @@ import org.aselect.system.utils.Utils;
  */
 public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 {
+	private static final int MAXNAS_IDENT_LENGTH = 253;
 	private byte _bIdentifier;
 	private byte[] _baRandom;
 	private DatagramSocket _listenSocket = null;
@@ -131,8 +133,9 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 
 			_listenSocket.setSoTimeout(_iSocketTimeout); // added timeout (154)
 			_listenSocket.send(oRADIUSPacket);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "datagram send");
+			
 			_listenSocket.receive(oRADIUSPacket);
-
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "received response");
 			handleResponse(oRADIUSPacket);
 
@@ -181,7 +184,7 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "uid=" + _sUid);
 		try {
 			Random randomGenerator;
-			byte[] baTempBuffer1, baTempBuffer2;
+			byte[] baTempBuffer1, baTempBuffer2, baTempBuffer3;
 			byte[] baOutputBuffer;
 			int iIndex = 0;
 
@@ -217,7 +220,7 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 			baOutputBuffer[iIndex++] = (byte) (16 + 2);
 
 			// copy password to baTempBuffer2, pad with zeroes to a length of 16 bytes
-			baTempBuffer1 = sPassword.getBytes();
+			baTempBuffer1 = sPassword.getBytes();	// RH, beware of "default" char set
 			baTempBuffer2 = new byte[16];
 			for (int i = 0; i < baTempBuffer1.length; i++) {
 				baTempBuffer2[i] = baTempBuffer1[i];
@@ -238,6 +241,8 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 			for (int i = 0; i < 16; i++) {
 				baOutputBuffer[iIndex++] = (byte) (baTempBuffer2[i] ^ baHash[i]);
 			}
+			// RH, so the password cannot exceed 16 chars !
+			
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "hashpwd=" + Utils.byteArrayToHexString(baOutputBuffer));
 
 //			BEGIN NEW 20110705, Bauke
@@ -267,6 +272,32 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 				baOutputBuffer[iIndex++] = baHash[i];
 			}
 */			// END NEW
+			
+			
+			
+			// RH, 20110728, set the NAS-Identifier, sn
+//			try {
+			    InetAddress addr = InetAddress.getLocalHost();
+
+			    // Get IP Address
+//			    byte[] ipAddr = addr.getAddress();
+
+			    // Get hostname
+			    String hostname = addr.getHostName();
+//			} catch (UnknownHostException e) {
+//			}
+
+				baOutputBuffer[iIndex++] = RADIUS_ATTRIBUTE_TYPE_NAS_IDENTIFIER;
+				baTempBuffer3 = hostname.getBytes();	// RH, beware of "default" char set
+				int trimmedLength =  (baTempBuffer3.length > MAXNAS_IDENT_LENGTH) ? MAXNAS_IDENT_LENGTH : baTempBuffer3.length;
+				baOutputBuffer[iIndex++] = (byte) (trimmedLength + 2);
+				System.arraycopy( baTempBuffer3, 0, baOutputBuffer, iIndex, trimmedLength );	// We want max MAXNAS_IDENT_LENGTH chars 
+				iIndex +=  trimmedLength;
+				
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "hostname (as hexstring, only using first  " + MAXNAS_IDENT_LENGTH + " bytes as nas-identifier): " + Utils.byteArrayToHexString( baTempBuffer3 ));
+
+				// RH, 20110728, set the NAS-Identifier, en
+			
 			
 			// store actual length
 			baOutputBuffer[2] = (byte) (iIndex >> 8);
