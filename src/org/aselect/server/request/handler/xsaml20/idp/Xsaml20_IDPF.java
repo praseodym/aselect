@@ -382,7 +382,7 @@ public class Xsaml20_IDPF extends AbstractRequestHandler
 		catch (UnsupportedEncodingException e3) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not URLEncode to UTF-8, this should not happen!");
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e3);
-			}
+		}
 		String finalResult = "";
 
 		//Send data
