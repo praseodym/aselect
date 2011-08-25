@@ -15,7 +15,6 @@
 	<classpathentry kind="lib" path="lib/opensaml-1.1.jar"/>
 	<classpathentry kind="lib" path="lib/slf4j-log4j12-1.5.0.jar"/>
 	<classpathentry kind="lib" path="lib/velocity-1.5.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="lib" path="lib/opensaml-2.3.0.jar"/>
 	<classpathentry kind="lib" path="lib/xmltooling-1.2.1.jar"/>
 	<classpathentry kind="lib" path="lib/joda-time-1.6.jar"/>
@@ -35,5 +34,9 @@
 	<classpathentry kind="lib" path="lib/slf4j-api-1.5.8.jar"/>
 	<classpathentry kind="lib" path="lib/xalan-2.7.1.jar"/>
 	<classpathentry kind="lib" path="lib/xml-apis-2.9.1.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.5.0_17"/>
+	<classpathentry kind="lib" path="lib/nekohtml-1.9.7.jar"/>
+	<classpathentry kind="lib" path="lib/openid4java-full-0.9.5.jar"/>
+	<classpathentry kind="lib" path="lib/jdom.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
