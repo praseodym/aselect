@@ -721,8 +721,11 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 							
 				// 20110721, Bauke: communicate with the AuthSP using the POST mechanism
 				String sPostIt = null;
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Looking for parameter post_it in section with id: " + sAuthSPId);
 				Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp", "id="+sAuthSPId);
-				sPostIt = _configManager.getParam(authSPsection, "post_it");
+//				sPostIt = _configManager.getParam(authSPsection, "post_it");	// post_it NOT mandatory in authsp section, this crashed the request if absent
+				sPostIt = ASelectConfigManager.getSimpleParam(authSPsection, "post_it", false);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "post_it: " + sPostIt);
 				if ("true".equals(sPostIt)) {
 					int idx = sRequest.indexOf('?');
 					String sUrl = (idx >= 0)? sRequest.substring(0, idx): sRequest;
@@ -764,12 +767,22 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 					oInputReader.close();
 				}
 				else {
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Doing GET from:  "+ sRequest);
 					URL oServer = new URL(sRequest);
 					URLConnection conn = oServer.openConnection();
 					InputStream iStream = conn.getInputStream();
 					BufferedReader oInputReader = new BufferedReader(new InputStreamReader(iStream), 16000);
 					sResponse = oInputReader.readLine();
 					oInputReader.close();
+					
+//					BufferedReader oInputReader = new BufferedReader(new InputStreamReader(oServer.openStream()), 16000);
+//					sResponse = oInputReader.readLine();
+//					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Read line from AUTHSP: " + sResponse);
+//
+//					oInputReader.close();
+//					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Stream closed to AUTHSP" );
+
+					
 				}
 				
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "From AUTHSP: " + sResponse);
