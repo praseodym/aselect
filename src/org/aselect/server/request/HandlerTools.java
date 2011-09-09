@@ -331,7 +331,7 @@ public class HandlerTools
 		}
 		systemLogger.log(Level.INFO, MODULE, sMethod, "Finalizing the assertion building, sign="+sign);
 		assertion.getAttributeStatements().add(attributeStatement);
-		assertion = marshallAssertion(assertion);
+		assertion = marshallAssertion(assertion, false);
 		if (sign) {
 			systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the final Assertion >======");
 			assertion = (Assertion)SamlTools.signSamlObject(assertion);
@@ -356,8 +356,8 @@ public class HandlerTools
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private static Assertion marshallAssertion(Assertion assertion)
-		throws ASelectException
+	public static Assertion marshallAssertion(Assertion assertion, boolean doLog)
+	throws ASelectException
 	{
 		String sMethod = "marshallAssertion";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
@@ -365,8 +365,10 @@ public class HandlerTools
 		Marshaller marshaller = factory.getMarshaller(assertion);
 		try {
 			Node node = marshaller.marshall(assertion);
-			//String msg = XMLHelper.prettyPrintXML(node);
-			//systemLogger.log(Level.INFO, MODULE, sMethod, msg);
+			if (doLog) {
+				String msg = XMLHelper.prettyPrintXML(node);
+				systemLogger.log(Level.INFO, MODULE, sMethod, msg);
+			}
 		}
 		catch (MarshallingException e) {
 			systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);

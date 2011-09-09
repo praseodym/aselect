@@ -573,7 +573,9 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 
 		// Get other response parameters
 		sUid = (String) htTGTContext.get("uid");
-		String sAuthSPLevel = (String) htTGTContext.get("authsp_level");
+		String sAuthSPLevel = (String) htTGTContext.get("sel_level");  // 20110828, Bauke: added
+		if (!Utils.hasValue(sAuthSPLevel))
+			sAuthSPLevel = (String) htTGTContext.get("authsp_level");
 		String sAuthSP = (String) htTGTContext.get("authsp");
 		long lExpTime = 0;
 		try {

@@ -1030,7 +1030,7 @@ public class ApplicationManager
 		throws ASelectException
 	{
 		String sMethod = "loadPublicKeyFromKeystore()";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Load public key " + sAlias + " from "
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Load public key=" + sAlias + ", from="
 				+ _sApplicationsKeystoreName);
 		try {
 			sAlias = sAlias.toLowerCase();
@@ -1215,5 +1215,4 @@ public class ApplicationManager
 		}
 		return oApplication.getAuthnContextDeclType();
 	}
-	
 }

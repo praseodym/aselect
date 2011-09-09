@@ -108,7 +108,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
 			_oBuilderFactory = org.opensaml.xml.Configuration.getBuilderFactory();
 
 			setWorkingDir(oServletConfig.getInitParameter("working_dir")); // from web.xml!
-			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Working directoy: " + getWorkingDir());
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Working directory: " + getWorkingDir());
 
 			Object oASelect = null;
 			try {

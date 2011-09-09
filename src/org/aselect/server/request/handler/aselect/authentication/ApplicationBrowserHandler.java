@@ -2397,7 +2397,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	{
 		String sMethod = "checkCredentials";
 		HashMap htTGTContext;
-		String sTGTLevel;
+		String sTGTLevel = null;
 		Integer intRequiredLevel;
 
 		htTGTContext = _tgtManager.getTGT(sTgt);
@@ -2423,8 +2423,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 
 		intRequiredLevel = (Integer) _htSessionContext.get("level");
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "checkCred level, requires: " + intRequiredLevel);
-		sTGTLevel = (String) htTGTContext.get("authsp_level");
+		String sAddedPatching = _configManager.getAddedPatching();
+
+		if (!sAddedPatching.contains("use_authsp_level"))
+			sTGTLevel = (String) htTGTContext.get("sel_level");  // 20110828, Bauke: added
+		if (!Utils.hasValue(sTGTLevel))  // old mechanism
+			sTGTLevel = (String) htTGTContext.get("authsp_level");
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "checkCred level, requires: " + intRequiredLevel+" tgt: "+sTGTLevel+" patch="+sAddedPatching);
 		if (sTGTLevel == null || Integer.parseInt(sTGTLevel) < intRequiredLevel.intValue()) {
 			return -1;  // level is not high enough
 		}

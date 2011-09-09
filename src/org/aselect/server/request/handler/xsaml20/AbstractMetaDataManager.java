@@ -283,7 +283,7 @@ public abstract class AbstractMetaDataManager
 		sbKeystoreLocation.append(File.separator).append("keystores").append(File.separator).append(
 				"trusted_issuers.keystore").toString();
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Read " + sbKeystoreLocation + " Prefix=ca_ Check="
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Load TrustedIssuers " + sbKeystoreLocation + " Prefix=ca_ Check="
 				+ getCheckCertificates());
 		try {
 			KeyStore ksASelect = KeyStore.getInstance("JKS");
@@ -488,7 +488,7 @@ public abstract class AbstractMetaDataManager
 		String sMethod = "checkCertificate";
 		String sCheckCerts = getCheckCertificates();
 
-		// _systemLogger.log(Level.INFO, MODULE, sMethod, "Prefix="+prefix+" CheckCerts="+sCheckCerts);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Prefix="+prefix+" CheckCerts="+sCheckCerts);
 		try {
 			if (sCheckCerts != null && sCheckCerts.contains(prefix + "dates")) {
 				javaCert.checkValidity();
@@ -581,7 +581,7 @@ public abstract class AbstractMetaDataManager
 
 		SSODescriptor descriptor = SSODescriptors.get(makeEntityKey(entityId, null));
 		if (descriptor == null) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Entity id: " + entityId + " not in SSODescriptors");
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Entity id: " + entityId + " not in SSODescriptors: "+SSODescriptors);
 			return null;
 		}
 		

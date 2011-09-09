@@ -276,8 +276,7 @@ public abstract class BasicRequestHandler
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
 
-		if (!_cryptoEngine.verifyApplicationSignature(pk, sData, sSignature)) { // can throw
-			// ERROR_ASELECT_INTERNAL_ERROR
+		if (!_cryptoEngine.verifyApplicationSignature(pk, sData, sSignature)) { // can throw ERROR_ASELECT_INTERNAL_ERROR
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Application:" + sAppId + " Invalid signature:"
 					+ sSignature + " Key=" + pk);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);

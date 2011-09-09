@@ -11,6 +11,7 @@
  */
 package org.aselect.server.request.handler.xsaml20;
 
+import java.io.Serializable;
 import java.security.PublicKey;
 import java.util.Date;
 import java.util.HashMap;
@@ -26,7 +27,6 @@ import org.aselect.server.request.handler.xsaml20.idp.MetaDataManagerIdp;
 import org.aselect.server.request.handler.xsaml20.idp.SLOTimer;
 import org.aselect.server.request.handler.xsaml20.idp.SLOTimerTask;
 import org.aselect.server.request.handler.xsaml20.idp.UserSsoSession;
-import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.communication.client.IClientCommunicator;
 import org.aselect.system.communication.client.raw.RawCommunicator;
@@ -44,14 +44,16 @@ import org.opensaml.common.SignableSAMLObject;
 import org.opensaml.common.binding.BasicSAMLMessageContext;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.binding.decoding.HTTPPostDecoder;
-import org.opensaml.saml2.core.*;
-import org.opensaml.saml2.ecp.RelayState;
+import org.opensaml.saml2.core.Issuer;
+import org.opensaml.saml2.core.LogoutRequest;
+import org.opensaml.saml2.core.Response;
+import org.opensaml.saml2.core.Status;
+import org.opensaml.saml2.core.StatusCode;
+import org.opensaml.saml2.core.StatusMessage;
 import org.opensaml.saml2.metadata.SingleLogoutService;
-import org.opensaml.ws.message.decoder.MessageDecodingException;
 import org.opensaml.ws.transport.http.HttpServletRequestAdapter;
 import org.opensaml.xml.Configuration;
 import org.opensaml.xml.XMLObjectBuilderFactory;
-import org.opensaml.xml.security.SecurityException;
 import org.opensaml.xml.util.XMLHelper;
 
 /**
@@ -81,6 +83,16 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	public String _sMyServerId; // The value of <server_id> in the <aselect> section
 	public String _sAppOrg; // The value of <organization> in the <aselect> section
 	public String _sASelectServerUrl; // The value of <server_url> in the <aselect> section
+	protected Issuer _oSamlIssuer = null;
+	
+	public Issuer get_SamlIssuer() {
+		return _oSamlIssuer;
+	}
+
+	public void set_SamlIssuer(Issuer oSamlIssuer) {
+		_oSamlIssuer = oSamlIssuer;
+	}
+
 	private XMLObjectBuilderFactory _oBuilderFactory;
 
 	// Must be overridden:
@@ -246,7 +258,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	 *             the a select exception
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		String sPathInfo = request.getPathInfo();
@@ -285,7 +297,8 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 		BasicSAMLMessageContext messageContext = new BasicSAMLMessageContext();
 		messageContext.setInboundMessageTransport(new HttpServletRequestAdapter(httpRequest));
 		try {
-			// Decode the message
+			// Decode the message, it's a "saml2:Response"
+			// Destination correctness will be checked
 			if (bIsPostRequest) {
 				HTTPPostDecoder decoder = new HTTPPostDecoder();
 				decoder.decode(messageContext);
@@ -300,18 +313,19 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 				sRelayState = null;
 			
 			SignableSAMLObject samlMessage = (SignableSAMLObject) messageContext.getInboundSAMLMessage();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "RelayState="+sRelayState+" Msg="+XMLHelper.prettyPrintXML(samlMessage.getDOM()));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Class="+samlMessage.getClass().getName()+" SamlMsg="+XMLHelper.prettyPrintXML(samlMessage.getDOM()));
+			
+			// Decide what part of the message we need, also sets _oSamlIssuer
+			samlMessage = extractSamlObject(samlMessage);
 			
 			// Check the signature. First we must detect which public key must be used
 			// The alias of the public key is equal to the appId and the
 			// appId is retrieved by the Issuer, which is the server_url
-			String elementName = samlMessage.getElementQName().getLocalPart();
-			Issuer iIssuer = retrieveIssuer(elementName, samlMessage);
-			if (iIssuer == null || "".equals(iIssuer.getValue())) {
+			if (_oSamlIssuer == null || "".equals(_oSamlIssuer.getValue())) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "SAMLMessage has no Issuer");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
-			String sEntityId = iIssuer.getValue();
+			String sEntityId = _oSamlIssuer.getValue();
 			
 			if (!is_bVerifySignature()) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "No signature verification needed");
@@ -319,20 +333,19 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			else {
 				// The SAMLRequest must be signed
 				if (bIsPostRequest) {  // POST, check request
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "SAML sp ===" + sEntityId+" VerifySignature=" + is_bVerifySignature());
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "SAML POST EntityId=" + sEntityId+" VerifySignature=" + is_bVerifySignature());
 					if (is_bVerifySignature()) { // Check signature.
 						getKeyAndCheckSignature(sEntityId, samlMessage);  // throws an exception on error
 					}
 				}
 				else { // GET, check signing of the URL
 					if (!SamlTools.isSigned(httpRequest)) {
-						_systemLogger.log(Level.WARNING, MODULE, sMethod, "SAML message must be signed.");
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, "SAML GET message must be signed.");
 						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 					}
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "SAML message IS signed.");
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "SAML GET message IS signed.");
 	
-					MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
-					PublicKey publicKey = metadataManager.getSigningKeyFromMetadata(sEntityId);
+					PublicKey publicKey = retrievePublicSigningKey(sEntityId);
 					if (publicKey == null) {
 						_systemLogger.log(Level.WARNING, MODULE, sMethod, "PublicKey for entityId: "+sEntityId+" not found.");
 						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
@@ -360,6 +373,23 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
+	}
+	
+	/**
+	 * Default implementation, possible to override (e.g. in Xsaml20_Receiver)
+	 * 
+	 * @param samlMessage
+	 * @return part of the message we need
+	 * @throws ASelectException
+	 */
+	protected SignableSAMLObject extractSamlObject(SignableSAMLObject samlMessage)
+	throws ASelectException
+	{
+		String sMethod = "extractSamlObject";
+		
+		String elementName = samlMessage.getElementQName().getLocalPart();
+		set_SamlIssuer(retrieveIssuer(elementName, samlMessage));
+		return samlMessage;
 	}
 
 
@@ -468,7 +498,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	 */
 	protected void logoutNextSessionSP(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
 			LogoutRequest logoutRequest, String initiatingSP, String initiatingID, boolean tryRedirectLogoutFirst,
-			int redirectLogoutTimeout, HashMap htTGTContext, Issuer responseIssuer)
+			int redirectLogoutTimeout, HashMap<String, Serializable> htTGTContext, Issuer responseIssuer)
 		throws ASelectException, ASelectStorageException
 	{
 		String sMethod = "logoutNextSessionSP";

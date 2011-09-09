@@ -325,7 +325,7 @@ public class SamlTools
 		boolean valid = true;
 		String sMethod = "checkValidityInterval";
 		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "obj->" + obj + "refInstant->" + refInstant);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "refInstant=" + refInstant);
 		
 		// We could do it with some sort of command pattern, for now we do it the "hard" way
 		// We would have been happy with some common ancestor that implements Conditions or so ;-)

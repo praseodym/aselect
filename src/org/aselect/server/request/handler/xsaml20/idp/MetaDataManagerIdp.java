@@ -64,6 +64,9 @@ public class MetaDataManagerIdp extends AbstractMetaDataManager
 
 	/**
 	 * Read Aselect.xml file This file contains the location of the metadata xml file
+	 * Search the <application> tags within <applications>
+	 * If a <meta_data> tag is present, use it's <meta_data> content
+	 * Store result in 'storeAllIdPData'.
 	 * 
 	 * @throws ASelectException
 	 *             the a select exception
@@ -143,7 +146,6 @@ public class MetaDataManagerIdp extends AbstractMetaDataManager
 			PartnerData idpData = new PartnerData(sId);
 			idpData.setMetadataUrl(metadata.getFirstChild().getTextContent());
 			storeAllIdPData.put(sId, idpData);
-			// 20100428: metadataSPs.put(sId, metadata.getFirstChild().getTextContent());
 		}
 	}
 }

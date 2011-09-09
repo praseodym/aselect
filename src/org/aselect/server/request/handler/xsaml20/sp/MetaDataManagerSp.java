@@ -75,9 +75,9 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 	throws ASelectException
 	{
 		String sMethod = "init";
-		Object sam = null;
-		Object agent = null;
-		Object idpSection = null;
+//		Object sam = null;
+//		Object agent = null;
+//		Object idpSection = null;
 
 		super.init();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Role=" + getMyRole() + " id=" + sFederationIdpKeyword);
@@ -144,9 +144,6 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 			String destination = Utils.getSimpleParam(_configManager, _systemLogger, idpSection, "destination", false);
 			if (destination != null)
 				idpData.setDestination(destination);
-			Object acsSection = Utils.getSimpleSection(_configManager,_systemLogger, idpSection, "serviceindex",
-					false);
-			
 			
 			String assertionconsumerserviceindex = Utils.getSimpleParam(_configManager, _systemLogger, idpSection, "serviceindex", false);  // "assertionconsumerserviceindex", false);
 			if (assertionconsumerserviceindex != null)

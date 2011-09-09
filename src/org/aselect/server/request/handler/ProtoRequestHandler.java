@@ -1085,6 +1085,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 
 		htAttributes.put("uid", sUserId);
 		htAttributes.put("betrouwbaarheidsniveau", sSecLevel);
+		htAttributes.put("sel_level", sSecLevel);
 
 		// IMPROVE following code should go to tgt.TGTIssuer, RH 20080617
 		HashMap htTGTContext = new HashMap();
@@ -1093,7 +1094,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		htTGTContext.put("betrouwbaarheidsniveau", sSecLevel);
 		htTGTContext.put("organization", sOrg);
 		htTGTContext.put("authsp_level", sSecLevel);
-		htAttributes.put("sel_level", sSecLevel);
+		htTGTContext.put("sel_level", sSecLevel);
 		htTGTContext.put("authsp", "SAML");
 		htTGTContext.put("app_id", sAppId);
 		htTGTContext.put("app_level", "2");
@@ -1200,8 +1201,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	{
 		String sMethod = "getKeyAndCheckSignature";
 		
-		MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
-		PublicKey pkey = metadataManager.getSigningKeyFromMetadata(sIssuer);
+		PublicKey pkey = retrievePublicSigningKey(sIssuer);
 		if (pkey == null || "".equals(pkey)) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No valid public key in metadata for "+sIssuer);
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
@@ -1214,6 +1214,22 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Message was NOT signed OK");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
+	}
+	
+	/**
+	 * NOTE: IDP is used, metadata is taken from the <applications> section
+	 * @param sEntityId
+	 * @return
+	 * @throws ASelectException
+	 */
+	public PublicKey retrievePublicSigningKey(String sEntityId)
+	throws ASelectException
+	{
+		String sMethod = "retrievePublicSigningKey";
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Get Metadata Key for: "+sEntityId);
+		MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
+		PublicKey publicKey = metadataManager.getSigningKeyFromMetadata(sEntityId);
+		return publicKey;
 	}
 
 	// For the new opensaml20 library
