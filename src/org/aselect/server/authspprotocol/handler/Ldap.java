@@ -724,6 +724,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Looking for parameter post_it in section with id: " + sAuthSPId);
 				Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp", "id="+sAuthSPId);
 //				sPostIt = _configManager.getParam(authSPsection, "post_it");	// post_it NOT mandatory in authsp section, this crashed the request if absent
+				// Should go to "optional parameters"  in init() of AuthSPHandlerManager 
 				sPostIt = ASelectConfigManager.getSimpleParam(authSPsection, "post_it", false);
 				_systemLogger.log(Level.FINEST, MODULE, sMethod, "post_it: " + sPostIt);
 				if ("true".equals(sPostIt)) {
