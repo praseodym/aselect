@@ -62,6 +62,8 @@ import org.aselect.system.utils.Utils;
  */
 public class SMSAuthSP extends ASelectHttpServlet
 {
+	private static final int MAX_FIXED_SECRET_LENGTH = 50;
+
 	/** The name of this module, that is used in the system logging. */
 	public static final String MODULE = "SMSAuthSP";
 
@@ -69,7 +71,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 	private final static String DEFAULT_FAILUREHANDLING = "aselect";
 
 	/** The version. */
-	public static final String VERSION = "A-Select SMS AuthSP " + "1.9";
+	public static final String VERSION = "A-Select SMS AuthSP " + "1.9.1";
 
 	/** The logger that logs system information. */
 	private AuthSPSystemLogger _systemLogger;
@@ -94,6 +96,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 
 	/** HTML authenticate templates */
 	private String _sAuthenticateHtmlTemplate;
+	private String _sChallengeHtmlTemplate;
 
 	// failure handling properties
 	private Properties _oErrorProperties;
@@ -109,6 +112,8 @@ public class SMSAuthSP extends ASelectHttpServlet
 	private String _sSmsFrom;
 	private SmsSender _oSmsSender;
 	private String _sSmsProvider;
+	private String _fixed_secret;		// RH, 20110913, n
+	private boolean _bShow_challenge;		// RH, 20110919, n
 
 	/**
 	 * Initialization of the SMS AuthSP. <br>
@@ -226,6 +231,18 @@ public class SMSAuthSP extends ASelectHttpServlet
 			sbInfo.append(sbErrorsConfig.toString()).append("\".");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 
+			// get show_challenge
+			try {
+				String sShow_challenge = _configManager.getParam(_oAuthSpConfig, "show_challenge");
+				_bShow_challenge = Boolean.parseBoolean(sShow_challenge);
+			}
+			catch (ASelectConfigException eAC) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod,
+						"No or invalid 'show_challenge' parameter found in configuration, no challenge form will be presented");
+				_bShow_challenge = false;
+			}
+
+			
 			// Load HTML templates.
 			_sErrorHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "error.html", sConfigID,
 					_sFriendlyName, VERSION);
@@ -233,6 +250,12 @@ public class SMSAuthSP extends ASelectHttpServlet
 			_sAuthenticateHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "authenticate.html", sConfigID,
 					_sFriendlyName, VERSION);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'authenticate.html' template.");
+			
+			if (_bShow_challenge) {	// Only load form if needed
+				_sChallengeHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "challenge.html", sConfigID,
+						_sFriendlyName, VERSION);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'challenge.html' template.");
+			}
 
 			// get allowed retries
 			try {
@@ -349,6 +372,23 @@ public class SMSAuthSP extends ASelectHttpServlet
 			}
 			_oSmsSender = SmsSenderFactory.createSmsSender(new URL(_sSmsUrl), _sSmsUser, _sSmsPassword, _sSmsGateway, _sSmsProvider);
 			// RH, 20110103, en
+			
+			// RH, 20110913, sn
+			try {
+				_fixed_secret = _configManager.getParam(_oAuthSpConfig, "fixed_secret");
+				if (_fixed_secret.length() == 0 || _fixed_secret.length() > MAX_FIXED_SECRET_LENGTH) throw new ASelectConfigException("Invalid _fixed_secret length");
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+				"There is a 'fixed_secret' parameter found in configuration, all secret codes will be the same, which is not very secret !");
+			}
+			catch (ASelectConfigException eAC) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod,
+						"No or invalid  'fixed_secret' parameter found  in configuration, random secret codes will be generated");
+				_fixed_secret = null;
+			}
+			// RH, 20110913, en
+			
+			
+			
 			sbInfo = new StringBuffer("Successfully started ");
 			sbInfo.append(VERSION).append(".");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
@@ -441,6 +481,9 @@ public class SMSAuthSP extends ASelectHttpServlet
 				// optional language code
 				if (sLanguage != null)
 					sbSignature.append(sLanguage);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Verifying alias data signature:" 
+						+ sAsId + " " +  sbSignature.toString() + " " + sSignature );
+
 				if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), sSignature)) {
 					StringBuffer sbWarning = new StringBuffer("Invalid signature from A-Select Server '");
 					sbWarning.append(sAsId).append("' for user: ").append(sUid);
@@ -466,6 +509,13 @@ public class SMSAuthSP extends ASelectHttpServlet
 				if (bValid)
 					iReturnSend = generateAndSendSms(servletRequest, sUid);
 				if (!bValid || iReturnSend == 1) {  // bad phone number
+					if (  _bShow_challenge &&  htServiceRequest.get("challenge") == null ) {	// we want to show the form and  first time around
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "challenge FORM htServiceRequest=" + htServiceRequest);
+						// Challenge form should inform user about invalid phone number 
+						showChallengeForm(pwOut, null, null, htServiceRequest);
+						return;
+					}
+
 					handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_SMS_INVALID_PHONE, sLanguage);
 					return;
 				}
@@ -781,6 +831,91 @@ public class SMSAuthSP extends ASelectHttpServlet
 		pwOut.println(sAuthenticateForm);
 	}
 
+	
+	/**
+	 * Show an HTML challenge page. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Shows a challenge to ask for phone  number form with, if applicable, an error or warning message.
+	 * 
+	 * @param pwOut
+	 *            the <code>PrintWriter</code> that is the target for displaying the html page.
+	 * @param sError
+	 *            The error that should be shown in the page. Can be null (no errors)
+	 * @param sErrorMessage
+	 *            The error message that should be shown in the page.
+	 * @param htServiceRequest
+	 *            The request parameters.
+	 */
+	private void showChallengeForm(PrintWriter pwOut, String sError, String sErrorMessage, HashMap htServiceRequest)
+	{
+		String sMethod = "showChallengeForm";
+		
+		String sChallengeForm = new String(_sChallengeHtmlTemplate);
+		String sMyUrl = (String) htServiceRequest.get("my_url");
+		String sRid = (String) htServiceRequest.get("rid");
+		String sAsUrl = (String) htServiceRequest.get("as_url");
+		String sUid = (String) htServiceRequest.get("uid");
+		String sAsId = (String) htServiceRequest.get("a-select-server");
+		String sSignature = (String) htServiceRequest.get("signature");
+		String sRetryCounter = (String) htServiceRequest.get("retry_counter");
+		String sCountry = (String) htServiceRequest.get("country");
+		String sLanguage = (String) htServiceRequest.get("language");
+		String sChallenge = (String) htServiceRequest.get("challenge");
+		
+		// RH, 20100907, sn
+		String sFriendlyName = (String) htServiceRequest.get("requestorfriendlyname");
+		if (sFriendlyName != null) {
+			try {
+				sChallengeForm = Utils.replaceString(sChallengeForm, "[requestor_friendly_name]", URLDecoder.decode(sFriendlyName, "UTF-8"));
+			}
+			catch (UnsupportedEncodingException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "UTF-8 dencoding not supported, using undecoded", e);
+				sChallengeForm = Utils.replaceString(sChallengeForm, "[requestor_friendly_name]", sFriendlyName);
+			}
+		}
+		// RH, 20100907, en
+
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "error_code="+sError+" message="+sErrorMessage);
+		sChallengeForm = Utils.replaceString(sChallengeForm, "[rid]", sRid);
+		sChallengeForm = Utils.replaceString(sChallengeForm, "[as_url]", sAsUrl);
+		sChallengeForm = Utils.replaceString(sChallengeForm, "[uid]", sUid);
+		sChallengeForm = Utils.replaceString(sChallengeForm, "[sms_server]", sMyUrl);
+		sChallengeForm = Utils.replaceString(sChallengeForm, "[a-select-server]", sAsId);
+		if (sError != null) {
+			sChallengeForm = Utils.replaceString(sChallengeForm, "[error]", sError);  // obsoleted 20100817
+			sChallengeForm = Utils.replaceString(sChallengeForm, "[error_code]", sError);
+		}
+		sChallengeForm = Utils.replaceString(sChallengeForm, "[country]", (sCountry != null)? sCountry: "");
+		sChallengeForm = Utils.replaceString(sChallengeForm, "[language]", (sLanguage != null)? sLanguage: "");
+
+		// TODO, check for css injection
+		sChallengeForm = Utils.replaceString(sChallengeForm, "[challenge]", (sChallenge != null)? sChallenge: sUid );
+
+		// TODO check handling of all signatures with/without url en-/ decoding
+		// This message presents a get form, so it will url-encode field values, but the signature in our htRequest is already urlencoded
+		// so we decode it here
+		try {
+			sChallengeForm = Utils.replaceString(sChallengeForm, "[signature]", URLDecoder.decode(sSignature, "UTF-8") );
+		}
+		catch (UnsupportedEncodingException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "UTF-8 url-decoding not supported, using undecoded", e);
+			e.printStackTrace();
+		}
+		sChallengeForm = Utils.replaceString(sChallengeForm, "[retry_counter]", sRetryCounter);
+		
+		sChallengeForm = Utils.replaceString(sChallengeForm, "[error_message]", sErrorMessage);
+		//sAuthenticateForm = Utils.replaceConditional(sAuthenticateForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
+		
+		// Bauke 20110721: Extract if_cond=... from the application URL
+		String sSpecials = Utils.getAselectSpecials(htServiceRequest, true/*decode too*/, _systemLogger);
+		sChallengeForm = Utils.handleAllConditionals(sChallengeForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
+
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Show Form");
+		pwOut.println(sChallengeForm);
+	}
+
+	
 	/**
 	 * Handle result.
 	 * 
@@ -868,14 +1003,17 @@ public class SMSAuthSP extends ASelectHttpServlet
 	private int generateAndSendSms(HttpServletRequest servRequest, String sRecipient)
 		throws SmsException
 	{
-		String sSecret = generateSecret();
+//		String sSecret = generateSecret();	// RH, 20110913, o
+		String sSecret = (_fixed_secret == null) ? generateSecret() : _fixed_secret;	// RH, 20110913, n
 		String sText = _sSmsText.replaceAll("0", sSecret);
 		
 		// TODO: add gateway here
 		_systemLogger.log(Level.INFO, MODULE, "generateAndSend", "SMS=" + sText + " Secret=" + sSecret);
-		int result = _oSmsSender.sendSms(sText, _sSmsFrom, sRecipient);
+//		int result = _oSmsSender.sendSms(sText, _sSmsFrom, sRecipient);	// RH, 20110913, o
+		int result =  (_fixed_secret == null) ? _oSmsSender.sendSms(sText, _sSmsFrom, sRecipient) : 0;	// RH, 20110913, n
 		servRequest.getSession().setAttribute("generated_secret", sSecret);
 		return result;
+
 	}
 
 	/**
