@@ -172,7 +172,7 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 			}
 			catch (ASelectConfigException e) {
 				defaultUID = "siam_user";
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'uid' found, using default (used for testing only):" + defaultUID , e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'uid' found, using default (used for testing only):" + defaultUID);
 //				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
