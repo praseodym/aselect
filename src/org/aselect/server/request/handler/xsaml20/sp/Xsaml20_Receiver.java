@@ -13,7 +13,9 @@ package org.aselect.server.request.handler.xsaml20.sp;
 
 import java.security.PublicKey;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -38,6 +40,7 @@ import org.opensaml.saml2.core.AttributeStatement;
 import org.opensaml.saml2.core.AuthnContext;
 import org.opensaml.saml2.core.AuthnContextClassRef;
 import org.opensaml.saml2.core.AuthnStatement;
+import org.opensaml.saml2.core.AuthzDecisionStatement;
 import org.opensaml.saml2.core.Conditions;
 import org.opensaml.saml2.core.Issuer;
 import org.opensaml.saml2.core.Response;
@@ -52,7 +55,6 @@ public class Xsaml20_Receiver extends Saml20_BrowserHandler
 	private final String ACCEPTREQUEST = "Response";
 
 	private String _sMyAppId = null;
-	private String _sResponseID = null;
 
 	HashMap<String, String> _htKnownApplications = new HashMap<String, String>(); // contains the know application id's
 	
@@ -142,31 +144,50 @@ public class Xsaml20_Receiver extends Saml20_BrowserHandler
 	{
 		String sMethod = "handleSpecificSaml20Request " + Thread.currentThread().getId();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "PathInfo="+httpRequest.getPathInfo());
-
+		String sApplicationResource = null;
+		String sPresence = null;
+		
+		// The Assertion signature was checked in the Saml20_BrowserHandler already
 		try {
 			Assertion assertObj = (Assertion)samlMessage;
 			//HandlerTools.marshallAssertion(assertObj, true);  // debugging
 			
-			//Issuer oIssuer = assertObj.getIssuer();
+			// Get the user id
 			Subject oSubject = assertObj.getSubject();
 			String sNameId = oSubject.getNameID().getValue();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "NameID="+sNameId);
+					
+			// Get the desired application
+			List<AuthzDecisionStatement> lAuthzDec = assertObj.getAuthzDecisionStatements();
+			if (lAuthzDec != null && lAuthzDec.size()>0) {
+				AuthzDecisionStatement authzDec = lAuthzDec.get(0);
+				if (authzDec != null)
+					sApplicationResource = authzDec.getResource();
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Resource="+sApplicationResource+" known="+_htKnownApplications);
+			
+			// And check it against the known applications
+			if (sApplicationResource == null && _htKnownApplications.size() == 1) {
+				Set<String> setAppl = _htKnownApplications.keySet();
+				Iterator itr = setAppl.iterator();
+				sPresence = sApplicationResource = (String)itr.next();  // entry is present, use key value
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Default Found="+sApplicationResource);
+			}
+			else {
+				sPresence = _htKnownApplications.get(sApplicationResource);  // if found, result is an empty string
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Present Found="+sApplicationResource);
+			}
+			if (sPresence == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unknown application: " + sApplicationResource);
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "NameID="+sNameId+" Application="+sApplicationResource);
 			
 			AuthnStatement oAuthn = assertObj.getAuthnStatements().get(0);
 			AuthnContext oContext = oAuthn.getAuthnContext();
 			AuthnContextClassRef oClassRef = oContext.getAuthnContextClassRef();
 			String sClassRef = oClassRef.getAuthnContextClassRef();
 			String sSecLevel = SecurityLevel.convertAuthnContextClassRefURIToLevel(sClassRef, _systemLogger);
-			String sDNSName = oAuthn.getSubjectLocality().getDNSName();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "ClassRef="+sClassRef+" level="+sSecLevel);
-			
-			// The Assertion signature was checked in the Saml20_BrowserHandler already
-			// _sResponseID holds the requested application, check it against the known applications
-			String sFound = _htKnownApplications.get(_sResponseID);
-			if (sFound == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unknow application: " + _sResponseID);
-				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-			}
 			
 			Conditions oCond = assertObj.getConditions();
 			DateTime oDateTime = oCond.getNotOnOrAfter();
@@ -180,6 +201,7 @@ public class Xsaml20_Receiver extends Saml20_BrowserHandler
 			HashMap htAttributes = new HashMap();
 			htAttributes.put("uid", sNameId);
 			htAttributes.put("sel_level", sSecLevel);
+			htAttributes.put("authsp_type", "saml_token");
 			AttributeStatement attrStatement = assertObj.getAttributeStatements().get(0);
 			List<Attribute> lAttr = attrStatement.getAttributes();
 			for (int i=0; i<lAttr.size(); i++) {
@@ -194,8 +216,8 @@ public class Xsaml20_Receiver extends Saml20_BrowserHandler
 			String sTgt = createContextAndIssueTGT(httpResponse, null, _sMyServerId, _sASelectOrganization, _sMyAppId, null, htAttributes);
 
 			// and redirect the user to the destination url
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT to "+_sResponseID);
-			httpResponse.sendRedirect(_sResponseID);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT to "+sApplicationResource);
+			httpResponse.sendRedirect(sApplicationResource);
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -224,13 +246,11 @@ public class Xsaml20_Receiver extends Saml20_BrowserHandler
 		
 		// Extract the "Assertion" from the message
 		Response response = (Response)samlMessage;
-		response.getDestination();
-		_sResponseID = response.getID();
 		Assertion assertObj = response.getAssertions().get(0);  // pointer in samlMessage
 		//HandlerTools.marshallAssertion(assertObj, true);  // debugging
 		
 		set_SamlIssuer(assertObj.getIssuer());
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Response ID="+_sResponseID+" issuer="+get_SamlIssuer().getValue()); 
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Issuer="+get_SamlIssuer().getValue()); 
 		return (SignableSAMLObject) assertObj;
 	}
 

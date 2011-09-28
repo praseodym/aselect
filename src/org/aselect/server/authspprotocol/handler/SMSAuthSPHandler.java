@@ -23,6 +23,7 @@ import org.aselect.server.session.SessionManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAuthSPException;
 import org.aselect.system.exception.ASelectConfigException;
+import org.aselect.system.utils.Utils;
 
 /**
  * The SMS AuthSP Handler. <br>
@@ -198,7 +199,7 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 
 			String sUserId = (String) htAllowedAuthsps.get(_sAuthsp);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Allowed=" + htAllowedAuthsps + " sUserId=" + sUserId);
-			if ("".equals(sUserId)) {
+			if (Utils.hasValue(sUserId)) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing SMS user attributes.");
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
