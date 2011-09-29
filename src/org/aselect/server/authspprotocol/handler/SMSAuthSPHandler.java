@@ -199,7 +199,7 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 
 			String sUserId = (String) htAllowedAuthsps.get(_sAuthsp);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Allowed=" + htAllowedAuthsps + " sUserId=" + sUserId);
-			if (Utils.hasValue(sUserId)) {
+			if (!Utils.hasValue(sUserId)) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing SMS user attributes.");
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
