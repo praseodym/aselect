@@ -580,6 +580,46 @@ public class AuthSPHandlerManager
 		return sUrl;
 	}
 
+	
+	
+	
+	/**
+	 * @param sAuthSPId
+	 * @param app_id
+	 * @return	retrieved next_authsp or null if not found
+	 */
+	public String getNextAuthSP(String sAuthSPId, String app_id)
+	{
+		String sMethod = "getNextAuthSP()";
+
+		String next_authsp = null;
+
+		try {
+			String strRG = getResourceGroup(sAuthSPId);
+			SAMResource mySAMResource = ASelectSAMAgent.getHandle().getActiveResource(strRG);
+			Object objAuthSPResource = mySAMResource.getAttributes();
+			Object objAuthSPResourceAppls = _oASelectConfigManager.getSection(objAuthSPResource, "applications");
+			Object objAppl = _oASelectConfigManager.getSection(objAuthSPResourceAppls, "application", "id=" + app_id);
+			next_authsp =  _oASelectConfigManager.getParam(objAppl, "next_authsp");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Found next_authsp: "+ next_authsp + " defined for app_id: "+app_id);
+		} catch (ASelectConfigException ace) {
+			next_authsp = null;
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "No next_authsp defined for app_id: "+app_id + ", continuing");
+		} catch (ASelectSAMException ase) {
+			next_authsp = null;
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "No next_authsp defined for app_id: "+app_id+ ", continuing");
+		}
+		catch (ASelectException e) {
+			next_authsp = null;
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "No ResourceGroup defined for authsp: "+sAuthSPId+ ", continuing if possible");
+		}
+		return next_authsp;
+	}
+
+	
+	
+	
+	
 	/**
 	 * Returns the handler which is able to handle direct_login requests <br>
 	 * <br>

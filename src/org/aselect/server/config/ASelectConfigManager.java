@@ -1120,6 +1120,11 @@ public class ASelectConfigManager extends ConfigManager
 		if (sForm.equals("loggedout"))
 			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
 
+		// Start sequential authsp's
+		if (sForm.equals("nextauthsp"))
+			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
+		// End sequential authsp's
+
 		return "Form '" + sForm + "' not found.";
 	}
 

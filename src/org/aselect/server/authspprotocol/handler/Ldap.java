@@ -93,6 +93,8 @@ import org.aselect.server.log.ASelectAuthenticationLogger;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.session.SessionManager;
 import org.aselect.server.tgt.TGTIssuer;
+import org.aselect.server.udb.IUDBConnector;
+import org.aselect.server.udb.UDBConnectorFactory;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAuthSPException;
 import org.aselect.system.exception.ASelectCommunicationException;
@@ -634,6 +636,9 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 		throws ASelectException
 	{
 		// show direct login form
+		String sMethod = "handleDirectLogin1";
+		
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "htServiceRequest: '"+htServiceRequest);
 		try {
 			showDirectLoginForm(htServiceRequest, pwOut, sServerId);
 		}
@@ -710,6 +715,9 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			String sAuthSPUrl = _authSPHandlerManager.getUrl(sAuthSPId);
 			Integer intAuthSPLevel = _authSPHandlerManager.getLevel(sAuthSPId);
 			String sResponse = null;
+			// RH, 20110912, moved authSPsection decl. up for reuse later
+			Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp", "id="+sAuthSPId);
+
 			try {
 				StringBuffer sbRequest = new StringBuffer(sAuthSPUrl);
 				sbRequest.append("?request=authenticate");
@@ -721,7 +729,8 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 							
 				// 20110721, Bauke: communicate with the AuthSP using the POST mechanism
 				String sPostIt = null;
-				Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp", "id="+sAuthSPId);
+				// RH, 20110912, moved authSPsection decl. for reuse later
+//				Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp", "id="+sAuthSPId);
 				if (authSPsection != null)
 					sPostIt = ASelectConfigManager.getSimpleParam(authSPsection, "post_it", false);  // not mandatory
 				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Section id="+sAuthSPId+" post_it: " + sPostIt);
@@ -802,17 +811,61 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			}
 			else if (sResponseCode.equals(ERROR_LDAP_OK)) // authentication succeeded
 			{
-				_authenticationLogger.log(new Object[] {
-					MODULE, sUid, (String) htSessionContext.get("client_ip"), sOrg,
-					(String) htSessionContext.get("app_id"), "granted"
-				});
 				
 				htSessionContext.put("user_id", sUid);
+
+				// Start sequential authsp's
+				String app_id = (String)htSessionContext.get("app_id");
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "SessionContext: '"+_sessionManager.getSessionContext(sRid));
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "htServiceRequest: '"+htServiceRequest);
+				
+				String next_authsp = _authSPHandlerManager.getNextAuthSP(sAuthSPId, app_id);;
+				
+				if (next_authsp != null) {
+					htSessionContext.remove("direct_authsp");	// No other direct_authsp's yet
+					
+					htSessionContext.put("forced_authsp", next_authsp);
+					
+					// Set allowed_user_authsps in the event of direct_authsp, 
+					// would 'normally' be set by  ApplicationBrowserHandler.handleLogin2(.....).getAuthsps(....)
+					
+					HashMap htUserAuthsps = getUserAuthSPs(sUid);
+					
+					htSessionContext.put("allowed_user_authsps", htUserAuthsps);
+					_sessionManager.updateSession(sRid, htSessionContext); // store too (545)
+					
+					
+					if (servletResponse != null) {
+						String sSelectForm = _configManager.getForm("nextauthsp", _sUserLanguage, _sUserCountry);
+						sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
+						sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]",  (String) htServiceRequest.get("a-select-server"));
+						sSelectForm = Utils.replaceString(sSelectForm, "[user_id]", sUid);
+						sSelectForm = Utils.replaceString(sSelectForm, "[authsp]", next_authsp);
+						sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", (String) htServiceRequest.get("my_url"));
+						sSelectForm = Utils.replaceString(sSelectForm, "[request]", "login3");
+						String sLanguage = (String) htServiceRequest.get("language");  // 20101027 _
+						String sCountry = (String) htServiceRequest.get("country");  // 20101027 _
+						sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
+						sSelectForm = Utils.replaceString(sSelectForm, "[country]", sCountry);
+						pwOut.println(sSelectForm);
+						// Direct user to next_authsp with form
+						return true;
+					}	else 	return false;	// No browser attached
+					
+				}
+				// End sequential authsp's
+
+				
+				_authenticationLogger.log(new Object[] {
+						MODULE, sUid, (String) htSessionContext.get("client_ip"), sOrg,
+						(String) htSessionContext.get("app_id"), "granted"
+					});
+				
 				htSessionContext.put("authsp_level", intAuthSPLevel.toString());
 				htSessionContext.put("sel_level", intAuthSPLevel.toString());  // equal to authsp_level in this case
 				htSessionContext.put("authsp_type", "ldap");
 				_sessionManager.updateSession(sRid, htSessionContext); // store too (545)
-
+				
 				// Only set ticket if the user's browser is listening
 				if (servletResponse != null) {
 					TGTIssuer tgtIssuer = new TGTIssuer(sServerId);
@@ -871,6 +924,47 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 	}
+
+	/**
+	 * @param sMethod
+	 * @param sUid
+	 * @return
+	 * @throws ASelectException
+	 */
+	private HashMap getUserAuthSPs(String sUid)
+		throws ASelectException
+	{
+		String sMethod = "getUserAuthSPs";
+
+		
+		HashMap htUserAuthsps = new HashMap();
+		IUDBConnector oUDBConnector = null;
+
+		try {
+			oUDBConnector = UDBConnectorFactory.getUDBConnector();
+		}
+		catch (ASelectException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to connect with UDB.", e);
+			throw e;
+		}
+
+		// Get user's attributes from the UDB
+		HashMap htUserProfile = oUDBConnector.getUserProfile(sUid);
+		if (!((String) htUserProfile.get("result_code")).equals(Errors.ERROR_ASELECT_SUCCESS)) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to get user profile.");
+			throw new ASelectException((String) htUserProfile.get("result_code"));
+		}
+		htUserAuthsps = (HashMap) htUserProfile.get("user_authsps");
+		if (htUserAuthsps == null) {
+			// should never happen
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "INTERNAL ERROR");
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "uid=" + sUid + " profile=" + htUserProfile
+				+ " user_authsps=" + htUserAuthsps);
+		return htUserAuthsps;
+	}
+
 
 	/**
 	 * Prints the direct Login form. <br>

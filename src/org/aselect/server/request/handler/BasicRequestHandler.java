@@ -152,6 +152,13 @@ public abstract class BasicRequestHandler
 		// 20090305, Bauke: The <application> itself can also set forced_uid / forced_authsp if so configured
 		if (sAuthsp == null) {
 			sAuthsp = aApp.getForcedAuthsp();
+//			// RH, 20110920, sn,  for sequential authsps introduced new parameter for backward compatibility
+//			// sequential authsps not implemented (yet) for "normal" authsp, only for direct_authsp
+//			if (sAuthsp == null && aApp.getFirstAuthsp() != null ) {
+//				_systemLogger.log(Level.INFO, MODULE, sMethod, "found first_authsp="+aApp.getFirstAuthsp()+" ,setting authsp to:"+aApp.getFirstAuthsp());
+//				sAuthsp = aApp.getFirstAuthsp();
+//			}			
+//			// RH, 20110920, en
 		}
 		if (sUid == null) {
 			sUid = aApp.getForcedUid();
@@ -219,7 +226,7 @@ public abstract class BasicRequestHandler
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "appLevel="+intAppLevel+" maxAppLevel="+intMaxAppLevel);
 		Vector vAuthSPs = _authSPManagerManager.getConfiguredAuthSPs(intAppLevel, intMaxAppLevel);
-
+		
 		// Authentication OK
 		// Single direct_authsp left?
 		if (vAuthSPs.size() == 1 && _authSPManagerManager.isDirectAuthSP((String)vAuthSPs.get(0))) {
@@ -227,6 +234,21 @@ public abstract class BasicRequestHandler
 			sbAsUrl.append("?request=direct_login1");
 			htSessionContext.put("direct_authsp", vAuthSPs.get(0));
 		}
+		// RH, 20110920, sn, for sequential authsps introduced new parameter for backward compatibility
+		else if  (aApp.getFirstAuthsp() != null && _authSPManagerManager.isDirectAuthSP(aApp.getFirstAuthsp() ) ) {
+			// If there is a first_authsp there must be a next_authsp defined for this app
+			// to ensure no tgt will be set until next_authsp has been handled
+			if (_authSPManagerManager.getNextAuthSP(aApp.getFirstAuthsp(), aApp.getId()) != null) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "found first_authsp="+aApp.getFirstAuthsp()+" , setting direct_authsp to:"+aApp.getFirstAuthsp());
+				// A-Select will show username and password box in one page.
+				sbAsUrl.append("?request=direct_login1");
+				htSessionContext.put("direct_authsp", aApp.getFirstAuthsp());
+			}	else	{
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Found first_authsp="+aApp.getFirstAuthsp()+" , but no next_authsp defined for app: "+aApp.getId());
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+		}
+		// RH, 20110920, en
 		else {  // multiple authsps
 			sbAsUrl.append("?request=login1");
 		}

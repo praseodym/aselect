@@ -89,7 +89,9 @@ import org.aselect.server.request.HandlerTools;
 import org.aselect.server.sam.ASelectSAMAgent;
 import org.aselect.server.tgt.TGTIssuer;
 import org.aselect.system.error.Errors;
+import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.AuthenticationLogger;
 import org.aselect.system.sam.agent.SAMResource;
 import org.aselect.system.utils.Tools;
@@ -323,6 +325,55 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			// 20091118, Bauke: new functionality: copy attributes from AuthSP
 			Utils.copyHashmapValue("attributes", htAdditional, htResponse);
 
+			
+			// RH, 201109, sn
+			// For non-direct_authsp sequential authsp implementation insert code here to handle any "next" authsps
+			// get these from (optional) parameter in authsp resource section "applications.....next_authsp"
+			// e.g.	String next_authsp = _authSPHandlerManager.getNextAuthSP(sAuthSPId, app_id);;
+			
+			String app_id = (String) htSessionContext.get("app_id");
+			String next_authsp = null;
+			try {
+				// get authsps config and retrieve active resource from SAMAgent
+				String sResourceGroup = _configManager.getParam(authSPsection, "resourcegroup");
+				SAMResource mySAMResource = ASelectSAMAgent.getHandle().getActiveResource(sResourceGroup);
+				Object objAuthSPResource = mySAMResource.getAttributes();
+				Object objAuthSPResourceAppls = _configManager.getSection(objAuthSPResource, "applications");
+				Object objAppl = _configManager.getSection(objAuthSPResourceAppls, "application", "id=" + app_id);
+				next_authsp =  _configManager.getParam(objAppl, "next_authsp");
+			} catch (ASelectConfigException ace) {
+				next_authsp = null;
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "No next_authsp defined for app_id: "+app_id + ", continuing");
+			} catch (ASelectSAMException ase) {
+				next_authsp = null;
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "No next_authsp defined for app_id: "+app_id+ ", continuing");
+			}
+			catch (ASelectException e) {
+				next_authsp = null;
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "No ResourceGroup defined for authsp: "+sAsp+ ", continuing if possible");
+			}
+
+			// If there is a next_authsp, "present" form to user (auto post) and do not set tgt 
+			if (next_authsp != null ) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Found next_authsp: "+ next_authsp + " defined for app_id: "+app_id);
+				if (servletResponse != null) {					// Direct user to next_authsp with form
+					String sSelectForm = _configManager.getForm("nextauthsp", _sUserLanguage, _sUserCountry);
+					sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
+					sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]",  (String) htServiceRequest.get("a-select-server"));
+					sSelectForm = Utils.replaceString(sSelectForm, "[user_id]", sUid);
+					sSelectForm = Utils.replaceString(sSelectForm, "[authsp]", next_authsp);
+					sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", (String) htServiceRequest.get("my_url"));
+					sSelectForm = Utils.replaceString(sSelectForm, "[request]", "login3");
+					String sLanguage = (String) htServiceRequest.get("language");
+					sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
+					String sCountry = (String) htServiceRequest.get("country");
+					sSelectForm = Utils.replaceString(sSelectForm, "[country]", sCountry);
+					servletResponse.getWriter().println(sSelectForm);
+				}
+				return;
+			}
+			// RH, 201109, en
+			
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
 			String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
 			String sCred = (String) htServiceRequest.get("aselect_credentials");

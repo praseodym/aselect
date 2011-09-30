@@ -93,6 +93,7 @@ public class Application
 	private String _AuthnContextDeclValue;	// RH, 20101217, n
 	private String _AuthnContextDeclType;	// RH, 20101217, n
 
+	private String _first_authsp = null;	// RH, 20110920, n
 
 
 	/**
@@ -618,5 +619,21 @@ public class Application
 	public synchronized void setAuthnContextDeclType(String authnContextDeclType)
 	{
 		_AuthnContextDeclType = authnContextDeclType;
+	}
+
+	/**
+	 * @return the _first_autsp
+	 */
+	public synchronized String getFirstAuthsp()
+	{
+		return _first_authsp;
+	}
+
+	/**
+	 * @param firstAuthsp the _first_autsp to set
+	 */
+	public synchronized void setFirstAuthsp(String firstAuthsp)
+	{
+		_first_authsp = firstAuthsp;
 	}
 }

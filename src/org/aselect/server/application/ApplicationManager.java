@@ -249,8 +249,7 @@ public class ApplicationManager
 			}
 			catch (ASelectConfigException eAC) {
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No 'require_signing' parameter found in section 'applications', using default value 'false'",
-						eAC);
+						"No 'require_signing' parameter found in section 'applications', using default value 'false'");
 			}
 
 			// RH, 20100909, so
@@ -340,6 +339,11 @@ public class ApplicationManager
 				}
 				// RH, 20101217, en
 
+				// RH, 20110920, sn
+				String sFirstAuthsp = ASelectConfigManager.getSimpleParam(oApplication, "first_authsp", false);
+				// RH, 20110920, en
+				
+				
 				// Bauke 20101125: For DigiD4Bedrijven:
 				String sUseSsn = ASelectConfigManager.getSimpleParam(oApplication, "use_ssn", false);
 				application.setUseSsn(sUseSsn);
@@ -393,7 +397,9 @@ public class ApplicationManager
 
 				application.setAuthnContextDeclValue(sAuthnContextDeclValue); // RH, 20101217, n
 				application.setAuthnContextDeclType(sAuthnContextDeclType); // RH, 20101217, n
-				
+
+				application.setFirstAuthsp(sFirstAuthsp);// RH, 20110920, n
+
 				_htApplications.put(sAppId, application);
 				oApplication = _oASelectConfigManager.getNextSection(oApplication);
 			}
