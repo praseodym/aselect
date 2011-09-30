@@ -169,7 +169,7 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 			HashMap htResult = SessionSyncRequestSender.getSessionSyncParameters(_oSystemLogger);
 			updateInterval = (Long) htResult.get("update_interval");
 			if (updateInterval == null) {
-				_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "No 'update_interval' available");
+				_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "No 'update_interval' available");
 				updateInterval = -1L;
 			}
 		}

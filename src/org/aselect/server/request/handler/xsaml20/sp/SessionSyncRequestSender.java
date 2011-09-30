@@ -13,18 +13,21 @@ package org.aselect.server.request.handler.xsaml20.sp;
 
 import java.io.StringReader;
 import java.security.PublicKey;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Level;
 
-import javax.xml.parsers.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
 import org.aselect.server.config.ASelectConfigManager;
+import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.server.request.handler.xsaml20.SoapManager;
 import org.aselect.server.tgt.TGTManager;
-import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
@@ -55,7 +58,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
-// TODO: Auto-generated Javadoc
 // Can only be used by an SP
 public class SessionSyncRequestSender
 {

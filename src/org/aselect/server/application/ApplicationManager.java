@@ -331,6 +331,11 @@ public class ApplicationManager
 				_htAdditionalAttributes = ASelectConfigManager.getTableFromConfig(oApplication, _htAdditionalAttributes,
 						"additional_attributes", "attribute", "name",/*->*/"value", false/* mandatory */, false/* unique values */);
 
+				// 20110928, Bauke
+				HashMap<String, String> _htValidResources = new HashMap<String, String>();
+				_htValidResources = ASelectConfigManager.getTableFromConfig(oApplication, _htValidResources, 
+						"resources", "resource", "id", null, false/* mandatory */, false/* unique values */);
+
 				// RH, 20101217, sn
 				String sAuthnContextDeclValue = ASelectConfigManager.getSimpleParam(oApplication, "authn_context_decl",  false);
 				String sAuthnContextDeclType = ASelectConfigManager.getParamFromSection(oApplication, "authn_context_decl", "type", sAuthnContextDeclValue == null ? false : true);
@@ -394,6 +399,7 @@ public class ApplicationManager
 				application.setAddedPatching(sAddedPatching);// RH, 20101206, n
 				application.setSecLevels(_htLevels); // RH, 20101214, n
 				application.setAdditionalAttributes(_htAdditionalAttributes); // Bauke, 20101229
+				application.set_ValidResources(_htValidResources);
 
 				application.setAuthnContextDeclValue(sAuthnContextDeclValue); // RH, 20101217, n
 				application.setAuthnContextDeclType(sAuthnContextDeclType); // RH, 20101217, n

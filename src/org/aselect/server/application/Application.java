@@ -90,6 +90,9 @@ public class Application
 	// Fixed attributes for a SAML token
 	private HashMap<String, String> _htAdditionalAttributes = null;	// Bauke, 20101229, n
 
+	// Allowed applications used by the saml20_receiver
+	private HashMap<String, String> _htValidApplications = null;	// Bauke, 20110928
+
 	private String _AuthnContextDeclValue;	// RH, 20101217, n
 	private String _AuthnContextDeclType;	// RH, 20101217, n
 
@@ -587,6 +590,14 @@ public class Application
 	public synchronized void setAdditionalAttributes(HashMap<String, String> htAdditionalAttributes)
 	{
 		_htAdditionalAttributes = htAdditionalAttributes;
+	}
+
+	public HashMap<String, String> getValidResources() {
+		return _htValidApplications;
+	}
+
+	public void set_ValidResources(HashMap<String, String> htValidApplications) {
+		_htValidApplications = htValidApplications;
 	}
 
 	/**

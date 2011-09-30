@@ -1096,6 +1096,8 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		htTGTContext.put("authsp_level", sSecLevel);
 		htTGTContext.put("sel_level", sSecLevel);
 		htTGTContext.put("authsp", "SAML");
+		Utils.copyHashmapValue("authsp", htTGTContext, htAttributes);  // overwrite
+		Utils.copyHashmapValue("authsp_type", htTGTContext, htAttributes);
 		htTGTContext.put("app_id", sAppId);
 		htTGTContext.put("app_level", "2");
 		HashMap htSession = null;

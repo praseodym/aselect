@@ -22,14 +22,13 @@ import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.server.application.Application;
 import org.aselect.server.application.ApplicationManager;
-import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.xsaml20.Saml20_BrowserHandler;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.server.request.handler.xsaml20.SecurityLevel;
 import org.aselect.system.error.Errors;
-import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.Audit;
 import org.joda.time.DateTime;
@@ -54,9 +53,9 @@ public class Xsaml20_Receiver extends Saml20_BrowserHandler
 	private final static String MODULE = "Xsaml20_Receiver";
 	private final String ACCEPTREQUEST = "Response";
 
-	private String _sMyAppId = null;
+	//private String _sMyAppId = null;
 
-	HashMap<String, String> _htKnownApplications = new HashMap<String, String>(); // contains the know application id's
+	//HashMap<String, String> _htKnownApplications = new HashMap<String, String>(); // contains the know application id's
 	
 	/**
 	 * Initializes the request handler
@@ -84,14 +83,14 @@ public class Xsaml20_Receiver extends Saml20_BrowserHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 		
-		try {
-			_sMyAppId = _configManager.getParam(oHandlerConfig, "app_id");
-		}
-		catch (ASelectConfigException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'app_id' found", e);
-		}
-		_htKnownApplications = ASelectConfigManager.getTableFromConfig(oHandlerConfig, _htKnownApplications, 
-				"applications", "application", "id", null, true/* mandatory */, false/* unique values */);
+		//try {
+		//	_sMyAppId = _configManager.getParam(oHandlerConfig, "app_id");
+		//}
+		//catch (ASelectConfigException e) {
+		//	_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'app_id' found", e);
+		//}
+		//_htKnownApplications = ASelectConfigManager.getTableFromConfig(oHandlerConfig, _htKnownApplications, 
+		//		"applications", "application", "id", null, true/* mandatory */, false/* unique values */);
 	}
 
 	/**
@@ -113,7 +112,6 @@ public class Xsaml20_Receiver extends Saml20_BrowserHandler
 		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request received === Path=" + sPathInfo+
 				" Locale="+request.getLocale().getLanguage()+" Method="+request.getMethod());
 
-		// 20100331, Bauke: added HTTP POST support
 		if (request.getParameter("SAMLRequest") != null || "POST".equals(request.getMethod())) {
 			handleSAMLMessage(request, response);
 		}
@@ -150,12 +148,12 @@ public class Xsaml20_Receiver extends Saml20_BrowserHandler
 		// The Assertion signature was checked in the Saml20_BrowserHandler already
 		try {
 			Assertion assertObj = (Assertion)samlMessage;
-			//HandlerTools.marshallAssertion(assertObj, true);  // debugging
+			//HandlerTools.marshallAssertion(assertObj, true);  // for debugging
 			
 			// Get the user id
 			Subject oSubject = assertObj.getSubject();
 			String sNameId = oSubject.getNameID().getValue();
-					
+
 			// Get the desired application
 			List<AuthzDecisionStatement> lAuthzDec = assertObj.getAuthzDecisionStatements();
 			if (lAuthzDec != null && lAuthzDec.size()>0) {
@@ -163,24 +161,27 @@ public class Xsaml20_Receiver extends Saml20_BrowserHandler
 				if (authzDec != null)
 					sApplicationResource = authzDec.getResource();
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Resource="+sApplicationResource+" known="+_htKnownApplications);
-			
+
+			Application appData = ApplicationManager.getHandle().getApplication(get_SamlIssuer().getValue());
+			HashMap<String,String> htValidResources = appData.getValidResources();
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Resource="+sApplicationResource+" valid="+htValidResources);
+
 			// And check it against the known applications
-			if (sApplicationResource == null && _htKnownApplications.size() == 1) {
-				Set<String> setAppl = _htKnownApplications.keySet();
+			if (sApplicationResource == null && htValidResources.size() == 1) {
+				Set<String> setAppl = htValidResources.keySet();
 				Iterator itr = setAppl.iterator();
 				sPresence = sApplicationResource = (String)itr.next();  // entry is present, use key value
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Default Found="+sApplicationResource);
 			}
 			else {
-				sPresence = _htKnownApplications.get(sApplicationResource);  // if found, result is an empty string
+				sPresence = (String) htValidResources.get(sApplicationResource);  // if found, result is an empty string
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Present Found="+sApplicationResource);
 			}
 			if (sPresence == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unknown application: " + sApplicationResource);
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "NameID="+sNameId+" Application="+sApplicationResource);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "NameID="+sNameId+" Resource="+sApplicationResource);
 			
 			AuthnStatement oAuthn = assertObj.getAuthnStatements().get(0);
 			AuthnContext oContext = oAuthn.getAuthnContext();
@@ -201,7 +202,8 @@ public class Xsaml20_Receiver extends Saml20_BrowserHandler
 			HashMap htAttributes = new HashMap();
 			htAttributes.put("uid", sNameId);
 			htAttributes.put("sel_level", sSecLevel);
-			htAttributes.put("authsp_type", "saml_token");
+			htAttributes.put("authsp_type", "saml");
+			htAttributes.put("friendly_name", appData.getFriendlyName());
 			AttributeStatement attrStatement = assertObj.getAttributeStatements().get(0);
 			List<Attribute> lAttr = attrStatement.getAttributes();
 			for (int i=0; i<lAttr.size(); i++) {
@@ -213,7 +215,8 @@ public class Xsaml20_Receiver extends Saml20_BrowserHandler
 			}
 			
 			// Create a ticket with attributes and set a cookie
-			String sTgt = createContextAndIssueTGT(httpResponse, null, _sMyServerId, _sASelectOrganization, _sMyAppId, null, htAttributes);
+			String sTgt = createContextAndIssueTGT(httpResponse, null, _sMyServerId, _sASelectOrganization,
+									get_SamlIssuer().getValue(), null, htAttributes);
 
 			// and redirect the user to the destination url
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT to "+sApplicationResource);
@@ -247,7 +250,7 @@ public class Xsaml20_Receiver extends Saml20_BrowserHandler
 		// Extract the "Assertion" from the message
 		Response response = (Response)samlMessage;
 		Assertion assertObj = response.getAssertions().get(0);  // pointer in samlMessage
-		//HandlerTools.marshallAssertion(assertObj, true);  // debugging
+		//HandlerTools.marshallAssertion(assertObj, true);  // for debugging
 		
 		set_SamlIssuer(assertObj.getIssuer());
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Issuer="+get_SamlIssuer().getValue()); 
