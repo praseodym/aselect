@@ -149,6 +149,8 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 	protected String _sUserLanguage = "";
 	protected String _sUserCountry = "";
 
+	protected String _sCorrectionFacility = null, _sCookiePrefix = "", _sCookieDomain = null;
+
 	/**
 	 * Construct an instance. <br>
 	 * <br>
@@ -413,5 +415,67 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 	public synchronized HttpServletRequest get_servletRequest()
 	{
 		return _servletRequest;
+	}
+
+	/**
+	 * Gets the authsp parameters from the config file.
+	 * 
+	 * @param sAuthSp -	the authsp id that identifies the <authsp> section
+	 * @return - the authsp section object
+	 * @throws ASelectException
+	 */
+	protected Object getAuthspParametersFromConfig(String sAuthSp)
+	throws ASelectException
+	{
+		String sMethod = "getAuthspParametersFromConfig";
+		Object authSPsection = null;
+		try {
+			authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp", "id="+sAuthSp);
+		}
+		catch (ASelectException eA) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid \"authsp\" received: " + sAuthSp, eA);
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST, eA);
+		}
+		
+		_sCorrectionFacility = Utils.getSimpleParam(_configManager, _systemLogger, authSPsection, "correction_facility", false);
+		_sCookiePrefix = Utils.getSimpleParam(_configManager, _systemLogger, authSPsection, "cookie_prefix", false);
+		_sCookieDomain = Utils.getSimpleParam(_configManager, _systemLogger, authSPsection, "cookie_domain", false);
+		if (!Utils.hasValue(_sCookieDomain)) {
+			_sCookieDomain = _configManager.getCookieDomain();
+		}
+		return authSPsection;
+	}
+
+	/**
+	 * Handle invalid phone.
+	 * 
+	 * @param servletResponse - the servlet response
+	 * @param sCorrectionFacility - the correction facility URL
+	 * @param sCookiePrefix - the cookie prefix
+	 * @param sCookieDomain - the cookie domain
+	 * @param sResultCode -  the result code
+	 * @param sRid - the rid
+	 * @param htSessionContext -  session context
+	 * @throws ASelectException
+	 * @throws IOException
+	 */
+	public void handleInvalidPhone(HttpServletResponse servletResponse, String sRid, HashMap htSessionContext)
+	throws ASelectException, IOException
+	{
+		String sMethod = "handleInvalidPhone";
+		
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "INVALID_PHONE from authsp");	
+		// Redirect or exception
+		if (!Utils.hasValue(_sCorrectionFacility))
+			throw new ASelectException(Errors.ERROR_ASELECT_AUTHSP_INVALID_PHONE);
+		
+		_sessionManager.killSession(sRid);
+
+		// User can possibly correct his phone number and retry
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT to (correction_facility): " + _sCorrectionFacility);
+		String sAppUrl = (String) htSessionContext.get("app_url");
+		HandlerTools.putCookieValue(servletResponse, _sCookiePrefix+"ApplicationUrl", sAppUrl,
+									_sCookieDomain, "/",  600/*seconds*/, _systemLogger);
+		servletResponse.sendRedirect(_sCorrectionFacility);
 	}
 }

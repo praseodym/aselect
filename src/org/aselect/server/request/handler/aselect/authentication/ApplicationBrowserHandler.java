@@ -1403,8 +1403,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			// We now have the list of authsps that the user may use. Show the selectform
 			HashMap htAuthsps = (HashMap) _htSessionContext.get("allowed_user_authsps");
-			// should the user be bothered with the selection form
-			// if it is only able to choose from 1 method?
+			// Should the user be bothered with the selection form
+			// if only one method is available?
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "User=" + sUid + " Authsps=" + htAuthsps);
 			if (htAuthsps.size() == 1) {
 				try {
@@ -1529,10 +1529,24 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request, missing parmeter 'authsp'");
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
-			sRedirectUrl = startAuthentication(sRid, htServiceRequest);
+			Object authSPsection = getAuthspParametersFromConfig(sAuthsp);
+			
+			// 20111013, Bauke: added absent phonenumber handling
+			HashMap htResponse = startAuthentication(sRid, htServiceRequest);
+			String sResultCode = (String) htResponse.get("result");
+			
+			// NO: don't handle here but in AuthSP
+			//if (sResultCode.equals(Errors.ERROR_ASELECT_AUTHSP_INVALID_PHONE)) {
+			//	handleInvalidPhone(servletResponse, sRid, _htSessionContext);
+			//	return;
+			//}
+			if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to create redirect url, result="+sResultCode);
+				throw new ASelectException(sResultCode);
+			}
 
+			sRedirectUrl = (String) htResponse.get("redirect_url");
 			try {
-				Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp", "id=" + sAuthsp);
 				try {
 					sPopup = _configManager.getParam(authSPsection, "popup");
 				}
@@ -2231,13 +2245,12 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// Get user's attributes from the UDB
 			HashMap htUserProfile = oUDBConnector.getUserProfile(sUid);
 			if (!((String) htUserProfile.get("result_code")).equals(Errors.ERROR_ASELECT_SUCCESS)) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to get user profile.");
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to get user profile, result="+(String)htUserProfile.get("result_code"));
 				throw new ASelectException((String) htUserProfile.get("result_code"));
 			}
 			htUserAuthsps = (HashMap) htUserProfile.get("user_authsps");
-			if (htUserAuthsps == null) {
-				// should never happen
-				_systemLogger.log(Level.SEVERE, _sModule, sMethod, "INTERNAL ERROR");
+			if (htUserAuthsps == null) {  // should never happen
+				_systemLogger.log(Level.SEVERE, _sModule, sMethod, "INTERNAL ERROR no \"user_authsps\" found");
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "uid=" + sUid + " profile=" + htUserProfile
@@ -2306,18 +2319,14 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *            The request parameters.
 	 * @return The error code.
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
-	private String startAuthentication(String sRid, HashMap htLoginRequest)
-		throws ASelectException
+	private HashMap startAuthentication(String sRid, HashMap htLoginRequest)
+	throws ASelectException
 	{
 		String sMethod = "startAuthentication";
-		HashMap htAllowedAuthsps;
-		String sAuthsp = null;
-
-		sAuthsp = (String) htLoginRequest.get("authsp");
-
-		htAllowedAuthsps = (HashMap) _htSessionContext.get("allowed_user_authsps");
+		
+		String sAuthsp = (String) htLoginRequest.get("authsp");
+		HashMap htAllowedAuthsps = (HashMap) _htSessionContext.get("allowed_user_authsps");
 		if (htAllowedAuthsps == null) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "allowed_user_authsps not found in session context");
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
@@ -2336,13 +2345,17 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		// but this seems to be the wrong one (AbstractBrowserRequestHandler sets the idp address on the idp)
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip was "
 				+ _htSessionContext.get("client_ip") + ", set to " + get_servletRequest().getRemoteAddr());
+		
 		_htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr());
-
-		Tools.pauseSensorData(_systemLogger, _htSessionContext);
+		// 20111013, Bauke: added absent phonenumber handling
+		// To be used by computeAuthenticationRequest():
+		_htSessionContext.put("sms_correction_facility", Boolean.toString(Utils.hasValue(_sCorrectionFacility)));
+		
 		if (!_sessionManager.writeSession(sRid, _htSessionContext)) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not write session context");
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
+		Tools.pauseSensorData(_systemLogger, _htSessionContext);
 
 		// Everything seems okay -> instantiate the protocol handler for
 		// the selected authsp and let it compute a signed authentication request
@@ -2373,12 +2386,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 		// let the protocol handler for the authsp do its work
 		HashMap htResponse = oProtocolHandler.computeAuthenticationRequest(sRid);
-		String sResultCode = (String) htResponse.get("result");
-		if (sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
-			return (String) htResponse.get("redirect_url");
-		}
-		_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to create redirect url.");
-		throw new ASelectException(sResultCode);
+		
+		return htResponse;
 	}
 
 	/**

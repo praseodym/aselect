@@ -199,9 +199,18 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 
 			String sUserId = (String) htAllowedAuthsps.get(_sAuthsp);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Allowed=" + htAllowedAuthsps + " sUserId=" + sUserId);
+			
+			// 20111013, Bauke: added absent phonenumber handling
+			String sCF = (String)htSessionContext.get("sms_correction_facility");
 			if (!Utils.hasValue(sUserId)) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing SMS user attributes.");
-				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
+				if ("true".equals(sCF)) {  // let the sms AuthSP take care of bad phone numbers
+					sUserId = "";
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing SMS user attributes, but correction_facility="+sCF);
+				}
+				else {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing SMS user attributes.");
+					throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
+				}
 			}
 			sbBuffer = new StringBuffer((String) htSessionContext.get("my_url"));
 			sbBuffer.append("?authsp=").append(_sAuthsp);
@@ -232,7 +241,7 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 			}
 
 			// Bauke: store additional sms attribute
-			htSessionContext.put("sms_phone", sUserId);
+			htSessionContext.put("sms_phone", sUserId);  // from aselectSmsUserAttributes
 			_sessionManager.put(sRid, htSessionContext);
 
 			sSignature = URLEncoder.encode(sSignature, "UTF-8");
@@ -257,8 +266,7 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 			htResponse.put("result", eAA.getMessage());
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod,
-					"Could not compute authentication request due to internal error", e);
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not compute authentication request due to internal error", e);
 			htResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 		}
 		return htResponse;

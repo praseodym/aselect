@@ -83,6 +83,7 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.exception.ASelectUDBException;
 import org.aselect.system.sam.agent.SAMResource;
+import org.aselect.system.utils.Utils;
 
 /**
  * JNDI database connector. <br>
@@ -331,8 +332,10 @@ public class JNDIConnector implements IUDBConnector
 				try {
 					Object objValue = oAttribute.get();
 					Class<? extends Object> c = objValue.getClass();
-					_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "AttrID="+sAttribute+" ClassName="+c.getCanonicalName());
-					if (!"java.lang.String".equals(c.getCanonicalName()))
+					boolean isString = "java.lang.String".equals(c.getCanonicalName());
+					_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "AttrID="+sAttribute+
+										" ClassName="+c.getCanonicalName()+" ="+(isString? (String)objValue: "---"));
+					if (!isString)
 						continue;  // skip
 					sAttributeValue = (String)objValue;
 				}
@@ -345,16 +348,11 @@ public class JNDIConnector implements IUDBConnector
 
 				htUserRecord.put(sAttribute.toUpperCase(), sAttributeValue);
 			}
-
 			sAttributeValue = (String) htUserRecord.get("ASELECTACCOUNTENABLED");
 
-			// check if the AccountEnabled value is Set
-			if (sAttributeValue == null) {
-				logAuthentication(sUserId, Errors.ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED, "User account disabled");
-				throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED);
-			}
-			// check if the account is enabled
-			if (sAttributeValue.equalsIgnoreCase("false")) {
+			// check if the AccountEnabled value is "true"
+			if (!Utils.hasValue(sAttributeValue) || sAttributeValue.equalsIgnoreCase("false")) {
+				_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "User account disabled");
 				logAuthentication(sUserId, Errors.ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED, "User account disabled");
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED);
 			}
@@ -369,12 +367,9 @@ public class JNDIConnector implements IUDBConnector
 					if (sAttributeValue.equalsIgnoreCase("TRUE")) {
 						// The authsp id is the substring between ASELECT(7 chars) and REGISTERED(10 chars)
 						String sAuthSPID = sAttributeName.substring(7, sAttributeName.length() - 10);
-
-						StringBuffer sbUserAttributes = new StringBuffer("ASELECT");
-						sbUserAttributes.append(sAuthSPID);
-						sbUserAttributes.append("USERATTRIBUTES");
-						sAttributeValue = (String) htUserRecord.get(sbUserAttributes.toString());
-						_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "Attr "+sbUserAttributes+"="+sAttributeValue);
+						StringBuffer sbUserAttributes = new StringBuffer("ASELECT").append(sAuthSPID).append("USERATTRIBUTES");
+						sAttributeValue = (String)htUserRecord.get(sbUserAttributes.toString());
+						_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, sbUserAttributes+"="+sAttributeValue);
 						
 						// The user attribute is used as a login name later on,
 						// but apparently it can be empty too!

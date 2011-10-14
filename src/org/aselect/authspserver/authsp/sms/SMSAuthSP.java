@@ -41,7 +41,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
 import org.aselect.system.utils.Utils;
 
-
 /**
  * An A-Select AuthtSP that sends an sms with the token <br>
  * <br>
@@ -242,7 +241,6 @@ public class SMSAuthSP extends ASelectHttpServlet
 				_bShow_challenge = false;
 			}
 
-			
 			// Load HTML templates.
 			_sErrorHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "error.html", sConfigID,
 					_sFriendlyName, VERSION);
@@ -284,8 +282,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 			}
 
 			if (!_sFailureHandling.equalsIgnoreCase("aselect") && !_sFailureHandling.equalsIgnoreCase("local")) {
-				StringBuffer sbWarning = new StringBuffer(
-						"Invalid 'failure_handling' parameter found in configuration: '");
+				StringBuffer sbWarning = new StringBuffer("Invalid 'failure_handling' parameter found in configuration: '");
 				sbWarning.append(_sFailureHandling);
 				sbWarning.append("', using default: aselect");
 				_sFailureHandling = DEFAULT_FAILUREHANDLING;
@@ -348,12 +345,13 @@ public class SMSAuthSP extends ASelectHttpServlet
 				throw new ASelectException(Errors.ERROR_SMS_INTERNAL_ERROR, eAC);
 			}
 
+			// NOTE: ASelectConfigException results in a stack trace.
+			// Therefore non serious missing parameters should throw an ASelectException please.
 			try {
 				_sSmsGateway = _configManager.getParam(_oAuthSpConfig, "gateway");
 			}
-			catch (ASelectConfigException eAC) {
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No 'gateway' parameter found in configuration, using default of provider", eAC);
+			catch (ASelectException eAC) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "No 'gateway' parameter found in configuration, using default of provider", eAC);
 				_sSmsGateway = null; // use default gateway
 			}
 
@@ -365,9 +363,8 @@ public class SMSAuthSP extends ASelectHttpServlet
 			try {
 				_sSmsProvider = _configManager.getParam(_oAuthSpConfig, "gw_provider");
 			}
-			catch (ASelectConfigException eAC) {
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No 'provider' parameter found in configuration, using default provider", eAC);
+			catch (ASelectException eAC) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "No 'provider' parameter found in configuration, using default provider", eAC);
 				_sSmsProvider = null; // use default gateway
 			}
 			_oSmsSender = SmsSenderFactory.createSmsSender(new URL(_sSmsUrl), _sSmsUser, _sSmsPassword, _sSmsGateway, _sSmsProvider);
@@ -380,14 +377,12 @@ public class SMSAuthSP extends ASelectHttpServlet
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
 				"There is a 'fixed_secret' parameter found in configuration, all secret codes will be the same, which is not very secret !");
 			}
-			catch (ASelectConfigException eAC) {
+			catch (ASelectException eAC) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod,
 						"No or invalid  'fixed_secret' parameter found  in configuration, random secret codes will be generated");
 				_fixed_secret = null;
 			}
 			// RH, 20110913, en
-			
-			
 			
 			sbInfo = new StringBuffer("Successfully started ");
 			sbInfo.append(VERSION).append(".");
@@ -508,14 +503,16 @@ public class SMSAuthSP extends ASelectHttpServlet
 				int iReturnSend = -1;
 				if (bValid)
 					iReturnSend = generateAndSendSms(servletRequest, sUid);
-				if (!bValid || iReturnSend == 1) {  // bad phone number
-					if (  _bShow_challenge &&  htServiceRequest.get("challenge") == null ) {	// we want to show the form and  first time around
+				if (!bValid || iReturnSend == 1) {
+					// Bad phone number.
+					// We want to show the challenge form only the first time around,
+					// therefore make sure the form contains a "challenge" input field.
+					if (_bShow_challenge && htServiceRequest.get("challenge") == null ) {
 						_systemLogger.log(Level.INFO, MODULE, sMethod, "challenge FORM htServiceRequest=" + htServiceRequest);
 						// Challenge form should inform user about invalid phone number 
 						showChallengeForm(pwOut, null, null, htServiceRequest);
 						return;
 					}
-
 					handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_SMS_INVALID_PHONE, sLanguage);
 					return;
 				}
@@ -564,7 +561,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 	 */
 	private boolean isValidPhoneNumber(String sPhone)
 	{
-		if (sPhone.charAt(0) == '+')
+		if (sPhone.length() > 0 && sPhone.charAt(0) == '+')
 			sPhone = sPhone.substring(1);
 		sPhone = sPhone.replaceAll("^0*", "");
 		if (sPhone.length() < 5 || sPhone.length() > 14)
