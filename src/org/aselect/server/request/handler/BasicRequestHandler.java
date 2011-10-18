@@ -243,7 +243,8 @@ public abstract class BasicRequestHandler
 				// A-Select will show username and password box in one page.
 				sbAsUrl.append("?request=direct_login1");
 				htSessionContext.put("direct_authsp", aApp.getFirstAuthsp());
-			}	else	{
+			}	
+			else {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Found first_authsp="+aApp.getFirstAuthsp()+" , but no next_authsp defined for app: "+aApp.getId());
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}

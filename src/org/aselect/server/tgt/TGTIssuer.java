@@ -260,7 +260,7 @@ public class TGTIssuer
 	 * @throws ASelectException
 	 *             if an error page must be shown
 	 */
-	public void issueCrossTGT(String sRid, String sAuthSP, HashMap htRemoteAttributes,
+	public void issueCrossTGTandRedirect(String sRid, String sAuthSP, HashMap htRemoteAttributes,
 			HttpServletResponse oHttpServletResponse, String sOldTGT)
 		throws ASelectException
 	{
@@ -400,7 +400,7 @@ public class TGTIssuer
 			
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
 			String sLang = (String)htTGTContext.get("language");
-			sendRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse, sLang);
+			sendTgtRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse, sLang);
 		}
 		catch (ASelectException e) {
 			StringBuffer sbError = new StringBuffer("Issue TGT for request '");
@@ -455,10 +455,10 @@ public class TGTIssuer
 	 * @throws ASelectException
 	 *             if an error page must be shown
 	 */
-	public void issueTGT(String sRid, String sAuthSP, HashMap htAdditional, HttpServletResponse oHttpServletResponse, String sOldTGT)
+	public String issueTGTandRedirect(String sRid, String sAuthSP, HashMap htAdditional, HttpServletResponse oHttpServletResponse, String sOldTGT)
 	throws ASelectException
 	{
-		String sMethod = "issueTGT";
+		String sMethod = "issueTGTandRedirect";
 
 		try {
 			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
@@ -466,9 +466,10 @@ public class TGTIssuer
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No session found, session expired: " + sRid);
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 			}
-			String sAppUrl = (String) htSessionContext.get("app_url");
 			String sLocalOrg = null;
 			String sAppId = (String) htSessionContext.get("app_id");
+			
+			String sAppUrl = (String) htSessionContext.get("app_url");
 			if (htSessionContext.get("remote_session") != null) {
 				// A 'local' A-Select Server forwarded the authentication request.
 				// The application in not known by this A-Select Server.
@@ -484,9 +485,9 @@ public class TGTIssuer
 			if (sResult != null && !sResult.equals(Errors.ERROR_ASELECT_SUCCESS)) {
 				// Authentication failed, but need to send decent <Response>
 				String sLang = (String)htSessionContext.get("language");  // we have no TGT Context yet
-				sendRedirect(sAppUrl, null, sRid, oHttpServletResponse, sLang);
+				sendTgtRedirect(sAppUrl, null, sRid, oHttpServletResponse, sLang);
 				// Must be killed by sAppUrl: _sessionManager.killSession(sRid);
-				return;
+				return null;
 			}
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Issue TGT for RID: " + sRid);
@@ -579,30 +580,22 @@ public class TGTIssuer
 
 			// Bauke: added for xsaml20
 			Utils.copyHashmapValue("sp_assert_url", htTGTContext, htSessionContext);
-			// RH, 20101104
 			Utils.copyHashmapValue("sp_reqbinding", htTGTContext, htSessionContext);
-			// RH, 20101114
 			Utils.copyHashmapValue("sp_reqsigning", htTGTContext, htSessionContext);
-			// RH, 20101116
 			Utils.copyHashmapValue("sp_audience", htTGTContext, htSessionContext);
-			// RH, 20101116
 			Utils.copyHashmapValue("sp_addkeyname", htTGTContext, htSessionContext);
-			// RH, 20101116
 			Utils.copyHashmapValue("sp_addcertificate", htTGTContext, htSessionContext);
 
 			Utils.copyHashmapValue("sp_rid", htTGTContext, htSessionContext);
 			ensureSessionPresence(sUserId, htTGTContext, htSessionContext, ssoSession);
 			
-
 			// Bauke, 20081209 added for ADFS / WS-Fed
 			Utils.copyHashmapValue("wreply", htTGTContext, htSessionContext);
 			Utils.copyHashmapValue("wtrealm", htTGTContext, htSessionContext);
 			Utils.copyHashmapValue("wctx", htTGTContext, htSessionContext);
 
-			// RH, 20080619, sn
-			// We will now only put the client_ip in the TGT if there is a non-zero value present in the sessioncontext
+			// RH, 20080619: Copy the client_ip in the TGT
 			Utils.copyHashmapValue("client_ip", htTGTContext, htSessionContext);
-			// RH, 20080619, en
 
 			// Bauke 20081110 copy RelayState to the TgT
 			Utils.copyHashmapValue("RelayState", htTGTContext, htSessionContext);
@@ -647,7 +640,7 @@ public class TGTIssuer
 				PrintWriter pwOut = oHttpServletResponse.getWriter();
 				pwOut.println(sSelectForm);
 				pwOut.close();
-				return;
+				return sTgt;
 			}
 
 			// No organization selection, the tgt was just issued, report sensor data
@@ -657,7 +650,9 @@ public class TGTIssuer
 			
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
 			String sLang = (String)htTGTContext.get("language");
-			sendRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse, sLang);
+			sendTgtRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse, sLang);
+			
+			return sTgt;
 		}
 		catch (ASelectException e) {
 			StringBuffer sbError = new StringBuffer("Issue TGT for request '");
@@ -745,7 +740,7 @@ public class TGTIssuer
 	 * @throws ASelectException
 	 *             if an error page must be shown
 	 */
-	public void issueErrorTGT(String sRid, String sResultCode, HttpServletResponse oHttpServletResponse)
+	public void issueErrorTGTandRedirect(String sRid, String sResultCode, HttpServletResponse oHttpServletResponse)
 		throws ASelectException
 	{
 		String sMethod = "issueErrorTGT()";
@@ -793,7 +788,7 @@ public class TGTIssuer
 
 			String sTgt = oTGTManager.createTGT(htTGTContext);
 			String sLang = (String)htTGTContext.get("language");
-			sendRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse, sLang);
+			sendTgtRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse, sLang);
 			sessionManager.killSession(sRid);
 		}
 		catch (ASelectException e) {
@@ -838,7 +833,7 @@ public class TGTIssuer
 	 *             if the user could not be redirected
 	 */
 	// 20100228, Bauke: added language to redirect
-	public void sendRedirect(String sAppUrl, String sTgt, String sRid, HttpServletResponse oHttpServletResponse, String sLanguage)
+	public void sendTgtRedirect(String sAppUrl, String sTgt, String sRid, HttpServletResponse oHttpServletResponse, String sLanguage)
 		throws ASelectException
 	{
 		String sMethod = "sendRedirect";
@@ -865,7 +860,7 @@ public class TGTIssuer
 			String sEncryptedTgt = (sTgt == null) ? "" : _cryptoEngine.encryptTGT(Utils.hexStringToByteArray(sTgt));
 			sbRedirect = new StringBuffer(sAppUrl);
 			sbRedirect.append("aselect_credentials=").append(sEncryptedTgt);
-			// Note, this rid probably has been deleted
+			// Note, this rid's session could well have been deleted
 			if (sRid !=null)
 				sbRedirect.append("&rid=").append(sRid);
 			sbRedirect.append("&a-select-server=").append(_sServerId);
@@ -882,25 +877,21 @@ public class TGTIssuer
 		}
 	}
 
-	/*
-	 * Sets the A-Select Cookie (aselect_credentials) containing the A-Select credentials
-	 */
 	/**
-	 * Sets the a select cookie.
+	 * Sets the A-Select Cookie (aselect_credentials) containing the A-Select credentials
 	 * 
 	 * @param sTgt
-	 *            the s tgt
+	 *            the tgt
 	 * @param sUserId
-	 *            the s user id
+	 *            the user id
 	 * @param oHttpServletResponse
-	 *            the o http servlet response
+	 *            the http servlet response
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
 	public void setASelectCookie(String sTgt, String sUserId, HttpServletResponse oHttpServletResponse)
-		throws ASelectException
+	throws ASelectException
 	{
-		String sMethod = "setASelectCookie()";
+		String sMethod = "setASelectCookie";
 		try {
 			// DONE(Bauke) uid and a-select-server do not have to be part of the credentials (martijn)
 			/*

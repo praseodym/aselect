@@ -336,7 +336,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			String sCred = (String) htServiceRequest.get("aselect_credentials");
 			if (sCred != null)
 				htAdditional.put("asp_credentials", sCred);
-			tgtIssuer.issueTGT(sRid, sAuthSp, htAdditional, servletResponse, sOldTGT);
+			tgtIssuer.issueTGTandRedirect(sRid, sAuthSp, htAdditional, servletResponse, sOldTGT);
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -414,7 +414,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Issue TGT
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-			tgtIssuer.issueErrorTGT(sRid, sResultCode, servletResponse);
+			tgtIssuer.issueErrorTGTandRedirect(sRid, sResultCode, servletResponse);
 		}
 		catch (ASelectException ae) {
 			throw ae;

@@ -647,7 +647,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		
 		TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 		String sLang = (String)htTGTContext.get("language");
-		oTGTIssuer.sendRedirect(sAppUrl, sTgt, sRid, servletResponse, sLang);
+		oTGTIssuer.sendTgtRedirect(sAppUrl, sTgt, sRid, servletResponse, sLang);
 	}
 
 	/**
@@ -704,8 +704,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						"Missing 'direct_authsp' in session and request, rid='" + sRid + "'");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
-			IAuthSPDirectLoginProtocolHandler oProtocolHandler = _authspHandlerManager
-					.getAuthSPDirectLoginProtocolHandler(sAuthSPId);
+			IAuthSPDirectLoginProtocolHandler oProtocolHandler = _authspHandlerManager.getAuthSPDirectLoginProtocolHandler(sAuthSPId);
 
 			// check if user already has a tgt so that he/she doesn't need to be authenticated again
 			if (_configManager.isSingleSignOn() && htServiceRequest.containsKey("aselect_credentials_tgt")
@@ -783,7 +782,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 							String sLang = (String)htTGTContext.get("language");
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-							oTGTIssuer.sendRedirect(sRedirectUrl, sTgt, sRid, servletResponse, sLang);
+							oTGTIssuer.sendTgtRedirect(sRedirectUrl, sTgt, sRid, servletResponse, sLang);
 							_sessionManager.killSession(sRid);
 							return;
 						}
@@ -981,7 +980,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							else {
 								TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 								String sLang = (String)htTGTContext.get("language");
-								oTGTIssuer.sendRedirect(sRedirectUrl, sTgt, sRid, servletResponse, sLang);
+								oTGTIssuer.sendTgtRedirect(sRedirectUrl, sTgt, sRid, servletResponse, sLang);
 								_sessionManager.killSession(sRid);
 							}
 							return;
@@ -1932,7 +1931,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							// htAdditional.put("tgt_exp_time", htTgtContext.get("tgt_exp_time"));
 
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-							oTGTIssuer.issueTGT(sRid, sAuthsp, htAdditional, servletResponse, null);
+							oTGTIssuer.issueTGTandRedirect(sRid, sAuthsp, htAdditional, servletResponse, null);
 							return;
 						}
 					}
@@ -2119,7 +2118,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void handleCreateTGT(HashMap htServiceRequest, HttpServletResponse servletResponse)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleCreateTGTRequest";
 		AuthenticationLogger authenticationLogger = ASelectAuthenticationLogger.getHandle();
@@ -2202,7 +2201,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Issue TGT
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-			tgtIssuer.issueTGT(sRid, sPrivilegedApplication, null, servletResponse, null);
+			tgtIssuer.issueTGTandRedirect(sRid, sPrivilegedApplication, null, servletResponse, null);
 		}
 		catch (ASelectException e) {
 			throw e;

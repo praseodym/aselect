@@ -624,7 +624,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					});
 					// Issue 'CANCEL' TGT
 					TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-					tgtIssuer.issueErrorTGT(sLocalRid, sResultCode, servletResponse);
+					tgtIssuer.issueErrorTGTandRedirect(sLocalRid, sResultCode, servletResponse);
 				}
 				else { // remote server returned error
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error");
@@ -646,7 +646,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 				String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
 				// Will also redirect the user
-				oTGTIssuer.issueTGT(sLocalRid, null, htRemoteAttributes, servletResponse, sOldTGT);
+				oTGTIssuer.issueTGTandRedirect(sLocalRid, null, htRemoteAttributes, servletResponse, sOldTGT);
 				// 20090909: oTGTIssuer.issueCrossTGT(sLocalRid, null, htRemoteAttributes, servletResponse, sOldTGT);
 			}
 		}

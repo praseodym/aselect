@@ -621,7 +621,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 							String sLang = (String)htTGTContext.get("language");
-							oTGTIssuer.sendRedirect(sRedirectUrl, sTgt, sRid, servletResponse, sLang);
+							oTGTIssuer.sendTgtRedirect(sRedirectUrl, sTgt, sRid, servletResponse, sLang);
 							_sessionManager.killSession(sRid);
 							return;
 						}
@@ -782,7 +782,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 							String sLang = (String)htTGTContext.get("language");
-							oTGTIssuer.sendRedirect(sRedirectUrl, sTgt, sRid, servletResponse, sLang);
+							oTGTIssuer.sendTgtRedirect(sRedirectUrl, sTgt, sRid, servletResponse, sLang);
 							_sessionManager.killSession(sRid);
 							return;
 						}
@@ -1489,7 +1489,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							// .get("tgt_exp_time"));
 
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-							oTGTIssuer.issueTGT(sRid, sAuthsp, htAdditional, servletResponse, null);
+							oTGTIssuer.issueTGTandRedirect(sRid, sAuthsp, htAdditional, servletResponse, null);
 							return;
 						}
 					}
@@ -1796,7 +1796,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Issue TGT
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-			tgtIssuer.issueTGT(sRid, sPrivilegedApplication, null, servletResponse, null);
+			tgtIssuer.issueTGTandRedirect(sRid, sPrivilegedApplication, null, servletResponse, null);
 
 		}
 		catch (ASelectException e) {
