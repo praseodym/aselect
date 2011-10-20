@@ -476,8 +476,17 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 						String[] tokens = sNameIDQualifier.split(":");
 						if (tokens.length > 4)
 							sAuthID = tokens[4];
-						if (tokens.length > 5)
-							sAuthSubID = tokens[5];
+
+						////////////////////////////////////////////////////
+//						if (tokens.length > 5)
+//							sAuthSubID = tokens[5];
+						// Test  new layout of eherkenning
+						// Maybe do something with pattern search here
+						if (tokens.length > 6)
+							sAuthSubID = tokens[6];
+						////////////////////////////////////////////////////
+
+						
 						sAuthID += "_"+sAuthSubID+"_"+sNameID;  // add separator
 						hmSamlAttributes.put("authid", sAuthID);
 					}
