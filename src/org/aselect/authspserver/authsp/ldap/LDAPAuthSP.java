@@ -372,8 +372,12 @@ public class LDAPAuthSP extends ASelectHttpServlet
 		String sMethod = "doGet()";
 		PrintWriter pwOut = null;
 		String sLanguage = null;
+		String failureHandling = _sFailureHandling;	// Initially we use default from config, this might change if we suspect parameter tampering
+
 
 		try {
+			servletResponse.setContentType("text/html");	// RH, 20111021, n 	// contenttype must be set before getwriter
+
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 			pwOut = servletResponse.getWriter();
 
@@ -407,11 +411,13 @@ public class LDAPAuthSP extends ASelectHttpServlet
 
 				if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sAsId == null) || (sSignature == null)) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod,
-							"Invalid request received: one or more mandatory parameters missing.");
+//							"Invalid request received: one or more mandatory parameters missing.");
+					"Invalid request received: one or more mandatory parameters missing, handling error locally.");
+					failureHandling = "local";	// RH, 20111021, n
 					throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);
 				}
 
-				servletResponse.setContentType("text/html");
+//				servletResponse.setContentType("text/html");	// RH, 20111021, o
 				// URL decode values
 				sAsUrl = URLDecoder.decode(sAsUrl, "UTF-8");
 				sUid = URLDecoder.decode(sUid, "UTF-8");
@@ -436,7 +442,9 @@ public class LDAPAuthSP extends ASelectHttpServlet
 					sbWarning.append(sAsId);
 					sbWarning.append("' for user: ");
 					sbWarning.append(sUid);
+					sbWarning.append(", handling error locally.");
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString());
+					failureHandling = "local";	// RH, 20111021, n
 					throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);
 				}
 
@@ -458,7 +466,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 		}
 		catch (ASelectException eAS) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Sending error to client", eAS);
-			handleResult(servletRequest, servletResponse, pwOut, eAS.getMessage(), sLanguage);
+			handleResult(servletRequest, servletResponse, pwOut, eAS.getMessage(), sLanguage, failureHandling);
 		}
 		catch (IOException eIO) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error sending response", eIO);
@@ -469,7 +477,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process request due to internal error", e);
-			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER, sLanguage);
+			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER, sLanguage, failureHandling);
 		}
 		finally {
 			if (pwOut != null) {
@@ -500,10 +508,13 @@ public class LDAPAuthSP extends ASelectHttpServlet
 		String sMethod = "doPost()";
 		PrintWriter pwOut = null;
 		String sLanguage = null;
+		String failureHandling = _sFailureHandling;	// Initially we use default from config, this might change if we suspect parameter tampering
+
 
 		String sRequest = servletRequest.getParameter("request");
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "LDAP POST { query-->" + servletRequest.getQueryString()+" len="+servletRequest.getContentLength());
 		try {
+			servletResponse.setContentType("text/html");	// RH, 20111021, n	// contenttype must be set before getwriter
 			pwOut = servletResponse.getWriter();
 
 			sLanguage = servletRequest.getParameter("language");  // optional language code
@@ -536,13 +547,15 @@ public class LDAPAuthSP extends ASelectHttpServlet
 				return;
 			}
 			
-			servletResponse.setContentType("text/html");
+//			servletResponse.setContentType("text/html");	// RH, 20111021, o	// contenttype must be set before getwriter
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "sRequest="+sRequest+" sRid="+sRid+" sUid="+sUid+" sPassword="+sPassword);
 			if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sPassword == null) || (sAsId == null)
 					|| (sRetryCounter == null) || (sSignature == null)) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: one or more mandatory parameters missing.");
+//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: one or more mandatory parameters missing.");
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: one or more mandatory parameters missing, handling error locally.");
+				failureHandling = "local";	// RH, 20111021, n
 				throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);
 			}
 
@@ -584,8 +597,9 @@ public class LDAPAuthSP extends ASelectHttpServlet
 					sbWarning.append(sAsId);
 					sbWarning.append("' for user: ");
 					sbWarning.append(sUid);
+					sbWarning.append(", handling error locally");	// RH, 20111021, n
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString());
-
+					failureHandling = "local";	// RH, 20111021, n
 					throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);
 				}
 
@@ -621,7 +635,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 						_authenticationLogger.log(new Object[] {
 							MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied", Errors.ERROR_LDAP_INVALID_PASSWORD
 						});
-						handleResult(servletRequest, servletResponse, pwOut, sResultCode, sLanguage);
+						handleResult(servletRequest, servletResponse, pwOut, sResultCode, sLanguage, failureHandling);
 					}
 				}
 				else if (sResultCode.equals(Errors.ERROR_LDAP_SUCCESS)) // success
@@ -631,19 +645,19 @@ public class LDAPAuthSP extends ASelectHttpServlet
 						MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "granted"
 					});
 
-					handleResult(servletRequest, servletResponse, pwOut, sResultCode, sLanguage);
+					handleResult(servletRequest, servletResponse, pwOut, sResultCode, sLanguage, failureHandling);
 				}
 				else // other error
 				{
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error authenticating user, cause: "
 							+ sResultCode);
-					handleResult(servletRequest, servletResponse, pwOut, sResultCode, sLanguage);
+					handleResult(servletRequest, servletResponse, pwOut, sResultCode, sLanguage, failureHandling);
 				}
 			}
 		}
 		catch (ASelectException eAS) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Sending error to client", eAS);
-			handleResult(servletRequest, servletResponse, pwOut, eAS.getMessage(), sLanguage);
+			handleResult(servletRequest, servletResponse, pwOut, eAS.getMessage(), sLanguage, failureHandling);
 		}
 		catch (IOException eIO) // could not send response
 		{
@@ -657,12 +671,12 @@ public class LDAPAuthSP extends ASelectHttpServlet
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"Invalid request received: The retry counter parameter is invalid.");
-			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_LDAP_INVALID_REQUEST, sLanguage);
+			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_LDAP_INVALID_REQUEST, sLanguage, failureHandling);
 		}
 		catch (Exception e) // internal error
 		{
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process request due to internal error", e);
-			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER, sLanguage);
+			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER, sLanguage, failureHandling);
 		}
 		finally {
 			if (pwOut != null) {
@@ -704,13 +718,16 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	 *            The output that is used, when error handling is local.
 	 */
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-			PrintWriter pwOut, String sResultCode, String sLanguage)
+			PrintWriter pwOut, String sResultCode, String sLanguage, String failureHandling)
 	{
 		String sMethod = "()";
 		StringBuffer sbTemp = null;
 
 		try {
-			if (_sFailureHandling.equalsIgnoreCase("aselect") || sResultCode.equals(Errors.ERROR_LDAP_SUCCESS))
+			// Prevent tampering with request parameters, potential fishing leak
+
+//			if (_sFailureHandling.equalsIgnoreCase("aselect") || sResultCode.equals(Errors.ERROR_LDAP_SUCCESS))
+			if (failureHandling.equalsIgnoreCase("aselect") || sResultCode.equals(Errors.ERROR_LDAP_SUCCESS))
 			// A-Select handles error or success
 			{
 				String sRid = servletRequest.getParameter("rid");
