@@ -112,9 +112,9 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#init(java.lang.Object, java.lang.Object)
 	 */
 	public void init(Object oAuthSPConfig, Object oAuthSPResource)
-		throws ASelectAuthSPException
+	throws ASelectAuthSPException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		_configManager = ASelectConfigManager.getHandle();
 		_sessionManager = SessionManager.getHandle();
 		_authenticationLogger = ASelectAuthenticationLogger.getHandle();
@@ -124,7 +124,7 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 				_sAuthsp = _configManager.getParam(oAuthSPConfig, "id");
 			}
 			catch (ASelectConfigException eAC) {
-				_systemLogger.log(Level.WARNING, MODULE, "init()",
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
 						"Parameter 'id' not found in SMS AuthSP configuration", eAC);
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
 			}
@@ -132,17 +132,17 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 				_sAuthspUrl = _configManager.getParam(oAuthSPResource, "url");
 			}
 			catch (ASelectConfigException eAC) {
-				_systemLogger.log(Level.WARNING, MODULE, "init()",
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
 						"Parameter 'url' not found in SMS AuthSP configuration", eAC);
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
 			}
 		}
 		catch (ASelectAuthSPException eAA) {
-			_systemLogger.log(Level.SEVERE, MODULE, "init()", "Initialisation failed due to configuration error", eAA);
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initialisation failed due to configuration error", eAA);
 			throw eAA;
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, "init()", "Initialisation failed due to internal error", e);
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initialisation failed due to internal error", e);
 			throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 	}
@@ -205,7 +205,7 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 			if (!Utils.hasValue(sUserId)) {
 				if ("true".equals(sCF)) {  // let the sms AuthSP take care of bad phone numbers
 					sUserId = "";
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing SMS user attributes, but correction_facility="+sCF);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing SMS user attributes, but sms_correction_facility="+sCF);
 				}
 				else {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing SMS user attributes.");

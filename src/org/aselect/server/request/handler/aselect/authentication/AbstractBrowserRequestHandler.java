@@ -356,8 +356,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 			return null;
 
 		htCredentials.put("aselect_credentials_tgt", sTgt);
-		if (sUserId != null)
-			htCredentials.put("aselect_credentials_uid", sUserId);
+		htCredentials.put("aselect_credentials_uid", sUserId);
 		htCredentials.put("aselect_credentials_server_id", _sMyServerId); // Bauke 20080618 was: sServerId);
 		return htCredentials;
 	}

@@ -809,7 +809,8 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		// Get other response parameters
 		sUid = (String) htTGTContext.get("uid");
 		String sAuthSPLevel = (String) htTGTContext.get("sel_level");  // 20100323: was ("authsp_level");
-		if (sAuthSPLevel == null) sAuthSPLevel = (String) htTGTContext.get("authsp_level"); // 20100812: added, just in case
+		if (sAuthSPLevel == null)
+			sAuthSPLevel = (String) htTGTContext.get("authsp_level"); // 20100812: added, just in case
 		String sAuthSP = (String) htTGTContext.get("authsp");
 		long lExpTime = 0;
 		try {

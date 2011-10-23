@@ -1067,19 +1067,23 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 */
 	public String createContextAndIssueTGT(HttpServletResponse response, String sRid /* can be null */,
 			String sServerId, String sOrg, String sAppId, String sTgt, HashMap htAttributes)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "createContextAndIssueTGT()";
 		SessionManager _sessionManager = SessionManager.getHandle(); // RH, 20080617, n
+		HashMap htSession = null;
+		if (sRid != null)
+			htSession = _sessionManager.getSessionContext(sRid);
 
 		// Extract uid and security level
 		String sUserId = (String) htAttributes.get("uid");
 		if (sUserId == null)
 			sUserId = (String) htAttributes.get("cn");
 
+		String sAuthspLevel = (String) htAttributes.get("authsp_level");
 		String sSecLevel = (String) htAttributes.get("sel_level");
 		if (sSecLevel == null) sSecLevel = (String) htAttributes.get("betrouwbaarheidsniveau");
-		if (sSecLevel == null) sSecLevel = (String) htAttributes.get("authsp_level");
+		if (sSecLevel == null) sSecLevel = sAuthspLevel;
 		if (sSecLevel == null) sSecLevel = "5";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "UserId=" + sUserId + ", secLevel=" + sSecLevel);
 
@@ -1092,23 +1096,21 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		htTGTContext.put("attributes", org.aselect.server.utils.Utils.serializeAttributes(htAttributes));
 		htTGTContext.put("uid", sUserId);
 		htTGTContext.put("betrouwbaarheidsniveau", sSecLevel);
-		htTGTContext.put("organization", sOrg);
-		htTGTContext.put("authsp_level", sSecLevel);
 		htTGTContext.put("sel_level", sSecLevel);
+		htTGTContext.put("authsp_level", sSecLevel);  // should be taken from configuration
 		htTGTContext.put("authsp", "SAML");
+		htTGTContext.put("organization", sOrg);
 		Utils.copyHashmapValue("authsp", htTGTContext, htAttributes);  // overwrite
 		Utils.copyHashmapValue("authsp_type", htTGTContext, htAttributes);
 		htTGTContext.put("app_id", sAppId);
-		htTGTContext.put("app_level", "2");
-		HashMap htSession = null;
-		if (sRid != null) {
+		htTGTContext.put("app_level", "2");  // should be taken from the application config OR session
+		if (sRid != null)
 			htTGTContext.put("rid", sRid);
-			htSession = _sessionManager.getSessionContext(sRid);
-			if (htSession != null) {
-				Utils.copyHashmapValue("client_ip", htTGTContext, htSession);
-				Utils.copyHashmapValue("user_agent", htTGTContext, htSession);
-				Utils.copyHashmapValue("authsp_type", htTGTContext, htSession);
-			}
+
+		if (htSession != null) {
+			Utils.copyHashmapValue("client_ip", htTGTContext, htSession);
+			Utils.copyHashmapValue("user_agent", htTGTContext, htSession);
+			Utils.copyHashmapValue("authsp_type", htTGTContext, htSession);
 		}
 		
 		if (sTgt == null) {

@@ -235,11 +235,11 @@ public abstract class BasicRequestHandler
 			htSessionContext.put("direct_authsp", vAuthSPs.get(0));
 		}
 		// RH, 20110920, sn, for sequential authsps introduced new parameter for backward compatibility
-		else if  (aApp.getFirstAuthsp() != null && _authSPManagerManager.isDirectAuthSP(aApp.getFirstAuthsp() ) ) {
+		else if (aApp.getFirstAuthsp() != null && _authSPManagerManager.isDirectAuthSP(aApp.getFirstAuthsp() ) ) {
 			// If there is a first_authsp there must be a next_authsp defined for this app
 			// to ensure no tgt will be set until next_authsp has been handled
 			if (_authSPManagerManager.getNextAuthSP(aApp.getFirstAuthsp(), aApp.getId()) != null) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "found first_authsp="+aApp.getFirstAuthsp()+" , setting direct_authsp to:"+aApp.getFirstAuthsp());
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Found first_authsp="+aApp.getFirstAuthsp()+" , setting direct_authsp to:"+aApp.getFirstAuthsp());
 				// A-Select will show username and password box in one page.
 				sbAsUrl.append("?request=direct_login1");
 				htSessionContext.put("direct_authsp", aApp.getFirstAuthsp());

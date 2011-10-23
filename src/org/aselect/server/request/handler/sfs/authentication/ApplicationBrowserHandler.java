@@ -547,7 +547,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void handleDirectLogin(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleDirectLogin()";
 		String sRid = null;
@@ -1489,7 +1489,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							// .get("tgt_exp_time"));
 
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-							oTGTIssuer.issueTGTandRedirect(sRid, sAuthsp, htAdditional, servletResponse, null);
+							oTGTIssuer.issueTGTandRedirect(sRid, sAuthsp, htAdditional, servletResponse, null, true);
 							return;
 						}
 					}
@@ -1796,7 +1796,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Issue TGT
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-			tgtIssuer.issueTGTandRedirect(sRid, sPrivilegedApplication, null, servletResponse, null);
+			tgtIssuer.issueTGTandRedirect(sRid, sPrivilegedApplication, null, servletResponse, null, true);
 
 		}
 		catch (ASelectException e) {

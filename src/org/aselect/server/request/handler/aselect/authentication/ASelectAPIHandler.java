@@ -573,9 +573,13 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 
 		// Get other response parameters
 		sUid = (String) htTGTContext.get("uid");
-		String sAuthSPLevel = (String) htTGTContext.get("sel_level");  // 20110828, Bauke: added
-		if (!Utils.hasValue(sAuthSPLevel))
-			sAuthSPLevel = (String) htTGTContext.get("authsp_level");
+		// 20111020, Bauke: both "authsp_level" and "sel_level" should have a value
+		String sAuthspLevel = (String) htTGTContext.get("authsp_level");
+		String sSelLevel = (String) htTGTContext.get("sel_level");
+		if (sAuthspLevel == null || sSelLevel == null) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid TGT: sAuthspLevel="+sAuthspLevel+" sSelLevel="+sSelLevel);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
+		}
 		String sAuthSP = (String) htTGTContext.get("authsp");
 		long lExpTime = 0;
 		try {
@@ -598,10 +602,10 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 			oOutputMessage.setParam("app_level", (String) htTGTContext.get("app_level"));
 			// Return both asp and authsp variables to remain compatible with A-Select 1.3 and 1.4
 			oOutputMessage.setParam("asp", sAuthSP);
-			oOutputMessage.setParam("asp_level", sAuthSPLevel);
+			oOutputMessage.setParam("asp_level", sAuthspLevel);
 			oOutputMessage.setParam("authsp", sAuthSP);
-			oOutputMessage.setParam("authsp_level", sAuthSPLevel);
-			oOutputMessage.setParam("sel_level", sAuthSPLevel);  // 20100812: added
+			oOutputMessage.setParam("authsp_level", sAuthspLevel);
+			oOutputMessage.setParam("sel_level", sSelLevel);  // 20100812: added
 			
 			oOutputMessage.setParam("uid", sUid);
 			oOutputMessage.setParam("tgt_exp_time", new Long(lExpTime).toString());

@@ -655,7 +655,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 				String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
 				// Will also redirect the user
-				oTGTIssuer.issueTGTandRedirect(sLocalRid, null, htRemoteAttributes, servletResponse, sOldTGT);
+				oTGTIssuer.issueTGTandRedirect(sLocalRid, null, htRemoteAttributes, servletResponse, sOldTGT, true);
 				// 20090909: oTGTIssuer.issueCrossTGT(sLocalRid, null, htRemoteAttributes, servletResponse, sOldTGT);
 			}
 		}

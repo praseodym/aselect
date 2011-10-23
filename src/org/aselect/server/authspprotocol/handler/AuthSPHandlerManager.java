@@ -61,7 +61,6 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMResource;
 
-// TODO: Auto-generated Javadoc
 /**
  * The AuthSPHandler manager for the A-Select Server. <br>
  * <br>
@@ -579,9 +578,6 @@ public class AuthSPHandlerManager
 		}
 		return sUrl;
 	}
-
-	
-	
 	
 	/**
 	 * @param sAuthSPId
@@ -602,10 +598,12 @@ public class AuthSPHandlerManager
 			Object objAppl = _oASelectConfigManager.getSection(objAuthSPResourceAppls, "application", "id=" + app_id);
 			next_authsp =  _oASelectConfigManager.getParam(objAppl, "next_authsp");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Found next_authsp: "+ next_authsp + " defined for app_id: "+app_id);
-		} catch (ASelectConfigException ace) {
+		}
+		catch (ASelectConfigException ace) {
 			next_authsp = null;
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "No next_authsp defined for app_id: "+app_id + ", continuing");
-		} catch (ASelectSAMException ase) {
+		}
+		catch (ASelectSAMException ase) {
 			next_authsp = null;
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "No next_authsp defined for app_id: "+app_id+ ", continuing");
 		}
@@ -614,11 +612,7 @@ public class AuthSPHandlerManager
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "No ResourceGroup defined for authsp: "+sAuthSPId+ ", continuing if possible");
 		}
 		return next_authsp;
-	}
-
-	
-	
-	
+	}	
 	
 	/**
 	 * Returns the handler which is able to handle direct_login requests <br>

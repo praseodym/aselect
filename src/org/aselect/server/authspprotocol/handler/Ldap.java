@@ -732,7 +732,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 //				Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp", "id="+sAuthSPId);
 				if (authSPsection != null)
 					sPostIt = ASelectConfigManager.getSimpleParam(authSPsection, "post_it", false);  // not mandatory
-				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Section id="+sAuthSPId+" post_it: " + sPostIt);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "Section id="+sAuthSPId+" post_it: " + sPostIt);
 
 				if ("true".equals(sPostIt)) {
 					int idx = sRequest.indexOf('?');
@@ -775,7 +775,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 					oInputReader.close();
 				}
 				else {
-					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Doing GET from:  "+ sRequest);
+					_systemLogger.log(Level.FINER, MODULE, sMethod, "Doing GET from:  "+ sRequest);
 					URL oServer = new URL(sRequest);
 					URLConnection conn = oServer.openConnection();
 					InputStream iStream = conn.getInputStream();
@@ -804,9 +804,13 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 
 				// Start sequential authsp's
 				String app_id = (String)htSessionContext.get("app_id");
-				_systemLogger.log(Level.FINEST, MODULE, sMethod, "SessionContext: '"+_sessionManager.getSessionContext(sRid));
-				_systemLogger.log(Level.FINEST, MODULE, sMethod, "htServiceRequest: '"+htServiceRequest);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "app_id="+app_id+" SessionContext="+htSessionContext);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "htServiceRequest="+htServiceRequest);
 				
+				htSessionContext.put("authsp_level", intAuthSPLevel.toString());
+				htSessionContext.put("sel_level", intAuthSPLevel.toString());  // equal to authsp_level in this case
+				htSessionContext.put("authsp_type", "ldap");
+
 				String next_authsp = _authSPHandlerManager.getNextAuthSP(sAuthSPId, app_id);;
 				if (next_authsp != null) {
 					htSessionContext.remove("direct_authsp");	// No other direct_authsp's yet
@@ -814,57 +818,57 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 					
 					// Set allowed_user_authsps in the event of direct_authsp, 
 					// would 'normally' be set by  ApplicationBrowserHandler.handleLogin2(.....).getAuthsps(....)
-					HashMap htUserAuthsps = getUserAuthSPs(sUid);
-					
+					HashMap htUserAuthsps = getUserAuthsps(sUid);
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "next_authsp="+next_authsp+" allowed="+htUserAuthsps);
 					htSessionContext.put("allowed_user_authsps", htUserAuthsps);
-					_sessionManager.updateSession(sRid, htSessionContext); // store too (545)
-					
-					if (servletResponse != null) {
-						String sSelectForm = _configManager.getForm("nextauthsp", _sUserLanguage, _sUserCountry);
-						sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
-						sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]",  (String) htServiceRequest.get("a-select-server"));
-						sSelectForm = Utils.replaceString(sSelectForm, "[user_id]", sUid);
-						sSelectForm = Utils.replaceString(sSelectForm, "[authsp]", next_authsp);
-						sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", (String) htServiceRequest.get("my_url"));
-						sSelectForm = Utils.replaceString(sSelectForm, "[request]", "login3");
-						String sLanguage = (String) htServiceRequest.get("language");  // 20101027 _
-						String sCountry = (String) htServiceRequest.get("country");  // 20101027 _
-						sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
-						sSelectForm = Utils.replaceString(sSelectForm, "[country]", sCountry);
-						pwOut.println(sSelectForm);
-						// Direct user to next_authsp with form
-						return true;
-					}
-					else 	return false;	// No browser attached
-					
+				}
+				// Store now, issueTGTandRedirect() wil read it again
+				_sessionManager.updateSession(sRid, htSessionContext);
+				
+				if (servletResponse == null) {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "No browser attached ...");
+					return false;  // No browser attached
+				}
+				
+				TGTIssuer tgtIssuer = new TGTIssuer(sServerId);
+				String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
+				String sTgt = tgtIssuer.issueTGTandRedirect(sRid, sAuthSPId, null, servletResponse, sOldTGT, false /* no redirect */);
+				// Cookie was set on the 'servletResponse'
+
+				// The next user redirect will set the TGT cookie, the "nextauthsp" form below will also set the cookie
+				if (next_authsp != null) {
+					String sSelectForm = _configManager.getForm("nextauthsp", _sUserLanguage, _sUserCountry);
+					sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
+					sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]",  (String) htServiceRequest.get("a-select-server"));
+					sSelectForm = Utils.replaceString(sSelectForm, "[user_id]", sUid);
+					sSelectForm = Utils.replaceString(sSelectForm, "[authsp]", next_authsp);
+					sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", (String) htServiceRequest.get("my_url"));
+					sSelectForm = Utils.replaceString(sSelectForm, "[request]", "login3");
+					String sLanguage = (String) htServiceRequest.get("language");  // 20101027 _
+					String sCountry = (String) htServiceRequest.get("country");  // 20101027 _
+					sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
+					sSelectForm = Utils.replaceString(sSelectForm, "[country]", sCountry);
+					pwOut.println(sSelectForm);
+					// Direct the user to the next_authsp using the "nextauthsp" form
+					return true;
 				}
 				// End sequential authsp's
 				
 				_authenticationLogger.log(new Object[] {
-						MODULE, sUid, (String) htSessionContext.get("client_ip"), sOrg,
-						(String) htSessionContext.get("app_id"), "granted"
+						MODULE, sUid, (String) htSessionContext.get("client_ip"), sOrg, app_id, "granted"
 					});
 				
-				htSessionContext.put("authsp_level", intAuthSPLevel.toString());
-				htSessionContext.put("sel_level", intAuthSPLevel.toString());  // equal to authsp_level in this case
-				htSessionContext.put("authsp_type", "ldap");
-				_sessionManager.updateSession(sRid, htSessionContext); // store too (545)
-				
-				// Only set ticket if the user's browser is listening
-				if (servletResponse != null) {
-					TGTIssuer tgtIssuer = new TGTIssuer(sServerId);
-					String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
-					String sTgt = tgtIssuer.issueTGTandRedirect(sRid, sAuthSPId, null, servletResponse, sOldTGT);
+				// Finish regular authsp handling
+				// 20111018, Bauke: redirect is done below
+				_sessionManager.killSession(sRid);				
 
-					/*String sAppUrl = (String) htSessionContext.get("app_url");
-					if (htSessionContext.get("remote_session") != null)
-						sAppUrl = (String) htSessionContext.get("local_as_url");
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
+				String sAppUrl = (String) htSessionContext.get("app_url");
+				if (htSessionContext.get("remote_session") != null)
+					sAppUrl = (String) htSessionContext.get("local_as_url");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
 
-					String sLang = (String)htTGTContext.get("language");
-					tgtIssuer.sendTgtRedirect(sAppUrl, sTgt, sRid, servletResponse, sLanguage);
-					*/
-				}  // else no browser attached
+				String sLang = (String)htSessionContext.get("language");
+				tgtIssuer.sendTgtRedirect(sAppUrl, sTgt, sRid, servletResponse, sLang);					
 				return true;
 			}
 			else if (sResponseCode.equals(ERROR_LDAP_ACCESS_DENIED)) {
@@ -924,12 +928,10 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	 * @return
 	 * @throws ASelectException
 	 */
-	private HashMap getUserAuthSPs(String sUid)
-		throws ASelectException
+	private HashMap getUserAuthsps(String sUid)
+	throws ASelectException
 	{
 		String sMethod = "getUserAuthSPs";
-
-		
 		HashMap htUserAuthsps = new HashMap();
 		IUDBConnector oUDBConnector = null;
 
@@ -958,7 +960,6 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 		return htUserAuthsps;
 	}
 
-
 	/**
 	 * Prints the direct Login form. <br>
 	 * <br>
@@ -984,7 +985,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	 *             the a select exception
 	 */
 	private void showDirectLoginForm(HashMap htServiceRequest, PrintWriter pwOut, String sServerId)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "showDirectLoginForm";
 		try {

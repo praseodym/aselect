@@ -305,6 +305,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse; //import org.aselect.system.servlet.HtmlInfo;
 
+import org.aselect.server.application.Application;
 import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.attributes.AttributeGatherer;
 import org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler;
@@ -706,10 +707,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 			IAuthSPDirectLoginProtocolHandler oProtocolHandler = _authspHandlerManager.getAuthSPDirectLoginProtocolHandler(sAuthSPId);
 
-			// check if user already has a tgt so that he/she doesn't need to be authenticated again
+			// Check if user already has a tgt so that he/she doesn't need to be authenticated again
 			if (_configManager.isSingleSignOn() && htServiceRequest.containsKey("aselect_credentials_tgt")
 					&& htServiceRequest.containsKey("aselect_credentials_uid")
-					&& htServiceRequest.containsKey("aselect_credentials_server_id")) {
+					&& htServiceRequest.containsKey("aselect_credentials_server_id"))
+			{
 				String sTgt = (String) htServiceRequest.get("aselect_credentials_tgt");
 				String sUid = (String) htServiceRequest.get("aselect_credentials_uid");
 				String sServerId = (String) htServiceRequest.get("aselect_credentials_server_id");
@@ -717,15 +719,15 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				// check if a request was done for another user-id
 				String sForcedUid = (String) _htSessionContext.get("forced_uid");
 
-				_systemLogger.log(Level.INFO, _sModule, sMethod, "DLOGIN sTgt=" + sTgt + "sUid=" + sUid + "sServerId="
-						+ sServerId + "sForcedUid=" + sForcedUid);
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "DLOGIN sTgt=" + sTgt + " sUid=" +
+								sUid + " sServerId=" + sServerId + " sForcedUid=" + sForcedUid);
 				if (sForcedUid != null && !sUid.equals(sForcedUid)) // user_id does not match
 				{
 					_tgtManager.remove(sTgt);
 				}
 				else {
 					int rc = checkCredentials(sTgt, sUid, sServerId); // valid credentials/level/SSO group
-					if (rc >= 0) {
+					if (rc >= 0) {  // ok
 						Boolean forcedAuthenticate = (Boolean) _htSessionContext.get("forced_authenticate");
 						if (forcedAuthenticate == null)
 							forcedAuthenticate = false;
@@ -786,10 +788,51 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							_sessionManager.killSession(sRid);
 							return;
 						}
+						// else: forcedAuthenticate: fall through
 					}
-					// TGT found but not sufficient.
+					// TGT found but not sufficient. It could be partially sufficient though
+					// (see the "next_authsp" mechanism).
+					
 					// Authenticate with same user-id that was stored in TGT
 					HashMap htTGTContext = _tgtManager.getTGT(sTgt);
+					
+					/*
+					 * We know the authsp here, and it's level, we can examine the TGT and see what level we already have.
+					 * if TGT-level >= authsp_level then we can skip a first_authsp and go to the next_authsp, etc
+					 */
+					String sAppId = (String)_htSessionContext.get("app_id");
+					Application aApp = _applicationManager.getApplication(sAppId);
+					String first_authsp = aApp.getFirstAuthsp();
+					String next_authsp = _authspHandlerManager.getNextAuthSP(sAuthSPId, sAppId);
+					int iAuthspLevel = _authspHandlerManager.getLevel(sAuthSPId);
+					int iTgtLevel = getLevelFromTGT(htTGTContext);
+					_systemLogger.log(Level.INFO, _sModule, sMethod, "NEXT_AUTHSP app_id="+sAppId+" authspLevel="+iAuthspLevel+
+							" tgtLevel="+iTgtLevel+" first_authsp="+first_authsp+" next_authsp="+next_authsp);
+					if (first_authsp != null && next_authsp != null && iTgtLevel >= iAuthspLevel) {
+						// Skip to next_authsp
+						// NOTE: sms is not a direct_authsp, therefore this does not work:
+						//  _htSessionContext.put("direct_authsp", next_authsp);
+						//  handleDirectLogin(htServiceRequest, servletResponse, pwOut);
+						
+						_htSessionContext.remove("direct_authsp");	// No other direct_authsp's yet
+						_htSessionContext.put("forced_authsp", next_authsp);
+						getUserAuthsps(sRid, sUid);  // also writes the session
+						
+						String sSelectForm = _configManager.getForm("nextauthsp", _sUserLanguage, _sUserCountry);
+						sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
+						sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]",  (String) htServiceRequest.get("a-select-server"));
+						sSelectForm = Utils.replaceString(sSelectForm, "[user_id]", sUid);
+						sSelectForm = Utils.replaceString(sSelectForm, "[authsp]", next_authsp);
+						sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", (String) htServiceRequest.get("my_url"));
+						sSelectForm = Utils.replaceString(sSelectForm, "[request]", "login3");
+						String sLanguage = (String) htServiceRequest.get("language");  // 20101027 _
+						String sCountry = (String) htServiceRequest.get("country");  // 20101027 _
+						sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
+						sSelectForm = Utils.replaceString(sSelectForm, "[country]", sCountry);
+						pwOut.println(sSelectForm);
+						
+						return;
+					}
 
 					// If TGT was issued in cross mode, the user now has to
 					// authenticate with a higher level in cross mode again
@@ -895,7 +938,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// Check if user already has a tgt so that he/she doesnt need to be authenticated again
 			if (_configManager.isSingleSignOn() && htServiceRequest.containsKey("aselect_credentials_tgt")
 					&& htServiceRequest.containsKey("aselect_credentials_uid")
-					&& htServiceRequest.containsKey("aselect_credentials_server_id")) {
+					&& htServiceRequest.containsKey("aselect_credentials_server_id"))
+			{
 				String sTgt = (String) htServiceRequest.get("aselect_credentials_tgt");
 				String sUid = (String) htServiceRequest.get("aselect_credentials_uid");
 				String sServerId = (String) htServiceRequest.get("aselect_credentials_server_id");
@@ -1364,7 +1408,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			try {
 				// Get authsps for this user, result is a collection of authsps with a login name to be used for that authsp
 				// Stored in the session under "allowed_user_authsps"
-				getAuthsps(sRid, sUid);  // will save _htSessionContext!
+				getUserAuthsps(sRid, sUid);  // will save _htSessionContext!
 			}
 			catch (ASelectException e) {
 				if (_crossASelectManager.isCrossSelectorEnabled() && _configManager.isCrossFallBackEnabled()) {
@@ -1886,7 +1930,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// AuthSP with a higher level
 			if (_configManager.isSingleSignOn() && htServiceRequest.containsKey("aselect_credentials_tgt")
 					&& htServiceRequest.containsKey("aselect_credentials_uid")
-					&& htServiceRequest.containsKey("aselect_credentials_server_id")) {
+					&& htServiceRequest.containsKey("aselect_credentials_server_id"))
+			{
 				String sTgt = (String) htServiceRequest.get("aselect_credentials_tgt");
 				String sUid = (String) htServiceRequest.get("aselect_credentials_uid");
 				String sServerId = (String) htServiceRequest.get("aselect_credentials_server_id");
@@ -1931,7 +1976,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							// htAdditional.put("tgt_exp_time", htTgtContext.get("tgt_exp_time"));
 
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-							oTGTIssuer.issueTGTandRedirect(sRid, sAuthsp, htAdditional, servletResponse, null);
+							oTGTIssuer.issueTGTandRedirect(sRid, sAuthsp, htAdditional, servletResponse, null, true);
 							return;
 						}
 					}
@@ -2201,7 +2246,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Issue TGT
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-			tgtIssuer.issueTGTandRedirect(sRid, sPrivilegedApplication, null, servletResponse, null);
+			tgtIssuer.issueTGTandRedirect(sRid, sPrivilegedApplication, null, servletResponse, null, true);
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -2213,19 +2258,20 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	}
 
 	/**
-	 * Get the AuthSP servers. Private method that fetches the authentication service providers from the user database
-	 * of the A-Select Servers. The user may have been registered or entitled to use several authentication service
-	 * providers. But only the ones that satisfy the level for the current application are returned by filtering the
+	 * Get the AuthSP servers for the given user.
+	 * Private method that fetches the authentication service providers from the user database
+	 * of the A-Select Servers.
+	 * The user may have been registered or entitled to use several authentication service providers.
+	 * But only the ones that satisfy the level for the current application are returned by filtering the
 	 * authsp's with lower levels out.
 	 * 
 	 * @param sRid
 	 *            The RID.
 	 * @param sUid
-	 *            the s uid
+	 *            the uid
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
-	private void getAuthsps(String sRid, String sUid)
+	private void getUserAuthsps(String sRid, String sUid)
 	throws ASelectException
 	{
 		String sMethod = "getAuthsps";
@@ -2405,7 +2451,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	{
 		String sMethod = "checkCredentials";
 		HashMap htTGTContext;
-		String sTGTLevel = null;
 		Integer intRequiredLevel;
 
 		htTGTContext = _tgtManager.getTGT(sTgt);
@@ -2430,15 +2475,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 		}
 
-		intRequiredLevel = (Integer) _htSessionContext.get("level");
-		String sAddedPatching = _configManager.getAddedPatching();
+		intRequiredLevel = (Integer)_htSessionContext.get("level");
 
-		if (!sAddedPatching.contains("use_authsp_level"))
-			sTGTLevel = (String) htTGTContext.get("sel_level");  // 20110828, Bauke: added
-		if (!Utils.hasValue(sTGTLevel))  // old mechanism
-			sTGTLevel = (String) htTGTContext.get("authsp_level");
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "checkCred level, requires: " + intRequiredLevel+" tgt: "+sTGTLevel+" patch="+sAddedPatching);
-		if (sTGTLevel == null || Integer.parseInt(sTGTLevel) < intRequiredLevel.intValue()) {
+		int iTGTLevel = getLevelFromTGT(htTGTContext);
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "CHECK LEVEL, requires: " + intRequiredLevel+" tgt: "+iTGTLevel);
+		if (iTGTLevel < intRequiredLevel.intValue()) {
 			return -1;  // level is not high enough
 		}
 
@@ -2451,6 +2492,25 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 		// OK!
 		return 0;
+	}
+
+	/**
+	 * Gets the authentication level from the TGT.
+	 * 
+	 * @param htTGTContext - the TGT context
+	 * @return the level
+	 */
+	private int getLevelFromTGT(HashMap htTGTContext)
+	{
+		String sTGTLevel = null;
+		String sAddedPatching = _configManager.getAddedPatching();
+
+		// "sel_level" takes precedence over "authsp_level" unless configuration decides otherwise
+		if (!sAddedPatching.contains("use_authsp_level"))
+			sTGTLevel = (String) htTGTContext.get("sel_level");  // 20110828, Bauke: added
+		if (!Utils.hasValue(sTGTLevel))  // old mechanism
+			sTGTLevel = (String) htTGTContext.get("authsp_level");
+		return (sTGTLevel == null)? 0: Integer.parseInt(sTGTLevel);
 	}
 
 	/**

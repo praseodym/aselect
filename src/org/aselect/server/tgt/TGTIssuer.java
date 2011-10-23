@@ -455,7 +455,7 @@ public class TGTIssuer
 	 * @throws ASelectException
 	 *             if an error page must be shown
 	 */
-	public String issueTGTandRedirect(String sRid, String sAuthSP, HashMap htAdditional, HttpServletResponse oHttpServletResponse, String sOldTGT)
+	public String issueTGTandRedirect(String sRid, String sAuthSP, HashMap htAdditional, HttpServletResponse oHttpServletResponse, String sOldTGT, boolean redirectToo)
 	throws ASelectException
 	{
 		String sMethod = "issueTGTandRedirect";
@@ -490,7 +490,7 @@ public class TGTIssuer
 				return null;
 			}
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Issue TGT for RID: " + sRid);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Issue TGT for RID: " + sRid+" redirectToo="+redirectToo);
 			HashMap<String,Object> htTGTContext = new HashMap<String,Object>();
 			htTGTContext.put("rid", sRid);
 			htTGTContext.put("app_id", sAppId);
@@ -503,6 +503,8 @@ public class TGTIssuer
 			htTGTContext.put("organization", sOrganization);
 			if (sAuthSP != null)
 				htTGTContext.put("authsp", sAuthSP);
+			
+			// "authsp_level" is taken from the authsp configuration
 			String sAuthspLevel = null;
 			if (sAuthSP != null) {
 				sAuthspLevel = (_authSPHandlerManager.getLevel(sAuthSP)).toString();
@@ -520,8 +522,11 @@ public class TGTIssuer
 				htTGTContext.put("authsp_level", sAuthspLevel);
 				htTGTContext.put("sel_level", sAuthspLevel);  // 20100812: set default value
 			}
-			Utils.copyHashmapValue("sel_level", htTGTContext, htSessionContext);  // possible override from session
+			// possible override from user session, could be higher, but should not be lower
+			// I don't expect sel_level to be in htSessionContext, but rather in htAdditional
+			Utils.copyHashmapValue("sel_level", htTGTContext, htSessionContext);
 			
+			// Requested level from the application
 			Integer intAppLevel = (Integer) htSessionContext.get("level");
 			htTGTContext.put("app_level", intAppLevel.toString());
 			
@@ -538,12 +543,22 @@ public class TGTIssuer
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "htAdditional="+htAdditional);
 				htTGTContext.putAll(htAdditional);
 			}
+			
+			// 20111020, Bauke: "sel_level" correction, should at least be equal to "authsp_level"!
+			String sSelLevel = (String)htTGTContext.get("sel_level");
+			sAuthspLevel = (String)htTGTContext.get("authsp_level");
+			if (sSelLevel != null && sAuthspLevel != null) {
+				if (Integer.parseInt(sSelLevel) < Integer.parseInt(sAuthspLevel)) {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "UPGRADE sel_level to "+sAuthspLevel);
+					htTGTContext.put("sel_level", sAuthspLevel);
+				}
+			}
 
 			// 20100228, Bauke: changed from "remote_attributes" to "attributes"
 			String sRemoteAttributes = (htAdditional==null)? null: (String) htAdditional.get("attributes");
 			HashMap htSerAttributes = (sRemoteAttributes==null)? null: org.aselect.server.utils.Utils.deserializeAttributes(sRemoteAttributes);
 			// 20100228, Bauke: when a remote system has changed the language, copy it here
-			_systemLogger.log(Level.FINE, MODULE, sMethod, "htSessionContext lang="+htSessionContext.get("language")+"htTGTContext lang="+htTGTContext.get("language"));
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "htSessionContext lang="+htSessionContext.get("language")+" htTGTContext lang="+htTGTContext.get("language"));
 			Utils.copyHashmapValue("language", htTGTContext, htSessionContext);  // default
 			if (htSerAttributes != null) {
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "htAttributes lang="+htSerAttributes.get("language"));
@@ -569,10 +584,10 @@ public class TGTIssuer
 			if (!bForcedAuthn && sOldTGT != null) {
 				htOldTGTContext = _tgtManager.getTGT(sOldTGT);
 				if (htOldTGTContext != null) {
+					// Higher old level takes precedence
 					HashMap htUpdate = compareOldTGTLevels(htOldTGTContext, htTGTContext);
 					if (!htUpdate.isEmpty())
 						htTGTContext.putAll(htUpdate);
-
 					htTGTContext.put("rid", sRid);
 					ssoSession = (UserSsoSession) htOldTGTContext.get("sso_session");
 				}
@@ -611,7 +626,7 @@ public class TGTIssuer
 			// Also places org_id in the TGT context:
 			boolean mustChooseOrg = Utils.handleOrganizationChoice(htTGTContext, hUserOrganizations);
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "MustChoose="+mustChooseOrg+" Store TGT " + htTGTContext);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "MustChoose="+mustChooseOrg+" Store TGT=" + htTGTContext);
 			String sTgt = null;
 			if (htOldTGTContext == null) {
 				// Create a new TGT, must set "name_id" to the sTgt value
@@ -646,12 +661,13 @@ public class TGTIssuer
 			// No organization selection, the tgt was just issued, report sensor data
 			// remove the session and send the user to the application
 			Tools.calculateAndReportSensorData(_configManager, _systemLogger, htSessionContext);
-			_sessionManager.killSession(sRid);
 			
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
-			String sLang = (String)htTGTContext.get("language");
-			sendTgtRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse, sLang);
-			
+			if (redirectToo) {
+				_sessionManager.killSession(sRid);				
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
+				String sLang = (String)htTGTContext.get("language");
+				sendTgtRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse, sLang);
+			}
 			return sTgt;
 		}
 		catch (ASelectException e) {
@@ -850,6 +866,8 @@ public class TGTIssuer
 					sAppUrl = sAppUrl.substring(0, sAppUrl.length()-1);
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "2="+sAppUrl);
 			}
+			else 
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "No aselect_specials");
 			
 			// Check whether the application url contains cgi parameters
 			if (sAppUrl.indexOf("?") > 0)

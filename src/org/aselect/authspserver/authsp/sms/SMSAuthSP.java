@@ -955,10 +955,9 @@ public class SMSAuthSP extends ASelectHttpServlet
 
 		try {
 			// Prevent tampering with request parameters, potential fishing leak
-//				if (_sFailureHandling.equalsIgnoreCase("aselect") || sResultCode.equals(Errors.ERROR_SMS_SUCCESS))
-				if (failureHandling.equalsIgnoreCase("aselect") || sResultCode.equals(Errors.ERROR_SMS_SUCCESS))
-			// A-Select handles error or success
-			{
+			if (failureHandling.equalsIgnoreCase("aselect") || sResultCode.equals(Errors.ERROR_SMS_SUCCESS) ||
+								sResultCode.equals(Errors.ERROR_SMS_INVALID_PHONE)) {  // 20111020, Bauke: added
+				// A-Select handles error or success
 				String sRid = servletRequest.getParameter("rid");
 				String sAsUrl = servletRequest.getParameter("as_url");
 				String sAsId = servletRequest.getParameter("a-select-server");

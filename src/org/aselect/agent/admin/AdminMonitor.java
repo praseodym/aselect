@@ -71,7 +71,6 @@ import org.aselect.agent.config.ASelectAgentConfigManager;
 import org.aselect.agent.log.ASelectAgentSystemLogger;
 import org.aselect.agent.ticket.TicketManager;
 
-// TODO: Auto-generated Javadoc
 /**
  * Implements a GUI for monitoring tickets that are issued by the A-Select Agent. <br>
  * <br>
