@@ -23,6 +23,9 @@ import java.util.logging.Level;
 
 import org.aselect.lbsensor.handler.SensorStore;
 
+/**
+ * The Class HttpPoller.
+ */
 public class HttpPoller extends TimerTask
 {
 	public final static String MODULE = "HttpPoller";
@@ -36,11 +39,11 @@ public class HttpPoller extends TimerTask
 	 * Instantiates a new http poller.
 	 * 
 	 * @param sSensorStoreId
-	 *            the s sensor store id
+	 *            the sensor store id
 	 * @param sUrl
-	 *            the s url
+	 *            the url
 	 * @param sSignOfLife
-	 *            the s sign of life
+	 *            the sign of life we're testing for
 	 */
 	public HttpPoller(String sSensorStoreId, String sUrl, String sSignOfLife)
 	{
@@ -59,7 +62,7 @@ public class HttpPoller extends TimerTask
 		String sLine;
 		boolean bOk;
 		BufferedReader oInReader = null;
-		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "ACTION: " + _sSensorStoreId);
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "ACTION: " + _sSensorStoreId+", t="+Thread.currentThread().getId());
 
 		// Poll the data supplier, is it still running?
 		SensorStore oSensorStore = LbSensor.getSensorStore(_sSensorStoreId);

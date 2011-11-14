@@ -190,20 +190,17 @@
  */
 package org.aselect.server.request.handler.aselect.authentication;
 
-import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.logging.Level;
 
-import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.application.Application;
 import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.attributes.AttributeGatherer;
-import org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler;
 import org.aselect.server.authspprotocol.handler.AuthSPHandlerManager;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
@@ -221,9 +218,8 @@ import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
+import org.aselect.system.utils.TimeSensor;
 import org.aselect.system.utils.Utils;
-import org.opensaml.DefaultBootstrap;
-import org.opensaml.xml.ConfigurationException;
 
 /**
  * Handle API requests from Applications and A-Select Agents. <br>
@@ -344,6 +340,8 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			handleAuthenticateRequest(oProtocolRequest, oInputMessage, oOutputMessage);
 		}
 		else if (sAPIRequest.equals("verify_credentials")) {
+			// uses timeSensor
+			_timeSensor.setTimeSensorLevel(1);  // used
 			handleVerifyCredentialsRequest(oInputMessage, oOutputMessage);
 		}
 		else if (sAPIRequest.equals("get_app_level")) {
@@ -353,6 +351,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			handleKillTGTRequest(oInputMessage, oOutputMessage);
 		}
 		else if (sAPIRequest.equals("upgrade_tgt")) {
+			_timeSensor.setTimeSensorLevel(1);  // used
 			handleUpgradeTGTRequest(oInputMessage, oOutputMessage);
 		}
 		// Not an API call:
@@ -397,6 +396,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		Utils.copyMsgValueToHashmap("check-signature", hmRequest, oInputMessage);
 		Utils.copyMsgValueToHashmap("signature", hmRequest, oInputMessage);
 		Utils.copyMsgValueToHashmap("shared_secret", hmRequest, oInputMessage);
+		Utils.copyMsgValueToHashmap("usi", hmRequest, oInputMessage);
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmRequest=" + hmRequest);
 		HashMap<String, String> hmResponse = handleAuthenticateAndCreateSession(hmRequest, null);
@@ -404,8 +404,9 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 
 		try {
 			String sValue = hmResponse.get("rid");
-			if (sValue != null)
+			if (sValue != null) {
 				oOutputMessage.setParam("rid", sValue);
+			}
 			sValue = hmResponse.get("as_url");
 			if (sValue != null)
 				oOutputMessage.setParam("as_url", sValue);
@@ -591,14 +592,18 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 		
 		// check if request should be signed
-		String sAppId = (String) htTGTContext.get("app_id");	// RH, 20100910, n
-//		if (_applicationManager.isSigningRequired()) {	// RH, 20100910, o
-		if (_applicationManager.isSigningRequired(sAppId)) {	// RH, 20100910, n
+		String sAppId = (String) htTGTContext.get("app_id");
+		if (Utils.hasValue(sAppId))
+			_timeSensor.setTimeSensorAppId(sAppId);
+		
+		if (_applicationManager.isSigningRequired(sAppId)) {
 			// Note: we should do this earlier, but we don't have an app_id until now
-//			String sAppId = (String) htTGTContext.get("app_id");	// RH, 20100910, o
 			StringBuffer sbData = new StringBuffer(sASelectServer).append(sEncTGT);
 			if (sLanguage != null)
 				sbData = sbData.append(sLanguage);
+			String sUsi = oInputMessage.getParam("usi");
+			if (sUsi != null)
+				sbData = sbData.append(sUsi);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "Signing required, sbData=" + sbData);
 			verifyApplicationSignature(oInputMessage, sbData.toString(), sAppId);
 		}
@@ -683,9 +688,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 * @throws ASelectException
 	 *             If processing fails.
 	 */
-	//
 	// Bauke 20081201: added support for parameter "saml_attributes"
-	//
 	private void handleVerifyCredentialsRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
 		throws ASelectException
 	{
@@ -771,6 +774,9 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			StringBuffer sbData = new StringBuffer(sASelectServer).append(sEncTgt).append(sRid);
 			if (sSamlAttributes != null)
 				sbData = sbData.append(sSamlAttributes);
+			String sUsi = oInputMessage.getParam("usi");
+			if (sUsi != null)
+				sbData = sbData.append(sUsi);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "sbData=" + sbData);
 			verifyApplicationSignature(oInputMessage, sbData.toString(), sAppId);
 		}
@@ -942,7 +948,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	private void verifyApplicationSignature(IInputMessage oInputMessage, String sData, String sAppId)
 		throws ASelectException
 	{
-		String sMethod = "verifyApplicationSignature()";
+		String sMethod = "verifyApplicationSignature";
 
 		String sSignature = null;
 		try {

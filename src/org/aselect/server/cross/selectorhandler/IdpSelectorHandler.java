@@ -102,7 +102,6 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.sam.agent.SAMResource;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * This class handles the remote A-Select Server selection by means of a user HTML form. <br>
  * <br>

@@ -12,6 +12,7 @@
 package org.aselect.lbsensor;
 
 import java.util.HashMap;
+import java.util.Timer;
 import java.util.logging.Level;
 
 import org.aselect.lbsensor.handler.SensorStore;
@@ -25,6 +26,9 @@ public class LbSensor
 
 	private static LbSensorSystemLogger _oLbSensorLogger;
 	private LbSensorConfigManager _oConfigManager = null;
+
+	protected long _iDataCollectInterval = 60*1000;  // default, milliseconds
+	protected Timer _dataCollectTimer;
 
 	/**
 	 * The main method.
@@ -129,6 +133,12 @@ public class LbSensor
 			oConfigHandler = _oConfigManager.getNextSection(oConfigHandler);
 			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "handler=" + oConfigHandler);
 		}
+		
+		// Run a timer thread to empty the DataCollectStore once in a while
+		DataCollectExporter dcExporter = new DataCollectExporter();
+		_dataCollectTimer = new Timer();
+		_dataCollectTimer.schedule(dcExporter, 0, _iDataCollectInterval);
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "scheduled");
 	}
 
 	/**

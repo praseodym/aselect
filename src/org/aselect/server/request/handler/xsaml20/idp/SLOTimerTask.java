@@ -30,7 +30,6 @@ import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.core.StatusCode;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
-// TODO: Auto-generated Javadoc
 /**
  * This class is a timertask.
  */

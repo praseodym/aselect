@@ -247,7 +247,8 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			String sIssuer = (String) htSessionContext.get("sp_issuer");
 			if (sIssuer == null && !sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
 				// Session can be killed. The user could not be authenticated.
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Error in response from authsp: " + sResultCode);
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Error in authsp response: " + sResultCode+" issuer="+sIssuer);
+				Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_pbh", sRid, htSessionContext, null, false);
 				_sessionManager.killSession(sRid);
 				throw new ASelectException(sResultCode);
 			}
@@ -330,6 +331,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 					sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
 					String sCountry = (String) htServiceRequest.get("country");
 					sSelectForm = Utils.replaceString(sSelectForm, "[country]", sCountry);
+					Tools.pauseSensorData(_systemLogger, htSessionContext);  //20111102
 					servletResponse.getWriter().println(sSelectForm);
 				}
 				return;
@@ -337,15 +339,15 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			// RH, 201109, en
 			
 			// Continue with regular processing
+			Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_pbh", sRid, htSessionContext, sTgt, true);
+			_sessionManager.killSession(sRid);
 			// 20111020, Bauke: redirect is done below
-			_sessionManager.killSession(sRid);				
 
 			String sAppUrl = (String) htSessionContext.get("app_url");
 			if (htSessionContext.get("remote_session") != null)
 				sAppUrl = (String) htSessionContext.get("local_as_url");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
-
 			String sLang = (String)htSessionContext.get("language");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
 			tgtIssuer.sendTgtRedirect(sAppUrl, sTgt, sRid, servletResponse, sLang);					
 			// 20111020, old: tgtIssuer.issueTGTandRedirect(sRid, sAuthSp, htAdditional, servletResponse, sOldTGT, true);
 		}
@@ -415,6 +417,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request: invalid or unknown session.");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
 			}
+			Tools.resumeSensorData(_systemLogger, htSessionContext);  // 20111102
 
 			// Log cancel request
 			String sAppId = (String) htSessionContext.get("app_id");

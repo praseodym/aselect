@@ -35,6 +35,7 @@ import org.aselect.system.communication.client.soap11.SOAP11Communicator;
 import org.aselect.system.communication.client.soap12.SOAP12Communicator;
 import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
+import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
 import org.w3c.dom.*;
@@ -286,7 +287,7 @@ public class Tools
 	 */
 
 	public static String stream2string(InputStream is, String enc, boolean doClose)
-		throws IOException
+	throws IOException
 	{
 
 		int xRead = 0;
@@ -314,7 +315,7 @@ public class Tools
 	 *             Signals that an I/O exception has occurred.
 	 */
 	public static String stream2string(InputStream is, boolean close)
-		throws IOException
+	throws IOException
 	{
 		return stream2string(is, DEFAULT_CHARSET, close);
 	}
@@ -331,7 +332,7 @@ public class Tools
 	 *             Signals that an I/O exception has occurred.
 	 */
 	public static String stream2string(InputStream is, String enc)
-		throws IOException
+	throws IOException
 	{
 		return stream2string(is, enc, true);
 	}
@@ -346,7 +347,7 @@ public class Tools
 	 *             Signals that an I/O exception has occurred.
 	 */
 	public static String stream2string(InputStream is)
-		throws IOException
+	throws IOException
 	{
 		return stream2string(is, DEFAULT_CHARSET, true);
 	}
@@ -365,7 +366,7 @@ public class Tools
 	 *             the a select exception
 	 */
 	public static IClientCommunicator initClientCommunicator(ConfigManager oCfgMgr, SystemLogger oSysLog, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sClientCommunicator = Utils.getSimpleParam(oCfgMgr, oSysLog, oConfig, "clientcommunicator", false);
 		oSysLog.log(Level.FINE, MODULE, "initClientCommunicator", "communicator="+sClientCommunicator);
@@ -396,6 +397,10 @@ public class Tools
 		String sMethod = "initializeSensorData";
 		long now = System.currentTimeMillis();
 
+		if (htSessionContext == null) {
+			oSysLog.log(Level.INFO, MODULE, sMethod, "NO SESSION");
+			return;
+		}
 		oSysLog.log(Level.INFO, MODULE, sMethod, "init now=" + now);
 		htSessionContext.put("first_contact", Long.toString(now)); // milliseconds
 		htSessionContext.put("time_spent", "0"); // milliseconds
@@ -414,7 +419,12 @@ public class Tools
 		String sMethod = "pauseSensorData";
 		long now = System.currentTimeMillis();
 
-		oSysLog.log(Level.INFO, MODULE, sMethod, "pause now=" + now);
+		if (htSessionContext == null) {
+			oSysLog.log(Level.INFO, MODULE, sMethod, "NO SESSION");
+			return;
+		}
+		String sPause = htSessionContext.get("pause_contact"); // seconds
+		oSysLog.log(Level.INFO, MODULE, sMethod, "pause now=" + now + ((sPause==null)?"": ", LBE already paused at="+sPause));
 		htSessionContext.put("pause_contact", Long.toString(now)); // seconds
 	}
 
@@ -431,10 +441,17 @@ public class Tools
 		String sMethod = "resumeSensorData";
 		long now = System.currentTimeMillis();
 
+		if (htSessionContext == null) {
+			oSysLog.log(Level.INFO, MODULE, sMethod, "NO SESSION");
+			return;
+		}
 		oSysLog.log(Level.INFO, MODULE, sMethod, "resume now=" + now);
 		String sPause = htSessionContext.get("pause_contact"); // seconds
 		String sSpent = htSessionContext.get("time_spent"); // seconds
-		if (sPause != null) {
+		if (sPause == null) {
+			oSysLog.log(Level.INFO, MODULE, sMethod,  "spent="+sSpent + ", LBE cannot resume, not paused");
+		}
+		else {
 			try {
 				long lPause = Long.parseLong(sPause);
 				long lSpent = (sSpent != null) ? Long.parseLong(sSpent) : 0;
@@ -453,35 +470,83 @@ public class Tools
 	 * Calculate and report sensor data.
 	 * 
 	 * @param oConfMgr
-	 *            the o conf mgr
+	 *            the conf mgr
 	 * @param oSysLog
-	 *            the o sys log
-	 * @param htSession
-	 *            the ht session
+	 *            the sys log
+	 * @param htSessionContext
+	 *            the session
 	 */
-	public static void calculateAndReportSensorData(ConfigManager oConfMgr, SystemLogger oSysLog, HashMap htSession)
+	public static void calculateAndReportSensorData(ConfigManager oConfMgr, SystemLogger oSysLog,
+						String sOrig, String sRid, HashMap htSessionContext, String sTgt, boolean bSuccess)
 	{
 		String sMethod = "calculateAndReportSensorData";
 		long lFirst;
 
-		String sFirst = (String) htSession.get("first_contact"); // seconds
-		String sSpent = (String) htSession.get("time_spent"); // seconds
-		if (sFirst != null) {
-			try {
-				lFirst = Long.parseLong(sFirst);
-				long now = System.currentTimeMillis();
-				long lTotalSpent = now - lFirst;
-				oSysLog.log(Level.INFO, MODULE, sMethod, "now=" + now + " first=" + sFirst + " spent=" + sSpent);
-				if (sSpent != null) {
-					long lSpent = Long.parseLong(sSpent);
-					lTotalSpent -= lSpent;
-				}
-				Object oConfig = Utils.getSimpleSection(oConfMgr, oSysLog, null, "aselect", true);
-				Tools.reportUsageToSensor(oConfMgr, oSysLog, oConfig, Long.toString(lTotalSpent));
+		if (htSessionContext == null) {
+			oSysLog.log(Level.INFO, MODULE, sMethod, "NO SESSION");
+			return;
+		}
+		String sFirst = (String) htSessionContext.get("first_contact"); // seconds
+		String sSpent = (String) htSessionContext.get("time_spent"); // seconds
+		if (sFirst == null) {
+			oSysLog.log(Level.INFO, MODULE, sMethod, "LBE not started");
+			return;
+		}
+		try {
+			String sPause = (String)htSessionContext.get("pause_contact"); // seconds
+			lFirst = Long.parseLong(sFirst);
+			long now = System.currentTimeMillis();
+			long lTotalSpent = now - lFirst;
+			oSysLog.log(Level.INFO, MODULE, sMethod, "now="+now + " first="+sFirst + " spent="+sSpent+
+							((sPause==null)?"": ", LBE already paused at="+sPause));
+			if (sSpent != null) {
+				long lSpent = Long.parseLong(sSpent);
+				lTotalSpent -= lSpent;
 			}
-			catch (Exception e) {
-				oSysLog.log(Level.INFO, MODULE, sMethod, "Sensor report failed");
-			}
+			Object oConfig = Utils.getSimpleSection(oConfMgr, oSysLog, null, "aselect", true);
+			Tools.reportUsageToSensor(oConfMgr, "lbsensor", "sensor_url", oSysLog, oConfig, Long.toString(lTotalSpent));
+		
+			// 20111110, Bauke: added TimeSensor functionality
+			String sUsi = (String)htSessionContext.get("usi");
+		    String sFirstContact = TimeSensor.timeSensorMilli2Time(Long.parseLong(sFirst));
+		    String sTotalSpent = TimeSensor.timeSensorMilli2Time(lTotalSpent);
+			String sNow = TimeSensor.timeSensorMilli2Time(now);
+			String sAppId = (String)htSessionContext.get("app_id");
+			String sVisit = (String)htSessionContext.get("authsp_visited");
+			// Thread is the last thread that contributed to processing
+		    String sP = String.format("%s,%s,%s,%d,%d,%d,%s,%s,%s,%s,%s,%s", sOrig, (sUsi==null)? "": sUsi,
+		    		sAppId, 1/*complete flow*/, (sVisit!=null)?4/*authsp*/: 3/*server*/, Thread.currentThread().getId(),
+		    		sFirstContact, sNow, sTotalSpent, Boolean.toString(bSuccess), sRid, (sTgt==null)? "": sTgt.substring(0,41));
+		    Tools.reportTimerSensorData(oConfMgr, "aselect"/*xml-tag*/, oSysLog, sP);
+		}
+		catch (Exception e) {
+			oSysLog.log(Level.INFO, MODULE, sMethod, "Sensor report failed: "+e.getClass()+": "+e.getMessage());
+		}
+	}
+
+	/**
+	 * Report timer sensor data to the url specified in the configuration.
+	 * 
+	 * @param oConfMgr
+	 *            the config mgr
+	 * @param sMainSection
+	 *            the main section to find the timer_sensor tag in
+	 * @param oSysLog
+	 *            the sys log
+	 * @param sData
+	 *            the data to be sent
+	 */
+	public static void reportTimerSensorData(ConfigManager oConfMgr, String sMainSection, SystemLogger oSysLog, String sData)
+	{
+		String sMethod = "reportTimerSensorData";
+		
+		Object oConfig;
+		try {
+			oConfig = Utils.getSimpleSection(oConfMgr, oSysLog, null, sMainSection, true);
+			reportUsageToSensor(oConfMgr, "timer_sensor", "sensor_url", oSysLog, oConfig, sData);
+		}
+		catch (ASelectException e) {
+			oSysLog.log(Level.INFO, MODULE, sMethod, "TimerSensor report failed");
 		}
 	}
 
@@ -489,27 +554,32 @@ public class Tools
 	 * Report usage to sensor.
 	 * 
 	 * @param oConfMgr
-	 *            the o conf mgr
+	 *            the configuration manager
+	 * @param sSection
+	 *            the section
+	 * @param sUrlTag
+	 *            the url tag
 	 * @param oSysLog
-	 *            the o sys log
+	 *            the sys log
 	 * @param oConfig
-	 *            the o config
+	 *            the config section
 	 * @param sData
-	 *            the s data
+	 *            the data to be sent
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
-	private static void reportUsageToSensor(ConfigManager oConfMgr, SystemLogger oSysLog, Object oConfig, String sData)
-		throws ASelectException
+	static void reportUsageToSensor(ConfigManager oConfMgr, String sSection, String sUrlTag,
+						SystemLogger oSysLog, Object oConfig, String sData)
+	throws ASelectException
 	{
 		String sMethod = "reportUsageToSensor";
 		IClientCommunicator oClientCommunicator;
 
-		Object oSensorSection = Utils.getSimpleSection(oConfMgr, oSysLog, oConfig, "lbsensor", false);
+		Object oSensorSection = Utils.getSimpleSection(oConfMgr, oSysLog, oConfig, sSection, false);
+		oSysLog.log(Level.INFO, MODULE, sMethod, "section="+sSection+"->"+oSensorSection);
 		if (oSensorSection == null)
 			return;
 		oClientCommunicator = Tools.initClientCommunicator(oConfMgr, oSysLog, oSensorSection);
-		String sSensorUrl = Utils.getSimpleParam(oConfMgr, oSysLog, oSensorSection, "sensor_url", true);
+		String sSensorUrl = Utils.getSimpleParam(oConfMgr, oSysLog, oSensorSection, sUrlTag, true);
 
 		HashMap htResponse = null;
 		HashMap<String, String> htRequest = new HashMap<String, String>();
@@ -566,5 +636,4 @@ public class Tools
 		}
 		return htAttributes;
 	}
-
 }

@@ -51,7 +51,6 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.logging.SystemLogger;
 
-// TODO: Auto-generated Javadoc
 /**
  * A common configuration manager. <br>
  * <br>

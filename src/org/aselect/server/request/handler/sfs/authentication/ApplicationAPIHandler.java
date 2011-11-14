@@ -543,7 +543,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			sbAsUrl.append("?request=login1");
 		}
 
-		sSessionId = _sessionManager.createSession(htSessionContext);
+		sSessionId = _sessionManager.createSession(htSessionContext, false);
 		if (sSessionId == null) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unable to create session");
 

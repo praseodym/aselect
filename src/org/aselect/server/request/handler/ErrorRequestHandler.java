@@ -68,8 +68,7 @@ public class ErrorRequestHandler extends AbstractRequestHandler
 	}
 
 	/**
-	 * Process incoming request <br>
-	 * .
+	 * Process incoming request.
 	 * 
 	 * @param request
 	 *            HttpServletRequest.
@@ -80,16 +79,10 @@ public class ErrorRequestHandler extends AbstractRequestHandler
 	 *             If processing of meta data request fails.
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process";
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, "process");
-//		String sRid = request.getParameter("rid");
-//		_systemLogger.log(Level.INFO, MODULE, "rid:", sRid);
-		
-//		_configManager.getForm(sForm, sLanguage, sCountry);
-//		HashMap context = _oSessionManager.getSessionContext(sRid);
-//		String appId = (String)context.get("app_id");
 		
 		// check for valid error_code	
 		String sErrorCode = request.getParameter("error_code");

@@ -36,6 +36,7 @@ import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.handler.IRequestHandler;
 import org.aselect.system.error.Errors;
+import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
@@ -445,6 +446,7 @@ public class RequestHandlerFactory
 
 			pwOut = response.getWriter();
 			response.setContentType("text/html");
+			Tools.pauseSensorData(_systemLogger, null);  //20111102, no session available at this point
 			pwOut.println(sErrorForm);
 		}
 		catch (IOException e) {

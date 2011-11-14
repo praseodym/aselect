@@ -121,6 +121,7 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.sam.agent.SAMResource;
+import org.aselect.system.utils.Tools;
 
 /**
  * This class handles requests coming from a a-select server through a users browser. <br>
@@ -236,6 +237,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 			}
 
+			Tools.resumeSensorData(_systemLogger, htSessionContext);  // 20111102
 			String sRemoteOrg = (String) htSessionContext.get("remote_organization");
 
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "AselBrowREQ sRemoteRid=" + sRemoteRid + ", sLocalRid="

@@ -22,6 +22,7 @@ import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMAgent;
 import org.aselect.system.storagemanager.IStorageHandler;
+import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
 /**
@@ -50,7 +51,9 @@ public class MemoryStorageHandler implements IStorageHandler
 
 	/** The logger that is used for system entries */
 	private SystemLogger _systemLogger;
-
+	
+	private ConfigManager _configManager;
+	
 	/**
 	 * Initialize the <code>MemoryStorageHandler</code>. <br>
 	 * <br>
@@ -87,10 +90,11 @@ public class MemoryStorageHandler implements IStorageHandler
 	 *      org.aselect.system.sam.agent.SAMAgent)
 	 */
 	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger systemLogger, SAMAgent oSAMAgent)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		_systemLogger = systemLogger;
 		_htStorage = new ConcurrentHashMap(200);
+		_configManager = oConfigManager;
 	}
 
 	/**
@@ -308,7 +312,7 @@ public class MemoryStorageHandler implements IStorageHandler
 	public void cleanup(Long lTimestamp)
 		throws ASelectStorageException
 	{
-		String sMethod = "cleanup()";
+		String sMethod = "cleanup";
 		int countAll = 0, countRemoved = 0;
 
 		_systemLogger.log(Level.FINER, MODULE, sMethod, " CleanupTime=" + lTimestamp);
@@ -318,13 +322,17 @@ public class MemoryStorageHandler implements IStorageHandler
 			Object oKey = eKeys.nextElement();
 
 			countAll++;
-			HashMap htStorageContainer = (HashMap) _htStorage.get(oKey);
-			Long lStorageTime = (Long) htStorageContainer.get("timestamp");
-			String sTxt = Utils.firstPartOf(oKey.toString(), 30);
+			HashMap htStorageContainer = (HashMap)_htStorage.get(oKey);
+			Long lStorageTime = (Long)htStorageContainer.get("timestamp");
 
 			if (lTimestamp.longValue() >= lStorageTime.longValue()) {
+				//String sFirstContact = (String)htStorageContainer.get("first_contact");
+				//if (sFirstContact != null) {  // it's a session
+				//	Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_mem", (String)oKey, htStorageContainer, null, false);
+				//}
 				_htStorage.remove(oKey);
 				countRemoved++;
+				String sTxt = Utils.firstPartOf(oKey.toString(), 30);
 				_systemLogger.log(Level.FINEST, MODULE, sMethod, "MSH Key=" + sTxt + " TimeStamp=" + lStorageTime
 						+ " Left=" + (lStorageTime - lTimestamp) + " removed");
 			}

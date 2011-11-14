@@ -74,6 +74,7 @@ import org.aselect.system.communication.server.IProtocolRequest;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.Tools;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -112,7 +113,8 @@ public class AuthSPAPIHandler extends AbstractAPIRequestHandler
 	 */
 	public AuthSPAPIHandler(RequestParser reqParser, HttpServletRequest servletRequest,
 			HttpServletResponse servletResponse, String sMyServerId, String sMyOrg)
-		throws ASelectCommunicationException {
+	throws ASelectCommunicationException
+	{
 		super(reqParser, servletRequest, servletResponse, sMyServerId, sMyOrg);
 		_sModule = "AuthSPAPIHandler";
 		_sessionManager = SessionManager.getHandle();
@@ -137,7 +139,7 @@ public class AuthSPAPIHandler extends AbstractAPIRequestHandler
 	@Override
 	public void processAPIRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
 			IOutputMessage oOutputMessage)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "processAPIRequest()";
 
@@ -170,16 +172,16 @@ public class AuthSPAPIHandler extends AbstractAPIRequestHandler
 	 *             If proccessing fails.
 	 */
 	private void handleKillSessionRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
-		String sSessionId = null;
+		String sRid = null;
 		String sSignature = null;
 		String sAuthSP = null;
 		HashMap htSessionContext;
 		String sMethod = "handleKillSessionRequest()";
 
 		try {
-			sSessionId = oInputMessage.getParam("rid");
+			sRid = oInputMessage.getParam("rid");
 			sSignature = oInputMessage.getParam("signature");
 			sAuthSP = oInputMessage.getParam("authsp");
 		}
@@ -188,24 +190,26 @@ public class AuthSPAPIHandler extends AbstractAPIRequestHandler
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST, eAC);
 		}
 
-		if (!CryptoEngine.getHandle().verifySignature(sAuthSP, sSessionId, sSignature)) {
+		if (!CryptoEngine.getHandle().verifySignature(sAuthSP, sRid, sSignature)) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "AuthSP:" + sAuthSP + " Invalid signature:"
 					+ sSignature);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
 
 		// check if session exists
-		htSessionContext = _sessionManager.getSessionContext(sSessionId);
+		htSessionContext = _sessionManager.getSessionContext(sRid);
 		if (htSessionContext == null) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid session: " + sSessionId);
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid session: " + sRid);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 		}
 
+		//20111102, Bauke: added
+		Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_pah", sRid, htSessionContext, null, true);
+		_sessionManager.killSession(sRid);
 		htSessionContext = null;
-		_sessionManager.killSession(sSessionId);
 
 		try {
-			oOutputMessage.setParam("rid", sSessionId);
+			oOutputMessage.setParam("rid", sRid);
 			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
 		}
 		catch (ASelectCommunicationException eAC) {

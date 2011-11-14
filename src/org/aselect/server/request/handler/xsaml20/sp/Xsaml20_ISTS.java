@@ -39,6 +39,7 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.sam.agent.SAMResource;
 import org.aselect.system.utils.BASE64Encoder;
 import org.aselect.system.utils.Base64Codec;
+import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
 import org.opensaml.common.SAMLObjectBuilder;
@@ -185,8 +186,6 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 		String sMethod = "process()";
 		String sRid;
 		String sFederationUrl = null;
-//		String preferredBinding = singleSignOnServiceBindingConstantHTTPPOST;
-//		String preferredBinding = singleSignOnServiceBindingConstantREDIRECT;
 
 		String sMyUrl = _sServerUrl; // extractAselectServerUrl(request);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "MyUrl=" + sMyUrl + " MyId="+getID()+ " Request=" + request);
@@ -204,9 +203,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No session found for RID: " + sRid);
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
-			//String sLanguage = (String)htSessionContext.get("language");
-			//if (sLanguage != null)
-			//	;
+			Tools.resumeSensorData(_systemLogger, htSessionContext);  //20111102
 			
 			// 20091028, Bauke, let the user choose which IdP to use
 			// 20110308, Bauke: changed, user chooses when "use_idp_select" is "true"
@@ -235,6 +232,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				response.setContentType("text/html");
 				response.setHeader("Pragma", "no-cache");
 				PrintWriter pwOut = response.getWriter();
+				Tools.pauseSensorData(_systemLogger, htSessionContext);  //20111102
 				pwOut.println(sSelectForm);
 				pwOut.close();
 				return new RequestState(null);
@@ -270,6 +268,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 					response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 					response.setContentType("text/html");
 					response.setHeader("Pragma", "no-cache");
+					Tools.pauseSensorData(_systemLogger, htSessionContext);  //20111102
 					response.sendRedirect(sRedirectUrl);
 					return new RequestState(null);
 				}
@@ -520,6 +519,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Inputs=" + sInputs);
 				handlePostForm(_sPostTemplate, sDestination, sInputs, response);
 			}
+			Tools.pauseSensorData(_systemLogger, htSessionContext);  //20111102
 		}
 		catch (ASelectException e) { // pass unchanged to the caller
 			throw e;

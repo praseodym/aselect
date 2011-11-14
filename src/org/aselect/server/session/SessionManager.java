@@ -246,7 +246,7 @@ public class SessionManager extends StorageManager
 	 * @throws ASelectException
 	 *             If server is busy.
 	 */
-	synchronized public String createSession(HashMap htSessionContext)
+	synchronized public String createSession(HashMap htSessionContext, boolean startPaused)
 		throws ASelectException
 	{
 		String sMethod = "createSession";
@@ -266,6 +266,8 @@ public class SessionManager extends StorageManager
 			}
 
 			Tools.initializeSensorData(_systemLogger, htSessionContext);
+			if (startPaused)
+				Tools.pauseSensorData(_systemLogger, htSessionContext);
 			// _systemLogger.log(Level.INFO, MODULE, sMethod, "New SessionId=" + sSessionId); // +
 			// ", htSessionContext="+htSessionContext);
 			put(sSessionId, htSessionContext); // always insert

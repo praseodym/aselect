@@ -64,7 +64,6 @@ import org.aselect.system.communication.client.IClientCommunicator;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 
-// TODO: Auto-generated Javadoc
 /**
  * Verbosely traces requests and responses. <br>
  * <br>

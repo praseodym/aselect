@@ -769,7 +769,7 @@ public class Utils
 	 */
 	public static String getSimpleParam(ConfigManager oConfMgr, SystemLogger oSysLog, Object oConfig, String sParam,
 			boolean bMandatory)
-		throws ASelectException
+	throws ASelectException
 	{
 		final String sMethod = "getSimpleParam";
 		try {
@@ -890,7 +890,7 @@ public class Utils
 	 */
 	public static String getParamFromSection(ConfigManager oConfMgr, SystemLogger oSysLog, Object oConfig,
 			String sSection, String sParam, boolean bMandatory)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		final String sMethod = "getParamFromSection";
 		try {

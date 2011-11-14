@@ -234,7 +234,7 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
 				htSessionContext.put("app_url", sRedirectUrl);
 				htSessionContext.put("organization", _sMyOrg);
 				
-				sSessionId = _sessionManager.createSession(htSessionContext);
+				sSessionId = _sessionManager.createSession(htSessionContext, false);
 				if (sSessionId == null) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to create session");
 					throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR);

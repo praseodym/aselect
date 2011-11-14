@@ -100,6 +100,7 @@ import org.aselect.system.exception.ASelectAuthSPException;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
 /**
@@ -585,7 +586,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	 */
 	public boolean handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleDirectLoginRequest";
 		String sRequest = (String) htServiceRequest.get("request");
@@ -837,6 +838,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 
 				// The next user redirect will set the TGT cookie, the "nextauthsp" form below will also set the cookie
 				if (next_authsp != null) {
+					// Direct the user to the next_authsp using the "nextauthsp" form
 					String sSelectForm = _configManager.getForm("nextauthsp", _sUserLanguage, _sUserCountry);
 					sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
 					sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]",  (String) htServiceRequest.get("a-select-server"));
@@ -848,8 +850,8 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 					String sCountry = (String) htServiceRequest.get("country");  // 20101027 _
 					sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
 					sSelectForm = Utils.replaceString(sSelectForm, "[country]", sCountry);
+					Tools.pauseSensorData(_systemLogger, htSessionContext);  //20111102
 					pwOut.println(sSelectForm);
-					// Direct the user to the next_authsp using the "nextauthsp" form
 					return true;
 				}
 				// End sequential authsp's
@@ -857,16 +859,18 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				_authenticationLogger.log(new Object[] {
 						MODULE, sUid, (String) htSessionContext.get("client_ip"), sOrg, app_id, "granted"
 					});
-				
-				// Finish regular authsp handling
-				// 20111018, Bauke: redirect is done below
-				_sessionManager.killSession(sRid);				
 
 				String sAppUrl = (String) htSessionContext.get("app_url");
 				if (htSessionContext.get("remote_session") != null)
 					sAppUrl = (String) htSessionContext.get("local_as_url");
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
+				
+				// 20111101, Bauke: added Sensor
+				// Finish regular authsp handling
+				Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_ldp", sRid, htSessionContext, sTgt, true);
+				_sessionManager.killSession(sRid);				
+				// 20111018, Bauke: redirect is done below
 
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
 				String sLang = (String)htSessionContext.get("language");
 				tgtIssuer.sendTgtRedirect(sAppUrl, sTgt, sRid, servletResponse, sLang);					
 				return true;
@@ -898,6 +902,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
 
 				sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext);
+				Tools.pauseSensorData(_systemLogger, htSessionContext);  //20111102
 				pwOut.println(sErrorForm);
 			}
 			else {
@@ -1039,6 +1044,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 					.append(sRid);
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[cancel]", sbUrl.toString());
 			sDirectLoginForm = _configManager.updateTemplate(sDirectLoginForm, htSessionContext);
+			Tools.pauseSensorData(_systemLogger, htSessionContext);  //20111102
 			pwOut.println(sDirectLoginForm);
 		}
 		catch (ASelectException e) {

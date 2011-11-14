@@ -568,6 +568,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			String sAppUrl = (String)htSessionContext.get("app_url");
 			sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), sAppUrl, _systemLogger);
 			sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext);
+			Tools.pauseSensorData(_systemLogger, htSessionContext);  //20111102
 			pwOut.println(sErrorForm);
 		}
 		catch (Exception e) {
@@ -675,9 +676,9 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 *             the a select exception
 	 */
 	protected void handlePostForm(String sTemplate, String sAction, String sInputLines, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
-		String sMethod = "handlePostForm()";
+		String sMethod = "handlePostForm";
 		PrintWriter pwOut = null;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "POST Form: Action=" + sAction);
 
@@ -1121,8 +1122,8 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		}
 
 		// We don't need the session any more
-		if (htSession != null) { // Bauke, 20081209 added
-			Tools.calculateAndReportSensorData(ASelectConfigManager.getHandle(), _systemLogger, htSession);
+		if (htSession != null) {
+			Tools.calculateAndReportSensorData(ASelectConfigManager.getHandle(), _systemLogger, "srv_pro", sRid, htSession, sTgt, true);
 			_sessionManager.killSession(sRid);
 		}
 

@@ -199,15 +199,12 @@ import java.util.Iterator;
 import java.util.TreeSet;
 import java.util.Vector;
 import java.util.logging.Level;
-
 import org.aselect.agent.authorization.AuthorizationEngine;
 import org.aselect.agent.config.ASelectAgentConfigManager;
 import org.aselect.agent.log.ASelectAgentSystemLogger;
 import org.aselect.agent.sam.ASelectAgentSAMAgent;
 import org.aselect.agent.session.SessionManager;
 import org.aselect.agent.ticket.TicketManager;
-//import org.aselect.server.log.ASelectSystemLogger;
-//import org.aselect.server.utils.Utils;
 import org.aselect.system.communication.client.IClientCommunicator;
 import org.aselect.system.communication.server.Communicator;
 import org.aselect.system.communication.server.IInputMessage;
@@ -296,6 +293,9 @@ public class RequestHandler extends Thread
 	 */
 	private boolean _bAuthorization = false;
 
+	// Store timing data
+	TimeSensor timeSensor;
+
 	/**
 	 * Initializes instance variables. <br>
 	 * <br>
@@ -329,6 +329,7 @@ public class RequestHandler extends Thread
 		_systemLogger = ASelectAgentSystemLogger.getHandle();
 		_clientCommunicator = oCommunicator;
 		_bAuthorization = bAuthorization;
+		timeSensor = new TimeSensor(_systemLogger, "agt_all");
 	}
 
 	/**
@@ -402,8 +403,7 @@ public class RequestHandler extends Thread
 			// Initialize the communicator
 			if (xCommunicator.init(oTCPProtocolRequest, oTCPProtocolResponse)) {
 				// Call processRequest for procesing
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "RUN prc T=" + System.currentTimeMillis() + " port="
-						+ port);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "RUN prc T=" + System.currentTimeMillis()+" port="+port);
 				processRequest(xCommunicator, port);
 
 				// Send our response
@@ -470,86 +470,76 @@ public class RequestHandler extends Thread
 	protected void processRequest(Communicator oCommunicator, int port)
 	{
 		String sMethod = "processRequest";
+		String sRequest = null;
+		long lMyThread = Thread.currentThread().getId();
 
 		try {
 			// create the input and output message
 			IInputMessage oInputMessage = oCommunicator.getInputMessage();
 			IOutputMessage oOutputMessage = oCommunicator.getOutputMessage();
 
-			String sRequest = null;
 			try {
 				sRequest = oInputMessage.getParam("request");
 			}
 			catch (Exception eX) { // sRequest is already null
 			}
-
 			if (sRequest == null) {
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Request is missing");
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST;
+				return;
 			}
-			else {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "REQ { T=" + System.currentTimeMillis() + " port="
-						+ port + ": " + sRequest + ", oInput=" + oInputMessage);
 
-				// check which API request was sent and let it be processed
-				if (sRequest.equals("authenticate")) {
-					processAuthenticateRequest(oInputMessage, oOutputMessage);
-				}
-				else if (sRequest.equals("verify_credentials")) {
-					processVerifyCredentialsRequest(oInputMessage, oOutputMessage);
-				}
-				else if (sRequest.equals("verify_ticket")) {
-					processVerifyTicketRequest(oInputMessage, oOutputMessage);
-				}
-				else if (sRequest.equals("kill_ticket")) {
-					processKillTicketRequest(oInputMessage, oOutputMessage);
-				}
-				else if (sRequest.equals("kill_tgt")) {
-					processKillTgtRequest(oInputMessage, oOutputMessage);
-				}
-				else if (sRequest.equals("attributes")) {
-					processAttributesRequest(oInputMessage, oOutputMessage);
-				}
-				else if (sRequest.equals("set_authorization_rules")) {
-					processSetAuthorizationRulesRequest(oInputMessage, oOutputMessage);
-				}
-				else { // Unknown or unsupported request
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unknown or unsupported request received.");
-					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
-				}
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "} REQ T=" + System.currentTimeMillis() + " port="
-						+ port + ": " + sRequest);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "REQ { T=" + System.currentTimeMillis() + " port="
+					+ port + ", t="+lMyThread + ": " + sRequest+", oInput=" + oInputMessage);
+			
+			timeSensor.timeSensorStart(1/*level*/, 1/*agent*/, lMyThread);  // default is success
+			String sUsi = oInputMessage.getParam("usi");  // unique sensor id
+			if (Utils.hasValue(sUsi))
+				timeSensor.setTimeSensorId(sUsi);
+
+			// check which API request was sent and let it be processed
+			_sErrorCode = Errors.ERROR_ASELECT_SUCCESS;  // optimistic default
+			if (sRequest.equals("authenticate")) {
+				timeSensor.setTimeSender("agt_aut");
+				processAuthenticateRequest(oInputMessage, oOutputMessage);
 			}
+			else if (sRequest.equals("verify_credentials")) {
+				timeSensor.setTimeSender("agt_vcr");
+				processVerifyCredentialsRequest(oInputMessage, oOutputMessage);
+			}
+			else if (sRequest.equals("verify_ticket")) {
+				timeSensor.setTimeSender("agt_vtk");
+				processVerifyTicketRequest(oInputMessage, oOutputMessage);
+			}
+			else if (sRequest.equals("kill_ticket")) {
+				timeSensor.setTimeSender("agt_ktk");
+				processKillTicketRequest(oInputMessage, oOutputMessage);
+			}
+			else if (sRequest.equals("kill_tgt")) {
+				timeSensor.setTimeSender("agt_ktg");
+				processKillTgtRequest(oInputMessage, oOutputMessage);
+			}
+			else if (sRequest.equals("attributes")) {
+				timeSensor.setTimeSender("agt_atr");
+				processAttributesRequest(oInputMessage, oOutputMessage);
+			}
+			else if (sRequest.equals("set_authorization_rules")) {
+				timeSensor.setTimeSender("agt_rul");
+				processSetAuthorizationRulesRequest(oInputMessage, oOutputMessage);
+			}
+			else { // Unknown or unsupported request
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unknown or unsupported request received.");
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST;
+			}
+			oOutputMessage.setParam("result_code", _sErrorCode);
 		}
 		catch (ASelectCommunicationException eAC) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Communication with A-Select Server failed.", eAC);
 		}
-	}
-
-	/**
-	 * Uses a <code>IClientCommunicator</code> to send a API call to the A-Select server.
-	 * 
-	 * @param sUrl
-	 *            The A-Select Server URL.
-	 * @param htParamsTable
-	 *            The parameters to send to A-Select.
-	 * @return The return parameters in a <code>HashMap</code>.
-	 */
-	protected HashMap sendRequestToASelectServer(String sUrl, HashMap htParamsTable)
-	{
-		String sMethod = "sendRequestToASelectServer()";
-
-		// send message
-		HashMap htReturnTable = new HashMap();
-		try {
-			htReturnTable = _clientCommunicator.sendMessage(htParamsTable, sUrl);
-		}
-		catch (ASelectCommunicationException e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "The A-Select server could not be reached.", e);
-			_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
-		}
-
-		// return reponse
-		return htReturnTable;
+		
+		timeSensor.timeSensorFinish(_sErrorCode.equals(Errors.ERROR_ASELECT_SUCCESS));
+		Tools.reportTimerSensorData(_configManager, "agent"/*xml*/, _systemLogger, timeSensor.timeSensorPack());
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "} REQ T="+System.currentTimeMillis() + " port="+port + ": "+sRequest);
 	}
 
 	/**
@@ -665,7 +655,7 @@ public class RequestHandler extends Thread
 	 *             If sending response fails.
 	 */
 	private void processAuthenticateRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "processAuthenticateRequest()";
 		StringBuffer sbBuffer = new StringBuffer();
@@ -680,19 +670,20 @@ public class RequestHandler extends Thread
 				sAppUrl = oInputMessage.getParam("app_url");
 				if (!sAppUrl.startsWith("http")) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "invalid 'app_url'");
-					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+					_sErrorCode = Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST;
 					return;
 				}
 				sAppId = oInputMessage.getParam("app_id");
 				if (sAppId.length() == 0) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "invalid 'app_id'");
-					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+					_sErrorCode = Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST;
 					return;
 				}
+				timeSensor.setTimeSensorAppId(sAppId);
 			}
 			catch (ASelectCommunicationException eAC) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received.", eAC);
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST;
 				return;
 			}
 			try {
@@ -786,26 +777,27 @@ public class RequestHandler extends Thread
 				sLanguage = null;
 			}
 
+			// 20111108, Bauke: Send unique session id too
+			htRequest.put("usi", timeSensor.getTimeSensorId());
 			HashMap htResponseParameters = sendToASelectServer(htRequest);
 			if (htResponseParameters.isEmpty()) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not reach A-Select Server.");
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
 				return;
 			}
 
 			String sResultCode = (String) htResponseParameters.get("result_code");
 			if (sResultCode == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid response from A-Select Server.");
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
 				return;
 			}
 			if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
 				sbBuffer = new StringBuffer("A-Select Server returned error: '");
-				sbBuffer.append(sResultCode);
-				sbBuffer.append("'.");
+				sbBuffer.append(sResultCode).append("'.");
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
 
-				oOutputMessage.setParam("result_code", sResultCode);
+				_sErrorCode = sResultCode;
 				return;
 			}
 
@@ -813,19 +805,19 @@ public class RequestHandler extends Thread
 			String sRid = (String) htResponseParameters.get("rid");
 			if (sRid == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "A-Select Server did not return 'rid'.");
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
 				return;
 			}
 			String sAsUrl = (String) htResponseParameters.get("as_url");
 			if (sAsUrl == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "A-Select Server did not return 'as_url'.");
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
 				return;
 			}
 			String sAsId = (String) htResponseParameters.get("a-select-server");
 			if (sAsId == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "A-Select Server did not return 'a-select-server'.");
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
 				return;
 			}
 
@@ -836,10 +828,12 @@ public class RequestHandler extends Thread
 			htSessionContext.put("user_type", "Local");
 			htSessionContext.put("app_id", sAppId);
 			htSessionContext.put("as_url", sAsUrl);
+			
+			timeSensor.setTimeSensorRid(sRid);  // Rid received from Server
 
 			if (!_sessionManager.createSession(sRid, htSessionContext)) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "could not create session.");
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR;
 				return;
 			}
 
@@ -847,11 +841,11 @@ public class RequestHandler extends Thread
 			oOutputMessage.setParam("as_url", sAsUrl);
 			oOutputMessage.setParam("a-select-server", sAsId);
 			oOutputMessage.setParam("rid", sRid);
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
+			_sErrorCode = Errors.ERROR_ASELECT_SUCCESS;
 		}
 		catch (ASelectCommunicationException eAC) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not create response message.", eAC);
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+			_sErrorCode = Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR;
 		}
 		catch (Exception e) {
 
@@ -859,7 +853,7 @@ public class RequestHandler extends Thread
 			sbBuffer.append(e.getMessage());
 			sbBuffer.append("\"");
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), e);
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+			_sErrorCode = Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR;
 		}
 	}
 
@@ -1036,7 +1030,7 @@ public class RequestHandler extends Thread
 	// Will request the server to send a Saml token containing the requested attributes
 	//
 	private void processVerifyCredentialsRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "processVerifyCredentialsRequest";
 		StringBuffer sbBuffer = new StringBuffer();
@@ -1055,20 +1049,20 @@ public class RequestHandler extends Thread
 				HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 				if (htSessionContext == null) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid session");
-					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_SESSION_EXPIRED);
+					_sErrorCode = Errors.ERROR_ASELECT_AGENT_SESSION_EXPIRED;
 					return;
 				}
 
 				sAsId = (String) htSessionContext.get("a-select-server");
 				if (sAsId == null) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing 'a-select-server' in session.");
-					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+					_sErrorCode = Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST;
 					return;
 				}
 			}
 			catch (ASelectCommunicationException eAC) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received.", eAC);
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST;
 				return;
 			}
 			try {
@@ -1084,7 +1078,7 @@ public class RequestHandler extends Thread
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "VerCRED rid=" + sRid + " server=" + sAsId +
 					" samlAttr="+sSamlAttributes+" appArgs="+sAppArgs);
 
-			// send the verify credentials request to the A-Select Server
+			// send the verify_credentials request to the A-Select Server
 			HashMap htRequest = new HashMap();
 			htRequest.put("request", "verify_credentials");
 			htRequest.put("rid", sRid);
@@ -1092,18 +1086,20 @@ public class RequestHandler extends Thread
 			if (sSamlAttributes != null)
 				htRequest.put("saml_attributes", sSamlAttributes);
 
+			// To the SERVER
+			htRequest.put("usi", timeSensor.getTimeSensorId());
 			HashMap htResponseParameters = sendToASelectServer(htRequest);
 
 			if (htResponseParameters.isEmpty()) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not reach A-Select Server.");
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
 				return;
 			}
 
 			String sResultCode = (String) htResponseParameters.get("result_code");
 			if (sResultCode == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid response from A-Select Server.");
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
 				return;
 			}
 			if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
@@ -1111,8 +1107,7 @@ public class RequestHandler extends Thread
 				sbBuffer.append(sResultCode);
 				sbBuffer.append("'.");
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
-
-				oOutputMessage.setParam("result_code", sResultCode);
+				_sErrorCode = sResultCode;
 				return;
 			}
 
@@ -1120,7 +1115,7 @@ public class RequestHandler extends Thread
 			String sUID = (String) htResponseParameters.get("uid");
 			if (sUID == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "A-Select Server did not return 'uid'");
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
 				return;
 			}
 			sUID = URLDecoder.decode(sUID, "UTF-8");
@@ -1128,7 +1123,7 @@ public class RequestHandler extends Thread
 			String sOrg = (String) htResponseParameters.get("organization");
 			if (sOrg == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "A-Select Server did not return 'organization'");
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
 				return;
 			}
 			String sAL = (String) htResponseParameters.get("authsp_level");
@@ -1138,7 +1133,7 @@ public class RequestHandler extends Thread
 			}
 			if (sAL == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "A-Select Server did not return 'authsp_level'");
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
 				return;
 			}
 			String sASP = (String) htResponseParameters.get("authsp");
@@ -1148,25 +1143,27 @@ public class RequestHandler extends Thread
 			}
 			if (sASP == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "A-Select Server did not return 'authsp'");
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
 				return;
 			}
 			String sAPP = (String) htResponseParameters.get("app_id");
 			if (sAPP == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "A-Select Server did not return 'app_id'");
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
 				return;
 			}
+			timeSensor.setTimeSensorAppId(sAPP);
+			
 			String sAppLevel = (String) htResponseParameters.get("app_level");
 			if (sAppLevel == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "A-Select Server did not return 'app_level'");
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
 				return;
 			}
 			String sTgtExp = (String) htResponseParameters.get("tgt_exp_time");
 			if (sTgtExp == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "A-Select Server did not return 'tgt_exp_time'");
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
 				return;
 			}
 
@@ -1204,9 +1201,12 @@ public class RequestHandler extends Thread
 			String sTicket = _ticketManager.createTicket(htTicketContext);
 			if (sTicket == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "TicketManager could not create ticket");
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_TOO_MUCH_USERS);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_TOO_MUCH_USERS;
 				return;
 			}
+
+			// NO, this is the agent ticket
+			// timeSensor.setTimeSensorTgt(sTicket);  // TgT still valid according to the SERVER
 
 			// prepare the response parameters for the calling application
 			oOutputMessage.setParam("ticket", sTicket);
@@ -1224,21 +1224,21 @@ public class RequestHandler extends Thread
 			if (sAttributes != null)
 				oOutputMessage.setParam("attributes", sAttributes);
 
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
+			_sErrorCode = Errors.ERROR_ASELECT_SUCCESS;
 
 			// delete the session context as we dont need it anymore
 			_sessionManager.killSession(sRid);
 		}
 		catch (ASelectCommunicationException eAC) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not create response message.", eAC);
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+			_sErrorCode = Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR;
 		}
 		catch (Exception e) {
 			sbBuffer = new StringBuffer("Exception while processing request: \"");
 			sbBuffer.append(e.getMessage());
 			sbBuffer.append("\"");
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), e);
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+			_sErrorCode = Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR;
 		}
 	}
 
@@ -1370,11 +1370,10 @@ public class RequestHandler extends Thread
 			catch (ASelectCommunicationException eAC) {
 				// missing required API parameters
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received.", eAC);
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST;
 				return;
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET uid=" + sUid + ", org=" + sOrg + ", ticket="
-					+ sTicket);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET uid="+sUid + ", org="+sOrg + ", ticket="+sTicket);
 
 			// Get optional parameters
 			// Parameter "attributes_hash" and 'request_uri' are not required
@@ -1406,7 +1405,7 @@ public class RequestHandler extends Thread
 			HashMap htTicketContext = _ticketManager.getTicketContext(sTicket);
 			if (htTicketContext == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request: unknown ticket.");
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_UNKNOWN_TICKET);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_UNKNOWN_TICKET;
 				return;
 			}
 
@@ -1419,7 +1418,7 @@ public class RequestHandler extends Thread
 				sbBuffer = new StringBuffer("Invalid request: uid mismatch: expected ");
 				sbBuffer.append(sStoredUid).append(" but got ").append(sUid);
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_TICKET_NOT_VALID);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_TICKET_NOT_VALID;
 				return;
 			}
 			// check organization match
@@ -1428,7 +1427,7 @@ public class RequestHandler extends Thread
 				sbBuffer.append("expected ").append(sStoredOrg);
 				sbBuffer.append(" but got ").append(sOrg);
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_TICKET_NOT_VALID);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_TICKET_NOT_VALID;
 				return;
 			}
 			// match attributes
@@ -1440,17 +1439,19 @@ public class RequestHandler extends Thread
 					if (sStoredAttributes == null)
 						sStoredAttributes = "";
 					oOutputMessage.setParam("attributes", sStoredAttributes);
-					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_CORRUPT_ATTRIBUTES);
+					_sErrorCode = Errors.ERROR_ASELECT_AGENT_CORRUPT_ATTRIBUTES;
 					return;
 				}
 			}
+			
 			// Authorize if applicable
 			if (_bAuthorization) {
 				// get app_id
 				String sAppId = (String) htTicketContext.get("app_id");
-				// get user attributes
-				
-//				HashMap htUserAttributes = org.aselect.server.utils.Utils.deserializeAttributes((String) htTicketContext.get("attributes"));
+				if (Utils.hasValue(sAppId))
+					timeSensor.setTimeSensorAppId(sAppId);
+
+				// Get user attributes
 				HashMap htUserAttributes = deserializeAttributes((String) htTicketContext.get("attributes"));
 
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET attr=" + htUserAttributes);
@@ -1467,9 +1468,8 @@ public class RequestHandler extends Thread
 				htUserAttributes.remove("attributes");
 				if (!AuthorizationEngine.getHandle().isUserAuthorized(sAppId, sRequestURI, htUserAttributes)) {
 					// not authorized
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "User not authorized to access application "
-							+ sAppId);
-					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_AUTHORIZATION_FAILED);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "User not authorized to access application "+sAppId);
+					_sErrorCode = Errors.ERROR_ASELECT_AGENT_AUTHORIZATION_FAILED;
 					return;
 				}
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET OK");
@@ -1493,16 +1493,18 @@ public class RequestHandler extends Thread
 				if (sLanguage != null)
 					htRequest.put("language", sLanguage);
 
+				// Send to SERVER
+				htRequest.put("usi", timeSensor.getTimeSensorId());
 				HashMap htResponseParameters = sendToASelectServer(htRequest);
 				if (htResponseParameters.isEmpty()) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not reach A-Select Server.");
-					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+					_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
 					return;
 				}
 				String sResultCode = (String) htResponseParameters.get("result_code");
 				if (sResultCode == null) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid response from A-Select Server.");
-					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER);
+					_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
 					return;
 				}
 				sLanguage = (String) htResponseParameters.get("language");
@@ -1514,7 +1516,7 @@ public class RequestHandler extends Thread
 					sbBuffer.append(sResultCode);
 					sbBuffer.append("'.");
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
-					oOutputMessage.setParam("result_code", sResultCode);
+					_sErrorCode = sResultCode;
 					return;
 				}
 			}
@@ -1522,27 +1524,31 @@ public class RequestHandler extends Thread
 
 			String sAppArgs = (String)htTicketContext.get("aselect_app_args");
 			_ticketManager.updateTicketContext(sTicket, htTicketContext);
+			
+			// NO, this is the agent ticket
+			// timeSensor.setTimeSensorTgt(sTicket);  // TgT still valid according to local checks (and upgrade_ticket)
+			
 			// Ticket OK, create response message
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
+			_sErrorCode = Errors.ERROR_ASELECT_SUCCESS;
 			if (sAppArgs != null)
 				oOutputMessage.setParam("aselect_app_args", sAppArgs);
 		}
 		catch (NumberFormatException eNF) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not create response message.", eNF);
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+			_sErrorCode = Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR;
 		}
 		catch (ASelectCommunicationException eAC) {
 			sbBuffer = new StringBuffer("Could not create response message.");
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), eAC);
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+			_sErrorCode = Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR;
 		}
 		catch (ASelectException eAS) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Error while processing request", eAS);
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+			_sErrorCode = Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR;
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Internal error while processing request", e);
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+			_sErrorCode = Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR;
 		}
 	}
 
@@ -1668,7 +1674,7 @@ public class RequestHandler extends Thread
 	 *             If setting response parameters fails.
 	 */
 	private void processAttributesRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "processAttributesRequest()";
 		StringBuffer sbBuffer = new StringBuffer();
@@ -1677,31 +1683,32 @@ public class RequestHandler extends Thread
 			String sTicket = null;
 			String sUid = null;
 			String sOrg = null;
-			try {
-				// get required API parameters
+			
+			try {  // get required API parameters
 				sTicket = oInputMessage.getParam("ticket");
 				sUid = oInputMessage.getParam("uid");
 				sOrg = oInputMessage.getParam("organization");
 			}
-			catch (ASelectCommunicationException eAC) {
-				// missing required API parameters
+			catch (ASelectCommunicationException eAC) {  // missing required API parameters
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received.", eAC);
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST;
 				return;
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "AttrReq uid=" + sUid + ", org=" + sOrg + ", ticket="
-					+ sTicket);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "AttrReq uid="+sUid + ", org="+sOrg + ", ticket="+sTicket);
 
 			// get the ticket context
 			HashMap htTicketContext = _ticketManager.getTicketContext(sTicket);
 			if (htTicketContext == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request: unknown ticket.");
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_UNKNOWN_TICKET);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_UNKNOWN_TICKET;
 				return;
 			}
 
 			String sAuthSP = (String) htTicketContext.get("authsp");
 			String sAppLevel = (String) htTicketContext.get("app_level");
+			String sAppId = (String) htTicketContext.get("app_id");
+			if (Utils.hasValue(sAppId))
+				timeSensor.setTimeSensorAppId(sAppId);
 
 			oOutputMessage.setParam("ticket_start_time", new Long(_ticketManager.getTicketStartTime(sTicket))
 					.toString());
@@ -1721,15 +1728,15 @@ public class RequestHandler extends Thread
 			else
 				oOutputMessage.setParam("attributes", "");
 
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
+			_sErrorCode = Errors.ERROR_ASELECT_SUCCESS;
 		}
 		catch (NumberFormatException eNF) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not create response message.", eNF);
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+			_sErrorCode = Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR;
 		}
 		catch (ASelectCommunicationException eAC) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not create response message.", eAC);
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+			_sErrorCode = Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR;
 		}
 		catch (Exception e) {
 
@@ -1737,7 +1744,7 @@ public class RequestHandler extends Thread
 			sbBuffer.append(e.getMessage());
 			sbBuffer.append("\"");
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), e);
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+			_sErrorCode = Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR;
 		}
 	}
 
@@ -1818,17 +1825,17 @@ public class RequestHandler extends Thread
 
 			if (!_ticketManager.killTicket(sTicket)) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not kill ticket");
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_UNKNOWN_TICKET);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_UNKNOWN_TICKET;
 				return;
 			}
 
 			// set response parameters
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
+			_sErrorCode = Errors.ERROR_ASELECT_SUCCESS;
 		}
 		catch (ASelectCommunicationException eAC) {
 			// mandatory parameter missing
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received.", eAC);
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+			_sErrorCode = Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST;
 			return;
 		}
 		catch (Exception e) {
@@ -1836,7 +1843,7 @@ public class RequestHandler extends Thread
 			sbBuffer.append(e.getMessage());
 			sbBuffer.append("\"");
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), e);
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+			_sErrorCode = Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR;
 		}
 	}
 
@@ -1865,17 +1872,17 @@ public class RequestHandler extends Thread
 
 			if (!_ticketManager.killTicket(sTicket)) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not kill ticket");
-				oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_UNKNOWN_TICKET);
+				_sErrorCode = Errors.ERROR_ASELECT_AGENT_UNKNOWN_TICKET;
 				return;
 			}
 
 			// set response parameters
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
+			_sErrorCode = Errors.ERROR_ASELECT_SUCCESS;
 		}
 		catch (ASelectCommunicationException eAC) {
 			// mandatory parameter missing
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received.", eAC);
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+			_sErrorCode = Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST;
 			return;
 		}
 		catch (Exception e) {
@@ -1883,7 +1890,7 @@ public class RequestHandler extends Thread
 			sbBuffer.append(e.getMessage());
 			sbBuffer.append("\"");
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), e);
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
+			_sErrorCode = Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR;
 		}
 	}
 
@@ -1968,16 +1975,16 @@ public class RequestHandler extends Thread
 	{
 		final String sMethod = "processSetAuthorizationRulesRequest()";
 		if (!_bAuthorization) { // Authorization not enabled
-			_systemLogger
-					.log(Level.WARNING, MODULE, sMethod, "Invalid request received: authorization is not enabled.");
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_AUTHORIZATION_NOT_ENABLED);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: authorization is not enabled.");
+			_sErrorCode = Errors.ERROR_ASELECT_AGENT_AUTHORIZATION_NOT_ENABLED;
 			return;
 		}
 
 		try { // get required API parameters
 			String sAppId = oInputMessage.getParam("app_id");
 			String[] saReceivedRules = oInputMessage.getArray("rules");
-
+			if (Utils.hasValue(sAppId))
+				timeSensor.setTimeSensorAppId(sAppId);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "RULES sAppId=" + sAppId + ", saReceivedRules="
 					+ saReceivedRules);
 
@@ -2005,7 +2012,7 @@ public class RequestHandler extends Thread
 				}
 				else { // Invalid rules
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: invalid rules[].");
-					oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+					_sErrorCode = Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST;
 					return;
 				}
 			}
@@ -2014,18 +2021,18 @@ public class RequestHandler extends Thread
 
 			// set result code OK
 			_systemLogger.log(Level.CONFIG, MODULE, sMethod, "Authorization rules set for application " + sAppId);
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
+			_sErrorCode = Errors.ERROR_ASELECT_SUCCESS;
 		}
 		catch (ASelectCommunicationException eAC) {
 			// missing required API parameters
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received.", eAC);
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+			_sErrorCode = Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST;
 		}
 		catch (ASelectAuthorizationException e) {
 			// Invalid rule parameter
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"Invalid request received: one or more rules are invalid", e);
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
+			_sErrorCode = Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST;
 			return;
 		}
 	}
@@ -2043,7 +2050,7 @@ public class RequestHandler extends Thread
 	 */
 	private HashMap sendToASelectServer(HashMap htParams)
 	{
-		String sMethod = "sendToASelectServer()";
+		String sMethod = "sendToASelectServer";
 		HashMap htResponse = new HashMap();
 
 		ASelectAgentSAMAgent oSAMAgent = ASelectAgentSAMAgent.getHandle();
@@ -2071,6 +2078,35 @@ public class RequestHandler extends Thread
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Unknown error reading A-Select server configuration.", e);
 		}
 		return htResponse;
+	}
+
+	/**
+	 * Uses a <code>IClientCommunicator</code> to send a API call to the A-Select server.
+	 * 
+	 * @param sUrl
+	 *            The A-Select Server URL.
+	 * @param htParamsTable
+	 *            The parameters to send to A-Select.
+	 * @return The return parameters in a <code>HashMap</code>.
+	 */
+	protected HashMap sendRequestToASelectServer(String sUrl, HashMap htParamsTable)
+	{
+		String sMethod = "sendRequestToASelectServer";
+
+		// send message
+		HashMap htReturnTable = new HashMap();
+		timeSensor.timeSensorPause();
+		try {
+			htReturnTable = _clientCommunicator.sendMessage(htParamsTable, sUrl);
+		}
+		catch (ASelectCommunicationException e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "The A-Select server could not be reached.", e);
+			_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
+		}
+		timeSensor.timeSensorResume();
+
+		// return reponse
+		return htReturnTable;
 	}
 
 	/**

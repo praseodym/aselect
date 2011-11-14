@@ -31,6 +31,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.Audit;
+import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 import org.opensaml.common.SignableSAMLObject;
 import org.opensaml.saml2.core.Issuer;
@@ -241,6 +242,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 
 		// sInfoForm = _configManager.updateTemplate(sInfoForm, _htSessionContext);
 		httpResponse.setContentType("text/html");
+		Tools.pauseSensorData(_systemLogger, null);  //20111102, there's no session available at this point (will be logged)
 		pwOut.println(sInfoForm);
 		pwOut.close();
 	}

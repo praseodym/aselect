@@ -148,10 +148,11 @@ public class StorageManager
 	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger systemLogger, SAMAgent oSAMAgent)
 		throws ASelectStorageException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		Object oHandlerSection;
 		Class cClass;
 		String sStorageHandlerId;
+		String sStorageManagerId;
 		Object oStorageHandlerSection;
 
 		_oSystemLogger = systemLogger;
@@ -159,8 +160,16 @@ public class StorageManager
 			oHandlerSection = oConfigManager.getSection(oConfigSection, "handler");
 		}
 		catch (ASelectConfigException x) {
-			systemLogger.log(Level.WARNING, MODULE, sMethod, "'<handler />' is missing in the configuration file. value was null");
+			systemLogger.log(Level.WARNING, MODULE, sMethod, "'<handler />' is missing in the configuration file");
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INIT, x);
+		}
+
+		try {
+			sStorageManagerId = oConfigManager.getParam(oConfigSection, "id");
+		}
+		catch (ASelectConfigException ace) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod, "storagemanager 'id' is missing", ace);
+			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INIT, ace);
 		}
 
 		String sMax = null;
@@ -247,7 +256,7 @@ public class StorageManager
 
 			// The cleaner will keep the storage clean.
 			_oCleaner = new Cleaner();
-			_oCleaner.init(_lExpireTime, lInterval, systemLogger);
+			_oCleaner.init(_lExpireTime, lInterval, systemLogger, sStorageManagerId);
 			_oCleaner.interrupt();
 			_oCleaner.start();
 		}
@@ -261,7 +270,7 @@ public class StorageManager
 	 * Retrieve object from storage. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * Returns a particular object from the storage. Calls the handler its <code>get()</code>.<br>
+	 * Returns a particular object from the storage. Calls the handler's <code>get()</code>.<br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * -<br>
@@ -602,6 +611,8 @@ public class StorageManager
 	 */
 	private class Cleaner extends Thread
 	{
+		private String _sId = "";
+		
 		/** Cleaning interval */
 		private long _lInterval = 0;
 
@@ -645,12 +656,13 @@ public class StorageManager
 		 * @param systemLogger
 		 *            The logger to log system entries.
 		 */
-		public void init(long lExpireTime, long lInterval, SystemLogger systemLogger)
+		public void init(long lExpireTime, long lInterval, SystemLogger systemLogger, String sId)
 		{
 			_lExpireTime = lExpireTime;
 			_lInterval = lInterval;
 			_systemLogger = systemLogger;
-
+			_sId = sId;
+			
 			if (_lExpireTime > 0)
 				_bGo = true;
 		}
@@ -683,9 +695,9 @@ public class StorageManager
 					long lCurrentTimestamp = System.currentTimeMillis();
 					Long lCleanupTimestamp = new Long(lCurrentTimestamp - _lExpireTime);
 
-					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Go cleanup");
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Go cleanup: "+_sId);
 					_oStorageHandler.cleanup(lCleanupTimestamp);
-					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Cleaned-up");
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Cleaned-up: "+_sId);
 				}
 				catch (ASelectStorageException eAS) {
 					// _systemLogger.log(Level.INFO, MODULE, sMethod,

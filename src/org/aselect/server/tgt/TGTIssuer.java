@@ -395,7 +395,7 @@ public class TGTIssuer
 			}
 
 			// A tgt was just issued, report sensor data
-			Tools.calculateAndReportSensorData(_configManager, _systemLogger, htSessionContext);
+			Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_tgt", sRid, htSessionContext, sTgt, true);
 			_sessionManager.killSession(sRid);
 			
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
@@ -483,10 +483,11 @@ public class TGTIssuer
 			// Check Authentication result
 			String sResult = (String) htSessionContext.get("result_code");
 			if (sResult != null && !sResult.equals(Errors.ERROR_ASELECT_SUCCESS)) {
-				// Authentication failed, but need to send decent <Response>
+				// Authentication failed, no TGT issued, but need to send decent <Response>
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "no success, redirect to "+sAppUrl);
 				String sLang = (String)htSessionContext.get("language");  // we have no TGT Context yet
 				sendTgtRedirect(sAppUrl, null, sRid, oHttpServletResponse, sLang);
-				// Must be killed by sAppUrl: _sessionManager.killSession(sRid);
+				// Session must be killed by sAppUrl: _sessionManager.killSession(sRid);
 				return null;
 			}
 
@@ -645,25 +646,25 @@ public class TGTIssuer
 			// 20100210, Bauke: Present the Organization selection to the user
 			// Leaves the Rid session in place, needed for the application url
 			if (mustChooseOrg) {
-				Tools.pauseSensorData(_systemLogger, htSessionContext);
-				_sessionManager.update(sRid, htSessionContext); // Write session
 				// The user must choose his organization
 				String sSelectForm = org.aselect.server.utils.Utils.presentOrganizationChoice(_configManager, htSessionContext,
 						sRid, (String)htTGTContext.get("language"), hUserOrganizations);
-				
 				oHttpServletResponse.setContentType("text/html");
+				
+				Tools.pauseSensorData(_systemLogger, htSessionContext);
+				_sessionManager.update(sRid, htSessionContext); // Write session
 				PrintWriter pwOut = oHttpServletResponse.getWriter();
 				pwOut.println(sSelectForm);
 				pwOut.close();
 				return sTgt;
 			}
-
-			// No organization selection, the tgt was just issued, report sensor data
-			// remove the session and send the user to the application
-			Tools.calculateAndReportSensorData(_configManager, _systemLogger, htSessionContext);
 			
 			if (redirectToo) {
-				_sessionManager.killSession(sRid);				
+				// No organization selection, the tgt was just issued, report sensor data
+				// remove the session and send the user to the application
+				Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_tgt", sRid, htSessionContext, sTgt, true);
+				_sessionManager.killSession(sRid);
+				
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
 				String sLang = (String)htTGTContext.get("language");
 				sendTgtRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse, sLang);
@@ -759,7 +760,7 @@ public class TGTIssuer
 	public void issueErrorTGTandRedirect(String sRid, String sResultCode, HttpServletResponse oHttpServletResponse)
 		throws ASelectException
 	{
-		String sMethod = "issueErrorTGT()";
+		String sMethod = "issueErrorTGT";
 		SessionManager sessionManager = null;
 
 		try {
@@ -803,9 +804,11 @@ public class TGTIssuer
 				htTGTContext.put("user_agent", sAgent);
 
 			String sTgt = oTGTManager.createTGT(htTGTContext);
+			// A tgt was just issued, report sensor data
+			Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_tgt", sRid, htSessionContext, sTgt, true);
+			sessionManager.killSession(sRid);
 			String sLang = (String)htTGTContext.get("language");
 			sendTgtRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse, sLang);
-			sessionManager.killSession(sRid);
 		}
 		catch (ASelectException e) {
 			StringBuffer sbError = new StringBuffer("Issue cancel TGT for request '");
@@ -850,11 +853,12 @@ public class TGTIssuer
 	 */
 	// 20100228, Bauke: added language to redirect
 	public void sendTgtRedirect(String sAppUrl, String sTgt, String sRid, HttpServletResponse oHttpServletResponse, String sLanguage)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "sendRedirect";
 		StringBuffer sbRedirect = null;
 
+		// NOTE: the SessionContext is already killed (therefore no pauseSensorData())
 		try {
 			// Remove aselect_specials from the URL, not intended for the application
 			String sSpecials = Utils.getParameterValueFromUrl(sAppUrl, "aselect_specials");

@@ -308,6 +308,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Send to DigiD=" + sASelectServerUrl + " req="
 					+ hashtable2CGIMessage(htRequest));
 
+			// Send to DigiD!
 			HashMap htResponse = null;
 			try {
 				htResponse = _oClientCommunicator.sendMessage(htRequest, sASelectServerUrl);
@@ -343,9 +344,6 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 
 			sASelectServerUrl = (String) htResponse.get("as_url");
 			String sDigidRid = (String) htResponse.get("rid");
-
-			// TODO Waarom een update??, er is niets gewijzigd
-			// _sessionManager.updateSession(sRid, htSessionContext);
 
 			// redirect with A-Select request=login1
 			StringBuffer sbRedirect = new StringBuffer(sASelectServerUrl);

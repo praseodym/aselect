@@ -428,7 +428,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 		// application browserrequests (ApplicationBrowserHandler)
 		// htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr()); // RH, 20080716, n // RH,
 		// 20080719, o
-		sSessionId = _sessionManager.createSession(htSessionContext);
+		sSessionId = _sessionManager.createSession(htSessionContext, false);
 		if (sSessionId == null) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unable to create session");
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);

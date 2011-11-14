@@ -91,6 +91,8 @@ import org.aselect.system.communication.server.soap12.SOAP12MessageCreator;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.TimeSensor;
+import org.aselect.system.utils.Tools;
 
 /**
  * Abstract API request handler. <br>
@@ -123,6 +125,11 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 	/** The organisation */
 	protected String _sMyOrg;
 
+	// For the needy
+	protected TimeSensor _timeSensor;
+	
+	long _lMyThread;
+
 	/**
 	 * Construct a instance. <br>
 	 * <br>
@@ -153,6 +160,8 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 		_servletResponse = servletResponse;
 		_sMyServerId = sMyServerId;
 		_sMyOrg = sMyOrg;
+		_lMyThread = Thread.currentThread().getId();
+		_timeSensor = new TimeSensor(_systemLogger, "srv_aah");
 
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "Protocol=" + reqParser.getRequestProtocol());
 		switch (reqParser.getRequestProtocol()) {
@@ -186,6 +195,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 	{
 		String sMethod = "processRequest()";
 		ApplicationManager _applicationManager = ApplicationManager.getHandle();
+		boolean bSuccess = false;
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "processRequest");
 
 		// create protocol wrappers
@@ -199,6 +209,12 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 				IInputMessage inputMessage = communicator.getInputMessage();
 				IOutputMessage outputMessage = communicator.getOutputMessage();
 
+				
+				// 20111108, Bauke: For however needs it:
+				_timeSensor.timeSensorStart(-1/*level unused*/, 3/*type=server*/, _lMyThread);  // unused by default
+				String sUsi = inputMessage.getParam("usi");
+				if (sUsi != null) _timeSensor.setTimeSensorId(sUsi);
+				
 				try {
 					String sServerId = null;
 					String sAppId = null;
@@ -227,8 +243,10 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 
 					_systemLogger.log(Level.FINER, _sModule, sMethod, "AbstApiREQ processAPIRequest");
 					processAPIRequest(protocolRequest, inputMessage, outputMessage);
+					bSuccess = true;  // no exceptions thrown
 				}
 				catch (ASelectException ace) {
+					_timeSensor.setTimeSensorType(0);
 					try {
 						outputMessage.setParam("result_code", ace.getMessage());
 					}
@@ -262,6 +280,15 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Internal error while processing API request", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+		finally {
+			try {
+				if (_timeSensor.getTimeSensorLevel() >= 1) {  // used
+					_timeSensor.timeSensorFinish(bSuccess);
+					Tools.reportTimerSensorData(_configManager, "aselect"/*<xml>*/, _systemLogger, _timeSensor.timeSensorPack());
+				}
+			}
+			catch (Exception e) { }
 		}
 	}
 

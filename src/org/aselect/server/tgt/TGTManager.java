@@ -145,7 +145,7 @@ public class TGTManager extends StorageManager
 	 *             if config is missing or the configured information is incorrect
 	 */
 	public void init()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		ASelectConfigManager oASelectConfigManager = null;
@@ -164,7 +164,7 @@ public class TGTManager extends StorageManager
 				throw e;
 			}
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "ConfigManager=" + oASelectConfigManager + "id=tgt"+
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "ConfigManager=" + oASelectConfigManager + " id=tgt"+
 					" Section=" + oTicketSection);
 			super.init(oTicketSection, oASelectConfigManager, _systemLogger, ASelectSAMAgent.getHandle());
 
@@ -212,7 +212,7 @@ public class TGTManager extends StorageManager
 	 *             If creation fails.
 	 */
 	synchronized public String createTGT(HashMap htTGTContext)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "createTGT";
 		String sReturn = null;

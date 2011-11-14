@@ -167,6 +167,9 @@ public abstract class BasicRequestHandler
 				
 		// Create Session
 		HashMap htSessionContext = new HashMap();
+		String sUsi = hmInput.get("usi");
+		if (sUsi != null)
+			htSessionContext.put("usi", sUsi);
 		htSessionContext.put("app_id", sAppId);
 		htSessionContext.put("app_url", sAppUrl);
 		htSessionContext.put("level", intAppLevel); // NOTE: Integer put
@@ -256,7 +259,7 @@ public abstract class BasicRequestHandler
 
 		// 20101009, Bauke: createSession was at *1 above, moved here
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "CTX htSessionContext=" + htSessionContext);
-		String sSessionId = _sessionManager.createSession(htSessionContext);
+		String sSessionId = _sessionManager.createSession(htSessionContext, true);
 		if (sSessionId == null) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to create session");
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);

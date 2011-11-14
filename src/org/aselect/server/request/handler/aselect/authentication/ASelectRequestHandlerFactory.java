@@ -172,9 +172,8 @@ public class ASelectRequestHandlerFactory
 	 * @throws ASelectCommunicationException
 	 *             If communication failed and no response was sent to the client yet.
 	 */
-	public IAuthnRequestHandler createRequestHandler(HttpServletRequest servletRequest,
-			HttpServletResponse servletResponse)
-		throws ASelectCommunicationException
+	public IAuthnRequestHandler createRequestHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
+	throws ASelectCommunicationException
 	{
 		String sMethod = "createRequestHandler()";
 		IAuthnRequestHandler oRequestHandler = null;
@@ -184,9 +183,9 @@ public class ASelectRequestHandlerFactory
 		int orig = reqParser.getRequestOrigin();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "HANDLER Orig="
 				+ ((orig == RequestParser.ORIGIN_APPLICATION) ? "APPL"
-						: (orig == RequestParser.ORIGIN_ASELECTSERVER) ? "ASELECT"
-								: (orig == RequestParser.ORIGIN_AUTHSP) ? "AUTHSP"
-										: (orig == RequestParser.ORIGIN_USER) ? "USER" : "INVALID") + ", type="
+					: (orig == RequestParser.ORIGIN_ASELECTSERVER) ? "ASELECT"
+					: (orig == RequestParser.ORIGIN_AUTHSP) ? "AUTHSP"
+					: (orig == RequestParser.ORIGIN_USER) ? "USER" : "INVALID") + ", type="
 				+ ((reqParser.getRequestType() == RequestParser.REQTYPE_API_CALL) ? "API" : "BROWSER") + ", method="
 				+ servletRequest.getMethod() + ", req=" + servletRequest.getParameter("request"));
 		/*

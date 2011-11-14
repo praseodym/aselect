@@ -31,7 +31,6 @@ import org.aselect.system.storagemanager.handler.MemoryStorageHandler;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
-// TODO: Auto-generated Javadoc
 /*
  * NOTE: Code differs from the idp-version.
  * NOTE: Code is identical to MemoryStorageHandlerTimeOut (except for class-names of course)

@@ -104,11 +104,12 @@ public class BasicSensorHandler implements ISensorHandler
 			try {
 				long now = System.currentTimeMillis();
 				long stamp = now % 1000000;
-				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Waiting. T=" + now + " " + stamp);
+				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Waiting. T=" + now + " " +
+						stamp+", t="+Thread.currentThread().getId());
 				oSocket = _oServiceSocket.accept();
 				int port = oSocket.getPort();
-				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Accepted T=" + System.currentTimeMillis() + " "
-						+ stamp + " port=" + port);
+				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Accepted T=" + System.currentTimeMillis() +
+						" "+stamp + " port="+port);
 
 				oSocket.setSoTimeout(40); // timeout for read actions
 				InputStream isInput = oSocket.getInputStream();
@@ -116,15 +117,18 @@ public class BasicSensorHandler implements ISensorHandler
 				oInReader = new BufferedReader(new InputStreamReader(isInput));
 				oOutWriter = new BufferedWriter(new OutputStreamWriter(osOutput));
 
+				sRequestLine.setLength(0);
 				processStart(oOutWriter, _sMyId);
 				while ((n = oInReader.read()) != -1) {
 					char c = (char) n;
 					sRequestLine.append(c);
-					echoCharToStream(oOutWriter, c);
+					echoCharToStream(oOutWriter, c);  // default echo behaviour is here
 					if (sRequestLine.toString().indexOf("\r\n") >= 0) {
 						// We have a complete line
 						int len = sRequestLine.length();
 						sRequestLine.setLength(len - 2);
+						//_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "LINE ["+sRequestLine+
+						//		"], t="+Thread.currentThread().getId() + " port="+port);
 						try {
 							processLine(oOutWriter, sRequestLine.toString(), _sMyId);
 						}
@@ -179,9 +183,8 @@ public class BasicSensorHandler implements ISensorHandler
 		_bActive = false;
 	}
 
-	// default line processing
 	/**
-	 * Process line.
+	 * Process line. This is the default supplied, may be overridden
 	 * 
 	 * @param oOutWriter
 	 *            the o out writer

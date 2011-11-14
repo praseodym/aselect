@@ -31,13 +31,14 @@ public class SensorStore
 	 * Instantiates a new sensor store.
 	 * 
 	 * @param sId
-	 *            the s id
+	 *            the id
 	 * @param iIntervals
-	 *            the i intervals
+	 *            the intervals
 	 * @param iLength
-	 *            the i length
+	 *            the length
 	 */
-	public SensorStore(String sId, int iIntervals, int iLength) {
+	public SensorStore(String sId, int iIntervals, int iLength)
+	{
 		_sId = sId;
 		iaCount = new long[iIntervals]; // initialized to 0
 		iaValues = new long[iIntervals];
@@ -48,7 +49,7 @@ public class SensorStore
 	 * Adds the data.
 	 * 
 	 * @param lValue
-	 *            the l value
+	 *            the value to be stored
 	 */
 	public void addData(long lValue)
 	{
@@ -76,11 +77,8 @@ public class SensorStore
 		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, _sId + ": new values=" + sAvgList);
 	}
 
-	//
-	// Change server status: (up / down)
-	//
 	/**
-	 * Sets the server up.
+	 * Change server status: (up / down).
 	 * 
 	 * @param up
 	 *            the new server up
@@ -90,15 +88,13 @@ public class SensorStore
 		_serverIsUp = up;
 	}
 
-	//
-	// Return: -1 server down,
-	// 0 server up but no average yet/any more,
-	// >0 server up average available
-	//
 	/**
 	 * Gets the average.
 	 * 
 	 * @return the average
+	 * 		-1 server down,
+ 	 * 		0 server up but no average yet/any more,
+ 	 * 		>0 server up average available
 	 */
 	public long getAverage()
 	{

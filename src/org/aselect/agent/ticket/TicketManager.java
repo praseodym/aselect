@@ -413,7 +413,7 @@ public class TicketManager
 
 		try {
 			int len = sTicket.length();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get Ticket(" + sTicket.substring(0, (len < 30) ? len : 30));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get Ticket(" + sTicket.substring(0, (len < 30) ? len : 30)+"...)");
 			htResponse = (HashMap) _oTicketTable.get(sTicket);
 		}
 		catch (Exception e) {

@@ -105,6 +105,7 @@ import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
 /**
@@ -299,6 +300,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 			}
 			sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext);  // accepts a null Session!
 			//_systemLogger.log(Level.INFO, _sModule, sMethod, "FORM="+sErrorForm);
+			Tools.pauseSensorData(_systemLogger, htSessionContext);  //20111102
 			pwOut.println(sErrorForm);
 		}
 		catch (Exception e) {
@@ -468,6 +470,8 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 		if (!Utils.hasValue(_sCorrectionFacility))
 			throw new ASelectException(Errors.ERROR_ASELECT_AUTHSP_INVALID_PHONE);
 		
+		// 20111101, Bauke: added Sensor
+		Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_abh", sRid, htSessionContext, null, false);
 		_sessionManager.killSession(sRid);
 
 		// User can possibly correct his phone number and retry

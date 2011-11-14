@@ -474,6 +474,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			if (_htSessionContext == null) {
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 			}
+			Tools.resumeSensorData(_systemLogger, _htSessionContext);  // 20111102
 			if (sReqLanguage != null && !sReqLanguage.equals("")) {
 				_htSessionContext.put("language", sReqLanguage);
 				_sessionManager.updateSession(sRid, _htSessionContext); // store language for posterity
@@ -508,6 +509,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Configuration error: " + e);
 				}
 				//_systemLogger.log(Level.INFO, _sModule, sMethod, "Serverinfo [" + sServerInfoForm + "]");
+				Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+				_sessionManager.update(sRid, _htSessionContext); // Write session
 				pwOut.println(sServerInfoForm);
 				pwOut.close();
 			}
@@ -640,7 +643,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		oTGTManager.updateTGT(sTgt, htTGTContext);
 
 		// The tgt was just issued and updated, report sensor data
-		Tools.calculateAndReportSensorData(_configManager, _systemLogger, _htSessionContext);
+		Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_sbh", sRid, _htSessionContext, sTgt, true);
 		_sessionManager.killSession(sRid);
 		
 		String sAppUrl = (String)_htSessionContext.get("app_url");	
@@ -780,12 +783,15 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							else {
 								sRedirectUrl = (String)_htSessionContext.get("local_as_url");
 							}
+							
 							_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRedirectUrl);
+							// 20111101, Bauke: added Sensor
+							Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_sbh", sRid, _htSessionContext, sTgt, true);
+							_sessionManager.killSession(sRid);
 
 							String sLang = (String)htTGTContext.get("language");
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 							oTGTIssuer.sendTgtRedirect(sRedirectUrl, sTgt, sRid, servletResponse, sLang);
-							_sessionManager.killSession(sRid);
 							return;
 						}
 						// else: forcedAuthenticate: fall through
@@ -829,8 +835,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						String sCountry = (String) htServiceRequest.get("country");  // 20101027 _
 						sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
 						sSelectForm = Utils.replaceString(sSelectForm, "[country]", sCountry);
-						pwOut.println(sSelectForm);
-						
+						Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+						_sessionManager.update(sRid, _htSessionContext); // Write session
+						pwOut.println(sSelectForm);						
 						return;
 					}
 
@@ -1022,10 +1029,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 								showSessionInfo(htServiceRequest, servletResponse, pwOut, sRedirectUrl, sTgt,
 										htTGTContext, sRid, spIssuer);
 							else {
+								// 20111101, Bauke: added Sensor
+								Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_sbh", sRid, _htSessionContext, sTgt, true);
+								_sessionManager.killSession(sRid);
+
 								TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 								String sLang = (String)htTGTContext.get("language");
 								oTGTIssuer.sendTgtRedirect(sRedirectUrl, sTgt, sRid, servletResponse, sLang);
-								_sessionManager.killSession(sRid);
 							}
 							return;
 						}
@@ -1117,6 +1127,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sLoginForm = Utils.handleAllConditionals(sLoginForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
 			
 			servletResponse.setContentType("text/html");
+			Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+			_sessionManager.update(sRid, _htSessionContext); // Write session
 			pwOut.println(sLoginForm);
 		}
 		catch (ASelectException ae) {
@@ -1132,27 +1144,26 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * Show session info.
 	 * 
 	 * @param htServiceRequest
-	 *            the ht service request
+	 *            the service request
 	 * @param servletResponse
 	 *            the servlet response
 	 * @param pwOut
 	 *            the pw out
 	 * @param sRedirectUrl
-	 *            the s redirect url
+	 *            the redirect url
 	 * @param sTgt
-	 *            the s tgt
+	 *            the tgt
 	 * @param htTGTContext
-	 *            the ht tgt context
+	 *            the tgt context
 	 * @param sRid
-	 *            the s rid
+	 *            the rid
 	 * @param spUrl
-	 *            the sp url
+	 *            the url
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
 	private void showSessionInfo(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut,
 			String sRedirectUrl, String sTgt, HashMap htTGTContext, String sRid, String spUrl)
-		throws ASelectException
+	throws ASelectException
 	{
 		final String sMethod = "showSessionInfo";
 		long now = new Date().getTime();
@@ -1216,6 +1227,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		sInfoForm = Utils.replaceString(sInfoForm, "[other_sps]", sOtherSPs);
 		sInfoForm = _configManager.updateTemplate(sInfoForm, _htSessionContext);
 		servletResponse.setContentType("text/html");
+		Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+		_sessionManager.update(sRid, _htSessionContext); // Write session
 		pwOut.println(sInfoForm);
 	}
 
@@ -1277,8 +1290,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 
 		// Display the consent form
-		Tools.pauseSensorData(_systemLogger, _htSessionContext);
-		_sessionManager.update(sRid, _htSessionContext); // Write session
 		String sFriendlyName = "";
 		try {
 			Object aselect = _configManager.getSection(null, "aselect");
@@ -1287,7 +1298,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Configuration error: " + e);
 		}
+
 		// Ask for consent by presenting the userconsent.html form
+		Tools.pauseSensorData(_systemLogger, _htSessionContext);
+		_sessionManager.update(sRid, _htSessionContext); // Write session
 		try {
 			_sConsentForm = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "userconsent",
 					_sUserLanguage, _sUserCountry);
@@ -1513,6 +1527,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sSelectForm = Utils.replaceString(sSelectForm, "[cancel]", sb.toString());
 			sSelectForm = _configManager.updateTemplate(sSelectForm, _htSessionContext);
 			// _systemLogger.log(Level.FINER, _sModule, sMethod, "Form select=["+sSelectForm+"]");
+			Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+			_sessionManager.update(sRid, _htSessionContext); // Write session
 			pwOut.println(sSelectForm);
 			return 0;
 		}
@@ -1556,7 +1572,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void handleLogin3(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sRid = null;
 		String sAuthsp = null;
@@ -1576,13 +1592,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			
 			// 20111013, Bauke: added absent phonenumber handling
 			HashMap htResponse = startAuthentication(sRid, htServiceRequest);
-			String sResultCode = (String) htResponse.get("result");
-			
-			// NO: don't handle here but in AuthSP
-			//if (sResultCode.equals(Errors.ERROR_ASELECT_AUTHSP_INVALID_PHONE)) {
-			//	handleInvalidPhone(servletResponse, sRid, _htSessionContext);
-			//	return;
-			//}
+			String sResultCode = (String) htResponse.get("result");			
 			if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to create redirect url, result="+sResultCode);
 				throw new ASelectException(sResultCode);
@@ -1603,12 +1613,16 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					if (sFName != null && !"".equals(sFName)) {
 						sRedirectUrl = sRedirectUrl + "&" + PARM_REQ_FRIENDLY_NAME + "="  +  URLEncoder.encode(sFName, "UTF-8");
 					}
-				} catch (ASelectException ae) {
+				}
+				catch (ASelectException ae) {
 					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Redirect without FriendlyName. Could not find or encode FriendlyName for: " + sAppId );
 				}
 				// RH, 20100907, en
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIRECT " + sRedirectUrl);
 				if (sPopup == null || sPopup.equalsIgnoreCase("false")) {
+					Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+					_htSessionContext.put("authsp_visited", "true");
+					_sessionManager.update(sRid, _htSessionContext); // Write session
 					servletResponse.sendRedirect(sRedirectUrl);
 					return;
 				}
@@ -1619,6 +1633,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				String strFriendlyName = _configManager.getParam(authSPsection, "friendly_name");
 				sPopupForm = Utils.replaceString(sPopupForm, "[authsp]", strFriendlyName);
 				sPopupForm = _configManager.updateTemplate(sPopupForm, _htSessionContext);
+				Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+				_htSessionContext.put("authsp_visited", "true");
+				_sessionManager.update(sRid, _htSessionContext); // Write session
 				pwOut.println(sPopupForm);
 				return;
 			}
@@ -2003,6 +2020,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						sb.append(sServerId);
 						sb.append("&rid=").append(sRid);
 
+						// 20111101, Bauke: added Sensor
+						Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_sbh", sRid, _htSessionContext, sTgt, true);
 						_sessionManager.killSession(sRid);
 
 						_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sb);
@@ -2124,11 +2143,15 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRemoteAsUrl + "," + " _sMyOrg=" + _sMyOrg
 						+ ", sRemoteOrg=" + sRemoteOrg);
 				if (sRemoteAsUrl != null) {
+					Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+					// no RID: _sessionManager.update(sRid, _htSessionContext); // Write session
 					servletResponse.sendRedirect(sRemoteAsUrl);
 					return;
 				}
 			}
 			sLoggedOutForm = _configManager.updateTemplate(sLoggedOutForm, htTGTContext);
+			Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+			// no RID _sessionManager.update(sRid, _htSessionContext); // Write session
 			pwOut.println(sLoggedOutForm);
 
 		}
@@ -2392,15 +2415,14 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				+ _htSessionContext.get("client_ip") + ", set to " + get_servletRequest().getRemoteAddr());
 		
 		_htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr());
-		// 20111013, Bauke: added absent phonenumber handling
-		// To be used by computeAuthenticationRequest():
+		// 20111013, Bauke: added absent phonenumber handling, to be used by computeAuthenticationRequest():
 		_htSessionContext.put("sms_correction_facility", Boolean.toString(Utils.hasValue(_sCorrectionFacility)));
 		
+		//Tools.pauseSensorData(_systemLogger, _htSessionContext);  // 20111102, done one level higher, before redirection
 		if (!_sessionManager.writeSession(sRid, _htSessionContext)) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not write session context");
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
-		Tools.pauseSensorData(_systemLogger, _htSessionContext);
 
 		// Everything seems okay -> instantiate the protocol handler for
 		// the selected authsp and let it compute a signed authentication request
@@ -2431,7 +2453,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 		// let the protocol handler for the authsp do its work
 		HashMap htResponse = oProtocolHandler.computeAuthenticationRequest(sRid);
-		
 		return htResponse;
 	}
 
@@ -2627,6 +2648,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				String sTemp3 = "<A HREF=\"" + sRemoteAsUrl + "\">" + sTemp + "</A>";
 				sUserInfoForm = Utils.replaceString(sUserInfoForm, "[org]", sTemp3);
 			}
+			Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+			// no RID: _sessionManager.update(sRid, _htSessionContext); // Write session
 			pwOut.println(sUserInfoForm);
 		}
 		catch (IOException eIO) {
@@ -2737,9 +2760,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		hmRequest.put("app_url", "login_token");
 		hmRequest.put("shared_secret", sSharedSecret);
 		hmRequest.put("check-signature", "false");  // this is an internal call, so don't
+		// No "usi" available in this entry
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmRequest=" + hmRequest);
-		// Exception for bad shared_recret:
+		// Exception for bad shared_secret:
 		HashMap<String, String> hmResponse = handleAuthenticateAndCreateSession(hmRequest, null);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmResponse=" + hmResponse);
 

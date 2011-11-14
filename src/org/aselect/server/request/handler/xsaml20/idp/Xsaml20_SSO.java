@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.namespace.QName;
 
 import org.aselect.server.application.ApplicationManager;
+import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.xsaml20.Saml20_BrowserHandler;
 import org.aselect.server.request.handler.xsaml20.Saml20_Metadata;
@@ -37,6 +38,7 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.Audit;
 import org.aselect.system.utils.BASE64Encoder;
+import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
 import org.opensaml.common.SAMLObjectBuilder;
@@ -619,7 +621,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Redirecting with artifact to: " + sAssertUrl);
 				sendSAMLArtifactRedirect(sAssertUrl, sRid, htSessionContext, sTgt, htTGTContext, httpResponse, sRelayState);
 			}
-			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Return from  AuthSP handled");
+			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Return from AuthSP handled");
 
 			// Cleanup for a forced_authenticate session
 			Boolean bForcedAuthn = (Boolean) htTGTContext.get("forced_authenticate");
@@ -630,6 +632,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				tgtManager.remove(sTgt);
 			}
 			if (bForcedAuthn && htSessionContext != null) {
+				Tools.calculateAndReportSensorData(ASelectConfigManager.getHandle(), _systemLogger, "srv_s20", sRid, htSessionContext, sTgt, true);
 				SessionManager sessionManager = SessionManager.getHandle();
 				sessionManager.killSession(sRid);
 			}
@@ -786,6 +789,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		// Let's POST the token
 		if (get_sPostTemplate() != null) {
 			String sSelectForm = _configManager.loadHTMLTemplate(null, get_sPostTemplate(), _sUserLanguage, _sUserCountry);
+			Tools.pauseSensorData(_systemLogger, htSessionContext);  //20111102
 			handlePostForm(sSelectForm, sp_assert_url, sInputs, oHttpServletResponse);
 		}
 		else {
