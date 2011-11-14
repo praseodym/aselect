@@ -471,6 +471,7 @@ public class RequestHandler extends Thread
 	{
 		String sMethod = "processRequest";
 		String sRequest = null;
+		String sUsi = null;
 		long lMyThread = Thread.currentThread().getId();
 
 		try {
@@ -492,8 +493,13 @@ public class RequestHandler extends Thread
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "REQ { T=" + System.currentTimeMillis() + " port="
 					+ port + ", t="+lMyThread + ": " + sRequest+", oInput=" + oInputMessage);
 			
-			timeSensor.timeSensorStart(1/*level*/, 1/*agent*/, lMyThread);  // default is success
-			String sUsi = oInputMessage.getParam("usi");  // unique sensor id
+			timeSensor.timeSensorStart(1/*level*/, 2/*agent*/, lMyThread);  // default is success
+			try {
+				sUsi = oInputMessage.getParam("usi");  // unique sensor id
+			}
+			catch (Exception e) {
+				// should generate my own usi
+			}
 			if (Utils.hasValue(sUsi))
 				timeSensor.setTimeSensorId(sUsi);
 
