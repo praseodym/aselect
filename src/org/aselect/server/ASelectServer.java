@@ -178,7 +178,6 @@
 package org.aselect.server;
 
 import java.io.File;
-
 import java.io.IOException;
 import java.util.Timer;
 import java.util.logging.Level;
@@ -188,7 +187,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.aselect.lbsensor.DataCollectExporter;
 import org.aselect.server.admin.AdminMonitor;
 import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.attributes.AttributeGatherer;
@@ -202,13 +200,11 @@ import org.aselect.server.request.RequestHandlerFactory;
 import org.aselect.server.sam.ASelectSAMAgent;
 import org.aselect.server.session.SessionManager;
 import org.aselect.server.tgt.TGTManager;
+import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
-import org.aselect.system.storagemanager.SendQueue;
-import org.aselect.system.storagemanager.SendQueueSender;
-import org.aselect.system.utils.Utils;
 
 /**
  * This is the A-Select Server main class. It is responsible for <code>init()</code>ializing and <code>destroy()</code>
@@ -249,9 +245,8 @@ public class ASelectServer extends ASelectHttpServlet
 	private CryptoEngine _cryptoEngine;
 	private AdminMonitor _adminMonitor = null;
 	private RequestHandlerFactory _oRequestHandlerFactory;
-	protected Timer _dataSendTimer;
 	private int _iBatchPeriod = -1;
-
+	private Timer _timerSensorThread = null;
 	/**
 	 * Initialize the A-Select Server. This method is invoked:
 	 * <ul>
@@ -422,7 +417,8 @@ public class ASelectServer extends ASelectHttpServlet
 				throw eAC;
 			}
 			
-			timerSensorConfig(_oASelectConfig, "aselect");
+			_iBatchPeriod = ConfigManager.timerSensorConfig(_configManager, _systemLogger, _oASelectConfig, "aselect");
+			_timerSensorThread = ConfigManager.timerSensorStartThread(_configManager, _systemLogger, "aselect", _iBatchPeriod);
 
 			try {
 				String sTemp = _configManager.getParam(_oASelectConfig, "admin_gui");
@@ -465,45 +461,6 @@ public class ASelectServer extends ASelectHttpServlet
 	}
 
 	/**
-	 * Timer sensor config.
-	 * 
-	 * @param _oMainConfig
-	 *            the main config section
-	 * @param sMainTag
-	 *            the main tag
-	 * @throws ASelectConfigException
-	 * @throws ASelectException
-	 */
-	private void timerSensorConfig(Object _oMainConfig, String sMainTag)
-	throws ASelectConfigException, ASelectException
-	{
-		String sMethod = "timerSensorConfig";
-		
-		// The Timer Queue and config
-		Object oSensorSection = Utils.getSimpleSection(_configManager, _systemLogger, _oMainConfig, "timer_sensor", false);
-		if (oSensorSection == null)
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Section "+sMainTag+"/"+"timer_sensor"+" not found, no timing");
-		else
-			_iBatchPeriod = Utils.getSimpleIntParam(_configManager, _systemLogger, oSensorSection, "batch_period", false);
-
-		if (_iBatchPeriod > 0) {
-			try {
-				SendQueueSender dcExporter = new SendQueueSender(_systemLogger);
-				SendQueue hQueue = SendQueue.getHandle();
-				hQueue.initialize(_configManager, _systemLogger, sMainTag, "timer_sensor"/*section*/);
-				
-				_dataSendTimer = new Timer();
-				_dataSendTimer.schedule(dcExporter, 0, _iBatchPeriod * 1000);  // in milliseconds
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "SendQueueSender scheduled every "+_iBatchPeriod+" seconds");
-			}
-			catch (Exception e) {
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Can't start SendQueueSender", e);
-				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-			}
-		}
-	}
-
-	/**
 	 * Free resources, stop worker threads, and generally shutdown the A-Select Server. This method is invoked by Tomcat
 	 * when the servlet is removed or Tomcat itself shuts down.
 	 * 
@@ -512,11 +469,9 @@ public class ASelectServer extends ASelectHttpServlet
 	@Override
 	public void destroy()
 	{
-		// Close resources
 		closeResources();
 
-		// Close loggers
-		_systemLogger.log(Level.INFO, MODULE, "destroy()", "A-Select server stopped.");
+		_systemLogger.log(Level.INFO, MODULE, "destroy", "A-Select server stopped.");
 		closeLoggers();
 
 		super.destroy();
@@ -625,8 +580,11 @@ public class ASelectServer extends ASelectHttpServlet
 		ASelectSAMAgent.getHandle().destroy();
 		if (_tgtManager != null)
 			_tgtManager.destroy();
+		
 		_sessionManager.destroy();
 		_cryptoEngine.stop();
+		
+		_timerSensorThread.cancel();
 	}
 
 	/**
@@ -643,5 +601,4 @@ public class ASelectServer extends ASelectHttpServlet
 			_systemLogger = null;
 		}
 	}
-
 }

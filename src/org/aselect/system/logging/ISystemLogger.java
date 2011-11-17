@@ -13,7 +13,6 @@ package org.aselect.system.logging;
 
 import java.util.logging.Level; //import org.apache.log4j.Level;
 
-import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.configmanager.IConfigManager;
 import org.aselect.system.exception.ASelectException;
 

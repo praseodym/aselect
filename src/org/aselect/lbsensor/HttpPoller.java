@@ -81,9 +81,10 @@ public class HttpPoller extends TimerTask
 			if (isInput != null) {
 				oInReader = new BufferedReader(new InputStreamReader(isInput));
 				for (; (sLine = oInReader.readLine()) != null;) {
-					_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "[" + sLine + "]");
-					if (sLine.contains(_sSignOfLife))
+					if (sLine.contains(_sSignOfLife)) {
 						bOk = true;
+						_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "[" + sLine + "]");
+					}
 				}
 				oInReader.close();
 			}

@@ -711,7 +711,7 @@ public class StorageManager
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "The cleaner could not do her work properly", e);
 				}
 			}
-			_systemLogger.log(Level.FINE, MODULE, sMethod, "The cleaner has stopped: " + this.getClass());
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "The cleaner has stopped: " + this.getClass());
 		}
 
 		/**

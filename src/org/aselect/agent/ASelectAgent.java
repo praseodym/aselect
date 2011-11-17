@@ -203,10 +203,11 @@ public class ASelectAgent
 	 * Handle to system logger.
 	 */
 	private ASelectAgentSystemLogger _oASelectAgentSystemLogger;
-	
 	private ASelectAgentConfigManager _oASelectAgentConfigManager;
 
+	// TimerSensor dispatch
 	private int _iBatchPeriod = -1;
+	Timer _timerSensorThread = null;	
 	
 	/**
 	 * The agent configuration section.
@@ -424,7 +425,7 @@ public class ASelectAgent
 			}
 		
 			// 20111116, Bauke: added
-			timerSensorConfig(_oASelectAgentConfigManager, _oASelectAgentSystemLogger, _oAgentSection, "agent");
+			_iBatchPeriod = ConfigManager.timerSensorConfig(_oASelectAgentConfigManager, _oASelectAgentSystemLogger, _oAgentSection, "agent");
 
 			// get a handle to the communicator
 			_oCommunicator = getCommunicator();
@@ -436,49 +437,6 @@ public class ASelectAgent
 			_oASelectAgentSystemLogger.log(Level.SEVERE, MODULE, sMethod, "Error during initialisation", e);
 
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-		}
-	}
-	
-	/**
-	 * Timer sensor config.
-	 * 
-	 * @param configManager
-	 *            the config manager
-	 * @param systemLogger
-	 *            the system logger
-	 * @param _oMainConfig
-	 *            the main config section
-	 * @param sMainTag
-	 *            the main tag
-	 * @throws ASelectConfigException
-	 * @throws ASelectException
-	 */
-	private void timerSensorConfig(ConfigManager configManager, SystemLogger systemLogger, Object _oMainConfig, String sMainTag)
-	throws ASelectConfigException, ASelectException
-	{
-		String sMethod = "timerSensorConfig";
-		
-		// The Timer Queue and config
-		Object oSensorSection = Utils.getSimpleSection(configManager, systemLogger, _oMainConfig, "timer_sensor", false);
-		if (oSensorSection == null)
-			systemLogger.log(Level.WARNING, MODULE, sMethod, "Section "+sMainTag+"/"+"timer_sensor"+" not found, no timing");
-		else
-			_iBatchPeriod  = Utils.getSimpleIntParam(configManager, systemLogger, oSensorSection, "batch_period", false);
-
-		if (_iBatchPeriod > 0) {
-			try {
-				SendQueueSender dcExporter = new SendQueueSender(systemLogger);
-				SendQueue hQueue = SendQueue.getHandle();
-				hQueue.initialize(configManager, systemLogger, sMainTag, "timer_sensor"/*section*/);
-				
-				Timer _dataSendTimer = new Timer();
-				_dataSendTimer.schedule(dcExporter, 0, _iBatchPeriod * 1000);  // in milliseconds
-				systemLogger.log(Level.INFO, MODULE, sMethod, "SendQueueSender scheduled every "+_iBatchPeriod+" seconds");
-			}
-			catch (Exception e) {
-				systemLogger.log(Level.SEVERE, MODULE, sMethod, "Can't start SendQueueSender", e);
-				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-			}
 		}
 	}
 
@@ -502,8 +460,9 @@ public class ASelectAgent
 	 */
 	public void destroy()
 	{
-		String sMethod = "destroy()";
+		String sMethod = "destroy";
 
+		// All threads must be stopped, otherwise the process keeps running
 		_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "Stopping all components.");
 		try {
 			_bActive = false;
@@ -526,7 +485,8 @@ public class ASelectAgent
 			ASelectAgentSAMAgent.getHandle().destroy();
 			TicketManager.getHandle().stop();
 			SessionManager.getHandle().stop();
-
+			_timerSensorThread.cancel();
+			
 			_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "A-Select Agent stopped.");
 			_oASelectAgentSystemLogger.closeHandlers();
 		}
@@ -615,6 +575,9 @@ public class ASelectAgent
 			_tServiceHandler = new Thread(new APIServiceHandler());
 
 		_tServiceHandler.start();
+		
+		_timerSensorThread = ConfigManager.timerSensorStartThread(_oASelectAgentConfigManager, _oASelectAgentSystemLogger, "agent", _iBatchPeriod);
+
 		new Thread(new AdminServiceHandler()).start();
 	}
 
@@ -842,7 +805,6 @@ public class ASelectAgent
 	 */
 	private class AdminServiceHandler implements Runnable
 	{
-		
 		/**
 		 * Loop for accepting AdminAPI requests.
 		 * 

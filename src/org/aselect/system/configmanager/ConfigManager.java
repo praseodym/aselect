@@ -44,12 +44,17 @@
 package org.aselect.system.configmanager;
 
 import java.io.File;
+import java.util.Timer;
 import java.util.logging.Level;
 
 import org.aselect.system.configmanager.handler.XMLConfigHandler;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
+import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
+import org.aselect.system.storagemanager.SendQueue;
+import org.aselect.system.storagemanager.SendQueueSender;
+import org.aselect.system.utils.Utils;
 
 /**
  * A common configuration manager. <br>
@@ -358,5 +363,57 @@ public class ConfigManager implements IConfigManager
 		// only XML is supported at this moment
 		return new XMLConfigHandler(_oSystemLogger);
 	}
+	
+	/**
+	 * Timer sensor config.
+	 * 
+	 * @param configManager
+	 *            the config manager
+	 * @param systemLogger
+	 *            the system logger
+	 * @param _oMainConfig
+	 *            the main config section
+	 * @param sMainTag
+	 *            the main tag
+	 * @throws ASelectConfigException
+	 * @throws ASelectException
+	 */
+	public static int timerSensorConfig(ConfigManager configManager, SystemLogger systemLogger, Object _oMainConfig, String sMainTag)
+	throws ASelectConfigException, ASelectException
+	{
+		String sMethod = "timerSensorConfig";
+		int iBatchPeriod = -1;
+		
+		// The Timer Queue and config
+		Object oSensorSection = Utils.getSimpleSection(configManager, systemLogger, _oMainConfig, "timer_sensor", false);
+		if (oSensorSection == null)
+			systemLogger.log(Level.WARNING, MODULE, sMethod, "Section "+sMainTag+"/"+"timer_sensor"+" not found, no timing");
+		else
+			iBatchPeriod  = Utils.getSimpleIntParam(configManager, systemLogger, oSensorSection, "batch_period", false);
+		return iBatchPeriod;
+	}
 
+	public static Timer timerSensorStartThread(ConfigManager configManager, SystemLogger systemLogger,
+			String sMainTag, int iBatchPeriod)
+	throws ASelectConfigException, ASelectException
+	{
+		String sMethod = "timerSensorConfig";
+		if (iBatchPeriod <= 0)
+			return null;
+		
+		try {
+			SendQueueSender dcExporter = new SendQueueSender(systemLogger);
+			SendQueue hQueue = SendQueue.getHandle();
+			hQueue.initialize(configManager, systemLogger, sMainTag, "timer_sensor"/*section*/);
+			
+			Timer _dataSendTimer = new Timer();
+			_dataSendTimer.schedule(dcExporter, 0, iBatchPeriod * 1000);  // in milliseconds
+			systemLogger.log(Level.INFO, MODULE, sMethod, "SendQueueSender scheduled every "+iBatchPeriod+" seconds");
+			return _dataSendTimer;
+		}
+		catch (Exception e) {
+			systemLogger.log(Level.SEVERE, MODULE, sMethod, "Can't start SendQueueSender", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		}
+	}
 }

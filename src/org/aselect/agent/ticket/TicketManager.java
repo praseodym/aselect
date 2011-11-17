@@ -263,8 +263,7 @@ public class TicketManager
 				}
 
 				try {
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "New Ticket=" + sTicket + ", Context="
-							+ htTicketContext);
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "New Ticket=" + Utils.firstPartOf(sTicket,40)); // + ", Context="+htTicketContext);
 					_oTicketTable.put(sTicket, htTicketContext);
 				}
 				catch (ASelectStorageException e) {

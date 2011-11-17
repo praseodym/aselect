@@ -108,7 +108,7 @@ public class LbSensor
 		for (; oConfigHandler != null;) {
 			String sId = _oConfigManager.getParam(oConfigHandler, "id");
 			String sClass = _oConfigManager.getParam(oConfigHandler, "class");
-			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "id=" + sId + " / class=" + sClass);
+			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Handler id=" + sId + " / class=" + sClass);
 
 			Class cTrueHandler = null;
 			ISensorHandler oSenseHandler = null;
@@ -164,6 +164,8 @@ public class LbSensor
 	public void destroy()
 	{
 		String sMethod = "destroy";
+		
+		if (_dataCollectTimer != null) _dataCollectTimer.cancel();
 		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Stopping all components.");
 	}
 }
