@@ -31,7 +31,7 @@
  * added license
  *
  * Revision 1.8  2006/03/01 08:56:39  remco
- * Added option "url=..." in aselect_filter_add_secure_app, which forces the A-Select Server and filter to redirect to a fixed url after a succesful authentication.
+ * Added option "url=..." in aselect_filter_add_secure_app, which forces the Server and filter to redirect to a fixed url after a succesful authentication.
  *
  * Revision 1.7  2005/09/12 13:50:49  remco
  * Added authorization support (untested)
@@ -285,7 +285,7 @@ int aselect_filter_receive_msg(int sd, char *pcReceiveMsg, int ccReceiveMsg)
     static int count = 1000;
     cnt = ++count;
 
-    TRACE2("RCV[%d] aselect_filter_receive_msg (%d)", cnt, ccReceiveMsg);
+    TRACE2("RCV[%d] aselect_filter_receive_msg: max=%d", cnt, ccReceiveMsg);
 
     // Receive data while their is data or till we find a "\r"
     while ((iRemaining > 0) && ((iReceived = recv(sd, pMsg, iRemaining, 0)) > 0)) {
@@ -302,14 +302,14 @@ int aselect_filter_receive_msg(int sd, char *pcReceiveMsg, int ccReceiveMsg)
     if (iReceived != -1)
         iReceived = ccReceiveMsg - iRemaining;
         
-    TRACE4("RCV[%d] aselect_filter_receive_msg %d: [%.*s]", cnt, iReceived, 40, pcReceiveMsg);
+    TRACE2("RCV[%d] aselect_filter_receive_msg: recv=%d", cnt, iReceived);
     return iReceived;
 }
 
 //
 // Connect to ASelect Agent send request and wait for response
 //
-char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAIP, int iASAPort, char *pcSendMessage, int ccSendMessage)
+char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAIP, int iASAPort, char *pcSendMessage, int ccSendMessage, TIMER_DATA *pt, int toAgent)
 {
     int                 sd;
     struct sockaddr_in  pin;
@@ -318,11 +318,11 @@ char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAI
     char                pcReceiveMessage[ASELECT_FILTER_MAX_RECV+1];
     int                 ccReceiveMessage;
     char                *pcResponse = NULL;
-    int cnt;
     static int count = 0;
-    cnt = ++count;
+    int cnt = ++count;
 
-    TRACE2("ToAGENT[%d] aselect_filter_send_request { [%s]", cnt, pcSendMessage);
+    char *sDest = (toAgent)? "AGENT": "LbSensor";
+    TRACE3("To%s[%d] aselect_filter_send_request { [%s]", sDest, cnt, pcSendMessage);
     memset(pcReceiveMessage, 0, ASELECT_FILTER_MAX_RECV);
 
     // Retrieve the host information
@@ -363,33 +363,36 @@ char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAI
 
             // Check if information is not too large for message
             if ((ccSendMessage + 1) < ASELECT_FILTER_MAX_MSG) {
-                // Send the message
-                if (send(sd, (void *) pcSendMessage, (ccSendMessage + 1), 0) > 0) {
+                // Send the message, PAUSE TIMER
+		if (pt != NULL) timer_pause(pt);
+                if (send(sd, (void *) pcSendMessage, (ccSendMessage), 0) > 0) { // 20111116 don't send null-byte
                     // Message has been sent, now wait for response
                     ccReceiveMessage = aselect_filter_receive_msg(sd, pcReceiveMessage, sizeof(pcReceiveMessage)-1);
                     if (ccReceiveMessage > 0) {
-			TRACE1("ccReceiveMessage=%d",ccReceiveMessage);
-                        if (ccReceiveMessage == sizeof(pcReceiveMessage)-1) {
+                        if (ccReceiveMessage >= sizeof(pcReceiveMessage)-1) {
                             // Received message too large
                             TRACE1("received message too large (%d)", ccReceiveMessage);
                             ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
-                                "ASELECT_FILTER:: message from A-Select Agent too large");
+                                "ASELECT_FILTER:: received message was too large");
                         }
                         else {
-                            pcResponse = ap_pstrndup(pPool, pcReceiveMessage, ccReceiveMessage);
+                            pcResponse = ap_pstrndup(pPool, pcReceiveMessage, ccReceiveMessage+1);  // 20111110 added +1
                             *(pcResponse + ccReceiveMessage) = '\0';
                         }
                     }
                     else { // Could not receive data
+			TRACE1("error while receiving data (%d)", errno);
                         ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
-                            ap_psprintf(pPool, "ASELECT_FILTER:: error while receiving data from A-Select Agent (%d)", errno));
+                            ap_psprintf(pPool, "ASELECT_FILTER:: error while receiving data (%d)", errno));
                     }
                 }
                 else { // Could not send data
-                    TRACE1("error while sending data to A-Select Agent (%d)", errno);
+                    TRACE1("error while sending data (%d)", errno);
                     ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
-                        ap_psprintf(pPool, "ASELECT_FILTER:: error while sending data to A-Select Agent (%d)", errno));
+                        ap_psprintf(pPool, "ASELECT_FILTER:: error while sending data (%d)", errno));
                 }
+		// RESUME TIMER
+		if (pt != NULL) timer_resume(pt);
             }
             else { // Message is too large for sending
                 TRACE("Message is too large for sending");
@@ -399,10 +402,9 @@ char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAI
 
         } // connect 
         else { // Could not connect to specified address and port
-            TRACE3("could connect to A-Select Agent at %s:%d (%d)", 
-                pcASAIP, iASAPort, errno);
-                ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
-                ap_psprintf(pPool, "ASELECT_FILTER:: could connect to A-Select Agent at %s:%d (%d)", pcASAIP, iASAPort, errno));
+            TRACE4("Could not connect to %s at %s:%d (%d)", sDest, pcASAIP, iASAPort, errno);
+	    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
+                ap_psprintf(pPool, "ASELECT_FILTER:: could not connect to %s at %s:%d (%d)", sDest, pcASAIP, iASAPort, errno));
         }
         close(sd);
 
@@ -412,8 +414,7 @@ char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAI
         ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
             ap_psprintf(pPool, "ASELECT_FILTER:: could not create socket (%d)", errno));
     }
-
-    TRACE2("} FromAGENT[%d] aselect_filter_send_request, response=[%s]", cnt, pcResponse?pcResponse:"NULL");
+    TRACE3("} From%s[%d] aselect_filter_send_request, response=[%s]", sDest, cnt, pcResponse?pcResponse:"NULL");
     return pcResponse;
 }
 
@@ -936,4 +937,120 @@ char *filter_action_text(ASELECT_FILTER_ACTION action)
     case ASELECT_FILTER_ACTION_SET_TICKET: return("SET_TICKET");
     default: return "INVALID_ACTION";
     }
+}
+
+// Bauke: added debugging info
+char *filter_return_text(int iRet)
+{
+    switch(iRet) {
+    case OK: return "OK";
+    case DONE: return "DONE";
+    case DECLINED: return "DECLINED";
+    case FORBIDDEN: return "FORBIDDEN";
+    default: return "INVALID_RETURN";
+    }
+}
+
+static struct timeval timer_zero()
+{
+    struct timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 0;
+    return tv;
+}
+
+static struct timeval timer_plus(struct timeval p1, struct timeval p2)
+{
+    struct timeval tv;
+
+    tv.tv_sec = p1.tv_sec + p2.tv_sec;
+    tv.tv_usec = p1.tv_usec + p2.tv_usec;
+
+    if (tv.tv_usec > 1000000) {
+	tv.tv_usec -= 1000000;
+	tv.tv_sec++;
+    }
+    return tv;
+}
+
+static struct timeval timer_minus(struct timeval p1, struct timeval p2)
+{
+    struct timeval tv;
+
+    tv.tv_sec = p1.tv_sec - p2.tv_sec;
+    tv.tv_usec = p1.tv_usec - p2.tv_usec;
+    if (tv.tv_usec < 0) {
+	tv.tv_sec--;
+	tv.tv_usec += 1000000;
+    }
+    return tv;
+}
+
+char *timer_usi(pool *pPool, TIMER_DATA *pTimer)
+{
+    static char buf[60];
+    if (!pTimer) return "0";
+    sprintf(buf, "%ld.%06ld", pTimer->td_start.tv_sec, pTimer->td_start.tv_usec);
+    return buf;
+}
+
+void timer_start(TIMER_DATA *pTimer)
+{
+    if (!pTimer) return;
+    pTimer->td_type = 1;  // initially
+    pTimer->td_spent = timer_zero();
+    gettimeofday(&pTimer->td_start, 0);
+    pTimer->td_finish = timer_zero();
+    TRACE3("TM_%d start: st=%d.%06d", getpid(), pTimer->td_start.tv_sec, pTimer->td_start.tv_usec);
+}
+
+void timer_pause(TIMER_DATA *pTimer)
+{
+    if (!pTimer) return;
+    gettimeofday(&pTimer->td_finish, 0);
+    TRACE3("TM_%d pause: fi=%d.%06d", getpid(), pTimer->td_finish.tv_sec, pTimer->td_finish.tv_usec);
+}
+
+// Must be called after timer_pause()
+void timer_resume(TIMER_DATA *pTimer)
+{
+    struct timeval tvNow, tvDiff;
+    if (!pTimer) return;
+    gettimeofday(&tvNow, 0);
+
+    // spent += now - finish;
+    tvDiff = timer_minus(tvNow, pTimer->td_finish);
+    pTimer->td_spent = timer_plus(pTimer->td_spent, tvDiff);
+    pTimer->td_finish = timer_zero();
+    TRACE7("TM_%d resume: nw=%d.%06d df=%d.%06d sp=%d.%06d", getpid(), tvNow.tv_sec, tvNow.tv_usec, tvDiff.tv_sec,
+	    tvDiff.tv_usec, pTimer->td_spent.tv_sec, pTimer->td_spent.tv_usec);
+}
+
+// round: (tv.tv_usec+500)/1000
+void timer_finish(TIMER_DATA *pTimer)
+{
+    struct timeval tvNow, tvDiff;
+    if (!pTimer) return;
+    gettimeofday(&tvNow, 0);
+
+    // TotalSpent = (now - start) - spent;
+    tvDiff = timer_minus(tvNow, pTimer->td_start);
+    pTimer->td_spent = timer_minus(tvDiff, pTimer->td_spent);
+    pTimer->td_finish = tvNow;
+    TRACE7("TM_%d finish: %d.%06d %d.%06d %d.%06d", getpid(), pTimer->td_start.tv_sec, pTimer->td_start.tv_usec,
+	    pTimer->td_spent.tv_sec, pTimer->td_spent.tv_usec, pTimer->td_finish.tv_sec, pTimer->td_finish.tv_usec);
+}
+
+char *timer_pack(pool *pPool, TIMER_DATA *pTimer, char *senderId, char *sAppId, int ok)
+{
+    char buf1[50], buf2[50], buf3[50];
+    char *result;
+
+    sprintf(buf1, "%d.%06d", pTimer->td_start.tv_sec, pTimer->td_start.tv_usec);
+    sprintf(buf2, "%d.%06d", pTimer->td_finish.tv_sec, pTimer->td_finish.tv_usec);
+    sprintf(buf3, "%d.%06d", pTimer->td_spent.tv_sec, pTimer->td_spent.tv_usec);
+    result = ap_psprintf(pPool, "%s,%s,%s,%d,%d,%d,%s,%s,%s,%s,,",
+		    senderId, buf1, sAppId, 1/*level*/, 1/*type*/,
+		    getpid()/*thread*/, buf1, buf2, buf3, ok? "true": "false");
+    return result;
 }

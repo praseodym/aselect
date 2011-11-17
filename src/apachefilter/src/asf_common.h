@@ -87,7 +87,7 @@ typedef apr_table_t     table;
 /*
  * Misc. defines
  */                                                      
-#define ASELECT_FILTER_MAX_MSG          20000        // Max message that can be sent through a socket
+#define ASELECT_FILTER_MAX_MSG          20000       // Max message that can be sent through a socket
 #define ASELECT_FILTER_MAX_RECV         20000       // Max size of a response from Agent
 #define ASELECT_FILTER_MAX_HEADER_SIZE  7500        // Max length of a header field (should be less than 8190 (see the LimitRequestFieldsize directive))
 #define ASELECT_FILTER_SOCKET_TIME_OUT  120         // Timeout used for sockets
@@ -101,6 +101,13 @@ typedef apr_table_t     table;
  * HTML template for client-side redirect. 
  * Must include two "%s", of which both are replaced by the new location
  */
+#define ASELECT_FILTER_CLIENT_REDIRECT_WINDOW_LOCATION \
+    "<html><head><title>" ASELECT_FILTER_VERSION " Redirect</title>\n" \
+    "<meta http-equiv=\"refresh\" content=\"0;url=%s\">\n" \
+    "<script language=\"javascript\">window.location=\"%s\";</script>\n" \
+    "</head><body></body></html>\n"
+
+// Original version using top.location
 #define ASELECT_FILTER_CLIENT_REDIRECT \
     "<html><head><title>" ASELECT_FILTER_VERSION " Redirect</title>\n" \
     "<meta http-equiv=\"refresh\" content=\"0;url=%s\">\n" \
@@ -201,6 +208,13 @@ typedef apr_table_t     table;
 #define ASELECT_FILTER_REDIRECT_TO_APP  0
 #define ASELECT_FILTER_REDIRECT_FULL    1
 
+typedef struct _TIMER_DATA
+{
+    int td_type;  // filter, filter+agent, ...
+    struct timeval td_start;  // timestamp start
+    struct timeval td_finish; // timestamp finish
+    struct timeval td_spent;  // time spent in milliseconds
+} TIMER_DATA;
 
 typedef struct _ASELECT_APPLICATION
 {
@@ -227,6 +241,8 @@ typedef struct _ASELECT_FILTER_CONFIG
 {
     char    *pcASAIP;
     int     iASAPort;
+    char    *pcSensorIP;
+    int     iSensorPort;
     char    *pcRemoteOrg;
     ASELECT_APPLICATION pApplications[ASELECT_FILTER_MAX_APP];
     PASELECT_APPLICATION pCurrentApp;
@@ -269,7 +285,8 @@ int         aselect_filter_get_error(pool *pPool, char *pcError);
 char *      aselect_filter_replace_tag(pool *pPool, char *pcTag, char *pcValue, char *pcSource);
 char *      aselect_filter_strip_param(pool *pPool, char * pcASelectServerURL );
 int         aselect_filter_receive_msg(int sd, char *pcReceiveMsg, int ccReceiveMsg );
-char *      aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAIP, int iASAPort, char *pcSendMessage, int ccSendMessage );
+char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAIP, int iASAPort, char *pcSendMessage, int ccSendMessage,
+		    TIMER_DATA *pt, int toAgent);
 char *      aselect_filter_get_param(pool *pPool, char *pcArgs, char *pcParam, char * pcDelimiter, int bUrlDecode);
 char *      aselect_filter_url_encode(pool *pPool, const char *pszValue);
 int         aselect_filter_url_decode(char *pszValue);
@@ -284,6 +301,13 @@ int aselect_filter_show_barhtml(pool *pPool, request_rec *pRequest, PASELECT_FIL
 char *aselect_filter_base64_decode(pool *pPool, const char *pszValue);
 char *aselect_filter_base64_encode(pool *pPool, const char *pszValue);
 char *filter_action_text(ASELECT_FILTER_ACTION action);
+char *filter_return_text(int iRet);
+void timer_start(TIMER_DATA *pTimer);
+void timer_pause(TIMER_DATA *pTimer);
+char *timer_usi(pool *pPool, TIMER_DATA *pTimer);
+void timer_resume(TIMER_DATA *pTimer);
+void timer_finish(TIMER_DATA *pTimer);
+char *timer_pack(pool *pPool, TIMER_DATA *pTimer, char *senderId, char *sAppId, int ok);
 
 #define ASELECT_FILTER_TRACE
 
@@ -302,6 +326,9 @@ char *filter_action_text(ASELECT_FILTER_ACTION action);
     #define TRACE2(x,o1,o2)       aselect_filter_trace2(__FILE__,__LINE__,x,o1,o2);
     #define TRACE3(x,o1,o2,o3)    aselect_filter_trace2(__FILE__,__LINE__,x,o1,o2,o3);
     #define TRACE4(x,o1,o2,o3,o4) aselect_filter_trace2(__FILE__,__LINE__,x,o1,o2,o3,o4);
+    #define TRACE5(x,o1,o2,o3,o4,o5) aselect_filter_trace2(__FILE__,__LINE__,x,o1,o2,o3,o4,o5);
+    #define TRACE6(x,o1,o2,o3,o4,o5,o6) aselect_filter_trace2(__FILE__,__LINE__,x,o1,o2,o3,o4,o5,o6);
+    #define TRACE7(x,o1,o2,o3,o4,o5,o6,o7) aselect_filter_trace2(__FILE__,__LINE__,x,o1,o2,o3,o4,o5,o6,o7);
 
 #else // #ifdef ASELECT_FILTER_TRACE
 
@@ -310,6 +337,9 @@ char *filter_action_text(ASELECT_FILTER_ACTION action);
     #define TRACE2(x,o1,o2)       ((void)0);
     #define TRACE3(x,o1,o2,o3)    ((void)0);
     #define TRACE4(x,o1,o2,o3,o4) ((void)0);
+    #define TRACE5(x,o1,o2,o3,o4,o5) ((void)0);
+    #define TRACE6(x,o1,o2,o3,o4,o5,o6) ((void)0);
+    #define TRACE7(x,o1,o2,o3,o4,o5,o6,o7) ((void)0);
 
 #endif // ASELECT_FILTER_TRACE
 
