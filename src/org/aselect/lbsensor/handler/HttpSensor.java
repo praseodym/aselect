@@ -72,7 +72,6 @@ public class HttpSensor extends BasicSensorHandler
 		String sMethod = "processLine";
 
 		// _oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "["+sLine+"]");
-		oOutWriter.write(sLine + "$\r\n");
 		if (sLine.startsWith("GET ")) {
 			// GET /?request=store&data=12345 HTTP/1.1
 			int i = 4;
@@ -83,14 +82,14 @@ public class HttpSensor extends BasicSensorHandler
 
 			int h = sLine.lastIndexOf(" HTTP/");
 			sLine = sLine.substring(i, h);
-			oOutWriter.write(sId + " GET [" + sLine + "]\r\n");
+			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, sId + " GET [" + sLine + "]");
 
 			HashMap<String, String> hmAttribs = Tools.getUrlAttributes(sLine, _oLbSensorLogger);
 			String sReq = hmAttribs.get("request");
 			if ("store".equals(sReq)) {
 				String sData = hmAttribs.get("data");
 				if (sData != null && !"".equals(sData)) {
-					oOutWriter.write("DATA [" + sData + "]\r\n");
+					_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "DATA [" + sData + "]");
 					try {
 						long lValue = Integer.parseInt(sData);
 						_myStore.addData(lValue);
@@ -108,6 +107,7 @@ public class HttpSensor extends BasicSensorHandler
 					}
 				}
 			}
+			oOutWriter.write(sLine + "HTTP/1.1 200 OK\r\n\r\n");
 		}
 	}
 

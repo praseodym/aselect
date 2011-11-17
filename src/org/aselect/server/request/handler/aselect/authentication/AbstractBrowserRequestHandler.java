@@ -152,6 +152,8 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 
 	protected String _sCorrectionFacility = null, _sCookiePrefix = "", _sCookieDomain = null;
 
+	protected HashMap _htSessionContext = null;
+
 	/**
 	 * Construct an instance. <br>
 	 * <br>

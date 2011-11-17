@@ -34,6 +34,14 @@ public class DataCollectSensor extends BasicSensorHandler
 	{
 		String sMethod = "initialize";
 		super.initialize(oConfigHandler, sId);
+		
+		int iExportAfter = _oConfigManager.getSimpleIntParam(oConfigHandler, "export_after", true);  // seconds
+		DataCollectStore.getHandle().set_iExportAfter(iExportAfter);
+		int iRunExport = _oConfigManager.getSimpleIntParam(oConfigHandler, "run_export", true);  // seconds
+		DataCollectStore.getHandle().set_iRunExport(iRunExport);
+		String sExportFile = _oConfigManager.getSimpleParam(oConfigHandler, "export_file", true);
+		DataCollectStore.getHandle().set_sExportFile(sExportFile);
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "ea="+iExportAfter+" re="+iRunExport+" ef="+sExportFile);
 	}
 
 	//
@@ -49,12 +57,26 @@ public class DataCollectSensor extends BasicSensorHandler
 	throws IOException
 	{
 		String sMethod = "processLine";
+		String sData = null;
 		TimeSensor ts = new TimeSensor(_oLbSensorLogger, "");
 
-		oOutWriter.write(sLine);
-		if (sLine.startsWith("GET ")) {
+		//_oLbSensorLogger.log(Level.INFO, MODULE, sMethod,
+		//		"LINE ["+sLine.replace("\r\n", "CN").replace("\r", "CR").replace("\n", "NL")+
+		//		"], t="+Thread.currentThread().getId());
+		// Recognize POST
+		int idx = sLine.indexOf("DATA=");
+		if (idx >= 0) {
+			sData = sLine.substring(idx+5);
+			idx = sData.indexOf('\r');
+			if (idx >= 0)
+				sData = sData.substring(0, idx);
+			idx = sData.indexOf('\n');
+			if (idx >= 0)
+				sData = sData.substring(0, idx);
+		}
+		// Recognize GET
+		else if (sLine.startsWith("GET ")) {
 			// GET /?request=store&data=12345 HTTP/1.1
-			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "["+sLine+"]");
 			int i = 4;
 			if (sLine.charAt(i) == '/')
 				i++;
@@ -65,25 +87,24 @@ public class DataCollectSensor extends BasicSensorHandler
 			sLine = sLine.substring(i, h);
 			
 			HashMap<String, String> hmAttribs = Tools.getUrlAttributes(sLine, _oLbSensorLogger);
-			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "attrs="+hmAttribs);
 			String sReq = hmAttribs.get("request");
-			if ("store".equals(sReq)) {
-				String sData = hmAttribs.get("data");
-				if (Utils.hasValue(sData)) {
-					try {
-						oOutWriter.write("Data ok");
-						ts.timeSensorUnPack(sData);
-						DataCollectStore hStore = DataCollectStore.getHandle();
-						hStore.addEntry(ts.getTimeSensorId(), ts);
-						_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "DATA=" + ts.timeSensorPack());
-					}
-					catch (Exception e) {
-						_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Exception: "+e.getClass()+"="+e.getMessage());
-					}
-				}
-			}
+			if ("store".equals(sReq))
+				sData = hmAttribs.get("data");
 		}
-		oOutWriter.write("$\r\n");
+		if (Utils.hasValue(sData)) {
+			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "DATA ["+sData+"]");
+			try {
+				ts.timeSensorUnPack(sData);
+				//_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Add="+ts.getTimeSensorId());
+				DataCollectStore hStore = DataCollectStore.getHandle();
+				//_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, ts.timeSensorPack());
+				hStore.addEntry(ts.getTimeSensorId(), ts);
+			}
+			catch (Exception e) {
+				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Exception: "+e.getClass()+" :"+e.getMessage());
+			}
+			oOutWriter.write("HTTP/1.1 200 OK\r\n");
+		}
 	}
 
 	// Called before processing

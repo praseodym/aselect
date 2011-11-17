@@ -38,6 +38,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
+import org.aselect.system.storagemanager.SendQueue;
 import org.w3c.dom.*;
 
 //
@@ -480,7 +481,7 @@ public class Tools
 						String sOrig, String sRid, HashMap htSessionContext, String sTgt, boolean bSuccess)
 	{
 		String sMethod = "calculateAndReportSensorData";
-		long lFirst;
+		long lFirst, lLast;
 
 		if (htSessionContext == null) {
 			oSysLog.log(Level.INFO, MODULE, sMethod, "NO SESSION");
@@ -493,31 +494,39 @@ public class Tools
 			return;
 		}
 		try {
+			long nowTime = System.currentTimeMillis();
 			String sPause = (String)htSessionContext.get("pause_contact"); // seconds
 			lFirst = Long.parseLong(sFirst);
-			long now = System.currentTimeMillis();
-			long lTotalSpent = now - lFirst;
-			oSysLog.log(Level.INFO, MODULE, sMethod, "now="+now + " first="+sFirst + " spent="+sSpent+
+			if (sPause != null)  // take as end point
+				lLast = Long.parseLong(sPause);
+			else
+				lLast = System.currentTimeMillis();
+			long lTotalSpent = lLast - lFirst;
+			oSysLog.log(Level.INFO, MODULE, sMethod, "last="+lLast + " first="+sFirst + " spent="+sSpent+
 							((sPause==null)?"": ", LBE already paused at="+sPause));
 			if (sSpent != null) {
 				long lSpent = Long.parseLong(sSpent);
 				lTotalSpent -= lSpent;
 			}
-			Object oConfig = Utils.getSimpleSection(oConfMgr, oSysLog, null, "aselect", true);
-			Tools.reportUsageToSensor(oConfMgr, "lbsensor", "sensor_url", oSysLog, oConfig, Long.toString(lTotalSpent));
-		
+			if (bSuccess) {
+				Tools.reportDataToSensor(oConfMgr, "aselect", "lbsensor", "sensor_url", oSysLog, Long.toString(lTotalSpent));
+			}
+
 			// 20111110, Bauke: added TimeSensor functionality
 			String sUsi = (String)htSessionContext.get("usi");
 		    String sFirstContact = TimeSensor.timeSensorMilli2Time(Long.parseLong(sFirst));
 		    String sTotalSpent = TimeSensor.timeSensorMilli2Time(lTotalSpent);
-			String sNow = TimeSensor.timeSensorMilli2Time(now);
+			String sLast = TimeSensor.timeSensorMilli2Time(lLast);
 			String sAppId = (String)htSessionContext.get("app_id");
 			String sVisit = (String)htSessionContext.get("authsp_visited");
 			// Thread is the last thread that contributed to processing
-		    String sP = String.format("%s,%s,%s,%d,%d,%d,%s,%s,%s,%s,%s,%s", sOrig, (sUsi==null)? "": sUsi,
+		    String sDataLine = String.format("%s,%s,%s,%d,%d,%d,%s,%s,%s,%s,%s,%s", sOrig, (sUsi==null)? "": sUsi,
 		    		sAppId, 1/*complete flow*/, (sVisit!=null)?4/*authsp*/: 3/*server*/, Thread.currentThread().getId(),
-		    		sFirstContact, sNow, sTotalSpent, Boolean.toString(bSuccess), sRid, (sTgt==null)? "": sTgt.substring(0,41));
-		    Tools.reportTimerSensorData(oConfMgr, "aselect"/*xml-tag*/, oSysLog, sP);
+		    		sFirstContact, sLast, sTotalSpent, Boolean.toString(bSuccess), sRid, (sTgt==null)? "": sTgt.substring(0,41));
+			long thenTime = System.currentTimeMillis();
+			oSysLog.log(Level.FINE, MODULE, sMethod, "Spent before reporting="+(thenTime - nowTime)+" mSec"); // includes 1 reportDataToSensor
+			SendQueue.getHandle().addEntry(sDataLine);
+			//Tools.reportTimerSensorData(oConfMgr, "aselect", "timer_sensor", oSysLog, sDataLine);
 		}
 		catch (Exception e) {
 			oSysLog.log(Level.INFO, MODULE, sMethod, "Sensor report failed: "+e.getClass()+": "+e.getMessage());
@@ -536,19 +545,24 @@ public class Tools
 	 * @param sData
 	 *            the data to be sent
 	 */
-	public static void reportTimerSensorData(ConfigManager oConfMgr, String sMainSection, SystemLogger oSysLog, String sData)
+	public static void reportTimerSensorData(ConfigManager oConfMgr, String sMainSection, String sSection, SystemLogger oSysLog, String sData)
 	{
-		String sMethod = "reportTimerSensorData";
+		String sMethod = "reportTimerSensorData";		
 		
-		Object oConfig;
+		long nowTime = System.currentTimeMillis();
 		try {
-			oConfig = Utils.getSimpleSection(oConfMgr, oSysLog, null, sMainSection, true);
-			reportUsageToSensor(oConfMgr, "timer_sensor", "sensor_url", oSysLog, oConfig, sData);
+			reportDataToSensor(oConfMgr, sMainSection, sSection, "sensor_url", oSysLog, sData);
 		}
 		catch (ASelectException e) {
 			oSysLog.log(Level.INFO, MODULE, sMethod, "TimerSensor report failed");
 		}
+		long thenTime = System.currentTimeMillis();
+		oSysLog.log(Level.FINE, MODULE, sMethod, "Spent reporting="+(thenTime - nowTime)+" mSec");
 	}
+
+	static boolean bFirst = true;
+	static IClientCommunicator oClientCommunicator = null;
+	static String sSensorUrl = null;
 
 	/**
 	 * Report usage to sensor.
@@ -567,33 +581,52 @@ public class Tools
 	 *            the data to be sent
 	 * @throws ASelectException
 	 */
-	static void reportUsageToSensor(ConfigManager oConfMgr, String sSection, String sUrlTag,
-						SystemLogger oSysLog, Object oConfig, String sData)
+	static private void reportDataToSensor(ConfigManager oConfMgr, String sMainTag, String sSection, String sUrlTag,
+						SystemLogger oSysLog, String sData)
 	throws ASelectException
 	{
-		String sMethod = "reportUsageToSensor";
-		IClientCommunicator oClientCommunicator;
-
-		Object oSensorSection = Utils.getSimpleSection(oConfMgr, oSysLog, oConfig, sSection, false);
-		oSysLog.log(Level.INFO, MODULE, sMethod, "section="+sSection+"->"+oSensorSection);
-		if (oSensorSection == null)
-			return;
-		oClientCommunicator = Tools.initClientCommunicator(oConfMgr, oSysLog, oSensorSection);
-		String sSensorUrl = Utils.getSimpleParam(oConfMgr, oSysLog, oSensorSection, sUrlTag, true);
-
+		String sMethod = "reportDataToSensor";
 		HashMap htResponse = null;
+		String sResponse = null;
+
+		// 2 communicators will be needed, so we can't cache a single one
+		//if (bFirst) {
+			bFirst = false;
+			oSysLog.log(Level.INFO, MODULE, sMethod, "Looking for: "+sMainTag+"/"+sSection+"/"+sUrlTag);
+			Object oConfig = Utils.getSimpleSection(oConfMgr, oSysLog, null, sMainTag, true);
+			Object oSensorSection = Utils.getSimpleSection(oConfMgr, oSysLog, oConfig, sSection, false);
+			if (oSensorSection == null) {
+				oSysLog.log(Level.WARNING, MODULE, sMethod, "Section "+sMainTag+"/"+sSection+" not found");
+				return;
+			}
+			sSensorUrl = Utils.getSimpleParam(oConfMgr, oSysLog, oSensorSection, sUrlTag, true);
+			if (!Utils.hasValue(sSensorUrl)) {
+				oSysLog.log(Level.WARNING, MODULE, sMethod, "Url tag "+sUrlTag+" not found");
+				return;
+			}
+			oClientCommunicator = Tools.initClientCommunicator(oConfMgr, oSysLog, oSensorSection);
+		//}
+		if (sSensorUrl == null)  // no sensor reporting
+			return;
+
 		HashMap<String, String> htRequest = new HashMap<String, String>();
 		htRequest.put("request", "store");
 		htRequest.put("data", sData);
-		oSysLog.log(Level.INFO, MODULE, sMethod, "Send LB Sensor: " + sData);
+		oSysLog.log(Level.INFO, MODULE, sMethod, "Send to Sensor ["+sData+"]");
 		try {
-			htResponse = oClientCommunicator.sendMessage(htRequest, sSensorUrl);
+			if ("timer_sensor".equals(sSection)) {  // POST
+				sResponse = oClientCommunicator.sendStringMessage(sData, sSensorUrl);
+				oSysLog.log(Level.INFO, MODULE, sMethod, "POST Result=" + sResponse);
+			}
+			else {  // GET
+				htResponse = oClientCommunicator.sendMessage(htRequest, sSensorUrl);
+				oSysLog.log(Level.INFO, MODULE, sMethod, "GET Result=" + htResponse);
+			}
 		}
 		catch (Exception e) {
 			oSysLog.log(Level.WARNING, MODULE, sMethod, "Could not contact LB Sensor at: " + sSensorUrl);
 			throw new ASelectException(Errors.ERROR_ASELECT_IO);
 		}
-		oSysLog.log(Level.INFO, MODULE, sMethod, "Result=" + htResponse);
 	}
 
 	/**

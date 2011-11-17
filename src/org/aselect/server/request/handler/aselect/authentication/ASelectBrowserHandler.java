@@ -156,7 +156,8 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 	 *            The A-Select Server organisation.
 	 */
 	public ASelectBrowserHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-			String sMyServerId, String sMyOrg) {
+			String sMyServerId, String sMyOrg)
+	{
 		super(servletRequest, servletResponse, sMyServerId, sMyOrg);
 		_sModule = "ASelectBrowserHandler";
 		_authenticationLogger = ASelectAuthenticationLogger.getHandle();
@@ -218,8 +219,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 			String sRemoteRid = null;
 			String sLocalRid = null;
 			String sCredentials = null;
-			HashMap htSessionContext;
-
+			
 			// check parameters
 			sRemoteRid = (String) htServiceRequest.get("rid");
 			sLocalRid = (String) htServiceRequest.get("local_rid");
@@ -231,17 +231,17 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 
-			htSessionContext = _sessionManager.getSessionContext(sLocalRid);
-			if (htSessionContext == null) {
+			_htSessionContext = _sessionManager.getSessionContext(sLocalRid);
+			if (_htSessionContext == null) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unknown session in response from cross aselect server");
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 			}
 
-			Tools.resumeSensorData(_systemLogger, htSessionContext);  // 20111102
-			String sRemoteOrg = (String) htSessionContext.get("remote_organization");
+			Tools.resumeSensorData(_systemLogger, _htSessionContext);  // 20111102
+			String sRemoteOrg = (String) _htSessionContext.get("remote_organization");
 
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "AselBrowREQ sRemoteRid=" + sRemoteRid + ", sLocalRid="
-					+ sLocalRid + ", sRemoteOrg=" + sRemoteOrg + " forced_uid=" + htSessionContext.get("forced_uid"));
+					+ sLocalRid + ", sRemoteOrg=" + sRemoteOrg + " forced_uid=" + _htSessionContext.get("forced_uid"));
 
 			// Retrieve backchannel data from the Remote Organization
 			HashMap htRemoteAttributes;
@@ -264,7 +264,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 				if (sResultCode.equals(Errors.ERROR_ASELECT_SERVER_CANCEL)) {
 					_authenticationLogger.log(new Object[] {
 						"Cross", sUID, (String) htServiceRequest.get("client_ip"), sRemoteOrg,
-						htSessionContext.get("app_id"), "denied", sResultCode
+						_htSessionContext.get("app_id"), "denied", sResultCode
 					});
 					// Issue 'CANCEL' TGT
 					TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
@@ -274,7 +274,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 					// remote server returned error
 					_authenticationLogger.log(new Object[] {
 						"Cross", sUID, (String) htServiceRequest.get("client_ip"), sRemoteOrg,
-						htSessionContext.get("app_id"), "denied", sResultCode
+						_htSessionContext.get("app_id"), "denied", sResultCode
 					});
 					throw new ASelectException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);
 				}
@@ -283,7 +283,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 				// Log succesful authentication
 				_authenticationLogger.log(new Object[] {
 					"Cross", sUID, (String) htServiceRequest.get("client_ip"), sRemoteOrg,
-					htSessionContext.get("app_id"), "granted"
+					_htSessionContext.get("app_id"), "granted"
 				});
 
 				// Issue a cross TGT since we do not know the AuthSP

@@ -116,6 +116,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.Timer;
 import java.util.logging.Level;
 
 import org.aselect.agent.admin.AdminMonitor;
@@ -131,9 +132,13 @@ import org.aselect.system.communication.client.IClientCommunicator;
 import org.aselect.system.communication.client.raw.RawCommunicator;
 import org.aselect.system.communication.client.soap11.SOAP11Communicator;
 import org.aselect.system.communication.client.soap12.SOAP12Communicator;
+import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.logging.SystemLogger;
+import org.aselect.system.storagemanager.SendQueue;
+import org.aselect.system.storagemanager.SendQueueSender;
 import org.aselect.system.utils.Utils;
 
 /**
@@ -198,7 +203,11 @@ public class ASelectAgent
 	 * Handle to system logger.
 	 */
 	private ASelectAgentSystemLogger _oASelectAgentSystemLogger;
+	
+	private ASelectAgentConfigManager _oASelectAgentConfigManager;
 
+	private int _iBatchPeriod = -1;
+	
 	/**
 	 * The agent configuration section.
 	 */
@@ -320,7 +329,7 @@ public class ASelectAgent
 			_oASelectAgentSystemLogger = ASelectAgentSystemLogger.getHandle();
 
 			// get handle to the ASelectAgentConfigManager and initialize it
-			ASelectAgentConfigManager _oASelectAgentConfigManager = ASelectAgentConfigManager.getHandle();
+			_oASelectAgentConfigManager = ASelectAgentConfigManager.getHandle();
 
 			_sWorkingDir = System.getProperty("user.dir");
 			_oASelectAgentConfigManager.init(_sWorkingDir);
@@ -413,6 +422,9 @@ public class ASelectAgent
 						"invalid 'adminport' directive in configuration: " + sPort, e);
 				throw new ASelectConfigException(Errors.ERROR_ASELECT_CONFIG_ERROR, e);
 			}
+		
+			// 20111116, Bauke: added
+			timerSensorConfig(_oASelectAgentConfigManager, _oASelectAgentSystemLogger, _oAgentSection, "agent");
 
 			// get a handle to the communicator
 			_oCommunicator = getCommunicator();
@@ -424,6 +436,49 @@ public class ASelectAgent
 			_oASelectAgentSystemLogger.log(Level.SEVERE, MODULE, sMethod, "Error during initialisation", e);
 
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+	}
+	
+	/**
+	 * Timer sensor config.
+	 * 
+	 * @param configManager
+	 *            the config manager
+	 * @param systemLogger
+	 *            the system logger
+	 * @param _oMainConfig
+	 *            the main config section
+	 * @param sMainTag
+	 *            the main tag
+	 * @throws ASelectConfigException
+	 * @throws ASelectException
+	 */
+	private void timerSensorConfig(ConfigManager configManager, SystemLogger systemLogger, Object _oMainConfig, String sMainTag)
+	throws ASelectConfigException, ASelectException
+	{
+		String sMethod = "timerSensorConfig";
+		
+		// The Timer Queue and config
+		Object oSensorSection = Utils.getSimpleSection(configManager, systemLogger, _oMainConfig, "timer_sensor", false);
+		if (oSensorSection == null)
+			systemLogger.log(Level.WARNING, MODULE, sMethod, "Section "+sMainTag+"/"+"timer_sensor"+" not found, no timing");
+		else
+			_iBatchPeriod  = Utils.getSimpleIntParam(configManager, systemLogger, oSensorSection, "batch_period", false);
+
+		if (_iBatchPeriod > 0) {
+			try {
+				SendQueueSender dcExporter = new SendQueueSender(systemLogger);
+				SendQueue hQueue = SendQueue.getHandle();
+				hQueue.initialize(configManager, systemLogger, sMainTag, "timer_sensor"/*section*/);
+				
+				Timer _dataSendTimer = new Timer();
+				_dataSendTimer.schedule(dcExporter, 0, _iBatchPeriod * 1000);  // in milliseconds
+				systemLogger.log(Level.INFO, MODULE, sMethod, "SendQueueSender scheduled every "+_iBatchPeriod+" seconds");
+			}
+			catch (Exception e) {
+				systemLogger.log(Level.SEVERE, MODULE, sMethod, "Can't start SendQueueSender", e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			}
 		}
 	}
 
@@ -657,7 +712,6 @@ public class ASelectAgent
 			// raw communication is specified or something unreadable
 			oCommunicator = new RawCommunicator(ASelectAgentSystemLogger.getHandle());
 		}
-
 		return oCommunicator;
 	}
 
@@ -678,8 +732,7 @@ public class ASelectAgent
 	 * @author Alfa & Ariss
 	 */
 	private class APIServiceHandler implements Runnable
-	{
-		
+	{		
 		/**
 		 * Loop for accepting API requests and instantiating RequestHandler objects.
 		 * 

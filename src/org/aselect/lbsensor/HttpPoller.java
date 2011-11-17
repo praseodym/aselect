@@ -66,6 +66,10 @@ public class HttpPoller extends TimerTask
 
 		// Poll the data supplier, is it still running?
 		SensorStore oSensorStore = LbSensor.getSensorStore(_sSensorStoreId);
+		if (oSensorStore == null) {
+			_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "Cannot get SensorStore for: " + _sSensorStoreId);
+			return;
+		}
 		try {
 			URL serverUrl = new URL(_sUrl);
 			URLConnection serverConn = serverUrl.openConnection();

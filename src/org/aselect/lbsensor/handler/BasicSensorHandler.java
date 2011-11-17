@@ -18,8 +18,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.logging.Level;
 
 import org.aselect.system.communication.server.Communicator;
@@ -39,15 +41,18 @@ public class BasicSensorHandler implements ISensorHandler
 	protected LbSensorSystemLogger _oLbSensorLogger = LbSensorSystemLogger.getHandle();
 	protected SensorStore _myStore = null; // Storage to calculate the running average data
 	protected String _sMyId = null;
+	protected String _myIP = "";
+	protected int _myPort = 0;
+	protected String _myHost = "";
 
 	private ServerSocket _oServiceSocket = null;
 	private boolean _bActive = true;
-
+	
 	/* (non-Javadoc)
 	 * @see org.aselect.lbsensor.ISensorHandler#initialize(java.lang.Object, java.lang.String)
 	 */
 	public void initialize(Object oConfigHandler, String sId)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "initialize";
 		int iPort = -1;
@@ -75,6 +80,17 @@ public class BasicSensorHandler implements ISensorHandler
 		if (iIntLength < 0)
 			iIntLength = 30; // seconds
 		_myStore = new SensorStore(_sMyId, iIntCount, iIntLength);
+		
+		try {
+			InetAddress ownIP = InetAddress.getLocalHost();
+			_myIP = ownIP.getHostAddress();
+			_myPort = _oServiceSocket.getLocalPort();
+			_myHost = ownIP.getHostName();
+			DataCollectStore.getHandle().set_myIP(_myIP);
+			DataCollectStore.getHandle().set_myPort(_myPort);
+		}
+		catch (UnknownHostException e2) {
+		}
 	}
 
 	/* (non-Javadoc)
@@ -97,9 +113,7 @@ public class BasicSensorHandler implements ISensorHandler
 		BufferedWriter oOutWriter = null;
 		Socket oSocket = null;
 
-		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "[" + sRequestLine.toString() + "]");
-		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, MODULE + " started on port: "
-				+ _oServiceSocket.getLocalPort());
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, MODULE + " ip="+_myIP+" port="	+ _myPort+" host="+_myHost);
 		while (_bActive) {
 			try {
 				long now = System.currentTimeMillis();
@@ -126,11 +140,10 @@ public class BasicSensorHandler implements ISensorHandler
 					if (sRequestLine.toString().indexOf("\r\n") >= 0) {
 						// We have a complete line
 						int len = sRequestLine.length();
-						sRequestLine.setLength(len - 2);
-						//_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "LINE ["+sRequestLine+
-						//		"], t="+Thread.currentThread().getId() + " port="+port);
+						//sRequestLine.setCharAt(len-2, '\0');
+						//:sRequestLine.setLength(len-2);
 						try {
-							processLine(oOutWriter, sRequestLine.toString(), _sMyId);
+							processLine(oOutWriter, sRequestLine.substring(0, len-2), _sMyId);
 						}
 						catch (Exception e) { // continue anyway
 						}

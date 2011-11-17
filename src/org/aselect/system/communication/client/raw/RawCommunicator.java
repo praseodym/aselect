@@ -105,12 +105,12 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Level;
 
+import org.aselect.system.communication.DataCommunicator;
 import org.aselect.system.communication.client.IClientCommunicator;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.logging.SystemLogger;
 
-// TODO: Auto-generated Javadoc
 /**
  * Client communicator which uses CGI messages. <br>
  * <br>
@@ -121,14 +121,13 @@ import org.aselect.system.logging.SystemLogger;
  */
 public class RawCommunicator implements IClientCommunicator
 {
+	private final String MODULE = "RawCommunicator";
 
 	/** The Logger for this RAWCommunicator */
 	private SystemLogger _systemLogger;
 
-	/** "[]" barces UTF-8 encoded. */
+	/** "[]" braces UTF-8 encoded. */
 	private static final String ENCODED_BRACES = "%5B%5D";
-
-	private final String MODULE = "RawCommunicator";
 
 	/**
 	 * Creates a new <code>RawCommunicator</code>. <br>
@@ -169,16 +168,15 @@ public class RawCommunicator implements IClientCommunicator
 	 * @see org.aselect.system.communication.client.IClientCommunicator#sendMessage(java.util.HashMap, java.lang.String)
 	 */
 	public HashMap sendMessage(HashMap parameters, String target)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
-		// create empty return HashMap
 		HashMap htReturn = new HashMap();
 		try {
-			// convert paramaters to CGI message string.
+			// Convert paramaters to CGI message string.
 			String sRequest = hashtable2CGIMessage(parameters);
-			// Send request to A-Select server
-			String sResponse = sendRequestToASelectServer(target, sRequest);
-			// convert response to HashMap
+			// Send request to server
+			String sResponse = sendRequestToAnotherServer(target, sRequest);
+			// Convert response to HashMap
 			if (sResponse != null)
 				htReturn = convertCGIMessage(sResponse);
 		}
@@ -193,10 +191,23 @@ public class RawCommunicator implements IClientCommunicator
 	/* (non-Javadoc)
 	 * @see org.aselect.system.communication.client.IClientCommunicator#sendStringMessage(java.lang.String, java.lang.String)
 	 */
-	public String sendStringMessage(String soapMessage, String sTarget)
-		throws ASelectCommunicationException
+	public String sendStringMessage(String sMessage, String sTarget)
+	throws ASelectCommunicationException
 	{
-		return null;
+		String sResponse = null;
+		String sMethod = "sendStringMessage";
+
+		try {  // Send the message
+			sResponse = DataCommunicator.send(_systemLogger, sMessage, sTarget);
+		}
+		catch (java.net.MalformedURLException eMU) {
+			StringBuffer sbBuffer = new StringBuffer("Invalid URL: ");
+			sbBuffer.append(eMU.getMessage()).append(" errorcode: ").append(Errors.ERROR_ASELECT_USE_ERROR);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString(), eMU);
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR, eMU);
+		}
+		//_systemLogger.log(Level.INFO, MODULE, sMethod, "Response=" + sResponse);
+		return sResponse;
 	}
 
 	/**
@@ -227,48 +238,41 @@ public class RawCommunicator implements IClientCommunicator
 	 * @throws ASelectCommunicationException
 	 *             If communication with <code>sUrl</code> fails.
 	 */
-	private String sendRequestToASelectServer(String sUrl, String sParams)
-		throws ASelectCommunicationException
+	private String sendRequestToAnotherServer(String sUrl, String sParams)
+	throws ASelectCommunicationException
 	{
+		String sMethod = "sendRequestToAnotherServer";
 		String sInputLine = "";
-		URL urlASelectServer = null;
+		URL urlSomeServer = null;
 		BufferedReader brInput = null;
-		String sMethod = "sendRequestToASelectServer()";
 		StringBuffer sbBuffer = new StringBuffer();
 
-		sbBuffer = new StringBuffer(sUrl);
-		sbBuffer.append("?");
-		sbBuffer.append(sParams);
+		sbBuffer = new StringBuffer(sUrl).append("?").append(sParams);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "URL=" + sbBuffer.toString());
 		try {
-			urlASelectServer = new URL(sbBuffer.toString());
-			brInput = new BufferedReader(new InputStreamReader(urlASelectServer.openStream()), 16000);
+			urlSomeServer = new URL(sbBuffer.toString());
+			brInput = new BufferedReader(new InputStreamReader(urlSomeServer.openStream()), 16000);
 			sInputLine = brInput.readLine();
 			brInput.close();
 
 			if (sInputLine != null)
 				sInputLine = sInputLine.trim();
+			return sInputLine;
 		}
 		catch (MalformedURLException eMU) // Invalid URL
 		{
-			sbBuffer = new StringBuffer("Invalid URL: \"");
-			sbBuffer.append(sUrl);
-			sbBuffer.append("\" errorcode: ");
-			sbBuffer.append(Errors.ERROR_ASELECT_USE_ERROR);
+			sbBuffer = new StringBuffer("Invalid URL: \"").append(sUrl);
+			sbBuffer.append("\" errorcode: ").append(Errors.ERROR_ASELECT_USE_ERROR);
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR, eMU);
 		}
 		catch (IOException eIO) // Error communicating with A-Select Server
 		{
-			sbBuffer = new StringBuffer("Error communicating with A-Select Server: \"");
-			sbBuffer.append(sUrl);
-			sbBuffer.append("\" errorcode: ");
-			sbBuffer.append(Errors.ERROR_ASELECT_IO);
+			sbBuffer = new StringBuffer("Error communicating with server at: \"").append(sUrl);
+			sbBuffer.append("\" errorcode: ").append(Errors.ERROR_ASELECT_IO);
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_IO, eIO);
 		}
-
-		return sInputLine;
 	}
 
 	/**
@@ -300,12 +304,6 @@ public class RawCommunicator implements IClientCommunicator
 		Set keys = htInput.keySet();
 		for (Object s : keys) {
 			String sKey = (String) s;
-			// Enumeration enumKeys = htInput.keys();
-
-			// boolean bStop = !enumKeys.hasMoreElements(); //more elements?
-			// while (!bStop)
-			// {
-			// String sKey = (String)enumKeys.nextElement();
 			Object oValue = htInput.get(sKey);
 			if (oValue instanceof String) {
 				sbBuffer.append(sKey);
@@ -325,10 +323,8 @@ public class RawCommunicator implements IClientCommunicator
 						sbBuffer.append("&");
 				}
 			}
-			// if (enumKeys.hasMoreElements()) {
 			// Append extra '&' after every parameter.
 			sbBuffer.append("&");
-			// }
 		}
 		int len = sbBuffer.length();
 		return sbBuffer.substring(0, (len > 0) ? len - 1 : len);
@@ -414,9 +410,6 @@ public class RawCommunicator implements IClientCommunicator
 				Set keys = tblVectors.keySet();
 				for (Object s : keys) {
 					String sArrName = (String) s;
-					// Enumeration keysEnum = tblVectors.keys();
-					// while (keysEnum.hasMoreElements()) {
-					// String sArrName = (String) keysEnum.nextElement();
 					Vector vTmp = (Vector) tblVectors.get(sArrName);
 					String[] arrTemp = new String[vTmp.size()];
 
@@ -427,7 +420,6 @@ public class RawCommunicator implements IClientCommunicator
 						_systemLogger.log(Level.WARNING, MODULE, "convertCGIMessage()",
 								"Could not convert Vector to array", e);
 					}
-
 					xResponse.put(sArrName, arrTemp);
 				}
 			}

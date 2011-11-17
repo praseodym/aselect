@@ -66,11 +66,10 @@ public class LbSensorSystemLogger extends SystemLogger
 		String sLogTarget = oConfigManager.getSimpleParam(oLogSection, "target", true);
 		Object oLogTarget = oConfigManager.getSectionFromSection(oLogSection, "target", "id=" + sLogTarget, true);
 
-		oLbSensorLogger.init("system", "org.aselect.lbsensor.LbSensorSystemLogger", oConfigManager, oLogTarget,
-				sWorkingDir);
+		oLbSensorLogger.init("system", "org.aselect.lbsensor.LbSensorSystemLogger", oConfigManager, oLogTarget, sWorkingDir);
 		oLbSensorLogger.setLevel(logLevel);
 
 		// First line that will go to the log file
-		log(Level.INFO, MODULE, sMethod, "Systemlogger initialized");
+		log(Level.INFO, MODULE, sMethod, "Systemlogger initialized, level="+logLevel);
 	}
 }

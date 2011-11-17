@@ -180,6 +180,7 @@ package org.aselect.server;
 import java.io.File;
 
 import java.io.IOException;
+import java.util.Timer;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -187,6 +188,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.lbsensor.DataCollectExporter;
 import org.aselect.server.admin.AdminMonitor;
 import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.attributes.AttributeGatherer;
@@ -204,6 +206,9 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
+import org.aselect.system.storagemanager.SendQueue;
+import org.aselect.system.storagemanager.SendQueueSender;
+import org.aselect.system.utils.Utils;
 
 /**
  * This is the A-Select Server main class. It is responsible for <code>init()</code>ializing and <code>destroy()</code>
@@ -244,6 +249,8 @@ public class ASelectServer extends ASelectHttpServlet
 	private CryptoEngine _cryptoEngine;
 	private AdminMonitor _adminMonitor = null;
 	private RequestHandlerFactory _oRequestHandlerFactory;
+	protected Timer _dataSendTimer;
+	private int _iBatchPeriod = -1;
 
 	/**
 	 * Initialize the A-Select Server. This method is invoked:
@@ -414,6 +421,8 @@ public class ASelectServer extends ASelectHttpServlet
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Can't initialize CryptoEngine", eAC);
 				throw eAC;
 			}
+			
+			timerSensorConfig(_oASelectConfig, "aselect");
 
 			try {
 				String sTemp = _configManager.getParam(_oASelectConfig, "admin_gui");
@@ -452,6 +461,45 @@ public class ASelectServer extends ASelectHttpServlet
 			closeResources();
 			closeLoggers();
 			throw new ServletException(sErrorMessage);
+		}
+	}
+
+	/**
+	 * Timer sensor config.
+	 * 
+	 * @param _oMainConfig
+	 *            the main config section
+	 * @param sMainTag
+	 *            the main tag
+	 * @throws ASelectConfigException
+	 * @throws ASelectException
+	 */
+	private void timerSensorConfig(Object _oMainConfig, String sMainTag)
+	throws ASelectConfigException, ASelectException
+	{
+		String sMethod = "timerSensorConfig";
+		
+		// The Timer Queue and config
+		Object oSensorSection = Utils.getSimpleSection(_configManager, _systemLogger, _oMainConfig, "timer_sensor", false);
+		if (oSensorSection == null)
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Section "+sMainTag+"/"+"timer_sensor"+" not found, no timing");
+		else
+			_iBatchPeriod = Utils.getSimpleIntParam(_configManager, _systemLogger, oSensorSection, "batch_period", false);
+
+		if (_iBatchPeriod > 0) {
+			try {
+				SendQueueSender dcExporter = new SendQueueSender(_systemLogger);
+				SendQueue hQueue = SendQueue.getHandle();
+				hQueue.initialize(_configManager, _systemLogger, sMainTag, "timer_sensor"/*section*/);
+				
+				_dataSendTimer = new Timer();
+				_dataSendTimer.schedule(dcExporter, 0, _iBatchPeriod * 1000);  // in milliseconds
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "SendQueueSender scheduled every "+_iBatchPeriod+" seconds");
+			}
+			catch (Exception e) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Can't start SendQueueSender", e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			}
 		}
 	}
 

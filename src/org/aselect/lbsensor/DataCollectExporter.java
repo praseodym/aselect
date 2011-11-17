@@ -25,7 +25,7 @@ public class DataCollectExporter extends TimerTask
 	public DataCollectExporter()
 	{	
 		String sMethod = "DataCollectExporter";
-		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "STARTED");
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Task STARTED");
 	}
 	
 	@Override
@@ -33,10 +33,9 @@ public class DataCollectExporter extends TimerTask
 	{
 		String sMethod = "run";
 		
-		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "ACTION");
 		DataCollectStore hStore = DataCollectStore.getHandle();
 		if (hStore == null) {
-			_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "Cannot get DataCollectrStore");
+			_oLbSensorLogger.log(Level.WARNING, MODULE, sMethod, "Cannot get DataCollectStore");
 			return;
 		}
 		hStore.exportEntries();

@@ -326,20 +326,18 @@ public class MemoryStorageHandler implements IStorageHandler
 			Long lStorageTime = (Long)htStorageContainer.get("timestamp");
 
 			if (lTimestamp.longValue() >= lStorageTime.longValue()) {
-				//String sFirstContact = (String)htStorageContainer.get("first_contact");
-				//if (sFirstContact != null) {  // it's a session
-				//	Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_mem", (String)oKey, htStorageContainer, null, false);
-				//}
+				// Try, report left-over sessions
+				HashMap hm = (HashMap)htStorageContainer.get("contents");
+				String sFirstContact = (String)hm.get("first_contact");
+				if (sFirstContact != null) {  // it's a session
+					Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_mem", (String)oKey, hm, null, false);
+				}
 				_htStorage.remove(oKey);
 				countRemoved++;
 				String sTxt = Utils.firstPartOf(oKey.toString(), 30);
 				_systemLogger.log(Level.FINEST, MODULE, sMethod, "MSH Key=" + sTxt + " TimeStamp=" + lStorageTime
 						+ " Left=" + (lStorageTime - lTimestamp) + " removed");
 			}
-			// else {
-			// _systemLogger.log(Level.FINEST, MODULE, sMethod, "MSH Key="+sTxt+
-			// " TimeStamp="+lStorageTime+" Left="+(lStorageTime-lTimestamp));
-			// }
 		}
 		// }
 		int countLeft = countAll - countRemoved;

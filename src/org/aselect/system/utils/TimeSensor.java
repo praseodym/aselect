@@ -167,7 +167,7 @@ public class TimeSensor
 		String sMethod = "timeSensorUnPack";
     	String[] sUnpacked = sPack.split(",", -1/*also empty fields*/);
 
-    	_oSystemLogger.log(Level.INFO, MODULE, sMethod, "flds="+sUnpacked.length);
+    	//_oSystemLogger.log(Level.INFO, MODULE, sMethod, "flds="+sUnpacked.length);
     	int i = 0;
     	try {
 	    	timeSender = sUnpacked[i++];

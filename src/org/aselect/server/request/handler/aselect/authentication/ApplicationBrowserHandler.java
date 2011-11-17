@@ -369,7 +369,6 @@ import org.opensaml.xml.util.XMLHelper;
  */
 public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 {
-	private HashMap _htSessionContext = null;
 	private ApplicationManager _applicationManager;
 	private CrossASelectManager _crossASelectManager;
 	private AuthSPHandlerManager _authspHandlerManager;
@@ -2785,14 +2784,14 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		// Retrieve the session just created
 		String sRid = (String)hmResponse.get("rid");
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Supplied rid=" + sRid);
-		HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
-		if (htSessionContext == null) {
+		_htSessionContext = _sessionManager.getSessionContext(sRid);
+		if (_htSessionContext == null) {
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 		}
-		htSessionContext.put("direct_authsp", sAuthSp);  // for handleDirectLogin2
-		htSessionContext.put("organization", _sMyOrg);
-		htSessionContext.put("client_ip", "login_token");
-		_sessionManager.updateSession(sRid, htSessionContext); // store too (545)
+		_htSessionContext.put("direct_authsp", sAuthSp);  // for handleDirectLogin2
+		_htSessionContext.put("organization", _sMyOrg);
+		_htSessionContext.put("client_ip", "login_token");
+		_sessionManager.updateSession(sRid, _htSessionContext); // store too (545)
 		
 		// Check login user and password
 		HashMap<String, String> hmDirectRequest = new HashMap<String, String>();
@@ -2811,8 +2810,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		if (bSuccess) {
 			sStatus = "200 OK";
 			// Reload session for results
-			htSessionContext = _sessionManager.getSessionContext(sRid);
-			if (htSessionContext == null) {
+			_htSessionContext = _sessionManager.getSessionContext(sRid);
+			if (_htSessionContext == null) {
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 			}
 
@@ -2822,8 +2821,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			hmContext.put("app_id", sAppId);
 			hmContext.put("authsp", sAuthSp);
 			hmContext.put("organization", _sMyOrg);
-			Utils.copyHashmapValue("authsp_type", hmContext, htSessionContext);
-			Utils.copyHashmapValue("authsp_level", hmContext, htSessionContext);
+			Utils.copyHashmapValue("authsp_type", hmContext, _htSessionContext);
+			Utils.copyHashmapValue("authsp_level", hmContext, _htSessionContext);
 			
 			AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
 			HashMap<String, Object> htAttribs = oAttributeGatherer.gatherAttributes(hmContext);

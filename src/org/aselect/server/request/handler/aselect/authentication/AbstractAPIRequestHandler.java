@@ -68,6 +68,7 @@
 
 package org.aselect.server.request.handler.aselect.authentication;
 
+import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
@@ -91,6 +92,7 @@ import org.aselect.system.communication.server.soap12.SOAP12MessageCreator;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.storagemanager.SendQueue;
 import org.aselect.system.utils.TimeSensor;
 import org.aselect.system.utils.Tools;
 
@@ -129,6 +131,8 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 	protected TimeSensor _timeSensor;
 	
 	long _lMyThread;
+
+	protected HashMap _htSessionContext;
 
 	/**
 	 * Construct a instance. <br>
@@ -285,7 +289,8 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 			try {
 				if (_timeSensor.getTimeSensorLevel() >= 1) {  // used
 					_timeSensor.timeSensorFinish(bSuccess);
-					Tools.reportTimerSensorData(_configManager, "aselect"/*<xml>*/, _systemLogger, _timeSensor.timeSensorPack());
+					SendQueue.getHandle().addEntry( _timeSensor.timeSensorPack());
+					//Tools.reportTimerSensorData(_configManager, "aselect"/*<xml>*/, "timer_sensor", _systemLogger, _timeSensor.timeSensorPack());
 				}
 			}
 			catch (Exception e) { }

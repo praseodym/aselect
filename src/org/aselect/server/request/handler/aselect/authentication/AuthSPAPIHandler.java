@@ -60,7 +60,6 @@
 
 package org.aselect.server.request.handler.aselect.authentication;
 
-import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
@@ -76,7 +75,6 @@ import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Tools;
 
-// TODO: Auto-generated Javadoc
 /**
  * This class handles authentication responses and API calls originating from an authsp. It must be used as follows: <br>
  * For each new incoming request, create a new <code>AuthSPRequestHandler</code> object and call its
@@ -88,7 +86,7 @@ import org.aselect.system.utils.Tools;
 public class AuthSPAPIHandler extends AbstractAPIRequestHandler
 {
 	private SessionManager _sessionManager;
-
+	
 	/**
 	 * Create new instance. <br>
 	 * <br>
@@ -177,8 +175,7 @@ public class AuthSPAPIHandler extends AbstractAPIRequestHandler
 		String sRid = null;
 		String sSignature = null;
 		String sAuthSP = null;
-		HashMap htSessionContext;
-		String sMethod = "handleKillSessionRequest()";
+		String sMethod = "handleKillSessionRequest";
 
 		try {
 			sRid = oInputMessage.getParam("rid");
@@ -197,16 +194,16 @@ public class AuthSPAPIHandler extends AbstractAPIRequestHandler
 		}
 
 		// check if session exists
-		htSessionContext = _sessionManager.getSessionContext(sRid);
-		if (htSessionContext == null) {
+		_htSessionContext = _sessionManager.getSessionContext(sRid);
+		if (_htSessionContext == null) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid session: " + sRid);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 		}
 
 		//20111102, Bauke: added
-		Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_pah", sRid, htSessionContext, null, true);
+		Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_pah", sRid, _htSessionContext, null, true);
 		_sessionManager.killSession(sRid);
-		htSessionContext = null;
+		_htSessionContext = null;
 
 		try {
 			oOutputMessage.setParam("rid", sRid);

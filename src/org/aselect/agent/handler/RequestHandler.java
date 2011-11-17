@@ -223,6 +223,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMResource;
+import org.aselect.system.storagemanager.SendQueue;
 import org.aselect.system.utils.*;
 
 /**
@@ -497,8 +498,8 @@ public class RequestHandler extends Thread
 			try {
 				sUsi = oInputMessage.getParam("usi");  // unique sensor id
 			}
-			catch (Exception e) {
-				// should generate my own usi
+			catch (Exception e) {  // should generate our own usi here
+				// using System.nanoTime();
 			}
 			if (Utils.hasValue(sUsi))
 				timeSensor.setTimeSensorId(sUsi);
@@ -544,7 +545,12 @@ public class RequestHandler extends Thread
 		}
 		
 		timeSensor.timeSensorFinish(_sErrorCode.equals(Errors.ERROR_ASELECT_SUCCESS));
-		Tools.reportTimerSensorData(_configManager, "agent"/*xml*/, _systemLogger, timeSensor.timeSensorPack());
+		
+		//StringBuffer sb = new StringBuffer("DATA=");
+		//sb.append(timeSensor.timeSensorPack()).append("\n");
+		//Tools.reportTimerSensorData(_configManager, "agent"/*xml*/, "timer_sensor", _systemLogger, sb.toString());
+		SendQueue.getHandle().addEntry(timeSensor.timeSensorPack());
+		
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "} REQ T="+System.currentTimeMillis() + " port="+port + ": "+sRequest);
 	}
 

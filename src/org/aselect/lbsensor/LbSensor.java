@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Timer;
 import java.util.logging.Level;
 
+import org.aselect.lbsensor.handler.DataCollectStore;
 import org.aselect.lbsensor.handler.SensorStore;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
@@ -27,7 +28,6 @@ public class LbSensor
 	private static LbSensorSystemLogger _oLbSensorLogger;
 	private LbSensorConfigManager _oConfigManager = null;
 
-	protected long _iDataCollectInterval = 60*1000;  // default, milliseconds
 	protected Timer _dataCollectTimer;
 
 	/**
@@ -47,11 +47,11 @@ public class LbSensor
 			oLbSensor.initialize();
 			oLbSensor.startServices();
 
-			System.out.println("Successfully started" + MODULE);
-			oLbSensorLogger.log(Level.SEVERE, MODULE, sMethod, "Successfully started LB Sensor");
+			System.out.println("Successfully started " + MODULE);
+			oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Successfully started LB Sensor");
 		}
 		catch (Exception e) {
-			System.out.println("Failed to start" + MODULE + ", exception=" + e);
+			System.out.println("Failed to start " + MODULE + ", exception=" + e);
 			oLbSensorLogger.log(Level.SEVERE, MODULE, sMethod, "Failed to start LB Sensor", e);
 
 			if (oLbSensor != null)
@@ -87,7 +87,7 @@ public class LbSensor
 		Object oLogSection = _oConfigManager.getSectionFromSection(oMainSection, "logging", "id=system", true);
 		_oLbSensorLogger.init(_oConfigManager, oLogSection, sWorkingDir);
 		// Logging goes to the system logfile now
-		_oLbSensorLogger.log(Level.SEVERE, MODULE, sMethod, "Starting LB Sensor");
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Starting LB Sensor");
 	}
 
 	/**
@@ -97,7 +97,7 @@ public class LbSensor
 	 *             the a select exception
 	 */
 	public void startServices()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "startServices";
 
@@ -134,11 +134,16 @@ public class LbSensor
 			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "handler=" + oConfigHandler);
 		}
 		
-		// Run a timer thread to empty the DataCollectStore once in a while
-		DataCollectExporter dcExporter = new DataCollectExporter();
-		_dataCollectTimer = new Timer();
-		_dataCollectTimer.schedule(dcExporter, 0, _iDataCollectInterval);
-		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "scheduled");
+		// When the DataCollectSensor was configured it has accumulated it's parameters,
+		// including <run_export>
+		long runExport = DataCollectStore.getHandle().get_iRunExport();  // default, milliseconds
+		if (runExport > 0) {
+			// Run a timer thread to empty the DataCollectStore once in a while
+			DataCollectExporter dcExporter = new DataCollectExporter();
+			_dataCollectTimer = new Timer();
+			_dataCollectTimer.schedule(dcExporter, 0, runExport * 1000);  // in milliseconds
+			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "DataCollectExporter scheduled every "+runExport+" seconds");
+		}
 	}
 
 	/**
@@ -159,6 +164,6 @@ public class LbSensor
 	public void destroy()
 	{
 		String sMethod = "destroy";
-		_oLbSensorLogger.log(Level.SEVERE, MODULE, sMethod, "Stopping all components.");
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Stopping all components.");
 	}
 }
