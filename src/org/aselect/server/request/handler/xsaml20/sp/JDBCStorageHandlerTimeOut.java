@@ -107,7 +107,10 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 		HashMap htValue = (HashMap) oValue;
 
 		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "MSHT " + this.getClass());
-		if (!_oTGTManager.containsKey(oKey) || htValue.get("createtime") == null) {
+		boolean hasKey = false;	// RH, 20111114, n
+		// We'll use a small (not most beautiful) trick to speed up the "put" later on
+//		if (!_oTGTManager.containsKey(oKey) || htValue.get("createtime") == null) {	// RH, 20111114, o
+		if ( !(hasKey = _oTGTManager.containsKey(oKey)) || htValue.get("createtime" ) == null) {	// RH, 20111114, n
 			long now = new Date().getTime();
 			htValue.put("createtime", String.valueOf(now));
 			htValue.put("sessionsynctime", String.valueOf(now));
@@ -121,7 +124,8 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			lTimestamp = _oTGTManager.getTimestamp(oKey);
 			htValue.remove("updatetimestamp");
 		}
-		super.put(oKey, oValue, lTimestamp);
+//		super.put(oKey, oValue, lTimestamp);		// RH, 20111114, o
+		super.put(oKey, oValue, lTimestamp, hasKey ? UpdateMode.UPDATEFIRST : UpdateMode.INSERTFIRST);		// RH, 20111114, n
 	}
 
 	/* (non-Javadoc)

@@ -324,7 +324,11 @@ public class SessionManager extends StorageManager
 		boolean bReturn = false;
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SessionId=" + sSessionId);
-			put(sSessionId, htSessionContext); // insert or update
+//			put(sSessionId, htSessionContext); // insert or update	//	RH, 20111117, o
+//			RH, 20111117, sn
+			// writeSession is mostly used for updating sessions so use update instead of put
+			update(sSessionId, htSessionContext); // insert or update
+//			RH, 20111117, en
 			bReturn = true;
 		}
 		catch (ASelectStorageException e) {

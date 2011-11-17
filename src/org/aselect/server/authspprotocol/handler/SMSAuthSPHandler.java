@@ -242,7 +242,10 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 
 			// Bauke: store additional sms attribute
 			htSessionContext.put("sms_phone", sUserId);  // from aselectSmsUserAttributes
-			_sessionManager.put(sRid, htSessionContext);
+//			_sessionManager.put(sRid, htSessionContext);
+			// We expect the session to be there so use update
+//			_sessionManager.put(sRid, htSessionContext);	// RH, 20111114, o
+			_sessionManager.update(sRid, htSessionContext);	// RH, 20111114, n
 
 			sSignature = URLEncoder.encode(sSignature, "UTF-8");
 			sUserId = URLEncoder.encode(sUserId, "UTF-8");

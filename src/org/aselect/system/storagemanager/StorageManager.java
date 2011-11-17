@@ -65,6 +65,7 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMAgent;
+import org.aselect.system.storagemanager.IStorageHandler.UpdateMode;
 
 /**
  * Store objects to some sort of physical storage. <br>
@@ -412,7 +413,7 @@ public class StorageManager
 
 	/**
 	 * Insert an object in storage. <br>
-	 * <br>
+	 * This method should be used to insert an object, otherwise use update<br>
 	 * <b>Description: </b> <br>
 	 * Inserts an object into the storage. Along with the storing of the object, a timestamp is created. This timestamp
 	 * is used to evaluate whether or not the object should be kept in storage (expiration). <br>
@@ -442,7 +443,7 @@ public class StorageManager
 	public void put(Object oKey, Object oValue)
 		throws ASelectStorageException
 	{
-		String sMethod = "put";
+//		String sMethod = "put";
 		// Allow for "unlimited" storage
 		// if (_oStorageHandler.isMaximum(_iMax)) // RH, 20090529, o
 		if (_iMax != I_UNLIMITED && _oStorageHandler.isMaximum(_iMax)) // RH, 20090529, n
@@ -451,7 +452,10 @@ public class StorageManager
 		// _oSystemLogger.log(Level.INFO, MODULE, sMethod,
 		// " this="+this.getClass()+" handler="+_oStorageHandler.getClass());
 		Long lTimestamp = new Long(System.currentTimeMillis());
-		_oStorageHandler.put(oKey, oValue, lTimestamp);
+		////////////////////////////////////////////////////////////////
+//		_oStorageHandler.put(oKey, oValue, lTimestamp);
+		// This method should be used to insert an object, otherwise use update		// RH, 20111117, o
+		_oStorageHandler.put(oKey, oValue, lTimestamp, UpdateMode.INSERTFIRST);		// RH, 20111117, n
 	}
 
 	/**
@@ -489,8 +493,18 @@ public class StorageManager
 	{
 		// _oSystemLogger.log(Level.INFO, MODULE, "update",
 		// "StorageHandlerClass="+_oStorageHandler.getClass()+" this="+this.getClass());
+		// RH, 20111117, sn
+		// Sometimes the update is used to insert new values, so check for max
+		if (_iMax != I_UNLIMITED && _oStorageHandler.isMaximum(_iMax)) 
+			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_MAXIMUM_REACHED);
+		// RH, 20111117, en
 		Long lTimestamp = new Long(System.currentTimeMillis());
-		_oStorageHandler.put(oKey, oValue, lTimestamp);
+		
+//		_oStorageHandler.put(oKey, oValue, lTimestamp);		// RH, 20111117, o
+		// RH, 20111117, sn
+		// Update hopes for an existing key so does an UPDATEFIRST
+		_oStorageHandler.put(oKey, oValue, lTimestamp, UpdateMode.UPDATEFIRST);
+		// RH, 20111117, en
 	}
 
 	/**

@@ -63,6 +63,11 @@ import org.aselect.system.sam.agent.SAMAgent;
 public interface IStorageHandler
 {
 	
+	public static enum UpdateMode {
+	    INSERTFIRST, UPDATEFIRST, SELECTFIRST , INSERTONLY, UPDATEONLY 
+	}
+
+	
 	/**
 	 * Initialize the handler. <br>
 	 * <br>
@@ -217,10 +222,46 @@ public interface IStorageHandler
 	 *            The time at which the object is stored.
 	 * @throws ASelectStorageException
 	 *             If storing fails.
+	 * @deprecated use {@link #put(Object oKey, Object oValue, Long lTimestamp, UpdateMode eMode)}
 	 */
 	public void put(Object oKey, Object oValue, Long lTimestamp)
 		throws ASelectStorageException;
 
+	
+	/**
+	 * insert object into storage. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Inserts a particular object into the physical storage. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b>
+	 * <ul>
+	 * <li><code>oKey != null</code></li>
+	 * <li><code>oValue != null</code></li>
+	 * <li><code>lTimestamp != null</code></li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * The object is stored. <br>
+	 * 
+	 * @param oKey
+	 *            The identifier of the object that needs to be stored.
+	 * @param oValue
+	 *            The object that needs to be stored.
+	 * @param lTimestamp
+	 *            The time at which the object is stored.
+	 * @param eMode
+	 *            Mode to apply on storage update (INDERTFIRST then update or UPDATEFIRST then insert)
+	 * @throws ASelectStorageException
+	 *             If storing fails.
+	 */
+	public void put(Object oKey, Object oValue, Long lTimestamp, UpdateMode eMode)
+		throws ASelectStorageException;
+
+	
 	/**
 	 * Removes object from storage. <br>
 	 * <br>

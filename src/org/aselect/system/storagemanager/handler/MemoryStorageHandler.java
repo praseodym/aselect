@@ -215,6 +215,30 @@ public class MemoryStorageHandler implements IStorageHandler
 		return htReturnTable;
 	}
 
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	public void put(Object oKey, Object oValue, Long lTimestamp, IStorageHandler.UpdateMode eMode)
+	throws ASelectStorageException
+	{
+		// TODO, this implementation uses ConcurrentHashMap so we could take advantage of that
+		// For now we just call the old one
+		switch (eMode) {
+		case INSERTFIRST: // do insert first
+			put(oKey, oValue, lTimestamp);
+			break;
+		case UPDATEFIRST: // do updatefirst
+			put(oKey, oValue, lTimestamp);
+			break;
+		default:	// do the old stuff for backward compatibility
+			put(oKey, oValue, lTimestamp);
+			break;
+		}
+	
+	}
+	////////////////////////////////////////////////////////////////////////////////////////////////////	
+	
+	
+	
 	/**
 	 * Put object in memory.
 	 * 

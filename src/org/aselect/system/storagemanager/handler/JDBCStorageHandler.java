@@ -621,6 +621,319 @@ public class JDBCStorageHandler implements IStorageHandler
 		return htResponse;
 	}
 
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	public void put(Object oKey, Object oValue, Long lTimestamp, IStorageHandler.UpdateMode eMode)
+	throws ASelectStorageException
+	{
+		String sMethod = "put(), with MODE flag";
+		// TODO, make sure there is a primekey
+		switch (eMode) {
+		case INSERTFIRST: // do insert first
+			_systemLogger.log(Level.INFO, MODULE, sMethod,
+					"Doing put with eMode INSERTFIRST" );
+			try {
+				create(oKey, oValue, lTimestamp);
+			}
+			catch (SQLException e) {
+				// If create fails we try update
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+				"INSERTFIRST fails where it should succeed, trying update" );
+				try {
+					update(oKey, oValue, lTimestamp);
+				}
+				catch (SQLException e1) {
+					// If update also fails we throw an ASelectStorageException
+					_systemLogger.log(Level.WARNING, MODULE, sMethod,
+							"Could not insert or update",  e1);
+					throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INSERT,  e1);
+				}
+			}
+			break;
+		case UPDATEFIRST: // do updatefirst
+			_systemLogger.log(Level.INFO, MODULE, sMethod,
+			"Doing put with eMode UPDATEFIRST" );
+			try {
+				update(oKey, oValue, lTimestamp);
+			}
+			catch (SQLException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+				"UPDATEFIRST fails where it should succeed, trying create" );
+				try {
+					create(oKey, oValue, lTimestamp);
+				}
+				catch (SQLException e1) {
+					// If create also fails we throw an ASelectStorageException
+					_systemLogger.log(Level.WARNING, MODULE, sMethod,
+							"Could not update or insert",  e1);
+					throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INSERT,  e1);
+				}
+			}
+			break;
+		default:	// do the old stuff for backward compatibility
+			_systemLogger.log(Level.INFO, MODULE, sMethod,
+			"Doing put with eMode default" );
+			put(oKey, oValue, lTimestamp);
+			break;
+		}
+	}
+	////////////////////////////////////////////////////////////////////////////////////////////////////	
+
+	/**
+	 * Inserts a particular object into the database.
+	 * 
+	 * @param oKey
+	 *            the o key
+	 * @param oValue
+	 *            the o value
+	 * @param lTimestamp
+	 *            the l timestamp
+	 * @throws ASelectStorageException 
+	 *             the a select storage exception
+	 * @throws SQLException
+	 * 				if not exactly one row was affected, e.g. if duplicate key was encountered
+	 * @see org.aselect.system.storagemanager.IStorageHandler#put(java.lang.Object, java.lang.Object, java.lang.Long)
+	 */
+	public void create(Object oKey, Object oValue, Long lTimestamp)
+		throws SQLException, ASelectStorageException
+	{
+		String sMethod = "create()";
+		Connection oConnection = null; // RH, 20090604, n
+		PreparedStatement oStatement = null;
+		ResultSet oResultSet = null;
+
+		try {
+			int iKey = 0; // old: oKey.hashCode();
+			Timestamp oTimestamp = new Timestamp(lTimestamp.longValue());
+			byte[] baKey = encode(oKey);
+			byte[] baValue = encode(oValue);
+
+			StringBuffer sbBuffer = new StringBuffer();
+//			sbBuffer.append("SELECT ").append(_sContextTimestamp).append(" ");
+//			sbBuffer.append("FROM ").append(_sTableName).append(" ");
+//			// sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?"); // old
+//			sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?"); // new
+//			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
+//
+//			// Connection oConnection = getConnection(); // RH, 20090604, o
+			oConnection = getConnection(); // RH, 20090604, n
+//			oStatement = oConnection.prepareStatement(sbBuffer.toString());
+//			// oStatement.setInt(1, iKey); // old
+//			oStatement.setBytes(1, baKey); // new
+//			oResultSet = oStatement.executeQuery();
+
+//			if (oResultSet.next()) { // record exists.
+//				sbBuffer = new StringBuffer();
+//				sbBuffer.append("UPDATE ").append(_sTableName).append(" ");
+//				sbBuffer.append("SET ").append(_sContextValue).append(" = ? , ").append(_sContextTimestamp).append(
+//						" = ? ");
+//				// sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?"); // old
+//				sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?"); // new
+//				_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
+//
+//				try { // added 1.5.4
+//					oStatement.close();
+//				}
+//				catch (SQLException e) {
+//					_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resource", e);
+//				}
+//				oStatement = oConnection.prepareStatement(sbBuffer.toString());
+//				oStatement.setBytes(1, baValue);
+//				oStatement.setTimestamp(2, oTimestamp);
+//				// oStatement.setInt(3, iKey); // old
+//				oStatement.setBytes(3, baKey); // new
+//			}
+//			else { // new record.
+				sbBuffer = new StringBuffer();
+				sbBuffer.append("INSERT INTO ").append(_sTableName).append(" ");
+				// RH, 20080714, sn
+				// It's quite bad practice not to include column names
+				sbBuffer.append("( ");
+				sbBuffer.append(_sContextKeyHash).append(", ");
+				sbBuffer.append(_sContextTimestamp).append(", ");
+				sbBuffer.append(_sContextKey).append(", ");
+				sbBuffer.append(_sContextValue).append(" ");
+				sbBuffer.append(") ");
+				// RH, 20080714, en
+				sbBuffer.append("VALUES (?,?,?,?)");
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
+
+//				try { // added 1.5.4
+//					oStatement.close();
+//				}
+//				catch (SQLException e) {
+//					_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resource", e);
+//				}
+				oStatement = oConnection.prepareStatement(sbBuffer.toString());
+				oStatement.setInt(1, iKey);
+				oStatement.setTimestamp(2, oTimestamp);
+				oStatement.setBytes(3, baKey);
+				oStatement.setBytes(4, baValue);
+//			}
+			// oStatement.executeUpdate();
+			int rowsAffected = oStatement.executeUpdate();
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Rows affected -> " + rowsAffected);
+			if (rowsAffected != 1) {
+				throw new SQLException("Invalid number of rows affected");
+			}
+		}
+		catch (IOException eIO) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"Could not decode one or more objects that were retrieved from the database", eIO);
+			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INSERT, eIO);
+		}
+
+//		catch (Exception e) {
+//			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+//					"An error occured while inserting objects into the database", e);
+//			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INSERT, e);
+//		}
+		finally {
+			try {
+				if (oResultSet != null)
+					oResultSet.close();
+				if (oStatement != null)
+					oStatement.close();
+			}
+			catch (SQLException e) {
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resource", e);
+			}
+			finally { // RH, 20090604, sn
+				_oConnectionHandler.releaseConnection(oConnection);
+			} // RH, 20090604, en
+		}
+	}
+
+	
+	/**
+	 * Updates a particular object in the database.
+	 * 
+	 * @param oKey
+	 *            the o key
+	 * @param oValue
+	 *            the o value
+	 * @param lTimestamp
+	 *            the l timestamp
+	 * @throws ASelectStorageException 
+	 *             the a select storage exception
+	 * @throws SQLException
+	 * 				if not exactly one row was affected
+	 * @see org.aselect.system.storagemanager.IStorageHandler#put(java.lang.Object, java.lang.Object, java.lang.Long)
+	 */
+	public void update(Object oKey, Object oValue, Long lTimestamp)
+		throws SQLException, ASelectStorageException
+	{
+		String sMethod = "update()";
+		Connection oConnection = null; // RH, 20090604, n
+		PreparedStatement oStatement = null;
+		ResultSet oResultSet = null;
+
+		try {
+			int iKey = 0; // old: oKey.hashCode();
+			Timestamp oTimestamp = new Timestamp(lTimestamp.longValue());
+			byte[] baKey = encode(oKey);
+			byte[] baValue = encode(oValue);
+
+			StringBuffer sbBuffer = new StringBuffer();
+//			sbBuffer.append("SELECT ").append(_sContextTimestamp).append(" ");
+//			sbBuffer.append("FROM ").append(_sTableName).append(" ");
+//			// sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?"); // old
+//			sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?"); // new
+//			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
+//
+//			// Connection oConnection = getConnection(); // RH, 20090604, o
+			oConnection = getConnection(); // RH, 20090604, n
+//			oStatement = oConnection.prepareStatement(sbBuffer.toString());
+//			// oStatement.setInt(1, iKey); // old
+//			oStatement.setBytes(1, baKey); // new
+//			oResultSet = oStatement.executeQuery();
+
+//			if (oResultSet.next()) { // record exists.
+				sbBuffer = new StringBuffer();
+				sbBuffer.append("UPDATE ").append(_sTableName).append(" ");
+				sbBuffer.append("SET ").append(_sContextValue).append(" = ? , ").append(_sContextTimestamp).append(
+						" = ? ");
+				// sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?"); // old
+				sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?"); // new
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
+
+//				try { // added 1.5.4
+//					oStatement.close();
+//				}
+//				catch (SQLException e) {
+//					_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resource", e);
+//				}
+				oStatement = oConnection.prepareStatement(sbBuffer.toString());
+				oStatement.setBytes(1, baValue);
+				oStatement.setTimestamp(2, oTimestamp);
+				// oStatement.setInt(3, iKey); // old
+				oStatement.setBytes(3, baKey); // new
+//			}
+//			else { // new record.
+//				sbBuffer = new StringBuffer();
+//				sbBuffer.append("INSERT INTO ").append(_sTableName).append(" ");
+//				// RH, 20080714, sn
+//				// It's quite bad practice not to include column names
+//				sbBuffer.append("( ");
+//				sbBuffer.append(_sContextKeyHash).append(", ");
+//				sbBuffer.append(_sContextTimestamp).append(", ");
+//				sbBuffer.append(_sContextKey).append(", ");
+//				sbBuffer.append(_sContextValue).append(" ");
+//				sbBuffer.append(") ");
+//				// RH, 20080714, en
+//				sbBuffer.append("VALUES (?,?,?,?)");
+//				_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
+
+//				try { // added 1.5.4
+//					oStatement.close();
+//				}
+//				catch (SQLException e) {
+//					_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resource", e);
+//				}
+//				oStatement = oConnection.prepareStatement(sbBuffer.toString());
+//				oStatement.setInt(1, iKey);
+//				oStatement.setTimestamp(2, oTimestamp);
+//				oStatement.setBytes(3, baKey);
+//				oStatement.setBytes(4, baValue);
+//			}
+			// oStatement.executeUpdate();
+			int rowsAffected = oStatement.executeUpdate();
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Rows affected -> " + rowsAffected);
+			if (rowsAffected != 1) {
+				throw new SQLException("Invalid number of rows affected");
+			}
+		}
+		catch (IOException eIO) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"Could not decode one or more objects that were retrieved from the database", eIO);
+			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INSERT, eIO);
+		}
+
+//		catch (Exception e) {
+//			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+//					"An error occured while inserting objects into the database", e);
+//			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INSERT, e);
+//		}
+		finally {
+			try {
+				if (oResultSet != null)
+					oResultSet.close();
+				if (oStatement != null)
+					oStatement.close();
+			}
+			catch (SQLException e) {
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close database resource", e);
+			}
+			finally { // RH, 20090604, sn
+				_oConnectionHandler.releaseConnection(oConnection);
+			} // RH, 20090604, en
+		}
+	}
+
+	
+	
+	
+	
 	/**
 	 * Inserts a particular object into the database.
 	 * 
@@ -1017,7 +1330,13 @@ public class JDBCStorageHandler implements IStorageHandler
 		ResultSet oResultSet = null;
 		int iKey = 0; // oKey.hashCode();
 
-		StringBuffer sbQuery = new StringBuffer("SELECT * FROM ");
+		
+//		StringBuffer sbQuery = new StringBuffer("SELECT * FROM ");	// RH, 20111115, o
+		// RH, 20111115, sn
+		StringBuffer sbQuery = new StringBuffer("SELECT ");
+		sbQuery.append(_sContextKey);
+		sbQuery.append(" FROM ");
+		// RH, 20111115, en
 		sbQuery.append(_sTableName);
 		sbQuery.append(" WHERE ");
 		// sbQuery.append(_sContextKeyHash); // old // was _sContextKey in the sfs
