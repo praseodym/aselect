@@ -7,6 +7,7 @@
 <!-- The result will end up in 'target'                       -->
 <!-- Use 'ant jars' to build the JAR files.                   -->
 <!-- Bauke Hiemstra - www.anoigo.nl: Adapted for A-Select 1.6 -->
+<!-- Remy Hanswijk - www.anoigo.nl: Some improvements		  -->
 
 <project name="A-Select 1.6" default="jars">
 
@@ -22,8 +23,10 @@
     <attribute name="exclude-pattern-7" default="" />
     <attribute name="exclude-pattern-8" default="" />
     <attribute name="exclude-pattern-9" default="" />
+    <element name="manifest-tag" optional="true" />
     <sequential>
-      <jar basedir="target/classes" destfile="target/org.aselect.@{jar-name}-1.6.jar">
+      <jar basedir="target/classes" destfile="target/org.aselect.@{jar-name}-1.6.jar" >
+      	<manifest-tag />
         <include name="@{include-pattern}" />
         <exclude name="@{exclude-pattern-1}" />
         <exclude name="@{exclude-pattern-2}" />
@@ -64,7 +67,25 @@
   </target>
 
   <target name="jars" description="Build the JAR files." depends="compile">
-    <build-jar jar-name="agent" include-pattern="org/aselect/agent/**/*.class" />
+    <build-jar jar-name="agent" include-pattern="org/aselect/agent/**/*.class" >
+    	<manifest-tag>
+    		<manifest>
+    			<attribute name="Main-Class" value="org.aselect.agent.ASelectAgent"/>
+    			<attribute name="Class-Path" value="org.aselect.system.jar mysql-connector-java-5.1.7-bin.jar 
+    			 cryptix-jce-provider.jar xercesImpl.jar xmlParserAPIs.jar 
+    			 commons-dbcp-1.2.2.jar commons-pool-1.4.jar . "/>
+    		</manifest>
+    	</manifest-tag>
+    </build-jar>
+    <build-jar jar-name="lbsensor" include-pattern="org/aselect/lbsensor/**/*.class" >
+    	<manifest-tag>
+    		<manifest>
+    			<attribute name="Main-Class" value="org.aselect.lbsensor.LbSensor"/>
+    			<attribute name="Class-Path" value="org.aselect.system.jar mysql-connector-java-5.1.7-bin.jar  
+    			 commons-dbcp-1.2.2.jar commons-pool-1.4.jar . "/>
+    		</manifest>
+    	</manifest-tag>
+    </build-jar>
     <build-jar jar-name="authsp.ip" include-pattern="org/aselect/authspserver/authsp/ip/**/*.class" />
     <build-jar jar-name="authsp.ldap" include-pattern="org/aselect/authspserver/authsp/ldap/**/*.class" />
     <build-jar jar-name="authsp.null" include-pattern="org/aselect/authspserver/authsp/nullauthsp/**/*.class" />
