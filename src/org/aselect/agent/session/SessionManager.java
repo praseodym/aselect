@@ -232,14 +232,24 @@ public class SessionManager
 		String sMethod = "createSession()";
 
 		try {
+			// TODO, don't think we should synchronize here, will be done on lower level
 			synchronized (_oSessionTable) {
-				if (_oSessionTable.containsKey(sSessionId)) {
-					return false;
-				}
+				////////////////////////////////
+				// RH, 20111121, so
+//				if (_oSessionTable.containsKey(sSessionId)) {
+//					return false;
+//				}
+				// RH, 20111121, eo
+				///////////////////////////////////
 				try {
+					// RH, 20111121, sn
+					if ( !_oSessionTable.create(sSessionId, htSessionContext)) {
+						return false;
+					}
+					// RH, 20111121, en
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "New SessionId/Rid=" + sSessionId
 							+ ", htSessionContext=" + htSessionContext);
-					_oSessionTable.put(sSessionId, htSessionContext);
+//					_oSessionTable.put(sSessionId, htSessionContext);		// RH, 20111121, o
 				}
 				catch (ASelectStorageException e) {
 					if (e.getMessage().equals(Errors.ERROR_ASELECT_STORAGE_MAXIMUM_REACHED)) {

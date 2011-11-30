@@ -168,7 +168,11 @@ public class AuthSPSessionManager extends StorageManager
 	{
 		String sMethod = "createSession()";
 		try {
-			if (containsKey(sRid)) {
+			
+			/////////////////////////////////////////////////////
+//			if (containsKey(sRid)) {	// RH, 20111121, o	
+			if ( !create(sRid,htContext )) {	// RH, 20111121, n
+				
 				StringBuffer sbError = new StringBuffer("Session already exists: ");
 				sbError.append(sRid);
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
@@ -176,7 +180,7 @@ public class AuthSPSessionManager extends StorageManager
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
 
-			put(sRid, htContext);
+//			put(sRid, htContext);	// RH, 20111121, o
 		}
 		catch (ASelectStorageException e) {
 			if (e.getMessage().equals(Errors.ERROR_ASELECT_STORAGE_MAXIMUM_REACHED)) {

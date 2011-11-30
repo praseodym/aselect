@@ -276,6 +276,15 @@ public class OldMemoryStorageHandler implements IStorageHandler
 		case UPDATEFIRST: // do updatefirst
 			put(oKey, oValue, lTimestamp);
 			break;
+		case INSERTONLY: // do create, throw exception if key exists
+			synchronized (_htStorage) {
+				if ( containsKey(oKey) ) {
+					throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_DUPLICATE_KEY);
+				} else {
+					put(oKey, oValue, lTimestamp);
+				}
+			}
+			break;
 		default:	// do the old stuff for backward compatibility
 			put(oKey, oValue, lTimestamp);
 			break;

@@ -224,17 +224,31 @@ public class TGTManager extends StorageManager
 			CryptoEngine.nextRandomBytes(baTGT);
 			sTGT = Utils.byteArrayToHexString(baTGT);
 
+			///////////////////////////////////////////
 			// checks if the generated tgt is unique and create a new one till it is unique
-			while (containsKey(sTGT)) {
-				CryptoEngine.nextRandomBytes(baTGT);
-				sTGT = Utils.byteArrayToHexString(baTGT);
-			}
+			// RH, 20111121, so
+//			while (containsKey(sTGT)) {
+//				CryptoEngine.nextRandomBytes(baTGT);
+//				sTGT = Utils.byteArrayToHexString(baTGT);
+//			}
+			// RH, 20111121, eo
+			///////////////////////////////////////////
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "New TGT=" + Utils.firstPartOf(sTGT, 30));
+//			_systemLogger.log(Level.INFO, MODULE, sMethod, "New TGT=" + Utils.firstPartOf(sTGT, 30));	// RH, 209111121, o
 			String sNameID = (String) htTGTContext.get("name_id");
 			if (sNameID == null)
 				htTGTContext.put("name_id", sTGT);
-			put(sTGT, htTGTContext);
+			
+			// RH, 20111121, sn
+			while ( !create(sTGT, htTGTContext) ) {
+				CryptoEngine.nextRandomBytes(baTGT);
+				sTGT = Utils.byteArrayToHexString(baTGT);
+				if (sNameID == null)
+					htTGTContext.put("name_id", sTGT);
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "New TGT=" + Utils.firstPartOf(sTGT, 30));	// RH, 209111121, n
+			// RH, 20111121, en
+//			put(sTGT, htTGTContext);			// RH, 20111121, o
 
 			_lTGTCounter++;
 			sReturn = sTGT;

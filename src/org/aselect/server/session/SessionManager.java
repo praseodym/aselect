@@ -259,18 +259,30 @@ public class SessionManager extends StorageManager
 
 			CryptoEngine.nextRandomBytes(baRandomBytes);
 			sSessionId = "R" + Utils.byteArrayToHexString(baRandomBytes);
-			while (containsKey(sSessionId)) {
-				CryptoEngine.nextRandomBytes(baRandomBytes);
-				sSessionId = "R" + Utils.byteArrayToHexString(baRandomBytes);
-				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Generated new sSessionId=" + sSessionId);
-			}
+			
+			//////////////////////////////////////////////////////////////////////
+			// RH, 20111121, so
+//			while (containsKey(sSessionId)) {
+//				CryptoEngine.nextRandomBytes(baRandomBytes);
+//				sSessionId = "R" + Utils.byteArrayToHexString(baRandomBytes);
+//				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Generated new sSessionId=" + sSessionId);
+//			}
+			// RH, 20111121, eo
+			/////////////////////////////////////////////////////
 
 			Tools.initializeSensorData(_systemLogger, htSessionContext);
 			if (startPaused)
 				Tools.pauseSensorData(_systemLogger, htSessionContext);
 			// _systemLogger.log(Level.INFO, MODULE, sMethod, "New SessionId=" + sSessionId); // +
 			// ", htSessionContext="+htSessionContext);
-			put(sSessionId, htSessionContext); // always insert
+//			put(sSessionId, htSessionContext); // always insert	// RH, 20111121, o
+			// RH, 20111121, sn
+			while ( !create(sSessionId, htSessionContext) ) {
+				CryptoEngine.nextRandomBytes(baRandomBytes);
+				sSessionId = "R" + Utils.byteArrayToHexString(baRandomBytes);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Generated new sSessionId=" + sSessionId);
+			}
+			// RH, 20111121, en
 			_lSessionsCounter++;
 		}
 		catch (ASelectStorageException e) {

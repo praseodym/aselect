@@ -507,6 +507,61 @@ public class StorageManager
 		// RH, 20111117, en
 	}
 
+	
+	/**
+	 * Creates an object in storage. <br>
+	 * <br>
+	 * <b>Description: </b> <br>
+	 * Creates an object into the storage. Along with the storing of the object, a timestamp is created. This timestamp
+	 * is used to evaluate whether or not the object should be kept in storage (expiration). <br>
+	 * <br>
+	 * Calls the handler its <code>put()</code>.<br>
+	 * <br>
+	 * <b>Concurrency issues: </b> <br>
+	 * -<br>
+	 * <br>
+	 * <b>Preconditions: </b>
+	 * <ul>
+	 * <li><code>oKey</code> must NOT exist in storage.</li>
+	 * <li><code>oKey != null</code></li>
+	 * <li><code>oValue != null</code></li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions: </b> <br>
+	 * The storage contains the given object. <br>
+	 * 
+	 * @param oKey
+	 *            The identifier of the object that is to be stored.
+	 * @param oValue
+	 *            The object that is to be stored.
+	 * @return true on successful create, false on duplicate key
+	 * @throws ASelectStorageException
+	 *             If storing fails or duplicate key, result in ASelectStorageException
+	 * @see IStorageHandler#put(Object, Object, Long)
+	 */
+	public boolean create(Object oKey, Object oValue)
+		throws ASelectStorageException
+	{
+		boolean createOK = false;
+		// _oSystemLogger.log(Level.INFO, MODULE, "create",
+		// "StorageHandlerClass="+_oStorageHandler.getClass()+" this="+this.getClass());
+		if (_iMax != I_UNLIMITED && _oStorageHandler.isMaximum(_iMax)) 
+			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_MAXIMUM_REACHED);
+		Long lTimestamp = new Long(System.currentTimeMillis());
+		try {
+			_oStorageHandler.put(oKey, oValue, lTimestamp, UpdateMode.INSERTONLY);
+			createOK = true;
+		} catch (ASelectStorageException ase) {	// Duplicate key returns false, everything else throws exception
+			if ( !Errors.ERROR_ASELECT_STORAGE_DUPLICATE_KEY.equals( ase.getMessage()) ) {
+				throw ase;
+			}
+			 _oSystemLogger.log(Level.INFO, MODULE, "create", "Resuming on duplicate key");
+		}
+		return createOK;
+	}
+
+	
+	
 	/**
 	 * Checks if the supplied key already exists in the physical storage.
 	 * 

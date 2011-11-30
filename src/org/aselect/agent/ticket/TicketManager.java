@@ -253,18 +253,22 @@ public class TicketManager
 		byte[] baTicketBytes = new byte[TICKET_LENGTH];
 
 		try {
+			// TODO, don't think we should synchronize here, will be done on lower level
 			synchronized (_oTicketTable) {
 				_oRandomGenerator.nextBytes(baTicketBytes);
 				sTicket = Utils.byteArrayToHexString(baTicketBytes);
+				
+				try {	// RH, 20111121, n
 
-				while (_oTicketTable.containsKey(sTicket)) {
-					_oRandomGenerator.nextBytes(baTicketBytes);
-					sTicket = Utils.byteArrayToHexString(baTicketBytes);
-				}
+//				while (_oTicketTable.containsKey(sTicket)) {	// RH, 20111121, o
+					while ( !_oTicketTable.create(sTicket, htTicketContext)) {	// RH, 20111121, n
+						_oRandomGenerator.nextBytes(baTicketBytes);
+						sTicket = Utils.byteArrayToHexString(baTicketBytes);
+					}
 
-				try {
+//				try {	// RH, 20111121, o
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "New Ticket=" + Utils.firstPartOf(sTicket,40)); // + ", Context="+htTicketContext);
-					_oTicketTable.put(sTicket, htTicketContext);
+//					_oTicketTable.put(sTicket, htTicketContext);		// RH, 20111121, o
 				}
 				catch (ASelectStorageException e) {
 					if (e.getMessage().equals(Errors.ERROR_ASELECT_STORAGE_MAXIMUM_REACHED)) {

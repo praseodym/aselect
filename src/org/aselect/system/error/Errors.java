@@ -412,7 +412,7 @@ public class Errors
 	 */
 	// public final static String ERROR_ASELECT_STORAGE_DECODING_FAILURE = "6008";
 
-	/**
+	/**Errors
 	 * Storage connection failed
 	 */
 	public final static String ERROR_ASELECT_STORAGE_CONNECTION_FAILURE = "6009";
@@ -421,6 +421,11 @@ public class Errors
 	 * Maximum storage items reached
 	 */
 	public final static String ERROR_ASELECT_STORAGE_MAXIMUM_REACHED = "6010";
+
+	/**
+	 * Attempt to create duplicate key
+	 */
+	public final static String ERROR_ASELECT_STORAGE_DUPLICATE_KEY = "6015";
 
 	/**
 	 * SAM recourse not available.

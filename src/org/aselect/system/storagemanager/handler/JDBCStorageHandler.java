@@ -670,6 +670,25 @@ public class JDBCStorageHandler implements IStorageHandler
 				}
 			}
 			break;
+		case INSERTONLY: // do only insert, throw exception on duplicate key
+			_systemLogger.log(Level.INFO, MODULE, sMethod,
+			"Doing put with eMode INSERTONLY" );
+			try {
+				create(oKey, oValue, lTimestamp);
+			}
+			catch (SQLException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
+				"INSERTONLY fails where it should succeed, might be duplicate key" );
+				// Is this a duplicate key?
+				if (containsKey(oKey)) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"Insert on duplicate key attempt, resuming" );
+					throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_DUPLICATE_KEY);
+				} else {
+					throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_INSERT);
+				}
+			}
+			break;
 		default:	// do the old stuff for backward compatibility
 			_systemLogger.log(Level.INFO, MODULE, sMethod,
 			"Doing put with eMode default" );
@@ -694,7 +713,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	 * 				if not exactly one row was affected, e.g. if duplicate key was encountered
 	 * @see org.aselect.system.storagemanager.IStorageHandler#put(java.lang.Object, java.lang.Object, java.lang.Long)
 	 */
-	public void create(Object oKey, Object oValue, Long lTimestamp)
+	private void create(Object oKey, Object oValue, Long lTimestamp)
 		throws SQLException, ASelectStorageException
 	{
 		String sMethod = "create()";
@@ -820,7 +839,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	 * 				if not exactly one row was affected
 	 * @see org.aselect.system.storagemanager.IStorageHandler#put(java.lang.Object, java.lang.Object, java.lang.Long)
 	 */
-	public void update(Object oKey, Object oValue, Long lTimestamp)
+	private void update(Object oKey, Object oValue, Long lTimestamp)
 		throws SQLException, ASelectStorageException
 	{
 		String sMethod = "update()";
