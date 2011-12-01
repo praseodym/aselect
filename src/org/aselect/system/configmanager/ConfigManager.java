@@ -387,9 +387,12 @@ public class ConfigManager implements IConfigManager
 		// The Timer Queue and config
 		Object oSensorSection = Utils.getSimpleSection(configManager, systemLogger, _oMainConfig, "timer_sensor", false);
 		if (oSensorSection == null)
-			systemLogger.log(Level.WARNING, MODULE, sMethod, "Section "+sMainTag+"/"+"timer_sensor"+" not found, no timing");
-		else
+			systemLogger.log(Level.WARNING, MODULE, sMethod, "Section "+sMainTag+"/"+"timer_sensor"+" not found, no timer_sensor logging");
+		else {
 			iBatchPeriod  = Utils.getSimpleIntParam(configManager, systemLogger, oSensorSection, "batch_period", false);
+			if (iBatchPeriod < 0)
+				iBatchPeriod = 60;  // seconds
+		}
 		return iBatchPeriod;
 	}
 
@@ -397,9 +400,11 @@ public class ConfigManager implements IConfigManager
 			String sMainTag, int iBatchPeriod)
 	throws ASelectConfigException, ASelectException
 	{
-		String sMethod = "timerSensorConfig";
-		if (iBatchPeriod <= 0)
+		String sMethod = "timerSensorStartThread";
+		if (iBatchPeriod <= 0) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod, "No timerSensor logging, batch_period="+iBatchPeriod+" seconds");
 			return null;
+		}
 		
 		try {
 			SendQueueSender dcExporter = new SendQueueSender(systemLogger);

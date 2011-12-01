@@ -57,7 +57,7 @@ public class SendQueue
 		Object oConfig = Utils.getSimpleSection(oConfMgr, _oSqLogger, null, _sConfigMainTag, true);
 		Object oSensorSection = Utils.getSimpleSection(oConfMgr, _oSqLogger, oConfig, _sConfigSection, false);
 		if (oSensorSection == null) {
-			_oSqLogger.log(Level.WARNING, MODULE, sMethod, "Section "+_sConfigMainTag+"/"+_sConfigSection+" not found");
+			_oSqLogger.log(Level.WARNING, MODULE, sMethod, "Section "+_sConfigMainTag+"/"+_sConfigSection+" not found, no timer_sensor logging");
 			return;
 		}
 		_iBatchSize = Utils.getSimpleIntParam(oConfMgr, _oSqLogger, oSensorSection, "batch_size", false);
