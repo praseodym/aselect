@@ -157,7 +157,7 @@ int aselect_filter_init(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *pPool, 
             ap_log_error( APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
                 "ASELECT_FILTER:: configured to redirect to application entry point" );
         else if (pConfig->iRedirectMode == ASELECT_FILTER_REDIRECT_FULL)
-            ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
+            ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
                 "ASELECT_FILTER:: configured to redirect to user entry point");
 
 	if (!aselect_filter_upload_all_rules(pConfig, pServer, pPool, NULL))  // no timer data available here
@@ -1191,10 +1191,13 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 		    }
 
 		    // The config file tells us which attributes to pass on and from which source
+		    // Three fields separted by a comma: <digid_name>,<ldap_name>,<attribute_name>
+		    // <digid_name> is obsolete
+		    // <ldap_name> can be a constant (enclosed by single quotes)
 		    // If not present in the Ldap attributes, use the DigiD value!
 		    for (i = 0; i < pConfig->iAttrCount; i++) {
-			char *p, *q, *is;
-			char digidName[90], ldapName[90], attrName[90], buf[260];
+			char *p, *q;
+			char digidName[250], ldapName[250], attrName[250], buf[560];
 			int len, constant;
 
 			p = pConfig->pAttrFilter[i];
@@ -1207,7 +1210,8 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 			    strncpy(digidName, p, len);
 			    digidName[len] = '\0';
 			    p = q+1;
-			    q = strchr(p, ',');
+			    // p points to start of <ldap_name>
+			    q = strrchr(p, ',');  // 20111128: find last comma
 			    if (q) {  // ldapName
 				len = (q-p < sizeof(ldapName))? q-p: sizeof(ldapName)-1;
 				strncpy(ldapName, p, len);
@@ -1264,13 +1268,36 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 			}
 			if (p && (*p||constant)) {
 			    char *encoded, *decoded;
-			    if (newArgs[0])
-				newArgs = ap_psprintf(pPool, "%s&%s=%s", newArgs, attrName, p);
-			    else
-				newArgs = ap_psprintf(pPool, "%s=%s", attrName, p);
+
+			    // p points to the attribute value
+			    if (constant) {
+				char *begin, *end, *val, *newValue;
+				// Replace [attr,uid] by the value of attribute 'uid'
+				// cn=[attr,uid],org=o transforms into cn=33400056,org=o
+				newValue = p;
+				begin = strstr(newValue, "[attr,");
+				for ( ; begin != NULL; begin = strstr(newValue, "[attr,")) {
+				    end = strchr(begin, ']');
+				    if (end == NULL) // syntax error
+					break;
+				    sprintf(buf, "%.*s=", end-(begin+6), begin+6);
+				    val = aselect_filter_get_param(pPool, pcAttributes, buf, "&", FALSE);
+				    // subtitute some
+				    if (val == NULL)  // no real value has been set
+					val = "";
+				    newValue = ap_psprintf(pPool, "%.*s%s%s", begin-newValue, newValue, val, end+1);
+				}
+				p = newValue;
+			    }
+			    if (strcmp(attrName, "AuthHeader") != 0) { // 20111128
+				if (newArgs[0])
+				    newArgs = ap_psprintf(pPool, "%s&%s=%s", newArgs, attrName, p);
+				else
+				    newArgs = ap_psprintf(pPool, "%s=%s", attrName, p);
+			    }
 
 			    if (strcmp(attrName, "AuthHeader") == 0) {
-				decoded = ap_psprintf(pPool, "%s:", p);
+				decoded = ap_psprintf(pPool, "%s:", p);  // <username>:<password>
 				aselect_filter_url_decode(decoded);
 				encoded = aselect_filter_base64_encode(pPool, decoded);
 				ap_table_set(headers_in, "Authorization", ap_psprintf(pPool, "Basic %s", encoded));
@@ -1332,7 +1359,7 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 		    // If we want to do this, do-not encode the = and & signs!!!
 		    //pRequest->args = aselect_filter_url_encode(pPool, pRequest->args);
 		}
-		TRACE2("Args%s modified to [%s]", (strchr(pConfig->pcPassAttributes,'q')!=0)? "": " NOT", pRequest->args);
+		TRACE2("Args modified to [%s], passed in: %s", pRequest->args, pConfig->pcPassAttributes);
 	    }
 	    else iError = ASELECT_FILTER_ERROR_FAILED;
 	}
