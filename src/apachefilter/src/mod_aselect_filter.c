@@ -116,6 +116,10 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 			char *pcTicketIn, char *pcUIDIn, char *pcOrganizationIn, char *pcRequestLanguage, table *headers_in, TIMER_DATA *pt);
 static void aselect_filter_removeUnwantedCharacters(char *args);
 static char *aselect_filter_findNoCasePattern(const char *text, const char *pattern);
+static void splitAttrFilter(char *attrFilter, char *condName, int condLen,
+			    char *ldapName, int ldapLen, char *attrName, int attrLen);
+static char *replaceAttributeValues(pool *pPool, char *pcAttributes, char *text, int bUrlDecode);
+static int conditionIsTrue(pool *pPool, char *pcAttributes, char *condName);
 
 //
 // Called once during the module initialization phase.
@@ -157,7 +161,7 @@ int aselect_filter_init(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *pPool, 
             ap_log_error( APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
                 "ASELECT_FILTER:: configured to redirect to application entry point" );
         else if (pConfig->iRedirectMode == ASELECT_FILTER_REDIRECT_FULL)
-            ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
+            ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
                 "ASELECT_FILTER:: configured to redirect to user entry point");
 
 	if (!aselect_filter_upload_all_rules(pConfig, pServer, pPool, NULL))  // no timer data available here
@@ -375,12 +379,14 @@ char *aselect_filter_auth_user(request_rec *pRequest, pool *pPool, PASELECT_FILT
 static char *getRequestedAttributes(pool *pPool, PASELECT_FILTER_CONFIG pConfig)
 {
     char *p, *q, *paramNames = NULL;
-    char ldapName[90];
+    char ldapName[400];
     int i, len;
 
     for (i = 0; i < pConfig->iAttrCount; i++) {
-	p = pConfig->pAttrFilter[i];
-	TRACE2("getRequestedAttributes:: %d: %s", i, p);
+	//TRACE2("getRequestedAttributes:: %d: %s", i, pConfig->pAttrFilter[i]);
+	splitAttrFilter(pConfig->pAttrFilter[i], NULL,0, ldapName,sizeof(ldapName), NULL,0);
+
+	/*p = pConfig->pAttrFilter[i];
 	ldapName[0] = '\0';
 	q = strchr(p, ',');
 	if (q) {  // digidName
@@ -392,7 +398,7 @@ static char *getRequestedAttributes(pool *pPool, PASELECT_FILTER_CONFIG pConfig)
 		ldapName[len] = '\0';
 	    }
 	    // Also continue when attrName is empty
-	}
+	}*/
 	if (ldapName[0] == '\0')
 	    continue;
 
@@ -406,6 +412,7 @@ static char *getRequestedAttributes(pool *pPool, PASELECT_FILTER_CONFIG pConfig)
 	else
 	    paramNames = ap_psprintf(pPool, "%s", ldapName);
     }
+    TRACE1("getRequestedAttributes:: %s", paramNames);
     return paramNames;
 }
 
@@ -1191,44 +1198,31 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 		    }
 
 		    // The config file tells us which attributes to pass on and from which source
-		    // Three fields separted by a comma: <digid_name>,<ldap_name>,<attribute_name>
-		    // <digid_name> is obsolete
-		    // <ldap_name> can be a constant (enclosed by single quotes)
-		    // If not present in the Ldap attributes, use the DigiD value!
+		    // Three fields separted by a comma: <condition>,<ldap_name>,<attribute_name>
+		    // If <condition> is empty or it evaluates to 'true' the header is written,
+		    // otherwise it's not.
+		    // <ldap_name> can be an expression (it must be enclosed by single quotes)
+		    // <condition> and <ldap_name> can contain attribute expressions [attr,...]
+		    //
 		    for (i = 0; i < pConfig->iAttrCount; i++) {
 			char *p, *q;
-			char digidName[250], ldapName[250], attrName[250], buf[560];
-			int len, constant;
+			char condName[400], ldapName[400], attrName[200], buf[600];
+			int constant;
 
-			p = pConfig->pAttrFilter[i];
-			TRACE2("aselect_filter_attribute_check:: %d: %s", i, p);
+			TRACE2("aselect_filter_attribute_check:: %d: %s", i, pConfig->pAttrFilter[i]);
+			splitAttrFilter(pConfig->pAttrFilter[i], condName, sizeof(condName),
+				    ldapName, sizeof(ldapName), attrName, sizeof(attrName));
 
-			digidName[0] = ldapName[0] = attrName[0] = '\0';
-			q = strchr(p, ',');
-			if (q) {  // digidName
-			    len = (q-p < sizeof(digidName))? q-p: sizeof(digidName)-1;
-			    strncpy(digidName, p, len);
-			    digidName[len] = '\0';
-			    p = q+1;
-			    // p points to start of <ldap_name>
-			    q = strrchr(p, ',');  // 20111128: find last comma
-			    if (q) {  // ldapName
-				len = (q-p < sizeof(ldapName))? q-p: sizeof(ldapName)-1;
-				strncpy(ldapName, p, len);
-				ldapName[len] = '\0';
-				p = q+1;
-				for (q=p; *q; q++)
-				    ;
-				//attrName
-				len = (q-p < sizeof(attrName))? q-p: sizeof(attrName)-1;
-				strncpy(attrName, p, len);
-				attrName[len] = '\0';
-			    }
-			}
 			if (attrName[0] == '\0')  // no HTTP header name
 			    continue;
+			//TRACE3("Attr[%s|%s|%s]", condName, ldapName, attrName);
 
-			//TRACE3("Attr %s,%s,%s", digidName, ldapName, attrName);
+			// Check condition
+			if (!conditionIsTrue(pPool, pcAttributes, condName)) {
+			    TRACE("Do not include header");
+			    continue;
+			}
+
 			// attrName has a value
 			if (strcmp(attrName, "language")==0) {
 			    char *p = (pRequest->args)? strstr(pRequest->args, "language="): NULL;
@@ -1255,13 +1249,14 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 			    }
 			    else {
 				sprintf(buf, "%s=", ldapName);
-				p = aselect_filter_get_param(pPool, pcAttributes, buf, "&", FALSE);
+				p = aselect_filter_get_param(pPool, pcAttributes, buf, "&", TRUE/*urlDecode*/); // was FALSE
 			    }
 			}
-			if (!constant && !(p && *p) && digidName[0] != '\0') {  // try to use DigiD value
-			    sprintf(buf, "digid_%s=", digidName);
-			    p = aselect_filter_get_param(pPool, pcAttributes, buf, "&", FALSE);
-			}
+			// 20111204: no more
+			//if (!constant && !(p && *p) && digidName[0] != '\0') {  // try to use DigiD value
+			//    sprintf(buf, "digid_%s=", digidName);
+			//    p = aselect_filter_get_param(pPool, pcAttributes, buf, "&", FALSE);
+			//}
 			if (strcmp(attrName, "language")==0 && pcRequestLanguage != NULL) {
 			    p = pcRequestLanguage; // replace attribute value
 			    constant = 0;
@@ -1271,42 +1266,29 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 
 			    // p points to the attribute value
 			    if (constant) {
-				char *begin, *end, *val, *newValue;
-				// Replace [attr,uid] by the value of attribute 'uid'
-				// cn=[attr,uid],org=o transforms into cn=33400056,org=o
-				newValue = p;
-				begin = strstr(newValue, "[attr,");
-				for ( ; begin != NULL; begin = strstr(newValue, "[attr,")) {
-				    end = strchr(begin, ']');
-				    if (end == NULL) // syntax error
-					break;
-				    sprintf(buf, "%.*s=", end-(begin+6), begin+6);
-				    val = aselect_filter_get_param(pPool, pcAttributes, buf, "&", FALSE);
-				    // subtitute some
-				    if (val == NULL)  // no real value has been set
-					val = "";
-				    newValue = ap_psprintf(pPool, "%.*s%s%s", begin-newValue, newValue, val, end+1);
-				}
-				p = newValue;
+				p = replaceAttributeValues(pPool, pcAttributes, p, TRUE/*urlDecode*/); // was FALSE
 			    }
 			    if (strcmp(attrName, "AuthHeader") != 0) { // 20111128
+				// Only for passing parameters in the URL parameters
+				p = aselect_filter_url_encode(pPool, p); // 20111206
 				if (newArgs[0])
 				    newArgs = ap_psprintf(pPool, "%s&%s=%s", newArgs, attrName, p);
 				else
 				    newArgs = ap_psprintf(pPool, "%s=%s", attrName, p);
 			    }
 
+			    // 20111206: p is no longer url encoded
 			    if (strcmp(attrName, "AuthHeader") == 0) {
 				decoded = ap_psprintf(pPool, "%s:", p);  // <username>:<password>
-				aselect_filter_url_decode(decoded);
+				//aselect_filter_url_decode(decoded); // 20111206
 				encoded = aselect_filter_base64_encode(pPool, decoded);
 				ap_table_set(headers_in, "Authorization", ap_psprintf(pPool, "Basic %s", encoded));
 			    }
 			    else if (strchr(pConfig->pcPassAttributes,'h')!=0) { // Pass in the header
 				//TRACE2("X-Header - %s: %s", attrName, p);
-				decoded = ap_pstrdup(pPool, p);
-				aselect_filter_url_decode(decoded);
-				ap_table_set(headers_in, ap_psprintf(pPool, "X-%s", attrName), decoded);
+				//decoded = ap_pstrdup(pPool, p); //20111206
+				//aselect_filter_url_decode(decoded); //20111206
+				ap_table_set(headers_in, ap_psprintf(pPool, "X-%s", attrName), p);  // 20111206 decoded);
 			    }
 
 			    // A value for 'attrname' was added
@@ -1317,7 +1299,7 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 				    q = strstr(p, attrName);
 				    if (!q)
 					break;
-				    // Bauke: example args: my_uid=9876&uid2=0000&uid=1234&uid=9876
+				    // Example args: my_uid=9876&uid2=0000&uid=1234&uid=9876
 				    if (q==pRequest->args || *(q-1) == '&' || *(q-1) == ' ') {
 					int nextChar = *(q+strlen(attrName));
 					if (nextChar == '=' || nextChar  == '&' || nextChar == '\0') {
@@ -1351,13 +1333,13 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 		}
 		TRACE1("PassAttributes=%s", pConfig->pcPassAttributes);
 		if (strchr(pConfig->pcPassAttributes,'q')!=0) {
-		    // Add the new args in front of the original ones
+		    // Add the new args in front of the original ones, newArgs contains URL encoded values (20111206)
 		    if (pRequest->args && pRequest->args[0])
 			pRequest->args = ap_psprintf(pPool, "%s&%s", newArgs, pRequest->args);
 		    else
 			pRequest->args = newArgs;
 		    // If we want to do this, do-not encode the = and & signs!!!
-		    //pRequest->args = aselect_filter_url_encode(pPool, pRequest->args);
+		    //pRequest->args = aselect_filter_url_encode(pPool, pRequest->args); // no longer needed 20111206
 		}
 		TRACE2("Args modified to [%s], passed in: %s", pRequest->args, pConfig->pcPassAttributes);
 	    }
@@ -1366,6 +1348,206 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 	else iError = ASELECT_FILTER_ERROR_AGENT_NO_RESPONSE;
     }
     return iError;
+}
+
+//
+// Split 'aselect_filter_add_attribute' value in three
+//
+static void splitAttrFilter(char *attrFilter, char *condName, int condLen,
+		char *ldapName, int ldapLen, char *attrName, int attrLen)
+{
+    char *p, *q, buf[40];
+    int len;
+
+    p = attrFilter;
+    if (condName) condName[0] = '\0';
+    if (ldapName) ldapName[0] = '\0';
+    if (attrName) attrName[0] = '\0';
+
+    if (*p == ',')  // empty condName
+	q = p;
+    else {  // parse condition
+	q = strchr(p, '(');  // e.g. contains(
+	if (q) {
+	    sprintf(buf, ")%.*s", q-p, p);
+	    q = strstr(p, buf);  // e.g. )contains
+	    if (q) 
+		q = strchr(q, ',');
+	    else
+		TRACE2("No match '%s' found from: %s", buf, p);
+	}
+	if (!q) {
+	    q = strchr(p, ',');
+	}
+    }
+    if (!q)  // condName
+	return;
+
+    if (condName) {
+	len = (q-p < condLen)? q-p: condLen-1;
+	strncpy(condName, p, len);
+	condName[len] = '\0';
+    }
+    p = q+1;
+    // p points to start of <ldap_name>
+    q = strrchr(p, ',');  // 20111128: find last comma
+    if (!q)  // ldapName
+	return;
+    if (ldapName) {
+	len = (q-p < ldapLen)? q-p: ldapLen-1;
+	strncpy(ldapName, p, len);
+	ldapName[len] = '\0';
+    }
+    p = q+1;
+    for (q=p; *q; q++)
+	;
+
+    //attrName
+    if (attrName) {
+	len = (q-p < attrLen)? q-p: attrLen-1;
+	strncpy(attrName, p, len);
+	attrName[len] = '\0';
+    }
+}
+
+//
+// Replace in 'text' all occurrences of [attr,<attr_name>]
+// by the value of attribute <attr_name>
+// If something goes wrong no replacement (or partial replacement) takes place
+//
+static char *replaceAttributeValues(pool *pPool, char *pcAttributes, char *text, int bUrlDecode)
+{
+    // cn=[attr,uid],org=o transforms into cn=33400056,org=o
+    char *newValue = text;
+    char *begin, *end, *val, buf[120];
+
+    if (!text)
+	return NULL;
+
+    begin = strstr(newValue, "[attr,");
+    for ( ; begin != NULL; begin = strstr(newValue, "[attr,")) {
+	end = strchr(begin, ']');
+	if (end == NULL) {// syntax error
+	    TRACE1("Attribute, no matching ] from: %.20s...", begin);
+	    break;
+	}
+	sprintf(buf, "%.*s=", end-(begin+6), begin+6);
+	val = aselect_filter_get_param(pPool, pcAttributes, buf, "&", bUrlDecode);
+	// substitute some
+	if (val == NULL) {  // no real value has been set
+	    TRACE2("Parameter '%.*s' not found", strlen(buf)-1, buf);
+	    val = "";
+	}
+	TRACE3("Replace attribute '%.*s' by '%s'", strlen(buf)-1, buf, val);
+	newValue = ap_psprintf(pPool, "%.*s%s%s", begin-newValue, newValue, val, end+1);
+    }
+    return newValue;
+}
+
+//
+// Replace function by the string "true" of "false"
+// Looks like: <beginToken>value1<septoken>value2<endToken>
+//             begin       arg1  end1      arg2  end2      pend
+//
+static char *evaluateFunction(pool *pPool, char *condValue, char *funcName)
+{
+    char *p, *begin, *arg1, *arg2, *end1, *end2, *pend;
+    char beginToken[40], endToken[40], *sepToken = "<~>";
+    char *substValue, *fun;
+    int finalLen, len, not;
+
+    if (!condValue)
+	return NULL;
+    sprintf(beginToken, "%s(", funcName);
+    sprintf(endToken, ")%s", funcName);
+
+    fun = funcName;
+    not = (strncmp(funcName, "not_", 4) == 0)? 1: 0;
+    if (not) funcName += 4;
+
+    p = strstr(condValue, beginToken);
+    for ( ; p != NULL; ) {
+	end1 = arg2 = end2 = pend = NULL;
+	begin = p;
+	//TRACE1("evaluate=[%s]", begin);
+	arg1 = begin + strlen(beginToken);
+	end1 = strstr(arg1, sepToken);
+	if (end1) arg2 = end1 + strlen(sepToken);
+	if (arg2) end2 = strstr(arg2, endToken);
+	if (end2) pend = end2 + strlen(endToken);
+	//TRACE5("function=%s arg1=[%.*s] arg2=[%.*s]", fun, end1-arg1, arg1, end2-arg2, arg2);
+	if (!(end1 && arg2 && end2)) {
+	    // must replace something to prevent loops
+	    TRACE1("Syntax error at: %s", begin);
+	    strncpy(begin, "____________________", arg1-begin-1);  // invalidate begintoken
+	    p = strstr(arg1, beginToken);
+	    return NULL; // continue;
+	}
+
+	// substitute from 'begin' to 'pend', both have a value here
+	substValue = "false";
+
+	if (strcmp(funcName, "equals") == 0) {
+	    if (end1-arg1 == end2-arg2 && strncmp(arg1, arg2, end1-arg1)==0)
+		substValue = "true";
+	}
+	else if (strcmp(funcName, "contains") == 0) {
+	    int sav1 = *end1;
+	    int sav2 = *end2;
+	    *end1 = *end2 = '\0';
+	    if (strstr(arg1, arg2) != NULL)
+		substValue = "true";
+	    *end1 = sav1;
+	    *end2 = sav2;
+	}
+	else if (strcmp(funcName, "and") == 0) {
+	    if (end1-arg1 == 4 && strncmp(arg1, "true", 4)==0 &&
+		    end2-arg2 == 4 && strncmp(arg2, "true", 4)==0)
+		substValue = "true";
+	}
+	else if (strcmp(funcName, "or") == 0) {
+	    if (end1-arg1 == 4 && strncmp(arg1, "true", 4)==0 ||
+		    end2-arg2 == 4 && strncmp(arg2, "true", 4)==0)
+		substValue = "true";
+	}
+	// negations
+	if (not) {
+	    if (strcmp(substValue, "true") == 0)
+		substValue = "false";
+	    else
+		substValue = "true";
+	}
+
+	finalLen = strlen(pend);
+	condValue = ap_psprintf(pPool, "%.*s%s%s", begin-condValue, condValue, substValue, pend);
+	len = strlen(condValue) - finalLen;  // that's where we were
+	p = strstr(condValue+len, beginToken);  // and advance
+	TRACE1("evaluated=[%s]", condValue);
+    }
+    return condValue;  // the new value
+}
+
+// Return 1 for true, 0 for false
+static int conditionIsTrue(pool *pPool, char *pcAttributes, char *condValue)
+{
+    if (!condValue[0])
+	return 1;  // true
+
+    // Replace all [attr,<attr_name>] constructions
+    TRACE1("condition=[%s]", condValue);
+    condValue = replaceAttributeValues(pPool, pcAttributes, condValue, TRUE/*urlDecode*/);
+
+    // Next evaluate, first contains and equals
+    condValue = evaluateFunction(pPool, condValue, "not_contains");
+    condValue = evaluateFunction(pPool, condValue, "contains");
+    condValue = evaluateFunction(pPool, condValue, "not_equals");
+    condValue = evaluateFunction(pPool, condValue, "equals");
+    condValue = evaluateFunction(pPool, condValue, "not_and");
+    condValue = evaluateFunction(pPool, condValue, "and");
+    condValue = evaluateFunction(pPool, condValue, "not_or");
+    condValue = evaluateFunction(pPool, condValue, "or");
+
+    return (condValue!=NULL && strcmp(condValue,"true")==0)?1 : 0;
 }
 
 static char *aselect_filter_findNoCasePattern(const char *text, const char *pattern)
