@@ -78,7 +78,7 @@ void aselect_filter_trace_logfilename(char *filename)
 //
 // Trace function, traces the time, process id and the logstring
 //
-void aselect_filter_trace(const char *fmt, ...)
+void aselect_filter_trace_not_used(const char *fmt, ...)
 {
     char    *pcTime;
     time_t  t;

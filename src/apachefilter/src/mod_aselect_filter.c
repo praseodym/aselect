@@ -92,7 +92,7 @@ char *aselect_filter_verify_credentials(request_rec *pRequest, pool *pPool, PASE
 					char *pcCredentials, char *applicationArguments, TIMER_DATA *pt);
 static int      aselect_filter_handler(request_rec *pRequest );
 static void *   aselect_filter_create_config(pool *pPool, server_rec *pServer );
-static int      aselect_filter_verify_config(PASELECT_FILTER_CONFIG pConfig );
+static int      aselect_filter_verify_config(request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig );
 static const char * aselect_filter_set_agent_address(cmd_parms *parms, void *mconfig, const char *arg );
 static const char * aselect_filter_set_agent_port(cmd_parms *parms, void *mconfig, const char *arg );
 static const char * aselect_filter_add_secure_app(cmd_parms *parms, void *mconfig, const char *arg1, const char *arg2, const char *arg3);
@@ -120,6 +120,8 @@ static void splitAttrFilter(char *attrFilter, char *condName, int condLen,
 			    char *ldapName, int ldapLen, char *attrName, int attrLen);
 static char *replaceAttributeValues(pool *pPool, char *pcAttributes, char *text, int bUrlDecode);
 static int conditionIsTrue(pool *pPool, char *pcAttributes, char *condName);
+static char *extractAttributeNames(pool *pPool, char *text, char *paramNames);
+static char *getRequestedAttributes(pool *pPool, PASELECT_FILTER_CONFIG pConfig);
 
 //
 // Called once during the module initialization phase.
@@ -144,9 +146,7 @@ int aselect_filter_init(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *pPool, 
 	strcat(pConfig->pcAddedSecurity, "c");  // add Secure & HttpOnly to cookies
     TRACE1("aselect_filter_init: added_security=%s", pConfig->pcAddedSecurity);
 
-    if (pConfig)
-    {
-	// 20091223: Bauke, added
+    if (pConfig) { // 20091223: Bauke, added
 	aselect_filter_trace_logfilename(pConfig->pcLogFileName);
 
         ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
@@ -171,6 +171,9 @@ int aselect_filter_init(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *pPool, 
                 pConfig->bConfigError = 1;
 #endif
 //      }
+        ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
+            ap_psprintf(pPool, "ASELECT_FILTER:: secure apps: %d, public apps: %d, attributes: %d", 
+                    pConfig->iAppCount, pConfig->iPublicAppCount, pConfig->iAttrCount));
     }
     ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, "ASELECT_FILTER:: done");
     TRACE1("aselect_filter_init: %x done", pServer);
@@ -252,7 +255,7 @@ int aselect_filter_upload_authz_rules(PASELECT_FILTER_CONFIG pConfig, server_rec
 	    TRACE1("ASELECT_FILTER:: Agent returned error %s while uploading authorization rules", pcResponse);
             return 0;
         }
-    }
+    }
     else {
         TRACE("aselect_filter_upload_authz_rules: Out of memory");
         return 0;
@@ -347,9 +350,7 @@ char *aselect_filter_auth_user(request_rec *pRequest, pool *pPool, PASELECT_FILT
 
     TRACE("aselect_filter_auth_user");
 
-    //
     // Create the message
-    //
     pcSendMessage = ap_psprintf(pPool, "request=authenticate&app_url=%s&app_id=%s&forced_logon=%s%s%s%s%s%s%s&usi=%s\r\n", 
         aselect_filter_url_encode(pPool, pcAppUrl), 
         aselect_filter_url_encode(pPool, pConfig->pCurrentApp->pcAppId),
@@ -361,11 +362,9 @@ char *aselect_filter_auth_user(request_rec *pRequest, pool *pPool, PASELECT_FILT
         pConfig->pCurrentApp->pcRemoteOrg,
         pConfig->pCurrentApp->pcExtra, timer_usi(pPool, pt));
     ccSendMessage = strlen(pcSendMessage);
-
     //TRACE2("request(%d): %s", ccSendMessage, pcSendMessage);
 
-    if ((pcResponse = aselect_filter_send_request(pRequest->server, pPool, pConfig->pcASAIP, pConfig->iASAPort, pcSendMessage, ccSendMessage, pt, 1)))
-    {
+    if ((pcResponse = aselect_filter_send_request(pRequest->server, pPool, pConfig->pcASAIP, pConfig->iASAPort, pcSendMessage, ccSendMessage, pt, 1))) {
         //TRACE1("response message: %s", pcResponse);
     }
     else { // socket error occured, take appropiate action
@@ -378,41 +377,59 @@ char *aselect_filter_auth_user(request_rec *pRequest, pool *pPool, PASELECT_FILT
 //
 static char *getRequestedAttributes(pool *pPool, PASELECT_FILTER_CONFIG pConfig)
 {
-    char *p, *q, *paramNames = NULL;
-    char ldapName[400];
+    char *p, *q, *paramNames = ",";
+    char condName[400], ldapName[400];
+    char attrName[200];
     int i, len;
 
     for (i = 0; i < pConfig->iAttrCount; i++) {
 	//TRACE2("getRequestedAttributes:: %d: %s", i, pConfig->pAttrFilter[i]);
-	splitAttrFilter(pConfig->pAttrFilter[i], NULL,0, ldapName,sizeof(ldapName), NULL,0);
+	splitAttrFilter(pConfig->pAttrFilter[i], condName,sizeof(condName), ldapName,sizeof(ldapName), NULL,0);
 
-	/*p = pConfig->pAttrFilter[i];
-	ldapName[0] = '\0';
-	q = strchr(p, ',');
-	if (q) {  // digidName
-	    p = q+1;
-	    q = strchr(p, ',');
-	    if (q) {  // ldapName
-		len = (q-p < sizeof(ldapName))? q-p: sizeof(ldapName)-1;
-		strncpy(ldapName, p, len);
-		ldapName[len] = '\0';
+	// Look in condName and ldapName for [attr,<name>] constructs
+	if (ldapName[0] != '\0') {
+	    // Decent ldapName present, extract attributes from expression
+	    if (ldapName[0] == '\'' && ldapName[strlen(ldapName)-1] == '\'')
+		paramNames = extractAttributeNames(pPool, ldapName, paramNames);
+	    else {
+		// Add ldapName itself, if not present yet
+		sprintf(attrName, ",%s,", ldapName);
+		if (strstr(paramNames, attrName) == 0)
+		    paramNames = ap_psprintf(pPool, "%s%s,", paramNames, ldapName);
 	    }
-	    // Also continue when attrName is empty
-	}*/
-	if (ldapName[0] == '\0')
-	    continue;
-
-	// Decent ldapName present, if it's a constant, skip it
-	if (ldapName[0] == '\'' && ldapName[strlen(ldapName)-1] == '\'')
-	    continue;
-
-	// Add ldapName
-	if (paramNames)
-	    paramNames = ap_psprintf(pPool, "%s,%s", paramNames, ldapName);
-	else
-	    paramNames = ap_psprintf(pPool, "%s", ldapName);
+	}
+	if (condName[0] != '\0') {
+	    paramNames = extractAttributeNames(pPool, condName, paramNames);
+	}
     }
-    TRACE1("getRequestedAttributes:: %s", paramNames);
+
+    // Remove comma's
+    paramNames[strlen(paramNames)-1] = '\0';
+    TRACE1("getRequestedAttributes:: %s", paramNames+1);
+    return paramNames+1;
+}
+
+static char *extractAttributeNames(pool *pPool, char *text, char *paramNames)
+{
+    char *p, *begin, *end;
+    char attrName[200];
+
+    //TRACE1("extractAttributeNames text=%s", text);
+    begin = strstr(text, "[attr,");
+    for ( ; begin != NULL; begin = strstr(end, "[attr,")) {
+	begin += 6;
+	end = strchr(begin, ']');
+	if (!end)
+	    return paramNames;
+	if (end-begin < 1)
+	    continue;
+
+	// Does the parameter already occur?
+	sprintf(attrName, ",%.*s,", end-begin, begin);
+	if (strstr(paramNames, attrName) == 0)
+	    paramNames = ap_psprintf(pPool, "%s%.*s,", paramNames, end-begin, begin);
+    }
+    //TRACE1("extractAttributeNames params=%s", paramNames);
     return paramNames;
 }
 
@@ -485,29 +502,44 @@ char *aselect_filter_attributes(request_rec *pRequest, pool *pPool, PASELECT_FIL
 }
 
 
-static int aselect_filter_verify_config(PASELECT_FILTER_CONFIG pConfig)
+static int aselect_filter_verify_config(request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig)
 {
-    if (pConfig->bConfigError)
+    if (!pConfig) {
+	ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest, "SIAM:: no config at all");
         return ASELECT_FILTER_ERROR_CONFIG;
-    if (pConfig->pcASAIP) {
-	if (strlen(pConfig->pcASAIP) <= 0)
-            return ASELECT_FILTER_ERROR_CONFIG;
     }
-    else
+    if (pConfig->bConfigError) {
+	ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest, "SIAM:: config error detected (old)");
         return ASELECT_FILTER_ERROR_CONFIG;
-
-    if (pConfig->iASAPort == 0)
+    }
+    if (!pConfig->pcASAIP) {
+	ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest, "SIAM:: no agent_address");
         return ASELECT_FILTER_ERROR_CONFIG;
-
-    if (pConfig->iAppCount == 0)
-        return ASELECT_FILTER_ERROR_CONFIG;
-
-    if (!pConfig->pcErrorTemplate || strlen(pConfig->pcErrorTemplate) <= 0)
+    }
+    if (strlen(pConfig->pcASAIP) <= 0) {
+	ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest, "SIAM:: no agent_address value");
 	return ASELECT_FILTER_ERROR_CONFIG;
+    }
 
-    if (!pConfig->pcLogoutTemplate || strlen(pConfig->pcLogoutTemplate) <= 0)
+    if (pConfig->iASAPort == 0) {
+	ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest, "SIAM:: no agent_port");
+        return ASELECT_FILTER_ERROR_CONFIG;
+    }
+
+    if (pConfig->iAppCount == 0) {
+	ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest, "SIAM:: no applications specified (warning)");
+        //return ASELECT_FILTER_ERROR_CONFIG;
+    }
+
+    if (!pConfig->pcErrorTemplate || strlen(pConfig->pcErrorTemplate) <= 0) {
+	ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest, "SIAM:: no error_template");
 	return ASELECT_FILTER_ERROR_CONFIG;
-    
+    }
+
+    if (!pConfig->pcLogoutTemplate || strlen(pConfig->pcLogoutTemplate) <= 0) {
+	ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest, "SIAM:: no logout_template");
+	return ASELECT_FILTER_ERROR_CONFIG;
+    }
     return ASELECT_FILTER_ERROR_OK;
 }
 
@@ -586,10 +618,11 @@ static int aselect_filter_handler(request_rec *pRequest)
     char *pcRequestLanguage = NULL;
     char *addedSecurity = "";
     char *securedAselectAppArgs = NULL;
+    int isSecure = 0;
 
     TIMER_DATA timer_data;
 
-    //ap_log_error(APLOG_MARK, APLOG_INFO, pRequest->server, ap_psprintf(pRequest->pool, "XX Url - %s", pRequest->uri));
+    ap_log_error(APLOG_MARK, APLOG_INFO, pRequest->server, ap_psprintf(pRequest->pool, "SIAM:: URI - %s %s", pRequest->uri, pRequest->args));
     TRACE2("---- { GET %s %s", pRequest->uri, pRequest->args);
     // START TIMER
     timer_data.td_type = 0;
@@ -607,7 +640,7 @@ static int aselect_filter_handler(request_rec *pRequest)
     {
         // Could not allocate pool
         TRACE("aselect_filter_handler: Could not allocate memory pool");
-        ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest, "ASELECT_FILTER:: could allocate memory pool");
+        ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest, "SIAM:: could allocate memory pool");
 	goto finish_filter_handler;  // only goto's to routine exit point
     }
 
@@ -619,14 +652,14 @@ static int aselect_filter_handler(request_rec *pRequest)
     if (!pConfig) {
         // Something went wrong, access denied
         TRACE("could not get module config data");
-        ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest, "ASELECT_FILTER:: could not retrieve configuration data");
+        ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest, "SIAM:: could not retrieve configuration data");
 	goto finish_filter_handler;
     }
     else { // Verify configuration
 	TRACE2("IP=%s Port=%d", (pConfig->pcASAIP)? pConfig->pcASAIP: "NULL", pConfig->iASAPort);
-        if (aselect_filter_verify_config(pConfig) != ASELECT_FILTER_ERROR_OK) {
+        if (aselect_filter_verify_config(pRequest, pConfig) != ASELECT_FILTER_ERROR_OK) {
             TRACE("Invalid configuration data");
-            ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest, "ASELECT_FILTER:: invalid configuration data");
+            ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest, "SIAM:: invalid configuration data");
 	    goto finish_filter_handler;
         }
     }
@@ -637,8 +670,23 @@ static int aselect_filter_handler(request_rec *pRequest)
        OK 0        **< Module has handled this stage */
 
     // 20110129, Bauke added public directories
-    if (aselect_filter_is_public_app(pPool, pConfig, pRequest->uri) == ASELECT_FILTER_ERROR_OK) {
-        TRACE2("\"%s\" is a public directory: %s", pRequest->uri, filter_action_text(iAction));
+    // Current code uses 'secure' as default (all public directories must be enumerated), example:
+/*  # The cockpit wil use the first 'aselect_filter_add_secure_app' line for "protected" apps
+    # 1. noudb:
+    aselect_filter_add_public_app "/web/"
+    aselect_filter_add_public_app "/html/"
+    aselect_filter_add_secure_app "/" "app1" "uid=siam_user,language=NL,country=NL"
+    # The second line is used for "public" apps
+    # 2. public:
+    #aselect_filter_add_secure_app "/" "app1" "disabled,language=NL,country=NL"
+*/
+    // To specify 'public' as default, an additional config-item is needed, and the following code:
+    //if (aselect_filter_verify_directory(pPool, pConfig, pRequest->uri) == ASELECT_FILTER_ERROR_OK)
+    //isSecure = 1;
+    if (/*isSecure==0 &&*/ aselect_filter_is_public_app(pPool, pConfig, pRequest->uri) == ASELECT_FILTER_ERROR_OK) {
+	ap_log_error(APLOG_MARK, APLOG_INFO, pRequest->server,
+	    ap_psprintf(pRequest->pool, "SIAM:: Public - %s", pRequest->uri));
+        TRACE1("\"%s\" is a public directory", pRequest->uri);
 	iRet = OK;
 	goto finish_filter_handler; // we don't want to do anything with this request
     }
@@ -648,7 +696,9 @@ static int aselect_filter_handler(request_rec *pRequest)
     //
     if (aselect_filter_verify_directory(pPool, pConfig, pRequest->uri) == ASELECT_FILTER_ERROR_FAILED) {
         // Not in a protected dir, this should not be possible, but we let the request through anyway
-        TRACE2("\"%s\" is not a protected dir (or is disabled): %s", pRequest->uri, filter_action_text(iAction));
+	ap_log_error(APLOG_MARK, APLOG_INFO, pRequest->server,
+	    ap_psprintf(pRequest->pool, "SIAM:: Disabled - %s", pRequest->uri));
+        TRACE1("\"%s\" is not a protected dir (or is disabled)", pRequest->uri);
         iRet = DECLINED;
 	goto finish_filter_handler;
     }
@@ -664,6 +714,8 @@ static int aselect_filter_handler(request_rec *pRequest)
     //
     // Retrieve the remote_addr
     //
+    ap_log_error(APLOG_MARK, APLOG_INFO, pRequest->server,
+	ap_psprintf(pRequest->pool, "SIAM:: Secure - %s app=%s", pRequest->uri, pConfig->pCurrentApp->pcAppId));
     TRACE2("\"%s\" is a protected dir, app_id: %s", pRequest->uri, pConfig->pCurrentApp->pcAppId);
     if (pRequest->connection->remote_ip) {
         TRACE1("remote_ip: %s", pRequest->connection->remote_ip);
@@ -745,7 +797,7 @@ static int aselect_filter_handler(request_rec *pRequest)
                             else {
                                 TRACE1("aselect_filter_verify_ticket FAILED (%d)", iError);
                                 ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
-                                    ap_psprintf(pPool, "ASELECT_FILTER::aselect_filter_verify_ticket FAILED (%d)", iError));
+                                    ap_psprintf(pPool, "ASELECT_FILTER:: aselect_filter_verify_ticket FAILED (%d)", iError));
                             }
                         }
                     }
@@ -926,27 +978,27 @@ static int aselect_filter_handler(request_rec *pRequest)
                                             iError = ASELECT_FILTER_ERROR_NO_SUCH_COOKIE;
                                             TRACE1("aselect_filter_get_cookie(aselectserverurl) FAILED: %d", iError);
                                             ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
-                                                ap_psprintf(pPool, "ASELECT_FILTER::aselect_filter_get_cookie(aselectserverurl) FAILED: %d", iError));
+                                                ap_psprintf(pPool, "ASELECT_FILTER:: aselect_filter_get_cookie(aselectserverurl) FAILED: %d", iError));
                                         }
                                     }
                                     else {
                                         TRACE1("aselect_filter_kill_ticket FAILED: %d", iError);
                                         ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
-                                            ap_psprintf(pPool, "ASELECT_FILTER::aselect_filter_kill_ticket FAILED: %d", iError));
+                                            ap_psprintf(pPool, "ASELECT_FILTER:: aselect_filter_kill_ticket FAILED: %d", iError));
                                     }
                                 }
                                 else {
                                     iError = ASELECT_FILTER_ERROR_INTERNAL;
                                     TRACE1("aselect_filter_kill_ticket FAILED: %d", iError);
                                     ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
-                                        ap_psprintf(pPool, "ASELECT_FILTER::aselect_filter_kill_ticket FAILED: %d", iError));
+                                        ap_psprintf(pPool, "ASELECT_FILTER:: aselect_filter_kill_ticket FAILED: %d", iError));
                                 }
                             }
                             else { // Could not find ticket to kill
                                 iError = ASELECT_FILTER_ERROR_NO_SUCH_COOKIE;
                                 TRACE1("aselect_filter_get_cookie(aselectticket) FAILED: %d", iError);
                                 ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
-                                    ap_psprintf(pPool, "ASELECT_FILTER::aselect_filter_get_cookie(aselectticket) FAILED: %d", iError));
+                                    ap_psprintf(pPool, "ASELECT_FILTER:: aselect_filter_get_cookie(aselectticket) FAILED: %d", iError));
                             }
                         }
                         else { // Nothing interesting in the request=param, so continue as normal
@@ -1040,7 +1092,7 @@ static int aselect_filter_handler(request_rec *pRequest)
                 else {
                     TRACE1("aselect_filter_auth_user FAILED (%d)", iError);
                     ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
-                        ap_psprintf(pPool, "ASELECT_FILTER::aselect_filter_auth_user FAILED (%d)", iError));
+                        ap_psprintf(pPool, "ASELECT_FILTER:: aselect_filter_auth_user FAILED (%d)", iError));
                 }
                 break;
 
@@ -1113,7 +1165,7 @@ static int aselect_filter_handler(request_rec *pRequest)
 finish_filter_handler:
     // FINISH TIMER
     ok = (iRet == DONE || iAction == ASELECT_FILTER_ACTION_ACCESS_GRANTED);
-    {
+    if (pConfig && pConfig->pCurrentApp) {
 	char *pData, buf[1000];
 	int rc;
 	timer_finish(&timer_data);
@@ -1219,7 +1271,7 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 
 			// Check condition
 			if (!conditionIsTrue(pPool, pcAttributes, condName)) {
-			    TRACE("Do not include header");
+			    TRACE("Do NOT include header");
 			    continue;
 			}
 
@@ -1438,7 +1490,7 @@ static char *replaceAttributeValues(pool *pPool, char *pcAttributes, char *text,
 	    TRACE2("Parameter '%.*s' not found", strlen(buf)-1, buf);
 	    val = "";
 	}
-	TRACE3("Replace attribute '%.*s' by '%s'", strlen(buf)-1, buf, val);
+	//TRACE3("Replace attribute '%.*s' by '%s'", strlen(buf)-1, buf, val);
 	newValue = ap_psprintf(pPool, "%.*s%s%s", begin-newValue, newValue, val, end+1);
     }
     return newValue;
@@ -1536,6 +1588,7 @@ static int conditionIsTrue(pool *pPool, char *pcAttributes, char *condValue)
     // Replace all [attr,<attr_name>] constructions
     TRACE1("condition=[%s]", condValue);
     condValue = replaceAttributeValues(pPool, pcAttributes, condValue, TRUE/*urlDecode*/);
+    TRACE1("replaced =[%s]", condValue);
 
     // Next evaluate, first contains and equals
     condValue = evaluateFunction(pPool, condValue, "not_contains");
@@ -1698,15 +1751,12 @@ aselect_filter_add_authz_rule(cmd_parms *parms, void *mconfig, const char *arg1,
     PASELECT_FILTER_CONFIG  pConfig = (PASELECT_FILTER_CONFIG) 
         ap_get_module_config(parms->server->module_config, &aselect_filter_module);
 
-    if (pConfig)
-    {
-        for (i=0; i<pConfig->iAppCount; i++)
-        {
+    if (pConfig) {
+        for (i=0; i<pConfig->iAppCount; i++) {
             if (strcmp(pConfig->pApplications[i].pcAppId, arg1) == 0)
                 break;
         }
-        if (i >= pConfig->iAppCount)
-        {
+        if (i >= pConfig->iAppCount) {
             TRACE1("aselect_filter_add_authz_rule: Unknown app_id \"%s\"", arg1);
             return "A-Select ERROR: Unknown application ID in authorization rule";
         }
@@ -1719,11 +1769,9 @@ aselect_filter_add_authz_rule(cmd_parms *parms, void *mconfig, const char *arg1,
             arg1, arg2, arg3);
         ++(pApp->iRuleCount);
     }
-    else
-    {
+    else {
         return "A-Select ERROR: Internal error: missing configuration object";
     }
-
     return NULL;
 }
 
