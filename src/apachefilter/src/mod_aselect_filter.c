@@ -1504,7 +1504,7 @@ static char *replaceAttributeValues(pool *pPool, char *pcAttributes, char *text,
 static char *evaluateFunction(pool *pPool, char *condValue, char *funcName)
 {
     char *p, *begin, *arg1, *arg2, *end1, *end2, *pend;
-    char beginToken[40], endToken[40], *sepToken = "<~>";
+    char beginToken[40], endToken[40], *sepToken = "[~]";
     char *substValue, *fun;
     int finalLen, len, not;
 
