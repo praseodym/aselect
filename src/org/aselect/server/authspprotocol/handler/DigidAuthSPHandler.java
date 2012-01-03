@@ -381,6 +381,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			String sLocalRid = (String) htResponse.get("local_rid");
 			String sDigidRid = (String) htResponse.get("rid");
 			String credentials = (String) htResponse.get("aselect_credentials");
+			String sLocalAppId = null;
 
 			// To determine which shared secret to use, we need to know the 'betrouwbaarheidsniveau'.
 			// This is stored in the session, which we can get via the local_rid.
@@ -388,8 +389,9 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			String sReqLevel = _sDefaultBetrouwbaarheidsNiveau;
 			String sharedSecret = _htSharedSecrets.get(_sDefaultBetrouwbaarheidsNiveau);
 			SessionManager sessionManager = SessionManager.getHandle();
-			if (sessionManager.containsKey(sLocalRid)) {
-				HashMap sessionContext = sessionManager.getSessionContext(sLocalRid);
+			// 20120103: Superfluous, just go get it: if (sessionManager.containsKey(sLocalRid)) {
+			HashMap sessionContext = sessionManager.getSessionContext(sLocalRid);
+			if (sessionContext != null) {
 				// 20090110, Bauke changed requested_betrouwbaarheidsniveau to required_level
 				sReqLevel = (String) sessionContext.get("required_level");
 				Integer intLevel = (Integer) sessionContext.get("level");
@@ -397,6 +399,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 				if (sReqLevel == null || sReqLevel.equals("empty"))
 					sReqLevel = _sDefaultBetrouwbaarheidsNiveau;
 				sharedSecret = _htSharedSecrets.get(sReqLevel);
+				sLocalAppId = (String)sessionContext.get("app_id");
 			}
 
 			HashMap reqParams = new HashMap();
@@ -433,7 +436,6 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			
 			String sRid = (String) response.get("rid");
 			String sOrganization = (String) response.get("organization");
-			String sAppID = (String) response.get("app_id");
 			
 			//
 			// Also match sBetrouwbaarheidsniveau against the requested level
@@ -468,14 +470,14 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 
 				resultCode = Errors.ERROR_ASELECT_SUCCESS;
 				_authenticationLogger.log(new Object[] {
-					MODULE, sUid, htResponse.get("client_ip"), sOrganization, sAppID, "granted"
+					MODULE, sUid, htResponse.get("client_ip"), sOrganization, sLocalAppId, "granted"
 				});
 			}
 			else {
 				resultCode = ("0040".equals(resultCode)) ? Errors.ERROR_ASELECT_SERVER_CANCEL
 						: Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER;
 				_authenticationLogger.log(new Object[] {
-					MODULE, sUid, htResponse.get("client_ip"), sOrganization, sAppID, "denied", resultCode
+					MODULE, sUid, htResponse.get("client_ip"), sOrganization, sLocalAppId, "denied", resultCode
 				});
 			}
 			result.put("rid", sLocalRid);
