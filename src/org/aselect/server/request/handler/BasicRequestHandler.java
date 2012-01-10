@@ -168,7 +168,7 @@ public abstract class BasicRequestHandler
 		// Create Session
 		HashMap htSessionContext = new HashMap();
 		String sUsi = hmInput.get("usi");
-		if (sUsi != null)
+		if (Utils.hasValue(sUsi))
 			htSessionContext.put("usi", sUsi);
 		htSessionContext.put("app_id", sAppId);
 		htSessionContext.put("app_url", sAppUrl);

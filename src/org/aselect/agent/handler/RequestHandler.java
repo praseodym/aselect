@@ -498,8 +498,8 @@ public class RequestHandler extends Thread
 			try {
 				sUsi = oInputMessage.getParam("usi");  // unique sensor id
 			}
-			catch (Exception e) {  // should generate our own usi here
-				// using System.nanoTime();
+			catch (Exception e) {  // Generate our own usi here
+				sUsi = Long.toString(System.nanoTime());
 			}
 			if (Utils.hasValue(sUsi))
 				timeSensor.setTimeSensorId(sUsi);

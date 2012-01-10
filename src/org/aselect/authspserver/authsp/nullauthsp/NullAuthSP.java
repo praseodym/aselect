@@ -393,11 +393,10 @@ public class NullAuthSP extends ASelectHttpServlet
 		
 		servletResponse.setContentType("text/html");
 		setDisableCachingHttpHeaders(servletRequest, servletResponse);
+		sQueryString = servletRequest.getQueryString();
+		HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, true);  // URL decoded result
 
 		try {
-			sQueryString = servletRequest.getQueryString();
-			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, false);
-
 			sLanguage = (String) htServiceRequest.get("language");  // optional language code
 			if (sLanguage == null || sLanguage.trim().length() < 1)
 				sLanguage = null;			
@@ -423,22 +422,19 @@ public class NullAuthSP extends ASelectHttpServlet
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "NULL GET {" + servletRequest + " --> " + sMethod + ": "
 					+ sQueryString);
 
-			sAsUrl = URLDecoder.decode(sAsUrl, "UTF-8");
-			sUid = URLDecoder.decode(sUid, "UTF-8");
-			sSignature = URLDecoder.decode(sSignature, "UTF-8");
+			// 20120110, Bauke: no longer needed, done by convertCGIMessage()
+			//sAsUrl = URLDecoder.decode(sAsUrl, "UTF-8");
+			//sUid = URLDecoder.decode(sUid, "UTF-8");
+			//sSignature = URLDecoder.decode(sSignature, "UTF-8");
 
 			StringBuffer sbSignature = new StringBuffer(sRid);
 			sbSignature.append(sAsUrl);
 			sbSignature.append(sUid);
 			sbSignature.append(sAsId);
 
-			// optional country code
-			if (sCountry != null)
-				sbSignature.append(sCountry);
-
-			// optional language code
-			if (sLanguage != null)
-				sbSignature.append(sLanguage);
+			// optional country and language code
+			if (sCountry != null) sbSignature.append(sCountry);
+			if (sLanguage != null) sbSignature.append(sLanguage);
 
 			if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), sSignature)) {
 				throw new ASelectException(Errors.ERROR_NULL_INVALID_REQUEST);
@@ -454,16 +450,14 @@ public class NullAuthSP extends ASelectHttpServlet
 					MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied", _sAuthMode
 				});
 			}
-
-			handleResult(servletRequest, servletResponse, _sAuthMode, sLanguage);
+			handleResult(htServiceRequest, servletResponse, _sAuthMode, sLanguage);
 		}
 		catch (ASelectException e) {
-			handleResult(servletRequest, servletResponse, e.getMessage(), sLanguage);
+			handleResult(htServiceRequest, servletResponse, e.getMessage(), sLanguage);
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Internal error", e);
-
-			handleResult(servletRequest, servletResponse, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, sLanguage);
+			handleResult(htServiceRequest, servletResponse, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, sLanguage);
 		}
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "} NULL GET");
 	}
@@ -498,9 +492,16 @@ public class NullAuthSP extends ASelectHttpServlet
 		if (sLanguage == null || sLanguage.trim().length() < 1) {
 			sLanguage = null;
 		}
+		String sRid = (String)servletRequest.getParameter("rid");  // is URLdecoded
+		String sAsUrl = (String)servletRequest.getParameter("as_url");
+		String sAsId = (String)servletRequest.getParameter("a-select-server");
+		HashMap serviceRequest = new HashMap();
+		if (sRid != null) serviceRequest.put("rid", sRid);
+		if (sAsUrl != null) serviceRequest.put("as_url", sAsUrl);
+		if (sAsId != null) serviceRequest.put("a-select-server", sAsId);
 
 		try {
-			handleResult(servletRequest, servletResponse, Errors.ERROR_NULL_INVALID_REQUEST, sLanguage);
+			handleResult(serviceRequest, servletResponse, Errors.ERROR_NULL_INVALID_REQUEST, sLanguage);
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Internal error", e);
@@ -537,7 +538,7 @@ public class NullAuthSP extends ASelectHttpServlet
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
+	private void handleResult(HashMap servletRequest, HttpServletResponse servletResponse,
 								String sResultCode, String sLanguage)
 	throws IOException
 	{
@@ -547,9 +548,9 @@ public class NullAuthSP extends ASelectHttpServlet
 		try {
 			pwOut = servletResponse.getWriter();
 			if (sResultCode.equals(Errors.ERROR_NULL_SUCCESS)) {
-				String sRid = servletRequest.getParameter("rid");
-				String sAsUrl = servletRequest.getParameter("as_url");
-				String sAsId = servletRequest.getParameter("a-select-server");
+				String sRid = (String)servletRequest.get("rid");
+				String sAsUrl = (String)servletRequest.get("as_url");
+				String sAsId = (String)servletRequest.get("a-select-server");
 				if (sRid == null || sAsUrl == null || sAsId == null) {
 					showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
 							// RH, 20100621, Remove cyclic dependency system<->server

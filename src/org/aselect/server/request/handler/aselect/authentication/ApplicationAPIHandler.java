@@ -601,8 +601,14 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			StringBuffer sbData = new StringBuffer(sASelectServer).append(sEncTGT);
 			if (sLanguage != null)
 				sbData = sbData.append(sLanguage);
-			String sUsi = oInputMessage.getParam("usi");
-			if (sUsi != null)
+			String sUsi = null;
+			try {
+				sUsi = oInputMessage.getParam("usi");  // unique sensor id
+			}
+			catch (Exception e) {  // Generate our own usi here
+				sUsi = Long.toString(System.nanoTime());
+			}
+			if (Utils.hasValue(sUsi))
 				sbData = sbData.append(sUsi);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "Signing required, sbData=" + sbData);
 			verifyApplicationSignature(oInputMessage, sbData.toString(), sAppId);
@@ -774,8 +780,14 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			StringBuffer sbData = new StringBuffer(sASelectServer).append(sEncTgt).append(sRid);
 			if (sSamlAttributes != null)
 				sbData = sbData.append(sSamlAttributes);
-			String sUsi = oInputMessage.getParam("usi");
-			if (sUsi != null)
+			String sUsi = null;
+			try {
+				sUsi = oInputMessage.getParam("usi");  // unique sensor id
+			}
+			catch (Exception e) {  // Generate our own usi here
+				sUsi = Long.toString(System.nanoTime());
+			}
+			if (Utils.hasValue(sUsi))
 				sbData = sbData.append(sUsi);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "sbData=" + sbData);
 			verifyApplicationSignature(oInputMessage, sbData.toString(), sAppId);

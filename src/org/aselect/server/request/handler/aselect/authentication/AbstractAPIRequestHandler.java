@@ -95,6 +95,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.storagemanager.SendQueue;
 import org.aselect.system.utils.TimeSensor;
 import org.aselect.system.utils.Tools;
+import org.aselect.system.utils.Utils;
 
 /**
  * Abstract API request handler. <br>
@@ -212,12 +213,18 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 			if (communicator.init(protocolRequest, protocolResponse)) {
 				IInputMessage inputMessage = communicator.getInputMessage();
 				IOutputMessage outputMessage = communicator.getOutputMessage();
-
 				
 				// 20111108, Bauke: For however needs it:
 				_timeSensor.timeSensorStart(-1/*level unused*/, 3/*type=server*/, _lMyThread);  // unused by default
-				String sUsi = inputMessage.getParam("usi");
-				if (sUsi != null) _timeSensor.setTimeSensorId(sUsi);
+				String sUsi = null;
+				try {
+					sUsi = inputMessage.getParam("usi");  // unique sensor id
+				}
+				catch (Exception e) {  // Generate our own usi here
+					sUsi = Long.toString(System.nanoTime());
+				}
+				if (Utils.hasValue(sUsi))
+					_timeSensor.setTimeSensorId(sUsi);
 				
 				try {
 					String sServerId = null;
