@@ -76,6 +76,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
@@ -719,64 +720,46 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp", "id="+sAuthSPId);
 
 			try {
-				StringBuffer sbRequest = new StringBuffer(sAuthSPUrl);
-				sbRequest.append("?request=authenticate");
-				sbRequest.append("&rid=").append(URLEncoder.encode(sRid, "UTF-8"));
-				sbRequest.append("&user=").append(URLEncoder.encode(sUid, "UTF-8"));
-				sbRequest.append("&password=").append(URLEncoder.encode(sPassword, "UTF-8"));
-				String sRequest = sbRequest.toString();
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "To AUTHSP: " + sRequest);
-							
 				// 20110721, Bauke: communicate with the AuthSP using the POST mechanism
 				String sPostIt = null;
-				// RH, 20110912, moved authSPsection decl. for reuse later
-//				Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp", "id="+sAuthSPId);
 				if (authSPsection != null)
 					sPostIt = ASelectConfigManager.getSimpleParam(authSPsection, "post_it", false);  // not mandatory
 				_systemLogger.log(Level.FINER, MODULE, sMethod, "Section id="+sAuthSPId+" post_it: " + sPostIt);
 
-				if ("true".equals(sPostIt)) {
-					int idx = sRequest.indexOf('?');
-					String sUrl = (idx >= 0)? sRequest.substring(0, idx): sRequest;
-					String sArgs = (idx >= 0)? sRequest.substring(idx+1): "";
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "URL="+sUrl+" Args="+sArgs+" len="+sArgs.length());
-
-					URL oServer = new URL(sUrl + "?request=authenticate");
-					URLConnection conn = oServer.openConnection();
+				StringBuffer sbReqArgs = new StringBuffer("request=authenticate");
+				sbReqArgs.append("&rid=").append(URLEncoder.encode(sRid, "UTF-8"));
+				sbReqArgs.append("&user=").append(URLEncoder.encode(sUid, "UTF-8"));
+				sbReqArgs.append("&password=").append(URLEncoder.encode(sPassword, "UTF-8"));
+				String sArgs = sbReqArgs.toString();
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "To AUTHSP: " + sAuthSPUrl+" Args="+sArgs);
+							
+				if ("true".equals(sPostIt)) {  // use POST, must also be URL encoded!!!
+					
+					URL oServer = new URL(sAuthSPUrl);  // 20120106, Bauke: just the url
+					HttpURLConnection conn = (HttpURLConnection)oServer.openConnection();
 					conn.setDoOutput(true);
 					
-					String sHost = sUrl, sPath = sUrl;
-					idx = sUrl.indexOf("//");
-					if (idx >= 0) {
-						idx += 2;  // host
-						sUrl = sUrl.substring(idx);
-						idx = sUrl.indexOf('/',	idx);
-					}
-					if (idx >= 0) {
-						sHost = sUrl.substring(0, idx);
-						sPath = sUrl.substring(idx);  // including '/'
-					}
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "POST Host="+oServer.getHost()+" Length="+sArgs.length());
+					conn.setRequestMethod("POST");
+					conn.setRequestProperty("Host", oServer.getHost());
+					conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+					conn.setRequestProperty("Content-Length", Integer.toString(sArgs.length()));
+					
 					OutputStream oStream = conn.getOutputStream();
 					BufferedWriter oOutputWriter = new BufferedWriter(new OutputStreamWriter(oStream), 16000);
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "POST "+sPath+" HTTP/1.1"+"---"+"Host: "+sHost);
-					oOutputWriter.write("POST "+sPath+" HTTP/1.1");
-					oOutputWriter.newLine();
-					oOutputWriter.write("Host: "+sHost);
-					oOutputWriter.newLine();
-					oOutputWriter.write("Content-Type: application/x-www-form-urlencoded");
-					oOutputWriter.newLine();
-					oOutputWriter.write("Content-Length: "+sArgs.length());
-					oOutputWriter.newLine();
 					oOutputWriter.write(sArgs);
-					oOutputWriter.newLine();
 					oOutputWriter.close();
+					
+					// And retrieve the response
 					InputStream iStream = conn.getInputStream();
 					BufferedReader oInputReader = new BufferedReader(new InputStreamReader(iStream), 16000);
 					sResponse = oInputReader.readLine();
 					oInputReader.close();
 				}
 				else {
-					_systemLogger.log(Level.FINER, MODULE, sMethod, "Doing GET from:  "+ sRequest);
+					StringBuffer sbRequest = new StringBuffer(sAuthSPUrl);
+					String sRequest = sbRequest.append("?").append(sbReqArgs).toString();
+					_systemLogger.log(Level.FINER, MODULE, sMethod, "GET request="+ sRequest);
 					URL oServer = new URL(sRequest);
 					URLConnection conn = oServer.openConnection();
 					InputStream iStream = conn.getInputStream();
@@ -792,7 +775,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				throw new ASelectException(Errors.ERROR_ASELECT_IO);
 			}
 
-			HashMap htResponse = Utils.convertCGIMessage(sResponse);
+			HashMap htResponse = Utils.convertCGIMessage(sResponse, false);
 			String sResponseCode = ((String) htResponse.get("status"));
 			String sOrg = (String) htSessionContext.get("organization");
 			if (sResponseCode == null) {
@@ -1022,15 +1005,12 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM directlogin, sServerId=" + sServerId);
 
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[rid]", sRid);
-			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[aselect_url]", (String) htServiceRequest
-					.get("my_url"));
+			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[aselect_url]", (String)htServiceRequest.get("my_url"));
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[a-select-server]", sServerId);
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[request]", "direct_login2");
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[cross_request]", "cross_login");
-
 			String sUid = (String) htSessionContext.get("user_id");
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[user_id]", (sUid != null)? sUid: "");
-
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[error_message]", sErrorMessage);
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[language]", _sUserLanguage);
 			// Extract if_cond=... from the application URL

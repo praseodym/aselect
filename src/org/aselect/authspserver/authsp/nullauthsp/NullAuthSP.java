@@ -294,7 +294,7 @@ public class NullAuthSP extends ASelectHttpServlet
 			}
 			catch (Exception e) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "No valid 'authsp' config section found with id='"
-						+ sConfigID + "', using default setting: authenitcation mode = granted.");
+						+ sConfigID + "', using default setting: authentication mode = granted.");
 			}
 
 			String sAuthMode = null;
@@ -306,7 +306,7 @@ public class NullAuthSP extends ASelectHttpServlet
 
 				_systemLogger
 						.log(Level.INFO, MODULE, sMethod,
-								"No valid 'authentication_mode' config item found, using default: authenitcation mode = granted.");
+								"No valid 'authentication_mode' config item found, using default: authentication mode = granted.");
 			}
 			if (sAuthMode == null)
 				sAuthMode = "";
@@ -396,7 +396,7 @@ public class NullAuthSP extends ASelectHttpServlet
 
 		try {
 			sQueryString = servletRequest.getQueryString();
-			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString);
+			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, false);
 
 			sLanguage = (String) htServiceRequest.get("language");  // optional language code
 			if (sLanguage == null || sLanguage.trim().length() < 1)

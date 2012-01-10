@@ -101,7 +101,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Properties;
@@ -330,7 +329,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			catch (ASelectConfigException eAC) {
 				_sFailureHandling = DEFAULT_FAILUREHANDLING;
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No 'failure_handling' parameter found in configuration, using default: aselect", eAC);
+						"No 'failure_handling' parameter found in configuration, using default: aselect");
 			}
 
 			if (!_sFailureHandling.equalsIgnoreCase("aselect") && !_sFailureHandling.equalsIgnoreCase("local")) {
@@ -354,6 +353,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 
 	/**
 	 * Process requests for the HTTP <code>GET</code> method. <br>
+	 * Arguments must be URL encoded.<br>
 	 * <br>
 	 * This could be a API call, otherwise the authentication screen is displayed.
 	 * 
@@ -374,15 +374,15 @@ public class LDAPAuthSP extends ASelectHttpServlet
 		String sLanguage = null;
 		String failureHandling = _sFailureHandling;	// Initially we use default from config, this might change if we suspect parameter tampering
 
-
 		try {
 			servletResponse.setContentType("text/html");	// RH, 20111021, n 	// contenttype must be set before getwriter
 
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 			pwOut = servletResponse.getWriter();
 
-			String sQueryString = servletRequest.getQueryString();
-			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString);
+			String sQueryString = servletRequest.getQueryString();  // parameters are URL encoded
+			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, true/*url decode*/);
+			// In htServiceRequest values are URL decoded now
 			
 			sLanguage = (String) htServiceRequest.get("language");  // optional language code
 			if (sLanguage == null || sLanguage.trim().length() < 1)
@@ -394,12 +394,12 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			// check if the request is an API call
 			String sRequestName = (String) htServiceRequest.get("request");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "LDAP GET { query-->" + sQueryString);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "req="+sRequestName+" pwd="+(String)htServiceRequest.get("password"));
 
-			if (sRequestName != null) {  // API request
+			if (sRequestName != null) {  // API request, no URL decoding done yet
 				handleApiRequest(htServiceRequest, servletRequest, pwOut, servletResponse);
 			}
-			else // Browser request
-			{
+			else { // Browser request
 				String sMyUrl = servletRequest.getRequestURL().toString();
 				htServiceRequest.put("my_url", sMyUrl);
 
@@ -411,38 +411,28 @@ public class LDAPAuthSP extends ASelectHttpServlet
 
 				if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sAsId == null) || (sSignature == null)) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod,
-//							"Invalid request received: one or more mandatory parameters missing.");
-					"Invalid request received: one or more mandatory parameters missing, handling error locally.");
+						"Invalid request received: one or more mandatory parameters missing, handling error locally.");
 					failureHandling = "local";	// RH, 20111021, n
 					throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);
 				}
 
-//				servletResponse.setContentType("text/html");	// RH, 20111021, o
-				// URL decode values
-				sAsUrl = URLDecoder.decode(sAsUrl, "UTF-8");
-				sUid = URLDecoder.decode(sUid, "UTF-8");
-				sSignature = URLDecoder.decode(sSignature, "UTF-8");
+				// 20120106, Bauke: no longer needed: URL decode values
+				//sAsUrl = URLDecoder.decode(sAsUrl, "UTF-8");
+				//sUid = URLDecoder.decode(sUid, "UTF-8");
+				//sSignature = URLDecoder.decode(sSignature, "UTF-8");
 
 				// validate signature
 				StringBuffer sbSignature = new StringBuffer(sRid);
-				sbSignature.append(sAsUrl);
-				sbSignature.append(sUid);
-				sbSignature.append(sAsId);
+				sbSignature.append(sAsUrl).append(sUid).append(sAsId);
 
-				// optional country code
-				if (sCountry != null)
-					sbSignature.append(sCountry);
-
-				// optional language code
-				if (sLanguage != null)
-					sbSignature.append(sLanguage);
+				// optional country and language code
+				if (sCountry != null) sbSignature.append(sCountry);
+				if (sLanguage != null) sbSignature.append(sLanguage);
 
 				if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), sSignature)) {
 					StringBuffer sbWarning = new StringBuffer("Invalid signature from A-Select Server '");
 					sbWarning.append(sAsId);
-					sbWarning.append("' for user: ");
-					sbWarning.append(sUid);
-					sbWarning.append(", handling error locally.");
+					sbWarning.append("' for user: ").append(sUid).append(", handling error locally.");
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString());
 					failureHandling = "local";	// RH, 20111021, n
 					throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);
@@ -455,11 +445,8 @@ public class LDAPAuthSP extends ASelectHttpServlet
 				htServiceRequest.put("as_url", sAsUrl);
 				htServiceRequest.put("uid", sUid);
 				htServiceRequest.put("retry_counter", "1");
-
-				if (sCountry != null)
-					htServiceRequest.put("country", sCountry);
-				if (sLanguage != null)
-					htServiceRequest.put("language", sLanguage);
+				if (sCountry != null) htServiceRequest.put("country", sCountry);
+				if (sLanguage != null) htServiceRequest.put("language", sLanguage);
 
 				showAuthenticateForm(pwOut, " ", " ", htServiceRequest);
 			}
@@ -490,6 +477,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 
 	/**
 	 * Process requests for the HTTP <code>POST</code> method. <br>
+	 * Arguments must be URL encoded.<br>
 	 * <br>
 	 * This should be the submitted authentication form.
 	 * 
@@ -512,11 +500,12 @@ public class LDAPAuthSP extends ASelectHttpServlet
 
 
 		String sRequest = servletRequest.getParameter("request");
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "LDAP POST { query-->" + servletRequest.getQueryString()+" len="+servletRequest.getContentLength());
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "LDAP POST { req="+sRequest+" query-->" + servletRequest.getQueryString()+" len="+servletRequest.getContentLength());
 		try {
 			servletResponse.setContentType("text/html");	// RH, 20111021, n	// contenttype must be set before getwriter
 			pwOut = servletResponse.getWriter();
 
+			// NOTE: getParameter() returns an URL decoded value
 			sLanguage = servletRequest.getParameter("language");  // optional language code
 			if (sLanguage == null || sLanguage.trim().length() < 1)
 				sLanguage = null;
@@ -532,33 +521,31 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			String sPassword = servletRequest.getParameter("password");
 			String sSignature = servletRequest.getParameter("signature");
 			String sRetryCounter = servletRequest.getParameter("retry_counter");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "req="+sRequest+" pwd=["+sPassword+"]");
 			
 			if ("authenticate".equals(sRequest)) {
 				HashMap htServiceRequest = new HashMap();
+
 				String sUser = servletRequest.getParameter("user");
+				if (sUser != null) htServiceRequest.put("user", sUser);
 				if (sRequest != null) htServiceRequest.put("request", sRequest);
 				if (sAsId != null) htServiceRequest.put("a-select-server", sAsId);
 				if (sRid != null) htServiceRequest.put("rid", sRid);
-				if (sUser != null) htServiceRequest.put("user", sUser);
 				if (sPassword != null) htServiceRequest.put("password", sPassword);
 				if (sSignature != null) htServiceRequest.put("signature", sSignature);
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "htServiceRequest="+htServiceRequest);
 				handleApiRequest(htServiceRequest, servletRequest, pwOut, servletResponse);
 				return;
 			}
-			
-//			servletResponse.setContentType("text/html");	// RH, 20111021, o	// contenttype must be set before getwriter
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "sRequest="+sRequest+" sRid="+sRid+" sUid="+sUid+" sPassword="+sPassword);
-			if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sPassword == null) || (sAsId == null)
-					|| (sRetryCounter == null) || (sSignature == null)) {
-//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: one or more mandatory parameters missing.");
+			if (sRid == null || sAsUrl == null || sUid == null || sPassword == null || sAsId == null ||
+								sRetryCounter == null || sSignature == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: one or more mandatory parameters missing, handling error locally.");
 				failureHandling = "local";	// RH, 20111021, n
 				throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);
 			}
-
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "LDAP POST " + servletRequest + " --> " + sMethod + ", "
 					+ sRid + ": " + sMyUrl);
 
@@ -572,10 +559,9 @@ public class LDAPAuthSP extends ASelectHttpServlet
 				htServiceRequest.put("a-select-server", sAsId);
 				htServiceRequest.put("retry_counter", sRetryCounter);
 				htServiceRequest.put("signature", sSignature);
-				if (sCountry != null)
-					htServiceRequest.put("country", sCountry);
-				if (sLanguage != null)
-					htServiceRequest.put("language", sLanguage);
+				if (sCountry != null) htServiceRequest.put("country", sCountry);
+				if (sLanguage != null) htServiceRequest.put("language", sLanguage);
+				
 				// show authentication form once again with warning message
 				showAuthenticateForm(pwOut, Errors.ERROR_LDAP_INVALID_PASSWORD, _configManager.getErrorMessage(
 						Errors.ERROR_LDAP_INVALID_PASSWORD, _oErrorProperties), htServiceRequest);
@@ -586,18 +572,15 @@ public class LDAPAuthSP extends ASelectHttpServlet
 				sbSignature.append(sAsUrl);
 				sbSignature.append(sUid);
 				sbSignature.append(sAsId);
-				if (sCountry != null)
-					sbSignature.append(sCountry);
-				if (sLanguage != null)
-					sbSignature.append(sLanguage);
+				if (sCountry != null) sbSignature.append(sCountry);
+				if (sLanguage != null) sbSignature.append(sLanguage);
 
-				if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), URLDecoder
-						.decode(sSignature, "UTF-8"))) {
+				// 20120106, Bauke: already decoded
+				//if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), URLDecoder.decode(sSignature, "UTF-8"))) {
+				if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), sSignature)) {
 					StringBuffer sbWarning = new StringBuffer("Invalid signature from A-Select Server '");
 					sbWarning.append(sAsId);
-					sbWarning.append("' for user: ");
-					sbWarning.append(sUid);
-					sbWarning.append(", handling error locally");	// RH, 20111021, n
+					sbWarning.append("' for user: ").append(sUid).append(", handling error locally");	// RH, 20111021, n
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString());
 					failureHandling = "local";	// RH, 20111021, n
 					throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);
@@ -621,10 +604,8 @@ public class LDAPAuthSP extends ASelectHttpServlet
 						htServiceRequest.put("a-select-server", sAsId);
 						htServiceRequest.put("retry_counter", String.valueOf(iRetriesDone + 1));
 						htServiceRequest.put("signature", sSignature);
-						if (sCountry != null)
-							htServiceRequest.put("country", sCountry);
-						if (sLanguage != null)
-							htServiceRequest.put("language", sLanguage);
+						if (sCountry != null) htServiceRequest.put("country", sCountry);
+						if (sLanguage != null) htServiceRequest.put("language", sLanguage);
 						// show authentication form once again with warning message
 						showAuthenticateForm(pwOut, Errors.ERROR_LDAP_INVALID_PASSWORD, _configManager.getErrorMessage(
 								Errors.ERROR_LDAP_INVALID_PASSWORD, _oErrorProperties), htServiceRequest);
@@ -696,7 +677,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	 */
 	protected boolean isRestartableServlet()
 	{
-		// TODO Restart functionality has to be added (Erwin)
+		// IMPROVE: Restart functionality can be added (Erwin)
 		return false;
 	}
 
@@ -720,13 +701,11 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut, String sResultCode, String sLanguage, String failureHandling)
 	{
-		String sMethod = "()";
+		String sMethod = "handleResult";
 		StringBuffer sbTemp = null;
 
 		try {
 			// Prevent tampering with request parameters, potential fishing leak
-
-//			if (_sFailureHandling.equalsIgnoreCase("aselect") || sResultCode.equals(Errors.ERROR_LDAP_SUCCESS))
 			if (failureHandling.equalsIgnoreCase("aselect") || sResultCode.equals(Errors.ERROR_LDAP_SUCCESS))
 			// A-Select handles error or success
 			{
@@ -800,6 +779,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	 * 
 	 * @param htServiceRequest
 	 *            a <code>HashMap</code> containing request parameters.
+	 *            The parameters have already been URL decoded.
 	 * @param servletRequest
 	 *            The request.
 	 * @param servletResponse
@@ -820,53 +800,56 @@ public class LDAPAuthSP extends ASelectHttpServlet
 		int iAllowedRetries = 0;
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "REQ " + htServiceRequest.get("request"));
-
-			if (htServiceRequest.get("request").equals("authenticate"))
-			{
-				if (_sessionManager.containsKey(sRid)) {
-					htSessionContext = _sessionManager.getSessionContext(sRid);
-					try {
-						iAllowedRetries = ((Integer) htSessionContext.get("allowed_retries")).intValue();
-					}
-					catch (ClassCastException e) {
-						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to cast to Integer.", e);
-						throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR);
-					}
-				}
-				else {
-					htSessionContext = new HashMap();
-					_sessionManager.createSession(sRid, htSessionContext);
-					iAllowedRetries = _iAllowedRetries;
-				}
-				iAllowedRetries--;
-				Integer intAllowedRetries = new Integer(iAllowedRetries);
-				htSessionContext.put("allowed_retries", intAllowedRetries);
-				_sessionManager.updateSession(sRid, htSessionContext); // Let's store the sucker (154)
-				if (iAllowedRetries < 0) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No login retries left for rid: '" + sRid + "'");
-					throw new ASelectException(Errors.ERROR_LDAP_ACCESS_DENIED);
-				}
-				handleAuthenticate(htServiceRequest, servletRequest);
-
-				sbResponse.append("&").append(RESULT_CODE);
-				sbResponse.append("=").append(Errors.ERROR_LDAP_SUCCESS);
-				_sessionManager.remove(sRid);
-			}
-			else {
+			if (!htServiceRequest.get("request").equals("authenticate") || !Utils.hasValue(sRid)) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid API request received.");
 				throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);
 			}
-		}
-		catch (ASelectException eAS) {
+			
+			// 20120105, Bauke: removed containsKey call
+			//if (_sessionManager.containsKey(sRid)) {
+			try {
+				htSessionContext = _sessionManager.getSessionContext(sRid);
+			}
+			catch (ASelectException e) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Not found: "+sRid);
+			}
+			
+			if (htSessionContext != null) {
+				try {
+					iAllowedRetries = ((Integer) htSessionContext.get("allowed_retries")).intValue();
+				}
+				catch (ClassCastException e) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to cast to Integer.", e);
+					throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR);
+				}
+			}
+			else {
+				htSessionContext = new HashMap();
+				_sessionManager.createSession(sRid, htSessionContext);
+				iAllowedRetries = _iAllowedRetries;
+			}
+			iAllowedRetries--;
+			Integer intAllowedRetries = new Integer(iAllowedRetries);
+			htSessionContext.put("allowed_retries", intAllowedRetries);
+			_sessionManager.updateSession(sRid, htSessionContext); // Let's store the sucker (154)
+			if (iAllowedRetries < 0) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No login retries left for rid: '" + sRid + "'");
+				throw new ASelectException(Errors.ERROR_LDAP_ACCESS_DENIED);
+			}
+			handleAuthenticate(htServiceRequest, servletRequest);
 
-			// Allready logged
+			sbResponse.append("&").append(RESULT_CODE);
+			sbResponse.append("=").append(Errors.ERROR_LDAP_SUCCESS);
+			_sessionManager.remove(sRid);
+		}
+		catch (ASelectException eAS) {  // Allready logged
 			sbResponse.append("&").append(RESULT_CODE);
 			sbResponse.append("=").append(eAS.getMessage());
 		}
+		
 		// set reponse headers
-		servletResponse.setContentType("application/x-www-form-urlencoded");
+		servletResponse.setContentType("application/x-www-form-urlencoded");  // must be set before getWriter()
 		servletResponse.setContentLength(sbResponse.length());
-		// respond
 		pwOut.write(sbResponse.toString());
 	}
 
@@ -876,17 +859,9 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	 * <b>Description:</b> <br>
 	 * processes a authenticate API call and sends an API reponse to the client. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br>
-	 * - <br>
-	 * <br>
-	 * <b>Preconditions:</b> <br>
-	 * - <br>
-	 * <br>
-	 * <b>Postconditions:</b> <br>
-	 * - <br>
 	 * 
 	 * @param htServiceRequest
-	 *            The request.
+	 *            The request containing URL decoded parameters.
 	 * @param servletRequest
 	 *            The request parameters.
 	 * @throws ASelectException
@@ -897,13 +872,9 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	{
 		String sMethod = "handleAuthenticate()";
 
-		// get user properties
 		String sUid = (String) htServiceRequest.get("user");
-		// get password
 		String sPassword = (String) htServiceRequest.get("password");
-		// Get A-Select server ID
 		String sAsID = (String) htServiceRequest.get("a-select-server");
-
 		if (sUid == null || sPassword == null) // missing request parameters
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
@@ -918,9 +889,10 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);
 		}
 
-		try {  // Authenticate the user
-			sUid = URLDecoder.decode(sUid, "UTF-8");
-			sPassword = URLDecoder.decode(sPassword, "UTF-8");
+		// 20120105, Bauke: URL decoding has been done earlier
+//		try {  // Authenticate the user
+//			sUid = URLDecoder.decode(sUid, "UTF-8");
+//			sPassword = URLDecoder.decode(sPassword, "UTF-8");
 
 			ILDAPProtocolHandler oProtocolHandler = LDAPProtocolHandlerFactory.instantiateProtocolHandler(
 					_oAuthSpConfig, sUid, _systemLogger);
@@ -944,11 +916,11 @@ public class LDAPAuthSP extends ASelectHttpServlet
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not authenticate user, cause:" + sResultCode);
 				throw new ASelectException(sResultCode);
 			}
-		}
-		catch (UnsupportedEncodingException eUE) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not decode request parameter", eUE);
-			throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR);
-		}
+//		}
+//		catch (UnsupportedEncodingException eUE) {
+//			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not decode request parameter", eUE);
+//			throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR);
+//		}
 	}
 
 	/**
@@ -968,7 +940,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	 */
 	private void showAuthenticateForm(PrintWriter pwOut, String sError, String sErrorMessage, HashMap htServiceRequest)
 	{
-		String sMethod = "showAuthenticateForm()";
+		String sMethod = "showAuthenticateForm";
 		
 		String sAuthenticateForm = new String(_sAuthenticateHtmlTemplate);
 		String sMyUrl = (String) htServiceRequest.get("my_url");
@@ -984,15 +956,17 @@ public class LDAPAuthSP extends ASelectHttpServlet
 
 		// RH, 20100907, sn
 		String sFriendlyName = (String) htServiceRequest.get("requestorfriendlyname");
-		if (sFriendlyName != null) {
-			try {
-				sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[requestor_friendly_name]", URLDecoder.decode(sFriendlyName, "UTF-8"));
-			}
-			catch (UnsupportedEncodingException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "UTF-8 dencoding not supported, using undecoded", e);
-				sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[requestor_friendly_name]", sFriendlyName);
-			}
-		}
+		//if (sFriendlyName != null) {
+			//try {
+				// 20120106, Bauke: decodeing already done
+				//sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[requestor_friendly_name]", URLDecoder.decode(sFriendlyName, "UTF-8"));
+		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[requestor_friendly_name]", sFriendlyName);
+			//}
+			//catch (UnsupportedEncodingException e) {
+			//	_systemLogger.log(Level.WARNING, MODULE, sMethod, "UTF-8 dencoding not supported, using undecoded", e);
+			//	sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[requestor_friendly_name]", sFriendlyName);
+			//}
+		//}
 		// RH, 20100907, en
 
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[rid]", sRid);

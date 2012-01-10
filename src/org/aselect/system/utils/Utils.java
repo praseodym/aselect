@@ -59,6 +59,7 @@
 package org.aselect.system.utils;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
@@ -502,11 +503,9 @@ public class Utils
 	 * Converts a CGI-based String to a hashtable. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * This methods converts a CGI-based String containing <code>key=value&key=value</code> to a hashtable containing
-	 * the keys and corresponding values. <br>
-	 * <br>
-	 * <b>Concurrency issues: </b> <br>
-	 * None. <br>
+	 * This methods converts a CGI-based String containing
+	 * <code>key=value&key=value</code> to a hashtable containing the keys and
+	 * corresponding values. <br>
 	 * <br>
 	 * <b>Preconditions: </b> <br>
 	 * CGI-based input String (<code>xMessage</code>).<br>
@@ -516,9 +515,11 @@ public class Utils
 	 * 
 	 * @param xMessage
 	 *            CGI-based input String.
+	 * @param doUrlDecode
+	 *            run URL decode on the parsed values
 	 * @return HashMap containg the keys and corresponding values.
 	 */
-	public static HashMap convertCGIMessage(String xMessage)
+	public static HashMap convertCGIMessage(String xMessage, boolean doUrlDecode)
 	{
 		String xToken, xKey, xValue;
 		StringTokenizer xST = null;
@@ -543,6 +544,11 @@ public class Utils
 						}
 
 						if (xKey != null && xValue != null) {
+							// 20120106, Bauke: added URL decode option
+							try {
+								xValue = URLDecoder.decode(xValue, "UTF-8");
+							}
+							catch (UnsupportedEncodingException e) { }
 							xResponse.put(xKey, xValue);
 						}
 					}

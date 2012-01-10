@@ -278,7 +278,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 			catch (ASelectConfigException eAC) {
 				_sFailureHandling = DEFAULT_FAILUREHANDLING;
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No 'failure_handling' parameter found in configuration, using default: aselect", eAC);
+						"No 'failure_handling' parameter found in configuration, using default: aselect");
 			}
 
 			if (!_sFailureHandling.equalsIgnoreCase("aselect") && !_sFailureHandling.equalsIgnoreCase("local")) {
@@ -351,7 +351,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 				_sSmsGateway = _configManager.getParam(_oAuthSpConfig, "gateway");
 			}
 			catch (ASelectException eAC) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "No 'gateway' parameter found in configuration, using default of provider", eAC);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "No 'gateway' parameter found in configuration, using default of provider");
 				_sSmsGateway = null; // use default gateway
 			}
 
@@ -364,7 +364,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 				_sSmsProvider = _configManager.getParam(_oAuthSpConfig, "gw_provider");
 			}
 			catch (ASelectException eAC) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "No 'provider' parameter found in configuration, using default provider", eAC);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "No 'provider' parameter found in configuration, using default provider");
 				_sSmsProvider = null; // use default gateway
 			}
 			_oSmsSender = SmsSenderFactory.createSmsSender(new URL(_sSmsUrl), _sSmsUser, _sSmsPassword, _sSmsGateway, _sSmsProvider);
@@ -427,7 +427,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 		
 		try {
 			String sQueryString = servletRequest.getQueryString();
-			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString);
+			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, false);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "GET htServiceRequest=" + htServiceRequest);
 			sLanguage = (String) htServiceRequest.get("language");  // optional language code
 			if (sLanguage == null || sLanguage.trim().length() < 1)

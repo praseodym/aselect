@@ -307,7 +307,7 @@ public class IPAuthSP extends ASelectHttpServlet
 			catch (ASelectConfigException e) {
 				_sFailureHandling = DEFAULT_FAILUREHANDLING;
 				_oAuthSPSystemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No 'failure_handling' parameter found in configuration, using default: aselect", e);
+						"No 'failure_handling' parameter found in configuration, using default: aselect");
 			}
 
 			if (!_sFailureHandling.equalsIgnoreCase("aselect") && !_sFailureHandling.equalsIgnoreCase("local")) {
@@ -356,7 +356,7 @@ public class IPAuthSP extends ASelectHttpServlet
 		String sLanguage = null;
 
 		try {
-			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString);
+			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, false);
 			sLanguage = (String) htServiceRequest.get("language");  // optional language code
 			if (sLanguage == null || sLanguage.trim().length() < 1)
 				sLanguage = null;

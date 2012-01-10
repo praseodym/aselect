@@ -340,7 +340,7 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 			return null;
 		}
 
-		HashMap sCredentialsParams = Utils.convertCGIMessage(sCredentialsCookie);
+		HashMap sCredentialsParams = Utils.convertCGIMessage(sCredentialsCookie, false);
 		if (sCredentialsParams == null) {
 			return null;
 		}
@@ -382,7 +382,7 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 		// Extract parameters into htServiceRequest
 		HashMap htServiceRequest = null;
 		if (servletRequest.getMethod().equalsIgnoreCase("GET")) {
-			htServiceRequest = Utils.convertCGIMessage(servletRequest.getQueryString());
+			htServiceRequest = Utils.convertCGIMessage(servletRequest.getQueryString(), false);
 		}
 		else {
 			htServiceRequest = new HashMap();

@@ -328,7 +328,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 			catch (ASelectConfigException e) {
 				_sFailureHandling = DEFAULT_FAILUREHANDLING;
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No 'failure_handling' parameter found in configuration, using default: aselect", e);
+						"No 'failure_handling' parameter found in configuration, using default: aselect");
 			}
 
 			if (!_sFailureHandling.equalsIgnoreCase("aselect") && !_sFailureHandling.equalsIgnoreCase("local")) {
@@ -385,7 +385,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 		try {
 			sQueryString = servletRequest.getQueryString();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "query=" + sQueryString);
-			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString);
+			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, false);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "htServiceRequest=" + htServiceRequest);
 
 			sLanguage = (String) htServiceRequest.get("language");  // optional language code

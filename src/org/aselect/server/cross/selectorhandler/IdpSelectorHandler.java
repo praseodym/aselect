@@ -594,7 +594,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_IO);
 		}
 
-		HashMap htServers = Utils.convertCGIMessage(sCgiString);
+		HashMap htServers = Utils.convertCGIMessage(sCgiString, false);
 
 		return htServers;
 	}

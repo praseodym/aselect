@@ -953,7 +953,7 @@ public class PKIAuthSP extends HttpServlet
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Send:" + sbRequest);
 			String sResponseString = send(sbRequest.toString());
 
-			HashMap xResponse = Utils.convertCGIMessage(sResponseString);
+			HashMap xResponse = Utils.convertCGIMessage(sResponseString, false);
 			String sResponseCode = ((String) xResponse.get("status"));
 			if (sResponseCode == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "invalid response from 2-Factor AuthSP");

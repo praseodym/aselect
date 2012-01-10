@@ -396,7 +396,7 @@ public class FlatFileConnector implements IUDBConnector
 	 * @param sErrorCode
 	 *            The error code of the error that occured
 	 * @param sMessage
-	 *            The authenitcation log message
+	 *            The authentication log message
 	 */
 	private void logAuthentication(String sUserID, String sErrorCode, String sMessage)
 	{

@@ -156,7 +156,7 @@ public abstract class AbstractLDAPProtocolHandler implements ILDAPProtocolHandle
 			sErrorCode = Errors.ERROR_LDAP_SUCCESS;
 		}
 		catch (ASelectException eAS) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not authenticate", eAS);
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not authenticate");
 			sErrorCode = eAS.getMessage();
 		}
 		catch (Exception e) {

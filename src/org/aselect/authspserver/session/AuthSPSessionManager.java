@@ -280,7 +280,7 @@ public class AuthSPSessionManager extends StorageManager
 		catch (ASelectStorageException e) {
 			StringBuffer sbError = new StringBuffer("Could not resolve session with rid: ");
 			sbError.append(sRid);
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString()+e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 		return htContext;

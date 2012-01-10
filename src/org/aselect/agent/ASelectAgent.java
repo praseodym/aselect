@@ -827,7 +827,7 @@ public class ASelectAgent
 
 					String sRequestString = isInput.readLine();
 					_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, sRequestString);
-					HashMap htParameters = Utils.convertCGIMessage(sRequestString);
+					HashMap htParameters = Utils.convertCGIMessage(sRequestString, false);
 					String sRequest = (String) htParameters.get("request");
 					if (sRequest.equalsIgnoreCase("stop")) {
 						destroy();

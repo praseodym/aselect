@@ -213,7 +213,7 @@ public abstract class BasicRequestHandler
 		int idx = sAppUrl.indexOf("?");
 		if (idx != -1) {
 			String sArgs = sAppUrl.substring(idx + 1);
-			HashMap<String, String> hmArgs = Utils.convertCGIMessage(sArgs);
+			HashMap<String, String> hmArgs = Utils.convertCGIMessage(sArgs, false);
 			sLanguage = hmArgs.get("language");
 			if (sLanguage != null) // takes precedence
 				htSessionContext.put("language", sLanguage.toLowerCase());

@@ -683,7 +683,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 		// Extract parameters into htServiceRequest
 		HashMap htServiceRequest = null;
 		if (servletRequest.getMethod().equalsIgnoreCase("GET")) {
-			htServiceRequest = Utils.convertCGIMessage(servletRequest.getQueryString());
+			htServiceRequest = Utils.convertCGIMessage(servletRequest.getQueryString(), false);
 		}
 		else {
 			htServiceRequest = new HashMap();

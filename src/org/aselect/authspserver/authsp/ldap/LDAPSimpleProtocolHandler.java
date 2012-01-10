@@ -145,9 +145,8 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 				 */
 				StringBuffer sbFine = new StringBuffer("Could not authenticate user (invalid password): ");
 				sbFine.append(_sUid);
-				_systemLogger.log(Level.FINE, _sModule, sMethod, sbFine.toString(), e);
-
-				throw new ASelectException(Errors.ERROR_LDAP_INVALID_PASSWORD, e);
+				_systemLogger.log(Level.FINE, _sModule, sMethod, sbFine.toString());
+				throw new ASelectException(Errors.ERROR_LDAP_INVALID_PASSWORD);
 			}
 			catch (CommunicationException eC) {
 				/*
@@ -161,7 +160,7 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 			}
 			catch (NamingException eN) {
 				// The initial directory context could not be created.
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "An naming error has occured", eN);
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "A naming error has occured", eN);
 				throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR, eN);
 			}
 
@@ -284,15 +283,15 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 			catch (AuthenticationException e) {
 				StringBuffer sbFine = new StringBuffer("Could not authenticate user (invalid password): ");
 				sbFine.append(_sUid);
-				_systemLogger.log(Level.SEVERE, _sModule, sMethod, sbFine.toString(), e);
-				throw new ASelectException(Errors.ERROR_LDAP_INVALID_PASSWORD, e);
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, sbFine.toString());
+				throw new ASelectException(Errors.ERROR_LDAP_INVALID_PASSWORD);
 			}
 			catch (CommunicationException eC) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "An communication error has occured", eC);
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "A communication error has occured", eC);
 				throw new ASelectException(Errors.ERROR_LDAP_COULD_NOT_REACH_LDAP_SERVER, eC);
 			}
 			catch (NamingException eN) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "An naming error has occured", eN);
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "A naming error has occured", eN);
 				throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR, eN);
 			}
 

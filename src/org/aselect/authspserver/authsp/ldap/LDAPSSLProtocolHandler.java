@@ -149,8 +149,7 @@ public class LDAPSSLProtocolHandler extends AbstractLDAPProtocolHandler
 				StringBuffer sbFine = new StringBuffer("Could not authenticate user (invalid password): ");
 				sbFine.append(_sUid);
 				_systemLogger.log(Level.FINE, _sModule, sMethod, sbFine.toString(), e);
-
-				throw new ASelectException(Errors.ERROR_LDAP_INVALID_PASSWORD, e);
+				throw new ASelectException(Errors.ERROR_LDAP_INVALID_PASSWORD);
 			}
 			catch (CommunicationException eC) {
 				/*
@@ -314,8 +313,7 @@ public class LDAPSSLProtocolHandler extends AbstractLDAPProtocolHandler
 				StringBuffer sbFine = new StringBuffer("Could not authenticate user (invalid password): ");
 				sbFine.append(_sUid);
 				_systemLogger.log(Level.FINE, _sModule, sMethod, sbFine.toString(), e);
-
-				throw new ASelectException(Errors.ERROR_LDAP_INVALID_PASSWORD, e);
+				throw new ASelectException(Errors.ERROR_LDAP_INVALID_PASSWORD);
 			}
 			catch (CommunicationException eC) {
 				Throwable tRoot = eC.getRootCause();

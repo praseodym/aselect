@@ -279,7 +279,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 			catch (ASelectConfigException eAC) {
 				_sFailureHandling = DEFAULT_FAILUREHANDLING;
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No 'failure_handling' parameter found in configuration, using default: aselect", eAC);
+						"No 'failure_handling' parameter found in configuration, using default: aselect");
 			}
 
 			if (!_sFailureHandling.equalsIgnoreCase("aselect") && !_sFailureHandling.equalsIgnoreCase("local")) {
@@ -351,7 +351,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 			pwOut = servletResponse.getWriter();
 
 			String sQueryString = servletRequest.getQueryString();
-			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString);
+			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, false);
 			HashMap htServiceRequestAsMap = (HashMap) servletRequest.getParameterMap();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "htServiceRequest:" + htServiceRequest);
 
