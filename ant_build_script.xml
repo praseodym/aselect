@@ -9,8 +9,44 @@
 <!-- Bauke Hiemstra - www.anoigo.nl: Adapted for A-Select 1.6 -->
 <!-- Remy Hanswijk - www.anoigo.nl: Some improvements		  -->
 
-<project name="A-Select 1.6" default="jars">
+<project name="A-Select" default="jars">
 
+
+	<exec outputproperty="build.current.revision" executable="svnversion" failifexecutionfails="false"  >
+	         <arg line="-n -c" />
+	         <redirector>
+	           <outputfilterchain>
+	             <tokenfilter>
+	                 <replaceregex pattern="^[0-9]*:?" replace="" flags="g"/>
+	             </tokenfilter>
+	          </outputfilterchain>
+	        </redirector>
+	</exec>
+	<!--
+	<property name="build.current.version" value="unknown" />
+	<exec outputproperty="build.current.version" executable="svn" failifexecutionfails="false" >
+	  <arg line="info" />
+	  <redirector>
+	  <outputfilterchain>
+	  <linecontainsregexp><regexp pattern="^URL:" /></linecontainsregexp>
+	   <tokenfilter>
+	     <replaceregex pattern=".*\/([^\/]+)$" replace="\1" flags="g"/>
+	   </tokenfilter>
+	  </outputfilterchain>
+	</redirector>
+	</exec>
+-->
+	<condition property="full.build.version" value="${build.current.revision}" else="unknown" >
+		<isset property="build.current.revision"/>
+		</condition>
+<!--		
+	<property name="full.build.version" value="${build.current.revision}" />
+	-->
+	
+	<echo message="Full build version: ${full.build.version}"/>
+	
+	
+	
   <macrodef name="build-jar">
     <attribute name="jar-name" />
     <attribute name="include-pattern" />
@@ -25,7 +61,10 @@
     <attribute name="exclude-pattern-9" default="" />
     <element name="manifest-tag" optional="true" />
     <sequential>
-      <jar basedir="target/classes" destfile="target/org.aselect.@{jar-name}-1.6.jar" >
+    	<!--
+        <jar basedir="target/classes" destfile="target/org.aselect.@{jar-name}-1.6.jar" >
+-->
+      <jar basedir="target/classes" destfile="target/org.aselect.@{jar-name}.jar" >
       	<manifest-tag />
         <include name="@{include-pattern}" />
         <exclude name="@{exclude-pattern-1}" />
@@ -70,6 +109,7 @@
     <build-jar jar-name="agent" include-pattern="org/aselect/agent/**/*.class" >
     	<manifest-tag>
     		<manifest>
+    			<attribute name="SIAM-Revision" value="${full.build.version}"/>
     			<attribute name="Main-Class" value="org.aselect.agent.ASelectAgent"/>
     			<attribute name="Class-Path" value="org.aselect.system.jar mysql-connector-java-5.1.7-bin.jar 
     			 cryptix-jce-provider.jar xercesImpl.jar xmlParserAPIs.jar 
@@ -80,6 +120,7 @@
     <build-jar jar-name="lbsensor" include-pattern="org/aselect/lbsensor/**/*.class" >
     	<manifest-tag>
     		<manifest>
+    			<attribute name="SIAM-Revision" value="${full.build.version}"/>
     			<attribute name="Main-Class" value="org.aselect.lbsensor.LbSensor"/>
     			<attribute name="Class-Path" value="org.aselect.system.jar mysql-connector-java-5.1.7-bin.jar  
     			 commons-dbcp-1.2.2.jar commons-pool-1.4.jar . "/>
@@ -96,7 +137,13 @@
                include-pattern="org/aselect/authspserver/**/*.class"
                exclude-pattern-1="org/aselect/authspserver/authsp/**/*.class" />
     <build-jar jar-name="authspserver-all"
-               include-pattern="org/aselect/authspserver/**/*.class" />
+               include-pattern="org/aselect/authspserver/**/*.class" >
+		<manifest-tag>
+			<manifest>
+				<attribute name="SIAM-Revision" value="${full.build.version}"/>
+			</manifest>
+		</manifest-tag>
+   	</build-jar>
     <build-jar jar-name="server.attributes.requestors.api"
                include-pattern="org/aselect/server/attributes/requestors/api/**/*.class" />
     <build-jar jar-name="server.attributes.requestors.flatfile"
@@ -135,13 +182,25 @@
                include-pattern="org/aselect/server/request/handler/xsaml20/**/*.class" />
     <build-jar jar-name="server.request.handler.wsfed"
                include-pattern="org/aselect/server/request/handler/wsfed/**/*.class" />
-    <build-jar jar-name="system" include-pattern="org/aselect/system/**/*.class" />
+    <build-jar jar-name="system" include-pattern="org/aselect/system/**/*.class" >
+		<manifest-tag>
+			<manifest>
+				<attribute name="SIAM-Revision" value="${full.build.version}"/>
+			</manifest>
+		</manifest-tag>
+    </build-jar>
     <build-jar jar-name="udb.flatfile" include-pattern="org/aselect/server/udb/flatfile/**/*.class" />
     <build-jar jar-name="udb.jdbc" include-pattern="org/aselect/server/udb/jdbc/**/*.class" />
     <build-jar jar-name="udb.jndi" include-pattern="org/aselect/server/udb/jndi/**/*.class" />
     <build-jar jar-name="udb.nodb" include-pattern="org/aselect/server/udb/nodb/**/*.class" />
     <build-jar jar-name="udb.sasdb" include-pattern="org/aselect/server/udb/sasdb/**/*.class" />
     <build-jar jar-name="server-all"
-               include-pattern="org/aselect/server/**/*.class" />
+               include-pattern="org/aselect/server/**/*.class" >
+		<manifest-tag>
+			<manifest>
+				<attribute name="SIAM-Revision" value="${full.build.version}"/>
+			</manifest>
+		</manifest-tag>
+    </build-jar>
   </target>
 </project>
