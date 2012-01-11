@@ -139,6 +139,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.storagemanager.SendQueue;
 import org.aselect.system.storagemanager.SendQueueSender;
+import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
 /**
@@ -279,8 +280,12 @@ public class ASelectAgent
 			oASelectAgent.startServices();
 
 			sbInfo.append(" succesfully started.");
+			//for (int i=0; i<10; i++) {
+			//	oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod,
+			//			"nano="+Long.toString(System.nanoTime())+" usi="+Tools.generateUniqueSensorId());
+			//}
+			
 			System.out.println(sbInfo.toString());
-
 			oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 		}
 		catch (Exception e) {

@@ -29,6 +29,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectUDBException;
+import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
 //
@@ -168,8 +169,9 @@ public abstract class BasicRequestHandler
 		// Create Session
 		HashMap htSessionContext = new HashMap();
 		String sUsi = hmInput.get("usi");
-		if (Utils.hasValue(sUsi))
-			htSessionContext.put("usi", sUsi);
+		if (!Utils.hasValue(sUsi))
+			sUsi = Tools.generateUniqueSensorId();  // 20120111, Bauke added
+		htSessionContext.put("usi", sUsi);
 		htSessionContext.put("app_id", sAppId);
 		htSessionContext.put("app_url", sAppUrl);
 		htSessionContext.put("level", intAppLevel); // NOTE: Integer put

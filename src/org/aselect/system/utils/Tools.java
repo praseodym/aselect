@@ -138,6 +138,36 @@ public class Tools
 		return df.format(new Date());
 	}
 
+	private static int usiRotate = 0;
+
+	/**
+	 * Generate unique sensor id. For use with LbSensor.
+	 * The format matches the filter version.
+	 * 
+	 * @return the unique id
+	 */
+	public static String generateUniqueSensorId()
+	{
+		// nano=11618456.720.181.759
+		final String sZeroes = "000000000";
+
+		usiRotate++;
+		if (usiRotate>999) usiRotate = 1;
+		
+		Long nano = System.nanoTime();
+		String sNano = Long.toString(nano);
+		int len = sNano.length();
+		if (len < 9) {  // will likely never happen
+			sNano = sZeroes.substring(len)+sNano;
+			len = sNano.length();
+		}
+		StringBuffer sbResult = new StringBuffer(sNano.substring(0, len-9));
+		sbResult.append(".").append(sNano.substring(len-9, len-3));
+		sbResult.append(String.format("%03d", usiRotate));
+
+		return sbResult.toString();
+	}
+
 	// Bauke: added
 	/**
 	 * Html encode.

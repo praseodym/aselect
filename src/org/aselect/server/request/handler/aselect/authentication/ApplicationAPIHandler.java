@@ -219,6 +219,7 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.utils.TimeSensor;
+import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
 /**
@@ -396,7 +397,17 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		Utils.copyMsgValueToHashmap("check-signature", hmRequest, oInputMessage);
 		Utils.copyMsgValueToHashmap("signature", hmRequest, oInputMessage);
 		Utils.copyMsgValueToHashmap("shared_secret", hmRequest, oInputMessage);
-		Utils.copyMsgValueToHashmap("usi", hmRequest, oInputMessage);
+		
+		//Utils.copyMsgValueToHashmap("usi", hmRequest, oInputMessage);
+		// 20120111, Bauke: replaced by:
+		String sUsi = null;
+		try {
+			sUsi = oInputMessage.getParam("usi");  // unique sensor id
+		}
+		catch (Exception e) {  // Generate our own usi here
+			sUsi = Tools.generateUniqueSensorId();
+		}
+		hmRequest.put("usi", sUsi);
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmRequest=" + hmRequest);
 		HashMap<String, String> hmResponse = handleAuthenticateAndCreateSession(hmRequest, null);

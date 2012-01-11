@@ -221,7 +221,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 					sUsi = inputMessage.getParam("usi");  // unique sensor id
 				}
 				catch (Exception e) {  // Generate our own usi here
-					sUsi = Long.toString(System.nanoTime());
+					sUsi = Tools.generateUniqueSensorId();
 				}
 				if (Utils.hasValue(sUsi))
 					_timeSensor.setTimeSensorId(sUsi);

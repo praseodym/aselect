@@ -2759,7 +2759,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		hmRequest.put("app_url", "login_token");
 		hmRequest.put("shared_secret", sSharedSecret);
 		hmRequest.put("check-signature", "false");  // this is an internal call, so don't
+		
 		// No "usi" available in this entry
+		hmRequest.put("usi", Tools.generateUniqueSensorId());  // 20120111, Bauke added
+
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmRequest=" + hmRequest);
 		// Exception for bad shared_secret:
