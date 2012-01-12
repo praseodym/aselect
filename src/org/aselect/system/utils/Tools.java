@@ -148,7 +148,7 @@ public class Tools
 	 */
 	public static String generateUniqueSensorId()
 	{
-		// nano=11618456.720.181.759
+		// Result: 11618456.720181001
 		final String sZeroes = "000000000";
 
 		usiRotate++;

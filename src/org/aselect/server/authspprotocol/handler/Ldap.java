@@ -810,7 +810,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				_sessionManager.updateSession(sRid, htSessionContext);
 				
 				if (servletResponse == null) {
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "No browser attached ...");
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No browser attached ...");
 					return false;  // No browser attached
 				}
 				
