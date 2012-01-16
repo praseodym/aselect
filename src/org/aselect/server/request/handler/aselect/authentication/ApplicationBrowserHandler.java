@@ -2805,6 +2805,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		
 		// Only perform user/password authentication (will update the session):
 		IAuthSPDirectLoginProtocolHandler oProtocolHandler = _authspHandlerManager.getAuthSPDirectLoginProtocolHandler(sAuthSp);
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "HttpSR="+servletResponse);
 		boolean bSuccess = oProtocolHandler.handleDirectLoginRequest(hmDirectRequest, null /*servlet response*/,
 											null /*output writer*/, _sMyServerId, "en", "nl");
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Success="+bSuccess+" hm="+hmDirectRequest);

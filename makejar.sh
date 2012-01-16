@@ -26,6 +26,7 @@ cd $BIN_DIR
 echo PWD=`pwd`
 echo $LAST_VERSION >$VERSION_FILE
 echo LAST_VERSION=$LAST_VERSION
+echo Commit first to get the correct version number for a production war-file
 
 case ''$1 in
 lb*)
@@ -49,7 +50,6 @@ server*)
 	;;
 system)
 	"$JAR" cf org.aselect.system.jar $VERSION_FILE org/aselect/system
-	"$JAR" tf org.aselect.system.jar | grep subversion
 	mv org.aselect.system.jar "$TARGET_DIR"
 	;;
 all)
@@ -58,7 +58,8 @@ all)
 	./makejar.sh server
 	./makejar.sh lbsensor
 	;;
-*) echo "Usage: `basename $0` all|agent|server|system|lbsensor"
-	;;
+*)	echo "Usage: `basename $0` all|agent|server|system|lbsensor"
+	rm -f $VERSION_FILE
+	exit;;
 esac
 rm -f $VERSION_FILE

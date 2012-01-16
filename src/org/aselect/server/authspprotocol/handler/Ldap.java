@@ -681,6 +681,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	{
 		String sMethod = "handleDirectLogin2";
 
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "servletResponse="+servletResponse);
 		try {
 			String sRid = null;
 			String sUid = null;
@@ -810,8 +811,9 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				_sessionManager.updateSession(sRid, htSessionContext);
 				
 				if (servletResponse == null) {
+					// For the login_token functionality, no redirection
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No browser attached ...");
-					return false;  // No browser attached
+					return true;  // No browser attached
 				}
 				
 				TGTIssuer tgtIssuer = new TGTIssuer(sServerId);
@@ -853,9 +855,9 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				_sessionManager.killSession(sRid);				
 				// 20111018, Bauke: redirect is done below
 
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to: sAppUrl=" + sAppUrl);
 				String sLang = (String)htSessionContext.get("language");
-				tgtIssuer.sendTgtRedirect(sAppUrl, sTgt, sRid, servletResponse, sLang);					
+				tgtIssuer.sendTgtRedirect(sAppUrl, sTgt, sRid, servletResponse, sLang);
 				return true;
 			}
 			else if (sResponseCode.equals(ERROR_LDAP_ACCESS_DENIED)) {
