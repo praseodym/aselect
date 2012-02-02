@@ -545,10 +545,14 @@ public class Utils
 
 						if (xKey != null && xValue != null) {
 							// 20120106, Bauke: added URL decode option
-							try {
-								xValue = URLDecoder.decode(xValue, "UTF-8");
-							}
-							catch (UnsupportedEncodingException e) { }
+							if (doUrlDecode) {	// RH, 20120202, n, fix on option doUrlDecode
+								try {
+									xValue = URLDecoder.decode(xValue, "UTF-8");
+								}
+								catch (UnsupportedEncodingException e) {
+									
+								}
+							}	// RH, 20120202, n, fix on option doUrlDecode
 							xResponse.put(xKey, xValue);
 						}
 					}
