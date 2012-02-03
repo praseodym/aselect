@@ -13,6 +13,7 @@ package org.aselect.server.request.handler.xsaml20;
 
 import java.io.StringReader;
 import java.security.PublicKey;
+import java.util.List;
 import java.util.logging.Level;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -55,7 +56,12 @@ public class SoapLogoutRequestSender
 	 *             If sending fails.
 	 */
 
-	// For backward compatibility
+	@Deprecated
+	   /**
+     * @deprecated
+     * use sendSoapLogoutRequest(String serviceProviderUrl, String issuerUrl, String sNameID, String reason, PublicKey pkey)
+     * 
+     */
 	public void sendSoapLogoutRequest(String serviceProviderUrl, String issuerUrl, String sNameID, String reason)
 		throws ASelectException
 	{
@@ -81,11 +87,37 @@ public class SoapLogoutRequestSender
 	public void sendSoapLogoutRequest(String serviceProviderUrl, String issuerUrl, String sNameID, String reason, PublicKey pkey)
 	throws ASelectException
 	{
+		 sendSoapLogoutRequest(serviceProviderUrl, issuerUrl, sNameID, reason, pkey, null);
+	}
+	
+	
+	/**
+	 * Send Logout Request. <br>
+	 * 
+	 * @param serviceProviderUrl
+	 *            String with SP url.
+	 * @param issuerUrl
+	 *            String with Issuer url.
+	 * @param sNameID
+	 *            String with NameID.
+	 * @param reason
+	 *            String with logout reason.
+	 * @param pkey
+	 *            Public key to verify SOAP response with, if null do not verify response
+	 * @param  List<String>sessionindexes
+	 * 				optional list of sessionindexes to kill
+	 * @throws ASelectException
+	 *             If sending fails.
+	 */
+	public void sendSoapLogoutRequest(String serviceProviderUrl, String issuerUrl, String sNameID, String reason, PublicKey pkey, List<String> sessionindexes)
+	throws ASelectException
+	{
 		String sMethod = "sendSoapLogoutRequest";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Send backchannel LogoutRequest to " + serviceProviderUrl
 				+ " for user: " + sNameID);
 
-		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(serviceProviderUrl, null, sNameID, issuerUrl, reason);
+//		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(serviceProviderUrl, null, sNameID, issuerUrl, reason);	// RH, 20120201, o
+		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(serviceProviderUrl, null, sNameID, issuerUrl, reason, sessionindexes);// RH, 20120201, n
 		// IMPROVE: SamlTools.setValidityInterval with only NotOnOrAfter, but we need this from calling object
 		
 		// Always sign the logoutRequest

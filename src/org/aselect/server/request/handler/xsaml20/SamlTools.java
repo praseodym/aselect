@@ -21,6 +21,7 @@ import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 
@@ -52,6 +53,7 @@ import org.opensaml.saml2.core.LogoutRequest;
 import org.opensaml.saml2.core.LogoutResponse;
 import org.opensaml.saml2.core.NameID;
 import org.opensaml.saml2.core.NameIDType;
+import org.opensaml.saml2.core.SessionIndex;
 import org.opensaml.saml2.core.Status;
 import org.opensaml.saml2.core.StatusCode;
 import org.opensaml.saml2.core.SubjectConfirmationData;
@@ -637,13 +639,22 @@ public class SamlTools
 	 *            the s tg t
 	 * @param sNameID
 	 *            the s name id
+	 * @param  List<String>sessionindexes
+	 * 				optional list of sessionindexes to kill
 	 * @return the logout request
 	 * @throws ASelectException
 	 *             If building logout request fails.
 	 */
+//	public static LogoutRequest buildLogoutRequest(String sServiceProviderUrl, String sTgT, String sNameID,
+//			String issuerUrl, String reason)
+//		throws ASelectException	{	// for backward compatibility
+//		return buildLogoutRequest(sServiceProviderUrl, sTgT, sNameID,
+//				issuerUrl, reason, null);
+//	}
+
 	@SuppressWarnings("unchecked")
 	public static LogoutRequest buildLogoutRequest(String sServiceProviderUrl, String sTgT, String sNameID,
-			String issuerUrl, String reason)
+			String issuerUrl, String reason, List<String>sessionindexes)
 		throws ASelectException
 	{
 		String sMethod = "buildLogoutRequest";
@@ -670,7 +681,21 @@ public class SamlTools
 		// optionele velden
 		logoutRequest.setReason(reason);
 		logoutRequest.setDestination(sServiceProviderUrl);
-
+		
+		
+		// RH, 20120130, sn
+		//	add optional SessionIndexes (Surf requires at least one)
+		if (sessionindexes != null) {
+			SAMLObjectBuilder<SessionIndex> sessionindexBuilder = (SAMLObjectBuilder<SessionIndex>) builderFactory
+			.getBuilder(SessionIndex.DEFAULT_ELEMENT_NAME);
+			for (String sSession : sessionindexes) {
+				SessionIndex sessionindex = sessionindexBuilder.buildObject();
+ 				sessionindex.setSessionIndex(sSession);
+				logoutRequest.getSessionIndexes().add(sessionindex);
+			}
+		}
+		// RH, 20120130, en
+		
 		SAMLObjectBuilder<Issuer> issuerBuilder = (SAMLObjectBuilder<Issuer>) builderFactory
 				.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
 		Issuer issuer = issuerBuilder.buildObject();

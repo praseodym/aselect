@@ -15,6 +15,7 @@ import java.security.PublicKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.Vector;
 import java.util.logging.Level;
 
 import org.aselect.server.request.handler.xsaml20.SoapLogoutRequestSender;
@@ -240,6 +241,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 		String _sMethod = "sendLogoutToFederation";
 
 		String sFederationUrl = (String) htTGTContext.get("federation_url");
+		Vector<String> sessionIndexes = (Vector<String>)  htTGTContext.get("remote_sessionlist");	// can be null	// RH, 20120201, n
 		if (sFederationUrl == null)
 			sFederationUrl = _sFederationUrl; // TODO: remove later on
 		if (sFederationUrl == null || sFederationUrl.equals("")) {
@@ -268,7 +270,8 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			}
 		}
 		try {
-			logout.sendSoapLogoutRequest(url, issuerUrl, sNameID, "urn:oasis:names:tc:SAML:2.0:logout:sp-timeout", pkey);
+//			logout.sendSoapLogoutRequest(url, issuerUrl, sNameID, "urn:oasis:names:tc:SAML:2.0:logout:sp-timeout", pkey);	// RH, 20120201, o
+			logout.sendSoapLogoutRequest(url, issuerUrl, sNameID, "urn:oasis:names:tc:SAML:2.0:logout:sp-timeout", pkey, sessionIndexes);	// RH, 20120201, n
 		}
 		catch (ASelectException e) {
 			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "Exception trying to send Logout message", e);

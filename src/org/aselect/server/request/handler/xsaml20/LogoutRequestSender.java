@@ -12,6 +12,7 @@
 package org.aselect.server.request.handler.xsaml20;
 
 import java.security.PrivateKey;
+import java.util.List;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
@@ -72,12 +73,21 @@ public class LogoutRequestSender
 	 *            the reason
 	 * @param sLogoutReturnUrl
 	 *            the logout return url
+	 * @param  List<String>sessionindexes
+	 * 				optional list of sessionindexes to kill
 	 * @throws ASelectException
 	 *             the A-select exception
 	 */
-	@SuppressWarnings("unchecked")
 	public void sendLogoutRequest(HttpServletRequest request, HttpServletResponse response, String sTgT,
 			String sServiceProviderUrl, String sIssuerUrl, String sNameID, String reason, String sLogoutReturnUrl)
+		throws ASelectException
+	{	// for backward compatibility
+		sendLogoutRequest(request, response, sTgT, sServiceProviderUrl, sIssuerUrl, sNameID, reason, sLogoutReturnUrl, null);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void sendLogoutRequest(HttpServletRequest request, HttpServletResponse response, String sTgT,
+			String sServiceProviderUrl, String sIssuerUrl, String sNameID, String reason, String sLogoutReturnUrl, List<String>sessionindexes)
 		throws ASelectException
 	{
 		String sMethod = "sendLogoutRequest";
@@ -85,7 +95,8 @@ public class LogoutRequestSender
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Send LogoutRequest to: " + sServiceProviderUrl);
 		XMLObjectBuilderFactory builderFactory = org.opensaml.xml.Configuration.getBuilderFactory();
 
-		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(sServiceProviderUrl, sTgT, sNameID, sIssuerUrl, reason);
+//		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(sServiceProviderUrl, sTgT, sNameID, sIssuerUrl, reason);
+		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(sServiceProviderUrl, sTgT, sNameID, sIssuerUrl, reason, sessionindexes);
 		// TODO setValidityInterval with only NotOnOrAfter, but we need this from calling object (from aselect.xml)
 		SAMLObjectBuilder<Endpoint> endpointBuilder = (SAMLObjectBuilder<Endpoint>) builderFactory
 				.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);

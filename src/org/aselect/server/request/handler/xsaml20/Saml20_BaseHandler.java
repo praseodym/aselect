@@ -17,6 +17,7 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.Vector;
 import java.util.logging.Level;
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
@@ -185,8 +186,14 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 				SAMLConstants.SAML2_REDIRECT_BINDING_URI);
 
 		if (url != null) {
+			// RH, 20120201, sn
+			// Get list of sessions to kill if present in tgt
+			Vector<String> sessionindexes = (Vector<String>) htTGTContext.get("remote_sessionlist");	// can be null
+			// RH, 20120201, en
+//			logoutRequestSender.sendLogoutRequest(request, response, sTgT, url, sIssuer/* issuer */, sNameID,
+//					"urn:oasis:names:tc:SAML:2.0:logout:user", sLogoutReturnUrl);					// RH, 20120201, o
 			logoutRequestSender.sendLogoutRequest(request, response, sTgT, url, sIssuer/* issuer */, sNameID,
-					"urn:oasis:names:tc:SAML:2.0:logout:user", sLogoutReturnUrl);
+					"urn:oasis:names:tc:SAML:2.0:logout:user", sLogoutReturnUrl, sessionindexes);					// RH, 20120201, n
 		}
 		else {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "No IdP SingleLogoutService");
