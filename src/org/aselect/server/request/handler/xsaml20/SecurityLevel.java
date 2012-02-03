@@ -26,6 +26,8 @@ public class SecurityLevel
 
 	// Saml text
 	final private static String UNSPECIFIED_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified";
+	final private static String PASSWORD_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:Password";
+	
 	final private static String PASSWORDPROTECTEDTRANSPORT_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport";
 	final private static String MOBILETWOFACTORUNREGISTERED_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorUnregistered";
 	//final private static String MOBILETWOFACTORCONTRACT_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:TimeSyncToken";  // Novell
@@ -35,6 +37,7 @@ public class SecurityLevel
 	final private static int LEVEL_NOT_FOUND = -1;
 	final private static int LEVEL_MIN = 0;  // used for searching
 	final private static int LEVEL_NULL = 5;
+	final private static int LEVEL_POOR = 7;	// RH, 20120124, n
 	final private static int LEVEL_LOW = 10;
 	final private static int LEVEL_BETTER = 15;  // 20100714 was 5?!?
 	final private static int LEVEL_MEDIUM = 20;
@@ -49,13 +52,15 @@ public class SecurityLevel
 
 	// public final static String BN_EMPTY = "empty"; // no longer 20090501
 	final private static String BN_NUL = "5";
+	final private static String BN_POVER = "7";	// RH, 20120124, n
 	final private static String BN_LAAG = "10";
 	final private static String BN_BETTER = "15";
 	final private static String BN_MEDIUM = "20";
 	final private static String BN_HOOG = "30";
 	
 	final public static String BN_NOT_FOUND = "not_found";
-	private static String[] aAlllowedLevels = {BN_NUL, BN_LAAG, BN_BETTER, BN_MEDIUM,  BN_HOOG} ;
+//	private static String[] aAlllowedLevels = {BN_NUL, BN_LAAG, BN_BETTER, BN_MEDIUM,  BN_HOOG} ;	// RH, 20120124, o
+	private static String[] aAlllowedLevels = {BN_NUL, BN_POVER, BN_LAAG, BN_BETTER, BN_MEDIUM,  BN_HOOG} ;	// RH, 20120124, n
 	public static Set<String> ALLOWEDLEVELS = new HashSet( Arrays.asList(aAlllowedLevels) );
 
 	/**
@@ -87,6 +92,8 @@ public class SecurityLevel
 		switch (iLevel) {
 		case LEVEL_NULL:
 			return UNSPECIFIED_URI;
+		case LEVEL_POOR:	// RH, 20120124, sn
+			return PASSWORD_URI;	// RH, 20120124, en
 		case LEVEL_LOW:
 			return PASSWORDPROTECTEDTRANSPORT_URI;
 		case LEVEL_BETTER:
@@ -123,6 +130,8 @@ public class SecurityLevel
 		try {
 			if (sAuthnContextClassRefURI.equals(UNSPECIFIED_URI))
 				return String.valueOf(LEVEL_NULL);
+			else if (sAuthnContextClassRefURI.equals(PASSWORD_URI))		// RH, 20120124, sn
+				return String.valueOf(LEVEL_POOR);	// RH, 20120124, en
 			else if (sAuthnContextClassRefURI.equals(PASSWORDPROTECTEDTRANSPORT_URI))
 				return String.valueOf(LEVEL_LOW);
 			else if (sAuthnContextClassRefURI.equals(MOBILETWOFACTORUNREGISTERED_URI))
@@ -238,6 +247,8 @@ public class SecurityLevel
 				}
 				if (iCurrentBestBetrouwheidsNiveau == LEVEL_NULL)
 					iCurrentBestBetrouwheidsNiveau = LEVEL_LOW;
+				else if (iCurrentBestBetrouwheidsNiveau == LEVEL_POOR)			// RH, 20120124, sn
+					iCurrentBestBetrouwheidsNiveau = LEVEL_LOW;			// RH, 20120124, en
 				else if (iCurrentBestBetrouwheidsNiveau == LEVEL_LOW)
 					iCurrentBestBetrouwheidsNiveau = LEVEL_BETTER;
 				else if (iCurrentBestBetrouwheidsNiveau == LEVEL_BETTER)
@@ -282,6 +293,8 @@ public class SecurityLevel
 	{
 		if (sAuthnContextClassRef.equals(UNSPECIFIED_URI))
 			return BN_NUL;
+		else if (sAuthnContextClassRef.equals(PASSWORD_URI))				// RH, 20120124, sn
+			return BN_POVER;						// RH, 20120124, en
 		else if (sAuthnContextClassRef.equals(PASSWORDPROTECTEDTRANSPORT_URI))
 			return BN_LAAG;
 		else if (sAuthnContextClassRef.equals(MOBILETWOFACTORUNREGISTERED_URI))
@@ -333,6 +346,8 @@ public class SecurityLevel
 	{
 		if (iSecurityLevel == LEVEL_NULL)
 			return BN_NUL;
+		else if (iSecurityLevel == LEVEL_POOR)				// RH, 20120124, sn
+			return BN_POVER;							// RH, 20120124, en
 		else if (iSecurityLevel == LEVEL_LOW)
 			return BN_LAAG;
 		else if (iSecurityLevel == LEVEL_BETTER)
@@ -356,6 +371,8 @@ public class SecurityLevel
 	{
 		if (sCurrentAuthnContextClassRef.equals(UNSPECIFIED_URI))
 			return LEVEL_NULL;
+		else if (sCurrentAuthnContextClassRef.equals(PASSWORD_URI))						// RH, 20120124, sn
+			return LEVEL_POOR;									// RH, 20120124, en
 		else if (sCurrentAuthnContextClassRef.equals(PASSWORDPROTECTEDTRANSPORT_URI))
 			return LEVEL_LOW;
 		else if (sCurrentAuthnContextClassRef.equals(MOBILETWOFACTORUNREGISTERED_URI))
