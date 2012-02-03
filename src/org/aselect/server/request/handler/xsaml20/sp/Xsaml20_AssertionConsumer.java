@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -52,9 +53,11 @@ import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.core.*;
 import org.opensaml.saml2.metadata.ArtifactResolutionService;
 import org.opensaml.ws.soap.soap11.Envelope;
+import org.opensaml.xml.XMLObject;
 import org.opensaml.xml.XMLObjectBuilderFactory;
 import org.opensaml.xml.io.Unmarshaller;
 import org.opensaml.xml.io.UnmarshallerFactory;
+import org.opensaml.xml.schema.XSString;
 import org.opensaml.xml.schema.impl.XSStringImpl;
 import org.opensaml.xml.util.XMLHelper;
 import org.w3c.dom.*;
@@ -85,6 +88,12 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 	private boolean signingRequired = false;
 	// Get from aselect.xml <applications require_signing="false | true">
 	private boolean localityAddressRequired = false; // Do we need to verify localityAddress in the AuthnStatement
+	
+	private boolean includeSessionindexes = false;
+//	 should the SessionIndex(es) be included in the saml request, to be included the must be present in the tgt 
+//		and therefore previously been received in the assertion
+//	 if null value is not specified in aselect.xml
+
 
 	//
 	// Example configuration:
@@ -124,6 +133,14 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 		if ("true".equalsIgnoreCase(sLocalityAddressRequired)) {
 			setLocalityAddressRequired(true);
 		}
+		// RH, 20120201, sn
+		String sIncludeSessionindexes = ASelectConfigManager.getSimpleParam(oHandlerConfig, "include_sessionindexes", false);
+		if ("true".equalsIgnoreCase(sIncludeSessionindexes)) {
+			setIncludeSessionindexes(true);
+		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "include_sessionindexes: " + isIncludeSessionindexes());
+		// RH, 20120201, en
+
 
 		_tgtManager = TGTManager.getHandle();
 		_authenticationLogger = ASelectAuthenticationLogger.getHandle();
@@ -330,9 +347,12 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 			if (samlResponseObject instanceof Response) {
 				// SSO
 				Response samlResponse = (Response) samlResponseObject;
-				// _systemLogger.log(Level.INFO, MODULE, sMethod,
-				// "Received: \n"+XMLHelper.prettyPrintXML(samlResponse.getDOM()));
+				_systemLogger.log(Level.INFO, MODULE, sMethod,
+				 "Processing response: \n"+XMLHelper.prettyPrintXML(samlResponse.getDOM()));
 				// Detect if this is a successful or an error Response
+
+				
+				
 				String sStatusCode = samlResponse.getStatus().getStatusCode().getValue();
 				String sRemoteRid = samlResponse.getID();
 				
@@ -346,10 +366,17 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				
 				if (sStatusCode.equals(StatusCode.SUCCESS_URI)) {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Response was successful " + samlResponse.toString());
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Number of Assertions found:  " +  samlResponse.getAssertions().size());
 					Assertion samlAssertion = samlResponse.getAssertions().get(0);
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Assertion ID:" +samlAssertion.getID());
 					String sOrganization = samlAssertion.getIssuer().getValue();
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Issuer:" +sOrganization);
 					String sNameID = samlAssertion.getSubject().getNameID().getValue();
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "NameID:" + sNameID);
 					String sNameIDQualifier = samlAssertion.getSubject().getNameID().getNameQualifier();
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "NameIDQualifier:" + sNameIDQualifier);
+
+
 					// Now check for time interval validation
 					// We only check first object from the list
 					// First the assertion itself
@@ -369,12 +396,23 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "AuthnStatement subjectlocalityaddress was NOT valid");
 						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 					}
+					
+					// Get the (option) sessionindex from remote
+					String sSessionindex = samlAssertion.getAuthnStatements().get(0).getSessionIndex();
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Sessionindex:" + sSessionindex);
+					
+					
 					AuthnContext oAuthnContext = samlAssertion.getAuthnStatements().get(0).getAuthnContext();
 					List<AuthenticatingAuthority> authAuthorities = oAuthnContext.getAuthenticatingAuthorities();
 					String sAuthnAuthority = null;
 					if (authAuthorities != null && authAuthorities.size() > 0)
 						sAuthnAuthority = (String)authAuthorities.get(0).getURI();
 					String sAuthnContextClassRefURI = oAuthnContext.getAuthnContextClassRef().getAuthnContextClassRef();
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "AuthnContextClassRefURI:" +sAuthnContextClassRefURI);;
+					/////////////////////////	digid4	///////////////////////////////////////////
+					/// Digid4 still has to decide how to provide a "face2face" declaration 
+					//	String sAuthnContextDeclRefIssueMethod = samlAssertion.getAuthnStatements().get(0).getAuthnContext().
+					/////////////////////////	digid4	///////////////////////////////////////////
 					String sSelectedLevel = SecurityLevel.convertAuthnContextClassRefURIToLevel(sAuthnContextClassRefURI, _systemLogger);
 					// Check returned security level
 					HashMap htSessionContext = _oSessionManager.getSessionContext(sLocalRid);
@@ -402,9 +440,19 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 						while (iAttr.hasNext()) {
 							Attribute attr = iAttr.next();
 							String sAttrName = attr.getName();
-							XSStringImpl xsString = (XSStringImpl) attr.getOrderedChildren().get(0);
-							String sAttrValue = xsString.getValue();
-							_systemLogger.log(Level.INFO, MODULE, sMethod, "Name=" + sAttrName + " Value=" + sAttrValue);
+							
+							String sAttrValue = null;// RH, 20120124, sn
+							List <XMLObject> aValues = attr.getAttributeValues();
+							if ( aValues != null && aValues.size() == 1 ) {	// For now we only alllow single valued simple type xs:string attributes
+	                              XMLObject xmlObj = aValues.get(0);
+//								XSStringImpl xsString = (XSStringImpl) attr.getOrderedChildren().get(0);// RH, 20120124, so
+//								String sAttrValue = xsString.getValue();// RH, 20120124, o
+//								sAttrValue = xsString.getValue();// RH, 20120124, eo
+								sAttrValue = xmlObj.getDOM().getFirstChild().getTextContent();
+								_systemLogger.log(Level.INFO, MODULE, sMethod, "Name=" + sAttrName + " Value=" + sAttrValue);
+							} else {
+								_systemLogger.log(Level.INFO, MODULE, sMethod, "Only single valued attributes allowed, skipped attribute Name=" + sAttrName);
+							}	// RH, 20120124, en
 							if ("attributes".equals(sAttrName))
 								sEncodedAttributes = sAttrValue;
 							else
@@ -497,7 +545,29 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					
 					// This is the quickest way to get "name_id" into the Context
 					hmSamlAttributes.put("name_id", sNameID);  // also as plain attribute
+					
+					///////////// Digid4	//////////////////////////////
+					// must be made configurable and parameterized, still looking for some reference to identify the service (maybe issuer) 
+					String[] splittedNameId = sNameID.split(":");
+					if ( splittedNameId.length == 2 && splittedNameId[0].toUpperCase().startsWith("S") && splittedNameId[0].length() == 9 )	{		// for now this identifies as digid4
+						hmSamlAttributes.put("uid", splittedNameId[1]);
+						// add special attributes for digid4
+						if ( "S00000000".equalsIgnoreCase(splittedNameId[0]) ) {
+							hmSamlAttributes.put("bsn", splittedNameId[1]);
+							
+						} else if ( "S00000001".equalsIgnoreCase(splittedNameId[0]) ) {
+							hmSamlAttributes.put("sofi", splittedNameId[1]);
+							
+						} else if ( "S00000002".equalsIgnoreCase(splittedNameId[0]) ) {
+							hmSamlAttributes.put("anummer", splittedNameId[1]);
 
+						} else if ( "S00000100".equalsIgnoreCase(splittedNameId[0]) ) {
+							hmSamlAttributes.put("oeb", splittedNameId[1]);
+						}
+					}
+					/////////////////////////////////////////////////////
+					
+					
 					// 20100422, Bauke: no uid, then use NameID
 					String sUid = (String)hmSamlAttributes.get("uid");
 					if (sUid == null || sUid.equals(""))
@@ -514,6 +584,15 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					hmSamlAttributes.put("authsp_level", sSelectedLevel);  // default value, issueTGT will correct this
 					hmSamlAttributes.put("organization", sOrganization);
 					hmSamlAttributes.put("authsp", sOrganization);
+					
+					// RH, 20120201, sn
+					// also save the provided session if present, saml2 specs say there might be more than one session to track
+					if (  isIncludeSessionindexes() && sSessionindex != null && sSessionindex.length() > 0 ) {
+						Vector sessionindexes = new Vector<String>();
+						sessionindexes.add(sSessionindex);
+						hmSamlAttributes.put("remote_sessionlist", sessionindexes);
+					}
+					// RH, 20120201, en
 
 					// Bauke, 20081204: If we want to send the IdP token as an attribute
 					// to the application, we will need the following code:
@@ -797,5 +876,21 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 	public synchronized void setLocalityAddressRequired(boolean localityAddressRequired)
 	{
 		this.localityAddressRequired = localityAddressRequired;
+	}
+
+	/**
+	 * @return the includeSessionindexes
+	 */
+	public synchronized boolean isIncludeSessionindexes()
+	{
+		return includeSessionindexes;
+	}
+
+	/**
+	 * @param includeSessionindexes the includeSessionindexes to set
+	 */
+	public synchronized void setIncludeSessionindexes(boolean includeSessionindexes)
+	{
+		this.includeSessionindexes = includeSessionindexes;
 	}
 }
