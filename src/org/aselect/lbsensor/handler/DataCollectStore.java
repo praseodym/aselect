@@ -109,7 +109,8 @@ public class DataCollectStore
 				if (iAge > _iExportAfter) {
 					_oLbSensorLogger.log(Level.FINE, MODULE, sMethod, "EXPORT="+ts.timeSensorPack());
 					int iType = ts.getTimeSensorType();
-					String sType = iType==1? "filter": iType==2? "agent": iType==3? "server": "authsp";
+					// type should be at least 1 at this point
+					String sType = iType==-1? "unused": iType==0? "error": iType==1? "filter": iType==2? "agent": iType==3? "server": "authsp";
 					long iSpent = 1000*ts.td_spent.getSeconds()+ts.td_spent.getMicro();
 					String sLine = String.format("%s;%d;SIAM;SESSION_%s;%d;%s;SERVER;%s;%d;%s;SIAMID;999;%s",
 								_myIP, _myPort, ts.getTimeSensorId(), ts.getTimeSensorLevel(), sType, ts.td_start.toString().replace(".", ""),

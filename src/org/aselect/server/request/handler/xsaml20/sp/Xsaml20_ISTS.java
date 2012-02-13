@@ -435,7 +435,6 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			//
 			// We have the AuthnRequest, now get it to the other side
 			//
-// SUGGEST implement HTPPPOST binding and get back to user-agent with POST form
 			boolean useSha256 = (specialSettings != null && specialSettings.contains("sha256"));
 			if (_sHttpMethod.equals("GET")) {
 				// No use signing the AuthnRequest, it's even forbidden according to the Saml specs

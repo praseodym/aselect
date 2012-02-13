@@ -549,9 +549,10 @@ public class Tools
 			String sLast = TimeSensor.timeSensorMilli2Time(lLast);
 			String sAppId = (String)htSessionContext.get("app_id");
 			String sVisit = (String)htSessionContext.get("authsp_visited");
+			int iTimeSensorType = (sVisit!=null)? 4/*authsp*/: 3/*server*/;
 			// Thread is the last thread that contributed to processing
 		    String sDataLine = String.format("%s,%s,%s,%d,%d,%d,%s,%s,%s,%s,%s,%s", sOrig, (sUsi==null)? "": sUsi,
-		    		sAppId, 1/*complete flow*/, (sVisit!=null)?4/*authsp*/: 3/*server*/, Thread.currentThread().getId(),
+		    		sAppId, 1/*complete flow*/, iTimeSensorType, Thread.currentThread().getId(),
 		    		sFirstContact, sLast, sTotalSpent, Boolean.toString(bSuccess), sRid, (sTgt==null)? "": sTgt.substring(0,41));
 			long thenTime = System.currentTimeMillis();
 			oSysLog.log(Level.FINE, MODULE, sMethod, "Spent before reporting="+(thenTime - nowTime)+" mSec"); // includes 1 reportDataToSensor
