@@ -148,7 +148,7 @@ public class DataCollectStore
 		_oLbSensorLogger.log(Level.FINE, MODULE, sMethod, "EXPORT="+ts.timeSensorPack()+" iType="+iType);
 		// type should be at least 1 at this point
 		String sType = iType==1? "filter": iType==2? "agent": iType==3? "server":
-					iType==4? "authsp": iType==5? "user": iType==0? "error": iType==-1? "unused": "?:"+Integer.toString(iType);
+					iType==4? "authsp": iType==5? "remote": iType==0? "error": iType==-1? "unused": "?:"+Integer.toString(iType);
 		long iSpent = 1000*ts.td_spent.getSeconds()+ts.td_spent.getMicro();
 		// Fieldnumbers in doc:        1  2    3  4  5  6      7  8  9 10     11 12 13
 		String sLine = String.format("%s;%d;SIAM;%s;%d;%s;SERVER;%s;%d;%s;SIAMID;%s;%s",
