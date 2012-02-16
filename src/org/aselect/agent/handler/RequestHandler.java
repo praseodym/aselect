@@ -507,31 +507,31 @@ public class RequestHandler extends Thread
 			// check which API request was sent and let it be processed
 			_sErrorCode = Errors.ERROR_ASELECT_SUCCESS;  // optimistic default
 			if (sRequest.equals("authenticate")) {
-				timeSensor.setTimeSender("agt_aut");
+				timeSensor.setTimeSensorSender("agt_aut");
 				processAuthenticateRequest(oInputMessage, oOutputMessage);
 			}
 			else if (sRequest.equals("verify_credentials")) {
-				timeSensor.setTimeSender("agt_vcr");
+				timeSensor.setTimeSensorSender("agt_vcr");
 				processVerifyCredentialsRequest(oInputMessage, oOutputMessage);
 			}
 			else if (sRequest.equals("verify_ticket")) {
-				timeSensor.setTimeSender("agt_vtk");
+				timeSensor.setTimeSensorSender("agt_vtk");
 				processVerifyTicketRequest(oInputMessage, oOutputMessage);
 			}
 			else if (sRequest.equals("kill_ticket")) {
-				timeSensor.setTimeSender("agt_ktk");
+				timeSensor.setTimeSensorSender("agt_ktk");
 				processKillTicketRequest(oInputMessage, oOutputMessage);
 			}
 			else if (sRequest.equals("kill_tgt")) {
-				timeSensor.setTimeSender("agt_ktg");
+				timeSensor.setTimeSensorSender("agt_ktg");
 				processKillTgtRequest(oInputMessage, oOutputMessage);
 			}
 			else if (sRequest.equals("attributes")) {
-				timeSensor.setTimeSender("agt_atr");
+				timeSensor.setTimeSensorSender("agt_atr");
 				processAttributesRequest(oInputMessage, oOutputMessage);
 			}
 			else if (sRequest.equals("set_authorization_rules")) {
-				timeSensor.setTimeSender("agt_rul");
+				timeSensor.setTimeSensorSender("agt_rul");
 				processSetAuthorizationRulesRequest(oInputMessage, oOutputMessage);
 			}
 			else { // Unknown or unsupported request

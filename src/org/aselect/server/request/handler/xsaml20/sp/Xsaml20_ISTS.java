@@ -215,7 +215,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			//if (cnt == 1) {
 			//	sFederationUrl = MetaDataManagerSp.getHandle().getDefaultIdP(); // there can only be one
 			//}
-			if (bIdpSelectForm && (sFederationUrl == null || sFederationUrl.equals(""))) {
+			if (bIdpSelectForm && (!Utils.hasValue(sFederationUrl))) {
 				// No Federation URL choice made yet, allow the user to choose
 				String sSelectForm = _configManager.loadHTMLTemplate(null, "idpselect", _sUserLanguage, _sUserCountry);
 				sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);

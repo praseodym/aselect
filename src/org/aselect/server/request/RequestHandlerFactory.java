@@ -328,11 +328,6 @@ public class RequestHandlerFactory
 			IRequestHandler oRequestHandler = (IRequestHandler) entry.getValue();
 			oRequestHandler.destroy();
 		}
-		/*
-		 * Enumeration enumHandlers = _htRequestHandlers.elements(); while (enumHandlers.hasMoreElements()) {
-		 * IAuthnRequestHandler oRequestHandler = (IAuthnRequestHandler)enumHandlers.nextElement();
-		 * oRequestHandler.destroy(); }
-		 */
 	}
 
 	/**

@@ -494,7 +494,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplBrowREQ null request sUrl=" + sUrl);
 
 			if (htServiceRequest.containsKey("aselect_credentials_uid"))
-				showUserInfo(htServiceRequest, _servletResponse);
+				showUserInfo(htServiceRequest, _servletResponse);  // pauses sensor
 			else {
 				String sServerInfoForm = _configManager.getForm("serverinfo", _sUserLanguage, _sUserCountry);
 				sServerInfoForm = Utils.replaceString(sServerInfoForm, "[message]", " ");
@@ -1272,8 +1272,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		// We need the user's consent to continue
 		String sReqConsent = (String) htServiceRequest.get("consent");
 		if ("true".equals(sReqConsent) || "false".equals(sReqConsent)) {
-			Tools.resumeSensorData(_systemLogger, _htSessionContext);
-			_sessionManager.update(sRid, _htSessionContext); // Write session
+			// 20120216: Already resumed in processBrowserRequest: Tools.resumeSensorData(_systemLogger, _htSessionContext);
+			// 20120216: _sessionManager.update(sRid, _htSessionContext); // Write session
 		}
 		if ("true".equals(sReqConsent)) { // new consent given
 			if (setConsentCookie) {
@@ -1390,7 +1390,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					if (sFName != null && !"".equals(sFName)) {
 						sAsUrl = sAsUrl + "&" + PARM_REQ_FRIENDLY_NAME + "="  +  URLEncoder.encode(sFName, "UTF-8");
 					}
-				} catch (ASelectException ae) {
+				}
+				catch (ASelectException ae) {
 					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Redirect without FriendlyName. Could not find or encode FriendlyName for: " + sAppId );
 				}
 				// RH, 20100907, en
@@ -1591,7 +1592,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			
 			// 20111013, Bauke: added absent phonenumber handling
 			HashMap htResponse = startAuthentication(sRid, htServiceRequest);
-			String sResultCode = (String) htResponse.get("result");			
+			String sResultCode = (String) htResponse.get("result");
 			if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to create redirect url, result="+sResultCode);
 				throw new ASelectException(sResultCode);
@@ -1619,7 +1620,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				// RH, 20100907, en
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIRECT " + sRedirectUrl);
 				if (sPopup == null || sPopup.equalsIgnoreCase("false")) {
-					Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+					Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102, control goes to a different server
 					_htSessionContext.put("authsp_visited", "true");
 					_sessionManager.update(sRid, _htSessionContext); // Write session
 					servletResponse.sendRedirect(sRedirectUrl);
@@ -1632,7 +1633,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				String strFriendlyName = _configManager.getParam(authSPsection, "friendly_name");
 				sPopupForm = Utils.replaceString(sPopupForm, "[authsp]", strFriendlyName);
 				sPopupForm = _configManager.updateTemplate(sPopupForm, _htSessionContext);
-				Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+				Tools.pauseSensorData(_systemLogger, _htSessionContext);  // 20111102, control to the user
 				_htSessionContext.put("authsp_visited", "true");
 				_sessionManager.update(sRid, _htSessionContext); // Write session
 				pwOut.println(sPopupForm);

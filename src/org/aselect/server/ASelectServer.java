@@ -469,11 +469,10 @@ public class ASelectServer extends ASelectHttpServlet
 	@Override
 	public void destroy()
 	{
+		_systemLogger.log(Level.INFO, MODULE, "destroy", "Stop server");
 		closeResources();
-
 		_systemLogger.log(Level.INFO, MODULE, "destroy", "A-Select server stopped.");
-		closeLoggers();
-
+		closeLoggers();  // no more logging
 		super.destroy();
 	}
 
@@ -558,8 +557,11 @@ public class ASelectServer extends ASelectHttpServlet
 	 */
 	private void closeResources()
 	{
+		String sMethod = "closeResources";
+		
 		// stop the Gui if applicable
 		if (_adminMonitor != null) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Stop GUI"); 
 			_adminMonitor.stop();
 			try {
 				_adminMonitor.dispose();
@@ -569,22 +571,36 @@ public class ASelectServer extends ASelectHttpServlet
 			}
 		}
 		// Stop attribute gatherer
-		if (_oAttributeGatherer != null)
+		if (_oAttributeGatherer != null) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Stop Gatherer"); 
 			_oAttributeGatherer.destroy();
-
+		}
 		// Stop request handler factory
-		if (_oRequestHandlerFactory != null)
+		if (_oRequestHandlerFactory != null) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Stop Handlers"); 
 			_oRequestHandlerFactory.destroy();
-
+		}
 		// Stop & destroy components that perform cleanup
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Stop SAM"); 
 		ASelectSAMAgent.getHandle().destroy();
-		if (_tgtManager != null)
+		if (_tgtManager != null) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Stop TGT Manager"); 
 			_tgtManager.destroy();
+		}
 		
+		try { java.lang.Thread.sleep(1000);	} catch (InterruptedException e) {}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Stop Session Manager"); 
 		_sessionManager.destroy();
+		try { java.lang.Thread.sleep(1000);	} catch (InterruptedException e) {}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Stop Crypto"); 
 		_cryptoEngine.stop();
 		
-		_timerSensorThread.cancel();
+		if (_timerSensorThread != null) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Stop TimeSensor");
+			_timerSensorThread.cancel();
+		}
+		try { java.lang.Thread.sleep(1000);	} catch (InterruptedException e) {}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Resources closed");
 	}
 
 	/**

@@ -772,7 +772,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 					"} AUTHN Authentication request was not successful, result_code=" + sResultCode);
 			throw new ASelectException(Errors.ERROR_ASELECT_IO);
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "} AUTHN htResponse=" + hmResponse);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "} AUTHN");
 		return hmResponse;
 	}
 

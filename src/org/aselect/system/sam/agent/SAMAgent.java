@@ -250,10 +250,6 @@ public class SAMAgent
 				Set keys = _htResourceGroups.keySet();
 				for (Object s : keys) {
 					String sKey = (String) s;
-					// Enumeration enumKeys = _htResourceGroups.keys();
-					// while (enumKeys.hasMoreElements())
-					// {
-					// String sKey = (String)enumKeys.nextElement();
 					SAMResourceGroup oSAMResourceGroup = (SAMResourceGroup) _htResourceGroups.get(sKey);
 					oSAMResourceGroup.destroy();
 					oSAMResourceGroup.interrupt();

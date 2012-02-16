@@ -101,7 +101,7 @@ public class TimeSensor
 		public void setMicro(long tvUsec) { tv_usec = tvUsec; }
 	}
 	
-    private String timeSender = "";  // the sending process
+    private String timeSensorSender = "";  // the sending process
 	private String timeSensorId = "";  // unique sensor id
     private String timeSensorRid = "";  // session id
 	private String timeSensorTgt = ""; // ticket
@@ -137,7 +137,7 @@ public class TimeSensor
     public TimeSensor(SystemLogger systemLogger, String sSenderId)
     {
 		_oSystemLogger = systemLogger;
-		timeSender = sSenderId;
+		timeSensorSender = sSenderId;
     }
     
     /**
@@ -149,7 +149,7 @@ public class TimeSensor
 	 */
     public String timeSensorPack()
     {
-	    return String.format("%s,%s,%s,%d,%d,%d,%s,%s,%s,%s,%s,%s", timeSender, timeSensorId,
+	    return String.format("%s,%s,%s,%d,%d,%d,%s,%s,%s,%s,%s,%s", timeSensorSender, timeSensorId,
 	    			timeSensorAppId, timeSensorLevel, timeSensorType, timeSensorThread,
 	    			td_start.toString(), td_finish.toString(), td_spent.toString(),
 	    			isTimeSensorSuccess(), timeSensorRid, timeSensorTgt);
@@ -170,7 +170,7 @@ public class TimeSensor
     	//_oSystemLogger.log(Level.INFO, MODULE, sMethod, "flds="+sUnpacked.length);
     	int i = 0;
     	try {
-	    	timeSender = sUnpacked[i++];
+	    	timeSensorSender = sUnpacked[i++];
 	    	timeSensorId = sUnpacked[i++];
 	    	timeSensorAppId = sUnpacked[i++];
 	    	timeSensorLevel = Integer.parseInt(sUnpacked[i++]);
@@ -277,8 +277,8 @@ public class TimeSensor
 	public String getTimeSensorTgt() { return timeSensorTgt; }
 	public void setTimeSensorTgt(String timeSensorTgt) { this.timeSensorTgt = timeSensorTgt.substring(0, 41); }
 
-	public String getTimeSender() { return timeSender; }
-	public void setTimeSender(String timeSender) { this.timeSender = timeSender; }
+	public String getTimeSensorSender() { return timeSensorSender; }
+	public void setTimeSensorSender(String timeSender) { this.timeSensorSender = timeSender; }
 
 	public boolean isTimeSensorSuccess() { return timeSensorSuccess; }
 	public void setTimeSensorSuccess(boolean timeSensorSuccess) { this.timeSensorSuccess = timeSensorSuccess; }

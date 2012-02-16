@@ -734,6 +734,8 @@ public class StorageManager
 			
 			if (_lExpireTime > 0)
 				_bGo = true;
+			
+			_systemLogger.log(Level.FINEST, MODULE, "init", "Init Cleaner: "+_sId+" expireTime="+_lExpireTime+" go="+_bGo);
 		}
 
 		/**
@@ -769,18 +771,16 @@ public class StorageManager
 					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Cleaned-up: "+_sId);
 				}
 				catch (ASelectStorageException eAS) {
-					// _systemLogger.log(Level.INFO, MODULE, sMethod,
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "The storage cleanup failed", eAS);
 				}
 				catch (InterruptedException eI) {
 					// Do nothing if interrupted
 				}
 				catch (Exception e) {
-					// _systemLogger.log(Level.INFO, MODULE, sMethod,
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "The cleaner could not do her work properly", e);
 				}
 			}
-			_systemLogger.log(Level.FINER, MODULE, sMethod, "The cleaner has stopped: " + this.getClass());
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "The cleaner has stopped: " + this.getClass()+" id="+_sId);
 		}
 
 		/**

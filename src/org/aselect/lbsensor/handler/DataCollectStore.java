@@ -23,8 +23,9 @@ import org.aselect.system.utils.Utils;
 import org.aselect.system.utils.TimeSensor.TimeVal;
 
 /**
+ * The Class DataCollectStore.
+ * 
  * @author bauke
- *
  */
 public class DataCollectStore
 {
@@ -45,7 +46,9 @@ public class DataCollectStore
 		_oLbSensorLogger.log(Level.INFO, MODULE, "DataCollectStore", "Created"); 
 	}
 
-	// This is a singleton
+	/**
+	 * This is a singleton, get it's handle.
+	 */
 	public static DataCollectStore getHandle()
 	{
 		if (_oDataCollectStore == null) {
@@ -54,14 +57,23 @@ public class DataCollectStore
 		return _oDataCollectStore;
 	}
 	
+	/**
+	 * Add new data to the entry store.
+	 * 
+	 * @param sKey
+	 *            the key
+	 * @param ts
+	 *            the TimeSensor struct
+	 */
 	synchronized public void addEntry(String sKey, TimeSensor ts)
 	{
 		String sMethod = "addEntry";
 		
 		//_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Get "+sKey);
+		// Look for a level 1 TimeSensorId record
 		TimeSensor tsStore = dataStore.get(sKey);
 		
-		if (tsStore == null) {
+		if (tsStore == null) {  // ID is not present yet
 			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "NEW "+sKey+ " data="+ts.timeSensorPack());
 			dataStore.put(sKey, ts);
 		}
@@ -75,7 +87,7 @@ public class DataCollectStore
 			if (tsStore.td_finish.timeValCompare(ts.td_finish) < 0) {  // save highest finish time
 				// ts is more recent, use it's values
 				tsStore.td_finish = ts.td_finish;
-				tsStore.setTimeSender(ts.getTimeSender());
+				tsStore.setTimeSensorSender(ts.getTimeSensorSender());
 				tsStore.setTimeSensorSuccess(ts.isTimeSensorSuccess());
 			}
 			
@@ -88,8 +100,14 @@ public class DataCollectStore
 			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "UPD "+sKey+ " data="+tsStore.timeSensorPack());
 			dataStore.put(sKey, tsStore);
 		}
+		
+		// And store the detail as a level 2 line
+		exportSingleEntry(ts, 2);
 	}
 	
+	/**
+	 * Export all entries due to the .csv file.
+	 */
 	synchronized public void exportEntries()
 	{
 		String sMethod = "exportEntries";
@@ -107,18 +125,7 @@ public class DataCollectStore
 				long iAge = tv.getSeconds() - ts.td_start.getSeconds();
 				//_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "key="+sKey+" sender="+ts.getTimeSender()+" age="+iAge);
 				if (iAge > _iExportAfter) {
-					_oLbSensorLogger.log(Level.FINE, MODULE, sMethod, "EXPORT="+ts.timeSensorPack());
-					int iType = ts.getTimeSensorType();
-					// type should be at least 1 at this point
-					String sType = iType==-1? "unused": iType==0? "error": iType==1? "filter": iType==2? "agent": iType==3? "server": "authsp";
-					long iSpent = 1000*ts.td_spent.getSeconds()+ts.td_spent.getMicro();
-					String sLine = String.format("%s;%d;SIAM;SESSION_%s;%d;%s;SERVER;%s;%d;%s;SIAMID;999;%s",
-								_myIP, _myPort, ts.getTimeSensorId(), ts.getTimeSensorLevel(), sType, ts.td_start.toString().replace(".", ""),
-								iSpent, ts.getTimeSensorAppId(), Boolean.toString(ts.isTimeSensorSuccess()));
-					
-					//long now = System.currentTimeMillis();
-					appendToFile(_sExportFile, sLine);
-					_oLbSensorLogger.log(Level.FINE, MODULE, sMethod, "Append["+sLine+"]"/*+" mSec="+(System.currentTimeMillis() - now)*/);
+					exportSingleEntry(ts, /* total overall = */ 1);
 					dataStore.remove(sKey);  // get's us a java.util.ConcurrentModificationException
 				}
 			}
@@ -128,6 +135,40 @@ public class DataCollectStore
 		}
 	}
 
+	/**
+	 * Export single entry to .csv file.
+	 * 
+	 * @param ts - the TimeSensor data
+	 * @param exportLevel - the level to be stored in the .csv file
+	 */
+	private void exportSingleEntry(TimeSensor ts, int exportLevel)
+	{
+		String sMethod = "exportSingleEntry";
+		int iType = ts.getTimeSensorType();
+		_oLbSensorLogger.log(Level.FINE, MODULE, sMethod, "EXPORT="+ts.timeSensorPack()+" iType="+iType);
+		// type should be at least 1 at this point
+		String sType = iType==1? "filter": iType==2? "agent": iType==3? "server":
+					iType==4? "authsp": iType==5? "user": iType==0? "error": iType==-1? "unused": "?:"+Integer.toString(iType);
+		long iSpent = 1000*ts.td_spent.getSeconds()+ts.td_spent.getMicro();
+		// Fieldnumbers in doc:        1  2    3  4  5  6      7  8  9 10     11 12 13
+		String sLine = String.format("%s;%d;SIAM;%s;%d;%s;SERVER;%s;%d;%s;SIAMID;%s;%s",
+					_myIP, _myPort, /*4*/ts.getTimeSensorSender(), /*5*/exportLevel, 
+					/*6*/sType, /*8*/ts.td_start.toString().replace(".", ""),
+					/*9*/iSpent, ts.getTimeSensorAppId(), /*12*/ts.getTimeSensorId(), Boolean.toString(ts.isTimeSensorSuccess()));
+		
+		//long now = System.currentTimeMillis();
+		appendToFile(_sExportFile, sLine);
+		_oLbSensorLogger.log(Level.FINE, MODULE, sMethod, "Append["+sLine+"]"/*+" mSec="+(System.currentTimeMillis() - now)*/);
+	}
+
+	/**
+	 * Append a line to a file.
+	 * 
+	 * @param fileName
+	 *            the file name
+	 * @param sLine
+	 *            the line to be added
+	 */
 	public void appendToFile(String fileName, String sLine)
 	{
 		String sMethod = "appendToFile";

@@ -685,6 +685,7 @@ public class CryptoEngine
 	public void stop()
 	{
 		if (_bIsActive) {
+			_systemLogger.log(Level.WARNING, MODULE, "stop", "Stop Crypto");
 			_bIsActive = false;
 			_storageManager.destroy();
 			_storageManager = null;

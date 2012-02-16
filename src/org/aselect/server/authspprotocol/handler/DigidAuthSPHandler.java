@@ -305,11 +305,12 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			htRequest.put("shared_secret", sSharedSecret);
 			htRequest.put("a-select-server", sASelectServerId);
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Send to DigiD=" + sASelectServerUrl + " req="
-					+ hashtable2CGIMessage(htRequest));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Send to DigiD=" + sASelectServerUrl +
+					" req=" + hashtable2CGIMessage(htRequest));
 
 			// Send to DigiD!
 			HashMap htResponse = null;
+			Tools.pauseSensorData(_systemLogger, htSessionContext);  // 20120215
 			try {
 				htResponse = _oClientCommunicator.sendMessage(htRequest, sASelectServerUrl);
 			}
@@ -317,6 +318,10 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not send authentication request to: "
 						+ sASelectServerUrl);
 				throw new ASelectException(Errors.ERROR_ASELECT_IO);
+			}
+			finally {
+				// Time in between should be attributed to DigiD
+				Tools.resumeSensorData(_systemLogger, htSessionContext);  // 20120215
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Result=" + htResponse);
 			
