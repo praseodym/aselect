@@ -487,7 +487,7 @@ char *aselect_filter_get_param(pool *pPool, char *pcArgs, char *pcParam, char *p
 char *aselect_filter_url_encode(pool *pPool, const char *pszValue)
 {
     static char *_safe = ".-*_";
-    char szHex[4];
+    char szHex[4+4];
     int len;
     char *s, *result;
 
@@ -503,10 +503,12 @@ char *aselect_filter_url_encode(pool *pPool, const char *pszValue)
             len += 3;
     }
 
-    result = s = (char *)ap_palloc(pPool, len+1);
+    result = s = (char *)ap_palloc(pPool, len+1+10);
     for (; *pszValue; ++pszValue)
     {
-        if (isalnum(*pszValue) ||
+	if ((unsigned char)*pszValue >= 0x80) // leave 8-bit alone
+            *(s++) = *pszValue;
+        else if (isalnum(*pszValue) ||
             (strchr(_safe, *pszValue) != NULL))
         {
             // no change
@@ -975,7 +977,7 @@ static struct timeval timer_plus(struct timeval p1, struct timeval p2)
 
 static struct timeval timer_minus(struct timeval p1, struct timeval p2)
 {
-    struct timeval tv;
+    struct timeval tv;
 
     tv.tv_sec = p1.tv_sec - p2.tv_sec;
     tv.tv_usec = p1.tv_usec - p2.tv_usec;
@@ -989,6 +991,7 @@ static struct timeval timer_minus(struct timeval p1, struct timeval p2)
 char *timer_usi(pool *pPool, TIMER_DATA *pTimer)
 {
     static char buf[60];
+
     if (!pTimer) return "0";
     sprintf(buf, "%ld.%06ld", pTimer->td_start.tv_sec, pTimer->td_start.tv_usec);
     return buf;

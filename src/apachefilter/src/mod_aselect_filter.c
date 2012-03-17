@@ -77,6 +77,7 @@ module AP_MODULE_DECLARE_DATA aselect_filter_module;
 //static handler_rec      aselect_filter_handlers[];
 static const command_rec    aselect_filter_cmds[];
 
+char *version_number = "====subversion_232====";
 
 // -----------------------------------------------------
 // Functions 
@@ -255,7 +256,7 @@ int aselect_filter_upload_authz_rules(PASELECT_FILTER_CONFIG pConfig, server_rec
 	    TRACE1("ASELECT_FILTER:: Agent returned error %s while uploading authorization rules", pcResponse);
             return 0;
         }
-    }
+    }
     else {
         TRACE("aselect_filter_upload_authz_rules: Out of memory");
         return 0;
@@ -1261,7 +1262,7 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 			char condName[400], ldapName[400], attrName[200], buf[600];
 			int constant;
 
-			TRACE2("aselect_filter_attribute_check:: %d: %s", i, pConfig->pAttrFilter[i]);
+			TRACE2("attribute_check:: %d: %s", i, pConfig->pAttrFilter[i]);
 			splitAttrFilter(pConfig->pAttrFilter[i], condName, sizeof(condName),
 				    ldapName, sizeof(ldapName), attrName, sizeof(attrName));
 
@@ -1317,17 +1318,22 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 			    char *encoded, *decoded;
 
 			    // p points to the attribute value
+			    TRACE1("attribute_check:: value=%s", p);
 			    if (constant) {
 				p = replaceAttributeValues(pPool, pcAttributes, p, TRUE/*urlDecode*/); // was FALSE
 			    }
+			    TRACE1("attribute_check:: value=%s", p);
 			    if (strcmp(attrName, "AuthHeader") != 0) { // 20111128
 				// Only for passing parameters in the URL parameters
+				TRACE1("url_encode :: value=%s", p);
 				p = aselect_filter_url_encode(pPool, p); // 20111206
+				TRACE1("url_encoded:: value=%s", p);
 				if (newArgs[0])
 				    newArgs = ap_psprintf(pPool, "%s&%s=%s", newArgs, attrName, p);
 				else
 				    newArgs = ap_psprintf(pPool, "%s=%s", attrName, p);
 			    }
+			    TRACE1("attribute_check:: newArgs=%s", newArgs);
 
 			    // 20111206: p is no longer url encoded
 			    if (strcmp(attrName, "AuthHeader") == 0) {
@@ -1342,6 +1348,7 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 				//aselect_filter_url_decode(decoded); //20111206
 				ap_table_set(headers_in, ap_psprintf(pPool, "X-%s", attrName), p);  // 20111206 decoded);
 			    }
+			    TRACE1("attribute_check:: purge=%s", pRequest->args);
 
 			    // A value for 'attrname' was added
 			    // Remove the same attribute from the original attributes (if present), can occur more than once
@@ -1409,7 +1416,7 @@ static void splitAttrFilter(char *attrFilter, char *condName, int condLen,
 		char *ldapName, int ldapLen, char *attrName, int attrLen)
 {
     char *p, *q, buf[40];
-    int len;
+    int len, i;
 
     p = attrFilter;
     if (condName) condName[0] = '\0';

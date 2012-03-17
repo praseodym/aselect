@@ -52,7 +52,6 @@
 #include "ap_sha1.h"
 #endif
 
-
 /*
  * Apache 2.0 <--> 1.3 compatibility defs (see also apr_compat.h)
  */
