@@ -66,7 +66,6 @@ import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTaggedObject;
 
-// TODO: Auto-generated Javadoc
 /**
  * The PKI Manager. <br>
  * <br>
@@ -90,8 +89,11 @@ public class PKIManager
 	private String _sCaKeyStoreLocation;
 	private HashMap _htCRLs;
 	private HashMap _htFailedCRLs;
+	private Thread _tAutoCrlUpdater;
 	private AutoCRLUpdater _oAutoCrlUpdater;
+	private Thread _tCrlRecoverer;
 	private CRLRecoverer _oCrlRecoverer;
+	private Thread _tPkiAdminServer;
 	private PKIAdminServer _oPkiAdminServer;
 
 	/** The logger that logs system information. */
@@ -112,7 +114,7 @@ public class PKIManager
 	public void init(Object oConfig, AuthSPSystemLogger oSystemLogger)
 		throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		_oConfig = oConfig;
 		_systemLogger = oSystemLogger;
 		_htCRLs = new HashMap();
@@ -120,6 +122,7 @@ public class PKIManager
 
 		Integer intTmp;
 		_oConfigManager = AuthSPConfigManager.getHandle();
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "PKI mgr init");
 		try {
 			String sCaValidationCheck = _oConfigManager.getParam(oConfig, "enabled");
 			if (!sCaValidationCheck.equalsIgnoreCase("false")) {
@@ -137,17 +140,20 @@ public class PKIManager
 				// init and start auto CRL updater Thread
 				intTmp = new Integer(_oConfigManager.getParam(oConfig, "crl_update_timer"));
 				_oAutoCrlUpdater = new AutoCRLUpdater(intTmp.intValue());
-				new Thread(_oAutoCrlUpdater).start();
+				_tAutoCrlUpdater = new Thread(_oAutoCrlUpdater);
+				_tAutoCrlUpdater.start();
 
 				// init and start auto CRL Recoverer Thread
 				intTmp = new Integer(_oConfigManager.getParam(oConfig, "crl_recover_timer"));
 				_oCrlRecoverer = new CRLRecoverer(intTmp.intValue());
-				new Thread(_oCrlRecoverer).start();
+				_tCrlRecoverer = new Thread(_oCrlRecoverer);
+				_tCrlRecoverer.start();
 
 				// init and start Admin Server Thread
 				intTmp = new Integer(_oConfigManager.getParam(oConfig, "pki_admin_port"));
 				_oPkiAdminServer = new PKIAdminServer(intTmp.intValue());
-				new Thread(_oPkiAdminServer).start();
+				_tPkiAdminServer = new Thread(_oPkiAdminServer);
+				_tPkiAdminServer.start();
 			}
 		}
 		catch (ASelectException e) {
@@ -161,9 +167,12 @@ public class PKIManager
 	 */
 	public void destroy()
 	{
-		_oAutoCrlUpdater.destroy();
-		_oCrlRecoverer.destroy();
-		_oPkiAdminServer.destroy();
+		String sMethod = "destroy";
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Destroy running PKI mgr threads");
+		if (_oAutoCrlUpdater!=null) _oAutoCrlUpdater.destroy();
+		if (_oCrlRecoverer!=null) _oCrlRecoverer.destroy();
+		if (_oPkiAdminServer!=null) _oPkiAdminServer.destroy();
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Running PKI mgr threads destroyed");
 	}
 
 	/**
@@ -847,7 +856,8 @@ public class PKIManager
 		 * @param lSeconds
 		 *            the interval between the checks.
 		 */
-		public AutoCRLUpdater(long lSeconds) {
+		public AutoCRLUpdater(long lSeconds)
+		{
 			_lMilliSeconds = lSeconds * 1000;
 			_bActive = true;
 		}
@@ -860,9 +870,15 @@ public class PKIManager
 		 */
 		public void run()
 		{
+			String sMethod = "AutoCRLUpdater.run";
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Run "+_bActive);
 			while (_bActive) {
 				try {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Sleep "+_lMilliSeconds);
+					System.out.println(sMethod+" Sleep "+_lMilliSeconds);
 					Thread.sleep(_lMilliSeconds);
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Slept "+_lMilliSeconds);
+					System.out.println(sMethod+" Slept "+_lMilliSeconds);
 					Set keys = _htCRLs.keySet();
 					for (Object oCrlKey : keys) {
 						// Enumeration oCrlKeys = _htCRLs.keys();
@@ -879,17 +895,18 @@ public class PKIManager
 							catch (ASelectException e) {
 								_htFailedCRLs.put(oCrlKey, e);
 								_htCRLs.remove(oCrlKey);
-								_systemLogger.log(Level.WARNING, MODULE, "AutoCRLUpdater",
+								_systemLogger.log(Level.WARNING, MODULE, sMethod,
 										"Reloading CRL for CA with alias: " + oCrlKey.toString() + " failed");
 							}
 						}
 					}
 				}
 				catch (InterruptedException e) {
-					_systemLogger.log(Level.INFO, MODULE, "AutoCRLUpdater", "Thread Stopped");
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "InterruptedException");
 				}
+				System.out.println(sMethod+" Stopped");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Stopped");
 			}
-
 		}
 
 		/**
@@ -911,11 +928,12 @@ public class PKIManager
 		 */
 		public void destroy()
 		{
+			String sMethod = "AutoCRLUpdater.destroy";
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "---");
 			_bActive = false;
-			try
-			// interrupt if sleeping
-			{
-				Thread.currentThread().interrupt();
+			try {  // interrupt if sleeping
+				_tAutoCrlUpdater.interrupt();
+				//Thread.currentThread().interrupt();
 			}
 			catch (Exception e) {
 				// no logging
@@ -948,7 +966,8 @@ public class PKIManager
 		 * @param lSeconds
 		 *            the interval between the checks.
 		 */
-		public CRLRecoverer(long lSeconds) {
+		public CRLRecoverer(long lSeconds)
+		{
 			_lMilliSeconds = lSeconds * 1000;
 			_bActive = true;
 		}
@@ -961,29 +980,33 @@ public class PKIManager
 		 */
 		public void run()
 		{
+			String sMethod = "CRLRecoverer.run";
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Run "+_bActive);
 			while (_bActive) {
 				try {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Sleep "+_lMilliSeconds);
+					System.out.println(sMethod+" Sleep "+_lMilliSeconds);
 					Thread.sleep(_lMilliSeconds);
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Slept "+_lMilliSeconds);
+					System.out.println(sMethod+" Slept "+_lMilliSeconds);
 					Set keys = _htFailedCRLs.keySet();
 					for (Object oFailedCrlKey : keys) {
-						// Enumeration oFailedCrlKeys = _htFailedCRLs.keys();
-						// while(oFailedCrlKeys.hasMoreElements())
-						// {
-						// Object oFailedCrlKey = oFailedCrlKeys.nextElement();
 						try {
 							loadCRLForCA((String) oFailedCrlKey);
 							_htFailedCRLs.remove(oFailedCrlKey);
 						}
 						catch (ASelectException e) {
-							_systemLogger.log(Level.WARNING, MODULE, "CRLRecoverer",
+							_systemLogger.log(Level.WARNING, MODULE, sMethod,
 									"Reloading CRL for CA with alias: " + oFailedCrlKey.toString() + " failed");
 						}
 					}
 				}
 				catch (InterruptedException e) {
-					_systemLogger.log(Level.INFO, MODULE, "CRLRecoverer", "Thread Stopped");
+					System.out.println(sMethod+" InterruptedException");
 				}
 			}
+			System.out.println(sMethod+" Stopped");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Stopped");
 		}
 
 		/**
@@ -1005,16 +1028,16 @@ public class PKIManager
 		 */
 		public void destroy()
 		{
+			String sMethod = "CRLRecoverer.destroy";
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "---");
 			_bActive = false;
-			try
-			// interrupt if sleeping
-			{
-				Thread.currentThread().interrupt();
+			try {  // interrupt if sleeping
+				_tCrlRecoverer.interrupt();
+				//Thread.currentThread().interrupt();
 			}
 			catch (Exception e) {
-				// no logging
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Interrupt failed");
 			}
-
 		}
 	}
 
@@ -1044,7 +1067,8 @@ public class PKIManager
 		 *             the a select exception
 		 */
 		public PKIAdminServer(int iPort)
-			throws ASelectException {
+		throws ASelectException
+		{
 			try {
 				oSocket = new ServerSocket(iPort, 0, InetAddress.getByName("localhost"));
 			}
@@ -1068,20 +1092,30 @@ public class PKIManager
 		 */
 		public void run()
 		{
+			String sMethod = "PKIAdminServer.run";
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Run "+_bActive);
 			PKIAdminRequestDispatcher oRequestDispatcher;
 			Thread oRequestThread;
 			while (_bActive) {
 				try {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Accept");
+					System.out.println(sMethod+" Accept");
 					Socket clientSocket = oSocket.accept();
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Accepted");
+					System.out.println(sMethod+" Accepted");
 					oRequestDispatcher = new PKIAdminRequestDispatcher(clientSocket);
 					oRequestThread = new Thread(oRequestDispatcher);
 					oRequestThread.setDaemon(true);
+					System.out.println(sMethod+" Start Thread");
 					oRequestThread.start();
+					System.out.println(sMethod+" Started Thread");
 				}
-				catch (IOException e) {
-					_systemLogger.log(Level.WARNING, MODULE, "PKIAdminServer", e.getMessage(), e);
+				catch (Exception e) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
 				}
 			}
+			System.out.println(sMethod+" Stopped");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Stopped");
 		}
 
 		/**
@@ -1103,18 +1137,17 @@ public class PKIManager
 		 */
 		public void destroy()
 		{
+			String sMethod = "PKIAdminServer.destroy";
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "---");
 			_bActive = false;
-			try
-			// interrupt if sleeping
-			{
-				Thread.currentThread().interrupt();
+			try {  // interrupt if sleeping
+				_tPkiAdminServer.interrupt();
+				//Thread.currentThread().interrupt();
 				oSocket.close();
 			}
-			catch (Exception e) {
-				// no logging
+			catch (Exception e) {	// no logging
 			}
 		}
-
 	}
 
 	class PKIAdminRequestDispatcher implements Runnable
@@ -1157,6 +1190,8 @@ public class PKIManager
 		 */
 		public void run()
 		{
+			String sMethod = "PKIAdminRequestDispatcher.run";
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Run "+_bActive);
 			try {
 				_oInputReader = new BufferedReader(new InputStreamReader(_oClientSocket.getInputStream()));
 				_pwOutput = new PrintWriter(_oClientSocket.getOutputStream(), true);
@@ -1173,8 +1208,10 @@ public class PKIManager
 				_oClientSocket.close();
 			}
 			catch (IOException e) {
-				_systemLogger.log(Level.WARNING, MODULE, "PKIAdminRequestDispatcher", e.getMessage(), e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
 			}
+			System.out.println(sMethod+" Stopped");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Stopped");
 		}
 
 		/**
@@ -1251,7 +1288,6 @@ public class PKIManager
 				_bActive = false;
 				_pwOutput.println("Connection Closed");
 			}
-
 			else {
 				_pwOutput.println("Unknown Command");
 			}
@@ -1276,10 +1312,10 @@ public class PKIManager
 		 */
 		public void destroy()
 		{
+			String sMethod = "PKIAdminRequestDispatcher.destroy";
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "---");
 			_bActive = false;
-			try
-			// interrupt if sleeping
-			{
+			try {  // interrupt if sleeping
 				Thread.currentThread().interrupt();
 			}
 			catch (Exception e) {

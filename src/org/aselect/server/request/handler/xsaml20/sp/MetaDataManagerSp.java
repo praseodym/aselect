@@ -75,28 +75,9 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 	throws ASelectException
 	{
 		String sMethod = "init";
-//		Object sam = null;
-//		Object agent = null;
-//		Object idpSection = null;
 
 		super.init();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Role=" + getMyRole() + " id=" + sFederationIdpKeyword);
-
-/*		sam = _configManager.getSection(null, "sam");
-		agent = _configManager.getSection(sam, "agent");
-		try {
-			Object metaResourcegroup = _configManager.getSection(agent, "resourcegroup", "id=" + sFederationIdpKeyword);
-			idpSection = _configManager.getSection(metaResourcegroup, "resource");
-		}
-		catch (ASelectConfigException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No resourcegroup: "+sFederationIdpKeyword+" configured");
-		}
-
-		while (idpSection != null) {
-			processResourceSection(idpSection);
-			idpSection = _configManager.getNextSection(idpSection);
-		}
-*/
 		initializeMetaDataHandling();
 	}
 
@@ -109,7 +90,7 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 	public void processResourceSection(Object idpSection)
 	throws ASelectConfigException, ASelectException
 	{
-		String sMethod = "readResourceSection";
+		String sMethod = "sp.processResourceSection";
 		// Look for "id" "url" and "session_sync"
 		String sId = _configManager.getParam(idpSection, "id");
 		PartnerData idpData = new PartnerData(sId);
@@ -247,4 +228,10 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 			// maybe throw more serious error here
 		}
 	}
+	
+	public void logIdPs()
+	{
+		_systemLogger.log(Level.INFO, MODULE, "logIdPs", "storeAllIdPData="+storeAllIdPData);
+	}
 }
+

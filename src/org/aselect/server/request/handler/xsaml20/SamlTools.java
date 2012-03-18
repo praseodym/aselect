@@ -209,12 +209,12 @@ public class SamlTools
 	 * 
 	 * @param ssObject
 	 *            the SAML object to be checked
-	 * @param pKey
+	 * @param publicKey
 	 *            the public key
 	 * @return true, if successful
 	 * @throws ASelectException
 	 */
-	public static boolean checkSignature(SignableSAMLObject ssObject, PublicKey pKey)
+	public static boolean checkSignature(SignableSAMLObject ssObject, PublicKey publicKey)
 		throws ASelectException
 	{
 		String sMethod = "checkSignature";
@@ -222,9 +222,9 @@ public class SamlTools
 		ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
 		Signature sig = ssObject.getSignature();
 	
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "pkey=" + pKey + " sig=" + sig);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "publicKey=" + publicKey + " signature=" + sig);
 		if (sig == null) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Expected signature not found");
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No signature found in SAML object");
 			return false;
 		}
 	
@@ -232,15 +232,13 @@ public class SamlTools
 		try {
 			profileValidator.validate(sig);
 		}
-		catch (ValidationException e) {
-			// Indicates signature did not conform to SAML Signature profile
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"Cannot validate signature, signature did not conform to SAML Signature profile", e);
+		catch (ValidationException e) {  // Indicates signature did not conform to SAML Signature profile
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot validate signature, signature did not conform to SAML Signature profile", e);
 			return false;
 		}
-	
+
 		BasicCredential credential = new BasicCredential();
-		credential.setPublicKey(pKey);
+		credential.setPublicKey(publicKey);
 	
 		SignatureValidator sigValidator = new SignatureValidator(credential);
 		try {

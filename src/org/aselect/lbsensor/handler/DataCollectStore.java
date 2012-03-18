@@ -85,7 +85,7 @@ public class DataCollectStore
 			}
 			tsStore.timeSensorSpentPlus(ts);
 			if (tsStore.td_finish.timeValCompare(ts.td_finish) < 0) {  // save highest finish time
-				// ts is more recent, use it's values
+				// ts is the latest, use it's values
 				tsStore.td_finish = ts.td_finish;
 				tsStore.setTimeSensorSender(ts.getTimeSensorSender());
 				tsStore.setTimeSensorSuccess(ts.isTimeSensorSuccess());
@@ -94,7 +94,7 @@ public class DataCollectStore
 			if (tsStore.getTimeSensorType() < ts.getTimeSensorType())  // save highest type
 				tsStore.setTimeSensorType(ts.getTimeSensorType());
 
-			if (!Utils.hasValue(tsStore.getTimeSensorAppId()))
+			if (!Utils.hasValue(tsStore.getTimeSensorAppId()))  // grab first app_id
 				tsStore.setTimeSensorAppId(ts.getTimeSensorAppId());
 			
 			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "UPD "+sKey+ " data="+tsStore.timeSensorPack());

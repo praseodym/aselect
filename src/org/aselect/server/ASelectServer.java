@@ -473,7 +473,9 @@ public class ASelectServer extends ASelectHttpServlet
 		closeResources();
 		_systemLogger.log(Level.INFO, MODULE, "destroy", "A-Select server stopped.");
 		closeLoggers();  // no more logging
+		System.out.println("AselectServer Loggers closed");
 		super.destroy();
+		System.out.println("AselectServer Super destroyed");
 	}
 
 	/**

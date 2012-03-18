@@ -120,15 +120,13 @@ public class ConfigManager implements IConfigManager
 				if (_oConfigHandler != null)
 					_oConfigHandler.init(fConfig);
 				else {
-					sbError.append("Can't open file: ");
-					sbError.append(sConfigFile);
+					sbError.append("Can't open file: ").append(sConfigFile);
 					_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString());
 					throw new ASelectConfigException(Errors.ERROR_ASELECT_CANT_OPEN);
 				}
 			}
 			else {
-				sbError.append("File doesn't exist: ");
-				sbError.append(sConfigFile);
+				sbError.append("File doesn't exist: ").append(sConfigFile);
 				_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString());
 				throw new ASelectConfigException(Errors.ERROR_ASELECT_NOT_FOUND);
 			}

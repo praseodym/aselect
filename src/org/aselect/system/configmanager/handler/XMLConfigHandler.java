@@ -102,7 +102,6 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-// TODO: Auto-generated Javadoc
 /**
  * ConfigHandler that reads and writes configuration items as XML data. <br>
  * <br>
@@ -181,7 +180,8 @@ public class XMLConfigHandler implements IConfigHandler
 	 * @param oSystemLogger
 	 *            The system logger that should be used.
 	 */
-	public XMLConfigHandler(SystemLogger oSystemLogger) {
+	public XMLConfigHandler(SystemLogger oSystemLogger)
+	{
 		_oSystemLogger = oSystemLogger;
 		_oDomDocument = null;
 	}
@@ -197,7 +197,7 @@ public class XMLConfigHandler implements IConfigHandler
 	 * @see org.aselect.system.configmanager.IConfigHandler#init(java.io.File)
 	 */
 	public void init(File fConfig)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
 		String sMethod = ".init()";

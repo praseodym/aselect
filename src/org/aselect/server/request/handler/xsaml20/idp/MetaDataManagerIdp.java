@@ -20,7 +20,6 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.w3c.dom.Element;
 
-// TODO: Auto-generated Javadoc
 /**
  * class MetaDataManagerIdp, this class is reading the aselect xml file. The aselect xml file contains the metadata xml
  * file information, this is the the location of the metadata xml file, this can be a pathname or URL
@@ -73,7 +72,7 @@ public class MetaDataManagerIdp extends AbstractMetaDataManager
 	 */
 	@Override
 	protected void init()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		Object applications = null;
@@ -109,6 +108,7 @@ public class MetaDataManagerIdp extends AbstractMetaDataManager
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "storeAllIdPData="+storeAllIdPData);
 		initializeMetaDataHandling();
 	}
 

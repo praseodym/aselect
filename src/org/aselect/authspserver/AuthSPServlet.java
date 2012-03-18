@@ -310,8 +310,7 @@ public class AuthSPServlet extends ASelectHttpServlet
 				}
 			}
 			catch (Exception e) {
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No 'shared_secret' configured, disabling servlet restart.");
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod, "No 'shared_secret' configured, disabling servlet restart.");
 				_bRestartable = false;
 			}
 
@@ -334,13 +333,8 @@ public class AuthSPServlet extends ASelectHttpServlet
 				sFriendlyName = oAuthSPConfigManager.getParam(oAuthSPServerConfig, "organization_friendly_name");
 			}
 			catch (ASelectConfigException eAC) {
-				_systemLogger
-						.log(
-								Level.WARNING,
-								MODULE,
-								sMethod,
-								"Could not retrieve 'organization_friendly_name' config parameter in authspserver config section",
-								eAC);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, 
+						"Could not retrieve 'organization_friendly_name' config parameter in authspserver config section", eAC);
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
 			}
 
@@ -365,7 +359,6 @@ public class AuthSPServlet extends ASelectHttpServlet
 			_oAuthSPSessionManager.init();
 			oServletContext.setAttribute("SessionManager", _oAuthSPSessionManager);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "The SessionManager is set to the servlet context.");
-
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "A-Select AuthSP Server is successfully initialized");
 		}
 		catch (ASelectException eAS) {
@@ -453,7 +446,9 @@ public class AuthSPServlet extends ASelectHttpServlet
 		closeResources();
 		_systemLogger.log(Level.INFO, MODULE, "destroy()", "A-Select AuthSP Server stopped.");
 		closeLoggers();
+		System.out.println("AuthSPServlet Loggers closed");
 		super.destroy();
+		System.out.println("AuthSPServlet Super destroyed");
 	}
 
 	/**

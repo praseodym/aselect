@@ -148,6 +148,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			metadataMgr.processResourceSection(idpSection);
 			idpSection = _configManager.getNextSection(idpSection);
 		}
+		metadataMgr.logIdPs();
 		
 		// Get Assertion Consumer data from config
 		try {
@@ -161,6 +162,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				String sId = _configManager.getParam(oHandler, "id");
 				if (sId != null && !sId.equals("saml20_assertionconsumer"))
 					continue;
+				// The Assertion Consumer
 				String sTarget = _configManager.getParam(oHandler, "target");
 				if (sTarget != null) {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "id=" + sId + " target=" + sTarget);
@@ -227,7 +229,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", _sServerId);  // 20110310
 				//sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
 				sSelectForm = _configManager.updateTemplate(sSelectForm, htSessionContext);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Template updated");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Template updated, [handler_url]="+sMyUrl + "/" + getID());
 				response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 				response.setContentType("text/html");
 				response.setHeader("Pragma", "no-cache");
@@ -347,7 +349,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			else
 				issuer.setValue(sMyUrl);
 
-			// AuthRequest
+			// AuthnRequest
 			SAMLObjectBuilder<AuthnRequest> authnRequestbuilder = (SAMLObjectBuilder<AuthnRequest>) builderFactory
 					.getBuilder(AuthnRequest.DEFAULT_ELEMENT_NAME);
 			AuthnRequest authnRequest = authnRequestbuilder.buildObject();

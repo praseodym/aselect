@@ -57,8 +57,6 @@ import org.opensaml.xml.XMLObject;
 import org.opensaml.xml.XMLObjectBuilderFactory;
 import org.opensaml.xml.io.Unmarshaller;
 import org.opensaml.xml.io.UnmarshallerFactory;
-import org.opensaml.xml.schema.XSString;
-import org.opensaml.xml.schema.impl.XSStringImpl;
 import org.opensaml.xml.util.XMLHelper;
 import org.w3c.dom.*;
 import org.xml.sax.InputSource;
@@ -159,9 +157,10 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 	 */
 	@SuppressWarnings("unchecked")
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
+		boolean checkAssertionSigning = false;
 		Object samlResponseObject = null;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
 
@@ -274,8 +273,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				String sIssuer = (issuer == null)? null: issuer.getValue();
 				// If issuer is not present in the response, use sASelectServerUrl value retrieved from metadata
 				// else use value from the response
-				String artifactResponseIssuer = (sIssuer == null || "".equals(sIssuer)) ?
-												sASelectServerUrl: sIssuer;
+				String artifactResponseIssuer = (sIssuer == null || "".equals(sIssuer))? sASelectServerUrl: sIssuer;
 	
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Do artifactResponse signature verification="+is_bVerifySignature());
 				if (is_bVerifySignature()) {
@@ -306,9 +304,9 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				samlResponseObject = artifactResponse.getMessage();
 			}	
 			else if ( !(sReceivedResponse == null || "".equals(sReceivedResponse)) ) {
-				// handle http-post, can be unsolicited post as well
+				// Handle http-post, can be unsolicited post as well
 				
-				 // Should be Base64 encoded
+				// Could be Base64 encoded
 				String sRelayState = request.getParameter("RelayState");
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Received Response: " + sReceivedResponse + " RelayState="+sRelayState);
 				// RelayState should contain intended application resource URL
@@ -325,16 +323,21 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				StringReader stringReader = new StringReader(sReceivedResponse);
 				InputSource inputSource = new InputSource(stringReader);
 				Document docReceived = builder.parse(inputSource);
-//				Element elementReceived = docReceived.getDocumentElement();
-//				Node eltSAMLResponse = SamlTools.getNode(elementReceived, "Response");
 				Node eltSAMLResponse = SamlTools.getNode(docReceived, "Response");
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Found node Response: " + eltSAMLResponse);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Found node Response: " + eltSAMLResponse +((eltSAMLResponse==null)? " NULL": " ok"));
 	
 				// Unmarshall to the SAMLmessage
 				UnmarshallerFactory factory = Configuration.getUnmarshallerFactory();
-				Unmarshaller unmarshaller = factory.getUnmarshaller((Element) eltSAMLResponse);
-	
-				samlResponseObject = (Response) unmarshaller.unmarshall((Element) eltSAMLResponse);
+				Unmarshaller unmarshaller = factory.getUnmarshaller((Element)eltSAMLResponse);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Unmarshaller"+((unmarshaller==null)? " NULL": " ok"));
+				samlResponseObject = (Response)unmarshaller.unmarshall((Element)eltSAMLResponse);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Unmarshalling done, VerifySignature="+is_bVerifySignature());
+
+				// 20120308: Bauke added signature checking
+				//   saml-profiles-2.0-os: The <Assertion> element(s) in the <Response> MUST be signed,
+				//   if the HTTP POST binding is used, and MAY be signed if the HTTPArtifact binding is used.
+				if (is_bVerifySignature())
+					checkAssertionSigning = true;
 			}
 			else {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No Artifact and no Response found in the message.");
@@ -347,12 +350,9 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 			if (samlResponseObject instanceof Response) {
 				// SSO
 				Response samlResponse = (Response) samlResponseObject;
-				_systemLogger.log(Level.INFO, MODULE, sMethod,
-				 "Processing response: \n"+XMLHelper.prettyPrintXML(samlResponse.getDOM()));
-				// Detect if this is a successful or an error Response
-
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Processing 'Response'");  // +XMLHelper.prettyPrintXML(samlResponse.getDOM()));
 				
-				
+				// Detect if this is a successful or an error Response		
 				String sStatusCode = samlResponse.getStatus().getStatusCode().getValue();
 				String sRemoteRid = samlResponse.getID();
 				
@@ -369,13 +369,38 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Number of Assertions found:  " +  samlResponse.getAssertions().size());
 					Assertion samlAssertion = samlResponse.getAssertions().get(0);
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Assertion ID:" +samlAssertion.getID());
-					String sOrganization = samlAssertion.getIssuer().getValue();
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Issuer:" +sOrganization);
+					String sAssertIssuer = samlAssertion.getIssuer().getValue();
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Issuer:" +sAssertIssuer+" checkAssertionSigning="+checkAssertionSigning);
+					
+					// 20120308: Bauke added signature checking
+					if (checkAssertionSigning) {
+						// Check signature of artifactResolve here. We get the public key from the metadata
+						// Therefore we need a valid Issuer to lookup the entityID in the metadata
+						// We get the metadataURL from aselect.xml so we consider this safe and authentic
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "Verify assertion signature, issuer="+sAssertIssuer);
+						if (!Utils.hasValue(sAssertIssuer)) {
+							_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No Issuer present in Assertion");
+							throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+						}
+						
+						MetaDataManagerSp metadataManager = MetaDataManagerSp.getHandle();
+						PublicKey pkey = metadataManager.getSigningKeyFromMetadata(sAssertIssuer);
+						if (pkey == null || "".equals(pkey)) {
+							_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No valid public key in metadata");
+							throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+						}
+						if (!SamlTools.checkSignature(samlAssertion, pkey)) {
+							_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Response was NOT signed OK");
+							throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+						}
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "Response was signed OK");
+					}
+					// 20120308
+					
 					String sNameID = samlAssertion.getSubject().getNameID().getValue();
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "NameID:" + sNameID);
 					String sNameIDQualifier = samlAssertion.getSubject().getNameID().getNameQualifier();
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "NameIDQualifier:" + sNameIDQualifier);
-
 
 					// Now check for time interval validation
 					// We only check first object from the list
@@ -400,7 +425,6 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					// Get the (option) sessionindex from remote
 					String sSessionindex = samlAssertion.getAuthnStatements().get(0).getSessionIndex();
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Sessionindex:" + sSessionindex);
-					
 					
 					AuthnContext oAuthnContext = samlAssertion.getAuthnStatements().get(0).getAuthnContext();
 					List<AuthenticatingAuthority> authAuthorities = oAuthnContext.getAuthenticatingAuthorities();
@@ -533,7 +557,6 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 						if (tokens.length > 6)
 							sAuthSubID = tokens[6];
 						////////////////////////////////////////////////////
-
 						
 						sAuthID += "_"+sAuthSubID+"_"+sNameID;  // add separator
 						hmSamlAttributes.put("authid", sAuthID);
@@ -567,14 +590,13 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					}
 					/////////////////////////////////////////////////////
 					
-					
 					// 20100422, Bauke: no uid, then use NameID
 					String sUid = (String)hmSamlAttributes.get("uid");
 					if (sUid == null || sUid.equals(""))
 						hmSamlAttributes.put("uid", sNameID);
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "NameID=" + sNameID + " remote_rid=" + sRemoteRid
 							+ " local_rid=" + sLocalRid + " sel_level=" + sSelectedLevel + " organization/authsp="
-							+ sOrganization);
+							+ sAssertIssuer);
 
 					// htRemoteAttributes.put("attributes", HandlerTools.serializeAttributes(htAttributes));
 					hmSamlAttributes.put("remote_rid", sRemoteRid);
@@ -582,8 +604,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 
 					hmSamlAttributes.put("sel_level", sSelectedLevel);
 					hmSamlAttributes.put("authsp_level", sSelectedLevel);  // default value, issueTGT will correct this
-					hmSamlAttributes.put("organization", sOrganization);
-					hmSamlAttributes.put("authsp", sOrganization);
+					hmSamlAttributes.put("organization", sAssertIssuer);
+					hmSamlAttributes.put("authsp", sAssertIssuer);
 					
 					// RH, 20120201, sn
 					// also save the provided session if present, saml2 specs say there might be more than one session to track

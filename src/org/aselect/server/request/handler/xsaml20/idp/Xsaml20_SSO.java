@@ -257,20 +257,22 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			String sReqBinding = authnRequest.getProtocolBinding();
 			boolean bForcedAuthn = authnRequest.isForceAuthn();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested binding="+sReqBinding+" ForceAuthn = " + bForcedAuthn);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "==== SPRid=" + sSPRid + " RelayState=" + sRelayState);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "SPRid=" + sSPRid + " RelayState=" + sRelayState);
 
-			// 20110323, Bauke: retrieve binding from metadata if requested binding is not present
 			HashMap<String, String> hmBinding = new HashMap<String, String>();
 			String sAssertionConsumerServiceURL = getAssertionConsumerServiceURL(samlMessage, hmBinding);
 			if (sAssertionConsumerServiceURL == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "AssertionConsumerServiceURL not found");
 				throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST);
 			}
+			// 20120313, Bauke: 
+			if (!Utils.hasValue(sReqBinding))
+				sReqBinding = hmBinding.get("binding");
 
 			// Start an authenticate request, we've done signature checking already, so do not ask to do it again
 			// Also performAuthenticateRequest is an internal call, so who wants signing
 			// 20110407, Bauke: check sig set to false
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "performAuthenticateRequest AppId=" + sAppId);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "performAuthenticateRequest AppId=" + sAppId+" binding="+sReqBinding);
 			HashMap htResponse = performAuthenticateRequest(_sASelectServerUrl, httpRequest.getPathInfo(),
 					RETURN_SUFFIX, sAppId, false /* check sig */, _oClientCommunicator);
 
@@ -282,28 +284,18 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			HashMap htSession = _oSessionManager.getSessionContext(sIDPRid);
 			if (sRelayState != null) {
 				htSession.put("RelayState", sRelayState);
-				
-			// Look for "aselect_specials" in the RelayState (is base64 encode if present)
-			/*	if (!sRelayState.contains("idp=")) {  // it's base64 encoded
-					sRelayState = new String(Base64Codec.decode(sRelayState));
-					String sSpecials = Utils.getParameterValueFromUrl(sRelayState, "aselect_specials");
-					if (sSpecials != null) {
-						// allows to pass the specials on to the next IdP in the chain
-						htSession.put("aselect_specials", sSpecials);
-					}
-				} */
 			}
 			htSession.put("sp_rid", sSPRid);
 			htSession.put("sp_issuer", sIssuer);
 			htSession.put("sp_assert_url", sAssertionConsumerServiceURL);
 			// RH, 20101101, Save requested binding for when we return from authSP
 			// 20110323, Bauke: if no requested binding, take binding from metadata
-			htSession.put("sp_reqbinding", hmBinding.get("binding"));  // 20110323: sReqBinding);
+			if (Utils.hasValue(sReqBinding))  // 20120313, Bauke: added test
+				htSession.put("sp_reqbinding", sReqBinding);  // 20120313: hmBinding.get("binding"));  // 20110323: sReqBinding);
 
 			// RH, 20081117, strictly speaking forced_logon != forced_authenticate
 			// 20090613, Bauke: 'forced_login' is used as API parameter (a String value)
-			// 'forced_authenticate' is used in the Session (a Boolean value),
-			// the meaning of both is identical
+			// 'forced_authenticate' is used in the Session (a Boolean value), the meaning of both is identical
 			if (bForcedAuthn) {
 				htSession.put("forced_authenticate", new Boolean(bForcedAuthn));
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "'forced_authenticate' in htSession set to: "
@@ -312,11 +304,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 			// The betrouwbaarheidsniveau is stored in the session context
 			RequestedAuthnContext requestedAuthnContext = authnRequest.getRequestedAuthnContext();
-//			String sBetrouwbaarheidsNiveau = SecurityLevel.getSecurityLevel(requestedAuthnContext, _systemLogger);			// RH, 20101216, o
-			// RH, 20101216, sn
 			HashMap<String, String> secLevels =  ApplicationManager.getHandle().getSecLevels(sAppId);
 			String sBetrouwbaarheidsNiveau = SecurityLevel.getSecurityLevel(requestedAuthnContext, _systemLogger, secLevels);
-			// RH, 20101216, en
 
 			if (sBetrouwbaarheidsNiveau.equals(SecurityLevel.BN_NOT_FOUND)) {
 				// We've got a security level but is not known
@@ -462,9 +451,9 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		String sBindingName = null;
 		if (AUTHNREQUEST.equals(elementName)) {
 			AuthnRequest authnRequest = (AuthnRequest) samlMessage;
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get Location from AuthnRequest 1");
 			sAssertionConsumerServiceURL = authnRequest.getAssertionConsumerServiceURL();
 			sBindingName = authnRequest.getProtocolBinding();
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Location from AuthnRequest="+sAssertionConsumerServiceURL+" binding="+sBindingName);
 		}
 
 		if (sAssertionConsumerServiceURL == null) {	// We didn't find it in the authnrequest
@@ -478,7 +467,6 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	
 			// get from metadata
 			MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
-			
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Looking for EntityId="+sEntityId + " sElementName="+sElementName+
 					" sBindingName="+sBindingName + " in:"+metadataManager.getMetadataURL(sEntityId));
 			
@@ -720,9 +708,9 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Response signing >======");
 		Response response = buildSpecificSAMLResponse(sRid, htSessionContext, sTgt, htTGTContext);
 		
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Response signing=" + _bSignAssertion+" sha="+ _sReqSigning);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Response SignAssertion=" + _bSignAssertion+" sha="+ _sReqSigning);
 		if (_bSignAssertion) {
-			// only the assertion was signed
+			// Only the assertion must be signed, actually this is a MUST for this profile according to the saml specs.
 			try {
 				// don't forget to marshall the response when no signing will be done here
 				org.opensaml.xml.Configuration.getMarshallerFactory().getMarshaller(response).marshall(response);
@@ -736,7 +724,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			response = (Response)SamlTools.signSamlObject(response, _sReqSigning, 
 							"true".equals(_sAddKeyName), "true".equals(_sAddCertificate));
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Response signing ======<"+response);
+		//_systemLogger.log(Level.INFO, MODULE, sMethod, "Response signing ======<"+response);
 		
 		String sResponse = XMLHelper.nodeToString(response.getDOM());
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Response=" + sResponse);

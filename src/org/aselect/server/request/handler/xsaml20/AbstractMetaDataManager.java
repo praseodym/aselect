@@ -147,8 +147,9 @@ public abstract class AbstractMetaDataManager
 	 */
 	protected void fileSystemProvider(ChainingMetadataProvider myMetadataProvider, String sMethod,
 			BasicParserPool ppMgr, String metadataURL)
-		throws ASelectException
+	throws ASelectException
 	{
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "fileSystemProvider url="+metadataURL);
 		File mdFile = new File(metadataURL);
 		mdFile.toURI();
 		FilesystemMetadataProvider fileProvider;
@@ -183,6 +184,7 @@ public abstract class AbstractMetaDataManager
 			BasicParserPool ppMgr, String metadataURL)
 		throws ASelectException
 	{
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "urlSystemProvider url="+metadataURL);
 		HTTPMetadataProvider urlProvider;
 		try {
 			// RH, 20090615, sn

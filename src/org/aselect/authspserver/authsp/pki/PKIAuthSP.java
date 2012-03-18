@@ -190,7 +190,7 @@ public class PKIAuthSP extends HttpServlet
 	 */
 	public void destroy()
 	{
-
+		_systemLogger.log(Level.INFO, MODULE, "destroy", "Destroy PKIManager");
 		_oPkiManager.destroy();
 		super.destroy();
 	}
@@ -214,7 +214,7 @@ public class PKIAuthSP extends HttpServlet
 	 *             when a template file can't be found or read.
 	 */
 	public void initHtmlTemplates()
-		throws ServletException
+	throws ServletException
 	{
 		StringBuffer sbTemp;
 		String sMethod = "initHtmlTemplates()";
@@ -243,7 +243,6 @@ public class PKIAuthSP extends HttpServlet
 			}
 			_sTFHtmlTemplate = Utils.replaceString(_sTFHtmlTemplate, "[version]", _sVersion);
 			_sTFHtmlTemplate = Utils.replaceString(_sTFHtmlTemplate, "[organization_friendly]", _sFriendlyName);
-
 		}
 		catch (FileNotFoundException e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, e.getMessage(), e);
