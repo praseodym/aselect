@@ -73,7 +73,6 @@
  * - Redesign of request handling
  *
  */
-
 package org.aselect.server.request.handler.aselect.authentication;
 
 import java.io.PrintWriter;
@@ -108,7 +107,6 @@ import org.aselect.system.utils.Utils;
  */
 public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 {
-	
 	/**
 	 * Constructor for AuthSPBrowserHandler. <br>
 	 * 
@@ -185,8 +183,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			try {
 				sHandlerName = _configManager.getParam(authSPsection, "handler");
 			}
-			catch (ASelectException eA) {
-				// Invalid AuthSP received
+			catch (ASelectException eA) {  // Invalid AuthSP received
 				StringBuffer sbError = new StringBuffer("No handler configured for AuthSP '");
 				sbError.append(sAuthSp).append("'");
 				_systemLogger.log(Level.SEVERE, _sModule, sMethod, sbError.toString(), eA);
@@ -224,39 +221,43 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "VA result=" + sResultCode);
 			// Result values: ERROR_ASELECT_SUCCESS, ERROR_ASELECT_AUTHSP_INVALID_DATA (only SMS)
 
+			// Finall, we can get hold of our session
 			String sRid = (String) htAuthspResponse.get("rid"); // this is our own rid
-			HashMap htSessionContext = null;
+			_htSessionContext = null;
 			if (sRid != null)
-				htSessionContext = _sessionManager.getSessionContext(sRid);
-			if (htSessionContext == null) {
+				_htSessionContext = _sessionManager.getSessionContext(sRid);
+			if (_htSessionContext == null) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Session not found");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 			}
+			// A session is available.
 
 			// User interaction is finished, resume the stopwatch
 			// Could be done before the verifyAuthenticationResponse() above,
 			// but at that point we did not have the Rid yet
-			Tools.resumeSensorData(_systemLogger, htSessionContext);
+			Tools.resumeSensorData(_systemLogger, _htSessionContext);
 
 			// Saml20: Any errors must be reported back to the SP (so no Exception throwing in that case)
 			if (sResultCode.equals(Errors.ERROR_ASELECT_AUTHSP_INVALID_PHONE)) {
-				handleInvalidPhone(servletResponse, sRid, htSessionContext);
+				handleInvalidPhone(servletResponse, sRid, _htSessionContext);
 				return;
 			}
 			
-			String sIssuer = (String) htSessionContext.get("sp_issuer");
+			String sIssuer = (String) _htSessionContext.get("sp_issuer");
 			if (sIssuer == null && !sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
 				// Session can be killed. The user could not be authenticated.
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Error in authsp response: " + sResultCode+" issuer="+sIssuer);
-				Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_pbh", sRid, htSessionContext, null, false);
+				Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_pbh", sRid, _htSessionContext, null, false);
+				Utils.setSessionStatus(_htSessionContext, "del", _systemLogger);
 				_sessionManager.killSession(sRid);
 				throw new ASelectException(sResultCode);
 			}
 
 			// The user was authenticated successfully, or sp_issuer was present
 			if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
-				htSessionContext.put("result_code", sResultCode); // must be used by the tgt issuer
-				_sessionManager.updateSession(sRid, htSessionContext);
+				_htSessionContext.put("result_code", sResultCode); // must be used by the tgt issuer
+				Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
+				_sessionManager.updateSession(sRid, _htSessionContext);
 			}
 
 			// Some AuthSP's will return the authenticated userid as well (e.g. DigiD)
@@ -265,12 +266,13 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			String sUid = (String) htAuthspResponse.get("uid");
 			if (sUid != null) { // For all AuthSP's that can set the user id
 				// (and thereby replace the 'siam_user' value)
-				htSessionContext.put("user_id", sUid);
-				_sessionManager.updateSession(sRid, htSessionContext);
+				_htSessionContext.put("user_id", sUid);
+				Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
+				_sessionManager.updateSession(sRid, _htSessionContext);
 
 				Utils.copyHashmapValue("betrouwbaarheidsniveau", htAdditional, htAuthspResponse);
-				Utils.copyHashmapValue("sp_assert_url", htAdditional, htSessionContext);
-				Utils.copyHashmapValue("sp_rid", htAdditional, htSessionContext); // saml20 addition
+				Utils.copyHashmapValue("sp_assert_url", htAdditional, _htSessionContext);
+				Utils.copyHashmapValue("sp_rid", htAdditional, _htSessionContext); // saml20 addition
 			}
 			Utils.copyHashmapValue("sel_level", htAdditional, htAuthspResponse);  // user chose a different level
 
@@ -281,7 +283,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			Utils.copyHashmapValue("sms_phone", htAdditional, htAuthspResponse);
 			// 20090811, Bauke: save authsp_type for use by the Saml20 session sync
 			Utils.copyHashmapValue("authsp_type", htAdditional, htAuthspResponse);
-			Utils.copyHashmapValue("authsp_type", htAdditional, htSessionContext);
+			Utils.copyHashmapValue("authsp_type", htAdditional, _htSessionContext);
 			// 20091118, Bauke: new functionality: copy attributes from AuthSP
 			Utils.copyHashmapValue("attributes", htAdditional, htAuthspResponse);
 
@@ -289,7 +291,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			// For non-direct_authsp sequential authsp implementation insert code here to handle any "next" authsps
 			// get these from (optional) parameter in authsp resource section "applications.....next_authsp"
 			// e.g.	String next_authsp = _authSPHandlerManager.getNextAuthSP(sAuthSPId, app_id);;
-			String app_id = (String) htSessionContext.get("app_id");
+			String app_id = (String) _htSessionContext.get("app_id");
 			String next_authsp = null;
 			try {
 				// get authsps config and retrieve active resource from SAMAgent
@@ -298,7 +300,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 				Object objAuthSPResource = mySAMResource.getAttributes();
 				Object objAuthSPResourceAppls = _configManager.getSection(objAuthSPResource, "applications");
 				Object objAppl = _configManager.getSection(objAuthSPResourceAppls, "application", "id=" + app_id);
-				next_authsp =  _configManager.getParam(objAppl, "next_authsp");
+				next_authsp = _configManager.getParam(objAppl, "next_authsp");
 			}
 			catch (ASelectConfigException ace) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "No next_authsp defined for app_id: "+app_id + ", continuing");
@@ -331,7 +333,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 					sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
 					String sCountry = (String) htServiceRequest.get("country");
 					sSelectForm = Utils.replaceString(sSelectForm, "[country]", sCountry);
-					Tools.pauseSensorData(_systemLogger, htSessionContext);  //20111102
+					Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
 					servletResponse.getWriter().println(sSelectForm);
 				}
 				return;
@@ -339,14 +341,15 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			// RH, 201109, en
 			
 			// Continue with regular processing
-			Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_pbh", sRid, htSessionContext, sTgt, true);
+			Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_pbh", sRid, _htSessionContext, sTgt, true);
+			Utils.setSessionStatus(_htSessionContext, "del", _systemLogger);
 			_sessionManager.killSession(sRid);
 			// 20111020, Bauke: redirect is done below
 
-			String sAppUrl = (String) htSessionContext.get("app_url");
-			if (htSessionContext.get("remote_session") != null)
-				sAppUrl = (String) htSessionContext.get("local_as_url");
-			String sLang = (String)htSessionContext.get("language");
+			String sAppUrl = (String) _htSessionContext.get("app_url");
+			if (_htSessionContext.get("remote_session") != null)
+				sAppUrl = (String) _htSessionContext.get("local_as_url");
+			String sLang = (String)_htSessionContext.get("language");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
 			tgtIssuer.sendTgtRedirect(sAppUrl, sTgt, sRid, servletResponse, sLang);					
 			// 20111020, old: tgtIssuer.issueTGTandRedirect(sRid, sAuthSp, htAdditional, servletResponse, sOldTGT, true);
@@ -412,16 +415,16 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			}
 
 			// Get session context
-			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
-			if (htSessionContext == null) {
+			_htSessionContext = _sessionManager.getSessionContext(sRid);
+			if (_htSessionContext == null) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request: invalid or unknown session.");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
 			}
-			Tools.resumeSensorData(_systemLogger, htSessionContext);  // 20111102
+			Tools.resumeSensorData(_systemLogger, _htSessionContext);  // 20111102
 
 			// Log cancel request
-			String sAppId = (String) htSessionContext.get("app_id");
-			String sUserId = (String) htSessionContext.get("user_id");
+			String sAppId = (String) _htSessionContext.get("app_id");
+			String sUserId = (String) _htSessionContext.get("user_id");
 			authenticationLogger.log(new Object[] {
 				"Login", sUserId, (String) htServiceRequest.get("client_ip"), _sMyOrg, sAppId, "denied", sResultCode
 			});

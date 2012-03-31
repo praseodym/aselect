@@ -54,9 +54,10 @@ public class AuthSPHandler
 	private boolean _bDirectAuthSP;
 
 	/**
-	 * Default condtructor.
+	 * Default constructor.
 	 */
-	public AuthSPHandler() {
+	public AuthSPHandler()
+	{
 		_sId = null;
 		_sHandler = null;
 		_sType = null;
@@ -85,7 +86,8 @@ public class AuthSPHandler
 	 *            the level
 	 */
 	public AuthSPHandler(String id, String handler, String resourceGroup, String type, String friendlyName,
-			Integer level, boolean popup) {
+			Integer level, boolean popup)
+	{
 		_sId = id;
 		_sHandler = handler;
 		_sResourceGroup = resourceGroup;

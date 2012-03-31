@@ -57,16 +57,7 @@ public class Xsaml20_Logout extends Saml20_BaseHandler
 		_oTGTManager = TGTManager.getHandle();
 
 		Object aselect = _configManager.getSection(null, "aselect");
-		// 20091207 _sFederationUrl = _configManager.getParam(aselect, "federation_url");
 		_sRedirectUrl = _configManager.getParam(aselect, "redirect_url");
-
-		// _sFriendlyName = _configManager.getParam(aselect, "organization_friendly_name");
-		// _sLogoutResultPage = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "logoutresult.html");
-		// _sLogoutResultPage = org.aselect.system.utils.Utils.replaceString(_sLogoutResultPage, "[version]",
-		// Version.getVersion());
-		// // Was: [organization_friendly_name], replaced 20081104
-		// _sLogoutResultPage = org.aselect.system.utils.Utils.replaceString(_sLogoutResultPage,
-		// "[organization_friendly]", _sFriendlyName);
 	}
 
 	/**

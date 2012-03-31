@@ -476,7 +476,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "RelayState="+sRelayState+" OutboundSAMLMessage:\n"+XMLHelper.prettyPrintXML(nodeMessageContext));
 				
 				if (useSha256) {
-					Saml20_RedirectEncoder encoder = new Saml20_RedirectEncoder();
+					Saml20_RedirectEncoder encoder = new Saml20_RedirectEncoder();  // is a HTTPRedirectDeflateEncoder
 					encoder.encode(messageContext);  // does a sendRedirect()
 				}
 				else {

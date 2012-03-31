@@ -457,8 +457,10 @@ public class Tools
 		String sPause = htSessionContext.get("pause_contact"); // seconds
 		oSysLog.log(Level.INFO, MODULE, sMethod, "pause now=" + now + ((sPause==null)?"": ", LBE already paused at="+sPause));
 		// 20120215, Bauke: only replace if no old value
-		if (sPause == null)
+		if (sPause == null) {
+			Utils.setSessionStatus(htSessionContext, "upd", oSysLog);
 			htSessionContext.put("pause_contact", Long.toString(now)); // seconds
+		}
 	}
 
 	/**
@@ -493,6 +495,7 @@ public class Tools
 				oSysLog.log(Level.INFO, MODULE, sMethod, "user=" + lUserSpent + "->" + lSpentNew + " paused="+ lPause);
 				htSessionContext.put("time_user", Long.toString(lSpentNew)); // seconds
 				htSessionContext.remove("pause_contact");
+				Utils.setSessionStatus(htSessionContext, "upd", oSysLog);
 			}
 			catch (Exception e) {
 				oSysLog.log(Level.INFO, MODULE, sMethod, "Sensor calculation failed", e);

@@ -15,14 +15,11 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.logging.Level;
 
 import org.aselect.authspserver.log.AuthSPSystemLogger;
-import org.aselect.system.utils.Tools;
 
 /**
  * Sends request for sms to wireless-services sms gateway

@@ -339,7 +339,13 @@ public class SessionManager extends StorageManager
 //			put(sSessionId, htSessionContext); // insert or update	//	RH, 20111117, o
 //			RH, 20111117, sn
 			// writeSession is mostly used for updating sessions so use update instead of put
+			
+			// 20120330, Bauke: Do not persist "status"
+			String sStatus = (String)htSessionContext.get("status");
+			htSessionContext.remove("status");
 			update(sSessionId, htSessionContext); // insert or update
+			if (sStatus != null) htSessionContext.put("status", sStatus);
+			
 //			RH, 20111117, en
 			bReturn = true;
 		}
@@ -380,7 +386,13 @@ public class SessionManager extends StorageManager
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SessionId=" + sSessionId);
 			if (containsKey(sSessionId)) {
+				
+				// 20120330, Bauke: Do not persist "status"
+				String sStatus = (String)htSessionContext.get("status");
+				htSessionContext.remove("status");
 				update(sSessionId, htSessionContext);
+				if (sStatus != null) htSessionContext.put("status", sStatus);
+				
 				bReturn = true;
 			}
 		}
@@ -416,6 +428,8 @@ public class SessionManager extends StorageManager
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SessionId=" + sSessionId); // + ", Context=" + htContext);
 			htContext = (HashMap) get(sSessionId);
+			if (htContext != null)
+				Utils.setSessionStatus(htContext, "get", _systemLogger);
 		}
 		catch (ASelectStorageException e) {
 			// produces a stack trace on FINEST level, when 'e' is given as a separate argument

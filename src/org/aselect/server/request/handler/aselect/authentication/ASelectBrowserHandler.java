@@ -122,6 +122,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.sam.agent.SAMResource;
 import org.aselect.system.utils.Tools;
+import org.aselect.system.utils.Utils;
 
 /**
  * This class handles requests coming from a a-select server through a users browser. <br>

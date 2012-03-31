@@ -806,6 +806,7 @@ public class TGTIssuer
 			String sTgt = oTGTManager.createTGT(htTGTContext);
 			// A tgt was just issued, report sensor data
 			Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_tgt", sRid, htSessionContext, sTgt, true);
+			Utils.setSessionStatus(htSessionContext, "del", _systemLogger);
 			sessionManager.killSession(sRid);
 			String sLang = (String)htTGTContext.get("language");
 			sendTgtRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse, sLang);

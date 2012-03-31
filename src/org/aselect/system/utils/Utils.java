@@ -323,6 +323,34 @@ public class Utils
 		}
 		return sSpecials;
 	}
+	
+	/**
+	 * Sets the session status.
+	 * 
+	 * @param htSessionContext
+	 *            the session context
+	 * @param sStatus
+	 *            the status to be set
+	 * @param logger
+	 *            the logger, can be null
+	 */
+	public static void setSessionStatus(HashMap htSessionContext, String sStatus, ISystemLogger logger)
+	{
+		String sMethod = "setSessionStatus";
+		if (htSessionContext == null)
+			return;
+		if (logger != null)
+			logger.log(Level.INFO, MODULE, sMethod, "status="+sStatus);
+		if ("del".equals(sStatus))
+			htSessionContext.put("status", sStatus);
+		else {
+			String sOld = (String)htSessionContext.get("status");
+			if (!"del".equals(sOld))
+				htSessionContext.put("status", sStatus);
+			else if (logger != null)
+				logger.log(Level.INFO, MODULE, sMethod, "status skipped, already "+sOld);
+		}
+	}
 
 	/**
 	 * Handle all conditional keywords in a HTML form.

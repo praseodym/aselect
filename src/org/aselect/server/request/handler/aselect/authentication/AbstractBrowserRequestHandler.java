@@ -141,6 +141,12 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 	/** The response. */
 	protected HttpServletResponse _servletResponse;
 
+	// The local BrowserRequestHandler version of the session,
+	// functions as a local cache. Updates are done in the local cache,
+	// and saved to storage at the end of the handler's life time
+	// The entry "status" maintains the action to be taken.
+	protected HashMap _htSessionContext = null;
+
 	/** The server ID */
 	protected String _sMyServerId;
 
@@ -151,8 +157,6 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 	protected String _sUserCountry = "";
 
 	protected String _sCorrectionFacility = null, _sCookiePrefix = "", _sCookieDomain = null;
-
-	protected HashMap _htSessionContext = null;
 
 	/**
 	 * Construct an instance. <br>
@@ -184,6 +188,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 
 		_servletRequest = servletRequest;
 		_servletResponse = servletResponse;
+		_htSessionContext = null;
 
 		// Localization
 		Locale loc = servletRequest.getLocale();
@@ -204,7 +209,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 	public void processRequest()
 	throws ASelectException
 	{
-		String sMethod = "processRequest()";
+		String sMethod = "processRequest";
 		PrintWriter pwOut = null;
 		HashMap htServiceRequest = null;
 		try {
@@ -246,6 +251,17 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 			// produces a stack trace on FINEST level, when 'e' is given as a separate argument to log()
 			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Internal error: "+e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+		finally {  // 20120330: Decide what to do with the locally cached session (for now, just log it)
+			String sStatus = null;
+			if (_htSessionContext != null)
+				sStatus = (String)_htSessionContext.get("status");
+			if ("upd".equals(sStatus))
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ upd Session");
+			else if ("del".equals(sStatus))
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ del Session");
+			else
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ Session ok");
 		}
 		// don't close pwOut, so the caller can still inform the user of an error
 	}
@@ -291,18 +307,22 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
 			sErrorForm = Utils.replaceString(sErrorForm, "[language]", _sUserLanguage);
 
+			/* 20120328, Bauke: we already have the session in _htSessionContext
 			HashMap htSessionContext = null;
 			String sRid = (String) htServiceRequest.get("rid");
 			if (sRid != null) {
 				htSessionContext = _sessionManager.getSessionContext(sRid);
-			}
-			if (htSessionContext != null) {
-				String sSpecials = Utils.getAselectSpecials(htSessionContext, true/*decode too*/, _systemLogger);
+			}*/
+			if (_htSessionContext != null) {
+				//_systemLogger.log(Level.INFO, _sModule, sMethod, "session="+_htSessionContext);
+				String sSpecials = Utils.getAselectSpecials(_htSessionContext, true/*decode too*/, _systemLogger);
 				sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
+				String sAppUrl = (String)_htSessionContext.get("app_url");
+				sErrorForm = Utils.replaceString(sErrorForm, "[app_url]", sAppUrl);
 			}
-			sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext);  // accepts a null Session!
+			sErrorForm = _configManager.updateTemplate(sErrorForm, _htSessionContext);  // accepts a null Session!
 			//_systemLogger.log(Level.INFO, _sModule, sMethod, "FORM="+sErrorForm);
-			Tools.pauseSensorData(_systemLogger, htSessionContext);  //20111102
+			Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
 			pwOut.println(sErrorForm);
 		}
 		catch (Exception e) {
@@ -341,13 +361,6 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 			return null;
 		}
 
-		/*
-		 * HashMap sCredentialsParams = Utils.convertCGIMessage(sCredentialsCookie); if (sCredentialsParams == null) {
-		 * return null; } String sTgt = (String)sCredentialsParams.get("tgt"); String sUserId =
-		 * (String)sCredentialsParams.get("uid"); String sServerId = (String)sCredentialsParams.get("a-select-server");
-		 * if ((sTgt == null) || (sUserId == null) || (sServerId == null)) { return null; } if
-		 * (!sServerId.equals(_sMyServerId)) { return null; }
-		 */
 		HashMap htTGTContext = _tgtManager.getTGT(sTgt);
 		if (htTGTContext == null) {
 			return null;
@@ -474,6 +487,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 		
 		// 20111101, Bauke: added Sensor
 		Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_abh", sRid, htSessionContext, null, false);
+		Utils.setSessionStatus(htSessionContext, "del", _systemLogger);
 		_sessionManager.killSession(sRid);
 
 		// User can possibly correct his phone number and retry
