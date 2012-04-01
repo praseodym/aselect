@@ -281,23 +281,27 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Supplied rid=" + sIDPRid + " response=" + htResponse);
 
 			// The new sessionhttpRequest
-			HashMap htSession = _oSessionManager.getSessionContext(sIDPRid);
-			if (sRelayState != null) {
-				htSession.put("RelayState", sRelayState);
+			HashMap htSessionContext = _oSessionManager.getSessionContext(sIDPRid);
+			if (htSessionContext == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No session found for RID: " + sIDPRid);
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
-			htSession.put("sp_rid", sSPRid);
-			htSession.put("sp_issuer", sIssuer);
-			htSession.put("sp_assert_url", sAssertionConsumerServiceURL);
+			if (sRelayState != null) {
+				htSessionContext.put("RelayState", sRelayState);
+			}
+			htSessionContext.put("sp_rid", sSPRid);
+			htSessionContext.put("sp_issuer", sIssuer);
+			htSessionContext.put("sp_assert_url", sAssertionConsumerServiceURL);
 			// RH, 20101101, Save requested binding for when we return from authSP
 			// 20110323, Bauke: if no requested binding, take binding from metadata
 			if (Utils.hasValue(sReqBinding))  // 20120313, Bauke: added test
-				htSession.put("sp_reqbinding", sReqBinding);  // 20120313: hmBinding.get("binding"));  // 20110323: sReqBinding);
+				htSessionContext.put("sp_reqbinding", sReqBinding);  // 20120313: hmBinding.get("binding"));  // 20110323: sReqBinding);
 
 			// RH, 20081117, strictly speaking forced_logon != forced_authenticate
 			// 20090613, Bauke: 'forced_login' is used as API parameter (a String value)
 			// 'forced_authenticate' is used in the Session (a Boolean value), the meaning of both is identical
 			if (bForcedAuthn) {
-				htSession.put("forced_authenticate", new Boolean(bForcedAuthn));
+				htSessionContext.put("forced_authenticate", new Boolean(bForcedAuthn));
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "'forced_authenticate' in htSession set to: "
 						+ bForcedAuthn);
 			}
@@ -318,13 +322,13 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			}
 
 			// 20090110, Bauke changed requested_betrouwbaarheidsniveau to required_level
-			htSession.put("required_level", sBetrouwbaarheidsNiveau);
-			htSession.put("level", Integer.parseInt(sBetrouwbaarheidsNiveau)); // 20090111, Bauke added, NOTE: it's an Integer
+			htSessionContext.put("required_level", sBetrouwbaarheidsNiveau);
+			htSessionContext.put("level", Integer.parseInt(sBetrouwbaarheidsNiveau)); // 20090111, Bauke added, NOTE: it's an Integer
 			
 			// 20110722, Bauke conditional setting, should come from configuration however
 			if (Integer.parseInt(sBetrouwbaarheidsNiveau) <= 10)
-				htSession.put("forced_uid", "saml20_user");
-			_oSessionManager.updateSession_Obsolete(sIDPRid, htSession);
+				htSessionContext.put("forced_uid", "saml20_user");
+			_oSessionManager.updateSession(sIDPRid, htSessionContext);
 
 			// redirect with A-Select request=login1
 			StringBuffer sbURL = new StringBuffer(sASelectServerUrl);

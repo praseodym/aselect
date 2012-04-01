@@ -833,8 +833,8 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 * @param sRid
 	 *            the s rid
 	 */
-	protected void storeSessionDataWithRid(HttpServletResponse response, HashMap htSessionMoreData, String sPrefix,
-			String sRid)
+	protected void storeSessionDataWithRid(HttpServletResponse response, HashMap htSessionMoreData,
+			String sPrefix, String sRid)
 	{
 		String sMethod = "storeRidSessionData()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Update Session: " + sPrefix + sRid + " htSessionMoreData="
@@ -844,11 +844,11 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		// Bauke 20081209 Update the session instead of always creating a new one
 		HashMap htSessionData = _oSessionManager.getSessionContext(sPrefix + sRid);
 		if (htSessionData == null)
-			_oSessionManager.updateSession(sPrefix + sRid, htSessionMoreData);
+			_oSessionManager.updateSession(sPrefix + sRid, htSessionMoreData);  // actually it's is a create with a pre-defined RID
 		else {
 			htSessionData.putAll(htSessionMoreData);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Update Session:" + htSessionData);
-			_oSessionManager.updateSession_Obsolete(sPrefix + sRid, htSessionData);
+			_oSessionManager.updateSession(sPrefix + sRid, htSessionData);
 		}
 
 		// Also store the rid used

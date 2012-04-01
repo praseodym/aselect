@@ -808,7 +808,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 					htSessionContext.put("allowed_user_authsps", htUserAuthsps);
 				}
 				// Store now, issueTGTandRedirect() will read it again
-				_sessionManager.updateSession_Obsolete(sRid, htSessionContext);
+				_sessionManager.updateSession(sRid, htSessionContext);
 				
 				if (servletResponse == null) {
 					// For the login_token functionality, no redirection

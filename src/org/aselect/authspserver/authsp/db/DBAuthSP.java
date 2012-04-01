@@ -919,11 +919,17 @@ public class DBAuthSP extends ASelectHttpServlet
 		sbResponse.append(sRid);
 		int iAllowedRetries = 0;
 		try {
-			if (htServiceRequest.get("request").equals("authenticate"))
-			// authenticate request
-			{
-				if (_sessionManager.containsKey(sRid)) {
+			if (htServiceRequest.get("request").equals("authenticate")) {
+				// 20120401, Bauke: removed containsKey call
+				//if (_sessionManager.containsKey(sRid)) {
+				boolean sessionPresent = false;  // 20120401: Bauke: optimize update/create
+				try {
 					htSessionContext = _sessionManager.getSessionContext(sRid);
+				}
+				catch (ASelectException e) {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Not found: "+sRid);
+				}
+				if (htSessionContext != null) {
 					try {
 						iAllowedRetries = ((Integer) htSessionContext.get("allowed_retries")).intValue();
 					}
@@ -934,13 +940,17 @@ public class DBAuthSP extends ASelectHttpServlet
 				}
 				else {
 					htSessionContext = new HashMap();
-					_sessionManager.createSession(sRid, htSessionContext);
+					//_sessionManager.createSession(sRid, htSessionContext);
 					iAllowedRetries = _iAllowedRetries;
 				}
 				iAllowedRetries--;
 				Integer intAllowedRetries = new Integer(iAllowedRetries);
 				htSessionContext.put("allowed_retries", intAllowedRetries);
-				_sessionManager.updateSession_TestAndGet(sRid, htSessionContext);
+				// 20120401: Bauke: optimize update/create
+				if (sessionPresent)
+					_sessionManager.updateSession(sRid, htSessionContext); // Let's store the sucker (154)
+				else
+					_sessionManager.createSession(sRid, htSessionContext);
 				if (iAllowedRetries < 0) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No login retries left for rid: '" + sRid + "'");
 					throw new ASelectException(Errors.ERROR_DB_ACCESS_DENIED);

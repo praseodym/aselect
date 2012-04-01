@@ -11,21 +11,13 @@
  */
 package org.aselect.authspserver.authsp.openid;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -36,7 +28,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.codec.binary.Base64;
 import org.aselect.authspserver.authsp.db.Errors;
 import org.aselect.authspserver.config.AuthSPConfigManager;
 import org.aselect.authspserver.crypto.CryptoEngine;
@@ -46,8 +37,6 @@ import org.aselect.authspserver.session.AuthSPSessionManager;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
-import org.aselect.system.utils.BASE64Decoder;
-import org.aselect.system.utils.BASE64Encoder;
 import org.aselect.system.utils.Utils;
 import org.openid4java.discovery.DiscoveryInformation;
 import org.openid4java.message.AuthRequest;
@@ -89,6 +78,8 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 
 	/** The version. */
 	public static final String VERSION = "OpenID AuthSP";
+
+	public static final String RID_POSTFIX = "_OpenID";
 
 	private final static boolean DEFAULT_ENCRYPTION = false;
 
@@ -458,13 +449,13 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 					htServiceRequest.put("signature", sSignature);
 
 					showAuthenticateForm(pwOut, " ", " ", htServiceRequest);
-				} else {	// handle return from openid
-					
+				}
+				else {	// handle return from openid	
 //					String sRid = (String) servletRequest.getParameter("rid");
 					
 					// get info from QueryString
 					String sRid = URLDecoder.decode((String) htServiceRequest.get("rid"), "UTF-8");
-			        HashMap<String , Object> htSessionContext = _sessionManager.getSessionContext(sRid + "98765");
+			        HashMap<String , Object> htSessionContext = _sessionManager.getSessionContext(sRid + RID_POSTFIX);
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Retrieved sessionContext:" + htSessionContext);
 			        
 					// get info from sessionContext
@@ -491,8 +482,6 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 					
 					String sMyUrl = servletRequest.getRequestURL().toString();
 
-					
-
 					StringBuffer sbTemp = new StringBuffer(sRid);
 					// TODO take urldecode as necessary and verify signature from openid
 					sbTemp.append(sAsUrl);
@@ -511,9 +500,6 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 						_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString());
 						throw new ASelectException(Errors.ERROR_DB_INVALID_REQUEST);
 					}
-
-					
-
 					servletResponse.setContentType("text/html");
 
 					boolean matches = false;
@@ -583,8 +569,6 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 							handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_INVALID_PASSWORD, sLanguage, sUid);
 						}
 					}
-
-					
 				}
 			}
 		}
@@ -608,7 +592,6 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 				pwOut.close();
 				pwOut = null;
 			}
-
 		}
 	}
 
@@ -691,8 +674,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 				showAuthenticateForm(pwOut, Errors.ERROR_DB_INVALID_PASSWORD, _configManager.getErrorMessage(
 						Errors.ERROR_DB_INVALID_REQUEST, _oErrorProperties), htServiceRequest);
 			}
-			else {
-				// verify signature
+			else { // Decent user id found, verify signature
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Start verify signature");
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "URL decode values");
 				
@@ -716,6 +698,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 					throw new ASelectException(Errors.ERROR_DB_INVALID_REQUEST);
 				}
 
+				// Signing is OK
 				{
 			        // Delegate to Open ID code
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Delegate to Open ID code");
@@ -759,19 +742,39 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 						"&as_url=" + URLEncoder.encode(sAsUrl, "UTF-8") + "&a-select-server=" + URLEncoder.encode(sAsId, "UTF-8") +
 						"&uid=" + URLEncoder.encode(sUid, "UTF-8") + "&signature=" + URLEncoder.encode(sSignature, "UTF-8") +
 						"&retry_counter=" + URLEncoder.encode(sRetryCounter, "UTF-8");
+					
 //					String returnURL = servletRequest.getRequestURL().toString() + "?is_return=true&rid="+sRid;
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Stored returnURL:" + returnURL);
-
 					hDiscovery.put("siam_url", returnURL);
-			        // TODO think about something better than "98765"
-			        // but we must NOT overwrite our aselectsession
+					
+			        // We must NOT overwrite our aselectsession, therefore the RID_POSTFIX construction will store a separate session
+					
+					// 20120401, Bauke: rewritten to clear up usage of updateSession()
+					HashMap htSessionContext = null;
+					String sFabricatedRid = sRid + RID_POSTFIX;
 					try {
+						htSessionContext = _sessionManager.getSessionContext(sFabricatedRid);
+					}
+					catch (ASelectException ae) {
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "Not found: "+sFabricatedRid);
+					}
+					if (htSessionContext != null) {
+						htSessionContext.putAll(hDiscovery);
+						_sessionManager.updateSession(sFabricatedRid, htSessionContext);
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "Updated session for storing discoveryinfo with id:" + sFabricatedRid);
+					}
+					else {
+				        _sessionManager.createSession(sFabricatedRid, hDiscovery);
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "Created session for storing discoveryinfo with id:" + sFabricatedRid);
+					}
+					/*try {
 						_sessionManager.updateSession_TestAndGet(sRid + "98765", hDiscovery);
 						_systemLogger.log(Level.INFO, MODULE, sMethod, "Updated session for storing discoveryinfo with id:" + sRid + "98765");
-					} catch (ASelectException ae){
+					}
+					catch (ASelectException ae) {
 				        _sessionManager.createSession(sRid + "98765", hDiscovery);
 						_systemLogger.log(Level.INFO, MODULE, sMethod, "Created session for storing discoveryinfo with id:" + sRid + "98765");
-					}
+					}*/
 			        
 			        // Create the AuthRequest
 //			        AuthRequest authRequest = RegistrationService.createOpenIdAuthRequest(discoveryInformation, getReturnToUrl());

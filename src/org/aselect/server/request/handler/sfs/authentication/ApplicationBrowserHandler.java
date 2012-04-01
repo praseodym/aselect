@@ -1234,7 +1234,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			}
 			_htSessionContext.put("remote_organization", sRemoteOrg);
-			if (!_sessionManager.updateSession_Obsolete(sLocalRid, _htSessionContext)) {
+			if (!_sessionManager.updateSession(sLocalRid, _htSessionContext)) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "could not update session context");
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
@@ -1783,7 +1783,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			htSessionContext.put("authsp", sPrivilegedApplication);
 			htSessionContext.put("authsp_level", sAuthspLevel);
 
-			if (!_sessionManager.updateSession_Obsolete(sRid, htSessionContext)) {
+			if (!_sessionManager.updateSession(sRid, htSessionContext)) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod,
 						"Invalid request received: could not update session.");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);

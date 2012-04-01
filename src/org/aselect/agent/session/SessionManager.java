@@ -300,46 +300,6 @@ public class SessionManager
 	}
 
 	/**
-	 * Update a session context. <br>
-	 * <br>
-	 * <b>Description:</b> <br>
-	 * Overwrites the new session context with the given ID in the storage. <br>
-	 * <br>
-	 * <b>Concurrency issues:</b> <br>
-	 * - <br>
-	 * <br>
-	 * <b>Preconditions:</b>
-	 * <ul>
-	 * <li><code>sSessionId != null</code></li>
-	 * <li><code>htSessionContext != null</code></li>
-	 * </ul>
-	 * <br>
-	 * <b>Postconditions:</b> <br>
-	 * The given session is updated with the new context. <br>
-	 * 
-	 * @param sSessionId
-	 *            The ID of the session.
-	 * @param htSessionContext
-	 *            The new session context.
-	 * @return True if updating succeeds, otherwise false.
-	 */
-	public boolean updateSessionContext_NeverUsed(String sSessionId, HashMap htSessionContext)
-	{
-		try {
-			synchronized (_oSessionTable) {
-				if (getSessionContext(sSessionId) != null) {
-					_oSessionTable.update(sSessionId, htSessionContext);
-				}
-			}
-		}
-		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, "updateSessionContext_NeverUsed", "Exception: " + e);
-			return false;
-		}
-		return true;
-	}
-
-	/**
 	 * Get the number of issued sessions since startup.
 	 * 
 	 * @return The number of issued sessions.

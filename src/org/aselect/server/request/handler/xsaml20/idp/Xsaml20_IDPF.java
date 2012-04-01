@@ -289,6 +289,10 @@ public class Xsaml20_IDPF extends AbstractRequestHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "rid retrieved: " + extractedRid);
 
 			HashMap<String, Object> htSessionContext = _oSessionManager.getSessionContext(extractedRid);
+			if (htSessionContext == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No session found for RID: " + extractedRid);
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
 			// idpf (for now) only supports HTTP-POST binding
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "set sp_reqbinding: " + Saml20_Metadata.singleSignOnServiceBindingConstantPOST);
 			htSessionContext.put("sp_reqbinding", Saml20_Metadata.singleSignOnServiceBindingConstantPOST);
@@ -305,7 +309,7 @@ public class Xsaml20_IDPF extends AbstractRequestHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "set sp_addcertificate: " +getEndpointaddcertificate());
 			htSessionContext.put("sp_addcertificate",getEndpointaddcertificate());	// set sp_addcertificate for  keyinfo in signature in samll post
 			
-			_oSessionManager.updateSession_Obsolete(extractedRid, htSessionContext);
+			_oSessionManager.updateSession(extractedRid, htSessionContext);
 			
     		String loginrequest= "login1";
 

@@ -807,6 +807,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			
 			// 20120105, Bauke: removed containsKey call
 			//if (_sessionManager.containsKey(sRid)) {
+			boolean sessionPresent = false;  // 20120401: Bauke: optimize update/create
 			try {
 				htSessionContext = _sessionManager.getSessionContext(sRid);
 			}
@@ -815,6 +816,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			}
 			
 			if (htSessionContext != null) {
+				sessionPresent = true;
 				try {
 					iAllowedRetries = ((Integer) htSessionContext.get("allowed_retries")).intValue();
 				}
@@ -825,13 +827,17 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			}
 			else {
 				htSessionContext = new HashMap();
-				_sessionManager.createSession(sRid, htSessionContext);
+				//_sessionManager.createSession(sRid, htSessionContext);
 				iAllowedRetries = _iAllowedRetries;
 			}
 			iAllowedRetries--;
 			Integer intAllowedRetries = new Integer(iAllowedRetries);
 			htSessionContext.put("allowed_retries", intAllowedRetries);
-			_sessionManager.updateSession_TestAndGet(sRid, htSessionContext); // Let's store the sucker (154)
+			// 20120401: Bauke: optimize update/create
+			if (sessionPresent)
+				_sessionManager.updateSession(sRid, htSessionContext); // Let's store the sucker (154)
+			else
+				_sessionManager.createSession(sRid, htSessionContext);
 			if (iAllowedRetries < 0) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No login retries left for rid: '" + sRid + "'");
 				throw new ASelectException(Errors.ERROR_LDAP_ACCESS_DENIED);

@@ -236,16 +236,14 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 		    		localID = localID.replaceFirst("^/", ""); // strip starting slash
 					
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "localID:" + localID);
-
 					Utils.sendDiscoveryResponse(response, createXrdsResponse(localID), _systemLogger);
 				}
 				catch (IOException e) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Problem sending XRDS response");
 					throw new ASelectCommunicationException("Problem sending XRDS response", e);
 				}
-		    	
-		    	
-		    } else {
+		    }
+		    else {
 		    	requestp = new ParameterList(request.getParameterMap());
 		    	mode = reqParms.containsKey("openid.mode") ?
 		    			requestp.getParameterValue("openid.mode") : null;
@@ -328,7 +326,8 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 		    		} catch (Exception e) { 	
 						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not retrieve rid from aselectserver: " + ridAselectServer);
 						throw new ASelectCommunicationException(Errors.ERROR_ASELECT_IO, e);
-		    		} finally {
+		    		}
+		    		finally {
 		    			if (in != null)
 							try {
 								in.close();
@@ -338,10 +337,7 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 							}
 		    		}
 
-
-
 		    		//out.println("<br/>ridResponse=" + ridResponse); 
-
 		    		String extractedRid = ridResponse.replaceFirst(".*rid=([^&]*).*$", "$1");
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "rid retrieved: " + extractedRid);
 
@@ -351,7 +347,8 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 
 					HashMap<String, Object> htSessionContext = new HashMap<String, Object>();
 					htSessionContext.put("openid_requestp", requestp);
-					_oSessionManager.updateSession(sessionID, htSessionContext);
+					org.aselect.system.utils.Utils.setSessionStatus(htSessionContext, "upd", _systemLogger);
+					_oSessionManager.updateSession(sessionID, htSessionContext);  // new session with predefined RID
 					
 		    		String loginrequest= "login1";
 

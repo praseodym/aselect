@@ -223,7 +223,7 @@ public class AuthSPSessionManager extends StorageManager
 	 * @throws ASelectException
 	 *             if the session could not be updated
 	 */
-	public void updateSession_TestAndGet(String sRid, HashMap htExtendedContext)
+	/*public void updateSession_TestAndGet(String sRid, HashMap htExtendedContext)
 		throws ASelectException
 	{
 		String sMethod = "updateSession_TestAndGet";
@@ -246,13 +246,13 @@ public class AuthSPSessionManager extends StorageManager
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-	}
+	}*/
 	
 	/**
 	 * Update a session context. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Overwrites the new session context with the given ID in the session storage. <br>
+	 * Updates the session context identified by the given ID in the session storage. <br>
 	 * <br>
 	 * <b>Preconditions:</b>
 	 * <ul>
@@ -316,7 +316,7 @@ public class AuthSPSessionManager extends StorageManager
 		String sMethod = "getSessionContext()";
 		HashMap htContext = null;
 		try {
-			htContext = (HashMap) get(sRid);
+			htContext = (HashMap)get(sRid);
 		}
 		catch (ASelectStorageException e) {
 			StringBuffer sbError = new StringBuffer("Could not resolve session with rid: ");

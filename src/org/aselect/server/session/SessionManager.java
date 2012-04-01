@@ -81,6 +81,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
+import org.aselect.system.logging.ISystemLogger;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.storagemanager.StorageManager;
 import org.aselect.system.utils.Tools;
@@ -124,6 +125,25 @@ public class SessionManager extends StorageManager
 	private SystemLogger _systemLogger;
 
 	/**
+	 * Private constructor. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Creates a new storage manager and retrieves the system logger. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * The storage manager is created.
+	 */
+	private SessionManager()
+	{
+	}
+
+	/**
 	 * Initializes the <code>SessionManager</code>. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
@@ -144,7 +164,7 @@ public class SessionManager extends StorageManager
 	 *             If one or more mandatory configuration settings are missing or invalid.
 	 */
 	public void init()
-		throws ASelectException, ASelectConfigException
+	throws ASelectException, ASelectConfigException
 	{
 		String sMethod = "init()";
 		try {
@@ -302,108 +322,6 @@ public class SessionManager extends StorageManager
 		return sSessionId;
 	}
 
-	// 20120331, Bauke: previously called writeSession() replacement for updateSessionObsolete() below
-	/* Stores a new session context using the supplied session ID. <br>
-	 * <br>
-	 * <b>Description:</b> <br>
-	 * Writes the new session context with the given ID in the storage. <br>
-	 * <br>
-	 * Use this method also instead of {@link SessionManager#updateSessionObsolete(String, HashMap) }, if the session allready
-	 * exists. In this case this method is faster. <br>
-	 */
-	/**
-	 * Update a session context. <br>
-	 * <br>
-	 * <b>Description:</b> <br>
-	 * Overwrites the new session context with the given ID in the storage. <br>
-	 * <br>
-	 * <b>Preconditions:</b>
-	 * <ul>
-	 * <li><code>sSessionId != null</code></li>
-	 * <li><code>htSessionContext != null</code></li>
-	 * </ul>
-	 * <br>
-	 * <b>Postconditions:</b> <br>
-	 * The given session is stored with the new context. <br>
-	 * <br>
-	 * 
-	 * @param sSessionId
-	 *            The ID of the session.
-	 * @param htSessionContext
-	 *            The new session context.
-	 * @return True if updating succeeds, otherwise false.
-	 */
-	public boolean updateSession(String sSessionId, HashMap htSessionContext)
-	{
-		String sMethod = "writeSession";
-		boolean bReturn = false;
-		try {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "SessionId=" + sSessionId);
-//			put(sSessionId, htSessionContext); // insert or update	//	RH, 20111117, o
-//			RH, 20111117, sn
-			// writeSession is mostly used for updating sessions so use update instead of put
-			
-			// 20120330, Bauke: Do not persist "status"
-			String sStatus = (String)htSessionContext.get("status");
-			htSessionContext.remove("status");
-			update(sSessionId, htSessionContext); // insert or update
-			if (sStatus != null) htSessionContext.put("status", sStatus);
-			
-//			RH, 20111117, en
-			bReturn = true;
-		}
-		catch (ASelectStorageException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not write session: " + sSessionId, e);
-		}
-		return bReturn;
-	}
-
-	/**
-	 * Update a session context. <br>
-	 * <br>
-	 * <b>Description:</b> <br>
-	 * Overwrites the new session context with the given ID in the storage. <br>
-	 * <br>
-	 * <b>Preconditions:</b>
-	 * <ul>
-	 * <li><code>sSessionId != null</code></li>
-	 * <li><code>htSessionContext != null</code></li>
-	 * </ul>
-	 * <br>
-	 * <b>Postconditions:</b> <br>
-	 * The given session is updated with the new context. <br>
-	 * 
-	 * @param sSessionId
-	 *            The ID of the session.
-	 * @param htSessionContext
-	 *            The new session context.
-	 * @return True if updating succeeds, otherwise false.
-	 */
-	// 20120331, Bauke: made obsolete, all calls must be replaced by updateSession() above (previously called writeSession())
-	//           we don't want the containsKey() call to improve performance
-	public boolean updateSession_Obsolete(String sSessionId, HashMap htSessionContext)
-	{
-		String sMethod = "updateSession_Obsolete";
-		boolean bReturn = false;
-		try {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "SessionId=" + sSessionId);
-			if (containsKey(sSessionId)) {
-				
-				// 20120330, Bauke: Do not persist "status"
-				String sStatus = (String)htSessionContext.get("status");
-				htSessionContext.remove("status");
-				update(sSessionId, htSessionContext);
-				if (sStatus != null) htSessionContext.put("status", sStatus);
-				
-				bReturn = true;
-			}
-		}
-		catch (ASelectStorageException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not update session with id: " + sSessionId, e);
-		}
-		return bReturn;
-	}
-
 	/**
 	 * Get the session context of a session. <br>
 	 * <br>
@@ -438,8 +356,75 @@ public class SessionManager extends StorageManager
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not find context for session with id: "
 					+ sSessionId+" Cause="+e);
 		}
-		//_systemLogger.log(Level.INFO, MODULE, sMethod, "Return context");
 		return htContext;
+	}
+
+	// 20120331, Bauke: previously called writeSession() replacement for updateSessionObsolete() below
+	/* Stores a new session context using the supplied session ID. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Writes the new session context with the given ID in the storage. <br>
+	 * <br>
+	 * Use this method also instead of {@link SessionManager#updateSessionObsolete(String, HashMap) }, if the session allready
+	 * exists. In this case this method is faster. <br>
+	 */
+	/**
+	 * Update a session context. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Overwrites the new session context with the given ID in the storage. <br>
+	 * <br>
+	 * <b>Preconditions:</b>
+	 * <ul>
+	 * <li><code>sSessionId != null</code></li>
+	 * <li><code>htSessionContext != null</code></li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * The given session is stored with the new context. <br>
+	 * <br>
+	 * 
+	 * @param sSessionId
+	 *            The ID of the session.
+	 * @param htSessionContext
+	 *            The new session context.
+	 * @return True if updating succeeds, otherwise false.
+	 */
+	public boolean updateSession(String sSessionId, HashMap htSessionContext)
+	{
+		String sMethod = "updateSession";
+		boolean bReturn = false;
+		try {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "SessionId=" + sSessionId);
+//			RH, 20111117: writeSession is mostly used for updating sessions so use update instead of put
+//			put(sSessionId, htSessionContext); // insert or update
+			
+			// 20120330, Bauke: Do not persist "status"
+			String sStatus = (String)htSessionContext.get("status");
+			htSessionContext.remove("status");
+			update(sSessionId, htSessionContext); // insert or update
+			if (sStatus != null) htSessionContext.put("status", sStatus);
+			
+			bReturn = true;
+		}
+		catch (ASelectStorageException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not write session: " + sSessionId, e);
+		}
+		return bReturn;
+	}
+
+	/**
+	 * Sets the session's status to "upd" - updated.
+	 * At the end of a handler's lifetime we can then decide to write the info in permanent storage.
+	 * 
+	 * @param htSessionContext
+	 *            the session context
+	 * @param logger
+	 *            a logger
+	 */
+	public void setUpdateSession(HashMap htSessionContext, ISystemLogger logger)
+	{
+		Utils.setSessionStatus(htSessionContext, "upd", _systemLogger);
 	}
 
 	/**
@@ -467,12 +452,25 @@ public class SessionManager extends StorageManager
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SessionId=" + sSessionId);
 			// Retrieve session start time (timestamp) and calculate last processing time
 			_lProcessTime = System.currentTimeMillis() - getTimestamp(sSessionId);
-			// Remove session
 			remove(sSessionId);
 		}
 		catch (ASelectStorageException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not remove session with id: " + sSessionId, e);
 		}
+	}
+
+	/**
+	 * Sets the session's status to "del" - deleted.
+	 * At the end of a handler's lifetime we can then decide to delete the session from permanent storage.
+	 * 
+	 * @param htSessionContext
+	 *            the session context
+	 * @param logger
+	 *            a logger
+	 */
+	public void setDeleteSession(HashMap htSessionContext, ISystemLogger logger)
+	{
+		Utils.setSessionStatus(htSessionContext, "del", _systemLogger);
 	}
 
 	/**
@@ -493,23 +491,5 @@ public class SessionManager extends StorageManager
 	public long getCounter()
 	{
 		return _lSessionsCounter;
-	}
-
-	/**
-	 * Private constructor. <br>
-	 * <br>
-	 * <b>Description:</b> <br>
-	 * Creates a new storage manager and retrieves the system logger. <br>
-	 * <br>
-	 * <b>Concurrency issues:</b> <br>
-	 * - <br>
-	 * <br>
-	 * <b>Preconditions:</b> <br>
-	 * - <br>
-	 * <br>
-	 * <b>Postconditions:</b> <br>
-	 * The storage manager is created.
-	 */
-	private SessionManager() {
 	}
 }
