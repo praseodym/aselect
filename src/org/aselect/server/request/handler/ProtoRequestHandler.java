@@ -844,11 +844,11 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		// Bauke 20081209 Update the session instead of always creating a new one
 		HashMap htSessionData = _oSessionManager.getSessionContext(sPrefix + sRid);
 		if (htSessionData == null)
-			_oSessionManager.writeSession(sPrefix + sRid, htSessionMoreData);
+			_oSessionManager.updateSession(sPrefix + sRid, htSessionMoreData);
 		else {
 			htSessionData.putAll(htSessionMoreData);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Update Session:" + htSessionData);
-			_oSessionManager.updateSession(sPrefix + sRid, htSessionData);
+			_oSessionManager.updateSession_Obsolete(sPrefix + sRid, htSessionData);
 		}
 
 		// Also store the rid used

@@ -324,7 +324,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			// 20110722, Bauke conditional setting, should come from configuration however
 			if (Integer.parseInt(sBetrouwbaarheidsNiveau) <= 10)
 				htSession.put("forced_uid", "saml20_user");
-			_oSessionManager.updateSession(sIDPRid, htSession);
+			_oSessionManager.updateSession_Obsolete(sIDPRid, htSession);
 
 			// redirect with A-Select request=login1
 			StringBuffer sbURL = new StringBuffer(sASelectServerUrl);

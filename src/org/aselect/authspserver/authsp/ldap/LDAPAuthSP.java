@@ -831,7 +831,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			iAllowedRetries--;
 			Integer intAllowedRetries = new Integer(iAllowedRetries);
 			htSessionContext.put("allowed_retries", intAllowedRetries);
-			_sessionManager.updateSession(sRid, htSessionContext); // Let's store the sucker (154)
+			_sessionManager.updateSession_TestAndGet(sRid, htSessionContext); // Let's store the sucker (154)
 			if (iAllowedRetries < 0) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No login retries left for rid: '" + sRid + "'");
 				throw new ASelectException(Errors.ERROR_LDAP_ACCESS_DENIED);

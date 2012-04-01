@@ -302,17 +302,20 @@ public class SessionManager extends StorageManager
 		return sSessionId;
 	}
 
-	/**
-	 * Stores a new session context using the supplied session ID. <br>
+	// 20120331, Bauke: previously called writeSession() replacement for updateSessionObsolete() below
+	/* Stores a new session context using the supplied session ID. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
 	 * Writes the new session context with the given ID in the storage. <br>
 	 * <br>
-	 * Use this method also instead of {@link SessionManager#updateSession(String, HashMap) }, if the session allready
+	 * Use this method also instead of {@link SessionManager#updateSessionObsolete(String, HashMap) }, if the session allready
 	 * exists. In this case this method is faster. <br>
+	 */
+	/**
+	 * Update a session context. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br>
-	 * - <br>
+	 * <b>Description:</b> <br>
+	 * Overwrites the new session context with the given ID in the storage. <br>
 	 * <br>
 	 * <b>Preconditions:</b>
 	 * <ul>
@@ -330,7 +333,7 @@ public class SessionManager extends StorageManager
 	 *            The new session context.
 	 * @return True if updating succeeds, otherwise false.
 	 */
-	public boolean writeSession(String sSessionId, HashMap htSessionContext)
+	public boolean updateSession(String sSessionId, HashMap htSessionContext)
 	{
 		String sMethod = "writeSession";
 		boolean bReturn = false;
@@ -361,9 +364,6 @@ public class SessionManager extends StorageManager
 	 * <b>Description:</b> <br>
 	 * Overwrites the new session context with the given ID in the storage. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br>
-	 * - <br>
-	 * <br>
 	 * <b>Preconditions:</b>
 	 * <ul>
 	 * <li><code>sSessionId != null</code></li>
@@ -379,9 +379,11 @@ public class SessionManager extends StorageManager
 	 *            The new session context.
 	 * @return True if updating succeeds, otherwise false.
 	 */
-	public boolean updateSession(String sSessionId, HashMap htSessionContext)
+	// 20120331, Bauke: made obsolete, all calls must be replaced by updateSession() above (previously called writeSession())
+	//           we don't want the containsKey() call to improve performance
+	public boolean updateSession_Obsolete(String sSessionId, HashMap htSessionContext)
 	{
-		String sMethod = "updateSession";
+		String sMethod = "updateSession_Obsolete";
 		boolean bReturn = false;
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SessionId=" + sSessionId);

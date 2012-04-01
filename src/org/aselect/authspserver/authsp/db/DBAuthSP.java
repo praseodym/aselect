@@ -940,7 +940,7 @@ public class DBAuthSP extends ASelectHttpServlet
 				iAllowedRetries--;
 				Integer intAllowedRetries = new Integer(iAllowedRetries);
 				htSessionContext.put("allowed_retries", intAllowedRetries);
-				_sessionManager.updateSession(sRid, htSessionContext);
+				_sessionManager.updateSession_TestAndGet(sRid, htSessionContext);
 				if (iAllowedRetries < 0) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No login retries left for rid: '" + sRid + "'");
 					throw new ASelectException(Errors.ERROR_DB_ACCESS_DENIED);

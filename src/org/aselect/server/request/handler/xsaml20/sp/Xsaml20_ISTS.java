@@ -257,7 +257,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 					// 20110331, Bauke: We leave forced_uid in place!
 					// If we do, control can easily be transferred to e.g. DigiD
 					//htSessionContext.remove("forced_uid");
-					_oSessionManager.updateSession(sRid, htSessionContext);
+					_oSessionManager.updateSession_Obsolete(sRid, htSessionContext);
 
 					String sRedirectUrl = _sFallbackUrl;
 					//sRedirectUrl = "[aselect_url]?request=direct_login1&rid=[rid]&authsp=Ldap&a-select-server=[a-select-server]";
@@ -287,7 +287,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			// This is needed to prevent session sync when we're not saml20
 			htSessionContext.put("authsp_type", "saml20");
 			htSessionContext.put("federation_url", sFederationUrl);
-			_oSessionManager.updateSession(sRid, htSessionContext);
+			_oSessionManager.updateSession_Obsolete(sRid, htSessionContext);
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get MetaData FederationUrl=" + sFederationUrl);
 			MetaDataManagerSp metadataMgr = MetaDataManagerSp.getHandle();

@@ -323,7 +323,7 @@ public class SessionManager
 	 *            The new session context.
 	 * @return True if updating succeeds, otherwise false.
 	 */
-	public boolean updateSessionContext(String sSessionId, HashMap htSessionContext)
+	public boolean updateSessionContext_NeverUsed(String sSessionId, HashMap htSessionContext)
 	{
 		try {
 			synchronized (_oSessionTable) {
@@ -333,7 +333,7 @@ public class SessionManager
 			}
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, "updateSessionContext()", "Exception: " + e);
+			_systemLogger.log(Level.SEVERE, MODULE, "updateSessionContext_NeverUsed", "Exception: " + e);
 			return false;
 		}
 		return true;

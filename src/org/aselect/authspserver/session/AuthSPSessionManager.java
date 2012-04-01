@@ -223,10 +223,10 @@ public class AuthSPSessionManager extends StorageManager
 	 * @throws ASelectException
 	 *             if the session could not be updated
 	 */
-	public void updateSession(String sRid, HashMap htExtendedContext)
+	public void updateSession_TestAndGet(String sRid, HashMap htExtendedContext)
 		throws ASelectException
 	{
-		String sMethod = "updateSession()";
+		String sMethod = "updateSession_TestAndGet";
 		try {
 			if (!containsKey(sRid)) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No sessions found with id: " + sRid);
@@ -246,6 +246,47 @@ public class AuthSPSessionManager extends StorageManager
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
+	}
+	
+	/**
+	 * Update a session context. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Overwrites the new session context with the given ID in the session storage. <br>
+	 * <br>
+	 * <b>Preconditions:</b>
+	 * <ul>
+	 * <li><code>sSessionId != null</code></li>
+	 * <li><code>htSessionContext != null</code></li>
+	 * </ul>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * The given session is stored with the new context. <br>
+	 * <br>
+	 * 
+	 * @param sSessionId
+	 *            The ID of the session.
+	 * @param htSessionContext
+	 *            The new session context.
+	 * @return True if updating succeeds, otherwise false.
+	 */
+	public boolean updateSession(String sSessionId, HashMap htSessionContext)
+	{
+		String sMethod = "writeSession";
+		boolean bReturn = false;
+		try {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "SessionId=" + sSessionId);
+			// 20120330, Bauke: Do not persist "status"
+			String sStatus = (String)htSessionContext.get("status");
+			htSessionContext.remove("status");
+			update(sSessionId, htSessionContext); // insert or update
+			if (sStatus != null) htSessionContext.put("status", sStatus);
+			bReturn = true;
+		}
+		catch (ASelectStorageException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not write session: " + sSessionId, e);
+		}
+		return bReturn;
 	}
 
 	/**

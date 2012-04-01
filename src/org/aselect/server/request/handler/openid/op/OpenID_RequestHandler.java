@@ -351,7 +351,7 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 
 					HashMap<String, Object> htSessionContext = new HashMap<String, Object>();
 					htSessionContext.put("openid_requestp", requestp);
-					_oSessionManager.writeSession(sessionID, htSessionContext);
+					_oSessionManager.updateSession(sessionID, htSessionContext);
 					
 		    		String loginrequest= "login1";
 

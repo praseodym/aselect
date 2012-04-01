@@ -477,7 +477,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			if (sReqLanguage != null && !sReqLanguage.equals("")) {
 				_htSessionContext.put("language", sReqLanguage);
 				Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-				_sessionManager.updateSession(sRid, _htSessionContext); // store language for posterity
+				_sessionManager.updateSession_Obsolete(sRid, _htSessionContext); // store language for posterity
 			}
 			// Copy language & country to session if not present yet (session takes precedence)
 			Utils.transferLocalization(_htSessionContext, _sUserLanguage, _sUserCountry);
@@ -699,7 +699,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				if (sAuthSPId != null) {
 					_htSessionContext.put("direct_authsp", sAuthSPId);
 					Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-					_sessionManager.updateSession(sRid, _htSessionContext); // make persistent
+					_sessionManager.updateSession_Obsolete(sRid, _htSessionContext); // make persistent
 				}
 			}
 			if (sAuthSPId == null) {
@@ -1756,7 +1756,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
 
 			// storage_manager_fix_for_lost_fields
-			if (!_sessionManager.updateSession(sRid, _htSessionContext)) {
+			if (!_sessionManager.updateSession_Obsolete(sRid, _htSessionContext)) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "could not update session context");
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
@@ -1976,7 +1976,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 									+ _htSessionContext.get("client_ip"));
 
 							Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-							_sessionManager.writeSession(sRid, _htSessionContext);
+							_sessionManager.updateSession(sRid, _htSessionContext);
 
 							HashMap htTgtContext = _tgtManager.getTGT(sTgt);
 							String sAuthsp = (String) htTgtContext.get("authsp");
@@ -2065,7 +2065,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_htSessionContext.put("allowed_user_authsps", htAllowedAuthsps);
 			_htSessionContext.put("user_id", htServiceRequest.get("client_ip"));
 			Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-			_sessionManager.writeSession(sRid, _htSessionContext);
+			_sessionManager.updateSession(sRid, _htSessionContext);
 
 			// go for IP authsp
 			htServiceRequest.put("authsp", "Ip");
@@ -2250,7 +2250,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_htSessionContext.put("authsp_level", sAuthspLevel);
 
 			Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-			if (!_sessionManager.updateSession(sRid, _htSessionContext)) {  // 20101027 use _ht...
+			if (!_sessionManager.updateSession_Obsolete(sRid, _htSessionContext)) {  // 20101027 use _ht...
 				_systemLogger.log(Level.WARNING, _sModule, sMethod,
 						"Invalid request received: could not update session.");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
@@ -2358,7 +2358,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					_htSessionContext.get("client_ip")+", set to "+get_servletRequest().getRemoteAddr());
 			_htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr());
 			Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-			if (!_sessionManager.writeSession(sRid, _htSessionContext)) {
+			if (!_sessionManager.updateSession(sRid, _htSessionContext)) {
 				// logged in sessionmanager
 				throw new ASelectException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
 			}
@@ -2413,7 +2413,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		
 		//Tools.pauseSensorData(_systemLogger, _htSessionContext);  // 20111102, done one level higher, before redirection
 		Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-		if (!_sessionManager.writeSession(sRid, _htSessionContext)) {
+		if (!_sessionManager.updateSession(sRid, _htSessionContext)) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not write session context");
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
@@ -2694,7 +2694,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				_htSessionContext.put("fixed_uid", sForcedUid);
 
 			Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-			if (!_sessionManager.updateSession(sRid, _htSessionContext)) {
+			if (!_sessionManager.updateSession_Obsolete(sRid, _htSessionContext)) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod,
 						"Invalid request received: could not update session.");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
@@ -2788,7 +2788,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		_htSessionContext.put("organization", _sMyOrg);
 		_htSessionContext.put("client_ip", "login_token");
 		Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-		_sessionManager.updateSession(sRid, _htSessionContext); // store too (545)
+		_sessionManager.updateSession_Obsolete(sRid, _htSessionContext); // store too (545)
 		
 		// Check login user and password
 		HashMap<String, String> hmDirectRequest = new HashMap<String, String>();

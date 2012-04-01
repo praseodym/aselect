@@ -766,8 +766,8 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 			        // TODO think about something better than "98765"
 			        // but we must NOT overwrite our aselectsession
 					try {
-						 _sessionManager.updateSession(sRid + "98765", hDiscovery);
-							_systemLogger.log(Level.INFO, MODULE, sMethod, "Updated session for storing discoveryinfo with id:" + sRid + "98765");
+						_sessionManager.updateSession_TestAndGet(sRid + "98765", hDiscovery);
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "Updated session for storing discoveryinfo with id:" + sRid + "98765");
 					} catch (ASelectException ae){
 				        _sessionManager.createSession(sRid + "98765", hDiscovery);
 						_systemLogger.log(Level.INFO, MODULE, sMethod, "Created session for storing discoveryinfo with id:" + sRid + "98765");

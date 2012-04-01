@@ -254,7 +254,7 @@ public interface IStorageHandler
 	 * @param lTimestamp
 	 *            The time at which the object is stored.
 	 * @param eMode
-	 *            Mode to apply on storage update (INDERTFIRST then update or UPDATEFIRST then insert)
+	 *            Mode to apply on storage update (INSERTFIRST then update or UPDATEFIRST then insert)
 	 * @throws ASelectStorageException
 	 *             If storing fails.
 	 */

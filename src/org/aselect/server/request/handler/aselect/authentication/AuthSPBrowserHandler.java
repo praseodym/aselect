@@ -257,7 +257,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
 				_htSessionContext.put("result_code", sResultCode); // must be used by the tgt issuer
 				Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-				_sessionManager.updateSession(sRid, _htSessionContext);
+				_sessionManager.updateSession_Obsolete(sRid, _htSessionContext);
 			}
 
 			// Some AuthSP's will return the authenticated userid as well (e.g. DigiD)
@@ -268,7 +268,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 				// (and thereby replace the 'siam_user' value)
 				_htSessionContext.put("user_id", sUid);
 				Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-				_sessionManager.updateSession(sRid, _htSessionContext);
+				_sessionManager.updateSession_Obsolete(sRid, _htSessionContext);
 
 				Utils.copyHashmapValue("betrouwbaarheidsniveau", htAdditional, htAuthspResponse);
 				Utils.copyHashmapValue("sp_assert_url", htAdditional, _htSessionContext);

@@ -305,7 +305,7 @@ public class Xsaml20_IDPF extends AbstractRequestHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "set sp_addcertificate: " +getEndpointaddcertificate());
 			htSessionContext.put("sp_addcertificate",getEndpointaddcertificate());	// set sp_addcertificate for  keyinfo in signature in samll post
 			
-			_oSessionManager.updateSession(extractedRid, htSessionContext);
+			_oSessionManager.updateSession_Obsolete(extractedRid, htSessionContext);
 			
     		String loginrequest= "login1";
 

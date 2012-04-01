@@ -666,7 +666,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId, "", "");
 
 			// Store changed session, for JDBC Storage Handler
-			if (!_sessionManager.writeSession(sRid, _htSessionContext)) {
+			if (!_sessionManager.updateSession(sRid, _htSessionContext)) {
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
 			}
 		}
@@ -1234,7 +1234,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			}
 			_htSessionContext.put("remote_organization", sRemoteOrg);
-			if (!_sessionManager.updateSession(sLocalRid, _htSessionContext)) {
+			if (!_sessionManager.updateSession_Obsolete(sLocalRid, _htSessionContext)) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "could not update session context");
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
@@ -1325,7 +1325,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			 */
 
 			// Store changed session, for JDBC Storage Handler
-			if (!_sessionManager.writeSession(sLocalRid, _htSessionContext)) {
+			if (!_sessionManager.updateSession(sLocalRid, _htSessionContext)) {
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
 			}
 
@@ -1473,7 +1473,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							// implements the redirect with a create signature.
 							// It is not logical to create a new TGT.
 							_htSessionContext.put("user_id", sUid);
-							_sessionManager.writeSession(sRid, _htSessionContext);
+							_sessionManager.updateSession(sRid, _htSessionContext);
 
 							HashMap htTgtContext = _tgtManager.getTGT(sTgt);
 							String sAuthsp = (String) htTgtContext.get("authsp");
@@ -1560,7 +1560,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			htAllowedAuthsps.put("Ip", htServiceRequest.get("client_ip"));
 			_htSessionContext.put("allowed_user_authsps", htAllowedAuthsps);
 			_htSessionContext.put("user_id", htServiceRequest.get("client_ip"));
-			_sessionManager.writeSession(sRid, _htSessionContext);
+			_sessionManager.updateSession(sRid, _htSessionContext);
 
 			// go for IP authsp
 			htServiceRequest.put("authsp", "Ip");
@@ -1783,7 +1783,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			htSessionContext.put("authsp", sPrivilegedApplication);
 			htSessionContext.put("authsp_level", sAuthspLevel);
 
-			if (!_sessionManager.updateSession(sRid, htSessionContext)) {
+			if (!_sessionManager.updateSession_Obsolete(sRid, htSessionContext)) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod,
 						"Invalid request received: could not update session.");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
@@ -1887,7 +1887,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_htSessionContext.put("allowed_user_authsps", htAllowedAuthsps);
 			_htSessionContext.put("user_id", sUid);
 
-			if (!_sessionManager.writeSession(sRid, _htSessionContext)) {
+			if (!_sessionManager.updateSession(sRid, _htSessionContext)) {
 				// logged in sessionmanager
 				throw new ASelectException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
 			}
@@ -1933,7 +1933,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 		_htSessionContext.put("authsp", sAuthsp);
 		_htSessionContext.put("my_url", htLoginRequest.get("my_url"));
-		if (!_sessionManager.writeSession(sRid, _htSessionContext)) {
+		if (!_sessionManager.updateSession(sRid, _htSessionContext)) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "could not update session context");
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
