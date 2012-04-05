@@ -220,6 +220,67 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 			}
 			// End Set specific metadata for this partner
 
+			// Set specific testdata for this partner
+			Object testdataSection = Utils.getSimpleSection(_configManager, _systemLogger, idpSection, "testdata", false);
+			if (testdataSection != null) {
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod, "testdate section found for: "+ sId);
+				// signon
+				String tst_issueinstant = Utils.getSimpleParam(_configManager, _systemLogger, testdataSection, "issueinstant", false);
+				if (tst_issueinstant != null)
+					idpData.getTestdata4partner().setIssueInstant(tst_issueinstant);
+				
+				String tst_issuer = Utils.getSimpleParam(_configManager, _systemLogger, testdataSection, "issuer", false);
+				if (tst_issuer != null)
+					idpData.getTestdata4partner().setIssuer(tst_issuer);
+				
+				String tst_authncontextclassrefuri = Utils.getSimpleParam(_configManager, _systemLogger, testdataSection, "authncontextclassrefuri", false);
+				if (tst_authncontextclassrefuri != null)
+					idpData.getTestdata4partner().setAuthnContextClassRefURI(tst_authncontextclassrefuri);
+
+				String tst_authncontextcomparisontypeenumeration = Utils.getSimpleParam(_configManager, _systemLogger, testdataSection, "authncontextcomparisontypeenumeration", false);
+				if (tst_authncontextcomparisontypeenumeration != null)
+					idpData.getTestdata4partner().setAuthnContextComparisonTypeEnumeration(tst_authncontextcomparisontypeenumeration);
+				
+				String tst_forceauthn = Utils.getSimpleParam(_configManager, _systemLogger, testdataSection, "forceauthn", false);
+				if (tst_forceauthn != null)
+					idpData.getTestdata4partner().setForceAuthn(tst_forceauthn);
+				
+				String tst_providername = Utils.getSimpleParam(_configManager, _systemLogger, testdataSection, "providername", false);
+				if (tst_providername != null)
+					idpData.getTestdata4partner().setProviderName(tst_providername);
+
+				String tst_assertionconsumerserviceindex = Utils.getSimpleParam(_configManager, _systemLogger, testdataSection, "assertionconsumerserviceindex", false);
+				if (tst_assertionconsumerserviceindex != null)
+					idpData.getTestdata4partner().setAssertionConsumerServiceIndex(tst_assertionconsumerserviceindex);
+				
+				String tst_assertionconsumerserviceurl = Utils.getSimpleParam(_configManager, _systemLogger, testdataSection, "assertionconsumerserviceurl", false);
+				if (tst_assertionconsumerserviceurl != null)
+					idpData.getTestdata4partner().setAssertionConsumerServiceURL(tst_assertionconsumerserviceurl);
+
+				String tst_destination = Utils.getSimpleParam(_configManager, _systemLogger, testdataSection, "destination", false);
+				if (tst_destination != null)
+					idpData.getTestdata4partner().setDestination(tst_destination);
+
+				// logout
+				String tst_issueinstant_logout = Utils.getSimpleParam(_configManager, _systemLogger, testdataSection, "issueinstant_logout", false);
+				if (tst_issueinstant_logout != null)
+					idpData.getTestdata4partner().setIssueInstantLogout(tst_issueinstant_logout);
+
+				String tst_issuer_logout = Utils.getSimpleParam(_configManager, _systemLogger, testdataSection, "issuer_logout", false);
+				if (tst_issuer_logout != null)
+					idpData.getTestdata4partner().setIssuerLogout(tst_issuer_logout);
+
+				String tst_destination_logout = Utils.getSimpleParam(_configManager, _systemLogger, testdataSection, "destination_logout", false);
+				if (tst_destination_logout != null)
+					idpData.getTestdata4partner().setDestinationLogout(tst_destination_logout);
+
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod, "Using testdata : "+ idpData.getTestdata4partner().toString());
+
+			} else {
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod, "No testdata section found for: "+ sId);
+			}
+			
+			
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "id=" + sId + "<>" + idpData);
 			storeAllIdPData.put(sId, idpData);
 		}

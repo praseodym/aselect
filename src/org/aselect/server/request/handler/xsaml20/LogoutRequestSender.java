@@ -22,6 +22,7 @@ import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
+import org.joda.time.DateTime;
 import org.opensaml.common.SAMLObjectBuilder;
 import org.opensaml.common.binding.BasicSAMLMessageContext;
 import org.opensaml.saml2.binding.encoding.HTTPRedirectDeflateEncoder;
@@ -75,9 +76,13 @@ public class LogoutRequestSender
 	 *            the logout return url
 	 * @param  List<String>sessionindexes
 	 * 				optional list of sessionindexes to kill
+	 * @param  PartnerData paretnerData
+	 * 				optional partnerdata to be used for special settings
 	 * @throws ASelectException
 	 *             the A-select exception
 	 */
+	
+
 	public void sendLogoutRequest(HttpServletRequest request, HttpServletResponse response, String sTgT,
 			String sServiceProviderUrl, String sIssuerUrl, String sNameID, String reason, String sLogoutReturnUrl)
 		throws ASelectException
@@ -89,6 +94,15 @@ public class LogoutRequestSender
 	public void sendLogoutRequest(HttpServletRequest request, HttpServletResponse response, String sTgT,
 			String sServiceProviderUrl, String sIssuerUrl, String sNameID, String reason, String sLogoutReturnUrl, List<String>sessionindexes)
 		throws ASelectException
+		{	// for backward compatibility
+			sendLogoutRequest(request, response, sTgT, sServiceProviderUrl, sIssuerUrl, sNameID, reason, sLogoutReturnUrl, sessionindexes, null);
+		}
+		
+	@SuppressWarnings("unchecked")
+	public void sendLogoutRequest(HttpServletRequest request, HttpServletResponse response, String sTgT,
+			String sServiceProviderUrl, String sIssuerUrl, String sNameID, String reason, String sLogoutReturnUrl, List<String>sessionindexes, PartnerData partnerData)
+			throws ASelectException
+
 	{
 		String sMethod = "sendLogoutRequest";
 
@@ -96,7 +110,33 @@ public class LogoutRequestSender
 		XMLObjectBuilderFactory builderFactory = org.opensaml.xml.Configuration.getBuilderFactory();
 
 //		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(sServiceProviderUrl, sTgT, sNameID, sIssuerUrl, reason);
-		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(sServiceProviderUrl, sTgT, sNameID, sIssuerUrl, reason, sessionindexes);
+		// RH, 20120307, sn
+		LogoutRequest logoutRequest = null;
+		if (partnerData != null && partnerData.getTestdata4partner() != null) {
+			String issueinstant = partnerData.getTestdata4partner().getIssueInstantLogout();
+			DateTime dtIssueinstant = null;
+			if (issueinstant != null) {
+				dtIssueinstant = new DateTime().plus(1000*Long.parseLong(issueinstant));
+				// TODO implement setting of absolute timestamps
+			}
+
+			String issuer = partnerData.getTestdata4partner().getIssuerLogout();
+			String destination =  partnerData.getTestdata4partner().getDestinationLogout();
+			logoutRequest = SamlTools.buildLogoutRequest(
+					destination != null ? destination : sServiceProviderUrl,
+					sTgT, sNameID, 
+					issuer != null ? issuer: sIssuerUrl, 
+					reason, sessionindexes,
+					dtIssueinstant);
+					
+		} else {
+			logoutRequest = SamlTools.buildLogoutRequest(sServiceProviderUrl, sTgT, sNameID, sIssuerUrl, reason, sessionindexes);
+		}
+		// RH, 20120307, en
+//		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(sServiceProviderUrl, sTgT, sNameID, sIssuerUrl, reason, sessionindexes);	// RH, 20120307, o
+		
+		
+		
 		// TODO setValidityInterval with only NotOnOrAfter, but we need this from calling object (from aselect.xml)
 		SAMLObjectBuilder<Endpoint> endpointBuilder = (SAMLObjectBuilder<Endpoint>) builderFactory
 				.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);
@@ -141,7 +181,7 @@ public class LogoutRequestSender
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 		String msg = XMLHelper.prettyPrintXML(node);
-		_systemLogger.log(Level.FINEST, MODULE, sMethod, "About to send: " + msg);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "About to send:\n " + msg);
 
 		// Store it in the history
 		SamlHistoryManager history = SamlHistoryManager.getHandle();

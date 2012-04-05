@@ -33,7 +33,8 @@ public class PartnerData
 	
 	private String federationurl = null;
 	private Metadata4Partner metadata4partner = null;
-	
+	private Testdata4Partner testdata4partner = null;
+		
 	public PartnerData(String sId)
 	{
 		partnerID = sId;
@@ -155,6 +156,8 @@ public class PartnerData
 		return metadata4partner;
 	}
 
+	
+	
 	// Simple wrapper for handler info
 	public class HandlerInfo
 	{
@@ -456,6 +459,242 @@ public class PartnerData
 		
 	}
 
+	// SImple wrapper class for test data 
+	public class Testdata4Partner {
+
+		private String IssueInstant= null;
+		private String Issuer = null;
+		private String AuthnContextClassRefURI = null;
+		private String AuthnContextComparisonTypeEnumeration= null;
+		private String ForceAuthn = null;
+		private String ProviderName = null;
+		private String AssertionConsumerServiceIndex= null;
+		private String AssertionConsumerServiceURL = null;
+		private String Destination = null;
+		
+		private String IssueInstantLogout= null;
+		private String IssuerLogout = null;
+		private String DestinationLogout = null;
+		
+		
+
+		@Override
+		public String toString()
+		{
+			// TODO Auto-generated method stub
+			return "IssueInstant=" + IssueInstant
+				+ ", Issuer=" + Issuer
+				+ ", AuthnContextClassRefURI=" + AuthnContextClassRefURI
+				+ ", AuthnContextComparisonTypeEnumeration=" + AuthnContextComparisonTypeEnumeration
+				+ ", ForceAuthn=" + ForceAuthn
+				+ ", ProviderName=" + ProviderName
+				+ ", AssertionConsumerServiceIndex=" + AssertionConsumerServiceIndex
+				+ ", AssertionConsumerServiceURL=" + AssertionConsumerServiceURL
+				+ ", Destination=" + Destination
+				+ ", IssueInstantLogout=" + IssueInstantLogout
+				+ ", IssuerLogout=" + IssuerLogout
+				+ ", DestinationLogout=" + DestinationLogout
+			;
+			
+		}
+		
+		
+		/**
+		 * @return the issueInstant
+		 */
+		public synchronized String getIssueInstant()
+		{
+			return IssueInstant;
+		}
+		/**
+		 * @param issueInstant the issueInstant to set
+		 */
+		public synchronized void setIssueInstant(String issueInstant)
+		{
+			IssueInstant = issueInstant;
+		}
+		/**
+		 * @return the issuer
+		 */
+		public synchronized String getIssuer()
+		{
+			return Issuer;
+		}
+		/**
+		 * @param issuer the issuer to set
+		 */
+		public synchronized void setIssuer(String issuer)
+		{
+			Issuer = issuer;
+		}
+		/**
+		 * @return the authnContextClassRefURI
+		 */
+		public synchronized String getAuthnContextClassRefURI()
+		{
+			return AuthnContextClassRefURI;
+		}
+		/**
+		 * @param authnContextClassRefURI the authnContextClassRefURI to set
+		 */
+		public synchronized void setAuthnContextClassRefURI(String authnContextClassRefURI)
+		{
+			AuthnContextClassRefURI = authnContextClassRefURI;
+		}
+		/**
+		 * @return the authnContextComparisonTypeEnumeration
+		 */
+		public synchronized String getAuthnContextComparisonTypeEnumeration()
+		{
+			return AuthnContextComparisonTypeEnumeration;
+		}
+		/**
+		 * @param authnContextComparisonTypeEnumeration the authnContextComparisonTypeEnumeration to set
+		 */
+		public synchronized void setAuthnContextComparisonTypeEnumeration(String authnContextComparisonTypeEnumeration)
+		{
+			AuthnContextComparisonTypeEnumeration = authnContextComparisonTypeEnumeration;
+		}
+		/**
+		 * @return the forceAuthn
+		 */
+		public synchronized String getForceAuthn()
+		{
+			return ForceAuthn;
+		}
+		/**
+		 * @param forceAuthn the forceAuthn to set
+		 */
+		public synchronized void setForceAuthn(String forceAuthn)
+		{
+			ForceAuthn = forceAuthn;
+		}
+		/**
+		 * @return the providerName
+		 */
+		public synchronized String getProviderName()
+		{
+			return ProviderName;
+		}
+		/**
+		 * @param providerName the providerName to set
+		 */
+		public synchronized void setProviderName(String providerName)
+		{
+			ProviderName = providerName;
+		}
+		/**
+		 * @return the assertionConsumerServiceIndex
+		 */
+		public synchronized String getAssertionConsumerServiceIndex()
+		{
+			return AssertionConsumerServiceIndex;
+		}
+		/**
+		 * @param assertionConsumerServiceIndex the assertionConsumerServiceIndex to set
+		 */
+		public synchronized void setAssertionConsumerServiceIndex(String assertionConsumerServiceIndex)
+		{
+			AssertionConsumerServiceIndex = assertionConsumerServiceIndex;
+		}
+		/**
+		 * @return the assertionConsumerServiceURL
+		 */
+		public synchronized String getAssertionConsumerServiceURL()
+		{
+			return AssertionConsumerServiceURL;
+		}
+		/**
+		 * @param assertionConsumerServiceURL the assertionConsumerServiceURL to set
+		 */
+		public synchronized void setAssertionConsumerServiceURL(String assertionConsumerServiceURL)
+		{
+			AssertionConsumerServiceURL = assertionConsumerServiceURL;
+		}
+		/**
+		 * @return the destination
+		 */
+		public synchronized String getDestination()
+		{
+			return Destination;
+		}
+		/**
+		 * @param destination the destination to set
+		 */
+		public synchronized void setDestination(String destination)
+		{
+			Destination = destination;
+		}
+
+
+		/**
+		 * @return the issueInstantLogout
+		 */
+		public String getIssueInstantLogout()
+		{
+			return IssueInstantLogout;
+		}
+
+
+		/**
+		 * @param issueInstantLogout the issueInstantLogout to set
+		 */
+		public void setIssueInstantLogout(String issueInstantLogout)
+		{
+			IssueInstantLogout = issueInstantLogout;
+		}
+
+
+		/**
+		 * @return the issuerLogout
+		 */
+		public String getIssuerLogout()
+		{
+			return IssuerLogout;
+		}
+
+
+		/**
+		 * @param issuerLogout the issuerLogout to set
+		 */
+		public void setIssuerLogout(String issuerLogout)
+		{
+			IssuerLogout = issuerLogout;
+		}
+
+
+		/**
+		 * @return the destinationLogout
+		 */
+		public String getDestinationLogout()
+		{
+			return DestinationLogout;
+		}
+
+
+		/**
+		 * @param destinationLogout the destinationLogout to set
+		 */
+		public void setDestinationLogout(String destinationLogout)
+		{
+			DestinationLogout = destinationLogout;
+		}
+
+	}
+	// End SImple wrapper class for test data 
+
 	
+	
+	/**
+	 * @return the metadata4partner
+	 */
+	public synchronized Testdata4Partner getTestdata4partner()
+	{
+		if (testdata4partner == null) {
+			testdata4partner = new Testdata4Partner();
+		}
+		return testdata4partner;
+	}
+
 	
 }

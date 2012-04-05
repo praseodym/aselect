@@ -650,9 +650,17 @@ public class SamlTools
 //				issuerUrl, reason, null);
 //	}
 
-	@SuppressWarnings("unchecked")
 	public static LogoutRequest buildLogoutRequest(String sServiceProviderUrl, String sTgT, String sNameID,
 			String issuerUrl, String reason, List<String>sessionindexes)
+		throws ASelectException
+	{
+		return buildLogoutRequest( sServiceProviderUrl, sTgT, sNameID,
+				 issuerUrl,  reason, sessionindexes, null);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static LogoutRequest buildLogoutRequest(String sServiceProviderUrl, String sTgT, String sNameID,
+			String issuerUrl, String reason, List<String>sessionindexes, DateTime issueInstant)
 		throws ASelectException
 	{
 		String sMethod = "buildLogoutRequest";
@@ -666,7 +674,11 @@ public class SamlTools
 		// verplichte velden
 		logoutRequest.setID((sTgT != null) ? "_" + sTgT : SamlTools.generateIdentifier(systemLogger, MODULE));
 		logoutRequest.setVersion(SAMLVersion.VERSION_20);
-		logoutRequest.setIssueInstant(new DateTime());
+		
+		if (issueInstant == null)  issueInstant = new DateTime();	// RH, 20120307, n
+			
+//		logoutRequest.setIssueInstant(new DateTime());	// RH, 20120307, o
+		logoutRequest.setIssueInstant(issueInstant);	// RH, 20120307, n
 
 		// een van de volgende 3 is verplicht baseId, encryptedId, nameId
 		SAMLObjectBuilder<NameID> nameIdBuilder = (SAMLObjectBuilder<NameID>) builderFactory

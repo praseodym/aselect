@@ -417,6 +417,54 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				authnRequest.setForceAuthn(true);
 			}
 			
+			// Handle testdata
+			if (partnerData.getTestdata4partner() != null) {
+				String timeOffset = partnerData.getTestdata4partner().getIssueInstant();
+				if (timeOffset != null) {
+//					if (timeOffset.startsWith("-")) {
+//						authnRequest.setIssueInstant(new DateTime().minus(1000*Long.parseLong(timeOffset)));
+//					} else {
+						authnRequest.setIssueInstant(new DateTime().plus(1000*Long.parseLong(timeOffset)));
+//					}
+					// TODO implement setting of absolute timestamps
+				}
+				if (partnerData.getTestdata4partner().getIssuer() != null) {
+					authnRequest.getIssuer().setValue(partnerData.getTestdata4partner().getIssuer());
+				}
+				if (partnerData.getTestdata4partner().getAuthnContextClassRefURI() != null) {
+					// There should be one so take first
+					authnRequest.getRequestedAuthnContext().getAuthnContextClassRefs().get(0).setAuthnContextClassRef(partnerData.getTestdata4partner().getAuthnContextClassRefURI());
+				}
+				if (partnerData.getTestdata4partner().getAuthnContextComparisonTypeEnumeration() != null) {
+					if ("minimum".equalsIgnoreCase( partnerData.getTestdata4partner().getAuthnContextComparisonTypeEnumeration()) ) 
+						requestedAuthnContext.setComparison(AuthnContextComparisonTypeEnumeration.MINIMUM);
+					else if ("exact".equalsIgnoreCase( partnerData.getTestdata4partner().getAuthnContextComparisonTypeEnumeration()) ) 
+						requestedAuthnContext.setComparison(AuthnContextComparisonTypeEnumeration.EXACT);
+						else if ("better".equalsIgnoreCase( partnerData.getTestdata4partner().getAuthnContextComparisonTypeEnumeration()) ) 
+							requestedAuthnContext.setComparison(AuthnContextComparisonTypeEnumeration.BETTER);
+							else if ("maximum".equalsIgnoreCase( partnerData.getTestdata4partner().getAuthnContextComparisonTypeEnumeration()) ) 
+								requestedAuthnContext.setComparison(AuthnContextComparisonTypeEnumeration.MAXIMUM);
+				}
+				if ( partnerData.getTestdata4partner() .getForceAuthn() != null) {
+					authnRequest.setForceAuthn(Boolean.parseBoolean(partnerData.getTestdata4partner() .getForceAuthn()));
+				}
+				if (partnerData.getTestdata4partner() .getProviderName() != null) {
+					authnRequest.setProviderName(partnerData.getTestdata4partner() .getProviderName());
+					
+				}
+				if (partnerData.getTestdata4partner() .getAssertionConsumerServiceIndex() != null) {
+					authnRequest.setAssertionConsumerServiceIndex(Integer.parseInt(partnerData.getTestdata4partner() .getAssertionConsumerServiceIndex())); // TODO beware of exception
+				}
+				if (partnerData.getTestdata4partner() .getAssertionConsumerServiceURL() != null) {
+					authnRequest.setAssertionConsumerServiceURL(partnerData.getTestdata4partner() .getAssertionConsumerServiceURL());
+				}
+				if (partnerData.getTestdata4partner() .getDestination() != null) {
+					authnRequest.setDestination(partnerData.getTestdata4partner() .getDestination());
+				}
+				
+			}
+			
+			
 			// 20100908, Bauke: Look for aselect_specials!
 			// In app_url or in the caller's RelayState (if we're an IdP)
 			String sSpecials = null;
