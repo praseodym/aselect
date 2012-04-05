@@ -291,7 +291,7 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Just marshalled into metadata node");
 
 		xmlMDRequest = XMLHelper.nodeToString(node);
-		_systemLogger.log(Level.FINEST, MODULE, sMethod, "xmlMDRequest: " + xmlMDRequest);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "xmlMDRequest: " + xmlMDRequest);
 		return xmlMDRequest;
 	}
 

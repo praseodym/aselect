@@ -177,7 +177,7 @@ public class ProxyHTTPMetadataProvider extends HTTPMetadataProvider
 		}
 		proxyhttpClient.executeMethod(getMethod);
 
-		_systemLogger.log(Level.FINEST, "Retrieved the following metadata document\n{}"
+		_systemLogger.log(Level.INFO, "Retrieved the following metadata document\n{}"
 				+ getMethod.getResponseBodyAsString());
 		XMLObject metadata = unmarshallMetadata(getMethod.getResponseBodyAsStream());
 
