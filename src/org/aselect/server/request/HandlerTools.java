@@ -11,12 +11,19 @@
  */
 package org.aselect.server.request;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -411,4 +418,51 @@ public class HandlerTools
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 	}
+	
+	
+	/*
+	 * 
+	 */
+		/**
+		 * @param keyfile	full path to keyfile that contains client certificate
+		 * @param keyfilePw	password for the keystore
+		 * @return	sslsocketfactory or null if creation failed 
+		 * @throws GeneralSecurityException
+		 * @throws IOException
+		 * 
+		 * Override this method if you need a non-default sslsocketfactory
+		 * or set  the security property "ssl.SocketFactory.provider"
+		 */
+		public static SSLSocketFactory createSSLSocketFactory(String keyfile, String keyfilePw) throws GeneralSecurityException, IOException {
+		    /*
+		     * Set up a key manager for client authentication
+		     * if asked by the server.  Use the implementation's
+		     * default TrustStore and secureRandom routines.
+		     */
+		    SSLSocketFactory factory = null;
+			SSLContext ctx;
+			KeyManagerFactory kmf;
+			KeyStore ks;
+			
+			if (keyfile == null || "".equals(keyfile.trim()) ) {
+				return null;
+			}
+			char[] passphrase = keyfilePw.toCharArray();
+
+			ctx = SSLContext.getInstance("TLS");
+			kmf = KeyManagerFactory.getInstance("SunX509");
+			ks = KeyStore.getInstance("JKS");
+
+			ks.load(new FileInputStream(keyfile), passphrase);
+
+			kmf.init(ks, passphrase);
+			ctx.init(kmf.getKeyManagers(), null, null);
+
+			factory = ctx.getSocketFactory();
+
+			return factory;
+			
+		}
+
+	
 }
