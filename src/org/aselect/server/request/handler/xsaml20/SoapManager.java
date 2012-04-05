@@ -16,6 +16,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.logging.Level;
 
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSocketFactory;
+
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
@@ -32,7 +35,16 @@ public class SoapManager
 	private static final String CONTENT_TYPE = "text/xml; charset=utf-8";
 
 	protected ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
+	private SSLSocketFactory sslSocketFactory = null;
 
+	
+	public SoapManager() {
+	}
+	
+	public SoapManager(SSLSocketFactory socketFactory) {
+		sslSocketFactory = socketFactory;
+	}	
+	
 	/**
 	 * Build a SOAP Message. <br>
 	 * 
@@ -79,12 +91,21 @@ public class SoapManager
 		StringBuffer sb = new StringBuffer();
 		URL url = null;
 		HttpURLConnection connection = null;
+		HttpsURLConnection  sslconnection = null;
 
 		// http://[target address]/[schema target]
 		url = new URL(sUrl);
 		try {
 			// open HTTP connection to URL
-			connection = (HttpURLConnection) url.openConnection();
+//			connection = (HttpURLConnection) url.openConnection();
+			if ( sslSocketFactory != null ) {
+				sslconnection = (HttpsURLConnection) url.openConnection();
+				sslconnection.setSSLSocketFactory(sslSocketFactory);
+				connection = sslconnection;
+			} else {
+				connection = (HttpURLConnection) url.openConnection();
+			}
+			
 			// enable sending to connection
 			connection.setDoOutput(true);
 
@@ -146,4 +167,5 @@ public class SoapManager
 		}
 		return sb.toString();
 	}
+	
 }

@@ -16,6 +16,7 @@ import java.security.PublicKey;
 import java.util.List;
 import java.util.logging.Level;
 
+import javax.net.ssl.SSLSocketFactory;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -40,7 +41,20 @@ public class SoapLogoutRequestSender
 	private final static String MODULE = "SoapLogoutRequestSender";
 	private static final String LOGOUTRESPONSE = "LogoutResponse";
 	private ASelectSystemLogger _systemLogger = ASelectSystemLogger.getHandle();
+	
+	private SSLSocketFactory sslSocketFactory = null;
 
+
+	
+	public SoapLogoutRequestSender() {
+	}
+	
+	
+	public SoapLogoutRequestSender(SSLSocketFactory socketFactory ) {
+		this.sslSocketFactory = socketFactory;
+	}
+
+	
 	/**
 	 * Send Logout Request. <br>
 	 * 
@@ -125,7 +139,9 @@ public class SoapLogoutRequestSender
 		logoutRequest = (LogoutRequest)SamlTools.signSamlObject(logoutRequest);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the logoutRequest ======<");
 
-		SoapManager soapManager = new SoapManager();
+//		SoapManager soapManager = new SoapManager();
+		SoapManager soapManager = new SoapManager(sslSocketFactory);	// sslSocketFactory may be null
+		
 		Envelope envelope = soapManager.buildSOAPMessage(logoutRequest);
 
 		Element envelopeElem = null;

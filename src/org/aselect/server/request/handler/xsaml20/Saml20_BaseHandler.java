@@ -13,12 +13,19 @@ package org.aselect.server.request.handler.xsaml20;
 
 import java.io.IOException;
 
+import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
+
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -27,10 +34,12 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.config.Version;
+import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.handler.ProtoRequestHandler;
 import org.aselect.server.request.handler.xsaml20.sp.MetaDataManagerSp;
 import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
+import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.utils.Utils;
@@ -63,7 +72,11 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 	private Long maxNotOnOrAfter = null;
 	// relaxation period after NotOnOrAfter, validity period will be extended with this value (seconds)
 	// if null value is not specified in aselect.xml
+	private boolean useBackchannelClientcertificate = false;
 
+	private SSLSocketFactory sslSocketFactory = null;
+
+	
 	/**
 	 * Init for class Saml20_BaseHandler. <br>
 	 * 
@@ -109,6 +122,49 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 		if (sMaxNotOnOrAfter != null) {
 			setMaxNotOnOrAfter(new Long(Long.parseLong(sMaxNotOnOrAfter) * 1000));
 		}
+		
+		// RH, 20120322, sn
+		String sUseBackChannelClientCertificate = ASelectConfigManager.getSimpleParam(oHandlerConfig, "use_backchannelclientcertificate", false);
+		if ("true".equalsIgnoreCase(sUseBackChannelClientCertificate)) {
+			setUseBackchannelClientcertificate(true);
+
+			String sKeystore = ASelectConfigManager.getParamFromSection(oHandlerConfig, "use_backchannelclientcertificate", "keystore", true);
+			String sKeystorePw = ASelectConfigManager.getParamFromSection(oHandlerConfig, "use_backchannelclientcertificate", "keystorepw", false);
+			try {
+				SSLSocketFactory _sslSocketFactory = HandlerTools.createSSLSocketFactory(sKeystore, sKeystorePw);
+				if (_sslSocketFactory != null) {
+					setSslSocketFactory(_sslSocketFactory);
+				} else {
+					StringBuffer sbBuffer = new StringBuffer("Unable to setup SSLSocketFactory, maybe keystore or keystore password invalid: \"");
+					sbBuffer.append("keystore:" + sKeystore);
+					sbBuffer.append("\" errorcode: ");
+					sbBuffer.append(Errors.ERROR_ASELECT_CONFIG_ERROR);
+					_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString());
+					throw new ASelectCommunicationException(Errors.ERROR_ASELECT_CONFIG_ERROR);
+				}
+			}
+			catch (IOException iox) {
+				StringBuffer sbBuffer = new StringBuffer("Unable to setup SSLSocketFactory, maybe keystore invalid: \"");
+				sbBuffer.append("keystore:" + sKeystore);
+				sbBuffer.append("\" errorcode: ");
+				sbBuffer.append(Errors.ERROR_ASELECT_CONFIG_ERROR);
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), iox);
+				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_CONFIG_ERROR, iox);
+			}
+			catch (GeneralSecurityException e) {
+				StringBuffer sbBuffer = new StringBuffer("Unable to setup SSLSocketFactory, maybe keystore or keystore password invalid: \"");
+				sbBuffer.append("keystore:" + sKeystore);
+				sbBuffer.append("\" errorcode: ");
+				sbBuffer.append(Errors.ERROR_ASELECT_CONFIG_ERROR);
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), e);
+				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_CONFIG_ERROR, e);
+			}
+
+			
+		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "use_backchannelclientcertificate: " + isUseBackchannelClientcertificate());
+		// RH, 20120322, en
+
 	}
 
 	// Unfortunately, sNameID is not equal to our tgtID (it's the Federation's)
@@ -178,6 +234,12 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 
 		// metadata
 		String sFederationUrl = (String) htTGTContext.get("federation_url");
+		
+		// RH, 20120307, sn
+		// Add partnerdata for later usage, this is the best point for geting the federationurl, we already retrieved the tgtcontext 
+		PartnerData partnerData = MetaDataManagerSp.getHandle().getPartnerDataEntry(sFederationUrl);
+		// RH, 20120307, en
+		
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Logout to IdP=" + sFederationUrl + " returnUrl="
 				+ sLogoutReturnUrl);
 		// if (sFederationUrl == null) sFederationUrl = _sFederationUrl; // xxx for now
@@ -193,7 +255,8 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 //			logoutRequestSender.sendLogoutRequest(request, response, sTgT, url, sIssuer/* issuer */, sNameID,
 //					"urn:oasis:names:tc:SAML:2.0:logout:user", sLogoutReturnUrl);					// RH, 20120201, o
 			logoutRequestSender.sendLogoutRequest(request, response, sTgT, url, sIssuer/* issuer */, sNameID,
-					"urn:oasis:names:tc:SAML:2.0:logout:user", sLogoutReturnUrl, sessionindexes);					// RH, 20120201, n
+//					"urn:oasis:names:tc:SAML:2.0:logout:user", sLogoutReturnUrl, sessionindexes);					// RH, 20120201, n
+					"urn:oasis:names:tc:SAML:2.0:logout:user", sLogoutReturnUrl, sessionindexes, partnerData);					// RH, 201200307, n
 		}
 		else {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "No IdP SingleLogoutService");
@@ -400,4 +463,38 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 		}
 		return authzDecisionQuery;
 	}
+	
+	/**
+	 * @return the useBackchannelClientcertificate
+	 */
+	public boolean isUseBackchannelClientcertificate()
+	{
+		return useBackchannelClientcertificate;
+	}
+
+	/**
+	 * @param useBackchannelClientcertificate the useBackchannelClientcertificate to set
+	 */
+	public void setUseBackchannelClientcertificate(boolean useBackchannelClientcertificate)
+	{
+		this.useBackchannelClientcertificate = useBackchannelClientcertificate;
+	}
+
+
+	/**
+	 * @return the sslSocketFactory
+	 */
+	public SSLSocketFactory getSslSocketFactory()
+	{
+		return sslSocketFactory;
+	}
+
+	/**
+	 * @param sslSocketFactory the sslSocketFactory to set
+	 */
+	public void setSslSocketFactory(SSLSocketFactory sslSocketFactory)
+	{
+		this.sslSocketFactory = sslSocketFactory;
+	}
+
 }

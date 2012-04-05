@@ -92,6 +92,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 //		and therefore previously been received in the assertion
 //	 if null value is not specified in aselect.xml
 
+	private boolean useBackchannelClientcertificate = false;
+
 
 	//
 	// Example configuration:
@@ -138,6 +140,14 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 		}
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "include_sessionindexes: " + isIncludeSessionindexes());
 		// RH, 20120201, en
+
+		// RH, 20120322, sn
+		String sUseBackChannelClientCertificate = ASelectConfigManager.getSimpleParam(oHandlerConfig, "use_backchannelclientcertificate", false);
+		if ("true".equalsIgnoreCase(sIncludeSessionindexes)) {
+			setUseBackchannelClientcertificate(true);
+		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "use_backchannelclientcertificate: " + isUseBackchannelClientcertificate());
+		// RH, 20120322, en
 
 
 		_tgtManager = TGTManager.getHandle();
@@ -236,7 +246,12 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the artifactResolve ======<");
 	
 				// Build the SOAP message
-				SoapManager soapManager = new SoapManager();
+				SoapManager soapManager  = null;
+				if (isUseBackchannelClientcertificate()) {
+					soapManager = new SoapManager(getSslSocketFactory());
+				} else {
+					soapManager = new SoapManager();
+				}
 				Envelope envelope = soapManager.buildSOAPMessage(artifactResolve);
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Marshall");
 				Element envelopeElem = SamlTools.marshallMessage(envelope);
@@ -914,5 +929,21 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 	public synchronized void setIncludeSessionindexes(boolean includeSessionindexes)
 	{
 		this.includeSessionindexes = includeSessionindexes;
+	}
+
+	/**
+	 * @return the useBackchannelClientcertificate
+	 */
+	public boolean isUseBackchannelClientcertificate()
+	{
+		return useBackchannelClientcertificate;
+	}
+
+	/**
+	 * @param useBackchannelClientcertificate the useBackchannelClientcertificate to set
+	 */
+	public void setUseBackchannelClientcertificate(boolean useBackchannelClientcertificate)
+	{
+		this.useBackchannelClientcertificate = useBackchannelClientcertificate;
 	}
 }
