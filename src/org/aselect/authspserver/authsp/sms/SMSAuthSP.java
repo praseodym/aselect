@@ -148,7 +148,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 	public void init(ServletConfig oConfig)
 		throws ServletException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		StringBuffer sbTemp = null;
 		try {
 			// super init
@@ -160,8 +160,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 			_sessionManager = AuthSPSessionManager.getHandle();
 
 			// log start
-			StringBuffer sbInfo = new StringBuffer("Starting : ");
-			sbInfo.append(MODULE);
+			StringBuffer sbInfo = new StringBuffer("Starting : ").append(MODULE);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 
 			// Retrieve crypto engine from servlet context.
@@ -208,13 +207,9 @@ public class SMSAuthSP extends ASelectHttpServlet
 			// Load error properties
 			StringBuffer sbErrorsConfig = new StringBuffer(_sWorkingDir);
 			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("conf");
+			sbErrorsConfig.append("conf").append(File.separator).append(sConfigID);
 			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append(sConfigID);
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("errors");
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("errors.conf");
+			sbErrorsConfig.append("errors").append(File.separator).append("errors.conf");
 			File fErrorsConfig = new File(sbErrorsConfig.toString());
 			if (!fErrorsConfig.exists()) {
 				StringBuffer sbFailed = new StringBuffer("The error configuration file does not exist: \"");
@@ -367,6 +362,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "No 'provider' parameter found in configuration, using default provider");
 				_sSmsProvider = null; // use default gateway
 			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "SmsProvider="+_sSmsProvider); 
 			_oSmsSender = SmsSenderFactory.createSmsSender(new URL(_sSmsUrl), _sSmsUser, _sSmsPassword, _sSmsGateway, _sSmsProvider);
 			// RH, 20110103, en
 			
@@ -417,9 +413,9 @@ public class SMSAuthSP extends ASelectHttpServlet
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	protected void doGet(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
-		throws java.io.IOException
+	throws java.io.IOException
 	{
-		String sMethod = "doGet()";
+		String sMethod = "doGet";
 		PrintWriter pwOut = null;
 		String sLanguage = null;
 		
@@ -437,7 +433,6 @@ public class SMSAuthSP extends ASelectHttpServlet
 				sCountry = null;
 			
 			servletResponse.setContentType("text/html");	// RH, 20111021, n			// Content type must be set (before getwriter)
-
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 			pwOut = servletResponse.getWriter();
 
@@ -459,15 +454,11 @@ public class SMSAuthSP extends ASelectHttpServlet
 				String sSignature = (String) htServiceRequest.get("signature");
 
 				if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sAsId == null) || (sSignature == null)) {
-//					_systemLogger.log(Level.WARNING, MODULE, sMethod,
-//							"Invalid request received: one or more mandatory parameters missing.");
 					_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"Invalid request received: one or more mandatory parameters missing, handling error locally.");
+						"Invalid request received: one or more mandatory parameters missing, handling error locally.");
 					failureHandling = "local";	// RH, 20111021, n
 					throw new ASelectException(Errors.ERROR_SMS_INVALID_REQUEST);
 				}
-
-//				servletResponse.setContentType("text/html");	// RH, 20111021, o			// Content type must be set (before getwriter)
 
 				// URL decode values
 				sAsUrl = URLDecoder.decode(sAsUrl, "UTF-8");
@@ -598,7 +589,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
-		throws java.io.IOException
+	throws java.io.IOException
 	{
 		String sMethod = "doPost()";
 		PrintWriter pwOut = null;
@@ -606,7 +597,6 @@ public class SMSAuthSP extends ASelectHttpServlet
 		String sPassword = null;
 		String sLanguage = null;
 		String failureHandling = _sFailureHandling;	// Initially we use default from config, this might change if we suspect parameter tampering
-
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "POST htServiceRequest=" + servletRequest);
 		try {
@@ -853,7 +843,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 	 * Show an HTML challenge page. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Shows a challenge to ask for phone  number form with, if applicable, an error or warning message.
+	 * Shows a challenge to ask for phone number form with, if applicable, an error or warning message.
 	 * 
 	 * @param pwOut
 	 *            the <code>PrintWriter</code> that is the target for displaying the html page.
@@ -920,9 +910,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 			e.printStackTrace();
 		}
 		sChallengeForm = Utils.replaceString(sChallengeForm, "[retry_counter]", sRetryCounter);
-		
 		sChallengeForm = Utils.replaceString(sChallengeForm, "[error_message]", sErrorMessage);
-		//sAuthenticateForm = Utils.replaceConditional(sAuthenticateForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
 		
 		// Bauke 20110721: Extract if_cond=... from the application URL
 		String sSpecials = Utils.getAselectSpecials(htServiceRequest, true/*decode too*/, _systemLogger);
@@ -932,7 +920,6 @@ public class SMSAuthSP extends ASelectHttpServlet
 		pwOut.println(sChallengeForm);
 	}
 
-	
 	/**
 	 * Handle result.
 	 * 
@@ -945,8 +932,6 @@ public class SMSAuthSP extends ASelectHttpServlet
 	 * @param sResultCode
 	 *            the s result code
 	 */
-//	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-//				PrintWriter pwOut, String sResultCode, String sLanguage)
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut, String sResultCode, String sLanguage, String failureHandling)
 	{
@@ -990,20 +975,17 @@ public class SMSAuthSP extends ASelectHttpServlet
 					}
 				}
 			}
-			else // Local error handling
-			{
+			else {  // Local error handling
 				showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
 						_oErrorProperties), sLanguage, _systemLogger);
 			}
 		}
-		catch (ASelectException eAS) // could not generate signature
-		{
+		catch (ASelectException eAS) {  // could not generate signature
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate SMS AuthSP signature", eAS);
 			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_SMS_COULD_NOT_AUTHENTICATE_USER, _configManager
 					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage, _systemLogger);
 		}
-		catch (UnsupportedEncodingException eUE) // could not encode signature
-		{
+		catch (UnsupportedEncodingException eUE) {  // could not encode signature
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode SMS AuthSP signature", eUE);
 			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_SMS_COULD_NOT_AUTHENTICATE_USER, _configManager
 					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage, _systemLogger);

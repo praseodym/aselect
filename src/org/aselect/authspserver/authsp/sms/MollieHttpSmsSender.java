@@ -8,8 +8,8 @@ package org.aselect.authspserver.authsp.sms;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.logging.Level;
 
@@ -23,6 +23,7 @@ import org.aselect.system.utils.Tools;
  */
 public class MollieHttpSmsSender implements SmsSender
 {
+	private static final String sModule = "Mollie";
 	private final String user;
 	private final String password;
 	private final URL url;
@@ -38,7 +39,8 @@ public class MollieHttpSmsSender implements SmsSender
 	 * @param password
 	 *            the password
 	 */
-	public MollieHttpSmsSender(URL url, String user, String password) {
+	public MollieHttpSmsSender(URL url, String user, String password)
+	{
 		this(url, user, password, null);
 	}
 
@@ -54,7 +56,8 @@ public class MollieHttpSmsSender implements SmsSender
 	 * @param gateway
 	 *            the gateway
 	 */
-	public MollieHttpSmsSender(URL url, String user, String password, String gateway) {
+	public MollieHttpSmsSender(URL url, String user, String password, String gateway)
+	{
 		super();
 		this.url = url;
 		this.user = user;
@@ -86,15 +89,15 @@ public class MollieHttpSmsSender implements SmsSender
 	public int sendSms(String message, String from, String recipients)
 	throws SmsException
 	{
-		final String EQUAL_SIGN = "=";
-		final String AMPERSAND = "&";
+		String sMethod = "sendSms";
 		int iReturnCode = -1;
 		StringBuffer data = new StringBuffer();
 		AuthSPSystemLogger _systemLogger;
 		_systemLogger = AuthSPSystemLogger.getHandle();
 
 		try {
-			// data.append(this.url);
+			final String EQUAL_SIGN = "=";
+			final String AMPERSAND = "&";
 			data.append(URLEncoder.encode("username", "UTF-8"));
 			data.append(EQUAL_SIGN).append(URLEncoder.encode(this.user, "UTF-8"));
 			data.append(AMPERSAND).append(URLEncoder.encode("password", "UTF-8"));
@@ -113,9 +116,8 @@ public class MollieHttpSmsSender implements SmsSender
 				data.append(EQUAL_SIGN).append(URLEncoder.encode(this.gateway, "UTF-8"));
 			}
 			// RH, 20080729, en
-
-			_systemLogger.log(Level.INFO, "Mollie", "sendSms", "url=" + url.toString() + " data=" + data.toString());
-			URLConnection conn = url.openConnection();
+			_systemLogger.log(Level.INFO, sModule, sMethod, "url=" + url.toString() + " data=" + data.toString());
+			HttpURLConnection conn = (HttpURLConnection)url.openConnection();
 			conn.setDoOutput(true);
 			OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
 			wr.write(data.toString());
@@ -124,7 +126,8 @@ public class MollieHttpSmsSender implements SmsSender
 			// Get the response
 			// Bauke: adapted to latest protocol
 			BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-			String sResult, sResultCode = "", line;
+			String line;
+			String sResult = "", sResultCode = "";
 			while ((line = rd.readLine()) != null) {
 //				System.out.println(line);	// RH, 20110104, o
 				sResult = Tools.extractFromXml(line, "resultcode", true);
@@ -133,7 +136,7 @@ public class MollieHttpSmsSender implements SmsSender
 					break;
 				}
 			}
-			_systemLogger.log(Level.INFO, "Mollie", "sendSms", "resultcode=" + sResultCode);
+			_systemLogger.log(Level.INFO, sModule, sMethod, "resultcode=" + sResultCode);
 			if (sResultCode.equals("10"))
 				iReturnCode = 0;  // OK
 			else if (sResultCode.equals("25"))

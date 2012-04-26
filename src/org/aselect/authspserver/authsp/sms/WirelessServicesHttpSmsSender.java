@@ -28,6 +28,7 @@ import org.aselect.authspserver.log.AuthSPSystemLogger;
  */
 public class WirelessServicesHttpSmsSender implements SmsSender
 {
+	private static final String sModule = "WirelessServices";
 	private static final String SEPCHAR = "=";
 	private static final String GWVERSION = "1.1";
 	private final String user;
@@ -45,7 +46,8 @@ public class WirelessServicesHttpSmsSender implements SmsSender
 	 * @param password
 	 *            the account password
 	 */
-	public WirelessServicesHttpSmsSender(URL url, String user, String password) {
+	public WirelessServicesHttpSmsSender(URL url, String user, String password)
+	{
 		this(url, user, password, null);
 	}
 
@@ -61,7 +63,8 @@ public class WirelessServicesHttpSmsSender implements SmsSender
 	 * @param gateway
 	 *            the (optional) priority gateway if supported by the sms gateway provider
 	 */
-	public WirelessServicesHttpSmsSender(URL url, String user, String password, String gateway) {
+	public WirelessServicesHttpSmsSender(URL url, String user, String password, String gateway)
+	{
 		super();
 		this.url = url;
 		this.user = user;
@@ -84,7 +87,8 @@ public class WirelessServicesHttpSmsSender implements SmsSender
 	public int sendSms(String message, String from, String recipients)
 		throws SmsException
 	{
-		int returncode = 15;
+		String sMethod = "sendSms";
+		int iReturnCode = 15;
 		StringBuffer data = new StringBuffer();
 		AuthSPSystemLogger _systemLogger;
 		_systemLogger = AuthSPSystemLogger.getHandle();
@@ -115,32 +119,32 @@ public class WirelessServicesHttpSmsSender implements SmsSender
 
 			// gateway == null, Wireless Services cannot specify alternate gateway like this, must use other URL
 			if (this.gateway != null && !"".equals(this.gateway.trim())) {
-				_systemLogger.log(Level.WARNING, "Wireless Services does not support alternate gateway, you must use alternate URL for this");
+				_systemLogger.log(Level.WARNING, sModule, sMethod, "No alternate gateway support, you must use alternate URL for this");
 			}
-			_systemLogger.log(Level.INFO, "Wireless Services", "sendSms", "url=" + url.toString() + " data=" + data.toString());
-			returncode++; // 16
-//			URLConnection conn = url.openConnection();
-			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			iReturnCode++; // 16
+			_systemLogger.log(Level.INFO, sModule, sMethod, "url=" + url.toString() + " data=" + data.toString());
+			HttpURLConnection conn = (HttpURLConnection)url.openConnection();
 //			conn.setRequestProperty("Connection", "close"); // use this if we will explicitly conn.disconnect();
 			conn.setRequestMethod("POST");	// Wireless Services prefers POST
 			conn.setRequestProperty("Host", url.getHost());	// Wireless Services requires 'Host' header
 			conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");	// Wireless Services requires this for POST
 			conn.setReadTimeout(10000);
-			returncode++; // 17
+			iReturnCode++; // 17
 			conn.setDoOutput(true);
 			OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
 			wr.write(data.toString());
 			wr.flush();
-			returncode++; // 18
+			iReturnCode++; // 18
 
 			// Get the response
 			BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 			String line;
 			String sResult = "", sResultCode = "";
 			while ((line = rd.readLine()) != null) {	// there should be only one significant line, ignore extra lines
-				if ( "".equals(sResult) && !"".equals(line) ) sResult = line;	// get first non-empty line
+				if ("".equals(sResult) && !"".equals(line))
+					sResult = line;	// get first non-empty line
 			}
-			_systemLogger.log(Level.INFO, "Wireless Services", "sendSms", "result:" + sResult);
+			_systemLogger.log(Level.INFO, sModule, sMethod, "result:" + sResult);
 
 			int resLength = sResult.length();
 			if (resLength == 0) {
@@ -155,7 +159,7 @@ public class WirelessServicesHttpSmsSender implements SmsSender
 				throw new SmsException("Wireless Services could not send sms, returncode from Wireless Services: " + sResultCode);
 			}
 			
-			returncode++; // 19
+			iReturnCode++; // 19
 			wr.close();
 			rd.close();
 		}
@@ -164,10 +168,9 @@ public class WirelessServicesHttpSmsSender implements SmsSender
 					+ "\' failed due to number format exception! " + e.getMessage(), e);
 		}
 		catch (Exception e) {
-			throw new SmsException("Sending SMS, using \'" + this.url.toString() + "\' failed (progress=" + returncode
+			throw new SmsException("Sending SMS, using \'" + this.url.toString() + "\' failed (progress=" + iReturnCode
 					+ ")! " + e.getMessage(), e);
 		}
-		return returncode;
+		return iReturnCode;
 	}
-	
 }

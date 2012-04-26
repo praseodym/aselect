@@ -51,13 +51,16 @@ public class SmsSenderFactory
 	 * <b>Concurrency issues:</b> <br>
 	 * - <br>
 	 */
-	public static SmsSender createSmsSender(URL url, String user, String password, String gateway, String gw_provider) {
+	public static SmsSender createSmsSender(URL url, String user, String password, String gateway, String gw_provider)
+	{
 		if (PROVIDER_WIRELESSSERVICES.equalsIgnoreCase(gw_provider)) {
 			return new  WirelessServicesHttpSmsSender(url, user, password, gateway);
+		}
+		else if ("GoldenBytes".equalsIgnoreCase(gw_provider)) {
+			return new GoldenBytesHttpSmsSender(url, user, password, gateway);
 		}
 		else {	// default to "mollie"
 			return new  MollieHttpSmsSender(url, user, password, gateway);
 		}
-		
 	}
 }
