@@ -32,7 +32,6 @@ import org.aselect.system.storagemanager.handler.JDBCStorageHandler;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
-// TODO: Auto-generated Javadoc
 /*
  * NOTE: Code differs from the idp-version.
  * NOTE: Code is identical to MemoryStorageHandlerTimeOut (except for class-names of course)
@@ -67,7 +66,8 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			_serverUrl = _oConfigManager.getParam(aselectSection, "redirect_url");
 		}
 		catch (ASelectConfigException e) {
-			systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'redirect_url' found in 'aselect' section", e);
+			systemLogger.log(Level.WARNING, MODULE, sMethod,
+					"No config item 'redirect_url' found in 'aselect' section", e);
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 		// 20091207: default if not available in TgT, only available for backward compatibility
@@ -156,7 +156,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 	 */
 	@SuppressWarnings("unchecked")
 	private void determineTimeOut()
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String _sMethod = "determineTimeOut";
 
@@ -188,7 +188,8 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			HashMap htTGTContext = (HashMap) _oTGTManager.get(key);
 			String sNameID = (String) htTGTContext.get("name_id");
 			String sSync = (String) htTGTContext.get("sessionsynctime");
-			Long lastSync = Long.parseLong(sSync);
+			_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "sSync="+sSync);
+			long lastSync = (sSync==null)? 0: Long.parseLong(sSync);
 			Boolean bForcedAuthn = (Boolean) htTGTContext.get("forced_authenticate");
 			if (bForcedAuthn == null)
 				bForcedAuthn = false;
@@ -242,6 +243,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 
 		String sFederationUrl = (String) htTGTContext.get("federation_url");
 		Vector<String> sessionIndexes = (Vector<String>)  htTGTContext.get("remote_sessionlist");	// can be null	// RH, 20120201, n
+
 		if (sFederationUrl == null)
 			sFederationUrl = _sFederationUrl; // TODO: remove later on
 		if (sFederationUrl == null || sFederationUrl.equals("")) {

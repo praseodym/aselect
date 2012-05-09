@@ -178,7 +178,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 			}
 			SessionSyncRequestSender ss_req = new SessionSyncRequestSender(_oSystemLogger, _sSpUrl, updateInterval,
 					_sMessageType, sSessionSyncUrl, pkey, getMaxNotBefore(), getMaxNotOnOrAfter(), is_bVerifyInterval());
-			errorCode = ss_req.synchronizeSession(sTgT, htTGTContext, /* true, coded */true/* upgrade */);
+			errorCode = ss_req.synchronizeSession(sTgT, htTGTContext, true/*updateTgt*/);
 		}
 		else {
 			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SP - No credentials available");

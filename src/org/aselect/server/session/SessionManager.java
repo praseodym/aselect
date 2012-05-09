@@ -245,6 +245,12 @@ public class SessionManager extends StorageManager
 		super.destroy();
 	}
 
+	public String createSession(HashMap htSessionContext, boolean startPaused)
+	throws ASelectException
+	{
+		return createSession(null, htSessionContext, startPaused);
+	}
+	
 	/**
 	 * Create a unique session ID and stores the <code>htSessionContext</code> using this ID. <br>
 	 * <br>
@@ -266,44 +272,58 @@ public class SessionManager extends StorageManager
 	 * @throws ASelectException
 	 *             If server is busy.
 	 */
-	synchronized public String createSession(HashMap htSessionContext, boolean startPaused)
-		throws ASelectException
+	synchronized public String createSession(String sPredefinedRid, HashMap htSessionContext, boolean startPaused)
+	throws ASelectException
 	{
 		String sMethod = "createSession";
-		String sSessionId = null;
+		String sSessionId = sPredefinedRid;
 
 		// The sessionid must be of the type xs:NCName and at least 20 random bytes long
 		// xs:NCName starts with a letter or '_'
 		try {
-			byte[] baRandomBytes = new byte[20];
+//			byte[] baRandomBytes = new byte[20];
+//			CryptoEngine.nextRandomBytes(baRandomBytes);
+//			sSessionId = "R" + Utils.byteArrayToHexString(baRandomBytes);
 
-			CryptoEngine.nextRandomBytes(baRandomBytes);
-			sSessionId = "R" + Utils.byteArrayToHexString(baRandomBytes);
-			
-			//////////////////////////////////////////////////////////////////////
-			// RH, 20111121, so
-//			while (containsKey(sSessionId)) {
-//				CryptoEngine.nextRandomBytes(baRandomBytes);
-//				sSessionId = "R" + Utils.byteArrayToHexString(baRandomBytes);
-//				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Generated new sSessionId=" + sSessionId);
-//			}
-			// RH, 20111121, eo
-			/////////////////////////////////////////////////////
+//// RH, 20111121, so
+////		while (containsKey(sSessionId)) {
+////			CryptoEngine.nextRandomBytes(baRandomBytes);
+////			sSessionId = "R" + Utils.byteArrayToHexString(baRandomBytes);
+////			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Generated new sSessionId=" + sSessionId);
+////		}
+//// RH, 20111121, eo
 
 			Tools.initializeSensorData(_systemLogger, htSessionContext);
 			if (startPaused)
 				Tools.pauseSensorData(_systemLogger, htSessionContext);
-			// _systemLogger.log(Level.INFO, MODULE, sMethod, "New SessionId=" + sSessionId); // +
-			// ", htSessionContext="+htSessionContext);
-//			put(sSessionId, htSessionContext); // always insert	// RH, 20111121, o
-			// RH, 20111121, sn
-			while ( !create(sSessionId, htSessionContext) ) {
-				CryptoEngine.nextRandomBytes(baRandomBytes);
-				sSessionId = "R" + Utils.byteArrayToHexString(baRandomBytes);
-				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Generated new sSessionId=" + sSessionId);
+			
+			// 20120404, Bauke: rewritten to handle a predefined Rid.
+			for ( ; ; ) {
+				if (!Utils.hasValue(sPredefinedRid)) {
+					byte[] baRandomBytes = new byte[20];
+					CryptoEngine.nextRandomBytes(baRandomBytes);
+					sSessionId = "R" + Utils.byteArrayToHexString(baRandomBytes);
+				}
+				if (create(sSessionId, htSessionContext))  // success
+					break;
+				if (Utils.hasValue(sPredefinedRid))  // only try once
+					break;
+				// create failed, try with a new Rid
 			}
-			// RH, 20111121, en
+			
+//			// RH, 20111121, sn
+//			while ( !create(sSessionId, htSessionContext) ) {
+//				// Generate a new SessionId
+//				CryptoEngine.nextRandomBytes(baRandomBytes);
+//				sSessionId = "R" + Utils.byteArrayToHexString(baRandomBytes);
+//				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Generated new sSessionId=" + sSessionId);
+//			}
+//			// RH, 20111121, en
+			
 			_lSessionsCounter++;
+			// Put "rid" and "status" in the local session cache
+			htSessionContext.put("status", "get");  // 20120401: indicates unchanged session
+			htSessionContext.put("rid", sSessionId);  // 20120401, Bauke: added to facilitate deferred session updates
 		}
 		catch (ASelectStorageException e) {
 			if (e.getMessage().equals(Errors.ERROR_ASELECT_STORAGE_MAXIMUM_REACHED)) {
@@ -348,8 +368,10 @@ public class SessionManager extends StorageManager
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SessionId=" + sSessionId); // + ", Context=" + htContext);
 			htContext = (HashMap) get(sSessionId);
-			if (htContext != null)
-				Utils.setSessionStatus(htContext, "get", _systemLogger);
+			if (htContext != null) {
+				htContext.put("status", "get");  // 20120401: indicates unchanged session
+				htContext.put("rid", sSessionId);  // 20120401, Bauke: added to facilitate deferred session updates
+			}
 		}
 		catch (ASelectStorageException e) {
 			// produces a stack trace on FINEST level, when 'e' is given as a separate argument
@@ -359,15 +381,6 @@ public class SessionManager extends StorageManager
 		return htContext;
 	}
 
-	// 20120331, Bauke: previously called writeSession() replacement for updateSessionObsolete() below
-	/* Stores a new session context using the supplied session ID. <br>
-	 * <br>
-	 * <b>Description:</b> <br>
-	 * Writes the new session context with the given ID in the storage. <br>
-	 * <br>
-	 * Use this method also instead of {@link SessionManager#updateSessionObsolete(String, HashMap) }, if the session allready
-	 * exists. In this case this method is faster. <br>
-	 */
 	/**
 	 * Update a session context. <br>
 	 * <br>
@@ -390,6 +403,7 @@ public class SessionManager extends StorageManager
 	 *            The new session context.
 	 * @return True if updating succeeds, otherwise false.
 	 */
+	// 20120331, Bauke: previously called writeSession()
 	public boolean updateSession(String sSessionId, HashMap htSessionContext)
 	{
 		String sMethod = "updateSession";
@@ -402,8 +416,10 @@ public class SessionManager extends StorageManager
 			// 20120330, Bauke: Do not persist "status"
 			String sStatus = (String)htSessionContext.get("status");
 			htSessionContext.remove("status");
+			htSessionContext.remove("rid");
 			update(sSessionId, htSessionContext); // insert or update
-			if (sStatus != null) htSessionContext.put("status", sStatus);
+			htSessionContext.put("status", "get");  // set hard, not through Utils.setSessionStatus()
+			htSessionContext.put("rid", sSessionId);
 			
 			bReturn = true;
 		}
@@ -428,7 +444,7 @@ public class SessionManager extends StorageManager
 	}
 
 	/**
-	 * Kill a session. <br>
+	 * Delete a session. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
 	 * Removes the session with the given ID from the storage manager. <br>
@@ -445,13 +461,14 @@ public class SessionManager extends StorageManager
 	 * @param sSessionId
 	 *            The ID of the session to be killed.
 	 */
-	public synchronized void killSession(String sSessionId)
+	public synchronized void deleteSession(String sSessionId, HashMap htSessionContext)
 	{
-		String sMethod = "killSession";
+		String sMethod = "deleteSession";
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SessionId=" + sSessionId);
 			// Retrieve session start time (timestamp) and calculate last processing time
-			_lProcessTime = System.currentTimeMillis() - getTimestamp(sSessionId);
+			// 20120405, Bauke, disabled, only used by the GUI
+			_lProcessTime = 0;  // System.currentTimeMillis() - getTimestamp(sSessionId);
 			remove(sSessionId);
 		}
 		catch (ASelectStorageException e) {
@@ -471,6 +488,38 @@ public class SessionManager extends StorageManager
 	public void setDeleteSession(HashMap htSessionContext, ISystemLogger logger)
 	{
 		Utils.setSessionStatus(htSessionContext, "del", _systemLogger);
+	}
+	
+	/**
+	 * Final session processing.
+	 * 
+	 * @param htSessionContext
+	 *            the session context
+	 * @param doReally
+	 *            perform action if true, else just logging
+	 */
+	public void finalSessionProcessing(HashMap htSessionContext, boolean doReally)
+	{
+		String sMethod = "finalSessionProcessing";
+		
+		if (htSessionContext == null) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Final NO Session OOPS!");  // may be legal
+			return;
+		}
+		String sStatus = (String)htSessionContext.get("status");
+		String sRid = (String)htSessionContext.get("rid");
+		if (sRid != null && "upd".equals(sStatus)) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Final upd Session "+sRid);
+			if (doReally)
+				updateSession(sRid, htSessionContext);
+		}
+		else if (sRid != null && "del".equals(sStatus)) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Final del Session "+sRid);
+			if (doReally)
+				deleteSession(sRid, htSessionContext);  // can throw an exception
+		}
+		else
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Final Session status="+sStatus+" - "+sRid);
 	}
 
 	/**

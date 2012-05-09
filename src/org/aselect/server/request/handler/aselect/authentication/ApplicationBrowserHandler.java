@@ -467,7 +467,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 
 		// Bauke, 20090929: added localization, do this asap.
-		String sRid = (String) htServiceRequest.get("rid");
+		String sRid = (String)htServiceRequest.get("rid");
 		if (sRid != null) {
 			_htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (_htSessionContext == null) {
@@ -475,9 +475,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 			Tools.resumeSensorData(_systemLogger, _htSessionContext);  // 20111102
 			if (sReqLanguage != null && !sReqLanguage.equals("")) {
-				_htSessionContext.put("language", sReqLanguage);
-				Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-				_sessionManager.updateSession(sRid, _htSessionContext); // store language for posterity
+				_htSessionContext.put("language", sReqLanguage); // store language for posterity
+				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 			}
 			// Copy language & country to session if not present yet (session takes precedence)
 			Utils.transferLocalization(_htSessionContext, _sUserLanguage, _sUserCountry);
@@ -491,10 +490,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 		if (sRequest == null) {
 			// Show info page if nothing else to do
-			String sUrl = (String) htServiceRequest.get("my_url");
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplBrowREQ null request sUrl=" + sUrl);
+			String sUrl = (String)htServiceRequest.get("my_url");
+			String sAsUid = (String)htServiceRequest.get("aselect_credentials_uid");
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplBrowREQ request=null sUrl=" + sUrl+" aselect_credentials_uid="+sAsUid);
 
-			if (htServiceRequest.containsKey("aselect_credentials_uid"))
+			if (sAsUid != null)
 				showUserInfo(htServiceRequest, _servletResponse);  // pauses sensor
 			else {
 				String sServerInfoForm = _configManager.getForm("serverinfo", _sUserLanguage, _sUserCountry);
@@ -510,7 +510,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				}
 				//_systemLogger.log(Level.INFO, _sModule, sMethod, "Serverinfo [" + sServerInfoForm + "]");
 				Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
-				_sessionManager.update(sRid, _htSessionContext); // Write session
+				//_sessionManager.update(sRid, _htSessionContext); // Write session
+				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 				pwOut.println(sServerInfoForm);
 				pwOut.close();
 			}
@@ -555,7 +556,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				String sSearch = Utils.getParameterValueFromUrl(sSpecials, "set_forced_uid");
 				if (sSearch != null)
 					_htSessionContext.put("user_id", sSearch);
-			}
+					_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added
+				}
 
 			while (true) {
 				if (sRequest.equals("login1")) {
@@ -631,19 +633,19 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		// No need to write the session, it's used below by calculateAndReportSensorData() and then discarded
 		
 		// Store the chosen organization in the TGT
-		TGTManager oTGTManager = TGTManager.getHandle();
-		HashMap<String,Object> htTGTContext = oTGTManager.getTGT(sTgt);
+		HashMap<String,Object> htTGTContext = _tgtManager.getTGT(sTgt);
 		if (htTGTContext == null) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Cannot get TGT");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
 		htTGTContext.put("org_id", sOrgId);
-		oTGTManager.updateTGT(sTgt, htTGTContext);
+		_tgtManager.updateTGT(sTgt, htTGTContext);
 
 		// The tgt was just issued and updated, report sensor data
 		Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_sbh", sRid, _htSessionContext, sTgt, true);
-		Utils.setSessionStatus(_htSessionContext, "del", _systemLogger);
-		_sessionManager.killSession(sRid);
+		//Utils.setSessionStatus(_htSessionContext, "del", _systemLogger);
+		//_sessionManager.killSession(sRid);
+		_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 		
 		String sAppUrl = (String)_htSessionContext.get("app_url");	
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIRECT to " + sAppUrl);
@@ -699,8 +701,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "authsp from request="+sAuthSPId);
 				if (sAuthSPId != null) {
 					_htSessionContext.put("direct_authsp", sAuthSPId);
-					Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-					_sessionManager.updateSession(sRid, _htSessionContext); // make persistent
+					//Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
+					//_sessionManager.updateSession(sRid, _htSessionContext); // make persistent
+					_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 				}
 			}
 			if (sAuthSPId == null) {
@@ -763,7 +766,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							// Leaves the Rid session in place, needed for the application url
 							if (rc == 1 && mustChooseOrg) {
 								Tools.pauseSensorData(_systemLogger, _htSessionContext);
-								_sessionManager.update(sRid, _htSessionContext); // Write session
+								//_sessionManager.update(sRid, _htSessionContext); // Write session
+								// pauseSensorDate() already does this: _sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 								// The user must choose his organization
 								String sSelectForm = org.aselect.server.utils.Utils.presentOrganizationChoice(_configManager, _htSessionContext,
 										sRid, (String)htTGTContext.get("language"), hUserOrganizations);
@@ -785,8 +789,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRedirectUrl);
 							// 20111101, Bauke: added Sensor
 							Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_sbh", sRid, _htSessionContext, sTgt, true);
-							Utils.setSessionStatus(_htSessionContext, "del", _systemLogger);
-							_sessionManager.killSession(sRid);
+							//Utils.setSessionStatus(_htSessionContext, "del", _systemLogger);
+							//_sessionManager.killSession(sRid);
+							// Session must be removed
+							_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
 							String sLang = (String)htTGTContext.get("language");
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
@@ -821,7 +827,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						
 						_htSessionContext.remove("direct_authsp");	// No other direct_authsp's yet
 						_htSessionContext.put("forced_authsp", next_authsp);
-						getUserAuthsps(sRid, sUid);  // also writes the session
+						getUserAuthsps(sRid, sUid);  // can change the session too
+						_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 						
 						String sSelectForm = _configManager.getForm("nextauthsp", _sUserLanguage, _sUserCountry);
 						sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
@@ -835,7 +842,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
 						sSelectForm = Utils.replaceString(sSelectForm, "[country]", sCountry);
 						Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
-						_sessionManager.update(sRid, _htSessionContext); // Write session
+						//_sessionManager.update(sRid, _htSessionContext); // Write session
 						pwOut.println(sSelectForm);						
 						return;
 					}
@@ -848,6 +855,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					if (!sTempOrg.equals(_sMyOrg)) {
 						_htSessionContext.put("forced_uid", sUid);
 						_htSessionContext.put("forced_organization", sTempOrg);
+						_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added
 						handleCrossLogin(htServiceRequest, servletResponse, pwOut);
 						return;
 					}
@@ -860,8 +868,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					// The userid is already known from the TGT
 					htServiceRequest.put("user_id", sUid);
 					// showDirectLoginForm(htServiceRequest,pwOut);
-					oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut,
-									_sMyServerId, _sUserLanguage, _sUserCountry);
+					oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, _htSessionContext,
+								pwOut, _sMyServerId, _sUserLanguage, _sUserCountry);
 					return;
 				}
 			}
@@ -884,8 +892,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 			
 			// Will issue a TGT if everything is ok
-			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut,
-											_sMyServerId, _sUserLanguage, _sUserCountry);
+			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, _htSessionContext,
+								pwOut, _sMyServerId, _sUserLanguage, _sUserCountry);
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -1030,8 +1038,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							else {
 								// 20111101, Bauke: added Sensor
 								Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_sbh", sRid, _htSessionContext, sTgt, true);
-								Utils.setSessionStatus(_htSessionContext, "del", _systemLogger);
-								_sessionManager.killSession(sRid);
+								//Utils.setSessionStatus(_htSessionContext, "del", _systemLogger);
+								//_sessionManager.killSession(sRid);
+								_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
 								TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 								String sLang = (String)htTGTContext.get("language");
@@ -1058,20 +1067,22 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							_crossASelectManager.isCrossSelectorEnabled() && _configManager.isCrossFallBackEnabled()) {
 						_htSessionContext.put("forced_uid", sUid);
 						_htSessionContext.put("forced_organization", sTempOrg);
-						_systemLogger.log(Level.INFO, _sModule, sMethod, "To CROSS MyOrg=" + _sMyOrg + " != org="
-								+ sTempOrg);
+						_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added
+						_systemLogger.log(Level.INFO, _sModule, sMethod, "To CROSS MyOrg="+_sMyOrg+" != org="+sTempOrg);
 						handleCrossLogin(htServiceRequest, servletResponse, pwOut);
 						return;
 					}
 					// User was originally authenticated at this A-Select Server
 					// The userid is already known from the TGT
 					htServiceRequest.put("user_id", sUid);
-					handleLogin2(htServiceRequest, servletResponse, pwOut);
+					rc = handleLogin2(htServiceRequest, servletResponse, pwOut);
 					return;
 				}
 			}
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "no TGT found or killed (other uid)");
-			if (!handleUserConsent(htServiceRequest, servletResponse, pwOut, sRid))
+			boolean bSuccess = handleUserConsent(htServiceRequest, servletResponse, pwOut, sRid);
+			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added
+			if (!bSuccess)
 				return; // Quit
 
 			// 20090120, Bauke store Client IP and User Agent in the Session
@@ -1079,8 +1090,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			Utils.copyHashmapValue("client_ip", _htSessionContext, htServiceRequest);
 			Utils.copyHashmapValue("user_agent", _htSessionContext, htServiceRequest);
 			// IMPROVE: could be that handleUserConsent() also saved the session, should be optimized
-			_sessionManager.update(sRid, _htSessionContext); // Will also update SensorData changed in
-			// handleUserConsent()
+			//_sessionManager.update(sRid, _htSessionContext);
+			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 
 			// no TGT found or killed (other uid)
 			if (!_configManager.isUDBEnabled() || _htSessionContext.containsKey("forced_organization")) {
@@ -1128,7 +1139,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			
 			servletResponse.setContentType("text/html");
 			Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
-			_sessionManager.update(sRid, _htSessionContext); // Write session
+			//_sessionManager.update(sRid, _htSessionContext); // Write session
+			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 			pwOut.println(sLoginForm);
 		}
 		catch (ASelectException ae) {
@@ -1228,7 +1240,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		sInfoForm = _configManager.updateTemplate(sInfoForm, _htSessionContext);
 		servletResponse.setContentType("text/html");
 		Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
-		_sessionManager.update(sRid, _htSessionContext); // Write session
+		//_sessionManager.update(sRid, _htSessionContext); // Write session
+		_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 		pwOut.println(sInfoForm);
 	}
 
@@ -1272,10 +1285,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 		// We need the user's consent to continue
 		String sReqConsent = (String) htServiceRequest.get("consent");
-		if ("true".equals(sReqConsent) || "false".equals(sReqConsent)) {
+		//if ("true".equals(sReqConsent) || "false".equals(sReqConsent)) {
 			// 20120216: Already resumed in processBrowserRequest: Tools.resumeSensorData(_systemLogger, _htSessionContext);
-			// 20120216: _sessionManager.update(sRid, _htSessionContext); // Write session
-		}
+			// 20120216: _sessionManager.update(sRid, _htSessionContext);
+		//}
 		if ("true".equals(sReqConsent)) { // new consent given
 			if (setConsentCookie) {
 				// Remember the user's answer by setting a Consent Cookie
@@ -1301,7 +1314,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 		// Ask for consent by presenting the userconsent.html form
 		Tools.pauseSensorData(_systemLogger, _htSessionContext);
-		_sessionManager.update(sRid, _htSessionContext); // Write session
+		//_sessionManager.update(sRid, _htSessionContext); // Write session
+		_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 		try {
 			_sConsentForm = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "userconsent",
 					_sUserLanguage, _sUserCountry);
@@ -1403,6 +1417,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 			// Has done it's work if present, note that getAuthsps() will store the session
 			_htSessionContext.remove("forced_uid");  // 20101027 _, solves JDBC issue where forced_uid was not removed!
+			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added
 
 			sUid = (String) htServiceRequest.get("user_id");
 			if (sUid == null) {
@@ -1423,7 +1438,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			try {
 				// Get authsps for this user, result is a collection of authsps with a login name to be used for that authsp
 				// Stored in the session under "allowed_user_authsps"
-				getUserAuthsps(sRid, sUid);  // will save _htSessionContext!
+				getUserAuthsps(sRid, sUid);  // will update _htSessionContext!
 			}
 			catch (ASelectException e) {
 				if (_crossASelectManager.isCrossSelectorEnabled() && _configManager.isCrossFallBackEnabled()) {
@@ -1431,9 +1446,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					return 0;
 				}
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to retrieve AuthSPs for user " + sUid);
-				//throw e;
 				// Would like to go back to login1 to give the user another chance
 				_htSessionContext.put("error_message", Errors.ERROR_ASELECT_SERVER_USER_NOT_ALLOWED);
+				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added
 				return 1;
 			}
 
@@ -1447,6 +1462,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				if (sUserId != null) {
 					htServiceRequest.put("sel_uid", sUserId);
 					_htSessionContext.put("sel_uid", sUserId);
+					_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added
 				}
 				String sFixedUid = (String) _htSessionContext.get("fixed_uid");
 				if (sFixedUid != null) {
@@ -1454,6 +1470,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					_systemLogger.log(Level.INFO, _sModule, sMethod, "Fixed user_id=" + sFixedUid);
 					htServiceRequest.put("user_id", sFixedUid);
 					_htSessionContext.put("user_id", sFixedUid);
+					_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added
 				}
 				handleLogin3(htServiceRequest, servletResponse, pwOut);
 				return 0;
@@ -1529,7 +1546,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sSelectForm = _configManager.updateTemplate(sSelectForm, _htSessionContext);
 			// _systemLogger.log(Level.FINER, _sModule, sMethod, "Form select=["+sSelectForm+"]");
 			Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
-			_sessionManager.update(sRid, _htSessionContext); // Write session
+			//_sessionManager.update(sRid, _htSessionContext); // Write session
+			// pauseSensorData does this already: _sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 			pwOut.println(sSelectForm);
 			return 0;
 		}
@@ -1623,7 +1641,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				if (sPopup == null || sPopup.equalsIgnoreCase("false")) {
 					Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102, control goes to a different server
 					_htSessionContext.put("authsp_visited", "true");
-					_sessionManager.update(sRid, _htSessionContext); // Write session
+					//_sessionManager.update(sRid, _htSessionContext); // Write session
+					_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 					servletResponse.sendRedirect(sRedirectUrl);
 					return;
 				}
@@ -1636,7 +1655,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				sPopupForm = _configManager.updateTemplate(sPopupForm, _htSessionContext);
 				Tools.pauseSensorData(_systemLogger, _htSessionContext);  // 20111102, control to the user
 				_htSessionContext.put("authsp_visited", "true");
-				_sessionManager.update(sRid, _htSessionContext); // Write session
+				//_sessionManager.update(sRid, _htSessionContext); // Write session
+				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 				pwOut.println(sPopupForm);
 				return;
 			}
@@ -1723,11 +1743,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_UNKNOWN_ORG);
 				}
 
-				// No optional parameter 'remote_organization found
-				// Determine the remote organization
-				HashMap htIdentification;
-
+				// No optional parameter 'remote_organization found, determine the remote organization
 				// some selector handlers may need the user_id if it is known already
+				HashMap htIdentification = null;
 				if (sUid != null) {
 					htServiceRequest.put("user_id", sUid);  // NOTE: in the Service Request, not the Session
 				}
@@ -1753,19 +1771,20 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				if (sTemp != null)
 					sUid = (String) htIdentification.get("user_id");
 			}
-			_htSessionContext.put("remote_organization", sRemoteOrg);
-			Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
+			//_htSessionContext.put("remote_organization", sRemoteOrg);
+			// 20120403, Bauke: no longer needed this method does not change the session
+			//_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
 			// storage_manager_fix_for_lost_fields
-			if (!_sessionManager.updateSession(sRid, _htSessionContext)) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "could not update session context");
-				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-			}
+			// 20120403, Bauke: no longer needed this method does not change the session
+			//if (!_sessionManager.update Session(sRid, _htSessionContext)) {
+			//	_systemLogger.log(Level.WARNING, _sModule, sMethod, "could not update session context");
+			//	throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			//}
 
 			Object oRemoteServer;
 			String sRemoteAsUrl;
 			String sRemoteServer;
-
 			try {
 				// continue cross a-select login processing
 				String sResourcegroup = _crossASelectManager.getRemoteParam(sRemoteOrg, "resourcegroup");
@@ -1873,7 +1892,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				StringBuffer sbUrl = new StringBuffer(sRemoteLoginUrl);
 				sbUrl.append("&rid=").append(sRemoteRid);
 				sbUrl.append("&a-select-server=").append(sRemoteServer);
-
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sbUrl);
 				servletResponse.sendRedirect(sbUrl.toString());
 			}
@@ -1976,8 +1994,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip is now "
 									+ _htSessionContext.get("client_ip"));
 
-							Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-							_sessionManager.updateSession(sRid, _htSessionContext);
+							//Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
+							//_sessionManager.updateSession(sRid, _htSessionContext);
+							_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
 							HashMap htTgtContext = _tgtManager.getTGT(sTgt);
 							String sAuthsp = (String) htTgtContext.get("authsp");
@@ -1991,7 +2010,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							// htAdditional.put("tgt_exp_time", htTgtContext.get("tgt_exp_time"));
 
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-							oTGTIssuer.issueTGTandRedirect(sRid, sAuthsp, htAdditional, servletResponse, null, true);
+							oTGTIssuer.issueTGTandRedirect(sRid, _htSessionContext, sAuthsp, htAdditional, servletResponse, null, true);
 							return;
 						}
 					}
@@ -2020,8 +2039,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 						// 20111101, Bauke: added Sensor
 						Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_sbh", sRid, _htSessionContext, sTgt, true);
-						Utils.setSessionStatus(_htSessionContext, "del", _systemLogger);
-						_sessionManager.killSession(sRid);
+						//Utils.setSessionStatus(_htSessionContext, "del", _systemLogger);
+						//_sessionManager.killSession(sRid);
+						_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
 						_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sb);
 						servletResponse.sendRedirect(sb.toString());
@@ -2065,8 +2085,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			htAllowedAuthsps.put("Ip", htServiceRequest.get("client_ip"));
 			_htSessionContext.put("allowed_user_authsps", htAllowedAuthsps);
 			_htSessionContext.put("user_id", htServiceRequest.get("client_ip"));
-			Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-			_sessionManager.updateSession(sRid, _htSessionContext);
+			//Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
+			//_sessionManager.updateSession(sRid, _htSessionContext);
+			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
 			// go for IP authsp
 			htServiceRequest.put("authsp", "Ip");
@@ -2106,7 +2127,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void handleLogout(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleLogout";
 		String sLoggedOutForm = _configManager.getForm("loggedout", _sUserLanguage, _sUserCountry);
@@ -2144,6 +2165,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				if (sRemoteAsUrl != null) {
 					Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
 					// no RID: _sessionManager.update(sRid, _htSessionContext); // Write session
+					_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
 					servletResponse.sendRedirect(sRemoteAsUrl);
 					return;
 				}
@@ -2151,6 +2173,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sLoggedOutForm = _configManager.updateTemplate(sLoggedOutForm, htTGTContext);
 			Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
 			// no RID _sessionManager.update(sRid, _htSessionContext); // Write session
+			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
 			pwOut.println(sLoggedOutForm);
 
 		}
@@ -2250,12 +2273,14 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_htSessionContext.put("authsp", sPrivilegedApplication);
 			_htSessionContext.put("authsp_level", sAuthspLevel);
 
-			Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-			if (!_sessionManager.updateSession(sRid, _htSessionContext)) {  // 20101027 use _ht...
-				_systemLogger.log(Level.WARNING, _sModule, sMethod,
-						"Invalid request received: could not update session.");
-				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
-			}
+			//Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
+			//if (!_sessionManager.updateSession(sRid, _htSessionContext)) {  // 20101027 use _ht...
+			//	_systemLogger.log(Level.WARNING, _sModule, sMethod,
+			//			"Invalid request received: could not update session.");
+			//	throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
+			//}
+			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
+			
 			// Log succesful authentication
 			authenticationLogger.log(new Object[] {
 				"Login", sUID, (String) htServiceRequest.get("client_ip"), _sMyOrg, sPrivilegedApplication, "granted"
@@ -2263,7 +2288,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Issue TGT
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-			tgtIssuer.issueTGTandRedirect(sRid, sPrivilegedApplication, null, servletResponse, null, true/*redirect*/);
+			tgtIssuer.issueTGTandRedirect(sRid, _htSessionContext, sPrivilegedApplication, null, servletResponse, null, true/*redirect*/);
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -2358,11 +2383,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip was "+
 					_htSessionContext.get("client_ip")+", set to "+get_servletRequest().getRemoteAddr());
 			_htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr());
-			Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-			if (!_sessionManager.updateSession(sRid, _htSessionContext)) {
+			
+			//Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
+			//if (!_sessionManager.updateSession(sRid, _htSessionContext)) {
 				// logged in sessionmanager
-				throw new ASelectException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
-			}
+			//	throw new ASelectException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
+			//}
+			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 			return;
 		}
 		catch (ASelectException e) {
@@ -2413,11 +2440,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		_htSessionContext.put("sms_correction_facility", Boolean.toString(Utils.hasValue(_sCorrectionFacility)));
 		
 		//Tools.pauseSensorData(_systemLogger, _htSessionContext);  // 20111102, done one level higher, before redirection
-		Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-		if (!_sessionManager.updateSession(sRid, _htSessionContext)) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not write session context");
-			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-		}
+		
+		//Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
+		//if (!_sessionManager.updateSession(sRid, _htSessionContext)) {
+		//	_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not write session context");
+		//	throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		//}
+		_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
 		// Everything seems okay -> instantiate the protocol handler for
 		// the selected authsp and let it compute a signed authentication request
@@ -2447,7 +2476,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 
 		// let the protocol handler for the authsp do its work
-		HashMap htResponse = oProtocolHandler.computeAuthenticationRequest(sRid);
+		HashMap htResponse = oProtocolHandler.computeAuthenticationRequest(sRid, _htSessionContext);
 		return htResponse;
 	}
 
@@ -2544,8 +2573,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		String sMethod = "showUserInfo";
 		PrintWriter pwOut = null;
 
-		try {
-			// get output writer
+		try {  // get output writer
 			pwOut = response.getWriter();
 
 			String sUserId = (String) htServiceRequest.get("aselect_credentials_uid");
@@ -2556,7 +2584,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[uid]", sUserId);
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[a-select-server]", _sMyServerId);
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[aselect_url]", sMyUrl);
-
 
 			String sTemp;
 			HashMap htTGTContext = _tgtManager.getTGT(sTgt);
@@ -2643,6 +2670,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 			Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
 			// no RID: _sessionManager.update(sRid, _htSessionContext); // Write session
+			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
 			pwOut.println(sUserInfoForm);
 		}
 		catch (IOException eIO) {
@@ -2694,12 +2722,14 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			if (sForcedUid != null)
 				_htSessionContext.put("fixed_uid", sForcedUid);
 
-			Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-			if (!_sessionManager.updateSession(sRid, _htSessionContext)) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod,
-						"Invalid request received: could not update session.");
-				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
-			}
+			//Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
+			//if (!_sessionManager.updateSession(sRid, _htSessionContext)) {
+			//	_systemLogger.log(Level.WARNING, _sModule, sMethod,
+			//			"Invalid request received: could not update session.");
+			//	throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
+			//}
+			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
+			
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "htSessionContext=" + _htSessionContext);
 			handleLogin1(htServiceRequest, servletResponse, pwOut);
 		}
@@ -2760,7 +2790,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmRequest=" + hmRequest);
 		
 		// Exception for bad shared_secret:
-		HashMap<String, String> hmResponse = handleAuthenticateAndCreateSession(hmRequest, null);
+		HashMap<String, Object> hmResponse = handleAuthenticateAndCreateSession(hmRequest, null);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmResponse=" + hmResponse);
 
 		String sResultCode = (String) hmResponse.get("result_code");
@@ -2781,15 +2811,18 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		// Retrieve the session just created
 		String sRid = (String)hmResponse.get("rid");
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Supplied rid=" + sRid);
-		_htSessionContext = _sessionManager.getSessionContext(sRid);
+		//_htSessionContext = _sessionManager.getSessionContext(sRid);
+		_htSessionContext = (HashMap)hmResponse.get("session");  // 20120404, Bauke: was getSessionContext(sRid)
 		if (_htSessionContext == null) {
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 		}
 		_htSessionContext.put("direct_authsp", sAuthSp);  // for handleDirectLogin2
 		_htSessionContext.put("organization", _sMyOrg);
 		_htSessionContext.put("client_ip", "login_token");
-		Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-		_sessionManager.updateSession(sRid, _htSessionContext); // store too (545)
+		
+		//Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
+		//_sessionManager.updateSession(sRid, _htSessionContext); // store too (545)
+		_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 		
 		// Check login user and password
 		HashMap<String, String> hmDirectRequest = new HashMap<String, String>();
@@ -2801,7 +2834,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		// Only perform user/password authentication (will update the session):
 		IAuthSPDirectLoginProtocolHandler oProtocolHandler = _authspHandlerManager.getAuthSPDirectLoginProtocolHandler(sAuthSp);
 		_systemLogger.log(Level.FINE, MODULE, sMethod, "HttpSR="+servletResponse);
-		boolean bSuccess = oProtocolHandler.handleDirectLoginRequest(hmDirectRequest, null /*servlet response*/,
+		boolean bSuccess = oProtocolHandler.handleDirectLoginRequest(hmDirectRequest, null /*servlet response*/, _htSessionContext,
 											null /*output writer*/, _sMyServerId, "en", "nl");
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Success="+bSuccess+" hm="+hmDirectRequest);
 		

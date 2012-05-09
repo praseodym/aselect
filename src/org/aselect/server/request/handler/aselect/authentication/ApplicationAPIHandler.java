@@ -410,20 +410,21 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		hmRequest.put("usi", sUsi);
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmRequest=" + hmRequest);
-		HashMap<String, String> hmResponse = handleAuthenticateAndCreateSession(hmRequest, null);
+		HashMap<String, Object> hmResponse = handleAuthenticateAndCreateSession(hmRequest, null);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmResponse=" + hmResponse);
 
 		try {
-			String sValue = hmResponse.get("rid");
+			String sValue = (String)hmResponse.get("rid");
 			if (sValue != null) {
 				oOutputMessage.setParam("rid", sValue);
 			}
-			sValue = hmResponse.get("as_url");
+			sValue = (String)hmResponse.get("as_url");
 			if (sValue != null)
 				oOutputMessage.setParam("as_url", sValue);
-			sValue = hmResponse.get("result_code");
+			sValue = (String)hmResponse.get("result_code");
 			if (sValue != null)
 				oOutputMessage.setParam("result_code", sValue);
+			// The new "session" is also available
 		}
 		catch (ASelectCommunicationException eAC) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not set response parameter", eAC);
@@ -621,16 +622,17 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			}
 			if (Utils.hasValue(sUsi))
 				sbData = sbData.append(sUsi);
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "Signing required, sbData=" + sbData);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "Signing required");
 			verifyApplicationSignature(oInputMessage, sbData.toString(), sAppId);
 		}
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "Upgrade TICKET context=" + htTGTContext);
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "Upgrade TICKET");
 
 		// 20091113, Bauke: overwrite user's preferred language taken from filter
 		// Also if the filter does not pass a language, let it know our favourite!
 		if (sLanguage != null) {
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "Request language=" + sLanguage);
 			htTGTContext.put("language", sLanguage);
+			_oTGTManager.setUpdateSession(htTGTContext, _systemLogger);	
 		}
 		else {
 			sLanguage = (String) htTGTContext.get("language");
@@ -647,7 +649,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 		if (htResult == null || htResult.isEmpty()) {
 			// No Session Sync handler, only update the ticket granting ticket
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "updateTGT only");
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "updateTGT only (changes timestamp!)");
 			_oTGTManager.updateTGT(sTgT, htTGTContext);
 		}
 		else {
@@ -681,7 +683,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			SessionSyncRequestSender ss_req = new SessionSyncRequestSender(_systemLogger, sServerUrl, updateInterval,
 					sSamlMessageType, sSessionSyncUrl, pKey, l_max_notbefore, l_max_notonorafter, ("true"
 							.equalsIgnoreCase(verify_interval.trim())) ? true : false);
-			String ssReturn = ss_req.synchronizeSession(sTgT, htTGTContext, /* true, coded */true/* updateTGT */);
+			String ssReturn = ss_req.synchronizeSession(sTgT, htTGTContext, true/* updateTGT */);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "ssReturn=" + ssReturn);
 		}
 		try {
@@ -736,7 +738,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		catch (ASelectCommunicationException eAC) { // ignore absence
 		}
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "a-select-server=" + sASelectServer + " rid=" + sRid
-				+ " aselect_credentials(encrypted TGT)=" + sEncTgt + " saml_attributes=" + sSamlAttributes
+				+ " aselect_credentials(encrypted TGT)=" + Utils.firstPartOf(sEncTgt,20) + " saml_attributes=" + sSamlAttributes
 				+ " signature=" + sSignature);
 
 		try {
@@ -843,7 +845,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		String sAuthSP = (String) htTGTContext.get("authsp");
 		long lExpTime = 0;
 		try {
-			lExpTime = _oTGTManager.getExpirationTime(sTGT);
+			lExpTime = _oTGTManager.getExpirationTime(sTGT);  // reads TGT again
 		}
 		catch (ASelectStorageException eAS) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not fetch TGT timeout", eAS);
@@ -972,7 +974,6 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		throws ASelectException
 	{
 		String sMethod = "verifyApplicationSignature";
-
 		String sSignature = null;
 		try {
 			sSignature = oInputMessage.getParam("signature");

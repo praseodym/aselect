@@ -1056,8 +1056,7 @@ public class ApplicationManager
 		}
 		catch (Exception e) {
 			StringBuffer sbError = new StringBuffer("Could not load public key of application '");
-			sbError.append(sAlias);
-			sbError.append("'");
+			sbError.append(sAlias).append("'");
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
 		}
 		// no public key found for application.

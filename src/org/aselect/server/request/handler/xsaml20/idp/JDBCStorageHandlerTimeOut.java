@@ -28,7 +28,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMAgent;
-import org.aselect.system.storagemanager.IStorageHandler.UpdateMode;
 import org.aselect.system.storagemanager.handler.JDBCStorageHandler;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
@@ -84,7 +83,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			timeOut = oConfigManager.getParam(oTicketSection, "timeout");
 			timeOutTime = Long.parseLong(timeOut);
 			timeOutTime = timeOutTime * 1000;
-			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "Timeout time on IDP = " + timeOutTime);
+			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "Absolute timeout on IDP = " + timeOutTime);
 		}
 		catch (ASelectConfigException e) {
 			systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'timeout' found", e);
@@ -118,7 +117,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 		String _sMethod = "put";
 		HashMap htValue = (HashMap) oValue;
 
-		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "JSHT " + this.getClass());
+		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Class=" + this.getClass());
 		boolean hasKey = false;	// RH, 20111114, n
 		// We'll use a small (not most beautiful) trick to speed up the "put" later on
 //		if (!_oTGTManager.containsKey(oKey) || htValue.get("createtime") == null) {	// RH, 20111114, o
@@ -248,7 +247,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			}
 		}
 		catch (ASelectException ex) {
-			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "IDPTO - Exception: ", ex);
+			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "IDPTO - Exception in checkSpTimeOut", ex);
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 	}
@@ -284,9 +283,8 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 		}
-		try {
-			requestSender.sendSoapLogoutRequest(url, _serverUrl, sNameID,
-					"urn:oasis:names:tc:SAML:2.0:logout:sp-timeout", pkey);
+		try {  // Sign with our private key!
+			requestSender.sendSoapLogoutRequest(url, _serverUrl, sNameID, "urn:oasis:names:tc:SAML:2.0:logout:sp-timeout", pkey);
 		}
 		catch (ASelectException e) {
 			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "IDP - exception trying to send logout request", e);

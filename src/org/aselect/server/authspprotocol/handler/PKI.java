@@ -42,7 +42,6 @@ import org.aselect.system.exception.ASelectAuthSPException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.utils.BASE64Decoder;
 
-// TODO: Auto-generated Javadoc
 /**
  * The PKI AuthSP Handler. <br>
  * <br>
@@ -155,6 +154,11 @@ public class PKI implements IAuthSPProtocolHandler
 	private String _sTwoFactorAuthSp;
 	private String _sTwoFactorAuthSpUrl;
 	private String _sTwoFactorAuthSpRetries;
+	
+	/* (non-Javadoc)
+	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#myRidName()
+	 */
+	public String getLocalRidName() { return "rid"; }
 
 	/**
 	 * The A-Select Server server id.
@@ -254,9 +258,9 @@ public class PKI implements IAuthSPProtocolHandler
 	 * @return the hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#computeAuthenticationRequest(java.lang.String)
 	 */
-	public HashMap computeAuthenticationRequest(String sRid)
+	public HashMap computeAuthenticationRequest(String sRid, HashMap htSessionContext)
 	{
-		String sMethod = "computeAuthenticationRequest()";
+		String sMethod = "computeAuthenticationRequest";
 
 		String sSignature = null;
 		String sServerId = null;
@@ -265,7 +269,7 @@ public class PKI implements IAuthSPProtocolHandler
 		htResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
 
 		try {
-			HashMap htSessionContext = _oSessionManager.getSessionContext(sRid);
+			// 20120403, Bauke: passes as parameter: HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
 				sbTemp = new StringBuffer("Could not fetch session context for rid='");
 				sbTemp.append(sRid).append("'.");
@@ -342,8 +346,7 @@ public class PKI implements IAuthSPProtocolHandler
 
 			htResponse.put("redirect_url", sbTemp.toString());
 		}
-		catch (ASelectAuthSPException eAA) {
-			// allready logged
+		catch (ASelectAuthSPException eAA) {  // allready logged
 			htResponse.put("result", eAA.getMessage());
 		}
 		catch (Exception e) {
@@ -355,16 +358,17 @@ public class PKI implements IAuthSPProtocolHandler
 	}
 
 	/**
-	 * Verifies the response comming from the PKI AuthSP <br>
-	 * <br>
-	 * .
-	 * 
+	 * Verifies the response coming from the PKI AuthSP.<br>
+	 * <br> 
 	 * @param htAuthspResponse
-	 *            the ht authsp response
-	 * @return the hash map
+	 *            the authsp response
+	 * @param htSessionContext
+	 *            the session context, must be available
+	 * @return the result hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.HashMap)
 	 */
-	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse)
+	// 20120403, Bauke: added htSessionContext
+	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse, HashMap htSessionContext)
 	{
 		String sMethod = "verifyAuthenticationResponse";
 		StringBuffer sbTemp;
@@ -386,7 +390,6 @@ public class PKI implements IAuthSPProtocolHandler
 				sbTemp = new StringBuffer(sMethod);
 				sbTemp.append("incorrect AuthSP response");
 				_systemLogger.log(Level.WARNING, sbTemp.toString());
-
 				htResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 				return htResponse;
 			}
@@ -394,15 +397,8 @@ public class PKI implements IAuthSPProtocolHandler
 			sbTemp.append("?authsp=");
 			sbTemp.append(_sAuthsp);
 			sAsUrl = sbTemp.toString();
-			HashMap htSessionContext = _oSessionManager.getSessionContext(sRid);
-			if (htSessionContext == null) {
-				// Session is expired or never existed.
-				sbTemp = new StringBuffer(sMethod);
-				sbTemp.append("session for RID: " + sRid + " is invalid.");
-				htResponse.put("result", Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
-				_systemLogger.log(Level.WARNING, sbTemp.toString());
-				return htResponse;
-			}
+
+			// 20120403, Bauke: session is available as a parameter
 			String sUserId = (String) htSessionContext.get("user_id");
 			String sOrg = (String) htSessionContext.get("organization");
 

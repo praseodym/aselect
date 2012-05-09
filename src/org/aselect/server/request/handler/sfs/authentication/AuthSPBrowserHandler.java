@@ -184,8 +184,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			IAuthSPProtocolHandler oProtocolHandler = null;
 
 			try {
-				authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp", "id="
-						+ sAsp);
+				authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp", "id="+sAsp);
 			}
 			catch (ASelectException eA) {
 				// Invalid AuthSP received
@@ -224,25 +223,27 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			}
 
 			// let the AuthSP protocol handler verify the response from the AuthSP
-			HashMap htResponse = oProtocolHandler.verifyAuthenticationResponse(htServiceRequest);
+			// 20120403, Bauke: added htSessionContext:
+			HashMap htSessionContext = new HashMap();
+			HashMap htAuthspResponse = oProtocolHandler.verifyAuthenticationResponse(htServiceRequest, htSessionContext);
 
-			String sResultCode = (String) htResponse.get("result");
+			String sResultCode = (String) htAuthspResponse.get("result");
 			if (!(sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS))) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Error in response from authsp: " + sResultCode);
 
 				// session can be killed. The user could not be authenticated.
 				String sRid = (String) htServiceRequest.get("rid");
-				_sessionManager.killSession(sRid);
+				_sessionManager.deleteSession(sRid, htSessionContext);
 
 				throw new ASelectException(sResultCode);
 			}
 
 			// user was authenticated successfully!!!
-			String sRid = (String) htResponse.get("rid");
+			String sRid = (String) htAuthspResponse.get("rid");
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
 
 			String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
-			tgtIssuer.issueTGTandRedirect(sRid, sAsp, null, servletResponse, sOldTGT, true);
+			tgtIssuer.issueTGTandRedirect(sRid, htSessionContext, sAsp, null, servletResponse, sOldTGT, true);
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -321,7 +322,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Issue TGT
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-			tgtIssuer.issueErrorTGTandRedirect(sRid, sResultCode, servletResponse);
+			tgtIssuer.issueErrorTGTandRedirect(sRid, htSessionContext, sResultCode, servletResponse);
 		}
 		catch (ASelectException ae) {
 			throw ae;

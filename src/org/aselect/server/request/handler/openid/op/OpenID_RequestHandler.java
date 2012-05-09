@@ -15,22 +15,18 @@ package org.aselect.server.request.handler.openid.op;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.AbstractRequestHandler;
@@ -39,18 +35,14 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.utils.BASE64Encoder;
 import org.openid4java.association.AssociationException;
 import org.openid4java.message.AuthSuccess;
 import org.openid4java.message.DirectError;
 import org.openid4java.message.Message;
 import org.openid4java.message.ParameterList;
-import org.openid4java.message.ax.AxMessage;
-import org.openid4java.message.sreg.SRegMessage;
 import org.openid4java.server.InMemoryServerAssociationStore;
 import org.openid4java.server.ServerException;
 import org.openid4java.server.ServerManager;
-//import sun.misc.Regexp;
 
 /**
  * OpenID RequestHandler. <br>
@@ -68,8 +60,7 @@ import org.openid4java.server.ServerManager;
 
 public class OpenID_RequestHandler extends AbstractRequestHandler
 {
-
-	private static final String SESSIONID_POSTFIX = "54321";
+	private static final String SESSIONID_PREFIX = "OpenID_";
 	private final static String MODULE = "OpenID_RequestHandler";
 	private ServerManager serverManager;	// Singleton per OpenID_RequestHandler
 	private String opEndpointUrl =  null;
@@ -80,7 +71,6 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 	private String verifySignature = null;
 	private String defaultUID = null;
 	private String aselectServerURL = null;
-	
 
 	/* @param oServletConfig
 	 *            the o servlet config
@@ -249,137 +239,134 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 		    			requestp.getParameterValue("openid.mode") : null;
 		    }
 
-		    if ("associate".equals(mode))
-		    {
+		    if ("associate".equals(mode)) {
 		        // --- process an association request ---
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Process an association request");
 		    	opResponse = serverManager.associationResponse(requestp);
 		    	Utils.logRequestParameters(requestp, _systemLogger);
 		    	Utils.sendPlainTextResponse(response, opResponse, _systemLogger);
 		        
-		    } else if ("checkid_setup".equals(mode)
-		            || "checkid_immediate".equals(mode)) {
+		    }
+		    else if ("checkid_setup".equals(mode) || "checkid_immediate".equals(mode)) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Process a checkid_setup or checkid_immediate request");
 		    	Utils.logRequestParameters(requestp, _systemLogger);
 		    	
 		    	// TODO ask the user to trust the realm in the openid.realm parameter
 		    	// TODO, save get a better sessionid for requestp in user session somehow  in _oSessionManager
 		    	
-			    	// authenticate to the aselect server
-		    		String ridReqURL = aselectServerURL;
-		    		String ridSharedSecret = sharedSecret;
-		    		String ridAselectServer = _sMyServerID;
-		    		String ridrequest= "authenticate";
-		    		String ridAppURL = opEndpointUrl;
-		    		
-//		    		String ridCheckSignature = verifySignature; 
-					// maybe also forced_userid ?
-		    		
-		    		String claimedUID = requestp.getParameterValue("openid.claimed_id");
-		    		String identity = requestp.getParameterValue("openid.identity");
-		    		if (claimedUID == null && identity == null) {
-						_systemLogger.log(Level.WARNING, MODULE, sMethod, "return error, extensions not supported (yet) ");
-				    	Utils.logRequestParameters(requestp, _systemLogger);
-				    	opResponse = DirectError.createDirectError("Extensions not supported (yet)");
-				    	Utils.sendPlainTextResponse(response, opResponse, _systemLogger);
-		    		}
-		    		String uid = null;
-		    		if ("http://specs.openid.net/auth/2.0/identifier_select".equals(identity)) {	// TODO get this constant somewhere from the openid4java library (probably some static somewhere
-		    			// This should trigger a username input in  aselect
-		    			// Either by presenting a choice or an input box
-		    			// We let aselectserver handle this
-		    			uid = defaultUID;
-		    		} else {
-						String localID = (identity == null) ? "" : identity;
-			    		localID = StringUtils.substringAfter(localID, getOpEndpointUrl());
-			    		localID = localID.replaceFirst("^/", ""); // strip starting slash
-		    			uid = localID;
-		    		}
-		    		
-		    		String ridResponse = "";
-		    		// Send data 
-		    		BufferedReader in = null;
-		    		try { 
-			    		//Construct request data 
-			    		String ridURL = ridReqURL + "?" + "shared_secret=" + URLEncoder.encode(ridSharedSecret, "UTF-8") +
-			    				"&a-select-server=" + URLEncoder.encode(ridAselectServer, "UTF-8") +
-			    				"&request=" + URLEncoder.encode(ridrequest, "UTF-8") +
-			    				"&uid=" + URLEncoder.encode(uid, "UTF-8") +
-			    				"&app_url=" + URLEncoder.encode(ridAppURL /* TODO + serialized version of requestp */ , "UTF-8") +
-//			    				"&check-signature=" + URLEncoder.encode(ridCheckSignature, "UTF-8") +
-			    				"&app_id=" + URLEncoder.encode(appID, "UTF-8");
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "Requesting rid through: " + ridURL);
-
-		    			URL url = new URL(ridURL); 
-		    			
-		    			in = new BufferedReader(
-		    					new InputStreamReader(
-		    							url.openStream()));
-
-		    			String inputLine = null;
-		    			while ((inputLine = in.readLine()) != null) {
-		    				ridResponse += inputLine;
-		    			}
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "Requesting rid response: " + ridResponse);
-
-
-		    		} catch (Exception e) { 	
-						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not retrieve rid from aselectserver: " + ridAselectServer);
-						throw new ASelectCommunicationException(Errors.ERROR_ASELECT_IO, e);
-		    		}
-		    		finally {
-		    			if (in != null)
-							try {
-								in.close();
-							}
-							catch (IOException e) {
-								_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not close stream to aselectserver : " + ridAselectServer);
-							}
-		    		}
-
-		    		//out.println("<br/>ridResponse=" + ridResponse); 
-		    		String extractedRid = ridResponse.replaceFirst(".*rid=([^&]*).*$", "$1");
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "rid retrieved: " + extractedRid);
-
-					String sessionID =  extractedRid+ SESSIONID_POSTFIX;
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Storing requestparameters with id: " + sessionID);
+		    	// authenticate to the aselect server
+	    		String ridReqURL = aselectServerURL;
+	    		String ridSharedSecret = sharedSecret;
+	    		String ridAselectServer = _sMyServerID;
+	    		String ridrequest= "authenticate";
+	    		String ridAppURL = opEndpointUrl;
+	    		
+//		    	String ridCheckSignature = verifySignature; 
+				// maybe also forced_userid ?
+	    		
+	    		String claimedUID = requestp.getParameterValue("openid.claimed_id");
+	    		String identity = requestp.getParameterValue("openid.identity");
+	    		if (claimedUID == null && identity == null) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "return error, extensions not supported (yet) ");
 			    	Utils.logRequestParameters(requestp, _systemLogger);
-
-					HashMap<String, Object> htSessionContext = new HashMap<String, Object>();
-					htSessionContext.put("openid_requestp", requestp);
-					org.aselect.system.utils.Utils.setSessionStatus(htSessionContext, "upd", _systemLogger);
-					_oSessionManager.updateSession(sessionID, htSessionContext);  // new session with predefined RID
-					
-		    		String loginrequest= "login1";
-
+			    	opResponse = DirectError.createDirectError("Extensions not supported (yet)");
+			    	Utils.sendPlainTextResponse(response, opResponse, _systemLogger);
+	    		}
+	    		String uid = null;
+	    		if ("http://specs.openid.net/auth/2.0/identifier_select".equals(identity)) {	// TODO get this constant somewhere from the openid4java library (probably some static somewhere
+	    			// This should trigger a username input in  aselect
+	    			// Either by presenting a choice or an input box
+	    			// We let aselectserver handle this
+	    			uid = defaultUID;
+	    		}
+	    		else {
+					String localID = (identity == null) ? "" : identity;
+		    		localID = StringUtils.substringAfter(localID, getOpEndpointUrl());
+		    		localID = localID.replaceFirst("^/", ""); // strip starting slash
+	    			uid = localID;
+	    		}
+	    		
+	    		String ridResponse = "";
+	    		// Send data 
+	    		BufferedReader in = null;
+	    		try { 
 		    		//Construct request data 
-		    		String redirectURL = null;
-					try {
-						redirectURL = ridReqURL + "?" + 
-								"request=" + URLEncoder.encode(loginrequest, "UTF-8") +
-								"&a-select-server=" + URLEncoder.encode(ridAselectServer, "UTF-8") +
-								"&rid=" + extractedRid;
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "Requesting login through redirect with redirectURL: " + redirectURL);
-						
-			    		response.sendRedirect(redirectURL);
-					}
-					catch (UnsupportedEncodingException e1) {
-						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not URLEncode to UTF-8, this should not happen!");
-						throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e1);
-					}
-					catch (IOException e) {
-						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not redirect to: " + redirectURL);
-						throw new ASelectCommunicationException(Errors.ERROR_ASELECT_IO, e);
-					}
+		    		String ridURL = ridReqURL + "?" + "shared_secret=" + URLEncoder.encode(ridSharedSecret, "UTF-8") +
+		    				"&a-select-server=" + URLEncoder.encode(ridAselectServer, "UTF-8") +
+		    				"&request=" + URLEncoder.encode(ridrequest, "UTF-8") +
+		    				"&uid=" + URLEncoder.encode(uid, "UTF-8") +
+		    				"&app_url=" + URLEncoder.encode(ridAppURL /* TODO + serialized version of requestp */ , "UTF-8") +
+//			    				"&check-signature=" + URLEncoder.encode(ridCheckSignature, "UTF-8") +
+		    				"&app_id=" + URLEncoder.encode(appID, "UTF-8");
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Requesting rid through: " + ridURL);
 
+	    			URL url = new URL(ridURL); 		    			
+					in = new BufferedReader(new InputStreamReader(url.openStream()));
 
-		    } else if ("check_authentication".equals(mode)) {
+	    			String inputLine = null;
+	    			while ((inputLine = in.readLine()) != null) {
+	    				ridResponse += inputLine;
+	    			}
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Requesting rid response: " + ridResponse);
+	    		}
+	    		catch (Exception e) { 	
+					_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not retrieve rid from aselectserver: " + ridAselectServer);
+					throw new ASelectCommunicationException(Errors.ERROR_ASELECT_IO, e);
+	    		}
+	    		finally {
+	    			if (in != null)
+						try {
+							in.close();
+						}
+						catch (IOException e) {
+							_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not close stream to aselectserver : " + ridAselectServer);
+						}
+	    		}
+
+	    		//out.println("<br/>ridResponse=" + ridResponse); 
+	    		String extractedRid = ridResponse.replaceFirst(".*rid=([^&]*).*$", "$1");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "rid retrieved: " + extractedRid);
+
+				String sessionID = SESSIONID_PREFIX + extractedRid;
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Storing requestparameters with id: " + sessionID);
+		    	Utils.logRequestParameters(requestp, _systemLogger);
+
+				HashMap<String, Object> htSessionContext = new HashMap<String, Object>();
+				htSessionContext.put("openid_requestp", requestp);
+				// 20120404, Bauke replaced: _oSessionManager.updateSession(sessionID, htSessionContext);
+				_oSessionManager.createSession(sessionID, htSessionContext, true/*start paused*/);  // new session with predefined RID
+				
+	    		String loginrequest= "login1";
+
+	    		//Construct request data 
+	    		String redirectURL = null;
+				try {
+					redirectURL = ridReqURL + "?" + 
+							"request=" + URLEncoder.encode(loginrequest, "UTF-8") +
+							"&a-select-server=" + URLEncoder.encode(ridAselectServer, "UTF-8") +
+							"&rid=" + extractedRid;
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Requesting login through redirect with redirectURL: " + redirectURL);
+					
+		    		response.sendRedirect(redirectURL);
+				}
+				catch (UnsupportedEncodingException e1) {
+					_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not URLEncode to UTF-8, this should not happen!");
+					throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e1);
+				}
+				catch (IOException e) {
+					_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not redirect to: " + redirectURL);
+					throw new ASelectCommunicationException(Errors.ERROR_ASELECT_IO, e);
+				}
+
+		    }
+		    else if ("check_authentication".equals(mode)) {
 		        // --- processing a verification request ---
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Process a check_authentication request");
 		    	Utils.logRequestParameters(requestp, _systemLogger);
 		        opResponse = serverManager.verify(requestp);
 		    	Utils.sendPlainTextResponse(response, opResponse, _systemLogger);
-		    } else {
+		    }
+		    else {
 		    	// This should be the aselectserver response
 		    	if (request.getParameter("aselect_credentials") != null) {
 			    	// handle the aselectserver response
@@ -464,12 +451,10 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 						throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e2);
 					} 
 
-
-					String sessionID =  extractedRid + SESSIONID_POSTFIX;
-
+					String sessionID = SESSIONID_PREFIX + extractedRid;
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Retrieving requestparameters with sessionID: " + sessionID);
 
-			    	HashMap<String, Object> htSessionContext = (HashMap<String, Object>) _oSessionManager.get(sessionID);
+			    	HashMap<String, Object> htSessionContext = (HashMap<String, Object>)_oSessionManager.get(sessionID);
 			    	requestp = (ParameterList) htSessionContext.get("openid_requestp");
 			    	
 			    	Utils.logRequestParameters(requestp, _systemLogger);

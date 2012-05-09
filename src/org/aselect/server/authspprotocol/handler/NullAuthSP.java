@@ -90,7 +90,6 @@ import org.aselect.server.session.SessionManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAuthSPException;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Null AuthSP handler. <br>
  * <br>
@@ -145,6 +144,11 @@ public class NullAuthSP implements IAuthSPProtocolHandler
 	 * The A-Select Server server id
 	 */
 	private String _sServerId;
+	
+	/* (non-Javadoc)
+	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#myRidName()
+	 */
+	public String getLocalRidName() { return "rid"; }
 
 	/**
 	 * Initializes the NullAuthSP handler. <br>
@@ -262,20 +266,19 @@ public class NullAuthSP implements IAuthSPProtocolHandler
 	 * @return the hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#computeAuthenticationRequest(java.lang.String)
 	 */
-	public HashMap computeAuthenticationRequest(String sRid)
+	public HashMap computeAuthenticationRequest(String sRid, HashMap htSessionContext)
 	{
-		String sMethod = "computeAuthenticationRequest()";
+		String sMethod = "computeAuthenticationRequest";
 
 		HashMap htResponse = new HashMap();
 		htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
 
 		try {
-			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+			// 20120403, Bauke: passes as parameter: HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
 				StringBuffer sbBuffer = new StringBuffer("Could not fetch session context for rid: ");
 				sbBuffer.append(sRid);
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
-
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
 
@@ -286,13 +289,11 @@ public class NullAuthSP implements IAuthSPProtocolHandler
 			HashMap htAllowedAuthsps = (HashMap) htSessionContext.get("allowed_user_authsps");
 			if (htAllowedAuthsps == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "allowed_user_authsps missing in session context");
-
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
 			String sUserId = (String) htAllowedAuthsps.get(_sAuthSP);
 			if (sUserId == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "missing NullAuthSP user attributes ");
-
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
 
@@ -322,7 +323,6 @@ public class NullAuthSP implements IAuthSPProtocolHandler
 				StringBuffer sbBuffer = new StringBuffer("Could not generate signature for authsp: ");
 				sbBuffer.append(_sAuthSP);
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
-
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
 
@@ -352,10 +352,8 @@ public class NullAuthSP implements IAuthSPProtocolHandler
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize", e);
-
 			htResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 		}
-
 		return htResponse;
 	}
 
@@ -393,13 +391,16 @@ public class NullAuthSP implements IAuthSPProtocolHandler
 	 * <br>
 	 * 
 	 * @param htAuthspResponse
-	 *            the ht authsp response
-	 * @return the hash map
+	 *            the authsp response
+	 * @param htSessionContext
+	 *            the session context, must be available
+	 * @return the result hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.HashMap)
 	 */
-	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse)
+	// 20120403, Bauke: added htSessionContext
+	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse, HashMap htSessionContext)
 	{
-		String sMethod = "verifyAuthenticationResponse()";
+		String sMethod = "verifyAuthenticationResponse";
 
 		String sUserId = null;
 		String sAppID = null;
@@ -416,11 +417,9 @@ public class NullAuthSP implements IAuthSPProtocolHandler
 			String sResultCode = (String) htAuthspResponse.get("result_code");
 			String sAsId = (String) htAuthspResponse.get("a-select-server");
 			String sSignature = (String) htAuthspResponse.get("signature");
-
 			if ((sRid == null) || (sResultCode == null) || (sSignature == null) || (sAsId == null)) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
 						"Incorrect AuthSP response, missing one or more required parameters.");
-
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 			}
 
@@ -438,18 +437,10 @@ public class NullAuthSP implements IAuthSPProtocolHandler
 			if (!_cryptoEngine.verifySignature(_sAuthSP, sbSignature.toString(), sSignature)) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid signature in response from AuthSP:"
 						+ _sAuthSP);
-
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 			}
 
-			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
-			if (htSessionContext == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"Session expired -> SessionContext not available for rid: ");
-
-				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
-			}
-
+			// 20120403, Bauke: session is available as a parameter
 			sUserId = (String) htSessionContext.get("user_id");
 			sAppID = (String) htSessionContext.get("app_id");
 
@@ -465,15 +456,12 @@ public class NullAuthSP implements IAuthSPProtocolHandler
 					_authenticationLogger.log(new Object[] {
 						MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrganization, sAppID, "denied", sResultCode
 					});
-
 					throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);
 				}
 
 				StringBuffer sbError = new StringBuffer("AuthSP returned errorcode: ");
 				sbError.append(sResultCode);
-
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
-
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
 
@@ -495,7 +483,6 @@ public class NullAuthSP implements IAuthSPProtocolHandler
 			sLogResultCode = Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER;
 			htResponse.put("result", sLogResultCode);
 		}
-
 		return htResponse;
 	}
 }

@@ -149,7 +149,7 @@ public class MemoryStorageHandler implements IStorageHandler
 	public long getTimestamp(Object oKey)
 		throws ASelectStorageException
 	{
-		String sMethod = "getTimestamp()";
+		String sMethod = "getTimestamp";
 		long lTimestamp = 0;
 
 		try {
@@ -157,6 +157,7 @@ public class MemoryStorageHandler implements IStorageHandler
 			HashMap htStorageContainer = (HashMap) _htStorage.get(oKey);
 			Long lValue = (Long) htStorageContainer.get("timestamp");
 			lTimestamp = lValue.longValue();
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Timestamp=" + lTimestamp);
 			// }
 		}
 		catch (NullPointerException eNP) {
@@ -357,6 +358,7 @@ public class MemoryStorageHandler implements IStorageHandler
 			countAll++;
 			HashMap htStorageContainer = (HashMap)_htStorage.get(oKey);
 			Long lStorageTime = (Long)htStorageContainer.get("timestamp");
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "StorageTime=" + lStorageTime);
 
 			if (lTimestamp.longValue() >= lStorageTime.longValue()) {
 				// Try, report left-over sessions

@@ -48,8 +48,14 @@ import org.aselect.system.exception.ASelectAuthSPException;
  * @author Alfa & Ariss
  */
 public interface IAuthSPProtocolHandler
-{
-	
+{	
+	/**
+	 * Gets the name we can use to get our own rid from the ServiceRequest.
+	 * 
+	 * @return the local rid name
+	 */
+	public String getLocalRidName();
+
 	/**
 	 * Initializes the AuthSP protocol handler. <br>
 	 * <b>Description: </b> <br>
@@ -81,25 +87,18 @@ public interface IAuthSPProtocolHandler
 	 * <code>ASelectLoginHandler</code> will redirect the user to this URL.<br>
 	 * The created URL should contain AuthSP specific parameters. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br>
-	 * - <br>
-	 * <br>
-	 * <b>Preconditions:</b> <br>
-	 * - <br>
-	 * <br>
-	 * <b>Postconditions:</b> <br>
-	 * - <br>
 	 * 
 	 * @param sRid
-	 *            Needed parameter in the redirect URL. Can also be used to retrieve session information from the
-	 *            <code>SessionManager</code>.
+	 *      The session's Rid, needed in the redirect URL.
+	 * @param htSessionContext
+	 * 		the session that must have been read by the caller.
 	 * @return <code>HashMap</code> containing at least:
 	 *         <ul>
 	 *         <li><code>result</code></li>
 	 *         <li><code>redirect_url</code></li>
 	 *         </ul>
 	 */
-	public HashMap computeAuthenticationRequest(String sRid);
+	public HashMap computeAuthenticationRequest(String sRid, HashMap htSessionContext);
 
 	/**
 	 * Verification of an AuthSP specific response. <br>
@@ -109,29 +108,23 @@ public interface IAuthSPProtocolHandler
 	 * HashMap</code>
 	 * to this function. The AuthSP handler should verify the AuthSP specific parameters. <br>
 	 * <br>
-	 * The AuthSP handler should verify the response from an AuthSP In the response hashtable the AuthSP handler shall
+	 * The AuthSP handler should verify the AuthSP response. In the result the AuthSP handler will
 	 * place "result" to indicate the processing result and "rid" of the request if everything is ok <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br>
-	 * - <br>
-	 * <br>
-	 * <b>Preconditions:</b> <br>
-	 * - <br>
-	 * <br>
-	 * <b>Postconditions:</b> <br>
-	 * - <br>
 	 * 
-	 * @param htResponse
-	 *            <code>HashMap</code> containing all parameters that were received from the AuthSP. It should contain
-	 *            at least:
-	 *            <ul>
-	 *            <li><code>rid</code>
-	 *            </ul>
+	 * @param htServiceRequest
+	 *         <code>HashMap</code> containing all parameters that were received from the AuthSP.
+	 *         It should contain at least:
+	 *         <ul>
+	 *         <li><code>rid</code>
+	 *         </ul>
+	 * @param htSessionContext, the session that was read by the caller
+	 * 
 	 * @return <code>HashMap</code> containing at least:
 	 *         <ul>
 	 *         <li><code>result</code>
 	 *         <li><code>rid</code>
 	 *         </ul>
 	 */
-	public HashMap verifyAuthenticationResponse(HashMap htResponse);
+	public HashMap verifyAuthenticationResponse(HashMap htServiceRequest, HashMap htSessionContext);
 }

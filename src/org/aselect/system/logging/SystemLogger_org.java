@@ -90,7 +90,6 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.configmanager.IConfigManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
@@ -128,7 +127,8 @@ public class SystemLogger_org implements ISystemLogger
 	/**
 	 * Default constructor.
 	 */
-	public SystemLogger_org() {
+	public SystemLogger_org()
+	{
 	}
 
 	/**
@@ -164,7 +164,7 @@ public class SystemLogger_org implements ISystemLogger
 	 */
 	public void init(String sLogFileNamePrefix, String sLoggerNamespace, IConfigManager oConfigManager,
 			Object oLogTargetConfig, String sWorkingDir)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 
@@ -175,9 +175,7 @@ public class SystemLogger_org implements ISystemLogger
 		this.log(Level.INFO, MODULE, sMethod, "dir=" + sWorkingDir + " prefix=" + sLogFileNamePrefix);
 		try {
 			if (oLogTargetConfig == null) {
-				this.log(Level.CONFIG, MODULE, sMethod,
-						"No valid config section supplied, using default logging settings.");
-
+				this.log(Level.CONFIG, MODULE, sMethod, "No valid config section supplied, using default logging settings.");
 				iLogMaxSize = MAXLOGSIZE;
 				iLogFiles = LOGFILES;
 
@@ -187,6 +185,7 @@ public class SystemLogger_org implements ISystemLogger
 				sbSysLogDir.append(File.separator);
 			}
 			else {
+				this.log(Level.INFO, MODULE, sMethod, "target present");
 				try {
 					iLogMaxSize = new Integer(oConfigManager.getParam(oLogTargetConfig, "max_file_size")).intValue();
 				}
@@ -210,6 +209,7 @@ public class SystemLogger_org implements ISystemLogger
 					sbInfo.append(iLogFiles);
 					this.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString(), e);
 				}
+				this.log(Level.INFO, MODULE, sMethod, "max_file_size="+iLogMaxSize+" nr_of_files="+iLogFiles);
 
 				try {
 					String sSysLogDir = oConfigManager.getParam(oLogTargetConfig, "directory");
@@ -228,22 +228,18 @@ public class SystemLogger_org implements ISystemLogger
 						if (!fSysLogDir.mkdirs())
 							throw new ASelectException(Errors.ERROR_ASELECT_IO);
 					}
-
 					sbSysLogDir = new StringBuffer(sSysLogDir);
 				}
 				catch (Exception e) {
 					sbSysLogDir = new StringBuffer(sWorkingDir);
-					sbSysLogDir.append(File.separator);
-					sbSysLogDir.append("log");
-					sbSysLogDir.append(File.separator);
+					sbSysLogDir.append(File.separator).append("log").append(File.separator);
 
-					StringBuffer sbInfo = new StringBuffer(
-							"No valid config item: 'directory' in config section 'target' found, using default directory: ");
+					StringBuffer sbInfo = new StringBuffer("No valid config item: 'directory' in config section 'target' found, using default directory: ");
 					sbInfo.append(sbSysLogDir.toString());
-
 					this.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString(), e);
 				}
 			}
+			this.log(Level.INFO, MODULE, sMethod, "SysLogDir=" + sbSysLogDir);
 
 			// logging dir
 			sbSysLogDir.append(sLogFileNamePrefix);
@@ -259,16 +255,17 @@ public class SystemLogger_org implements ISystemLogger
 					StringBuffer sbFailed = new StringBuffer("Could not access the system logging directory: ");
 					sbFailed.append(sbSysLogDir.toString());
 					this.log(Level.WARNING, MODULE, sMethod, sbFailed.toString());
-
 					throw new ASelectException(Errors.ERROR_ASELECT_IO);
 				}
 			}
+			this.log(Level.INFO, MODULE, sMethod, "Logging directory="+sbSysLogDir);
 
 			// create log file
 			StringBuffer sbLogFile = new StringBuffer(sbSysLogDir.toString());
 			sbLogFile.append(File.separator);
 			sbLogFile.append(sLogFileNamePrefix);
 			sbLogFile.append("%g.log");
+			this.log(Level.INFO, MODULE, sMethod, "LogFile="+sbLogFile+" Namespace="+sLoggerNamespace);
 
 			// create file handler
 			FileHandler oFileHandler = new FileHandler(sbLogFile.toString(), iLogMaxSize, iLogFiles, true);
@@ -278,8 +275,13 @@ public class SystemLogger_org implements ISystemLogger
 			// get logger and set handler
 			// 1.5.4 Avoid multiple A-Select servers in the same VM all writing to the same logfile
 			// _oLogger = Logger.getLogger(sLoggerNamespace+"."+this.hashCode());
+			this.log(Level.INFO, MODULE, sMethod, "Get logger and add FileHandler");
 			_oLogger = Logger.getLogger(sLoggerNamespace);
+			// UseParentHandlers is controlled by setLevel() below!!
+			// FINEST also logs to stdout!
+			this.log(Level.INFO, MODULE, sMethod, "UseParent="+_oLogger.getUseParentHandlers());
 			_oLogger.addHandler(oFileHandler);
+			this.log(Level.INFO, MODULE, sMethod, "Done");
 			setLevel(Level.FINE);
 		}
 		catch (ASelectException e) {
@@ -448,31 +450,6 @@ public class SystemLogger_org implements ISystemLogger
 	}
 
 	/**
-	 * Enable/disable debug logging. <br>
-	 * <br>
-	 * <b>Description: </b> <br>
-	 * When set to debugging, messages will be copied to the DebugLogger. <br>
-	 * <br>
-	 * <b>Concurrency issues: </b> <br>
-	 * -<br>
-	 * <br>
-	 * <b>Preconditions: </b> <br>
-	 * -<br>
-	 * <br>
-	 * <b>Postconditions: </b> <br>
-	 * -<br>
-	 * 
-	 * @param bDebug
-	 *            True if debugging should be enabled, otherwise false.
-	 * @deprecated use {@link #setLevel(Level)} instead.
-	 */
-	@Deprecated
-	public void setDebug(boolean bDebug)
-	{
-		_oLogger.setUseParentHandlers(bDebug);
-	}
-
-	/**
 	 * Set the level of the system logger. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
@@ -576,7 +553,6 @@ public class SystemLogger_org implements ISystemLogger
 	 */
 	class SystemLogFormatter extends Formatter
 	{
-		
 		/**
 		 * Format the log message for system logging.
 		 * 
@@ -589,12 +565,9 @@ public class SystemLogger_org implements ISystemLogger
 		public String format(LogRecord oRecord)
 		{
 			// Default log message
-			StringBuffer sbBuffer = new StringBuffer("[");
-			sbBuffer.append(new Date().toString());
-			sbBuffer.append("] - ");
+			StringBuffer sbBuffer = new StringBuffer("[").append(new Date().toString()).append("] - ");
 			String sLevel = oRecord.getLevel().getName();
-			sbBuffer.append(sLevel);
-			sbBuffer.append(": ");
+			sbBuffer.append(sLevel).append(": ");
 			for (int i = 0; i < 7 - sLevel.length(); i++)
 				sbBuffer.append(' ');
 			sbBuffer.append(oRecord.getMessage());
@@ -616,10 +589,8 @@ public class SystemLogger_org implements ISystemLogger
 					}
 					sbBuffer.append("}\n");
 				}
-
 			}
 			sbBuffer.append("\n");
-
 			return sbBuffer.toString();
 		}
 	}
@@ -632,91 +603,5 @@ public class SystemLogger_org implements ISystemLogger
 	public boolean isDebug()
 	{
 		return _bDebug;
-	}
-
-	/**
-	 * Format a detailed error message. <br>
-	 * <br>
-	 * <b>Description: </b> <br>
-	 * Create a detailed message which can be logged. <br>
-	 * <br>
-	 * <b>Concurrency issues: </b> <br>
-	 * -<br>
-	 * <br>
-	 * <b>Preconditions: </b> <br>
-	 * -<br>
-	 * <br>
-	 * <b>Postconditions: </b> <br>
-	 * -<br>
-	 * 
-	 * @param sModule
-	 *            The module (class name) that is to be logged.
-	 * @param sMethod
-	 *            The method that is to be logged.
-	 * @param e
-	 *            A Exception that is to be logged.
-	 * @param sErrorType
-	 *            The type of error.
-	 * @return A formatted detailed log message.
-	 * @deprecated use {@link #log(Level, String, String, String, Throwable)} instead.
-	 */
-	@Deprecated
-	public static String formatDetailedError(String sModule, String sMethod, Exception e, String sErrorType)
-	{
-		StringBuffer sb = new StringBuffer();
-
-		if (sModule != null)
-			sb.append(sModule).append(".");
-		if (sMethod != null) {
-			sb.append(sMethod);
-		}
-		sb.append("::").append(sErrorType).append(": ");
-
-		String sException = e.getClass().getName();
-		sb.append(sException.substring(sException.lastIndexOf(".") + 1));
-		if (e.getMessage() != null)
-			sb.append(" \"").append(e.getMessage()).append("\"");
-
-		StackTraceElement[] trace = e.getStackTrace();
-		if (trace != null && trace.length > 0) {
-			sb.append(" at ");
-			String sAtClass = trace[0].getClassName();
-			String sAtMethod = trace[0].getMethodName();
-			int line = trace[0].getLineNumber();
-			sb.append(sAtClass).append(".");
-			sb.append(sAtMethod).append("()");
-			sb.append(":").append(line);
-		}
-		return sb.toString();
-	}
-
-	/**
-	 * Format a internal error message. <br>
-	 * <br>
-	 * <b>Description: </b> <br>
-	 * Create a internal error message which can be logged. <br>
-	 * <br>
-	 * <b>Concurrency issues: </b> <br>
-	 * -<br>
-	 * <br>
-	 * <b>Preconditions: </b> <br>
-	 * -<br>
-	 * <br>
-	 * <b>Postconditions: </b> <br>
-	 * -<br>
-	 * 
-	 * @param sModule
-	 *            The module (class name) that is to be logged.
-	 * @param sMethod
-	 *            The method that is to be logged.
-	 * @param e
-	 *            A Exception that is to be logged.
-	 * @return A formatted internal error log message.
-	 * @deprecated use {@link #log(Level, String, String, String, Throwable)} instead.
-	 */
-	@Deprecated
-	public static String formatInternalError(String sModule, String sMethod, Exception e)
-	{
-		return formatDetailedError(sModule, sMethod, e, "INTERNAL ERROR");
 	}
 }

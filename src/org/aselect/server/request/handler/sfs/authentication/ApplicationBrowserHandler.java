@@ -622,7 +622,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 							String sLang = (String)htTGTContext.get("language");
 							oTGTIssuer.sendTgtRedirect(sRedirectUrl, sTgt, sRid, servletResponse, sLang);
-							_sessionManager.killSession(sRid);
+							_sessionManager.deleteSession(sRid, _htSessionContext);
 							return;
 						}
 					}
@@ -645,7 +645,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					// The userid is already known from the TGT
 					htServiceRequest.put("user_id", sUid);
 					// showDirectLoginForm(htServiceRequest,pwOut);
-					oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId,
+					oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, _htSessionContext, pwOut, _sMyServerId,
 							"", "");
 					return;
 				}
@@ -659,11 +659,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			if (sForcedUid != null) {
 				htServiceRequest.put("user_id", sForcedUid);
 				// showDirectLoginForm(htServiceRequest,pwOut);
-				oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId, "",
+				oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, _htSessionContext, pwOut, _sMyServerId, "",
 						"");
 				return;
 			}
-			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, pwOut, _sMyServerId, "", "");
+			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, _htSessionContext, pwOut, _sMyServerId, "", "");
 
 			// Store changed session, for JDBC Storage Handler
 			if (!_sessionManager.updateSession(sRid, _htSessionContext)) {
@@ -783,7 +783,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 							String sLang = (String)htTGTContext.get("language");
 							oTGTIssuer.sendTgtRedirect(sRedirectUrl, sTgt, sRid, servletResponse, sLang);
-							_sessionManager.killSession(sRid);
+							_sessionManager.deleteSession(sRid, _htSessionContext);
 							return;
 						}
 					}
@@ -1489,7 +1489,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							// .get("tgt_exp_time"));
 
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-							oTGTIssuer.issueTGTandRedirect(sRid, sAuthsp, htAdditional, servletResponse, null, true);
+							oTGTIssuer.issueTGTandRedirect(sRid, _htSessionContext, sAuthsp, htAdditional, servletResponse, null, true);
 							return;
 						}
 					}
@@ -1518,7 +1518,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						sb.append(sServerId);
 						sb.append("&rid=").append(sRid);
 
-						_sessionManager.killSession(sRid);
+						_sessionManager.deleteSession(sRid, _htSessionContext);
 						servletResponse.sendRedirect(sb.toString());
 					}
 					catch (UnsupportedEncodingException e) {
@@ -1796,7 +1796,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Issue TGT
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-			tgtIssuer.issueTGTandRedirect(sRid, sPrivilegedApplication, null, servletResponse, null, true);
+			tgtIssuer.issueTGTandRedirect(sRid, _htSessionContext, sPrivilegedApplication, null, servletResponse, null, true);
 
 		}
 		catch (ASelectException e) {
@@ -1966,7 +1966,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 
 		// let the protocol handler for the authsp do its work
-		HashMap htResponse = oProtocolHandler.computeAuthenticationRequest(sRid);
+		HashMap htResponse = oProtocolHandler.computeAuthenticationRequest(sRid, _htSessionContext);
 		String sResultCode = (String) htResponse.get("result");
 		if (sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
 			return (String) htResponse.get("redirect_url");

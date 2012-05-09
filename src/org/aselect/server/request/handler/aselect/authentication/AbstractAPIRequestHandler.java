@@ -214,7 +214,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 				IInputMessage inputMessage = communicator.getInputMessage();
 				IOutputMessage outputMessage = communicator.getOutputMessage();
 				
-				// 20111108, Bauke: For however needs it:
+				// 20111108, Bauke: For whoever needs it:
 				_timeSensor.timeSensorStart(-1/*level unused*/, 3/*type=server*/, _lMyThread);  // unused by default
 				String sUsi = null;
 				try {
@@ -296,7 +296,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 			try {
 				if (_timeSensor.getTimeSensorLevel() >= 1) {  // used
 					_timeSensor.timeSensorFinish(bSuccess);
-					SendQueue.getHandle().addEntry( _timeSensor.timeSensorPack());
+					SendQueue.getHandle().addEntry(_timeSensor.timeSensorPack());
 					//Tools.reportTimerSensorData(_configManager, "aselect"/*<xml>*/, "timer_sensor", _systemLogger, _timeSensor.timeSensorPack());
 				}
 			}

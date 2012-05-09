@@ -76,7 +76,7 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 			_sFederationUrl = _oConfigManager.getParam(aselectSection, "federation_url");
 		}
 		catch (ASelectConfigException e) {
-			// 20091207: systemLogger.log(Level.WARNING, MODULE, sMethod,
+			// 20091207: systemLogger.log(Level.INFO, MODULE, sMethod,
 			// "No config item 'federation_url' found in 'aselect' section", e);
 			// 20091207: throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
@@ -88,10 +88,10 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 			if ("true".equalsIgnoreCase(sVerifySignature)) {
 				set_bVerifySignature(true);
 			}
-			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "verify_signature = " + is_bVerifySignature());
+			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "storagemanager id=\"tgt\": verify_signature = " + is_bVerifySignature());
 		}
 		catch (ASelectConfigException e) {
-			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "verify_signature not found, set to = "
+			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "storagemanager id=\"tgt\": verify_signature not found, set to = "
 					+ is_bVerifySignature());
 		}
 	}
@@ -108,7 +108,10 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 		HashMap htValue = (HashMap) oValue;
 
 		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "MSHT " + this.getClass());
-		if (!_oTGTManager.containsKey(oKey) || htValue.get("createtime") == null) {
+		// We'll use a small (not most beautiful) trick to speed up the "put" later on
+//		if (!_oTGTManager.containsKey(oKey) || htValue.get("createtime") == null) {	// RH, 20111114, o
+		boolean hasKey = _oTGTManager.containsKey(oKey);	// RH, 20111114, n
+		if (!hasKey || htValue.get("createtime" ) == null) {	// RH, 20111114, n
 			long now = new Date().getTime();
 			htValue.put("createtime", String.valueOf(now));
 			htValue.put("sessionsynctime", String.valueOf(now));
@@ -123,6 +126,8 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 			htValue.remove("updatetimestamp");
 		}
 		super.put(oKey, oValue, lTimestamp);
+		// don't use the Jdbc construction here!!!!
+		// super.put(oKey, oValue, lTimestamp, hasKey ? UpdateMode.UPDATEFIRST : UpdateMode.INSERTFIRST);		// RH, 20111114, n
 	}
 
 	/* (non-Javadoc)
@@ -181,12 +186,10 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 		Set keys = allTgts.keySet();
 		for (Object s : keys) {
 			String key = (String) s;
-			// for (Enumeration<String> e = allTgts.keys(); e.hasMoreElements();) {
-			// String key = e.nextElement();
 			HashMap htTGTContext = (HashMap) _oTGTManager.get(key);
 			String sNameID = (String) htTGTContext.get("name_id");
 			String sSync = (String) htTGTContext.get("sessionsynctime");
-			Long lastSync = Long.parseLong(sSync);
+			Long lastSync = sSync==null? 0: Long.parseLong(sSync);
 			Boolean bForcedAuthn = (Boolean) htTGTContext.get("forced_authenticate");
 			if (bForcedAuthn == null)
 				bForcedAuthn = false;
@@ -271,10 +274,9 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 		try {
 //			logout.sendSoapLogoutRequest(url, issuerUrl, sNameID, "urn:oasis:names:tc:SAML:2.0:logout:sp-timeout", pkey);	// RH, 20120201, o
 			logout.sendSoapLogoutRequest(url, issuerUrl, sNameID, "urn:oasis:names:tc:SAML:2.0:logout:sp-timeout", pkey, sessionIndexes);	// RH, 20120201, n
-
 		}
 		catch (ASelectException e) {
-			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "exception trying to send Logout message", e);
+			_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "Exception trying to send Logout message", e);
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 		return false;

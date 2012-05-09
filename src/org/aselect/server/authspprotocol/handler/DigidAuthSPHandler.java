@@ -54,6 +54,11 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 	private HashMap<String, String> _htBetrouwbaarheidsNiveaus;
 	private HashMap<String, String> _htSharedSecrets;
 
+	/* (non-Javadoc)
+	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#myRidName()
+	 */
+	public String getLocalRidName() { return "local_rid"; }
+
 	/**
 	 * Initializes the DigidAuthSPHandler. <br>
 	 * Resolves the following config items:<br>
@@ -82,7 +87,6 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			_configManager = ASelectConfigManager.getHandle();
 			_sessionManager = SessionManager.getHandle();
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
 			try {
 				_sAuthSPId = _configManager.getParam(oAuthSPConfig, "id");
 			}
@@ -132,8 +136,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 				oBetrouwbaarheidsNiveaus = _configManager.getSection(oAuthSPConfig, "betrouwbaarheidsniveaus");
 			}
 			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config section 'betrouwbaarheidsniveaus' found",
-						e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config section 'betrouwbaarheidsniveaus' found",e);
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -142,7 +145,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 				oBetrouwbaarheidsNiveau = _configManager.getSection(oBetrouwbaarheidsNiveaus, "betrouwbaarheidsniveau");
 			}
 			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config section 'betrouwbaarheidsniveau' found", e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config section 'betrouwbaarheidsniveau' found",e);
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 			_htBetrouwbaarheidsNiveaus = new HashMap<String, String>();
@@ -152,7 +155,6 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 				loadBetrouwbaarheidsNiveau(oBetrouwbaarheidsNiveau);
 				oBetrouwbaarheidsNiveau = _configManager.getNextSection(oBetrouwbaarheidsNiveau);
 			}
-
 		}
 		catch (ASelectAuthSPException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not initialize", e);
@@ -175,7 +177,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 	private void loadBetrouwbaarheidsNiveau(Object oBetrouwbaarheidsNiveau)
 		throws ASelectException
 	{
-		String sMethod = "loadBetrouwbaarheidsNiveau()";
+		String sMethod = "loadBetrouwbaarheidsNiveau";
 
 		String sNiveau;
 		try {
@@ -254,16 +256,16 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#computeAuthenticationRequest(java.lang.String)
 	 */
 	@SuppressWarnings("unchecked")
-	public HashMap computeAuthenticationRequest(String sRid)
+	public HashMap computeAuthenticationRequest(String sRid, HashMap htSessionContext)
 	{
-		String sMethod = "computeAuthenticationRequest()";
+		String sMethod = "computeAuthenticationRequest";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
 
 		HashMap htMethodResponse = new HashMap();
 		htMethodResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
 
 		try {
-			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+			// 20120403, Bauke: passes as parameter: HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
 				StringBuffer sbBuffer = new StringBuffer("Could not fetch session context for rid: ");
 				sbBuffer.append(sRid);
@@ -310,7 +312,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 
 			// Send to DigiD!
 			HashMap htResponse = null;
-			Tools.pauseSensorData(_systemLogger, htSessionContext);  // 20120215
+			Tools.pauseSensorData(_systemLogger, htSessionContext);  // 20120215, possible session update
 			try {
 				htResponse = _oClientCommunicator.sendMessage(htRequest, sASelectServerUrl);
 			}
@@ -321,7 +323,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			}
 			finally {
 				// Time in between should be attributed to DigiD
-				Tools.resumeSensorData(_systemLogger, htSessionContext);  // 20120215
+				Tools.resumeSensorData(_systemLogger, htSessionContext);  // 20120215, possible sessin update
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Result=" + htResponse);
 			
@@ -374,9 +376,10 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.HashMap)
 	 */
 	@SuppressWarnings("unchecked")
-	public HashMap verifyAuthenticationResponse(HashMap htResponse)
+	// 20120403, Bauke: added htSessionContext
+	public HashMap verifyAuthenticationResponse(HashMap htResponse, HashMap htSessionContext)
 	{
-		String sMethod = "verifyAuthenticationResponse()";
+		String sMethod = "verifyAuthenticationResponse";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
 
 		HashMap<String, Object> result = new HashMap<String, Object>();
@@ -393,19 +396,16 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			// If its not found, we use the default betrouwbaarheidsniveau to determine the shared secret.
 			String sReqLevel = _sDefaultBetrouwbaarheidsNiveau;
 			String sharedSecret = _htSharedSecrets.get(_sDefaultBetrouwbaarheidsNiveau);
-			SessionManager sessionManager = SessionManager.getHandle();
-			// 20120103: Superfluous, just go get it: if (sessionManager.containsKey(sLocalRid)) {
-			HashMap sessionContext = sessionManager.getSessionContext(sLocalRid);
-			if (sessionContext != null) {
-				// 20090110, Bauke changed requested_betrouwbaarheidsniveau to required_level
-				sReqLevel = (String) sessionContext.get("required_level");
-				Integer intLevel = (Integer) sessionContext.get("level");
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "required_level=" + sReqLevel + " level=" + intLevel);
-				if (sReqLevel == null || sReqLevel.equals("empty"))
-					sReqLevel = _sDefaultBetrouwbaarheidsNiveau;
-				sharedSecret = _htSharedSecrets.get(sReqLevel);
-				sLocalAppId = (String)sessionContext.get("app_id");
-			}
+			
+			// 20120403, Bauke: session is available as a parameter
+			// 20090110, Bauke changed requested_betrouwbaarheidsniveau to required_level
+			sReqLevel = (String)htSessionContext.get("required_level");
+			Integer intLevel = (Integer)htSessionContext.get("level");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "required_level=" + sReqLevel + " level=" + intLevel);
+			if (sReqLevel == null || sReqLevel.equals("empty"))
+				sReqLevel = _sDefaultBetrouwbaarheidsNiveau;
+			sharedSecret = _htSharedSecrets.get(sReqLevel);
+			sLocalAppId = (String)htSessionContext.get("app_id");
 
 			HashMap reqParams = new HashMap();
 			reqParams.put("request", "verify_credentials");
@@ -420,11 +420,9 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 				response = _oClientCommunicator.sendMessage(reqParams, _sAuthSPUrl);
 			}
 			catch (ASelectCommunicationException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not send authentication request to: "
-						+ _sAuthSPUrl);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not send authentication request to: "+_sAuthSPUrl);
 				throw new ASelectException(Errors.ERROR_ASELECT_IO);
 			}
-
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Response=" + response);
 
 			// DigiD should respond with:

@@ -56,7 +56,7 @@ public abstract class BasicRequestHandler
 	 * @throws ASelectException
 	 *             on any failure
 	 */
-	protected HashMap<String, String> handleAuthenticateAndCreateSession(HashMap<String, String> hmInput, String sUrlTarget)
+	protected HashMap<String, Object> handleAuthenticateAndCreateSession(HashMap<String, String> hmInput, String sUrlTarget)
 	throws ASelectException
 	{
 		String sMethod = "handleAuthenticateAndCreateSession";
@@ -260,18 +260,19 @@ public abstract class BasicRequestHandler
 		}
 
 		// 20101009, Bauke: createSession was at *1 above, moved here
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "CTX htSessionContext=" + htSessionContext);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Create htSessionContext=" + htSessionContext);
 		String sSessionId = _sessionManager.createSession(htSessionContext, true);
 		if (sSessionId == null) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to create session");
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "OUT sbAsUrl=" + sbAsUrl + ", rid=" + sSessionId);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Create sbAsUrl=" + sbAsUrl + ", rid=" + sSessionId);
 
-		HashMap<String, String> hmOutput = new HashMap<String, String>();
+		HashMap<String, Object> hmOutput = new HashMap<String, Object>();
 		hmOutput.put("as_url", sbAsUrl.toString());
 		hmOutput.put("rid", sSessionId);
 		hmOutput.put("result_code", Errors.ERROR_ASELECT_SUCCESS);
+		hmOutput.put("session", htSessionContext);
 		return hmOutput;
 	}
 

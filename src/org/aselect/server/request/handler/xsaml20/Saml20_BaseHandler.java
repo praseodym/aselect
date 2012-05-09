@@ -12,19 +12,14 @@
 package org.aselect.server.request.handler.xsaml20;
 
 import java.io.IOException;
-
-import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.security.GeneralSecurityException;
-import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;

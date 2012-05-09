@@ -87,6 +87,7 @@ import org.aselect.server.log.ASelectAuthenticationLogger;
 import org.aselect.server.sam.ASelectSAMAgent;
 import org.aselect.server.tgt.TGTIssuer;
 import org.aselect.system.error.Errors;
+import org.aselect.system.exception.ASelectAuthSPException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
@@ -211,31 +212,32 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
 
+			// 20120403, Bauke: get local rid name from handler, and read session first
+			String sRid = (String) htServiceRequest.get(oProtocolHandler.getLocalRidName());  // "rid" or "local_rid" for DigiD
+			if (sRid == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "AuthSP response does not contain our RID");
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
+			}
+			_htSessionContext = _sessionManager.getSessionContext(sRid);
+			if (_htSessionContext == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Bad AuthSP response: Session could not be retrieved");
+				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
+			}
+			// A session is available.
+			
+			// User interaction is finished, resume the stopwatch
+			Tools.resumeSensorData(_systemLogger, _htSessionContext);
+			
 			// Let the AuthSP protocol handler verify the response from the AuthSP
-			// htResponse will contain the result data
+			// htAuthResponse will contain the result data
+			// 20120403, Bauke: added _htSessionContext:
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "AuthSP verify, Request=" + htServiceRequest);
-			HashMap htAuthspResponse = oProtocolHandler.verifyAuthenticationResponse(htServiceRequest);
+			HashMap htAuthspResponse = oProtocolHandler.verifyAuthenticationResponse(htServiceRequest, _htSessionContext);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "AuthSP verify, Response=" + htAuthspResponse);
 
 			String sResultCode = (String)htAuthspResponse.get("result");
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "VA result=" + sResultCode);
 			// Result values: ERROR_ASELECT_SUCCESS, ERROR_ASELECT_AUTHSP_INVALID_DATA (only SMS)
-
-			// Finall, we can get hold of our session
-			String sRid = (String) htAuthspResponse.get("rid"); // this is our own rid
-			_htSessionContext = null;
-			if (sRid != null)
-				_htSessionContext = _sessionManager.getSessionContext(sRid);
-			if (_htSessionContext == null) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Session not found");
-				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
-			}
-			// A session is available.
-
-			// User interaction is finished, resume the stopwatch
-			// Could be done before the verifyAuthenticationResponse() above,
-			// but at that point we did not have the Rid yet
-			Tools.resumeSensorData(_systemLogger, _htSessionContext);
 
 			// Saml20: Any errors must be reported back to the SP (so no Exception throwing in that case)
 			if (sResultCode.equals(Errors.ERROR_ASELECT_AUTHSP_INVALID_PHONE)) {
@@ -248,16 +250,18 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 				// Session can be killed. The user could not be authenticated.
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Error in authsp response: " + sResultCode+" issuer="+sIssuer);
 				Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_pbh", sRid, _htSessionContext, null, false);
-				Utils.setSessionStatus(_htSessionContext, "del", _systemLogger);
-				_sessionManager.killSession(sRid);
+				//Utils.setSessionStatus(_htSessionContext, "del", _systemLogger);
+				//_sessionManager.killSession(sRid);
+				_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 				throw new ASelectException(sResultCode);
 			}
 
 			// The user was authenticated successfully, or sp_issuer was present
 			if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
 				_htSessionContext.put("result_code", sResultCode); // must be used by the tgt issuer
-				Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-				_sessionManager.updateSession(sRid, _htSessionContext);
+				//Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
+				//_sessionManager.updateSession(sRid, _htSessionContext);
+				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 			}
 
 			// Some AuthSP's will return the authenticated userid as well (e.g. DigiD)
@@ -267,8 +271,10 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			if (sUid != null) { // For all AuthSP's that can set the user id
 				// (and thereby replace the 'siam_user' value)
 				_htSessionContext.put("user_id", sUid);
-				Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-				_sessionManager.updateSession(sRid, _htSessionContext);
+				
+				//Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
+				//_sessionManager.updateSession(sRid, _htSessionContext);
+				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
 				Utils.copyHashmapValue("betrouwbaarheidsniveau", htAdditional, htAuthspResponse);
 				Utils.copyHashmapValue("sp_assert_url", htAdditional, _htSessionContext);
@@ -315,7 +321,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			// 20111020, Bauke: split redirection from issueTGTandRedirect, so next_authsp variant will also set the TGT
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
 			String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
-			String sTgt = tgtIssuer.issueTGTandRedirect(sRid, sAuthSp, htAdditional, servletResponse, sOldTGT, false /* no redirect */);
+			String sTgt = tgtIssuer.issueTGTandRedirect(sRid, _htSessionContext, sAuthSp, htAdditional, servletResponse, sOldTGT, false /* no redirect */);
 			// Cookie was set on the 'servletResponse'
 
 			// If there is a next_authsp, "present" form to user (auto post) and do not set tgt 
@@ -342,8 +348,9 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			
 			// Continue with regular processing
 			Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_pbh", sRid, _htSessionContext, sTgt, true);
-			Utils.setSessionStatus(_htSessionContext, "del", _systemLogger);
-			_sessionManager.killSession(sRid);
+			//Utils.setSessionStatus(_htSessionContext, "del", _systemLogger);
+			//_sessionManager.killSession(sRid);
+			_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 			// 20111020, Bauke: redirect is done below
 
 			String sAppUrl = (String) _htSessionContext.get("app_url");
@@ -431,7 +438,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Issue TGT
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-			tgtIssuer.issueErrorTGTandRedirect(sRid, sResultCode, servletResponse);
+			tgtIssuer.issueErrorTGTandRedirect(sRid, _htSessionContext, sResultCode, servletResponse);
 		}
 		catch (ASelectException ae) {
 			throw ae;

@@ -141,10 +141,12 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 	/** The response. */
 	protected HttpServletResponse _servletResponse;
 
-	// The local BrowserRequestHandler version of the session,
-	// functions as a local cache. Updates are done in the local cache,
+	// The local version of the session,
+	// it functions as a local cache. Updates are done in the local cache,
 	// and saved to storage at the end of the handler's life time
-	// The entry "status" maintains the action to be taken.
+	// The entry "status" in the session maintains the action to be taken.
+	// Also the "rid" value is stored in the session, while locally cached.
+	// Both values will be removed before storing the session.
 	protected HashMap _htSessionContext = null;
 
 	/** The server ID */
@@ -252,16 +254,9 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Internal error: "+e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-		finally {  // 20120330: Decide what to do with the locally cached session (for now, just log it)
-			String sStatus = null;
-			if (_htSessionContext != null)
-				sStatus = (String)_htSessionContext.get("status");
-			if ("upd".equals(sStatus))
-				_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ upd Session");
-			else if ("del".equals(sStatus))
-				_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ del Session");
-			else
-				_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ Session ok");
+		finally {
+			// 20120330: Decide what to do with the locally cached session
+			_sessionManager.finalSessionProcessing(_htSessionContext, true/*update*/);
 		}
 		// don't close pwOut, so the caller can still inform the user of an error
 	}
@@ -487,8 +482,9 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 		
 		// 20111101, Bauke: added Sensor
 		Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_abh", sRid, htSessionContext, null, false);
-		Utils.setSessionStatus(htSessionContext, "del", _systemLogger);
-		_sessionManager.killSession(sRid);
+		//Utils.setSessionStatus(htSessionContext, "del", _systemLogger);
+		//_sessionManager.killSession(sRid);
+		_sessionManager.setDeleteSession(htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
 		// User can possibly correct his phone number and retry
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT to (correction_facility): " + _sCorrectionFacility);

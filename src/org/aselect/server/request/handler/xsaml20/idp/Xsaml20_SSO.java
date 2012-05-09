@@ -31,7 +31,6 @@ import org.aselect.server.request.handler.xsaml20.Saml20_Metadata;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.server.request.handler.xsaml20.SecurityLevel;
 import org.aselect.server.request.handler.xsaml20.Saml20_ArtifactManager;
-import org.aselect.server.session.SessionManager;
 import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
@@ -191,19 +190,28 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request received === Path=" + sPathInfo+
 				" Locale="+request.getLocale().getLanguage()+" Method="+request.getMethod());
 
-		if (sPathInfo.endsWith(RETURN_SUFFIX)) {
-			processReturn(request, response);
+		_htSessionContext = null;
+		try {
+			if (sPathInfo.endsWith(RETURN_SUFFIX)) {
+				processReturn(request, response);
+			}
+			// 20100331, Bauke: added HTTP POST support
+			else if (request.getParameter("SAMLRequest") != null || "POST".equals(request.getMethod())) {
+				handleSAMLMessage(request, response);
+			}
+			else {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Request: " + request.getQueryString()
+						+ " is not recognized");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
+			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request handled ");
 		}
-		// 20100331, Bauke: added HTTP POST support
-		else if (request.getParameter("SAMLRequest") != null || "POST".equals(request.getMethod())) {
-			handleSAMLMessage(request, response);
+		catch (ASelectException e) {  // need this to use the finally clause
+			throw e;
 		}
-		else {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Request: " + request.getQueryString()
-					+ " is not recognized");
-			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		finally {
+			_oSessionManager.finalSessionProcessing(_htSessionContext, true/*update session*/);
 		}
-		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request handled ");
 		return new RequestState(null);
 	}
 	
@@ -273,38 +281,40 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			// Also performAuthenticateRequest is an internal call, so who wants signing
 			// 20110407, Bauke: check sig set to false
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "performAuthenticateRequest AppId=" + sAppId+" binding="+sReqBinding);
-			HashMap htResponse = performAuthenticateRequest(_sASelectServerUrl, httpRequest.getPathInfo(),
+			HashMap<String, Object> htResponse = performAuthenticateRequest(_sASelectServerUrl, httpRequest.getPathInfo(),
 					RETURN_SUFFIX, sAppId, false /* check sig */, _oClientCommunicator);
 
 			String sASelectServerUrl = (String) htResponse.get("as_url");
 			String sIDPRid = (String) htResponse.get("rid");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Supplied rid=" + sIDPRid + " response=" + htResponse);
 
-			// The new sessionhttpRequest
-			HashMap htSessionContext = _oSessionManager.getSessionContext(sIDPRid);
-			if (htSessionContext == null) {
+			// We need the session
+			//_htSessionContext = _oSessionManager.getSessionContext(sIDPRid);
+			_htSessionContext = (HashMap<String, Object>) htResponse.get("session");  // 20120404, Bauke: was getSessionContext(sIDPRid)
+			if (_htSessionContext == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No session found for RID: " + sIDPRid);
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 			if (sRelayState != null) {
-				htSessionContext.put("RelayState", sRelayState);
+				_htSessionContext.put("RelayState", sRelayState);
 			}
-			htSessionContext.put("sp_rid", sSPRid);
-			htSessionContext.put("sp_issuer", sIssuer);
-			htSessionContext.put("sp_assert_url", sAssertionConsumerServiceURL);
+			_htSessionContext.put("sp_rid", sSPRid);
+			_htSessionContext.put("sp_issuer", sIssuer);
+			_htSessionContext.put("sp_assert_url", sAssertionConsumerServiceURL);
 			// RH, 20101101, Save requested binding for when we return from authSP
 			// 20110323, Bauke: if no requested binding, take binding from metadata
 			if (Utils.hasValue(sReqBinding))  // 20120313, Bauke: added test
-				htSessionContext.put("sp_reqbinding", sReqBinding);  // 20120313: hmBinding.get("binding"));  // 20110323: sReqBinding);
+				_htSessionContext.put("sp_reqbinding", sReqBinding);  // 20120313: hmBinding.get("binding"));  // 20110323: sReqBinding);
 
 			// RH, 20081117, strictly speaking forced_logon != forced_authenticate
 			// 20090613, Bauke: 'forced_login' is used as API parameter (a String value)
 			// 'forced_authenticate' is used in the Session (a Boolean value), the meaning of both is identical
 			if (bForcedAuthn) {
-				htSessionContext.put("forced_authenticate", new Boolean(bForcedAuthn));
+				_htSessionContext.put("forced_authenticate", new Boolean(bForcedAuthn));
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "'forced_authenticate' in htSession set to: "
 						+ bForcedAuthn);
 			}
+			_oSessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120403, Bauke: added
 
 			// The betrouwbaarheidsniveau is stored in the session context
 			RequestedAuthnContext requestedAuthnContext = authnRequest.getRequestedAuthnContext();
@@ -322,13 +332,13 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			}
 
 			// 20090110, Bauke changed requested_betrouwbaarheidsniveau to required_level
-			htSessionContext.put("required_level", sBetrouwbaarheidsNiveau);
-			htSessionContext.put("level", Integer.parseInt(sBetrouwbaarheidsNiveau)); // 20090111, Bauke added, NOTE: it's an Integer
+			_htSessionContext.put("required_level", sBetrouwbaarheidsNiveau);
+			_htSessionContext.put("level", Integer.parseInt(sBetrouwbaarheidsNiveau)); // 20090111, Bauke added, NOTE: it's an Integer
 			
 			// 20110722, Bauke conditional setting, should come from configuration however
 			if (Integer.parseInt(sBetrouwbaarheidsNiveau) <= 10)
-				htSessionContext.put("forced_uid", "saml20_user");
-			_oSessionManager.updateSession(sIDPRid, htSessionContext);
+				_htSessionContext.put("forced_uid", "saml20_user");
+			_oSessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120403, Bauke: was updateSession
 
 			// redirect with A-Select request=login1
 			StringBuffer sbURL = new StringBuffer(sASelectServerUrl);
@@ -340,6 +350,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Challenge for credentials, redirect to:"
 					+ sbURL.toString());
 			httpResponse.sendRedirect(sbURL.toString());
+			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> SAML AuthnRequest handled");
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -349,7 +360,6 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, XMLHelper.prettyPrintXML(samlMessage.getDOM()));
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> SAML AuthnRequest handled");
 	}
 	
 	/**
@@ -549,7 +559,6 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	{
 		String sMethod = "processReturn()";
 		HashMap htTGTContext = null;
-		HashMap htSessionContext = null;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
 		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Handle return from the AuthSP");
 
@@ -564,11 +573,11 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				htTGTContext = getContextFromTgt(sTgt, false); // Don't check expiration
 			}
 			else {
-				htSessionContext = _oSessionManager.getSessionContext(sRid);
+				_htSessionContext = _oSessionManager.getSessionContext(sRid);
 			}
 
 			// One of them must be available
-			if (htTGTContext == null && htSessionContext == null) {
+			if (htTGTContext == null && _htSessionContext == null) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod,
 						"Neither TGT context nor Session context are available");
 				throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
@@ -577,8 +586,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			String sAssertUrl = null;
 			if (htTGTContext != null)
 				sAssertUrl = (String) htTGTContext.get("sp_assert_url");
-			if (sAssertUrl == null && htSessionContext != null)
-				sAssertUrl = (String) htSessionContext.get("sp_assert_url");
+			if (sAssertUrl == null && _htSessionContext != null)
+				sAssertUrl = (String) _htSessionContext.get("sp_assert_url");
 			if (sAssertUrl == null) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Return url \"sp_assert_url\" is missing");
 				throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
@@ -587,8 +596,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			// 20090603, Bauke: Only take RelayState from the session (not from TgT)
 			// If RelayState was given, it must be available in the Session Context.
 			String sRelayState = null;
-			if (htSessionContext != null)
-				sRelayState = (String) htSessionContext.get("RelayState");
+			if (_htSessionContext != null)
+				sRelayState = (String) _htSessionContext.get("RelayState");
 			else
 				sRelayState = (String) htTGTContext.get("RelayState");
 
@@ -596,22 +605,22 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			String sReqBInding = null;
 			if (htTGTContext  != null)
 				sReqBInding = (String) htTGTContext.get("sp_reqbinding");
-			if (sReqBInding == null && htSessionContext != null )
-				sReqBInding = (String) htSessionContext.get("sp_reqbinding");
+			if (sReqBInding == null && _htSessionContext != null )
+				sReqBInding = (String) _htSessionContext.get("sp_reqbinding");
 			if (sReqBInding == null) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested binding \"sp_reqbinding\" is missing, using default" );
 			}
 
 			// And off you go!
-			retrieveLocalSettings(htSessionContext, htTGTContext);  // results are placed in this object
+			retrieveLocalSettings(_htSessionContext, htTGTContext);  // results are placed in this object
 			
 			if (Saml20_Metadata.singleSignOnServiceBindingConstantPOST.equals(sReqBInding)) {
 				_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Redirecting with post to: " + sAssertUrl);
-				sendSAMLResponsePOST(sAssertUrl, sRid, htSessionContext, sTgt, htTGTContext, httpResponse, sRelayState);
+				sendSAMLResponsePOST(sAssertUrl, sRid, _htSessionContext, sTgt, htTGTContext, httpResponse, sRelayState);
 			}
 			else {	// use artifact as default (for backward compatibility) 
 				_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Redirecting with artifact to: " + sAssertUrl);
-				sendSAMLArtifactRedirect(sAssertUrl, sRid, htSessionContext, sTgt, htTGTContext, httpResponse, sRelayState);
+				sendSAMLArtifactRedirect(sAssertUrl, sRid, _htSessionContext, sTgt, htTGTContext, httpResponse, sRelayState);
 			}
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Return from AuthSP handled");
 
@@ -623,10 +632,9 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				TGTManager tgtManager = TGTManager.getHandle();
 				tgtManager.remove(sTgt);
 			}
-			if (bForcedAuthn && htSessionContext != null) {
-				Tools.calculateAndReportSensorData(ASelectConfigManager.getHandle(), _systemLogger, "srv_s20", sRid, htSessionContext, sTgt, true);
-				SessionManager sessionManager = SessionManager.getHandle();
-				sessionManager.killSession(sRid);
+			Tools.calculateAndReportSensorData(ASelectConfigManager.getHandle(), _systemLogger, "srv_s20", sRid, _htSessionContext, sTgt, true);
+			if (bForcedAuthn && _htSessionContext != null) {
+				_oSessionManager.setDeleteSession(_htSessionContext, _systemLogger);  //20120403, Bauke: was killSession
 			}
 		}
 		catch (ASelectException e) {
@@ -686,21 +694,20 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	 * Send SAMLResponse POST redirect.
 	 * 
 	 * @param sAppUrl
-	 *            the s app url
+	 *            the app url
 	 * @param sRid
-	 *            the s rid
+	 *            the RID
 	 * @param htSessionContext
-	 *            the ht session context
+	 *            the session context
 	 * @param sTgt
-	 *            the s tgt
+	 *            the TGT
 	 * @param htTGTContext
-	 *            the ht tgt context
+	 *            the tgt context
 	 * @param oHttpServletResponse
-	 *            the o http servlet response
+	 *            the http servlet response
 	 * @param sRelayState
-	 *            the s relay state
+	 *            the relay state
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
 	@SuppressWarnings("unchecked")
 	private void sendSAMLResponsePOST(String sAppUrl, String sRid, HashMap htSessionContext, String sTgt,
@@ -781,7 +788,6 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		// Let's POST the token
 		if (get_sPostTemplate() != null) {
 			String sSelectForm = _configManager.loadHTMLTemplate(null, get_sPostTemplate(), _sUserLanguage, _sUserCountry);
-			Tools.pauseSensorData(_systemLogger, htSessionContext);  //20111102
 			handlePostForm(sSelectForm, sp_assert_url, sInputs, oHttpServletResponse);
 		}
 		else {

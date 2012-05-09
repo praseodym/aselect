@@ -378,6 +378,12 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					sLocalRid = sLocalRid.substring(0, len-9);
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "RemoteRid=" + sRemoteRid +
 								" LocalRid=" + sLocalRid + " StatusCode=" + sStatusCode);
+				_htSessionContext = _oSessionManager.getSessionContext(sLocalRid);
+				if (_htSessionContext == null) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod,
+							"Unknown session in response from cross aselect server");
+					throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+				}
 				
 				if (sStatusCode.equals(StatusCode.SUCCESS_URI)) {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Response was successful " + samlResponse.toString());
@@ -453,14 +459,9 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					//	String sAuthnContextDeclRefIssueMethod = samlAssertion.getAuthnStatements().get(0).getAuthnContext().
 					/////////////////////////	digid4	///////////////////////////////////////////
 					String sSelectedLevel = SecurityLevel.convertAuthnContextClassRefURIToLevel(sAuthnContextClassRefURI, _systemLogger);
+					
 					// Check returned security level
-					HashMap htSessionContext = _oSessionManager.getSessionContext(sLocalRid);
-					if (htSessionContext == null) {
-						_systemLogger.log(Level.WARNING, MODULE, sMethod,
-								"Unknown session in response from cross aselect server");
-						throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-					}
-					Integer intAppLevel = (Integer) htSessionContext.get("level");
+					Integer intAppLevel = (Integer) _htSessionContext.get("level");
 					if (Integer.parseInt(sSelectedLevel) < intAppLevel) {
 						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Security level returned ("+
 										sSelectedLevel+") must be at least: "+intAppLevel);
@@ -527,8 +528,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					String eHerkversion = null;
 					while (keyIter.hasNext()) {
 						Matcher m = p.matcher((String)keyIter.next());
-						if (m.find())
-						{
+						if (m.find())  {
 							sEntityId = (String)hmSamlAttributes.get(m.group());
 							eHerkversion = m.group(1);
 							_systemLogger.log(Level.INFO, MODULE, sMethod, "Found sEntityId=" + sEntityId + " eHerkversion=" + eHerkversion);
@@ -564,14 +564,12 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 						if (tokens.length > 4)
 							sAuthID = tokens[4];
 
-						////////////////////////////////////////////////////
 //						if (tokens.length > 5)
 //							sAuthSubID = tokens[5];
 						// Test  new layout of eherkenning
 						// Maybe do something with pattern search here
 						if (tokens.length > 6)
 							sAuthSubID = tokens[6];
-						////////////////////////////////////////////////////
 						
 						sAuthID += "_"+sAuthSubID+"_"+sNameID;  // add separator
 						hmSamlAttributes.put("authid", sAuthID);
@@ -643,7 +641,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					// End of IdP token
 
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "htRemoteAttributes=" + hmSamlAttributes);
-					handleSSOResponse(htSessionContext, hmSamlAttributes, request, response);
+					handleSSOResponse(_htSessionContext, hmSamlAttributes, request, response);
 				}
 				else {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Response was not successful: " + sStatusCode);
@@ -666,18 +664,11 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					// 1. handleSSOResponse(htRemoteAttributes, request, response); // Lets application display error
 					// 2. throw new ASelectException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED); // Standard server error
 					// 3. Show error page:
-					HashMap htSessionContext = _oSessionManager.getSessionContext(sLocalRid);
-					if (htSessionContext == null) {
-						_systemLogger.log(Level.WARNING, MODULE, sMethod,
-								"Unknown session in response from cross aselect server");
-						throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
-					}
 					response.setContentType("text/html");
-					showErrorPage(sErrorCode, htSessionContext, response.getWriter());
+					showErrorPage(sErrorCode, _htSessionContext, response.getWriter());
 				}
 			}
-			else {
-				// SLO
+			else {  // SLO
 				_systemLogger.log(Level.WARNING, "Unexpected SAMLObject type: " + samlResponseObject.getClass());
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
@@ -688,6 +679,9 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Internal error", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+		finally {
+			_oSessionManager.finalSessionProcessing(_htSessionContext, true/*really do it*/);
 		}
 		return null;
 	}
@@ -749,7 +743,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					});
 					// Issue 'CANCEL' TGT
 					TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-					tgtIssuer.issueErrorTGTandRedirect(sLocalRid, sResultCode, servletResponse);
+					tgtIssuer.issueErrorTGTandRedirect(sLocalRid, htSessionContext, sResultCode, servletResponse);
 				}
 				else { // remote server returned error
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error");
@@ -770,8 +764,9 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				// and we might have received remote attributes.
 				TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 				String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
-				// Will also redirect the user
-				oTGTIssuer.issueTGTandRedirect(sLocalRid, null, htRemoteAttributes, servletResponse, sOldTGT, true);
+				// Will also redirect the user, this call can update/delete the session in the local cache
+				// Final session updates will be done by finalSessionProcessing()
+				oTGTIssuer.issueTGTandRedirect(sLocalRid, htSessionContext, null, htRemoteAttributes, servletResponse, sOldTGT, true);
 				// 20090909: oTGTIssuer.issueCrossTGT(sLocalRid, null, htRemoteAttributes, servletResponse, sOldTGT);
 			}
 		}

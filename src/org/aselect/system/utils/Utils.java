@@ -340,7 +340,7 @@ public class Utils
 		if (htSessionContext == null)
 			return;
 		if (logger != null)
-			logger.log(Level.INFO, MODULE, sMethod, "status="+sStatus);
+			logger.log(Level.INFO, MODULE, sMethod, "Set status="+sStatus);
 		if ("del".equals(sStatus))
 			htSessionContext.put("status", sStatus);
 		else {
@@ -348,7 +348,7 @@ public class Utils
 			if (!"del".equals(sOld))
 				htSessionContext.put("status", sStatus);
 			else if (logger != null)
-				logger.log(Level.INFO, MODULE, sMethod, "status skipped, already "+sOld);
+				logger.log(Level.INFO, MODULE, sMethod, "Skip status, already="+sOld);
 		}
 	}
 
@@ -992,11 +992,11 @@ public class Utils
 	 * Transfer localization.
 	 * 
 	 * @param htSessionContext
-	 *            the ht session context
+	 *            the session context
 	 * @param sUserLanguage
-	 *            the s user language
+	 *            the user language
 	 * @param sUserCountry
-	 *            the s user country
+	 *            the user country
 	 */
 	public static void transferLocalization(HashMap<String, Object> htSessionContext, String sUserLanguage,
 			String sUserCountry)
@@ -1004,11 +1004,15 @@ public class Utils
 		if (htSessionContext == null)
 			return;
 		String sloc = (String) htSessionContext.get("language");
-		if ((sloc == null || sloc.equals("")) && sUserLanguage != null && !sUserLanguage.equals(""))
+		if ((sloc == null || sloc.equals("")) && sUserLanguage != null && !sUserLanguage.equals("")) {
 			htSessionContext.put("language", sUserLanguage);
+			Utils.setSessionStatus(htSessionContext, "upd", null/*log*/);
+		}
 		sloc = (String) htSessionContext.get("country");
-		if ((sloc == null || sloc.equals("")) && sUserCountry != null && !sUserCountry.equals(""))
+		if ((sloc == null || sloc.equals("")) && sUserCountry != null && !sUserCountry.equals("")) {
 			htSessionContext.put("country", sUserCountry);
+			Utils.setSessionStatus(htSessionContext, "upd", null/*log*/);
+		}
 	}
 
 	// No organization gathering specified: no org_id in TGT

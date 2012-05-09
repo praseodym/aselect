@@ -583,7 +583,7 @@ public class ASelectAgent
 		
 		_timerSensorThread = ConfigManager.timerSensorStartThread(_oASelectAgentConfigManager, _oASelectAgentSystemLogger, "agent", _iBatchPeriod);
 
-		new Thread(new AdminServiceHandler()).start();
+		new Thread(new AdminServiceHandler()).start();  // accepts "stop"
 	}
 
 	/**

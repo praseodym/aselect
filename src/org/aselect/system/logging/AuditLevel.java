@@ -13,13 +13,8 @@ package org.aselect.system.logging;
 
 import org.apache.log4j.Level;
 
-// TODO: Auto-generated Javadoc
 public class AuditLevel extends Level
 {
-
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -3286629221695935369L;
 
 	/**

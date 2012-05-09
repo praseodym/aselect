@@ -72,6 +72,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
+import org.aselect.system.logging.ISystemLogger;
 import org.aselect.system.storagemanager.StorageManager;
 import org.aselect.system.utils.Utils;
 
@@ -250,6 +251,7 @@ public class TGTManager extends StorageManager
 			// RH, 20111121, en
 //			put(sTGT, htTGTContext);			// RH, 20111121, o
 
+			htTGTContext.put("status", "get");  // 20120405: unmodified
 			_lTGTCounter++;
 			sReturn = sTGT;
 		}
@@ -298,18 +300,34 @@ public class TGTManager extends StorageManager
 	{
 		String sMethod = "updateTGT";
 		boolean bReturn = false;
-		if (getTGT(sTGT) != null) {
+		//20120405, Bauke: if (getTGT(sTGT) != null) {
 			try {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "updateTGT(" + Utils.firstPartOf(sTGT, 30) + ")");
+				htTGTContext.remove("status");
 				update(sTGT, htTGTContext);
+				htTGTContext.put("status", "get");  // 20120405: unmodified
 				bReturn = true;
 			}
 			catch (Exception e) {
 				bReturn = false;
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not update TGT", e);
 			}
-		}
+		//}
 		return bReturn;
+	}
+	
+	/**
+	 * Sets the session's status to "upd" - updated.
+	 * At the end of a handler's lifetime we can then decide to write the info in permanent storage.
+	 * 
+	 * @param htTGTContext
+	 *            the TGT context
+	 * @param logger
+	 *            a logger
+	 */
+	public void setUpdateSession(HashMap htTGTContext, ISystemLogger logger)
+	{
+		Utils.setSessionStatus(htTGTContext, "upd", _systemLogger);
 	}
 
 	/**
@@ -328,6 +346,8 @@ public class TGTManager extends StorageManager
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "getTGT(" + Utils.firstPartOf(sTGT, 30) + ")");
 			htContext = (HashMap) get(sTGT);
+			if (htContext != null)
+				htContext.put("status", "get");  // 20120405: unmodified
 		}
 		catch (ASelectStorageException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "TGT not found");

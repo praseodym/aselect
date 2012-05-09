@@ -80,7 +80,6 @@ import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.storagemanager.StorageManager;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * Manages A-Select Agent tickets. <br>
  * <br>
@@ -100,7 +99,7 @@ import org.aselect.system.utils.Utils;
  * 
  * @author Alfa & Ariss
  */
-public class TicketManager
+public class TicketManager extends StorageManager
 {
 	/** The module name */
 	public static final String MODULE = "TicketManager";
@@ -311,7 +310,7 @@ public class TicketManager
 	 */
 	public void updateTicketContext(String sTicket, HashMap htTicketContext)
 	{
-		String sMethod = "updateTicketContext()";
+		String sMethod = "updateTicketContext";
 
 		try {
 			synchronized (_oTicketTable) {

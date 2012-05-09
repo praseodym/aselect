@@ -15,7 +15,6 @@ import java.io.PrintWriter;
 
 import java.io.UnsupportedEncodingException;
 import java.security.PrivateKey;
-import java.util.HashMap;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -81,9 +80,8 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 
 	// Example configuration
 	//
-	// <handler id="saml20_ists"
-	// class="org.aselect.server.request.handler.xsaml20.Xsaml20_ISTS"
-	// target="/saml20_ists.*">
+	// <handler id="saml20_ists" target="/saml20_ists.*"
+	// class="org.aselect.server.request.handler.xsaml20.Xsaml20_ISTS">
 	//
 	/* (non-Javadoc)
 	 * @see org.aselect.server.request.handler.xsaml20.Saml20_BaseHandler#init(javax.servlet.ServletConfig, java.lang.Object)
@@ -200,12 +198,13 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			}
 
 			// Find the associated session context
-			HashMap htSessionContext = _oSessionManager.getSessionContext(sRid);
-			if (htSessionContext == null) {
+			_htSessionContext = _oSessionManager.getSessionContext(sRid);
+			if (_htSessionContext == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No session found for RID: " + sRid);
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
-			Tools.resumeSensorData(_systemLogger, htSessionContext);  //20111102
+			// Session present
+			Tools.resumeSensorData(_systemLogger, _htSessionContext);  //20111102, can change the session
 			
 			// 20091028, Bauke, let the user choose which IdP to use
 			// 20110308, Bauke: changed, user chooses when "use_idp_select" is "true"
@@ -228,13 +227,13 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				sSelectForm = Utils.replaceString(sSelectForm, "[handler_id]", getID());
 				sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", _sServerId);  // 20110310
 				//sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
-				sSelectForm = _configManager.updateTemplate(sSelectForm, htSessionContext);
+				sSelectForm = _configManager.updateTemplate(sSelectForm, _htSessionContext);
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Template updated, [handler_url]="+sMyUrl + "/" + getID());
 				response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 				response.setContentType("text/html");
 				response.setHeader("Pragma", "no-cache");
 				PrintWriter pwOut = response.getWriter();
-				Tools.pauseSensorData(_systemLogger, htSessionContext);  //20111102
+				Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102 can update the session
 				pwOut.println(sSelectForm);
 				pwOut.close();
 				return new RequestState(null);
@@ -253,11 +252,11 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				// if a fallback is present: REDIRECT to the authsp
 				if (Utils.hasValue(_sFallbackUrl)) {
 					// Don't come back here:
-					htSessionContext.remove("forced_authsp");
+					_htSessionContext.remove("forced_authsp");
 					// 20110331, Bauke: We leave forced_uid in place!
 					// If we do, control can easily be transferred to e.g. DigiD
 					//htSessionContext.remove("forced_uid");
-					_oSessionManager.updateSession(sRid, htSessionContext);
+					_oSessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120403, Bauke: added
 
 					String sRedirectUrl = _sFallbackUrl;
 					//sRedirectUrl = "[aselect_url]?request=direct_login1&rid=[rid]&authsp=Ldap&a-select-server=[a-select-server]";
@@ -270,7 +269,8 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 					response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 					response.setContentType("text/html");
 					response.setHeader("Pragma", "no-cache");
-					Tools.pauseSensorData(_systemLogger, htSessionContext);  //20111102
+					Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102 can change the session
+					//_oSessionManager.updateSession(sRid, _htSessionContext);  // 20120403, Bauke: removed
 					response.sendRedirect(sRedirectUrl);
 					return new RequestState(null);
 				}
@@ -285,9 +285,10 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 
 			// 20090811, Bauke: save type of Authsp to store in the TGT later on
 			// This is needed to prevent session sync when we're not saml20
-			htSessionContext.put("authsp_type", "saml20");
-			htSessionContext.put("federation_url", sFederationUrl);
-			_oSessionManager.updateSession(sRid, htSessionContext);
+			_htSessionContext.put("authsp_type", "saml20");
+			_htSessionContext.put("federation_url", sFederationUrl);
+			//_oSessionManager.updateSession(sRid, _htSessionContext);
+			_oSessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120403, Bauke: was updateSession
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get MetaData FederationUrl=" + sFederationUrl);
 			MetaDataManagerSp metadataMgr = MetaDataManagerSp.getHandle();
@@ -306,7 +307,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			if ("".equals(sDestination))
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 
-			String sApplicationId = (String) htSessionContext.get("app_id");
+			String sApplicationId = (String)_htSessionContext.get("app_id");
 			String sApplicationLevel = getApplicationLevel(sApplicationId);
 			String sAuthnContextClassRefURI = SecurityLevel.convertLevelToAuthnContextClassRefURI(sApplicationLevel, _systemLogger);
 			// 20100428, Bauke: old: String sAuthnContextClassRefURI = levelMap.get(sApplicationLevel);
@@ -408,7 +409,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 
 			// Check if we have to set the ForceAuthn attribute
 			// 20090613, Bauke: use forced_authenticate (not forced_logon)!
-			Boolean bForcedAuthn = (Boolean) htSessionContext.get("forced_authenticate");
+			Boolean bForcedAuthn = (Boolean)_htSessionContext.get("forced_authenticate");
 			if (bForcedAuthn == null)
 				bForcedAuthn = false;
 			// 20100311, Bauke: "force" special_setting added for eHerkenning
@@ -469,7 +470,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			// In app_url or in the caller's RelayState (if we're an IdP)
 			String sSpecials = null;
 			if (specialSettings != null && specialSettings.contains("relay_specials")) {
-				sSpecials = Utils.getAselectSpecials(htSessionContext, false/*leave base64*/, _systemLogger);
+				sSpecials = Utils.getAselectSpecials(_htSessionContext, false/*leave base64*/, _systemLogger);
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "<special_settings>="+specialSettings+" aselect_specials="+sSpecials);
 			
@@ -561,14 +562,14 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				sInputs += buildHtmlInput("SAMLRequest", sAssertion);  //Tools.htmlEncode(nodeMessageContext.getTextContent()));
 				
 				// 20100317, Bauke: pass language to IdP (does not work in the GET version)
-				String sLang = (String)htSessionContext.get("language");
+				String sLang = (String)_htSessionContext.get("language");
 				if (sLang != null)
 					sInputs += buildHtmlInput("language",sLang);
 	
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Inputs=" + sInputs);
 				handlePostForm(_sPostTemplate, sDestination, sInputs, response);
 			}
-			Tools.pauseSensorData(_systemLogger, htSessionContext);  //20111102
+			Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102 can change the session
 		}
 		catch (ASelectException e) { // pass unchanged to the caller
 			throw e;
@@ -576,6 +577,9 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+		finally {
+			_oSessionManager.finalSessionProcessing(_htSessionContext, true/*update session*/);
 		}
 		return new RequestState(null);
 	}
@@ -590,7 +594,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 	 *             the a select exception
 	 */
 	private String getApplicationLevel(String sApplicationId)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getApplicationLevel()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Id=" + sApplicationId);

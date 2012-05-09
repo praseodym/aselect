@@ -24,7 +24,6 @@ import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.HandlerTools;
 import org.aselect.server.tgt.TGTManager;
 
-// TODO: Auto-generated Javadoc
 /**
  * @author RH
  */

@@ -82,6 +82,14 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	protected Vector _vIdPUrls;
 	protected HashMap _htIdPs;
 
+	// The local version of the session,
+	// it functions as a local cache. Updates are done in the local cache,
+	// and saved to storage at the end of the handler's life time
+	// The entry "status" in the session maintains the action to be taken.
+	// Also the "rid" value is stored in the session, while locally cached.
+	// Both values will be removed before storing the session.
+	protected HashMap _htSessionContext = null;
+
 	// Localization
 	protected String _sUserLanguage = "";
 	protected String _sUserCountry = "";
@@ -665,15 +673,14 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 * Handle post form.
 	 * 
 	 * @param sTemplate
-	 *            the s template
+	 *            the form template
 	 * @param sAction
-	 *            the s action
+	 *            the action
 	 * @param sInputLines
-	 *            the s input lines
+	 *            the input lines
 	 * @param response
 	 *            the response
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
 	protected void handlePostForm(String sTemplate, String sAction, String sInputLines, HttpServletResponse response)
 	throws ASelectException
@@ -739,7 +746,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	protected HashMap performAuthenticateRequest(String sASelectURL, String sPathInfo, String sReturnSuffix,
+	protected HashMap<String, Object> performAuthenticateRequest(String sASelectURL, String sPathInfo, String sReturnSuffix,
 			String sAppId, boolean checkSignature, IClientCommunicator iClientComm)
 	throws ASelectException
 	{
@@ -758,7 +765,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 
 		// 20090606: Bauke: changed external call to direct method call
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmRequest=" + hmRequest);
-		HashMap<String, String> hmResponse = handleAuthenticateAndCreateSession(hmRequest, null);
+		HashMap<String, Object> hmResponse = handleAuthenticateAndCreateSession(hmRequest, null);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmResponse=" + hmResponse);
 
 		/*
@@ -827,47 +834,51 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 * @param response
 	 *            the response
 	 * @param htSessionMoreData
-	 *            the ht session more data
+	 *            more data for the session 
+	 * @param htSessionContext
+	 *            the session context, can be null
 	 * @param sPrefix
-	 *            the s prefix
+	 *            the rid prefix
 	 * @param sRid
-	 *            the s rid
+	 *            the rid
+	 * @throws ASelectException
 	 */
-	protected void storeSessionDataWithRid(HttpServletResponse response, HashMap htSessionMoreData,
-			String sPrefix, String sRid)
+	protected HashMap<String, Object> storeSessionDataWithRid(HttpServletResponse response, HashMap htSessionMoreData,
+				HashMap<String, Object> htSessionContext, String sPrefix, String sRid)
+	throws ASelectException
 	{
-		String sMethod = "storeRidSessionData()";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Update Session: " + sPrefix + sRid + " htSessionMoreData="
-				+ htSessionMoreData);
+		String sMethod = "storeRidSessionData";
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Update Session: "+sPrefix+sRid +
+				" htSessionMoreData="+htSessionMoreData);
 
-		// IMPROVE, this method is now only used by idff and wsfed
+		// This method is now only used by idff and wsfed
 		// Bauke 20081209 Update the session instead of always creating a new one
-		HashMap htSessionData = _oSessionManager.getSessionContext(sPrefix + sRid);
-		if (htSessionData == null)
-			_oSessionManager.updateSession(sPrefix + sRid, htSessionMoreData);  // actually it's is a create with a pre-defined RID
+		// 20120404, Bauke: removed: HashMap htSessionData = _oSessionManager.getSessionContext(sPrefix + sRid);
+		if (htSessionContext == null)
+			_oSessionManager.createSession(sPrefix+sRid, htSessionMoreData, true/*start paused*/);  // create with a pre-defined RID
 		else {
-			htSessionData.putAll(htSessionMoreData);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Update Session:" + htSessionData);
-			_oSessionManager.updateSession(sPrefix + sRid, htSessionData);
+			htSessionContext.putAll(htSessionMoreData);
+			_oSessionManager.updateSession(sPrefix+sRid, htSessionContext);
 		}
 
-		// Also store the rid used
+		// Also return the rid used in a cookie
 		String sCookieDomain = _configManager.getCookieDomain();
-		HandlerTools.putCookieValue(response, sPrefix + "rid", sRid, sCookieDomain, null, -1, _systemLogger);
+		HandlerTools.putCookieValue(response, sPrefix+"rid", sRid, sCookieDomain, null, -1, _systemLogger);
+		return htSessionContext;
 	}
 
 	/**
-	 * Retrieve session data from rid.
+	 * Retrieve session data from rid. The rid is taken from a cookie.
 	 * 
 	 * @param request
 	 *            the request
 	 * @param sPrefix
-	 *            the s prefix
-	 * @return the hash map
+	 *            the prefix
+	 * @return the session context
 	 */
 	protected HashMap retrieveSessionDataFromRid(HttpServletRequest request, String sPrefix)
 	{
-		String sMethod = "retrieveRidSessionData()";
+		String sMethod = "retrieveRidSessionData";
 
 		String sRidCookie = HandlerTools.getCookieValue(request, sPrefix + "rid", _systemLogger);
 		if (sRidCookie == null) {
@@ -1052,7 +1063,9 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 * @param response
 	 *            the HttpServletResponse
 	 * @param sRid
-	 *            the rid
+	 *            the rid, can be null
+	 * @param htSessionContext
+	 *            the session context if available, can be null
 	 * @param sServerId
 	 *            the server id
 	 * @param sOrg
@@ -1066,15 +1079,15 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 * @return the TGT that was created
 	 * @throws ASelectException
 	 */
-	public String createContextAndIssueTGT(HttpServletResponse response, String sRid /* can be null */,
+	// 20120403, Bauke: added htSessionContext to save on session reads
+	public String createContextAndIssueTGT(HttpServletResponse response, String sRid/*can be null*/, HashMap htSessionContext/*can be null*/,
 			String sServerId, String sOrg, String sAppId, String sTgt, HashMap htAttributes)
 	throws ASelectException
 	{
 		String sMethod = "createContextAndIssueTGT()";
 		SessionManager _sessionManager = SessionManager.getHandle(); // RH, 20080617, n
-		HashMap htSession = null;
-		if (sRid != null)
-			htSession = _sessionManager.getSessionContext(sRid);
+		if (sRid != null && htSessionContext == null)
+			htSessionContext = _sessionManager.getSessionContext(sRid);
 
 		// Extract uid and security level
 		String sUserId = (String) htAttributes.get("uid");
@@ -1108,10 +1121,10 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		if (sRid != null)
 			htTGTContext.put("rid", sRid);
 
-		if (htSession != null) {
-			Utils.copyHashmapValue("client_ip", htTGTContext, htSession);
-			Utils.copyHashmapValue("user_agent", htTGTContext, htSession);
-			Utils.copyHashmapValue("authsp_type", htTGTContext, htSession);
+		if (htSessionContext != null) {
+			Utils.copyHashmapValue("client_ip", htTGTContext, htSessionContext);
+			Utils.copyHashmapValue("user_agent", htTGTContext, htSessionContext);
+			Utils.copyHashmapValue("authsp_type", htTGTContext, htSessionContext);
 		}
 		
 		if (sTgt == null) {
@@ -1122,9 +1135,9 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		}
 
 		// We don't need the session any more
-		if (htSession != null) {
-			Tools.calculateAndReportSensorData(ASelectConfigManager.getHandle(), _systemLogger, "srv_pro", sRid, htSession, sTgt, true);
-			_sessionManager.killSession(sRid);
+		if (htSessionContext != null) {
+			Tools.calculateAndReportSensorData(ASelectConfigManager.getHandle(), _systemLogger, "srv_pro", sRid, htSessionContext, sTgt, true);
+			_sessionManager.deleteSession(sRid, htSessionContext);
 		}
 
 		// create cookie if single sign-on is enabled

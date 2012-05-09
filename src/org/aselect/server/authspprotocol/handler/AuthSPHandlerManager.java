@@ -150,8 +150,9 @@ public class AuthSPHandlerManager
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"Not a single 'authsp' section found in A-Select config", e);
-				throw e;
+						"Not a single 'authsp' section found in A-Select config, AuthSP's are disabled");
+				return;
+				// 20120502, Bauke: was: throw e;
 			}
 
 			while (oAuthSPHandlerConfig != null) {

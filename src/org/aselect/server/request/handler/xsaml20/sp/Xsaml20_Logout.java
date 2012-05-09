@@ -156,7 +156,7 @@ public class Xsaml20_Logout extends Saml20_BaseHandler
 			String sAuthspType = (String) htTGTContext.get("authsp_type");
 			if (sAuthspType != null && sAuthspType.equals("saml20")) {
 				htTGTContext.put("RelayState", sLogoutReturnUrl);
-				_oTGTManager.update(sTGT, htTGTContext);
+				_oTGTManager.updateTGT(sTGT, htTGTContext);  // 20120405, was: update()
 				sendLogoutToIdP(request, response, sTGT, htTGTContext, _sRedirectUrl, sLogoutReturnUrl);
 				return;
 			}

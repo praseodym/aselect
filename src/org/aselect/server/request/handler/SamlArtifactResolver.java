@@ -155,8 +155,7 @@ public abstract class SamlArtifactResolver extends ProtoRequestHandler
 
 			Node n = oSAMLResponse.toDOM();
 			// Add SessionIndex: goes in <saml:AuthenticationStatement ...>
-			Tools.addAttributeToElement(n, _systemLogger, "AuthenticationStatement", "SessionIndex", Tools
-					.getTimestamp());
+			Tools.addAttributeToElement(n, _systemLogger, "AuthenticationStatement", "SessionIndex", Tools.getTimestamp());
 			// Removed lib: before AuthenticationStatementType (Oracle)
 			Tools.addAttributeToElement(n, _systemLogger, "AuthenticationStatement", "xsi:type",
 					"AuthenticationStatementType");

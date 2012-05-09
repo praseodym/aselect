@@ -35,7 +35,6 @@ import org.aselect.system.communication.client.soap11.SOAP11Communicator;
 import org.aselect.system.communication.client.soap12.SOAP12Communicator;
 import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
-import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.storagemanager.SendQueue;
@@ -435,6 +434,7 @@ public class Tools
 		oSysLog.log(Level.INFO, MODULE, sMethod, "init now=" + now);
 		htSessionContext.put("first_contact", Long.toString(now)); // milliseconds
 		htSessionContext.put("time_user", "0"); // milliseconds
+		Utils.setSessionStatus(htSessionContext, "upd", oSysLog);
 	}
 
 	/**
@@ -458,8 +458,8 @@ public class Tools
 		oSysLog.log(Level.INFO, MODULE, sMethod, "pause now=" + now + ((sPause==null)?"": ", LBE already paused at="+sPause));
 		// 20120215, Bauke: only replace if no old value
 		if (sPause == null) {
-			Utils.setSessionStatus(htSessionContext, "upd", oSysLog);
 			htSessionContext.put("pause_contact", Long.toString(now)); // seconds
+			Utils.setSessionStatus(htSessionContext, "upd", oSysLog);
 		}
 	}
 
@@ -507,11 +507,19 @@ public class Tools
 	 * Calculate and report sensor data.
 	 * 
 	 * @param oConfMgr
-	 *            the conf mgr
+	 *            the config manager
 	 * @param oSysLog
-	 *            the sys log
+	 *            the system logger
+	 * @param sOrig
+	 *            the orig
+	 * @param sRid
+	 *            the rid
 	 * @param htSessionContext
 	 *            the session
+	 * @param sTgt
+	 *            the TGT
+	 * @param bSuccess
+	 *            successful?
 	 */
 	public static void calculateAndReportSensorData(ConfigManager oConfMgr, SystemLogger oSysLog,
 						String sOrig, String sRid, HashMap htSessionContext, String sTgt, boolean bSuccess)

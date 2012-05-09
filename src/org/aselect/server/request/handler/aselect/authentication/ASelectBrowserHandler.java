@@ -269,7 +269,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 					});
 					// Issue 'CANCEL' TGT
 					TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-					tgtIssuer.issueErrorTGTandRedirect(sLocalRid, sResultCode, servletResponse);
+					tgtIssuer.issueErrorTGTandRedirect(sLocalRid, _htSessionContext, sResultCode, servletResponse);
 				}
 				else {
 					// remote server returned error
@@ -291,7 +291,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 				// and we might have received remote attributes.
 				TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 				String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
-				oTGTIssuer.issueCrossTGTandRedirect(sLocalRid, null, htRemoteAttributes, servletResponse, sOldTGT);
+				oTGTIssuer.issueCrossTGTandRedirect(sLocalRid, _htSessionContext, null, htRemoteAttributes, servletResponse, sOldTGT);
 			}
 		}
 		catch (ASelectException ae) {

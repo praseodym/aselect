@@ -220,12 +220,12 @@ public class Idff12_SSO extends ProtoRequestHandler
 		String sUrlRid = request.getParameter("rid");
 		String sPathInfo = request.getPathInfo();
 		String sServer = null;
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "SSO PATH=" + sPathInfo + " " + request.getMethod() + " "
-				+ request.getQueryString());
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "SSO PATH=" + sPathInfo + " " +
+				request.getMethod() + " " + request.getQueryString());
 
 		HashMap htCredentials = getASelectCredentials(request);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "getAselectCredentials: sUrlRid=" + sUrlRid + " Credentials="
-				+ htCredentials);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "getAselectCredentials: sUrlRid=" + sUrlRid +
+				" Credentials="	+ htCredentials);
 
 		if (htCredentials != null && !htCredentials.isEmpty()) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Credentials present");
@@ -244,7 +244,10 @@ public class Idff12_SSO extends ProtoRequestHandler
 						+ ", htAttributes=" + sSerAttributes);
 
 				// Idff session is used to store the Caller's Assertion consumerURL and RelayState
-				htIdffSession = retrieveSessionDataFromRid(request, SESSION_ID_PREFIX);
+				_htSessionContext = retrieveSessionDataFromRid(request, SESSION_ID_PREFIX);
+				// _htSessionContext can be null
+				if (_htSessionContext != null)
+					htIdffSession = new HashMap();  // no more additional data needed
 
 				if (sPathInfo.endsWith(RETURN_SUFFIX) && htIdffSession == null) {
 					// The Idff session is only needed upon return
@@ -276,6 +279,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 			}
 		}
 		if (htIdffSession == null || !sPathInfo.endsWith(RETURN_SUFFIX)) {
+			// need additional data for the session
 			htIdffSession = new HashMap();
 			if (sProviderID != null)
 				htIdffSession.put("libProviderID", sProviderID);
@@ -343,11 +347,13 @@ public class Idff12_SSO extends ProtoRequestHandler
 				}
 
 				// Start an authenticate request
-				htTgtContext = performAuthenticateRequest(sASelectURL, sPathInfo, RETURN_SUFFIX, _sMyAppId, true,
-						_oClientCommunicator);
-
-				sRid = (String) htTgtContext.get("rid");
-				storeSessionDataWithRid(response, htIdffSession, SESSION_ID_PREFIX, sRid);
+				// NOTE: returns a result including a session not a TGT context
+				HashMap<String, Object> htResponse = performAuthenticateRequest(sASelectURL, sPathInfo, RETURN_SUFFIX,
+						_sMyAppId, true, _oClientCommunicator);
+				
+				sRid = (String) htResponse.get("rid");
+				_htSessionContext = (HashMap)htResponse.get("session");  // 20120404, Bauke: the newly created session
+				_htSessionContext = storeSessionDataWithRid(response, htIdffSession, _htSessionContext/*not null*/, SESSION_ID_PREFIX, sRid);
 
 				// Let the user make his choice
 				// The cookie contains the previous choice
@@ -364,7 +370,8 @@ public class Idff12_SSO extends ProtoRequestHandler
 						sASelectURL, sRid, _sASelectServerID, response);
 				return new RequestState(null);
 			}
-
+			// htTgtContext is not null
+			
 			// ---- Step 2 ---- Back from identification or already logged in
 			// Returned from login1, should have aselect_credentials, rid, a-select-server
 			// This only code works if we arrive here from another aselect server
@@ -374,8 +381,8 @@ public class Idff12_SSO extends ProtoRequestHandler
 				_tgtManager.updateTGT(sTgt, htTgtContext);
 			}
 
-			// Store with the newest issued Rid
-			storeSessionDataWithRid(response, htIdffSession, SESSION_ID_PREFIX, sRid);
+			// Store with the newly issued Rid
+			_htSessionContext = storeSessionDataWithRid(response, htIdffSession, _htSessionContext/*can be null*/, SESSION_ID_PREFIX, sRid);
 
 			byte[] bSourceId = Util.generateSourceId(_sProviderId);
 			SAMLArtifactType0003 oSAMLArtifact = new SAMLArtifactType0003(bSourceId);

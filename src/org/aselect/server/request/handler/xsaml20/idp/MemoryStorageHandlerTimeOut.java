@@ -32,7 +32,6 @@ import org.aselect.system.storagemanager.handler.MemoryStorageHandler;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
-// TODO: Auto-generated Javadoc
 /*
  * NOTE: Code is identical to MemoryStorageHandlerTimeOut (except for class-names of course).
  *       Though it is different from the sp-version.
@@ -118,13 +117,19 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 		String _sMethod = "put";
 		HashMap htValue = (HashMap) oValue;
 
-		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "MSHT " + this.getClass());
-		if (!_oTGTManager.containsKey(oKey) || htValue.get("createtime") == null) {
+		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Class=" + this.getClass());
+		// We'll use a small (not most beautiful) trick to speed up the "put" later on
+//		if (!_oTGTManager.containsKey(oKey) || htValue.get("createtime") == null) {	// RH, 20111114, o
+		boolean hasKey = _oTGTManager.containsKey(oKey);	// RH, 20111114, n
+		if (!hasKey || htValue.get("createtime") == null) {	// RH, 20111114, n
 			long now = new Date().getTime();
 			htValue.put("createtime", String.valueOf(now));
 			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Added createtime=" + now);
 		}
 		super.put(oKey, oValue, lTimestamp);
+		// don't use the Jdbc construction here!!!!
+		//super.put(oKey, oValue, lTimestamp, hasKey ? UpdateMode.UPDATEFIRST : UpdateMode.INSERTFIRST);	// RH, 20111114, n
+		
 	}
 
 	// Called from system.StorageManager: Cleaner.run()

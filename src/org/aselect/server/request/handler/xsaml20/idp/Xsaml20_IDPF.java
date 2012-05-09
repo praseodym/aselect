@@ -11,7 +11,6 @@
  */
 package org.aselect.server.request.handler.xsaml20.idp;
 
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -27,6 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.AbstractRequestHandler;
+import org.aselect.server.request.handler.ProtoRequestHandler;
 import org.aselect.server.request.handler.xsaml20.Saml20_Metadata;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
@@ -46,10 +46,8 @@ import org.aselect.system.exception.ASelectException;
  * 
  * @author Remy Hanswijk
  */
-
-public class Xsaml20_IDPF extends AbstractRequestHandler
+public class Xsaml20_IDPF extends ProtoRequestHandler
 {
-
 	private final static String MODULE = "Saml20_IDPF";
 //	private String ists =  null;
 	private String idpfEndpointUrl =  null;
@@ -142,7 +140,6 @@ public class Xsaml20_IDPF extends AbstractRequestHandler
 //				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'verify_signature' found", e);
 //				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 //			}
-
 			
 			try {
 				defaultUID = _configManager.getParam(oConfig, "uid");
@@ -160,7 +157,6 @@ public class Xsaml20_IDPF extends AbstractRequestHandler
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
-			
 			try {
 				endpointsigning = _configManager.getParam(oConfig, "applicationendpointsigning");
 			}
@@ -205,8 +201,7 @@ public class Xsaml20_IDPF extends AbstractRequestHandler
 	}
 
 	/**
-	 * Process incoming request <br>
-	 * .
+	 * Process incoming request.<br>
 	 * 
 	 * @param request
 	 *            HttpServletRequest.
@@ -216,7 +211,6 @@ public class Xsaml20_IDPF extends AbstractRequestHandler
 	 * @throws ASelectException
 	 *             If processing of  data request fails.
 	 */
-
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 		throws ASelectException
 	{		
@@ -288,28 +282,28 @@ public class Xsaml20_IDPF extends AbstractRequestHandler
     		String extractedRid = ridResponse.replaceFirst(".*rid=([^&]*).*$", "$1");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "rid retrieved: " + extractedRid);
 
-			HashMap<String, Object> htSessionContext = _oSessionManager.getSessionContext(extractedRid);
-			if (htSessionContext == null) {
+			_htSessionContext = _oSessionManager.getSessionContext(extractedRid);
+			if (_htSessionContext == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No session found for RID: " + extractedRid);
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 			// idpf (for now) only supports HTTP-POST binding
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "set sp_reqbinding: " + Saml20_Metadata.singleSignOnServiceBindingConstantPOST);
-			htSessionContext.put("sp_reqbinding", Saml20_Metadata.singleSignOnServiceBindingConstantPOST);
+			_htSessionContext.put("sp_reqbinding", Saml20_Metadata.singleSignOnServiceBindingConstantPOST);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "set sp_assert_url: " +getEndpointurl());
-			htSessionContext.put("sp_assert_url", getEndpointurl());
+			_htSessionContext.put("sp_assert_url", getEndpointurl());
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "set sp_reqsigning: " +getEndpointsigning());
-			htSessionContext.put("sp_reqsigning",getEndpointsigning());
+			_htSessionContext.put("sp_reqsigning",getEndpointsigning());
 			
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "set sp_audience: " +getEndpointaudience());
-			htSessionContext.put("sp_audience",getEndpointaudience());	// set sp_audience for audience restriction in saml post
+			_htSessionContext.put("sp_audience",getEndpointaudience());	// set sp_audience for audience restriction in saml post
 			
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "set sp_addkeyname: " +getEndpointaddkeyname());
-			htSessionContext.put("sp_addkeyname",getEndpointaddkeyname());	// set sp_addkeyname for keyinfo in signature in samll post
+			_htSessionContext.put("sp_addkeyname",getEndpointaddkeyname());	// set sp_addkeyname for keyinfo in signature in samll post
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "set sp_addcertificate: " +getEndpointaddcertificate());
-			htSessionContext.put("sp_addcertificate",getEndpointaddcertificate());	// set sp_addcertificate for  keyinfo in signature in samll post
+			_htSessionContext.put("sp_addcertificate",getEndpointaddcertificate());	// set sp_addcertificate for  keyinfo in signature in samll post
 			
-			_oSessionManager.updateSession(extractedRid, htSessionContext);
+			_oSessionManager.updateSession(extractedRid, _htSessionContext);
 			
     		String loginrequest= "login1";
 

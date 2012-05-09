@@ -128,16 +128,18 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 
 	/** AuthSP success code */
 	private final static String ERROR_OPENID_OK = "000";
-
 	/** AuthsP access denied error. */
 	private final static String ERROR_OPENID_ACCESS_DENIED = "800";
-
 	private final static String ERROR_OPENID_INVALID_CREDENTIALS = "400";
-
 
 	// Localization
 	protected String _sUserLanguage = "";
 	protected String _sUserCountry = "";
+	
+	/* (non-Javadoc)
+	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#myRidName()
+	 */
+	public String getLocalRidName() { return "rid"; }
 
 	/**
 	 * Initializes the <code>OpenID</code> AuthSP handler. <br>
@@ -262,7 +264,7 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 	 * @return the hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#computeAuthenticationRequest(java.lang.String)
 	 */
-	public HashMap computeAuthenticationRequest(String sRid)
+	public HashMap computeAuthenticationRequest(String sRid, HashMap htSessionContext)
 	{
 		String sMethod = "computeAuthenticationRequest";
 		StringBuffer sbBuffer = null;
@@ -271,7 +273,7 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 		htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
 
 		try {
-			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+			// 20120403, Bauke: passes as parameter: HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
 				sbBuffer = new StringBuffer("Could not fetch session context for rid='");
 				sbBuffer.append(sRid).append("'.");
@@ -382,11 +384,14 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 	 * </table>
 	 * 
 	 * @param htAuthspResponse
-	 *            the ht authsp response
-	 * @return the hash map
+	 *            the authsp response
+	 * @param htSessionContext
+	 *            the session context, must be available
+	 * @return the result hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.HashMap)
 	 */
-	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse)
+	// 20120403, Bauke: added htSessionContext
+	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse, HashMap htSessionContext)
 	{
 		String sMethod = "verifyAuthenticationResponse()";
 		StringBuffer sbBuffer = null;
@@ -423,22 +428,14 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 
 			boolean bVerifies = CryptoEngine.getHandle().verifySignature(_sAuthsp, sbSignature.toString(), sSignature);
 			if (!bVerifies) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "invalid signature in response from AuthSP:"
-						+ _sAuthsp);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "invalid signature in response from AuthSP:"+_sAuthsp);
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 			}
 
-			// get parameters from session
-			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
-			if (htSessionContext == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"Incorrect AuthSP response: invalid Session (could be expired)");
-				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
-			}
+			// 20120403, Bauke: session is available as a parameter now
+
 			// OpenID returns it's own uid
-//			String sUserId = (String) htSessionContext.get("user_id");
-			String sUserId = (String) htAuthspResponse.get("uid");
-			
+			String sUserId = (String) htAuthspResponse.get("uid");			
 			String sOrg = (String) htSessionContext.get("organization");
 
 			// check why the user was not authenticated successfully
@@ -469,8 +466,7 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 			htResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
 			htResponse.put("uid", sUserId);
 		}
-		catch (ASelectAuthSPException eAA) // Error occurred
-		{
+		catch (ASelectAuthSPException eAA) { // Error occurred
 			// allready logged
 			htResponse.put("result", eAA.getMessage());
 		}
@@ -484,7 +480,6 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod,
 					"Could not verify authentication response due to internal error", e);
 			htResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
-
 		}
 		return htResponse;
 	}
@@ -512,7 +507,7 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 	 * @see org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler#handleDirectLoginRequest(java.util.HashMap,
 	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter, java.lang.String)
 	 */
-	public boolean handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse,
+	public boolean handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, HashMap htSessonContext,
 			PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
 	throws ASelectException
 	{

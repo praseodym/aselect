@@ -93,7 +93,6 @@ import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
 /**
  * Authentication logger. <br>
  * <br>
@@ -703,7 +702,7 @@ public class AuthenticationLogger
 	private void altLog(String sMethod, String sMessage)
 	{
 		if (_systemLogger == null)
-			System.err.println("[" + getTimestamp() + "] " + MODULE + "." + sMethod + " -> " + sMessage);
+			System.err.println("[" + getAuthTimestamp() + "] " + MODULE + "." + sMethod + " -> " + sMessage);
 		else
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sMessage);
 	}
@@ -725,7 +724,7 @@ public class AuthenticationLogger
 	 * 
 	 * @return The current date/time in a logable format.
 	 */
-	private String getTimestamp()
+	private String getAuthTimestamp()
 	{
 		int i;
 		Calendar cNow = Calendar.getInstance();

@@ -245,7 +245,7 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
 				HashMap htAttributes = extractUidAndAttributes(sAssertion);
 
 				// Create a TGT
-				createContextAndIssueTGT(response, sSessionId, _sMyServerId, _sMyOrg, _sMyAppId, null, htAttributes);
+				createContextAndIssueTGT(response, sSessionId, htSessionContext, _sMyServerId, _sMyOrg, _sMyAppId, null, htAttributes);
 
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIR " + sRedirectUrl);
 				response.sendRedirect(sRedirectUrl.toString());

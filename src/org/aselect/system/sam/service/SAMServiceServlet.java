@@ -98,7 +98,6 @@ import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * Abstract class for the SAM Service servlets like in A-Select Server and A-Select AuthSPServer. <br>
  * <br>

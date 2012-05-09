@@ -253,30 +253,25 @@ public class SessionSyncRequestSender
 	 * Synchronize session.
 	 * 
 	 * @param sTgT
-	 *            the s tg t
+	 *            the TGT key
 	 * @param htTGTContext
-	 *            the ht tgt context
+	 *            the tgt context
 	 * @param updateTgt
-	 *            the update tgt
-	 * @return the string
+	 *            also update the ticket?
+	 * @return successful?
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	public String synchronizeSession(String sTgT, HashMap<String, Object> htTGTContext, /* boolean credsAreCoded, */
-	boolean updateTgt)
+	public String synchronizeSession(String sTgT, HashMap<String, Object> htTGTContext, boolean updateTgt)
 		throws ASelectException
 	{
 		String _sMethod = "synchronizeSession";
+		boolean bTgtUpdated = false;
 
 		// 20090811, Bauke: Only saml20 needs this type of session sync
 		String sAuthspType = (String) htTGTContext.get("authsp_type");
 		if (sAuthspType == null || !sAuthspType.equals("saml20"))
 			return Errors.ERROR_ASELECT_SUCCESS;
-
-		if (updateTgt) { // updates the timestamp
-			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Update TICKET context=" + htTGTContext);
-			_oTGTManager.updateTGT(sTgT, htTGTContext);
-		}
 
 		Long now = new Date().getTime();
 		String ssTime = (String) htTGTContext.get("sessionsynctime");
@@ -289,8 +284,7 @@ public class SessionSyncRequestSender
 		}
 		else if (now >= lastSync + _lUpdateInterval) {
 			// Session Sync needed
-			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SP - Session Sync, type=" + _sSamlMessageType + " now="
-					+ now);
+			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SP - Session Sync, type=" + _sSamlMessageType + " now="+now);
 			String sNameID = (String) htTGTContext.get("name_id");
 			if (sNameID != null) {
 				boolean success = false;
@@ -308,6 +302,7 @@ public class SessionSyncRequestSender
 					_oSystemLogger.log(Level.WARNING, MODULE, _sMethod, "Failed to send update to federation");
 					throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 				}
+				// success
 			}
 			else {
 				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "No user found with credentials=" + sTgT);
@@ -320,9 +315,16 @@ public class SessionSyncRequestSender
 			// Setting the value below prevents the regular Timestamp update
 			htTGTContext.put("updatetimestamp", "no");
 			_oTGTManager.updateTGT(sTgT, htTGTContext);
+			bTgtUpdated = true;
 		}
 		else {
 			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SP - No SessionSync Yet");
+		}
+		
+		// Update when requested by caller and not done here yet
+		if (!bTgtUpdated && updateTgt) { // updates at least the timestamp
+			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Update TICKET context=" + htTGTContext);
+			_oTGTManager.updateTGT(sTgT, htTGTContext);
 		}
 		return Errors.ERROR_ASELECT_SUCCESS;
 	}

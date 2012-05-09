@@ -489,7 +489,7 @@ public class StorageManager
 	 * @see IStorageHandler#put(Object, Object, Long)
 	 */
 	public void update(Object oKey, Object oValue)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		// _oSystemLogger.log(Level.INFO, MODULE, "update",
 		// "StorageHandlerClass="+_oStorageHandler.getClass()+" this="+this.getClass());
@@ -540,22 +540,24 @@ public class StorageManager
 	 * @see IStorageHandler#put(Object, Object, Long)
 	 */
 	public boolean create(Object oKey, Object oValue)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		boolean createOK = false;
 		// _oSystemLogger.log(Level.INFO, MODULE, "create",
 		// "StorageHandlerClass="+_oStorageHandler.getClass()+" this="+this.getClass());
 		if (_iMax != I_UNLIMITED && _oStorageHandler.isMaximum(_iMax)) 
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_MAXIMUM_REACHED);
+		
 		Long lTimestamp = new Long(System.currentTimeMillis());
 		try {
 			_oStorageHandler.put(oKey, oValue, lTimestamp, UpdateMode.INSERTONLY);
 			createOK = true;
-		} catch (ASelectStorageException ase) {	// Duplicate key returns false, everything else throws exception
+		}
+		catch (ASelectStorageException ase) {	// Duplicate key returns false, everything else throws exception
 			if ( !Errors.ERROR_ASELECT_STORAGE_DUPLICATE_KEY.equals( ase.getMessage()) ) {
 				throw ase;
 			}
-			 _oSystemLogger.log(Level.INFO, MODULE, "create", "Resuming on duplicate key");
+			_oSystemLogger.log(Level.INFO, MODULE, "create", "Resuming on duplicate key");
 		}
 		return createOK;
 	}

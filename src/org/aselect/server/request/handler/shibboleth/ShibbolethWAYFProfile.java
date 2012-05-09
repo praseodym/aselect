@@ -338,13 +338,6 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 			else {
 				String sSelectedIdP = null;
 				String sCookieValue = HandlerTools.getCookieValue(request, COOKIENAME, _systemLogger);
-				/*
-				 * Cookie oCookie[] = request.getCookies(); if (oCookie != null) { for (int i = 0; i < oCookie.length;
-				 * i++) { String sCookieName = oCookie[i].getName(); if (sCookieName.equals(COOKIENAME)) { String
-				 * sCookieValue = oCookie[i].getValue(); //remove '"' surrounding the cookie if applicable int iLength =
-				 * sCookieName.length(); if(sCookieName.charAt(0) == '"' && sCookieName.charAt(iLength-1) == '"') {
-				 * sCookieName = sCookieName.substring(1, iLength-1); }
-				 */
 
 				if (sCookieValue == null || !_vIdPs.contains(sCookieValue)) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid '" + COOKIENAME
@@ -352,9 +345,6 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
 				sSelectedIdP = sCookieValue;
-				/*
-				 * } } }
-				 */
 				String sAction = request.getRequestURL().toString();
 				handleShowForm(sSelectedIdP, sAction, sTarget, sShire, sProviderId, response);
 			}

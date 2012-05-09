@@ -107,48 +107,6 @@ public class HandlerTools
 		response.setHeader("Set-Cookie", sValue);
 	}
 
-	// Age -1 means keep for the session only, 0 means delete, positive values: keep until Age (in seconds) expires
-	// NOT USED, because the Java API does not support HttpOnly
-	/**
-	 * Xxx_put cookie value.
-	 * 
-	 * @param response
-	 *            the response
-	 * @param sCookieName
-	 *            the s cookie name
-	 * @param sCookieValue
-	 *            the s cookie value
-	 * @param sCookieDomain
-	 *            the s cookie domain
-	 * @param iAge
-	 *            the i age
-	 * @param logger
-	 *            the logger
-	 */
-	public static void xxx_putCookieValue(HttpServletResponse response, String sCookieName, String sCookieValue,
-			String sCookieDomain, int iAge, ASelectSystemLogger logger)
-	{
-		String sMethod = "putCookieValue";
-		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
-		String addedSecurity = _configManager.getAddedSecurity();
-		String sCookiePath = _configManager.getCookiePath();
-
-		Cookie cookie = new Cookie(sCookieName, sCookieValue); // does not work +"; HttpOnly");
-		if (sCookieDomain != null)
-			cookie.setDomain(sCookieDomain);
-		cookie.setPath(sCookiePath); // was: "/aselectserver/server");
-		cookie.setVersion(1);
-		if (iAge != -1)
-			cookie.setMaxAge(iAge);
-
-		if (addedSecurity != null && addedSecurity.contains("cookies"))
-			cookie.setSecure(true);
-
-		logger.log(Level.INFO, MODULE, sMethod, "Add Cookie: " + sCookieName + " Value=" + sCookieValue + " Domain="
-				+ cookie.getDomain() + " Path=" + cookie.getPath() + " Age=" + iAge);
-		response.addCookie(cookie);
-	}
-
 	/**
 	 * Del cookie value.
 	 * 

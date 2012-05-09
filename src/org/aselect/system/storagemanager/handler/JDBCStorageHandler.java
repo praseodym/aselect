@@ -337,7 +337,7 @@ public class JDBCStorageHandler implements IStorageHandler
 			sbBuffer.append("FROM ").append(_sTableName).append(" ");
 			// sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?"); // old
 			sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?"); // new
-			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer);  // 20120405: + " -> " + oKey);
 
 			oConnection = getConnection(); // RH, 20090604, n
 			oStatement = oConnection.prepareStatement(sbBuffer.toString());
@@ -351,9 +351,8 @@ public class JDBCStorageHandler implements IStorageHandler
 			if (oResultSet.next()) { // record exists.
 
 				// oRet = decode(oResultSet.getBytes(_sContextValue.replace(identifierQuote, " ").trim())); // o
-				oRet = decode(oResultSet.getBytes(_sContextValue.substring(identifierQuote.length(), _sContextValue
-						.length()
-						- identifierQuote.length())));
+				oRet = decode(oResultSet.getBytes(_sContextValue.substring(identifierQuote.length(),
+						_sContextValue.length()	- identifierQuote.length())));
 				_systemLogger.log(Level.FINER, MODULE, sMethod, "result=" + oRet);
 			}
 			else {
@@ -374,7 +373,7 @@ public class JDBCStorageHandler implements IStorageHandler
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_RETRIEVE, eNP);
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not retrieve the object from the database");
+			//_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not retrieve the object from the database");
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_RETRIEVE, e);
 		}
 		finally {
@@ -414,7 +413,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	public long getTimestamp(Object oKey)
 		throws ASelectStorageException
 	{
-		String sMethod = "getTimestamp()";
+		String sMethod = "getTimestamp";
 		long lRet = 0;
 		PreparedStatement oStatement = null;
 		Connection oConnection = null; // RH, 20090604, n
@@ -621,7 +620,6 @@ public class JDBCStorageHandler implements IStorageHandler
 		return htResponse;
 	}
 
-	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	public void put(Object oKey, Object oValue, Long lTimestamp, IStorageHandler.UpdateMode eMode)
 	throws ASelectStorageException
@@ -775,7 +773,7 @@ public class JDBCStorageHandler implements IStorageHandler
 				sbBuffer.append(") ");
 				// RH, 20080714, en
 				sbBuffer.append("VALUES (?,?,?,?)");
-				_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oValue);
 
 //				try { // added 1.5.4
 //					oStatement.close();
@@ -874,7 +872,7 @@ public class JDBCStorageHandler implements IStorageHandler
 						" = ? ");
 				// sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?"); // old
 				sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?"); // new
-				_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oValue);
 
 //				try { // added 1.5.4
 //					oStatement.close();
@@ -985,7 +983,7 @@ public class JDBCStorageHandler implements IStorageHandler
 			sbBuffer.append("FROM ").append(_sTableName).append(" ");
 			// sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?"); // old
 			sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?"); // new
-			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oKey);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oValue);
 
 			// Connection oConnection = getConnection(); // RH, 20090604, o
 			oConnection = getConnection(); // RH, 20090604, n

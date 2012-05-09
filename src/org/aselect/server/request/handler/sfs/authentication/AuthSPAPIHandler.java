@@ -211,7 +211,7 @@ public class AuthSPAPIHandler extends AbstractAPIRequestHandler
 		}
 
 		htSessionContext = null;
-		_sessionManager.killSession(sSessionId);
+		_sessionManager.deleteSession(sSessionId, htSessionContext);
 
 		try {
 			oOutputMessage.setParam("rid", sSessionId);

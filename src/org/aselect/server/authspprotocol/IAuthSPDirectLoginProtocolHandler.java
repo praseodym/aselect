@@ -111,7 +111,8 @@ public interface IAuthSPDirectLoginProtocolHandler
 	 * @return true if successful
 	 * @throws ASelectException
 	 */
-	public boolean handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse,
+	// 20120403, Bauke: added htSessionContext to save on session reads
+	public boolean handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, HashMap htSessionContext,
 			PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
 		throws ASelectException;
 

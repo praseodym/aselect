@@ -175,6 +175,11 @@ public class Radius implements IAuthSPProtocolHandler
 	private final static String MODULE = "Radius";
 	private final static String ERROR_RADIUS_NO_ERROR = "000";
 	private final static String ERROR_RADIUS_ACCESS_DENIED = "800";
+	
+	/* (non-Javadoc)
+	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#myRidName()
+	 */
+	public String getLocalRidName() { return "rid"; }
 
 	/**
 	 * Initializes the Radius AuthSP handler. <br>
@@ -282,16 +287,16 @@ public class Radius implements IAuthSPProtocolHandler
 	 * @return the hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#computeAuthenticationRequest(java.lang.String)
 	 */
-	public HashMap computeAuthenticationRequest(String sRid)
+	public HashMap computeAuthenticationRequest(String sRid, HashMap htSessionContext)
 	{
-		String sMethod = "computeAuthenticationRequest()";
+		String sMethod = "computeAuthenticationRequest";
 		StringBuffer sbTemp;
 
 		HashMap htResponse = new HashMap();
 		htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
 
 		try {
-			HashMap htSessionContext = _oSessionManager.getSessionContext(sRid);
+			// 20120403, Bauke: passes as parameter: HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
 				sbTemp = new StringBuffer("could not fetch session context for rid=").append(sRid);
 				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sbTemp.toString());
@@ -398,13 +403,16 @@ public class Radius implements IAuthSPProtocolHandler
 	 * </table>
 	 * 
 	 * @param htAuthspResponse
-	 *            the ht authsp response
-	 * @return the hash map
+	 *            the authsp response
+	 * @param htSessionContext
+	 *            the session context, must be available
+	 * @return the result hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.HashMap)
 	 */
-	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse)
+	// 20120403, Bauke: added htSessionContext
+	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse, HashMap htSessionContext)
 	{
-		String sMethod = "verifyAuthenticationResponse()";
+		String sMethod = "verifyAuthenticationResponse";
 		StringBuffer sbTemp;
 
 		HashMap htResponse = new HashMap();
@@ -441,16 +449,10 @@ public class Radius implements IAuthSPProtocolHandler
 			if (!bVerifies) {
 				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, "invalid signature in response from AuthSP:"
 						+ _sAuthsp);
-
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 			}
 
-			HashMap htSessionContext = _oSessionManager.getSessionContext(sRid);
-			if (htSessionContext == null) {
-				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod,
-						"Incorrect AuthSP response: invalid Session (could be expired)");
-				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
-			}
+			// 20120403, Bauke: session is available as a parameter
 			String sUserId = (String) htSessionContext.get("user_id");
 			String sOrg = (String) htSessionContext.get("organization");
 

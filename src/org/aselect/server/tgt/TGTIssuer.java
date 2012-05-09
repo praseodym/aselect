@@ -249,6 +249,8 @@ public class TGTIssuer
 	 * 
 	 * @param sRid
 	 *            The request id (session key)
+	 * @param htSessionContext
+	 *            the session context, must be available from the caller
 	 * @param sAuthSP
 	 *            The AuthSP which the used to authenticate
 	 * @param htRemoteAttributes
@@ -260,7 +262,8 @@ public class TGTIssuer
 	 * @throws ASelectException
 	 *             if an error page must be shown
 	 */
-	public void issueCrossTGTandRedirect(String sRid, String sAuthSP, HashMap htRemoteAttributes,
+	// 20120403, Bauke: added htSessionContext
+	public void issueCrossTGTandRedirect(String sRid, HashMap htSessionContext, String sAuthSP, HashMap htRemoteAttributes,
 			HttpServletResponse oHttpServletResponse, String sOldTGT)
 		throws ASelectException
 	{
@@ -271,7 +274,8 @@ public class TGTIssuer
 		String sArpTarget = null; // added 1.5.4
 
 		try {
-			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+			// 20120403, Bauke: session is passed as a parameter:
+			// HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
 				StringBuffer sbFailed = new StringBuffer("No session found, session expired: ");
 				sbFailed.append(sRid);
@@ -280,6 +284,7 @@ public class TGTIssuer
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Issue Cross TGT for RID: " + sRid);
 
+			// Session is present
 			String sAppUrl = (String) htSessionContext.get("app_url");
 			String sAppId = (String) htSessionContext.get("app_id");
 			String sRemoteOrganization = (String) htSessionContext.get("remote_organization");
@@ -396,7 +401,7 @@ public class TGTIssuer
 
 			// A tgt was just issued, report sensor data
 			Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_tgt", sRid, htSessionContext, sTgt, true);
-			_sessionManager.killSession(sRid);
+			_sessionManager.setDeleteSession(htSessionContext, _systemLogger);  // 20120403, Bauke: was killSession()
 			
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
 			String sLang = (String)htTGTContext.get("language");
@@ -444,6 +449,8 @@ public class TGTIssuer
 	 * 
 	 * @param sRid
 	 *            The request id (session key)
+	 * @param htSessionContext
+	 *            the session context, must be available from the caller
 	 * @param sAuthSP
 	 *            The AuthSP which the used to authenticate
 	 * @param htAdditional
@@ -455,13 +462,15 @@ public class TGTIssuer
 	 * @throws ASelectException
 	 *             if an error page must be shown
 	 */
-	public String issueTGTandRedirect(String sRid, String sAuthSP, HashMap htAdditional, HttpServletResponse oHttpServletResponse, String sOldTGT, boolean redirectToo)
+	// 20120403, Bauke: added htSessionContext
+	public String issueTGTandRedirect(String sRid, HashMap htSessionContext, String sAuthSP, HashMap htAdditional, HttpServletResponse oHttpServletResponse, String sOldTGT, boolean redirectToo)
 	throws ASelectException
 	{
 		String sMethod = "issueTGTandRedirect";
 
 		try {
-			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+			// 20120403, Bauke: session is passed as a parameter:
+			// HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No session found, session expired: " + sRid);
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
@@ -639,8 +648,8 @@ public class TGTIssuer
 					setASelectCookie(sTgt, sUserId, oHttpServletResponse);
 			}
 			else { // Update the old TGT
-				sTgt = sOldTGT;
 				_tgtManager.updateTGT(sOldTGT, htTGTContext);
+				sTgt = sOldTGT;
 			}
 			
 			// 20100210, Bauke: Present the Organization selection to the user
@@ -652,7 +661,8 @@ public class TGTIssuer
 				oHttpServletResponse.setContentType("text/html");
 				
 				Tools.pauseSensorData(_systemLogger, htSessionContext);
-				_sessionManager.update(sRid, htSessionContext); // Write session
+				//_sessionManager.updateSession(sRid, htSessionContext); // Write session
+				// done by pauseSensorData(): _sessionManager.setUpdateSession(htSessionContext, _systemLogger);  // 20120403, Bauke: was updateSession()
 				PrintWriter pwOut = oHttpServletResponse.getWriter();
 				pwOut.println(sSelectForm);
 				pwOut.close();
@@ -663,7 +673,8 @@ public class TGTIssuer
 				// No organization selection, the tgt was just issued, report sensor data
 				// remove the session and send the user to the application
 				Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_tgt", sRid, htSessionContext, sTgt, true);
-				_sessionManager.killSession(sRid);
+				//_sessionManager.killSession(sRid);
+				_sessionManager.setDeleteSession(htSessionContext, _systemLogger);  // 20120403, Bauke: was killSession()
 				
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
 				String sLang = (String)htTGTContext.get("language");
@@ -750,6 +761,8 @@ public class TGTIssuer
 	 * 
 	 * @param sRid
 	 *            The request id (session key)
+	 * @param htSessionContext
+	 *            the session context, must be available from the caller
 	 * @param sResultCode
 	 *            The error code that occurred and will be returned to the webapplication application
 	 * @param oHttpServletResponse
@@ -757,7 +770,8 @@ public class TGTIssuer
 	 * @throws ASelectException
 	 *             if an error page must be shown
 	 */
-	public void issueErrorTGTandRedirect(String sRid, String sResultCode, HttpServletResponse oHttpServletResponse)
+	// 20120403, Bauke: added htSessionContext
+	public void issueErrorTGTandRedirect(String sRid, HashMap htSessionContext, String sResultCode, HttpServletResponse oHttpServletResponse)
 		throws ASelectException
 	{
 		String sMethod = "issueErrorTGT";
@@ -767,7 +781,8 @@ public class TGTIssuer
 			sessionManager = SessionManager.getHandle();
 			TGTManager oTGTManager = TGTManager.getHandle();
 
-			HashMap htSessionContext = sessionManager.getSessionContext(sRid);
+			// 20120403, Bauke: session is passed as a parameter:
+			// HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
 				StringBuffer sbFailed = new StringBuffer("No session found, session expired: ");
 				sbFailed.append(sRid);
@@ -806,8 +821,8 @@ public class TGTIssuer
 			String sTgt = oTGTManager.createTGT(htTGTContext);
 			// A tgt was just issued, report sensor data
 			Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_tgt", sRid, htSessionContext, sTgt, true);
-			Utils.setSessionStatus(htSessionContext, "del", _systemLogger);
-			sessionManager.killSession(sRid);
+			//sessionManager.killSession(sRid);
+			sessionManager.setDeleteSession(htSessionContext, _systemLogger);  // 20120403, Bauke: was killSession
 			String sLang = (String)htTGTContext.get("language");
 			sendTgtRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse, sLang);
 		}

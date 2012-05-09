@@ -202,7 +202,7 @@ public class AuthSPAPIHandler extends AbstractAPIRequestHandler
 
 		//20111102, Bauke: added
 		Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_pah", sRid, _htSessionContext, null, true);
-		_sessionManager.killSession(sRid);
+		_sessionManager.deleteSession(sRid, _htSessionContext);
 		_htSessionContext = null;
 
 		try {

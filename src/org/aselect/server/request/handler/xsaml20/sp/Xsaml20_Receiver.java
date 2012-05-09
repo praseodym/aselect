@@ -215,7 +215,7 @@ public class Xsaml20_Receiver extends Saml20_BrowserHandler
 			}
 			
 			// Create a ticket with attributes and set a cookie
-			String sTgt = createContextAndIssueTGT(httpResponse, null, _sMyServerId, _sASelectOrganization,
+			String sTgt = createContextAndIssueTGT(httpResponse, null, null, _sMyServerId, _sASelectOrganization,
 									get_SamlIssuer().getValue(), null, htAttributes);
 
 			// and redirect the user to the destination url

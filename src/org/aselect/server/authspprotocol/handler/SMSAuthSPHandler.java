@@ -109,6 +109,11 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 	private static final String ERROR_SMS_ACCESS_DENIED = "800";
 
 	/* (non-Javadoc)
+	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#myRidName()
+	 */
+	public String getLocalRidName() { return "rid"; }
+
+	/* (non-Javadoc)
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#init(java.lang.Object, java.lang.Object)
 	 */
 	public void init(Object oAuthSPConfig, Object oAuthSPResource)
@@ -174,7 +179,7 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 	 * @return the hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#computeAuthenticationRequest(java.lang.String)
 	 */
-	public HashMap computeAuthenticationRequest(String sRid)
+	public HashMap computeAuthenticationRequest(String sRid, HashMap htSessionContext)
 	{
 		String sMethod = "computeAuthenticationRequest";
 		StringBuffer sbBuffer = null;
@@ -183,7 +188,7 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "sRid=" + sRid);
 
 		try {
-			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+			// 20120403, Bauke: passes as parameter: HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Context=" + htSessionContext);
 			if (htSessionContext == null) {
 				sbBuffer = new StringBuffer("Could not fetch session context for rid='");
@@ -242,10 +247,8 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 
 			// Bauke: store additional sms attribute
 			htSessionContext.put("sms_phone", sUserId);  // from aselectSmsUserAttributes
-//			_sessionManager.put(sRid, htSessionContext);
-			// We expect the session to be there so use update
-//			_sessionManager.put(sRid, htSessionContext);	// RH, 20111114, o
-			_sessionManager.update(sRid, htSessionContext);	// RH, 20111114, n
+			//_sessionManager.updateSession(sRid, htSessionContext);  // 20120401, Bauke: changed, was update()
+			_sessionManager.setUpdateSession(htSessionContext, _systemLogger);  // 20120403, Bauke: was updateSession
 
 			sSignature = URLEncoder.encode(sSignature, "UTF-8");
 			sUserId = URLEncoder.encode(sUserId, "UTF-8");
@@ -301,11 +304,14 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 	 * </table>
 	 * 
 	 * @param htAuthspResponse
-	 *            the ht authsp response
-	 * @return the hash map
+	 *            the authsp response
+	 * @param htSessionContext
+	 *            the session context, must be available
+	 * @return the result hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.HashMap)
 	 */
-	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse)
+	// 20120403, Bauke: added htSessionContext
+	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse, HashMap htSessionContext)
 	{
 		String sMethod = "verifyAuthenticationResponse";
 		StringBuffer sbBuffer = null;
@@ -337,13 +343,8 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "invalid signature in response from AuthSP:" + _sAuthsp);
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 			}
-			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
-			if (htSessionContext == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"Incorrect AuthSP response: invalid Session (could be expired)");
-				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
-			}
-
+			
+			// 20120403, Bauke: session is available as a parameter
 			String sUserId = (String) htSessionContext.get("sel_uid");
 			if (sUserId == null)
 				sUserId = (String) htSessionContext.get("user_id");

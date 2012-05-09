@@ -70,7 +70,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.sam.agent.SAMResource;
 
-// TODO: Auto-generated Javadoc
 /**
  * API call Attribute requestor. <br>
  * <br>

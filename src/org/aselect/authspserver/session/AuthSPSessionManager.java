@@ -48,7 +48,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.storagemanager.StorageManager;
 
-// TODO: Auto-generated Javadoc
 /**
  * A session manager for all AuthSP's. <br>
  * <br>
@@ -129,7 +128,6 @@ public class AuthSPSessionManager extends StorageManager
 			}
 
 			super.init(oSessionConfig, _configManager, _systemLogger, AuthSPSAMAgent.getHandle());
-
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Session manager Successfully started.");
 		}
 		catch (ASelectException e) {
@@ -164,11 +162,10 @@ public class AuthSPSessionManager extends StorageManager
 	 *             if the session could not be created or already exists
 	 */
 	public void createSession(String sRid, HashMap htContext)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "createSession()";
 		try {
-			
 			/////////////////////////////////////////////////////
 //			if (containsKey(sRid)) {	// RH, 20111121, o	
 			if ( !create(sRid,htContext )) {	// RH, 20111121, n
@@ -176,7 +173,6 @@ public class AuthSPSessionManager extends StorageManager
 				StringBuffer sbError = new StringBuffer("Session already exists: ");
 				sbError.append(sRid);
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
-
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
 
@@ -187,7 +183,6 @@ public class AuthSPSessionManager extends StorageManager
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Maximum number of sessions reached", e);
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_BUSY, e);
 			}
-
 			throw e;
 		}
 		catch (Exception e) {

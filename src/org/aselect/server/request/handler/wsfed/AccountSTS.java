@@ -213,12 +213,14 @@ public class AccountSTS extends ProtoRequestHandler
 		String sASelectURL = _sServerUrl;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Start Authenticate");
 
-		HashMap htResponse = performAuthenticateRequest(sASelectURL, sPathInfo, RETURN_SUFFIX,
+		HashMap<String, Object> htResponse = performAuthenticateRequest(sASelectURL, sPathInfo, RETURN_SUFFIX,
 					_sMyAppId, false/*don't check signature*/, _oClientCommunicator);
-		String sRid = (String) htResponse.get("rid");
-
-		// We need this stuff when we come back
-		storeSessionDataWithRid(response, htSessionData, SESSION_ID_PREFIX, sRid);
+		
+		String sRid = (String) htResponse.get("rid");  // rid for the newly generated session
+		_htSessionContext = (HashMap)htResponse.get("session");
+		
+		// We need this stuff when we come back. Store as an additional session record
+		_htSessionContext = storeSessionDataWithRid(response, htSessionData, _htSessionContext, SESSION_ID_PREFIX, sRid);
 
 		// Let the user get himself identified
 		String sActionUrl = sASelectURL + _sIstsUrl;
@@ -308,8 +310,8 @@ public class AccountSTS extends ProtoRequestHandler
 
 			if (htCredentials == null) {
 				// No credentials were made yet, Issue a TGT
-				sTgt = createContextAndIssueTGT(response, null, _sASelectServerID, _sASelectOrganization, _sMyAppId,
-						sTgt, htAttributes);
+				sTgt = createContextAndIssueTGT(response, null, null, _sASelectServerID, _sASelectOrganization,
+						_sMyAppId, sTgt, htAttributes);
 
 				// Create Token and POST it to the caller
 				HashMap htSessionData = retrieveSessionDataFromRid(request, SESSION_ID_PREFIX);

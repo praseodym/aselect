@@ -340,7 +340,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 				}
 				else { // GET, check signing of the URL
 					if (!SamlTools.isSigned(httpRequest)) {
-						_systemLogger.log(Level.WARNING, MODULE, sMethod, "SAML GET message must be signed.");
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, "SAML GET message must be signed, invalid request");
 						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 					}
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "SAML GET message IS signed.");

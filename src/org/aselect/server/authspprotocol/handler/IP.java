@@ -59,7 +59,6 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAuthSPException;
 import org.aselect.system.exception.ASelectConfigException;
 
-// TODO: Auto-generated Javadoc
 /**
  * The IP AuthSP Handler. <br>
  * <br>
@@ -153,6 +152,11 @@ public class IP implements IAuthSPProtocolHandler
 
 	private HashMap _htIPRangesCGI;
 	private HashMap _htIPRanges;
+	
+	/* (non-Javadoc)
+	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#myRidName()
+	 */
+	public String getLocalRidName() { return "rid"; }
 
 	/**
 	 * Initializes the <code>IP</code> AuthSP handler. <br>
@@ -346,27 +350,25 @@ public class IP implements IAuthSPProtocolHandler
 	 * @return the hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#computeAuthenticationRequest(java.lang.String)
 	 */
-	public HashMap computeAuthenticationRequest(String sRid)
+	public HashMap computeAuthenticationRequest(String sRid, HashMap htSessionContext)
 	{
-		String sMethod = "computeAuthenticationRequest()";
+		String sMethod = "computeAuthenticationRequest";
 
 		HashMap htResponse = new HashMap();
 		htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
 
 		try {
-			HashMap htSessionContext = _oSessionManager.getSessionContext(sRid);
+			// 20120403, Bauke: passes as parameter: HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
 				StringBuffer sbError = new StringBuffer("could not fetch session context for rid: ");
 				sbError.append(sRid);
 				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
-
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
 
 			String sAppId = (String) htSessionContext.get("app_id");
 			if (sAppId == null) {
 				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, "No 'app_id' found in session");
-
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
 			String sUserId = (String) htSessionContext.get("user_id");
@@ -377,7 +379,6 @@ public class IP implements IAuthSPProtocolHandler
 				StringBuffer sbError = new StringBuffer("no ip ranges defined for app_id: ");
 				sbError.append(sAppId);
 				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
-
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
 
@@ -386,7 +387,6 @@ public class IP implements IAuthSPProtocolHandler
 				StringBuffer sbError = new StringBuffer("no ip ranges defined for app_id: ");
 				sbError.append(sAppId);
 				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
-
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
 
@@ -441,12 +441,10 @@ public class IP implements IAuthSPProtocolHandler
 
 			// TODO The id's of the ranges must be encoded (Martijn)
 			sbRedirect.append(sIPRangesCGI);
-
 			sbRedirect.append("&signature=").append(sSignature);
 
 			htResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
 			htResponse.put("redirect_url", sbRedirect.toString());
-
 		}
 		catch (ASelectAuthSPException e) {
 			htResponse.put("result", e.getMessage());
@@ -454,7 +452,6 @@ public class IP implements IAuthSPProtocolHandler
 		catch (Exception e) {
 			_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod,
 					"Could not compute authentication request due to internal error", e);
-
 			htResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 		}
 		return htResponse;
@@ -486,13 +483,18 @@ public class IP implements IAuthSPProtocolHandler
 	 * </table>
 	 * 
 	 * @param htAuthSPResponse
-	 *            the ht auth sp response
-	 * @return the hash map
+	 *            the auth sp response
+	 * @param htSessionContext
+	 *            the session context, must be available
+	 * @param htSessionContext
+	 *            the session context, must be available
+	 * @return the result hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.HashMap)
 	 */
-	public HashMap verifyAuthenticationResponse(HashMap htAuthSPResponse)
+	// 20120403, Bauke: added htSessionContext
+	public HashMap verifyAuthenticationResponse(HashMap htAuthSPResponse, HashMap htSessionContext)
 	{
-		String sMethod = "verifyAuthenticationResponse()";
+		String sMethod = "verifyAuthenticationResponse";
 		String sUserId = null;
 		String sOrganization = null;
 		String sAppID = null;
@@ -508,7 +510,6 @@ public class IP implements IAuthSPProtocolHandler
 			if ((sRid == null) || (sResultCode == null) || (sSignature == null)) {
 				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod,
 						"Incorrect AuthSP response: one or more parameters missing.");
-
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 			}
 
@@ -522,22 +523,13 @@ public class IP implements IAuthSPProtocolHandler
 			sbSignature.append(sResultCode);
 
 			sSignature = URLDecoder.decode(sSignature, "UTF-8");
-
 			if (!_oCryptoEngine.verifySignature(_sAuthsp, sbSignature.toString(), sSignature)) {
 				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid signature in response from AuthSP:"
 						+ _sAuthsp);
-
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 			}
-			HashMap htSessionContext = _oSessionManager.getSessionContext(sRid);
-			if (htSessionContext == null) {
-				StringBuffer sbError = new StringBuffer("Session expired -> SessionContext not available for rid: ");
-				sbError.append(sRid);
-				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
 
-				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
-			}
-
+			// 20120403, Bauke: session is available as a parameter
 			sUserId = (String) htSessionContext.get("user_id");
 			sOrganization = (String) htSessionContext.get("organization");
 			sAppID = (String) htSessionContext.get("app_id");
@@ -547,22 +539,18 @@ public class IP implements IAuthSPProtocolHandler
 					_oASelectAuthenticationLogger.log(new Object[] {
 						MODULE, sUserId, htAuthSPResponse.get("client_ip"), sOrganization, sAppID, "denied", sResultCode
 					});
-
 					throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED);
 				}
 
 				StringBuffer sbError = new StringBuffer("AuthSP returned errorcode: ");
 				sbError.append(sResultCode);
-
 				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
-
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
 
 			_oASelectAuthenticationLogger.log(new Object[] {
 				MODULE, sUserId, htAuthSPResponse.get("client_ip"), sOrganization, sAppID, "granted"
 			});
-
 			htResponse.put("rid", sRid);
 			htResponse.put("authsp_type", "ip");
 			htResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
@@ -573,7 +561,6 @@ public class IP implements IAuthSPProtocolHandler
 		catch (Exception e) {
 			_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod,
 					"Could not verify authentication response due to internal error", e);
-
 			htResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 		}
 		return htResponse;

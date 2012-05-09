@@ -94,7 +94,6 @@ import org.aselect.system.configmanager.IConfigManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
 /**
  * The logger to write system log entries. <br>
  * <br>
@@ -108,7 +107,6 @@ import org.aselect.system.exception.ASelectException;
  */
 public class SystemLoggerAudit implements ISystemLogger
 {
-
 	/** The module name. */
 	private final String MODULE = "SystemLoggerAudit";
 	/**
@@ -131,73 +129,6 @@ public class SystemLoggerAudit implements ISystemLogger
 	 */
 	public SystemLoggerAudit() {
 	}
-
-	/**
-	 * Inits the.
-	 * 
-	 * @param sLogFileNamePrefix
-	 *            The log file name prefix (".log" is appended).
-	 * @param sLoggerNamespace
-	 *            The namespace of this system logger.
-	 * @param oConfigManager
-	 *            the o config manager
-	 * @param oLogTargetConfig
-	 *            the o log target config
-	 * @param sWorkingDir
-	 *            the s working dir
-	 * @throws Exception
-	 *             If initialisation fails.
-	 * @throws ASelectException
-	 *             the a select exception
-	 * @deprecated use other init! Initialize the <code>SystemLogger</code>. <br>
-	 * <br>
-	 *             <b>Description: </b> <br>
-	 *             Performs the following steps:
-	 *             <ul>
-	 *             <li>Create new FileHandler <code></code></li>
-	 *             <li>Open log file</li>
-	 *             <li>Add file handler to this logger</li>
-	 *             <li>Set default level (ALL)</li>
-	 *             </ul>
-	 * <br>
-	 *             <b>Concurrency issues: </b> <br>
-	 *             -<br>
-	 * <br>
-	 *             <b>Preconditions: </b>
-	 *             <ul>
-	 *             <li>sLogDir != null</li>
-	 *             <li>sLogFileNamePrefix != null</li>
-	 *             </ul>
-	 * <br>
-	 *             <b>Postconditions: </b> <br>
-	 *             The logger is initialised. <br>
-	 */
-	// public void init(String sLogDir, String sLogFileNamePrefix,
-	// String sLoggerNamespace, int iFileLimit, int iNumberOfFiles)
-	// throws Exception
-	// {
-	// try
-	// {
-	// StringBuffer sbLogFile = new StringBuffer();
-	// sbLogFile.append(sLogDir).append(File.separator).append(
-	// sLogFileNamePrefix).append("%g.log");
-	//
-	// // FileHandler oFileHandler = new FileHandler(sbLogFile.toString(),
-	// // iFileLimit, iNumberOfFiles, true);
-	// // oFileHandler.setFormatter(new SystemLogFormatter());
-	// // oFileHandler.setLevel(Level.ALL);
-	// _oLogger = Logger.getLogger(sLoggerNamespace);
-	// // _oLogger.addHandler(oFileHandler);
-	// // _oLogger.addAppender(newAppender);
-	// setLevel(Level.FINE);
-	// }
-	// catch (Exception e)
-	// {
-	// System.err.println("SystemLoggerAudit: could not initialize logger -> "
-	// + e.getMessage());
-	// throw e;
-	// }
-	// }
 
 	/**
 	 * Initializes the System logger. <br>
@@ -339,8 +270,7 @@ public class SystemLoggerAudit implements ISystemLogger
 			sbLogFile.append("%g.log");
 
 			// create file handler
-			// FileHandler oFileHandler = new FileHandler(sbLogFile.toString(),
-			// iLogMaxSize, iLogFiles, true);
+			// FileHandler oFileHandler = new FileHandler(sbLogFile.toString(), iLogMaxSize, iLogFiles, true);
 			// oFileHandler.setFormatter(new SystemLogFormatter());
 			// oFileHandler.setLevel(Level.ALL);
 
@@ -385,7 +315,6 @@ public class SystemLoggerAudit implements ISystemLogger
 	public void log(Level level, String sMessage)
 	{
 		try {
-			// _oLogger.log(level, sMessage);
 			_oLogger.log(mapLevel(level), sMessage);
 		}
 		catch (Exception e) // logging to file failed
@@ -526,32 +455,7 @@ public class SystemLoggerAudit implements ISystemLogger
 		sbError.append(" -> ");
 		sbError.append(sMessage);
 		log(level, sbError.toString(), cause);
-
 	}
-
-	/**
-	 * Enable/disable debug logging. <br>
-	 * <br>
-	 * <b>Description: </b> <br>
-	 * When set to debugging, messages will be copied to the DebugLogger. <br>
-	 * <br>
-	 * <b>Concurrency issues: </b> <br>
-	 * -<br>
-	 * <br>
-	 * <b>Preconditions: </b> <br>
-	 * -<br>
-	 * <br>
-	 * <b>Postconditions: </b> <br>
-	 * -<br>
-	 * 
-	 * @param oLevel
-	 *            the o level
-	 * @deprecated use {@link #setLevel(Level)} instead.
-	 */
-	// public void setDebug(boolean bDebug)
-	// {
-	// _oLogger.setUseParentHandlers(bDebug);
-	// }
 
 	/**
 	 * Set the level of the system logger. <br>
@@ -700,10 +604,8 @@ public class SystemLoggerAudit implements ISystemLogger
 					}
 					sbBuffer.append("}\n");
 				}
-
 			}
 			sbBuffer.append("\n");
-
 			return sbBuffer.toString();
 		}
 	}
@@ -716,92 +618,6 @@ public class SystemLoggerAudit implements ISystemLogger
 	public boolean isDebug()
 	{
 		return _bDebug;
-	}
-
-	/**
-	 * Format a detailed error message. <br>
-	 * <br>
-	 * <b>Description: </b> <br>
-	 * Create a detailed message which can be logged. <br>
-	 * <br>
-	 * <b>Concurrency issues: </b> <br>
-	 * -<br>
-	 * <br>
-	 * <b>Preconditions: </b> <br>
-	 * -<br>
-	 * <br>
-	 * <b>Postconditions: </b> <br>
-	 * -<br>
-	 * 
-	 * @param sModule
-	 *            The module (class name) that is to be logged.
-	 * @param sMethod
-	 *            The method that is to be logged.
-	 * @param e
-	 *            A Exception that is to be logged.
-	 * @param sErrorType
-	 *            The type of error.
-	 * @return A formatted detailed log message.
-	 * @deprecated use {@link #log(Level, String, String, String, Throwable)} instead.
-	 */
-	@Deprecated
-	public static String formatDetailedError(String sModule, String sMethod, Exception e, String sErrorType)
-	{
-		StringBuffer sb = new StringBuffer();
-
-		if (sModule != null)
-			sb.append(sModule).append(".");
-		if (sMethod != null) {
-			sb.append(sMethod);
-		}
-		sb.append("::").append(sErrorType).append(": ");
-
-		String sException = e.getClass().getName();
-		sb.append(sException.substring(sException.lastIndexOf(".") + 1));
-		if (e.getMessage() != null)
-			sb.append(" \"").append(e.getMessage()).append("\"");
-
-		StackTraceElement[] trace = e.getStackTrace();
-		if (trace != null && trace.length > 0) {
-			sb.append(" at ");
-			String sAtClass = trace[0].getClassName();
-			String sAtMethod = trace[0].getMethodName();
-			int line = trace[0].getLineNumber();
-			sb.append(sAtClass).append(".");
-			sb.append(sAtMethod).append("()");
-			sb.append(":").append(line);
-		}
-		return sb.toString();
-	}
-
-	/**
-	 * Format a internal error message. <br>
-	 * <br>
-	 * <b>Description: </b> <br>
-	 * Create a internal error message which can be logged. <br>
-	 * <br>
-	 * <b>Concurrency issues: </b> <br>
-	 * -<br>
-	 * <br>
-	 * <b>Preconditions: </b> <br>
-	 * -<br>
-	 * <br>
-	 * <b>Postconditions: </b> <br>
-	 * -<br>
-	 * 
-	 * @param sModule
-	 *            The module (class name) that is to be logged.
-	 * @param sMethod
-	 *            The method that is to be logged.
-	 * @param e
-	 *            A Exception that is to be logged.
-	 * @return A formatted internal error log message.
-	 * @deprecated use {@link #log(Level, String, String, String, Throwable)} instead.
-	 */
-	@Deprecated
-	public static String formatInternalError(String sModule, String sMethod, Exception e)
-	{
-		return formatDetailedError(sModule, sMethod, e, "INTERNAL ERROR");
 	}
 
 	// Custom mapping from a-select (j.u.l.) levels to log4j levels
@@ -843,7 +659,5 @@ public class SystemLoggerAudit implements ISystemLogger
 		}
 		else
 			return org.apache.log4j.Level.OFF;
-
 	}
-
 }

@@ -104,22 +104,21 @@ public class DBAuthSPHandler implements IAuthSPProtocolHandler
 	private final String MODULE = "DBAuthSPHandler";
 
 	private ASelectConfigManager _configManager;
-
 	private SessionManager _sessionManager;
-
 	private ASelectSystemLogger _systemLogger;
-
 	private ASelectAuthenticationLogger _authenticationLogger;
 
 	private String _sAuthsp;
-
 	private String _sAuthspUrl;
 
 	private static final String ERROR_DB_OK = "000";
-
 	private static final String ERROR_DB_ACCESS_DENIED = "800";
-
 	private static final String ERROR_DB_INVALID_CREDENTIALS = "400";
+	
+	/* (non-Javadoc)
+	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#myRidName()
+	 */
+	public String getLocalRidName() { return "rid"; }
 
 	/* (non-Javadoc)
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#init(java.lang.Object, java.lang.Object)
@@ -189,14 +188,14 @@ public class DBAuthSPHandler implements IAuthSPProtocolHandler
 	 * @return the hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#computeAuthenticationRequest(java.lang.String)
 	 */
-	public HashMap computeAuthenticationRequest(String sRid)
+	public HashMap computeAuthenticationRequest(String sRid, HashMap htSessionContext)
 	{
-		String sMethod = "computeAuthenticationRequest()";
+		String sMethod = "computeAuthenticationRequest";
 		StringBuffer sbBuffer = null;
 		HashMap htResponse = new HashMap();
 		htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		try {
-			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+			// 20120403, Bauke: passes as parameter: HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
 				sbBuffer = new StringBuffer("Could not fetch session context for rid='");
 				sbBuffer.append(sRid).append("'.");
@@ -296,16 +295,20 @@ public class DBAuthSPHandler implements IAuthSPProtocolHandler
 	 * </table>
 	 * 
 	 * @param htAuthspResponse
-	 *            the ht authsp response
-	 * @return the hash map
+	 *            the authsp response
+	 * @param htSessionContext
+	 *            the session context, must be available
+	 * @return the result hash map
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#verifyAuthenticationResponse(java.util.HashMap)
 	 */
-	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse)
+	// 20120403, Bauke: added htSessionContext
+	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse, HashMap htSessionContext)
 	{
-		String sMethod = "verifyAuthenticationResponse()";
+		String sMethod = "verifyAuthenticationResponse";
 		StringBuffer sbBuffer = null;
 		HashMap htResponse = new HashMap();
 		htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		
 		try {
 			String sRid = (String) htAuthspResponse.get("rid");
 			String sAsUrl = (String) htAuthspResponse.get("my_url");
@@ -332,12 +335,8 @@ public class DBAuthSPHandler implements IAuthSPProtocolHandler
 						"invalid signature in response from AuthSP:" + _sAuthsp);
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 			}
-			HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
-			if (htSessionContext == null) {
-				_systemLogger.log(Level.WARNING, "DBAuthSPHandler", sMethod,
-						"Incorrect AuthSP response: invalid Session (could be expired)");
-				throw new ASelectAuthSPException("0102");
-			}
+
+			// 20120403, Bauke: session is available as a parameter
 			String sUserId = (String) htSessionContext.get("user_id");
 			String sOrg = (String) htSessionContext.get("organization");
 			if (sResultCode.equalsIgnoreCase(ERROR_DB_ACCESS_DENIED)) {
