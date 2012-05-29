@@ -12,11 +12,11 @@
  */
 // Marked Parts:
 // Author: Bauke Hiemstra - www.anoigo.nl
-
+//
+// Bauke 20120526: removed Apache 1.3 code
 // Bauke 20081108:
 // - boolean "aselect_filter_secure_url" to activate URL escape sequence removal
 //   default is 1.
-
 // Bauke 20080928:
 // - added configurable Logout Bar
 // - aselect_filter_trace() calls all replaced by TRACE()
@@ -67,17 +67,13 @@
 // -----------------------------------------------------
 // Exports
 // -----------------------------------------------------
-#ifdef APACHE_13_ASELECT_FILTER
-module MODULE_VAR_EXPORT    aselect_filter_module;
-#else
 module AP_MODULE_DECLARE_DATA aselect_filter_module;
-#endif
 
 
 //static handler_rec      aselect_filter_handlers[];
 static const command_rec    aselect_filter_cmds[];
 
-char *version_number = "====subversion_232====";
+char *version_number = "====subversion_233====";
 
 // -----------------------------------------------------
 // Functions 
@@ -113,8 +109,9 @@ static const char * aselect_filter_set_sensor_port(cmd_parms *parms, void *mconf
 
 static char * aselect_filter_attributes(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcTicket,
 					char *pcUid, char *pcOrganization, TIMER_DATA *pt);
-static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig,
-			char *pcTicketIn, char *pcUIDIn, char *pcOrganizationIn, char *pcRequestLanguage, table *headers_in, TIMER_DATA *pt);
+static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, request_rec *pRequest,
+	PASELECT_FILTER_CONFIG pConfig, char *pcTicketIn, char *pcUIDIn, char *pcOrganizationIn,
+	char *pcRequestLanguage, table *headers_in, TIMER_DATA *pt);
 static void aselect_filter_removeUnwantedCharacters(char *args);
 static char *aselect_filter_findNoCasePattern(const char *text, const char *pattern);
 static void splitAttrFilter(char *attrFilter, char *condName, int condLen,
@@ -128,16 +125,12 @@ static char *getRequestedAttributes(pool *pPool, PASELECT_FILTER_CONFIG pConfig)
 // Called once during the module initialization phase.
 // can be used to setup the filter configuration 
 //
-#ifdef APACHE_13_ASELECT_FILTER
-void aselect_filter_init(server_rec *pServer, pool *pPool)
-#else
 int aselect_filter_init(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *pPool, server_rec *pServer)
-#endif
 {
     int i;
-    PASELECT_APPLICATION pApp;
     char pcMessage[2048];
-    TRACE1("aselect_filter_init: %x", pServer);
+    TRACE1("aselect_filter_init: { %x", pServer);
+    TRACE3("aselect_filter_init: %s|%s|%s", pServer->error_fname, pServer->server_hostname, pServer->server_scheme);
     PASELECT_FILTER_CONFIG  pConfig = (PASELECT_FILTER_CONFIG)ap_get_module_config(pServer->module_config, &aselect_filter_module);
 
     TRACE1("aselect_filter_init: %x read", pServer);
@@ -149,38 +142,30 @@ int aselect_filter_init(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *pPool, 
 
     if (pConfig) { // 20091223: Bauke, added
 	aselect_filter_trace_logfilename(pConfig->pcLogFileName);
-
         ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
-            ap_psprintf(pPool, "ASELECT_FILTER:: A-Select Agent running on: %s:%d", 
-                    pConfig->pcASAIP, pConfig->iASAPort));
+		ap_psprintf(pPool, "ASELECT_FILTER:: A-Select Agent running on: %s:%d", 
+		pConfig->pcASAIP, pConfig->iASAPort));
 
         if (pConfig->bUseASelectBar)
             ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
-                "ASELECT_FILTER:: configured to use the a-select bar");
+		    "ASELECT_FILTER:: configured to use the a-select bar");
 
         if (pConfig->iRedirectMode == ASELECT_FILTER_REDIRECT_TO_APP)
             ap_log_error( APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
-                "ASELECT_FILTER:: configured to redirect to application entry point" );
+		    "ASELECT_FILTER:: configured to redirect to application entry point" );
         else if (pConfig->iRedirectMode == ASELECT_FILTER_REDIRECT_FULL)
             ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
-                "ASELECT_FILTER:: configured to redirect to user entry point");
+		    "ASELECT_FILTER:: configured to redirect to user entry point");
 
-	if (!aselect_filter_upload_all_rules(pConfig, pServer, pPool, NULL))  // no timer data available here
-#ifdef APACHE_20_ASELECT_FILTER
-                return -1;
-#else
-                pConfig->bConfigError = 1;
-#endif
-//      }
+	if (!aselect_filter_upload_all_rules(pConfig, pServer, pPool, NULL))
+	    return -1;
         ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
-            ap_psprintf(pPool, "ASELECT_FILTER:: secure apps: %d, public apps: %d, attributes: %d", 
-                    pConfig->iAppCount, pConfig->iPublicAppCount, pConfig->iAttrCount));
+		ap_psprintf(pPool, "ASELECT_FILTER:: secure apps: %d, public apps: %d, attributes: %d", 
+		pConfig->iAppCount, pConfig->iPublicAppCount, pConfig->iAttrCount));
     }
     ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, "ASELECT_FILTER:: done");
-    TRACE1("aselect_filter_init: %x done", pServer);
-#ifdef APACHE_20_ASELECT_FILTER
+    TRACE1("aselect_filter_init: } %x done", pServer);
     return 0;
-#endif
 }
 
 //
@@ -191,10 +176,11 @@ int aselect_filter_upload_all_rules(PASELECT_FILTER_CONFIG pConfig, server_rec *
     int i;
     PASELECT_APPLICATION pApp;
 
+    TRACE1("ASELECT_FILTER:: AppCount=%d", pConfig->iAppCount);
     for (i=0; i<pConfig->iAppCount; i++) {
 	pApp = &pConfig->pApplications[i];
-	TRACE4("ASELECT_FILTER:: added %s at %s %s%s",
-	    pApp->pcAppId, pApp->pcLocation, pApp->bEnabled ? "" : "(disabled)", pApp->bForcedLogon ? "(forced logon)" : "");
+	TRACE4("ASELECT_FILTER:: added %s at %s %s%s", pApp->pcAppId, pApp->pcLocation,
+		pApp->bEnabled ? "" : "(disabled)", pApp->bForcedLogon ? "(forced logon)" : "");
 
 	if (aselect_filter_upload_authz_rules(pConfig, pServer, pPool, pApp, pt)) {
 	    TRACE2("ASELECT_FILTER:: registered %d authZ rules for %s", pApp->iRuleCount, pApp->pcAppId);
@@ -284,8 +270,7 @@ char *aselect_filter_verify_ticket(request_rec *pRequest, pool *pPool, PASELECT_
     // Create the message
     // Bauke: added
     *pcSHA1 = 0;
-    if (pcAttributes && *pcAttributes)
-    {
+    if (pcAttributes && *pcAttributes) {
         ap_SHA1Init(&ctxSHA1);
         ap_SHA1Update(&ctxSHA1, pcAttributes, strlen(pcAttributes));
         ap_SHA1Final(cSHA1, &ctxSHA1);
@@ -633,12 +618,7 @@ static int aselect_filter_handler(request_rec *pRequest)
     //
     // Select which pool to use
     //
-#ifdef APACHE_13_ASELECT_FILTER
-    if ((pPool = ap_make_sub_pool(pRequest->pool)) == NULL)
-#else
-    if ((apr_pool_create(&pPool, pRequest->pool)) != APR_SUCCESS)
-#endif
-    {
+    if ((apr_pool_create(&pPool, pRequest->pool)) != APR_SUCCESS) {
         // Could not allocate pool
         TRACE("aselect_filter_handler: Could not allocate memory pool");
         ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest, "SIAM:: could allocate memory pool");
@@ -755,16 +735,34 @@ static int aselect_filter_handler(request_rec *pRequest)
 		// If attributes are not stored in a cookie,
 		// the value will not be checked with the A-Select server.
                 //if (/*!pConfig->bUseCookie ||*/ (pcAttributesIn) )
-		if (1 == 1)
-                {
+		if (1 == 1) {
+		    int try;
                     TRACE1("aselect_filter_handler: attributes cookie: %s", pcAttributesIn? pcAttributesIn: "NULL");
                     // Validate ticket
 		    // Bauke: added, always send rules
-		    aselect_filter_upload_all_rules(pConfig, pRequest->server, pPool, &timer_data);
-                    pcResponseVT = aselect_filter_verify_ticket(pRequest, pPool, pConfig, pcTicketIn,
+		    //aselect_filter_upload_all_rules(pConfig, pRequest->server, pPool, &timer_data);
+		    // 20120527, Bauke: no longer uploading the rules in advance, but upon error message from Agent
+		    for (try = 0; try < 2; try++) {
+			pcResponseVT = aselect_filter_verify_ticket(pRequest, pPool, pConfig, pcTicketIn,
 					pcUIDIn, pcOrganizationIn, pcAttributesIn, pcRequestLanguage, &timer_data);
-                    if (pcResponseVT) {
                         iError = aselect_filter_get_error(pPool, pcResponseVT);
+			if (iError == ASELECT_FILTER_ASAGENT_ERROR_NO_RULES) {
+			    aselect_filter_upload_all_rules(pConfig, pRequest->server, pPool, &timer_data);
+			    // and try again
+			}
+			else break;
+		    }
+		    if (iError == ASELECT_FILTER_ASAGENT_ERROR_NO_RULES)
+			iError = ASELECT_FILTER_ASAGENT_ERROR_NOT_AUTHORIZED; // 140
+                    if (pcResponseVT) {
+			// 20120527, Bauke: use the Agent setting for sending data to LbSensor
+			// if batch_size < 0, no Agent configuration, ignore Agent
+			pcTmp = aselect_filter_get_param(pPool, pcResponseVT, "batch_size=", "&", TRUE);
+			if (pcTmp != NULL) {
+			    int iBatchSize = atoi(pcTmp);
+			    if (iBatchSize >= 0)
+				pConfig->iBatchSize = iBatchSize;
+			}
                         if (iError == ASELECT_FILTER_ASAGENT_ERROR_OK) {
                             // User has ticket, ACCESS GRANTED
 			    // 20091114, Bauke: Possibly a server language was passed back
@@ -1161,7 +1159,8 @@ static int aselect_filter_handler(request_rec *pRequest)
 	//iRet = DONE;
     }
 
-    TRACE3("==== 5. Finish iError=%d iAction=%s, iRet=%s", iError, filter_action_text(iAction), filter_return_text(iRet));
+    TRACE4("==== 5. Finish iError=%d iAction=%s, iRet=%s, bs=%d", iError, filter_action_text(iAction),
+		    filter_return_text(iRet),pConfig->iBatchSize);
 
 finish_filter_handler:
     // FINISH TIMER
@@ -1171,7 +1170,7 @@ finish_filter_handler:
 	int rc;
 	timer_finish(&timer_data);
 	pData = timer_pack(pPool, &timer_data, "flt_all", pConfig->pCurrentApp->pcAppId, ok);
-	if (pConfig->iSensorPort > 0 && *pConfig->pcSensorIP) {
+	if (pConfig->iBatchSize > 0 && pConfig->iSensorPort > 0 && *pConfig->pcSensorIP) {
 	    sprintf(buf, "GET /?request=store&data=%s HTTP/1.1\r\n", pData);
 	    aselect_filter_send_request(pRequest->server, pPool, pConfig->pcSensorIP, pConfig->iSensorPort,
 					buf, strlen(buf), NULL, 0);
@@ -1199,7 +1198,7 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
     TRACE4("passAttributesinUrl iError=%d, TicketIn=%s, UidIn=%s, OrgIn=%s", iError,
 		pcTicketIn?pcTicketIn:"NULL", pcUIDIn?pcUIDIn:"NULL", pcOrganizationIn?pcOrganizationIn:"NULL");
     if (pcAttributes == NULL) {
-	int i, purge, stop;
+	int i, purge, stop, try;
 	char *pcResponse, *newArgs;
 
 	TRACE("Get Attributes");
@@ -1747,6 +1746,7 @@ aselect_filter_set_sensor_port(cmd_parms *parms, void *mconfig, const char *arg)
 
     TRACE1("aselect_filter_set_sensor_port:: port: %s", pcPort);
     pConfig->iSensorPort = atoi(pcPort);
+    pConfig->iBatchSize = 1;  // default, send data to LbSensor
     return NULL;
 }
 
@@ -2233,93 +2233,6 @@ static const char *aselect_filter_pass_attributes(cmd_parms *parms, void *mconfi
     return NULL;
 }
 
-#ifdef APACHE_13_ASELECT_FILTER
-//
-// Registered handlers that can be called for this module
-//
-static handler_rec aselect_filter_handlers[] =
-{
-    { "aselect_filter_handler", aselect_filter_handler },
-    {NULL}
-};
-
-//
-// Registered cmds to call from httpd.conf
-//
-static const command_rec aselect_filter_cmds[] = 
-{
-    { "aselect_filter_set_agent_address", aselect_filter_set_agent_address, NULL, RSRC_CONF, TAKE1,
-        "Usage aselect_filter_set_agent_address <ip or dns name of A-Select Agent>, example: aselect_filter_set_agent_address \"localhost\"" },
-    { "aselect_filter_set_agent_port", aselect_filter_set_agent_port, NULL, RSRC_CONF, TAKE1,
-        "Usage aselect_filter_set_agent_port <port of A-Select Agent>, example: aselect_filter_set_agent_port \"1495\"" },
-    { "aselect_filter_add_secure_app", aselect_filter_add_secure_app, NULL, RSRC_CONF, TAKE3,
-        "Usage aselect_filter_add_secure_app <location> <application id> <flags>, example: aselect_filter_add_secure_app \"///secure///\" \"app1\" \"forced-logon\"" },
-    { "aselect_filter_add_authz_rule", aselect_filter_add_authz_rule, NULL, RSRC_CONF, TAKE3,
-        "Usage aselect_filter_add_authz_rule <application id> <target uri> <condition>, example: aselect_filter_add_authz_rule \"app1\" \"*\" \"role=student\"" },
-
-    { "aselect_filter_set_html_error_template", aselect_filter_set_html_error_template, NULL, RSRC_CONF, TAKE1,
-        "Usage aselect_filter_set_html_error_template <path to template html page>, example: aselect_filter_set_html_error_template \"///usr//local//apache//aselect//error.html\""
-    },
-    { "aselect_filter_set_html_logout_template", aselect_filter_set_html_logout_template, NULL, RSRC_CONF, TAKE1,
-        "Usage aselect_filter_set_html_logout_template <path to template html page>, example: aselect_filter_set_html_logout_template \"///usr//local//apache//aselect//logout.html\""
-    },
-
-    { "aselect_filter_set_use_aselect_bar", aselect_filter_set_use_aselect_bar, NULL, RSRC_CONF, TAKE1,
-        "Usage aselect_filter_set_use_aselect_bar <on or off>, example: aselect_filter_set_use_aselect_bar on" },
-    { "aselect_filter_set_redirect_mode", aselect_filter_set_redirection_mode, NULL, RSRC_CONF, TAKE1,
-        "Usage aselect_filter_redirect_mode <app | full>, example: aselect_filter_redirect_mode \"app\"" },
-
-// Bauke: added entries
-    { "aselect_filter_secure_url", aselect_filter_secure_url, NULL, RSRC_CONF, TAKE1,
-        "Usage: aselect_filter_secure_url < 1 | 0 >, example: aselect_filter_secure_url \"1\"" },
-
-    { "aselect_filter_pass_attributes", aselect_filter_pass_attributes, NULL, RSRC_CONF, TAKE1,
-        "Usage: aselect_filter_pass_attributes < c | q | h >, example: aselect_filter_pass_attributes \"ch\"" },
-
-    { "aselect_filter_add_attribute", aselect_filter_add_attribute, NULL, RSRC_CONF, TAKE1,
-        "Usage: aselect_filter_add_attribute < attribute filter spec >, example: aselect_filter_add_attribute \"uid,cn,user_id\""
-    },
-    { "aselect_filter_add_public_app", aselect_filter_add_public_app, NULL, RSRC_CONF, TAKE1,
-        "Usage: aselect_filter_add_public_app < app_url >, example: aselect_filter_add_public_app \"/website\""
-    },
-// 20091223: Bauke, added
-    { "aselect_filter_added_security", aselect_filter_added_security, NULL, RSRC_CONF, TAKE1,
-        "Usage: aselect_filter_added_security < cookies | >, example: aselect_filter_added_security \"cookies\"" },
-
-    { "aselect_filter_set_logfile", aselect_filter_set_logfile, NULL, RSRC_CONF, TAKE1,
-        "Usage: aselect_filter_set_logfile <filename>, example: aselect_filter_set_logfile \"/tmp/aselect_filter.log\"" },
-
-    { NULL }
-};
-
-//
-// Main export structure containing all the entry points for this module
-//
-module MODULE_VAR_EXPORT aselect_filter_module =
-{
-    STANDARD_MODULE_STUFF,
-    aselect_filter_init,    // module initializer
-    NULL,                   // per-dir config creator
-    NULL,                   // dir config merger
-    aselect_filter_create_config,   // server config creator
-    NULL,                   // server config merger
-    aselect_filter_cmds,    // command table
-    NULL,                   // [9] content handlers
-    NULL,                   // [2] URI-to-filename translation
-    NULL,                   // [5] check/validate user_id
-    NULL,                   // [6] check user_id is valid here
-    aselect_filter_handler, // [4] check access by host address
-    NULL,                   // [7] MIME type checker/setter
-    NULL,                   // [8] fixups
-    NULL,                   // [10] logger
-    NULL,                   // [3] header parser
-    NULL,                   // process initialization
-    NULL,                   // process exit/cleanup
-    NULL                    // [1] post read_request handling
-};
-
-#else // APACHE_20_CODE #ifdef APACHE_13_ASELECT_FILTER
-
 //
 // Registered cmds to call from httpd.conf
 //
@@ -2408,6 +2321,3 @@ module AP_MODULE_DECLARE_DATA aselect_filter_module =
     aselect_filter_cmds,            // command table
     aselect_filter_register_hooks,      //  set up other request processing hooks
 };
-
-#endif // #ifdef APACHE_13_ASELECT_FILTER
-

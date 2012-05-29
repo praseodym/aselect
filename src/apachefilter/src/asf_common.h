@@ -12,6 +12,7 @@
  * Marked Parts:
  * Author: Bauke Hiemstra - www.anoigo.nl
  *
+ * 20120526 remove Apache 1.3 code
  */
 
 /* asf_common.h
@@ -19,17 +20,8 @@
  * Functions and defines shared by the Apache 1.3 and 2.0 filters.
  *
  */
-
-
 #ifndef __ASELECT_FILTER_COMMON_H
 #define __ASELECT_FILTER_COMMON_H
-
-/*
- * Apache 1.3 <--> 2.0 defines
- */
-#if !defined(APACHE_13_ASELECT_FILTER) && !defined(APACHE_20_ASELECT_FILTER)
-#error "APACHE_xx_ASELECT_FILTER not defined"
-#endif
 
 #include <fnmatch.h>
 
@@ -43,19 +35,10 @@
 #include "http_log.h"
 #include "http_protocol.h"
 
-#ifdef APACHE_20_ASELECT_FILTER
 #include <netdb.h>
 #include "apr_strings.h"
 #include "apr_compat.h"
 #include "apr_sha1.h"
-#else
-#include "ap_sha1.h"
-#endif
-
-/*
- * Apache 2.0 <--> 1.3 compatibility defs (see also apr_compat.h)
- */
-#ifdef APACHE_20_ASELECT_FILTER
 
 typedef apr_pool_t      pool;
 typedef apr_table_t     table;
@@ -70,8 +53,6 @@ typedef apr_table_t     table;
 #define ap_SHA1Init(a)              apr_sha1_init(a)
 #define ap_SHA1Update(a,b,c)        apr_sha1_update(a,b,c)
 #define ap_SHA1Final(a,b)           apr_sha1_final(a,b)
-
-#endif
 
 #ifndef FALSE
 #define FALSE	(0)
@@ -191,6 +172,8 @@ typedef apr_table_t     table;
 #define ASELECT_FILTER_ASAGENT_ERROR_TICKET_MAX_REACHED     0x010d  // Too many users have a ticket
 #define ASELECT_FILTER_ASAGENT_ERROR_CORRUPT_ATTRIBUTES     0x010e  // User attributes are corrupted
 #define ASELECT_FILTER_ASAGENT_ERROR_INVALID_REQUEST        0x0130  // Invalid request
+#define ASELECT_FILTER_ASAGENT_ERROR_NOT_AUTHORIZED         0x0140  // Not authorized
+#define ASELECT_FILTER_ASAGENT_ERROR_NO_RULES               0x0142  // Haven't received any auhtz rules
 
 /*
  * A-Select Server errors
@@ -215,6 +198,9 @@ typedef struct _TIMER_DATA
     struct timeval td_spent;  // time spent in milliseconds
 } TIMER_DATA;
 
+/*
+ * Per application
+ */
 typedef struct _ASELECT_APPLICATION
 {
     char *pcLocation;
@@ -242,6 +228,7 @@ typedef struct _ASELECT_FILTER_CONFIG
     int     iASAPort;
     char    *pcSensorIP;
     int     iSensorPort;
+    int     iBatchSize;
     char    *pcRemoteOrg;
     ASELECT_APPLICATION pApplications[ASELECT_FILTER_MAX_APP];
     PASELECT_APPLICATION pCurrentApp;
@@ -341,6 +328,5 @@ char *timer_pack(pool *pPool, TIMER_DATA *pTimer, char *senderId, char *sAppId, 
     #define TRACE7(x,o1,o2,o3,o4,o5,o6,o7) ((void)0);
 
 #endif // ASELECT_FILTER_TRACE
-
 
 #endif //__ASELECT_FILTER_COMMON_H

@@ -182,7 +182,6 @@ void aselect_filter_bytes_to_hex(const unsigned char *pcBytes, size_t length, ch
     pcResult[length*2] = 0;
 }
 
-
 //
 // Reads in a 2 byte error string and converts it to an int
 //
@@ -211,7 +210,6 @@ int aselect_filter_get_error(pool *pPool, char *pcError)
     }
     return iError;
 }
-
 
 // Replace pcTag in pcSource with pcValue
 char *aselect_filter_replace_tag(pool *pPool, char *pcTag, char *pcValue, char *pcSource)
@@ -252,7 +250,6 @@ char *aselect_filter_replace_tag(pool *pPool, char *pcTag, char *pcValue, char *
 
     return pcDest;
 }
-
 
 //
 // strips any parameters from the string
@@ -342,8 +339,7 @@ char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAI
     // Create a socket
     if ((sd = socket(AF_INET, SOCK_STREAM, 0)) != -1) {
         // Connect using connection information
-        if (connect(sd,(struct sockaddr *) &pin, sizeof(pin)) != -1)
-        {
+        if (connect(sd,(struct sockaddr *) &pin, sizeof(pin)) != -1) {
             // Set the socket timeouts on the send and receive
             // SO_SNDTIMEO - send timeout
             // SO_RCVTIMEO - receive timeout
@@ -364,7 +360,7 @@ char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAI
             // Check if information is not too large for message
             if ((ccSendMessage + 1) < ASELECT_FILTER_MAX_MSG) {
                 // Send the message, PAUSE TIMER
-		if (pt != NULL) timer_pause(pt);
+				if (pt != NULL) timer_pause(pt);
                 if (send(sd, (void *) pcSendMessage, (ccSendMessage), 0) > 0) { // 20111116 don't send null-byte
                     // Message has been sent, now wait for response
                     ccReceiveMessage = aselect_filter_receive_msg(sd, pcReceiveMessage, sizeof(pcReceiveMessage)-1);
@@ -373,7 +369,7 @@ char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAI
                             // Received message too large
                             TRACE1("received message too large (%d)", ccReceiveMessage);
                             ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
-                                "ASELECT_FILTER:: received message was too large");
+									"ASELECT_FILTER:: received message was too large");
                         }
                         else {
                             pcResponse = ap_pstrndup(pPool, pcReceiveMessage, ccReceiveMessage+1);  // 20111110 added +1
@@ -381,18 +377,18 @@ char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAI
                         }
                     }
                     else { // Could not receive data
-			TRACE1("error while receiving data (%d)", errno);
+						TRACE1("error while receiving data (%d)", errno);
                         ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
-                            ap_psprintf(pPool, "ASELECT_FILTER:: error while receiving data (%d)", errno));
+								ap_psprintf(pPool, "ASELECT_FILTER:: error while receiving data (%d)", errno));
                     }
                 }
                 else { // Could not send data
                     TRACE1("error while sending data (%d)", errno);
                     ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
-                        ap_psprintf(pPool, "ASELECT_FILTER:: error while sending data (%d)", errno));
+							ap_psprintf(pPool, "ASELECT_FILTER:: error while sending data (%d)", errno));
                 }
-		// RESUME TIMER
-		if (pt != NULL) timer_resume(pt);
+				// RESUME TIMER
+				if (pt != NULL) timer_resume(pt);
             }
             else { // Message is too large for sending
                 TRACE("Message is too large for sending");
@@ -403,21 +399,20 @@ char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAI
         } // connect 
         else { // Could not connect to specified address and port
             TRACE4("Could not connect to %s at %s:%d (%d)", sDest, pcASAIP, iASAPort, errno);
-	    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
-                ap_psprintf(pPool, "ASELECT_FILTER:: could not connect to %s at %s:%d (%d)", sDest, pcASAIP, iASAPort, errno));
+			ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
+					ap_psprintf(pPool, "ASELECT_FILTER:: could not connect to %s at %s:%d (%d)",
+					sDest, pcASAIP, iASAPort, errno));
         }
         close(sd);
-
     } // socket
     else {
         // Could not create socket
         ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
-            ap_psprintf(pPool, "ASELECT_FILTER:: could not create socket (%d)", errno));
+				ap_psprintf(pPool, "ASELECT_FILTER:: could not create socket (%d)", errno));
     }
     TRACE3("} From%s[%d] aselect_filter_send_request, response=[%s]", sDest, cnt, pcResponse?pcResponse:"NULL");
     return pcResponse;
 }
-
 
 char *aselect_filter_get_param(pool *pPool, char *pcArgs, char *pcParam, char *pcDelimiter, int bUrlDecode)
 {
@@ -701,7 +696,6 @@ int aselect_filter_gen_authcomplete_redirect(pool * pPool, request_rec *pRequest
     return DONE;
 }
 
-
 //
 // Set top frame to redirect to a-select-server
 //
@@ -818,8 +812,6 @@ int aselect_filter_show_barhtml(pool *pPool, request_rec *pRequest, PASELECT_FIL
     ap_rprintf(pRequest, ASELECT_LOGOUT_BAR_FRAME, pConfig->pCurrentApp->pcLocation, slash, pcASelectAppURL);
     return DONE;
 }
-
-
 
 /*
  * Decode a base64-encoded string into a byte array (allocated
@@ -977,7 +969,7 @@ static struct timeval timer_plus(struct timeval p1, struct timeval p2)
 
 static struct timeval timer_minus(struct timeval p1, struct timeval p2)
 {
-    struct timeval tv;
+    struct timeval tv;
 
     tv.tv_sec = p1.tv_sec - p2.tv_sec;
     tv.tv_usec = p1.tv_usec - p2.tv_usec;
