@@ -73,7 +73,7 @@ module AP_MODULE_DECLARE_DATA aselect_filter_module;
 //static handler_rec      aselect_filter_handlers[];
 static const command_rec    aselect_filter_cmds[];
 
-char *version_number = "====subversion_233====";
+char *version_number = "====subversion_244====";
 
 // -----------------------------------------------------
 // Functions 
@@ -745,7 +745,18 @@ static int aselect_filter_handler(request_rec *pRequest)
 		    for (try = 0; try < 2; try++) {
 			pcResponseVT = aselect_filter_verify_ticket(pRequest, pPool, pConfig, pcTicketIn,
 					pcUIDIn, pcOrganizationIn, pcAttributesIn, pcRequestLanguage, &timer_data);
+			// if batch_size < 0, no Agent configuration, ignore Agent
                         iError = aselect_filter_get_error(pPool, pcResponseVT);
+			pcTmp = aselect_filter_get_param(pPool, pcResponseVT, "batch_size=", "&", TRUE);
+			if (pcTmp != NULL) {  // new Agent too
+			    int iBatchSize = atoi(pcTmp);
+			    if (iBatchSize >= 0)
+				pConfig->iBatchSize = iBatchSize;
+			}
+			else { // older Agent, does not report batch_size
+			    if (iError == ASELECT_FILTER_ASAGENT_ERROR_NOT_AUTHORIZED) // could be caused by absent rules
+				iError = ASELECT_FILTER_ASAGENT_ERROR_NO_RULES;  // force rule sending
+			}
 			if (iError == ASELECT_FILTER_ASAGENT_ERROR_NO_RULES) {
 			    aselect_filter_upload_all_rules(pConfig, pRequest->server, pPool, &timer_data);
 			    // and try again
