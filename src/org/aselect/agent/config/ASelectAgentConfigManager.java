@@ -178,14 +178,29 @@ public class ASelectAgentConfigManager extends ConfigManager
 	 *             the exception
 	 */
 	public void init(String sWorkingDir)
-		throws ASelectConfigException, Exception
+	throws ASelectConfigException, Exception
 	{
-		_sWorkingDir = sWorkingDir;
 		_systemLogger = ASelectAgentSystemLogger.getHandle();
-
-		StringBuffer sb = new StringBuffer(_sWorkingDir).append(File.separator).append("agent.xml");
-		super.init(sb.toString(), ASelectAgentSystemLogger.getHandle());
+		_sWorkingDir = sWorkingDir;
+		
+		loadConfiguration(sWorkingDir);
+		
 		loadCrypto();
+	}
+
+	/**
+	 * Load configuration.
+	 * 
+	 * @param sWorkingDir
+	 *            the s working dir
+	 * @throws ASelectConfigException
+	 *             the a select config exception
+	 */
+	public void loadConfiguration(String sWorkingDir)
+	throws ASelectConfigException
+	{
+		StringBuffer sb = new StringBuffer(sWorkingDir).append(File.separator).append("agent.xml");
+		super.init(sb.toString(), ASelectAgentSystemLogger.getHandle());
 	}
 
 	/**

@@ -424,6 +424,9 @@ public class ASelectConfigManager extends ConfigManager
 	// <user_info>consent,save_consent,session,logout</user_info>
 	// use either "consent" or "save_consent"
 	private String _sUserInfoSettings = "";
+	
+	private String _sSharedSecret = null;
+	public String getSharedSecret() { return _sSharedSecret; }
 
 	// Key is <template_name>_<lang> where _<lang> is optional (default entry)
 	private ConcurrentHashMap<String, String> hmCachedTemplates = new ConcurrentHashMap<String, String>();
@@ -507,35 +510,11 @@ public class ASelectConfigManager extends ConfigManager
 			String sSQLTable, String sConfigIDName)
 		throws ASelectException
 	{
-		String sMethod = "init()";
-		StringBuffer sbInfo = null;
-
-		_sWorkingDir = sWorkingDir;
-		_systemLogger = ASelectSystemLogger.getHandle();
-		_oASelectAuthenticationLogger = ASelectAuthenticationLogger.getHandle();
-
-		// read config
-		if (sSQLDriver != null || sSQLPassword != null || sSQLURL != null || sSQLTable != null) {
-			sbInfo = new StringBuffer("Reading config from database: ");
-			sbInfo.append(sSQLURL);
-			_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString());
-			super.init(sSQLDriver, sSQLUser, sSQLPassword, sSQLURL, sSQLTable, sConfigIDName, _systemLogger);
-		}
-		else {
-			StringBuffer sbConfigFile = new StringBuffer(sWorkingDir);
-
-			if (!sWorkingDir.endsWith(File.separator)) {
-				sbConfigFile.append(File.separator);
-			}
-			sbConfigFile.append("conf");
-			sbConfigFile.append(File.separator);
-			sbConfigFile.append("aselect.xml");
-
-			sbInfo = new StringBuffer("Reading config from file: ");
-			sbInfo.append(sbConfigFile.toString());
-			_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString());
-			super.init(sbConfigFile.toString(), _systemLogger);
-		}
+		String sMethod = "init";
+		StringBuffer sbInfo;
+		
+		// Load config from database or xml file
+		loadConfiguration(sWorkingDir, sSQLDriver, sSQLUser, sSQLPassword, sSQLURL, sSQLTable, sConfigIDName);
 
 		try {
 			_oASelectConfigSection = this.getSection(null, "aselect");
@@ -680,6 +659,7 @@ public class ASelectConfigManager extends ConfigManager
 		_sUserInfoSettings = ASelectConfigManager.getSimpleParam(_oASelectConfigSection, "user_info", false);
 		if (_sUserInfoSettings == null)
 			_sUserInfoSettings = "";
+		_sSharedSecret = ASelectConfigManager.getSimpleParam(_oASelectConfigSection, "shared_secret", false);
 
 		// In a redundant environment a domain cookie wil be set.
 		// This way, all A-Select servers in, for example:
@@ -738,6 +718,52 @@ public class ASelectConfigManager extends ConfigManager
 		loadPrivilegedSettings(sWorkingDir);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded privileged settings");
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully initialized A-Select Server Config Manager");
+	}
+
+	/**
+	 * @param sWorkingDir
+	 * @param sSQLDriver
+	 * @param sSQLUser
+	 * @param sSQLPassword
+	 * @param sSQLURL
+	 * @param sSQLTable
+	 * @param sConfigIDName
+	 * @param sMethod
+	 * @throws ASelectConfigException
+	 */
+	public void loadConfiguration(String sWorkingDir, String sSQLDriver, String sSQLUser, String sSQLPassword,
+								String sSQLURL, String sSQLTable, String sConfigIDName)
+	throws ASelectConfigException
+	{
+		String sMethod = "loadConfiguration";
+		StringBuffer sbInfo = null;
+
+		_sWorkingDir = sWorkingDir;
+		_systemLogger = ASelectSystemLogger.getHandle();
+		_oASelectAuthenticationLogger = ASelectAuthenticationLogger.getHandle();
+
+		// read config
+		if (sSQLDriver != null || sSQLPassword != null || sSQLURL != null || sSQLTable != null) {
+			sbInfo = new StringBuffer("Reading config from database: ");
+			sbInfo.append(sSQLURL);
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString());
+			super.init(sSQLDriver, sSQLUser, sSQLPassword, sSQLURL, sSQLTable, sConfigIDName, _systemLogger);
+		}
+		else {
+			StringBuffer sbConfigFile = new StringBuffer(sWorkingDir);
+
+			if (!sWorkingDir.endsWith(File.separator)) {
+				sbConfigFile.append(File.separator);
+			}
+			sbConfigFile.append("conf");
+			sbConfigFile.append(File.separator);
+			sbConfigFile.append("aselect.xml");
+
+			sbInfo = new StringBuffer("Reading config from file: ");
+			sbInfo.append(sbConfigFile.toString());
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString());
+			super.init(sbConfigFile.toString(), _systemLogger);
+		}
 	}
 
 	/**
@@ -2404,39 +2430,4 @@ public class ASelectConfigManager extends ConfigManager
 		}
 		return htAllKeys_Values;
 	}
-
-	/*public static HashMap<String, String> getTableFromConfig(Object oConfig, HashMap<String, String> htAllKeys_Values,
-			String sMainSection, String sSubSection, boolean mandatory)
-		throws ASelectException, ASelectConfigException
-	{
-		String sMethod = "getTableFromConfig";
-
-		Object oProviders = null;
-		try {
-			oProviders = getHandle().getSection(oConfig, sMainSection);
-		}
-		catch (ASelectConfigException e) {
-			if (!mandatory)
-				return null;
-			ASelectSystemLogger.getHandle().log(Level.WARNING, MODULE, sMethod, "No config section '" + sMainSection + "' found", e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-		}
-
-		Object oProvider = null;
-		try {
-			oProvider = getHandle().getSection(oProviders, sSubSection);
-		}
-		catch (ASelectConfigException e) {
-			ASelectSystemLogger.getHandle().log(Level.WARNING, MODULE, sMethod, "Not even one config section '" + sSubSection
-					+ "' found in the '" + sMainSection + "' section", e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-		}
-		while (oProvider != null) {
-			String sKey = oProvider.toString();
-			htAllKeys_Values.put(sKey, "");
-
-			oProvider = getHandle().getNextSection(oProvider);
-		}
-		return htAllKeys_Values;
-	}*/
 }

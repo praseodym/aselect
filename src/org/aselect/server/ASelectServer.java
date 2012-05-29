@@ -245,8 +245,10 @@ public class ASelectServer extends ASelectHttpServlet
 	private CryptoEngine _cryptoEngine;
 	private AdminMonitor _adminMonitor = null;
 	private RequestHandlerFactory _oRequestHandlerFactory;
-	private int _iBatchPeriod = -1;
 	private Timer _timerSensorThread = null;
+	private String _sWorkingDir = null;
+	private int _numRequests = 0;
+	
 	/**
 	 * Initialize the A-Select Server. This method is invoked:
 	 * <ul>
@@ -289,7 +291,6 @@ public class ASelectServer extends ASelectHttpServlet
 				_authenticationLogger = ASelectAuthenticationLogger.getHandle();
 
 			String strWorkingDir = oServletConfig.getInitParameter("working_dir");
-
 			if (strWorkingDir == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
 						"Could not retrieve 'working_dir' parameter from deployment descriptor.");
@@ -299,6 +300,7 @@ public class ASelectServer extends ASelectHttpServlet
 				strWorkingDir += File.separator;
 			}
 			strWorkingDir += "aselectserver";
+			_sWorkingDir = strWorkingDir;
 
 			String sqlDriver = oServletConfig.getInitParameter("sql_driver");
 			String sqlURL = oServletConfig.getInitParameter("sql_url");
@@ -308,6 +310,8 @@ public class ASelectServer extends ASelectHttpServlet
 
 			_configManager = ASelectConfigManager.getHandle();
 			_configManager.init(strWorkingDir, sqlDriver, sqlUser, sqlPassword, sqlURL, sqlTable, MODULE);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "INIT " + " T=" + System.currentTimeMillis() +
+					", t="+Thread.currentThread().getId());
 		}
 		catch (ASelectException eAS) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initializing failed", eAS);
@@ -417,9 +421,12 @@ public class ASelectServer extends ASelectHttpServlet
 				throw eAC;
 			}
 			
-			_iBatchPeriod = ConfigManager.timerSensorConfig(_configManager, _systemLogger, _oASelectConfig, "aselect");
-			_timerSensorThread = ConfigManager.timerSensorStartThread(_configManager, _systemLogger, "aselect", _iBatchPeriod);
-
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Start TimeSensor?");
+			_timerSensorThread = ConfigManager.timerSensorStartThread(_configManager, _systemLogger, "aselect");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "TimeSensor thread="+_timerSensorThread);
+			// Allow the ConfigManager to supply this Object to interested parties (i.e. AselectRestartRequestHandler
+			_configManager.setMainServlet(this);
+			
 			try {
 				String sTemp = _configManager.getParam(_oASelectConfig, "admin_gui");
 				if (sTemp.equalsIgnoreCase("true")) {
@@ -469,6 +476,8 @@ public class ASelectServer extends ASelectHttpServlet
 	@Override
 	public void destroy()
 	{
+		_systemLogger.log(Level.INFO, MODULE, "destroy", "DESTROY" + " T=" + System.currentTimeMillis() +
+				", t="+Thread.currentThread().getId());
 		_systemLogger.log(Level.INFO, MODULE, "destroy", "Stop server");
 		closeResources();
 		_systemLogger.log(Level.INFO, MODULE, "destroy", "A-Select server stopped.");
@@ -498,10 +507,9 @@ public class ASelectServer extends ASelectHttpServlet
 	 */
 	@Override
 	protected void service(HttpServletRequest request, HttpServletResponse response)
-		throws ServletException, IOException
+	throws ServletException, IOException
 	{
-
-		String sMethod = "service()";
+		String sMethod = "service";
 		try {
 			// Prevent caching
 			setDisableCachingHttpHeaders(request, response);
@@ -511,9 +519,11 @@ public class ASelectServer extends ASelectHttpServlet
 				response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
 				return;
 			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "TimeSensor thread="+_timerSensorThread+" this="+this);
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "SERVICE {" + " T=" + System.currentTimeMillis() +
-					", t="+Thread.currentThread().getId()+ " "+ request.getMethod() + " Query: " + request.getQueryString());
+			_numRequests++;
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "SERVICE {" + " T="+System.currentTimeMillis()+", t="+Thread.currentThread().getId()+
+					" nReq="+_numRequests+" "+request.getMethod() + " Query: "+request.getQueryString());
 			//HandlerTools.logCookies(request, _systemLogger);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, request.getRemoteHost() + " / " + request.getRequestURL()
 					+ " / " + request.getRemoteAddr());
@@ -597,9 +607,10 @@ public class ASelectServer extends ASelectHttpServlet
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Stop Crypto"); 
 		_cryptoEngine.stop();
 		
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "TimeSensor thread="+_timerSensorThread+" nReq="+_numRequests);
 		if (_timerSensorThread != null) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Stop TimeSensor");
-			_timerSensorThread.cancel();
+			ConfigManager.timerSensorStopThread(_timerSensorThread);
 		}
 		try { java.lang.Thread.sleep(1000);	} catch (InterruptedException e) {}
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Resources closed");
@@ -618,5 +629,34 @@ public class ASelectServer extends ASelectHttpServlet
 			_systemLogger.closeHandlers();
 			_systemLogger = null;
 		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.aselect.system.servlet.ASelectHttpServlet#mainServletFunction(java.lang.String)
+	 */
+	public int mainServletFunction(String sRequest)
+	{	
+		String sMethod = "mainServletFunction";
+		if (!"reload_config".equals(sRequest))
+			return -1;
+		
+		try {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "TimeSensor thread="+_timerSensorThread);
+			if (_timerSensorThread != null) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Stop TimeSensor");
+				ConfigManager.timerSensorStopThread(_timerSensorThread);
+			}
+			
+			// Reload the configuration
+			_configManager.loadConfiguration(_sWorkingDir, null, null, null, null, null, MODULE);
+			
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Start TimeSensor?");
+			_timerSensorThread = ConfigManager.timerSensorStartThread(_configManager, _systemLogger, "aselect");
+		}
+		catch (ASelectException e) {
+			String sErrorMessage = _configManager.getErrorMessage(e.getMessage());
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sErrorMessage, e);
+		}
+		return 0;
 	}
 }

@@ -36,11 +36,15 @@ public class DataCollectSensor extends BasicSensorHandler
 		super.initialize(oConfigHandler, sId);
 		
 		int iExportAfter = _oConfigManager.getSimpleIntParam(oConfigHandler, "export_after", true);  // seconds
-		DataCollectStore.getHandle().set_iExportAfter(iExportAfter);
+		DataCollectStore.getHandle().setExportAfter(iExportAfter);
 		int iRunExport = _oConfigManager.getSimpleIntParam(oConfigHandler, "run_export", true);  // seconds
-		DataCollectStore.getHandle().set_iRunExport(iRunExport);
+		DataCollectStore.getHandle().setRunExport(iRunExport);
 		String sExportFile = _oConfigManager.getSimpleParam(oConfigHandler, "export_file", true);
-		DataCollectStore.getHandle().set_sExportFile(sExportFile);
+		DataCollectStore.getHandle().setExportFile(sExportFile);
+		int iCollectLevel = _oConfigManager.getSimpleIntParam(oConfigHandler, "collect_level", true);  // 1 or 2
+		if (iCollectLevel<1)
+			iCollectLevel = 1;
+		DataCollectStore.getHandle().setCollectLevel(iCollectLevel);
 		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "ea="+iExportAfter+" re="+iRunExport+" ef="+sExportFile);
 	}
 

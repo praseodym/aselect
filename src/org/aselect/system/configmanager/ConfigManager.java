@@ -52,6 +52,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
+import org.aselect.system.servlet.ASelectHttpServlet;
 import org.aselect.system.storagemanager.SendQueue;
 import org.aselect.system.storagemanager.SendQueueSender;
 import org.aselect.system.utils.Utils;
@@ -81,6 +82,8 @@ public class ConfigManager implements IConfigManager
 
 	/** SystemLogger object were system logging is sent to. */
 	private SystemLogger _oSystemLogger;
+	
+	private ASelectHttpServlet _oMainServlet = null;
 
 	/**
 	 * Default constructor. <br>
@@ -97,7 +100,8 @@ public class ConfigManager implements IConfigManager
 	 * <b>Postconditions: </b> <br>
 	 * -<br>
 	 */
-	public ConfigManager() {
+	public ConfigManager()
+	{
 		_oConfigHandler = null;
 		_oSystemLogger = null;
 	}
@@ -106,7 +110,7 @@ public class ConfigManager implements IConfigManager
 	 * @see org.aselect.system.configmanager.IConfigManager#init(java.lang.String, org.aselect.system.logging.SystemLogger)
 	 */
 	public void init(String sConfigFile, SystemLogger oSystemLogger)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
 		String sMethod = "init()";
@@ -117,8 +121,10 @@ public class ConfigManager implements IConfigManager
 
 			if (fConfig != null && fConfig.exists()) { // only start initializing when config file exists
 				_oConfigHandler = resolveConfigHandler(fConfig);
-				if (_oConfigHandler != null)
+				if (_oConfigHandler != null) {
+					_oSystemLogger.log(Level.INFO, MODULE, sMethod, "Read configuration from: "+sConfigFile);
 					_oConfigHandler.init(fConfig);
+				}
 				else {
 					sbError.append("Can't open file: ").append(sConfigFile);
 					_oSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString());
@@ -376,29 +382,36 @@ public class ConfigManager implements IConfigManager
 	 * @throws ASelectConfigException
 	 * @throws ASelectException
 	 */
-	public static int timerSensorConfig(ConfigManager configManager, SystemLogger systemLogger, Object _oMainConfig, String sMainTag)
+	private static int timerSensorConfig(ConfigManager configManager, SystemLogger systemLogger, String sMainTag)
 	throws ASelectConfigException, ASelectException
 	{
 		String sMethod = "timerSensorConfig";
 		int iBatchPeriod = -1;
+		int iBatchSize = -1;
 		
 		// The Timer Queue and config
+		Object _oMainConfig = configManager.getSection(null, sMainTag);  // main section
 		Object oSensorSection = Utils.getSimpleSection(configManager, systemLogger, _oMainConfig, "timer_sensor", false);
 		if (oSensorSection == null)
 			systemLogger.log(Level.WARNING, MODULE, sMethod, "Section "+sMainTag+"/"+"timer_sensor"+" not found, no timer_sensor logging");
 		else {
 			iBatchPeriod  = Utils.getSimpleIntParam(configManager, systemLogger, oSensorSection, "batch_period", false);
-			if (iBatchPeriod < 0)
+			if (iBatchPeriod <= 0)
 				iBatchPeriod = 60;  // seconds
+			iBatchSize = Utils.getSimpleIntParam(configManager, systemLogger, oSensorSection, "batch_size", false);
+			if (iBatchSize < 0)  // can be set to 0 to deactivate timer_sensor
+				iBatchSize = 100;
 		}
+		SendQueue.getHandle().setBatchPeriod(iBatchPeriod);
+		SendQueue.getHandle().setBatchSize(iBatchSize);
 		return iBatchPeriod;
 	}
 
-	public static Timer timerSensorStartThread(ConfigManager configManager, SystemLogger systemLogger,
-			String sMainTag, int iBatchPeriod)
+	public static Timer timerSensorStartThread(ConfigManager configManager, SystemLogger systemLogger, String sMainTag)
 	throws ASelectConfigException, ASelectException
 	{
 		String sMethod = "timerSensorStartThread";
+		int iBatchPeriod = ConfigManager.timerSensorConfig(configManager, systemLogger, sMainTag);
 		if (iBatchPeriod <= 0) {
 			systemLogger.log(Level.WARNING, MODULE, sMethod, "No timerSensor logging, batch_period="+iBatchPeriod+" seconds");
 			return null;
@@ -407,16 +420,30 @@ public class ConfigManager implements IConfigManager
 		try {
 			SendQueueSender dcExporter = new SendQueueSender(systemLogger);
 			SendQueue hQueue = SendQueue.getHandle();
+			// Will get <sensor_url> and <client_communicator> from config too:
 			hQueue.initialize(configManager, systemLogger, sMainTag, "timer_sensor"/*section*/);
 			
 			Timer _dataSendTimer = new Timer();
-			_dataSendTimer.schedule(dcExporter, 0, iBatchPeriod * 1000);  // in milliseconds
-			systemLogger.log(Level.INFO, MODULE, sMethod, "SendQueueSender scheduled every "+iBatchPeriod+" seconds");
+			_dataSendTimer.schedule(dcExporter, 0, hQueue.getBatchPeriod() * 1000);  // in milliseconds
+			systemLogger.log(Level.INFO, MODULE, sMethod, "SendQueueSender scheduled every "+hQueue.getBatchPeriod()+" seconds"+" batchSize="+hQueue.getBatchSize());
 			return _dataSendTimer;
 		}
 		catch (Exception e) {
 			systemLogger.log(Level.SEVERE, MODULE, sMethod, "Can't start SendQueueSender", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
+	}
+	
+	public static void timerSensorStopThread(Timer tThread)
+	{
+		tThread.cancel();
+	}
+
+	public void setMainServlet(ASelectHttpServlet oMainServlet) {
+		_oMainServlet = oMainServlet;
+	}
+
+	public ASelectHttpServlet getMainServlet() {
+		return _oMainServlet;
 	}
 }

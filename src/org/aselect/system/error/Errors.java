@@ -306,6 +306,8 @@ public class Errors
 	 */
 	public final static String ERROR_ASELECT_AGENT_AUTHORIZATION_NOT_ENABLED = "0141";
 
+	public final static String ERROR_ASELECT_AGENT_NO_RULES = "0142";
+
 	/**
 	 * Error: Can't open datasource
 	 */

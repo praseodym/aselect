@@ -566,7 +566,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				if (sLang != null)
 					sInputs += buildHtmlInput("language",sLang);
 	
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Inputs=" + sInputs);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Inputs=" + Utils.firstPartOf(sInputs,200));
 				handlePostForm(_sPostTemplate, sDestination, sInputs, response);
 			}
 			Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102 can change the session

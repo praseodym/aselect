@@ -297,7 +297,6 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 				if (_timeSensor.getTimeSensorLevel() >= 1) {  // used
 					_timeSensor.timeSensorFinish(bSuccess);
 					SendQueue.getHandle().addEntry(_timeSensor.timeSensorPack());
-					//Tools.reportTimerSensorData(_configManager, "aselect"/*<xml>*/, "timer_sensor", _systemLogger, _timeSensor.timeSensorPack());
 				}
 			}
 			catch (Exception e) { }

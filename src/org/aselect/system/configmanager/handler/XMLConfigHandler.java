@@ -79,6 +79,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DateFormat;
 import java.util.Date;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -136,6 +137,12 @@ public class XMLConfigHandler implements IConfigHandler
 	 * The XML DOM Document that contains the configuration
 	 */
 	private Document _oDomDocument;
+	// Do we need locking for _oDomDocument?
+	// Only if we want to perform concurrent save operations.
+	// Any read leaves a valid Document in _oDomDocument.
+	//	ReentrantLock lockDomDocument;
+	//	private synchronized void setDomDocument(Document oDomDocument) { _oDomDocument = oDomDocument; }
+	//	private synchronized Document getDomDocument() { return _oDomDocument; }
 
 	/**
 	 * The configuration file containing the XML config, if a file is used as physical storage.
@@ -200,11 +207,12 @@ public class XMLConfigHandler implements IConfigHandler
 	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
-		String sMethod = ".init()";
+		String sMethod = "init";
 
 		try {
 			_fConfig = fConfig;
 			_oDomDocument = parseXML(_fConfig);
+			_oSystemLogger.log(Level.FINE, MODULE, sMethod, "XML parsed: "+_fConfig.getCanonicalPath());
 		}
 		catch (ParserConfigurationException e) {
 			sbError.append("Parser incorrect configured.");

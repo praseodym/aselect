@@ -4,25 +4,44 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 
+import org.aselect.system.utils.Utils;
+
+/**
+ * The Class StopAgent.
+ */
 public class StopAgent {
 
-	public static void main(String[] args) {
+	/**
+	 * The main method.
+	 * 
+	 * @param args
+	 *            the arguments: <port> <timeOutMs> <request=...>
+	 */
+	public static void main(String[] args)
+	{
+		int port = 1946;
+		int timeoutMs = 5000;
+		String req = "request=stop";
+		String sMore;
 		try {
-			int port = 1946;
-			if (args.length > 0) port = Integer.parseInt(args[0]);
-			int timeoutMs = 5000;
-			if (args.length > 1) timeoutMs = Integer.parseInt(args[1]);
-			String msg = "request=stop";
-			if (args.length > 2) msg = args[2];
+			if (args.length > 0 && Utils.hasValue(args[0]))
+				port = Integer.parseInt(args[0]);
+			if (args.length > 1 && Utils.hasValue(args[1]))
+				timeoutMs = Integer.parseInt(args[1]);
+			if (args.length > 2)
+				req = args[2];
+			if (args.length > 3)
+				req += "&"+args[3];
 			InetAddress addr = InetAddress.getByName("localhost");
 			SocketAddress sockaddr = new InetSocketAddress(addr, port);
 			Socket sock = new Socket();
 			sock.connect(sockaddr, timeoutMs);
 			OutputStreamWriter out = new OutputStreamWriter(sock.getOutputStream());
-			out.write(msg);
+			out.write(req);
 			out.write("\r\n");
 			out.close();
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

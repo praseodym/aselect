@@ -18,7 +18,6 @@ import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.utils.Tools;
-import org.aselect.system.utils.Utils;
 
 public class SendQueue
 {
@@ -28,7 +27,9 @@ public class SendQueue
 	protected ConfigManager _oConfMgr = null;
 	protected String _sConfigMainTag = null;
 	protected String _sConfigSection = null;
+	// Set batch_size to 0 to deactivate
 	private int _iBatchSize = -1;  // will keep this value when no <timer_sensor> is configured
+	private int _iBatchPeriod = -1;
 	
 	private ConcurrentLinkedQueue<String> dataStore = new ConcurrentLinkedQueue<String>();
 
@@ -54,23 +55,14 @@ public class SendQueue
 		_oSqLogger = oLog;
 		_sConfigMainTag = sConfigMainTag;
 		_sConfigSection = sConfigSection;
-		Object oConfig = Utils.getSimpleSection(oConfMgr, _oSqLogger, null, _sConfigMainTag, true);
-		Object oSensorSection = Utils.getSimpleSection(oConfMgr, _oSqLogger, oConfig, _sConfigSection, false);
-		if (oSensorSection == null) {
-			_oSqLogger.log(Level.WARNING, MODULE, sMethod, "Section "+_sConfigMainTag+"/"+_sConfigSection+" not found, no timer_sensor logging");
-			return;
-		}
-		_iBatchSize = Utils.getSimpleIntParam(oConfMgr, _oSqLogger, oSensorSection, "batch_size", false);
-		if (_iBatchSize < 0)
-			_iBatchSize = 100;
-		_oSqLogger.log(Level.INFO, MODULE, sMethod, "done batch_size="+_iBatchSize);
+		_oSqLogger.log(Level.INFO, MODULE, sMethod, "done batch_size="+_iBatchSize+" batch_period="+_iBatchPeriod);
 	}
 	
 	public void addEntry(String sValue)
 	{
 		String sMethod = "addEntry";
 		
-		if (_iBatchSize < 0)
+		if (_iBatchSize <= 0)
 			return;
 		_oSqLogger.log(Level.INFO, MODULE, sMethod, "value="+sValue);
 		dataStore.add(sValue);
@@ -81,32 +73,66 @@ public class SendQueue
 		String sMethod = "sendEntries";
 		int countEntries, countTotal = 0;
 		
-		if (_iBatchSize < 0)
+		if (_iBatchSize <= 0)
 			return;
 		try {
-			_oSqLogger.log(Level.INFO, MODULE, sMethod, "started");
+			_oSqLogger.log(Level.INFO, MODULE, sMethod, "SENDQ { started");
 			String sValue = dataStore.poll();  // retrieve and remove
 			for (int run = 1; sValue != null; run++) {
 				StringBuffer sBuf = new StringBuffer();
 				for (countEntries = 0; sValue != null && countEntries < _iBatchSize; countEntries++) {
 					sBuf.append("DATA=").append(sValue).append("\r\n");
-				    //Tools.reportTimerSensorData(_oConfMgr, _sConfigMainTag/*"aselect", "timer_section", _oSqLogger, sValue);
 					sValue = dataStore.poll();
 				}
 				if (countEntries > 0) {
 					long now = System.currentTimeMillis();
-			    	Tools.reportTimerSensorData(_oConfMgr, _sConfigMainTag/*"aselect"*/,
-			    					_sConfigSection/*timer_sensor"*/, _oSqLogger, sBuf.toString());
+			    	reportTimerSensorData(sBuf.toString());
 					_oSqLogger.log(Level.FINE, MODULE, sMethod, "mSec="+(System.currentTimeMillis() - now)+" polled="+sValue);
 				}
 				countTotal += countEntries;
 				_oSqLogger.log(Level.INFO, MODULE, sMethod, "run="+run+" count="+countEntries+" total="+countTotal);
 				// next run
 			}
-			_oSqLogger.log(Level.INFO, MODULE, sMethod, "finished");
+			_oSqLogger.log(Level.INFO, MODULE, sMethod, "} SENDQ finished");
 		}
 		catch (Exception e) {
-			_oSqLogger.log(Level.WARNING, MODULE, sMethod, "Exception: "+e.getClass()+"="+e.getMessage());
+			_oSqLogger.log(Level.WARNING, MODULE, sMethod, "} SENDQ finished: Exception: "+e.getClass()+"="+e.getMessage());
 		}
+	}
+
+	/**
+	 * Report timer sensor data to the url specified in the configuration.
+	 * 
+	 * @param sData
+	 *            the data to be sent
+	 */
+	private void reportTimerSensorData(String sData)
+	{
+		String sMethod = "reportTimerSensorData";		
+		
+		long nowTime = System.currentTimeMillis();
+		try {
+			Tools.reportDataToSensor(_oConfMgr, _sConfigMainTag/*"aselect" or "agent"*/,
+					_sConfigSection/*timer_sensor"*/, "sensor_url", _oSqLogger, sData);
+		}
+		catch (ASelectException e) {
+			_oSqLogger.log(Level.INFO, MODULE, sMethod, "TimerSensor report failed");
+		}
+		long thenTime = System.currentTimeMillis();
+		_oSqLogger.log(Level.FINE, MODULE, sMethod, "Spent local="+(thenTime - nowTime)+" mSec");
+	}
+
+	public int getBatchPeriod() {
+		return _iBatchPeriod;
+	}
+	public void setBatchPeriod(int iBatchPeriod) {
+		_iBatchPeriod = iBatchPeriod;
+	}
+
+	public int getBatchSize() {
+		return _iBatchSize;
+	}
+	public void setBatchSize(int iBatchSize) {
+		_iBatchSize = iBatchSize;
 	}
 }

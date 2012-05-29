@@ -128,6 +128,8 @@ import org.aselect.agent.log.ASelectAgentSystemLogger;
 import org.aselect.agent.sam.ASelectAgentSAMAgent;
 import org.aselect.agent.session.SessionManager;
 import org.aselect.agent.ticket.TicketManager;
+import org.aselect.server.config.ASelectConfigManager;
+import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.communication.client.IClientCommunicator;
 import org.aselect.system.communication.client.raw.RawCommunicator;
 import org.aselect.system.communication.client.soap11.SOAP11Communicator;
@@ -136,10 +138,7 @@ import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.logging.SystemLogger;
-import org.aselect.system.storagemanager.SendQueue;
-import org.aselect.system.storagemanager.SendQueueSender;
-import org.aselect.system.utils.Tools;
+import org.aselect.system.logging.Audit;
 import org.aselect.system.utils.Utils;
 
 /**
@@ -207,8 +206,7 @@ public class ASelectAgent
 	private ASelectAgentConfigManager _oASelectAgentConfigManager;
 
 	// TimerSensor dispatch
-	private int _iBatchPeriod = -1;
-	Timer _timerSensorThread = null;	
+	private Timer _timerSensorThread = null;	
 	
 	/**
 	 * The agent configuration section.
@@ -360,7 +358,6 @@ public class ASelectAgent
 			catch (Exception e) {
 				_oASelectAgentSystemLogger.log(Level.SEVERE, MODULE, sMethod,
 						"No valid 'logging' config section with id='system' found.", e);
-
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 			_oASelectAgentSystemLogger.init(oSysLogging, _sWorkingDir);
@@ -410,7 +407,6 @@ public class ASelectAgent
 			catch (NumberFormatException e) {
 				_oASelectAgentSystemLogger.log(Level.WARNING, MODULE, sMethod,
 						"invalid serviceport directive in configuration: " + sPort, e);
-
 				throw new ASelectConfigException(Errors.ERROR_ASELECT_CONFIG_ERROR, e);
 			}
 
@@ -428,9 +424,6 @@ public class ASelectAgent
 						"invalid 'adminport' directive in configuration: " + sPort, e);
 				throw new ASelectConfigException(Errors.ERROR_ASELECT_CONFIG_ERROR, e);
 			}
-		
-			// 20111116, Bauke: added
-			_iBatchPeriod = ConfigManager.timerSensorConfig(_oASelectAgentConfigManager, _oASelectAgentSystemLogger, _oAgentSection, "agent");
 
 			// get a handle to the communicator
 			_oCommunicator = getCommunicator();
@@ -440,7 +433,6 @@ public class ASelectAgent
 		}
 		catch (Exception e) {
 			_oASelectAgentSystemLogger.log(Level.SEVERE, MODULE, sMethod, "Error during initialisation", e);
-
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 	}
@@ -490,7 +482,7 @@ public class ASelectAgent
 			ASelectAgentSAMAgent.getHandle().destroy();
 			TicketManager.getHandle().stop();
 			SessionManager.getHandle().stop();
-			_timerSensorThread.cancel();
+			ConfigManager.timerSensorStopThread(_timerSensorThread);
 			
 			_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "A-Select Agent stopped.");
 			_oASelectAgentSystemLogger.closeHandlers();
@@ -546,7 +538,7 @@ public class ASelectAgent
 	 *             if the services could not be started.
 	 */
 	public void startServices()
-		throws Exception
+	throws Exception
 	{
 		String sMethod = "startServices()";
 		// try to allocate the listening ports on localhost.
@@ -580,10 +572,34 @@ public class ASelectAgent
 			_tServiceHandler = new Thread(new APIServiceHandler());
 
 		_tServiceHandler.start();
-		
-		_timerSensorThread = ConfigManager.timerSensorStartThread(_oASelectAgentConfigManager, _oASelectAgentSystemLogger, "agent", _iBatchPeriod);
+				
+		// 20111116, Bauke: added
+		_timerSensorThread = ConfigManager.timerSensorStartThread(_oASelectAgentConfigManager, _oASelectAgentSystemLogger, "agent");
 
 		new Thread(new AdminServiceHandler()).start();  // accepts "stop"
+	}
+	
+	private void restartTimerSensorThread(ASelectAgentConfigManager configManager, ASelectAgentSystemLogger systemLogger, String sWorkingDir)
+	throws ASelectException
+	{
+		String sMethod = "restartTimerSensorThread";
+		try {
+			systemLogger.log(Level.INFO, MODULE, sMethod, "TimeSensor thread="+_timerSensorThread);
+			if (_timerSensorThread != null) {
+				systemLogger.log(Level.INFO, MODULE, sMethod, "Stop TimeSensor");
+				ConfigManager.timerSensorStopThread(_timerSensorThread);
+			}
+			
+			// Reload the configuration
+			configManager.loadConfiguration(sWorkingDir);
+			
+			systemLogger.log(Level.INFO, MODULE, sMethod, "Start TimeSensor?");
+			_timerSensorThread = ConfigManager.timerSensorStartThread(configManager, systemLogger, "agent");
+		}
+		catch (ASelectException e) {
+			systemLogger.log(Level.SEVERE, MODULE, sMethod, "Restart TimerSensor failed", e);
+			throw e;
+		}
 	}
 
 	/**
@@ -831,10 +847,22 @@ public class ASelectAgent
 					PrintStream osOutput = new PrintStream(oSocket.getOutputStream());
 
 					String sRequestString = isInput.readLine();
-					_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, sRequestString);
+					_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "Request="+sRequestString);
 					HashMap htParameters = Utils.convertCGIMessage(sRequestString, false);
+					_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "Parameters="+htParameters);
 					String sRequest = (String) htParameters.get("request");
-					if (sRequest.equalsIgnoreCase("stop")) {
+					if ("reload_config".equals(sRequest)) {
+						restartTimerSensorThread(_oASelectAgentConfigManager, _oASelectAgentSystemLogger, _sWorkingDir);
+					}
+					else if ("logging".equals(sRequest)) {
+						String sLevel = (String) htParameters.get("level");
+						if (Utils.hasValue(sLevel)) {
+							Level level = Audit.parse(sLevel);
+							_oASelectAgentSystemLogger.setLevel(level);
+							_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "Level set to: "+sLevel);
+						}
+					}
+					else if (sRequest.equalsIgnoreCase("stop")) {
 						destroy();
 					}
 					osOutput.println("result=" + Errors.ERROR_ASELECT_SUCCESS);

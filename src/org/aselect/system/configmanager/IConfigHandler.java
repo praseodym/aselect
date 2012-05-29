@@ -38,7 +38,6 @@ import java.io.File;
 
 import org.aselect.system.exception.ASelectConfigException;
 
-// TODO: Auto-generated Javadoc
 /**
  * Interface for all ConfigHandlers. <br>
  * <br>

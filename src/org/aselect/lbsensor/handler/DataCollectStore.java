@@ -17,6 +17,9 @@ import java.util.Enumeration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
+import org.apache.log4j.Logger;
+import org.apache.log4j.Priority;
+import org.aselect.lbsensor.LbSensor;
 import org.aselect.lbsensor.LbSensorSystemLogger;
 import org.aselect.system.utils.TimeSensor;
 import org.aselect.system.utils.Utils;
@@ -40,9 +43,13 @@ public class DataCollectStore
 	private String _sExportFile = "";
 	private int _iExportAfter = -1;  // seconds
 	private int _iRunExport = -1;  // seconds
+	private int _iCollectLevel = 1; // logging level
+
+	private static Logger _log4jExport;  // exporting data uses log4j for it's output
 
 	private DataCollectStore()
 	{
+		_log4jExport = Logger.getLogger("lb_export");
 		_oLbSensorLogger.log(Level.INFO, MODULE, "DataCollectStore", "Created"); 
 	}
 
@@ -110,8 +117,8 @@ public class DataCollectStore
 	 */
 	synchronized public void exportEntries()
 	{
-		String sMethod = "exportEntries";
-		
+		String sMethod = "exportEntries";		
+		//LbSensor.getLog4j().info("MainLogger - begin");
 		try {
 			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "started, export_after="+_iExportAfter);
 			Enumeration<String> eKeys = dataStore.keys();
@@ -133,6 +140,7 @@ public class DataCollectStore
 		catch (Exception e) {
 			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Exception: "+e.getClass()+"="+e.getMessage());
 		}
+		//LbSensor.getLog4j().info("MainLogger - end");
 	}
 
 	/**
@@ -145,7 +153,11 @@ public class DataCollectStore
 	{
 		String sMethod = "exportSingleEntry";
 		int iType = ts.getTimeSensorType();
-		_oLbSensorLogger.log(Level.FINE, MODULE, sMethod, "EXPORT="+ts.timeSensorPack()+" iType="+iType);
+
+		if (exportLevel > _iCollectLevel)
+			return;
+		_oLbSensorLogger.log(Level.FINE, MODULE, sMethod, "EXPORT="+ts.timeSensorPack()+" iType="+iType+" level="+exportLevel);
+
 		// type should be at least 1 at this point
 		String sType = iType==1? "filter": iType==2? "agent": iType==3? "server":
 					iType==4? "authsp": iType==5? "remote": iType==0? "error": iType==-1? "unused": "?:"+Integer.toString(iType);
@@ -158,6 +170,7 @@ public class DataCollectStore
 		
 		//long now = System.currentTimeMillis();
 		appendToFile(_sExportFile, sLine);
+		_log4jExport.log(org.apache.log4j.Level.INFO, sLine);  // or info(sLine)
 		_oLbSensorLogger.log(Level.FINE, MODULE, sMethod, "Append["+sLine+"]"/*+" mSec="+(System.currentTimeMillis() - now)*/);
 	}
 
@@ -188,9 +201,12 @@ public class DataCollectStore
 	public void set_myIP(String myIP) { _myIP = myIP; }
 	public void set_myPort(int myPort) { _myPort = myPort; }
 	
-	public void set_iExportAfter(int iExportAfter) { _iExportAfter = iExportAfter; }
-	public void set_sExportFile(String sExportFile) { _sExportFile = sExportFile; }
+	public void setExportAfter(int iExportAfter) { _iExportAfter = iExportAfter; }
+	public void setExportFile(String sExportFile) { _sExportFile = sExportFile; }
 
-	public int get_iRunExport() { return _iRunExport; }
-	public void set_iRunExport(int iRunExport) { _iRunExport = iRunExport; }
+	public int getRunExport() { return _iRunExport; }
+	public void setRunExport(int iRunExport) { _iRunExport = iRunExport; }
+
+	public int getCollectLevel() { return _iCollectLevel; }
+	public void setCollectLevel(int iCollectLevel) { _iCollectLevel = iCollectLevel; }
 }

@@ -285,73 +285,6 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	}
 
 	/**
-	 * Handles the restart request. <br>
-	 * <br>
-	 * <b>Description: </b> <br>
-	 * This method should be called if a sub class receives a restart request. This methods calls
-	 * {@link ASelectHttpServlet#restartServlets(SystemLogger)}which restarts all restartable servlets in the servlet
-	 * context. <br>
-	 * <br>
-	 * <i>Note: The restart request should be handled by one <code>Servlet</code> in the context. </i> <br>
-	 * <br>
-	 * <b>Concurrency issues: </b> <br>
-	 * This method should be called serial. <br>
-	 * <br>
-	 * <b>Preconditions: </b>
-	 * <ul>
-	 * <li><code>oRequest != null</code></li>
-	 * <li><code>sMySharedSecret != null</code></li>
-	 * <li><code>pwOut != null</code></li>
-	 * </ul>
-	 * <br>
-	 * <b>Postconditions: </b> <br>
-	 * All restartable servlets in the context are restarted. <br>
-	 * 
-	 * @param oRequest
-	 *            The HTTP request.
-	 * @param sMySharedSecret
-	 *            The shared secret on which the received Shared_secret is validated upon.
-	 * @param pwOut
-	 *            The ouput.
-	 * @param systemLogger
-	 *            The logger for system logging.
-	 * @return A-Select result code.
-	 */
-	protected String handleRestartRequest(HttpServletRequest oRequest, String sMySharedSecret, PrintWriter pwOut,
-			SystemLogger systemLogger)
-	{
-		// TODO The error handling differs from standard A-Select
-		// TODO The result is ignored in the A-Select and AuthSP Server (Erwin van den Beld)
-		String sMethod = "handleRestartRequest()";
-		String sSharedSecret = oRequest.getParameter("shared_secret");
-
-		if (sSharedSecret == null) {
-			if (systemLogger != null)
-				systemLogger.log(Level.WARNING, MODULE, sMethod, "parameter 'shared_secret' not found");
-			else
-				System.err.println("parameter 'shared_secret' not found");
-
-			return Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST;
-		}
-		if (!sSharedSecret.equals(sMySharedSecret)) {
-			StringBuffer sbError = new StringBuffer("Invalid 'shared_secret' received from ");
-			sbError.append(oRequest.getRemoteAddr());
-
-			if (systemLogger != null)
-				systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
-			else
-				System.err.println(sbError.toString());
-
-			return Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST;
-		}
-
-		String sResult = (restartServlets(systemLogger) ? Errors.ERROR_ASELECT_SUCCESS
-				: Errors.ERROR_ASELECT_INTERNAL_ERROR);
-		pwOut.print("result_code=" + sResult);
-		return sResult;
-	}
-
-	/**
 	 * Restart all restartable servlets within this context. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
@@ -374,9 +307,11 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	 *            The system logger.
 	 * @return false if one or more restart requests fail, otherwise true.
 	 */
+	// NOTE: There's also a version of this method in ASelectRestartRequestHandler.java
+	// That version is used by the AselectServer
 	protected synchronized boolean restartServlets(SystemLogger logger)
 	{
-		String sMethod = "restartServlets()";
+		String sMethod = "ASelectHttpServlet.restartServlets";
 		StringBuffer sb = null;
 		boolean bEndResult = true;
 
@@ -389,19 +324,15 @@ public abstract class ASelectHttpServlet extends HttpServlet
 				logger.log(Level.INFO, MODULE, sMethod, sb.toString());
 			else
 				System.err.println(sb.toString());
-
 			return false;
 		}
 
 		try {
 			this.getServletConfig().getServletContext().setAttribute("restarting_servlets", "true");
 			StringBuffer sbResult = new StringBuffer("Restart: ");
-			Set keys = htRestartServlets.keySet();
-			for (Object s : keys) {
+			Set keySet = htRestartServlets.keySet();
+			for (Object s : keySet) {
 				String sKey = (String) s;
-				// for (Enumeration e = htRestartServlets.keys(); e.hasMoreElements();)
-				// {
-				// String sKey = (String)e.nextElement();
 				ASelectHttpServlet servlet = (ASelectHttpServlet) htRestartServlets.get(sKey);
 				boolean bResult = true;
 				try {
@@ -414,8 +345,6 @@ public abstract class ASelectHttpServlet extends HttpServlet
 				sbResult.append(sKey).append(" (");
 				sbResult.append(bResult ? "OK" : "Failed");
 				sbResult.append(")");
-				// if (e.hasMoreElements())
-				sbResult.append(", ");
 			}
 			int len = sbResult.length();
 			String sResult = sb.substring(0, len - 2);
@@ -500,5 +429,17 @@ public abstract class ASelectHttpServlet extends HttpServlet
 			hRestartServlets = new HashMap();
 		hRestartServlets.put(sServletName, this);
 		config.getServletContext().setAttribute("restartable_servlets", hRestartServlets);
+	}
+	
+	/**
+	 * Main servlet function. Override when needed
+	 * 
+	 * @param sRequest
+	 *            the request name
+	 * @return - 0 upon success
+	 */
+	public int mainServletFunction(String sRequest)
+	{
+		return 0;		
 	}
 }

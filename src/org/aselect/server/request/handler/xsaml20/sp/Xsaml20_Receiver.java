@@ -253,7 +253,7 @@ public class Xsaml20_Receiver extends Saml20_BrowserHandler
 		//HandlerTools.marshallAssertion(assertObj, true);  // for debugging
 		
 		set_SamlIssuer(assertObj.getIssuer());
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Issuer="+get_SamlIssuer().getValue()); 
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Issuer="+get_SamlIssuer().getValue()+" ObjectId="+assertObj.getID()); 
 		return (SignableSAMLObject) assertObj;
 	}
 

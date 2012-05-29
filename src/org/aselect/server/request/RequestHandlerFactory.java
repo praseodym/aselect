@@ -267,7 +267,7 @@ public class RequestHandlerFactory
 		// 20100509, Bauke: added, show result page to the user, instead of a blank screen
 		catch (ASelectException e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Processing failed, ASelectException="+e);
-			showErrorPage(request, response, Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			showErrorPage(request, response, e.getMessage()); //Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			throw e;
 		}
 		catch (Exception e) {

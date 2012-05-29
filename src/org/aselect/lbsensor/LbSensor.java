@@ -15,6 +15,9 @@ import java.util.HashMap;
 import java.util.Timer;
 import java.util.logging.Level;
 
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 import org.aselect.lbsensor.handler.DataCollectStore;
 import org.aselect.lbsensor.handler.SensorStore;
 import org.aselect.system.error.Errors;
@@ -27,6 +30,9 @@ public class LbSensor
 
 	private static LbSensorSystemLogger _oLbSensorLogger;
 	private LbSensorConfigManager _oConfigManager = null;
+
+	private static Logger log4j;
+	public static Logger getLog4j() { return log4j; }
 
 	protected Timer _dataCollectTimer;
 
@@ -41,6 +47,13 @@ public class LbSensor
 		String sMethod = "main";
 		LbSensorSystemLogger oLbSensorLogger = LbSensorSystemLogger.getHandle();
 		LbSensor oLbSensor = null;
+		System.out.println("java.class.path="+System.getProperty("java.class.path"));
+		System.out.println("java.library.path="+System.getProperty("java.library.path"));
+		System.out.println("user.dir="+System.getProperty("user.dir"));
+
+		PropertyConfigurator.configure("lbsensor.properties");
+		log4j = Logger.getLogger(LbSensor.class.getName());
+		log4j.info("====\nMain="+LbSensor.class.getName());
 
 		try {
 			oLbSensor = new LbSensor();
@@ -59,6 +72,7 @@ public class LbSensor
 
 			System.exit(1);
 		}
+		log4j.info("Main Ready");
 	}
 
 	/**
@@ -136,7 +150,7 @@ public class LbSensor
 		
 		// When the DataCollectSensor was configured it has accumulated it's parameters,
 		// including <run_export>
-		long runExport = DataCollectStore.getHandle().get_iRunExport();  // default, milliseconds
+		long runExport = DataCollectStore.getHandle().getRunExport();  // default, milliseconds
 		if (runExport > 0) {
 			// Run a timer thread to empty the DataCollectStore once in a while
 			DataCollectExporter dcExporter = new DataCollectExporter();

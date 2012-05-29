@@ -112,11 +112,14 @@ import org.aselect.authspserver.log.AuthSPAuthenticationLogger;
 import org.aselect.authspserver.log.AuthSPSystemLogger;
 import org.aselect.authspserver.sam.AuthSPSAMAgent;
 import org.aselect.authspserver.session.AuthSPSessionManager;
+import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.logging.Audit;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.servlet.ASelectHttpServlet;
+import org.aselect.system.utils.Utils;
 
 /**
  * The A-Select AuthSP Server. <br>
@@ -403,9 +406,10 @@ public class AuthSPServlet extends ASelectHttpServlet
 	 */
 	@Override
 	public void doGet(HttpServletRequest oHttpServletRequest, HttpServletResponse oHttpServletResponse)
-		throws ServletException
+	throws ServletException
 	{
-		_systemLogger.log(Level.INFO, MODULE, "AUTHSP GET {", "" + _bRestartable);
+		String sMethod = "doGet";
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "AUTHSP GET { restartable="+_bRestartable);
 
 		if (_bRestartable) {
 			// turn off caching
@@ -413,25 +417,44 @@ public class AuthSPServlet extends ASelectHttpServlet
 
 			// handle request=restart
 			String sRequest = oHttpServletRequest.getParameter("request");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "request=" + sRequest);
+			String sResult = Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST;
 			if (sRequest != null) {
-				_systemLogger.log(Level.INFO, MODULE, "GET ", "" + sRequest);
-
 				PrintWriter pwOut = null;
 				try {
 					pwOut = oHttpServletResponse.getWriter();
-					if (sRequest.equals("restart"))
-						handleRestartRequest(oHttpServletRequest, _sMySharedSecret, pwOut, _systemLogger);
+					String sSharedSecret = oHttpServletRequest.getParameter("shared_secret");
+					String sLevel = oHttpServletRequest.getParameter("level");
+					if (!Utils.hasValue(sSharedSecret)) {
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Parameter 'shared_secret' not found in request");
+					}
+					else if (!sSharedSecret.equals(_sMySharedSecret)) {
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid 'shared_secret' received");
+					}
+					else if ("restart_servlets".equals(sRequest)) {
+						 if (restartServlets(_systemLogger))
+							sResult = Errors.ERROR_ASELECT_SUCCESS;
+					}
+					else if ("logging".equals(sRequest)) {
+						if (Utils.hasValue(sLevel)) {
+							Level level = Audit.parse(sLevel);
+							AuthSPSystemLogger.getHandle().setLevel(level);
+							pwOut.println("Logging level set to: "+sLevel);
+							sResult = Errors.ERROR_ASELECT_SUCCESS;
+						}
+					}
+					pwOut.println("Result="+sResult);
 				}
 				catch (IOException e) {
 					throw new ServletException("Error sending response: " + e.getMessage());
 				}
 				finally {
-					if (pwOut == null)
+					if (pwOut != null)
 						pwOut.close();
 				}
 			}
 		}
-		_systemLogger.log(Level.INFO, MODULE, "} AUTHSP GET", "");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "} AUTHSP GET");
 	}
 
 	/**
@@ -505,6 +528,7 @@ public class AuthSPServlet extends ASelectHttpServlet
 
 	/**
 	 * First restarts this AuthSP Server and then the restartable servlets in the context.
+	 * Overrides the version from ASelectHttpServlet.
 	 * 
 	 * @param logger
 	 *            the logger
@@ -514,7 +538,7 @@ public class AuthSPServlet extends ASelectHttpServlet
 	@Override
 	protected synchronized boolean restartServlets(SystemLogger logger)
 	{
-		String sMethod = "restartServlets()";
+		String sMethod = "AuthSPServlet.restartServlets";
 		boolean bEndResult = true;
 
 		try {
@@ -543,9 +567,6 @@ public class AuthSPServlet extends ASelectHttpServlet
 				Set keys = htRestartServlets.keySet();
 				for (Object s : keys) {
 					String sKey = (String) s;
-					// for (Enumeration e = htRestartServlets.keys(); e.hasMoreElements();)
-					// {
-					// String sKey = (String)e.nextElement();
 					sbResult.append(", ");
 					ASelectHttpServlet servlet = (ASelectHttpServlet) htRestartServlets.get(sKey);
 					try {
@@ -558,8 +579,6 @@ public class AuthSPServlet extends ASelectHttpServlet
 					sbResult.append(sKey).append(" (");
 					sbResult.append(bResult ? "OK" : "Failed");
 					sbResult.append(")");
-					// if (e.hasMoreElements())
-					// sbResult.append(", ");
 				}
 			}
 			logger.log(Level.INFO, MODULE, sMethod, sbResult.toString());

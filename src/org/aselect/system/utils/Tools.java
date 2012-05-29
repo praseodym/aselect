@@ -21,7 +21,9 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
 import java.net.URLDecoder;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -554,6 +556,7 @@ public class Tools
 				lTotalSpent -= lUserSpent;
 			}
 			if (bSuccess) {
+				// Does not use the queue
 				Tools.reportDataToSensor(oConfMgr, "aselect", "lbsensor", "sensor_url", oSysLog, Long.toString(lTotalSpent));
 			}
 
@@ -570,7 +573,10 @@ public class Tools
 		    		sAppId, 1/*complete flow*/, iTimeSensorType, Thread.currentThread().getId(),
 		    		sFirstContact, sLast, sTotalSpent, Boolean.toString(bSuccess), sRid, (sTgt==null)? "": sTgt.substring(0,41));
 			long thenTime = System.currentTimeMillis();
-			oSysLog.log(Level.FINE, MODULE, sMethod, "TotalSpent="+sTotalSpent+" User="+sUserSpent+" local="+(thenTime - nowTime)+" mSec"); // includes 1 reportDataToSensor
+			
+			// Time period includes 1 call to reportDataToSensor()
+			oSysLog.log(Level.FINE, MODULE, sMethod, "TotalSpent="+sTotalSpent+" User="+sUserSpent+" local="+(thenTime - nowTime)+" mSec");
+			
 			SendQueue.getHandle().addEntry(sDataLine);
 			
 			// Report user time as well (could be DigiD for instance)
@@ -581,8 +587,6 @@ public class Tools
 			    		sRid, (sTgt==null)? "": sTgt.substring(0,41));
 				SendQueue.getHandle().addEntry(sDataLine);
 			}
-
-			// Queued now: Tools.reportTimerSensorData(oConfMgr, "aselect", "timer_sensor", oSysLog, sDataLine);
 		}
 		catch (Exception e) {
 			oSysLog.log(Level.INFO, MODULE, sMethod, "Sensor report failed: "+e.getClass()+": "+e.getMessage());
@@ -590,54 +594,24 @@ public class Tools
 	}
 
 	/**
-	 * Report timer sensor data to the url specified in the configuration.
-	 * 
-	 * @param oConfMgr
-	 *            the config mgr
-	 * @param sMainSection
-	 *            the main section to find the timer_sensor tag in
-	 * @param oSysLog
-	 *            the sys log
-	 * @param sData
-	 *            the data to be sent
-	 */
-	public static void reportTimerSensorData(ConfigManager oConfMgr, String sMainSection, String sSection, SystemLogger oSysLog, String sData)
-	{
-		String sMethod = "reportTimerSensorData";		
-		
-		long nowTime = System.currentTimeMillis();
-		try {
-			reportDataToSensor(oConfMgr, sMainSection, sSection, "sensor_url", oSysLog, sData);
-		}
-		catch (ASelectException e) {
-			oSysLog.log(Level.INFO, MODULE, sMethod, "TimerSensor report failed");
-		}
-		long thenTime = System.currentTimeMillis();
-		oSysLog.log(Level.FINE, MODULE, sMethod, "Spent local="+(thenTime - nowTime)+" mSec");
-	}
-
-	static boolean bFirst = true;
-	static IClientCommunicator oClientCommunicator = null;
-	static String sSensorUrl = null;
-
-	/**
 	 * Report usage to sensor.
 	 * 
 	 * @param oConfMgr
 	 *            the configuration manager
+	 * @param sMainTag
+	 *            the main tag
 	 * @param sSection
 	 *            the section
 	 * @param sUrlTag
 	 *            the url tag
 	 * @param oSysLog
 	 *            the sys log
-	 * @param oConfig
-	 *            the config section
 	 * @param sData
 	 *            the data to be sent
 	 * @throws ASelectException
+	 *             the a select exception
 	 */
-	static private void reportDataToSensor(ConfigManager oConfMgr, String sMainTag, String sSection, String sUrlTag,
+	public static void reportDataToSensor(ConfigManager oConfMgr, String sMainTag, String sSection, String sUrlTag,
 						SystemLogger oSysLog, String sData)
 	throws ASelectException
 	{
@@ -645,8 +619,11 @@ public class Tools
 		HashMap htResponse = null;
 		String sResponse = null;
 
+		// 20120529: these were class variables
+		IClientCommunicator oClientCommunicator = null;
+		String sSensorUrl = null;
+
 		// 2 communicators will be needed, so we can't cache a single one
-		bFirst = false;
 		oSysLog.log(Level.FINE, MODULE, sMethod, "Looking for: "+sMainTag+"/"+sSection+"/"+sUrlTag);
 		Object oConfig = Utils.getSimpleSection(oConfMgr, oSysLog, null, sMainTag, true);
 		Object oSensorSection = Utils.getSimpleSection(oConfMgr, oSysLog, oConfig, sSection, false);
@@ -723,5 +700,31 @@ public class Tools
 			}
 		}
 		return htAttributes;
+	}
+	
+
+	/**
+	 * Gets the server ip address.
+	 * 
+	 * @return the dotted ip address
+	 */
+	public static String getServerIpAddress(SystemLogger oSystemLogger)
+	{
+		String sMethod = "getServerIpAddress";
+	    String s = "";
+		try {
+		    InetAddress addr = InetAddress.getLocalHost();
+		    byte[] ipAddr = addr.getAddress();  // Get IP Address
+
+		    for (int i=0; i<ipAddr.length; i++) {
+		    	int ip = ipAddr[i];
+		    	s += ((i==0)?"": ".")+String.valueOf(ip<0? ip+256: ip);
+		    }
+		    String hostname = addr.getHostName();  // Get hostname
+		    oSystemLogger.log(Level.INFO, MODULE, sMethod, "Hostname="+hostname+" Ip="+s);
+		}
+		catch (UnknownHostException e) {
+		}
+		return s;
 	}
 }

@@ -373,8 +373,8 @@ public class AuthorizationEngine
 	 * Check if a user is authorized. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Evaluates the rules of the given application by subtitution of the given user attributrs and validating all
-	 * rules. <br>
+	 * Evaluates the rules of the given application by subtitution of the given
+	 * user attributrs and validating all rules. <br>
 	 * The user is only authorized if all rules of the application apply. <br>
 	 * <br>
 	 * <b>Preconditions:</b>
@@ -388,21 +388,22 @@ public class AuthorizationEngine
 	 * <br>
 	 * 
 	 * @param sAppId
-	 *            The app_id of the application that the user is authorized for.
+	 *          The app_id of the application that the user is authorized for.
 	 * @param sURI
-	 *            The URI for which the user is authorized.
+	 *          The URI for which the user is authorized.
 	 * @param htUserAttributes
-	 *            The user attributes.
-	 * @return <code>true</code> if the user is authorized to use the given application, otherwise <code>false</code>.
+	 *          The user attributes.
+	 * @return
+	 * 			-1: no rules received, 0: ok, 1: not authorized 
 	 * @throws ASelectAuthorizationException
 	 *             If evalution of the rule fails.
 	 */
-	public boolean isUserAuthorized(String sAppId, String sURI, HashMap htUserAttributes)
+	public int checkUserAuthorization(String sAppId, String sURI, HashMap htUserAttributes)
 		throws ASelectAuthorizationException
 	{
-		final String sMethod = "isUserAuthorized()";
+		final String sMethod = "isUserAuthorized";
 		StringBuffer sb = null;
-		boolean bAuthorized = true;
+		int iResult = 0;
 		// get all evaluation trees of the given application
 		HashMap htEvaluationTrees = (HashMap) _htEvaluationForrest.get(sAppId);
 
@@ -414,16 +415,12 @@ public class AuthorizationEngine
 			// No rules so user is authorized, unless NeedFilterRules was set
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "No Rules -> "
 					+ ((_bNeedFilterRules) ? "NOT OK (filter did not send them)" : "OK"));
-			bAuthorized = !_bNeedFilterRules; // true;
+			iResult = (_bNeedFilterRules)? -1: 0;
 		}
 		else {
 			Set keys = htEvaluationTrees.keySet();
 			for (Object s : keys) {
 				String sRuleId = (String) s;
-				// Enumeration eEvaluationTrees = htEvaluationTrees.keys();
-				// while (eEvaluationTrees.hasMoreElements())
-				// {
-				// String sRuleId = (String)eEvaluationTrees.nextElement();
 				AuthorizationRule oRule = (AuthorizationRule) htEvaluationTrees.get(sRuleId);
 				EvaluationTree eTree = oRule.getEvaluationTree();
 
@@ -438,7 +435,7 @@ public class AuthorizationEngine
 						_systemLogger.log(Level.INFO, MODULE, sMethod, "Need AUTH, tree=" + eTree + " attr="
 								+ htUserAttributes);
 						if (!_oEvaluator.evaluate(htUserAttributes, eTree)) {
-							bAuthorized = false;
+							iResult = 1;  // rejected
 							sb = new StringBuffer("User attributes not sufficient for rule: '");
 							sb.append(sRuleId).append("' ('");
 							sb.append(oRule.getPlainTextRule()).append("').");
@@ -455,8 +452,8 @@ public class AuthorizationEngine
 				}
 			}
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, (bAuthorized) ? "OK" : "NOT OK");
-		return bAuthorized;
+		_systemLogger.log(Level.INFO, MODULE, sMethod, (iResult==0) ? "OK" : (iResult==-1)? "NO RULES": "NOT OK");
+		return iResult;
 	}
 
 	/**

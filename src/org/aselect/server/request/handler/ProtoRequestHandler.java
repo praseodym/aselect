@@ -1214,7 +1214,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 				"</wst:RequestSecurityTokenResponse>";
 	}
 
-	public void getKeyAndCheckSignature(String sIssuer, SignableSAMLObject authzDecisionQuery)
+	public void getKeyAndCheckSignature(String sIssuer, SignableSAMLObject samlObject)
 	throws ASelectException
 	{
 		String sMethod = "getKeyAndCheckSignature";
@@ -1225,7 +1225,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
 		
-		if (checkSignature(authzDecisionQuery, pkey)) {
+		if (checkSignature(samlObject, pkey)) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Message was signed OK");
 		}
 		else {

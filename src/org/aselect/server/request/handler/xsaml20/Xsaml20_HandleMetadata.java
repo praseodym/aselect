@@ -22,17 +22,16 @@ import java.util.logging.Level;
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.AbstractRequestHandler;
 import org.aselect.server.request.handler.xsaml20.idp.MetaDataManagerIdp;
 import org.aselect.system.error.Errors;
+import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
-import org.opensaml.saml2.core.Assertion;
-import org.opensaml.saml2.core.impl.AssertionUnmarshaller;
-import org.w3c.dom.Document;
+import org.aselect.system.utils.Tools;
+import org.aselect.system.utils.Utils;
 
 /*
  * Calling example:
@@ -41,7 +40,8 @@ import org.w3c.dom.Document;
 public class Xsaml20_HandleMetadata extends AbstractRequestHandler
 {
 	private final static String MODULE = "Xsaml20_HandleMetadata";
-
+	private String _sMySharedSecret = null;
+	
 	/**
 	 * Init method <br>
 	 * .
@@ -55,11 +55,17 @@ public class Xsaml20_HandleMetadata extends AbstractRequestHandler
 	 */
 	@Override
 	public void init(ServletConfig servletConfig, Object config)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		super.init(servletConfig, config);
+		_sMySharedSecret = _configManager.getSharedSecret();
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, "init");
+		if (!Utils.hasValue(_sMySharedSecret)) {
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod, "Could not retrieve 'shared_secret' from aselect config section");
+			throw new ASelectConfigException(Errors.ERROR_ASELECT_CONFIG_ERROR);
+		}
+
 	}
 
 	/**
@@ -78,11 +84,8 @@ public class Xsaml20_HandleMetadata extends AbstractRequestHandler
 		throws ASelectException
 	{
 		String sMethod = "process";
-		String urlSite = "//localhost";
 		PrintWriter out;
 
-		StringBuffer path = request.getRequestURL();
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "path=" + path);
 		try {
 			out = response.getWriter();
 			response.setContentType("text/xml");
@@ -91,21 +94,29 @@ public class Xsaml20_HandleMetadata extends AbstractRequestHandler
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not handle the request", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-		// We only accept this request from localhost
-		// http://localhost:8080/...
-		int idx = path.indexOf(urlSite);
-		char nextChar = '\0';
-		if (idx >= 0) {
-			nextChar = path.charAt(idx + urlSite.length());
+
+		String sSharedSecret = request.getParameter("shared_secret");
+		if (!Utils.hasValue(sSharedSecret)) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Parameter 'shared_secret' not found in request");
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
-		if (idx < 0 || (nextChar != ':' && nextChar != '/')) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Not called from '//localhost'");
-			out.println("This request must be called from '//localhost'!");
+		if (!sSharedSecret.equals(_sMySharedSecret)) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid 'shared_secret' received");
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+
+		// We only accept this request from localhost
+		String sServerIp = Tools.getServerIpAddress(_systemLogger);
+		String sClientIp = request.getRemoteAddr();
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "ServerIp="+sServerIp+" ClientIp="+sClientIp);
+		if (!sServerIp.equals(sClientIp)) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Not called from the local server"+" client_ip="+sClientIp);
+			out.println("This request must be called from the local server");
 		}
 		else {
 			String sList = request.getParameter("list");
 			String entityId = request.getParameter("metadata");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "entityId=" + entityId);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "list="+sList+" entityId=" + entityId);
 
 			if (sList == null && entityId == null) {
 				out.println("Parameter 'metadata' is missing!");

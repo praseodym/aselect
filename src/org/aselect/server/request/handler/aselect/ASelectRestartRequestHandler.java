@@ -26,12 +26,17 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.server.config.ASelectConfigManager;
+import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.AbstractRequestHandler;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.logging.Audit;
 import org.aselect.system.servlet.ASelectHttpServlet;
+import org.aselect.system.utils.Tools;
+import org.aselect.system.utils.Utils;
 
 /**
  * Handles the A-Select <i>restart</i> request. <br>
@@ -63,39 +68,35 @@ public class ASelectRestartRequestHandler extends AbstractRequestHandler
 	 * <br>
 	 * 
 	 * @param oServletConfig
-	 *            the o servlet config
+	 *            the servlet config
 	 * @param oConfig
-	 *            the o config
+	 *            the config object
 	 * @throws ASelectException
-	 *             the a select exception
+	 *             the aselect exception
 	 * @see org.aselect.server.request.handler.AbstractRequestHandler#init(javax.servlet.ServletConfig, java.lang.Object)
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 
-		try {
-			super.init(oServletConfig, oConfig);
+//		try {
+		super.init(oServletConfig, oConfig);
 
-			try {
-				_sMySharedSecret = _configManager.getParam(oConfig, "shared_secret");
-			}
-			catch (ASelectConfigException e) {
-				_sMySharedSecret = null;
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"Could not retrieve 'shared_secret' config parameter in aselect config section.", e);
-				throw e;
-			}
+		_sMySharedSecret = _configManager.getSharedSecret();
+		if (!Utils.hasValue(_sMySharedSecret)) {
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod, "Could not retrieve 'shared_secret' from aselect config section");
+			throw new ASelectConfigException(Errors.ERROR_ASELECT_CONFIG_ERROR);
 		}
-		catch (ASelectException e) {
-			throw e;
-		}
-		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize", e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-		}
+//		}
+//		catch (ASelectException e) {
+//			throw e;
+//		}
+//		catch (Exception e) {
+//			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize", e);
+//			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+//		}
 	}
 
 	/**
@@ -126,35 +127,56 @@ public class ASelectRestartRequestHandler extends AbstractRequestHandler
 	 *            the response
 	 * @return the request state
 	 * @throws ASelectException
-	 *             the a select exception
+	 *             the aselect exception
 	 * @see org.aselect.server.request.handler.AbstractRequestHandler#process(javax.servlet.http.HttpServletRequest,
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		try {
 			String sSharedSecret = request.getParameter("shared_secret");
+			String sRequest= request.getParameter("request");
 
-			if (sSharedSecret == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"Parameter 'shared_secret' not found in restart request from " + request.getRemoteAddr());
-
+			String sServerIp = Tools.getServerIpAddress(_systemLogger);
+			String sClientIp = request.getRemoteAddr();
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "ServerIp="+sServerIp+" ClientIp="+sClientIp);
+			if (!sServerIp.equals(sClientIp)) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Handler not called from the local server");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 
+			if (!Utils.hasValue(sSharedSecret)) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Parameter 'shared_secret' not found in request");
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
 			if (!sSharedSecret.equals(_sMySharedSecret)) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid 'shared_secret' received from "
-						+ request.getRemoteAddr());
-
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid 'shared_secret' received");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 
-			String sResult = (restartServlets() ? Errors.ERROR_ASELECT_SUCCESS : Errors.ERROR_ASELECT_INTERNAL_ERROR);
-
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "sRequest="+sRequest);
+			String sResult = Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST;
+			if ("reload_config".equals(sRequest)) {
+				int rc = _configManager.getMainServlet().mainServletFunction(sRequest);
+				sResult = (rc == 0)? Errors.ERROR_ASELECT_SUCCESS : Errors.ERROR_ASELECT_INTERNAL_ERROR;
+			}
+			else if ("logging".equals(sRequest)) {
+				String sLevel= request.getParameter("level");
+				if (Utils.hasValue(sLevel)) {
+					Level level = Audit.parse(sLevel);
+					ASelectSystemLogger.getHandle().setLevel(level);
+					sResult = Errors.ERROR_ASELECT_SUCCESS;
+				}
+			}
+			else if ("restart_servlets".equals(sRequest)) {
+				sResult = (aselectRestartServlets() ? Errors.ERROR_ASELECT_SUCCESS : Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			}
+			// else INVALID_REQUEST
+			
 			PrintWriter pwOut = response.getWriter();
-			pwOut.print("result_code=" + sResult);
+			pwOut.println("result_code=" + sResult);
 			if (pwOut != null)
 				pwOut.close();
 		}
@@ -202,9 +224,12 @@ public class ASelectRestartRequestHandler extends AbstractRequestHandler
 	 * 
 	 * @return false if one or more restart requests fail, otherwise true.
 	 */
-	private synchronized boolean restartServlets()
+	// NOTE: There's also a version of this method in ASelectHttpServlet.java
+	// That version is used by the AuthspServer
+	// AND another one in AuthSPServlet.java
+	private synchronized boolean aselectRestartServlets()
 	{
-		String sMethod = "restartServlets()";
+		String sMethod = "aselectRestartServlets";
 		boolean bEndResult = true;
 		try {
 			ServletContext oServletContext = _oServletConfig.getServletContext();
@@ -218,13 +243,10 @@ public class ASelectRestartRequestHandler extends AbstractRequestHandler
 			oServletContext.setAttribute("restarting_servlets", "true");
 			StringBuffer sbResult = new StringBuffer("Restart: ");
 
-			Set keys = htRestartServlets.keySet();
-			for (Object s : keys) {
+			Set keySet = htRestartServlets.keySet();
+			for (Object s : keySet) {
 				String sKey = (String) s;
-				// Enumeration enumRestartServlets = htRestartServlets.keys();
-				// while (enumRestartServlets.hasMoreElements())
-				// {
-				// String sKey = (String)enumRestartServlets.nextElement();
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Restart servlet: "+sKey);
 				ASelectHttpServlet oASelectHttpServlet = (ASelectHttpServlet) htRestartServlets.get(sKey);
 				boolean bResult = true;
 				try {
@@ -238,7 +260,6 @@ public class ASelectRestartRequestHandler extends AbstractRequestHandler
 				sbResult.append(sKey).append(" (");
 				sbResult.append(bResult ? "OK" : "Failed");
 				sbResult.append(")");
-				// if (enumRestartServlets.hasMoreElements())
 				sbResult.append(", ");
 			}
 			int len = sbResult.length();

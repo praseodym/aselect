@@ -71,11 +71,11 @@ public abstract class AbstractRequestHandler extends BasicRequestHandler impleme
 	 * <br>
 	 * 
 	 * @param oServletConfig
-	 *            the o servlet config
+	 *            the servlet config
 	 * @param oConfig
-	 *            the o config
+	 *            the config
 	 * @throws ASelectException
-	 *             the a select exception
+	 *             the aselect exception
 	 * @see org.aselect.server.request.handler.IRequestHandler#init(javax.servlet.ServletConfig, java.lang.Object)
 	 */
 	public void init(ServletConfig oServletConfig, Object oConfig)
@@ -102,8 +102,7 @@ public abstract class AbstractRequestHandler extends BasicRequestHandler impleme
 				sTarget = _configManager.getParam(oConfig, "target");
 			}
 			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'target' in 'handler' section found",
-						e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'target' in 'handler' section found", e);
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "target=" + sTarget);

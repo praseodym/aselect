@@ -295,7 +295,7 @@ public class RequestHandler extends Thread
 	private boolean _bAuthorization = false;
 
 	// Store timing data
-	TimeSensor timeSensor;
+	private TimeSensor timeSensor;
 
 	/**
 	 * Initializes instance variables. <br>
@@ -545,10 +545,6 @@ public class RequestHandler extends Thread
 		}
 		
 		timeSensor.timeSensorFinish(_sErrorCode.equals(Errors.ERROR_ASELECT_SUCCESS));
-		
-		//StringBuffer sb = new StringBuffer("DATA=");
-		//sb.append(timeSensor.timeSensorPack()).append("\n");
-		//Tools.reportTimerSensorData(_configManager, "agent"/*xml*/, "timer_sensor", _systemLogger, sb.toString());
 		SendQueue.getHandle().addEntry(timeSensor.timeSensorPack());
 		
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "} REQ T="+System.currentTimeMillis() + " port="+port + ": "+sRequest);
@@ -1364,7 +1360,7 @@ public class RequestHandler extends Thread
 	private void processVerifyTicketRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
 		throws ASelectCommunicationException
 	{
-		String sMethod = "processVerifyTicketRequest()";
+		String sMethod = "processVerifyTicketRequest";
 		StringBuffer sbBuffer = new StringBuffer();
 		String sTicket = null;
 		String sUid = null;
@@ -1414,6 +1410,11 @@ public class RequestHandler extends Thread
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET attributes_hash=" + sAttributesHash
 					+ ", request_uri=" + sRequestURI + ", ip=" + sIP);
+
+			// 20120527, Bauke: Communicate our batch_size to the filter, if it's 0, the filter will disable LbSensor output
+			SendQueue hQueue = SendQueue.getHandle();
+			int iBatchSize = hQueue.getBatchSize();
+			oOutputMessage.setParam("batch_size", Integer.toString(iBatchSize));
 
 			// get the ticket context
 			HashMap htTicketContext = _ticketManager.getTicketContext(sTicket);
@@ -1480,10 +1481,10 @@ public class RequestHandler extends Thread
 				htUserAttributes.putAll(htTicketContext);
 				// Remove encoded attributes
 				htUserAttributes.remove("attributes");
-				if (!AuthorizationEngine.getHandle().isUserAuthorized(sAppId, sRequestURI, htUserAttributes)) {
-					// not authorized
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "User not authorized to access application "+sAppId);
-					_sErrorCode = Errors.ERROR_ASELECT_AGENT_AUTHORIZATION_FAILED;
+				int iResult = AuthorizationEngine.getHandle().checkUserAuthorization(sAppId, sRequestURI, htUserAttributes);
+				if (iResult != 0) {  // not authorized
+					_sErrorCode = (iResult==1)? Errors.ERROR_ASELECT_AGENT_AUTHORIZATION_FAILED: Errors.ERROR_ASELECT_AGENT_NO_RULES;
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "User not authorized "+sAppId+" error="+_sErrorCode);
 					return;
 				}
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET OK");
@@ -1543,9 +1544,9 @@ public class RequestHandler extends Thread
 			// timeSensor.setTimeSensorTgt(sTicket);  // TgT still valid according to local checks (and upgrade_ticket)
 			
 			// Ticket OK, create response message
-			_sErrorCode = Errors.ERROR_ASELECT_SUCCESS;
 			if (sAppArgs != null)
 				oOutputMessage.setParam("aselect_app_args", sAppArgs);
+			_sErrorCode = Errors.ERROR_ASELECT_SUCCESS;
 		}
 		catch (NumberFormatException eNF) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not create response message.", eNF);
@@ -1999,8 +2000,8 @@ public class RequestHandler extends Thread
 			String[] saReceivedRules = oInputMessage.getArray("rules");
 			if (Utils.hasValue(sAppId))
 				timeSensor.setTimeSensorAppId(sAppId);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "RULES sAppId=" + sAppId + ", saReceivedRules="
-					+ saReceivedRules);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "RULES sAppId=" + sAppId +
+					", saReceivedRules="+saReceivedRules);
 
 			// Split id, rules and URI's
 			String[] saRuleIDs = new String[saReceivedRules.length];
