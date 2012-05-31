@@ -312,7 +312,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 
 			// Send to DigiD!
 			HashMap htResponse = null;
-			Tools.pauseSensorData(_systemLogger, htSessionContext);  // 20120215, possible session update
+			Tools.pauseSensorData(_configManager, _systemLogger, htSessionContext);  // 20120215, possible session update
 			try {
 				htResponse = _oClientCommunicator.sendMessage(htRequest, sASelectServerUrl);
 			}
@@ -323,7 +323,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			}
 			finally {
 				// Time in between should be attributed to DigiD
-				Tools.resumeSensorData(_systemLogger, htSessionContext);  // 20120215, possible sessin update
+				Tools.resumeSensorData(_configManager, _systemLogger, htSessionContext);  // 20120215, possible sessin update
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Result=" + htResponse);
 			

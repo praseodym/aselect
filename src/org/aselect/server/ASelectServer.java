@@ -421,9 +421,9 @@ public class ASelectServer extends ASelectHttpServlet
 				throw eAC;
 			}
 			
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Start TimeSensor?");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Start TimerSensor?");
 			_timerSensorThread = ConfigManager.timerSensorStartThread(_configManager, _systemLogger, "aselect");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "TimeSensor thread="+_timerSensorThread);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "TimerSensor thread="+_timerSensorThread);
 			// Allow the ConfigManager to supply this Object to interested parties (i.e. AselectRestartRequestHandler
 			_configManager.setMainServlet(this);
 			
@@ -519,7 +519,7 @@ public class ASelectServer extends ASelectHttpServlet
 				response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
 				return;
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "TimeSensor thread="+_timerSensorThread+" this="+this);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "TimerSensor thread="+_timerSensorThread+" this="+this);
 
 			_numRequests++;
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SERVICE {" + " T="+System.currentTimeMillis()+", t="+Thread.currentThread().getId()+
@@ -607,9 +607,9 @@ public class ASelectServer extends ASelectHttpServlet
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Stop Crypto"); 
 		_cryptoEngine.stop();
 		
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "TimeSensor thread="+_timerSensorThread+" nReq="+_numRequests);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "TimerSensor thread="+_timerSensorThread+" nReq="+_numRequests);
 		if (_timerSensorThread != null) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Stop TimeSensor");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Stop TimerSensor");
 			ConfigManager.timerSensorStopThread(_timerSensorThread);
 		}
 		try { java.lang.Thread.sleep(1000);	} catch (InterruptedException e) {}
@@ -641,16 +641,16 @@ public class ASelectServer extends ASelectHttpServlet
 			return -1;
 		
 		try {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "TimeSensor thread="+_timerSensorThread);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "TimerSensor thread="+_timerSensorThread);
 			if (_timerSensorThread != null) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Stop TimeSensor");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Stop TimerSensor");
 				ConfigManager.timerSensorStopThread(_timerSensorThread);
 			}
 			
 			// Reload the configuration
 			_configManager.loadConfiguration(_sWorkingDir, null, null, null, null, null, MODULE);
 			
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Start TimeSensor?");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Start TimerSensor?");
 			_timerSensorThread = ConfigManager.timerSensorStartThread(_configManager, _systemLogger, "aselect");
 		}
 		catch (ASelectException e) {

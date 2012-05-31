@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.logging.Level;
 
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.utils.TimeSensor;
+import org.aselect.system.utils.TimerSensor;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
@@ -62,7 +62,7 @@ public class DataCollectSensor extends BasicSensorHandler
 	{
 		String sMethod = "processLine";
 		String sData = null;
-		TimeSensor ts = new TimeSensor(_oLbSensorLogger, "");
+		TimerSensor ts = new TimerSensor(_oLbSensorLogger, "");
 
 		//_oLbSensorLogger.log(Level.INFO, MODULE, sMethod,
 		//		"LINE ["+sLine.replace("\r\n", "CN").replace("\r", "CR").replace("\n", "NL")+
@@ -98,11 +98,11 @@ public class DataCollectSensor extends BasicSensorHandler
 		if (Utils.hasValue(sData)) {
 			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "DATA ["+sData+"]");
 			try {
-				ts.timeSensorUnPack(sData);
-				//_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Add="+ts.getTimeSensorId());
+				ts.timerSensorUnPack(sData);
+				//_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Add="+ts.getTimerSensorId());
 				DataCollectStore hStore = DataCollectStore.getHandle();
-				//_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, ts.timeSensorPack());
-				hStore.addEntry(ts.getTimeSensorId(), ts);
+				//_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, ts.timerSensorPack());
+				hStore.addEntry(ts.getTimerSensorId(), ts);
 			}
 			catch (Exception e) {
 				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Exception: "+e.getClass()+" :"+e.getMessage());

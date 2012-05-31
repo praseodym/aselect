@@ -21,9 +21,9 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.Priority;
 import org.aselect.lbsensor.LbSensor;
 import org.aselect.lbsensor.LbSensorSystemLogger;
-import org.aselect.system.utils.TimeSensor;
+import org.aselect.system.utils.TimerSensor;
 import org.aselect.system.utils.Utils;
-import org.aselect.system.utils.TimeSensor.TimeVal;
+import org.aselect.system.utils.TimerSensor.TimeVal;
 
 /**
  * The Class DataCollectStore.
@@ -37,7 +37,7 @@ public class DataCollectStore
 	private static DataCollectStore _oDataCollectStore;
 
 	protected LbSensorSystemLogger _oLbSensorLogger = LbSensorSystemLogger.getHandle();
-	private ConcurrentHashMap<String, TimeSensor> dataStore = new ConcurrentHashMap<String, TimeSensor>();
+	private ConcurrentHashMap<String, TimerSensor> dataStore = new ConcurrentHashMap<String, TimerSensor>();
 	private String _myIP = "";
 	private int _myPort = 0;
 	private String _sExportFile = "";
@@ -70,41 +70,41 @@ public class DataCollectStore
 	 * @param sKey
 	 *            the key
 	 * @param ts
-	 *            the TimeSensor struct
+	 *            the TimerSensor struct
 	 */
-	synchronized public void addEntry(String sKey, TimeSensor ts)
+	synchronized public void addEntry(String sKey, TimerSensor ts)
 	{
 		String sMethod = "addEntry";
 		
 		//_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Get "+sKey);
-		// Look for a level 1 TimeSensorId record
-		TimeSensor tsStore = dataStore.get(sKey);
+		// Look for a level 1 TimerSensorId record
+		TimerSensor tsStore = dataStore.get(sKey);
 		
 		if (tsStore == null) {  // ID is not present yet
-			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "NEW "+sKey+ " data="+ts.timeSensorPack());
+			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "NEW "+sKey+ " data="+ts.timerSensorPack());
 			dataStore.put(sKey, ts);
 		}
 		else {
-			//_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "UPD0 "+sKey+ " data="+tsStore.timeSensorPack());
+			//_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "UPD0 "+sKey+ " data="+tsStore.timerSensorPack());
 			// Manipulate contents of tsStore
 			if (tsStore.td_start.timeValCompare(ts.td_start) > 0) {  // save lowest start time
 				tsStore.td_start = ts.td_start;
 			}
-			tsStore.timeSensorSpentPlus(ts);
+			tsStore.timerSensorSpentPlus(ts);
 			if (tsStore.td_finish.timeValCompare(ts.td_finish) < 0) {  // save highest finish time
 				// ts is the latest, use it's values
 				tsStore.td_finish = ts.td_finish;
-				tsStore.setTimeSensorSender(ts.getTimeSensorSender());
-				tsStore.setTimeSensorSuccess(ts.isTimeSensorSuccess());
+				tsStore.setTimerSensorSender(ts.getTimerSensorSender());
+				tsStore.setTimerSensorSuccess(ts.isTimerSensorSuccess());
 			}
 			
-			if (tsStore.getTimeSensorType() < ts.getTimeSensorType())  // save highest type
-				tsStore.setTimeSensorType(ts.getTimeSensorType());
+			if (tsStore.getTimerSensorType() < ts.getTimerSensorType())  // save highest type
+				tsStore.setTimerSensorType(ts.getTimerSensorType());
 
-			if (!Utils.hasValue(tsStore.getTimeSensorAppId()))  // grab first app_id
-				tsStore.setTimeSensorAppId(ts.getTimeSensorAppId());
+			if (!Utils.hasValue(tsStore.getTimerSensorAppId()))  // grab first app_id
+				tsStore.setTimerSensorAppId(ts.getTimerSensorAppId());
 			
-			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "UPD "+sKey+ " data="+tsStore.timeSensorPack());
+			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "UPD "+sKey+ " data="+tsStore.timerSensorPack());
 			dataStore.put(sKey, tsStore);
 		}
 		
@@ -125,7 +125,7 @@ public class DataCollectStore
 			while (eKeys.hasMoreElements()) {
 				String sKey = (String)eKeys.nextElement();
 
-				TimeSensor ts = dataStore.get(sKey);
+				TimerSensor ts = dataStore.get(sKey);
 				TimeVal tv = ts.new TimeVal();
 				tv.timeValNow();  // set current time
 				
@@ -146,17 +146,17 @@ public class DataCollectStore
 	/**
 	 * Export single entry to .csv file.
 	 * 
-	 * @param ts - the TimeSensor data
+	 * @param ts - the TimerSensor data
 	 * @param exportLevel - the level to be stored in the .csv file
 	 */
-	private void exportSingleEntry(TimeSensor ts, int exportLevel)
+	private void exportSingleEntry(TimerSensor ts, int exportLevel)
 	{
 		String sMethod = "exportSingleEntry";
-		int iType = ts.getTimeSensorType();
+		int iType = ts.getTimerSensorType();
 
 		if (exportLevel > _iCollectLevel)
 			return;
-		_oLbSensorLogger.log(Level.FINE, MODULE, sMethod, "EXPORT="+ts.timeSensorPack()+" iType="+iType+" level="+exportLevel);
+		_oLbSensorLogger.log(Level.FINE, MODULE, sMethod, "EXPORT="+ts.timerSensorPack()+" iType="+iType+" level="+exportLevel);
 
 		// type should be at least 1 at this point
 		String sType = iType==1? "filter": iType==2? "agent": iType==3? "server":
@@ -164,9 +164,9 @@ public class DataCollectStore
 		long iSpent = 1000*ts.td_spent.getSeconds()+ts.td_spent.getMicro();
 		// Fieldnumbers in doc:        1  2    3  4  5  6      7  8  9 10     11 12 13
 		String sLine = String.format("%s;%d;SIAM;%s;%d;%s;SERVER;%s;%d;%s;SIAMID;%s;%s",
-					_myIP, _myPort, /*4*/ts.getTimeSensorSender(), /*5*/exportLevel, 
+					_myIP, _myPort, /*4*/ts.getTimerSensorSender(), /*5*/exportLevel, 
 					/*6*/sType, /*8*/ts.td_start.toString().replace(".", ""),
-					/*9*/iSpent, ts.getTimeSensorAppId(), /*12*/ts.getTimeSensorId(), Boolean.toString(ts.isTimeSensorSuccess()));
+					/*9*/iSpent, ts.getTimerSensorAppId(), /*12*/ts.getTimerSensorId(), Boolean.toString(ts.isTimerSensorSuccess()));
 		
 		//long now = System.currentTimeMillis();
 		appendToFile(_sExportFile, sLine);

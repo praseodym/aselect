@@ -1233,7 +1233,7 @@ public class PKIManager
 				try {
 					loadCaKeyStoreFromPFXFile(_sCaKeyStoreLocation, _sCaKeyStorePassword);
 					loadCRLs();
-					_pwOutput.println("Succesfully Reloaded CA Keystore and CRL's");
+					_pwOutput.println("Successfully Reloaded CA Keystore and CRL's");
 				}
 				catch (ASelectException e) {
 					_pwOutput.println("The Following exception occured: " + e.getMessage());
@@ -1250,7 +1250,7 @@ public class PKIManager
 					_systemLogger.log(Level.WARNING, MODULE, "PKIAdminRequestDispatcher->handleRequest()", e
 							.getMessage(), e);
 				}
-				_pwOutput.println("Succesfully Reloaded CRL's");
+				_pwOutput.println("Successfully Reloaded CRL's");
 			}
 			else if (sRequest.equalsIgnoreCase("3")) {
 				try {
@@ -1260,7 +1260,7 @@ public class PKIManager
 					if (_oCaKeystore.containsAlias(sAlias)) {
 						try {
 							loadCRLForCA(sAlias);
-							_pwOutput.println("Succesfully Reloaded CRL for CA with Alias: " + sAlias);
+							_pwOutput.println("Successfully Reloaded CRL for CA with Alias: " + sAlias);
 						}
 						catch (ASelectException e) {
 							_htCRLs.remove(sAlias);

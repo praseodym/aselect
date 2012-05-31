@@ -4,9 +4,9 @@ import java.util.logging.Level;
 
 import org.aselect.system.logging.SystemLogger;
 
-public class TimeSensor
+public class TimerSensor
 {		
-	private String MODULE = "TimeSensor";
+	private String MODULE = "TimerSensor";
 	private SystemLogger _oSystemLogger;
 
 	public class TimeVal
@@ -101,15 +101,15 @@ public class TimeSensor
 		public void setMicro(long tvUsec) { tv_usec = tvUsec; }
 	}
 	
-    private String timeSensorSender = "";  // the sending process
-	private String timeSensorId = "";  // unique sensor id
-    private String timeSensorRid = "";  // session id
-	private String timeSensorTgt = ""; // ticket
-	private String timeSensorAppId = ""; // application requested (app1, ...)
-	private int timeSensorLevel = -1;  // -1=unused, 0=???, 1=flow complete, 2=detail flow, 3=even more detail
-    private int timeSensorType = -1;   // -1=unused, 0=???, 1=filter, 2=filter+agent, 3=...server, 4=...authsp 
-    private long timeSensorThread = -1; 
-    private boolean timeSensorSuccess = false; 
+    private String timerSensorSender = "";  // the sending process
+	private String timerSensorId = "";  // unique sensor id
+    private String timerSensorRid = "";  // session id
+	private String timerSensorTgt = ""; // ticket
+	private String timerSensorAppId = ""; // application requested (app1, ...)
+	private int timerSensorLevel = -1;  // -1=unused, 0=???, 1=flow complete, 2=detail flow, 3=even more detail
+    private int timerSensorType = -1;   // -1=unused, 0=???, 1=filter, 2=filter+agent, 3=...server, 4=...authsp 
+    private long timerSensorThread = -1; 
+    private boolean timerSensorSuccess = false; 
 
 	public TimeVal td_start = new TimeVal();  // timestamp start
     public TimeVal td_finish = new TimeVal(); // timestamp finish
@@ -121,7 +121,7 @@ public class TimeSensor
 	 * @param mSec - the milliseconds
 	 * @return the TimeVal string
 	 */
-    public static String timeSensorMilli2Time(long mSec)
+    public static String timerSensorMilli2Time(long mSec)
     {
        long sec = mSec / 1000;
 	    long usec = mSec - 1000 * sec;
@@ -134,25 +134,25 @@ public class TimeSensor
 	 * @param systemLogger
 	 *            the system logger
 	 */
-    public TimeSensor(SystemLogger systemLogger, String sSenderId)
+    public TimerSensor(SystemLogger systemLogger, String sSenderId)
     {
 		_oSystemLogger = systemLogger;
-		timeSensorSender = sSenderId;
+		timerSensorSender = sSenderId;
     }
     
     /**
 	 * Timer sensor pack method.
 	 * 
-	 * @return the packed string that represents the TimeSensor object
+	 * @return the packed string that represents the TimerSensor object
 	 *
      * Output example: 1320673143.256681,1,1,1320673143.281,1320673143.739,0.458
 	 */
-    public String timeSensorPack()
+    public String timerSensorPack()
     {
-	    return String.format("%s,%s,%s,%d,%d,%d,%s,%s,%s,%s,%s,%s", timeSensorSender, timeSensorId,
-	    			timeSensorAppId, timeSensorLevel, timeSensorType, timeSensorThread,
+	    return String.format("%s,%s,%s,%d,%d,%d,%s,%s,%s,%s,%s,%s", timerSensorSender, timerSensorId,
+	    			timerSensorAppId, timerSensorLevel, timerSensorType, timerSensorThread,
 	    			td_start.toString(), td_finish.toString(), td_spent.toString(),
-	    			isTimeSensorSuccess(), timeSensorRid, timeSensorTgt);
+	    			isTimerSensorSuccess(), timerSensorRid, timerSensorTgt);
     }
     
     /**
@@ -162,34 +162,34 @@ public class TimeSensor
 	 *            the packed string
 	 * @return the time sensor object
 	 */
-    public void timeSensorUnPack(String sPack)
+    public void timerSensorUnPack(String sPack)
     {
-		String sMethod = "timeSensorUnPack";
+		String sMethod = "timerSensorUnPack";
     	String[] sUnpacked = sPack.split(",", -1/*also empty fields*/);
 
     	//_oSystemLogger.log(Level.INFO, MODULE, sMethod, "flds="+sUnpacked.length);
     	int i = 0;
     	try {
-	    	timeSensorSender = sUnpacked[i++];
-	    	timeSensorId = sUnpacked[i++];
-	    	timeSensorAppId = sUnpacked[i++];
-	    	timeSensorLevel = Integer.parseInt(sUnpacked[i++]);
-	    	timeSensorType = Integer.parseInt(sUnpacked[i++]);
-	    	timeSensorThread = Integer.parseInt(sUnpacked[i++]);
+	    	timerSensorSender = sUnpacked[i++];
+	    	timerSensorId = sUnpacked[i++];
+	    	timerSensorAppId = sUnpacked[i++];
+	    	timerSensorLevel = Integer.parseInt(sUnpacked[i++]);
+	    	timerSensorType = Integer.parseInt(sUnpacked[i++]);
+	    	timerSensorThread = Integer.parseInt(sUnpacked[i++]);
 	    	
 	    	td_start.fromString(sUnpacked[i++]);
 	    	td_finish.fromString(sUnpacked[i++]);
 	    	td_spent.fromString(sUnpacked[i++]);
-	    	timeSensorSuccess = Boolean.parseBoolean(sUnpacked[i++]);
-	    	timeSensorRid = sUnpacked[i++];
-	    	timeSensorTgt = sUnpacked[i++];
+	    	timerSensorSuccess = Boolean.parseBoolean(sUnpacked[i++]);
+	    	timerSensorRid = sUnpacked[i++];
+	    	timerSensorTgt = sUnpacked[i++];
     	}
     	catch (Exception e) {
 			_oSystemLogger.log(Level.INFO, MODULE, sMethod, "Exception:"+e.getClass()+" "+e.getMessage()+" i="+i);
     	}
     }
     
-    public void timeSensorSpentPlus(TimeSensor tsOther)
+    public void timerSensorSpentPlus(TimerSensor tsOther)
     {
     	td_spent.timeValPlus(tsOther.td_spent);
     }
@@ -200,35 +200,35 @@ public class TimeSensor
 	 * @param level
 	 *            the level of detail
 	 */
-	public void timeSensorStart(int level, int type, long threadId)
+	public void timerSensorStart(int level, int type, long threadId)
 	{
-		String sMethod = "timeSensorStart";
+		String sMethod = "timerSensorStart";
 		
- 	    timeSensorType = type;
- 	    timeSensorLevel = level;
- 	    timeSensorThread = threadId;
+ 	    timerSensorType = type;
+ 	    timerSensorLevel = level;
+ 	    timerSensorThread = threadId;
 	    td_start.timeValNow();
 	    td_spent.timeValZero();
 	    td_finish.timeValZero();
-		_oSystemLogger.log(Level.INFO, MODULE, sMethod, "TS_"+timeSensorThread+" start: st="+td_start.toString());
+		_oSystemLogger.log(Level.INFO, MODULE, sMethod, "TS_"+timerSensorThread+" start: st="+td_start.toString());
 	}
 
 	/**
 	 * Timer sensor pause.
 	 */
-	public void timeSensorPause()
+	public void timerSensorPause()
 	{
-		String sMethod = "timeSensorPause";
+		String sMethod = "timerSensorPause";
 		td_finish.timeValNow();
-		_oSystemLogger.log(Level.INFO, MODULE, sMethod, "TS_"+timeSensorThread+" pause: fi="+td_finish.toString());
+		_oSystemLogger.log(Level.INFO, MODULE, sMethod, "TS_"+timerSensorThread+" pause: fi="+td_finish.toString());
 	}
 
 	/**
 	 * Timer sensor resume. Must be called after timer_pause()
 	 */
-	public void timeSensorResume()
+	public void timerSensorResume()
 	{
-		String sMethod = "timeSensorResume";
+		String sMethod = "timerSensorResume";
 	    TimeVal tvNow = new TimeVal();
 	    tvNow.timeValNow();
 	    String sNow = tvNow.toString();
@@ -238,16 +238,16 @@ public class TimeSensor
 	    String sDiff = tvNow.toString();
 	    td_spent.timeValPlus(tvNow);
 	    td_finish.timeValZero();
-	    _oSystemLogger.log(Level.INFO, MODULE, sMethod, "TS_"+timeSensorThread+
+	    _oSystemLogger.log(Level.INFO, MODULE, sMethod, "TS_"+timerSensorThread+
 	    					" resume: nw="+sNow+" df="+sDiff+" sp="+td_spent.toString());
 	}
 
 	/**
 	 * Timer sensor finish.
 	 */
-	public void timeSensorFinish(boolean bSuccess)
+	public void timerSensorFinish(boolean bSuccess)
 	{
-		String sMethod = "timeSensorFinish";
+		String sMethod = "timerSensorFinish";
 	    TimeVal tvNow = new TimeVal();
 
 	    // TotalSpent = (now - start) - spent;
@@ -256,33 +256,33 @@ public class TimeSensor
 	    tvNow.timeValMinus(td_start);
 	    tvNow.timeValMinus(td_spent);
 	    td_spent.timeValCopy(tvNow);
-	    timeSensorSuccess = bSuccess;
-	    _oSystemLogger.log(Level.INFO, MODULE, sMethod, "TS_"+timeSensorThread+" finish: "+
+	    timerSensorSuccess = bSuccess;
+	    _oSystemLogger.log(Level.INFO, MODULE, sMethod, "TS_"+timerSensorThread+" finish: "+
 	    			td_start.toString()+" "+td_spent.toString()+" "+td_finish.toString()+
-	    			" id="+timeSensorId+" level="+timeSensorLevel+" type="+timeSensorType+" ok="+timeSensorSuccess);
+	    			" id="+timerSensorId+" level="+timerSensorLevel+" type="+timerSensorType+" ok="+timerSensorSuccess);
 	}
 
-	public int getTimeSensorType() { return timeSensorType; }
-	public void setTimeSensorType(int tdType) { timeSensorType = tdType; }
+	public int getTimerSensorType() { return timerSensorType; }
+	public void setTimerSensorType(int tdType) { timerSensorType = tdType; }
 	
-	public int getTimeSensorLevel() { return timeSensorLevel; }
-	public void setTimeSensorLevel(int tdLevel) { timeSensorLevel = tdLevel; }
+	public int getTimerSensorLevel() { return timerSensorLevel; }
+	public void setTimerSensorLevel(int tdLevel) { timerSensorLevel = tdLevel; }
 	
-	public String getTimeSensorId() { return timeSensorId; }
-	public void setTimeSensorId(String tdId) { timeSensorId = tdId; }
+	public String getTimerSensorId() { return timerSensorId; }
+	public void setTimerSensorId(String tdId) { timerSensorId = tdId; }
 	
-    public String getTimeSensorRid() { return timeSensorRid; }
-	public void setTimeSensorRid(String timeSensorRid) { this.timeSensorRid = timeSensorRid; }
+    public String getTimerSensorRid() { return timerSensorRid; }
+	public void setTimerSensorRid(String timerSensorRid) { this.timerSensorRid = timerSensorRid; }
 
-	public String getTimeSensorTgt() { return timeSensorTgt; }
-	public void setTimeSensorTgt(String timeSensorTgt) { this.timeSensorTgt = timeSensorTgt.substring(0, 41); }
+	public String getTimerSensorTgt() { return timerSensorTgt; }
+	public void setTimerSensorTgt(String timerSensorTgt) { this.timerSensorTgt = timerSensorTgt.substring(0, 41); }
 
-	public String getTimeSensorSender() { return timeSensorSender; }
-	public void setTimeSensorSender(String timeSender) { this.timeSensorSender = timeSender; }
+	public String getTimerSensorSender() { return timerSensorSender; }
+	public void setTimerSensorSender(String timerSender) { this.timerSensorSender = timerSender; }
 
-	public boolean isTimeSensorSuccess() { return timeSensorSuccess; }
-	public void setTimeSensorSuccess(boolean timeSensorSuccess) { this.timeSensorSuccess = timeSensorSuccess; }
+	public boolean isTimerSensorSuccess() { return timerSensorSuccess; }
+	public void setTimerSensorSuccess(boolean timerSensorSuccess) { this.timerSensorSuccess = timerSensorSuccess; }
 
-    public String getTimeSensorAppId() { return timeSensorAppId; }
-	public void setTimeSensorAppId(String timeSensorAppId) { this.timeSensorAppId = timeSensorAppId; }
+    public String getTimerSensorAppId() { return timerSensorAppId; }
+	public void setTimerSensorAppId(String timerSensorAppId) { this.timerSensorAppId = timerSensorAppId; }
 }

@@ -92,8 +92,8 @@ import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * Implements the ConfigManager for the A-Select Agent package. <br>
  * <br>
@@ -154,6 +154,13 @@ public class ASelectAgentConfigManager extends ConfigManager
 	 */
 	private HashMap _htAttributeForwarding = null;
 
+	// Send "upgrade_tgt" to server only after a number of seconds have elapsed:
+	int _upgradeTgtInterval = 0;
+
+	public int getUpgradeTgtInterval() {
+		return _upgradeTgtInterval;
+	}
+
 	/**
 	 * returns a static ASelectAgentConfigManager handle to this singleton.
 	 * 
@@ -173,18 +180,26 @@ public class ASelectAgentConfigManager extends ConfigManager
 	 * @param sWorkingDir
 	 *            The working directory.
 	 * @throws ASelectConfigException
-	 *             the a select config exception
-	 * @throws Exception
-	 *             the exception
+	 *             the aselect config exception
 	 */
 	public void init(String sWorkingDir)
-	throws ASelectConfigException, Exception
+	throws ASelectConfigException
 	{
 		_systemLogger = ASelectAgentSystemLogger.getHandle();
 		_sWorkingDir = sWorkingDir;
-		
 		loadConfiguration(sWorkingDir);
-		
+	}
+	
+	public void init_next()
+	throws ASelectException
+	{
+		String sMethod = "init_next";
+		Object _oAgentSection = getSection(null, "agent");
+		_upgradeTgtInterval = Utils.getSimpleIntParam(this, _systemLogger, _oAgentSection, "upgrade_tgt_interval", false);
+		if (_upgradeTgtInterval < 0)
+			_upgradeTgtInterval = 60;  // seconds, value 0 means send always
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "upgrade_tgt_interval="+_upgradeTgtInterval);
+
 		loadCrypto();
 	}
 

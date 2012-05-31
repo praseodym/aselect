@@ -238,7 +238,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 			}
 
-			Tools.resumeSensorData(_systemLogger, _htSessionContext);  // 20111102
+			Tools.resumeSensorData(_configManager, _systemLogger, _htSessionContext);  // 20111102
 			String sRemoteOrg = (String) _htSessionContext.get("remote_organization");
 
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "AselBrowREQ sRemoteRid=" + sRemoteRid + ", sLocalRid="

@@ -204,7 +204,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 			// Session present
-			Tools.resumeSensorData(_systemLogger, _htSessionContext);  //20111102, can change the session
+			Tools.resumeSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102, can change the session
 			
 			// 20091028, Bauke, let the user choose which IdP to use
 			// 20110308, Bauke: changed, user chooses when "use_idp_select" is "true"
@@ -233,7 +233,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				response.setContentType("text/html");
 				response.setHeader("Pragma", "no-cache");
 				PrintWriter pwOut = response.getWriter();
-				Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102 can update the session
+				Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102 can update the session
 				pwOut.println(sSelectForm);
 				pwOut.close();
 				return new RequestState(null);
@@ -269,7 +269,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 					response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 					response.setContentType("text/html");
 					response.setHeader("Pragma", "no-cache");
-					Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102 can change the session
+					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102 can change the session
 					//_oSessionManager.updateSession(sRid, _htSessionContext);  // 20120403, Bauke: removed
 					response.sendRedirect(sRedirectUrl);
 					return new RequestState(null);
@@ -569,7 +569,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Inputs=" + Utils.firstPartOf(sInputs,200));
 				handlePostForm(_sPostTemplate, sDestination, sInputs, response);
 			}
-			Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102 can change the session
+			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102 can change the session
 		}
 		catch (ASelectException e) { // pass unchanged to the caller
 			throw e;

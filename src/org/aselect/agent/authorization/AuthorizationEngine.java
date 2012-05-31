@@ -64,10 +64,10 @@ import org.aselect.agent.authorization.parsing.EvaluationTree;
 import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.exception.ASelectAuthorizationException;
 import org.aselect.system.exception.ASelectConfigException;
+import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * A-Select Agent authorization engine. <br>
  * <br>
@@ -91,7 +91,7 @@ public class AuthorizationEngine
 	private final String MODULE = "AuthorizationEngine";
 
 	/**
-	 * The type o f array for rules and URI's.
+	 * The array for rules and URI's.
 	 */
 	private final String[] ARRAY_TYPE = new String[0];
 
@@ -186,12 +186,12 @@ public class AuthorizationEngine
 			try {
 				Object _oAgentSection = _configManager.getSection(null, "agent");
 				String sTemp = _configManager.getParam(_oAgentSection, "need_filter_rules");
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "need_filter_rules=" + sTemp);
 				if (sTemp.equalsIgnoreCase("true")) {
 					_bNeedFilterRules = true;
 				}
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "need_filter_rules=" + _bNeedFilterRules);
 			}
-			catch (ASelectConfigException e) { // OK too
+			catch (ASelectException e) { // OK too
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Exception=" + e);
 			}
 			// read evaluation trees from configuration and add to forrest
@@ -199,18 +199,15 @@ public class AuthorizationEngine
 				oAuthorizationApplicationsSection = _configManager.getSection(oAuthorizationConfig, "policies");
 			}
 			catch (ASelectConfigException e) {
-				// policies section mey be omitted.
+				// policies section may be omitted.
 			}
 
 			if (oAuthorizationApplicationsSection != null)
 
-				try {
-					// Get first policy
-					oAuthorizationApplicationSection = _configManager.getSection(oAuthorizationApplicationsSection,
-							"policy");
+				try {  // Get first policy
+					oAuthorizationApplicationSection = _configManager.getSection(oAuthorizationApplicationsSection, "policy");
 				}
-				catch (ASelectConfigException e) {
-					// zero or more policies may be configured.
+				catch (ASelectConfigException e) {  // zero or more policies may be configured.
 				}
 
 			// For all policies

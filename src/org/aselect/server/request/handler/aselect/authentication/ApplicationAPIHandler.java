@@ -218,7 +218,7 @@ import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
-import org.aselect.system.utils.TimeSensor;
+import org.aselect.system.utils.TimerSensor;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
@@ -341,8 +341,8 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			handleAuthenticateRequest(oProtocolRequest, oInputMessage, oOutputMessage);
 		}
 		else if (sAPIRequest.equals("verify_credentials")) {
-			// uses timeSensor
-			_timeSensor.setTimeSensorLevel(1);  // used
+			// uses timerSensor
+			_timerSensor.setTimerSensorLevel(1);  // used
 			handleVerifyCredentialsRequest(oInputMessage, oOutputMessage);
 		}
 		else if (sAPIRequest.equals("get_app_level")) {
@@ -352,7 +352,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			handleKillTGTRequest(oInputMessage, oOutputMessage);
 		}
 		else if (sAPIRequest.equals("upgrade_tgt")) {
-			_timeSensor.setTimeSensorLevel(1);  // used
+			_timerSensor.setTimerSensorLevel(1);  // used
 			handleUpgradeTGTRequest(oInputMessage, oOutputMessage);
 		}
 		// Not an API call:
@@ -606,7 +606,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		// check if request should be signed
 		String sAppId = (String) htTGTContext.get("app_id");
 		if (Utils.hasValue(sAppId))
-			_timeSensor.setTimeSensorAppId(sAppId);
+			_timerSensor.setTimerSensorAppId(sAppId);
 		
 		if (_applicationManager.isSigningRequired(sAppId)) {
 			// Note: we should do this earlier, but we don't have an app_id until now

@@ -293,9 +293,9 @@ public class SessionManager extends StorageManager
 ////		}
 //// RH, 20111121, eo
 
-			Tools.initializeSensorData(_systemLogger, htSessionContext);
+			Tools.initializeSensorData(ASelectConfigManager.getHandle(), _systemLogger, htSessionContext);
 			if (startPaused)
-				Tools.pauseSensorData(_systemLogger, htSessionContext);
+				Tools.pauseSensorData(ASelectConfigManager.getHandle(), _systemLogger, htSessionContext);
 			
 			// 20120404, Bauke: rewritten to handle a predefined Rid.
 			for ( ; ; ) {

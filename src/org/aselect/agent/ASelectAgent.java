@@ -128,8 +128,6 @@ import org.aselect.agent.log.ASelectAgentSystemLogger;
 import org.aselect.agent.sam.ASelectAgentSAMAgent;
 import org.aselect.agent.session.SessionManager;
 import org.aselect.agent.ticket.TicketManager;
-import org.aselect.server.config.ASelectConfigManager;
-import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.communication.client.IClientCommunicator;
 import org.aselect.system.communication.client.raw.RawCommunicator;
 import org.aselect.system.communication.client.soap11.SOAP11Communicator;
@@ -277,7 +275,7 @@ public class ASelectAgent
 			oASelectAgent.init();
 			oASelectAgent.startServices();
 
-			sbInfo.append(" succesfully started.");
+			sbInfo.append(" successfully started.");
 			//for (int i=0; i<10; i++) {
 			//	oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod,
 			//			"nano="+Long.toString(System.nanoTime())+" usi="+Tools.generateUniqueSensorId());
@@ -325,9 +323,9 @@ public class ASelectAgent
 	 *             if initialization was unsuccessful.
 	 */
 	public void init()
-		throws ASelectException
+	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			// create logger
 			_oASelectAgentSystemLogger = ASelectAgentSystemLogger.getHandle();
@@ -338,17 +336,6 @@ public class ASelectAgent
 			_sWorkingDir = System.getProperty("user.dir");
 			_oASelectAgentConfigManager.init(_sWorkingDir);
 			_oAgentSection = _oASelectAgentConfigManager.getSection(null, "agent");
-
-			// System properties must be set first!
-			// retrieve truststore configuration
-			try {
-				String sKeystoreFile = _oASelectAgentConfigManager.getParam(_oAgentSection, "truststore");
-				System.setProperty("javax.net.ssl.trustStore", sKeystoreFile);
-			}
-			catch (ASelectConfigException eAC) {
-				_oASelectAgentSystemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"Missing or invalid optional config item 'truststore', using default keystore", eAC);
-			}
 
 			// initialize system logger
 			Object oSysLogging = null;
@@ -361,7 +348,19 @@ public class ASelectAgent
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 			_oASelectAgentSystemLogger.init(oSysLogging, _sWorkingDir);
+			_oASelectAgentConfigManager.init_next();  // more configuration
 			_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "Starting A-Select Agent");
+
+			// System properties must be set first!
+			// retrieve truststore configuration
+			try {
+				String sKeystoreFile = _oASelectAgentConfigManager.getParam(_oAgentSection, "truststore");
+				System.setProperty("javax.net.ssl.trustStore", sKeystoreFile);
+			}
+			catch (ASelectConfigException eAC) {
+				_oASelectAgentSystemLogger.log(Level.CONFIG, MODULE, sMethod,
+						"Missing or invalid optional config item 'truststore', using default keystore", eAC);
+			}
 
 			// initialize SAMAgent
 			ASelectAgentSAMAgent _samAgent = ASelectAgentSAMAgent.getHandle();
@@ -584,16 +583,16 @@ public class ASelectAgent
 	{
 		String sMethod = "restartTimerSensorThread";
 		try {
-			systemLogger.log(Level.INFO, MODULE, sMethod, "TimeSensor thread="+_timerSensorThread);
+			systemLogger.log(Level.INFO, MODULE, sMethod, "TimerSensor thread="+_timerSensorThread);
 			if (_timerSensorThread != null) {
-				systemLogger.log(Level.INFO, MODULE, sMethod, "Stop TimeSensor");
+				systemLogger.log(Level.INFO, MODULE, sMethod, "Stop TimerSensor");
 				ConfigManager.timerSensorStopThread(_timerSensorThread);
 			}
 			
 			// Reload the configuration
 			configManager.loadConfiguration(sWorkingDir);
 			
-			systemLogger.log(Level.INFO, MODULE, sMethod, "Start TimeSensor?");
+			systemLogger.log(Level.INFO, MODULE, sMethod, "Start TimerSensor?");
 			_timerSensorThread = ConfigManager.timerSensorStartThread(configManager, systemLogger, "agent");
 		}
 		catch (ASelectException e) {

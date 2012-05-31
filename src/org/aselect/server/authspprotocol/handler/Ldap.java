@@ -833,7 +833,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 					String sCountry = (String) htServiceRequest.get("country");  // 20101027 _
 					sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
 					sSelectForm = Utils.replaceString(sSelectForm, "[country]", sCountry);
-					Tools.pauseSensorData(_systemLogger, htSessionContext);  //20111102 can update the session
+					Tools.pauseSensorData(_configManager, _systemLogger, htSessionContext);  //20111102 can update the session
 					pwOut.println(sSelectForm);
 					return true;
 				}
@@ -886,7 +886,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
 
 				sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext);
-				Tools.pauseSensorData(_systemLogger, htSessionContext);  //20111102 can update the session
+				Tools.pauseSensorData(_configManager, _systemLogger, htSessionContext);  //20111102 can update the session
 				pwOut.println(sErrorForm);
 			}
 			else {
@@ -1024,7 +1024,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 					.append(sRid);
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[cancel]", sbUrl.toString());
 			sDirectLoginForm = _configManager.updateTemplate(sDirectLoginForm, htSessionContext);
-			Tools.pauseSensorData(_systemLogger, htSessionContext);  //20111102, can update the session
+			Tools.pauseSensorData(_configManager, _systemLogger, htSessionContext);  //20111102, can update the session
 			pwOut.println(sDirectLoginForm);
 		}
 		catch (ASelectException e) {

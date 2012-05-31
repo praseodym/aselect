@@ -93,7 +93,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.storagemanager.SendQueue;
-import org.aselect.system.utils.TimeSensor;
+import org.aselect.system.utils.TimerSensor;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
@@ -129,7 +129,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 	protected String _sMyOrg;
 
 	// For the needy
-	protected TimeSensor _timeSensor;
+	protected TimerSensor _timerSensor;
 	
 	long _lMyThread;
 
@@ -166,7 +166,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 		_sMyServerId = sMyServerId;
 		_sMyOrg = sMyOrg;
 		_lMyThread = Thread.currentThread().getId();
-		_timeSensor = new TimeSensor(_systemLogger, "srv_aah");
+		_timerSensor = new TimerSensor(_systemLogger, "srv_aah");
 
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "Protocol=" + reqParser.getRequestProtocol());
 		switch (reqParser.getRequestProtocol()) {
@@ -215,7 +215,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 				IOutputMessage outputMessage = communicator.getOutputMessage();
 				
 				// 20111108, Bauke: For whoever needs it:
-				_timeSensor.timeSensorStart(-1/*level unused*/, 3/*type=server*/, _lMyThread);  // unused by default
+				_timerSensor.timerSensorStart(-1/*level unused*/, 3/*type=server*/, _lMyThread);  // unused by default
 				String sUsi = null;
 				try {
 					sUsi = inputMessage.getParam("usi");  // unique sensor id
@@ -224,7 +224,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 					sUsi = Tools.generateUniqueSensorId();
 				}
 				if (Utils.hasValue(sUsi))
-					_timeSensor.setTimeSensorId(sUsi);
+					_timerSensor.setTimerSensorId(sUsi);
 				
 				try {
 					String sServerId = null;
@@ -257,7 +257,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 					bSuccess = true;  // no exceptions thrown
 				}
 				catch (ASelectException ace) {
-					_timeSensor.setTimeSensorType(0);
+					_timerSensor.setTimerSensorType(0);
 					try {
 						outputMessage.setParam("result_code", ace.getMessage());
 					}
@@ -294,9 +294,9 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 		}
 		finally {
 			try {
-				if (_timeSensor.getTimeSensorLevel() >= 1) {  // used
-					_timeSensor.timeSensorFinish(bSuccess);
-					SendQueue.getHandle().addEntry(_timeSensor.timeSensorPack());
+				if (_timerSensor.getTimerSensorLevel() >= 1) {  // used
+					_timerSensor.timerSensorFinish(bSuccess);
+					SendQueue.getHandle().addEntry(_timerSensor.timerSensorPack());
 				}
 			}
 			catch (Exception e) { }

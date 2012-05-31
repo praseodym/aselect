@@ -516,14 +516,6 @@ public class ASelectConfigManager extends ConfigManager
 		// Load config from database or xml file
 		loadConfiguration(sWorkingDir, sSQLDriver, sSQLUser, sSQLPassword, sSQLURL, sSQLTable, sConfigIDName);
 
-		try {
-			_oASelectConfigSection = this.getSection(null, "aselect");
-		}
-		catch (ASelectConfigException e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not find aselect config section in config file", e);
-			throw e;
-		}
-
 		// initialize system logger
 		Object oSysLogging = null;
 		try {
@@ -536,8 +528,7 @@ public class ASelectConfigManager extends ConfigManager
 		}
 		_systemLogger.init(oSysLogging, sWorkingDir);
 
-		sbInfo = new StringBuffer("Starting ");
-		sbInfo.append(Version.getVersion());
+		sbInfo = new StringBuffer("Starting ").append(Version.getVersion());
 		_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 
 		// initialize authentication logger
@@ -755,15 +746,24 @@ public class ASelectConfigManager extends ConfigManager
 			if (!sWorkingDir.endsWith(File.separator)) {
 				sbConfigFile.append(File.separator);
 			}
-			sbConfigFile.append("conf");
-			sbConfigFile.append(File.separator);
-			sbConfigFile.append("aselect.xml");
+			sbConfigFile.append("conf").append(File.separator).append("aselect.xml");
 
 			sbInfo = new StringBuffer("Reading config from file: ");
 			sbInfo.append(sbConfigFile.toString());
 			_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString());
 			super.init(sbConfigFile.toString(), _systemLogger);
 		}
+		try {
+			_oASelectConfigSection = this.getSection(null, "aselect");
+		}
+		catch (ASelectConfigException e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not find aselect config section in config file", e);
+			throw e;
+		}
+		
+		// Save presence of the <lbsensor> setting in the ConfigManager
+		Object oLbSensorSection = Utils.getSimpleSection(this, _systemLogger, _oASelectConfigSection, "lbsensor", false);
+		setLbSensorConfigured(oLbSensorSection!=null);
 	}
 
 	/**

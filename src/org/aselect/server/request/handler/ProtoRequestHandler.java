@@ -576,7 +576,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			String sAppUrl = (String)htSessionContext.get("app_url");
 			sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), sAppUrl, _systemLogger);
 			sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext);
-			Tools.pauseSensorData(_systemLogger, htSessionContext);  //20111102
+			Tools.pauseSensorData(_configManager, _systemLogger, htSessionContext);  //20111102
 			pwOut.println(sErrorForm);
 		}
 		catch (Exception e) {

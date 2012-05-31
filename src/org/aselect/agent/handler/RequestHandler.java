@@ -295,7 +295,7 @@ public class RequestHandler extends Thread
 	private boolean _bAuthorization = false;
 
 	// Store timing data
-	private TimeSensor timeSensor;
+	private TimerSensor timerSensor;
 
 	/**
 	 * Initializes instance variables. <br>
@@ -330,7 +330,7 @@ public class RequestHandler extends Thread
 		_systemLogger = ASelectAgentSystemLogger.getHandle();
 		_clientCommunicator = oCommunicator;
 		_bAuthorization = bAuthorization;
-		timeSensor = new TimeSensor(_systemLogger, "agt_all");
+		timerSensor = new TimerSensor(_systemLogger, "agt_all");
 	}
 
 	/**
@@ -362,7 +362,7 @@ public class RequestHandler extends Thread
 	 */
 	public void run()
 	{
-		String sMethod = "run()";
+		String sMethod = "run";
 		int port = _socket.getPort();
 
 		try {
@@ -494,7 +494,7 @@ public class RequestHandler extends Thread
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "REQ { T=" + System.currentTimeMillis() + " port="
 					+ port + ", t="+lMyThread + ": " + sRequest+", oInput=" + oInputMessage);
 			
-			timeSensor.timeSensorStart(1/*level*/, 2/*agent*/, lMyThread);  // default is success
+			timerSensor.timerSensorStart(1/*level*/, 2/*agent*/, lMyThread);  // default is success
 			try {
 				sUsi = oInputMessage.getParam("usi");  // unique sensor id
 			}
@@ -502,36 +502,36 @@ public class RequestHandler extends Thread
 				sUsi = Tools.generateUniqueSensorId();
 			}
 			if (Utils.hasValue(sUsi))
-				timeSensor.setTimeSensorId(sUsi);
+				timerSensor.setTimerSensorId(sUsi);
 
 			// check which API request was sent and let it be processed
 			_sErrorCode = Errors.ERROR_ASELECT_SUCCESS;  // optimistic default
 			if (sRequest.equals("authenticate")) {
-				timeSensor.setTimeSensorSender("agt_aut");
+				timerSensor.setTimerSensorSender("agt_aut");
 				processAuthenticateRequest(oInputMessage, oOutputMessage);
 			}
 			else if (sRequest.equals("verify_credentials")) {
-				timeSensor.setTimeSensorSender("agt_vcr");
+				timerSensor.setTimerSensorSender("agt_vcr");
 				processVerifyCredentialsRequest(oInputMessage, oOutputMessage);
 			}
 			else if (sRequest.equals("verify_ticket")) {
-				timeSensor.setTimeSensorSender("agt_vtk");
+				timerSensor.setTimerSensorSender("agt_vtk");
 				processVerifyTicketRequest(oInputMessage, oOutputMessage);
 			}
 			else if (sRequest.equals("kill_ticket")) {
-				timeSensor.setTimeSensorSender("agt_ktk");
+				timerSensor.setTimerSensorSender("agt_ktk");
 				processKillTicketRequest(oInputMessage, oOutputMessage);
 			}
 			else if (sRequest.equals("kill_tgt")) {
-				timeSensor.setTimeSensorSender("agt_ktg");
+				timerSensor.setTimerSensorSender("agt_ktg");
 				processKillTgtRequest(oInputMessage, oOutputMessage);
 			}
 			else if (sRequest.equals("attributes")) {
-				timeSensor.setTimeSensorSender("agt_atr");
+				timerSensor.setTimerSensorSender("agt_atr");
 				processAttributesRequest(oInputMessage, oOutputMessage);
 			}
 			else if (sRequest.equals("set_authorization_rules")) {
-				timeSensor.setTimeSensorSender("agt_rul");
+				timerSensor.setTimerSensorSender("agt_rul");
 				processSetAuthorizationRulesRequest(oInputMessage, oOutputMessage);
 			}
 			else { // Unknown or unsupported request
@@ -544,8 +544,8 @@ public class RequestHandler extends Thread
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Communication with A-Select Server failed.", eAC);
 		}
 		
-		timeSensor.timeSensorFinish(_sErrorCode.equals(Errors.ERROR_ASELECT_SUCCESS));
-		SendQueue.getHandle().addEntry(timeSensor.timeSensorPack());
+		timerSensor.timerSensorFinish(_sErrorCode.equals(Errors.ERROR_ASELECT_SUCCESS));
+		SendQueue.getHandle().addEntry(timerSensor.timerSensorPack());
 		
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "} REQ T="+System.currentTimeMillis() + " port="+port + ": "+sRequest);
 	}
@@ -687,7 +687,7 @@ public class RequestHandler extends Thread
 					_sErrorCode = Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST;
 					return;
 				}
-				timeSensor.setTimeSensorAppId(sAppId);
+				timerSensor.setTimerSensorAppId(sAppId);
 			}
 			catch (ASelectCommunicationException eAC) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received.", eAC);
@@ -786,7 +786,7 @@ public class RequestHandler extends Thread
 			}
 
 			// 20111108, Bauke: Send unique session id too
-			htRequest.put("usi", timeSensor.getTimeSensorId());
+			htRequest.put("usi", timerSensor.getTimerSensorId());
 			HashMap htResponseParameters = sendToASelectServer(htRequest);
 			if (htResponseParameters.isEmpty()) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not reach A-Select Server.");
@@ -837,7 +837,7 @@ public class RequestHandler extends Thread
 			htSessionContext.put("app_id", sAppId);
 			htSessionContext.put("as_url", sAsUrl);
 			
-			timeSensor.setTimeSensorRid(sRid);  // Rid received from Server
+			timerSensor.setTimerSensorRid(sRid);  // Rid received from Server
 
 			if (!_sessionManager.createSession(sRid, htSessionContext)) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "could not create session.");
@@ -1095,7 +1095,7 @@ public class RequestHandler extends Thread
 				htRequest.put("saml_attributes", sSamlAttributes);
 
 			// To the SERVER
-			htRequest.put("usi", timeSensor.getTimeSensorId());
+			htRequest.put("usi", timerSensor.getTimerSensorId());
 			HashMap htResponseParameters = sendToASelectServer(htRequest);
 
 			if (htResponseParameters.isEmpty()) {
@@ -1160,7 +1160,7 @@ public class RequestHandler extends Thread
 				_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
 				return;
 			}
-			timeSensor.setTimeSensorAppId(sAPP);
+			timerSensor.setTimerSensorAppId(sAPP);
 			
 			String sAppLevel = (String) htResponseParameters.get("app_level");
 			if (sAppLevel == null) {
@@ -1215,7 +1215,7 @@ public class RequestHandler extends Thread
 			}
 
 			// NO, this is the agent ticket
-			// timeSensor.setTimeSensorTgt(sTicket);  // TgT still valid according to the SERVER
+			// timerSensor.setTimerSensorTgt(sTicket);  // TgT still valid according to the SERVER
 
 			// prepare the response parameters for the calling application
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Prepare response");
@@ -1236,7 +1236,7 @@ public class RequestHandler extends Thread
 
 			_sErrorCode = Errors.ERROR_ASELECT_SUCCESS;
 
-			// delete the session context as we dont need it anymore
+			// delete the session context as we don't need it anymore
 			_sessionManager.killSession(sRid);
 		}
 		catch (ASelectCommunicationException eAC) {
@@ -1464,7 +1464,7 @@ public class RequestHandler extends Thread
 				// get app_id
 				String sAppId = (String) htTicketContext.get("app_id");
 				if (Utils.hasValue(sAppId))
-					timeSensor.setTimeSensorAppId(sAppId);
+					timerSensor.setTimerSensorAppId(sAppId);
 
 				// Get user attributes
 				HashMap htUserAttributes = deserializeAttributes((String) htTicketContext.get("attributes"));
@@ -1493,8 +1493,18 @@ public class RequestHandler extends Thread
 			// Bauke: added, upgrade ticket so it will live longer and prosper some more
 			// must also be send to the server, to keep the user's session alive accross different applications
 			// START NEW CODE
-			boolean _bSendUpgrade_tgt = true;
-			if (_bSendUpgrade_tgt) {
+			//boolean _bSendUpgrade_tgt = true;
+			//if (_bSendUpgrade_tgt) {
+			String sLastTime = (String)htTicketContext.get("last_upgrade_tgt");
+			long lLastTime = 0;
+			if (sLastTime != null)
+				lLastTime = Long.parseLong(sLastTime);
+			long now = new Date().getTime();
+			int interval = 1000 * ASelectAgentConfigManager.getHandle().getUpgradeTgtInterval();
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Last upgrade_tgt:"+(now - lLastTime)+
+						" seconds ago, update="+(now - lLastTime >= interval)+" interval="+interval);
+			if (now - lLastTime >= interval) {  // default use 60 seconds intervals
+				htTicketContext.put("last_upgrade_tgt", Long.toString(now));
 				String sCryptedCredentials = (String) htTicketContext.get("crypted_credentials");
 				String sAselectServer = (String) htTicketContext.get("a-select-server");
 				HashMap htRequest = new HashMap();
@@ -1509,7 +1519,7 @@ public class RequestHandler extends Thread
 					htRequest.put("language", sLanguage);
 
 				// Send to SERVER
-				htRequest.put("usi", timeSensor.getTimeSensorId());
+				htRequest.put("usi", timerSensor.getTimerSensorId());
 				HashMap htResponseParameters = sendToASelectServer(htRequest);
 				if (htResponseParameters.isEmpty()) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not reach A-Select Server.");
@@ -1528,8 +1538,7 @@ public class RequestHandler extends Thread
 				}
 				if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
 					sbBuffer = new StringBuffer("A-Select Server returned error: '");
-					sbBuffer.append(sResultCode);
-					sbBuffer.append("'.");
+					sbBuffer.append(sResultCode).append("'.");
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
 					_sErrorCode = sResultCode;
 					return;
@@ -1541,7 +1550,7 @@ public class RequestHandler extends Thread
 			_ticketManager.updateTicketContext(sTicket, htTicketContext);
 			
 			// NO, this is the agent ticket
-			// timeSensor.setTimeSensorTgt(sTicket);  // TgT still valid according to local checks (and upgrade_ticket)
+			// timerSensor.setTimerSensorTgt(sTicket);  // TgT still valid according to local checks (and upgrade_ticket)
 			
 			// Ticket OK, create response message
 			if (sAppArgs != null)
@@ -1723,7 +1732,7 @@ public class RequestHandler extends Thread
 			String sAppLevel = (String) htTicketContext.get("app_level");
 			String sAppId = (String) htTicketContext.get("app_id");
 			if (Utils.hasValue(sAppId))
-				timeSensor.setTimeSensorAppId(sAppId);
+				timerSensor.setTimerSensorAppId(sAppId);
 
 			oOutputMessage.setParam("ticket_start_time", new Long(_ticketManager.getTicketStartTime(sTicket))
 					.toString());
@@ -1999,7 +2008,7 @@ public class RequestHandler extends Thread
 			String sAppId = oInputMessage.getParam("app_id");
 			String[] saReceivedRules = oInputMessage.getArray("rules");
 			if (Utils.hasValue(sAppId))
-				timeSensor.setTimeSensorAppId(sAppId);
+				timerSensor.setTimerSensorAppId(sAppId);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "RULES sAppId=" + sAppId +
 					", saReceivedRules="+saReceivedRules);
 
@@ -2110,7 +2119,7 @@ public class RequestHandler extends Thread
 
 		// send message
 		HashMap htReturnTable = new HashMap();
-		timeSensor.timeSensorPause();
+		timerSensor.timerSensorPause();
 		try {
 			htReturnTable = _clientCommunicator.sendMessage(htParamsTable, sUrl);
 		}
@@ -2118,7 +2127,7 @@ public class RequestHandler extends Thread
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "The A-Select server could not be reached.", e);
 			_sErrorCode = Errors.ERROR_ASELECT_AGENT_COULD_NOT_REACH_ASELECT_SERVER;
 		}
-		timeSensor.timeSensorResume();
+		timerSensor.timerSensorResume();
 
 		// return reponse
 		return htReturnTable;

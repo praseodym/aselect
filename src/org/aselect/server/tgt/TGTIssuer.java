@@ -660,7 +660,7 @@ public class TGTIssuer
 						sRid, (String)htTGTContext.get("language"), hUserOrganizations);
 				oHttpServletResponse.setContentType("text/html");
 				
-				Tools.pauseSensorData(_systemLogger, htSessionContext);
+				Tools.pauseSensorData(_configManager, _systemLogger, htSessionContext);
 				//_sessionManager.updateSession(sRid, htSessionContext); // Write session
 				// done by pauseSensorData(): _sessionManager.setUpdateSession(htSessionContext, _systemLogger);  // 20120403, Bauke: was updateSession()
 				PrintWriter pwOut = oHttpServletResponse.getWriter();

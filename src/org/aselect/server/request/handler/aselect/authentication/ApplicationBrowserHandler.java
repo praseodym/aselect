@@ -473,7 +473,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			if (_htSessionContext == null) {
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
 			}
-			Tools.resumeSensorData(_systemLogger, _htSessionContext);  // 20111102
+			Tools.resumeSensorData(_configManager, _systemLogger, _htSessionContext);  // 20111102
 			if (sReqLanguage != null && !sReqLanguage.equals("")) {
 				_htSessionContext.put("language", sReqLanguage); // store language for posterity
 				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
@@ -509,7 +509,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Configuration error: " + e);
 				}
 				//_systemLogger.log(Level.INFO, _sModule, sMethod, "Serverinfo [" + sServerInfoForm + "]");
-				Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+				Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 				//_sessionManager.update(sRid, _htSessionContext); // Write session
 				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 				pwOut.println(sServerInfoForm);
@@ -629,7 +629,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "OrgChoice="+sOrgId);
 
 		// Stop the user-time pause
-		Tools.pauseSensorData(_systemLogger, _htSessionContext);
+		Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);
 		// No need to write the session, it's used below by calculateAndReportSensorData() and then discarded
 		
 		// Store the chosen organization in the TGT
@@ -765,7 +765,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							// 20100210, Bauke: Present the Organization selection to the user
 							// Leaves the Rid session in place, needed for the application url
 							if (rc == 1 && mustChooseOrg) {
-								Tools.pauseSensorData(_systemLogger, _htSessionContext);
+								Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);
 								//_sessionManager.update(sRid, _htSessionContext); // Write session
 								// pauseSensorDate() already does this: _sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 								// The user must choose his organization
@@ -841,7 +841,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						String sCountry = (String) htServiceRequest.get("country");  // 20101027 _
 						sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
 						sSelectForm = Utils.replaceString(sSelectForm, "[country]", sCountry);
-						Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+						Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 						//_sessionManager.update(sRid, _htSessionContext); // Write session
 						pwOut.println(sSelectForm);						
 						return;
@@ -1138,7 +1138,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sLoginForm = Utils.handleAllConditionals(sLoginForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
 			
 			servletResponse.setContentType("text/html");
-			Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 			//_sessionManager.update(sRid, _htSessionContext); // Write session
 			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 			pwOut.println(sLoginForm);
@@ -1239,7 +1239,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		sInfoForm = Utils.replaceString(sInfoForm, "[other_sps]", sOtherSPs);
 		sInfoForm = _configManager.updateTemplate(sInfoForm, _htSessionContext);
 		servletResponse.setContentType("text/html");
-		Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+		Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 		//_sessionManager.update(sRid, _htSessionContext); // Write session
 		_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 		pwOut.println(sInfoForm);
@@ -1313,7 +1313,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 
 		// Ask for consent by presenting the userconsent.html form
-		Tools.pauseSensorData(_systemLogger, _htSessionContext);
+		Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);
 		//_sessionManager.update(sRid, _htSessionContext); // Write session
 		_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 		try {
@@ -1545,7 +1545,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sSelectForm = Utils.replaceString(sSelectForm, "[cancel]", sb.toString());
 			sSelectForm = _configManager.updateTemplate(sSelectForm, _htSessionContext);
 			// _systemLogger.log(Level.FINER, _sModule, sMethod, "Form select=["+sSelectForm+"]");
-			Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 			//_sessionManager.update(sRid, _htSessionContext); // Write session
 			// pauseSensorData does this already: _sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 			pwOut.println(sSelectForm);
@@ -1639,7 +1639,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				// RH, 20100907, en
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIRECT " + sRedirectUrl);
 				if (sPopup == null || sPopup.equalsIgnoreCase("false")) {
-					Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102, control goes to a different server
+					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102, control goes to a different server
 					_htSessionContext.put("authsp_visited", "true");
 					//_sessionManager.update(sRid, _htSessionContext); // Write session
 					_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
@@ -1653,7 +1653,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				String strFriendlyName = _configManager.getParam(authSPsection, "friendly_name");
 				sPopupForm = Utils.replaceString(sPopupForm, "[authsp]", strFriendlyName);
 				sPopupForm = _configManager.updateTemplate(sPopupForm, _htSessionContext);
-				Tools.pauseSensorData(_systemLogger, _htSessionContext);  // 20111102, control to the user
+				Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  // 20111102, control to the user
 				_htSessionContext.put("authsp_visited", "true");
 				//_sessionManager.update(sRid, _htSessionContext); // Write session
 				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
@@ -2163,7 +2163,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRemoteAsUrl + "," + " _sMyOrg=" + _sMyOrg
 						+ ", sRemoteOrg=" + sRemoteOrg);
 				if (sRemoteAsUrl != null) {
-					Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 					// no RID: _sessionManager.update(sRid, _htSessionContext); // Write session
 					_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
 					servletResponse.sendRedirect(sRemoteAsUrl);
@@ -2171,7 +2171,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				}
 			}
 			sLoggedOutForm = _configManager.updateTemplate(sLoggedOutForm, htTGTContext);
-			Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 			// no RID _sessionManager.update(sRid, _htSessionContext); // Write session
 			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
 			pwOut.println(sLoggedOutForm);
@@ -2668,7 +2668,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				String sTemp3 = "<A HREF=\"" + sRemoteAsUrl + "\">" + sTemp + "</A>";
 				sUserInfoForm = Utils.replaceString(sUserInfoForm, "[org]", sTemp3);
 			}
-			Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 			// no RID: _sessionManager.update(sRid, _htSessionContext); // Write session
 			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
 			pwOut.println(sUserInfoForm);

@@ -419,16 +419,20 @@ public class Tools
 	/**
 	 * Initialize sensor data.
 	 * 
+	 * @param oConfMgr
+	 *            the conf mgr
 	 * @param oSysLog
 	 *            the system log
 	 * @param htSessionContext
 	 *            the session context
 	 */
-	public static void initializeSensorData(SystemLogger oSysLog, HashMap<String, String> htSessionContext)
+	public static void initializeSensorData(ConfigManager oConfMgr, SystemLogger oSysLog, HashMap<String, String> htSessionContext)
 	{
 		String sMethod = "initializeSensorData";
 		long now = System.currentTimeMillis();
 
+		if (!oConfMgr.isLbSensorConfigured() && !oConfMgr.isTimerSensorConfigured())
+			return;
 		if (htSessionContext == null) {
 			oSysLog.log(Level.INFO, MODULE, sMethod, "NO SESSION");
 			return;
@@ -442,15 +446,19 @@ public class Tools
 	/**
 	 * Pause sensor data.
 	 * 
+	 * @param oConfMgr
+	 *            the conf mgr
 	 * @param oSysLog
 	 *            the system log
 	 * @param htSessionContext
 	 *            the session context
 	 */
-	public static void pauseSensorData(SystemLogger oSysLog, HashMap<String, String> htSessionContext)
+	public static void pauseSensorData(ConfigManager oConfMgr, SystemLogger oSysLog, HashMap<String, String> htSessionContext)
 	{
 		String sMethod = "pauseSensorData";
 
+		if (!oConfMgr.isLbSensorConfigured() && !oConfMgr.isTimerSensorConfigured())
+			return;
 		if (htSessionContext == null) {
 			oSysLog.log(Level.INFO, MODULE, sMethod, "NO SESSION");
 			return;
@@ -468,15 +476,19 @@ public class Tools
 	/**
 	 * Resume sensor data.
 	 * 
+	 * @param oConfMgr
+	 *            the conf mgr
 	 * @param oSysLog
 	 *            the system log
 	 * @param htSessionContext
 	 *            the session context
 	 */
-	public static void resumeSensorData(SystemLogger oSysLog, HashMap<String, String> htSessionContext)
+	public static void resumeSensorData(ConfigManager oConfMgr, SystemLogger oSysLog, HashMap<String, String> htSessionContext)
 	{
 		String sMethod = "resumeSensorData";
 
+		if (!oConfMgr.isLbSensorConfigured() && !oConfMgr.isTimerSensorConfigured())
+			return;
 		if (htSessionContext == null) {
 			oSysLog.log(Level.INFO, MODULE, sMethod, "NO SESSION");
 			return;
@@ -507,6 +519,7 @@ public class Tools
 
 	/**
 	 * Calculate and report sensor data.
+	 * Used by the time sensor and the lb sensor mechanism
 	 * 
 	 * @param oConfMgr
 	 *            the config manager
@@ -528,7 +541,11 @@ public class Tools
 	{
 		String sMethod = "calculateAndReportSensorData";
 		long lFirst, lLast;
-
+		
+		oSysLog.log(Level.INFO, MODULE, sMethod, "<lbsensor>="+(oConfMgr.isLbSensorConfigured())+
+				" <timer_sensor>="+oConfMgr.isTimerSensorConfigured());
+		if (!oConfMgr.isLbSensorConfigured() && !oConfMgr.isTimerSensorConfigured())
+			return;
 		if (htSessionContext == null) {
 			oSysLog.log(Level.INFO, MODULE, sMethod, "NO SESSION");
 			return;
@@ -556,21 +573,24 @@ public class Tools
 				lTotalSpent -= lUserSpent;
 			}
 			if (bSuccess) {
-				// Does not use the queue
+				// Send data to lbsensor's http_sensor, does not use the queue
 				Tools.reportDataToSensor(oConfMgr, "aselect", "lbsensor", "sensor_url", oSysLog, Long.toString(lTotalSpent));
 			}
 
-			// 20111110, Bauke: added TimeSensor functionality
+			if (!oConfMgr.isTimerSensorConfigured())  // No TimerSensor requested, skip the rest
+				return;
+			
+			// 20111110, Bauke: added TimerSensor functionality
 			String sUsi = (String)htSessionContext.get("usi");
-		    String sFirstContact = TimeSensor.timeSensorMilli2Time(Long.parseLong(sFirst));
-		    String sTotalSpent = TimeSensor.timeSensorMilli2Time(lTotalSpent);
-			String sLast = TimeSensor.timeSensorMilli2Time(lLast);
+		    String sFirstContact = TimerSensor.timerSensorMilli2Time(Long.parseLong(sFirst));
+		    String sTotalSpent = TimerSensor.timerSensorMilli2Time(lTotalSpent);
+			String sLast = TimerSensor.timerSensorMilli2Time(lLast);
 			String sAppId = (String)htSessionContext.get("app_id");
 			String sVisit = (String)htSessionContext.get("authsp_visited");
-			int iTimeSensorType = (sVisit!=null)? 4/*authsp*/: 3/*server*/;
+			int iTimerSensorType = (sVisit!=null)? 4/*authsp*/: 3/*server*/;
 			// Thread is the last thread that contributed to processing
 		    String sDataLine = String.format("%s,%s,%s,%d,%d,%d,%s,%s,%s,%s,%s,%s", sOrig, (sUsi==null)? "": sUsi,
-		    		sAppId, 1/*complete flow*/, iTimeSensorType, Thread.currentThread().getId(),
+		    		sAppId, 1/*complete flow*/, iTimerSensorType, Thread.currentThread().getId(),
 		    		sFirstContact, sLast, sTotalSpent, Boolean.toString(bSuccess), sRid, (sTgt==null)? "": sTgt.substring(0,41));
 			long thenTime = System.currentTimeMillis();
 			
@@ -583,7 +603,7 @@ public class Tools
 			if (lUserSpent > 0) {
 			    sDataLine = String.format("%s,%s,%s,%d,%d,%d,%s,%s,%s,%s,%s,%s", sOrig, (sUsi==null)? "": sUsi,
 			    		sAppId, 1/*complete flow*/, 5/*user*/, Thread.currentThread().getId(),
-			    		sFirstContact, sLast, TimeSensor.timeSensorMilli2Time(lUserSpent), Boolean.toString(bSuccess),
+			    		sFirstContact, sLast, TimerSensor.timerSensorMilli2Time(lUserSpent), Boolean.toString(bSuccess),
 			    		sRid, (sTgt==null)? "": sTgt.substring(0,41));
 				SendQueue.getHandle().addEntry(sDataLine);
 			}
@@ -609,7 +629,7 @@ public class Tools
 	 * @param sData
 	 *            the data to be sent
 	 * @throws ASelectException
-	 *             the a select exception
+	 *             the aselect exception
 	 */
 	public static void reportDataToSensor(ConfigManager oConfMgr, String sMainTag, String sSection, String sUrlTag,
 						SystemLogger oSysLog, String sData)
@@ -618,6 +638,11 @@ public class Tools
 		String sMethod = "reportDataToSensor";
 		HashMap htResponse = null;
 		String sResponse = null;
+
+		oSysLog.log(Level.INFO, MODULE, sMethod, "<lbsensor>="+(oConfMgr.isLbSensorConfigured())+
+				" <timer_sensor>="+oConfMgr.isTimerSensorConfigured());
+		if (!oConfMgr.isLbSensorConfigured() && !oConfMgr.isTimerSensorConfigured())
+			return;
 
 		// 20120529: these were class variables
 		IClientCommunicator oClientCommunicator = null;
@@ -628,18 +653,15 @@ public class Tools
 		Object oConfig = Utils.getSimpleSection(oConfMgr, oSysLog, null, sMainTag, true);
 		Object oSensorSection = Utils.getSimpleSection(oConfMgr, oSysLog, oConfig, sSection, false);
 		if (oSensorSection == null) {
-			oSysLog.log(Level.WARNING, MODULE, sMethod, "Section "+sMainTag+"/"+sSection+" not found");
+			oSysLog.log(Level.WARNING, MODULE, sMethod, "Section "+sMainTag+"/"+sSection+" not found, no sensor reporting");
 			return;
 		}
 		sSensorUrl = Utils.getSimpleParam(oConfMgr, oSysLog, oSensorSection, sUrlTag, true);
 		if (!Utils.hasValue(sSensorUrl)) {
-			oSysLog.log(Level.WARNING, MODULE, sMethod, "Url tag "+sUrlTag+" not found");
+			oSysLog.log(Level.WARNING, MODULE, sMethod, "Url tag "+sUrlTag+" not found, no sensor reporting");
 			return;
 		}
 		oClientCommunicator = Tools.initClientCommunicator(oConfMgr, oSysLog, oSensorSection);
-			
-		if (sSensorUrl == null)  // no sensor reporting
-			return;
 
 		HashMap<String, String> htRequest = new HashMap<String, String>();
 		htRequest.put("request", "store");
@@ -665,13 +687,13 @@ public class Tools
 	 * Convert an URL parameter string to a HashMap containing key, value pairs.
 	 * See also: HashMap convertCGIMessage(String xMessage) in Utils.
 	 * 
-	 * @param sText
-	 *            the s text
+	 * @param sTheUrl
+	 *            the url to convert
 	 * @param oSystemLogger
-	 *            the o system logger
+	 *            the system logger
 	 * @return the url attributes
 	 */
-	public static HashMap<String, String>getUrlAttributes(String sText, SystemLogger oSystemLogger)
+	public static HashMap<String, String>getUrlAttributes(String sTheUrl, SystemLogger oSystemLogger)
 	{
 		String sMethod = "getAttributes";
 		String sKey = "";
@@ -679,7 +701,7 @@ public class Tools
 		HashMap<String, String> htAttributes = new HashMap<String, String>();
 
 		// Split the 'sText' string
-		String[] saAttrs = sText.split("&");
+		String[] saAttrs = sTheUrl.split("&");
 		for (int i = 0; i < saAttrs.length; i++) {
 			int iEqualSign = saAttrs[i].indexOf("=");
 
@@ -696,7 +718,7 @@ public class Tools
 			}
 			catch (UnsupportedEncodingException e) {
 				// just skip this attribute
-				oSystemLogger.log(Level.WARNING, MODULE, sMethod, "[" + sText + "]", e);
+				oSystemLogger.log(Level.WARNING, MODULE, sMethod, "[" + sTheUrl + "]", e);
 			}
 		}
 		return htAttributes;

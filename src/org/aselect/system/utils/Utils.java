@@ -867,34 +867,34 @@ public class Utils
 	 * Gets the simple section.
 	 * 
 	 * @param oConfMgr
-	 *            the o conf mgr
+	 *            the conf mgr
 	 * @param oSysLog
-	 *            the o sys log
+	 *            the sys log
 	 * @param oConfig
-	 *            the o config
-	 * @param sParam
-	 *            the s param
+	 *            the config
+	 * @param sSection
+	 *            the section we're looking for
 	 * @param bMandatory
-	 *            the b mandatory
+	 *            the mandatory
 	 * @return the simple section
 	 * @throws ASelectConfigException
-	 *             the a select config exception
+	 *             the aselect config exception
 	 */
-	public static Object getSimpleSection(ConfigManager oConfMgr, SystemLogger oSysLog, Object oConfig, String sParam,
-			boolean bMandatory)
-		throws ASelectConfigException
+	public static Object getSimpleSection(ConfigManager oConfMgr, SystemLogger oSysLog,
+					Object oConfig, String sSection, boolean bMandatory)
+	throws ASelectConfigException
 	{
 		final String sMethod = "getSimpleSection";
 		Object oSection = null;
 
-		oSysLog.log(Level.INFO, MODULE, sMethod, "Param=" + sParam + " cfg=" + oConfMgr);
+		oSysLog.log(Level.INFO, MODULE, sMethod, "Param=" + sSection + " cfg=" + oConfMgr);
 		try {
-			oSection = oConfMgr.getSection(oConfig, sParam);
+			oSection = oConfMgr.getSection(oConfig, sSection);
 		}
 		catch (ASelectConfigException e) {
 			if (!bMandatory)
 				return null;
-			oSysLog.log(Level.SEVERE, MODULE, sMethod, "Cannot find " + sParam + " section in config file", e);
+			oSysLog.log(Level.SEVERE, MODULE, sMethod, "Cannot find " + sSection + " section in config file", e);
 			throw e;
 		}
 		return oSection;

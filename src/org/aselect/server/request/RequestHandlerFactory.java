@@ -441,7 +441,7 @@ public class RequestHandlerFactory
 
 			pwOut = response.getWriter();
 			response.setContentType("text/html");
-			Tools.pauseSensorData(_systemLogger, null);  //20111102, no session available at this point
+			Tools.pauseSensorData(_configManager, _systemLogger, null);  //20111102, no session available at this point
 			pwOut.println(sErrorForm);
 		}
 		catch (IOException e) {

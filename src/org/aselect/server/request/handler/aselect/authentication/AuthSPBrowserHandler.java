@@ -226,7 +226,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			// A session is available.
 			
 			// User interaction is finished, resume the stopwatch
-			Tools.resumeSensorData(_systemLogger, _htSessionContext);
+			Tools.resumeSensorData(_configManager, _systemLogger, _htSessionContext);
 			
 			// Let the AuthSP protocol handler verify the response from the AuthSP
 			// htAuthResponse will contain the result data
@@ -339,7 +339,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 					sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
 					String sCountry = (String) htServiceRequest.get("country");
 					sSelectForm = Utils.replaceString(sSelectForm, "[country]", sCountry);
-					Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 					servletResponse.getWriter().println(sSelectForm);
 				}
 				return;
@@ -427,7 +427,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request: invalid or unknown session.");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
 			}
-			Tools.resumeSensorData(_systemLogger, _htSessionContext);  // 20111102
+			Tools.resumeSensorData(_configManager, _systemLogger, _htSessionContext);  // 20111102
 
 			// Log cancel request
 			String sAppId = (String) _htSessionContext.get("app_id");

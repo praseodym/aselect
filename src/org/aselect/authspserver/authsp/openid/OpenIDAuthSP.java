@@ -139,7 +139,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 	 * <br>
 	 * <b>Preconditions:</b>
 	 * <ul>
-	 * <li>The AuthSPServer must be succesfully started</li>
+	 * <li>The AuthSPServer must be successfully started</li>
 	 * <li>An error config file must exist</li>
 	 * <li>An error template file must exist</li>
 	 * <li>An authentication template file must exist</li>

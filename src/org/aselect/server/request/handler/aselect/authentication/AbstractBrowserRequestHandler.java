@@ -317,7 +317,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 			}
 			sErrorForm = _configManager.updateTemplate(sErrorForm, _htSessionContext);  // accepts a null Session!
 			//_systemLogger.log(Level.INFO, _sModule, sMethod, "FORM="+sErrorForm);
-			Tools.pauseSensorData(_systemLogger, _htSessionContext);  //20111102
+			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 			pwOut.println(sErrorForm);
 		}
 		catch (Exception e) {

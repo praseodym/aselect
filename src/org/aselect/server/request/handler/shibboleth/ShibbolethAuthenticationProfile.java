@@ -399,7 +399,7 @@ public class ShibbolethAuthenticationProfile extends AbstractRequestHandler
 			String sResultCode = (String) htResponse.get("result_code");
 			if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"Authentication request was not succesful, server returned 'result_code': " + sResultCode);
+						"Authentication request was not successful, server returned 'result_code': " + sResultCode);
 				throw new ASelectException(Errors.ERROR_ASELECT_IO);
 			}
 

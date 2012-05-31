@@ -84,6 +84,7 @@ public class ConfigManager implements IConfigManager
 	private SystemLogger _oSystemLogger;
 	
 	private ASelectHttpServlet _oMainServlet = null;
+	private boolean isLbSensorConfigured;
 
 	/**
 	 * Default constructor. <br>
@@ -438,12 +439,22 @@ public class ConfigManager implements IConfigManager
 	{
 		tThread.cancel();
 	}
+	
+	public boolean isTimerSensorConfigured() {
+		return SendQueue.getHandle().getBatchSize() > 0;
+	}
 
 	public void setMainServlet(ASelectHttpServlet oMainServlet) {
 		_oMainServlet = oMainServlet;
 	}
-
 	public ASelectHttpServlet getMainServlet() {
 		return _oMainServlet;
+	}
+	
+	public boolean isLbSensorConfigured() {
+		return isLbSensorConfigured;
+	}
+	public void setLbSensorConfigured(boolean isLbSensorConfigured) {
+		this.isLbSensorConfigured = isLbSensorConfigured;
 	}
 }

@@ -44,16 +44,16 @@ public class LbSensorSystemLogger extends SystemLogger
 	}
 
 	/**
-	 * Inits the.
+	 * Initializes the logger.
 	 * 
 	 * @param oConfigManager
-	 *            the o config manager
+	 *            the config manager
 	 * @param oLogSection
-	 *            the o log section
+	 *            the log section
 	 * @param sWorkingDir
-	 *            the s working dir
+	 *            the working dir
 	 * @throws ASelectException
-	 *             the a select exception
+	 *             the aselect exception
 	 */
 	public void init(LbSensorConfigManager oConfigManager, Object oLogSection, String sWorkingDir)
 		throws ASelectException

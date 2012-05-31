@@ -242,7 +242,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 
 		// sInfoForm = _configManager.updateTemplate(sInfoForm, _htSessionContext);
 		httpResponse.setContentType("text/html");
-		Tools.pauseSensorData(_systemLogger, null);  //20111102, there's no session available at this point (will be logged)
+		Tools.pauseSensorData(_configManager, _systemLogger, null);  //20111102, there's no session available at this point (will be logged)
 		pwOut.println(sInfoForm);
 		pwOut.close();
 	}
