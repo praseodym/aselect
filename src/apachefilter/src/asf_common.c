@@ -360,7 +360,7 @@ char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAI
             // Check if information is not too large for message
             if ((ccSendMessage + 1) < ASELECT_FILTER_MAX_MSG) {
                 // Send the message, PAUSE TIMER
-				if (pt != NULL) timer_pause(pt);
+		if (pt != NULL) timer_pause(pt);
                 if (send(sd, (void *) pcSendMessage, (ccSendMessage), 0) > 0) { // 20111116 don't send null-byte
                     // Message has been sent, now wait for response
                     ccReceiveMessage = aselect_filter_receive_msg(sd, pcReceiveMessage, sizeof(pcReceiveMessage)-1);
@@ -369,7 +369,7 @@ char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAI
                             // Received message too large
                             TRACE1("received message too large (%d)", ccReceiveMessage);
                             ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
-									"ASELECT_FILTER:: received message was too large");
+					"ASELECT_FILTER:: received message was too large");
                         }
                         else {
                             pcResponse = ap_pstrndup(pPool, pcReceiveMessage, ccReceiveMessage+1);  // 20111110 added +1
@@ -377,18 +377,18 @@ char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAI
                         }
                     }
                     else { // Could not receive data
-						TRACE1("error while receiving data (%d)", errno);
+			TRACE1("error while receiving data (%d)", errno);
                         ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
-								ap_psprintf(pPool, "ASELECT_FILTER:: error while receiving data (%d)", errno));
+				    ap_psprintf(pPool, "ASELECT_FILTER:: error while receiving data (%d)", errno));
                     }
                 }
                 else { // Could not send data
                     TRACE1("error while sending data (%d)", errno);
                     ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
-							ap_psprintf(pPool, "ASELECT_FILTER:: error while sending data (%d)", errno));
+				ap_psprintf(pPool, "ASELECT_FILTER:: error while sending data (%d)", errno));
                 }
-				// RESUME TIMER
-				if (pt != NULL) timer_resume(pt);
+		// RESUME TIMER
+		if (pt != NULL) timer_resume(pt);
             }
             else { // Message is too large for sending
                 TRACE("Message is too large for sending");
@@ -399,16 +399,16 @@ char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAI
         } // connect 
         else { // Could not connect to specified address and port
             TRACE4("Could not connect to %s at %s:%d (%d)", sDest, pcASAIP, iASAPort, errno);
-			ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
-					ap_psprintf(pPool, "ASELECT_FILTER:: could not connect to %s at %s:%d (%d)",
-					sDest, pcASAIP, iASAPort, errno));
+	    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
+			ap_psprintf(pPool, "ASELECT_FILTER:: could not connect to %s at %s:%d (%d)",
+				    sDest, pcASAIP, iASAPort, errno));
         }
         close(sd);
     } // socket
     else {
         // Could not create socket
         ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
-				ap_psprintf(pPool, "ASELECT_FILTER:: could not create socket (%d)", errno));
+		    ap_psprintf(pPool, "ASELECT_FILTER:: could not create socket (%d)", errno));
     }
     TRACE3("} From%s[%d] aselect_filter_send_request, response=[%s]", sDest, cnt, pcResponse?pcResponse:"NULL");
     return pcResponse;
@@ -730,10 +730,9 @@ int aselect_filter_gen_top_redirect(pool *pPool, char *addedSecurity, request_re
 //
 // 20110129, Bauke added public apps
 //
-int aselect_filter_is_public_app(pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcUri)
+int XXXaselect_filter_is_public_app(pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcUri)
 {
     int i;
-
     for (i = 0; i < pConfig->iPublicAppCount; i++) {
         TRACE3("aselect_filter_is_public_app::comparing directory(%d):\"%s\" to URI: \"%s\"", 
 		    i, pConfig->pPublicApps[i], pcUri);
@@ -748,10 +747,9 @@ int aselect_filter_is_public_app(pool *pPool, PASELECT_FILTER_CONFIG pConfig, ch
 //
 // Checks the config for the URI and if it exists return the corresponding App ID
 //
-int aselect_filter_verify_directory(pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcUri)
+int XXXaselect_filter_verify_directory(pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcUri)
 {
     int i;
-
     for (i = 0; i < pConfig->iAppCount; i++) {
         TRACE4("aselect_filter_verify_directory::comparing directory(%d):\"%s\" to URI: \"%s\", enabled=%d", 
             i, pConfig->pApplications[i].pcLocation, pcUri, pConfig->pApplications[i].bEnabled);
@@ -765,6 +763,68 @@ int aselect_filter_verify_directory(pool *pPool, PASELECT_FILTER_CONFIG pConfig,
         }
     }
     return ASELECT_FILTER_ERROR_FAILED;
+}
+
+/*
+ * The cockpit wil use the first 'aselect_filter_add_secure_app' line as default for "protected" apps
+    aselect_filter_add_secure_app "/" "app1" "uid=siam_user,language=NL,country=NL"
+ * The same holds for public apps:
+    aselect_filter_add_public_app "/web/"
+    aselect_filter_add_public_app "/html/"
+ * Disabled rules will simply be ignored
+    aselect_filter_add_secure_app "/" "app1" "disabled,language=NL,country=NL"
+*/
+//
+// Checks the uri to decide whether it's a public or a secure application
+//
+int aselect_filter_check_app_uri(pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcUri)
+{
+    int i, len, uriLen = strlen(pcUri);
+    int iBestSec = -1, iBestPub = -1;
+    int lenBestSec = 0, lenBestPub = 0;
+
+    for (i = 0; i < pConfig->iAppCount; i++) {
+        TRACE4("aselect_filter_check_app_uri::comparing directory(%d):\"%s\" to URI: \"%s\", enabled=%d", 
+            i, pConfig->pApplications[i].pcLocation, pcUri, pConfig->pApplications[i].bEnabled);
+	len = strlen(pConfig->pApplications[i].pcLocation);
+        if (len > 0 && len <= uriLen && strncmp(pcUri, pConfig->pApplications[i].pcLocation, len) == 0) {  // a match
+            if (pConfig->pApplications[i].bEnabled) {  // skip disabled apps
+		TRACE("aselect_filter_check_app_uri::match"); 
+		if (len > lenBestSec) {
+		    iBestSec = i;
+		    lenBestSec = len;
+		}
+            }
+            // else: App found, but the rule was disabled
+        }
+    }
+    for (i = 0; i < pConfig->iPublicAppCount; i++) {
+        TRACE3("aselect_filter_check_app_uri::comparing directory[%d]:\"%s\" to URI: \"%s\"", 
+		    i, pConfig->pPublicApps[i], pcUri);
+	len = strlen(pConfig->pPublicApps[i]);
+        if (len > 0 && len <= uriLen && strncmp(pcUri, pConfig->pPublicApps[i], len) == 0) {  // a match
+	    if (strncmp(pcUri, pConfig->pPublicApps[i], len) == 0) {
+		TRACE1("aselect_filter_check_app_uri::match, len=%d", len); 
+		if (len > lenBestPub) {
+		    TRACE("aselect_filter_check_app_uri::better"); 
+		    iBestPub = i;
+		    lenBestPub = len;
+		}
+	    }
+	}
+    }
+    TRACE4("aselect_filter_check_app_uri::Sec: i=%d len=%d Pub: i=%d len=%d", iBestSec, lenBestSec, iBestPub, lenBestPub);
+    if (iBestSec < 0 && iBestPub < 0)
+        TRACE1("Uri \"%s\" not found", pcUri);
+	return -1;  // no match at all
+
+    if (lenBestSec >= lenBestPub) {
+	pConfig->pCurrentApp = &pConfig->pApplications[iBestSec];
+        TRACE1("Secure uri \"%s\"", pcUri);
+	return 1;  // secure ok
+    }
+    TRACE1("Public uri \"%s\"", pcUri);
+    return 0;  // public app ok
 }
 
 //

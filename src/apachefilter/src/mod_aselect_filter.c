@@ -88,7 +88,7 @@ char *aselect_filter_auth_user(request_rec *pRequest, pool *pPool, PASELECT_FILT
 char *aselect_filter_verify_credentials(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcRID,
 					char *pcCredentials, char *applicationArguments, TIMER_DATA *pt);
 static int      aselect_filter_handler(request_rec *pRequest );
-static void *   aselect_filter_create_config(pool *pPool, server_rec *pServer );
+//static void *   aselect_filter_create_config(pool *pPool, server_rec *pServer );
 static int      aselect_filter_verify_config(request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig );
 static const char * aselect_filter_set_agent_address(cmd_parms *parms, void *mconfig, const char *arg );
 static const char * aselect_filter_set_agent_port(cmd_parms *parms, void *mconfig, const char *arg );
@@ -564,48 +564,39 @@ char *extractApplicationParameters(pool *pPool, char *arguments)
 static int aselect_filter_handler(request_rec *pRequest)
 {
     int ok;
-    int             iRet = FORBIDDEN; // 402
-    int             iError = ASELECT_FILTER_ERROR_OK;
-    int             iAction = ASELECT_FILTER_ACTION_ACCESS_DENIED;
-    table           *headers_in = pRequest->headers_in;
-    table           *headers_out = pRequest->headers_out;
+    int iRet = FORBIDDEN; // 402
+    int iError = ASELECT_FILTER_ERROR_OK;
+    int iAction = ASELECT_FILTER_ACTION_ACCESS_DENIED;
+    table *headers_in = pRequest->headers_in;
+    table *headers_out = pRequest->headers_out;
     PASELECT_FILTER_CONFIG  pConfig;
-    char            *pcTicketIn;
-    char            *pcTicketOut = NULL;
-    char            *pcUIDIn;
-    char            *pcUIDOut = NULL;
-    char            *pcOrganizationIn;
-    char            *pcOrganizationOut = NULL;
-    char            *pcAttributesIn;
-    char            *pcTicket;
-    char            *pcCredentials;
-    char            *pcRID;
-    char            *pcAppUrl;
-    char            *pcCookie;
-    char            *pcCookie2;
-    char            *pcCookie3;
-    char            *pcCookie4;
-    char            *pcASUrl;
-    char            *pcASelectServer;
-    char            *pcResponseVT;
-    char            *pcResponseAU;
-    char            *pcResponseCred;
-    pool            *pPool = NULL;
-    char            *pcUrl;
-    char            *pcRequest;
-    char            *pcASelectAppURL;
-    char            *pcASelectServerURL;
-    char            *pcResponseKill;
-    char            *pcTmp;
-    char            *pcTmp2;
-    char            *pcStrippedParams;
-    char            *pcAttributes = NULL;
-    int             bFirstParam;
+    char *pcTicketIn, *pcTicketOut = NULL;
+    char *pcUIDIn, *pcUIDOut = NULL;
+    char *pcOrganizationIn, *pcOrganizationOut = NULL;
+    char *pcAttributesIn;
+    char *pcTicket;
+    char *pcCredentials;
+    char *pcRID;
+    char *pcAppUrl;
+    char *pcCookie, *pcCookie2, *pcCookie3, *pcCookie4;
+    char *pcASUrl;
+    char *pcASelectServer;
+    char *pcResponseVT, *pcResponseAU;
+    char *pcResponseCred;
+    pool *pPool = NULL;
+    char *pcUrl;
+    char *pcRequest;
+    char *pcASelectAppURL, *pcASelectServerURL;
+    char *pcResponseKill;
+    char *pcTmp, *pcTmp2;
+    char *pcStrippedParams;
+    char *pcAttributes = NULL;
     char *pcRequestLanguage = NULL;
     char *addedSecurity = "";
     char *securedAselectAppArgs = NULL;
-    int isSecure = 0;
-
+    char *passUsiAttribute = NULL; 
+    int bFirstParam;
+    int rc, isSecure = 0;
     TIMER_DATA timer_data;
 
     ap_log_error(APLOG_MARK, APLOG_INFO, pRequest->server, ap_psprintf(pRequest->pool, "SIAM:: URI - %s %s", pRequest->uri, pRequest->args));
@@ -632,7 +623,7 @@ static int aselect_filter_handler(request_rec *pRequest)
     pConfig = (PASELECT_FILTER_CONFIG)ap_get_module_config(pRequest->server->module_config, &aselect_filter_module);
     if (!pConfig) {
         // Something went wrong, access denied
-        TRACE("could not get module config data");
+        TRACE("Could not get module config data");
         ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest, "SIAM:: could not retrieve configuration data");
 	goto finish_filter_handler;
     }
@@ -651,20 +642,25 @@ static int aselect_filter_handler(request_rec *pRequest)
        OK 0        **< Module has handled this stage */
 
     // 20110129, Bauke added public directories
-    // Current code uses 'secure' as default (all public directories must be enumerated), example:
-/*  # The cockpit wil use the first 'aselect_filter_add_secure_app' line for "protected" apps
-    # 1. noudb:
-    aselect_filter_add_public_app "/web/"
-    aselect_filter_add_public_app "/html/"
-    aselect_filter_add_secure_app "/" "app1" "uid=siam_user,language=NL,country=NL"
-    # The second line is used for "public" apps
-    # 2. public:
-    #aselect_filter_add_secure_app "/" "app1" "disabled,language=NL,country=NL"
-*/
-    // To specify 'public' as default, an additional config-item is needed, and the following code:
-    //if (aselect_filter_verify_directory(pPool, pConfig, pRequest->uri) == ASELECT_FILTER_ERROR_OK)
-    //isSecure = 1;
-    if (/*isSecure==0 &&*/ aselect_filter_is_public_app(pPool, pConfig, pRequest->uri) == ASELECT_FILTER_ERROR_OK) {
+    // Code uses 'secure' as default (all public directories must be enumerated)
+
+    // 20120530, Bauke: new mechanism to choose public/secure using match length
+    // 20120608: default is secure
+    //rc = aselect_filter_check_app_uri(pPool, pConfig, pRequest->uri);
+    rc = 1;
+    TRACE2("Return \"%s\" rc=%d", pRequest->uri, rc);
+    if (rc == 0) {  // public
+	ap_log_error(APLOG_MARK, APLOG_INFO, pRequest->server,
+	    ap_psprintf(pRequest->pool, "SIAM:: Public - %s", pRequest->uri));
+        TRACE1("\"%s\" is a public directory", pRequest->uri);
+	iRet = OK;
+	goto finish_filter_handler; // we don't want to do anything with this request
+    }
+    // else 1="secure" or -1="not found"
+    // 20120530 end
+
+    /*
+    if (aselect_filter_is_public_app(pPool, pConfig, pRequest->uri) == ASELECT_FILTER_ERROR_OK) {
 	ap_log_error(APLOG_MARK, APLOG_INFO, pRequest->server,
 	    ap_psprintf(pRequest->pool, "SIAM:: Public - %s", pRequest->uri));
         TRACE1("\"%s\" is a public directory", pRequest->uri);
@@ -683,6 +679,7 @@ static int aselect_filter_handler(request_rec *pRequest)
         iRet = DECLINED;
 	goto finish_filter_handler;
     }
+    */
 
     // Serious action, so use a serious type :-)
     timer_data.td_type = 1;
@@ -712,21 +709,19 @@ static int aselect_filter_handler(request_rec *pRequest)
     //
     pcTicketIn = aselect_filter_get_cookie(pPool, headers_in, "aselectticket=");
     if (pcTicketIn) {
-        TRACE1("aselect_filter_handler: found ticket: %s", pcTicketIn);
-        
-        // Check for user ID
         //
-        if ((pcUIDIn = aselect_filter_get_cookie(pPool, headers_in, "aselectuid=")))
-        {
+        // Look for a valid ticket
+        //
+        TRACE1("aselect_filter_handler: found ticket: %s", pcTicketIn);
+        if ((pcUIDIn = aselect_filter_get_cookie(pPool, headers_in, "aselectuid="))) {
             TRACE1("aselect_filter_handler: found uid: %s", pcUIDIn);
-           
+	    //
             // Check for Organization 
             //
             if ((pcOrganizationIn = aselect_filter_get_cookie(pPool, headers_in, "aselectorganization=")))
             {
                 TRACE3("aselect_filter_handler: found organization: %s, bSecureUrl=%d PassAttributes=%s",
 			pcOrganizationIn, pConfig->bSecureUrl, pConfig->pcPassAttributes);
-
                 //
                 // Check attributes
                 //
@@ -788,10 +783,21 @@ static int aselect_filter_handler(request_rec *pRequest)
 				TRACE1("Return aselect_app_args=%s", pcTmp);
 				securedAselectAppArgs = pcTmp;
 			    }
+			    pcTmp = aselect_filter_get_param(pPool, pcResponseVT, "usi=", "&", TRUE);
+			    if (pcTmp != NULL) {
+				TRACE1("passUsi=%s", pcTmp);
+				passUsiAttribute = pcTmp;
+			    }
                             iAction = ASELECT_FILTER_ACTION_ACCESS_GRANTED;
                             TRACE("aselect_filter_handler: User has ticket: ACCESS_GRANTED");
                         }
                         else {
+			    pRequest->content_type = "text/html";
+			    pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectticket", pConfig->pCurrentApp->pcLocation, addedSecurity);
+			    TRACE1("Delete cookie: %s", pcCookie);
+			    ap_table_add(headers_out, "Set-Cookie", pcCookie);
+			    ap_send_http_header(pRequest);
+
                             if (iError == ASELECT_SERVER_ERROR_TGT_NOT_VALID ||
                                 iError == ASELECT_SERVER_ERROR_TGT_EXPIRED ||
                                 iError == ASELECT_SERVER_ERROR_TGT_TOO_LOW ||
@@ -829,13 +835,11 @@ static int aselect_filter_handler(request_rec *pRequest)
     }
 
     TRACE3("==== 2. Verify iError=%d iAction=%s, iRet=%s", iError, filter_action_text(iAction), filter_return_text(iRet));
-    if (iAction == ASELECT_FILTER_ACTION_VERIFY_CREDENTIALS)
-    {
-        TRACE1("Verify Credentials, ARGUMENTS: %s", pRequest->args);
-
+    if (iAction == ASELECT_FILTER_ACTION_VERIFY_CREDENTIALS) {
         //
         // Check for user credentials 
         //
+        TRACE1("Verify Credentials, ARGUMENTS: %s", pRequest->args);
         pcCredentials = aselect_filter_get_param(pPool, pRequest->args, "aselect_credentials=", "&", TRUE);
         if (pcCredentials) {
             TRACE1("aselect_credentials: %s", pcCredentials);
@@ -859,9 +863,17 @@ static int aselect_filter_handler(request_rec *pRequest)
                             // Save Uid
                             if ((pcUIDOut = aselect_filter_get_param(pPool, pcResponseCred, "uid=", "&", TRUE))) {
                                 if ((pcOrganizationOut = aselect_filter_get_param(pPool, pcResponseCred, "organization=", "&", TRUE))) {
+                                    pcTmp = aselect_filter_get_param(pPool, pcResponseCred, "usi=", "&", TRUE);
+                                    if (pcTmp) {
+					TRACE1("passUsi=%s", pcTmp);
+                                        passUsiAttribute = pcTmp;
+				    }
                                     pcAttributes = aselect_filter_get_param(pPool, pcResponseCred, "attributes=", "&", TRUE);
                                     if (pcAttributes)
                                         pcAttributes = aselect_filter_base64_decode(pPool, pcAttributes);
+				    if (passUsiAttribute != NULL) {
+					pcAttributes = ap_psprintf(pPool, "usi=%s&%s", passUsiAttribute, pcAttributes);
+				    }
                                     iAction = ASELECT_FILTER_ACTION_SET_TICKET;
                                 }
                                 else {
@@ -959,6 +971,7 @@ static int aselect_filter_handler(request_rec *pRequest)
 					// Successfully killed the ticket, now redirect to the aselect-server
 					if ((pcASelectServerURL = aselect_filter_get_cookie(pPool, headers_in, "aselectserverurl=")))
 					{
+					    TRACE("Delete cookies");
 					    pRequest->content_type = "text/html";
 					    pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectticket", pConfig->pCurrentApp->pcLocation, addedSecurity);
 					    ap_table_add(headers_out, "Set-Cookie", pcCookie);
@@ -981,7 +994,6 @@ static int aselect_filter_handler(request_rec *pRequest)
 
 					    ap_send_http_header(pRequest);
 					    ap_rprintf(pRequest, ASELECT_FILTER_CLIENT_REDIRECT, pcASelectServerURL, pcASelectServerURL);
-
 					    iRet = DONE;
                                         }
                                         else {
@@ -1177,17 +1189,22 @@ finish_filter_handler:
     // FINISH TIMER
     ok = (iRet == DONE || iAction == ASELECT_FILTER_ACTION_ACCESS_GRANTED);
     if (pConfig && pConfig->pCurrentApp) {
-	char *pData, buf[1000];
+	char *pData, buf[1000], *pcResponse;
 	int rc;
 	timer_finish(&timer_data);
 	pData = timer_pack(pPool, &timer_data, "flt_all", pConfig->pCurrentApp->pcAppId, ok);
 	if (pConfig->iBatchSize > 0 && pConfig->iSensorPort > 0 && *pConfig->pcSensorIP) {
 	    sprintf(buf, "GET /?request=store&data=%s HTTP/1.1\r\n", pData);
-	    aselect_filter_send_request(pRequest->server, pPool, pConfig->pcSensorIP, pConfig->iSensorPort,
+	    pcResponse = aselect_filter_send_request(pRequest->server, pPool, pConfig->pcSensorIP, pConfig->iSensorPort,
 					buf, strlen(buf), NULL, 0);
+	    if (!pcResponse) {  // disable connection
+		// Does not work however, the worker is killed!
+		pConfig->iSensorPort = 0;
+		TRACE("Disable LbSensor");
+	    }
 	}
 	else
-	    TRACE1("Sensor [%s]", pData);
+	    TRACE1("Sensor data [%s] not sent", pData);
     }
     TRACE4("==== 6. Returning %s, ok=%d %s ? %s", filter_return_text(iRet), ok, pRequest->uri, pRequest->args);
     TRACE("---- }\n====");
@@ -1685,7 +1702,7 @@ static void aselect_filter_removeUnwantedCharacters(char *args)
 //
 // Use to create the per server configuration data
 //
-static void *aselect_filter_create_config(pool *pPool, server_rec *pServer)
+/*static void *aselect_filter_create_config(pool *pPool, server_rec *pServer)
 {
     PASELECT_FILTER_CONFIG  pConfig = NULL;
 
@@ -1698,10 +1715,9 @@ static void *aselect_filter_create_config(pool *pPool, server_rec *pServer)
 	TRACE("aselect_filter_create_config::ERROR:: could not allocate memory for pConfig");
     }
     return pConfig;
-}
+}*/
 
-static const char *
-aselect_filter_set_agent_address(cmd_parms *parms, void *mconfig, const char *arg)
+static const char *aselect_filter_set_agent_address(cmd_parms *parms, void *mconfig, const char *arg)
 {
     PASELECT_FILTER_CONFIG  pConfig = (PASELECT_FILTER_CONFIG) ap_get_module_config(parms->server->module_config, &aselect_filter_module);
 
@@ -2303,11 +2319,11 @@ void *aselect_filter_create_server_config( apr_pool_t *pPool, server_rec *pServe
     PASELECT_FILTER_CONFIG  pConfig = NULL;
 
     // Logs on stdout
-    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, "aselect_filter_create_config");
+    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer, "aselect_filter_create_server_config");
     pConfig = (PASELECT_FILTER_CONFIG) apr_palloc(pPool, sizeof(ASELECT_FILTER_CONFIG));
     if (!pConfig) {
 	ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, pServer,
-	    "aselect_filter_create_config::ERROR:: could not allocate memory for pConfig");
+	    "aselect_filter_create_server_config::ERROR:: could not allocate memory for pConfig");
         return NULL;
     }
     memset( pConfig, 0, sizeof( ASELECT_FILTER_CONFIG ) );
