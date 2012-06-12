@@ -137,26 +137,21 @@ public class AuthorizationRuleEvaluator
 		// get token
 		AuthorizationRuleToken oToken = (AuthorizationRuleToken) tEvaluation._oNode;
 		// check group
-		_systemLogger.log(Level.FINE, MODULE, sMethod, "Group=" + oToken._iGroup);
 		switch (oToken._iGroup) {
-		case AuthorizationRuleToken.LOGIC_OPERATOR_GROUP: {
+		case AuthorizationRuleToken.LOGIC_OPERATOR_GROUP:
 			bAuthorized = evaluateLogic(htAttributes, tEvaluation);
 			break;
-		}
-		case AuthorizationRuleToken.OPERATOR_GROUP: {
+		case AuthorizationRuleToken.OPERATOR_GROUP:
 			// simple expression with operator
 			bAuthorized = evaluateSimple(htAttributes, tEvaluation);
 			break;
-		}
-		case AuthorizationRuleToken.DATA_GROUP: {
+		case AuthorizationRuleToken.DATA_GROUP:
 			// simple expression with just a key
 			bAuthorized = evaluateSimple(htAttributes, tEvaluation);
 			break;
-		}
-		default: {
+		default:
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid evaluation tree: unknown token group.");
 			throw new ASelectAuthorizationException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-		}
 		}
 		return bAuthorized;
 	}
@@ -174,9 +169,9 @@ public class AuthorizationRuleEvaluator
 	 *             If evaluating fails.
 	 */
 	private boolean evaluateSimple(HashMap htAttributes, EvaluationTree tEvaluation)
-		throws ASelectAuthorizationException
+	throws ASelectAuthorizationException
 	{
-		final String sMethod = "evaluateSimple()";
+		final String sMethod = "evaluateSimple";
 		boolean bAuthorized = false;
 		AuthorizationRuleToken oToken = (AuthorizationRuleToken) tEvaluation._oNode;
 

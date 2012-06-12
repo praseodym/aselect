@@ -123,7 +123,6 @@ import org.aselect.agent.admin.AdminMonitor;
 import org.aselect.agent.authorization.AuthorizationEngine;
 import org.aselect.agent.config.ASelectAgentConfigManager;
 import org.aselect.agent.handler.RequestHandler;
-import org.aselect.agent.handler.TraceRequestHandler;
 import org.aselect.agent.log.ASelectAgentSystemLogger;
 import org.aselect.agent.sam.ASelectAgentSAMAgent;
 import org.aselect.agent.session.SessionManager;
@@ -565,11 +564,7 @@ public class ASelectAgent
 		_bActive = true;
 
 		// start the handler threads
-		if (_oASelectAgentSystemLogger.isDebug())
-			_tServiceHandler = new Thread(new VerboseServiceHandler());
-		else
-			_tServiceHandler = new Thread(new APIServiceHandler());
-
+		_tServiceHandler = new Thread(new APIServiceHandler());
 		_tServiceHandler.start();
 				
 		// 20111116, Bauke: added
@@ -756,59 +751,6 @@ public class ASelectAgent
 			_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "APIServiceHandler stopped.");
 		}
 
-	}
-
-	/**
-	 * Inner class that accepts API service requests and logs verbosely. <br>
-	 * <br>
-	 * <b>Description: </b> <br>
-	 * See <code>APIServiceHandler</code> for more descriptive information. <br>
-	 * <br>
-	 * Upon each connection a TraceRequestHandler thread is started which does the actual handling of the API request. <br>
-	 * <br>
-	 * <b>Concurrency issues: </b> <br>
-	 * None. <br>
-	 * 
-	 * @author Alfa & Ariss
-	 */
-	private class VerboseServiceHandler extends APIServiceHandler implements Runnable
-	{
-		
-		/**
-		 * Loop for accepting API requests and instantiating TraceRequestHandler objects.
-		 * 
-		 * @see java.lang.Runnable#run()
-		 */
-		@Override
-		public void run()
-		{
-			Socket oSocket = null;
-			RequestHandler oHandler;
-			String sMethod = "VerboseServiceHandler.run()";
-
-			StringBuffer sbInfo = new StringBuffer("VerboseServiceHandler started on port: ");
-			sbInfo.append(_servicePort);
-			_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
-			while (_bActive) {
-				try {
-					oSocket = _oServiceSocket.accept();
-					oHandler = new TraceRequestHandler(oSocket, _oCommunicator, _bAuthorization);
-					oHandler.start();
-				}
-				catch (Exception e) {
-					if (_bActive) // only log if active
-					{
-						StringBuffer sbError = new StringBuffer("Exception occurred: \"");
-						sbError.append(e.getMessage());
-						sbError.append("\"");
-						_oASelectAgentSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
-					}
-				}
-			}
-			// stopped
-			sbInfo = new StringBuffer("VerboseServiceHandler stopped.");
-			_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
-		}
 	}
 
 	/**

@@ -352,6 +352,8 @@ public class TGTIssuer
 			Utils.copyHashmapValue("user_agent", htTGTContext, htSessionContext);
 			// Bauke 20091029, for multiple saml IdPs
 			Utils.copyHashmapValue("federation_url", htTGTContext, htSessionContext);
+			// 20120606, Bauke: connect sessions
+			Utils.copyHashmapValue("usi", htTGTContext, htSessionContext);
 
 			// Attributes that where released by the 'remote' A-Select Server will be stored in the TGT.
 			// This server might have configured a 'TGTAttributeRequestor' to
@@ -627,6 +629,8 @@ public class TGTIssuer
 			Utils.copyHashmapValue("user_agent", htTGTContext, htSessionContext);
 			// Bauke 20091029, for multiple saml IdPs
 			Utils.copyHashmapValue("federation_url", htTGTContext, htSessionContext);
+			// 20120606, Bauke: connect sessions
+			Utils.copyHashmapValue("usi", htTGTContext, htSessionContext);
 			
 			// 20100210, Bauke: Organization selection is here
 			AttributeGatherer ag = AttributeGatherer.getHandle();
@@ -673,7 +677,6 @@ public class TGTIssuer
 				// No organization selection, the tgt was just issued, report sensor data
 				// remove the session and send the user to the application
 				Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_tgt", sRid, htSessionContext, sTgt, true);
-				//_sessionManager.killSession(sRid);
 				_sessionManager.setDeleteSession(htSessionContext, _systemLogger);  // 20120403, Bauke: was killSession()
 				
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
@@ -810,6 +813,8 @@ public class TGTIssuer
 				htTGTContext.put("local_organization", sLocalOrg);
 			htTGTContext.put("rid", sRid);
 			htTGTContext.put("result_code", sResultCode);
+			// 20120606, Bauke: connect sessions
+			Utils.copyHashmapValue("usi", htTGTContext, htSessionContext);
 
 			// We will now always put the client_ip in the TGT
 			// There should always be a client_ip in the sessioncontext
@@ -821,7 +826,6 @@ public class TGTIssuer
 			String sTgt = oTGTManager.createTGT(htTGTContext);
 			// A tgt was just issued, report sensor data
 			Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_tgt", sRid, htSessionContext, sTgt, true);
-			//sessionManager.killSession(sRid);
 			sessionManager.setDeleteSession(htSessionContext, _systemLogger);  // 20120403, Bauke: was killSession
 			String sLang = (String)htTGTContext.get("language");
 			sendTgtRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse, sLang);

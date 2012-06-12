@@ -322,7 +322,6 @@ import org.aselect.server.request.handler.xsaml20.ServiceProvider;
 import org.aselect.server.request.handler.xsaml20.idp.UserSsoSession;
 import org.aselect.server.sam.ASelectSAMAgent;
 import org.aselect.server.tgt.TGTIssuer;
-import org.aselect.server.tgt.TGTManager;
 import org.aselect.server.udb.IUDBConnector;
 import org.aselect.server.udb.UDBConnectorFactory;
 import org.aselect.system.communication.client.raw.RawCommunicator;
@@ -456,10 +455,18 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	throws ASelectException
 	{
 		String sMethod = "processBrowserRequest";
+		boolean useUsi = false;
 
 		String sRequest = (String) htServiceRequest.get("request");
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplBrowREQ sRequest=" + sRequest + ", htServiceRequest="+
 						htServiceRequest + " user language=" + _sUserLanguage);
+		
+		// 20120611, Bauke: added "usi" handling
+		if (sRequest != null && ("logout".equals(sRequest) || sRequest.startsWith("direct_login") || sRequest.startsWith("login"))) {
+			_timerSensor.setTimerSensorLevel(1);  // enable sensor
+			useUsi = true;
+		}
+		
 		String sReqLanguage = (String) htServiceRequest.get("language");
 		if (sReqLanguage != null && !sReqLanguage.equals("")) {
 			_sUserLanguage = sReqLanguage;
@@ -472,6 +479,15 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (_htSessionContext == null) {
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
+			}
+			// 20120611, Bauke: added "usi" handling
+			String sUsi = (String)_htSessionContext.get("usi");
+			String sAppId = (String)_htSessionContext.get("app_id");
+			if (useUsi) {
+				if (Utils.hasValue(sUsi))  // overwrite
+					_timerSensor.setTimerSensorId(sUsi);
+				if (Utils.hasValue(sAppId))
+					_timerSensor.setTimerSensorAppId(sAppId);
 			}
 			Tools.resumeSensorData(_configManager, _systemLogger, _htSessionContext);  // 20111102
 			if (sReqLanguage != null && !sReqLanguage.equals("")) {
@@ -585,7 +601,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			else if (sRequest.equals("ip_login")) {
 				handleIPLogin1(htServiceRequest, _servletResponse, pwOut);
 			}
-			else if (sRequest.indexOf("direct_login") >= 0) {
+			else if (sRequest.startsWith("direct_login")) {
 				handleDirectLogin(htServiceRequest, _servletResponse, pwOut);
 			}
 			else if (sRequest.equals("create_tgt")) {
@@ -643,8 +659,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 		// The tgt was just issued and updated, report sensor data
 		Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_sbh", sRid, _htSessionContext, sTgt, true);
-		//Utils.setSessionStatus(_htSessionContext, "del", _systemLogger);
-		//_sessionManager.killSession(sRid);
 		_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 		
 		String sAppUrl = (String)_htSessionContext.get("app_url");	
@@ -789,8 +803,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRedirectUrl);
 							// 20111101, Bauke: added Sensor
 							Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_sbh", sRid, _htSessionContext, sTgt, true);
-							//Utils.setSessionStatus(_htSessionContext, "del", _systemLogger);
-							//_sessionManager.killSession(sRid);
 							// Session must be removed
 							_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
@@ -1038,8 +1050,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							else {
 								// 20111101, Bauke: added Sensor
 								Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_sbh", sRid, _htSessionContext, sTgt, true);
-								//Utils.setSessionStatus(_htSessionContext, "del", _systemLogger);
-								//_sessionManager.killSession(sRid);
 								_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
 								TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
@@ -1641,7 +1651,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				if (sPopup == null || sPopup.equalsIgnoreCase("false")) {
 					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102, control goes to a different server
 					_htSessionContext.put("authsp_visited", "true");
-					//_sessionManager.update(sRid, _htSessionContext); // Write session
 					_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 					servletResponse.sendRedirect(sRedirectUrl);
 					return;
@@ -1655,7 +1664,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				sPopupForm = _configManager.updateTemplate(sPopupForm, _htSessionContext);
 				Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  // 20111102, control to the user
 				_htSessionContext.put("authsp_visited", "true");
-				//_sessionManager.update(sRid, _htSessionContext); // Write session
 				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 				pwOut.println(sPopupForm);
 				return;
@@ -2039,8 +2047,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 						// 20111101, Bauke: added Sensor
 						Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_sbh", sRid, _htSessionContext, sTgt, true);
-						//Utils.setSessionStatus(_htSessionContext, "del", _systemLogger);
-						//_sessionManager.killSession(sRid);
 						_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
 						_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sb);
@@ -2135,6 +2141,14 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		try {
 			String sTgt = (String) htServiceRequest.get("aselect_credentials_tgt");
 			HashMap htTGTContext = _tgtManager.getTGT(sTgt);
+			
+			// 20120611, Bauke: added "usi"
+			String sUsi = (String)htTGTContext.get("usi");
+			if (Utils.hasValue(sUsi))  // overwrite
+				_timerSensor.setTimerSensorId(sUsi);
+			String sAppId = (String)htTGTContext.get("app_id");
+			if (Utils.hasValue(sAppId))
+				_timerSensor.setTimerSensorAppId(sAppId);
 
 			if (htTGTContext != null) {
 				_tgtManager.remove(sTgt);

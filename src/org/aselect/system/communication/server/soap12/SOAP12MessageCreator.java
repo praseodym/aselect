@@ -196,7 +196,8 @@ public class SOAP12MessageCreator implements IMessageCreatorInterface
 	 * @param systemLogger
 	 *            The logger that is used to log system entries.
 	 */
-	public SOAP12MessageCreator(String sMethodEnv, String sMethodName, SystemLogger systemLogger) {
+	public SOAP12MessageCreator(String sMethodEnv, String sMethodName, SystemLogger systemLogger)
+	{
 		_sMethodEnv = sMethodEnv;
 		_sMethodName = sMethodName;
 		_oInputMessage = null;
@@ -227,7 +228,7 @@ public class SOAP12MessageCreator implements IMessageCreatorInterface
 	 *      org.aselect.system.communication.server.IProtocolResponse)
 	 */
 	public boolean init(IProtocolRequest oRequest, IProtocolResponse oResponse)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "init()";
 
@@ -250,55 +251,41 @@ public class SOAP12MessageCreator implements IMessageCreatorInterface
 			String sCodeString = "";
 			switch (iCode) {
 			case ASOAPException.VERSION_MISMATCH: // version mismatch
-			{
 				sCodeString = SOAPConstants.ERR_VERSION_MISMATCH;
 				_oResponse.setProperty("Status", "" + SOAPConstants.STATUS_VERSION_MISMATCH);
 				createFault(sCodeString, sReason, sDetail);
 				break;
-			}
 			case ASOAPException.MUST_UNDERSTAND: // Must understand
-			{
 				sCodeString = SOAPConstants.ERR_MUST_UNDERSTAND;
 				_oResponse.setProperty("Status", "" + SOAPConstants.STATUS_MUST_UNDERSTAND);
 				createFault(sCodeString, sReason, sDetail);
 				break;
-			}
 			case ASOAPException.DATA_ENCODING_UNKNOWN: // Unknown data
 				// encoding
-			{
 				sCodeString = SOAPConstants.ERR_DATA_ENCODING_UNKNOWN;
 				_oResponse.setProperty("Status", "" + SOAPConstants.STATUS_DATA_ENCODING_UNKNOWN);
 				createFault(sCodeString, sReason, sDetail);
 				break;
-			}
 			case ASOAPException.SOAP_11: // Received SOAP 1.1 message
-			{
 				sCodeString = SOAPConstants.ERR_VERSION_MISMATCH;
 				_oResponse.setProperty("Status", "" + SOAPConstants.STATUS_VERSION_MISMATCH);
 				createSOAP11UpdateFault(sCodeString, sReason);
 				break;
-			}
 			case ASOAPException.SENDER: // Bad request received
-			{
 				sCodeString = SOAPConstants.ERR_CLIENT;
 				_oResponse.setProperty("Status", "" + SOAPConstants.STATUS_CLIENT);
 				createFault(sCodeString, sReason, sDetail);
 				break;
-			}
 			case ASOAPException.RECEIVER: // Internal Server error
-			{
 				sCodeString = SOAPConstants.ERR_SERVER;
 				_oResponse.setProperty("Status", "" + SOAPConstants.STATUS_SERVER);
 				createFault(sCodeString, sReason, sDetail);
 				break;
-			}
 			default: // Server error
-			{
 				sCodeString = SOAPConstants.ERR_SERVER;
 				_oResponse.setProperty("Status", "" + SOAPConstants.STATUS_SERVER);
 				createFault(sCodeString, sReason, sDetail);
 				break;
-			}
 			}
 			// a Fault message will be send imediately to the sender
 			send();
@@ -311,10 +298,7 @@ public class SOAP12MessageCreator implements IMessageCreatorInterface
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
 			// log additional info
 			_systemLogger.log(Level.FINE, MODULE, sMethod, "Received SOAP inputmessage:\n" + _oRequest.getMessage());
-
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "SOAP fault sent: " + sCodeString + ", " + sReason + ", "
-					+ sDetail);
-
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "SOAP fault sent: " + sCodeString + ", " + sReason + ", "+sDetail);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 		}
 		return true;
@@ -331,7 +315,7 @@ public class SOAP12MessageCreator implements IMessageCreatorInterface
 	 * @see org.aselect.system.communication.server.IInputMessage#getParam(java.lang.String)
 	 */
 	public String getParam(String sName)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "getParam()";
 		// _systemLogger.log(Level.INFO, MODULE, sMethod, "param:"+sName);
@@ -344,8 +328,7 @@ public class SOAP12MessageCreator implements IMessageCreatorInterface
 		// get parameters with [name] from RPC SOAP body
 		NodeList nlParams = _elInputRPCBody.getElementsByTagNameNS(_sMethodEnv, sName);
 		String sValue = "";
-		if (nlParams.getLength() == 1) // exactly 1 param found with this name
-		{
+		if (nlParams.getLength() == 1) {  // exactly 1 param found with this name
 			// get all text nodes
 			Element elParam = (Element) nlParams.item(0);
 			NodeList xValues = elParam.getChildNodes();
@@ -357,9 +340,7 @@ public class SOAP12MessageCreator implements IMessageCreatorInterface
 					if (!sAdd.equals(""))
 						sValue += sAdd;
 				}
-				else
-				// not a TextNode inside parameter
-				{
+				else {	// not a TextNode inside parameter
 					StringBuffer sb = new StringBuffer("Invalid parameter in input message: ");
 					sb.append(nValue.getNodeName());
 					sb.append(",cause: ");
@@ -369,16 +350,12 @@ public class SOAP12MessageCreator implements IMessageCreatorInterface
 				}
 			}
 		}
-		else
-		// no Param found or more then one
-		{
-			StringBuffer sb = new StringBuffer();
+		else {  // no Param found or more then one
+			/*StringBuffer sb = new StringBuffer();
 			sb.append(nlParams.getLength());
 			sb.append(" number of parameters in input message with name ");
-			sb.append(sName);
-			sb.append(",cause: ");
-			sb.append(Errors.ERROR_ASELECT_USE_ERROR);
-			_systemLogger.log(Level.FINE, MODULE, sMethod, sb.toString());
+			sb.append(sName).append(",cause: ").append(Errors.ERROR_ASELECT_USE_ERROR);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, sb.toString());*/
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 		}
 		return sValue.trim();
@@ -395,7 +372,7 @@ public class SOAP12MessageCreator implements IMessageCreatorInterface
 	 * @see org.aselect.system.communication.server.IInputMessage#getArray(java.lang.String)
 	 */
 	public String[] getArray(String sName)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "getArray()";
 		if (_elInputRPCBody == null) {
@@ -429,7 +406,7 @@ public class SOAP12MessageCreator implements IMessageCreatorInterface
 	 * @see org.aselect.system.communication.server.IOutputMessage#setParam(java.lang.String, java.lang.String, boolean)
 	 */
 	public boolean setParam(String sName, String sValue, boolean doUrlEncode)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		return setParam(sName, sValue);
 	}
@@ -447,7 +424,7 @@ public class SOAP12MessageCreator implements IMessageCreatorInterface
 	 * @see org.aselect.system.communication.server.IOutputMessage#setParam(java.lang.String, java.lang.String)
 	 */
 	public boolean setParam(String sName, String sValue)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "setParam()";
 		if (_oOutputMessage == null) {
@@ -500,7 +477,7 @@ public class SOAP12MessageCreator implements IMessageCreatorInterface
 	 * @see org.aselect.system.communication.server.IOutputMessage#setParam(java.lang.String, java.lang.String[])
 	 */
 	public boolean setParam(String sName, String[] saValues)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "setParam()";
 		if (_oOutputMessage == null) {

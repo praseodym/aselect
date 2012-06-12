@@ -39,13 +39,15 @@ public class DataCollectSensor extends BasicSensorHandler
 		DataCollectStore.getHandle().setExportAfter(iExportAfter);
 		int iRunExport = _oConfigManager.getSimpleIntParam(oConfigHandler, "run_export", true);  // seconds
 		DataCollectStore.getHandle().setRunExport(iRunExport);
-		String sExportFile = _oConfigManager.getSimpleParam(oConfigHandler, "export_file", true);
-		DataCollectStore.getHandle().setExportFile(sExportFile);
+		//String sExportFile = _oConfigManager.getSimpleParam(oConfigHandler, "export_file", true);
+		//DataCollectStore.getHandle().setExportFile(sExportFile);
 		int iCollectLevel = _oConfigManager.getSimpleIntParam(oConfigHandler, "collect_level", true);  // 1 or 2
 		if (iCollectLevel<1)
 			iCollectLevel = 1;
 		DataCollectStore.getHandle().setCollectLevel(iCollectLevel);
-		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "ea="+iExportAfter+" re="+iRunExport+" ef="+sExportFile);
+		int iTranslateUsi = _oConfigManager.getSimpleIntParam(oConfigHandler, "translate_usi", true);  // 0 or 1
+		DataCollectStore.getHandle().setTranslateUsi(iTranslateUsi);
+		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "ea="+iExportAfter+" re="+iRunExport);  //+" ef="+sExportFile);
 	}
 
 	//
@@ -102,7 +104,7 @@ public class DataCollectSensor extends BasicSensorHandler
 				//_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Add="+ts.getTimerSensorId());
 				DataCollectStore hStore = DataCollectStore.getHandle();
 				//_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, ts.timerSensorPack());
-				hStore.addEntry(ts.getTimerSensorId(), ts);
+				hStore.addEntry(ts);
 			}
 			catch (Exception e) {
 				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Exception: "+e.getClass()+" :"+e.getMessage());

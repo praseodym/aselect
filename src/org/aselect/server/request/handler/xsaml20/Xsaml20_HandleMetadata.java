@@ -23,7 +23,6 @@ import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.AbstractRequestHandler;
 import org.aselect.server.request.handler.xsaml20.idp.MetaDataManagerIdp;
@@ -69,8 +68,7 @@ public class Xsaml20_HandleMetadata extends AbstractRequestHandler
 	}
 
 	/**
-	 * Process incoming request <br>
-	 * .
+	 * Process incoming request.
 	 * 
 	 * @param request
 	 *            HttpServletRequest.

@@ -113,75 +113,6 @@
  * Revision 1.25  2005/03/18 15:28:02  peter
  * Fixed cross-authenticate bugs.
  * organization parameter is now optional in request=cross_authenticate, A-Select Server will retrieve the organization id.
- *
- * Revision 1.24  2005/03/18 14:50:55  erwin
- * Removed processCreateTGT()
- *
- * Revision 1.23  2005/03/18 13:43:59  remco
- * added untested create_tgt
- *
- * Revision 1.22  2005/03/17 14:07:51  remco
- * Attributes functionality
- *
- * Revision 1.21  2005/03/17 08:26:01  erwin
- * Removed fixmes
- *
- * Revision 1.20  2005/03/16 11:29:46  martijn
- * renamed todo's
- *
- * Revision 1.19  2005/03/16 11:22:16  martijn
- * todo's converted to fixme's
- *
- * Revision 1.18  2005/03/15 16:22:46  peter
- * createSession bug solved in processCrossAuthenticateRequest()
- *
- * Revision 1.17  2005/03/15 10:52:17  martijn
- * The crypto configuration is changed, providers are now also configurable. The 'do_signing' config parameter is changed to 'sign_requests'
- *
- * Revision 1.16  2005/03/14 10:09:07  erwin
- * The ticket and session expiration and start
- * time are now read from the ticket and session
- * manager.
- *
- * Revision 1.15  2005/03/09 17:10:22  remco
- * fixed compiler warnings
- *
- * Revision 1.14  2005/03/09 16:23:34  remco
- * agent always signed requests, even when this option was turned off
- *
- * Revision 1.13  2005/03/09 14:28:47  remco
- * proper signing
- *
- * Revision 1.12  2005/03/09 12:09:59  remco
- * added preliminary signing
- *
- * Revision 1.11  2005/03/09 09:20:38  erwin
- * Renamed errors.
- *
- * Revision 1.10  2005/03/08 08:44:41  erwin
- * Improved Ticket managent
- *
- * Revision 1.9  2005/03/07 15:58:44  erwin
- * improved sendRequestToASelectServer() and local variable names
- *
- * Revision 1.8  2005/03/07 14:43:24  erwin
- * asp -> authsp in requests and admin monitor.
- *
- * Revision 1.7  2005/03/03 17:24:19  erwin
- * Applied code style, added javadoc comment.
- *
- * Revision 1.6  2005/03/01 16:30:17  erwin
- * Fixed fixme's.
- *
- * Revision 1.5  2005/02/28 14:03:06  erwin
- * Fixed logging messages and levels.
- *
- * Revision 1.4  2005/02/25 15:51:33  erwin
- * Improved logging.
- *
- * Revision 1.3  2005/02/24 15:09:09  ali
- * Added IAgentEventListener class and updates internal Javadoc.
- *
  */
 
 package org.aselect.agent.handler;
@@ -837,8 +768,11 @@ public class RequestHandler extends Thread
 			htSessionContext.put("app_id", sAppId);
 			htSessionContext.put("as_url", sAsUrl);
 			
-			timerSensor.setTimerSensorRid(sRid);  // Rid received from Server
+			// 20120606, "usi" will do that now: timerSensor.setTimerSensorRid(sRid);  // Rid received from Server
+			// Saving the "usi" here can connect later sessions to this one
+			htSessionContext.put("usi", timerSensor.getTimerSensorId());  // 20120606: on Session Create
 
+			// Creates session with the same Rid as the server!!
 			if (!_sessionManager.createSession(sRid, htSessionContext)) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "could not create session.");
 				_sErrorCode = Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR;
@@ -1049,6 +983,7 @@ public class RequestHandler extends Thread
 			String sAsId = null;
 			String sSamlAttributes = null;
 			String sAppArgs = null;
+			String sInitialUsi = null;
 
 			try { // check parameters
 				sRid = oInputMessage.getParam("rid");
@@ -1067,6 +1002,8 @@ public class RequestHandler extends Thread
 					_sErrorCode = Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST;
 					return;
 				}
+				// To report to LbSensor:
+				sInitialUsi = (String)htSessionContext.get("usi");
 			}
 			catch (ASelectCommunicationException eAC) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received.", eAC);
@@ -1193,6 +1130,10 @@ public class RequestHandler extends Thread
 			if (sAppArgs != null)
 				htTicketContext.put("aselect_app_args", sAppArgs);
 			
+			if (sInitialUsi != null) {  // 20120606, Bauke
+				htTicketContext.put("usi", sInitialUsi);  // save for the next "verify_ticket"
+				timerSensor.setTimerSensorRid(sInitialUsi);  // report "usi" connection to LbSensor
+			}
 			// The attributes parameter is optional.
 			String sAttributes = (String) htResponseParameters.get("attributes");
 			if (sAttributes != null) {
@@ -1205,6 +1146,9 @@ public class RequestHandler extends Thread
 			}
 			else
 				htTicketContext.put("attributes_hash", new String(""));
+			
+			// And since we have a fresh ticket now:
+			htTicketContext.put("last_upgrade_tgt", Long.toString(System.currentTimeMillis()));
 
 			// Create ticket
 			String sTicket = _ticketManager.createTicket(htTicketContext);
@@ -1213,9 +1157,6 @@ public class RequestHandler extends Thread
 				_sErrorCode = Errors.ERROR_ASELECT_AGENT_TOO_MUCH_USERS;
 				return;
 			}
-
-			// NO, this is the agent ticket
-			// timerSensor.setTimerSensorTgt(sTicket);  // TgT still valid according to the SERVER
 
 			// prepare the response parameters for the calling application
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Prepare response");
@@ -1233,6 +1174,8 @@ public class RequestHandler extends Thread
 
 			if (sAttributes != null)
 				oOutputMessage.setParam("attributes", sAttributes);
+			if (sInitialUsi != null)  // 20120606, Bauke
+				oOutputMessage.setParam("usi", sInitialUsi);  // must be reported to the application
 
 			_sErrorCode = Errors.ERROR_ASELECT_SUCCESS;
 
@@ -1358,7 +1301,7 @@ public class RequestHandler extends Thread
 	 *             If setting response parameters fails.
 	 */
 	private void processVerifyTicketRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "processVerifyTicketRequest";
 		StringBuffer sbBuffer = new StringBuffer();
@@ -1371,8 +1314,7 @@ public class RequestHandler extends Thread
 		String sLanguage = null;
 
 		try {
-			try {
-				// get required API parameters
+			try {	// get required API parameters
 				sTicket = oInputMessage.getParam("ticket");
 				sUid = oInputMessage.getParam("uid");
 				sOrg = oInputMessage.getParam("organization");
@@ -1458,17 +1400,14 @@ public class RequestHandler extends Thread
 					return;
 				}
 			}
+			String sAppId = (String) htTicketContext.get("app_id");
+			if (Utils.hasValue(sAppId))
+				timerSensor.setTimerSensorAppId(sAppId);
 			
 			// Authorize if applicable
 			if (_bAuthorization) {
-				// get app_id
-				String sAppId = (String) htTicketContext.get("app_id");
-				if (Utils.hasValue(sAppId))
-					timerSensor.setTimerSensorAppId(sAppId);
-
 				// Get user attributes
 				HashMap htUserAttributes = deserializeAttributes((String) htTicketContext.get("attributes"));
-
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET attr=" + htUserAttributes);
 
 				// Add ip if applicable
@@ -1492,9 +1431,8 @@ public class RequestHandler extends Thread
 
 			// Bauke: added, upgrade ticket so it will live longer and prosper some more
 			// must also be send to the server, to keep the user's session alive accross different applications
-			// START NEW CODE
-			//boolean _bSendUpgrade_tgt = true;
-			//if (_bSendUpgrade_tgt) {
+			// START NEW CODE			
+			// 20120531, added "last_upgrade_tgt" mechanism to the code
 			String sLastTime = (String)htTicketContext.get("last_upgrade_tgt");
 			long lLastTime = 0;
 			if (sLastTime != null)
@@ -1546,11 +1484,17 @@ public class RequestHandler extends Thread
 			}
 			// END NEW CODE
 
+			// 20120606, added, after successful verify_ticket:
+			String sInitialUsi = (String) htTicketContext.get("usi");
+			if (Utils.hasValue(sInitialUsi)) {
+				timerSensor.setTimerSensorRid(sInitialUsi);  // report to LbSensor
+				oOutputMessage.setParam("usi", sInitialUsi);  // must be reported to the application
+				// The next calls get it's own "usi" value
+				htTicketContext.remove("usi");
+			}
+
 			String sAppArgs = (String)htTicketContext.get("aselect_app_args");
 			_ticketManager.updateTicketContext(sTicket, htTicketContext);
-			
-			// NO, this is the agent ticket
-			// timerSensor.setTimerSensorTgt(sTicket);  // TgT still valid according to local checks (and upgrade_ticket)
 			
 			// Ticket OK, create response message
 			if (sAppArgs != null)
@@ -1727,6 +1671,7 @@ public class RequestHandler extends Thread
 				_sErrorCode = Errors.ERROR_ASELECT_AGENT_UNKNOWN_TICKET;
 				return;
 			}
+			String sInitialUsi = (String)htTicketContext.get("usi");
 
 			String sAuthSP = (String) htTicketContext.get("authsp");
 			String sAppLevel = (String) htTicketContext.get("app_level");
@@ -1751,6 +1696,9 @@ public class RequestHandler extends Thread
 				oOutputMessage.setParam("attributes", sAttributes);
 			else
 				oOutputMessage.setParam("attributes", "");
+
+			if (sInitialUsi != null)  // 20120606, Bauke
+				oOutputMessage.setParam("usi", sInitialUsi);  // must be reported to the application
 
 			_sErrorCode = Errors.ERROR_ASELECT_SUCCESS;
 		}

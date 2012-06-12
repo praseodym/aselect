@@ -317,8 +317,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 				htResponse = _oClientCommunicator.sendMessage(htRequest, sASelectServerUrl);
 			}
 			catch (Exception e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not send authentication request to: "
-						+ sASelectServerUrl);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not send authentication request to: "+sASelectServerUrl);
 				throw new ASelectException(Errors.ERROR_ASELECT_IO);
 			}
 			finally {

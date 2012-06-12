@@ -431,7 +431,7 @@ public class Tools
 		String sMethod = "initializeSensorData";
 		long now = System.currentTimeMillis();
 
-		if (!oConfMgr.isLbSensorConfigured() && !oConfMgr.isTimerSensorConfigured())
+		if (!oConfMgr.isLbSensorConfigured() /*&& !oConfMgr.isTimerSensorConfigured()*/)
 			return;
 		if (htSessionContext == null) {
 			oSysLog.log(Level.INFO, MODULE, sMethod, "NO SESSION");
@@ -444,7 +444,7 @@ public class Tools
 	}
 
 	/**
-	 * Pause sensor data.
+	 * Pause sensor data. Used by LbSensor and TimerSensor.
 	 * 
 	 * @param oConfMgr
 	 *            the conf mgr
@@ -464,11 +464,11 @@ public class Tools
 			return;
 		}
 		long now = System.currentTimeMillis();
-		String sPause = htSessionContext.get("pause_contact"); // seconds
+		String sPause = htSessionContext.get("pause_contact"); // milliseconds
 		oSysLog.log(Level.INFO, MODULE, sMethod, "pause now=" + now + ((sPause==null)?"": ", LBE already paused at="+sPause));
 		// 20120215, Bauke: only replace if no old value
 		if (sPause == null) {
-			htSessionContext.put("pause_contact", Long.toString(now)); // seconds
+			htSessionContext.put("pause_contact", Long.toString(now));
 			Utils.setSessionStatus(htSessionContext, "upd", oSysLog);
 		}
 	}
@@ -482,21 +482,23 @@ public class Tools
 	 *            the system log
 	 * @param htSessionContext
 	 *            the session context
+	 * @return the number of milliseconds spent by the user since the last pause.
 	 */
-	public static void resumeSensorData(ConfigManager oConfMgr, SystemLogger oSysLog, HashMap<String, String> htSessionContext)
+	public static long resumeSensorData(ConfigManager oConfMgr, SystemLogger oSysLog, HashMap<String, String> htSessionContext)
 	{
 		String sMethod = "resumeSensorData";
+		long lPaused = -1;
 
-		if (!oConfMgr.isLbSensorConfigured() && !oConfMgr.isTimerSensorConfigured())
-			return;
+		if (!oConfMgr.isLbSensorConfigured()/* && !oConfMgr.isTimerSensorConfigured()*/)
+			return -1;
 		if (htSessionContext == null) {
 			oSysLog.log(Level.INFO, MODULE, sMethod, "NO SESSION");
-			return;
+			return -1;
 		}
 		long now = System.currentTimeMillis();
 		oSysLog.log(Level.INFO, MODULE, sMethod, "resume now=" + now);
-		String sPause = htSessionContext.get("pause_contact"); // seconds
-		String sUserSpent = htSessionContext.get("time_user"); // seconds
+		String sPause = htSessionContext.get("pause_contact"); // milliseconds
+		String sUserSpent = htSessionContext.get("time_user"); // milliseconds
 		if (sPause == null) {
 			oSysLog.log(Level.INFO, MODULE, sMethod,  "user="+sUserSpent + ", LBE cannot resume, not paused");
 		}
@@ -504,10 +506,10 @@ public class Tools
 			try {
 				long lPause = Long.parseLong(sPause);
 				long lUserSpent = (sUserSpent != null) ? Long.parseLong(sUserSpent) : 0;
-				long lPaused = now - lPause;
+				lPaused = now - lPause;
 				long lSpentNew = lUserSpent + lPaused;
 				oSysLog.log(Level.INFO, MODULE, sMethod, "user=" + lUserSpent + "->" + lSpentNew + " paused="+ lPause);
-				htSessionContext.put("time_user", Long.toString(lSpentNew)); // seconds
+				htSessionContext.put("time_user", Long.toString(lSpentNew)); // milliseconds
 				htSessionContext.remove("pause_contact");
 				Utils.setSessionStatus(htSessionContext, "upd", oSysLog);
 			}
@@ -515,11 +517,12 @@ public class Tools
 				oSysLog.log(Level.INFO, MODULE, sMethod, "Sensor calculation failed", e);
 			}
 		}
+		return lPaused;
 	}
 
 	/**
 	 * Calculate and report sensor data.
-	 * Used by the time sensor and the lb sensor mechanism
+	 * Used by the lb sensor mechanism only.
 	 * 
 	 * @param oConfMgr
 	 *            the config manager
@@ -543,9 +546,10 @@ public class Tools
 		long lFirst, lLast;
 		
 		oSysLog.log(Level.INFO, MODULE, sMethod, "<lbsensor>="+(oConfMgr.isLbSensorConfigured())+
-				" <timer_sensor>="+oConfMgr.isTimerSensorConfigured());
-		if (!oConfMgr.isLbSensorConfigured() && !oConfMgr.isTimerSensorConfigured())
+				" <timer_sensor>="+oConfMgr.isTimerSensorConfigured()+" success="+bSuccess);
+		if (!oConfMgr.isLbSensorConfigured() || !bSuccess /*&& !oConfMgr.isTimerSensorConfigured()*/)
 			return;
+		
 		if (htSessionContext == null) {
 			oSysLog.log(Level.INFO, MODULE, sMethod, "NO SESSION");
 			return;
@@ -576,37 +580,39 @@ public class Tools
 				// Send data to lbsensor's http_sensor, does not use the queue
 				Tools.reportDataToSensor(oConfMgr, "aselect", "lbsensor", "sensor_url", oSysLog, Long.toString(lTotalSpent));
 			}
-
-			if (!oConfMgr.isTimerSensorConfigured())  // No TimerSensor requested, skip the rest
-				return;
-			
-			// 20111110, Bauke: added TimerSensor functionality
-			String sUsi = (String)htSessionContext.get("usi");
-		    String sFirstContact = TimerSensor.timerSensorMilli2Time(Long.parseLong(sFirst));
-		    String sTotalSpent = TimerSensor.timerSensorMilli2Time(lTotalSpent);
-			String sLast = TimerSensor.timerSensorMilli2Time(lLast);
-			String sAppId = (String)htSessionContext.get("app_id");
-			String sVisit = (String)htSessionContext.get("authsp_visited");
-			int iTimerSensorType = (sVisit!=null)? 4/*authsp*/: 3/*server*/;
-			// Thread is the last thread that contributed to processing
-		    String sDataLine = String.format("%s,%s,%s,%d,%d,%d,%s,%s,%s,%s,%s,%s", sOrig, (sUsi==null)? "": sUsi,
-		    		sAppId, 1/*complete flow*/, iTimerSensorType, Thread.currentThread().getId(),
-		    		sFirstContact, sLast, sTotalSpent, Boolean.toString(bSuccess), sRid, (sTgt==null)? "": sTgt.substring(0,41));
-			long thenTime = System.currentTimeMillis();
-			
-			// Time period includes 1 call to reportDataToSensor()
-			oSysLog.log(Level.FINE, MODULE, sMethod, "TotalSpent="+sTotalSpent+" User="+sUserSpent+" local="+(thenTime - nowTime)+" mSec");
-			
-			SendQueue.getHandle().addEntry(sDataLine);
-			
-			// Report user time as well (could be DigiD for instance)
-			if (lUserSpent > 0) {
-			    sDataLine = String.format("%s,%s,%s,%d,%d,%d,%s,%s,%s,%s,%s,%s", sOrig, (sUsi==null)? "": sUsi,
-			    		sAppId, 1/*complete flow*/, 5/*user*/, Thread.currentThread().getId(),
-			    		sFirstContact, sLast, TimerSensor.timerSensorMilli2Time(lUserSpent), Boolean.toString(bSuccess),
-			    		sRid, (sTgt==null)? "": sTgt.substring(0,41));
-				SendQueue.getHandle().addEntry(sDataLine);
-			}
+//DOES NOT BELONG HERE:
+//			if (!oConfMgr.isTimerSensorConfigured())  // No TimerSensor requested, skip the rest
+//				return;
+//			
+//			// 20111110, Bauke: added TimerSensor functionality
+//			String sUsi = (String)htSessionContext.get("usi");
+//		    String sFirstContact = TimerSensor.timerSensorMilli2Time(Long.parseLong(sFirst));
+//		    String sTotalSpent = TimerSensor.timerSensorMilli2Time(lTotalSpent);
+//			String sLast = TimerSensor.timerSensorMilli2Time(lLast);
+//			String sAppId = (String)htSessionContext.get("app_id");
+//			String sVisit = (String)htSessionContext.get("authsp_visited");
+//			int iTimerSensorType = (sVisit!=null)? 4/*authsp*/: 3/*server*/;
+//			// Thread is the last thread that contributed to processing
+//			// 20120606, Rid/Tgt was replaced by original "usi" to tie sessions together
+//		    String sDataLine = String.format("%s,%s,%s,%d,%d,%d,%s,%s,%s,%s,%s,%s", sOrig, (sUsi==null)? "": sUsi,
+//		    		sAppId, 1/*complete flow*/, iTimerSensorType, Thread.currentThread().getId(),
+//		    		sFirstContact, sLast, sTotalSpent, Boolean.toString(bSuccess),
+//		    		""/*sRid*/, ""/*(sTgt==null)? "": sTgt.substring(0,41)*/);
+//			long thenTime = System.currentTimeMillis();
+//			
+//			// Time period includes 1 call to reportDataToSensor()
+//			oSysLog.log(Level.FINE, MODULE, sMethod, "TotalSpent="+sTotalSpent+" User="+sUserSpent+" local="+(thenTime - nowTime)+" mSec");
+//			
+//			SendQueue.getHandle().addEntry(sDataLine);
+//			
+//			// Report user time as well (could be DigiD for instance)
+//			if (lUserSpent > 0) {
+//			    sDataLine = String.format("%s,%s,%s,%d,%d,%d,%s,%s,%s,%s,%s,%s", sOrig, (sUsi==null)? "": sUsi,
+//			    		sAppId, 1/*complete flow*/, 5/*user*/, Thread.currentThread().getId(),
+//			    		sFirstContact, sLast, TimerSensor.timerSensorMilli2Time(lUserSpent), Boolean.toString(bSuccess),
+//			    		""/*sRid*/, ""/*(sTgt==null)? "": sTgt.substring(0,41)*/);
+//				SendQueue.getHandle().addEntry(sDataLine);
+//			}
 		}
 		catch (Exception e) {
 			oSysLog.log(Level.INFO, MODULE, sMethod, "Sensor report failed: "+e.getClass()+": "+e.getMessage());
@@ -614,7 +620,7 @@ public class Tools
 	}
 
 	/**
-	 * Report usage to sensor.
+	 * Report usage data to sensor. Used by the LbSensor and the TimerSensor mechanism.
 	 * 
 	 * @param oConfMgr
 	 *            the configuration manager

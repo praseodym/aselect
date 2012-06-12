@@ -54,8 +54,6 @@
  *
  * Revision 1.1  2005/03/15 08:21:52  tom
  * - Redesign of request handling
- *
- *
  */
 
 package org.aselect.server.request.handler.aselect.authentication;
@@ -150,7 +148,7 @@ public class AuthSPAPIHandler extends AbstractAPIRequestHandler
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
 
-		if (sAPIRequest.equals("kill_session")) {
+		if ("kill_session".equals(sAPIRequest)) {
 			handleKillSessionRequest(oInputMessage, oOutputMessage);
 		}
 		else {

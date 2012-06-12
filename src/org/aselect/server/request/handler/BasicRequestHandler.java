@@ -68,6 +68,9 @@ public abstract class BasicRequestHandler
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request since no applications are configured.");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
+		String sUsi = hmInput.get("usi");
+		if (!Utils.hasValue(sUsi))
+			sUsi = Tools.generateUniqueSensorId();  // 20120111, Bauke added
 
 		String sAppId = hmInput.get("app_id");
 		String sAppUrl = hmInput.get("app_url");
@@ -168,9 +171,6 @@ public abstract class BasicRequestHandler
 				
 		// Create Session
 		HashMap htSessionContext = new HashMap();
-		String sUsi = hmInput.get("usi");
-		if (!Utils.hasValue(sUsi))
-			sUsi = Tools.generateUniqueSensorId();  // 20120111, Bauke added
 		htSessionContext.put("usi", sUsi);
 		htSessionContext.put("app_id", sAppId);
 		htSessionContext.put("app_url", sAppUrl);
@@ -280,13 +280,13 @@ public abstract class BasicRequestHandler
 	 * Verify application signature.
 	 * 
 	 * @param sSignature
-	 *            the s signature
+	 *            the signature
 	 * @param sData
-	 *            the s data
+	 *            the data
 	 * @param sAppId
-	 *            the s app id
+	 *            the app id
 	 * @throws ASelectException
-	 *             the a select exception
+	 *             the aselect exception
 	 */
 	protected void verifyApplicationSignature(String sSignature, String sData, String sAppId)
 		throws ASelectException

@@ -27,7 +27,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.ProtoRequestHandler;
-import org.aselect.server.request.handler.xsaml20.sp.MetaDataManagerSp;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
@@ -235,7 +234,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
 		throws ASelectException
 	{
 		String sMethod = "handleMetaDataRequest";
-		String sLocalIssuer = null;
+//		String sLocalIssuer = null;
 		
 		// 20100429, Bauke: the caller can replace the default EntityID by the specified partner's <issuer>
 		String remoteID = httpRequest.getParameter("id");

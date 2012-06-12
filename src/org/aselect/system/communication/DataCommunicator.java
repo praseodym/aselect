@@ -69,8 +69,10 @@ public class DataCommunicator
 		StringBuffer sbBuf = new StringBuffer();
 		StringBuffer sbBuffer;
 		HttpURLConnection connection = null;
+		PrintStream osOutput = null;
 		URL url = new URL(sUrl);
 
+		systemLogger.log(Level.INFO, MODULE, sMethod, "Send "+sMessage.length()+" bytes to: "+sUrl);
 		try {
 			// open HTTP connection to URL
 			connection = (HttpURLConnection) url.openConnection();
@@ -81,10 +83,9 @@ public class DataCommunicator
 			connection.setRequestProperty("Content-Type", CONTENT_TYPE);
 			connection.setRequestProperty("Accept", CONTENT_TYPE);
 			// write message to output
-			PrintStream osOutput = new PrintStream(connection.getOutputStream());
+			osOutput = new PrintStream(connection.getOutputStream());
 			osOutput.println(sMessage);
 			osOutput.println("");  // is already <CR><NL> combination
-			osOutput.close();
 
 			int xRetCode = connection.getResponseCode();
 			switch (xRetCode) { // switch on HTTP response code
@@ -120,6 +121,13 @@ public class DataCommunicator
 			sbBuffer.append("\" errorcode: ").append(Errors.ERROR_ASELECT_IO);
 			systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString(), eIO);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_IO, eIO);
+		}
+		finally {
+			systemLogger.log(Level.INFO, MODULE, sMethod, "Close osOutput="+osOutput+" conn="+connection);
+			if (osOutput != null)
+				osOutput.close();
+			if (connection != null)
+				connection.disconnect();
 		}
 		return sbBuf.toString();
 	}

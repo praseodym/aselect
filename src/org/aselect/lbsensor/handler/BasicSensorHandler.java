@@ -89,7 +89,7 @@ public class BasicSensorHandler implements ISensorHandler
 			DataCollectStore.getHandle().set_myIP(_myIP);
 			DataCollectStore.getHandle().set_myPort(_myPort);
 		}
-		catch (UnknownHostException e2) {
+		catch (UnknownHostException e) {
 		}
 	}
 
@@ -213,7 +213,7 @@ public class BasicSensorHandler implements ISensorHandler
 	{
 		String sMethod = "processLine";
 
-		_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, sId + " [" + line + "]");
+		_oLbSensorLogger.log(Level.FINEST, MODULE, sMethod, sId + " [" + line + "]");
 	}
 
 	/**
@@ -253,9 +253,9 @@ public class BasicSensorHandler implements ISensorHandler
 	 * Echo char to stream.
 	 * 
 	 * @param oOutWriter
-	 *            the o out writer
+	 *            the out writer
 	 * @param c
-	 *            the c
+	 *            the char to write
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */

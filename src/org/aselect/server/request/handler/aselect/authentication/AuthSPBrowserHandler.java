@@ -93,6 +93,8 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.AuthenticationLogger;
 import org.aselect.system.sam.agent.SAMResource;
+import org.aselect.system.storagemanager.SendQueue;
+import org.aselect.system.utils.TimerSensor;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
@@ -145,7 +147,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	 */
 	@Override
 	public void processBrowserRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sRequest = (String) htServiceRequest.get("request");
 
@@ -176,6 +178,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	{
 		String sMethod = "handleAuthSPResponse";
 		String sHandlerName = null;
+		long now = System.currentTimeMillis();
 		
 		try {
 			String sAuthSp = (String) htServiceRequest.get("authsp");
@@ -226,8 +229,32 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			// A session is available.
 			
 			// User interaction is finished, resume the stopwatch
-			Tools.resumeSensorData(_configManager, _systemLogger, _htSessionContext);
-			
+			String sPause = (String)_htSessionContext.get("pause_contact"); // Was set by pauseSensorData()
+			Tools.resumeSensorData(_configManager, _systemLogger, _htSessionContext);  // throws away "pause_contact"
+
+			if (_configManager.isTimerSensorConfigured()) {
+				String sUsi = (String)_htSessionContext.get("usi");
+				// Report time spent by the user
+				if (Utils.hasValue(sPause)) {
+					// User was busy from "sPause" to "now"
+					long lPause = Long.parseLong(sPause);
+					TimerSensor userTs = new TimerSensor(_systemLogger, "srv_pbh");
+					userTs.timerSensorStart(lPause, 1/*level used*/, 3/*type=server*/, _lMyThreadId);
+					if (Utils.hasValue(sUsi))
+						userTs.setTimerSensorId(sUsi);
+					userTs.timerSensorFinish(now, true);
+					SendQueue.getHandle().addEntry(userTs.timerSensorPack());
+				}
+
+				// 20120611, Bauke: added "usi" handling
+				_timerSensor.setTimerSensorLevel(1);  // enable measuring
+				if (Utils.hasValue(sUsi))
+					_timerSensor.setTimerSensorId(sUsi);
+				String sAppId = (String)_htSessionContext.get("app_id");
+				if (Utils.hasValue(sAppId))
+					_timerSensor.setTimerSensorAppId(sAppId);
+			}
+						
 			// Let the AuthSP protocol handler verify the response from the AuthSP
 			// htAuthResponse will contain the result data
 			// 20120403, Bauke: added _htSessionContext:
@@ -250,8 +277,6 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 				// Session can be killed. The user could not be authenticated.
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Error in authsp response: " + sResultCode+" issuer="+sIssuer);
 				Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_pbh", sRid, _htSessionContext, null, false);
-				//Utils.setSessionStatus(_htSessionContext, "del", _systemLogger);
-				//_sessionManager.killSession(sRid);
 				_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 				throw new ASelectException(sResultCode);
 			}
@@ -259,8 +284,6 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			// The user was authenticated successfully, or sp_issuer was present
 			if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
 				_htSessionContext.put("result_code", sResultCode); // must be used by the tgt issuer
-				//Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-				//_sessionManager.updateSession(sRid, _htSessionContext);
 				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 			}
 
@@ -271,9 +294,6 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			if (sUid != null) { // For all AuthSP's that can set the user id
 				// (and thereby replace the 'siam_user' value)
 				_htSessionContext.put("user_id", sUid);
-				
-				//Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-				//_sessionManager.updateSession(sRid, _htSessionContext);
 				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
 				Utils.copyHashmapValue("betrouwbaarheidsniveau", htAdditional, htAuthspResponse);
@@ -314,9 +334,6 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			catch (ASelectSAMException ase) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "No next_authsp defined for app_id: "+app_id+ ", continuing");
 			}
-			catch (ASelectException e) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "No ResourceGroup defined for authsp: "+sAuthSp+ ", continuing if possible");
-			}
 
 			// 20111020, Bauke: split redirection from issueTGTandRedirect, so next_authsp variant will also set the TGT
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
@@ -348,8 +365,6 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			
 			// Continue with regular processing
 			Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_pbh", sRid, _htSessionContext, sTgt, true);
-			//Utils.setSessionStatus(_htSessionContext, "del", _systemLogger);
-			//_sessionManager.killSession(sRid);
 			_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 			// 20111020, Bauke: redirect is done below
 
@@ -436,7 +451,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 				"Login", sUserId, (String) htServiceRequest.get("client_ip"), _sMyOrg, sAppId, "denied", sResultCode
 			});
 
-			// Issue TGT
+			// Issue error TGT
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
 			tgtIssuer.issueErrorTGTandRedirect(sRid, _htSessionContext, sResultCode, servletResponse);
 		}

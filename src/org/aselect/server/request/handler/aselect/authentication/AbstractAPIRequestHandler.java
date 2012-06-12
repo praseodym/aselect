@@ -131,7 +131,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 	// For the needy
 	protected TimerSensor _timerSensor;
 	
-	long _lMyThread;
+	long _lMyThreadId;
 
 	protected HashMap _htSessionContext;
 
@@ -165,7 +165,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 		_servletResponse = servletResponse;
 		_sMyServerId = sMyServerId;
 		_sMyOrg = sMyOrg;
-		_lMyThread = Thread.currentThread().getId();
+		_lMyThreadId = Thread.currentThread().getId();
 		_timerSensor = new TimerSensor(_systemLogger, "srv_aah");
 
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "Protocol=" + reqParser.getRequestProtocol());
@@ -215,7 +215,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 				IOutputMessage outputMessage = communicator.getOutputMessage();
 				
 				// 20111108, Bauke: For whoever needs it:
-				_timerSensor.timerSensorStart(-1/*level unused*/, 3/*type=server*/, _lMyThread);  // unused by default
+				_timerSensor.timerSensorStart(-1/*level unused*/, 3/*type=server*/, _lMyThreadId);  // unused by default
 				String sUsi = null;
 				try {
 					sUsi = inputMessage.getParam("usi");  // unique sensor id

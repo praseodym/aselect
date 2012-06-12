@@ -145,7 +145,7 @@ public class LbSensor
 			_tMyServiceHandler.start(); // don't use run() here!
 
 			oConfigHandler = _oConfigManager.getNextSection(oConfigHandler);
-			_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "handler=" + oConfigHandler);
+			//_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "next handler=" + oConfigHandler);
 		}
 		
 		// When the DataCollectSensor was configured it has accumulated it's parameters,

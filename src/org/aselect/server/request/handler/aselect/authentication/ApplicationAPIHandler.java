@@ -335,20 +335,22 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unsupported API call", eAC);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplApiREQ " + sAPIRequest);
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplApiREQ request=" + sAPIRequest);
 
 		if (sAPIRequest.equals("authenticate")) {
+			_timerSensor.setTimerSensorLevel(1);  // enable
 			handleAuthenticateRequest(oProtocolRequest, oInputMessage, oOutputMessage);
 		}
 		else if (sAPIRequest.equals("verify_credentials")) {
 			// uses timerSensor
-			_timerSensor.setTimerSensorLevel(1);  // used
+			_timerSensor.setTimerSensorLevel(1);  // enable
 			handleVerifyCredentialsRequest(oInputMessage, oOutputMessage);
 		}
 		else if (sAPIRequest.equals("get_app_level")) {
 			handleGetAppLevelRequest(oInputMessage, oOutputMessage);
 		}
 		else if (sAPIRequest.equals("kill_tgt")) {
+			_timerSensor.setTimerSensorLevel(1);  // enable
 			handleKillTGTRequest(oInputMessage, oOutputMessage);
 		}
 		else if (sAPIRequest.equals("upgrade_tgt")) {
@@ -408,6 +410,10 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			sUsi = Tools.generateUniqueSensorId();
 		}
 		hmRequest.put("usi", sUsi);
+		_timerSensor.setTimerSensorId(sUsi);
+		String sAppId = hmRequest.get("app_id");
+		if (Utils.hasValue(sAppId))
+			_timerSensor.setTimerSensorAppId(sAppId);
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmRequest=" + hmRequest);
 		HashMap<String, Object> hmResponse = handleAuthenticateAndCreateSession(hmRequest, null);

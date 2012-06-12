@@ -850,7 +850,6 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				// 20111101, Bauke: added Sensor
 				// Finish regular authsp handling
 				Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_ldp", sRid, htSessionContext, sTgt, true);
-				// _sessionManager.Session(sRid);	
 				_sessionManager.setDeleteSession(htSessionContext, _systemLogger);  // 20120403, Bauke: changed from Session
 				// 20111018, Bauke: redirect is done below
 

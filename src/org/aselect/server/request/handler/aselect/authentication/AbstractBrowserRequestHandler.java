@@ -105,6 +105,8 @@ import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.storagemanager.SendQueue;
+import org.aselect.system.utils.TimerSensor;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
 
@@ -158,6 +160,10 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 	protected String _sUserLanguage = "";
 	protected String _sUserCountry = "";
 
+	// For the needy
+	protected TimerSensor _timerSensor;	
+	long _lMyThreadId;
+
 	protected String _sCorrectionFacility = null, _sCookiePrefix = "", _sCookieDomain = null;
 
 	/**
@@ -192,6 +198,9 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 		_servletResponse = servletResponse;
 		_htSessionContext = null;
 
+		_lMyThreadId = Thread.currentThread().getId();
+		_timerSensor = new TimerSensor(_systemLogger, "srv_abh");
+
 		// Localization
 		Locale loc = servletRequest.getLocale();
 		_sUserLanguage = loc.getLanguage();
@@ -214,14 +223,25 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 		String sMethod = "processRequest";
 		PrintWriter pwOut = null;
 		HashMap htServiceRequest = null;
+		boolean bSuccess = false;
 		try {
-			pwOut = _servletResponse.getWriter();
+			_timerSensor.timerSensorStart(-1/*level unused*/, 3/*type=server*/, _lMyThreadId);  // unused by default
 
+			pwOut = _servletResponse.getWriter();
 			_servletResponse.setContentType("text/html");
 			htServiceRequest = createServiceRequest(_servletRequest);
 			String sRequest = (String) htServiceRequest.get("request");
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ "+_servletRequest.getMethod()+
 					" htServiceRequest=" + htServiceRequest);
+			String sUsi = null;
+			try {
+				sUsi = (String)htServiceRequest.get("usi");  // unique sensor id
+			}
+			catch (Exception e) {  // Generate our own usi here
+				sUsi = Tools.generateUniqueSensorId();
+			}
+			if (Utils.hasValue(sUsi))
+				_timerSensor.setTimerSensorId(sUsi);
 
 			// only check a-select-server if request != null
 			if (sRequest != null && !sRequest.equals("alive")) {
@@ -240,9 +260,11 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 				}
 			}
 			processBrowserRequest(htServiceRequest, _servletResponse, pwOut);
+			bSuccess = true;  // no exceptions thrown
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ Done");
 		}
 		catch (ASelectException ae) {
+			_timerSensor.setTimerSensorType(0);
 			showErrorPage(ae.getMessage(), htServiceRequest, pwOut);
 		}
 		catch (IOException ioe) {
@@ -255,6 +277,14 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 		finally {
+			try {
+				if (_timerSensor.getTimerSensorLevel() >= 1) {  // used
+					_timerSensor.timerSensorFinish(bSuccess);
+					SendQueue.getHandle().addEntry(_timerSensor.timerSensorPack());
+				}
+			}
+			catch (Exception e) { }
+			
 			// 20120330: Decide what to do with the locally cached session
 			_sessionManager.finalSessionProcessing(_htSessionContext, true/*update*/);
 		}
@@ -482,8 +512,6 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 		
 		// 20111101, Bauke: added Sensor
 		Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_abh", sRid, htSessionContext, null, false);
-		//Utils.setSessionStatus(htSessionContext, "del", _systemLogger);
-		//_sessionManager.killSession(sRid);
 		_sessionManager.setDeleteSession(htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
 		// User can possibly correct his phone number and retry

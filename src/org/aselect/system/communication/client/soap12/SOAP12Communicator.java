@@ -387,7 +387,6 @@ public class SOAP12Communicator implements IClientCommunicator
 				 * stream isInput.close();
 				 */// RH, 20080717, eo
 				sbBuf = new StringBuffer(Tools.stream2string(connection.getInputStream(), true)); // RH, 20080717, n
-
 				break;
 			}
 			case 400: // Bad request
@@ -412,7 +411,6 @@ public class SOAP12Communicator implements IClientCommunicator
 				break;
 			}
 			}
-
 		}
 		catch (java.net.UnknownHostException eUH)// target host unknown
 		{

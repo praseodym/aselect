@@ -422,15 +422,14 @@ public class AuthorizationEngine
 				EvaluationTree eTree = oRule.getEvaluationTree();
 
 				String sURIMask = oRule.getURI();
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "sRuleId=" + sRuleId + " sURIMask=" + sURIMask
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "sRuleId=" + sRuleId + " sURIMask=" + sURIMask
 						+ " sURI=" + sURI);
 
 				if (sURIMask == null || (sURI != null && Utils.matchWildcardMask(sURI, sURIMask)))
 				// This URI obliges authorization
 				{
 					try {
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "Need AUTH, tree=" + eTree + " attr="
-								+ htUserAttributes);
+						_systemLogger.log(Level.FINER, MODULE, sMethod, "Need AUTH");
 						if (!_oEvaluator.evaluate(htUserAttributes, eTree)) {
 							iResult = 1;  // rejected
 							sb = new StringBuffer("User attributes not sufficient for rule: '");
@@ -474,7 +473,6 @@ public class AuthorizationEngine
 			sb.append(htRule.keySet());
 			sb.append("\n");
 		}
-
 		return sb.toString();
 	}
 
@@ -482,7 +480,5 @@ public class AuthorizationEngine
 	 * Private default constructor.
 	 */
 	private AuthorizationEngine() {
-
 	}
-
 }
