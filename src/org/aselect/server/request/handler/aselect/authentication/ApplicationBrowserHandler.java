@@ -1617,7 +1617,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request, missing parmeter 'authsp'");
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
-			Object authSPsection = getAuthspParametersFromConfig(sAuthsp);
 			
 			// 20111013, Bauke: added absent phonenumber handling
 			HashMap htResponse = startAuthentication(sRid, htServiceRequest);
@@ -1627,6 +1626,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				throw new ASelectException(sResultCode);
 			}
 
+			Object authSPsection = getAuthspParametersFromConfig(sAuthsp);
 			sRedirectUrl = (String) htResponse.get("redirect_url");
 			try {
 				try {
@@ -2435,8 +2435,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 		if (!htAllowedAuthsps.containsKey(sAuthsp)) {
-			StringBuffer sbError = new StringBuffer("Invalid/unknown authsp id in request: ");
-			sbError.append(sAuthsp);
+			StringBuffer sbError = new StringBuffer("Invalid/unknown authsp id in request: ").append(sAuthsp);
+			sbError = sbError.append(" valid are: "+htAllowedAuthsps);
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, sbError.toString());
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}

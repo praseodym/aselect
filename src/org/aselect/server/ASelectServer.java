@@ -447,7 +447,7 @@ public class ASelectServer extends ASelectHttpServlet
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Can't start AdminMonitor", e);
 				throw e;
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully started A-Select server.");
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Successfully started A-Select server.");
 		}
 		catch (ASelectException eAS) {
 			String sErrorMessage = _configManager.getErrorMessage(eAS.getMessage());

@@ -438,11 +438,12 @@ public class PKI implements IAuthSPProtocolHandler
 			_systemLogger.log(Level.INFO, "Decoded sSubjectDN=" + sSubjectDN);
 
 			// 20090224, Bauke: When 'forced_uid' is used change the 'uid' to a more discriminating value
-			String sForcedUid = (String) htSessionContext.get("forced_uid");
-			if (sForcedUid != null && sForcedUid.equals(sUserId) && sSubjectDN != null) {
-				sUserId = sSubjectDN;
-				htResponse.put("uid", sUserId);
-			}
+			// 20120615, Bauke: replaced by setting "uid" to "pki_subject_id" below
+//			String sForcedUid = (String) htSessionContext.get("forced_uid");
+//			if (sForcedUid != null && sForcedUid.equals(sUserId) && sSubjectDN != null) {
+//				sUserId = sSubjectDN;
+//				htResponse.put("uid", sUserId);
+//			}
 			// Log the user authentication
 			if (sResultCode.equalsIgnoreCase(PKI_NO_ERROR)) {
 				_authenticationLogger.log(new Object[] {
@@ -457,8 +458,11 @@ public class PKI implements IAuthSPProtocolHandler
 					htResponse.put("pki_subject_dn", sSubjectDN); // Bauke: added
 				if (sIssuerDN != null)
 					htResponse.put("pki_issuer_dn", sIssuerDN); // Bauke: added
-				if (sSubjectId != null)
+				if (sSubjectId != null) {
 					htResponse.put("pki_subject_id", sSubjectId); // Bauke: added
+					htResponse.put("uid", sSubjectId);  // 20120615, Bauke: set default value for uid
+				}
+				
 				return htResponse;
 			}
 			_authenticationLogger.log(new Object[] {

@@ -281,7 +281,7 @@ public class ASelectAgent
 			//}
 			
 			System.out.println(sbInfo.toString());
-			oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
+			oASelectAgentSystemLogger.log(Level.WARNING, MODULE, sMethod, sbInfo.toString());
 		}
 		catch (Exception e) {
 			sbInfo.append(" failed to start.");

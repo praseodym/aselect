@@ -362,7 +362,7 @@ public class AuthSPServlet extends ASelectHttpServlet
 			_oAuthSPSessionManager.init();
 			oServletContext.setAttribute("SessionManager", _oAuthSPSessionManager);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "The SessionManager is set to the servlet context.");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "A-Select AuthSP Server is successfully initialized");
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "A-Select AuthSP Server is successfully initialized");
 		}
 		catch (ASelectException eAS) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initializing failed", eAS);
@@ -467,7 +467,7 @@ public class AuthSPServlet extends ASelectHttpServlet
 	public void destroy()
 	{
 		closeResources();
-		_systemLogger.log(Level.INFO, MODULE, "destroy()", "A-Select AuthSP Server stopped.");
+		_systemLogger.log(Level.WARNING, MODULE, "destroy()", "A-Select AuthSP Server stopped.");
 		closeLoggers();
 		System.out.println("AuthSPServlet Loggers closed");
 		super.destroy();
