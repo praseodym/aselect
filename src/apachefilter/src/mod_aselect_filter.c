@@ -73,7 +73,7 @@ module AP_MODULE_DECLARE_DATA aselect_filter_module;
 //static handler_rec      aselect_filter_handlers[];
 static const command_rec    aselect_filter_cmds[];
 
-char *version_number = "====subversion_244====";
+char *version_number = "====subversion_248====";
 
 // -----------------------------------------------------
 // Functions 
@@ -81,8 +81,8 @@ char *version_number = "====subversion_244====";
 
 int aselect_filter_upload_all_rules(PASELECT_FILTER_CONFIG pConfig, server_rec *pServer, pool *pPool, TIMER_DATA *pt);
 int  aselect_filter_upload_authz_rules(PASELECT_FILTER_CONFIG pConfig, server_rec *pServer, pool *pPool, PASELECT_APPLICATION pApp, TIMER_DATA *pt);
-char *aselect_filter_verify_ticket(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcTicket, char *pcUID,
-				    char *pcOrganization, char *pcAttributes, char *language, TIMER_DATA *pt);
+char *aselect_filter_verify_ticket(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcTicket,
+				    char *pcAttributes, char *language, TIMER_DATA *pt);
 char *aselect_filter_kill_ticket(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcTicket, TIMER_DATA *pt);
 char *aselect_filter_auth_user(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcAppUrl, TIMER_DATA *pt);
 char *aselect_filter_verify_credentials(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcRID,
@@ -107,15 +107,13 @@ static const char *aselect_filter_added_security(cmd_parms *parms, void *mconfig
 static const char * aselect_filter_set_sensor_address(cmd_parms *parms, void *mconfig, const char *arg );
 static const char * aselect_filter_set_sensor_port(cmd_parms *parms, void *mconfig, const char *arg );
 
-static char * aselect_filter_attributes(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcTicket,
-					char *pcUid, char *pcOrganization, TIMER_DATA *pt);
-static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, request_rec *pRequest,
-	PASELECT_FILTER_CONFIG pConfig, char *pcTicketIn, char *pcUIDIn, char *pcOrganizationIn,
-	char *pcRequestLanguage, table *headers_in, TIMER_DATA *pt);
+static char * aselect_filter_attributes(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcTicket, TIMER_DATA *pt);
+static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, char *usiAttr, pool *pPool, request_rec *pRequest,
+	PASELECT_FILTER_CONFIG pConfig, char *pcTicketIn, char *pcRequestLanguage, table *headers_in, TIMER_DATA *pt);
 static void aselect_filter_removeUnwantedCharacters(char *args);
 static char *aselect_filter_findNoCasePattern(const char *text, const char *pattern);
 static void splitAttrFilter(char *attrFilter, char *condName, int condLen,
-			    char *ldapName, int ldapLen, char *attrName, int attrLen);
+			    char *ldapName, int ldapLen, char *applAttrName, int attrLen);
 static char *replaceAttributeValues(pool *pPool, char *pcAttributes, char *text, int bUrlDecode);
 static int conditionIsTrue(pool *pPool, char *pcAttributes, char *condName);
 static char *extractAttributeNames(pool *pPool, char *text, char *paramNames);
@@ -254,7 +252,7 @@ int aselect_filter_upload_authz_rules(PASELECT_FILTER_CONFIG pConfig, server_rec
 // Request validation of a ticket
 //
 char *aselect_filter_verify_ticket(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig,
-	char *pcTicket, char *pcUID, char *pcOrganization, char *pcAttributes, char *language, TIMER_DATA *pt)
+			char *pcTicket, char *pcAttributes, char *language, TIMER_DATA *pt)
 {
     char *          pcSendMessage;
     int             ccSendMessage;
@@ -266,7 +264,6 @@ char *aselect_filter_verify_ticket(request_rec *pRequest, pool *pPool, PASELECT_
     char langBuf[40];
     
     TRACE1("aselect_filter_verify_ticket: pcAttributes=%s", (pcAttributes)?pcAttributes:"NULL");
-
     // Create the message
     // Bauke: added
     *pcSHA1 = 0;
@@ -285,14 +282,13 @@ char *aselect_filter_verify_ticket(request_rec *pRequest, pool *pPool, PASELECT_
 	sprintf(langBuf, "&language=%s", language);
     if (*pcSHA1)
 	pcSendMessage = ap_psprintf(pPool, 
-	    "request=verify_ticket&ticket=%s&app_id=%s&uid=%s&organization=%s&attributes_hash=%s&request_uri=%s&ip=%s%s&usi=%s\r\n", 
-	    pcTicket, pConfig->pCurrentApp->pcAppId, pcUID, pcOrganization, 
-	    pcSHA1, pcURI, pRequest->connection->remote_ip, langBuf, timer_usi(pPool, pt));
+	    //"request=verify_ticket&ticket=%s&app_id=%s&uid=%s&organization=%s&attributes_hash=%s&request_uri=%s&ip=%s%s&usi=%s\r\n", 
+	    "request=verify_ticket&ticket=%s&app_id=%s&attributes_hash=%s&request_uri=%s&ip=%s%s&usi=%s\r\n", 
+	    pcTicket, pConfig->pCurrentApp->pcAppId, pcSHA1, pcURI, pRequest->connection->remote_ip, langBuf, timer_usi(pPool, pt));
     else // No attribute hash available, so don't ask for an attribute check
 	pcSendMessage = ap_psprintf(pPool, 
-	    "request=verify_ticket&ticket=%s&app_id=%s&uid=%s&organization=%s&request_uri=%s&ip=%s%s&usi=%s\r\n", 
-	    pcTicket, pConfig->pCurrentApp->pcAppId, pcUID, pcOrganization, 
-	    pcURI, pRequest->connection->remote_ip, langBuf, timer_usi(pPool, pt));
+	    "request=verify_ticket&ticket=%s&app_id=%s&request_uri=%s&ip=%s%s&usi=%s\r\n", 
+	    pcTicket, pConfig->pCurrentApp->pcAppId, pcURI, pRequest->connection->remote_ip, langBuf, timer_usi(pPool, pt));
 
     ccSendMessage = strlen(pcSendMessage);
 
@@ -364,8 +360,7 @@ char *aselect_filter_auth_user(request_rec *pRequest, pool *pPool, PASELECT_FILT
 static char *getRequestedAttributes(pool *pPool, PASELECT_FILTER_CONFIG pConfig)
 {
     char *p, *q, *paramNames = ",";
-    char condName[400], ldapName[400];
-    char attrName[200];
+    char condName[1200], ldapName[400], applAttrName[200]; // check with other buffers with the same name
     int i, len;
 
     for (i = 0; i < pConfig->iAttrCount; i++) {
@@ -379,8 +374,8 @@ static char *getRequestedAttributes(pool *pPool, PASELECT_FILTER_CONFIG pConfig)
 		paramNames = extractAttributeNames(pPool, ldapName, paramNames);
 	    else {
 		// Add ldapName itself, if not present yet
-		sprintf(attrName, ",%s,", ldapName);
-		if (strstr(paramNames, attrName) == 0)
+		sprintf(applAttrName, ",%s,", ldapName);
+		if (strstr(paramNames, applAttrName) == 0)
 		    paramNames = ap_psprintf(pPool, "%s%s,", paramNames, ldapName);
 	    }
 	}
@@ -397,23 +392,25 @@ static char *getRequestedAttributes(pool *pPool, PASELECT_FILTER_CONFIG pConfig)
 
 static char *extractAttributeNames(pool *pPool, char *text, char *paramNames)
 {
+    int len;
     char *p, *begin, *end;
-    char attrName[200];
+    char *param;
 
-    //TRACE1("extractAttributeNames text=%s", text);
+    TRACE1("extractAttributeNames text=%s", text);
     begin = strstr(text, "[attr,");
     for ( ; begin != NULL; begin = strstr(end, "[attr,")) {
 	begin += 6;
 	end = strchr(begin, ']');
 	if (!end)
 	    return paramNames;
-	if (end-begin < 1)
+	len = end - begin;
+	if (len < 1)
 	    continue;
 
 	// Does the parameter already occur?
-	sprintf(attrName, ",%.*s,", end-begin, begin);
-	if (strstr(paramNames, attrName) == 0)
-	    paramNames = ap_psprintf(pPool, "%s%.*s,", paramNames, end-begin, begin);
+	param = ap_psprintf(pPool, ",%.*s,", len, begin);
+	if (strstr(paramNames, param) == 0)
+	    paramNames = ap_psprintf(pPool, "%s%.*s,", paramNames, len, begin);
     }
     //TRACE1("extractAttributeNames params=%s", paramNames);
     return paramNames;
@@ -461,7 +458,7 @@ char *aselect_filter_verify_credentials(request_rec *pRequest, pool *pPool,
 // Bauke: Added:
 // Retrieve Attribute values from the Agent
 //
-char *aselect_filter_attributes(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcTicket, char *pcUid, char *pcOrganization, TIMER_DATA *pt)
+char *aselect_filter_attributes(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcTicket, TIMER_DATA *pt)
 {
     char    *pcSendMessage;
     int     ccSendMessage;
@@ -471,9 +468,8 @@ char *aselect_filter_attributes(request_rec *pRequest, pool *pPool, PASELECT_FIL
     //
     // Create the message
     //
-    pcSendMessage = ap_psprintf(pPool, "request=attributes&ticket=%s&uid=%s&organization=%s&usi=%s\r\n", 
-		aselect_filter_url_encode(pPool, pcTicket), aselect_filter_url_encode(pPool, pcUid),
-		aselect_filter_url_encode(pPool, pcOrganization), timer_usi(pPool, pt));
+    //pcSendMessage = ap_psprintf(pPool, "request=attributes&ticket=%s&uid=%s&organization=%s&usi=%s\r\n", 
+    pcSendMessage = ap_psprintf(pPool, "request=attributes&ticket=%s&usi=%s\r\n", aselect_filter_url_encode(pPool, pcTicket), timer_usi(pPool, pt));
     ccSendMessage = strlen(pcSendMessage);
 
     //TRACE2("request(%d): %s", ccSendMessage, pcSendMessage);
@@ -564,7 +560,7 @@ char *extractApplicationParameters(pool *pPool, char *arguments)
 static int aselect_filter_handler(request_rec *pRequest)
 {
     int ok;
-    int iRet = FORBIDDEN; // 402
+    int iRet = FORBIDDEN; // 401
     int iError = ASELECT_FILTER_ERROR_OK;
     int iAction = ASELECT_FILTER_ACTION_ACCESS_DENIED;
     table *headers_in = pRequest->headers_in;
@@ -604,17 +600,18 @@ static int aselect_filter_handler(request_rec *pRequest)
     // START TIMER
     timer_data.td_type = 0;
     timer_start(&timer_data);
-    ap_table_do(aselect_filter_print_table, pRequest, headers_in, NULL);
+    //ap_table_do(aselect_filter_print_table, pRequest, headers_in, NULL);
 
-    //
-    // Select which pool to use
-    //
+    // Create the pool
     if ((apr_pool_create(&pPool, pRequest->pool)) != APR_SUCCESS) {
         // Could not allocate pool
         TRACE("aselect_filter_handler: Could not allocate memory pool");
         ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pRequest, "SIAM:: could allocate memory pool");
 	goto finish_filter_handler;  // only goto's to routine exit point
     }
+
+    // 20120610, Bauke: Default usi is my own, could be modified by the Agent (verify_credentials or verify_ticket)
+    passUsiAttribute = timer_usi(pPool, &timer_data);
 
     // NOTE: the application ticket is a cookie, check if the browser can handle cookies else we run into a loop
     // check cookie, no cookie, validate_user, set cookie, check cookie, no cookie.... and so on
@@ -646,14 +643,19 @@ static int aselect_filter_handler(request_rec *pRequest)
 
     // 20120530, Bauke: new mechanism to choose public/secure using match length
     // 20120608: default is secure
-    //rc = aselect_filter_check_app_uri(pPool, pConfig, pRequest->uri);
-    rc = 1;
-    TRACE2("Return \"%s\" rc=%d", pRequest->uri, rc);
+    rc = aselect_filter_check_app_uri(pPool, pConfig, pRequest->uri);
     if (rc == 0) {  // public
 	ap_log_error(APLOG_MARK, APLOG_INFO, pRequest->server,
 	    ap_psprintf(pRequest->pool, "SIAM:: Public - %s", pRequest->uri));
         TRACE1("\"%s\" is a public directory", pRequest->uri);
 	iRet = OK;
+	goto finish_filter_handler; // we don't want to do anything with this request
+    }
+    else if (rc < 0) {  // not found
+	ap_log_error(APLOG_MARK, APLOG_INFO, pRequest->server,
+	    ap_psprintf(pRequest->pool, "SIAM:: Not configured - %s", pRequest->uri));
+        TRACE1("\"%s\" is not configured", pRequest->uri);
+	iRet = HTTP_NOT_FOUND;
 	goto finish_filter_handler; // we don't want to do anything with this request
     }
     // else 1="secure" or -1="not found"
@@ -692,15 +694,15 @@ static int aselect_filter_handler(request_rec *pRequest)
     //
     // Retrieve the remote_addr
     //
+    TRACE2("\"%s\" is a protected dir, app_id: %s", pRequest->uri, pConfig->pCurrentApp->pcAppId);
     ap_log_error(APLOG_MARK, APLOG_INFO, pRequest->server,
 	ap_psprintf(pRequest->pool, "SIAM:: Secure - %s app=%s", pRequest->uri, pConfig->pCurrentApp->pcAppId));
-    TRACE2("\"%s\" is a protected dir, app_id: %s", pRequest->uri, pConfig->pCurrentApp->pcAppId);
     if (pRequest->connection->remote_ip) {
         TRACE1("remote_ip: %s", pRequest->connection->remote_ip);
     }
 
     TRACE3("==== 1. Start iError=%d iAction=%s, iRet=%s", iError, filter_action_text(iAction), filter_return_text(iRet));
-    TRACE3("     (DECLINED=%d DONE=%d FORBIDDEN=%d)", DECLINED, DONE, FORBIDDEN);
+    TRACE4("     (DECLINED=%d DONE=%d FORBIDDEN=%d OK=%d)", DECLINED, DONE, FORBIDDEN, OK);
     addedSecurity = (strchr(pConfig->pcAddedSecurity, 'c')!=NULL)? " secure; HttpOnly": "";
     if (pcTicketIn = aselect_filter_get_cookie(pPool, headers_in, "JSESSIONID="))
         TRACE1("aselect_filter_handler: JSESSIONID: %s", pcTicketIn);
@@ -713,13 +715,16 @@ static int aselect_filter_handler(request_rec *pRequest)
         // Look for a valid ticket
         //
         TRACE1("aselect_filter_handler: found ticket: %s", pcTicketIn);
-        if ((pcUIDIn = aselect_filter_get_cookie(pPool, headers_in, "aselectuid="))) {
+        //pcUIDIn = aselect_filter_get_cookie(pPool, headers_in, "aselectuid=");
+	pcUIDIn = "-1";
+        if (1==1 /*pcUIDIn*/) {
             TRACE1("aselect_filter_handler: found uid: %s", pcUIDIn);
 	    //
             // Check for Organization 
             //
-            if ((pcOrganizationIn = aselect_filter_get_cookie(pPool, headers_in, "aselectorganization=")))
-            {
+            //pcOrganizationIn = aselect_filter_get_cookie(pPool, headers_in, "aselectorganization=");
+	    pcOrganizationIn = "---";
+            if (1==1 /*pcOrganizationIn*/) {
                 TRACE3("aselect_filter_handler: found organization: %s, bSecureUrl=%d PassAttributes=%s",
 			pcOrganizationIn, pConfig->bSecureUrl, pConfig->pcPassAttributes);
                 //
@@ -738,8 +743,8 @@ static int aselect_filter_handler(request_rec *pRequest)
 		    //aselect_filter_upload_all_rules(pConfig, pRequest->server, pPool, &timer_data);
 		    // 20120527, Bauke: no longer uploading the rules in advance, but upon error message from Agent
 		    for (try = 0; try < 2; try++) {
-			pcResponseVT = aselect_filter_verify_ticket(pRequest, pPool, pConfig, pcTicketIn,
-					pcUIDIn, pcOrganizationIn, pcAttributesIn, pcRequestLanguage, &timer_data);
+			pcResponseVT = aselect_filter_verify_ticket(pRequest, pPool, pConfig,
+					    pcTicketIn, pcAttributesIn, pcRequestLanguage, &timer_data);
 			// if batch_size < 0, no Agent configuration, ignore Agent
                         iError = aselect_filter_get_error(pPool, pcResponseVT);
 			pcTmp = aselect_filter_get_param(pPool, pcResponseVT, "batch_size=", "&", TRUE);
@@ -794,6 +799,9 @@ static int aselect_filter_handler(request_rec *pRequest)
                         else {
 			    pRequest->content_type = "text/html";
 			    pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectticket", pConfig->pCurrentApp->pcLocation, addedSecurity);
+			    TRACE1("Delete cookie: %s", pcCookie);
+			    ap_table_add(headers_out, "Set-Cookie", pcCookie);
+			    pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectattributes", pConfig->pCurrentApp->pcLocation, addedSecurity);
 			    TRACE1("Delete cookie: %s", pcCookie);
 			    ap_table_add(headers_out, "Set-Cookie", pcCookie);
 			    ap_send_http_header(pRequest);
@@ -871,9 +879,13 @@ static int aselect_filter_handler(request_rec *pRequest)
                                     pcAttributes = aselect_filter_get_param(pPool, pcResponseCred, "attributes=", "&", TRUE);
                                     if (pcAttributes)
                                         pcAttributes = aselect_filter_base64_decode(pPool, pcAttributes);
-				    if (passUsiAttribute != NULL) {
-					pcAttributes = ap_psprintf(pPool, "usi=%s&%s", passUsiAttribute, pcAttributes);
+				    if (passUsiAttribute != NULL) { 
+					if (pcAttributes != NULL)
+					    pcAttributes = ap_psprintf(pPool, "usi=%s&%s", passUsiAttribute, pcAttributes);
+					else
+					    pcAttributes = ap_psprintf(pPool, "usi=%s", passUsiAttribute);
 				    }
+				    TRACE1("ver_cred:: attributes=%s", pcAttributes);
                                     iAction = ASELECT_FILTER_ACTION_SET_TICKET;
                                 }
                                 else {
@@ -976,12 +988,12 @@ static int aselect_filter_handler(request_rec *pRequest)
 					    pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectticket", pConfig->pCurrentApp->pcLocation, addedSecurity);
 					    ap_table_add(headers_out, "Set-Cookie", pcCookie);
 					    TRACE1("Set-Cookie: %s", pcCookie);
-					    pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectuid", pConfig->pCurrentApp->pcLocation, addedSecurity);
-					    ap_table_add(headers_out, "Set-Cookie", pcCookie);
-					    TRACE1("Set-Cookie: %s", pcCookie);
-					    pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectorganization", pConfig->pCurrentApp->pcLocation, addedSecurity);
-					    ap_table_add(headers_out, "Set-Cookie", pcCookie);
-					    TRACE1("Set-Cookie: %s", pcCookie);
+					    //pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectuid", pConfig->pCurrentApp->pcLocation, addedSecurity);
+					    //ap_table_add(headers_out, "Set-Cookie", pcCookie);
+					    //TRACE1("Set-Cookie: %s", pcCookie);
+					    //pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectorganization", pConfig->pCurrentApp->pcLocation, addedSecurity);
+					    //ap_table_add(headers_out, "Set-Cookie", pcCookie);
+					    //TRACE1("Set-Cookie: %s", pcCookie);
 					    pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectserverurl", pConfig->pCurrentApp->pcLocation, addedSecurity);
 					    ap_table_add(headers_out, "Set-Cookie", pcCookie);
 					    TRACE1("Set-Cookie: %s", pcCookie);
@@ -1123,8 +1135,7 @@ static int aselect_filter_handler(request_rec *pRequest)
                 // Generate & set A-Select cookies
                 //
                 TRACE3("Action: ASELECT_FILTER_ACTION_SET_TICKET: %s - %s - %s", pcTicketOut, pcUIDOut, pcOrganizationOut);
-		if (/*pConfig->bUseCookie ||*/ strchr(pConfig->pcPassAttributes,'c')!=0) {  // Bauke: added
-		    // Pass attributes in a cookie
+		if (/*pConfig->bUseCookie ||*/ strchr(pConfig->pcPassAttributes,'c')!=0) {  // Bauke: added: Pass attributes in a cookie
 		    pcCookie4 = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectattributes", 
 			    (pcAttributes == NULL) ? "" : pcAttributes, pConfig->pCurrentApp->pcLocation, addedSecurity);
 		    TRACE1("Set-Cookie: %s", pcCookie4);
@@ -1133,21 +1144,18 @@ static int aselect_filter_handler(request_rec *pRequest)
 		if (/*!pConfig->bUseCookie ||*/ strchr(pConfig->pcPassAttributes,'q')!=0 ||
 			    strchr(pConfig->pcPassAttributes,'h')!=0 || strchr(pConfig->pcPassAttributes,'t')!=0) {  // Bauke: added
 		    // Pass attributes in the html header and/or query string
-		    iError = aselect_filter_passAttributesInUrl(iError, pcAttributes, pPool, pRequest, pConfig,
-				    pcTicketOut, pcUIDOut, pcOrganizationOut, pcRequestLanguage, headers_in, &timer_data);
+		    iError = aselect_filter_passAttributesInUrl(iError, pcAttributes, passUsiAttribute, pPool, pRequest, pConfig,
+				    pcTicketOut, pcRequestLanguage, headers_in, &timer_data);
 		}
-
                 pcCookie = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectticket", pcTicketOut, pConfig->pCurrentApp->pcLocation, addedSecurity);
                 TRACE1("Set-Cookie: %s", pcCookie);
                 ap_table_add(headers_out, "Set-Cookie", pcCookie); 
-
-                pcCookie2 = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectuid", pcUIDOut, pConfig->pCurrentApp->pcLocation, addedSecurity);
-                TRACE1("Set-Cookie: %s", pcCookie2);
-                ap_table_add(headers_out, "Set-Cookie", pcCookie2); 
-
-                pcCookie3 = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectorganization", pcOrganizationOut, pConfig->pCurrentApp->pcLocation, addedSecurity);
-                TRACE1("Set-Cookie: %s", pcCookie3);
-                ap_table_add(headers_out, "Set-Cookie", pcCookie3); 
+                //pcCookie2 = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectuid", pcUIDOut, pConfig->pCurrentApp->pcLocation, addedSecurity);
+                //TRACE1("Set-Cookie: %s", pcCookie2);
+                //ap_table_add(headers_out, "Set-Cookie", pcCookie2); 
+                //pcCookie3 = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectorganization", pcOrganizationOut, pConfig->pCurrentApp->pcLocation, addedSecurity);
+                //TRACE1("Set-Cookie: %s", pcCookie3);
+                //ap_table_add(headers_out, "Set-Cookie", pcCookie3); 
 
 		// Filter out application parameters
                 TRACE2("SecureUrl=%d RequestArgs: '%s'", pConfig->bSecureUrl, pRequest->args);
@@ -1174,10 +1182,12 @@ static int aselect_filter_handler(request_rec *pRequest)
 
     // Bauke: added
     TRACE3("==== 4. Attributes iError=%d iAction=%s, iRet=%s", iError, filter_action_text(iAction), filter_return_text(iRet));
+    TRACE1("attributes=%s", pcAttributes);
     // Bauke, 20100520, added: iRet != DONE
     if (iRet != DONE && iError == ASELECT_FILTER_ERROR_OK && iAction == ASELECT_FILTER_ACTION_ACCESS_GRANTED) { /*!pConfig->bUseCookie ||*/
 	if (strchr(pConfig->pcPassAttributes,'q')!=0 || strchr(pConfig->pcPassAttributes,'h')!=0 || strchr(pConfig->pcPassAttributes,'t')!=0) {
-	    iError = aselect_filter_passAttributesInUrl(iError, pcAttributes, pPool, pRequest, pConfig, pcTicketIn, pcUIDIn, pcOrganizationIn, pcRequestLanguage, headers_in, &timer_data);
+	    iError = aselect_filter_passAttributesInUrl(iError, pcAttributes, passUsiAttribute, pPool, pRequest, pConfig,
+				    pcTicketIn, pcRequestLanguage, headers_in, &timer_data);
 	}
 	//iRet = DONE;
     }
@@ -1219,18 +1229,16 @@ finish_filter_handler:
 //
 // Bauke added: Pass attributes in the query string and/or in the header
 //
-static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, pool *pPool, request_rec *pRequest,
-	    PASELECT_FILTER_CONFIG pConfig, char *pcTicketIn, char *pcUIDIn, char *pcOrganizationIn,
-	    char *pcRequestLanguage, table *headers_in, TIMER_DATA *pt)
+static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, char *passUsiAttribute, pool *pPool, request_rec *pRequest,
+	    PASELECT_FILTER_CONFIG pConfig, char *pcTicketIn, char *pcRequestLanguage, table *headers_in, TIMER_DATA *pt)
 {
-    TRACE4("passAttributesinUrl iError=%d, TicketIn=%s, UidIn=%s, OrgIn=%s", iError,
-		pcTicketIn?pcTicketIn:"NULL", pcUIDIn?pcUIDIn:"NULL", pcOrganizationIn?pcOrganizationIn:"NULL");
+    TRACE2("passAttributesinUrl iError=%d, TicketIn=%s", iError, pcTicketIn?pcTicketIn:"NULL");
     if (pcAttributes == NULL) {
 	int i, purge, stop, try;
 	char *pcResponse, *newArgs;
 
 	TRACE("Get Attributes");
-	pcResponse = aselect_filter_attributes(pRequest, pPool, pConfig, pcTicketIn, pcUIDIn, pcOrganizationIn, pt);
+	pcResponse = aselect_filter_attributes(pRequest, pPool, pConfig, pcTicketIn, pt);
 	if (pcResponse) {
 	    TRACE1("Attributes Response [%.40s]", pcResponse);
 	    iError = aselect_filter_get_error(pPool, pcResponse);
@@ -1240,6 +1248,12 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 		pcAttributes = aselect_filter_get_param(pPool, pcResponse, "attributes=", "&", TRUE);
 		if (pcAttributes) {
 		    pcAttributes = aselect_filter_base64_decode(pPool, pcAttributes);
+		    if (passUsiAttribute != NULL) { 
+			if (pcAttributes != NULL)
+			    pcAttributes = ap_psprintf(pPool, "usi=%s&%s", passUsiAttribute, pcAttributes);
+			else
+			    pcAttributes = ap_psprintf(pPool, "usi=%s", passUsiAttribute);
+		    }
 
 		    TRACE2("Start: SecureUrl=%d pRequestArgs=%s", pConfig->bSecureUrl, (pRequest->args)? pRequest->args: "NULL");
 		    TRACE1("Attributes from Agent: %s", pcAttributes);
@@ -1286,25 +1300,25 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 		    //
 		    for (i = 0; i < pConfig->iAttrCount; i++) {
 			char *p, *q;
-			char condName[400], ldapName[400], attrName[200], buf[600];
+			char condName[1200], ldapName[400], applAttrName[200], buf[450]/*larger than ldapName*/;
 			int constant;
 
 			TRACE2("attribute_check:: %d: %s", i, pConfig->pAttrFilter[i]);
 			splitAttrFilter(pConfig->pAttrFilter[i], condName, sizeof(condName),
-				    ldapName, sizeof(ldapName), attrName, sizeof(attrName));
+				    ldapName, sizeof(ldapName), applAttrName, sizeof(applAttrName));
 
-			if (attrName[0] == '\0')  // no HTTP header name
+			if (applAttrName[0] == '\0')  // no HTTP header name
 			    continue;
-			//TRACE3("Attr[%s|%s|%s]", condName, ldapName, attrName);
+			//TRACE3("Attr[%s|%s|%s]", condName, ldapName, applAttrName);
 
 			// Check condition
 			if (!conditionIsTrue(pPool, pcAttributes, condName)) {
-			    TRACE("Do NOT include header");
+			    TRACE("attribute_check:: Do NOT include in header");
 			    continue;
 			}
 
-			// attrName has a value
-			if (strcmp(attrName, "language")==0) {
+			// applAttrName has a value
+			if (strcmp(applAttrName, "language")==0) {
 			    char *p = (pRequest->args)? strstr(pRequest->args, "language="): NULL;
 			    if (pcRequestLanguage != NULL) {
 				// Server has a language for us, must be passed, don't skip
@@ -1337,7 +1351,7 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 			//    sprintf(buf, "digid_%s=", digidName);
 			//    p = aselect_filter_get_param(pPool, pcAttributes, buf, "&", FALSE);
 			//}
-			if (strcmp(attrName, "language")==0 && pcRequestLanguage != NULL) {
+			if (strcmp(applAttrName, "language")==0 && pcRequestLanguage != NULL) {
 			    p = pcRequestLanguage; // replace attribute value
 			    constant = 0;
 			}
@@ -1349,45 +1363,42 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 			    if (constant) {
 				p = replaceAttributeValues(pPool, pcAttributes, p, TRUE/*urlDecode*/); // was FALSE
 			    }
-			    TRACE1("attribute_check:: value=%s", p);
-			    if (strcmp(attrName, "AuthHeader") != 0) { // 20111128
+			    if (strcmp(applAttrName, "AuthHeader") != 0) { // 20111128
 				// Only for passing parameters in the URL parameters
-				TRACE1("url_encode :: value=%s", p);
 				p = aselect_filter_url_encode(pPool, p); // 20111206
-				TRACE1("url_encoded:: value=%s", p);
 				if (newArgs[0])
-				    newArgs = ap_psprintf(pPool, "%s&%s=%s", newArgs, attrName, p);
+				    newArgs = ap_psprintf(pPool, "%s&%s=%s", newArgs, applAttrName, p);
 				else
-				    newArgs = ap_psprintf(pPool, "%s=%s", attrName, p);
+				    newArgs = ap_psprintf(pPool, "%s=%s", applAttrName, p);
 			    }
 			    TRACE1("attribute_check:: newArgs=%s", newArgs);
 
 			    // 20111206: p is no longer url encoded
-			    if (strcmp(attrName, "AuthHeader") == 0) {
+			    if (strcmp(applAttrName, "AuthHeader") == 0) {
 				decoded = ap_psprintf(pPool, "%s:", p);  // <username>:<password>
 				//aselect_filter_url_decode(decoded); // 20111206
 				encoded = aselect_filter_base64_encode(pPool, decoded);
 				ap_table_set(headers_in, "Authorization", ap_psprintf(pPool, "Basic %s", encoded));
 			    }
 			    else if (strchr(pConfig->pcPassAttributes,'h')!=0) { // Pass in the header
-				//TRACE2("X-Header - %s: %s", attrName, p);
+				//TRACE2("X-Header - %s: %s", applAttrName, p);
 				//decoded = ap_pstrdup(pPool, p); //20111206
 				//aselect_filter_url_decode(decoded); //20111206
-				ap_table_set(headers_in, ap_psprintf(pPool, "X-%s", attrName), p);  // 20111206 decoded);
+				ap_table_set(headers_in, ap_psprintf(pPool, "X-%s", applAttrName), p);  // 20111206 decoded);
 			    }
-			    TRACE1("attribute_check:: purge=%s", pRequest->args);
+			    //TRACE1("attribute_check:: purge=%s", pRequest->args);
 
-			    // A value for 'attrname' was added
+			    // A value for 'applAttrName' was added
 			    // Remove the same attribute from the original attributes (if present), can occur more than once
 			    for (purge=1; purge; ) {
 				purge = 0;
 				for (p = pRequest->args; p != NULL; p = q+1) {
-				    q = strstr(p, attrName);
+				    q = strstr(p, applAttrName);
 				    if (!q)
 					break;
 				    // Example args: my_uid=9876&uid2=0000&uid=1234&uid=9876
 				    if (q==pRequest->args || *(q-1) == '&' || *(q-1) == ' ') {
-					int nextChar = *(q+strlen(attrName));
+					int nextChar = *(q+strlen(applAttrName));
 					if (nextChar == '=' || nextChar  == '&' || nextChar == '\0') {
 					    purge = 1;
 					    break;  // handle this one
@@ -1410,7 +1421,7 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 				}
 			    }
 			}
-			//TRACE3("New arguments [%d]: %s, req=%s", i, newArgs, pRequest->args);
+			TRACE3("New arguments [%d]: %s, req=%s", i, newArgs, pRequest->args);
 		    }
 		}
 		else {
@@ -1426,8 +1437,8 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 			pRequest->args = newArgs;
 		    // If we want to do this, do-not encode the = and & signs!!!
 		    //pRequest->args = aselect_filter_url_encode(pPool, pRequest->args); // no longer needed 20111206
+		    TRACE1("Query args modified to [%s]", pRequest->args);
 		}
-		TRACE2("Args modified to [%s], passed in: %s", pRequest->args, pConfig->pcPassAttributes);
 	    }
 	    else iError = ASELECT_FILTER_ERROR_FAILED;
 	}
@@ -1440,7 +1451,7 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, po
 // Split 'aselect_filter_add_attribute' value in three
 //
 static void splitAttrFilter(char *attrFilter, char *condName, int condLen,
-		char *ldapName, int ldapLen, char *attrName, int attrLen)
+		char *ldapName, int ldapLen, char *applAttrName, int attrLen)
 {
     char *p, *q, buf[40];
     int len, i;
@@ -1448,7 +1459,7 @@ static void splitAttrFilter(char *attrFilter, char *condName, int condLen,
     p = attrFilter;
     if (condName) condName[0] = '\0';
     if (ldapName) ldapName[0] = '\0';
-    if (attrName) attrName[0] = '\0';
+    if (applAttrName) applAttrName[0] = '\0';
 
     if (*p == ',')  // empty condName
 	q = p;
@@ -1488,11 +1499,11 @@ static void splitAttrFilter(char *attrFilter, char *condName, int condLen,
     for (q=p; *q; q++)
 	;
 
-    //attrName
-    if (attrName) {
+    //applAttrName
+    if (applAttrName) {
 	len = (q-p < attrLen)? q-p: attrLen-1;
-	strncpy(attrName, p, len);
-	attrName[len] = '\0';
+	strncpy(applAttrName, p, len);
+	applAttrName[len] = '\0';
     }
 }
 

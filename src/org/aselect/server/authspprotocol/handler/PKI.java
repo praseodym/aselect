@@ -435,7 +435,6 @@ public class PKI implements IAuthSPProtocolHandler
 				sIssuerDN = new String(base64Decoder.decodeBuffer(sIssuerDN));
 			if (sSubjectId != null)
 				sSubjectId = new String(base64Decoder.decodeBuffer(sSubjectId));
-			_systemLogger.log(Level.INFO, "Decoded sSubjectDN=" + sSubjectDN);
 
 			// 20090224, Bauke: When 'forced_uid' is used change the 'uid' to a more discriminating value
 			// 20120615, Bauke: replaced by setting "uid" to "pki_subject_id" below
@@ -453,7 +452,7 @@ public class PKI implements IAuthSPProtocolHandler
 
 				htResponse.put("rid", sRid);
 				// Bauke: transfer additional attributes to caller
-				_systemLogger.log(Level.INFO, "to Response: sSubjectDN=" + sSubjectDN);
+				_systemLogger.log(Level.INFO, "to Response: sSubjectId=" + sSubjectId);
 				if (sSubjectDN != null)
 					htResponse.put("pki_subject_dn", sSubjectDN); // Bauke: added
 				if (sIssuerDN != null)

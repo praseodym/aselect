@@ -645,22 +645,21 @@ int aselect_filter_gen_authcomplete_redirect(pool * pPool, request_rec *pRequest
 
     if (*pConfig->pCurrentApp->pcRedirectURL) {
 	pcRedirectURL = pConfig->pCurrentApp->pcRedirectURL;
-	TRACE3("1.RedirectURL=%s, Args=%s, bArgs=%d", pcRedirectURL, pRequest->args, bArgs);
+	TRACE4("1.RedirectURL=%s Args=%s bArgs=%d UseBar=%d", pcRedirectURL, pRequest->args, bArgs, pConfig->bUseASelectBar);
         if (bArgs) {
 	    pcRedirectURL = ap_psprintf(pPool, "%s%s", pcRedirectURL, pRequest->args);
         }
         else {
 	    pcRedirectURL = pConfig->pCurrentApp->pcRedirectURL;
 	}
-	TRACE2("2.RedirectURL=%s, UseBar=%d", pcRedirectURL, pConfig->bUseASelectBar);
 	if (pConfig->bUseASelectBar) {
 	    pcRedirectURL = constructShowBarURL(pPool, pcRedirectURL);
 	    //bFrameHtml = 1;
-	    TRACE1("3.RedirectURL=%s", pcRedirectURL);
+	    TRACE1("2.RedirectURL=%s", pcRedirectURL);
 	}        
     }
     else {
-	TRACE3("1.NoRedURL, URI=%s, Args=%s, bArgs=%d", pRequest->uri, pRequest->args, bArgs);
+	TRACE4("1.NoRedirectURL URI=%s Args=%s bArgs=%d UseBar=%d", pRequest->uri, pRequest->args, bArgs, pConfig->bUseASelectBar);
 	if (!bArgs)
 	    pcURI = pRequest->uri;
 	else {
@@ -672,7 +671,6 @@ int aselect_filter_gen_authcomplete_redirect(pool * pPool, request_rec *pRequest
 		    bArgs = FALSE;
 	    }
 	}
-	TRACE2("2.NoRedURL pcURI=%s, UseBar=%d", pcURI, pConfig->bUseASelectBar);
 	if (pConfig->bUseASelectBar) {
 	    pcURL = constructShowBarURL(pPool, pcURI);
 	    // Code below works, but cannot handle refresh page since the url does not contain: request=aselect_show_bar
@@ -684,9 +682,8 @@ int aselect_filter_gen_authcomplete_redirect(pool * pPool, request_rec *pRequest
 	else
 	    pcURL = pcURI;
     
-	TRACE1("3.NoRedURL pcURL=%s", pcURL);
 	pcRedirectURL = ap_construct_url(pPool, pcURL, pRequest);
-	TRACE1("4.NoRedURL RedirectURL=%s", pcRedirectURL);
+	TRACE1("2.NoRedirectURL=%s", pcRedirectURL);
     }
 
     //if (!bFrameHtml) {
@@ -789,8 +786,8 @@ int aselect_filter_check_app_uri(pool *pPool, PASELECT_FILTER_CONFIG pConfig, ch
 	len = strlen(pConfig->pApplications[i].pcLocation);
         if (len > 0 && len <= uriLen && strncmp(pcUri, pConfig->pApplications[i].pcLocation, len) == 0) {  // a match
             if (pConfig->pApplications[i].bEnabled) {  // skip disabled apps
-		TRACE("aselect_filter_check_app_uri::match"); 
 		if (len > lenBestSec) {
+		    TRACE2("aselect_filter_check_app_uri::better match secure[%d] len=%d", i, len); 
 		    iBestSec = i;
 		    lenBestSec = len;
 		}
@@ -804,9 +801,8 @@ int aselect_filter_check_app_uri(pool *pPool, PASELECT_FILTER_CONFIG pConfig, ch
 	len = strlen(pConfig->pPublicApps[i]);
         if (len > 0 && len <= uriLen && strncmp(pcUri, pConfig->pPublicApps[i], len) == 0) {  // a match
 	    if (strncmp(pcUri, pConfig->pPublicApps[i], len) == 0) {
-		TRACE1("aselect_filter_check_app_uri::match, len=%d", len); 
 		if (len > lenBestPub) {
-		    TRACE("aselect_filter_check_app_uri::better"); 
+		    TRACE2("aselect_filter_check_app_uri::better match public[%d] len=%d", i, len); 
 		    iBestPub = i;
 		    lenBestPub = len;
 		}
@@ -814,16 +810,14 @@ int aselect_filter_check_app_uri(pool *pPool, PASELECT_FILTER_CONFIG pConfig, ch
 	}
     }
     TRACE4("aselect_filter_check_app_uri::Sec: i=%d len=%d Pub: i=%d len=%d", iBestSec, lenBestSec, iBestPub, lenBestPub);
-    if (iBestSec < 0 && iBestPub < 0)
-        TRACE1("Uri \"%s\" not found", pcUri);
+    if (iBestSec < 0 && iBestPub < 0) {
 	return -1;  // no match at all
+    }
 
     if (lenBestSec >= lenBestPub) {
 	pConfig->pCurrentApp = &pConfig->pApplications[iBestSec];
-        TRACE1("Secure uri \"%s\"", pcUri);
 	return 1;  // secure ok
     }
-    TRACE1("Public uri \"%s\"", pcUri);
     return 0;  // public app ok
 }
 
@@ -880,9 +874,7 @@ int aselect_filter_show_barhtml(pool *pPool, request_rec *pRequest, PASELECT_FIL
  */
 char *aselect_filter_base64_decode(pool *pPool, const char *pszValue)
 {
-    static const char *_base64 =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    
+    static const char *_base64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     char *szDest;
     int iDest, iDestCount;
     int state;

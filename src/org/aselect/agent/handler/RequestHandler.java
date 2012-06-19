@@ -1306,8 +1306,8 @@ public class RequestHandler extends Thread
 		String sMethod = "processVerifyTicketRequest";
 		StringBuffer sbBuffer = new StringBuffer();
 		String sTicket = null;
-		String sUid = null;
-		String sOrg = null;
+		//String sUid = null;
+		//String sOrg = null;
 		String sAttributesHash = null;
 		String sRequestURI = null;
 		String sIP = null;
@@ -1316,8 +1316,9 @@ public class RequestHandler extends Thread
 		try {
 			try {	// get required API parameters
 				sTicket = oInputMessage.getParam("ticket");
-				sUid = oInputMessage.getParam("uid");
-				sOrg = oInputMessage.getParam("organization");
+				// 20120619, Bauke: removed "aselectuid" and "aselectorganization" cookies, and therefore the related checks
+				//sUid = oInputMessage.getParam("uid");
+				//sOrg = oInputMessage.getParam("organization");
 			}
 			catch (ASelectCommunicationException eAC) {
 				// missing required API parameters
@@ -1325,7 +1326,8 @@ public class RequestHandler extends Thread
 				_sErrorCode = Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST;
 				return;
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET uid="+sUid + ", org="+sOrg + ", ticket="+sTicket);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET ticket="+sTicket);
+			//_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET uid="+sUid + ", org="+sOrg + ", ticket="+sTicket);
 
 			// Get optional parameters
 			// Parameter "attributes_hash" and 'request_uri' are not required
@@ -1370,23 +1372,24 @@ public class RequestHandler extends Thread
 			String sStoredOrg = (String) htTicketContext.get("organization");
 			String sStoredAttributes = (String) htTicketContext.get("attributes_hash");
 
-			// check uid match
-			if (!sStoredUid.equals(sUid)) {
-				sbBuffer = new StringBuffer("Invalid request: uid mismatch: expected ");
-				sbBuffer.append(sStoredUid).append(" but got ").append(sUid);
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
-				_sErrorCode = Errors.ERROR_ASELECT_AGENT_TICKET_NOT_VALID;
-				return;
-			}
-			// check organization match
-			if (!sStoredOrg.equals(sOrg)) {
-				sbBuffer = new StringBuffer("Invalid request: organization mismatch: ");
-				sbBuffer.append("expected ").append(sStoredOrg);
-				sbBuffer.append(" but got ").append(sOrg);
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
-				_sErrorCode = Errors.ERROR_ASELECT_AGENT_TICKET_NOT_VALID;
-				return;
-			}
+			// 20120619, Bauke: removed "aselectuid" and "aselectorganization" cookies, and therefore the related checks
+//			// check uid match
+//			if (!sStoredUid.equals(sUid)) {
+//				sbBuffer = new StringBuffer("Invalid request: uid mismatch: expected ");
+//				sbBuffer.append(sStoredUid).append(" but got ").append(sUid);
+//				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
+//				_sErrorCode = Errors.ERROR_ASELECT_AGENT_TICKET_NOT_VALID;
+//				return;
+//			}
+//			// check organization match
+//			if (!sStoredOrg.equals(sOrg)) {
+//				sbBuffer = new StringBuffer("Invalid request: organization mismatch: ");
+//				sbBuffer.append("expected ").append(sStoredOrg);
+//				sbBuffer.append(" but got ").append(sOrg);
+//				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
+//				_sErrorCode = Errors.ERROR_ASELECT_AGENT_TICKET_NOT_VALID;
+//				return;
+//			}
 			// match attributes
 			if (sAttributesHash != null) {
 				if (!sStoredAttributes.equalsIgnoreCase(sAttributesHash)) {
@@ -1649,20 +1652,22 @@ public class RequestHandler extends Thread
 
 		try {
 			String sTicket = null;
-			String sUid = null;
-			String sOrg = null;
+			//String sUid = null;
+			//String sOrg = null;
 			
 			try {  // get required API parameters
 				sTicket = oInputMessage.getParam("ticket");
-				sUid = oInputMessage.getParam("uid");
-				sOrg = oInputMessage.getParam("organization");
+				// 20120619, Bauke: removed "aselectuid" and "aselectorganization" cookies, and therefore the related checks
+				//sUid = oInputMessage.getParam("uid");
+				//sOrg = oInputMessage.getParam("organization");
 			}
 			catch (ASelectCommunicationException eAC) {  // missing required API parameters
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received.", eAC);
 				_sErrorCode = Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST;
 				return;
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "AttrReq uid="+sUid + ", org="+sOrg + ", ticket="+sTicket);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "AttrReq ticket="+sTicket);
+			//_systemLogger.log(Level.INFO, MODULE, sMethod, "AttrReq uid="+sUid + ", org="+sOrg + ", ticket="+sTicket);
 
 			// get the ticket context
 			HashMap htTicketContext = _ticketManager.getTicketContext(sTicket);
@@ -1682,8 +1687,9 @@ public class RequestHandler extends Thread
 			oOutputMessage.setParam("ticket_start_time", new Long(_ticketManager.getTicketStartTime(sTicket))
 					.toString());
 			oOutputMessage.setParam("ticket_exp_time", new Long(_ticketManager.getTicketTimeout(sTicket)).toString());
-			oOutputMessage.setParam("uid", sUid);
-			oOutputMessage.setParam("organization", sOrg);
+			// 20120619, Bauke: removed "aselectuid" and "aselectorganization" cookies, and therefore the related checks
+			//oOutputMessage.setParam("uid", sUid);
+			//oOutputMessage.setParam("organization", sOrg);
 			oOutputMessage.setParam("authsp_level", sAppLevel);
 			oOutputMessage.setParam("authsp", sAuthSP);
 			// 1.4 backwards compatibility

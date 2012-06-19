@@ -239,14 +239,14 @@ typedef struct _ASELECT_FILTER_CONFIG
     int     bConfigError;
  // Bauke: added lines
     int     bSecureUrl;
-    char    pcPassAttributes[10];  // can contain a combination of 'c', 'q', 'h' (cookie, query string, header)
+    char    pcPassAttributes[20];  // can contain a combination of 'c', 'q', 'h' (cookie, query string, header)
     char    *pAttrFilter[ASELECT_FILTER_MAX_ATTR];
     int     iAttrCount;
     char    *pPublicApps[ASELECT_FILTER_MAX_APP]; // Same maximum as pApplications
     int     iPublicAppCount;
     char    *pcLogoutTemplate;
     char    *pcLogFileName;
-    char    pcAddedSecurity[10];  // can contain a 'c' (cookies)
+    char    pcAddedSecurity[20];  // can contain a 'c' (cookies)
 } ASELECT_FILTER_CONFIG, *PASELECT_FILTER_CONFIG;
 
 /*
