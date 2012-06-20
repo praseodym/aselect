@@ -33,7 +33,7 @@ package org.aselect.agent.authorization.parsing.types;
 
 import java.util.StringTokenizer;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * IP Version 6 Address. <br>
  * <br>
@@ -97,7 +97,7 @@ public class IPv6Address implements Comparable
 	 *             If parsing fails.
 	 */
 	public IPv6Address(String s)
-		throws Exception {
+	throws Exception {
 		String sAdress = null;
 
 		if (!s.matches(IPV6_REGEX)) {
@@ -129,7 +129,7 @@ public class IPv6Address implements Comparable
 	 *             If the provided <code>Object</code> is not an <code>IPv6Address</code>.
 	 */
 	public int compareTo(Object oOther)
-		throws ClassCastException
+	throws ClassCastException
 	{
 		int iRet = 0;
 		if (oOther instanceof IPv6Address) {
@@ -189,7 +189,7 @@ public class IPv6Address implements Comparable
 	 *             If parsing fails.
 	 */
 	private int[] convertAddress(String s, boolean bIsMask)
-		throws NumberFormatException
+	throws NumberFormatException
 	{
 		int[] ia = null;
 		StringTokenizer st = new StringTokenizer(s, ":");

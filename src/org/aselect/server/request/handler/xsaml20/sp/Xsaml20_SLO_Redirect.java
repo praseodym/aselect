@@ -38,7 +38,7 @@ import org.opensaml.saml2.metadata.SingleLogoutService;
 import org.opensaml.ws.transport.http.HttpServletRequestAdapter;
 import org.opensaml.xml.util.XMLHelper;
 
-// TODO: Auto-generated Javadoc
+
 //
 // SP Soap Logout Request Handler
 // Handles IdP requests using HTTP redirect
@@ -60,7 +60,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BaseHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		super.init(oServletConfig, oHandlerConfig);
 	}
@@ -88,7 +88,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BaseHandler
 	 *             If processing of logout request fails.
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
@@ -114,7 +114,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BaseHandler
 	 *             the a select exception
 	 */
 	private void handleSAMLRequest(HttpServletRequest httpRequest, HttpServletResponse httpResponse)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleSAMLRequest()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
@@ -221,7 +221,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BaseHandler
 	 */
 	private void handleLogoutRequest(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
 			LogoutRequest logoutRequest)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleLogoutRequest()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");

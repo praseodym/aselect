@@ -87,7 +87,7 @@ public class Saml11Builder
 	 *             the SAML exception
 	 */
 	public SAMLAssertion createAssertionFromString(String s)
-		throws SAMLException
+	throws SAMLException
 	{
 		_systemLogger.log(Level.WARNING, MODULE, "createAssertionFromString()", "Assert=" + s);
 		InputStream i = new ByteArrayInputStream(s.getBytes());
@@ -122,7 +122,7 @@ public class Saml11Builder
 	 */
 	public SAMLAssertion createSAMLAssertionFromCredentials(String sUid, String sRequestID, String sNameIdFormat,
 			String sIP, String sHost, String sConfirmationMethod, String sProviderId, String sAudience, HashMap htInfo)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "createSAMLAssertion()";
 		HashMap htAttributes = null;
@@ -205,7 +205,7 @@ public class Saml11Builder
 	 */
 	public SAMLAssertion createMySAMLAssertion(String sProviderId, String sUid, String sNameIdFormat, String sIP,
 			String sHost, String sConfirmationMethod, String sAudience, HashMap htAttributes)
-		throws ASelectException, SAMLException
+	throws ASelectException, SAMLException
 	{
 		String sMethod = "createMySAMLAssertion()";
 		Date dCurrent = new Date();
@@ -269,7 +269,7 @@ public class Saml11Builder
 	 */
 	private SAMLAuthenticationStatement generateSAMLAuthenticationStatement(String sUid, String sNameIdFormat,
 			String sIP, String sHost, Date dCurrent, String sConfirmationMethod)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "generateSAMLAuthenticationStatement()";
 		SAMLAuthenticationStatement oSAMLAuthenticationStatement = null;
@@ -314,7 +314,7 @@ public class Saml11Builder
 	 */
 	private SAMLAttributeStatement generateSAMLAttributeStatement(String sUid, String sNameIdFormat,
 			HashMap htAttributes)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "generateSAMLAttributeStatement()";
 		SAMLAttributeStatement oSAMLAttributeStatement = null;
@@ -457,7 +457,7 @@ public class Saml11Builder
 	 *             the a select exception
 	 */
 	private SAMLAttribute createSAMLAttribute(String sName, Object oValue, String sNameSpace)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "generateSAMLAttribute()";
 		SAMLAttribute oSAMLAttribute = new SAMLAttribute();

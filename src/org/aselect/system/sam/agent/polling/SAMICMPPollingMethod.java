@@ -47,7 +47,6 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.ISAMPollingMethod;
 
-// TODO: Auto-generated Javadoc
 /**
  * Polls a resource by using ICMP PING commands. <br>
  * <br>
@@ -176,7 +175,6 @@ public class SAMICMPPollingMethod implements ISAMPollingMethod
 			sbError.append("'");
 			_oSystemLogger.log(Level.FINE, MODULE, sMethod, sbError.toString(), e);
 		}
-
 		return bPing;
 	}
 
@@ -190,7 +188,7 @@ public class SAMICMPPollingMethod implements ISAMPollingMethod
 	 *             if the uri couldn't be parsed or the result is empty.
 	 */
 	private URI parseJDBCString(String sUri)
-		throws ASelectSAMException
+	throws ASelectSAMException
 	{
 		StringBuffer sbError = new StringBuffer();
 		String sMethod = "parseJDBCString()";
@@ -200,7 +198,6 @@ public class SAMICMPPollingMethod implements ISAMPollingMethod
 			StringTokenizer stUri = new StringTokenizer(sUri, ":");
 			while (stUri.hasMoreElements()) {
 				String sToken = (String) stUri.nextElement();
-
 				if (sToken.startsWith("//")) {
 					uriResponse = new URI("jdbc", sToken.substring(2), null, null);
 				}
@@ -211,7 +208,6 @@ public class SAMICMPPollingMethod implements ISAMPollingMethod
 			sbError.append(sUri);
 			sbError.append("'");
 			_oSystemLogger.log(Level.FINE, MODULE, sMethod, sbError.toString(), e);
-
 			throw new ASelectSAMException(Errors.ERROR_ASELECT_PARSE_ERROR);
 		}
 
@@ -220,10 +216,8 @@ public class SAMICMPPollingMethod implements ISAMPollingMethod
 			sbError.append(sUri);
 			sbError.append("'. Empty result after creating the URI object.");
 			_oSystemLogger.log(Level.FINE, MODULE, sMethod, sbError.toString());
-
 			throw new ASelectSAMException(Errors.ERROR_ASELECT_PARSE_ERROR);
 		}
-
 		return uriResponse;
 	}
 }

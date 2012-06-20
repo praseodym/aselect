@@ -108,7 +108,7 @@ public class MemoryStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#get(java.lang.Object)
 	 */
 	public Object get(Object oKey)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "get()";
 		Object oValue = null;
@@ -147,7 +147,7 @@ public class MemoryStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#getTimestamp(java.lang.Object)
 	 */
 	public long getTimestamp(Object oKey)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "getTimestamp";
 		long lTimestamp = 0;
@@ -183,7 +183,7 @@ public class MemoryStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#getCount()
 	 */
 	public long getCount()
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		return _htStorage.size();
 	}
@@ -197,7 +197,7 @@ public class MemoryStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#getAll()
 	 */
 	public HashMap getAll()
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "getAll()";
 		HashMap htReturnTable = new HashMap();
@@ -263,7 +263,7 @@ public class MemoryStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#put(java.lang.Object, java.lang.Object, java.lang.Long)
 	 */
 	public void put(Object oKey, Object oValue, Long lTimestamp)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "put";
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, "this=" + this); // +" store="+_htStorage);
@@ -300,7 +300,7 @@ public class MemoryStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#remove(java.lang.Object)
 	 */
 	public void remove(Object oKey)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "remove()";
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, " this=" + this); // +" "+_htStorage);
@@ -327,7 +327,7 @@ public class MemoryStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#removeAll()
 	 */
 	public void removeAll()
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		// synchronized (_htStorage) {
 		_htStorage.clear();
@@ -344,7 +344,7 @@ public class MemoryStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#cleanup(java.lang.Long)
 	 */
 	public void cleanup(Long lTimestamp)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "cleanup";
 		int countAll = 0, countRemoved = 0;
@@ -405,7 +405,7 @@ public class MemoryStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#isMaximum(long)
 	 */
 	public boolean isMaximum(long lItemCount)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		return (_htStorage.size() >= lItemCount);
 	}
@@ -423,7 +423,7 @@ public class MemoryStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#containsKey(java.lang.Object)
 	 */
 	public boolean containsKey(Object oKey)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		_systemLogger.log(Level.INFO, MODULE, "containsKey", "Key=" + Utils.firstPartOf(oKey.toString(), 30));
 		return _htStorage.containsKey(oKey);

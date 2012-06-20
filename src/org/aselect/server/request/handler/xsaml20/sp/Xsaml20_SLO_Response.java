@@ -49,7 +49,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
-// TODO: Auto-generated Javadoc
+
 //
 // SP
 // Accept LogoutResponse
@@ -81,7 +81,7 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init";
 		super.init(oServletConfig, oConfig);
@@ -99,7 +99,7 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 	 *             If process logout response fails.
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
@@ -128,7 +128,7 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 	 *             the a select exception
 	 */
 	private void handleRedirectLogoutResponse(HttpServletRequest httpRequest, HttpServletResponse httpResponse)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleRedirectLogoutResponse";
 
@@ -223,7 +223,7 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 	 */
 	private void handleLogoutResponse(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
 			LogoutResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleLogoutResponse";
 		TGTManager tgtManager = TGTManager.getHandle();
@@ -262,7 +262,7 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 	 *             the a select exception
 	 */
 	private void handleSOAPLogoutResponse(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleSOAPLogoutResponse";
 		try {

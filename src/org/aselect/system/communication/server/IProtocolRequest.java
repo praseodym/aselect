@@ -31,7 +31,7 @@ package org.aselect.system.communication.server;
 import java.io.IOException;
 import java.io.InputStream;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Defines an interface to the request part of a protocol. <br>
  * <br>
@@ -108,6 +108,6 @@ public interface IProtocolRequest
 	 *             if <CODE>InputStream</CODE> can't be retrieved from the protocol.
 	 */
 	public InputStream getInputStream()
-		throws IOException;
+	throws IOException;
 
 }

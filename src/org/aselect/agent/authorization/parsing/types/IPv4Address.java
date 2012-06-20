@@ -36,7 +36,7 @@ package org.aselect.agent.authorization.parsing.types;
 
 import java.util.StringTokenizer;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * IP Version 4 Address. <br>
  * <br>
@@ -153,7 +153,7 @@ public class IPv4Address implements Comparable
 	 *             If parsing fails.
 	 */
 	public IPv4Address(String s)
-		throws Exception {
+	throws Exception {
 		String sAdress = null;
 
 		if (!s.matches(IPV4_REGEX)) {
@@ -184,7 +184,7 @@ public class IPv4Address implements Comparable
 	 *             If the provided <code>Object</code> is not an <code>IPv4Address</code>.
 	 */
 	public int compareTo(Object oOther)
-		throws ClassCastException
+	throws ClassCastException
 	{
 		int iRet = 0;
 		if (oOther instanceof IPv4Address) {
@@ -246,7 +246,7 @@ public class IPv4Address implements Comparable
 	 *             If parsing fails.
 	 */
 	private byte[] convertAddress(String s, boolean bIsMask)
-		throws NumberFormatException
+	throws NumberFormatException
 	{
 		StringTokenizer st = new StringTokenizer(s, ".");
 		byte[] ba = null;

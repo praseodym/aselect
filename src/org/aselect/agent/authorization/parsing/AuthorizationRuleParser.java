@@ -46,7 +46,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAuthorizationException;
 import org.aselect.system.logging.SystemLogger;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Parser for evaluation rules. <br>
  * <br>
@@ -137,7 +137,7 @@ public class AuthorizationRuleParser
 	 *             If parsing fails.
 	 */
 	public void parse()
-		throws ASelectAuthorizationException
+	throws ASelectAuthorizationException
 	{
 		final String sMethod = "parse()";
 		try {
@@ -186,7 +186,7 @@ public class AuthorizationRuleParser
 	 *             If parsing fails.
 	 */
 	private EvaluationTree parseExpression()
-		throws ASelectAuthorizationException
+	throws ASelectAuthorizationException
 	{
 		final String sMethod = "parseExpression()";
 		// Parse SimpleExpression
@@ -219,7 +219,7 @@ public class AuthorizationRuleParser
 	 *             If parsing fails.
 	 */
 	private EvaluationTree parseSimpleExpression()
-		throws ASelectAuthorizationException
+	throws ASelectAuthorizationException
 	{
 		final String sMethod = "parseSimpleExpression()";
 		StringBuffer sb = null;
@@ -311,7 +311,7 @@ public class AuthorizationRuleParser
 	 *             If parsing fails.
 	 */
 	private EvaluationTree parseLogicExpression(EvaluationTree tLeft)
-		throws ASelectAuthorizationException
+	throws ASelectAuthorizationException
 	{
 		final String sMethod = "parseLogicExpression()";
 		// accept is '&' or '|'
@@ -343,7 +343,7 @@ public class AuthorizationRuleParser
 	 *             If scanning fails or no token available (<code>null</code>).
 	 */
 	private AuthorizationRuleToken acceptIt()
-		throws ASelectAuthorizationException
+	throws ASelectAuthorizationException
 	{
 		final String sMethod = "acceptIt()";
 		AuthorizationRuleToken oToken = _oCurrentToken;
@@ -374,7 +374,7 @@ public class AuthorizationRuleParser
 	 *             If no token available (<code>null</code>), scan error, or invalid kind.
 	 */
 	private AuthorizationRuleToken acceptKind(int iExpectedKind)
-		throws ASelectAuthorizationException
+	throws ASelectAuthorizationException
 	{
 		final String sMethod = "acceptKind()";
 		AuthorizationRuleToken oToken = _oCurrentToken;
@@ -408,7 +408,7 @@ public class AuthorizationRuleParser
 	 *             If no token available (<code>null</code>), scan error, or invalid group.
 	 */
 	private AuthorizationRuleToken acceptGroup(int iExpectedGroup)
-		throws ASelectAuthorizationException
+	throws ASelectAuthorizationException
 	{
 		final String sMethod = "acceptGroup()";
 		AuthorizationRuleToken oToken = _oCurrentToken;

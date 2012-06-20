@@ -109,7 +109,7 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 	 */
 	@Override
 	protected void doBind(String sPassword)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "doBind()";
 		StringBuffer sbTemp = null;

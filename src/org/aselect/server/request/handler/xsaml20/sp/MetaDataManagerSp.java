@@ -47,7 +47,7 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 	 *             the a select exception
 	 */
 	public static MetaDataManagerSp getHandle()
-		throws ASelectException
+	throws ASelectException
 	{
 		if (metaDataManager == null) {
 			metaDataManager = new MetaDataManagerSp();

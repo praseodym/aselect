@@ -155,7 +155,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#init(java.lang.Object)
 	 */
 	public void init(Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		Object oMain = null;

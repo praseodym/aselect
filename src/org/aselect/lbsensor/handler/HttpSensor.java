@@ -37,7 +37,7 @@ public class HttpSensor extends BasicSensorHandler
 	 */
 	@Override
 	public void initialize(Object oConfigHandler, String sId)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "initialize";
 
@@ -67,7 +67,7 @@ public class HttpSensor extends BasicSensorHandler
 	 */
 	@Override
 	protected void processLine(BufferedWriter oOutWriter, String sLine, String sId)
-		throws IOException
+	throws IOException
 	{
 		String sMethod = "processLine";
 
@@ -139,7 +139,7 @@ public class HttpSensor extends BasicSensorHandler
 	 */
 	@Override
 	protected void echoCharToStream(BufferedWriter oOutWriter, char c)
-		throws IOException
+	throws IOException
 	{
 		// No Action
 	}

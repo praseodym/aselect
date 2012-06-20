@@ -163,7 +163,7 @@ public class RADIUSCHAPProtocolHandler extends AbstractRADIUSProtocolHandler
 	 *             the exception
 	 */
 	public void composeRequest(String sPassword, DatagramPacket oRADIUSPacket)
-		throws Exception
+	throws Exception
 	{
 		String sMethod = "composeRequest()";
 		_sErrorCode = Errors.ERROR_RADIUS_INTERNAL_ERROR;

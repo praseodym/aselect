@@ -172,7 +172,7 @@ public class DBAuthSP extends ASelectHttpServlet
 	 * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
 	 */
 	public void init(ServletConfig oConfig)
-		throws ServletException
+	throws ServletException
 	{
 		String sMethod = "init()";
 		StringBuffer sbTemp = null;
@@ -423,7 +423,7 @@ public class DBAuthSP extends ASelectHttpServlet
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	protected void doGet(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
-		throws java.io.IOException
+	throws java.io.IOException
 	{
 		String sMethod = "doGet()";
 		PrintWriter pwOut = null;
@@ -544,7 +544,7 @@ public class DBAuthSP extends ASelectHttpServlet
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
-		throws java.io.IOException
+	throws java.io.IOException
 	{
 		String sMethod = "doPost()";
 		PrintWriter pwOut = null;
@@ -990,7 +990,7 @@ public class DBAuthSP extends ASelectHttpServlet
 	 *             the a select exception
 	 */
 	private void handleAuthenticate(HashMap htServiceRequest, HttpServletRequest servletRequest)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleAuthenticate()";
 		String sResultCode = null;
@@ -1113,7 +1113,7 @@ public class DBAuthSP extends ASelectHttpServlet
 	 *             if the connection could not be opened
 	 */
 //	private Connection getConnection()
-//		throws ASelectException
+//	throws ASelectException
 //	{
 //		String sMethod = "getConnection()";
 //
@@ -1153,7 +1153,7 @@ public class DBAuthSP extends ASelectHttpServlet
 	 *             if the connection could not be opened
 	 */
 	private Connection getConnection(DBServerParms serverParms)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getConnection()";
 

@@ -33,7 +33,7 @@ import org.aselect.authspserver.log.AuthSPSystemLogger;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.sam.agent.SAMAgent;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * A singleton class for the <code>SAMAgent</code>. <br>
  * <br>
@@ -79,7 +79,7 @@ public class AuthSPSAMAgent extends SAMAgent
 	 *             the a select sam exception
 	 */
 	public void init()
-		throws ASelectSAMException
+	throws ASelectSAMException
 	{
 		super.init(AuthSPConfigManager.getHandle(), AuthSPSystemLogger.getHandle());
 	}

@@ -151,7 +151,7 @@ public abstract class AbstractAPIRequestHandler implements IRequestHandler
 	 */
 	public AbstractAPIRequestHandler(RequestParser reqParser, HttpServletRequest servletRequest,
 			HttpServletResponse servletResponse, String sMyServerId, String sMyOrg)
-		throws ASelectCommunicationException {
+	throws ASelectCommunicationException {
 		String sMethod = "AbstractAPIRequestHandler()";
 
 		_systemLogger = ASelectSystemLogger.getHandle();
@@ -189,7 +189,7 @@ public abstract class AbstractAPIRequestHandler implements IRequestHandler
 	 *             if communication fails and no response is send to the client.
 	 */
 	public void processRequest()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "processRequest()";
 
@@ -276,5 +276,5 @@ public abstract class AbstractAPIRequestHandler implements IRequestHandler
 	 */
 	abstract protected void processAPIRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
 			IOutputMessage oOutputMessage)
-		throws ASelectException;
+	throws ASelectException;
 }

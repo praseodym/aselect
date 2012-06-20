@@ -84,7 +84,7 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 
@@ -174,7 +174,7 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 	 *             the a select storage exception
 	 */
 	protected int removeTgtByNameID(String sNameID)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "removeByNameID";
 		TGTManager tgtManager = TGTManager.getHandle();
@@ -218,7 +218,7 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 	 */
 	protected void sendLogoutToIdP(HttpServletRequest request, HttpServletResponse response, String sTgT,
 			HashMap htTGTContext, String sIssuer, String sLogoutReturnUrl)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "sendLogoutToIdP";
 		// String sAuthspType = (String)htTGTContext.get("authsp_type");
@@ -235,8 +235,7 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 		PartnerData partnerData = MetaDataManagerSp.getHandle().getPartnerDataEntry(sFederationUrl);
 		// RH, 20120307, en
 		
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Logout to IdP=" + sFederationUrl + " returnUrl="
-				+ sLogoutReturnUrl);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Logout to IdP="+sFederationUrl + " returnUrl="+sLogoutReturnUrl);
 		// if (sFederationUrl == null) sFederationUrl = _sFederationUrl; // xxx for now
 		MetaDataManagerSp metadataManager = MetaDataManagerSp.getHandle();
 		String url = metadataManager.getLocation(sFederationUrl, SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME,
@@ -275,7 +274,7 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 	 *             the a select exception
 	 */
 	protected void finishLogoutActions(HttpServletResponse httpResponse, String resultCode, String sReturnUrl)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "finishLogoutActions";
 		String sLogoutResultPage = "";

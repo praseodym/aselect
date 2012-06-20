@@ -46,7 +46,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * A singleton class for the <code>SystemLogger</code> that logs system information. <br>
  * <br>
@@ -116,7 +116,7 @@ public class AuthSPSystemLogger extends SystemLogger
 	 *             if initialization went wrong
 	 */
 	public void init(Object oSysLogging, String sWorkingDir)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 

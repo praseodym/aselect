@@ -77,7 +77,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#init(java.lang.Object, java.lang.Object)
 	 */
 	public void init(Object oAuthSPConfig, Object oAuthSPResource)
-		throws ASelectAuthSPException
+	throws ASelectAuthSPException
 	{
 		String sMethod = "init";
 
@@ -175,7 +175,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 	 *             the a select exception
 	 */
 	private void loadBetrouwbaarheidsNiveau(Object oBetrouwbaarheidsNiveau)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadBetrouwbaarheidsNiveau";
 
@@ -503,7 +503,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 	 *             the unsupported encoding exception
 	 */
 	private String hashtable2CGIMessage(HashMap htInput)
-		throws UnsupportedEncodingException
+	throws UnsupportedEncodingException
 	{
 		StringBuffer sbBuffer = new StringBuffer();
 		Set keys = htInput.keySet();

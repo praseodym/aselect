@@ -521,7 +521,7 @@ public class SOAP12MessageCreator implements IMessageCreatorInterface
 	 * @see org.aselect.system.communication.server.IOutputMessage#send()
 	 */
 	public boolean send()
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "send()";
 		if (_oOutputMessage == null) {
@@ -586,7 +586,7 @@ public class SOAP12MessageCreator implements IMessageCreatorInterface
 	 *             If parsing or validation fails.
 	 */
 	private void createInputMessage()
-		throws ASOAPException
+	throws ASOAPException
 	{
 		try {
 			// create DocumentBuilderFactory to parse SOAP message.
@@ -1096,7 +1096,7 @@ public class SOAP12MessageCreator implements IMessageCreatorInterface
 	 *             If resolving fails.
 	 */
 	private String[] resolveArray(Element elParam)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String[] sa = null;
 		String sArraySize = null;

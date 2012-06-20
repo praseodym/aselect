@@ -147,7 +147,7 @@ public class StorageManager
 	 *             If storage initialization fails.
 	 */
 	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger systemLogger, SAMAgent oSAMAgent)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "init";
 		Object oHandlerSection;
@@ -323,7 +323,7 @@ public class StorageManager
 	 * @see IStorageHandler#getTimestamp(Object)
 	 */
 	public long getExpirationTime(Object oKey)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		long lTimestamp = _oStorageHandler.getTimestamp(oKey);
 		return lTimestamp + _lExpireTime;
@@ -353,7 +353,7 @@ public class StorageManager
 	 * @see IStorageHandler#getTimestamp(Object)
 	 */
 	public long getTimestamp(Object oKey)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		long lTimestamp = _oStorageHandler.getTimestamp(oKey);
 		return lTimestamp;
@@ -380,7 +380,7 @@ public class StorageManager
 	 * @see IStorageHandler#getAll()
 	 */
 	public HashMap getAll()
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		return _oStorageHandler.getAll();
 	}
@@ -406,7 +406,7 @@ public class StorageManager
 	 * @see IStorageHandler#getCount()
 	 */
 	public long getCount()
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		return _oStorageHandler.getCount();
 	}
@@ -441,7 +441,7 @@ public class StorageManager
 	 * @see IStorageHandler#put(Object, Object, Long)
 	 */
 	public void put(Object oKey, Object oValue)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 //		String sMethod = "put";
 		// Allow for "unlimited" storage
@@ -574,7 +574,7 @@ public class StorageManager
 	 *             if IO error occurred with physical storage
 	 */
 	public boolean containsKey(Object oKey)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		return _oStorageHandler.containsKey(oKey);
 	}
@@ -601,7 +601,7 @@ public class StorageManager
 	 * @see IStorageHandler#remove(Object)
 	 */
 	public void remove(Object oKey)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		_oStorageHandler.remove(oKey);
 	}
@@ -626,7 +626,7 @@ public class StorageManager
 	 * @see IStorageHandler#removeAll()
 	 */
 	public void removeAll()
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		_oStorageHandler.removeAll();
 	}

@@ -297,7 +297,7 @@ public class RawCommunicator implements IClientCommunicator
 	 *             If URL encoding fails.
 	 */
 	private static String hashtable2CGIMessage(HashMap htInput)
-		throws UnsupportedEncodingException
+	throws UnsupportedEncodingException
 	{
 		StringBuffer sbBuffer = new StringBuffer();
 
@@ -359,7 +359,7 @@ public class RawCommunicator implements IClientCommunicator
 	 *             If URL decoding fails.
 	 */
 	public HashMap convertCGIMessage(String sMessage)
-		throws UnsupportedEncodingException
+	throws UnsupportedEncodingException
 	{
 		String sToken, sKey, sValue;
 		StringTokenizer sTokenizer = null;

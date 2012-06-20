@@ -448,7 +448,7 @@ public class TicketManager extends StorageManager
 	 *             If retrieving ticket timeout fails.
 	 */
 	public long getTicketTimeout(String sTicket)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		return _oTicketTable.getExpirationTime(sTicket);
 	}
@@ -475,7 +475,7 @@ public class TicketManager extends StorageManager
 	 *             If retrieving ticket start time fails.
 	 */
 	public long getTicketStartTime(String sTicket)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		return _oTicketTable.getTimestamp(sTicket);
 	}

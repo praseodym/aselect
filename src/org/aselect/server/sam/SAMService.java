@@ -107,7 +107,7 @@ public class SAMService extends SAMServiceServlet
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig)
-		throws ServletException
+	throws ServletException
 	{
 		_systemLogger = ASelectSystemLogger.getHandle();
 		super.init(oServletConfig);

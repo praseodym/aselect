@@ -33,7 +33,7 @@ public class JdbcSensor extends BasicSensorHandler
 	 */
 	@Override
 	public void initialize(Object oConfigHandler, String sId)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "initialize";
 
@@ -94,7 +94,7 @@ public class JdbcSensor extends BasicSensorHandler
 	 */
 	@Override
 	protected void echoCharToStream(BufferedWriter oOutWriter, char c)
-		throws IOException
+	throws IOException
 	{
 		// No Action
 	}

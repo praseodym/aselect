@@ -162,7 +162,7 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#init(java.lang.Object, java.lang.Object)
 	 */
 	public void init(Object oAuthSPConfig, Object oAuthSPResource)
-		throws ASelectAuthSPException
+	throws ASelectAuthSPException
 	{
 		final String sMethod = "init()";
 		_configManager = ASelectConfigManager.getHandle();
@@ -209,7 +209,7 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 	 * @see org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler#init(java.lang.String)
 	 */
 	public void init(String sAuthSPId)
-		throws ASelectAuthSPException
+	throws ASelectAuthSPException
 	{
 		final String sMethod = "init()";
 		_configManager = ASelectConfigManager.getHandle();
@@ -536,7 +536,7 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 	 *             the a select exception
 	 */
 	private void handleDirectLogin1(HashMap htServiceRequest, PrintWriter pwOut, String sServerId)
-		throws ASelectException
+	throws ASelectException
 	{
 		throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 	}
@@ -571,7 +571,7 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 	 */
 	private void handleDirectLogin2(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut,
 			String sServerId)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleDirectLogin2";
 
@@ -604,7 +604,7 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 	 *             the a select exception
 	 */
 	private void showDirectLoginForm(HashMap htServiceRequest, PrintWriter pwOut, String sServerId)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "showDirectLoginForm()";
 		throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);

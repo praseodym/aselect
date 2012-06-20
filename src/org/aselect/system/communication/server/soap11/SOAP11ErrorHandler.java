@@ -34,7 +34,7 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * SOAP 1.1 parse error handler. <br>
  * <br>
@@ -60,7 +60,7 @@ public class SOAP11ErrorHandler implements ErrorHandler
 	 * @see org.xml.sax.ErrorHandler#warning(org.xml.sax.SAXParseException)
 	 */
 	public void warning(SAXParseException eSP)
-		throws SAXException
+	throws SAXException
 	{
 		throw eSP;
 	}
@@ -75,7 +75,7 @@ public class SOAP11ErrorHandler implements ErrorHandler
 	 * @see org.xml.sax.ErrorHandler#error(org.xml.sax.SAXParseException)
 	 */
 	public void error(SAXParseException eSP)
-		throws SAXException
+	throws SAXException
 	{
 		throw eSP;
 	}
@@ -90,7 +90,7 @@ public class SOAP11ErrorHandler implements ErrorHandler
 	 * @see org.xml.sax.ErrorHandler#fatalError(org.xml.sax.SAXParseException)
 	 */
 	public void fatalError(SAXParseException eSP)
-		throws SAXException
+	throws SAXException
 	{
 		throw eSP;
 	}

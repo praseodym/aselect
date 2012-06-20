@@ -34,7 +34,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
+
 //
 //
 public class Idff12_ISTS extends ProtoRequestHandler
@@ -70,7 +70,7 @@ public class Idff12_ISTS extends ProtoRequestHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -97,7 +97,7 @@ public class Idff12_ISTS extends ProtoRequestHandler
 	 * @see org.aselect.server.request.handler.IRequestHandler#process(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		try {
@@ -137,7 +137,7 @@ public class Idff12_ISTS extends ProtoRequestHandler
 	 *             the a select exception
 	 */
 	private void handleSubmit(String sIdPUrl, String sRelayState, String sProviderId, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleSubmit()";
 		try {

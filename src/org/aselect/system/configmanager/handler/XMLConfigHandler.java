@@ -262,7 +262,7 @@ public class XMLConfigHandler implements IConfigHandler
 	 */
 	public void init(String sUser, String sPassword, String sDatabaseURL, String sDatabaseTable, String sDriverName,
 			String sConfigId)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
 		String sMethod = "init()";
@@ -355,7 +355,7 @@ public class XMLConfigHandler implements IConfigHandler
 	 *      java.lang.String)
 	 */
 	public synchronized Object getSection(Object oRootSection, String sSectionType, String sSectionID)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
 		String sMethod = "getSection()";
@@ -411,7 +411,7 @@ public class XMLConfigHandler implements IConfigHandler
 	 * @see org.aselect.system.configmanager.IConfigHandler#getSection(java.lang.Object, java.lang.String)
 	 */
 	public synchronized Object getSection(Object oRootSection, String sSectionType)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
 		String sMethod = "getSection()";
@@ -464,7 +464,7 @@ public class XMLConfigHandler implements IConfigHandler
 	 * @see org.aselect.system.configmanager.IConfigHandler#setSection(java.lang.Object, java.lang.String)
 	 */
 	public synchronized Object setSection(Object oRootSection, String sSectionType)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
 		String sMethod = "setSection()";
@@ -531,7 +531,7 @@ public class XMLConfigHandler implements IConfigHandler
 	 * @see org.aselect.system.configmanager.IConfigHandler#getParam(java.lang.Object, java.lang.String)
 	 */
 	public synchronized String getParam(Object oSection, String sConfigItem)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
 		String sMethod = "getParam()";
@@ -641,7 +641,7 @@ public class XMLConfigHandler implements IConfigHandler
 	 */
 	public synchronized boolean setParam(Object oRootSection, String sConfigItem, String sConfigValue,
 			boolean bMandatory)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
 		String sMethod = "setParam()";
@@ -715,7 +715,7 @@ public class XMLConfigHandler implements IConfigHandler
 	 * @see org.aselect.system.configmanager.IConfigHandler#getNextSection(java.lang.Object)
 	 */
 	public synchronized Object getNextSection(Object oSection)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		String sMethod = "getNextSection()";
 
@@ -751,7 +751,7 @@ public class XMLConfigHandler implements IConfigHandler
 	 * @see org.aselect.system.configmanager.IConfigHandler#removeSection(java.lang.Object, java.lang.String)
 	 */
 	public synchronized boolean removeSection(Object oRootSection, String sSectionType)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
 		String sMethod = "removeSection()";
@@ -834,7 +834,7 @@ public class XMLConfigHandler implements IConfigHandler
 	 *      java.lang.String)
 	 */
 	public synchronized boolean removeSection(Object oRootSection, String sSectionType, String sSectionID)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
 		String sMethod = "removeSection()";
@@ -907,7 +907,7 @@ public class XMLConfigHandler implements IConfigHandler
 	 * @see org.aselect.system.configmanager.IConfigHandler#saveConfig()
 	 */
 	public synchronized void saveConfig()
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		String sMethod = "saveConfig()";
 
@@ -1021,7 +1021,7 @@ public class XMLConfigHandler implements IConfigHandler
 	 * @deprecated All config should be stored in only one config file.
 	 */
 	public synchronized void importConfig(File configFile)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
 		String sMethod = "importConfig()";
@@ -1076,7 +1076,7 @@ public class XMLConfigHandler implements IConfigHandler
 	 *             If setting fails.
 	 */
 	private synchronized void setParamAsAtribute(Object oSection, String sConfigItem, String sConfigValue)
-		throws DOMException
+	throws DOMException
 	{
 		Element elSection = (Element) oSection;
 		elSection.setAttribute(sConfigItem, sConfigValue);
@@ -1113,7 +1113,7 @@ public class XMLConfigHandler implements IConfigHandler
 	 *             If setting fails.
 	 */
 	private synchronized void setParamAsChild(Object oSection, String sConfigItem, String sConfigValue)
-		throws DOMException
+	throws DOMException
 	{
 		boolean bFound = false;
 		Element elSection = null;
@@ -1176,7 +1176,7 @@ public class XMLConfigHandler implements IConfigHandler
 	 *             If serialization fails
 	 */
 	private void serializeTo(OutputStream osOutput)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		String sMethod = "serializeTo()";
 
@@ -1226,7 +1226,7 @@ public class XMLConfigHandler implements IConfigHandler
 	 *             If an error occurs during I/O
 	 */
 	private Document parseXML(File fConfig)
-		throws ParserConfigurationException, SAXException, IOException
+	throws ParserConfigurationException, SAXException, IOException
 	{
 		// create DocumentBuilderFactory to parse config file.
 		DocumentBuilderFactory oDocumentBuilderFactory = DocumentBuilderFactory.newInstance();
@@ -1264,7 +1264,7 @@ public class XMLConfigHandler implements IConfigHandler
 	 *             If an error occurs during I/O
 	 */
 	private Document parseXML(byte[] baData)
-		throws ParserConfigurationException, SAXException, IOException
+	throws ParserConfigurationException, SAXException, IOException
 	{
 		// create DocumentBuilderFactory to parse config file.
 		DocumentBuilderFactory oDocumentBuilderFactory = DocumentBuilderFactory.newInstance();
@@ -1309,7 +1309,7 @@ public class XMLConfigHandler implements IConfigHandler
 	 *             If retrieving fails
 	 */
 	private Node getSubSectionByID(Node nRootSection, String sSectionType, String sSectionID)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
 		String sMethod = "getSubSectionByID()";
@@ -1393,7 +1393,7 @@ public class XMLConfigHandler implements IConfigHandler
 	 *             If retrieving fails
 	 */
 	private Node getSubSection(Node nRootSection, String sSectionType)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
 		String sMethod = "getSubSection()";

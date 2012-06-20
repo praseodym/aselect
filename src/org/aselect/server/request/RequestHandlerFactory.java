@@ -105,7 +105,7 @@ public class RequestHandlerFactory
 	 *             if initalization fails
 	 */
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -361,7 +361,7 @@ public class RequestHandlerFactory
 	 *             if an error ocurred while matching
 	 */
 	private boolean matchTarget(HttpServletRequest request, Pattern pTargetPattern)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "matchTarget()";
 		boolean bReturn = false;

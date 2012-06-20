@@ -79,7 +79,7 @@ public class HtmlInfo extends HttpServlet
 	// RH, 20100621, Remove cyclic dependency system<->server
 //	public void doGet(HttpServletRequest request, HttpServletResponse response, ASelectSystemLogger systemLogger)
 	public void doGet(HttpServletRequest request, HttpServletResponse response, ISystemLogger systemLogger)
-		throws ServletException, IOException
+	throws ServletException, IOException
 	{
 		String sMethod = "handleHtmlInfo";
 		int idx;

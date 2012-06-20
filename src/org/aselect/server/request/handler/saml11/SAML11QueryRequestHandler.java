@@ -57,7 +57,7 @@ import org.opensaml.SAMLSubject;
 import org.opensaml.SAMLSubjectQuery;
 import org.opensaml.SAMLSubjectStatement;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * SAML 1.1 Artifact request handler. <br>
  * <br>
@@ -125,7 +125,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -289,7 +289,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		SAMLRequest oSAMLRequest = null;
@@ -447,7 +447,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
 	private SAMLSubjectStatement handleAuthenticationQuery(HashMap htSAMLSession,
 			SAMLAuthenticationQuery oSAMLAuthenticationQuery, String sNameIdentifier, long lExpireTime, String sIP,
 			String sHost)
-		throws SAMLException
+	throws SAMLException
 	{
 		String sMethod = "handleAuthenticationQuery()";
 		String sAuthSPID = null;
@@ -542,7 +542,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
 	 */
 	private SAMLSubjectStatement handleAttributeQuery(HashMap htSAMLSession, SAMLAttributeQuery oSAMLAttributeQuery,
 			String sNameIdentifier)
-		throws SAMLException
+	throws SAMLException
 	{
 		String sMethod = "handleAttributeQuery()";
 		SAMLAttributeStatement oSAMLAttributeStatement = null;
@@ -659,7 +659,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
 	 */
 	private SAMLSubjectStatement handleAuthorizationDecisionQuery(HashMap htSAMLSession,
 			SAMLAuthorizationDecisionQuery oSAMLAuthorizationDecisionQuery, String sNameIdentifier)
-		throws SAMLException
+	throws SAMLException
 	{
 		String sMethod = "handleAuthorizationDecisionQuery()";
 		SAMLAuthorizationDecisionStatement oSAMLAuthorizationDecisionStatement = null;
@@ -740,7 +740,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
 	 */
 	private SAMLResponse generateSAMLResponse(String sInResponseTo, String sShire,
 			SAMLSubjectStatement oSAMLSubjectStatement)
-		throws SAMLException
+	throws SAMLException
 	{
 		String sMethod = "generateSAMLResponse()";
 		SAMLResponse oSAMLResponse = null;
@@ -790,7 +790,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
 	 *             if no SAML response could be sent
 	 */
 	private void respondError(HttpServletResponse response, SAMLRequest oSAMLRequest, SAMLException oSAMLException)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "respondError()";
 		String sResponseId = null;
@@ -836,7 +836,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
 	 *             if creation fails
 	 */
 	private SAMLAttribute createSAMLAttribute(String sName, Object oValue)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "generateSAMLAttribute()";
 		SAMLAttribute oSAMLAttribute = new SAMLAttribute();

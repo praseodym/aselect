@@ -130,7 +130,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	 */
 	abstract protected void handleSpecificSaml20Request(HttpServletRequest httpRequest,
 			HttpServletResponse httpResponse, SignableSAMLObject samlMessage, String sRelayState)
-		throws ASelectException;
+	throws ASelectException;
 
 	/**
 	 * Initializes the request handler by reading the following configuration: <br/>
@@ -167,7 +167,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 
@@ -429,7 +429,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	@SuppressWarnings("unchecked")
 	protected Response errorResponse(String sInResponseTo, String sDestination, String sSecLevelstatusCode,
 			String sStatusMessage)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "errorResponse()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
@@ -499,7 +499,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	protected void logoutNextSessionSP(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
 			LogoutRequest logoutRequest, String initiatingSP, String initiatingID, boolean tryRedirectLogoutFirst,
 			int redirectLogoutTimeout, HashMap<String, Serializable> htTGTContext, Issuer responseIssuer)
-		throws ASelectException, ASelectStorageException
+	throws ASelectException, ASelectStorageException
 	{
 		String sMethod = "logoutNextSessionSP";
 		String sRelayState = null;

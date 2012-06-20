@@ -153,7 +153,7 @@ public class JNDIConnector implements IUDBConnector
 	 * @see org.aselect.server.udb.IUDBConnector#init(java.lang.Object)
 	 */
 	public void init(Object oConfigSection)
-		throws ASelectUDBException
+	throws ASelectUDBException
 	{
 		String sMethod = "init()";
 		_htConfiguredAuthSPs = new HashMap();
@@ -433,7 +433,7 @@ public class JNDIConnector implements IUDBConnector
 	 * @see org.aselect.server.udb.IUDBConnector#getUserAttributes(java.lang.String, java.lang.String)
 	 */
 	public String getUserAttributes(String sUserId, String sAuthSPId)
-		throws ASelectUDBException
+	throws ASelectUDBException
 	{
 		String sMethod = "getUserAttributes()";
 
@@ -557,7 +557,7 @@ public class JNDIConnector implements IUDBConnector
 	 * @see org.aselect.server.udb.IUDBConnector#isUserEnabled(java.lang.String)
 	 */
 	public boolean isUserEnabled(String sUserId)
-		throws ASelectUDBException
+	throws ASelectUDBException
 	{
 		String sMethod = "isUserEnabled";
 
@@ -713,7 +713,7 @@ public class JNDIConnector implements IUDBConnector
 	 *             if a mandatory config item doesn't exist or is invalid
 	 */
 	private void readConfig(Object oConfigSection)
-		throws ASelectUDBException
+	throws ASelectUDBException
 	{
 		String sMethod = "readConfig()";
 		_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "JNDIConf oConfigSection=" + oConfigSection);
@@ -795,7 +795,7 @@ public class JNDIConnector implements IUDBConnector
 	 *             if no valid resource could be found
 	 */
 	private DirContext getConnection()
-		throws ASelectUDBException, ASelectSAMException
+	throws ASelectUDBException, ASelectSAMException
 	{
 		String sMethod = "getConnection()";
 

@@ -445,7 +445,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
 	 */
 	public void processBrowserRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sRequest;
 		String sRid;
@@ -713,7 +713,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void handleLogin1(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleLogin1()";
 		String sRid = null;
@@ -891,7 +891,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void handleLogin2(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sRid = null;
 		String sUid = null;
@@ -1039,7 +1039,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void handleLogin3(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 
 		String sRid = null;
@@ -1134,7 +1134,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void handleCrossLogin(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sRemoteOrg = null;
 		String sUid = null;
@@ -1424,7 +1424,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *             TODO add support for cross and force_authenticate (martijn)
 	 */
 	private void handleIPLogin1(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleIPLogin1()";
 		String sRid = null;
@@ -1601,7 +1601,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void handleLogout(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleLogout()";
 		String sLoggedOutForm = _configManager.getForm("loggedout");
@@ -1700,7 +1700,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void handleCreateTGT(HashMap htServiceRequest, HttpServletResponse servletResponse)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleCreateTGTRequest()";
 		AuthenticationLogger authenticationLogger = ASelectAuthenticationLogger.getHandle();
@@ -1823,7 +1823,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void getAuthsps(String sRid, String sUid)
-		throws ASelectException
+	throws ASelectException
 	{
 		Integer intRequiredLevel = null;
 		Integer intMaxLevel = null;
@@ -1912,7 +1912,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private String startAuthentication(String sRid, HashMap htLoginRequest)
-		throws ASelectException
+	throws ASelectException
 	{
 		HashMap htAllowedAuthsps;
 		String sAuthsp = null;
@@ -2039,7 +2039,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void showUserInfo(HashMap htServiceRequest, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "showUserInfo()";
 		PrintWriter pwOut = null;

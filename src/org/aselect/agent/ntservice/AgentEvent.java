@@ -31,7 +31,7 @@
 
 package org.aselect.agent.ntservice;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Implements the class with event codes for use with the ASelect Agent Service for use in Windows environments. <br>
  * <br>

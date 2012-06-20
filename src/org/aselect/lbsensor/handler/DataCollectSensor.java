@@ -141,7 +141,7 @@ public class DataCollectSensor extends BasicSensorHandler
 	 */
 	@Override
 	protected void echoCharToStream(BufferedWriter oOutWriter, char c)
-		throws IOException
+	throws IOException
 	{
 		// No Action
 	}

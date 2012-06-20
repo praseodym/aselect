@@ -26,7 +26,7 @@
 
 package org.aselect.agent.authorization.parsing;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * An A-Select Authorization rule. <br>
  * <br>

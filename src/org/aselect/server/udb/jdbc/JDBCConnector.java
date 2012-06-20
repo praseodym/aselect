@@ -85,7 +85,7 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.exception.ASelectUDBException;
 import org.aselect.system.sam.agent.SAMResource;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * JDBC database connector. <br>
  * <br>
@@ -152,7 +152,7 @@ public class JDBCConnector implements IUDBConnector
 	 * @see org.aselect.server.udb.IUDBConnector#init(java.lang.Object)
 	 */
 	public void init(Object oConfigSection)
-		throws ASelectUDBException
+	throws ASelectUDBException
 	{
 		String sMethod = "init()";
 		_oASelectConfigManager = ASelectConfigManager.getHandle();
@@ -432,7 +432,7 @@ public class JDBCConnector implements IUDBConnector
 	 * @see org.aselect.server.udb.IUDBConnector#getUserAttributes(java.lang.String, java.lang.String)
 	 */
 	public String getUserAttributes(String sUserId, String sAuthSPId)
-		throws ASelectUDBException
+	throws ASelectUDBException
 	{
 		String sMethod = "getUserAttributes()";
 
@@ -536,7 +536,7 @@ public class JDBCConnector implements IUDBConnector
 	 * @see org.aselect.server.udb.IUDBConnector#isUserEnabled(java.lang.String)
 	 */
 	public boolean isUserEnabled(String sUserId)
-		throws ASelectUDBException
+	throws ASelectUDBException
 	{
 		String sMethod = "isUserEnabled()";
 		boolean bEnabled = false;
@@ -637,7 +637,7 @@ public class JDBCConnector implements IUDBConnector
 	 *             if no valid resource could be found
 	 */
 	private Connection getConnection()
-		throws ASelectUDBException, ASelectSAMException
+	throws ASelectUDBException, ASelectSAMException
 	{
 		String sMethod = "getConnection()";
 

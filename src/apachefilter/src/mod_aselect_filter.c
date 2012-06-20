@@ -1005,6 +1005,7 @@ static int aselect_filter_handler(request_rec *pRequest)
 					    // else: no aselectattributes cookie needed
 
 					    ap_send_http_header(pRequest);
+					    TRACE1("Redirect to ", pcASelectServerURL);
 					    ap_rprintf(pRequest, ASELECT_FILTER_CLIENT_REDIRECT, pcASelectServerURL, pcASelectServerURL);
 					    iRet = DONE;
                                         }

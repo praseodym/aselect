@@ -17,7 +17,7 @@ import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMAgent;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * @author root
  */
@@ -44,7 +44,7 @@ public class ClosingConnectionHandler extends AbstractConnectionHandler
 	 */
 	@Override
 	public Connection getConnection()
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		// TODO Auto-generated method stub
 		super.getConnection();

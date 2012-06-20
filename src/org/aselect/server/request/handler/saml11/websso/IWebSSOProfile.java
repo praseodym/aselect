@@ -21,7 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Interface for SAML 1.1 websso profile reponse handlers. <br>
  * <br>
@@ -64,7 +64,7 @@ public interface IWebSSOProfile
 	 */
 	public void init(Object oConfig, long lAssertionExpireTime, String sAttributeNamespace,
 			boolean bSendAttributeStatement)
-		throws ASelectException;
+	throws ASelectException;
 
 	/**
 	 * processes a request and sends a websso response. <br>
@@ -93,7 +93,7 @@ public interface IWebSSOProfile
 	 *             if processing fails
 	 */
 	public void process(HashMap htInfo, HttpServletResponse response, String sIP, String sHost)
-		throws ASelectException;
+	throws ASelectException;
 
 	/**
 	 * Removes class variables from memory. <br>

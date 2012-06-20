@@ -41,7 +41,7 @@ import java.util.HashMap;
 
 import org.aselect.system.exception.ASelectCommunicationException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Interface for simple A-Select API communication. <br>
  * <br>
@@ -83,7 +83,7 @@ public interface IClientCommunicator
 	 *             If communication fails.
 	 */
 	public HashMap sendMessage(HashMap htParameters, String sTarget)
-		throws ASelectCommunicationException;
+	throws ASelectCommunicationException;
 
 	// Bauke: Added
 	/**
@@ -98,5 +98,5 @@ public interface IClientCommunicator
 	 *             the a select communication exception
 	 */
 	public String sendStringMessage(String sParameters, String sTarget)
-		throws ASelectCommunicationException;
+	throws ASelectCommunicationException;
 }

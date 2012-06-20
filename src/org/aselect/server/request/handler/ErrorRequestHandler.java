@@ -52,7 +52,7 @@ public class ErrorRequestHandler extends AbstractRequestHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {

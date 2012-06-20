@@ -30,7 +30,7 @@ package org.aselect.system.communication.server;
 
 import org.aselect.system.exception.ASelectCommunicationException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Defines a interface to a input message which can be used with A-Select. <br>
  * <br>
@@ -72,7 +72,7 @@ public interface IInputMessage
 	 *             If parameter retrieving fails.
 	 */
 	public String getParam(String sName)
-		throws ASelectCommunicationException;
+	throws ASelectCommunicationException;
 
 	/**
 	 * RequestHandler.processVerifyCredentialsRequest Get array Parameter values from this message. <br>
@@ -96,5 +96,5 @@ public interface IInputMessage
 	 *             If parameter retrieving fails.
 	 */
 	public String[] getArray(String sName)
-		throws ASelectCommunicationException;
+	throws ASelectCommunicationException;
 }

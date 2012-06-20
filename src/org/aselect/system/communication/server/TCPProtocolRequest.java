@@ -127,7 +127,7 @@ public class TCPProtocolRequest implements IProtocolRequest
 	 *             If reading from the socket fails.
 	 */
 	public TCPProtocolRequest(Socket oRequestSocket, SystemLogger oSystemLogger)
-		throws IOException {
+	throws IOException {
 		_htHeaders = new HashMap();
 		_htProperties = new HashMap();
 		_sbInputBuffer = new StringBuffer();
@@ -199,7 +199,7 @@ public class TCPProtocolRequest implements IProtocolRequest
 	 * @see java.io.ByteArrayInputStream
 	 */
 	public InputStream getInputStream()
-		throws IOException
+	throws IOException
 	{
 		return new ByteArrayInputStream(_sbInputBuffer.toString().getBytes());
 	}
@@ -240,7 +240,7 @@ public class TCPProtocolRequest implements IProtocolRequest
 	 *             If reading from the socket fails.
 	 */
 	private void readRequest(Socket oSocket)
-		throws IOException
+	throws IOException
 	{
 		final String sMethod = "TCPProtocolRequest.readRequest()::";
 		String sRequestLine = null;

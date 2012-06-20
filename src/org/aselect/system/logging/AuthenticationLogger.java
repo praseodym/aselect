@@ -220,7 +220,7 @@ public class AuthenticationLogger
 	 */
 	public void init(String sComponent, String sLogFileNamePrefix, String sLoggerNamespace,
 			ConfigManager oConfigManager, Object oLogTargetConfig, SystemLogger oSystemLogger, String sWorkingDir)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 
@@ -284,7 +284,7 @@ public class AuthenticationLogger
 	 */
 	public void init(String sComponent, ConfigManager oConfigManager, Object oLogTargetConfig,
 			SystemLogger oSystemLogger)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 
@@ -538,7 +538,7 @@ public class AuthenticationLogger
 	 *             If the the supplied object array could not be logged to the database. (connection lost)
 	 */
 	private void logToDB(Object[] oLogFields)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "logToDB";
 		PreparedStatement oStatement = null;
@@ -632,7 +632,7 @@ public class AuthenticationLogger
 	 *             If connection fails.
 	 */
 	private synchronized void connect()
-		throws Exception
+	throws Exception
 	{
 		try {
 			_conn.close();
@@ -760,7 +760,7 @@ public class AuthenticationLogger
 	 *             if incorrect configuration is found
 	 */
 	private void readConfig(ConfigManager oConfigManager, Object oLogTargetConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "readConfig()";
 
@@ -861,7 +861,7 @@ public class AuthenticationLogger
 	 *             if a column type or name could not be resolved
 	 */
 	private Vector retrieveColumnTypes()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "retrieveColumnTypes()";
 		Statement oStatement = null;
@@ -936,7 +936,7 @@ public class AuthenticationLogger
 	 *             if the query could not be created
 	 */
 	private StringBuffer createStatementQuery()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "createStatementQuery()";
 

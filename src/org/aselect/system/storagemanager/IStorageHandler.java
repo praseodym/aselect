@@ -100,7 +100,7 @@ public interface IStorageHandler
 	 *             If initialisation fails.
 	 */
 	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger systemLogger, SAMAgent oSAMAgent)
-		throws ASelectStorageException;
+	throws ASelectStorageException;
 
 	/**
 	 * Get a object from storage. <br>
@@ -124,7 +124,7 @@ public interface IStorageHandler
 	 *             If retrieving fails.
 	 */
 	public Object get(Object oKey)
-		throws ASelectStorageException;
+	throws ASelectStorageException;
 
 	/**
 	 * Retrieve an object its timestamp from storage. <br>
@@ -149,7 +149,7 @@ public interface IStorageHandler
 	 * @see IStorageHandler#getTimestamp(Object)
 	 */
 	public long getTimestamp(Object oKey)
-		throws ASelectStorageException;
+	throws ASelectStorageException;
 
 	/**
 	 * Return stored objects. <br>
@@ -171,7 +171,7 @@ public interface IStorageHandler
 	 *             If retrieving fails.
 	 */
 	public HashMap getAll()
-		throws ASelectStorageException;
+	throws ASelectStorageException;
 
 	/**
 	 * Return stored object count. <br>
@@ -193,7 +193,7 @@ public interface IStorageHandler
 	 *             If retrieving fails.
 	 */
 	public long getCount()
-		throws ASelectStorageException;
+	throws ASelectStorageException;
 
 	/**
 	 * insert object into storage. <br>
@@ -225,7 +225,7 @@ public interface IStorageHandler
 	 * @deprecated use {@link #put(Object oKey, Object oValue, Long lTimestamp, UpdateMode eMode)}
 	 */
 	public void put(Object oKey, Object oValue, Long lTimestamp)
-		throws ASelectStorageException;
+	throws ASelectStorageException;
 
 	
 	/**
@@ -259,7 +259,7 @@ public interface IStorageHandler
 	 *             If storing fails.
 	 */
 	public void put(Object oKey, Object oValue, Long lTimestamp, UpdateMode eMode)
-		throws ASelectStorageException;
+	throws ASelectStorageException;
 
 	
 	/**
@@ -283,7 +283,7 @@ public interface IStorageHandler
 	 *             If removal fails.
 	 */
 	public void remove(Object oKey)
-		throws ASelectStorageException;
+	throws ASelectStorageException;
 
 	/**
 	 * Removes all objects from storage. <br>
@@ -304,7 +304,7 @@ public interface IStorageHandler
 	 *             if removal fails.
 	 */
 	public void removeAll()
-		throws ASelectStorageException;
+	throws ASelectStorageException;
 
 	/**
 	 * Removes expired objects from the storage. <br>
@@ -327,7 +327,7 @@ public interface IStorageHandler
 	 *             If cleaning fails.
 	 */
 	public void cleanup(Long lTimestamp)
-		throws ASelectStorageException;
+	throws ASelectStorageException;
 
 	/**
 	 * Clean up all used recourses.
@@ -345,7 +345,7 @@ public interface IStorageHandler
 	 *             if io error occurred with physical storage
 	 */
 	public boolean isMaximum(long lItemCount)
-		throws ASelectStorageException;
+	throws ASelectStorageException;
 
 	/**
 	 * Checks if the the supplied key object exists in the physical storage. <br>
@@ -358,5 +358,5 @@ public interface IStorageHandler
 	 *             if IO error occurred with physical storage
 	 */
 	public boolean containsKey(Object oKey)
-		throws ASelectStorageException;
+	throws ASelectStorageException;
 }

@@ -156,7 +156,7 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
 	 *      java.util.Vector)
 	 */
 	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes)
-		throws ASelectAttributesException
+	throws ASelectAttributesException
 	{
 		String sMethod = "getAttributes()";
 		HashMap htAttributes = new HashMap();

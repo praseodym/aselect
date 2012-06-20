@@ -47,7 +47,7 @@ package org.aselect.agent.authorization.parsing;
 import java.util.Vector;
 import java.io.IOException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Scanner for evaluation rules. <br>
  * <br>
@@ -241,7 +241,7 @@ public class AuthorizationRuleScanner
 	 *             Signals that an I/O exception has occurred.
 	 */
 	private int yy_advance()
-		throws java.io.IOException
+	throws java.io.IOException
 	{
 		int next_read;
 		int i;
@@ -525,7 +525,7 @@ public class AuthorizationRuleScanner
 	 *             Signals that an I/O exception has occurred.
 	 */
 	public AuthorizationRuleToken scan()
-		throws java.io.IOException
+	throws java.io.IOException
 	{
 		int yy_lookahead;
 		int yy_anchor = YY_NO_ANCHOR;

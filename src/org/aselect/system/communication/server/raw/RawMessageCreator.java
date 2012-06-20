@@ -188,7 +188,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	 *      org.aselect.system.communication.server.IProtocolResponse)
 	 */
 	public boolean init(IProtocolRequest oRequest, IProtocolResponse oResponse)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		_oRequest = oRequest;
 		_oResponse = oResponse;
@@ -235,7 +235,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	 * @see org.aselect.system.communication.server.IInputMessage#getParam(java.lang.String)
 	 */
 	public String getParam(String sName)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "getParam()";
 		StringBuffer sbBuffer = null;
@@ -271,7 +271,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	 * @see org.aselect.system.communication.server.IInputMessage#getArray(java.lang.String)
 	 */
 	public String[] getArray(String sName)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "getArray()";
 		StringBuffer sbBuffer = null;
@@ -312,7 +312,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	 * @see org.aselect.system.communication.server.IOutputMessage#setParam(java.lang.String, java.lang.String)
 	 */
 	public boolean setParam(String sName, String sValue)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		return setParam(sName, sValue, isDoUrlEncode());  // 20110112: Formerly: true);
 	}
@@ -332,7 +332,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	 * @see org.aselect.system.communication.server.IOutputMessage#setParam(java.lang.String, java.lang.String)
 	 */
 	public boolean setParam(String sName, String sValue, boolean doUrlEncode)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "setParam";
 		StringBuffer sbBuffer = null;
@@ -393,7 +393,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	 * @see org.aselect.system.communication.server.IOutputMessage#setParam(java.lang.String, java.lang.String[])
 	 */
 	public boolean setParam(String sName, String[] saValue)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "setParam()";
 		StringBuffer sbBuffer = null;
@@ -458,7 +458,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	 *             if decoding of value fails or internal error occurs.
 	 */
 	public HashMap convertCGIMessage(String sMessage)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "convertCGIMessage()";
 		HashMap htResponse = new HashMap();
@@ -536,7 +536,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	 * @see org.aselect.system.communication.server.IOutputMessage#send()
 	 */
 	public boolean send()
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "send()";
 		boolean bRetVal = false;
@@ -579,7 +579,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	 *             If communication fails.
 	 */
 	private boolean sendMessage(String sMsg)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "sendMessage()";
 		boolean bRetVal = false;
@@ -624,7 +624,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	 *             If encoding of value fails.
 	 */
 	private StringBuffer convertArray(String sName, String[] saValues)
-		throws UnsupportedEncodingException
+	throws UnsupportedEncodingException
 	{
 		StringBuffer sbBuffer = new StringBuffer();
 		for (int i = 0; i < saValues.length; i++) {

@@ -81,7 +81,7 @@ public class ServletResponseWrapper implements IProtocolResponse
 	 * @see org.aselect.system.communication.server.IProtocolResponse#getOutputStream()
 	 */
 	public OutputStream getOutputStream()
-		throws IOException
+	throws IOException
 	{
 		return _oResponse.getOutputStream();
 	}

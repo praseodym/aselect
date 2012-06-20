@@ -58,7 +58,6 @@ import org.aselect.agent.session.SessionManager;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectStorageException;
 
-// TODO: Auto-generated Javadoc
 /**
  * Monitors the pending authentication sessions of the A-Select Agent. <br>
  * <br>
@@ -110,7 +109,7 @@ public class SessionMonitorModel extends AbstractTableModel implements Runnable
 	 *             on error.
 	 */
 	public SessionMonitorModel(int iCheckInterval)
-		throws ASelectConfigException {
+	throws ASelectConfigException {
 		_sessionManager = SessionManager.getHandle();
 		_configManager = ASelectAgentConfigManager.getHandle();
 		_active = false;

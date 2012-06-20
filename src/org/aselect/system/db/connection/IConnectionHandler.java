@@ -10,7 +10,7 @@ import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMAgent;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * @author RH
  */
@@ -39,7 +39,7 @@ public interface IConnectionHandler
 	 *             the a select storage exception
 	 */
 	Connection getConnection()
-		throws ASelectStorageException;
+	throws ASelectStorageException;
 
 	/**
 	 * Release connection.

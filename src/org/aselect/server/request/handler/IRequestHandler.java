@@ -62,7 +62,7 @@ public interface IRequestHandler
 	 *             if initalization fails
 	 */
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException;
+	throws ASelectException;
 
 	/**
 	 * Processes the request. <br>
@@ -89,7 +89,7 @@ public interface IRequestHandler
 	 *             if the request couldn't be processed
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException;
+	throws ASelectException;
 
 	/**
 	 * Returns the RequestHandler unique ID. <br>

@@ -81,7 +81,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * This class handles authentication responses and API calls originating from an authsp. It must be used as follows: <br>
  * For each new incoming request, create a new <code>AuthSPRequestHandler</code> object and call its
@@ -119,7 +119,7 @@ public class AuthSPAPIHandler extends AbstractAPIRequestHandler
 	 */
 	public AuthSPAPIHandler(RequestParser reqParser, HttpServletRequest servletRequest,
 			HttpServletResponse servletResponse, String sMyServerId, String sMyOrg)
-		throws ASelectCommunicationException {
+	throws ASelectCommunicationException {
 		super(reqParser, servletRequest, servletResponse, sMyServerId, sMyOrg);
 		_sModule = "AuthSPAPIHandler";
 		_sessionManager = SessionManager.getHandle();
@@ -144,7 +144,7 @@ public class AuthSPAPIHandler extends AbstractAPIRequestHandler
 	@Override
 	public void processAPIRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
 			IOutputMessage oOutputMessage)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "processAPIRequest()";
 
@@ -178,7 +178,7 @@ public class AuthSPAPIHandler extends AbstractAPIRequestHandler
 	 *             If proccessing fails.
 	 */
 	private void handleKillSessionRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sSessionId = null;
 		String sSignature = null;

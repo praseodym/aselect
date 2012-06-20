@@ -75,7 +75,7 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.exception.ASelectUDBException;
 import org.aselect.system.sam.agent.SAMResource;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * FlatFile database connector. <br>
  * <br>
@@ -123,7 +123,7 @@ public class FlatFileConnector implements IUDBConnector
 	 * @see org.aselect.server.udb.IUDBConnector#init(java.lang.Object)
 	 */
 	public void init(Object oConfigSection)
-		throws ASelectUDBException
+	throws ASelectUDBException
 	{
 		String sFlatFile = null;
 		String sUDBResourceGroup = null;

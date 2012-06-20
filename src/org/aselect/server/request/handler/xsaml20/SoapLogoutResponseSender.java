@@ -50,7 +50,7 @@ public class SoapLogoutResponseSender
 	 */
 	public void sendSoapLogoutResponse(String serviceProvider, String issuerUrl, String user, String statusCodeValue,
 			String inResponseTo)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "sendSoapLogoutResponse";
 		LogoutResponse logoutResponse = SamlTools.buildLogoutResponse(issuerUrl, statusCodeValue, inResponseTo);

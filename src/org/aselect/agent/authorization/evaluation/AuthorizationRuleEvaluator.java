@@ -61,7 +61,6 @@ import org.aselect.system.exception.ASelectAuthorizationException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
 /**
  * Evaluator for authorization rules. <br>
  * <br>
@@ -124,7 +123,7 @@ public class AuthorizationRuleEvaluator
 	 *             If evaluating fails.
 	 */
 	public boolean evaluate(HashMap htAttributes, EvaluationTree tEvaluation)
-		throws ASelectAuthorizationException
+	throws ASelectAuthorizationException
 	{
 		final String sMethod = "evaluate()";
 		boolean bAuthorized = false;
@@ -288,7 +287,7 @@ public class AuthorizationRuleEvaluator
 	 */
 	private boolean evaluateSimpleMultiValuedAttribute(AuthorizationRuleToken oToken,
 			AuthorizationRuleToken oExpectedValue, Vector vValue)
-		throws ASelectAuthorizationException
+	throws ASelectAuthorizationException
 	{
 		final String sMethod = "evaluateSimpleMultiValuedAttribute()";
 		boolean bAuthorized = false;
@@ -408,7 +407,7 @@ public class AuthorizationRuleEvaluator
 	 *             If evaluating fails.
 	 */
 	private boolean evaluateLogic(HashMap htAttributes, EvaluationTree tEvaluation)
-		throws ASelectAuthorizationException
+	throws ASelectAuthorizationException
 	{
 		final String sMethod = "evaluateLogic()";
 		boolean bAuthorized = false;
@@ -449,7 +448,7 @@ public class AuthorizationRuleEvaluator
 	 *             If the value can not be converted to the same type as the expected value.
 	 */
 	private Comparable convertAttributeValue(Comparable cExpected, String sValue)
-		throws ASelectAuthorizationException
+	throws ASelectAuthorizationException
 	{
 		final String sMethod = "convertAttributeValue()";
 		StringBuffer sb = null;

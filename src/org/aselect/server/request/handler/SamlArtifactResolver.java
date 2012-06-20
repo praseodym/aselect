@@ -57,7 +57,7 @@ public abstract class SamlArtifactResolver extends ProtoRequestHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -79,7 +79,7 @@ public abstract class SamlArtifactResolver extends ProtoRequestHandler
 	 * @see org.aselect.server.request.handler.IRequestHandler#process(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		SAMLRequest oSAMLRequest = null;
@@ -199,7 +199,7 @@ public abstract class SamlArtifactResolver extends ProtoRequestHandler
 	 *             the a select exception
 	 */
 	private void respondError(HttpServletResponse response, SAMLRequest oSAMLRequest, SAMLException oSAMLException)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "respondError()";
 		String sResponseId = null;

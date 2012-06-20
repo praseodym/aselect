@@ -52,7 +52,7 @@ public class SamlHistoryManager extends StorageManager
 	 *             the a select exception
 	 */
 	public static SamlHistoryManager getHandle()
-		throws ASelectException
+	throws ASelectException
 	{
 		if (_oSamlHistoryManager == null) {
 			_oSamlHistoryManager = new SamlHistoryManager();
@@ -68,7 +68,7 @@ public class SamlHistoryManager extends StorageManager
 	 *             the a select exception
 	 */
 	public void init()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		ASelectConfigManager oASelectConfigManager = null;

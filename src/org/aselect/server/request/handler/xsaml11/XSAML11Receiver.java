@@ -24,7 +24,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
+
 //
 // SAML 1.1 Browser Artifact profile
 // The Artifact Receiver (or Assertion Consumer) - Destination Site
@@ -57,7 +57,7 @@ public class XSAML11Receiver extends SamlAssertionConsumer
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		super.init(oServletConfig, oConfig);

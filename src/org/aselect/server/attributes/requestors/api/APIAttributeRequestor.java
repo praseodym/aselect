@@ -141,7 +141,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#init(java.lang.Object)
 	 */
 	public void init(Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -339,7 +339,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(HashMap, Vector)
 	 */
 	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes)
-		throws ASelectAttributesException
+	throws ASelectAttributesException
 	{
 		final String sMethod = "getAttributes()";
 		String sStatusKeyValue = null;
@@ -485,7 +485,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 	 *             If retrieving fails.
 	 */
 	private String getConnection()
-		throws ASelectSAMException
+	throws ASelectSAMException
 	{
 		String sMethod = "getConnection()";
 		SAMResource oSAMResource = null;
@@ -521,7 +521,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 	 *             if retrieving fails.
 	 */
 	private void retrieveSOAPMethodFromConfig(Object oMainConfiguration)
-		throws ASelectAttributesException
+	throws ASelectAttributesException
 	{
 		String sMethod = "retrieveSOAPMethodFromConfig()";
 		try {

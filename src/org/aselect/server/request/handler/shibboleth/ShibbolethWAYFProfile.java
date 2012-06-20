@@ -39,7 +39,7 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Where are you from request handler. <br>
  * <br>
@@ -102,7 +102,7 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -276,7 +276,7 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		try {
@@ -406,7 +406,7 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 	 */
 	private void handleShowForm(String sSelectedIdP, String sAction, String sTarget, String sShire, String sProviderId,
 			HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleSubmit()";
 		PrintWriter pwOut = null;
@@ -482,7 +482,7 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 	 */
 	private void handleSubmit(String sIdP, String sTarget, String sShire, String sProviderId,
 			HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleSubmit()";
 		try {
@@ -524,7 +524,7 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 	 *             if the file couldn't be read
 	 */
 	protected String readTemplate(File fTemplate)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "readTemplate()";
 		BufferedReader brIn = null;

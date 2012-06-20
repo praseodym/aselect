@@ -38,7 +38,7 @@ public class Saml20_RedirectDecoder extends HTTPRedirectDeflateDecoder
 	 */
 	@Override
 	protected boolean compareEndpointURIs(String messageDestination, String receiverEndpoint)
-		throws MessageDecodingException
+	throws MessageDecodingException
 	{
 		_systemLogger = ASelectSystemLogger.getHandle();
 		_systemLogger.log(Level.INFO, MODULE, "compareEndpointURIs", "Dest=" + messageDestination + " Recv="

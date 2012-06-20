@@ -62,7 +62,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 
@@ -204,7 +204,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 	 */
 	private void showLogoutInfo(HttpServletRequest httpRequest, HttpServletResponse httpResponse, PrintWriter pwOut,
 			String sInitiatingSP, String sRedirectUrl, HashMap htTGTContext, String sRelayState)
-		throws ASelectException
+	throws ASelectException
 	{
 		final String sMethod = "showLogoutInfo";
 
@@ -259,7 +259,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 	 *             the a select exception
 	 */
 	private Response validateLogoutRequest(LogoutRequest logoutRequest, HttpServletRequest httpRequest)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "validateLogoutRequest()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");

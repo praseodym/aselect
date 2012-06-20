@@ -27,7 +27,7 @@ import org.aselect.system.storagemanager.StorageManager;
 import org.opensaml.SAMLAssertion;
 import org.opensaml.artifact.Artifact;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Session manager for temporary Assertion storage. <br>
  * <br>
@@ -67,7 +67,7 @@ public class AssertionSessionManager extends StorageManager
 	 *             if initalization fails
 	 */
 	public void init(Object oConfig)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "init()";
 		try {
@@ -136,7 +136,7 @@ public class AssertionSessionManager extends StorageManager
 	 *             if storing failed
 	 */
 	public void putAssertion(Artifact oArtifact, SAMLAssertion oSAMLAssertion)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "putAssertion()";
 		try {

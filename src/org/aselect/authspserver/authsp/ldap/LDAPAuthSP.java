@@ -219,7 +219,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	 * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
 	 */
 	public void init(ServletConfig oConfig)
-		throws ServletException
+	throws ServletException
 	{
 		String sMethod = "init()";
 		StringBuffer sbTemp = null;
@@ -367,7 +367,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	protected void doGet(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
-		throws java.io.IOException
+	throws java.io.IOException
 	{
 		String sMethod = "doGet()";
 		PrintWriter pwOut = null;
@@ -491,7 +491,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
-		throws java.io.IOException
+	throws java.io.IOException
 	{
 		String sMethod = "doPost()";
 		PrintWriter pwOut = null;

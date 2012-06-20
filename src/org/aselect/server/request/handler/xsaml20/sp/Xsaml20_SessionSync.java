@@ -51,7 +51,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 
@@ -123,7 +123,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	 *             If processing of request fails.synchronizeSession
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String errorCode = Errors.ERROR_ASELECT_SUCCESS;
 		String _sMethod = "process";

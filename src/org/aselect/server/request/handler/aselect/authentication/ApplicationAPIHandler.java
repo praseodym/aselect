@@ -381,7 +381,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 */
 	private void handleAuthenticateRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
 			IOutputMessage oOutputMessage)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleAuthenticateRequest";
 
@@ -450,7 +450,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 * @deprecated Not used anymore since A-Select 1.4.1
 	 */
 	private void handleGetAppLevelRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleGetAppLevelRequest()";
 		String sAppId = null;
@@ -502,7 +502,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 *             If proccessing fails.
 	 */
 	private void handleKillTGTRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleKillTGTRequest";
 		String sEncTGT = null;
@@ -575,7 +575,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 *             the a select exception
 	 */
 	private void handleUpgradeTGTRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleUpgradeTGTRequest";
 		String sEncTGT = null;
@@ -715,7 +715,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 */
 	// Bauke 20081201: added support for parameter "saml_attributes"
 	private void handleVerifyCredentialsRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleVerifyCredentialsRequest()";
 		HashMap htTGTContext = null;
@@ -977,7 +977,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 *             If signature is invalid.
 	 */
 	private void verifyApplicationSignature(IInputMessage oInputMessage, String sData, String sAppId)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "verifyApplicationSignature";
 		String sSignature = null;

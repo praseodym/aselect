@@ -65,7 +65,7 @@ import org.aselect.server.tgt.TGTManager;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectStorageException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Main TGTMonitorModel Class. <br>
  * <br>

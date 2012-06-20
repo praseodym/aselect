@@ -32,7 +32,7 @@ import org.aselect.system.sam.agent.SAMResource;
 
 import java.sql.ResultSetMetaData;
 
-// TODO: Auto-generated Javadoc
+
 //import com.mysql.jdbc.ResultSetMetaData;
 
 public class JDBCAttributeRequestor extends GenericAttributeRequestor
@@ -50,7 +50,7 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#init(java.lang.Object)
 	 */
 	public void init(Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		// _htReMapAttributes = new HashMap();
@@ -159,7 +159,7 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(java.util.HashMap, java.util.Vector)
 	 */
 	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes)
-		throws ASelectAttributesException
+	throws ASelectAttributesException
 	{
 		String sMethod = "getAttributes()";
 		HashMap htAttributes = new HashMap();
@@ -292,7 +292,7 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 	 *             the a select sam exception
 	 */
 	private Connection getConnection()
-		throws ASelectSAMException
+	throws ASelectSAMException
 	{
 		String sMethod = "getConnection()";
 

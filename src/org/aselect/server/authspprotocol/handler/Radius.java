@@ -199,7 +199,7 @@ public class Radius implements IAuthSPProtocolHandler
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#init(java.lang.Object, java.lang.Object)
 	 */
 	public void init(Object authSPConfig, Object authSPResource)
-		throws ASelectAuthSPException
+	throws ASelectAuthSPException
 	{
 		String sMethod = "init()";
 		Object oASelectConfig = null;

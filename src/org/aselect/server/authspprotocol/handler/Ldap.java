@@ -240,7 +240,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#init(java.lang.Object, java.lang.Object)
 	 */
 	public void init(Object oAuthSPConfig, Object oAuthSPResource)
-		throws ASelectAuthSPException
+	throws ASelectAuthSPException
 	{
 		final String sMethod = "init()";
 		_configManager = ASelectConfigManager.getHandle();
@@ -286,7 +286,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	 * @see org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler#init(java.lang.String)
 	 */
 	public void init(String sAuthSPId)
-		throws ASelectAuthSPException
+	throws ASelectAuthSPException
 	{
 		final String sMethod = "init()";
 		_configManager = ASelectConfigManager.getHandle();
@@ -633,7 +633,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	 *             the a select exception
 	 */
 	private void handleDirectLogin1(HashMap htServiceRequest, HashMap htSessionContext, PrintWriter pwOut, String sServerId)
-		throws ASelectException
+	throws ASelectException
 	{
 		// show direct login form
 		String sMethod = "handleDirectLogin1";

@@ -51,7 +51,7 @@ public class Saml20_ArtifactManager extends StorageManager
 	 *             the a select exception
 	 */
 	public static Saml20_ArtifactManager getTheArtifactManager()
-		throws ASelectException
+	throws ASelectException
 	{
 		if (artifactManager == null) {
 			artifactManager = new Saml20_ArtifactManager();
@@ -87,7 +87,7 @@ public class Saml20_ArtifactManager extends StorageManager
 	 */
 	public void sendArtifact(String sArtifact, SAMLObject samlObject, String sAppUrl,
 			HttpServletResponse oHttpServletResponse, String sRelayState, String addedPatching)
-		throws IOException, ASelectStorageException
+	throws IOException, ASelectStorageException
 	{
 		String sMethod = "sendArtifact";
 
@@ -130,7 +130,7 @@ public class Saml20_ArtifactManager extends StorageManager
 	 *             the a select storage exception
 	 */
 	private void putArtifactInStorage(Object key, XMLObject samlObject, String addedPatching)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "putArtifactInStorage";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "key=" + key);
@@ -183,7 +183,7 @@ public class Saml20_ArtifactManager extends StorageManager
 	 */
 	private void removeArtifactFromStorage(Object key)
 		// RH, 2008113, n
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "removeArtifactFromStorage";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "key=" + key);
@@ -218,7 +218,7 @@ public class Saml20_ArtifactManager extends StorageManager
 	 *             the SAX exception
 	 */
 	public XMLObject getArtifactFromStorage(Object key)
-		throws ASelectStorageException, ParserConfigurationException, SAXException, IOException
+	throws ASelectStorageException, ParserConfigurationException, SAXException, IOException
 	{
 		String sMethod = "getArtifactFromStorage";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "get key=" + key);
@@ -308,7 +308,7 @@ public class Saml20_ArtifactManager extends StorageManager
 	 *             If initialization fails.
 	 */
 	public void init()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		ASelectConfigManager oASelectConfigManager = null;

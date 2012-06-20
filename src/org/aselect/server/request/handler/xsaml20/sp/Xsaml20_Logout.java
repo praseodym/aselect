@@ -49,7 +49,7 @@ public class Xsaml20_Logout extends Saml20_BaseHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init";
 
@@ -72,7 +72,7 @@ public class Xsaml20_Logout extends Saml20_BaseHandler
 	 *             If processing logout request fails.
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process";
 
@@ -105,7 +105,7 @@ public class Xsaml20_Logout extends Saml20_BaseHandler
 	 *             - If proccessing fails.
 	 */
 	private void handleKillTGTRequest(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleKillTGTRequest";
 

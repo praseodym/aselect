@@ -72,7 +72,7 @@ public interface IConfigHandler
 	 *             If initialization fails.
 	 */
 	public void init(File fConfig)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Initializes the <code>ConfigHandler</code>. <br>
@@ -114,7 +114,7 @@ public interface IConfigHandler
 	 */
 	public void init(String sUser, String sPassword, String sDatabaseURL, String sDatabaseTable, String sDriverName,
 			String sConfigId)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Returns a sub-section from the configuration of the given root-section. <br>
@@ -144,7 +144,7 @@ public interface IConfigHandler
 	 *             If retrieving fails.
 	 */
 	public Object getSection(Object oRootSection, String sSectionType, String sSectionID)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Get the first section. <br>
@@ -170,7 +170,7 @@ public interface IConfigHandler
 	 *             If retrieving fails.
 	 */
 	public Object getSection(Object rootSection, String sectionType)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Get a sub-section. <br>
@@ -196,7 +196,7 @@ public interface IConfigHandler
 	 *             Is setting session fails.
 	 */
 	public Object setSection(Object oRootSection, String sSectionType)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Removes a specified configuration section. <br>
@@ -222,7 +222,7 @@ public interface IConfigHandler
 	 *             If removinf fails.
 	 */
 	public boolean removeSection(Object oRootSection, String sSectionType)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Removes a configuration section specified by section ID. <br>
@@ -250,7 +250,7 @@ public interface IConfigHandler
 	 *             If removing fails.
 	 */
 	public boolean removeSection(Object oRootSection, String sSectionType, String sSectionID)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Returns a <code>String</code> that contains the requested configuration parameter. <br>
@@ -277,7 +277,7 @@ public interface IConfigHandler
 	 *             If retrieving fails.
 	 */
 	public String getParam(Object oSection, String sConfigItem)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Adds a config parameter to the given section. <br>
@@ -309,7 +309,7 @@ public interface IConfigHandler
 	 *             If setting fails.
 	 */
 	public boolean setParam(Object oSection, String sConfigItem, String sConfigValue, boolean bMandatory)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Returns the next section. <br>
@@ -334,7 +334,7 @@ public interface IConfigHandler
 	 *             If retrieving fails
 	 */
 	public Object getNextSection(Object oSection)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Saves the configuration as is known by the <code>ConfigHandler<code>.
@@ -361,7 +361,7 @@ public interface IConfigHandler
 	 *             If saving fails
 	 */
 	public void saveConfig()
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Import configuration items into this configuration. <br>
@@ -387,6 +387,6 @@ public interface IConfigHandler
 	 */
 	@Deprecated
 	public void importConfig(File fConfig)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 }

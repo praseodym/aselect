@@ -76,7 +76,7 @@ public interface IAuthSPProtocolHandler
 	 *             If initialization fails.
 	 */
 	public void init(Object oAuthSPConfig, Object oAuthSPResource)
-		throws ASelectAuthSPException;
+	throws ASelectAuthSPException;
 
 	/**
 	 * Creation of an AuthSP specific redirect URL. <br>

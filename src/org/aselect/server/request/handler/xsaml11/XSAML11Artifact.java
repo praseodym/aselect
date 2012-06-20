@@ -17,7 +17,7 @@ package org.aselect.server.request.handler.xsaml11;
 
 import org.aselect.server.request.handler.*;
 
-// TODO: Auto-generated Javadoc
+
 //
 // The SAML Artifact Resolver - Source Site
 // (Also referred to as SAML Responder)

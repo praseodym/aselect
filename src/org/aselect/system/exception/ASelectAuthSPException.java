@@ -31,7 +31,7 @@
 
 package org.aselect.system.exception;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * AuthSP exception. <br>
  * <br>

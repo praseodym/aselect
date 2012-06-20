@@ -41,7 +41,7 @@ package org.aselect.authspserver.authsp.radius;
 
 import org.aselect.system.logging.SystemLogger;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Abstract Radius Protocol Handler. <br>
  * <br>

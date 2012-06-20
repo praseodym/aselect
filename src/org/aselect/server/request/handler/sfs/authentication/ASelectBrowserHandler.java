@@ -129,7 +129,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.sam.agent.SAMResource;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * This class handles requests coming from a a-select server through a users browser. <br>
  * <br>
@@ -187,7 +187,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 	 */
 	@Override
 	public void processBrowserRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		if (htServiceRequest.get("aselect_credentials") != null)
 			handleCrossAuthenticateResponse(htServiceRequest, _servletResponse);
@@ -211,7 +211,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void handleCrossAuthenticateResponse(HashMap htServiceRequest, HttpServletResponse servletResponse)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleCrossAuthenticateResponse()";
 
@@ -307,7 +307,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select config exception
 	 */
 	static public String getSFSRelay(String sOrg)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		String sMethod = "getSFSRelay()";
 		String sRelay = null;
@@ -387,7 +387,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private HashMap verifyRemoteCredentials(String sCredentials, String sRemoteRid, String sRemoteOrg)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "verifyRemoteCredentials()";
 		Object oRemoteServer;

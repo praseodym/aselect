@@ -105,7 +105,7 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * This class handles the remote A-Select Server selection by checking the user id against configured regular
  * expressions. <br>
@@ -147,7 +147,7 @@ public class SFSSelectorHandler implements ISelectorHandler
 	 * @see org.aselect.server.cross.ISelectorHandler#init(java.lang.Object)
 	 */
 	public void init(Object oHandlerConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -335,7 +335,7 @@ public class SFSSelectorHandler implements ISelectorHandler
 	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
 	 */
 	public HashMap getRemoteServerId(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getRemoteServerId()";
 		String sErrorMessage = null;
@@ -421,7 +421,7 @@ public class SFSSelectorHandler implements ISelectorHandler
 	 *             the a select exception
 	 */
 	private void loadHTMLTemplates()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sWorkingdir = new StringBuffer(_configManager.getWorkingdir()).append(File.separator).append("conf")
 				.append(File.separator).append("html").append(File.separator).toString();
@@ -444,7 +444,7 @@ public class SFSSelectorHandler implements ISelectorHandler
 	 *             the a select exception
 	 */
 	private String loadHTMLTemplate(String sLocation)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sTemplate = new String();
 		String sLine;
@@ -492,7 +492,7 @@ public class SFSSelectorHandler implements ISelectorHandler
 	 */
 	private void showAuthenticationForm(HashMap htServiceRequest, PrintWriter pwOut, String sErrorCode,
 			String sDefaultHomeIdp)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "showAuthenticationForm()";
 

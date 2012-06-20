@@ -29,7 +29,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.sam.agent.SAMResource;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * - <br>
  * <br>
@@ -58,7 +58,7 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#init(java.lang.Object)
 	 */
 	public void init(Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		SAMResource oSAMResource = null;
@@ -149,7 +149,7 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 	 *      java.util.Vector)
 	 */
 	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes)
-		throws ASelectAttributesException
+	throws ASelectAttributesException
 	{
 		HashMap htReturn = new HashMap();
 		String sMethod = "getAttributes()";
@@ -217,7 +217,7 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 	 *             the a select exception
 	 */
 	private HashMap readAttributes(Object oAttribute)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "readAttributes()";
 		HashMap htReturn = new HashMap();

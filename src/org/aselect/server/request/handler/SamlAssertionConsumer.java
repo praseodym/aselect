@@ -63,7 +63,7 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -134,7 +134,7 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
 	 *             the a select exception
 	 */
 	public String findArtifactUrl(String sArtifact)
-		throws ASelectException
+	throws ASelectException
 	{
 		return _sArtifactUrl;
 	}
@@ -158,7 +158,7 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
 	 * @see org.aselect.server.request.handler.IRequestHandler#process(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		String sSessionId = null;
@@ -266,7 +266,7 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
 	 */
 	@Override
 	public String serializeTheseAttributes(HashMap htAttribs)
-		throws ASelectException
+	throws ASelectException
 	{
 		return "";
 	}

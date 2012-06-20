@@ -209,7 +209,7 @@ public class BasicSensorHandler implements ISensorHandler
 	 *             Signals that an I/O exception has occurred.
 	 */
 	protected void processLine(BufferedWriter oOutWriter, String line, String sId)
-		throws IOException
+	throws IOException
 	{
 		String sMethod = "processLine";
 
@@ -260,7 +260,7 @@ public class BasicSensorHandler implements ISensorHandler
 	 *             Signals that an I/O exception has occurred.
 	 */
 	protected void echoCharToStream(BufferedWriter oOutWriter, char c)
-		throws IOException
+	throws IOException
 	{
 		//if (c=='\r') oOutWriter.write(c+"<R>");
 		//else if (c=='\n') oOutWriter.write(c+"<N>");

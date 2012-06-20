@@ -85,7 +85,7 @@ public class LogoutRequestSender
 
 	public void sendLogoutRequest(HttpServletRequest request, HttpServletResponse response, String sTgT,
 			String sServiceProviderUrl, String sIssuerUrl, String sNameID, String reason, String sLogoutReturnUrl)
-		throws ASelectException
+	throws ASelectException
 	{	// for backward compatibility
 		sendLogoutRequest(request, response, sTgT, sServiceProviderUrl, sIssuerUrl, sNameID, reason, sLogoutReturnUrl, null);
 	}
@@ -93,7 +93,7 @@ public class LogoutRequestSender
 	@SuppressWarnings("unchecked")
 	public void sendLogoutRequest(HttpServletRequest request, HttpServletResponse response, String sTgT,
 			String sServiceProviderUrl, String sIssuerUrl, String sNameID, String reason, String sLogoutReturnUrl, List<String>sessionindexes)
-		throws ASelectException
+	throws ASelectException
 		{	// for backward compatibility
 			sendLogoutRequest(request, response, sTgT, sServiceProviderUrl, sIssuerUrl, sNameID, reason, sLogoutReturnUrl, sessionindexes, null);
 		}
@@ -101,7 +101,7 @@ public class LogoutRequestSender
 	@SuppressWarnings("unchecked")
 	public void sendLogoutRequest(HttpServletRequest request, HttpServletResponse response, String sTgT,
 			String sServiceProviderUrl, String sIssuerUrl, String sNameID, String reason, String sLogoutReturnUrl, List<String>sessionindexes, PartnerData partnerData)
-			throws ASelectException
+		throws ASelectException
 
 	{
 		String sMethod = "sendLogoutRequest";

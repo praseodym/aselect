@@ -39,7 +39,7 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * SAML 1.1 SSO request handler. <br>
  * <br>
@@ -108,7 +108,7 @@ public class SAML11RequestHandler extends AbstractRequestHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		String sAttributeNamespace = null;
@@ -393,7 +393,7 @@ public class SAML11RequestHandler extends AbstractRequestHandler
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		try {
@@ -496,7 +496,7 @@ public class SAML11RequestHandler extends AbstractRequestHandler
 	 *             if communication fails
 	 */
 	private HashMap handleVerifyCredentials(String sCredentials, String sRid, HttpServletRequest request)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleVerifyCredentials()";
 		HashMap htRequest = new HashMap();

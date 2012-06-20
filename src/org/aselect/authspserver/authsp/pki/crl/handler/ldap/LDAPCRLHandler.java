@@ -40,7 +40,7 @@ import org.aselect.authspserver.authsp.pki.crl.handler.ICRLHandler;
 import org.aselect.authspserver.log.AuthSPSystemLogger;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * The LDAP CRL Handler. <br>
  * <br>
@@ -87,7 +87,7 @@ public class LDAPCRLHandler implements ICRLHandler
 	 * @see org.aselect.authspserver.authsp.pki.crl.handler.ICRLHandler#getCRL(java.lang.String)
 	 */
 	public CRL getCRL(String URI)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getCRL()";
 		CRL oCrl = null;

@@ -111,7 +111,7 @@ public class AuthSPSessionManager extends StorageManager
 	 *             if initialization fails
 	 */
 	public void init()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -219,7 +219,7 @@ public class AuthSPSessionManager extends StorageManager
 	 *             if the session could not be updated
 	 */
 	/*public void updateSession_TestAndGet(String sRid, HashMap htExtendedContext)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "updateSession_TestAndGet";
 		try {
@@ -306,7 +306,7 @@ public class AuthSPSessionManager extends StorageManager
 	 *             if the session oculd not be resolved.
 	 */
 	public HashMap getSessionContext(String sRid)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getSessionContext()";
 		HashMap htContext = null;

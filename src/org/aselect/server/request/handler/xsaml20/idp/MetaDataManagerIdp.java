@@ -44,7 +44,7 @@ public class MetaDataManagerIdp extends AbstractMetaDataManager
 	 *             the a select exception
 	 */
 	public static MetaDataManagerIdp getHandle()
-		throws ASelectException
+	throws ASelectException
 	{
 		if (metaDataManager == null) {
 			metaDataManager = new MetaDataManagerIdp();

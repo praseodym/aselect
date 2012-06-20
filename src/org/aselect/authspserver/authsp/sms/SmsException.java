@@ -6,7 +6,7 @@
  */
 package org.aselect.authspserver.authsp.sms;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * @author ernst-jan TODO To change the template for this generated type comment go to Window - Preferences - Java -
  *         Code Style - Code Templates

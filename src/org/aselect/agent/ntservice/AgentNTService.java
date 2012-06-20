@@ -55,7 +55,7 @@ import org.aselect.agent.ASelectAgent;
 import org.aselect.agent.log.ASelectAgentSystemLogger;
 import org.aselect.system.logging.SystemLogger;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * A-Select agent service wrapper. <br>
  * <br>

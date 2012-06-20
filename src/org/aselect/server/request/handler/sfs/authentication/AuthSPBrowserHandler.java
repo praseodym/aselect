@@ -98,7 +98,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.AuthenticationLogger;
 import org.aselect.system.sam.agent.SAMResource;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * This class handles cross-authentication requests coming from a remote A-Select Server, except for the
  * <code>cross_login</code> request. It must be used as follows: <br>
@@ -147,7 +147,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	 */
 	@Override
 	public void processBrowserRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sRequest = (String) htServiceRequest.get("request");
 
@@ -174,7 +174,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void handleAuthSPResponse(HashMap htServiceRequest, HttpServletResponse servletResponse)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleAuthSPResponse()";
 		String sHandlerName = null;
@@ -268,7 +268,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void handleError(HashMap htServiceRequest, HttpServletResponse servletResponse)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleError()";
 		AuthenticationLogger authenticationLogger = ASelectAuthenticationLogger.getHandle();

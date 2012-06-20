@@ -82,7 +82,7 @@ public class LbSensor
 	 *             the a select exception
 	 */
 	public void initialize()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "initialize";
 		_oLbSensorLogger = LbSensorSystemLogger.getHandle();

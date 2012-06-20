@@ -77,7 +77,7 @@ public class SoapLogoutRequestSender
      * 
      */
 	public void sendSoapLogoutRequest(String serviceProviderUrl, String issuerUrl, String sNameID, String reason)
-		throws ASelectException
+	throws ASelectException
 	{
 		sendSoapLogoutRequest(serviceProviderUrl, issuerUrl, sNameID, reason, null);
 	}

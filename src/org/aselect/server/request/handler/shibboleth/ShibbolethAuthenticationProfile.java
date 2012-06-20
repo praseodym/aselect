@@ -35,7 +35,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Shibboleth interface for A-Select. <br>
  * <br>
@@ -99,7 +99,7 @@ public class ShibbolethAuthenticationProfile extends AbstractRequestHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -281,7 +281,7 @@ public class ShibbolethAuthenticationProfile extends AbstractRequestHandler
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		HashMap htSession = new HashMap();

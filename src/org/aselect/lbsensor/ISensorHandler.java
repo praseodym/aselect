@@ -28,7 +28,7 @@ public interface ISensorHandler extends Runnable
 	 *             the a select exception
 	 */
 	void initialize(Object oConfigHandler, String sId)
-		throws ASelectException;
+	throws ASelectException;
 
 	/**
 	 * Gets the my store.

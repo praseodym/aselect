@@ -92,7 +92,7 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
 	 */
 	public void init(Object oConfig, long lAssertionExpireTime, String sAttributeNamespace,
 			boolean bSendAttributeStatement)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -170,7 +170,7 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
 	 *      javax.servlet.http.HttpServletResponse, java.lang.String, java.lang.String)
 	 */
 	abstract public void process(HashMap htInfo, HttpServletResponse response, String sIP, String sHost)
-		throws ASelectException;
+	throws ASelectException;
 
 	/**
 	 * Destroy.
@@ -226,7 +226,7 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
 	 */
 	protected SAMLAssertion createSAMLAssertion(String sUid, String sProviderId, HashMap htInfo, String sIP,
 			String sHost, String sConfirmationMethod, String sIdp)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "createSAMLAssertion()";
 		SAMLAssertion oSAMLAssertion = null;
@@ -374,7 +374,7 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
 	 */
 	private void storeSessionInformation(String sUid, String sProviderId, String sAppID, String sAuthSPID,
 			HashMap htAttributes)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "storeAttributesSession()";
 		try {
@@ -465,7 +465,7 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
 	private SAMLAuthenticationStatement generateSAMLAuthenticationStatement(String sUid, String sIP, String sHost,
 			Date dCurrent, String sConfirmationMethod, String sIdp)
 
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "generateSAMLAuthenticationStatement()";
 		SAMLAuthenticationStatement oSAMLAuthenticationStatement = null;
@@ -518,7 +518,7 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
 	 *             if generation fails
 	 */
 	private SAMLAttributeStatement generateSAMLAttributeStatement(String sUid, HashMap htAttributes)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "generateSAMLAttributeStatement()";
 		SAMLAttributeStatement oSAMLAttributeStatement = null;
@@ -577,7 +577,7 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
 	 *             if creation fails
 	 */
 	private SAMLAttribute createSAMLAttribute(String sName, Object oValue)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "generateSAMLAttribute()";
 		SAMLAttribute oSAMLAttribute = new SAMLAttribute();

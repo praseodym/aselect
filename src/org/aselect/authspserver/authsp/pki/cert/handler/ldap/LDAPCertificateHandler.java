@@ -45,7 +45,7 @@ import org.aselect.authspserver.log.AuthSPSystemLogger;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * The LDAP Certificate Handler. <br>
  * <br>
@@ -89,7 +89,7 @@ public class LDAPCertificateHandler implements ICertificateHandler
 	 *      java.lang.Object)
 	 */
 	public void init(AuthSPSystemLogger oSystemLogger, Object oBackendConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		_oConfigManager = AuthSPConfigManager.getHandle();
@@ -130,7 +130,7 @@ public class LDAPCertificateHandler implements ICertificateHandler
 	 * @see org.aselect.authspserver.authsp.pki.cert.handler.ICertificateHandler#getCertificates(java.lang.String)
 	 */
 	public KeyStore getCertificates(String sSubjectDn)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getCertificates()";
 		DirContext oDirCtx = null;

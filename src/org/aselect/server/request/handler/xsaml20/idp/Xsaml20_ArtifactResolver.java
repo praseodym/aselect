@@ -116,7 +116,7 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler
 	 */
 	@SuppressWarnings("unchecked")
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, request.getContentType());
@@ -332,7 +332,7 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler
 	@SuppressWarnings("unchecked")
 	private ArtifactResponse errorResponse(String sInResponseTo, String sDestination, String sSecLevelstatusCode,
 			String sStatusMessage)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "errorResponse()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");

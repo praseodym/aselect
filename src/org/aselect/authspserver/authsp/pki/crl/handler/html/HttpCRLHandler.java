@@ -35,7 +35,7 @@ import org.aselect.authspserver.authsp.pki.crl.handler.ICRLHandler;
 import org.aselect.authspserver.log.AuthSPSystemLogger;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * The Http CRL Handler. <br>
  * <br>
@@ -82,7 +82,7 @@ public class HttpCRLHandler implements ICRLHandler
 	 * @see org.aselect.authspserver.authsp.pki.crl.handler.ICRLHandler#getCRL(java.lang.String)
 	 */
 	public CRL getCRL(String sUri)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getCRL()";
 

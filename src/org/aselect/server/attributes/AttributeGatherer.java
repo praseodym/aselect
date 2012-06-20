@@ -232,7 +232,7 @@ public class AttributeGatherer
 	 *             If initialization fails.
 	 */
 	public void init()
-		throws ASelectException
+	throws ASelectException
 	{
 		final String sMethod = "init()";
 

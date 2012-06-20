@@ -98,7 +98,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 * @see org.aselect.server.request.handler.AbstractRequestHandler#init(javax.servlet.ServletConfig, java.lang.Object)
 	 */
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -135,7 +135,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 *             the a select exception
 	 */
 	public String serializeTheseAttributes(HashMap htAttribs)
-		throws ASelectException
+	throws ASelectException
 	{
 		_systemLogger.log(Level.INFO, MODULE, "serializeTheseAttributes()", "No OVERRIDE for this method!!");
 		return "";
@@ -186,7 +186,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 *             the a select exception
 	 */
 	protected HashMap getASelectCredentials(HttpServletRequest servletRequest)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getAselectCredentials";
 
@@ -268,7 +268,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 * @throws ASelectException
 	 */
 	public HashMap getAttributesFromTgtAndGatherer(HashMap htTGTContext)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getAttributesFromTgtAndGatherer()";
 		
@@ -304,7 +304,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 *             the a select exception
 	 */
 	public HashMap getContextFromTgt(String sTgt, boolean checkExpiration)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getContextFromTgt()";
 		TGTManager _tgtManager = TGTManager.getHandle();
@@ -371,7 +371,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 *             the a select exception
 	 */
 	protected String readTemplate(File fTemplate)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "readTemplate()";
 		BufferedReader brIn = null;
@@ -414,7 +414,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 *             the a select exception
 	 */
 	protected String readTemplateFromConfig(Object oConfig, String sName)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "readTemplateFromConfig()";
 		String sTemplateName = null;
@@ -482,7 +482,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 */
 	protected void getTableFromConfig(Object oConfig, Vector vAllKeys, HashMap htAllKeys_Values, String sMainSection,
 			String sSubSection, String sKeyName, String sValueName, boolean mandatory, boolean uniqueValues)
-		throws ASelectException, ASelectConfigException
+	throws ASelectException, ASelectConfigException
 	{
 		String sMethod = "getTableFromConfig";
 
@@ -616,7 +616,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	protected void handleShowForm(String sTemplate, String sSelectedIdP, String sAction, String sPassContext,
 			String sReplyTo, String sCurrentTime, String sAselectUrl, String sRid, String sAselectServer,
 			HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleShowForm()";
 		PrintWriter pwOut = null;
@@ -794,7 +794,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 *             the a select exception
 	 */
 	protected IClientCommunicator initClientCommunicator(Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		return Tools.initClientCommunicator(ASelectConfigManager.getHandle(), _systemLogger, oConfig);
 	}
@@ -906,7 +906,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 *             the a select exception
 	 */
 	protected Saml11Builder createSAML11Builder(Object oConfig, String sPrefix)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "createSAML11Builder()";
 
@@ -1177,7 +1177,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 */
 	protected String createRequestorToken(HttpServletRequest request, String sProviderId, String sUid,
 			String sUserDomain, String sNameIdFormat, String sAudience, HashMap htAttributes, String sSubjConf)
-		throws ASelectException, SAMLException
+	throws ASelectException, SAMLException
 	{
 		String sMethod = "createRequestorToken";
 		String sIP = request.getRemoteAddr();
@@ -1264,7 +1264,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 * @throws ASelectException
 	 */
 	public boolean checkSignature(SignableSAMLObject ssObject, PublicKey pKey)
-		throws ASelectException
+	throws ASelectException
 	{
 		return SamlTools.checkSignature(ssObject, pKey);
 	}
@@ -1282,7 +1282,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 *             the a select exception
 	 */
 	public SignableSAMLObject sign(SignableSAMLObject obj)
-		throws ASelectException
+	throws ASelectException
 	{
 		return SamlTools.signSamlObject(obj);
 	}
@@ -1298,7 +1298,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 *             the a select exception
 	 */
 	public boolean checkSignature(String sResults)
-		throws ASelectException
+	throws ASelectException
 	{
 		ASelectConfigManager _oASelectConfigManager;
 		String sMethod = "checkSignature()";
@@ -1356,7 +1356,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 *             the a select exception
 	 */
 	PublicKey loadPublicKeyFromKeystore(String sKeystoreName, String sAlias)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadPublicKeyFromKeystore";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Loading public key " + sAlias + " from " + sKeystoreName);
@@ -1385,7 +1385,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 *             the a select communication exception
 	 */
 	public Element parseSamlMessage(String sMessage)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		Element elBody = null;
 		String sMethod = "parse()";
@@ -1459,7 +1459,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 *             the a select exception
 	 */
 	public String readHttpPostData(HttpServletRequest request)
-		throws ASelectException
+	throws ASelectException
 	{
 		String _sMethod = "readHttpPostData";
 		try {

@@ -179,7 +179,7 @@ public class SessionSyncRequestSender
 	 *             the a select exception
 	 */
 	static public HashMap getSessionSyncParameters(ASelectSystemLogger mySystemLogger)
-		throws ASelectException
+	throws ASelectException
 	{
 		String MODULE = "SessionSyncRequestSender";
 		String sMethod = "getSessionSyncParameters";
@@ -263,7 +263,7 @@ public class SessionSyncRequestSender
 	 *             the a select exception
 	 */
 	public String synchronizeSession(String sTgT, HashMap<String, Object> htTGTContext, boolean updateTgt)
-		throws ASelectException
+	throws ASelectException
 	{
 		String _sMethod = "synchronizeSession";
 		boolean bTgtUpdated = false;
@@ -342,7 +342,7 @@ public class SessionSyncRequestSender
 	 */
 	@SuppressWarnings("unchecked")
 	private boolean sendSAMLUpdateToFederation(String sNameID, String sTgT)
-		throws ASelectException
+	throws ASelectException
 	{
 		String _sMethod = "sendSAMLUpdateToFederation";
 
@@ -727,7 +727,7 @@ public class SessionSyncRequestSender
 	 *             the a select exception
 	 */
 	private boolean determineMessageType(String request)
-		throws ASelectException
+	throws ASelectException
 	{
 		String _sMethod = "determineMessageType";
 		boolean saml = true;

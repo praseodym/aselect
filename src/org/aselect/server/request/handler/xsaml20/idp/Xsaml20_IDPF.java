@@ -74,7 +74,7 @@ public class Xsaml20_IDPF extends ProtoRequestHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 
@@ -212,7 +212,7 @@ public class Xsaml20_IDPF extends ProtoRequestHandler
 	 *             If processing of  data request fails.
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{		
 		String sMethod = "process()";
 		String uid = defaultUID;
@@ -353,7 +353,7 @@ public class Xsaml20_IDPF extends ProtoRequestHandler
 	 * @throws ASelectCommunicationException
 	 */
 	private String verify_credentials(HttpServletRequest request, String extracted_credentials)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "verify_credentials()";
 		// This could be done by getting request parametermap

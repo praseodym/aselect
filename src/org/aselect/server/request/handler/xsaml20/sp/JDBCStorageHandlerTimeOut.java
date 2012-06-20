@@ -51,7 +51,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 	 */
 	@Override
 	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger systemLogger, SAMAgent oSAMAgent)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "init";
 
@@ -102,7 +102,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 	 */
 	@Override
 	public void put(Object oKey, Object oValue, Long lTimestamp)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String _sMethod = "put";
 		HashMap htValue = (HashMap) oValue;
@@ -134,7 +134,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 	 */
 	@Override
 	public void cleanup(Long lTimestamp)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String _sMethod = "cleanup";
 		Long now = new Date().getTime();
@@ -237,7 +237,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 	 *             the a select storage exception
 	 */
 	private boolean sendLogoutToFederation(String sNameID, HashMap htTGTContext)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String _sMethod = "sendLogoutToFederation";
 

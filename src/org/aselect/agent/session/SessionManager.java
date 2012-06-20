@@ -395,7 +395,7 @@ public class SessionManager
 	 *             If retrieving session timeout fails.
 	 */
 	public long getSessionTimeout(String sSessionId)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		return _oSessionTable.getExpirationTime(sSessionId);
 	}

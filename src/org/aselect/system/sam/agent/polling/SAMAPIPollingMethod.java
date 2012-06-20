@@ -54,7 +54,6 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.ISAMPollingMethod;
 
-// TODO: Auto-generated Javadoc
 /**
  * The interface for polling methods. <br>
  * <br>
@@ -123,7 +122,7 @@ public class SAMAPIPollingMethod implements ISAMPollingMethod
 	 */
 	public void init(Object oResourceConfigSection, Object oPollingMethodConfigSection, ConfigManager oConfigManager,
 			SystemLogger oSystemLogger)
-		throws ASelectSAMException
+	throws ASelectSAMException
 	{
 		StringBuffer sbError = new StringBuffer(MODULE);
 		String sMethod = "init()";
@@ -140,7 +139,6 @@ public class SAMAPIPollingMethod implements ISAMPollingMethod
 
 			throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
-
 		_oClientCommunicator = getCommunicator(oPollingMethodConfigSection);
 	}
 
@@ -195,7 +193,7 @@ public class SAMAPIPollingMethod implements ISAMPollingMethod
 	 *             if no response can be retrieved
 	 */
 	private HashMap communicate()
-		throws ASelectSAMException
+	throws ASelectSAMException
 	{
 		String sMethod = "communicate()";
 		StringBuffer sbError = new StringBuffer();
@@ -214,7 +212,6 @@ public class SAMAPIPollingMethod implements ISAMPollingMethod
 
 		try {
 			HashMap htCCResponse = _oClientCommunicator.sendMessage(htRequest, _sUrl);
-
 			String saStatus[] = (String[]) htCCResponse.get("get");
 
 			for (int i = 0; i < saStatus.length; i++) {
@@ -223,7 +220,6 @@ public class SAMAPIPollingMethod implements ISAMPollingMethod
 				iEqualsPos = sStatusKeyValue.indexOf("=");
 				sStatusKey = sStatusKeyValue.substring(0, iEqualsPos);
 				sStatusValue = sStatusKeyValue.substring(iEqualsPos + 1);
-
 				htResponse.put(sStatusKey, sStatusValue);
 			}
 
@@ -233,7 +229,6 @@ public class SAMAPIPollingMethod implements ISAMPollingMethod
 				sbError.append("\"");
 
 				_oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
-
 				throw new ASelectSAMException(Errors.ERROR_ASELECT_SAM_UNAVALABLE);
 			}
 		}
@@ -246,10 +241,8 @@ public class SAMAPIPollingMethod implements ISAMPollingMethod
 			sbError.append("\"");
 
 			_oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
-
 			throw new ASelectSAMException(Errors.ERROR_ASELECT_SAM_UNAVALABLE);
 		}
-
 		return htResponse;
 	}
 

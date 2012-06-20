@@ -48,7 +48,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.Audit;
 import org.aselect.system.logging.SystemLogger;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * The system logger for the A-Select Server. <br>
  * <br>
@@ -123,7 +123,7 @@ public class ASelectSystemLogger extends SystemLogger
 	 *             if initialization went wrong
 	 */
 	public void init(Object oSysLogging, String sWorkingDir)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 

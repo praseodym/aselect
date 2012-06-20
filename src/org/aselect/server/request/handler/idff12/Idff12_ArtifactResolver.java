@@ -20,7 +20,7 @@ import javax.servlet.ServletConfig;
 import org.aselect.server.request.handler.*;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
+
 //
 //
 public class Idff12_ArtifactResolver extends SamlArtifactResolver
@@ -51,7 +51,7 @@ public class Idff12_ArtifactResolver extends SamlArtifactResolver
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		super.init(oServletConfig, oConfig);
 	}

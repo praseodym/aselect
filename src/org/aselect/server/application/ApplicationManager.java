@@ -456,7 +456,7 @@ public class ApplicationManager
 	 * @return true if signing is required, otherwise false.
 	 */
 	public boolean isSigningRequired(String sAppId)
-		throws ASelectException
+	throws ASelectException
 	{
 		if (sAppId == null) {
 			return _bRequireSigning;
@@ -499,7 +499,7 @@ public class ApplicationManager
 	 *             the a select exception
 	 */
 	public Integer getRequiredLevel(String sAppId)
-		throws ASelectException
+	throws ASelectException
 	{
 		Application oApplication = getApplication(sAppId);
 		return oApplication.getMinLevel();
@@ -527,7 +527,7 @@ public class ApplicationManager
 	 *             the a select exception
 	 */
 	public Integer getMaxLevel(String sAppId)
-		throws ASelectException
+	throws ASelectException
 	{
 		Application oApplication = getApplication(sAppId);
 		return oApplication.getMaxLevel();
@@ -543,7 +543,7 @@ public class ApplicationManager
 	 *             If retrieving fails.
 	 */
 	public PublicKey getSigningKey(String sAppId)
-		throws ASelectException
+	throws ASelectException
 	{
 		Application oApplication = getApplication(sAppId);
 		return oApplication.getSigningKey();
@@ -559,7 +559,7 @@ public class ApplicationManager
 	 *             the a select exception
 	 */
 	public boolean isForcedAuthenticateEnabled(String sAppId)
-		throws ASelectException
+	throws ASelectException
 	{
 		Application oApplication = getApplication(sAppId);
 		return oApplication.isForcedAuthenticate();
@@ -587,7 +587,7 @@ public class ApplicationManager
 	 *             the a select exception
 	 */
 	public String getAttributePolicy(String sAppId)
-		throws ASelectException
+	throws ASelectException
 	{
 		Application oApplication = getApplication(sAppId);
 		return oApplication.getAttributePolicy();
@@ -615,7 +615,7 @@ public class ApplicationManager
 	 *             the a select exception
 	 */
 	public String getFriendlyName(String sAppId)
-		throws ASelectException
+	throws ASelectException
 	{
 		Application oApplication = getApplication(sAppId);
 		return oApplication.getFriendlyName();
@@ -643,7 +643,7 @@ public class ApplicationManager
 	 *             the a select exception
 	 */
 	public String getMaintainerEmail(String sAppId)
-		throws ASelectException
+	throws ASelectException
 	{
 		Application oApplication = getApplication(sAppId);
 		return oApplication.getMaintainerEmail();
@@ -672,7 +672,7 @@ public class ApplicationManager
 	 *             the a select exception
 	 */
 	public boolean isUseOpaqueUid(String sAppId)
-		throws ASelectException
+	throws ASelectException
 	{
 		Application oApplication = getApplication(sAppId);
 		return oApplication.isUseOpaqueUId();
@@ -700,7 +700,7 @@ public class ApplicationManager
 	 *             the a select exception
 	 */
 	public boolean isShowUrl(String sAppId)
-		throws ASelectException
+	throws ASelectException
 	{
 		Application oApplication = getApplication(sAppId);
 		return oApplication.isShowUrl();
@@ -866,7 +866,7 @@ public class ApplicationManager
 	 *             the a select exception
 	 */
 	public String getOptionalParam(String sAppId, String sName)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sReturn = null;
 		String sMethod = "getOptionalParam()";
@@ -907,7 +907,7 @@ public class ApplicationManager
 	 *             the a select exception
 	 */
 	public Application getApplication(String sAppId)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getApplication()";
 		Application oApplication = (Application) _htApplications.get(sAppId);
@@ -931,7 +931,7 @@ public class ApplicationManager
 	 *             the a select exception
 	 */
 	private HashMap resolveSSOGroups()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "resolveSSOGroups()";
 		HashMap htReturn = new HashMap();
@@ -1039,7 +1039,7 @@ public class ApplicationManager
 	 *             the a select exception
 	 */
 	private PublicKey loadPublicKeyFromKeystore(String sAlias)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadPublicKeyFromKeystore()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Load public key=" + sAlias + ", from="

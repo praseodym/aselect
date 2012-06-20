@@ -123,7 +123,7 @@ public class SAMAgent
 	 *             if no correct configuration was found
 	 */
 	public void init(ConfigManager oConfigManager, SystemLogger oSystemLogger)
-		throws ASelectSAMException
+	throws ASelectSAMException
 	{
 		String sMethod = "init()";
 

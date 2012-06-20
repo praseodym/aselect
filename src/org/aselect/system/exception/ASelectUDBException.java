@@ -28,7 +28,7 @@
 
 package org.aselect.system.exception;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * UDB exception. <br>
  * <br>

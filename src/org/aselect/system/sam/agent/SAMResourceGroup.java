@@ -146,7 +146,7 @@ public class SAMResourceGroup extends Thread
 	 *             if initialization fails.
 	 */
 	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger oSystemLogger)
-		throws ASelectSAMException
+	throws ASelectSAMException
 	{
 		StringBuffer sbError = new StringBuffer(MODULE);
 		String sMethod = "init()";
@@ -262,7 +262,7 @@ public class SAMResourceGroup extends Thread
 	 *             If no active resource was found.
 	 */
 	public SAMResource getActiveResource()
-		throws ASelectSAMException
+	throws ASelectSAMException
 	{
 		StringBuffer sbError = new StringBuffer(MODULE);
 		String sMethod = "getActiveResource()";
@@ -302,7 +302,7 @@ public class SAMResourceGroup extends Thread
 	 */
 	@Deprecated
 	public SAMResource getResource(String sKey)
-		throws ASelectSAMException
+	throws ASelectSAMException
 	{
 		StringBuffer sbError = new StringBuffer(MODULE);
 		String sMethod = "getResource()";

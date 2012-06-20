@@ -13,7 +13,7 @@ package org.aselect.system.logging;
 
 import java.util.logging.Level;
 
-// TODO: Auto-generated Javadoc
+
 public class Audit extends Level
 {
 	// Create the new level
@@ -42,7 +42,7 @@ public class Audit extends Level
 	 *             the illegal argument exception
 	 */
 	public static Level parse(String name)
-		throws IllegalArgumentException
+	throws IllegalArgumentException
 	{
 		if ("AUDIT".equalsIgnoreCase(name)) {
 			return AUDIT;

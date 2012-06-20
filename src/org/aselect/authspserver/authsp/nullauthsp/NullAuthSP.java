@@ -114,7 +114,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * . <br>
  * Null AuthSP is an AuthSP used for testing <br>
@@ -210,7 +210,7 @@ public class NullAuthSP extends ASelectHttpServlet
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig)
-		throws ServletException
+	throws ServletException
 	{
 		String sMethod = "init()";
 
@@ -385,7 +385,7 @@ public class NullAuthSP extends ASelectHttpServlet
 	 */
 	@Override
 	protected void doGet(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
-		throws ServletException, java.io.IOException
+	throws ServletException, java.io.IOException
 	{
 		String sMethod = "doGet()";
 		String sQueryString = "";

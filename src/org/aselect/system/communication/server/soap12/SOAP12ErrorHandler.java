@@ -33,7 +33,7 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * SOAP 1.2 error handler. <br>
  * <br>
@@ -72,7 +72,7 @@ public class SOAP12ErrorHandler implements ErrorHandler
 	 * @see org.xml.sax.ErrorHandler#warning(org.xml.sax.SAXParseException)
 	 */
 	public void warning(SAXParseException xSE)
-		throws SAXException
+	throws SAXException
 	{
 		throw xSE;
 	}
@@ -87,7 +87,7 @@ public class SOAP12ErrorHandler implements ErrorHandler
 	 * @see org.xml.sax.ErrorHandler#error(org.xml.sax.SAXParseException)
 	 */
 	public void error(SAXParseException xSE)
-		throws SAXException
+	throws SAXException
 	{
 		throw xSE;
 	}
@@ -102,7 +102,7 @@ public class SOAP12ErrorHandler implements ErrorHandler
 	 * @see org.xml.sax.ErrorHandler#fatalError(org.xml.sax.SAXParseException)
 	 */
 	public void fatalError(SAXParseException xSE)
-		throws SAXException
+	throws SAXException
 	{
 		throw xSE;
 	}

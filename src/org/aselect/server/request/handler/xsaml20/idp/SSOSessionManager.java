@@ -23,7 +23,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.storagemanager.StorageManager;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * This class stores UserSsoSession to the configured storagemanager in a key-value pair. The key is the userId, the
  * value is the UserSsoSession.
@@ -53,7 +53,7 @@ public class SSOSessionManager extends StorageManager
 	 *             the a select exception
 	 */
 	public static SSOSessionManager XXXgetHandle()
-		throws ASelectException
+	throws ASelectException
 	{
 		if (_oSsoSessionManager == null) {
 			_oSsoSessionManager = new SSOSessionManager();
@@ -69,7 +69,7 @@ public class SSOSessionManager extends StorageManager
 	 *             the a select exception
 	 */
 	private void init()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		ASelectConfigManager oASelectConfigManager = null;
@@ -115,7 +115,7 @@ public class SSOSessionManager extends StorageManager
 	 *             the a select exception
 	 */
 	public void XXXputSsoSession(UserSsoSession session)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "putSsoSession()";
 		String sKey = session.getTgtId(); // used to be: getUserId();

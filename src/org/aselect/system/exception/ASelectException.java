@@ -37,7 +37,7 @@
 
 package org.aselect.system.exception;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Standard A-Select exception. <br>
  * <br>

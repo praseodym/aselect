@@ -85,7 +85,7 @@ public class WirelessServicesHttpSmsSender implements SmsSender
 	 * @see org.aselect.authspserver.authsp.sms.SmsSender#sendSms(java.lang.String, java.lang.String, java.lang.String)
 	 */
 	public int sendSms(String message, String from, String recipients)
-		throws SmsException
+	throws SmsException
 	{
 		String sMethod = "sendSms";
 		int iReturnCode = 15;

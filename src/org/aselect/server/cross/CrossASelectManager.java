@@ -101,7 +101,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * This class loads all necessary configuration needed to set up a 'cross' A-Select environment. <br>
  * <br>
@@ -290,7 +290,7 @@ public class CrossASelectManager
 	 *             the a select config exception
 	 */
 	public void init()
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		String sMethod = "init()";
 		_oASelectConfigManager = ASelectConfigManager.getHandle();
@@ -595,7 +595,7 @@ public class CrossASelectManager
 	 *             If the entire section was not found, or a internal error occurred.
 	 */
 	public String getOptionalLocalParam(String sOrgId, String sName)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sReturn = null;
 		String sMethod = "getOptionalLocalParam()";
@@ -747,7 +747,7 @@ public class CrossASelectManager
 	 *             the a select exception
 	 */
 	private boolean loadLocalServerSettings()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadLocalServerSettings()";
 		Object oLocalServer = null;
@@ -876,7 +876,7 @@ public class CrossASelectManager
 	 *             the a select exception
 	 */
 	private boolean loadRemoteServerSettings()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadRemoteServerSettings()";
 		_htRemoteServers = new HashMap();
@@ -957,7 +957,7 @@ public class CrossASelectManager
 	 *             the a select exception
 	 */
 	private boolean loadRemoteSelectorSettings()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadRemoteSelectorSettings()";
 		Object ocross_selector_ConfigSection;
@@ -1011,7 +1011,7 @@ public class CrossASelectManager
 	 *             If loading fails.
 	 */
 	private void loadLocalServerSigningKeys(String sWorkingDir)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadLocalServerSigningKeys()";
 
@@ -1059,7 +1059,7 @@ public class CrossASelectManager
 	 *             the a select exception
 	 */
 	private PublicKey loadPublicKeyFromKeystore(String sKeystorePath, String sAlias)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadPublicKeyFromKeystore()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Loading public key " + sAlias + " from " + sKeystorePath);

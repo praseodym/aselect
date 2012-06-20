@@ -89,7 +89,7 @@ public class ServletRequestWrapper implements IProtocolRequest
 	 * @see org.aselect.system.communication.server.IProtocolRequest#getInputStream()
 	 */
 	public InputStream getInputStream()
-		throws IOException
+	throws IOException
 	{
 		// read the original data and put it in a buffer (String)
 		BufferedReader br = new BufferedReader(new InputStreamReader(_oRequest.getInputStream()));

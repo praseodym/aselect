@@ -187,7 +187,7 @@ public class PKI implements IAuthSPProtocolHandler
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#init(java.lang.Object, java.lang.Object)
 	 */
 	public void init(Object oAuthSpConfig, Object oAuthSpResource)
-		throws ASelectAuthSPException
+	throws ASelectAuthSPException
 	{
 		String sMethod = "init()";
 		Object oASelectConfig = null;
@@ -452,7 +452,7 @@ public class PKI implements IAuthSPProtocolHandler
 
 				htResponse.put("rid", sRid);
 				// Bauke: transfer additional attributes to caller
-				_systemLogger.log(Level.INFO, "to Response: sSubjectId=" + sSubjectId);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "to Response: sSubjectId=" + sSubjectId);
 				if (sSubjectDN != null)
 					htResponse.put("pki_subject_dn", sSubjectDN); // Bauke: added
 				if (sIssuerDN != null)

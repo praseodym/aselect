@@ -95,7 +95,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 
@@ -121,7 +121,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 	 * javax.servlet.http.HttpServletResponse)
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		// SUGGEST allow for direct transient ID handling
 		String sMethod = "process()";
@@ -170,7 +170,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 	 *             the a select exception
 	 */
 	protected void handleAttributeRequest(HttpServletRequest request, HttpServletResponse response)
-		throws IOException, ASelectException
+	throws IOException, ASelectException
 	{
 
 		String sMethod = "handleAttributeRequest()";
@@ -311,7 +311,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 		"unchecked"
 	})
 	private Assertion createAssertion(String token)
-		throws ASelectException
+	throws ASelectException
 	{
 
 		String sMethod = "createAssertion()";
@@ -365,7 +365,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 	 *             the unmarshalling exception
 	 */
 	private Assertion unmarshallAssertion(Element ass)
-		throws ASelectException, UnmarshallingException
+	throws ASelectException, UnmarshallingException
 	{
 		String sMethod = "unmarshallAssertion";
 
@@ -390,7 +390,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 	 *             the unmarshalling exception
 	 */
 	private AttributeStatement unmarshallAttributeStatement(Element ass)
-		throws ASelectException, UnmarshallingException
+	throws ASelectException, UnmarshallingException
 	{
 		String sMethod = "unmarshallAssertion";
 

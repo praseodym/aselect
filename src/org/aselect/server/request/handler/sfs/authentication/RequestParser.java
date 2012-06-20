@@ -77,7 +77,7 @@ package org.aselect.server.request.handler.sfs.authentication;
 
 import javax.servlet.http.HttpServletRequest;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * The <code>RequestParser</code> determines the type, origin, and protocol of any request arriving at the A-Select
  * Server. The A-Select Server routes the request through its request handlers based on the classification made by the

@@ -43,7 +43,7 @@
 
 package org.aselect.authspserver.config;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Class containing the version of the A-Select AuthSP Server. <br>
  * <br>

@@ -38,7 +38,7 @@ import org.opensaml.SAMLRequest;
 import org.opensaml.SAMLResponse;
 import org.opensaml.artifact.SAMLArtifact;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * SAML 1.1 Artifact request handler. <br>
  * <br>
@@ -70,7 +70,7 @@ public class SAML11ArtifactRequestHandler extends AbstractRequestHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -107,7 +107,7 @@ public class SAML11ArtifactRequestHandler extends AbstractRequestHandler
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		SAMLRequest oSAMLRequest = null;
@@ -220,7 +220,7 @@ public class SAML11ArtifactRequestHandler extends AbstractRequestHandler
 	 *             if no SAML response could be sent
 	 */
 	private void respondError(HttpServletResponse response, SAMLRequest oSAMLRequest, SAMLException oSAMLException)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "respondError()";
 		String sResponseId = null;

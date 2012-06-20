@@ -32,7 +32,7 @@
 
 package org.aselect.system.communication.server.soap11;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * An exception that is used to create SOAP fault elements. <br>
  * <br>

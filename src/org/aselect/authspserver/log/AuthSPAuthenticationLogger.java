@@ -51,7 +51,7 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.AuthenticationLogger;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * A singleton class for the <code>SystemLogger</code> that logs Authentication information. <br>
  * <br>
@@ -121,7 +121,7 @@ public class AuthSPAuthenticationLogger extends AuthenticationLogger
 	 *             if initialization went wrong
 	 */
 	public void init(Object oAuthLogging, String sWorkingDir)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 

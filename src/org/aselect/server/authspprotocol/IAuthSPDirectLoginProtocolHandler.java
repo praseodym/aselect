@@ -76,7 +76,7 @@ public interface IAuthSPDirectLoginProtocolHandler
 	 *             If initialization fails.
 	 */
 	public void init(String sAuthSPId)
-		throws ASelectAuthSPException;
+	throws ASelectAuthSPException;
 
 	// 20110626, Bauke: added return to indicate success
 	// needed for login_token request
@@ -114,6 +114,6 @@ public interface IAuthSPDirectLoginProtocolHandler
 	// 20120403, Bauke: added htSessionContext to save on session reads
 	public boolean handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, HashMap htSessionContext,
 			PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
-		throws ASelectException;
+	throws ASelectException;
 
 }

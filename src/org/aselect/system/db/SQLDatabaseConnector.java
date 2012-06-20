@@ -60,7 +60,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectDatabaseException;
 import org.aselect.system.logging.SystemLogger;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * SQL database connection functionality. <br>
  * <br>
@@ -135,7 +135,7 @@ public class SQLDatabaseConnector
 	 */
 	public SQLDatabaseConnector(String sDriverName, String sUser, String sPassword, String sURL,
 			SystemLogger systemLogger)
-		throws ASelectDatabaseException {
+	throws ASelectDatabaseException {
 		String sMethod = "SQLDatabaseConnector()";
 		_systemLogger = systemLogger;
 		_sSQLUser = sUser;
@@ -318,7 +318,7 @@ public class SQLDatabaseConnector
 	 *             If execution fails.
 	 */
 	public ResultSet executeQuery(Statement oStmt, String sQuery)
-		throws ASelectDatabaseException
+	throws ASelectDatabaseException
 	{
 		String sMethod = "executeQuery()";
 		ResultSet rs = null;
@@ -369,7 +369,7 @@ public class SQLDatabaseConnector
 	 * @see java.sql.Statement#executeUpdate(java.lang.String)
 	 */
 	public int executeUpdate(Statement oStmt, String sQuery)
-		throws ASelectDatabaseException
+	throws ASelectDatabaseException
 	{
 		String sMethod = "executeUpdate()";
 		int iRowsChanged = -1;
@@ -415,7 +415,7 @@ public class SQLDatabaseConnector
 	 *             If transaction could not be started.
 	 */
 	public void startTransaction(Statement oStmt)
-		throws ASelectDatabaseException
+	throws ASelectDatabaseException
 	{
 		String sMethod = "startTransaction()";
 		try {
@@ -459,7 +459,7 @@ public class SQLDatabaseConnector
 	 *             If transaction could not be rolled back.
 	 */
 	public void rollbackTransaction(Statement oStmt)
-		throws ASelectDatabaseException
+	throws ASelectDatabaseException
 	{
 		String sMethod = "rollbackTransaction()";
 		try {
@@ -502,7 +502,7 @@ public class SQLDatabaseConnector
 	 *             If transaction could not be committed.
 	 */
 	public void commitTransaction(Statement oStmt)
-		throws ASelectDatabaseException
+	throws ASelectDatabaseException
 	{
 		String sMethod = "commitTransaction()";
 		try {

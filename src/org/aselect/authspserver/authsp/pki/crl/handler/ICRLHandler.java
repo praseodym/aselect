@@ -23,7 +23,7 @@ import java.security.cert.CRL;
 import org.aselect.authspserver.log.AuthSPSystemLogger;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * The interface for a CRL Handler. <br>
  * <br>
@@ -59,5 +59,5 @@ public interface ICRLHandler
 	 *             the a select exception
 	 */
 	public abstract CRL getCRL(String sUri)
-		throws ASelectException;
+	throws ASelectException;
 }

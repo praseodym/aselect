@@ -153,7 +153,7 @@ public class ConfigManager implements IConfigManager
 	 */
 	public void init(String sDriverName, String sUser, String sPassword, String sDatabaseURL, String sDatabaseTable,
 			String sConfigId, SystemLogger oSystemLogger)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
 		String sMethod = "init()";
@@ -195,7 +195,7 @@ public class ConfigManager implements IConfigManager
 	 * @see org.aselect.system.configmanager.IConfigManager#getSection(java.lang.Object, java.lang.String, java.lang.String)
 	 */
 	public Object getSection(Object oRootSection, String sSectionType, String sSectionID)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		return _oConfigHandler.getSection(oRootSection, sSectionType, sSectionID);
 	}
@@ -204,7 +204,7 @@ public class ConfigManager implements IConfigManager
 	 * @see org.aselect.system.configmanager.IConfigManager#getSection(java.lang.Object, java.lang.String)
 	 */
 	public Object getSection(Object oRootSection, String sSectionType)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		return _oConfigHandler.getSection(oRootSection, sSectionType);
 	}
@@ -213,7 +213,7 @@ public class ConfigManager implements IConfigManager
 	 * @see org.aselect.system.configmanager.IConfigManager#setSection(java.lang.Object, java.lang.String)
 	 */
 	public Object setSection(Object oRootSection, String sSectionType)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		return _oConfigHandler.setSection(oRootSection, sSectionType);
 	}
@@ -222,7 +222,7 @@ public class ConfigManager implements IConfigManager
 	 * @see org.aselect.system.configmanager.IConfigManager#removeSection(java.lang.Object, java.lang.String)
 	 */
 	public boolean removeSection(Object oRootSection, String sSectionType)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		return _oConfigHandler.removeSection(oRootSection, sSectionType);
 	}
@@ -231,7 +231,7 @@ public class ConfigManager implements IConfigManager
 	 * @see org.aselect.system.configmanager.IConfigManager#removeSection(java.lang.Object, java.lang.String, java.lang.String)
 	 */
 	public boolean removeSection(Object oRootSection, String sSectionType, String sSectionID)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		return _oConfigHandler.removeSection(oRootSection, sSectionType, sSectionID);
 	}
@@ -240,7 +240,7 @@ public class ConfigManager implements IConfigManager
 	 * @see org.aselect.system.configmanager.IConfigManager#getParam(java.lang.Object, java.lang.String)
 	 */
 	public String getParam(Object oSection, String sConfigItem)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		return _oConfigHandler.getParam(oSection, sConfigItem);
 	}
@@ -249,7 +249,7 @@ public class ConfigManager implements IConfigManager
 	 * @see org.aselect.system.configmanager.IConfigManager#setParam(java.lang.Object, java.lang.String, java.lang.String, boolean)
 	 */
 	public boolean setParam(Object oSection, String sConfigItem, String sConfigValue, boolean bMandatory)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		return _oConfigHandler.setParam(oSection, sConfigItem, sConfigValue, bMandatory);
 	}
@@ -258,7 +258,7 @@ public class ConfigManager implements IConfigManager
 	 * @see org.aselect.system.configmanager.IConfigManager#getNextSection(java.lang.Object)
 	 */
 	public Object getNextSection(Object oSection)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		return _oConfigHandler.getNextSection(oSection);
 	}
@@ -267,7 +267,7 @@ public class ConfigManager implements IConfigManager
 	 * @see org.aselect.system.configmanager.IConfigManager#saveConfig()
 	 */
 	public void saveConfig()
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		_oConfigHandler.saveConfig();
 	}
@@ -277,7 +277,7 @@ public class ConfigManager implements IConfigManager
 	 */
 	@Deprecated
 	public void importConfig(File fConfig)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		String sMethod = "importConfig()";
 

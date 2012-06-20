@@ -289,7 +289,7 @@ public abstract class BasicRequestHandler
 	 *             the aselect exception
 	 */
 	protected void verifyApplicationSignature(String sSignature, String sData, String sAppId)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "verifyApplicationSignature()";
 		ApplicationManager _applicationManager = ApplicationManager.getHandle();

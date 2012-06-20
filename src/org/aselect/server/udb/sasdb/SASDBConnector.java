@@ -70,7 +70,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectUDBException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * SASDB UDB connection. <br>
  * <br>
@@ -130,7 +130,7 @@ public class SASDBConnector implements IUDBConnector
 	 * @see org.aselect.server.udb.IUDBConnector#init(java.lang.Object)
 	 */
 	public void init(Object oConfigSection)
-		throws ASelectUDBException
+	throws ASelectUDBException
 	{
 		String sMethod = "init()";
 
@@ -474,7 +474,7 @@ public class SASDBConnector implements IUDBConnector
 	 * @see org.aselect.server.udb.IUDBConnector#getUserAttributes(java.lang.String, java.lang.String)
 	 */
 	public String getUserAttributes(String sUserId, String sAuthSPId)
-		throws ASelectUDBException
+	throws ASelectUDBException
 	{
 		String sMethod = "getUserAttributes()";
 
@@ -536,7 +536,7 @@ public class SASDBConnector implements IUDBConnector
 	 * @see org.aselect.server.udb.IUDBConnector#isUserEnabled(java.lang.String)
 	 */
 	public boolean isUserEnabled(String sUserId)
-		throws ASelectUDBException
+	throws ASelectUDBException
 	{
 		String sMethod = "isUserEnabled()";
 

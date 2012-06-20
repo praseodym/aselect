@@ -126,7 +126,7 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	 */
 	@Override
 	public void init(ServletConfig config)
-		throws ServletException
+	throws ServletException
 	{
 		super.init(config);
 		if (isRestartableServlet())
@@ -403,7 +403,7 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	 */
 	@Override
 	protected void service(HttpServletRequest request, HttpServletResponse response)
-		throws ServletException, java.io.IOException
+	throws ServletException, java.io.IOException
 	{
 		if (isRestartInProgress())
 			response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);

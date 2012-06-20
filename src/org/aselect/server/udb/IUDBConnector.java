@@ -35,7 +35,7 @@ import java.util.HashMap;
 
 import org.aselect.system.exception.ASelectUDBException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Interface to a A-Select UDB connector. <br>
  * <br>
@@ -75,7 +75,7 @@ public interface IUDBConnector
 	 *             if the component could not be initialized by missing config parameters or could not open a connection
 	 */
 	public void init(Object oConfigSection)
-		throws ASelectUDBException;
+	throws ASelectUDBException;
 
 	/**
 	 * Returns the user profile stored in user database. <br>
@@ -136,7 +136,7 @@ public interface IUDBConnector
 	 *             If retrieving information from UDB fails.
 	 */
 	public boolean isUserEnabled(String sUserId)
-		throws ASelectUDBException;
+	throws ASelectUDBException;
 
 	/**
 	 * Retrieves the user attributes for the given user and AuthSP. <br>
@@ -165,5 +165,5 @@ public interface IUDBConnector
 	 *             If retrieving information from UDB fails.
 	 */
 	public String getUserAttributes(String sUserId, String sAuthSPId)
-		throws ASelectUDBException;
+	throws ASelectUDBException;
 }

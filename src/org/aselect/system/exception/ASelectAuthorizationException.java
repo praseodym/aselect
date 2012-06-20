@@ -29,7 +29,7 @@
 
 package org.aselect.system.exception;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Aurhorization exception. <br>
  * <br>

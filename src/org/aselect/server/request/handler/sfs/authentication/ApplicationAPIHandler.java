@@ -284,7 +284,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 */
 	public ApplicationAPIHandler(RequestParser reqParser, HttpServletRequest servletRequest,
 			HttpServletResponse servletResponse, String sMyServerId, String sMyOrg)
-		throws ASelectCommunicationException {
+	throws ASelectCommunicationException {
 		super(reqParser, servletRequest, servletResponse, sMyServerId, sMyOrg);
 
 		// set variables and get handles
@@ -316,7 +316,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 */
 	protected void processAPIRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
 			IOutputMessage oOutputMessage)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "processAPIRequest";
 
@@ -363,7 +363,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 */
 	private void handleAuthenticateRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
 			IOutputMessage oOutputMessage)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleAuthenticateRequest()";
 		String sSessionId = null;
@@ -574,7 +574,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 * @deprecated Not used anymore since A-Select 1.4.1
 	 */
 	private void handleGetAppLevelRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleGetAppLevelRequest()";
 		String sAppId = null;
@@ -627,7 +627,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 *             If proccessing fails.
 	 */
 	private void handleKillTGTRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleKillTGTRequest()";
 		String sEncTGT = null;
@@ -700,7 +700,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 *             If proccessing fails.
 	 */
 	private void handleVerifyCredentialsRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleVerifyCredentialsRequest()";
 
@@ -895,7 +895,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 *             If signature is invalid.
 	 */
 	private void verifyApplicationSignature(IInputMessage oInputMessage, String sData, String sAppId)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "verifyApplicationSignature()";
 

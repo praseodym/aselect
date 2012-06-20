@@ -25,7 +25,7 @@ import java.security.KeyStore;
 import org.aselect.authspserver.log.AuthSPSystemLogger;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Certificate Handler Interface. <br>
  * <br>
@@ -51,7 +51,7 @@ public interface ICertificateHandler
 	 *             the a select exception
 	 */
 	public void init(AuthSPSystemLogger oSystemLogger, Object oBackendConfig)
-		throws ASelectException;
+	throws ASelectException;
 
 	/**
 	 * Get The Certificate(s) for the corresponding subjectDN.
@@ -63,5 +63,5 @@ public interface ICertificateHandler
 	 *             the a select exception
 	 */
 	public KeyStore getCertificates(String sSubjectDn)
-		throws ASelectException;
+	throws ASelectException;
 }

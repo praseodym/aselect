@@ -950,7 +950,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void handleLogin1(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleLogin1";
 		String sRid = null;
@@ -1274,7 +1274,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 */
 	private boolean handleUserConsent(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut,
 			String sRid)
-		throws ASelectException
+	throws ASelectException
 	{
 		String COOKIE_NAME = "user_consent";
 		final String sMethod = "handleUserConsent";
@@ -1715,7 +1715,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void handleCrossLogin(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sRemoteOrg = null;
 		String sUid = null;
@@ -1947,7 +1947,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *             TODO add support for cross and force_authenticate (martijn)
 	 */
 	private void handleIPLogin1(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleIPLogin1";
 		String sRid = null;
@@ -2582,7 +2582,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void showUserInfo(HashMap htServiceRequest, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "showUserInfo";
 		PrintWriter pwOut = null;

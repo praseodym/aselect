@@ -154,7 +154,7 @@ public class SamlTools
 	 *             the message decoding exception
 	 */
 	public static boolean verifySignature(PublicKey key, HttpServletRequest httpRequest)
-		throws MessageDecodingException
+	throws MessageDecodingException
 	{
 		String sMethod = "verifySignature()";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
@@ -215,7 +215,7 @@ public class SamlTools
 	 * @throws ASelectException
 	 */
 	public static boolean checkSignature(SignableSAMLObject ssObject, PublicKey publicKey)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "checkSignature";
 		
@@ -265,7 +265,7 @@ public class SamlTools
 	 *             the ASelect exception
 	 */
 	public static boolean checkLocalityAddress(SAMLObject obj, String refAddress)
-		throws ASelectException
+	throws ASelectException
 	{
 		// We may want to check the DNSName here
 		boolean valid = false;
@@ -301,7 +301,7 @@ public class SamlTools
 	 *             the a select exception
 	 */
 	public static boolean checkValidityInterval(SAMLObject obj)
-		throws ASelectException
+	throws ASelectException
 	{
 		return checkValidityInterval(obj, new DateTime());
 	}
@@ -470,7 +470,7 @@ public class SamlTools
 	 *             the a select exception
 	 */
 	public static SAMLObject setAudienceRestrictions(SAMLObject obj, AudienceRestriction restriction)
-		throws ASelectException
+	throws ASelectException
 	{
 
 		String sMethod = "setAudienceRestrictions";
@@ -645,14 +645,14 @@ public class SamlTools
 	 */
 //	public static LogoutRequest buildLogoutRequest(String sServiceProviderUrl, String sTgT, String sNameID,
 //			String issuerUrl, String reason)
-//		throws ASelectException	{	// for backward compatibility
+//	throws ASelectException	{	// for backward compatibility
 //		return buildLogoutRequest(sServiceProviderUrl, sTgT, sNameID,
 //				issuerUrl, reason, null);
 //	}
 
 	public static LogoutRequest buildLogoutRequest(String sServiceProviderUrl, String sTgT, String sNameID,
 			String issuerUrl, String reason, List<String>sessionindexes)
-		throws ASelectException
+	throws ASelectException
 	{
 		return buildLogoutRequest( sServiceProviderUrl, sTgT, sNameID,
 				 issuerUrl,  reason, sessionindexes, null);
@@ -661,7 +661,7 @@ public class SamlTools
 	@SuppressWarnings("unchecked")
 	public static LogoutRequest buildLogoutRequest(String sServiceProviderUrl, String sTgT, String sNameID,
 			String issuerUrl, String reason, List<String>sessionindexes, DateTime issueInstant)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "buildLogoutRequest";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
@@ -730,7 +730,7 @@ public class SamlTools
 	 */
 	@SuppressWarnings("unchecked")
 	public static LogoutResponse buildLogoutResponse(String issuer, String statusCodeValue, String inResponseTo)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "buildLogoutResponse()";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
@@ -817,7 +817,7 @@ public class SamlTools
 	 *             thrown if the give message can not be marshalled into its DOM representation
 	 */
 	public static Element marshallMessage(XMLObject message)
-		throws MessageEncodingException
+	throws MessageEncodingException
 	{
 		String sMethod = "marshallMessage()";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
@@ -850,7 +850,7 @@ public class SamlTools
 	 *             the message encoding exception
 	 */
 	public static XMLObject unmarshallElement(Element element)
-		throws MessageEncodingException
+	throws MessageEncodingException
 	{
 		String sMethod = "unmarshallMessage()";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
@@ -886,7 +886,7 @@ public class SamlTools
 	 *             the certificate exception
 	 */
 	public static java.security.cert.X509Certificate getCertificate(X509Certificate cert)
-		throws CertificateException
+	throws CertificateException
 	{
 		return org.opensaml.xml.security.keyinfo.KeyInfoHelper.getCertificate(cert);
 	}
@@ -921,7 +921,7 @@ public class SamlTools
 	 *             Signals that an I/O exception has occurred.
 	 */
 	public static void sendSOAPResponse(HttpServletResponse response, String envelope)
-		throws IOException
+	throws IOException
 	{
 		final String CONTENT_TYPE = "text/xml; charset=utf-8";
 

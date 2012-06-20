@@ -75,7 +75,7 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * This class handles the remote A-Select Server selection by checking the user id against configured regular
  * expressions. <br>
@@ -111,7 +111,7 @@ public class RegexSelectorHandler implements ISelectorHandler
 	 * @see org.aselect.server.cross.ISelectorHandler#init(java.lang.Object)
 	 */
 	public void init(Object oHandlerConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -207,7 +207,7 @@ public class RegexSelectorHandler implements ISelectorHandler
 	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
 	 */
 	public HashMap getRemoteServerId(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getRemoteServerId()";
 		int i = 0;
@@ -253,7 +253,7 @@ public class RegexSelectorHandler implements ISelectorHandler
 	 *             the a select exception
 	 */
 	private void loadHTMLTemplates()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sWorkingdir = new StringBuffer(_configManager.getWorkingdir()).append(File.separator).append("conf")
 				.append(File.separator).append("html").append(File.separator).toString();
@@ -276,7 +276,7 @@ public class RegexSelectorHandler implements ISelectorHandler
 	 *             the a select exception
 	 */
 	private String loadHTMLTemplate(String sLocation)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sTemplate = new String();
 		String sLine;
@@ -321,7 +321,7 @@ public class RegexSelectorHandler implements ISelectorHandler
 	 *             the a select exception
 	 */
 	private void showAuthenticationForm(HashMap htServiceRequest, PrintWriter pwOut, String sErrorCode)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "showAuthenticationForm";
 		try {

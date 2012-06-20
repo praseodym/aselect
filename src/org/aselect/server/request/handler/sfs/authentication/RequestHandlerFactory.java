@@ -71,7 +71,7 @@ import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * The request hendler factory for the A-Select Server. <br>
  * <br>
@@ -180,7 +180,7 @@ public class RequestHandlerFactory
 	 *             If communication failed and no response was sent to the client yet.
 	 */
 	public IRequestHandler createRequestHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "createRequestHandler()";
 

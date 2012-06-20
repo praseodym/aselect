@@ -31,7 +31,7 @@ package org.aselect.system.communication.server;
 import java.io.IOException;
 import java.io.OutputStream;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Defines an interface to the response part of a protocol. <br>
  * <br>
@@ -93,5 +93,5 @@ public interface IProtocolResponse
 	 *             if <CODE>OutputStream</CODE> can't be retrieved from the protocol
 	 */
 	public OutputStream getOutputStream()
-		throws IOException;
+	throws IOException;
 }

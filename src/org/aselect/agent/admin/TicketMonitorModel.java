@@ -60,7 +60,6 @@ import org.aselect.agent.ticket.TicketManager;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectStorageException;
 
-// TODO: Auto-generated Javadoc
 /**
  * Monitors the tickets that are issued by the A-Select Agent. <br>
  * <br>
@@ -114,7 +113,7 @@ public class TicketMonitorModel extends AbstractTableModel implements Runnable
 	 *             If 'max_tickets' parameter is incorrect.
 	 */
 	public TicketMonitorModel(int iCheckInterval)
-		throws NumberFormatException, ASelectConfigException {
+	throws NumberFormatException, ASelectConfigException {
 		_ticketManager = TicketManager.getHandle();
 		_configManager = ASelectAgentConfigManager.getHandle();
 

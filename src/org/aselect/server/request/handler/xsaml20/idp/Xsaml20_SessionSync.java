@@ -86,7 +86,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		super.init(oServletConfig, oHandlerConfig);
@@ -104,7 +104,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	 *            on failure.
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String _sMethod = "process";
 		_systemLogger.log(Level.INFO, MODULE, _sMethod, "-- SS IDP RequestHandler --");
@@ -200,7 +200,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	 *             the a select exception
 	 */
 	private void changeUpdateTimeSp(String serviceProviderUrl, String tgtId)
-		throws ASelectException
+	throws ASelectException
 	{
 		String _sMethod = "changeUpdateTimeSp";
 		_systemLogger.log(Level.INFO, MODULE, _sMethod, "TGT=" + tgtId);
@@ -273,7 +273,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	 *             the a select exception
 	 */
 	private void sendSAMLResponse(HttpServletRequest request, HttpServletResponse response, String uid, boolean permit)
-		throws ASelectException
+	throws ASelectException
 	{
 		String _sMethod = "sendSAMLResponse";
 		_systemLogger.log(Level.INFO, MODULE, _sMethod, "Send SAML response to SP");
@@ -326,7 +326,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	 */
 	@SuppressWarnings("unchecked")
 	private Response buildSAMLResponse(String uid, boolean permit)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "buildSAMLResponse";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Build SAML Response for " + uid);
@@ -452,7 +452,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	 *             the a select exception
 	 */
 	private Document handleXACMLRequest(String xacmlMessage)
-		throws ASelectException
+	throws ASelectException
 	{
 		String _sMethod = "handleXACMLRequest";
 		_systemLogger.log(Level.INFO, MODULE, _sMethod, "Handle XACML Request");
@@ -605,7 +605,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	 *             the a select exception
 	 */
 	public Response marshallResponse(Response response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "marshallResponse";
 		MarshallerFactory factory = org.opensaml.xml.Configuration.getMarshallerFactory();
@@ -640,7 +640,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	 *             the a select exception
 	 */
 	private boolean determineMessageType(String request)
-		throws ASelectException
+	throws ASelectException
 	{
 		String _sMethod = "determinteMessageType";
 		boolean saml = true;

@@ -33,7 +33,7 @@ import org.opensaml.ws.message.encoder.MessageEncodingException;
 import org.opensaml.xml.XMLObject;
 import org.w3c.dom.Element;
 
-// TODO: Auto-generated Javadoc
+
 //
 // IdP SLO Http Response Handler
 //
@@ -65,7 +65,7 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		super.init(oServletConfig, oConfig);
 		String sMethod = "init()";
@@ -106,7 +106,7 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 	@Override
 	protected void handleSpecificSaml20Request(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
 			SignableSAMLObject samlMessage, String sRelayState)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleSpecificSaml20Request";
 		LogoutResponse logoutResponse = (LogoutResponse) samlMessage;

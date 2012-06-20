@@ -39,7 +39,7 @@ package org.aselect.authspserver.authsp.ldap;
 
 import org.aselect.authspserver.log.AuthSPSystemLogger;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Interface for a LDAP protocol handler. <br>
  * <br>

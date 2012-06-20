@@ -89,7 +89,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 
@@ -149,7 +149,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	 *             the a select exception
 	 */
 	private void readMetaDataPublicKeyCert(String sWorkingDir)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "readMetaDataPublicKeyCert";
 
@@ -231,7 +231,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	 *             the a select exception
 	 */
 	private void handleMetaDataRequest(HttpServletRequest httpRequest, HttpServletResponse httpResponse)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleMetaDataRequest";
 //		String sLocalIssuer = null;
@@ -279,7 +279,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	 */
 //	protected String createMetaDataXML(String localIssuer)
 	protected String createMetaDataXML(String remoteID)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "createMetaDataXML";
 		String error = "This method should NOT be called directly but must be overridden!";
@@ -291,7 +291,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	 * @see org.aselect.server.request.handler.IRequestHandler#process(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		try {

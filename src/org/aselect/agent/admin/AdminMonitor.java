@@ -136,7 +136,7 @@ public class AdminMonitor extends JFrame implements TableModelListener
 	 *             when something goes wrong.
 	 */
 	public void start(int iCheckInterval)
-		throws Exception
+	throws Exception
 	{
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		StringBuffer sbVersion = new StringBuffer(ASelectAgent.MODULE);

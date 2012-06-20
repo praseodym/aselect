@@ -74,7 +74,7 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMResource;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * A factory to create <code>ILDAPProtocolHandler</code> implementations. <br>
  * <br>
@@ -121,7 +121,7 @@ public class LDAPProtocolHandlerFactory
 	 */
 	public static ILDAPProtocolHandler instantiateProtocolHandler(Object oConfig, String sUid,
 			AuthSPSystemLogger systemLogger)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "instantiateProtocolHandler()";
 
@@ -195,7 +195,7 @@ public class LDAPProtocolHandlerFactory
 	 *             If retrieving fails.
 	 */
 	public static HashMap getContext(Object oConfig, String sUid, SystemLogger oSystemLogger)
-		throws ASelectException
+	throws ASelectException
 	{
 		HashMap htResponse = new HashMap();
 		StringBuffer sbTemp = null;

@@ -83,6 +83,6 @@ public interface IMessageCreatorInterface extends IInputMessage, IOutputMessage
 	 *             if communication fails.
 	 */
 	public boolean init(IProtocolRequest oRequest, IProtocolResponse oResponse)
-		throws ASelectCommunicationException;
+	throws ASelectCommunicationException;
 
 }

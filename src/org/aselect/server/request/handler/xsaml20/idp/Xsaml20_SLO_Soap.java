@@ -76,7 +76,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 
@@ -107,7 +107,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 	 *             If processing of logout request fails.
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process";
 		String sContentType = request.getContentType();
@@ -130,7 +130,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 	 *             the a select exception
 	 */
 	private void handleSOAPLogoutRequest(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleSOAPLogoutRequest";
 		try {
@@ -225,7 +225,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 	 *             If remove session fails.
 	 */
 	public void removeSessionFromFederation(String sNameID, String initiatingSP)
-		throws ASelectException
+	throws ASelectException
 	{
 		String _sMethod = "removeSessionFromFederation";
 		String sCred = Utils.firstPartOf(sNameID, 30);

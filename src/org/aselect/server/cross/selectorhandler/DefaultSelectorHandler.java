@@ -67,7 +67,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * This class handles the remote A-Select Server selection by means of a user HTML form. <br>
  * <br>
@@ -106,7 +106,7 @@ public class DefaultSelectorHandler implements ISelectorHandler
 	 * @see org.aselect.server.cross.ISelectorHandler#init(java.lang.Object)
 	 */
 	public void init(Object oHandlerConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -142,7 +142,7 @@ public class DefaultSelectorHandler implements ISelectorHandler
 	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
 	 */
 	public HashMap getRemoteServerId(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		HashMap htResult = new HashMap();
 
@@ -170,7 +170,7 @@ public class DefaultSelectorHandler implements ISelectorHandler
 	 *             the a select exception
 	 */
 	private void showSelectForm(HashMap htServiceRequest, PrintWriter pwOut, HashMap htServers)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "showSelectForm()";
 		String sSelectForm = null;
@@ -249,7 +249,7 @@ public class DefaultSelectorHandler implements ISelectorHandler
 	 *             Global HashMap _htHtmlTemplates variabele contains the templates. <br>
 	 */
 	private void loadHTMLTemplates()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sWorkingdir = new StringBuffer(_configManager.getWorkingdir()).append(File.separator).append("conf")
 				.append(File.separator).append("html").append(File.separator).toString();

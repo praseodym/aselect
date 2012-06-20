@@ -190,7 +190,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * This class handles incoming API calls from local servers. <br>
  * <br>
@@ -235,7 +235,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 	 */
 	public ASelectAPIHandler(RequestParser reqParser, HttpServletRequest servletRequest,
 			HttpServletResponse servletResponse, String sMyServerId, String sMyOrg)
-		throws ASelectCommunicationException {
+	throws ASelectCommunicationException {
 		super(reqParser, servletRequest, servletResponse, sMyServerId, sMyOrg);
 
 		_sModule = "ASelectAPIHandler";
@@ -265,7 +265,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 	@Override
 	protected void processAPIRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
 			IOutputMessage oOutputMessage)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "processAPIRequest()";
 		String sRequest = oInputMessage.getParam("request");
@@ -297,7 +297,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 	 */
 	private void handleAuthenticateRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
 			IOutputMessage oOutputMessage)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleAuthenticateRequest()";
 		String sSessionId = null;
@@ -479,7 +479,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 	 *             If proccessing fails.
 	 */
 	private void handleVerifyCredentialsRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleVerifyCredentialsRequest()";
 
@@ -638,7 +638,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 	 *             If signature is invalid.
 	 */
 	private void verifyLocalASelectServerSignature(IInputMessage oInputMessage, String sData, String sOrg)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "verifyLocalASelectServerSignature()";
 

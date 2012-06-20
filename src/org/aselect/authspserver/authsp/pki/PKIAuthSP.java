@@ -110,7 +110,7 @@ public class PKIAuthSP extends HttpServlet
 	 * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
 	 */
 	public void init(ServletConfig oServletConfig)
-		throws ServletException
+	throws ServletException
 	{
 		String sMethod = "init()";
 		try {
@@ -272,7 +272,7 @@ public class PKIAuthSP extends HttpServlet
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
-		throws ServletException, IOException
+	throws ServletException, IOException
 	{
 		String sMethod = "doPost()";
 		StringBuffer sbTemp = null;
@@ -345,7 +345,7 @@ public class PKIAuthSP extends HttpServlet
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	protected void doGet(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
-		throws ServletException
+	throws ServletException
 	{
 		String sMethod = "doGet()";
 		try {
@@ -418,7 +418,7 @@ public class PKIAuthSP extends HttpServlet
 	 *             If something goes wrong with the handle result
 	 */
 	public void handleAuthenticate(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
-		throws ServletException
+	throws ServletException
 	{
 		String sResultCode = Errors.PKI_CLIENT_CERT_SUCCESS;
 		StringBuffer sbTemp;
@@ -599,7 +599,7 @@ public class PKIAuthSP extends HttpServlet
 	 *             the a select exception
 	 */
 	public boolean validateBinaryBlob(Object oConfig, String sSubjectDn, X509Certificate oClientCert)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "validateBinaryBlob()";
 		boolean bFound = false;
@@ -663,7 +663,7 @@ public class PKIAuthSP extends HttpServlet
 	 */
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			String sResultCode, String sSubjectDN, String sIssuerDN, String sSubjectId)
-		throws ServletException
+	throws ServletException
 	{
 		String sMethod = "handleResult()";
 		StringBuffer sbTemp = null;
@@ -801,7 +801,7 @@ public class PKIAuthSP extends HttpServlet
 	private boolean verifySignature(String sRid, String sAsUrl, String sUserAttributes, String sAsId,
 			String sTFAuthSpName, String sTFAuthSpUrl, String sTFAuthSpRetries, String sTFAuthSpUserAttributes,
 			String sSignature)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "verifySignature()";
 		boolean bValid = false;
@@ -854,7 +854,7 @@ public class PKIAuthSP extends HttpServlet
 	 */
 	private void handleTFAuthenticationRequest(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			String sRid, HashMap htSessionInfo)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleTFAuthenticationRequest()";
 		StringBuffer sbTemp;
@@ -929,7 +929,7 @@ public class PKIAuthSP extends HttpServlet
 	 */
 	private boolean verifyTFAuthentication(String sRid, String sTFAuthSpUrl, String sTFAuthSpUserAttributes,
 			String sPassword)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "verifyTFAuthentication()";
 		boolean bAuthenticated = false;
@@ -992,7 +992,7 @@ public class PKIAuthSP extends HttpServlet
 	 *             when connection is failed.
 	 */
 	private String send(String sUrl)
-		throws IOException
+	throws IOException
 	{
 		URL oServer = new URL(sUrl.toString());
 		BufferedReader oInputReader = new BufferedReader(new InputStreamReader(oServer.openStream()), 16000);
@@ -1026,7 +1026,7 @@ public class PKIAuthSP extends HttpServlet
 	 *             when something goes wrong
 	 */
 	private void sendPage(String sTemplate, HttpServletRequest servletRequest, HttpServletResponse servletResponse)
-		throws IOException
+	throws IOException
 	{
 		// disable caching
 		if (servletRequest.getProtocol().equals("HTTP/1.1"))// HTTP 1.1 protocol

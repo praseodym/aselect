@@ -76,7 +76,7 @@ public class SecurityLevel
 	 * @throws ASelectException
 	 */
 	public static String convertLevelToAuthnContextClassRefURI(String sLevel, ASelectSystemLogger systemLogger)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "convertLevelToAuthnContextClassRefURI";
 
@@ -123,7 +123,7 @@ public class SecurityLevel
 	 */
 	public static String convertAuthnContextClassRefURIToLevel(String sAuthnContextClassRefURI,
 			ASelectSystemLogger systemLogger)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "convertAuthnContextClassRefURIToLevel";
 

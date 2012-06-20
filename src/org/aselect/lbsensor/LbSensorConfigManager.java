@@ -64,7 +64,7 @@ public class LbSensorConfigManager extends ConfigManager
 	 *             the a select exception
 	 */
 	public void init(String sWorkingDir)
-		throws ASelectConfigException, ASelectException
+	throws ASelectConfigException, ASelectException
 	{
 		final String sMethod = "init";
 
@@ -93,7 +93,7 @@ public class LbSensorConfigManager extends ConfigManager
 	 *             the a select config exception
 	 */
 	public String getParamFromSection(Object oConfig, String sSection, String sParam, boolean bMandatory)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		return Utils.getParamFromSection(getHandle(), LbSensorSystemLogger.getHandle(), oConfig, sSection, sParam,
 				bMandatory);
@@ -114,7 +114,7 @@ public class LbSensorConfigManager extends ConfigManager
 	 *             the a select config exception
 	 */
 	public Object getSimpleSection(Object oConfig, String sParam, boolean bMandatory)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		return Utils.getSimpleSection(getHandle(), LbSensorSystemLogger.getHandle(), oConfig, sParam, bMandatory);
 	}
@@ -134,7 +134,7 @@ public class LbSensorConfigManager extends ConfigManager
 	 *             the a select exception
 	 */
 	public String getSimpleParam(Object oConfig, String sParam, boolean bMandatory)
-		throws ASelectException
+	throws ASelectException
 	{
 		return Utils.getSimpleParam(getHandle(), LbSensorSystemLogger.getHandle(), oConfig, sParam, bMandatory);
 	}
@@ -154,7 +154,7 @@ public class LbSensorConfigManager extends ConfigManager
 	 *             the a select exception
 	 */
 	public int getSimpleIntParam(Object oConfig, String sParam, boolean bMandatory)
-		throws ASelectException
+	throws ASelectException
 	{
 		return Utils.getSimpleIntParam(getHandle(), LbSensorSystemLogger.getHandle(), oConfig, sParam, bMandatory);
 	}
@@ -176,7 +176,7 @@ public class LbSensorConfigManager extends ConfigManager
 	 *             the a select config exception
 	 */
 	public Object getSectionFromSection(Object oConfig, String sParam, String sValue, boolean bMandatory)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		return Utils.getSectionFromSection(getHandle(), LbSensorSystemLogger.getHandle(), oConfig, sParam, sValue,
 				bMandatory);

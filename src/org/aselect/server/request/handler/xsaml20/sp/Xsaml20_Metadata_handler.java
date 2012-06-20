@@ -75,7 +75,7 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init";
 
@@ -156,7 +156,7 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 	@Override
 //	protected String createMetaDataXML(String sLocalIssuer)
 	protected String createMetaDataXML(String remoteID)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "createMetaDataXML";
 		String xmlMDRequest = null;

@@ -154,7 +154,7 @@ public class SAMResource
 	 *             if the resource could not initialize
 	 */
 	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger oSystemLogger)
-		throws ASelectSAMException
+	throws ASelectSAMException
 	{
 		String sMethod = "init()";
 
@@ -245,7 +245,8 @@ public class SAMResource
 					_oPollingThread = new PollingThread();
 					_oPollingThread.start();
 				}
-			} else {	// RH, 20110202, sn
+			}
+			else {	// RH, 20110202, sn
 				_bLive = true;	// if we have no way of polling so assume alive
 			}	// RH, 20110202, en
 		}
@@ -340,7 +341,6 @@ public class SAMResource
 	 */
 	private class PollingThread extends Thread
 	{
-		
 		/**
 		 * Start polling every configured interval <br>
 		 * <br>
@@ -355,15 +355,11 @@ public class SAMResource
 
 			while (_bRunThread) {
 				try {
-					
 					_bLive = _oSAMPollingMethod.poll();
-
 					if (!_bLive) {
 						StringBuffer sbError = new StringBuffer(MODULE);
 						sbError.append(":PollingThread.run() -> ");
-						sbError.append("Resource '");
-						sbError.append(_sId);
-						sbError.append("' is currently unavailable.");
+						sbError.append("Resource '").append(_sId).append("' is currently unavailable.");
 						_oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
 					}
 					sleep(_lInterval);

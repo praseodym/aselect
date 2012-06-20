@@ -161,7 +161,7 @@ public abstract class SAMServiceServlet extends HttpServlet
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig)
-		throws ServletException
+	throws ServletException
 	{
 		StringBuffer sbError = new StringBuffer();
 		String sMethod = "init()";
@@ -448,7 +448,7 @@ public abstract class SAMServiceServlet extends HttpServlet
 	 */
 	@Override
 	protected void service(HttpServletRequest oHttpServletRequest, HttpServletResponse oHttpServletResponse)
-		throws ServletException, IOException
+	throws ServletException, IOException
 	{
 		String sMethod = "service()";
 		IMessageCreatorInterface oMsgCreator = null;
@@ -756,7 +756,7 @@ public abstract class SAMServiceServlet extends HttpServlet
 	 *             if the template located in <i>sTemplateName</i> can't be accessed or read.
 	 */
 	private String loadTemplateFile(String sTemplateName)
-		throws Exception
+	throws Exception
 	{
 		String sLine = null;
 		String sLineSep = null;

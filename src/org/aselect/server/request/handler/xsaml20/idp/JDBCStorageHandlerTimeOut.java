@@ -51,7 +51,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 	 */
 	@Override
 	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger systemLogger, SAMAgent oSAMAgent)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "init()";
 		Object oTicketSection;
@@ -112,7 +112,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 	 */
 	@Override
 	public void put(Object oKey, Object oValue, Long lTimestamp)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String _sMethod = "put";
 		HashMap htValue = (HashMap) oValue;
@@ -139,7 +139,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 	 */
 	@Override
 	public void cleanup(Long lTimestamp)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String _sMethod = "cleanup";
 		long now = new Date().getTime();
@@ -165,7 +165,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 	 */
 	@SuppressWarnings("unchecked")
 	private void checkTimeoutCondition()
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String _sMethod = "checkTimeoutCondition";
 		long now = new Date().getTime();
@@ -267,7 +267,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 	 *             If send request fails.
 	 */
 	private void sendLogoutRequestToSp(String sNameID, String urlSp)
-		throws ASelectException
+	throws ASelectException
 	{
 		String _sMethod = "sendLogOutRequest";
 		SoapLogoutRequestSender requestSender = new SoapLogoutRequestSender();

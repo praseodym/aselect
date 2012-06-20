@@ -64,7 +64,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		super.init(oServletConfig, oHandlerConfig);
 	}
@@ -92,7 +92,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 	 *             If processing of logout request fails.
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
@@ -117,7 +117,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 	 *             the a select exception
 	 */
 	private void handleSOAPLogoutRequest(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleSOAPLogoutRequest";
 		try {

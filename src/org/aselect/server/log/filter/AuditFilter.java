@@ -54,7 +54,7 @@ public class AuditFilter implements Filter
 	 */
 	@SuppressWarnings("unchecked")
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-		throws IOException, ServletException
+	throws IOException, ServletException
 	{
 		// Retrieves the session object from the current request.
 		// HttpSession session =
@@ -132,7 +132,7 @@ public class AuditFilter implements Filter
 	 */
 	@SuppressWarnings("unchecked")
 	public void init(FilterConfig filterConfig)
-		throws ServletException
+	throws ServletException
 	{
 		final String sMethod = "init()";
 		_logger = ASelectSystemLogger.getHandle();

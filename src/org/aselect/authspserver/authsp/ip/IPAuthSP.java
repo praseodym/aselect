@@ -94,7 +94,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * A-Select IP AuthSP <br>
  * <br>
@@ -156,7 +156,7 @@ public class IPAuthSP extends ASelectHttpServlet
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig)
-		throws ServletException
+	throws ServletException
 	{
 		String sMethod = "init()";
 		Object oAuthSPConfig = null;
@@ -348,7 +348,7 @@ public class IPAuthSP extends ASelectHttpServlet
 	 */
 	@Override
 	protected void doGet(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
-		throws ServletException, java.io.IOException
+	throws ServletException, java.io.IOException
 	{
 		String sMethod = "doGet()";
 		PrintWriter pwOut = null;
@@ -588,7 +588,7 @@ public class IPAuthSP extends ASelectHttpServlet
 	 */
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut, String sResultCode, String sLanguage)
-		throws IOException
+	throws IOException
 	{
 		String sMethod = "handleResult()";
 

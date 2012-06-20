@@ -84,7 +84,7 @@ public class ASelectSAMAgent extends SAMAgent
 	 *             the a select sam exception
 	 */
 	public void init()
-		throws ASelectSAMException
+	throws ASelectSAMException
 	{
 		super.init(ASelectConfigManager.getHandle(), ASelectSystemLogger.getHandle());
 	}

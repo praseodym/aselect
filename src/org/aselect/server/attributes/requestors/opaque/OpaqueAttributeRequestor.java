@@ -54,7 +54,7 @@ import org.aselect.system.exception.ASelectAttributesException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Generate an "opaque handle" attribute from the user id <br>
  * <br>
@@ -86,7 +86,7 @@ public class OpaqueAttributeRequestor extends GenericAttributeRequestor
 	 *      java.util.Vector)
 	 */
 	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes)
-		throws ASelectAttributesException
+	throws ASelectAttributesException
 	{
 		final String sMethod = "getAttributes()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "vAttributes=" + vAttributes + " htTGTContext=" + htTGTContext);
@@ -126,7 +126,7 @@ public class OpaqueAttributeRequestor extends GenericAttributeRequestor
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#init(java.lang.Object)
 	 */
 	public void init(Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		// Does nothing
 	}

@@ -265,7 +265,7 @@ public class ASelectServer extends ASelectHttpServlet
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig)
-		throws ServletException
+	throws ServletException
 	{
 		String sMethod = "init()";
 		// Initialize Configuration

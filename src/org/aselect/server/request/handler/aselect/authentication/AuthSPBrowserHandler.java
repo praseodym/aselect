@@ -398,7 +398,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private void handleError(HashMap htServiceRequest, HttpServletResponse servletResponse)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleError()";
 		AuthenticationLogger authenticationLogger = ASelectAuthenticationLogger.getHandle();

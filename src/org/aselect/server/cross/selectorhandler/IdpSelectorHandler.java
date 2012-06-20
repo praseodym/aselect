@@ -149,7 +149,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 	 * @see org.aselect.server.cross.ISelectorHandler#init(java.lang.Object)
 	 */
 	public void init(Object oHandlerConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -227,7 +227,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter)
 	 */
 	public HashMap getRemoteServerId(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "IdpSelectorHandler.getRemoteServerId()";
 		HashMap htReturn = null;
@@ -300,7 +300,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 	 *             the a select exception
 	 */
 	private void showSelectForm(HashMap htServiceRequest, PrintWriter pwOut, HashMap htServers, String sDefaultRemoteOrg)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "showSelectForm()";
 		try {
@@ -407,7 +407,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 	 *             Global HashMap _htHtmlTemplates variabele contains the templates. <br>
 	 */
 	private void loadHTMLTemplates()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadHTMLTemplates()";
 		try {
@@ -440,7 +440,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 	 *             the a select exception
 	 */
 	private String loadHTMLTemplate(String sLocation)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sTemplate = new String();
 		String sLine;
@@ -479,7 +479,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 	 *             the a select exception
 	 */
 	private void getIdpQueryServerResourceGroup()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getIdpQueryServerResourceGroup()";
 		if (!_crossASelectManager.getRemoteServers().containsKey(_sIdPQueryServerId)) {
@@ -516,7 +516,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 	 *             the a select exception
 	 */
 	private String getIdpQueryServerUrl()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getUrl()";
 		String sUrl = null;
@@ -560,7 +560,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 	 *             the a select exception
 	 */
 	private HashMap handleIdpApiCall()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleIdpApiCall()";
 		HashMap htResult = null;

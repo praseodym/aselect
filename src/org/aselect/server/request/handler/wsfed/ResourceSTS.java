@@ -31,7 +31,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Tools;
 import org.opensaml.*;
 
-// TODO: Auto-generated Javadoc
+
 //
 // Resource Partner STS = SP
 //
@@ -69,7 +69,7 @@ public class ResourceSTS extends ProtoRequestHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -102,7 +102,7 @@ public class ResourceSTS extends ProtoRequestHandler
 	 * @see org.aselect.server.request.handler.IRequestHandler#process(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		String sPathInfo = request.getPathInfo();
@@ -193,7 +193,7 @@ public class ResourceSTS extends ProtoRequestHandler
 	 *             the a select exception
 	 */
 	public RequestState processReturn(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "processReturn()";
 		// String sPwa = request.getParameter("wa");
@@ -250,7 +250,7 @@ public class ResourceSTS extends ProtoRequestHandler
 	 */
 	@Override
 	public String serializeTheseAttributes(HashMap htAttribs)
-		throws ASelectException
+	throws ASelectException
 	{
 		return "";
 	}

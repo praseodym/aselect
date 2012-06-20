@@ -56,7 +56,7 @@ public class LbSensorSystemLogger extends SystemLogger
 	 *             the aselect exception
 	 */
 	public void init(LbSensorConfigManager oConfigManager, Object oLogSection, String sWorkingDir)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init";
 		LbSensorSystemLogger oLbSensorLogger = LbSensorSystemLogger.getHandle();

@@ -47,7 +47,7 @@ import java.util.Locale;
 import org.aselect.agent.authorization.parsing.types.IPv4Address;
 import org.aselect.agent.authorization.parsing.types.IPv6Address;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * A token that is used when scanning, parsing and evaluating authorization rules. <br>
  * <br>

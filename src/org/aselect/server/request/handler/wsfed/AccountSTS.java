@@ -84,7 +84,7 @@ public class AccountSTS extends ProtoRequestHandler
 	 * @see org.aselect.server.request.handler.ProtoRequestHandler#init(javax.servlet.ServletConfig, java.lang.Object)
 	 */
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		_oTGTManager = TGTManager.getHandle();
@@ -251,7 +251,7 @@ public class AccountSTS extends ProtoRequestHandler
 	 *             the a select exception
 	 */
 	public RequestState processReturn(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "processReturn()";
 		// Redirection from RP?
@@ -355,7 +355,7 @@ public class AccountSTS extends ProtoRequestHandler
 	 */
 	private RequestState postRequestorToken(HttpServletRequest request, HttpServletResponse response, String sUid,
 			HashMap htSessionData, HashMap htAttributes)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "postRequestorToken()";
 
@@ -409,7 +409,7 @@ public class AccountSTS extends ProtoRequestHandler
 	 * @see org.aselect.server.request.handler.ProtoRequestHandler#serializeTheseAttributes(java.util.HashMap)
 	 */
 	public String serializeTheseAttributes(HashMap htAttribs)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "serializeTheseAttributes";
 		
@@ -430,7 +430,7 @@ public class AccountSTS extends ProtoRequestHandler
 	 *             the a select exception
 	 */
 	public RequestState processSignout(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "processSignout()";
 

@@ -107,7 +107,7 @@ public class Utils
 	 * @throws ASelectException
 	 */
 	public static String decodeCredentials(String credentials, SystemLogger oSysLog)
-		throws ASelectException
+	throws ASelectException
 	{
 		String _sMethod = "decodeCredentials";
 		String decodedCredentials = null;
@@ -141,7 +141,7 @@ public class Utils
 	 * @throws ASelectException - If serialization fails.
 	 */
 	public static String serializeAttributes(HashMap htAttributes)
-		throws ASelectException
+	throws ASelectException
 	{
 		final String sMethod = "serializeAttributes";
 		try {
@@ -202,7 +202,7 @@ public class Utils
 	 *             If URLDecode fails
 	 */
 	public static HashMap deserializeAttributes(String sSerializedAttributes)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "deSerializeAttributes";
 		HashMap htAttributes = new HashMap();

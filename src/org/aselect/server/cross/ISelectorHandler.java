@@ -39,7 +39,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Handler to determine the remote A-Select Server. <br>
  * <br>
@@ -79,7 +79,7 @@ public interface ISelectorHandler
 	 *             * @throws ASelectException the a select exception
 	 */
 	public void init(Object oHandlerConfig)
-		throws ASelectException;
+	throws ASelectException;
 
 	/**
 	 * Entry point of the handler during cross-authentication. Handler may present the user with a HTML page here to
@@ -103,6 +103,6 @@ public interface ISelectorHandler
 	 *             the a select exception
 	 */
 	public HashMap getRemoteServerId(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException;
+	throws ASelectException;
 
 }

@@ -1791,7 +1791,7 @@ public class RequestHandler extends Thread
 	 *             If setting response parameters fails.
 	 */
 	private void processKillTicketRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "processKillTicketRequest()";
 		StringBuffer sbBuffer = new StringBuffer();
@@ -1831,14 +1831,14 @@ public class RequestHandler extends Thread
 	 * Process kill tgt request.
 	 * 
 	 * @param oInputMessage
-	 *            the o input message
+	 *            the input message
 	 * @param oOutputMessage
-	 *            the o output message
+	 *            the output message
 	 * @throws ASelectCommunicationException
-	 *             the a select communication exception
+	 *             the aselect communication exception
 	 */
 	private void processKillTgtRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "processKillTgtRequest()";
 		StringBuffer sbBuffer = new StringBuffer();
@@ -1949,7 +1949,7 @@ public class RequestHandler extends Thread
 	 *             If setting response parameters fails.
 	 */
 	private void processSetAuthorizationRulesRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		final String sMethod = "processSetAuthorizationRulesRequest()";
 		if (!_bAuthorization) { // Authorization not enabled
@@ -2096,7 +2096,7 @@ public class RequestHandler extends Thread
 	 *             If signing fails.
 	 */
 	private void signRequest(HashMap htRequest)
-		throws Exception
+	throws Exception
 	{
 		if (!_configManager.isSigningEnabled())
 			return;
@@ -2145,7 +2145,7 @@ public class RequestHandler extends Thread
 	 *             If URLDecode fails
 	 */
 	private HashMap deserializeAttributes(String sSerializedAttributes)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "deSerializeAttributes";
 		HashMap htAttributes = new HashMap();

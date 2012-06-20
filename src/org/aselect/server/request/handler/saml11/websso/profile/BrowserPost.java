@@ -39,7 +39,7 @@ import org.opensaml.SAMLAssertion;
 import org.opensaml.SAMLResponse;
 import org.opensaml.SAMLSubject;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Browser/Post websso profile. <br>
  * <br>
@@ -89,7 +89,7 @@ public class BrowserPost extends AbstractWebSSOProfile
 	@Override
 	public void init(Object oConfig, long lAssertionExpireTime, String sAttributeNamespace,
 			boolean bSendAttributeStatement)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -180,7 +180,7 @@ public class BrowserPost extends AbstractWebSSOProfile
 	 */
 	@Override
 	public void process(HashMap htInfo, HttpServletResponse response, String sIP, String sHost)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		try {
@@ -303,7 +303,7 @@ public class BrowserPost extends AbstractWebSSOProfile
 	 *             if the page could not be displayed or the Base64 encoding fails
 	 */
 	private void send(HttpServletResponse response, SAMLResponse oSAMLResponse, String sAction, String sTarget)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "send()";
 		PrintWriter pwOut = null;
@@ -354,7 +354,7 @@ public class BrowserPost extends AbstractWebSSOProfile
 	 *             if the file couldn't be read
 	 */
 	private String readTemplate(File fTemplate)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "readTemplate()";
 		BufferedReader brIn = null;

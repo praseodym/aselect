@@ -38,7 +38,7 @@
  */
 package org.aselect.agent.authorization.parsing;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * A binary tree that is constructed during evaluating rule parsing. <br>
  * <br>

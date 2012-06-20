@@ -68,7 +68,7 @@ public class Xsaml20_Receiver extends Saml20_BrowserHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 

@@ -31,7 +31,7 @@ public interface IConfigManager
 	 *             If initialization fails.
 	 */
 	public abstract void init(String sConfigFile, SystemLogger oSystemLogger)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Initialize the <code>ConfigManager</code> for use with a database. <br>
@@ -67,7 +67,7 @@ public interface IConfigManager
 	 */
 	public abstract void init(String sDriverName, String sUser, String sPassword, String sDatabaseURL,
 			String sDatabaseTable, String sConfigId, SystemLogger oSystemLogger)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Returns a sub-section from the configuration of the given root-section. <br>
@@ -97,7 +97,7 @@ public interface IConfigManager
 	 *             If retrieving fails.
 	 */
 	public abstract Object getSection(Object oRootSection, String sSectionType, String sSectionID)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Returns a sub-section from the configuration of the given root section specified by the given type. <br>
@@ -123,7 +123,7 @@ public interface IConfigManager
 	 *             If retrieving fails
 	 */
 	public abstract Object getSection(Object oRootSection, String sSectionType)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Adds an empty configuration section of the specified <code>sectionType
@@ -150,7 +150,7 @@ public interface IConfigManager
 	 *             If setting fails
 	 */
 	public abstract Object setSection(Object oRootSection, String sSectionType)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Removes a specified configuration section. <br>
@@ -176,7 +176,7 @@ public interface IConfigManager
 	 *             If removing fails
 	 */
 	public abstract boolean removeSection(Object oRootSection, String sSectionType)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Removes a configuration section specified by section ID. <br>
@@ -204,7 +204,7 @@ public interface IConfigManager
 	 *             if removing fails
 	 */
 	public abstract boolean removeSection(Object oRootSection, String sSectionType, String sSectionID)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Returns a <code>String</code> that contains the requested configuration parameter. <br>
@@ -231,7 +231,7 @@ public interface IConfigManager
 	 *             If retrieving fails
 	 */
 	public abstract String getParam(Object oSection, String sConfigItem)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Adds a config parameter to the given section. <br>
@@ -263,7 +263,7 @@ public interface IConfigManager
 	 *             If setting fails
 	 */
 	public abstract boolean setParam(Object oSection, String sConfigItem, String sConfigValue, boolean bMandatory)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Returns the next section with the same type that is direclty located after the given section. <br>
@@ -287,7 +287,7 @@ public interface IConfigManager
 	 *             If retrieving fails
 	 */
 	public abstract Object getNextSection(Object oSection)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Saves the configuration as is known by the ConfigHandler. <br>
@@ -308,7 +308,7 @@ public interface IConfigManager
 	 *             If saving fails
 	 */
 	public abstract void saveConfig()
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 	/**
 	 * Imports the configuration file within the configuration that is present in the <code>ConfigHandler</code>. <br>
@@ -334,6 +334,6 @@ public interface IConfigManager
 	 */
 	@Deprecated
 	public abstract void importConfig(File fConfig)
-		throws ASelectConfigException;
+	throws ASelectConfigException;
 
 }

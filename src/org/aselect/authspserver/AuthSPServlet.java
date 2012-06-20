@@ -183,7 +183,7 @@ public class AuthSPServlet extends ASelectHttpServlet
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig)
-		throws ServletException
+	throws ServletException
 	{
 		String sMethod = "init()";
 

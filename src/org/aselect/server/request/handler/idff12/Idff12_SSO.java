@@ -80,7 +80,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 	 * @see org.aselect.server.request.handler.ProtoRequestHandler#init(javax.servlet.ServletConfig, java.lang.Object)
 	 */
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -210,7 +210,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 	 * @see org.aselect.server.request.handler.IRequestHandler#process(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		HashMap htTgtContext = null;
@@ -445,7 +445,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 	 * @see org.aselect.server.request.handler.ProtoRequestHandler#serializeTheseAttributes(java.util.HashMap)
 	 */
 	public String serializeTheseAttributes(HashMap htAttribs)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "serializeTheseAttributes";
 		

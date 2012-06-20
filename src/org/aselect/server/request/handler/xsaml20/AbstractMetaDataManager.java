@@ -182,7 +182,7 @@ public abstract class AbstractMetaDataManager
 	 */
 	protected void urlSystemProvider(ChainingMetadataProvider myMetadataProvider, String sMethod,
 			BasicParserPool ppMgr, String metadataURL)
-		throws ASelectException
+	throws ASelectException
 	{
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "urlSystemProvider url="+metadataURL);
 		HTTPMetadataProvider urlProvider;
@@ -227,7 +227,7 @@ public abstract class AbstractMetaDataManager
 	 *             the a select exception
 	 */
 	protected void ensureMetadataPresence(String entityId)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "ensureMetadataPresence";
 		String metadataURL = null;
@@ -275,7 +275,7 @@ public abstract class AbstractMetaDataManager
 	 *             the a select exception
 	 */
 	private void loadTrustedIssuers()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadTrustedIssuers";
 
@@ -371,7 +371,7 @@ public abstract class AbstractMetaDataManager
 	 * @throws ASelectException
 	 */
 	protected void addMetadata(ChainingMetadataProvider myMetadataProvider)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "addMetadata";
 		ArrayList<MetadataProvider> metadataProviderArray = new ArrayList<MetadataProvider>();
@@ -837,7 +837,7 @@ public abstract class AbstractMetaDataManager
 	 *             the XML parser exception
 	 */
 	private synchronized Element marshallDescriptor(XMLObject descriptor)
-		throws MarshallingException, XMLParserException
+	throws MarshallingException, XMLParserException
 	{
 		String sMethod = "marshallDescriptor";
 

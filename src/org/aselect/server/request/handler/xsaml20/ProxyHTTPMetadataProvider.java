@@ -68,7 +68,7 @@ public class ProxyHTTPMetadataProvider extends HTTPMetadataProvider
 	 *             the metadata provider exception
 	 */
 	public ProxyHTTPMetadataProvider(String metadataURL, int requestTimeout, String proxyHost, int proxyPort)
-		throws MetadataProviderException {
+	throws MetadataProviderException {
 
 		super(metadataURL, requestTimeout);
 
@@ -166,7 +166,7 @@ public class ProxyHTTPMetadataProvider extends HTTPMetadataProvider
 	 */
 	@Override
 	protected XMLObject fetchMetadata()
-		throws IOException, UnmarshallingException
+	throws IOException, UnmarshallingException
 	{
 		_systemLogger.log(Level.FINEST, "Fetching metadata document from remote server");
 

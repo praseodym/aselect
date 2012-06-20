@@ -265,7 +265,7 @@ public class TGTIssuer
 	// 20120403, Bauke: added htSessionContext
 	public void issueCrossTGTandRedirect(String sRid, HashMap htSessionContext, String sAuthSP, HashMap htRemoteAttributes,
 			HttpServletResponse oHttpServletResponse, String sOldTGT)
-		throws ASelectException
+	throws ASelectException
 	{
 		// A 'cross TGT' is issued if this Server is acting as 'local' A-Select Server.
 		// The user was authenticated at another (remote) A-Select Server.
@@ -775,7 +775,7 @@ public class TGTIssuer
 	 */
 	// 20120403, Bauke: added htSessionContext
 	public void issueErrorTGTandRedirect(String sRid, HashMap htSessionContext, String sResultCode, HttpServletResponse oHttpServletResponse)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "issueErrorTGT";
 		SessionManager sessionManager = null;

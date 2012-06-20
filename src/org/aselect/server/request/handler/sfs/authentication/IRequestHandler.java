@@ -73,5 +73,5 @@ public interface IRequestHandler
 	 *             the a select exception
 	 */
 	public void processRequest()
-		throws ASelectException;
+	throws ASelectException;
 }

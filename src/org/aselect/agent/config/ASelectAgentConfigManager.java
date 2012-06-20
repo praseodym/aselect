@@ -299,7 +299,7 @@ public class ASelectAgentConfigManager extends ConfigManager
 	 *             the a select exception
 	 */
 	private void loadCrypto()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadCrypto()";
 
@@ -429,7 +429,7 @@ public class ASelectAgentConfigManager extends ConfigManager
 	 *             the a select exception
 	 */
 	private void loadDefaultPrivateKey(String sKeystorePath, String sPassword)
-		throws ASelectException
+	throws ASelectException
 	{
 		try {
 			KeyStore ks = KeyStore.getInstance("JKS");
@@ -458,7 +458,7 @@ public class ASelectAgentConfigManager extends ConfigManager
 	 *             the a select exception
 	 */
 	private void readSignatureConfig(Object oCryptoSection, HashMap htProviders)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "readSignatureConfig()";
 		String sProvider = null;

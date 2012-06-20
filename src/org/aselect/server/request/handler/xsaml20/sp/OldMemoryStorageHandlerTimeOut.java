@@ -32,7 +32,7 @@ import org.aselect.system.storagemanager.handler.OldMemoryStorageHandler;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
-// TODO: Auto-generated Javadoc
+
 /*
  * NOTE: Code is identical to JDBCStorageHandlerTimeOut (except for class-names of course)
  */
@@ -51,7 +51,7 @@ public class OldMemoryStorageHandlerTimeOut extends OldMemoryStorageHandler
 	 */
 	@Override
 	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger systemLogger, SAMAgent oSAMAgent)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "init()";
 
@@ -101,7 +101,7 @@ public class OldMemoryStorageHandlerTimeOut extends OldMemoryStorageHandler
 	 */
 	@Override
 	public void put(Object oKey, Object oValue, Long lTimestamp)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String _sMethod = "put";
 		HashMap htValue = (HashMap) oValue;
@@ -129,7 +129,7 @@ public class OldMemoryStorageHandlerTimeOut extends OldMemoryStorageHandler
 	 */
 	@Override
 	public void cleanup(Long lTimestamp)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String _sMethod = "cleanup";
 		Long now = new Date().getTime();
@@ -151,7 +151,7 @@ public class OldMemoryStorageHandlerTimeOut extends OldMemoryStorageHandler
 	 */
 	@SuppressWarnings("unchecked")
 	private void determineTimeOut()
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String _sMethod = "determineTimeOut";
 
@@ -224,7 +224,7 @@ public class OldMemoryStorageHandlerTimeOut extends OldMemoryStorageHandler
 	 *             the a select storage exception
 	 */
 	private boolean sendLogoutToFederation(String sNameID, HashMap htTGTContext)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String _sMethod = "sendLogoutToFederation";
 

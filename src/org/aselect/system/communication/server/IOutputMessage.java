@@ -77,7 +77,7 @@ public interface IOutputMessage
 	 *             If communication fails.
 	 */
 	public boolean setParam(String sName, String sValue)
-		throws ASelectCommunicationException;
+	throws ASelectCommunicationException;
 
 	// 20090310, Bauke: Added to support applications using the DigiD protocol to connect to the server
 	// That protocol does not URL encode it's parameters
@@ -129,7 +129,7 @@ public interface IOutputMessage
 	 *             If communication fails.
 	 */
 	public boolean setParam(String sName, String[] saValues)
-		throws ASelectCommunicationException;
+	throws ASelectCommunicationException;
 
 	/**
 	 * Sends this message. <br>
@@ -151,6 +151,6 @@ public interface IOutputMessage
 	 *             If communication fails.
 	 */
 	public boolean send()
-		throws ASelectCommunicationException;
+	throws ASelectCommunicationException;
 
 }

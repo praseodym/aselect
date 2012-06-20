@@ -52,7 +52,7 @@ import org.aselect.authspserver.log.AuthSPSystemLogger;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.service.SAMServiceServlet;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * The A-Select AuthSP Server SAM Service servlet. <br>
  * <br>
@@ -87,7 +87,7 @@ public class SAMService extends SAMServiceServlet
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig)
-		throws ServletException
+	throws ServletException
 	{
 		_systemLogger = AuthSPSystemLogger.getHandle();
 		super.init(oServletConfig);

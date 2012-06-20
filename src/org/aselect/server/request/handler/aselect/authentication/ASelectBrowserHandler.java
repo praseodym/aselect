@@ -184,7 +184,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 	 */
 	@Override
 	public void processBrowserRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		if (htServiceRequest.get("aselect_credentials") != null) {
 			handleCrossAuthenticateResponse(htServiceRequest, _servletResponse, pwOut);
@@ -212,7 +212,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 	 */
 	private void handleCrossAuthenticateResponse(HashMap htServiceRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "handleCrossAuthenticateResponse()";
 
@@ -322,7 +322,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 	 *             the a select exception
 	 */
 	private HashMap verifyRemoteCredentials(String sCredentials, String sRemoteRid, String sRemoteOrg)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "verifyRemoteCredentials()";
 		Object oRemoteServer;

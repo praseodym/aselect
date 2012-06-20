@@ -123,7 +123,7 @@ public class AuditLevel extends Level
 	 *             the illegal argument exception
 	 */
 	public static Level parse(String name)
-		throws IllegalArgumentException
+	throws IllegalArgumentException
 	{
 		return toLevel("AUDIT");
 	}

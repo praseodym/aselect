@@ -59,7 +59,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.AuthenticationLogger;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * The authentication logger for the A-Select Server. <br>
  * <br>
@@ -133,7 +133,7 @@ public class ASelectAuthenticationLogger extends AuthenticationLogger
 	 *             if initialization went wrong
 	 */
 	public void init(Object oAuthLogging, String sWorkingDir)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		String sAuthLogTarget = null;

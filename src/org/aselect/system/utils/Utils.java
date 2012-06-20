@@ -612,7 +612,7 @@ public class Utils
 	 *             If URL encoding fails.
 	 */
 	public static String hashtable2CGIMessage(HashMap htInput)
-		throws UnsupportedEncodingException
+	throws UnsupportedEncodingException
 	{
 		StringBuffer sbBuffer = new StringBuffer();
 		Set keys = htInput.keySet();
@@ -840,7 +840,7 @@ public class Utils
 	 */
 	public static int getSimpleIntParam(ConfigManager oConfMgr, SystemLogger oSysLog, Object oConfig, String sParam,
 			boolean bMandatory)
-		throws ASelectException
+	throws ASelectException
 	{
 		final String sMethod = "getSimpleIntParam";
 		String sValue = getSimpleParam(oConfMgr, oSysLog, oConfig, sParam, bMandatory);
@@ -968,7 +968,7 @@ public class Utils
 	 */
 	public static Object getSectionFromSection(ConfigManager oConfMgr, SystemLogger oSysLog, Object oConfig,
 			String sParam, String sValue, boolean bMandatory)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		final String sMethod = "getSectionFromSection";
 		Object oLogSection = null;

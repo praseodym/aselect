@@ -36,7 +36,7 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMAgent;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * The SAM agent for the A-Select Agent. <br>
  * <br>
@@ -89,7 +89,7 @@ public class ASelectAgentSAMAgent extends SAMAgent
 	 * @see SAMAgent#init(ConfigManager, SystemLogger)
 	 */
 	public void init()
-		throws ASelectSAMException
+	throws ASelectSAMException
 	{
 		super.init(ASelectAgentConfigManager.getHandle(), ASelectAgentSystemLogger.getHandle());
 	}

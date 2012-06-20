@@ -15,7 +15,7 @@ import java.util.Timer;
 import java.util.logging.Level;
 import org.aselect.server.log.ASelectSystemLogger;
 
-// TODO: Auto-generated Javadoc
+
 public class SLOTimer extends Timer
 {
 	private static SLOTimer sloTimer;

@@ -79,7 +79,7 @@ public abstract class AbstractRequestHandler extends BasicRequestHandler impleme
 	 * @see org.aselect.server.request.handler.IRequestHandler#init(javax.servlet.ServletConfig, java.lang.Object)
 	 */
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {

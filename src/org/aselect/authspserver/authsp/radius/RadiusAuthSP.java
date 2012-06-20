@@ -221,7 +221,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 	 * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
 	 */
 	public void init(ServletConfig servletConfig)
-		throws ServletException
+	throws ServletException
 	{
 		String sMethod = "init()";
 
@@ -374,7 +374,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	protected void doGet(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
-		throws ServletException, java.io.IOException
+	throws ServletException, java.io.IOException
 	{
 		String sMethod = "doGet";
 		PrintWriter pwOut = null;
@@ -495,7 +495,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
 	protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
-		throws ServletException, java.io.IOException
+	throws ServletException, java.io.IOException
 	{
 		String sMethod = "doPost()";
 		PrintWriter pwOut = null;
@@ -763,7 +763,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 	 */
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut, String sResultCode, String sLanguage)
-		throws IOException
+	throws IOException
 	{
 		String sMethod = "handleResult()";
 

@@ -36,7 +36,7 @@ public class SensorDataDispatcher extends BasicSensorHandler
 	 */
 	@Override
 	public void initialize(Object oConfigHandler, String sId)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "initialize";
 
@@ -59,7 +59,7 @@ public class SensorDataDispatcher extends BasicSensorHandler
 	 */
 	@Override
 	protected void processLine(BufferedWriter oOutWriter, String sLine, String sId)
-		throws IOException
+	throws IOException
 	{
 		String sMethod = "processLine";
 
@@ -109,7 +109,7 @@ public class SensorDataDispatcher extends BasicSensorHandler
 	 *             Signals that an I/O exception has occurred.
 	 */
 	private void writeHtmlResponse(BufferedWriter outWriter, long lAverage, int iCode)
-		throws IOException
+	throws IOException
 	{
 		String sCode = (iCode == STATUS_OK) ? "OK" : (iCode == STATUS_UNAVAILABLE) ? "Service unavailable"
 				: "Not Found";
@@ -126,7 +126,7 @@ public class SensorDataDispatcher extends BasicSensorHandler
 	 */
 	@Override
 	protected void echoCharToStream(BufferedWriter oOutWriter, char c)
-		throws IOException
+	throws IOException
 	{
 		// No Action
 	}

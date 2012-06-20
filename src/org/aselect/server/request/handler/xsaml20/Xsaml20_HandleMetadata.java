@@ -79,7 +79,7 @@ public class Xsaml20_HandleMetadata extends AbstractRequestHandler
 	 *             If processing of meta data request fails.
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process";
 		PrintWriter out;

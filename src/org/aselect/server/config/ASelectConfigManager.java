@@ -508,7 +508,7 @@ public class ASelectConfigManager extends ConfigManager
 	 */
 	public void init(String sWorkingDir, String sSQLDriver, String sSQLUser, String sSQLPassword, String sSQLURL,
 			String sSQLTable, String sConfigIDName)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init";
 		StringBuffer sbInfo;
@@ -1037,7 +1037,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *             the a select exception
 	 */
 	public Properties loadErrorFile(String sLanguage, String sCountry)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadErrorFile";
 		File fTemplate = null;
@@ -1164,7 +1164,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *             the a select exception
 	 */
 	public String getForm(String sForm)
-		throws ASelectException
+	throws ASelectException
 	{
 		return getForm(sForm, "", "");
 	}
@@ -1197,7 +1197,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *             if template could not be updated
 	 */
 	public String updateTemplate(String sTemplate, HashMap htSessionContext)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "updateTemplate()";
 		String sReturn = null;
@@ -1294,7 +1294,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *             if loading fails.
 	 */
 	private void loadDefaultPrivateKey(String sWorkingDir)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadDefaultPrivateKey()";
 		String sKeyStoreName = "aselect.keystore";
@@ -1367,7 +1367,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *             id loading fails.
 	 */
 	private void loadAuthSPSettings(String sWorkingDir)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadAuthSPSettings()";
 		Object oAuthSP = null;
@@ -1552,7 +1552,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *             If loading fails.
 	 */
 	private void loadAuthSPSpecificPrivateKey(String sWorkingDir, Object oAuthSPConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadAuthSPSpecificPrivateKey()";
 		String sAlias = null;
@@ -1650,7 +1650,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *             If loading templates fails.
 	 */
 	public void loadHTMLTemplates(String sWorkingDir)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadHTMLTemplates()";
 
@@ -1790,7 +1790,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *             the a select exception
 	 */
 	public String loadHTMLTemplate(String sWorkingDir, String sFileName)
-		throws ASelectException
+	throws ASelectException
 	{
 		return loadHTMLTemplate(sWorkingDir, sFileName, "", "");
 	}
@@ -1817,7 +1817,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *             if loading fails.
 	 */
 	private void loadPrivilegedSettings(String sWorkingDir)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadPrivilegedSettings()";
 
@@ -1887,7 +1887,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *             If loading fails.
 	 */
 	private void loadPrivilegedPublicKey(String sWorkingDir, String sAlias)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadPrivilegedPublicKey()";
 		try {
@@ -2015,7 +2015,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *             if check fails.
 	 */
 	private void checkUDBSettings()
-		throws ASelectException
+	throws ASelectException
 	{
 		Object oUdbCfgSection = null;
 		String sConnectorID = null;
@@ -2117,7 +2117,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *             if check fails.
 	 */
 	private void checkEssentialConfig()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "checkEssentialConfig()";
 
@@ -2283,7 +2283,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *             the a select config exception
 	 */
 	public static String getParamFromSection(Object oConfig, String sSection, String sParam, boolean bMandatory)
-		throws ASelectConfigException
+	throws ASelectConfigException
 	{
 		return Utils.getParamFromSection(getHandle(), ASelectSystemLogger.getHandle(), oConfig, sSection, sParam,
 				bMandatory);
@@ -2304,7 +2304,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *             the a select exception
 	 */
 	public static String getSimpleParam(Object oConfig, String sParam, boolean bMandatory)
-		throws ASelectException
+	throws ASelectException
 	{
 		return Utils.getSimpleParam(getHandle(), ASelectSystemLogger.getHandle(), oConfig, sParam, bMandatory);
 	}
@@ -2324,7 +2324,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *             the a select exception
 	 */
 	public static Object getSimpleSection(Object oConfig, String sParam, boolean bMandatory)
-		throws ASelectException
+	throws ASelectException
 	{
 		return Utils.getSimpleSection(getHandle(), ASelectSystemLogger.getHandle(), oConfig, sParam, bMandatory);
 	}
@@ -2363,7 +2363,7 @@ public class ASelectConfigManager extends ConfigManager
 	 */
 	public static HashMap<String, String> getTableFromConfig(Object oConfig, HashMap<String, String> htAllKeys_Values, String sMainSection,
 			String sSubSection, String sKeyName, String sValueName, boolean mandatory, boolean uniqueValues)
-		throws ASelectException, ASelectConfigException
+	throws ASelectException, ASelectConfigException
 	{
 		String sMethod = "getTableFromConfig";
 

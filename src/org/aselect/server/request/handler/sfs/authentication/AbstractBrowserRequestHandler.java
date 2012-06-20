@@ -190,7 +190,7 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 	 * @see org.aselect.server.request.handler.sfs.authentication.IRequestHandler#processRequest()
 	 */
 	public void processRequest()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "processRequest()";
 		PrintWriter pwOut = null;
@@ -252,7 +252,7 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 	 */
 	abstract protected void processBrowserRequest(HashMap htServiceRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut)
-		throws ASelectException;
+	throws ASelectException;
 
 	/**
 	 * Shows the main A-Select Error page with the approprate errors. <br>

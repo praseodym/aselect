@@ -163,7 +163,7 @@ public class SystemLoggerAudit implements ISystemLogger
 	 */
 	public void init(String sLogFileNamePrefix, String sLoggerNamespace, IConfigManager oConfigManager,
 			Object oLogTargetConfig, String sWorkingDir)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 

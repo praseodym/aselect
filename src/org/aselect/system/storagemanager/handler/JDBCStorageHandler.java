@@ -200,7 +200,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	 *      org.aselect.system.sam.agent.SAMAgent)
 	 */
 	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger systemLogger, SAMAgent oSAMAgent)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "init()";
 		Object oTableSection = null;
@@ -321,7 +321,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#get(java.lang.Object)
 	 */
 	public Object get(Object oKey)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "get()";
 		Object oRet = null;
@@ -411,7 +411,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#getTimestamp(java.lang.Object)
 	 */
 	public long getTimestamp(Object oKey)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "getTimestamp";
 		long lRet = 0;
@@ -501,7 +501,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#getCount()
 	 */
 	public long getCount()
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "getCount()";
 		long lCount = -1;
@@ -556,7 +556,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#getAll()
 	 */
 	public HashMap getAll()
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		HashMap htResponse = new HashMap();
 		StringBuffer sbBuffer = null;
@@ -712,7 +712,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#put(java.lang.Object, java.lang.Object, java.lang.Long)
 	 */
 	private void create(Object oKey, Object oValue, Long lTimestamp)
-		throws SQLException, ASelectStorageException
+	throws SQLException, ASelectStorageException
 	{
 		String sMethod = "create()";
 		Connection oConnection = null; // RH, 20090604, n
@@ -838,7 +838,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#put(java.lang.Object, java.lang.Object, java.lang.Long)
 	 */
 	private void update(Object oKey, Object oValue, Long lTimestamp)
-		throws SQLException, ASelectStorageException
+	throws SQLException, ASelectStorageException
 	{
 		String sMethod = "update()";
 		Connection oConnection = null; // RH, 20090604, n
@@ -965,7 +965,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#put(java.lang.Object, java.lang.Object, java.lang.Long)
 	 */
 	public void put(Object oKey, Object oValue, Long lTimestamp)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "put()";
 		Connection oConnection = null; // RH, 20090604, n
@@ -1081,7 +1081,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#remove(java.lang.Object)
 	 */
 	public void remove(Object oKey)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "remove()";
 		StringBuffer sbBuffer = null;
@@ -1152,7 +1152,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#removeAll()
 	 */
 	public void removeAll()
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "removeAll()";
 		StringBuffer sbBuffer = null;
@@ -1203,7 +1203,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#cleanup(java.lang.Long)
 	 */
 	public void cleanup(Long lTimestamp)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "cleanup()";
 		StringBuffer sbBuffer = null;
@@ -1274,7 +1274,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#isMaximum(long)
 	 */
 	public boolean isMaximum(long lItemCount)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "isMaximum";
 		boolean bReturn = false;
@@ -1338,7 +1338,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	 * @see org.aselect.system.storagemanager.IStorageHandler#containsKey(java.lang.Object)
 	 */
 	public boolean containsKey(Object oKey)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "containsKey()";
 		boolean bReturn = false;
@@ -1433,7 +1433,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	// private Connection getConnection() throws ASelectStorageException
 	// Keep this method for backward compatibility with other/extending classes
 	protected Connection getConnection()
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 
 		return _oConnectionHandler.getConnection();
@@ -1511,7 +1511,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	 */
 	// private static byte[] encode(Object o) throws IOException
 	protected byte[] encode(Object o)
-		throws IOException
+	throws IOException
 	{
 		byte[] baResponse = null;
 		ByteArrayOutputStream osBytes = new ByteArrayOutputStream();
@@ -1554,7 +1554,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	 */
 	// private static Object decode(byte[] baBytes) throws IOException, ClassNotFoundException
 	protected Object decode(byte[] baBytes)
-		throws IOException, ClassNotFoundException
+	throws IOException, ClassNotFoundException
 	{
 		Object oResponse = null;
 

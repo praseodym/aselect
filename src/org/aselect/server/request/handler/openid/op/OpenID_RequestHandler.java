@@ -82,7 +82,7 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 
@@ -201,7 +201,7 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 	 */
 
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{		
 			String sMethod = "process()";
 			//// maybe use "on the fly" endPointURL ?

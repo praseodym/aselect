@@ -85,7 +85,7 @@ public class UDBConnectorFactory
 	 *             If retrieving fails.
 	 */
 	public static IUDBConnector getUDBConnector()
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getUDBConnector()";
 

@@ -11,7 +11,7 @@ import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMAgent;
 import org.aselect.system.sam.agent.SAMResource;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * @author root
  */
@@ -41,7 +41,7 @@ public abstract class AbstractConnectionHandler implements IConnectionHandler
 	 * @see org.aselect.system.db.jdbc.IConnectionHandler#getConnection()
 	 */
 	public Connection getConnection()
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		// TODO Auto-generated method stub
 		return null;

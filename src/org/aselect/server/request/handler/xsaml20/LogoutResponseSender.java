@@ -74,7 +74,7 @@ public class LogoutResponseSender
 	@SuppressWarnings("unchecked")
 	public void sendLogoutResponse(String logoutResponseLocation, String issuer, String statusCode,
 			String inResponseTo, String sRelayState, HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "sendLogoutResponse()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Send LogoutResponse to: " + logoutResponseLocation

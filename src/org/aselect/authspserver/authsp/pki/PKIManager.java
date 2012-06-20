@@ -112,7 +112,7 @@ public class PKIManager
 	 *             if something goes wrong during init.
 	 */
 	public void init(Object oConfig, AuthSPSystemLogger oSystemLogger)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init";
 		_oConfig = oConfig;
@@ -182,7 +182,7 @@ public class PKIManager
 	 *             the a select exception
 	 */
 	private void loadCRLs()
-		throws ASelectException
+	throws ASelectException
 	{
 		_htCRLs = new HashMap();
 		String sMethod = "loadCRLs()";
@@ -227,7 +227,7 @@ public class PKIManager
 	 *             the a select exception
 	 */
 	private void loadCRLForCA(String sCaAlias)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadCRLForCA()";
 		Object oCaConfig;
@@ -301,7 +301,7 @@ public class PKIManager
 	 *             the a select exception
 	 */
 	public HashMap getTrustedCACertificate(X509Certificate oCert)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getTrustedCACertificate()";
 		HashMap htResult = new HashMap();
@@ -396,7 +396,7 @@ public class PKIManager
 	 *             the key store exception
 	 */
 	private X509Certificate getCA(String sCaAlias)
-		throws KeyStoreException
+	throws KeyStoreException
 	{
 		return (X509Certificate) _oCaKeystore.getCertificate(sCaAlias);
 	}
@@ -422,7 +422,7 @@ public class PKIManager
 	 *             if cert is not yet valid or expired.
 	 */
 	public void validateCertificateDate(X509Certificate oCert)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "validateCertificateDate()";
 		try {
@@ -514,7 +514,7 @@ public class PKIManager
 	 *             the a select exception
 	 */
 	public boolean isClientCertRevoked(String sCaAlias, X509Certificate oClientCert)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "isCRLisSignedByCA()";
 		X509CRL oCrl = null;
@@ -550,7 +550,7 @@ public class PKIManager
 	 *             the a select exception
 	 */
 	private Vector getCRLUrls(Object oCrlConfig, String sCaAlias)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getCRLUrls()";
 		Vector oCrlUrls = null;
@@ -657,7 +657,7 @@ public class PKIManager
 	 *             the a select exception
 	 */
 	private void loadCaKeyStoreFromPFXFile(String aFileName, String aKeyStorePassword)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "loadCaKeyStoreFromPFXFile()";
 		try {
@@ -711,7 +711,7 @@ public class PKIManager
 	 *             the a select exception
 	 */
 	private Vector getCrlUrls(X509Certificate oCertificate)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getCRLUrls()";
 		Vector vOctetValues = new Vector();
@@ -752,7 +752,7 @@ public class PKIManager
 	 *             the a select exception
 	 */
 	private Vector getOctetValues(byte[] baExtensionValue)
-		throws ASelectException
+	throws ASelectException
 	{
 		return getOctetValues(getDERObject(baExtensionValue));
 	}
@@ -768,7 +768,7 @@ public class PKIManager
 	 *             the a select exception
 	 */
 	private DERObject getDERObject(byte[] baExtensionValue)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getDERObject()";
 		try {
@@ -794,7 +794,7 @@ public class PKIManager
 	 *             the a select exception
 	 */
 	private Vector getOctetValues(DERObject derObject)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "getOctetValues(DERObject derObject)";
 		Vector vDerValues = new Vector();
@@ -1067,7 +1067,7 @@ public class PKIManager
 		 *             the a select exception
 		 */
 		public PKIAdminServer(int iPort)
-		throws ASelectException
+	throws ASelectException
 		{
 			try {
 				oSocket = new ServerSocket(iPort, 0, InetAddress.getByName("localhost"));

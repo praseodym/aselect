@@ -72,7 +72,7 @@ import org.aselect.server.session.SessionManager;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectStorageException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * SessionMonitorModel class used by the AdminMonitor. <br>
  * <br>

@@ -318,7 +318,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 	 */
 	abstract protected void processAPIRequest(IProtocolRequest oProtocolRequest, IInputMessage oInputMessage,
 			IOutputMessage oOutputMessage)
-		throws ASelectException;
+	throws ASelectException;
 
 	/**
 	 * Gets the _servlet request.

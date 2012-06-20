@@ -59,7 +59,7 @@ import javax.naming.directory.SearchResult;
 
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * A SSL LDAP protocol handler. <br>
  * <br>
@@ -110,7 +110,7 @@ public class LDAPSSLProtocolHandler extends AbstractLDAPProtocolHandler
 	 */
 	@Override
 	protected void doBind(String sPassword)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "doBind()";
 		StringBuffer sbTemp = null;

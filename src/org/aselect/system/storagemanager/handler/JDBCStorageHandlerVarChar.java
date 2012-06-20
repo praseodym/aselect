@@ -43,7 +43,7 @@ public class JDBCStorageHandlerVarChar extends JDBCStorageHandler
 	 */
 	@Override
 	public Object get(Object oKey)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "get()";
 		Object oRet = null;
@@ -136,7 +136,7 @@ public class JDBCStorageHandlerVarChar extends JDBCStorageHandler
 	 */
 	@Override
 	public void put(Object oKey, Object oValue, Long lTimestamp)
-		throws ASelectStorageException
+	throws ASelectStorageException
 	{
 		String sMethod = "put()";
 		PreparedStatement oStatement = null;

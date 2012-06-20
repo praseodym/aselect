@@ -134,7 +134,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 
@@ -410,7 +410,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	 *             the a select exception
 	 */
 	protected Response validateAuthnRequest(AuthnRequest authnRequest, String sRequestUrl)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "validateAuthnRequest";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "RequestUrl=" + sRequestUrl);
@@ -517,7 +517,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	 */
 	private void sendErrorArtifact(Response errorResponse, AuthnRequest authnRequest, HttpServletResponse httpResponse,
 			String sRelayState)
-		throws IOException, ASelectException
+	throws IOException, ASelectException
 	{
 		String sMethod = "sendErrorArtifact()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
@@ -555,7 +555,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	 *             the a select exception
 	 */
 	private void processReturn(HttpServletRequest httpRequest, HttpServletResponse httpResponse)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "processReturn()";
 		HashMap htTGTContext = null;

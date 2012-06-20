@@ -197,7 +197,7 @@ public class AdminMonitor extends JFrame implements TableModelListener
 	 *             If <code>setLookAndFeel()</code> fails.
 	 */
 	public AdminMonitor()
-		throws Exception {
+	throws Exception {
 		// Initialize GUI
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		StringBuffer sbInfo = new StringBuffer(Version.getVersion());
@@ -283,7 +283,7 @@ public class AdminMonitor extends JFrame implements TableModelListener
 	 *             the exception
 	 */
 	public void start(int iCheckInterval)
-		throws Exception
+	throws Exception
 	{
 
 		_oTGTsModel = new TGTMonitorModel(iCheckInterval);

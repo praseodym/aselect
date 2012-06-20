@@ -333,7 +333,7 @@ public class AuthorizationEngine
 	 *             If one or more of the supplied rules are not valid authorization rules.
 	 */
 	public synchronized void setAuthorizationRules(String sAppId, String[] saIDs, String[] saRules, String[] saURIs)
-		throws ASelectAuthorizationException
+	throws ASelectAuthorizationException
 	{
 		final String sMethod = "addAuthorizationRule()";
 		String sId = null;
@@ -396,7 +396,7 @@ public class AuthorizationEngine
 	 *             If evalution of the rule fails.
 	 */
 	public int checkUserAuthorization(String sAppId, String sURI, HashMap htUserAttributes)
-		throws ASelectAuthorizationException
+	throws ASelectAuthorizationException
 	{
 		final String sMethod = "isUserAuthorized";
 		StringBuffer sb = null;

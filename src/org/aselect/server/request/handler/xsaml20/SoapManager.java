@@ -85,7 +85,7 @@ public class SoapManager
 	 *             If sending fails.
 	 */
 	public String sendSOAP(String sMessage, String sUrl)
-		throws java.net.MalformedURLException, ASelectCommunicationException
+	throws java.net.MalformedURLException, ASelectCommunicationException
 	{
 		String sMethod = "sendSOAP";
 		StringBuffer sb = new StringBuffer();

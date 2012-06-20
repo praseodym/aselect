@@ -35,7 +35,6 @@ import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 
-// TODO: Auto-generated Javadoc
 /**
  * The interface for polling methods. <br>
  * <br>
@@ -49,7 +48,6 @@ import org.aselect.system.logging.SystemLogger;
  */
 public interface ISAMPollingMethod
 {
-	
 	/**
 	 * Initialization method for the SAM polling methods. <br>
 	 * <br>
@@ -78,7 +76,7 @@ public interface ISAMPollingMethod
 	 */
 	public void init(Object oResourceConfigSection, Object oPollingMethodConfigSection, ConfigManager oConfigManager,
 			SystemLogger oSystemLogger)
-		throws ASelectSAMException;
+	throws ASelectSAMException;
 
 	/**
 	 * Will poll a resource. <br>
@@ -98,5 +96,4 @@ public interface ISAMPollingMethod
 	 * @return TRUE if the resource is available, FALSE if the resource is unavailable.
 	 */
 	public boolean poll();
-
 }

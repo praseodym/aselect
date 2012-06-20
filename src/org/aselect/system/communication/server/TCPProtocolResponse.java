@@ -46,7 +46,7 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Iterator;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Wrapper to add data and headers to an outgoing Socket response. <br>
  * <br>
@@ -176,7 +176,7 @@ public class TCPProtocolResponse implements IProtocolResponse
 	 * @see org.aselect.system.communication.server.IProtocolResponse#getOutputStream()
 	 */
 	public OutputStream getOutputStream()
-		throws IOException
+	throws IOException
 	{
 		OutputStream osOutput = _oSocket.getOutputStream();
 

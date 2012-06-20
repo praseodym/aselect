@@ -31,7 +31,7 @@ import org.opensaml.artifact.ArtifactParseException;
 import org.opensaml.artifact.SAMLArtifactType0003;
 import org.opensaml.artifact.Util;
 
-// TODO: Auto-generated Javadoc
+
 //
 //
 public class Idff12_AssertConsumer extends SamlAssertionConsumer
@@ -61,7 +61,7 @@ public class Idff12_AssertConsumer extends SamlAssertionConsumer
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		super.init(oServletConfig, oConfig);
@@ -141,7 +141,7 @@ public class Idff12_AssertConsumer extends SamlAssertionConsumer
 	 */
 	@Override
 	public String findArtifactUrl(String sArtifact)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "findArtifactUrl()";
 		String sSamlSite = "";

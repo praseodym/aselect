@@ -181,7 +181,7 @@ public class IP implements IAuthSPProtocolHandler
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#init(java.lang.Object, java.lang.Object)
 	 */
 	public void init(Object oAuthSPConfig, Object oAuthSPResource)
-		throws ASelectAuthSPException
+	throws ASelectAuthSPException
 	{
 		String sMethod = "init()";
 

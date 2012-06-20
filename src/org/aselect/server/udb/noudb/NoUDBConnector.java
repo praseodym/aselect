@@ -120,7 +120,7 @@ public class NoUDBConnector implements IUDBConnector
 	 * @see org.aselect.server.udb.IUDBConnector#init(java.lang.Object)
 	 */
 	public void init(Object oConfigSection)
-		throws ASelectUDBException
+	throws ASelectUDBException
 	{
 		// String sFlatFile = null;
 		String sUDBResourceGroup = null;

@@ -96,7 +96,7 @@ public class Communicator
 	 * @see IMessageCreatorInterface#init(IProtocolRequest, IProtocolResponse)
 	 */
 	public boolean init(IProtocolRequest oRequest, IProtocolResponse oResponse)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		return _oCreator.init(oRequest, oResponse);
 	}
@@ -157,7 +157,7 @@ public class Communicator
 	 * @see IMessageCreatorInterface#send()
 	 */
 	public boolean send()
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		// call the send from the Message Creator
 		return _oCreator.send();

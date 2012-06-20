@@ -81,7 +81,7 @@ public class XSAML11RequestHandler extends ProtoRequestHandler
 	 */
 	@Override
 	public void init(ServletConfig oServletConfig, Object oConfig)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -155,7 +155,7 @@ public class XSAML11RequestHandler extends ProtoRequestHandler
 	 * @see org.aselect.server.request.handler.IRequestHandler#process(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
 	 */
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "XSaml11 request=" + request);
@@ -240,7 +240,7 @@ public class XSAML11RequestHandler extends ProtoRequestHandler
 	 *             the a select exception
 	 */
 	private void send(HttpServletResponse response, SAMLArtifact oSAMLArtifact, String sRedirectUrl, String sTarget)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "send()";
 		try {
@@ -271,7 +271,7 @@ public class XSAML11RequestHandler extends ProtoRequestHandler
 	 */
 	@Override
 	public String serializeTheseAttributes(HashMap htAttribs)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "serializeTheseAttributes()";
 		String sSerializedAttributes = org.aselect.server.utils.Utils.serializeAttributes(htAttribs);

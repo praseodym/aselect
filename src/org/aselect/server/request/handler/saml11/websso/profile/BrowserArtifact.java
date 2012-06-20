@@ -34,7 +34,7 @@ import org.opensaml.artifact.SAMLArtifactType0002;
 import org.opensaml.artifact.URI;
 import org.opensaml.artifact.Util;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Browser/Artifact websso profile. <br>
  * <br>
@@ -93,7 +93,7 @@ public class BrowserArtifact extends AbstractWebSSOProfile
 	@Override
 	public void init(Object oConfig, long lAssertionExpireTime, String sAttributeNamespace,
 			boolean bSendAttributeStatement)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 		try {
@@ -217,7 +217,7 @@ public class BrowserArtifact extends AbstractWebSSOProfile
 	 */
 	@Override
 	public void process(HashMap htInfo, HttpServletResponse response, String sIP, String sHost)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "process()";
 		SAMLArtifact oSAMLArtifact = null;
@@ -352,7 +352,7 @@ public class BrowserArtifact extends AbstractWebSSOProfile
 	 *             URLEncoding fails or redirect couldn't be sent
 	 */
 	private void send(HttpServletResponse response, SAMLArtifact oSAMLArtifact, String sShire, String sTarget)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "send()";
 		try {

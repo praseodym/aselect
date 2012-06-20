@@ -46,7 +46,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.SystemLogger;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Implements the System logger for the A-Select Agent package. <br>
  * <br>
@@ -107,7 +107,7 @@ public class ASelectAgentSystemLogger extends SystemLogger
 	 *             if initialization went wrong
 	 */
 	public void init(Object oSysLogging, String sWorkingDir)
-		throws ASelectException
+	throws ASelectException
 	{
 		String sMethod = "init()";
 

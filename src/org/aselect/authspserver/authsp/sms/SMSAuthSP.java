@@ -146,7 +146,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 	 * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
 	 */
 	public void init(ServletConfig oConfig)
-		throws ServletException
+	throws ServletException
 	{
 		String sMethod = "init";
 		StringBuffer sbTemp = null;
@@ -1003,7 +1003,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 	 *             the sms exception
 	 */
 	private int generateAndSendSms(HttpServletRequest servRequest, String sRecipient)
-		throws SmsException
+	throws SmsException
 	{
 //		String sSecret = generateSecret();	// RH, 20110913, o
 		String sSecret = (_fixed_secret == null) ? generateSecret() : _fixed_secret;	// RH, 20110913, n

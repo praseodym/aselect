@@ -50,7 +50,7 @@ import java.util.logging.Level;
 import org.aselect.authspserver.log.AuthSPSystemLogger;
 import org.aselect.system.exception.ASelectException;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * This class contains base functionality for LDAP AuthSP handlers. <br>
  * <br>
@@ -175,6 +175,6 @@ public abstract class AbstractLDAPProtocolHandler implements ILDAPProtocolHandle
 	 *             If user could not be authenticated.
 	 */
 	abstract protected void doBind(String sPassword)
-		throws ASelectException;
+	throws ASelectException;
 
 }

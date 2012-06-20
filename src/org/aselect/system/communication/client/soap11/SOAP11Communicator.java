@@ -100,7 +100,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.helpers.DefaultHandler;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * Client communicator which uses SOAP 1.1 over HTTP. <br>
  * <br>
@@ -179,7 +179,7 @@ public class SOAP11Communicator implements IClientCommunicator
 	 * @see org.aselect.system.communication.client.IClientCommunicator#sendMessage(java.util.HashMap, java.lang.String)
 	 */
 	public HashMap sendMessage(HashMap htParameters, String sUrl)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "sendMessage()";
 		HashMap htResult = new HashMap();
@@ -217,7 +217,7 @@ public class SOAP11Communicator implements IClientCommunicator
 	 * @see org.aselect.system.communication.client.IClientCommunicator#sendStringMessage(java.lang.String, java.lang.String)
 	 */
 	public String sendStringMessage(String soapMessage, String sTarget)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sResponse = null;
 		String sMethod = "sendStringMessage()";
@@ -353,7 +353,7 @@ public class SOAP11Communicator implements IClientCommunicator
 	 *             the malformed url exception
 	 */
 	private String send(String sMessage, String sUrl)
-		throws java.net.MalformedURLException, ASelectCommunicationException
+	throws java.net.MalformedURLException, ASelectCommunicationException
 	{
 		StringBuffer sb = new StringBuffer();
 		String sMethod = "send()";
@@ -468,7 +468,7 @@ public class SOAP11Communicator implements IClientCommunicator
 	 * @see org.apache.xerces.parsers.DOMParser#parse(org.xml.sax.InputSource)
 	 */
 	private Element parse(String sMessage)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		Element elBody = null;
 		String sMethod = "parse()";
@@ -557,7 +557,7 @@ public class SOAP11Communicator implements IClientCommunicator
 	 *             If conversion fails.
 	 */
 	private HashMap xmlBody2Hashtable(Element elBody, String sURI)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "xmlBody2Hashtable";
 		HashMap htReturn = new HashMap();
@@ -642,7 +642,7 @@ public class SOAP11Communicator implements IClientCommunicator
 	 *             If the "arraySize" is malformed.
 	 */
 	private String[] resolveArray(Element elRoot, NodeList nlChildElements)
-		throws ASelectCommunicationException
+	throws ASelectCommunicationException
 	{
 		String sMethod = "resolveArray()";
 		String[] sa = null;

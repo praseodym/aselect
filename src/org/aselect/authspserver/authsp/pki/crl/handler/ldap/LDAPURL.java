@@ -21,7 +21,7 @@ package org.aselect.authspserver.authsp.pki.crl.handler.ldap;
 
 import java.util.StringTokenizer;
 
-// TODO: Auto-generated Javadoc
+
 /**
  * a LDAP URL Wrapper Class. <br>
  * <br>
