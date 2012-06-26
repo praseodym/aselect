@@ -148,7 +148,9 @@ public abstract class BasicRequestHandler
 			String sArg = hmInput.get("shared_secret");
 			if (sArg == null || !sSharedSecret.equals(sArg)) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Shared secret for app '" + sAppId
-						+ "' does not match or is missing: "+ sArg + "!="+ sSharedSecret);
+//						+ "' does not match or is missing: "+ sArg + "!="+ sSharedSecret);
+				// we don't want to disclose any secrets in the log
+				+ "' does not match or is missing");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 		}

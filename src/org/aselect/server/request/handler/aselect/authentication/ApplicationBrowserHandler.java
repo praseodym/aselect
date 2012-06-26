@@ -302,9 +302,11 @@ import java.util.Vector;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse; //import org.aselect.system.servlet.HtmlInfo;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.aselect.server.application.Application;
 import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.attributes.AttributeGatherer;
@@ -333,6 +335,7 @@ import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.AuthenticationLogger;
 import org.aselect.system.sam.agent.SAMResource;
+import org.aselect.system.utils.BASE64Decoder;
 import org.aselect.system.utils.BASE64Encoder;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
@@ -2777,14 +2780,33 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		String sMethod = "handleLoginToken";
 		AuthSPHandlerManager _authspHandlerManager = AuthSPHandlerManager.getHandle();
 		String sStatus = "401 Unauthorized";
-		
+
+		String sResponse = "";
+
 		String sAppId = (String)htServiceRequest.get("app_id");
 		String sAuthSp = (String)htServiceRequest.get("authsp");
 		String sUid = (String)htServiceRequest.get("uid");
 		String sPassword = (String)htServiceRequest.get("password");
 		String sSharedSecret = (String)htServiceRequest.get("shared_secret");
-		if ("".equals(sAppId) || "".equals(sAuthSp) || "".equals(sUid) ||
-					"".equals(sPassword)|| "".equals(sSharedSecret)) {
+
+		String sOutputFormat = (String)htServiceRequest.get("output_format");
+
+		String sSignature = (String)htServiceRequest.get("signature");
+//		_systemLogger.log(Level.INFO, MODULE, sMethod, "reveived sSignature:" + sSignature);
+		
+		boolean sSigningRequired = _applicationManager.isSigningRequired(sAppId);
+//		_systemLogger.log(Level.INFO, MODULE, sMethod, "sSigningRequired:" + sSigningRequired);
+
+		String sApplSharedSecret = _applicationManager.getApplication(sAppId).getSharedSecret();
+//		_systemLogger.log(Level.INFO, MODULE, sMethod, "sApplSharedSecret:" + sApplSharedSecret);
+
+//		if ("".equals(sAppId) || "".equals(sAuthSp) || "".equals(sUid) ||
+		if (sAppId == null || "".equals(sAppId) || sAuthSp == null || "".equals(sAuthSp) || sUid == null || "".equals(sUid) ||
+//					"".equals(sPassword)|| "".equals(sSharedSecret)) {
+//			"".equals(sPassword)|| ( !sSigningRequired && "".equals(sSharedSecret) )) {
+				sPassword == null || "".equals(sPassword) || 
+				( sApplSharedSecret != null  && ( sSharedSecret == null ||  "".equals(sSharedSecret) )  ) ||
+				( sSigningRequired && ( sSignature == null ||  "".equals(sSignature) )  )) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Mandatory parameter is missing");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
@@ -2796,9 +2818,18 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		hmRequest.put("app_id", sAppId);
 		hmRequest.put("a-select-server", _sMyServerId);
 		hmRequest.put("app_url", "login_token");
-		hmRequest.put("shared_secret", sSharedSecret);
-		hmRequest.put("check-signature", "false");  // this is an internal call, so don't
 		
+		
+		hmRequest.put("shared_secret", sSharedSecret);
+		
+		
+		if ( sSigningRequired) {	// not defensive because of backward compatibility
+			hmRequest.put("check-signature", "true");
+			hmRequest.put("signature", sSignature);
+		} else { 
+			hmRequest.put("check-signature", "false");  // this is an internal call, so don't
+		}
+	
 		// No "usi" available in this entry
 		hmRequest.put("usi", Tools.generateUniqueSensorId());  // 20120111, Bauke added
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmRequest=" + hmRequest);
@@ -2873,6 +2904,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
 			HashMap<String, Object> htAttribs = oAttributeGatherer.gatherAttributes(hmContext);
 			
+			
+			
+			
 			// Return Saml 20 token
 			String subject = sRid.toString(); // transientID, elsewhere the TGT value is used
 			
@@ -2880,6 +2914,20 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			Assertion assertion = HandlerTools.createAttributeStatementAssertion(htAttribs, _sServerUrl, subject, "true".equalsIgnoreCase(sWantSigning));
 			String sResult = XMLHelper.nodeToString(assertion.getDOM());
 			_systemLogger.log(Level.FINE, MODULE, sMethod, "sResult="+sResult);
+
+			if ("saml".equalsIgnoreCase(sOutputFormat)) {
+				sResponse = sResult;
+			} else if ("samlhtml".equalsIgnoreCase(sOutputFormat)) {
+				sResponse = StringEscapeUtils.escapeHtml(sResult);
+			} else if ("cgi".equalsIgnoreCase(sOutputFormat)) {
+				sResponse =  org.aselect.server.utils.Utils.serializeAttributes(htAttribs);
+				BASE64Decoder b64dec = new BASE64Decoder();
+				sResponse = new String(b64dec.decodeBuffer(sResponse));
+			} else if ("cgibase64".equalsIgnoreCase(sOutputFormat)) {
+				sResponse =  org.aselect.server.utils.Utils.serializeAttributes(htAttribs);
+			} else { // backward compatibility
+				sResponse = "<html><head><title>"+sStatus+"</title></head><body><h1>"+sStatus+"</h1></body></html>";
+
 			
 			try {
 				BASE64Encoder b64enc = new BASE64Encoder();
@@ -2901,12 +2949,20 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					break;
 				sResult = sResult.substring(SPLIT_HEADER);
 			}
+			
+			}
+
+			servletResponse.setStatus(HttpServletResponse.SC_OK);
 		}
 		else {
-			servletResponse.setStatus(401);
+//			servletResponse.setStatus(401);
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "Sending UNAUTHORIZED");
+			servletResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 		}
 		pwOut.flush();  // otherwise: java.lang.ArrayIndexOutOfBoundsException: 8192 when output gets large
-		pwOut.append("<html><head><title>"+sStatus+"</title></head><body><h1>"+sStatus+"</h1></body></html>");
+//			pwOut.append("<html><head><title>"+sStatus+"</title></head><body><h1>"+sStatus+"</h1></body></html>");
+		_systemLogger.log(Level.FINE, MODULE, sMethod, "Sending response="+sResponse);
+		pwOut.append(sResponse);
 		pwOut.close();
 		_systemLogger.log(Level.FINE, MODULE, sMethod, "done");
 	}

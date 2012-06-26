@@ -254,7 +254,8 @@ public class RequestParser
 				}
 				else
 				// Redirect from application?
-				if (_sRequest.equals("login1") || _sRequest.equals("cross_login")) {  // || _sRequest.equals("login_token")) {
+//				if (_sRequest.equals("login1") || _sRequest.equals("cross_login")) {  // || _sRequest.equals("login_token")) {
+				if (_sRequest.equals("login1") || _sRequest.equals("cross_login")  || _sRequest.equals("login_token")) {
 					_iRequestOrigin = ORIGIN_APPLICATION;
 					_iRequestType = REQTYPE_BROWSER;
 				}
