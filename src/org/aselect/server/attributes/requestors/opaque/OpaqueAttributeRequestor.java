@@ -85,14 +85,14 @@ public class OpaqueAttributeRequestor extends GenericAttributeRequestor
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(java.util.HashMap,
 	 *      java.util.Vector)
 	 */
-	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes)
+	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes, HashMap hmAttributes)
 	throws ASelectAttributesException
 	{
 		final String sMethod = "getAttributes()";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "vAttributes=" + vAttributes + " htTGTContext=" + htTGTContext);
 
 		try {
 			String sUID = (String) htTGTContext.get("uid");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "vAttributes=" + vAttributes + "hash sUid=" + sUID);
 
 			if (vAttributes == null)
 				return null;

@@ -21,6 +21,7 @@ import java.util.Vector;
 import java.util.logging.Level;
 
 import org.aselect.server.attributes.requestors.GenericAttributeRequestor;
+import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAttributesException;
@@ -28,7 +29,7 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.sam.agent.SAMResource;
-
+import org.aselect.system.utils.Utils;
 
 /**
  * - <br>
@@ -46,6 +47,7 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 	private final static String MODULE = "FlatFileAttributeRequestor";
 	private ConfigManager _oFlatFileManager;
 	private HashMap _htGlobalAttributes;
+	private String _sKey = null;
 
 	/**
 	 * Initialize the <code>OpaqueAttributeRequestor</code>. The user id is case sensitive <br>
@@ -60,9 +62,10 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 	public void init(Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		SAMResource oSAMResource = null;
 		Object oResourceConfig = null;
+		String sKey = null;
 
 		try {
 			String sResourceGroup = null;
@@ -73,7 +76,15 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'resourcegroup' config item found");
 				throw new ASelectAttributesException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
-
+			
+			// Possible override of the default "uid" search key
+			Object oMain = ASelectConfigManager.getSimpleSection(oConfig, "main", false);
+			if (oMain != null) {
+				sKey = ASelectConfigManager.getSimpleParam(oMain, "key", false);
+				if (Utils.hasValue(sKey))
+					_sKey = sKey;
+			}
+			
 			try {
 				oSAMResource = _samAgent.getActiveResource(sResourceGroup);
 			}
@@ -123,7 +134,6 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 
 			_htGlobalAttributes = readAttributes(oAttribute);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Attrs=" + _htGlobalAttributes);
-
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -142,35 +152,56 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 	 *            the ht tgt context
 	 * @param vAttributes
 	 *            the v attributes
+	 * @param hmAttributes
+	 *            the hm attributes
 	 * @return the attributes
 	 * @throws ASelectAttributesException
 	 *             the a select attributes exception
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(java.util.HashMap,
 	 *      java.util.Vector)
 	 */
-	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes)
+	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes, HashMap hmAttributes)
 	throws ASelectAttributesException
 	{
+		String sMethod = "getAttributes";
 		HashMap htReturn = new HashMap();
-		String sMethod = "getAttributes()";
+		String sKey = "uid";
+		String sSection = "user";
+		String sKeyValue = null;
 
 		try {
 			htReturn.putAll(_htGlobalAttributes);
 
-			String sUserId = (String) htTGTContext.get("uid");
-			if (sUserId == null) {
-				_systemLogger.log(Level.FINE, MODULE, sMethod, "No user in attribute flatfile with id: " + sUserId);
-				return htReturn;
+			// 20120627, Bauke: added attributes gathered so far, added alternate key to gather
+			// First try alternate key
+			if (Utils.hasValue(_sKey)) {
+				sKeyValue = (String)hmAttributes.get(_sKey);
+				if (!Utils.hasValue(sKeyValue)) {
+					sKeyValue = (String)htTGTContext.get(_sKey);
+				}
+				if (Utils.hasValue(sKeyValue)) {
+					sSection = sKey = _sKey;  // value available for this key
+					_systemLogger.log(Level.FINE, MODULE, sMethod, "Get "+sKey+"=" + sKeyValue);
+				}
 			}
-			_systemLogger.log(Level.FINE, MODULE, sMethod, "Get uid=" + sUserId);
+			
+			// Alternate key did not work, default is "uid"
+			if (!Utils.hasValue(sKeyValue)) {
+				sKeyValue = (String)htTGTContext.get("uid");
+				if (sKeyValue == null) {
+					_systemLogger.log(Level.FINE, MODULE, sMethod, "'uid' not found in TGT");
+					return htReturn;
+				}
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "Get uid=" + sKeyValue);
+			}
 
+			// sKeyValue available
 			Object oUser = null;
 			try {
-				oUser = _oFlatFileManager.getSection(null, "user", "id=" + sUserId);
+				oUser = _oFlatFileManager.getSection(null, sSection, "id=" + sKeyValue);
 			}
 			catch (ASelectException e) {
-				_systemLogger.log(Level.FINE, MODULE, sMethod, "No config section 'user' found");
-				_systemLogger.log(Level.FINE, MODULE, sMethod, "No attributes found for user with id: " + sUserId);
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "No section '"+sSection+"' found, no attributes for "+sKeyValue);
 				return htReturn;
 			}
 
@@ -179,8 +210,7 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 				oAttribute = _oFlatFileManager.getSection(oUser, "attribute");
 			}
 			catch (ASelectException e) {
-				_systemLogger.log(Level.FINE, MODULE, sMethod, "Not one config section 'attribute' found");
-				_systemLogger.log(Level.FINE, MODULE, sMethod, "No attributes found for user with id: " + sUserId);
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "No section 'attribute' found, no more attributes for "+sKeyValue);
 				return htReturn;
 			}
 			htReturn.putAll(readAttributes(oAttribute));
@@ -192,7 +222,6 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unable to resolve attributes");
 			throw new ASelectAttributesException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-
 		return htReturn;
 	}
 

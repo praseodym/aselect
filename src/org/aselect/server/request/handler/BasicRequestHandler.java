@@ -93,14 +93,14 @@ public abstract class BasicRequestHandler
 		if (sForcedLogon != null)
 			boolForcedAuthn = new Boolean(sForcedLogon);
 
-		// check if request should be signed
-		String sCheckSignature = hmInput.get("check-signature");
 
 		// RH, 20100910, Remove fishing leak and make signature verification configurable per application
 //		if (_applicationManager.isSigningRequired() && bCheckSignature) {		// RH, 20100910, o
 //		if (_applicationManager.isSigningRequired(sAppId)) {		// RH, 20100910, n
 		
 		// 20110407, Bauke: use check-signature
+		// check if request should be signed
+		String sCheckSignature = hmInput.get("check-signature");
 		if (_applicationManager.isSigningRequired(sAppId) && "true".equals(sCheckSignature)) {
 			String sSignature = hmInput.get("signature");
 			if (sSignature == null) {

@@ -263,8 +263,7 @@ public class AccountSTS extends ProtoRequestHandler
 		// String sUrlServer = (String) request.getParameter("a-select-server");
 		String sUrlTgt = (String) request.getParameter("aselect_credentials");
 
-		_systemLogger
-				.log(Level.INFO, MODULE, sMethod, "sPwa=" + sPwa + " wresult=" + sPwresult + " sUrlRid=" + sUrlRid);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "sPwa=" + sPwa + " wresult=" + sPwresult + " sUrlRid=" + sUrlRid);
 		String sUid = null;
 		String sTgt = null;
 		HashMap htCredentials = null;
@@ -280,8 +279,7 @@ public class AccountSTS extends ProtoRequestHandler
 			else {
 				// From A-Select server
 				sUrlTgt = decryptCredentials(sUrlTgt);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "From A-Select TGT="
-						+ Tools.clipString(sUrlTgt, 40, true));
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "From A-Select TGT="+Tools.clipString(sUrlTgt, 40, true));
 
 				// Get credentials and attributes using Cookie
 				htCredentials = getASelectCredentials(request);

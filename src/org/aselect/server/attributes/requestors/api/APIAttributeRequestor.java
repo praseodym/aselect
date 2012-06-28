@@ -338,7 +338,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 	 *             the a select attributes exception
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(HashMap, Vector)
 	 */
-	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes)
+	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes, HashMap hmAttributes)
 	throws ASelectAttributesException
 	{
 		final String sMethod = "getAttributes()";

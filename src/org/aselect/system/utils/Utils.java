@@ -295,7 +295,7 @@ public class Utils
 	}
 
 	/**
-	 * Gets the aselect_specials value from RelayState of app_url.
+	 * Gets the aselect_specials value from RelayState or app_url.
 	 * 
 	 * @param htSessionContext
 	 *            the session context

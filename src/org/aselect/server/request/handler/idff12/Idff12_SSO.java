@@ -349,7 +349,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 				// Start an authenticate request
 				// NOTE: returns a result including a session not a TGT context
 				HashMap<String, Object> htResponse = performAuthenticateRequest(sASelectURL, sPathInfo, RETURN_SUFFIX,
-						_sMyAppId, true, _oClientCommunicator);
+						_sMyAppId, true/*check signature*/, _oClientCommunicator);
 				
 				sRid = (String) htResponse.get("rid");
 				_htSessionContext = (HashMap)htResponse.get("session");  // 20120404, Bauke: the newly created session

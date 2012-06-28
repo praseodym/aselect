@@ -460,7 +460,8 @@ public class ApplicationManager
 	{
 		if (sAppId == null) {
 			return _bRequireSigning;
-		} else {
+		}
+		else {
 			Application oApplication = getApplication(sAppId);
 			return oApplication.isSigningRequired();
 		}

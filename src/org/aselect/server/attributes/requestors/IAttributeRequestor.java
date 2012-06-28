@@ -103,7 +103,7 @@ public interface IAttributeRequestor
 	 * @throws ASelectAttributesException
 	 *             If gathering fails.
 	 */
-	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes)
+	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes, HashMap hmAttributes)
 	throws ASelectAttributesException;
 
 	/**

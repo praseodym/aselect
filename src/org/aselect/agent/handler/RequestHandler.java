@@ -1647,7 +1647,7 @@ public class RequestHandler extends Thread
 	private void processAttributesRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
 	throws ASelectCommunicationException
 	{
-		String sMethod = "processAttributesRequest()";
+		String sMethod = "processAttributesRequest";
 		StringBuffer sbBuffer = new StringBuffer();
 
 		try {
@@ -1676,7 +1676,7 @@ public class RequestHandler extends Thread
 				_sErrorCode = Errors.ERROR_ASELECT_AGENT_UNKNOWN_TICKET;
 				return;
 			}
-			String sInitialUsi = (String)htTicketContext.get("usi");
+			String sInitialUsi = (String)htTicketContext.get("usi");  // is removed after a successful verify_ticket:
 
 			String sAuthSP = (String) htTicketContext.get("authsp");
 			String sAppLevel = (String) htTicketContext.get("app_level");
@@ -1684,8 +1684,7 @@ public class RequestHandler extends Thread
 			if (Utils.hasValue(sAppId))
 				timerSensor.setTimerSensorAppId(sAppId);
 
-			oOutputMessage.setParam("ticket_start_time", new Long(_ticketManager.getTicketStartTime(sTicket))
-					.toString());
+			oOutputMessage.setParam("ticket_start_time", new Long(_ticketManager.getTicketStartTime(sTicket)).toString());
 			oOutputMessage.setParam("ticket_exp_time", new Long(_ticketManager.getTicketTimeout(sTicket)).toString());
 			// 20120619, Bauke: removed "aselectuid" and "aselectorganization" cookies, and therefore the related checks
 			//oOutputMessage.setParam("uid", sUid);
@@ -1705,6 +1704,7 @@ public class RequestHandler extends Thread
 
 			if (sInitialUsi != null)  // 20120606, Bauke
 				oOutputMessage.setParam("usi", sInitialUsi);  // must be reported to the application
+			// "usi" is added by the filter
 
 			_sErrorCode = Errors.ERROR_ASELECT_SUCCESS;
 		}
@@ -1717,7 +1717,6 @@ public class RequestHandler extends Thread
 			_sErrorCode = Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR;
 		}
 		catch (Exception e) {
-
 			sbBuffer = new StringBuffer("Exception while processing request: \"");
 			sbBuffer.append(e.getMessage());
 			sbBuffer.append("\"");

@@ -79,7 +79,6 @@ package org.aselect.server.attributes.requestors.jndi;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -382,7 +381,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	throws ASelectAttributesException
 	{
 		HashMap<String,String> hOrganizations = new HashMap<String, String>();
-		gatherAttributes(htTGTContext, null, null, hOrganizations);
+		gatherAttributes(htTGTContext, null, null, null, hOrganizations);
 		return hOrganizations;
 	}
 
@@ -403,11 +402,11 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#getAttributes(java.util.HashMap,
 	 *      java.util.Vector)
 	 */
-	public HashMap<String,Object> getAttributes(HashMap htTGTContext, Vector vAttributes)
+	public HashMap<String,Object> getAttributes(HashMap htTGTContext, Vector vAttributes, HashMap hmAttributes)
 	throws ASelectAttributesException
 	{
 		HashMap<String,Object> hAttrResponse = new HashMap<String,Object>();
-		gatherAttributes(htTGTContext, vAttributes, hAttrResponse, null);
+		gatherAttributes(htTGTContext, vAttributes, hmAttributes, hAttrResponse, null);
 		return hAttrResponse;
 	}
 	
@@ -420,7 +419,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	 * @param hOrgResponse - the organizations found for this user (getOrganizations only)
 	 * @throws ASelectAttributesException
 	 */
-	private void gatherAttributes(HashMap htTGTContext, Vector vAttributes,
+	private void gatherAttributes(HashMap htTGTContext, Vector vAttributes, HashMap hmAttributes,
 			HashMap<String,Object> hAttrResponse, HashMap<String,String> hOrgResponse)
 	throws ASelectAttributesException
 	{		

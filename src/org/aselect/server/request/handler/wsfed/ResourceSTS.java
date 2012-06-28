@@ -31,7 +31,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Tools;
 import org.opensaml.*;
 
-
 //
 // Resource Partner STS = SP
 //

@@ -234,7 +234,7 @@ public class AttributeGatherer
 	public void init()
 	throws ASelectException
 	{
-		final String sMethod = "init()";
+		final String sMethod = "init";
 
 		String sConfigItem = null;
 		Object oAttributeGatheringConfig = null;
@@ -359,8 +359,7 @@ public class AttributeGatherer
 					_vReleasePolicies.add(sID);
 
 					try {
-						String sDuplicateOption = _configManager.getParam(oReleasePolicyConfig,
-								sConfigItem = "duplicate");
+						String sDuplicateOption = _configManager.getParam(oReleasePolicyConfig, sConfigItem = "duplicate");
 						_htDuplicatePolicies.put(sID, sDuplicateOption);
 					}
 					catch (ASelectConfigException e) {
@@ -544,8 +543,8 @@ public class AttributeGatherer
 				for (Object s : keys) {
 					String sRequestorID = (String) s;
 					Vector vAttributes = (Vector) htReleasePolicy.get(sRequestorID);
-					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER << Requestor=" + sRequestorID);
-
+					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER << Requestor=" + sRequestorID+" vAttr="+vAttributes);
+					
 					IAttributeRequestor attributeRequestor = (IAttributeRequestor) _htRequestors.get(sRequestorID);
 					if (attributeRequestor == null) {
 						StringBuffer sb = new StringBuffer("Unknown requestor \"").append(sRequestorID).append("\"");
@@ -556,13 +555,14 @@ public class AttributeGatherer
 					// The Attribute Requestor is responsible for using the organization's id in the gathering process
 					HashMap htAttrsFromAR = null;
 					try {
-						htAttrsFromAR = attributeRequestor.getAttributes(htTGTContext, vAttributes);
+						// 20120627, Bauke: added attributes gathered so far, allows us to use a gathered attribute later on
+						htAttrsFromAR = attributeRequestor.getAttributes(htTGTContext, vAttributes, htAttributes);
 					}
 					catch (ASelectAttributesException eA) {
 						StringBuffer sb = new StringBuffer("Could not gather attributes for user \"").append(sUid).append("\"");
 						_systemLogger.log(Level.WARNING, _MODULE, sMethod, sb.toString(), eA);
 					}
-					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER >> Requestor=" + sRequestorID + " htAttrs="+htAttrsFromAR);
+					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER >> Requestor=" + sRequestorID + " htAttrsFromAR="+htAttrsFromAR);
 
 					// Merge the returned attributes with our set
 					if (htAttrsFromAR != null) {
@@ -628,6 +628,7 @@ public class AttributeGatherer
 							else
 								htAttributes.put(sKey, htAttrsFromAR.get(sKey));
 						}
+						_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER -- htAttributes="+htAttributes);
 					}
 				}
 			}
