@@ -4,8 +4,6 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 
-import org.aselect.system.utils.Utils;
-
 /**
  * The Class StopAgent.
  */
@@ -22,11 +20,11 @@ public class StopAgent {
 		int port = 1946;
 		int timeoutMs = 5000;
 		String req = "request=stop";
-		String sMore;
 		try {
-			if (args.length > 0 && Utils.hasValue(args[0]))
+			// NOTE: do not use Utils.<...> this makes the class dependant on org.aselect.system.jar
+			if (args.length > 0 && args[0] != null)
 				port = Integer.parseInt(args[0]);
-			if (args.length > 1 && Utils.hasValue(args[1]))
+			if (args.length > 1 && args[1] != null)
 				timeoutMs = Integer.parseInt(args[1]);
 			if (args.length > 2)
 				req = args[2];

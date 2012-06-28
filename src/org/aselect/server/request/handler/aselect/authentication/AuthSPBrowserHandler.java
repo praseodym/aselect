@@ -239,7 +239,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 					// User was busy from "sPause" to "now"
 					long lPause = Long.parseLong(sPause);
 					TimerSensor userTs = new TimerSensor(_systemLogger, "srv_pbh");
-					userTs.timerSensorStart(lPause, 1/*level used*/, 3/*type=server*/, _lMyThreadId);
+					userTs.timerSensorStart(lPause, 1/*level used*/, 5/*type=remote*/, _lMyThreadId);
 					if (Utils.hasValue(sUsi))
 						userTs.setTimerSensorId(sUsi);
 					userTs.timerSensorFinish(now, true);
