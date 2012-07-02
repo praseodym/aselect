@@ -62,6 +62,7 @@ import java.util.logging.Level;
 
 import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.error.Errors;
+import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 
@@ -118,6 +119,18 @@ public class SAMResourceGroup extends Thread
 	private long _lInterval;
 
 	/**
+	 * Identifier for this resourcegroup.
+	 */
+	private String sResourceGroupID = null;
+	
+	/**
+	 * Logging level when resourcegroup has critical number of resources ( e.g. non at all )
+	 * Defaults to WARNING for backward compatbility
+	 */
+	private static final Level  DEFAULT_NOTICE_LEVEL = Level.WARNING;
+	private Level _criticalResourceGroupNoticeLevel = DEFAULT_NOTICE_LEVEL;
+
+	/**
 	 * This function is to initialize the SAMAgent. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
@@ -156,7 +169,6 @@ public class SAMResourceGroup extends Thread
 		_oSystemLogger = oSystemLogger;
 
 		Object oResourceSection = null;
-		String sResourceGroupID = null;
 		try {
 
 			try {
@@ -169,12 +181,12 @@ public class SAMResourceGroup extends Thread
 			}
 
 			try {
-				_lInterval = new Long(oConfigManager.getParam(oConfigSection, "interval")).longValue();
+				_lInterval = new Long(oConfigManager.getParam(oConfigSection, "interval")).longValue() * 1000;
 			}
 			catch (Exception e) {
 
 				// the interval is not configured, using the default interval time
-				_lInterval = DEFAULT_UPDATE_INTERVAL;
+				_lInterval = DEFAULT_UPDATE_INTERVAL * 1000;
 
 				StringBuffer sbWarning = new StringBuffer(sbError.toString());
 				sbWarning.append("Could not find config item 'interval' in config section 'resourcegroup' with id=");
@@ -225,7 +237,20 @@ public class SAMResourceGroup extends Thread
 				}
 				_htResources.put(sResourceId, oSAMResource);
 			}
-
+			try {
+			String sCriticalResourceNoticeLevel = oConfigManager.getParam(oConfigSection, "criticalresourcegroupnoticelevel");
+				try {
+					_criticalResourceGroupNoticeLevel = Level.parse(sCriticalResourceNoticeLevel);
+					} catch (IllegalArgumentException ie) {
+						_oSystemLogger.log(Level.CONFIG, MODULE, sMethod, "Invalid argument for 'criticalresourcegroupnoticelevel', defaults:" + DEFAULT_NOTICE_LEVEL.getName() +  ". Valid argumants are [ SEVERE | WARNING | ..... | ALL ]");
+						_criticalResourceGroupNoticeLevel = DEFAULT_NOTICE_LEVEL;
+					}
+			} catch ( ASelectConfigException e ) {
+				_oSystemLogger.log(Level.CONFIG, MODULE, sMethod, "No argument for 'criticalresourcegroupnoticelevel', defaults to:" + DEFAULT_NOTICE_LEVEL.getName());
+				_criticalResourceGroupNoticeLevel = DEFAULT_NOTICE_LEVEL;
+			}
+			
+			
 			updateStatus();
 			_bRunThread = true;
 		}
@@ -268,8 +293,9 @@ public class SAMResourceGroup extends Thread
 		String sMethod = "getActiveResource()";
 
 		if (_vActive.isEmpty()) {
-			sbError.append("There were no resources found to be active.");
-			_oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
+			sbError.append("There were no resources found to be active for resourcegroup id:" + getsResourceGroupID());
+//			_oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());	// RH, 20120628, o
+			_oSystemLogger.log(getCriticalResourceGroupNoticeLevel(), MODULE, sMethod, sbError.toString());	// RH, 20120628, n
 			throw new ASelectSAMException(Errors.ERROR_ASELECT_SAM_NO_RESOURCE_ACTIVE);
 		}
 
@@ -407,6 +433,34 @@ public class SAMResourceGroup extends Thread
 //				vLive.add(oSAMResource);			// RH, 20110202, o
 			}
 		}
+		// RH, 20120628, sn
+		if ( vLive.size() == 0 ) {
+			String sMethod = "updateStatus()";
+			StringBuffer sbError = new StringBuffer("No active resources for resourcegroup:" + getsResourceGroupID() );
+			_oSystemLogger.log(getCriticalResourceGroupNoticeLevel(), MODULE, sMethod, sbError.toString());
+		}
+		// RH, 20120628, en
 		_vActive = vLive;
+
+	}
+
+	public String getsResourceGroupID()
+	{
+		return sResourceGroupID;
+	}
+
+	public void setsResourceGroupID(String sResourceGroupID)
+	{
+		this.sResourceGroupID = sResourceGroupID;
+	}
+
+	public Level getCriticalResourceGroupNoticeLevel()
+	{
+		return _criticalResourceGroupNoticeLevel;
+	}
+
+	public void setCriticalResourceGroupNoticeLevel(Level criticalResourceGroupNoticeLevel)
+	{
+		_criticalResourceGroupNoticeLevel = criticalResourceGroupNoticeLevel;
 	}
 }

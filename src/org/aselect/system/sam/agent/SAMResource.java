@@ -100,6 +100,11 @@ public class SAMResource
 	private PollingThread _oPollingThread;
 
 	/**
+	 * Default polling interval for this resources
+	 */
+	private final long DEFAULT_UPDATE_INTERVAL = 50;
+
+	/**
 	 * The polling interval
 	 */
 	private long _lInterval;
@@ -205,6 +210,11 @@ public class SAMResource
 					StringBuffer sbError = new StringBuffer(
 							"No config item 'pollingmethod' is found, disabling polling for resource: ");
 					sbError.append(_sId);
+					// RH, 20120702, sn
+					sbError.append(" and method:");
+					sbError.append(sConfiguredPollingMethod);
+					_bLive = true;	// if we have no way of polling so assume alive
+					// RH, 20120702, en
 					_oSystemLogger.log(Level.CONFIG, MODULE, sMethod, sbError.toString());
 				}
 
@@ -224,12 +234,17 @@ public class SAMResource
 						sConfiguredInterval = oConfigManager.getParam(oConfigSection, "interval");
 					}
 					catch (Exception e) {
+						
+						// the interval is not configured, using the default interval time
+						_lInterval = DEFAULT_UPDATE_INTERVAL * 1000;
+
 						StringBuffer sbError = new StringBuffer(
 								"No config item 'interval' is found for resource with id: '");
 						sbError.append(_sId);
+						sbError.append(". Setting interval to default value: '");
+						sbError.append(DEFAULT_UPDATE_INTERVAL);
 						sbError.append("'");
-						_oSystemLogger.log(Level.INFO, MODULE, sMethod, sbError.toString());
-						throw new ASelectSAMException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+						_oSystemLogger.log(Level.CONFIG, MODULE, sMethod, sbError.toString());
 					}
 
 					_oSAMPollingMethod = (ISAMPollingMethod) cPollingClass.newInstance();
