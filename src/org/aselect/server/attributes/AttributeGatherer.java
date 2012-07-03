@@ -647,7 +647,7 @@ public class AttributeGatherer
 		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Add additional attributes from TGT");
 		Utils.copyHashmapValue("uid", htAttributes, htTGTContext);
 		Utils.copyHashmapValue("sel_uid", htAttributes, htTGTContext);
-		// 20120606, Maybe not: Utils.copyHashmapValue("usi", htAttributes, htTGTContext);
+		// 20120606, Maybe not, is added by the filter: Utils.copyHashmapValue("usi", htAttributes, htTGTContext);
 
 		String sAuthsp = (String) htTGTContext.get("authsp");
 		if (sAuthsp != null)

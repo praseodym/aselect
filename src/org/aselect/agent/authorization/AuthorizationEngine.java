@@ -227,8 +227,7 @@ public class AuthorizationEngine
 					oRuleSection = _configManager.getSection(oRulesSection, "rule");
 				}
 				catch (ASelectConfigException e) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing or invalid authorization rules section",
-							e);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing or invalid authorization rules section", e);
 					throw e;
 				}
 

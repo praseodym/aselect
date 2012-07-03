@@ -301,8 +301,7 @@ public class RequestHandler extends Thread
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "RUN stt T=" + System.currentTimeMillis() + " socket="
 					+ _socket + " port=" + port);
 			TCPProtocolRequest oTCPProtocolRequest = new TCPProtocolRequest(_socket, _systemLogger);
-			TCPProtocolResponse oTCPProtocolResponse = new TCPProtocolResponse(_socket, oTCPProtocolRequest
-					.getProtocolName());
+			TCPProtocolResponse oTCPProtocolResponse = new TCPProtocolResponse(_socket, oTCPProtocolRequest.getProtocolName());
 
 			IMessageCreatorInterface oMessageCreator = null;
 
@@ -1962,16 +1961,14 @@ public class RequestHandler extends Thread
 			String[] saReceivedRules = oInputMessage.getArray("rules");
 			if (Utils.hasValue(sAppId))
 				timerSensor.setTimerSensorAppId(sAppId);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "RULES sAppId=" + sAppId +
-					", saReceivedRules="+saReceivedRules);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "RULES sAppId="+sAppId + ", saReceivedRules="+saReceivedRules);
 
 			// Split id, rules and URI's
 			String[] saRuleIDs = new String[saReceivedRules.length];
 			String[] saURIs = new String[saReceivedRules.length];
 			String[] saRules = new String[saReceivedRules.length];
 			for (int i = 0; i < saReceivedRules.length; i++) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "RULES Rule=" + sAppId + ", saReceivedRules="
-						+ saReceivedRules[i]);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "RULES Rule="+sAppId + ", saReceivedRules="+saReceivedRules[i]);
 				String[] saSplit = saReceivedRules[i].split(";", 3);
 				if (saSplit.length == 3) {
 					saRuleIDs[i] = saSplit[0];
