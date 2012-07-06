@@ -166,19 +166,21 @@ public class PartnerData
 		private Boolean isdefault = null;
 		private Integer index =  null;
 		private String responselocation =  null;
+		private String location =  null;
 
 		private HandlerInfo()
 		{
 			// hide this constructor
 		}
 
-		public HandlerInfo(String type, String binding, Boolean isdefault, Integer index, String responselocation)
+		public HandlerInfo(String type, String binding, Boolean isdefault, Integer index, String responselocation, String location)
 		{
 			this.type = type;
 			this.binding = binding;
 			this.isdefault = isdefault;
 			this.index =  index;
 			this.responselocation = responselocation;
+			this.location = location;
 		}
 
 		/**
@@ -219,6 +221,16 @@ public class PartnerData
 		public synchronized String getResponselocation()
 		{
 			return responselocation;
+		}
+
+		public synchronized String getLocation()
+		{
+			return location;
+		}
+
+		public synchronized void setLocation(String location)
+		{
+			this.location = location;
 		}
 
 

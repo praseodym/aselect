@@ -273,6 +273,9 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 				if (SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME.equalsIgnoreCase(hHandler.getType()) ) {
 					String sBInding = null;
 					String sLocation = null;
+					// RH, 20120703, n, For singlelogout service we allow to define alternate location, maybe in future also for other services
+					String forcedLocation = hHandler.getLocation();	// returns null if not set
+					
 					if (SAMLConstants.SAML2_REDIRECT_BINDING_URI.equals(hHandler.getBinding())) {
 						// Create the SingleLogoutService HTTP, creates Request and Response
 						_systemLogger.log(Level.INFO, MODULE, sMethod, getSpSloHttpLocation());
@@ -289,7 +292,11 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 								.getBuilder(SingleLogoutService.DEFAULT_ELEMENT_NAME);
 						SingleLogoutService sloHttpService = sloHttpServiceBuilder.buildObject();
 						sloHttpService.setBinding(sBInding);
-						sloHttpService.setLocation(getRedirectURL() + sLocation);
+						if (forcedLocation != null) {	// RH, 20120703, sn
+							sloHttpService.setLocation(forcedLocation);							;
+						} else 	// RH, 20120703, en
+							sloHttpService.setLocation(getRedirectURL() + sLocation);
+						
 						if (hHandler.getResponselocation() != null) {
 							sloHttpService.setResponseLocation(hHandler.getResponselocation());
 						} else {

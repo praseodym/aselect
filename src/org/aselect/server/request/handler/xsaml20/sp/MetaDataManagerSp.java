@@ -168,9 +168,14 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 					if (metahandlerindex != null) {
 						iMetahandlerindex = new Integer(metahandlerindex);
 					}
+					
+					// RH, 20120703, sn, Added optional location
+					String metahandlerlocation = Utils.getSimpleParam(_configManager, _systemLogger, metaHandler, "location", false);
+					// RH, 20120703, en
+
 					String metahandlerresponselocation = Utils.getSimpleParam(_configManager, _systemLogger, metaHandler, "responselocation", false);
 
-					idpData.getMetadata4partner().getHandlers().add(idpData.new HandlerInfo(metahandlertype,metahandlerbinding,  bMetahandlerisdefault,  iMetahandlerindex, metahandlerresponselocation) );
+					idpData.getMetadata4partner().getHandlers().add(idpData.new HandlerInfo(metahandlertype,metahandlerbinding,  bMetahandlerisdefault,  iMetahandlerindex, metahandlerresponselocation, metahandlerlocation) );
 					metaHandler = _configManager.getNextSection(metaHandler);
 				}
 				
