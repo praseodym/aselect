@@ -29,12 +29,13 @@ import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMAgent;
 import org.aselect.system.storagemanager.handler.MemoryStorageHandler;
+import org.aselect.system.utils.Utils;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
 /*
  * NOTE: Code differs from the idp-version.
- * NOTE: Code is identical to MemoryStorageHandlerTimeOut (except for class-names of course)
+ * NOTE: Code is identical to MemoryStorageHandlerTimeOut (except for class-names of course).
  */
 public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 {
@@ -138,10 +139,9 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 	throws ASelectStorageException
 	{
 		String _sMethod = "cleanup";
-		Long now = new Date().getTime();
+		long now = new Date().getTime();
 
-		_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "CLEANUP { lTimestamp=" + (lTimestamp - now) + " class="
-				+ this.getClass());
+		_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "CLEANUP { now="+now+" lTimestamp="+lTimestamp+" diff="+(now-lTimestamp));
 		determineTimeOut();
 		// Only the TGT Manager should use this class, therefore do not call super.cleanup()
 		// super.cleanup(lTimestamp);
@@ -165,16 +165,15 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 		if (_oTGTManager != null) {
 			allTgts = _oTGTManager.getAll();
 		}
-		if (allTgts == null)
+		if (allTgts == null || allTgts.size() == 0)
 			return;
-		_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO _serverUrl=" + _serverUrl + " - TGT Count="
-				+ allTgts.size());
+		_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO _serverUrl="+_serverUrl+" - TGT Count="+allTgts.size());
 		Long updateInterval = -1L;
 		try {
 			HashMap htResult = SessionSyncRequestSender.getSessionSyncParameters(_oSystemLogger);
 			updateInterval = (Long) htResult.get("update_interval");
 			if (updateInterval == null) {
-				_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "No 'update_interval' available");
+				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "No 'update_interval' available");
 				updateInterval = -1L;
 			}
 		}
@@ -189,7 +188,7 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 			HashMap htTGTContext = (HashMap) _oTGTManager.get(key);
 			String sNameID = (String) htTGTContext.get("name_id");
 			String sSync = (String) htTGTContext.get("sessionsynctime");
-			Long lastSync = sSync==null? 0: Long.parseLong(sSync);
+			long lastSync = (sSync==null)? 0: Long.parseLong(sSync);
 			Boolean bForcedAuthn = (Boolean) htTGTContext.get("forced_authenticate");
 			if (bForcedAuthn == null)
 				bForcedAuthn = false;
@@ -197,28 +196,28 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 			Long timeStamp = _oTGTManager.getTimestamp(key);
 			Long now = new Date().getTime();
 
-			String sKey = (key.length() > 30) ? key.substring(0, 30) + "..." : key;
-			_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO - NameID=" + sNameID + " TimeStamp="
-					+ (timeStamp - now) + " Left=" + (expireTime - now) + " lastSync=" + (lastSync - now) + " Key="
-					+ sKey);
+			String sKey = Utils.firstPartOf(key, 30);
+			_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO - NameID="+Utils.firstPartOf(sNameID,20)+
+					" Age="+(now-timeStamp)+" Time left="+(expireTime-now)+" Last Sync="+(now-lastSync)+" Key="+sKey);
 
 			String sAuthspType = (String) htTGTContext.get("authsp_type");
 			Boolean bToFed = (sAuthspType != null && sAuthspType.equals("saml20"));
 			// Check Ticket Expiration
 			if (now >= expireTime) {
-				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SPTO Remove TGT (and send Logout), Key=" + sKey
-						+ " forced=" + bForcedAuthn);
+				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SPTO: Remove TGT, Key="+sKey);
 				_oTGTManager.remove(key);
 
 				// 20090622, Bauke, if forced_authenticate, the IdP does not have a ticket
-				if (bToFed && !bForcedAuthn)
+				if (bToFed && !bForcedAuthn) {
+					_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SPTO: saml20 and forced="+bForcedAuthn);
 					sendLogoutToFederation(sNameID, htTGTContext);
+				}
 			}
 
 			// Check Session Sync
-			// Since the last Session Sync also update the TGT's timestamp
+			// Since the last Session Sync also updates the TGT's timestamp
 			// also skip a few seconds after lastSync
-			if (bToFed && updateInterval > 0 && timeStamp > lastSync + 10 && now >= lastSync + updateInterval) {
+			if (bToFed && updateInterval>0 && timeStamp>lastSync+10 && now>=lastSync+updateInterval) {
 				// Perform a Session Sync to the Federation
 				_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO Skip this SessionSync");
 			}
@@ -250,7 +249,7 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 			_oSystemLogger.log(Level.SEVERE, MODULE, _sMethod, "No \"federation_url\" available in TGT");
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
-		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SPTO (" + _serverUrl + ") - NameID to timeout = " + sNameID);
+		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "SPTO ("+_serverUrl+") - NameID to timeout = "+Utils.firstPartOf(sNameID, 30));
 		SoapLogoutRequestSender logout = new SoapLogoutRequestSender();
 		String url = null;
 		MetaDataManagerSp metadataManager = null;

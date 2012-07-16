@@ -192,6 +192,7 @@ package org.aselect.server.request.handler.aselect.authentication;
 
 import java.security.MessageDigest;
 import java.security.PublicKey;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.logging.Level;
 
@@ -451,7 +452,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	private void handleGetAppLevelRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
 	throws ASelectException
 	{
-		String sMethod = "handleGetAppLevelRequest()";
+		String sMethod = "handleGetAppLevelRequest";
 		String sAppId = null;
 		String sASelectServer = null;
 
@@ -608,11 +609,11 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		catch (ASelectCommunicationException eAC) {
 		}
 		
-		// check if request should be signed
 		String sAppId = (String) htTGTContext.get("app_id");
 		if (Utils.hasValue(sAppId))
 			_timerSensor.setTimerSensorAppId(sAppId);
 		
+		// check if request should be signed
 		if (_applicationManager.isSigningRequired(sAppId)) {
 			// Note: we should do this earlier, but we don't have an app_id until now
 			StringBuffer sbData = new StringBuffer(sASelectServer).append(sEncTGT);
@@ -647,17 +648,36 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 
 		// 20090811, Bauke: Only saml20 needs this type of session sync
 		HashMap htResult = null;
-		String sAuthspType = (String) htTGTContext.get("authsp_type");
+		String sResult = null;
+		String sAuthspType = (String) htTGTContext.get("authsp_type");		
 		if (sAuthspType != null && sAuthspType.equals("saml20")) {
-			// Send Session Sync to the Federation
-			htResult = SessionSyncRequestSender.getSessionSyncParameters(_systemLogger);
+			//20120706, Bauke: support Digid4 session sync mechanism
+			String sRedirectSyncTime = (String) htTGTContext.get("redirect_sync_time");
+			if (Utils.hasValue(sRedirectSyncTime)) {
+				// Digid4-like IdP, user must be redirected to IdP for session_sync
+				if (redirectSyncNeeded(htTGTContext)) {
+					_systemLogger.log(Level.INFO, _sModule, sMethod, "RedirectSyncTime expired, upgrade_tgt failed");
+					sResult = Errors.ERROR_ASELECT_SERVER_TGT_EXPIRED;
+				}
+				else {
+					_systemLogger.log(Level.INFO, _sModule, sMethod, "updateTGT only (changes timestamp!)");
+					_oTGTManager.updateTGT(sTgT, htTGTContext);
+					sResult = Errors.ERROR_ASELECT_SUCCESS;
+				}
+				// sResult has been set now, we're ready
+			}
+			else {  // also saml20, Send Session Sync to the Federation
+				htResult = SessionSyncRequestSender.getSessionSyncParameters(_systemLogger);
+			}
 		}
-		if (htResult == null || htResult.isEmpty()) {
-			// No Session Sync handler, only update the ticket granting ticket
+		
+		if (sResult == null && (htResult == null || htResult.isEmpty())) {
+			// No "saml20" or no Session Sync handler, only update the ticket granting ticket
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "updateTGT only (changes timestamp!)");
 			_oTGTManager.updateTGT(sTgT, htTGTContext);
+			sResult = Errors.ERROR_ASELECT_SUCCESS;
 		}
-		else {
+		else if (sResult == null) {
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "Send Sync to Federation");
 			long updateInterval = (Long) htResult.get("update_interval");
 			String sSamlMessageType = (String) htResult.get("message_type");
@@ -690,15 +710,16 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 							.equalsIgnoreCase(verify_interval.trim())) ? true : false);
 			String ssReturn = ss_req.synchronizeSession(sTgT, htTGTContext, true/* updateTGT */);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "ssReturn=" + ssReturn);
+			sResult = Errors.ERROR_ASELECT_SUCCESS;
 		}
 		try {
-			oOutputMessage.setParam("result_code", Errors.ERROR_ASELECT_SUCCESS);
+			oOutputMessage.setParam("result_code", sResult);
 		}
 		catch (ASelectCommunicationException eAC) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not set response parameter", eAC);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR, eAC);
 		}
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "Ready");
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "Done result="+sResult);
 	}
 
 	/**
@@ -716,7 +737,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	private void handleVerifyCredentialsRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
 	throws ASelectException
 	{
-		String sMethod = "handleVerifyCredentialsRequest()";
+		String sMethod = "handleVerifyCredentialsRequest";
 		HashMap htTGTContext = null;
 		String sRid = null;
 		String sUid = null;
@@ -762,8 +783,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 
 		htTGTContext = _oTGTManager.getTGT(sTGT);
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED ApplApi rid=" + sRid + ", TGTContext=" + htTGTContext
-				+ ", inputMessage=" + oInputMessage);
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED ApplApi rid=" + sRid+" inputMessage="+oInputMessage);
 
 		if (htTGTContext == null) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unknown TGT");
@@ -877,7 +897,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 		String sSerializedAttributes = org.aselect.server.utils.Utils.serializeAttributes(htAttribs);
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED SerAttr="
-				+ Utils.firstPartOf(sSerializedAttributes, 40) + " Token=" + Utils.firstPartOf(sToken, 40));
+				+ Utils.firstPartOf(sSerializedAttributes, 30) + " Token=" + Utils.firstPartOf(sToken, 30));
 
 		try {
 			oOutputMessage.setParam("app_id", sAppId);

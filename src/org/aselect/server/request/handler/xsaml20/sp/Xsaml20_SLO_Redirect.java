@@ -116,8 +116,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BaseHandler
 	private void handleSAMLRequest(HttpServletRequest httpRequest, HttpServletResponse httpResponse)
 	throws ASelectException
 	{
-		String sMethod = "handleSAMLRequest()";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
+		String sMethod = "handleSAMLRequest";
 
 		try {
 			BasicSAMLMessageContext messageContext = new BasicSAMLMessageContext();
@@ -223,15 +222,12 @@ public class Xsaml20_SLO_Redirect extends Saml20_BaseHandler
 			LogoutRequest logoutRequest)
 	throws ASelectException
 	{
-		String sMethod = "handleLogoutRequest()";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
+		String sMethod = "handleLogoutRequest";
 
 		// Destroy the local session
 		String sNameID = logoutRequest.getNameID().getValue();
 		int found = removeTgtByNameID(sNameID);
-		if (found == 0) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "NO TGT FOUND");
-		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "TGT found="+found);
 
 		// Delete the client cookie
 		String sCookieDomain = _configManager.getCookieDomain();

@@ -110,11 +110,11 @@ public class MemoryStorageHandler implements IStorageHandler
 	public Object get(Object oKey)
 	throws ASelectStorageException
 	{
-		String sMethod = "get()";
+		String sMethod = "get";
 		Object oValue = null;
 
-		_systemLogger.log(Level.FINEST, MODULE, sMethod, "key="+oKey+" this=" + this); // +" store="+_htStorage);
 		String sTxt = Utils.firstPartOf(oKey.toString(), 30);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "key="+sTxt+" this=" + this); // +" store="+_htStorage);
 		try {
 			HashMap htStorageContainer = (HashMap) _htStorage.get(oKey);
 			if (htStorageContainer != null) {
@@ -157,7 +157,7 @@ public class MemoryStorageHandler implements IStorageHandler
 			HashMap htStorageContainer = (HashMap) _htStorage.get(oKey);
 			Long lValue = (Long) htStorageContainer.get("timestamp");
 			lTimestamp = lValue.longValue();
-			_systemLogger.log(Level.FINER, MODULE, sMethod, "Timestamp=" + lTimestamp);
+			//_systemLogger.log(Level.FINER, MODULE, sMethod, "Timestamp=" + lTimestamp);
 			// }
 		}
 		catch (NullPointerException eNP) {

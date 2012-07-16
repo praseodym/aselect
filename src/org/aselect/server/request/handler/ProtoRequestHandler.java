@@ -1127,6 +1127,8 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			Utils.copyHashmapValue("authsp_type", htTGTContext, htSessionContext);
 			// 20120606, Bauke: connect sessions
 			Utils.copyHashmapValue("usi", htTGTContext, htSessionContext);
+			// 20120706, Bauke: for Digid4 "session sync"
+			Utils.copyHashmapValue("redirect_sync_time", htTGTContext, htSessionContext);
 		}
 		
 		if (sTgt == null) {

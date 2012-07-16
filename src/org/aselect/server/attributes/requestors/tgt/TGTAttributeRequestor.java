@@ -31,7 +31,6 @@
 
 package org.aselect.server.attributes.requestors.tgt;
 
-
 import java.util.HashMap;
 import java.util.Set;
 import java.util.Vector;
@@ -42,7 +41,6 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAttributesException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.utils.Utils;
 
 /**
  * Retrieves 'attributes' from TGT context. <br>

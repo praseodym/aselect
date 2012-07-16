@@ -53,11 +53,10 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		super.init(oServletConfig, oHandlerConfig);
 		_oSystemLogger = _systemLogger;
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
 
 		try {
 			ConfigManager oConfigManager = ASelectConfigManager.getHandle();
@@ -79,6 +78,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 			// "No config item 'federation_url' found in 'handler' section", e);
 			// 20091207: throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "federation_url="+_sFederationUrl);
 
 		try {
 			_sUpdateInterval = _configManager.getParam(oHandlerConfig, "update_interval");

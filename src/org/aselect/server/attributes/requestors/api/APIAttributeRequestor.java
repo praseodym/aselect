@@ -143,7 +143,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 	public void init(Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			// Get main configuration
 			Object oMainConfiguration = null;
@@ -219,8 +219,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
 							"Could not retrieve one 'parameter' in 'parameters' configuration section", eAC);
 				}
-				while (oParameter != null) // for all parameters
-				{
+				while (oParameter != null) {  // for all parameters
 					try {
 						String sParameterName = _configManager.getParam(oParameter, "id");
 						// check if the parameter is a session parameter
@@ -230,8 +229,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 							if (sAttributeMapping.equals("true"))
 								bSession = true;
 						}
-						catch (ASelectConfigException eAC) {
-							// bSession allready false
+						catch (ASelectConfigException eAC) {  // bSession allready false
 						}
 
 						if (bSession)
@@ -241,7 +239,6 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 							String sParameterValue = _configManager.getParam(oParameter, "value");
 							_htConfigParameters.put(sParameterName, sParameterValue);
 						}
-
 					}
 					catch (ASelectConfigException eAC) {
 						_systemLogger.log(Level.CONFIG, MODULE, sMethod,
@@ -271,27 +268,19 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 			catch (ASelectConfigException eAC) {
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
 						"Could not retrieve 'attribute_mapping' configuration section, no mapping used", eAC);
-
 			}
 
 			if (oAttributesConfiguration != null) {
 				Object oAttribute = null;
-
 				// get all attribute mappings
 				try {
 					oAttribute = _configManager.getSection(oAttributesConfiguration, "attribute");
 				}
 				catch (ASelectConfigException eAC) {
-					_systemLogger
-							.log(
-									Level.CONFIG,
-									MODULE,
-									sMethod,
-									"Could not retrieve one 'attribute' in 'attribute_mapping' configuration section, no mapping used",
-									eAC);
+					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+						"Could not retrieve one 'attribute' in 'attribute_mapping' configuration section, no mapping used",	eAC);
 				}
-				while (oAttribute != null) // for all attributes
-				{
+				while (oAttribute != null) {  // for all attributes
 					try {
 						String sAttributeName = _configManager.getParam(oAttribute, "id");
 						_vAllAttributes.add(sAttributeName);
@@ -314,7 +303,6 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 					oAttribute = _configManager.getNextSection(oAttribute);
 				}
 			}
-
 		}
 		catch (ASelectException eAS) {
 			throw eAS;
@@ -341,7 +329,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes, HashMap hmAttributes)
 	throws ASelectAttributesException
 	{
-		final String sMethod = "getAttributes()";
+		final String sMethod = "getAttributes";
 		String sStatusKeyValue = null;
 		String sStatusKey = null;
 		String sStatusValue = null;
@@ -351,8 +339,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 
 		HashMap htAttributes = new HashMap();
 		try {
-			if (!vAttributes.isEmpty()) // Attributes should be gathered.
-			{
+			if (!vAttributes.isEmpty()) {  // Attributes should be gathered.
 				// get connection
 				try {
 					sURL = getConnection();
@@ -383,13 +370,11 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 				htRequest.putAll(_htConfigParameters);
 
 				// add attribute names to request if applicable
-				if (!vAttributes.firstElement().equals("*")) // Not a Wildcard
-				{
+				if (!vAttributes.firstElement().equals("*")) {  // Not a Wildcard
 					// Map requested attributes
 					Vector vRequestAttributes = new Vector();
 					Object[] oa = vAttributes.toArray();
-					for (int i = 0; i < oa.length; i++) // for all requested attributes
-					{
+					for (int i = 0; i < oa.length; i++) {  // for all requested attributes
 						// get mapping
 						int iIndex = _vAllAttributes.indexOf(oa[i]);
 						if (iIndex < 0) { // no mapping available
@@ -487,7 +472,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 	private String getConnection()
 	throws ASelectSAMException
 	{
-		String sMethod = "getConnection()";
+		String sMethod = "getConnection";
 		SAMResource oSAMResource = null;
 		String sUrl = null;
 		try {
@@ -523,7 +508,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 	private void retrieveSOAPMethodFromConfig(Object oMainConfiguration)
 	throws ASelectAttributesException
 	{
-		String sMethod = "retrieveSOAPMethodFromConfig()";
+		String sMethod = "retrieveSOAPMethodFromConfig";
 		try {
 			_sSOAPMethod = _configManager.getParam(oMainConfiguration, "method");
 		}

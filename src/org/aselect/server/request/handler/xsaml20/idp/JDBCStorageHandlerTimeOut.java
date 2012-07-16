@@ -118,9 +118,9 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 		HashMap htValue = (HashMap) oValue;
 
 		_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Class=" + this.getClass());
-		boolean hasKey = false;	// RH, 20111114, n
 		// We'll use a small (not most beautiful) trick to speed up the "put" later on
 //		if (!_oTGTManager.containsKey(oKey) || htValue.get("createtime") == null) {	// RH, 20111114, o
+		boolean hasKey = false;	// RH, 20111114, n
 		if (!(hasKey =_oTGTManager.containsKey(oKey)) || htValue.get("createtime") == null) {	// RH, 20111114, n
 			long now = new Date().getTime();
 			htValue.put("createtime", String.valueOf(now));
@@ -130,8 +130,6 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 		super.put(oKey, oValue, lTimestamp, hasKey ? UpdateMode.UPDATEFIRST : UpdateMode.INSERTFIRST);	// RH, 20111114, n
 		
 	}
-	
-	
 
 	// Called from system.StorageManager: Cleaner.run()
 	/* (non-Javadoc)
@@ -144,10 +142,9 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 		String _sMethod = "cleanup";
 		long now = new Date().getTime();
 
-		_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "CLEANUP { lTimestamp=" + (lTimestamp - now) + " class="
-				+ this.getClass());
+		_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "CLEANUP { now="+now+" lTimestamp="+lTimestamp+" diff="+(now-lTimestamp));
 		checkTimeoutCondition();
-		// Only the TGT Manager should use this class, so no super.cleanup()
+		// Only the TGT Manager should use this class, therefore do not call super.cleanup()
 		_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "} CLEANUP");
 	}
 
@@ -184,9 +181,6 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			Set keys = allTgts.keySet();
 			for (Object s : keys) {
 				String key = (String) s;
-				// for (Enumeration<String> e = allTgts.keys(); e.hasMoreElements();) {
-				// String key = e.nextElement();
-				// Get TGT
 				HashMap htTGTContext = (HashMap) _oTGTManager.get(key);
 				String sNameID = (String) htTGTContext.get("name_id");
 				Long lExpInterval = _oTGTManager.getExpirationTime(key) - _oTGTManager.getTimestamp(key);
@@ -280,7 +274,7 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 			pkey = metadataManager.getSigningKeyFromMetadata(urlSp);
 			if (pkey == null || "".equals(pkey)) {
 				_oSystemLogger.log(Level.SEVERE, MODULE, _sMethod, "No valid public key in metadata");
-				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+				throw new ASelectStorageException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 		}
 		try {  // Sign with our private key!

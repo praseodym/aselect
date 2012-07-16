@@ -377,14 +377,12 @@ public class SAMService extends SAMServiceServlet
 
 				oAuthSP = oASelectConfigManager.getNextSection(oAuthSP);
 			}
-
 			sReturn = sbAuthSP.toString();
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, MODULE, "resolveAuthSPs()", "Error retrieving AuthSP information", e);
+			_systemLogger.log(Level.WARNING, MODULE, "resolveAuthSPs", "Error retrieving AuthSP information", e);
 			sReturn = "&nbsp;";
 		}
-
 		return sReturn;
 	}
 }

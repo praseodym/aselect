@@ -178,8 +178,7 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler
 			String sInResponseTo = artifactResolve.getID(); // Is required in SAMLsyntax
 
 			// 20090409, Bauke: If back-channel communication is used Destination is optional
-			// If we ever want to set it, look for the Recipient attribute contained
-			// in the subject confirmation
+			// If we ever want to set it, look for the Recipient attribute contained in the subject confirmation
 			// (tgt:"sp_assert_url" equals the location where the artifact was sent to).
 			// The issuer (artifactResolve.getIssuer()) cannot be used for this purpose!
 			//
@@ -195,8 +194,8 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler
 			else {
 				Saml20_ArtifactManager artifactManager = Saml20_ArtifactManager.getTheArtifactManager();
 				Response samlResponse = (Response) artifactManager.getArtifactFromStorage(sReceivedArtifact);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "samlResponse retrieved from storage:\n"
-						+ XMLHelper.nodeToString(samlResponse.getDOM()));
+				//_systemLogger.log(Level.INFO, MODULE, sMethod, "samlResponse retrieved from storage:\n"
+				//		+ XMLHelper.nodeToString(samlResponse.getDOM()));
 
 				// We will not allow to use the artifact again
 				artifactManager.remove(sReceivedArtifact); // RH, 20081113, n
@@ -334,8 +333,8 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler
 			String sStatusMessage)
 	throws ASelectException
 	{
-		String sMethod = "errorResponse()";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
+		String sMethod = "errorResponse";
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
 
 		SAMLObjectBuilder<StatusCode> statusCodeBuilder = (SAMLObjectBuilder<StatusCode>) _oBuilderFactory
 				.getBuilder(StatusCode.DEFAULT_ELEMENT_NAME);
@@ -378,7 +377,7 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler
 	public void destroy()
 	{
 		String sMethod = "destroy()";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
 	}
 
 	/**

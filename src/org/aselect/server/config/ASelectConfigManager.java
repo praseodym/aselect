@@ -1151,7 +1151,7 @@ public class ASelectConfigManager extends ConfigManager
 			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
 		// End sequential authsp's
 
-		return "Form '" + sForm + "' not found.";
+		return "Form '" + sForm + "' not found, not a standard form";
 	}
 
 	/**
@@ -1199,7 +1199,7 @@ public class ASelectConfigManager extends ConfigManager
 	public String updateTemplate(String sTemplate, HashMap htSessionContext)
 	throws ASelectException
 	{
-		String sMethod = "updateTemplate()";
+		String sMethod = "updateTemplate";
 		String sReturn = null;
 		String sFriendlyName = "";
 		String sMaintainerEmail = "";

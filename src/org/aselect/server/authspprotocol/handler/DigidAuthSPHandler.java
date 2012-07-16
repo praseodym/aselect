@@ -259,7 +259,6 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 	public HashMap computeAuthenticationRequest(String sRid, HashMap htSessionContext)
 	{
 		String sMethod = "computeAuthenticationRequest";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
 
 		HashMap htMethodResponse = new HashMap();
 		htMethodResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);

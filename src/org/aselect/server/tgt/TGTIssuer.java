@@ -141,6 +141,7 @@ package org.aselect.server.tgt;
 
 import java.io.PrintWriter;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -354,6 +355,15 @@ public class TGTIssuer
 			Utils.copyHashmapValue("federation_url", htTGTContext, htSessionContext);
 			// 20120606, Bauke: connect sessions
 			Utils.copyHashmapValue("usi", htTGTContext, htSessionContext);
+			
+			// 20120706, Bauke: for Digid4 "session sync"
+			Utils.copyHashmapValue("redirect_sync_time", htTGTContext, htSessionContext);
+			Utils.copyHashmapValue("redirect_ists_url", htTGTContext, htSessionContext);
+			Utils.copyHashmapValue("redirect_post_form", htTGTContext, htSessionContext);
+			
+			Long now = new Date().getTime();
+			htTGTContext.put("sessionsynctime", Long.toString(now));
+			// 20120706
 
 			// Attributes that where released by the 'remote' A-Select Server will be stored in the TGT.
 			// This server might have configured a 'TGTAttributeRequestor' to
@@ -465,11 +475,11 @@ public class TGTIssuer
 	 *             if an error page must be shown
 	 */
 	// 20120403, Bauke: added htSessionContext
-	public String issueTGTandRedirect(String sRid, HashMap htSessionContext, String sAuthSP, HashMap htAdditional, HttpServletResponse oHttpServletResponse, String sOldTGT, boolean redirectToo)
+	public String issueTGTandRedirect(String sRid, HashMap htSessionContext, String sAuthSP, HashMap htAdditional,
+					HttpServletResponse oHttpServletResponse, String sOldTGT, boolean redirectToo)
 	throws ASelectException
 	{
 		String sMethod = "issueTGTandRedirect";
-
 		try {
 			// 20120403, Bauke: session is passed as a parameter:
 			// HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
@@ -570,10 +580,10 @@ public class TGTIssuer
 			String sRemoteAttributes = (htAdditional==null)? null: (String) htAdditional.get("attributes");
 			HashMap htSerAttributes = (sRemoteAttributes==null)? null: org.aselect.server.utils.Utils.deserializeAttributes(sRemoteAttributes);
 			// 20100228, Bauke: when a remote system has changed the language, copy it here
-			_systemLogger.log(Level.FINE, MODULE, sMethod, "htSessionContext lang="+htSessionContext.get("language")+" htTGTContext lang="+htTGTContext.get("language"));
+			//_systemLogger.log(Level.FINE, MODULE, sMethod, "htSessionContext lang="+htSessionContext.get("language")+" htTGTContext lang="+htTGTContext.get("language"));
 			Utils.copyHashmapValue("language", htTGTContext, htSessionContext);  // default
 			if (htSerAttributes != null) {
-				_systemLogger.log(Level.FINE, MODULE, sMethod, "htAttributes lang="+htSerAttributes.get("language"));
+				//_systemLogger.log(Level.FINE, MODULE, sMethod, "htAttributes lang="+htSerAttributes.get("language"));
 				Utils.copyHashmapValue("language", htTGTContext, htSerAttributes);  // copy remote version over it
 			}
 			_systemLogger.log(Level.FINE, MODULE, sMethod, "htTGTContext lang="+htTGTContext.get("language"));
@@ -632,6 +642,15 @@ public class TGTIssuer
 			// 20120606, Bauke: connect sessions
 			Utils.copyHashmapValue("usi", htTGTContext, htSessionContext);
 			
+			// 20120706, Bauke: for Digid4 "session sync"
+			Utils.copyHashmapValue("redirect_sync_time", htTGTContext, htSessionContext);
+			Utils.copyHashmapValue("redirect_ists_url", htTGTContext, htSessionContext);
+			Utils.copyHashmapValue("redirect_post_form", htTGTContext, htSessionContext);
+			
+			Long now = new Date().getTime();
+			htTGTContext.put("sessionsynctime", Long.toString(now));
+			// 20120706
+
 			// 20100210, Bauke: Organization selection is here
 			AttributeGatherer ag = AttributeGatherer.getHandle();
 			HashMap<String,String> hUserOrganizations = ag.gatherOrganizations(htTGTContext);
@@ -640,7 +659,7 @@ public class TGTIssuer
 			// Also places org_id in the TGT context:
 			boolean mustChooseOrg = Utils.handleOrganizationChoice(htTGTContext, hUserOrganizations);
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "MustChoose="+mustChooseOrg+" Store TGT=" + htTGTContext);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "MustChoose="+mustChooseOrg+" Store TGT");
 			String sTgt = null;
 			if (htOldTGTContext == null) {
 				// Create a new TGT, must set "name_id" to the sTgt value
@@ -696,39 +715,6 @@ public class TGTIssuer
 			sbError.append(sRid).append("' failed due to internal error");
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-		}
-	}
-
-	// Looks very much like code in the ApplicationBrowserHandler
-	/**
-	 * Ensure session presence.
-	 * 
-	 * @param sUserId
-	 *            the s user id
-	 * @param htTGTContext
-	 *            the ht tgt context
-	 * @param htSessionContext
-	 *            the ht session context
-	 * @param ssoSession
-	 *            the sso session
-	 */
-	private void ensureSessionPresence(String sUserId, HashMap htTGTContext, HashMap htSessionContext,
-			UserSsoSession ssoSession)
-	{
-		String sMethod = "ensureSessionPresence";
-
-		String sIssuer = (String) htSessionContext.get("sp_issuer");
-		if (sIssuer != null) {
-			// SSO Sessions in effect
-			htTGTContext.put("sp_issuer", sIssuer);
-			if (ssoSession == null) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "NEW SSO session for " + sUserId + " issuer=" + sIssuer);
-				ssoSession = new UserSsoSession(sUserId, ""); // sTgt);
-			}
-			ServiceProvider sp = new ServiceProvider(sIssuer);
-			ssoSession.addServiceProvider(sp);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "UPD SSO session " + ssoSession);
-			htTGTContext.put("sso_session", ssoSession);
 		}
 	}
 
@@ -841,6 +827,39 @@ public class TGTIssuer
 			sbError.append(sRid).append("' failed due to internal error");
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString(), e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+	}
+
+	// Looks very much like code in the ApplicationBrowserHandler
+	/**
+	 * Ensure session presence.
+	 * 
+	 * @param sUserId
+	 *            the s user id
+	 * @param htTGTContext
+	 *            the ht tgt context
+	 * @param htSessionContext
+	 *            the ht session context
+	 * @param ssoSession
+	 *            the sso session
+	 */
+	private void ensureSessionPresence(String sUserId, HashMap htTGTContext, HashMap htSessionContext,
+			UserSsoSession ssoSession)
+	{
+		String sMethod = "ensureSessionPresence";
+	
+		String sIssuer = (String) htSessionContext.get("sp_issuer");
+		if (sIssuer != null) {
+			// SSO Sessions in effect
+			htTGTContext.put("sp_issuer", sIssuer);
+			if (ssoSession == null) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "NEW SSO session for " + sUserId + " issuer=" + sIssuer);
+				ssoSession = new UserSsoSession(sUserId, ""); // sTgt);
+			}
+			ServiceProvider sp = new ServiceProvider(sIssuer);
+			ssoSession.addServiceProvider(sp);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "UPD SSO session " + ssoSession);
+			htTGTContext.put("sso_session", ssoSession);
 		}
 	}
 

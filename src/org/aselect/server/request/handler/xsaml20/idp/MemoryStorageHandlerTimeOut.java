@@ -33,8 +33,8 @@ import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
 /*
- * NOTE: Code is identical to MemoryStorageHandlerTimeOut (except for class-names of course).
  *       Though it is different from the sp-version.
+ * NOTE: Code is identical to MemoryStorageHandlerTimeOut (except for class-names of course).
  */
 public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 {
@@ -143,10 +143,9 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 		String _sMethod = "cleanup";
 		long now = new Date().getTime();
 
-		_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "CLEANUP { lTimestamp=" + (lTimestamp - now) + " class="
-				+ this.getClass());
+		_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "CLEANUP { now="+now+" lTimestamp="+lTimestamp+" diff="+(now-lTimestamp));
 		checkTimeoutCondition();
-		// Only the TGT Manager should use this class, so no super.cleanup()
+		// Only the TGT Manager should use this class, therefore do not call super.cleanup()
 		_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "} CLEANUP");
 	}
 
@@ -175,17 +174,14 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 			if (_oTGTManager != null) {
 				allTgts = _oTGTManager.getAll();
 			}
-			if (allTgts == null)
+		if (allTgts == null || allTgts.size() == 0)
 				return;
-			_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "IDPTO - TGT Count=" + allTgts.size());
+			_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO _serverUrl="+_serverUrl+" - TGT Count="+allTgts.size());
 
 			// For all TGT's
 			Set keys = allTgts.keySet();
 			for (Object s : keys) {
 				String key = (String) s;
-				// for (Enumeration<String> e = allTgts.keys(); e.hasMoreElements();) {
-				// String key = e.nextElement();
-				// Get TGT
 				HashMap htTGTContext = (HashMap) _oTGTManager.get(key);
 				String sNameID = (String) htTGTContext.get("name_id");
 				Long lExpInterval = _oTGTManager.getExpirationTime(key) - _oTGTManager.getTimestamp(key);
@@ -279,7 +275,7 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 			pkey = metadataManager.getSigningKeyFromMetadata(urlSp);
 			if (pkey == null || "".equals(pkey)) {
 				_oSystemLogger.log(Level.SEVERE, MODULE, _sMethod, "No valid public key in metadata");
-				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+				throw new ASelectStorageException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 		}
 		try {  // Sign with our private key!

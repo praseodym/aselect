@@ -150,6 +150,8 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 	// Also the "rid" value is stored in the session, while locally cached.
 	// Both values will be removed before storing the session.
 	protected HashMap _htSessionContext = null;
+	// We can do the same for the TGT, so the BrowserHandlers need not read it:
+	protected HashMap _htTGTContext = null;
 
 	/** The server ID */
 	protected String _sMyServerId;
@@ -229,10 +231,11 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 
 			pwOut = _servletResponse.getWriter();
 			_servletResponse.setContentType("text/html");
+			
+			// Also reads TGT into _htTGTContext if available
 			htServiceRequest = createServiceRequest(_servletRequest);
 			String sRequest = (String) htServiceRequest.get("request");
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ "+_servletRequest.getMethod()+
-					" htServiceRequest=" + htServiceRequest);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ "+_servletRequest.getMethod()+" htServiceRequest=" + htServiceRequest);
 			String sUsi = null;
 			try {
 				sUsi = (String)htServiceRequest.get("usi");  // unique sensor id
@@ -249,17 +252,18 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ _sMyServerId=" + _sMyServerId
 						+ ", sServerId=" + sServerId);
 				if (sServerId == null) {
-					_systemLogger.log(Level.WARNING, _sModule, sMethod,
-							"Missing required parameter \"a-select-server\"");
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing required parameter \"a-select-server\"");
 					throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
 				else if (!sServerId.equals(_sMyServerId)) {
-					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid \"a-select-server\" parameter: "
-							+ sServerId);
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid 'a-select-server' parameter: "+sServerId);
 					throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_ID_MISMATCH);
 				}
 			}
+			// Specifics for the individual BrowserHandler,
+			// TGT has been read if available, htServiceRequest has been filled with parameters (GET or POST)
 			processBrowserRequest(htServiceRequest, _servletResponse, pwOut);
+			
 			bSuccess = true;  // no exceptions thrown
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ Done");
 		}
@@ -376,8 +380,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 	 */
 	protected HashMap getASelectCredentials(HttpServletRequest servletRequest)
 	{
-		String sMethod = "getASelectCredentials()";
-		HashMap htCredentials = new HashMap();
+		String sMethod = "getASelectCredentials";
 
 		// check for credentials that might be present
 		// Bauke 20080618, we only store the tgt value from now on
@@ -386,17 +389,19 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 			return null;
 		}
 
-		HashMap htTGTContext = _tgtManager.getTGT(sTgt);
-		if (htTGTContext == null) {
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "Read TGT");
+		_htTGTContext = _tgtManager.getTGT(sTgt);
+		if (_htTGTContext == null) {
 			return null;
 		}
 		/*
 		 * if (!sUserId.equals(htTGTContext.get("uid"))) { return null; }
 		 */
-		String sUserId = (String) htTGTContext.get("uid");
+		String sUserId = (String) _htTGTContext.get("uid");
 		if (sUserId == null)
 			return null;
 
+		HashMap htCredentials = new HashMap();
 		htCredentials.put("aselect_credentials_tgt", sTgt);
 		htCredentials.put("aselect_credentials_uid", sUserId);
 		htCredentials.put("aselect_credentials_server_id", _sMyServerId); // Bauke 20080618 was: sServerId);
@@ -439,6 +444,8 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 		String sAgent = servletRequest.getHeader("User-Agent");
 		if (sAgent != null)
 			htServiceRequest.put("user_agent", sAgent);
+		
+		// Also reads TGT into _htTGTContext if available
 		HashMap htCredentials = getASelectCredentials(servletRequest);
 		if (htCredentials != null) {
 			htServiceRequest.put("aselect_credentials_tgt", htCredentials.get("aselect_credentials_tgt"));

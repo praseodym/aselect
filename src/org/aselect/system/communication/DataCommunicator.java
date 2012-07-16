@@ -112,15 +112,15 @@ public class DataCommunicator
 			sbBuffer = new StringBuffer("Target host unknown: \"");
 			sbBuffer.append(sUrl);
 			sbBuffer.append("\" errorcode: ").append(Errors.ERROR_ASELECT_USE_ERROR);
-			systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString(), eUH);
-			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR, eUH);
+			systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 		}
 		catch (java.io.IOException eIO) {  // error while connecting,writing or reading
-			sbBuffer = new StringBuffer("Could not open connection with host: \"");
+			sbBuffer = new StringBuffer("Could not open connection to host: \"");
 			sbBuffer.append(sUrl);
 			sbBuffer.append("\" errorcode: ").append(Errors.ERROR_ASELECT_IO);
-			systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString(), eIO);
-			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_IO, eIO);
+			systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_IO);
 		}
 		finally {
 			systemLogger.log(Level.INFO, MODULE, sMethod, "Close osOutput="+osOutput+" conn="+connection);

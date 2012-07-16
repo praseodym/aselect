@@ -491,8 +491,6 @@ public class StorageManager
 	public void update(Object oKey, Object oValue)
 	throws ASelectStorageException
 	{
-		// _oSystemLogger.log(Level.INFO, MODULE, "update",
-		// "StorageHandlerClass="+_oStorageHandler.getClass()+" this="+this.getClass());
 		// RH, 20111117, sn
 		// Sometimes the update is used to insert new values, so check for max
 		if (_iMax != I_UNLIMITED && _oStorageHandler.isMaximum(_iMax)) 
@@ -760,7 +758,7 @@ public class StorageManager
 		@Override
 		public void run()
 		{
-			String sMethod = "run()";
+			String sMethod = "run";
 			while (_bGo) {
 				try {
 					sleep(_lInterval);
@@ -768,7 +766,7 @@ public class StorageManager
 					long lCurrentTimestamp = System.currentTimeMillis();
 					Long lCleanupTimestamp = new Long(lCurrentTimestamp - _lExpireTime);
 
-					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Go cleanup: "+_sId);
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Go cleanup: "+_sId+" now="+lCurrentTimestamp+" expiration time="+_lExpireTime);
 					_oStorageHandler.cleanup(lCleanupTimestamp);
 					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Cleaned-up: "+_sId);
 				}

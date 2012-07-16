@@ -94,6 +94,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 
 	private boolean useBackchannelClientcertificate = false;
 
+	// 20120712, Bauke: Store TGT in class variable to save on reads
+	protected HashMap _htTGTContext = null;
 
 	//
 	// Example configuration:
@@ -115,13 +117,11 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		super.init(oServletConfig, oHandlerConfig);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
 
 		_oBuilderFactory = Configuration.getBuilderFactory();
-
 		_sMyServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
 		_sFederationUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "federation_url", false);
 		// Issuer in the send SAML message
@@ -149,7 +149,6 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "use_backchannelclientcertificate: " + isUseBackchannelClientcertificate());
 		// RH, 20120322, en
 
-
 		_tgtManager = TGTManager.getHandle();
 		_authenticationLogger = ASelectAuthenticationLogger.getHandle();
 	}
@@ -169,17 +168,16 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		boolean checkAssertionSigning = false;
 		Object samlResponseObject = null;
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "#=============#");
 
 		try {
 			String sReceivedArtifact = request.getParameter("SAMLart");
 			String sReceivedResponse = request.getParameter("SAMLResponse");
+			String sRelayState = request.getParameter("RelayState");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Received artifact: " + sReceivedArtifact + " RelayState="+sRelayState);
 			if ( !(sReceivedArtifact == null || "".equals(sReceivedArtifact)) ) {
-				String sRelayState = request.getParameter("RelayState");
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Received artifact: " + sReceivedArtifact + " RelayState="+sRelayState);
 				String sFederationUrl = _sFederationUrl; // default, remove later on, can be null
 				if (sRelayState.startsWith("idp=")) {
 					sFederationUrl = sRelayState.substring(4);
@@ -319,14 +317,10 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				samlResponseObject = artifactResponse.getMessage();
 			}	
 			else if ( !(sReceivedResponse == null || "".equals(sReceivedResponse)) ) {
-				// Handle http-post, can be unsolicited post as well
-				
+				// Handle http-post, can be unsolicited POST as well
 				// Could be Base64 encoded
-				String sRelayState = request.getParameter("RelayState");
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Received Response: " + sReceivedResponse + " RelayState="+sRelayState);
 				// RelayState should contain intended application resource URL
 				sRelayState = new String(Base64Codec.decode(sRelayState));
-				
 				sReceivedResponse = new String(Base64Codec.decode(sReceivedResponse));
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Received Response: " + sReceivedResponse + " RelayState="+sRelayState);
 				DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -483,14 +477,15 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 							
 							String sAttrValue = null;// RH, 20120124, sn
 							List <XMLObject> aValues = attr.getAttributeValues();
-							if ( aValues != null && aValues.size() == 1 ) {	// For now we only alllow single valued simple type xs:string attributes
-	                              XMLObject xmlObj = aValues.get(0);
+							if ( aValues != null && aValues.size() == 1 ) {	// For now we only allow single valued simple type xs:string attributes
+	                            XMLObject xmlObj = aValues.get(0);
 //								XSStringImpl xsString = (XSStringImpl) attr.getOrderedChildren().get(0);// RH, 20120124, so
 //								String sAttrValue = xsString.getValue();// RH, 20120124, o
 //								sAttrValue = xsString.getValue();// RH, 20120124, eo
 								sAttrValue = xmlObj.getDOM().getFirstChild().getTextContent();
 								_systemLogger.log(Level.INFO, MODULE, sMethod, "Name=" + sAttrName + " Value=" + sAttrValue);
-							} else {
+							}
+							else {
 								_systemLogger.log(Level.INFO, MODULE, sMethod, "Only single valued attributes allowed, skipped attribute Name=" + sAttrName);
 							}	// RH, 20120124, en
 							if ("attributes".equals(sAttrName))
@@ -715,6 +710,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "<--");
 
 		try {
+			// 20120712, Bauke: Stores TGT in class variable to save on reads:
 			HashMap htServiceRequest = createServiceRequest(servletRequest);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "htServiceRequest=" + htServiceRequest);
 
@@ -825,7 +821,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 	}
 
 	/**
-	 * Retrieve A-Select credentials. <br>
+	 * Retrieve A-Select credentials. Reads TGT in _htTGTContext.<br>
 	 * <br>
 	 * <b>Description:</b> <br>
 	 * Reads the A-Select credentials from a Cookie and put them into a <code>HashMap</code>. <br>
@@ -856,11 +852,12 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 		if (sTgt == null)
 			return null;
 
-		HashMap htTGTContext = _tgtManager.getTGT(sTgt);
-		if (htTGTContext == null)
+		// 20120712, Bauke: Store TGT in class variable to save on reads
+		_htTGTContext = _tgtManager.getTGT(sTgt);
+		if (_htTGTContext == null)
 			return null;
 
-		String sUserId = (String) htTGTContext.get("uid");
+		String sUserId = (String) _htTGTContext.get("uid");
 		if (sUserId != null)
 			htCredentials.put("aselect_credentials_uid", sUserId);
 		htCredentials.put("aselect_credentials_tgt", sTgt);

@@ -374,7 +374,6 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			String sLang = (String)_htSessionContext.get("language");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
 			tgtIssuer.sendTgtRedirect(sAppUrl, sTgt, sRid, servletResponse, sLang);					
-			// 20111020, old: tgtIssuer.issueTGTandRedirect(sRid, sAuthSp, htAdditional, servletResponse, sOldTGT, true);
 		}
 		catch (ASelectException e) {
 			throw e;

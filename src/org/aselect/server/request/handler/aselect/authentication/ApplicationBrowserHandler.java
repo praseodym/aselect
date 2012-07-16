@@ -302,7 +302,6 @@ import java.util.Vector;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse; //import org.aselect.system.servlet.HtmlInfo;
 
@@ -475,6 +474,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_sUserLanguage = sReqLanguage;
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "Set user language=" + _sUserLanguage + " from Request");
 		}
+		// TGT was read if available
 
 		// Bauke, 20090929: added localization, do this asap.
 		String sRid = (String)htServiceRequest.get("rid");
@@ -562,7 +562,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// Session is available
 			String sDirectAuthSP = (String) _htSessionContext.get("direct_authsp");
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "direct_authsp="+sDirectAuthSP);
-			if (sDirectAuthSP != null && !(sRequest.indexOf("direct_login") >= 0)) {
+			if (sDirectAuthSP != null && !sRequest.startsWith("direct_login")) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod,
 						"'direct_authsp' found, but not a 'direct_login' request, rid='" + sRid + "'");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
@@ -652,13 +652,14 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		// No need to write the session, it's used below by calculateAndReportSensorData() and then discarded
 		
 		// Store the chosen organization in the TGT
-		HashMap<String,Object> htTGTContext = _tgtManager.getTGT(sTgt);
-		if (htTGTContext == null) {
+		// 20120712, Bauke, not needed, ASelectAuthenticationProfile has already read the TGT
+		//HashMap<String,Object> _htTGTContext = _tgtManager.getTGT(sTgt);
+		if (_htTGTContext == null) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Cannot get TGT");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
-		htTGTContext.put("org_id", sOrgId);
-		_tgtManager.updateTGT(sTgt, htTGTContext);
+		_htTGTContext.put("org_id", sOrgId);
+		_tgtManager.updateTGT(sTgt, _htTGTContext);
 
 		// The tgt was just issued and updated, report sensor data
 		Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_sbh", sRid, _htSessionContext, sTgt, true);
@@ -668,7 +669,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIRECT to " + sAppUrl);
 		
 		TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-		String sLang = (String)htTGTContext.get("language");
+		String sLang = (String)_htTGTContext.get("language");
 		oTGTIssuer.sendTgtRedirect(sAppUrl, sTgt, sRid, servletResponse, sLang);
 	}
 
@@ -708,18 +709,16 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		String sRid = null;
 
 		String sRequest = (String) htServiceRequest.get("request");
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "==== "+sRequest+" htServReq="+htServiceRequest);
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "request="+sRequest+" htServReq="+htServiceRequest);
 		try {
 			sRid = (String) htServiceRequest.get("rid");
 			String sAuthSPId = (String) _htSessionContext.get("direct_authsp");
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "authsp from session="+sAuthSPId);
+			_systemLogger.log(Level.FINE, _sModule, sMethod, "authsp from session="+sAuthSPId);
 			if (sAuthSPId == null) {
 				sAuthSPId = (String) htServiceRequest.get("authsp");
-				_systemLogger.log(Level.INFO, _sModule, sMethod, "authsp from request="+sAuthSPId);
+				_systemLogger.log(Level.FINE, _sModule, sMethod, "authsp from request="+sAuthSPId);
 				if (sAuthSPId != null) {
 					_htSessionContext.put("direct_authsp", sAuthSPId);
-					//Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-					//_sessionManager.updateSession(sRid, _htSessionContext); // make persistent
 					_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 				}
 			}
@@ -729,7 +728,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 			IAuthSPDirectLoginProtocolHandler oProtocolHandler = _authspHandlerManager.getAuthSPDirectLoginProtocolHandler(sAuthSPId);
-
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "ProtocolHandler="+oProtocolHandler.getClass());
+			
 			// Check if user already has a tgt so that he/she doesn't need to be authenticated again
 			if (_configManager.isSingleSignOn() && htServiceRequest.containsKey("aselect_credentials_tgt")
 					&& htServiceRequest.containsKey("aselect_credentials_uid")
@@ -741,14 +741,14 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 				// check if a request was done for another user-id
 				String sForcedUid = (String) _htSessionContext.get("forced_uid");
-
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "DLOGIN sTgt=" + sTgt + " sUid=" +
 								sUid + " sServerId=" + sServerId + " sForcedUid=" + sForcedUid);
-				if (sForcedUid != null && !sUid.equals(sForcedUid)) // user_id does not match
-				{
+				
+				if (sForcedUid != null && !sUid.equals(sForcedUid)) { // user_id does not match
 					_tgtManager.remove(sTgt);
 				}
 				else {
+					// Reads the TGT into class variable _htTGTContext:
 					int rc = checkCredentials(sTgt, sUid, sServerId); // valid credentials/level/SSO group
 					if (rc >= 0) {  // ok
 						Boolean forcedAuthenticate = (Boolean) _htSessionContext.get("forced_authenticate");
@@ -758,26 +758,25 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						if (!forcedAuthenticate.booleanValue()) {
 							// Valid tgt, no forced_authenticate, update TGT with app_id or local_organization
 							// needed for attribute gathering in verify_tgt
-							HashMap htTGTContext = _tgtManager.getTGT(sTgt);
-							
+							// No redirectSyncNeeded() mechanism here
 							boolean mustChooseOrg = false;
 							HashMap<String,String> hUserOrganizations = null;
 							if (rc == 1) {  // no organization choice was made
 								// 20100318, Bauke: Organization selection is here
 								AttributeGatherer ag = AttributeGatherer.getHandle();
-								hUserOrganizations = ag.gatherOrganizations(htTGTContext);
+								hUserOrganizations = ag.gatherOrganizations(_htTGTContext);
 								
 								// Also places org_id in the TGT context:
-								mustChooseOrg = Utils.handleOrganizationChoice(htTGTContext, hUserOrganizations);
+								mustChooseOrg = Utils.handleOrganizationChoice(_htTGTContext, hUserOrganizations);
 							}
 							_systemLogger.log(Level.INFO, MODULE, sMethod, "MustChoose="+mustChooseOrg+" UserOrgs="+hUserOrganizations);
 
-							Utils.copyHashmapValue("app_id", htTGTContext, _htSessionContext);
-							Utils.copyHashmapValue("local_organization", htTGTContext, _htSessionContext);
-							Utils.copyHashmapValue("language", htTGTContext, _htSessionContext);
+							Utils.copyHashmapValue("app_id", _htTGTContext, _htSessionContext);
+							Utils.copyHashmapValue("local_organization", _htTGTContext, _htSessionContext);
+							Utils.copyHashmapValue("language", _htTGTContext, _htSessionContext);
 							
-							htTGTContext.put("rid", sRid);
-							_tgtManager.updateTGT(sTgt, htTGTContext);
+							_htTGTContext.put("rid", sRid);
+							_tgtManager.updateTGT(sTgt, _htTGTContext);
 							
 							// 20100210, Bauke: Present the Organization selection to the user
 							// Leaves the Rid session in place, needed for the application url
@@ -787,7 +786,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 								// pauseSensorDate() already does this: _sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 								// The user must choose his organization
 								String sSelectForm = org.aselect.server.utils.Utils.presentOrganizationChoice(_configManager, _htSessionContext,
-										sRid, (String)htTGTContext.get("language"), hUserOrganizations);
+										sRid, (String)_htTGTContext.get("language"), hUserOrganizations);
 								servletResponse.setContentType("text/html");
 								pwOut.println(sSelectForm);
 								pwOut.close();
@@ -809,7 +808,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							// Session must be removed
 							_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
-							String sLang = (String)htTGTContext.get("language");
+							String sLang = (String)_htTGTContext.get("language");
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 							oTGTIssuer.sendTgtRedirect(sRedirectUrl, sTgt, sRid, servletResponse, sLang);
 							return;
@@ -818,9 +817,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					}
 					// TGT found but not sufficient. It could be partially sufficient though
 					// (see the "next_authsp" mechanism).
-					
-					// Authenticate with same user-id that was stored in TGT
-					HashMap htTGTContext = _tgtManager.getTGT(sTgt);
 					
 					/*
 					 * We know the authsp here, and it's level, we can examine the TGT and see what level we already have.
@@ -831,7 +827,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					String first_authsp = aApp.getFirstAuthsp();
 					String next_authsp = _authspHandlerManager.getNextAuthSP(sAuthSPId, sAppId);
 					int iAuthspLevel = _authspHandlerManager.getLevel(sAuthSPId);
-					int iTgtLevel = getLevelFromTGT(htTGTContext);
+					int iTgtLevel = getLevelFromTGT(_htTGTContext);
 					_systemLogger.log(Level.INFO, _sModule, sMethod, "NEXT_AUTHSP app_id="+sAppId+" authspLevel="+iAuthspLevel+
 							" tgtLevel="+iTgtLevel+" first_authsp="+first_authsp+" next_authsp="+next_authsp);
 					if (first_authsp != null && next_authsp != null && iTgtLevel >= iAuthspLevel) {
@@ -864,9 +860,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 					// If TGT was issued in cross mode, the user now has to
 					// authenticate with a higher level in cross mode again
-					String sTempOrg = (String) htTGTContext.get("proxy_organization");
+					String sTempOrg = (String) _htTGTContext.get("proxy_organization");
 					if (sTempOrg == null)
-						sTempOrg = (String) htTGTContext.get("organization");
+						sTempOrg = (String) _htTGTContext.get("organization");
 					if (!sTempOrg.equals(_sMyOrg)) {
 						_htSessionContext.put("forced_uid", sUid);
 						_htSessionContext.put("forced_organization", sTempOrg);
@@ -959,8 +955,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		String sRid = null;
 		StringBuffer sbUrl;
 
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "Login1 SessionContext:" + _htSessionContext
-				+ ", ServiceRequest:" + htServiceRequest);
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "Login1 SessionContext:" + _htSessionContext +
+						", ServiceRequest:" + htServiceRequest);
 		try {
 			sRid = (String) htServiceRequest.get("rid");
 
@@ -977,19 +973,43 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				String sForcedUid = (String) _htSessionContext.get("forced_uid");
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "SSO branch uid=" + sUid + " forced_uid=" + sForcedUid);
 				if (sForcedUid != null && !sForcedUid.equals("saml20_user") && !sForcedUid.equals("siam_user")
-						&& !sUid.equals(sForcedUid)) // user_id does not match
-				{
+						&& !sUid.equals(sForcedUid)) { 
+					// user_id does not match
+					_systemLogger.log(Level.INFO, _sModule, sMethod, "Forced uid does not match, remove TGT");
 					_tgtManager.remove(sTgt);
 				}
 				else {
+					// Reads the TGT into class variable _htTGTContext:
 					int rc = checkCredentials(sTgt, sUid, sServerId); // valid credentials/level/SSO group
-					if (rc >= 0) {
+					if (rc < 0)
+						_systemLogger.log(Level.INFO, _sModule, sMethod, "TGT invalid or missing");
+					else {
 						Boolean boolForced = (Boolean) _htSessionContext.get("forced_authenticate");
 						if (boolForced == null)
 							boolForced = false;
-						_systemLogger.log(Level.INFO, _sModule, sMethod, "CheckCred OK forced=" + boolForced);
+						_systemLogger.log(Level.INFO, _sModule, sMethod, "TGT OK rc="+rc+" forced_authenticate=" + boolForced);
 						if (!boolForced.booleanValue()) {
 							// valid tgt, no forced_authenticate
+							
+							if (redirectSyncNeeded(_htTGTContext)) {  // looks for "redirect_sync_time"
+								_systemLogger.log(Level.INFO, _sModule, sMethod, "redirectSyncNeeded, goto ISTS");
+								// redirect to the ISTS
+								String sIsts = (String)_htTGTContext.get("redirect_ists_url");
+								String sPostForm = (String)_htTGTContext.get("redirect_post_form");
+								String sSelectForm = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(),
+												sPostForm, _sUserLanguage, _sUserCountry);
+								sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
+								sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", _sMyServerId);
+								sSelectForm = Utils.replaceString(sSelectForm, "[handler_url]", sIsts);
+								servletResponse.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+								servletResponse.setContentType("text/html");
+								servletResponse.setHeader("Pragma", "no-cache");
+								Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102 can update the session
+								pwOut.println(sSelectForm);
+								pwOut.close();
+								return;
+							}
+
 							// redirect to application as user has already a valid tgt
 							String sRedirectUrl;
 							if (_htSessionContext.get("remote_session") == null) {
@@ -1002,31 +1022,30 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							else {
 								sRedirectUrl = (String) _htSessionContext.get("local_as_url");
 							}
+							_systemLogger.log(Level.INFO, _sModule, sMethod, "No forced_authenticate, redirect="+sRedirectUrl);
 							// update TGT with app_id or local_organization
 							// needed for attribute gathering in verify_tgt
-							HashMap htTGTContext = _tgtManager.getTGT(sTgt);
 
-							htTGTContext.put("rid", sRid);
-							Utils.copyHashmapValue("local_organization", htTGTContext, _htSessionContext);
+							_htTGTContext.put("rid", sRid);
+							Utils.copyHashmapValue("local_organization", _htTGTContext, _htSessionContext);
 							// Copy sp_rid as well: xsaml20
-							Utils.copyHashmapValue("sp_rid", htTGTContext, _htSessionContext);
+							Utils.copyHashmapValue("sp_rid", _htTGTContext, _htSessionContext);
 							// 20110526, Bauke, copy sp_reqbinding too, it must survive SSO
-							Utils.copyHashmapValue("sp_reqbinding", htTGTContext, _htSessionContext);
-							Utils.copyHashmapValue("RelayState", htTGTContext, _htSessionContext);
-							_systemLogger.log(Level.INFO, _sModule, sMethod, "UPD rid=" + sRid);
+							Utils.copyHashmapValue("sp_reqbinding", _htTGTContext, _htSessionContext);
+							Utils.copyHashmapValue("RelayState", _htTGTContext, _htSessionContext);
 
 							// Add the SP to SSO administration - xsaml20
 							String sAppId = (String) _htSessionContext.get("app_id");
-							String sTgtAppId = (String) htTGTContext.get("app_id");
+							String sTgtAppId = (String) _htTGTContext.get("app_id");
 							String spIssuer = (String) _htSessionContext.get("sp_issuer");
 							// Utils.copyHashmapValue("app_id", htTGTContext, _htSessionContext);
 							if (sAppId != null) {
 								if (spIssuer == null || sTgtAppId == null)
-									htTGTContext.put("app_id", sAppId);
+									_htTGTContext.put("app_id", sAppId);
 							}
 							if (spIssuer != null) { // saml20 sessions
-								htTGTContext.put("sp_issuer", spIssuer); // save latest issuer
-								UserSsoSession ssoSession = (UserSsoSession) htTGTContext.get("sso_session");
+								_htTGTContext.put("sp_issuer", spIssuer); // save latest issuer
+								UserSsoSession ssoSession = (UserSsoSession) _htTGTContext.get("sso_session");
 								if (ssoSession == null) {
 									_systemLogger.log(Level.INFO, MODULE, sMethod, "NEW SSO session for " + sUid
 											+ " issuer=" + spIssuer);
@@ -1035,49 +1054,49 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 								ServiceProvider sp = new ServiceProvider(spIssuer);
 								ssoSession.addServiceProvider(sp);
 								_systemLogger.log(Level.INFO, _sModule, sMethod, "UPD SSO session " + ssoSession);
-								htTGTContext.put("sso_session", ssoSession);
+								_htTGTContext.put("sso_session", ssoSession);
 							}
 
 							// Overwrite with the latest value of sp_assert_url,
 							// so the customer can reach his home-SP again.
-							Utils.copyHashmapValue("sp_assert_url", htTGTContext, _htSessionContext);
+							Utils.copyHashmapValue("sp_assert_url", _htTGTContext, _htSessionContext);
 
-							_tgtManager.updateTGT(sTgt, htTGTContext);
+							_tgtManager.updateTGT(sTgt, _htTGTContext);
 							_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRedirectUrl);
 
 							// 20090313, Bauke: add info screen for the user, shows SP's already logged in
 							ASelectConfigManager configManager = ASelectConfigManager.getHandle();
 							if (spIssuer != null && configManager.getUserInfoSettings().contains("session"))
-								showSessionInfo(htServiceRequest, servletResponse, pwOut, sRedirectUrl, sTgt,
-										htTGTContext, sRid, spIssuer);
+								showSessionInfo(htServiceRequest, servletResponse, pwOut, sRedirectUrl, sTgt, _htTGTContext, sRid, spIssuer);
 							else {
 								// 20111101, Bauke: added Sensor
 								Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_sbh", sRid, _htSessionContext, sTgt, true);
 								_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
 								TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-								String sLang = (String)htTGTContext.get("language");
+								String sLang = (String)_htTGTContext.get("language");
 								oTGTIssuer.sendTgtRedirect(sRedirectUrl, sTgt, sRid, servletResponse, sLang);
 							}
 							return;
 						}
+						// bad TGT or forced_authenticate
 					}
-					// TGT found but not sufficient or forced_authenticate
-					_systemLogger.log(Level.INFO, _sModule, sMethod, "TGT found but not sufficient");
+					_systemLogger.log(Level.INFO, _sModule, sMethod, "TGT not OK");
 
-					if (!handleUserConsent(htServiceRequest, servletResponse, pwOut, sRid))
+					if (!handleUserConsent(htServiceRequest, servletResponse, pwOut, sRid)) {
+						_systemLogger.log(Level.INFO, _sModule, sMethod, "No user consent");
 						return; // No consent, Quit
+					}
 
-					// Authenicate with same user-id that was stored in TGT
-					HashMap htTGTContext = _tgtManager.getTGT(sTgt);
-
+					// Authenicate with same user-id that was stored in the TGT
 					// If TGT was issued in cross mode, the user now has to
 					// authenticate with a higher level in cross mode again
-					String sTempOrg = (String) htTGTContext.get("proxy_organization");
+					String sTempOrg = (String) _htTGTContext.get("proxy_organization");
 					if (sTempOrg == null)
-						sTempOrg = (String) htTGTContext.get("organization");
+						sTempOrg = (String) _htTGTContext.get("organization");
 					if (!sTempOrg.equals(_sMyOrg) && // 20090111, Bauke Added test below:
-							_crossASelectManager.isCrossSelectorEnabled() && _configManager.isCrossFallBackEnabled()) {
+							_crossASelectManager.isCrossSelectorEnabled() && _configManager.isCrossFallBackEnabled())
+					{
 						_htSessionContext.put("forced_uid", sUid);
 						_htSessionContext.put("forced_organization", sTempOrg);
 						_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added
@@ -1092,7 +1111,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					return;
 				}
 			}
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "no TGT found or killed (other uid)");
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "No TGT or removed (other uid) tgt_read="+(_htTGTContext!=null));
 			boolean bSuccess = handleUserConsent(htServiceRequest, servletResponse, pwOut, sRid);
 			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added
 			if (!bSuccess)
@@ -1107,8 +1126,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 
 			// no TGT found or killed (other uid)
-			if (!_configManager.isUDBEnabled() || _htSessionContext.containsKey("forced_organization")) {
-				_systemLogger.log(Level.INFO, _sModule, sMethod, "To Cross 2");
+			if (!_configManager.isUDBEnabled() || _htSessionContext.containsKey("forced_organization"))
+			{
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "UDBEnabled="+_configManager.isUDBEnabled()+
+						" forced_organzation="+_htSessionContext.containsKey("forced_organization")+": To Cross 2");
 				handleCrossLogin(htServiceRequest, servletResponse, pwOut);
 				return;
 			}
@@ -1119,12 +1140,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					htServiceRequest.put("user_id", sForcedUid);
 				if (sForcedAuthsp != null)
 					htServiceRequest.put("forced_authsp", sForcedAuthsp);
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "Forced uid:"+sForcedUid+" OR forced authsp:"+sForcedAuthsp+", to login2");
 				handleLogin2(htServiceRequest, servletResponse, pwOut);
 				return;
 			}
 
 			// Show login (user_id) form
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "show LOGIN form");
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "No user id, show LOGIN form");
 			String sLoginForm = _configManager.getForm("login", _sUserLanguage, _sUserCountry);
 			sLoginForm = Utils.replaceString(sLoginForm, "[rid]", sRid);
 			sLoginForm = Utils.replaceString(sLoginForm, "[aselect_url]", (String) htServiceRequest.get("my_url"));
@@ -1455,6 +1477,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 			catch (ASelectException e) {
 				if (_crossASelectManager.isCrossSelectorEnabled() && _configManager.isCrossFallBackEnabled()) {
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to retrieve AuthSPs for user="+sUid+" goto CROSS");
 					handleCrossLogin(htServiceRequest, servletResponse, pwOut);
 					return 0;
 				}
@@ -1493,11 +1516,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			HashMap htAuthsps = (HashMap) _htSessionContext.get("allowed_user_authsps");
 			// Should the user be bothered with the selection form
 			// if only one method is available?
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "User=" + sUid + " Authsps=" + htAuthsps);
+			String sFormShow = _configManager.getParam(_configManager.getSection(null, "authsps"), "always_show_select_form");
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "User="+sUid+" Authsps="+htAuthsps+" always_show_select_form="+sFormShow);
 			if (htAuthsps.size() == 1) {
 				try {
-					String sFormShow = _configManager.getParam(_configManager.getSection(null, "authsps"),
-							"always_show_select_form");
 					if (sFormShow.equalsIgnoreCase("false")) {
 						// continue with login3
 						Set keys = htAuthsps.keySet();
@@ -1505,6 +1527,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							htServiceRequest.put("authsp", (String) s);
 							break;
 						}
+						_systemLogger.log(Level.INFO, _sModule, sMethod, "Single authsp, goto login3");
 						handleLogin3(htServiceRequest, servletResponse, pwOut);
 						return 0;
 					}
@@ -1517,6 +1540,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// end only 1 valid authsp
 
 			// Multiple candidates, present the select.html form
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "Multiple authsps, show 'select' form");
 			String sSelectForm = _configManager.getForm("select", _sUserLanguage, _sUserCountry);
 			sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
 			sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", _sMyServerId);
@@ -1963,12 +1987,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "IPLogin1");
 		try {
 			sRid = (String) htServiceRequest.get("rid");
-
 			// check if user already has a tgt so that he/she doesnt need to
 			// be authenticated again
 
-			// TODO IP login is not used when a user already has a TGT (Peter)
-			// IP login is not used when a user already has a TGT. The origin
+			// TODO IP login is not used when a user already has a TGT. The origin
 			// ip-range will never be forced when already authenticated with an
 			// AuthSP with a higher level
 			if (_configManager.isSingleSignOn() && htServiceRequest.containsKey("aselect_credentials_tgt")
@@ -1979,51 +2001,38 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				String sUid = (String) htServiceRequest.get("aselect_credentials_uid");
 				String sServerId = (String) htServiceRequest.get("aselect_credentials_server_id");
 
-				// TODO Check if TGT already exists for user id (Peter)
-				// If a user_id was provided in the request we have to check here if the already existing
-				// TGT is for the same user-id. see CVS
+				// Reads the TGT into class variable _htTGTContext:
 				int rc = checkCredentials(sTgt, sUid, sServerId);
 				if (rc >= 0) {
 					// redirect to application as user has already a valid tgt
 					if (_htSessionContext.get("cross_authenticate") != null) {
-						// redirect to application as user has already a valid
-						// tgt
-						if (_htSessionContext.get("cross_authenticate") != null) {
-							// Cross A-Select does not implement 'verify_credentials'
-							// The TGT should be created now, TGTIssuer will redirect to local A-Select Server
+						// Cross A-Select does not implement 'verify_credentials'
+						// The TGT should be created now, TGTIssuer will redirect to local A-Select Server
+						_htSessionContext.put("user_id", sUid);
 
-							// TODO Check if a new TGT must be created (Peter)
-							// A new TGT is created because the TGTIssuer implements the redirect with a create signature.
-							// It is not logical to create a new TGT.
-							_htSessionContext.put("user_id", sUid);
+						// RH, should be set through AbstractBrowserRequestHandler
+						// but this seems to be the wrong one (AbstractBrowserRequestHandler sets the idp address)
+						_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip was "
+								+ _htSessionContext.get("client_ip"));
+						_htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr());
+						_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip is now "
+								+ _htSessionContext.get("client_ip"));
 
-							// RH, should be set through AbstractBrowserRequestHandler
-							// but this seems to be the wrong one (AbstractBrowserRequestHandler sets the idp address)
-							_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip was "
-									+ _htSessionContext.get("client_ip"));
-							_htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr());
-							_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip is now "
-									+ _htSessionContext.get("client_ip"));
+						//Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
+						//_sessionManager.updateSession(sRid, _htSessionContext);
+						_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
-							//Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-							//_sessionManager.updateSession(sRid, _htSessionContext);
-							_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
+						String sAuthsp = (String) _htTGTContext.get("authsp");
+						_tgtManager.remove(sTgt);
 
-							HashMap htTgtContext = _tgtManager.getTGT(sTgt);
-							String sAuthsp = (String) htTgtContext.get("authsp");
+						// issue new one but with the same lifetime as the existing one
+						HashMap htAdditional = new HashMap();
+						// FIXME StorageManager can't update timestamp, this doesn't work. (Erwin, Peter)
+						// htAdditional.put("tgt_exp_time", htTgtContext.get("tgt_exp_time"));
 
-							// kill existing tgt
-							_tgtManager.remove(sTgt);
-
-							// issue new one but with the same lifetime as the existing one
-							HashMap htAdditional = new HashMap();
-							// FIXME StorageManager can't update timestamp, this doesn't work. (Erwin, Peter)
-							// htAdditional.put("tgt_exp_time", htTgtContext.get("tgt_exp_time"));
-
-							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-							oTGTIssuer.issueTGTandRedirect(sRid, _htSessionContext, sAuthsp, htAdditional, servletResponse, null, true);
-							return;
-						}
+						TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
+						oTGTIssuer.issueTGTandRedirect(sRid, _htSessionContext, sAuthsp, htAdditional, servletResponse, null, true);
+						return;
 					}
 
 					try {
@@ -2143,26 +2152,27 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 		try {
 			String sTgt = (String) htServiceRequest.get("aselect_credentials_tgt");
-			HashMap htTGTContext = _tgtManager.getTGT(sTgt);
+			// 20120712, Bauke, not needed, ASelectAuthenticationProfile has already read the TGT
+			// HashMap _htTGTContext = _tgtManager.getTGT(sTgt);
 			
 			// 20120611, Bauke: added "usi"
-			String sUsi = (String)htTGTContext.get("usi");
+			String sUsi = (String)_htTGTContext.get("usi");
 			if (Utils.hasValue(sUsi))  // overwrite
 				_timerSensor.setTimerSensorId(sUsi);
-			String sAppId = (String)htTGTContext.get("app_id");
+			String sAppId = (String)_htTGTContext.get("app_id");
 			if (Utils.hasValue(sAppId))
 				_timerSensor.setTimerSensorAppId(sAppId);
 
-			if (htTGTContext != null) {
+			if (_htTGTContext != null) {
 				_tgtManager.remove(sTgt);
 
 				String sCookieDomain = _configManager.getCookieDomain();
 				HandlerTools.delCookieValue(servletResponse, "aselect_credentials", sCookieDomain, _systemLogger);
 
 				String sRemoteAsUrl = null;
-				String sRemoteOrg = (String) htTGTContext.get("proxy_organization");
+				String sRemoteOrg = (String) _htTGTContext.get("proxy_organization");
 				if (sRemoteOrg == null)
-					sRemoteOrg = (String) htTGTContext.get("organization");
+					sRemoteOrg = (String) _htTGTContext.get("organization");
 
 				if (!sRemoteOrg.equals(_sMyOrg)) {
 					try {
@@ -2187,7 +2197,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					return;
 				}
 			}
-			sLoggedOutForm = _configManager.updateTemplate(sLoggedOutForm, htTGTContext);
+			sLoggedOutForm = _configManager.updateTemplate(sLoggedOutForm, _htTGTContext);
 			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 			// no RID _sessionManager.update(sRid, _htSessionContext); // Write session
 			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
@@ -2267,7 +2277,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 
-			// Get session context
 			// 20101027, Bauke: skip reading the session again, it's already available in _htSessionContext!
 			// check authsp_level
 			try {
@@ -2289,13 +2298,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_htSessionContext.put("user_id", sUID);  // 20101027 use _ht...
 			_htSessionContext.put("authsp", sPrivilegedApplication);
 			_htSessionContext.put("authsp_level", sAuthspLevel);
-
-			//Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-			//if (!_sessionManager.updateSession(sRid, _htSessionContext)) {  // 20101027 use _ht...
-			//	_systemLogger.log(Level.WARNING, _sModule, sMethod,
-			//			"Invalid request received: could not update session.");
-			//	throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
-			//}
 			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 			
 			// Log succesful authentication
@@ -2499,7 +2501,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 	/**
 	 * Private method to check whether the user's tgt is valid and satisfies the required level for the current
-	 * application. <br>
+	 * application. TGT must be available in _htTGTContext.
 	 * 
 	 * @param sTgt
 	 *            The ticket granting ticket.
@@ -2512,14 +2514,14 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	private int checkCredentials(String sTgt, String sUid, String sServerId)
 	{
 		String sMethod = "checkCredentials";
-		HashMap htTGTContext;
 		Integer intRequiredLevel;
 
-		htTGTContext = _tgtManager.getTGT(sTgt);
-		if (htTGTContext == null) {
+		// 20120712, Bauke, not needed, ASelectAuthenticationProfile has already read the TGT
+		//_htTGTContext = _tgtManager.getTGT(sTgt);
+		if (_htTGTContext == null) {
 			return -1;
 		}
-		if (!((String) htTGTContext.get("uid")).equals(sUid)) {
+		if (!((String)_htTGTContext.get("uid")).equals(sUid)) {
 			return -1;
 		}
 		if (!sServerId.equals(_sMyServerId)) {
@@ -2528,8 +2530,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "checkCred SSO");
 
 		// check single sign-on groups
-		Vector vCurSSOGroups = (Vector) _htSessionContext.get("sso_groups");
-		Vector vOldSSOGroups = (Vector) htTGTContext.get("sso_groups");
+		Vector vCurSSOGroups = (Vector)_htSessionContext.get("sso_groups");
+		Vector vOldSSOGroups = (Vector)_htTGTContext.get("sso_groups");
 		if (vCurSSOGroups != null && vOldSSOGroups != null) {
 			if (!vCurSSOGroups.isEmpty() && !vOldSSOGroups.isEmpty()) {
 				if (!_applicationManager.isValidSSOGroup(vCurSSOGroups, vOldSSOGroups))
@@ -2537,7 +2539,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 		}
 		intRequiredLevel = (Integer)_htSessionContext.get("level");
-		int iTGTLevel = getLevelFromTGT(htTGTContext);
+		int iTGTLevel = getLevelFromTGT(_htTGTContext);
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "CHECK LEVEL, requires: " + intRequiredLevel+" tgt: "+iTGTLevel);
 		if (iTGTLevel < intRequiredLevel.intValue()) {
 			return -1;  // level is not high enough
@@ -2546,7 +2548,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		// No organization gathering specified: no org_id in TGT
 		// Organization gathering specified but no organization found or choice not made yet: org_id="" in TGT
 		// Choice made by the user: org_id has a value
-		String sOrgId = (String)htTGTContext.get("org_id");
+		String sOrgId = (String)_htTGTContext.get("org_id");
 		if (sOrgId != null && sOrgId.equals(""))
 			return 1;  // No organization choice was made yet
 
@@ -2588,6 +2590,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	throws ASelectException
 	{
 		String sMethod = "showUserInfo";
+		String sTemp;
 		PrintWriter pwOut = null;
 
 		try {  // get output writer
@@ -2602,8 +2605,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[a-select-server]", _sMyServerId);
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[aselect_url]", sMyUrl);
 
-			String sTemp;
-			HashMap htTGTContext = _tgtManager.getTGT(sTgt);
+			// 20120712, Bauke, not needed, ASelectAuthenticationProfile has already read the TGT
+			// HashMap _htTGTContext = _tgtManager.getTGT(sTgt);
 			try {
 				long lExpTime = _tgtManager.getExpirationTime(sTgt);
 				sTemp = new Date(lExpTime).toString();
@@ -2618,7 +2621,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[tgt_blob]", sEncTgt);
 			// End of SAML20 patch
 
-			sTemp = (String) htTGTContext.get("app_id");
+			sTemp = (String) _htTGTContext.get("app_id");
 			// RH, 20100805, Experimental insert of friendly_name
 			String sFName = _applicationManager.getFriendlyName(sTemp);
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[friendly_name]", sFName);
@@ -2626,9 +2629,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			if (sTemp == null)
 				sTemp = "[unknown]";
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[app_id]", sTemp);
-			sUserInfoForm = _configManager.updateTemplate(sUserInfoForm, htTGTContext);
+			sUserInfoForm = _configManager.updateTemplate(sUserInfoForm, _htTGTContext);
 
-			sTemp = (String) htTGTContext.get("authsp");
+			sTemp = (String) _htTGTContext.get("authsp");
 			if (sTemp != null) {
 				try {
 					Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"),
@@ -2645,12 +2648,12 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[authsp]", sTemp);
 
-			sTemp = (String) htTGTContext.get("authsp_level");
+			sTemp = (String) _htTGTContext.get("authsp_level");
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[tgt_level]", sTemp);
 
-			sTemp = (String) htTGTContext.get("proxy_organization");
+			sTemp = (String) _htTGTContext.get("proxy_organization");
 			if (sTemp == null)
-				sTemp = (String) htTGTContext.get("organization");
+				sTemp = (String) _htTGTContext.get("organization");
 
 			String sRemoteAsUrl = null;
 			if (!sTemp.equals(_sMyOrg)) {
@@ -2686,7 +2689,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				sUserInfoForm = Utils.replaceString(sUserInfoForm, "[org]", sTemp3);
 			}
 			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
-			// no RID: _sessionManager.update(sRid, _htSessionContext); // Write session
 			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
 			pwOut.println(sUserInfoForm);
 		}

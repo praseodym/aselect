@@ -158,7 +158,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 			HttpServletResponse servletResponse, String sMyServerId, String sMyOrg)
 	throws ASelectCommunicationException
 	{
-		String sMethod = "AbstractAPIRequestHandler()";
+		String sMethod = "AbstractAPIRequestHandler";
 
 		_systemLogger = ASelectSystemLogger.getHandle();
 		_servletRequest = servletRequest;

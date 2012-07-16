@@ -12,6 +12,7 @@
 package org.aselect.server.request.handler;
 
 import java.security.PublicKey;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -293,7 +294,7 @@ public abstract class BasicRequestHandler
 	protected void verifyApplicationSignature(String sSignature, String sData, String sAppId)
 	throws ASelectException
 	{
-		String sMethod = "verifyApplicationSignature()";
+		String sMethod = "verifyApplicationSignature";
 		ApplicationManager _applicationManager = ApplicationManager.getHandle();
 		CryptoEngine _cryptoEngine = CryptoEngine.getHandle();
 
@@ -343,4 +344,27 @@ public abstract class BasicRequestHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "User is enabled: "+sUID);
 		return true;
 	}
+	
+	/**
+	 * Is redirect syncing needed.
+	 * For Digid4-like IdP, users must be redirected to IdP for session_sync
+	 * 
+	 * @param htTGTContext
+	 *            the tgt context
+	 * @return true, if successful
+	 */
+	protected boolean redirectSyncNeeded(HashMap htTGTContext)
+	{
+		String sMethod = "redirectSyncNeeded";
+		String sRedirectSyncTime = (String) htTGTContext.get("redirect_sync_time");
+		if (!Utils.hasValue(sRedirectSyncTime))
+			return false;
+		long lSyncTime = 1000 * Long.parseLong(sRedirectSyncTime);  // from seconds to milli
+		Long now = new Date().getTime();
+		String ssTime = (String)htTGTContext.get("sessionsynctime");
+		Long lastSync = (ssTime == null) ? 0 : Long.parseLong(ssTime);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect sync after="+lSyncTime+" Elapsed="+ (now-lastSync)+": now="+now+" last="+ssTime);
+		return (now - lastSync > lSyncTime);
+	}
+
 }

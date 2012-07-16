@@ -190,12 +190,12 @@ public class SessionSyncRequestSender
 		try {
 			Object oRequestsSection = myConfigManager.getSection(null, "requests");
 			Object oHandlersSection = myConfigManager.getSection(oRequestsSection, "handlers");
-			Object oHandler = myConfigManager.getSection(oHandlersSection, "handler");
 
 			// 20090304, Bauke: cache the results in htSessionSyncParameters
 			// Not present yet, so get the parameters
 			htSessionSyncParameters = new HashMap<String, Object>();
 			mySystemLogger.log(Level.INFO, MODULE, sMethod, "Scan handlers");
+			Object oHandler = myConfigManager.getSection(oHandlersSection, "handler");
 			for (; oHandler != null;) {
 				try {
 					String sId = myConfigManager.getParam(oHandler, "id");
@@ -310,9 +310,9 @@ public class SessionSyncRequestSender
 			}
 
 			// If successful, update the ticket granting ticket (timestamp will be set to "now")
-			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Update TGT timestamp=" + now);
+			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "Update TGT sessionsynctime=" + now);
 			htTGTContext.put("sessionsynctime", Long.toString(now));
-			// Setting the value below prevents the regular Timestamp update
+			// Setting "updatetimestamp" prevents the regular Timestamp update
 			htTGTContext.put("updatetimestamp", "no");
 			_oTGTManager.updateTGT(sTgT, htTGTContext);
 			bTgtUpdated = true;

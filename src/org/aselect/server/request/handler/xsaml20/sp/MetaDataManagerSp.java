@@ -83,7 +83,7 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 
 	/**
 	 * Process an IdP section for it's metadata
-	 * @param idpSection
+	 * @param idpSection - the <resource> section
 	 * @throws ASelectConfigException
 	 * @throws ASelectException
 	 */
@@ -100,13 +100,18 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 			String metadataUrl = Utils.getSimpleParam(_configManager, _systemLogger, idpSection, "url", true);
 			if (metadataUrl != null)
 				idpData.setMetadataUrl(metadataUrl);
-			
 			String specialSettings = Utils.getSimpleParam(_configManager, _systemLogger, idpSection, "special_settings", false);
 			if (specialSettings != null)
 				idpData.setSpecialSettings(specialSettings);
 			String myIssuer = Utils.getSimpleParam(_configManager, _systemLogger, idpSection, "local_issuer", false);
 			if (myIssuer != null)
 				idpData.setLocalIssuer(myIssuer);
+			String sRedirectSyncTime = Utils.getSimpleParam(_configManager, _systemLogger, idpSection, "redirect_sync_time", false);
+			if (sRedirectSyncTime != null)
+				idpData.setRedirectSyncTime(sRedirectSyncTime);
+			String sRedirectPostForm = Utils.getSimpleParam(_configManager, _systemLogger, idpSection, "redirect_post_form", false);
+			if (sRedirectPostForm != null)
+				idpData.setRedirectPostForm(sRedirectPostForm);
 			
 			String sSessionSync = null;
 			if (sId.equals("metadata")) { // 20091030: backward compatibility

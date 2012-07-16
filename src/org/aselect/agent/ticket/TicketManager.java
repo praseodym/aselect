@@ -419,9 +419,8 @@ public class TicketManager extends StorageManager
 			htResponse = (HashMap) _oTicketTable.get(sTicket);
 		}
 		catch (Exception e) {
-			StringBuffer sbError = new StringBuffer("Ticket doesn't exist: ");
-			sbError.append(sTicket);
-			_systemLogger.log(Level.FINE, MODULE, sMethod, sbError.toString(), e);
+			StringBuffer sbError = new StringBuffer("Ticket doesn't exist: ").append(sTicket);
+			_systemLogger.log(Level.FINE, MODULE, sMethod, sbError.toString());
 		}
 		return htResponse;
 	}

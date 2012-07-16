@@ -1442,7 +1442,7 @@ public class RequestHandler extends Thread
 			long now = new Date().getTime();
 			int interval = 1000 * ASelectAgentConfigManager.getHandle().getUpgradeTgtInterval();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Last upgrade_tgt:"+(now - lLastTime)+
-						" seconds ago, update="+(now - lLastTime >= interval)+" interval="+interval);
+						" ms ago, update="+(now - lLastTime >= interval)+" interval="+interval);
 			if (now - lLastTime >= interval) {  // default use 60 seconds intervals
 				htTicketContext.put("last_upgrade_tgt", Long.toString(now));
 				String sCryptedCredentials = (String) htTicketContext.get("crypted_credentials");

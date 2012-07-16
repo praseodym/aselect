@@ -461,7 +461,7 @@ public class AttributeGatherer
 		boolean bFound = false;
 
 		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER BEGIN _htReleasePolicies=" + _htReleasePolicies);
-		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER TGTContext=" + htTGTContext);
+		//_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER TGTContext=" + htTGTContext);
 
 		// Release policies available?
 		if (_vReleasePolicies == null || _htReleasePolicies == null) {
@@ -647,7 +647,7 @@ public class AttributeGatherer
 		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Add additional attributes from TGT");
 		Utils.copyHashmapValue("uid", htAttributes, htTGTContext);
 		Utils.copyHashmapValue("sel_uid", htAttributes, htTGTContext);
-		// 20120606, Maybe not, is added by the filter: Utils.copyHashmapValue("usi", htAttributes, htTGTContext);
+		// 20120606, Bauke: Certainly not, is added by the filter: Utils.copyHashmapValue("usi", htAttributes, htTGTContext);
 
 		String sAuthsp = (String) htTGTContext.get("authsp");
 		if (sAuthsp != null)

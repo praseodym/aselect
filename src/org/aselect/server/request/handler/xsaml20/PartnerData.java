@@ -24,6 +24,9 @@ public class PartnerData
 	private String metadataUrl = null;
 	private String sessionSyncUrl = null;
 	private String specialSettings = null;
+	private String sRedirectSyncTime = null;
+	private String sRedirectPostForm = null;
+
 	private String localIssuer = null;
 	private String destination = null;
 	private String assertionconsumerserviceindex = null;
@@ -72,9 +75,22 @@ public class PartnerData
 	public String getSpecialSettings() {
 		return specialSettings;
 	}
-
 	public void setSpecialSettings(String special) {
 		this.specialSettings = special;
+	}
+	
+	public String getRedirectSyncTime() {
+		return sRedirectSyncTime;
+	}
+	public void setRedirectSyncTime(String sRedirectSyncTime) {
+		this.sRedirectSyncTime = sRedirectSyncTime;
+	}
+
+	public String getRedirectPostForm() {
+		return sRedirectPostForm;
+	}
+	public void setRedirectPostForm(String sRedirectPostForm) {
+		this.sRedirectPostForm = sRedirectPostForm;
 	}
 
 	public String getLocalIssuer() {

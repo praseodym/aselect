@@ -76,6 +76,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 	private String _sHttpMethod = "GET";
 	private String _sIdpResourceGroup = null;
 	private String _sFallbackUrl = null;
+	private String _sRedirectSyncTime = null;
 	private boolean bIdpSelectForm = false;
 
 	// Example configuration
@@ -188,7 +189,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 		String sFederationUrl = null;
 
 		String sMyUrl = _sServerUrl; // extractAselectServerUrl(request);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "MyUrl=" + sMyUrl + " MyId="+getID()+ " Request=" + request);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "MyUrl=" + sMyUrl + " MyId="+getID()+ " path=" + request.getPathInfo());
 
 		try {
 			sRid = request.getParameter("rid");
@@ -287,7 +288,6 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			// This is needed to prevent session sync when we're not saml20
 			_htSessionContext.put("authsp_type", "saml20");
 			_htSessionContext.put("federation_url", sFederationUrl);
-			//_oSessionManager.updateSession(sRid, _htSessionContext);
 			_oSessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120403, Bauke: was updateSession
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get MetaData FederationUrl=" + sFederationUrl);
@@ -340,6 +340,15 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				requestedAuthnContext.setComparison(AuthnContextComparisonTypeEnumeration.MINIMUM);
 			else
 				requestedAuthnContext.setComparison(AuthnContextComparisonTypeEnumeration.EXACT);
+			
+			// 20120706, Bauke: save in session, must be transferred to TGT and used for Digid4 session_sync mechanism
+			String sst = partnerData.getRedirectSyncTime();
+			if (Utils.hasValue(sst)) {
+				_htSessionContext.put("redirect_sync_time", sst);
+				_htSessionContext.put("redirect_ists_url", sMyUrl + "/" + getID());
+				_htSessionContext.put("redirect_post_form", partnerData.getRedirectPostForm());
+				_oSessionManager.setUpdateSession(_htSessionContext, _systemLogger);
+			}
 			
 			SAMLObjectBuilder<Issuer> issuerBuilder = (SAMLObjectBuilder<Issuer>) builderFactory
 					.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);

@@ -85,7 +85,6 @@ public class ASelectAuthenticationProfile extends AbstractRequestHandler
 		try {
 			super.init(oServletConfig, oConfig);
 
-
 			try {
 				_sAllowLoginToken = _configManager.getParam(oConfig, "allow_login_token");
 			}
@@ -163,12 +162,12 @@ public class ASelectAuthenticationProfile extends AbstractRequestHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		try {
 			// create the appropriate handler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "HANDLER request=" + request.getParameter("request"));
 			IAuthnRequestHandler iHandler = _oRequestHandlerFactory.createRequestHandler(request, response);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "PROCESS " + iHandler.getClass());
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "PROCESS by " + iHandler.getClass());
 			iHandler.processRequest();
 		}
 		catch (ASelectException e) {
