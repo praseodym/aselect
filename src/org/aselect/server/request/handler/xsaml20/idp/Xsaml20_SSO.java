@@ -613,8 +613,9 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 			// And off you go!
 			retrieveLocalSettings(_htSessionContext, htTGTContext);  // results are placed in this object
-			
-			if (Saml20_Metadata.singleSignOnServiceBindingConstantPOST.equals(sReqBInding)) {
+
+			// 20120719, Bauke added test for post_template!
+			if (Saml20_Metadata.singleSignOnServiceBindingConstantPOST.equals(sReqBInding) && get_sPostTemplate() != null) {
 				_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Redirecting with post to: " + sAssertUrl);
 				sendSAMLResponsePOST(sAssertUrl, sRid, _htSessionContext, sTgt, htTGTContext, httpResponse, sRelayState);
 			}

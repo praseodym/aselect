@@ -2859,6 +2859,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		String sRid = (String)hmResponse.get("rid");
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Supplied rid=" + sRid);
 		//_htSessionContext = _sessionManager.getSessionContext(sRid);
+		// The session was created by handleAuthenticateAndCreateSession()
 		_htSessionContext = (HashMap)hmResponse.get("session");  // 20120404, Bauke: was getSessionContext(sRid)
 		if (_htSessionContext == null) {
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
