@@ -439,6 +439,8 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 		
 		// Create final EntityDescriptor
 		ssoDescriptor.setWantAssertionsSigned(true);
+		ssoDescriptor.setAuthnRequestsSigned(true);	// RH, 20120727, n. Actually we always sign the request. Just never told so
+		
 		ssoDescriptor.getKeyDescriptors().add(keyDescriptor);
 		ssoDescriptor.addSupportedProtocol(SAMLConstants.SAML20P_NS);
 		entityDescriptor.getRoleDescriptors().add(ssoDescriptor);
