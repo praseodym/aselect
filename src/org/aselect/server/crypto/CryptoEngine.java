@@ -101,6 +101,8 @@ import java.util.logging.Level;
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.DESedeKeySpec;
 
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectSystemLogger;
@@ -587,6 +589,53 @@ public class CryptoEngine
 		return null;
 	}
 
+	
+	/**
+	 * Generate a 3DES (symmetric) encrypted string using (remote) public key <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * This method generates a 3DES encrypted string over a block of data <br>
+	 * <br>
+	 * 
+	 * 
+	 * @param sData
+	 *            The data to be signed.
+	 * @param sKey
+	 *            secret key as base64 string
+	 * @return The base64 3des encrypted string
+	 * @throws ASelectException 
+	 */
+	public synchronized String generate3DES(String sData, String sKeyBase64) throws ASelectException
+	{
+		String sMethod = "CryptoEngine.generate3DES()";
+
+
+			try {
+				SecretKey key = null;
+				if ( sKeyBase64 != null) {
+					BASE64Decoder b64dec = new BASE64Decoder();
+					DESedeKeySpec keyspec = new DESedeKeySpec(b64dec.decodeBuffer(sKeyBase64));
+					SecretKeyFactory keyfactory = SecretKeyFactory.getInstance("DESede");
+					key = keyfactory.generateSecret(keyspec);	
+				} else {
+					key = _secretKey;	// use default;
+				}
+				
+				_cipher.init(Cipher.ENCRYPT_MODE, key);
+				byte[]encrypted = _cipher.doFinal(sData.getBytes("UTF-8"));
+				BASE64Encoder b64enc = new BASE64Encoder();
+				String sBase64rep = b64enc.encode(encrypted);
+				return sBase64rep;
+			}
+			catch (Exception e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "could not encrypt", e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+
+			}
+		}
+
+	
+	
 	/**
 	 * Encrypt a TGT using the configured encryption algorithm (cipher). <br>
 	 * 
@@ -707,6 +756,33 @@ public class CryptoEngine
 		getHandle()._secureRandom.nextBytes(baRandom);
 	}
 
+	/**
+	 * Generate random long number. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * This method generates a long random number, It uses the configured
+	 * SecureRandom object to generate this data. <br>
+	 * 
+	 */
+	public static long nextRandomLong()
+	{
+		return getHandle()._secureRandom.nextLong();
+	}
+
+	/**
+	 * Generate random integer number. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * This method generates a integer random number, It uses the configured
+	 * SecureRandom object to generate this data. <br>
+	 * 
+	 */
+	public static int nextRandomInt()
+	{
+		return getHandle()._secureRandom.nextInt();
+	}
+	
+	
 	/**
 	 * Read signature config.
 	 * 
@@ -985,4 +1061,7 @@ public class CryptoEngine
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 	}
+	
+	
+	
 }
