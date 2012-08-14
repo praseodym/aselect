@@ -73,7 +73,7 @@ module AP_MODULE_DECLARE_DATA aselect_filter_module;
 //static handler_rec      aselect_filter_handlers[];
 static const command_rec    aselect_filter_cmds[];
 
-char *version_number = "====subversion_251====";
+char *version_number = "====subversion_258====";
 
 // -----------------------------------------------------
 // Functions 
@@ -302,13 +302,11 @@ char *aselect_filter_verify_ticket(request_rec *pRequest, pool *pPool, PASELECT_
 //
 char *aselect_filter_kill_ticket(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcTicket, TIMER_DATA *pt)
 {
-    char            *pcSendMessage;
-    int             ccSendMessage;
-    char            *pcResponse;
+    char *pcSendMessage;
+    int ccSendMessage;
+    char *pcResponse;
 
-    //
     // Create the message
-    //
     TRACE("aselect_filter_kill_ticket");
     pcSendMessage = ap_psprintf(pPool, "request=kill_ticket&ticket=%s&app_id=%s&usi=%s\r\n", 
 	    aselect_filter_url_encode(pPool, pcTicket), aselect_filter_url_encode(pPool, pConfig->pCurrentApp->pcAppId), timer_usi(pPool, pt));
@@ -325,13 +323,12 @@ char *aselect_filter_kill_ticket(request_rec *pRequest, pool *pPool, PASELECT_FI
 //
 char *aselect_filter_auth_user(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcAppUrl, TIMER_DATA *pt)
 {
-    char    *pcSendMessage;
-    int     ccSendMessage;
-    char    *pcResponse;
-
-    TRACE("aselect_filter_auth_user");
+    char *pcSendMessage;
+    int ccSendMessage;
+    char *pcResponse;
 
     // Create the message
+    TRACE("aselect_filter_auth_user");
     pcSendMessage = ap_psprintf(pPool, "request=authenticate&app_url=%s&app_id=%s&forced_logon=%s%s%s%s%s%s%s&usi=%s\r\n", 
         aselect_filter_url_encode(pPool, pcAppUrl), 
         aselect_filter_url_encode(pPool, pConfig->pCurrentApp->pcAppId),
@@ -947,261 +944,285 @@ static int aselect_filter_handler(request_rec *pRequest)
     }
     TRACE3("==== 3. Action iError=%d iAction=%s, iRet=%s", iError, filter_action_text(iAction), filter_return_text(iRet));
 
-    //
     // If we do not have an error then act according to iAction
     //
     if (iError == ASELECT_FILTER_ERROR_OK) {
+	// Handle special case, user wants to log out but was not logged in
+	if (iAction == ASELECT_FILTER_ACTION_AUTH_USER && pRequest->args) {
+	    pcRequest = aselect_filter_get_param(pPool, pRequest->args, "request=", "&", TRUE);
+	    if (pcRequest != NULL && strstr(pcRequest, "kill_ticket") != 0) {
+		TRACE1("action=%s", filter_action_text(iAction));
+		iAction = ASELECT_FILTER_ACTION_ACCESS_GRANTED;
+	    }
+	}
+
         // Act according to action
-        switch(iAction) {
-            case ASELECT_FILTER_ACTION_ACCESS_GRANTED:
-                // User was granted access
-                // Check for known requests such as show_aselect_bar and kill_ticket
-                TRACE1("Action: ASELECT_FILTER_ACTION_ACCESS_GRANTED, args=%s", pRequest->args);
-                if (pRequest->args) {
-                    pcRequest = aselect_filter_get_param(pPool, pRequest->args, "request=", "&", TRUE);
-                    if (pcRequest) {
-			TRACE1("pcRequest=%s", pcRequest);
-                        if (strstr(pcRequest, "aselect_show_bar") && pConfig->bUseASelectBar) {
-                            // Return the frame around the logout_bar and the application
-			    //Old needs 'aselect_app_url' to pass app parameters
-                            //if ((pcASelectAppURL = aselect_filter_get_param(pPool, pRequest->args, "aselect_app_url=", "&", TRUE))) 
-			    //	aselect_filter_removeUnwantedCharacters(pcASelectAppURL);
-			    //end Old
-			    if (securedAselectAppArgs != NULL)
-                                iRet = aselect_filter_show_barhtml(pPool, pRequest, pConfig, securedAselectAppArgs);
-                            else
-                                iRet = aselect_filter_show_barhtml(pPool, pRequest, pConfig, pConfig->pCurrentApp->pcLocation);
-			    // iRet is now set to DONE
-                        }
-                        else if (strstr(pcRequest, "aselect_generate_bar")) {
-                            // Return the logout_bar content, containing the logout button
-			    char *pcLogoutHTML = pConfig->pcLogoutTemplate;  // configurable logout template
+	switch(iAction) {
+	case ASELECT_FILTER_ACTION_ACCESS_GRANTED:
+	    // User was granted access
+	    // Check for known requests such as show_aselect_bar and kill_ticket
+	    TRACE1("Action: ASELECT_FILTER_ACTION_ACCESS_GRANTED, args=%s", pRequest->args);
+	    if (pRequest->args) {
+		pcRequest = aselect_filter_get_param(pPool, pRequest->args, "request=", "&", TRUE);
+		if (pcRequest) {
+		    TRACE1("pcRequest=%s", pcRequest);
+		    if (strstr(pcRequest, "aselect_show_bar") && pConfig->bUseASelectBar) {
+			// Return the frame around the logout_bar and the application
+			//Old needs 'aselect_app_url' to pass app parameters
+			//if ((pcASelectAppURL = aselect_filter_get_param(pPool, pRequest->args, "aselect_app_url=", "&", TRUE))) 
+			//	aselect_filter_removeUnwantedCharacters(pcASelectAppURL);
+			//end Old
+			if (securedAselectAppArgs != NULL)
+			    iRet = aselect_filter_show_barhtml(pPool, pRequest, pConfig, securedAselectAppArgs);
+			else
+			    iRet = aselect_filter_show_barhtml(pPool, pRequest, pConfig, pConfig->pCurrentApp->pcLocation);
+			// iRet is now set to DONE
+		    }
+		    else if (strstr(pcRequest, "aselect_generate_bar")) {
+			// Return the logout_bar content, containing the logout button
+			char *pcLogoutHTML = pConfig->pcLogoutTemplate;  // configurable logout template
 
-			    TRACE1("aselect_generate_bar, logout loc=%s", pConfig->pCurrentApp->pcLocation);
-                            pRequest->content_type = "text/html";
-                            ap_send_http_header(pRequest);
+			TRACE1("aselect_generate_bar, logout loc=%s", pConfig->pCurrentApp->pcLocation);
+			pRequest->content_type = "text/html";
+			ap_send_http_header(pRequest);
 
-			    // Bauke 20080928: added configurable Logout Bar
-			    while (pcLogoutHTML && (strstr(pcLogoutHTML, "[action]") != NULL)) {
-				pcLogoutHTML = aselect_filter_replace_tag(pPool, "[action]", pConfig->pCurrentApp->pcLocation, pcLogoutHTML);
-			    }
-			    ap_rprintf(pRequest, "%s\n", (pcLogoutHTML)? pcLogoutHTML: "");
-                            iRet = DONE;
-                        }
-                        else if (strstr(pcRequest, "aselect_kill_ticket") || strstr(pcRequest, "kill_ticket")) {
-                            // Kill the user ticket
-                            if ((pcTicket = aselect_filter_get_cookie(pPool, headers_in, "aselectticket="))) {
-                                if ((pcResponseKill = aselect_filter_kill_ticket(pRequest, pPool, pConfig, pcTicket, &timer_data))) {
-				    iError = aselect_filter_get_error(pPool, pcResponseKill);
-
-				    if (iError == ASELECT_FILTER_ASAGENT_ERROR_OK) {
-					// Successfully killed the ticket, now redirect to the aselect-server
-					if ((pcASelectServerURL = aselect_filter_get_cookie(pPool, headers_in, "aselectserverurl=")))
-					{
-					    pRequest->content_type = "text/html";
-					    pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectticket",
-					    		pConfig->pCurrentApp->pcLocation, addedSecurity);
-					    TRACE1("Delete cookie: %s", pcCookie);
-					    ap_table_add(headers_out, "Set-Cookie", pcCookie);
-					    if (strchr(pConfig->pcPassAttributes,'C')!=0) {  // 20120703: Bauke: added
-						pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectuid",
-								pConfig->pCurrentApp->pcLocation, addedSecurity);
-						TRACE1("Delete cookie: %s", pcCookie);
-						ap_table_add(headers_out, "Set-Cookie", pcCookie);
-					    }
-					    //pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectorganization",
-					    //		pConfig->pCurrentApp->pcLocation, addedSecurity);
-					    //TRACE1("Delete cookie: %s", pcCookie);
-					    //ap_table_add(headers_out, "Set-Cookie", pcCookie);
-					    pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectserverurl",
-					    		pConfig->pCurrentApp->pcLocation, addedSecurity);
-					    TRACE1("Delete cookie: %s", pcCookie);
-					    ap_table_add(headers_out, "Set-Cookie", pcCookie);
-					    if (strchr(pConfig->pcPassAttributes,'c')!=0 ||
-						    strchr(pConfig->pcPassAttributes,'C')!=0) {  // Bauke: added
-						pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectattributes",
-								pConfig->pCurrentApp->pcLocation, addedSecurity);
-						TRACE1("Delete cookie: %s", pcCookie);
-						ap_table_add(headers_out, "Set-Cookie", pcCookie);
-					    }
-					    // else: no aselectattributes cookie needed
-
-					    ap_send_http_header(pRequest);
-					    TRACE1("Redirect to '%s'", pcASelectServerURL);
-					    ap_rprintf(pRequest, ASELECT_FILTER_CLIENT_REDIRECT, pcASelectServerURL, pcASelectServerURL);
-					    iRet = DONE;
-                                        }
-                                        else {
-                                            iError = ASELECT_FILTER_ERROR_NO_SUCH_COOKIE;
-                                            TRACE1("aselect_filter_get_cookie(aselectserverurl) FAILED: %d", iError);
-                                            ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
-                                                ap_psprintf(pPool, "ASELECT_FILTER:: aselect_filter_get_cookie(aselectserverurl) FAILED: %d", iError));
-                                        }
-                                    }
-                                    else {
-                                        TRACE1("aselect_filter_kill_ticket FAILED: %d", iError);
-                                        ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
-                                            ap_psprintf(pPool, "ASELECT_FILTER:: aselect_filter_kill_ticket FAILED: %d", iError));
-                                    }
-                                }
-                                else {
-                                    iError = ASELECT_FILTER_ERROR_INTERNAL;
-                                    TRACE1("aselect_filter_kill_ticket FAILED: %d", iError);
-                                    ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
-                                        ap_psprintf(pPool, "ASELECT_FILTER:: aselect_filter_kill_ticket FAILED: %d", iError));
-                                }
-                            }
-                            else { // Could not find ticket to kill
-                                iError = ASELECT_FILTER_ERROR_NO_SUCH_COOKIE;
-                                TRACE1("aselect_filter_get_cookie(aselectticket) FAILED: %d", iError);
-                                ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
-                                    ap_psprintf(pPool, "ASELECT_FILTER:: aselect_filter_get_cookie(aselectticket) FAILED: %d", iError));
-                            }
-                        }
-                        else { // Nothing interesting in the request=param, so continue as normal
-			    TRACE("No recognized request given");
-                            iRet = DECLINED;
-                        }
-                    }
-                    else { // No arguments we are interested in, so continue as normal
-			TRACE("No request given");
-                        iRet = DECLINED;
-                    }
-                }
-                else {
-                    iRet = DECLINED;
-                }
-		break;
-
-            case ASELECT_FILTER_ACTION_AUTH_USER:
-                // User does not have a valid CREDENTIALS and must be authenticated by the ASelect Server
-                // Contact ASelect Agent to find the users ASelect Server
-
-                TRACE("Action: ASELECT_FILTER_ACTION_AUTH_USER");
-                TRACE2("iRedirectMode: %d redirectURL=%s", pConfig->iRedirectMode, pConfig->pCurrentApp->pcRedirectURL);
-                if (*pConfig->pCurrentApp->pcRedirectURL) {
-                    TRACE1("Using fixed app_url: %s", pConfig->pCurrentApp->pcRedirectURL);
-                    if (pRequest->args != NULL) {
-                      if (strchr(pConfig->pCurrentApp->pcRedirectURL, '?'))
-                          pcAppUrl = ap_psprintf(pPool, "%s&%s", pConfig->pCurrentApp->pcRedirectURL,
-                              pRequest->args);
-                      else
-                          pcAppUrl = ap_psprintf(pPool, "%s?%s", pConfig->pCurrentApp->pcRedirectURL,
-                              pRequest->args);
-                    }
-                    else
-                      pcAppUrl = pConfig->pCurrentApp->pcRedirectURL;
-                }
-                else {
-                  if (pConfig->iRedirectMode == ASELECT_FILTER_REDIRECT_FULL) {
-                      if (pRequest->args != NULL) {
-                          pcUrl = ap_psprintf(pPool, "%s?%s", pRequest->uri, pRequest->args);
-                          pcAppUrl = ap_construct_url(pPool, pcUrl, pRequest);
-                      }
-                      else
-                          pcAppUrl = ap_construct_url(pPool, pRequest->uri, pRequest);
-                  }
-                  else
-                      pcAppUrl = ap_construct_url(pPool, pConfig->pCurrentApp->pcLocation, pRequest);
-                }
-                
-		// Remove: request=aselect_show_bar if present, otherwise we would get 2 of them
-		if (pConfig->bUseASelectBar) {
-		    char *req = "request=aselect_show_bar";
-		    char *p = strstr(pcAppUrl, req);
-		    int len = strlen(req);
-		    if (p) {
-			TRACE1("Removed: %s", req);
-			if (p > pcAppUrl && *(p-1) == '&') {
-			    p--; len++;
+			// Bauke 20080928: added configurable Logout Bar
+			while (pcLogoutHTML && (strstr(pcLogoutHTML, "[action]") != NULL)) {
+			    pcLogoutHTML = aselect_filter_replace_tag(pPool, "[action]", pConfig->pCurrentApp->pcLocation, pcLogoutHTML);
 			}
-			pcAppUrl = ap_psprintf(pPool, "%.*s%s", p-pcAppUrl, pcAppUrl, p+len);
+			ap_rprintf(pRequest, "%s\n", (pcLogoutHTML)? pcLogoutHTML: "");
+			iRet = DONE;
+		    }
+		    else if (strstr(pcRequest, "aselect_kill_ticket") || strstr(pcRequest, "kill_ticket")) {
+			// Kill the user ticket
+			if ((pcTicket = aselect_filter_get_cookie(pPool, headers_in, "aselectticket="))) {
+			    if ((pcResponseKill = aselect_filter_kill_ticket(pRequest, pPool, pConfig, pcTicket, &timer_data)))
+			    {
+				//TRACE1("Agent response: %s", pcResponseKill);
+				iError = aselect_filter_get_error(pPool, pcResponseKill);
+				if (iError == ASELECT_FILTER_ASAGENT_ERROR_OK) {
+				    // Successfully killed the ticket, now redirect to the aselect-server
+				    if ((pcASelectServerURL = aselect_filter_get_cookie(pPool, headers_in, "aselectserverurl=")))
+				    {
+					pRequest->content_type = "text/html";
+					pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectticket",
+						    pConfig->pCurrentApp->pcLocation, addedSecurity);
+					TRACE1("Delete cookie: %s", pcCookie);
+					ap_table_add(headers_out, "Set-Cookie", pcCookie);
+					if (strchr(pConfig->pcPassAttributes,'C')!=0) {  // 20120703: Bauke: added
+					    pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectuid",
+							    pConfig->pCurrentApp->pcLocation, addedSecurity);
+					    TRACE1("Delete cookie: %s", pcCookie);
+					    ap_table_add(headers_out, "Set-Cookie", pcCookie);
+					}
+					//pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectorganization",
+					//		pConfig->pCurrentApp->pcLocation, addedSecurity);
+					//TRACE1("Delete cookie: %s", pcCookie);
+					//ap_table_add(headers_out, "Set-Cookie", pcCookie);
+					pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectserverurl",
+						    pConfig->pCurrentApp->pcLocation, addedSecurity);
+					TRACE1("Delete cookie: %s", pcCookie);
+					ap_table_add(headers_out, "Set-Cookie", pcCookie);
+					if (strchr(pConfig->pcPassAttributes,'c')!=0 ||
+						strchr(pConfig->pcPassAttributes,'C')!=0) {  // Bauke: added
+					    pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectattributes",
+							    pConfig->pCurrentApp->pcLocation, addedSecurity);
+					    TRACE1("Delete cookie: %s", pcCookie);
+					    ap_table_add(headers_out, "Set-Cookie", pcCookie);
+					}
+					// else: no aselectattributes cookie needed
+					ap_send_http_header(pRequest);
+
+					// Example:
+					// https://siam.plains.nl/aselectserver/server?request=logout&a-select-server=plains&logout_return_url=...
+					pcTmp = aselect_filter_get_param(pPool, pcResponseKill, "a-select-server=", "&", TRUE);
+					if (!pcTmp)
+					    pcTmp = "";
+					pcTmp2 = aselect_filter_get_param(pPool, pRequest->args, "logout_return_url=", "&", TRUE);
+					if (pcTmp2 && *pcTmp2) {
+					    pcASelectServerURL = ap_psprintf(pPool, "%s?request=logout&a-select-server=%s&logout_return_url=%s",
+						    pcASelectServerURL, aselect_filter_url_encode(pPool, pcTmp),
+						    aselect_filter_url_encode(pPool, pcTmp2));
+					}
+					else {
+					    pcASelectServerURL = ap_psprintf(pPool, "%s?request=logout&a-select-server=%s",
+						    pcASelectServerURL, aselect_filter_url_encode(pPool, pcTmp));
+					}
+					TRACE1("Redirect to '%s'", pcASelectServerURL);
+					ap_rprintf(pRequest, ASELECT_FILTER_CLIENT_REDIRECT, pcASelectServerURL, pcASelectServerURL);
+					iRet = DONE;
+				    }
+				    else {
+					iError = ASELECT_FILTER_ERROR_NO_SUCH_COOKIE;
+					TRACE1("aselect_filter_get_cookie(aselectserverurl) FAILED: %d", iError);
+					ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
+					    ap_psprintf(pPool, "ASELECT_FILTER:: aselect_filter_get_cookie(aselectserverurl) FAILED: %d", iError));
+				    }
+				}
+				else {
+				    TRACE1("aselect_filter_kill_ticket FAILED: %d", iError);
+				    ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
+					ap_psprintf(pPool, "ASELECT_FILTER:: aselect_filter_kill_ticket FAILED: %d", iError));
+				}
+			    }
+			    else {
+				iError = ASELECT_FILTER_ERROR_INTERNAL;
+				TRACE1("aselect_filter_kill_ticket FAILED: %d", iError);
+				ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
+				    ap_psprintf(pPool, "ASELECT_FILTER:: aselect_filter_kill_ticket FAILED: %d", iError));
+			    }
+			}
+			else { // Could not find ticket to kill
+			    iError = ASELECT_FILTER_ERROR_NO_SUCH_COOKIE;
+			    TRACE1("aselect_filter_get_cookie(aselectticket) FAILED: %d", iError);
+			    ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
+				ap_psprintf(pPool, "ASELECT_FILTER:: aselect_filter_get_cookie(aselectticket) FAILED: %d", iError));
+			}
+		    }
+		    else { // Nothing interesting in the request=param, so continue as normal
+			TRACE("No recognized request given");
+			iRet = DECLINED;
 		    }
 		}
-                TRACE1("Redirect for authentication to app_url: %s", pcAppUrl);
-                if ((pcResponseAU = aselect_filter_auth_user(pRequest, pPool, pConfig, pcAppUrl, &timer_data))) {
-                    iError = aselect_filter_get_error(pPool, pcResponseAU);
-                }
-
-                if (iError == ASELECT_FILTER_ASAGENT_ERROR_OK) {
-                    TRACE1("response: %s", pcResponseAU);
-                    //
-                    // build the redirection URL from the response
-                    //
-                    if ((pcRID = aselect_filter_get_param(pPool, pcResponseAU, "rid=", "&", TRUE))) {
-                        if ((pcASelectServer = aselect_filter_get_param(pPool, pcResponseAU, "a-select-server=", "&", TRUE))) {
-                            if ((pcASUrl = aselect_filter_get_param(pPool, pcResponseAU, "as_url=", "&", TRUE))) {
-                                iRet = aselect_filter_gen_top_redirect(pPool, addedSecurity, pRequest, pcASUrl, pcASelectServer, pcRID);
-                            }
-                            else {
-                                iError = ASELECT_FILTER_ERROR_AGENT_RESPONSE;
-                            }
-                        }
-                        else {
-                            iError = ASELECT_FILTER_ERROR_AGENT_RESPONSE;
-                        }
-                    }
-                    else {
-                        iError = ASELECT_FILTER_ERROR_AGENT_RESPONSE;
-                    }
-                }
-                else {
-                    TRACE1("aselect_filter_auth_user FAILED (%d)", iError);
-                    ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
-                        ap_psprintf(pPool, "ASELECT_FILTER:: aselect_filter_auth_user FAILED (%d)", iError));
-                }
-                break;
-
-            case ASELECT_FILTER_ACTION_SET_TICKET:
-                //
-                // Generate & set A-Select cookies
-                //
-                TRACE3("Action: ASELECT_FILTER_ACTION_SET_TICKET: %s - %s - %s", pcTicketOut, pcUIDOut, pcOrganizationOut);
-		if (strchr(pConfig->pcPassAttributes,'c')!=0 ||
-			strchr(pConfig->pcPassAttributes,'C')!=0) {  // Bauke: added: Pass attributes in a cookie
-		    pcCookie4 = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectattributes", 
-			    (pcAttributes == NULL) ? "" : pcAttributes, pConfig->pCurrentApp->pcLocation, addedSecurity);
-		    TRACE1("Set-Cookie: %s", pcCookie4);
-		    ap_table_add(headers_out, "Set-Cookie", pcCookie4); 
+		else { // No arguments we are interested in, so continue as normal
+		    TRACE("No request given");
+		    iRet = DECLINED;
 		}
-		else if (strchr(pConfig->pcPassAttributes,'q')!=0 || strchr(pConfig->pcPassAttributes,'h')!=0 ||
-				strchr(pConfig->pcPassAttributes,'t')!=0) {  // Bauke: added
-		    // Pass attributes in the html header and/or query string
-		    iError = aselect_filter_passAttributesInUrl(iError, pcAttributes, passUsiAttribute, pPool,
-				    pRequest, pConfig, pcTicketOut, pcRequestLanguage, headers_in, &timer_data);
+	    }
+	    else {
+		iRet = DECLINED;
+	    }
+	    break;
+
+	case ASELECT_FILTER_ACTION_AUTH_USER:
+	    // User does not have valid CREDENTIALS and must be authenticated by the Server
+	    // Contact the Agent to find the user's Server
+
+	    TRACE("Action: ASELECT_FILTER_ACTION_AUTH_USER");
+	    TRACE2("iRedirectMode: %d redirectURL=%s", pConfig->iRedirectMode, pConfig->pCurrentApp->pcRedirectURL);
+	    if (*pConfig->pCurrentApp->pcRedirectURL) {
+		TRACE1("Using fixed app_url: %s", pConfig->pCurrentApp->pcRedirectURL);
+		if (pRequest->args != NULL) {
+		  if (strchr(pConfig->pCurrentApp->pcRedirectURL, '?'))
+		      pcAppUrl = ap_psprintf(pPool, "%s&%s", pConfig->pCurrentApp->pcRedirectURL,
+			  pRequest->args);
+		  else
+		      pcAppUrl = ap_psprintf(pPool, "%s?%s", pConfig->pCurrentApp->pcRedirectURL,
+			  pRequest->args);
 		}
-                pcCookie = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectticket",
-			    pcTicketOut, pConfig->pCurrentApp->pcLocation, addedSecurity);
-                TRACE1("Set-Cookie: %s", pcCookie);
-                ap_table_add(headers_out, "Set-Cookie", pcCookie); 
-		if (strchr(pConfig->pcPassAttributes,'C')!=0) {  // 20120703: Bauke: added for backward compatibility
-		    pcCookie2 = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectuid",
-				pcUIDOut, pConfig->pCurrentApp->pcLocation, addedSecurity);
-		    TRACE1("Set-Cookie: %s", pcCookie2);
-		    ap_table_add(headers_out, "Set-Cookie", pcCookie2); 
+		else
+		  pcAppUrl = pConfig->pCurrentApp->pcRedirectURL;
+	    }
+	    else {
+	      if (pConfig->iRedirectMode == ASELECT_FILTER_REDIRECT_FULL) {
+		  if (pRequest->args != NULL) {
+		      pcUrl = ap_psprintf(pPool, "%s?%s", pRequest->uri, pRequest->args);
+		      pcAppUrl = ap_construct_url(pPool, pcUrl, pRequest);
+		  }
+		  else
+		      pcAppUrl = ap_construct_url(pPool, pRequest->uri, pRequest);
+	      }
+	      else
+		  pcAppUrl = ap_construct_url(pPool, pConfig->pCurrentApp->pcLocation, pRequest);
+	    }
+	    
+	    // Remove: request=aselect_show_bar if present, otherwise we would get 2 of them
+	    if (pConfig->bUseASelectBar) {
+		char *req = "request=aselect_show_bar";
+		char *p = strstr(pcAppUrl, req);
+		int len = strlen(req);
+		if (p) {
+		    TRACE1("Removed: %s", req);
+		    if (p > pcAppUrl && *(p-1) == '&') {
+			p--; len++;
+		    }
+		    pcAppUrl = ap_psprintf(pPool, "%.*s%s", p-pcAppUrl, pcAppUrl, p+len);
 		}
-                //pcCookie3 = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectorganization",
-		//		pcOrganizationOut, pConfig->pCurrentApp->pcLocation, addedSecurity);
-                //TRACE1("Set-Cookie: %s", pcCookie3);
-                //ap_table_add(headers_out, "Set-Cookie", pcCookie3); 
+	    }
+	    TRACE1("Redirect for authentication to app_url: %s", pcAppUrl);
+	    if ((pcResponseAU = aselect_filter_auth_user(pRequest, pPool, pConfig, pcAppUrl, &timer_data))) {
+		iError = aselect_filter_get_error(pPool, pcResponseAU);
+	    }
 
-		// Filter out application parameters
-                TRACE2("SecureUrl=%d RequestArgs: '%s'", pConfig->bSecureUrl, pRequest->args);
-		pRequest->args = extractApplicationParameters(pPool, pRequest->args);
-                TRACE1("Ticket SET --> pRequest->args='%s'",pRequest->args);
+	    if (iError == ASELECT_FILTER_ASAGENT_ERROR_OK) {
+		TRACE1("response: %s", pcResponseAU);
+		//
+		// build the redirection URL from the response
+		//
+		if ((pcRID = aselect_filter_get_param(pPool, pcResponseAU, "rid=", "&", TRUE))) {
+		    if ((pcASelectServer = aselect_filter_get_param(pPool, pcResponseAU, "a-select-server=", "&", TRUE))) {
+			if ((pcASUrl = aselect_filter_get_param(pPool, pcResponseAU, "as_url=", "&", TRUE))) {
+			    iRet = aselect_filter_gen_top_redirect(pPool, addedSecurity, pRequest, pcASUrl, pcASelectServer, pcRID);
+			}
+			else {
+			    iError = ASELECT_FILTER_ERROR_AGENT_RESPONSE;
+			}
+		    }
+		    else {
+			iError = ASELECT_FILTER_ERROR_AGENT_RESPONSE;
+		    }
+		}
+		else {
+		    iError = ASELECT_FILTER_ERROR_AGENT_RESPONSE;
+		}
+	    }
+	    else {
+		TRACE1("aselect_filter_auth_user FAILED (%d)", iError);
+		ap_log_rerror(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pRequest,
+		    ap_psprintf(pPool, "ASELECT_FILTER:: aselect_filter_auth_user FAILED (%d)", iError));
+	    }
+	    break;
 
-                iRet = aselect_filter_gen_authcomplete_redirect(pPool, pRequest, pConfig);
-		// always returns DONE
-                break;
+	case ASELECT_FILTER_ACTION_SET_TICKET:
+	    //
+	    // Generate & set A-Select cookies
+	    //
+	    TRACE3("Action: ASELECT_FILTER_ACTION_SET_TICKET: %s - %s - %s", pcTicketOut, pcUIDOut, pcOrganizationOut);
+	    if (strchr(pConfig->pcPassAttributes,'c')!=0 ||
+		    strchr(pConfig->pcPassAttributes,'C')!=0) {  // Bauke: added: Pass attributes in a cookie
+		pcCookie4 = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectattributes", 
+			(pcAttributes == NULL) ? "" : pcAttributes, pConfig->pCurrentApp->pcLocation, addedSecurity);
+		TRACE1("Set-Cookie: %s", pcCookie4);
+		ap_table_add(headers_out, "Set-Cookie", pcCookie4); 
+	    }
+	    else if (strchr(pConfig->pcPassAttributes,'q')!=0 || strchr(pConfig->pcPassAttributes,'h')!=0 ||
+			    strchr(pConfig->pcPassAttributes,'t')!=0) {  // Bauke: added
+		// Pass attributes in the html header and/or query string
+		iError = aselect_filter_passAttributesInUrl(iError, pcAttributes, passUsiAttribute, pPool,
+				pRequest, pConfig, pcTicketOut, pcRequestLanguage, headers_in, &timer_data);
+	    }
+	    pcCookie = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectticket",
+			pcTicketOut, pConfig->pCurrentApp->pcLocation, addedSecurity);
+	    TRACE1("Set-Cookie: %s", pcCookie);
+	    ap_table_add(headers_out, "Set-Cookie", pcCookie); 
+	    if (strchr(pConfig->pcPassAttributes,'C')!=0) {  // 20120703: Bauke: added for backward compatibility
+		pcCookie2 = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectuid",
+			    pcUIDOut, pConfig->pCurrentApp->pcLocation, addedSecurity);
+		TRACE1("Set-Cookie: %s", pcCookie2);
+		ap_table_add(headers_out, "Set-Cookie", pcCookie2); 
+	    }
+	    //pcCookie3 = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectorganization",
+	    //		pcOrganizationOut, pConfig->pCurrentApp->pcLocation, addedSecurity);
+	    //TRACE1("Set-Cookie: %s", pcCookie3);
+	    //ap_table_add(headers_out, "Set-Cookie", pcCookie3); 
 
-            case ASELECT_FILTER_ACTION_ACCESS_DENIED:
-                TRACE("Action: ACCESS_DENIED");
-		break;
+	    // Filter out application parameters
+	    TRACE2("SecureUrl=%d RequestArgs: '%s'", pConfig->bSecureUrl, pRequest->args);
+	    pRequest->args = extractApplicationParameters(pPool, pRequest->args);
+	    TRACE1("Ticket SET --> pRequest->args='%s'",pRequest->args);
 
-            default:
-                // Access is denied or unknown action: ACCESS DENIED
-		break;
-        }
+	    iRet = aselect_filter_gen_authcomplete_redirect(pPool, pRequest, pConfig);
+	    // always returns DONE
+	    break;
+
+	case ASELECT_FILTER_ACTION_ACCESS_DENIED:
+	    TRACE("Action: ACCESS_DENIED");
+	    break;
+
+	default:
+	    // Access is denied or unknown action: ACCESS DENIED
+	    break;
+	}
     }
     if (iError != ASELECT_FILTER_ERROR_OK) {
         if (aselect_filter_gen_error_page(pPool, pRequest, iError, pConfig->pcErrorTemplate) == ASELECT_FILTER_ERROR_OK)

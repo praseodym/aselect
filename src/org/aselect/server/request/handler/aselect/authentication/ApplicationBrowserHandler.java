@@ -460,8 +460,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		boolean useUsi = false;
 
 		String sRequest = (String) htServiceRequest.get("request");
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplBrowREQ sRequest=" + sRequest + ", htServiceRequest="+
-						htServiceRequest + " user language=" + _sUserLanguage);
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplBrowREQ sRequest="+sRequest + " user language="+_sUserLanguage);
 		
 		// 20120611, Bauke: added "usi" handling
 		if (sRequest != null && ("logout".equals(sRequest) || sRequest.startsWith("direct_login") || sRequest.startsWith("login"))) {
@@ -2126,9 +2125,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * <b>Description:</b> <br>
 	 * The request can be used to logout a user by destroying his/her TGT. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br>
-	 * - <br>
-	 * <br>
 	 * <b>Preconditions:</b> <br>
 	 * Valid TGT <br>
 	 * <br>
@@ -2142,38 +2138,37 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @param pwOut
 	 *            Used to write information back to the user (HTML)
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
 	private void handleLogout(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 	throws ASelectException
 	{
 		String sMethod = "handleLogout";
-		String sLoggedOutForm = _configManager.getForm("loggedout", _sUserLanguage, _sUserCountry);
+		String sRemoteAsUrl = null;
 
 		try {
-			String sTgt = (String) htServiceRequest.get("aselect_credentials_tgt");
+			String sTgt = (String)htServiceRequest.get("aselect_credentials_tgt");
 			// 20120712, Bauke, not needed, ASelectAuthenticationProfile has already read the TGT
 			// HashMap _htTGTContext = _tgtManager.getTGT(sTgt);
-			
-			// 20120611, Bauke: added "usi"
-			String sUsi = (String)_htTGTContext.get("usi");
-			if (Utils.hasValue(sUsi))  // overwrite
-				_timerSensor.setTimerSensorId(sUsi);
-			String sAppId = (String)_htTGTContext.get("app_id");
-			if (Utils.hasValue(sAppId))
-				_timerSensor.setTimerSensorAppId(sAppId);
 
+			String sCookieDomain = _configManager.getCookieDomain();
+			HandlerTools.delCookieValue(servletResponse, "aselect_credentials", sCookieDomain, _systemLogger);
+			
 			if (_htTGTContext != null) {
+				// 20120611, Bauke: added "usi"
+				String sUsi = (String)_htTGTContext.get("usi");
+				if (Utils.hasValue(sUsi))  // overwrite
+					_timerSensor.setTimerSensorId(sUsi);
+				String sAppId = (String)_htTGTContext.get("app_id");
+				if (Utils.hasValue(sAppId))
+					_timerSensor.setTimerSensorAppId(sAppId);
+
 				_tgtManager.remove(sTgt);
 
-				String sCookieDomain = _configManager.getCookieDomain();
-				HandlerTools.delCookieValue(servletResponse, "aselect_credentials", sCookieDomain, _systemLogger);
-
-				String sRemoteAsUrl = null;
 				String sRemoteOrg = (String) _htTGTContext.get("proxy_organization");
 				if (sRemoteOrg == null)
 					sRemoteOrg = (String) _htTGTContext.get("organization");
 
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "_sMyOrg="+_sMyOrg+" sRemoteOrg="+sRemoteOrg);
 				if (!sRemoteOrg.equals(_sMyOrg)) {
 					try {
 						CrossASelectManager oCrossASelectManager = CrossASelectManager.getHandle();
@@ -2187,22 +2182,27 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						sRemoteAsUrl = null;
 					}
 				}
-				_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRemoteAsUrl + "," + " _sMyOrg=" + _sMyOrg
-						+ ", sRemoteOrg=" + sRemoteOrg);
-				if (sRemoteAsUrl != null) {
-					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
-					// no RID: _sessionManager.update(sRid, _htSessionContext); // Write session
-					_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
-					servletResponse.sendRedirect(sRemoteAsUrl);
-					return;
-				}
 			}
+			
+			if (sRemoteAsUrl == null) {  // 20120809, Bauke: added
+				sRemoteAsUrl = (String)htServiceRequest.get("logout_return_url");
+			}
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR "+((sRemoteAsUrl!=null)? URLDecoder.decode(sRemoteAsUrl, "UTF-8"): "null")+" _sMyOrg="+_sMyOrg);
+			
+			if (sRemoteAsUrl != null) {
+				Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
+				// no RID: _sessionManager.update(sRid, _htSessionContext); // Write session
+				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
+				servletResponse.sendRedirect(URLDecoder.decode(sRemoteAsUrl, "UTF-8"));
+				return;
+			}
+
+			String sLoggedOutForm = _configManager.getForm("loggedout", _sUserLanguage, _sUserCountry);
 			sLoggedOutForm = _configManager.updateTemplate(sLoggedOutForm, _htTGTContext);
 			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 			// no RID _sessionManager.update(sRid, _htSessionContext); // Write session
 			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
 			pwOut.println(sLoggedOutForm);
-
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error", e);

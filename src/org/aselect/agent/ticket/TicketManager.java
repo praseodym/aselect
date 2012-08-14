@@ -168,7 +168,7 @@ public class TicketManager extends StorageManager
 	 */
 	public boolean init()
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			_oConfigManager = ASelectAgentConfigManager.getHandle();
 
@@ -217,7 +217,7 @@ public class TicketManager extends StorageManager
 	 */
 	public void stop()
 	{
-		String sMethod = "stop()";
+		String sMethod = "stop";
 
 		if (_oTicketTable != null)
 			_oTicketTable.destroy();
@@ -247,7 +247,7 @@ public class TicketManager extends StorageManager
 	 */
 	public String createTicket(HashMap htTicketContext)
 	{
-		String sMethod = "createTicket()";
+		String sMethod = "createTicket";
 		String sTicket = null;
 		byte[] baTicketBytes = new byte[TICKET_LENGTH];
 
@@ -343,7 +343,7 @@ public class TicketManager extends StorageManager
 	 */
 	public boolean killTicket(String sTicket)
 	{
-		String sMethod = "killTicket()";
+		String sMethod = "killTicket";
 
 		try {
 			synchronized (_oTicketTable) {
@@ -374,7 +374,7 @@ public class TicketManager extends StorageManager
 	 */
 	public void killAllTickets()
 	{
-		String sMethod = "killAllTickets()";
+		String sMethod = "killAllTickets";
 
 		try {
 			synchronized (_oTicketTable) {
@@ -407,7 +407,7 @@ public class TicketManager extends StorageManager
 	 */
 	public HashMap getTicketContext(String sTicket)
 	{
-		String sMethod = "getTicketContext()";
+		String sMethod = "getTicketContext";
 		HashMap htResponse = null;
 
 		if (sTicket == null || sTicket.equals(""))
@@ -498,7 +498,7 @@ public class TicketManager extends StorageManager
 	 */
 	public HashMap getTicketContexts()
 	{
-		String sMethod = "getTicketContexts()";
+		String sMethod = "getTicketContexts";
 		HashMap xResponse = null;
 
 		try {

@@ -452,7 +452,7 @@ public class RequestHandler extends Thread
 				timerSensor.setTimerSensorSender("agt_ktk");
 				processKillTicketRequest(oInputMessage, oOutputMessage);
 			}
-			else if (sRequest.equals("kill_tgt")) {
+			else if (sRequest.equals("kill_tgt")) {  // same as kill_ticket
 				timerSensor.setTimerSensorSender("agt_ktg");
 				processKillTgtRequest(oInputMessage, oOutputMessage);
 			}
@@ -1791,7 +1791,7 @@ public class RequestHandler extends Thread
 	private void processKillTicketRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
 	throws ASelectCommunicationException
 	{
-		String sMethod = "processKillTicketRequest()";
+		String sMethod = "processKillTicketRequest";
 		StringBuffer sbBuffer = new StringBuffer();
 		String sTicket = null;
 		try {
@@ -1805,7 +1805,14 @@ public class RequestHandler extends Thread
 				return;
 			}
 
-			// set response parameters
+			// Set response parameters
+			// 20120809, Bauke: report a-select-server to filter as well
+			ASelectAgentSAMAgent oSAMAgent = ASelectAgentSAMAgent.getHandle();
+			SAMResource oResource = oSAMAgent.getActiveResource("aselectserver");
+			Object oConfigSection = oResource.getAttributes();
+			String sAS = _configManager.getParam(oConfigSection, "aselect-server-id");
+			if (Utils.hasValue(sAS))
+				oOutputMessage.setParam("a-select-server", sAS);
 			_sErrorCode = Errors.ERROR_ASELECT_SUCCESS;
 		}
 		catch (ASelectCommunicationException eAC) {
@@ -1838,7 +1845,7 @@ public class RequestHandler extends Thread
 	private void processKillTgtRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
 	throws ASelectCommunicationException
 	{
-		String sMethod = "processKillTgtRequest()";
+		String sMethod = "processKillTgtRequest";
 		StringBuffer sbBuffer = new StringBuffer();
 		String sTicket = null;
 		try {
