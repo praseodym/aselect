@@ -210,7 +210,7 @@ public class SAMAgent
 	public SAMResource getActiveResource(String sID)
 	throws ASelectSAMException
 	{
-		String sMethod = "getActiveResource()";
+		String sMethod = "getActiveResource";
 		SAMResource oSAMResource = null;
 		
 		_oSystemLogger.log(Level.INFO, MODULE, sMethod, "Getting active resource for: " + sID);		// RH, 20110202, n

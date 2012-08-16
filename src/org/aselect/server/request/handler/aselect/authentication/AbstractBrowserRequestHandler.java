@@ -476,6 +476,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 	throws ASelectException
 	{
 		String sMethod = "getAuthspParametersFromConfig";
+		_systemLogger.log(Level.FINE, _sModule, sMethod, "AuthSp="+sAuthSp);
 		Object authSPsection = null;
 		try {
 			authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp", "id="+sAuthSp);
@@ -485,12 +486,15 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST, eA);
 		}
 		
-		_sCorrectionFacility = Utils.getSimpleParam(_configManager, _systemLogger, authSPsection, "correction_facility", false);
+		_sCorrectionFacility = Utils.getSimpleParam(_configManager, _systemLogger, authSPsection, "sms_correction_facility", false);
 		_sCookiePrefix = Utils.getSimpleParam(_configManager, _systemLogger, authSPsection, "cookie_prefix", false);
+		if (_sCookiePrefix == null)
+			_sCookiePrefix = "";
 		_sCookieDomain = Utils.getSimpleParam(_configManager, _systemLogger, authSPsection, "cookie_domain", false);
 		if (!Utils.hasValue(_sCookieDomain)) {
 			_sCookieDomain = _configManager.getCookieDomain();
 		}
+		_systemLogger.log(Level.FINE, _sModule, sMethod, "sms_correction_facility="+_sCorrectionFacility);
 		return authSPsection;
 	}
 
@@ -522,7 +526,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 		_sessionManager.setDeleteSession(htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
 		// User can possibly correct his phone number and retry
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT to (correction_facility): " + _sCorrectionFacility);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT to (sms_correction_facility): " + _sCorrectionFacility);
 		String sAppUrl = (String) htSessionContext.get("app_url");
 		HandlerTools.putCookieValue(servletResponse, _sCookiePrefix+"ApplicationUrl", sAppUrl,
 									_sCookieDomain, "/",  600/*seconds*/, _systemLogger);

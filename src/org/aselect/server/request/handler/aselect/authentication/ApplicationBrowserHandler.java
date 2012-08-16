@@ -1643,6 +1643,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request, missing parmeter 'authsp'");
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
+			// 20120815, Bauke: Before startAuthentication, because it reads from config
+			Object authSPsection = getAuthspParametersFromConfig(sAuthsp);
 			
 			// 20111013, Bauke: added absent phonenumber handling
 			HashMap htResponse = startAuthentication(sRid, htServiceRequest);
@@ -1652,7 +1654,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				throw new ASelectException(sResultCode);
 			}
 
-			Object authSPsection = getAuthspParametersFromConfig(sAuthsp);
 			sRedirectUrl = (String) htResponse.get("redirect_url");
 			try {
 				try {
@@ -2452,7 +2453,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		// RH, should be set through AbstractBrowserRequestHandler
 		// but this seems to be the wrong one (AbstractBrowserRequestHandler sets the idp address on the idp)
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip was "
-				+ _htSessionContext.get("client_ip") + ", set to " + get_servletRequest().getRemoteAddr());
+				+ _htSessionContext.get("client_ip") + ", set to " + get_servletRequest().getRemoteAddr()+" sCF="+_sCorrectionFacility);
 		
 		_htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr());
 		// 20111013, Bauke: added absent phonenumber handling, to be used by computeAuthenticationRequest():

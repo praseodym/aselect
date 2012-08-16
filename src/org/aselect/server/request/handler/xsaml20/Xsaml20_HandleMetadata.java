@@ -56,7 +56,7 @@ public class Xsaml20_HandleMetadata extends AbstractRequestHandler
 	public void init(ServletConfig servletConfig, Object config)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		super.init(servletConfig, config);
 		_sMySharedSecret = _configManager.getSharedSecret();
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, "init");
