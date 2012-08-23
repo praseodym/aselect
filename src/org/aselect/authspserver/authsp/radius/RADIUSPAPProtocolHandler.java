@@ -107,6 +107,10 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 		try {
 			DatagramPacket oRADIUSPacket;
 			byte xBuffer[] = new byte[MAX_RADIUS_PACKET_SIZE];
+			
+			byte xBufferReceive[] = new byte[MAX_RADIUS_PACKET_SIZE];		// RH, 20120823, sn
+			DatagramPacket oRADIUSPacketReceive;		// we use clean receive buffer so no leftovers from sending process ( cutting buffers, old values etc.)
+			oRADIUSPacketReceive = new DatagramPacket(xBufferReceive, xBufferReceive.length);	// RH, 20120823, en
 			_baRandom = new byte[16];
 
 			if (!_bFullUid) {
@@ -135,9 +139,12 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 			_listenSocket.send(oRADIUSPacket);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "datagram send");
 			
-			_listenSocket.receive(oRADIUSPacket);
+//			_listenSocket.receive(oRADIUSPacket);// RH, 20120823, o
+			_listenSocket.receive(oRADIUSPacketReceive);// RH, 20120823, n
+			
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "received response");
-			handleResponse(oRADIUSPacket);
+//			handleResponse(oRADIUSPacket);// RH, 20120823, o
+			handleResponse(oRADIUSPacketReceive);// RH, 20120823, n
 
 			try {
 				_listenSocket.close();
@@ -229,7 +236,7 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 			for (int i = baTempBuffer1.length; i < 16; i++) {
 				baTempBuffer2[i] = (byte) 0x00;
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "pwd=" + Utils.byteArrayToHexString(baOutputBuffer));
+//			_systemLogger.log(Level.INFO, MODULE, sMethod, "pwd=" + Utils.byteArrayToHexString(baOutputBuffer));
 
 			// compute b1 = MD5(S + RSA) as in rfc2138
 			MessageDigest md5Object = MessageDigest.getInstance("MD5");
@@ -243,7 +250,7 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 			}
 			// RH, so the password cannot exceed 16 chars !
 			
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "hashpwd=" + Utils.byteArrayToHexString(baOutputBuffer));
+//			_systemLogger.log(Level.INFO, MODULE, sMethod, "hashpwd=" + Utils.byteArrayToHexString(baOutputBuffer));
 
 //			BEGIN NEW 20110705, Bauke
 //			NOTE rfc2865 obsoletes rfc2138
@@ -336,7 +343,7 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "uid=" + _sUid);
 		try {
 			byte[] baResponseBuffer = oRADIUSPacket.getData();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "request=" + Utils.byteArrayToHexString(baResponseBuffer));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "response=" + Utils.byteArrayToHexString(baResponseBuffer));
 
 			// check code
 			iResponseBufferIndex = 0;
@@ -382,8 +389,8 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 			md5Object.update(_sSharedSecret.getBytes());
 			baHash = md5Object.digest();
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "authenticator="+Utils.byteArrayToHexString(baResponseBuffer)+
-							" hash="+Utils.byteArrayToHexString(baHash));
+//			_systemLogger.log(Level.INFO, MODULE, sMethod, "authenticator="+Utils.byteArrayToHexString(baResponseBuffer)+
+//							" hash="+Utils.byteArrayToHexString(baHash));
 			for (int i = 0; i < 16; i++) {
 				if (baAuthenticator[i] != baHash[i]) {
 					StringBuffer sbTemp = new StringBuffer("RADIUS Authenticator mismatch Server\r\n");
