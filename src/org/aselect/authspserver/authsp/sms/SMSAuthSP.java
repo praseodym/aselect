@@ -31,14 +31,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.aselect.authspserver.config.AuthSPConfigManager;
-import org.aselect.authspserver.crypto.CryptoEngine;
-import org.aselect.authspserver.log.AuthSPAuthenticationLogger;
-import org.aselect.authspserver.log.AuthSPSystemLogger;
-import org.aselect.authspserver.session.AuthSPSessionManager;
+import org.aselect.authspserver.authsp.AbstractAuthSP;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.servlet.ASelectHttpServlet;
 import org.aselect.system.utils.Utils;
 
 /**
@@ -59,7 +54,9 @@ import org.aselect.system.utils.Utils;
  * 
  * @author Cristina Gavrila, BTTSD
  */
-public class SMSAuthSP extends ASelectHttpServlet
+//public class SMSAuthSP extends ASelectHttpServlet
+public class SMSAuthSP extends AbstractAuthSP
+
 {
 	private static final int MAX_FIXED_SECRET_LENGTH = 50;
 
@@ -72,20 +69,20 @@ public class SMSAuthSP extends ASelectHttpServlet
 	/** The version. */
 	public static final String VERSION = "A-Select SMS AuthSP " + "1.9.1";
 
-	/** The logger that logs system information. */
-	private AuthSPSystemLogger _systemLogger;
-
-	/** The logger that logs authentication information. */
-	private AuthSPAuthenticationLogger _authenticationLogger;
-
-	/** The crypto engine */
-	private CryptoEngine _cryptoEngine;
-
-	/** The configuration */
-	private AuthSPConfigManager _configManager;
-
-	/** The Sessionmanager */
-	private AuthSPSessionManager _sessionManager;
+//	/** The logger that logs system information. */
+//	private AuthSPSystemLogger _systemLogger;
+//
+//	/** The logger that logs authentication information. */
+//	private AuthSPAuthenticationLogger _authenticationLogger;
+//
+//	/** The crypto engine */
+//	private CryptoEngine _cryptoEngine;
+//
+//	/** The configuration */
+//	private AuthSPConfigManager _configManager;
+//
+//	/** The Sessionmanager */
+//	private AuthSPSessionManager _sessionManager;
 
 	private String _sWorkingDir;
 	private Object _oAuthSpConfig;
@@ -113,6 +110,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 	private String _sSmsProvider;
 	private String _fixed_secret;		// RH, 20110913, n
 	private boolean _bShow_challenge;		// RH, 20110919, n
+	
 
 	/**
 	 * Initialization of the SMS AuthSP. <br>
@@ -154,10 +152,10 @@ public class SMSAuthSP extends ASelectHttpServlet
 			// super init
 			super.init(oConfig);
 			// retrieve managers and loggers
-			_systemLogger = AuthSPSystemLogger.getHandle();
-			_authenticationLogger = AuthSPAuthenticationLogger.getHandle();
-			_configManager = AuthSPConfigManager.getHandle();
-			_sessionManager = AuthSPSessionManager.getHandle();
+//			_systemLogger = AuthSPSystemLogger.getHandle();
+//			_authenticationLogger = AuthSPAuthenticationLogger.getHandle();
+//			_configManager = AuthSPConfigManager.getHandle();
+//			_sessionManager = AuthSPSessionManager.getHandle();
 
 			// log start
 			StringBuffer sbInfo = new StringBuffer("Starting : ").append(MODULE);
@@ -165,12 +163,12 @@ public class SMSAuthSP extends ASelectHttpServlet
 
 			// Retrieve crypto engine from servlet context.
 			ServletContext oContext = oConfig.getServletContext();
-			_cryptoEngine = (CryptoEngine) oContext.getAttribute("CryptoEngine");
-			if (_cryptoEngine == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No CryptoEngine found in servlet context.");
-				throw new ASelectException(Errors.ERROR_SMS_INTERNAL_ERROR);
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded CryptoEngine.");
+//			_cryptoEngine = (CryptoEngine) oContext.getAttribute("CryptoEngine");
+//			if (_cryptoEngine == null) {
+//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No CryptoEngine found in servlet context.");
+//				throw new ASelectException(Errors.ERROR_SMS_INTERNAL_ERROR);
+//			}
+//			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded CryptoEngine.");
 
 			// Retrieve friendly name
 			_sFriendlyName = (String) oContext.getAttribute("friendly_name");
@@ -380,6 +378,7 @@ public class SMSAuthSP extends ASelectHttpServlet
 			}
 			// RH, 20110913, en
 			
+			
 			sbInfo = new StringBuffer("Successfully started ");
 			sbInfo.append(VERSION).append(".");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
@@ -420,6 +419,10 @@ public class SMSAuthSP extends ASelectHttpServlet
 		String sLanguage = null;
 		
 		String failureHandling = _sFailureHandling;	// Initially we use default from config, this might change if we suspect parameter tampering
+		
+		// super doGet for basics, future improvement
+//		super.doGet(servletRequest, servletResponse);
+
 		
 		try {
 			String sQueryString = servletRequest.getQueryString();
@@ -491,8 +494,22 @@ public class SMSAuthSP extends ASelectHttpServlet
 				htServiceRequest.put("as_url", sAsUrl);
 				htServiceRequest.put("uid", sUid);  // This is the user's phone number
 				
+				
+				String formtoken = newToken();
+				Integer iRetryCounter = 1;	// first time
+				String sRetryCounter =  String.valueOf(iRetryCounter);	// for backward compatibility  we use the retry_counter to store our formtoken
+				sRetryCounter +=  ":" + formtoken;	// for backward compatibility  we use the retry_counter to store our formtoken
+				HashMap sessionContext = null; 
+				
+				if ( !_sessionManager.containsKey(sRid) ) {	// We expect there is no session yet
+					sessionContext = new HashMap();
+				} else  {
+					sessionContext = _sessionManager.getSessionContext(sRid);
+				}
+				sessionContext.put("sms_formtoken", formtoken);
+				sessionContext.put("sms_retry_counter", iRetryCounter);
+				_sessionManager.updateSession(sRid, sessionContext);
 				// RH, 20110104, add formsignature
-				String sRetryCounter =  String.valueOf(1);	// first time
 				sRetryCounter += ":" + _cryptoEngine.generateSignature(sConcat(sAsId, sUid, sRetryCounter));
 				htServiceRequest.put("retry_counter", String.valueOf(sRetryCounter));
 
@@ -621,6 +638,8 @@ public class SMSAuthSP extends ASelectHttpServlet
 			String sRetryCounter = servletRequest.getParameter("retry_counter");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "uid=" + sUid + " password=" + sPassword + " rid=" + sRid);
 
+
+			
 			if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sPassword == null) || (sAsId == null)
 					|| (sRetryCounter == null) || (sSignature == null)) {
 //				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: one or more mandatory parameters missing.");
@@ -628,8 +647,16 @@ public class SMSAuthSP extends ASelectHttpServlet
 				failureHandling = "local";	// RH, 20111021, n
 				throw new ASelectException(Errors.ERROR_SMS_INVALID_REQUEST);
 			}
+
+			HashMap sessionContext = _sessionManager.getSessionContext(sRid);
+			String formtoken;
+			Integer retry_counter;
+			if ( (sessionContext == null) ||  ( (formtoken = (String)sessionContext.get("sms_formtoken")) == null)
+					 ||  ( (retry_counter = (Integer)sessionContext.get("sms_retry_counter")) == null)) {
+				throw new ASelectException(Errors.ERROR_SMS_INVALID_REQUEST);			
+			}
 			
-			if (sPassword.trim().length() < 1) {  // invalid password, retry
+			if (sPassword.trim().length() < 1) {  // empty password, retry
 				HashMap htServiceRequest = new HashMap();
 				htServiceRequest.put("my_url", sMyUrl);
 				htServiceRequest.put("as_url", sAsUrl);
@@ -667,33 +694,55 @@ public class SMSAuthSP extends ASelectHttpServlet
 					throw new ASelectException(Errors.ERROR_SMS_INVALID_REQUEST);
 				}
 
+				// RH, 20110104, sn
+				// verify form signature
+				// formSignature is stored as part of the retryCounter
+				String[] sa = sRetryCounter.split(":");
+				String formSignature = sa[2];
+				sRetryCounter = sa[0] + ":" + sa[1]; // now also contains formtoken
+				String signedParms = sConcat(sAsId, sUid, sRetryCounter);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "sRetryCounter:" +sa[1] + ", formtoken:" + formtoken);
+				if ( !_cryptoEngine.verifyMySignature(signedParms, formSignature) || !sa[1].equals(formtoken) ) {
+					StringBuffer sbWarning = new StringBuffer("Invalid signature from User form '");
+					sbWarning.append(sAsId).append("' for user: ").append(sUid);
+					sbWarning.append(" , handling error locally. ").append(sUid);	// RH, 20111021, n
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString());
+					failureHandling = "local";	// RH, 20111021, n
+					throw new ASelectException(Errors.ERROR_SMS_INVALID_REQUEST);
+				}
+				// RH, 20110104, en
+
+				
+				
 				// authenticate user
+				// IMPROVE, Should go to sessionmanager for clustering
 				String generatedPass = (String) servletRequest.getSession().getAttribute("generated_secret");
 				String sResultCode = (sPassword.compareTo(generatedPass) == 0) ? (Errors.ERROR_SMS_SUCCESS)
 						: Errors.ERROR_SMS_INVALID_PASSWORD;
 
 				if (sResultCode.equals(Errors.ERROR_SMS_INVALID_PASSWORD)) // invalid password
 				{
-					// RH, 20110104, sn
-					// verify form signature
-					// formSignature is stored as part of the retryCounter
-					String[] sa = sRetryCounter.split(":");
-					String formSignature = sa[1];
-					sRetryCounter = sa[0];
-					String signedParms = sConcat(sAsId, sUid, sRetryCounter);
-					if ( !_cryptoEngine.verifyMySignature(signedParms, formSignature) ) {
-						StringBuffer sbWarning = new StringBuffer("Invalid signature from User form '");
-						sbWarning.append(sAsId).append("' for user: ").append(sUid);
-						sbWarning.append(" , handling error locally. ").append(sUid);	// RH, 20111021, n
-						_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString());
-						failureHandling = "local";	// RH, 20111021, n
-						throw new ASelectException(Errors.ERROR_SMS_INVALID_REQUEST);
-					}
-					// RH, 20110104, en
+//					// RH, 20110104, sn
+//					// verify form signature
+//					// formSignature is stored as part of the retryCounter
+//					String[] sa = sRetryCounter.split(":");
+//					String formSignature = sa[1];
+//					sRetryCounter = sa[0];
+//					String signedParms = sConcat(sAsId, sUid, sRetryCounter);
+//					if ( !_cryptoEngine.verifyMySignature(signedParms, formSignature) ) {
+//						StringBuffer sbWarning = new StringBuffer("Invalid signature from User form '");
+//						sbWarning.append(sAsId).append("' for user: ").append(sUid);
+//						sbWarning.append(" , handling error locally. ").append(sUid);	// RH, 20111021, n
+//						_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString());
+//						failureHandling = "local";	// RH, 20111021, n
+//						throw new ASelectException(Errors.ERROR_SMS_INVALID_REQUEST);
+//					}
+//					// RH, 20110104, en
 
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Invalid password, retry=" + sRetryCounter + " < "
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Invalid password, retry=" + retry_counter + " < "
 							+ _iAllowedRetries);
-					int iRetriesDone = Integer.parseInt(sRetryCounter);
+//					int iRetriesDone = Integer.parseInt(sRetryCounter);
+					int iRetriesDone = retry_counter;
 					if (iRetriesDone < _iAllowedRetries) // try again
 					{
 						HashMap htServiceRequest = new HashMap();
@@ -705,6 +754,14 @@ public class SMSAuthSP extends ASelectHttpServlet
 						// RH, 20110104, sn
 						// add formsignature
 						sRetryCounter =  String.valueOf(iRetriesDone + 1);
+						sessionContext.put("sms_retry_counter", iRetriesDone+1);
+						formtoken = newToken(); 
+						sessionContext.put("sms_formtoken", formtoken);
+						_sessionManager.updateSession(sRid, sessionContext);
+
+//						sRetryCounter =  String.valueOf(formtoken);
+						sRetryCounter +=  ":" + formtoken;	// for backward compatibility we use sRetryCounter to store the formtoken
+						
 						sRetryCounter += ":" + _cryptoEngine.generateSignature( sConcat(sAsId, sUid, sRetryCounter));
 						// RH, 20110104, en
 //						htServiceRequest.put("retry_counter", String.valueOf(iRetriesDone + 1));	// RH, 20110104, o
@@ -1033,22 +1090,5 @@ public class SMSAuthSP extends ASelectHttpServlet
 		}
 		NumberFormat format = new DecimalFormat(new String(secretFormat));
 		return format.format(secretValue);
-	}
-
-	/**
-	 * Simple utility to concatenate strings
-	 * Only not null params are concatenated
-	 * @param strings
-	 * 		strings to concat
-	 * @return
-	 * 		concated string
-	 */
-	private String sConcat(String... strings )
-	{
-		StringBuffer sb = new StringBuffer();
-	       for ( String s : strings )              
-	    	   if (s != null)
-	    		   sb.append(s); 
-	       return sb.toString();
 	}
 }
