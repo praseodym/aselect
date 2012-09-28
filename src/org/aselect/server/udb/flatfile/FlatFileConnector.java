@@ -366,16 +366,13 @@ public class FlatFileConnector implements IUDBConnector
 	 */
 	public String getUserAttributes(String sUserId, String sAuthSPId)
 	{
-		String sMethod = "getUserAttributes()";
+		String sMethod = "getUserAttributes";
 		_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "User=" + sUserId + " Authsp=" + sAuthSPId);
 		String sAttributesValue = null;
 		String sUID = sUserId.replace(' ', '+');
 
-		StringBuffer sbUserAttributes = new StringBuffer("user.");
-		sbUserAttributes.append(sUID);
-		sbUserAttributes.append(".");
-		sbUserAttributes.append(sAuthSPId);
-		sbUserAttributes.append(".attributes");
+		StringBuffer sbUserAttributes = new StringBuffer("user.").append(sUID);
+		sbUserAttributes.append(".").append(sAuthSPId).append(".attributes");
 
 		sAttributesValue = (String) _propFlatFile.get(sbUserAttributes.toString());
 		if (sAttributesValue == null) {
@@ -384,6 +381,7 @@ public class FlatFileConnector implements IUDBConnector
 			_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, sb.toString(), new ASelectUDBException(
 					Errors.ERROR_ASELECT_UDB_UNKNOWN_USER));
 		}
+		_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "Return=" + sAttributesValue);
 		return sAttributesValue;
 	}
 

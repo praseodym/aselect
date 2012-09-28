@@ -58,6 +58,9 @@ all)
 	./makejar.sh server
 	./makejar.sh lbsensor
 	;;
+src)
+	tar cvf aselect_src_`date +%Y%m%d`.tar `find . -name '*.java' -o -name '*.[ch]' | grep -v lbsensor`
+	;;
 *)	echo "Usage: `basename $0` all|agent|server|system|lbsensor"
 	rm -f $VERSION_FILE
 	exit;;

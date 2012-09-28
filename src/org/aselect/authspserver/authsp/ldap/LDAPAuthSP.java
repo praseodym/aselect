@@ -112,7 +112,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.aselect.authspserver.authsp.AbstractAuthSP;
 import org.aselect.authspserver.config.AuthSPConfigManager;
 import org.aselect.authspserver.crypto.CryptoEngine;
 import org.aselect.authspserver.log.AuthSPAuthenticationLogger;
@@ -143,8 +142,7 @@ import org.aselect.system.utils.Utils;
  * 
  * @author Alfa & Ariss
  */
-//public class LDAPAuthSP extends ASelectHttpServlet
-public class LDAPAuthSP extends AbstractAuthSP
+public class LDAPAuthSP extends ASelectHttpServlet
 {
 	private static final long serialVersionUID = 1L;
 
@@ -158,22 +156,22 @@ public class LDAPAuthSP extends AbstractAuthSP
 	private final static String DEFAULT_FAILUREHANDLING = "aselect";
 
 	/** The version. */
-	public static final String VERSION = "A-Select LDAP AuthSP " + "1.9";
+	public static final String VERSION = "A-Select LDAP AuthSP";
 
-//	/** The logger that logs system information. */
-//	private AuthSPSystemLogger _systemLogger;
-//
-//	/** The logger that logs authentication information. */
-//	private AuthSPAuthenticationLogger _authenticationLogger;
-//
-//	/** The crypto engine */
-//	private CryptoEngine _cryptoEngine;
-//
-//	/** The configuration */
-//	private AuthSPConfigManager _configManager;
-//
-//	/** The Sessionmanager */
-//	private AuthSPSessionManager _sessionManager;
+	/** The logger that logs system information. */
+	private AuthSPSystemLogger _systemLogger;
+
+	/** The logger that logs authentication information. */
+	private AuthSPAuthenticationLogger _authenticationLogger;
+
+	/** The crypto engine */
+	private CryptoEngine _cryptoEngine;
+
+	/** The configuration */
+	private AuthSPConfigManager _configManager;
+
+	/** The Sessionmanager */
+	private AuthSPSessionManager _sessionManager;
 
 	private String _sWorkingDir;
 	private Object _oAuthSpConfig;
@@ -229,12 +227,10 @@ public class LDAPAuthSP extends AbstractAuthSP
 			// super init
 			super.init(oConfig);
 			// retrieve managers and loggers
-			
-//			_systemLogger = AuthSPSystemLogger.getHandle();
-//			_authenticationLogger = AuthSPAuthenticationLogger.getHandle();
-//			_configManager = AuthSPConfigManager.getHandle();
-//			_sessionManager = AuthSPSessionManager.getHandle();
-			
+			_systemLogger = AuthSPSystemLogger.getHandle();
+			_authenticationLogger = AuthSPAuthenticationLogger.getHandle();
+			_configManager = AuthSPConfigManager.getHandle();
+			_sessionManager = AuthSPSessionManager.getHandle();
 			// log start
 			StringBuffer sbInfo = new StringBuffer("Starting : ");
 			sbInfo.append(MODULE);
@@ -242,13 +238,12 @@ public class LDAPAuthSP extends AbstractAuthSP
 
 			// Retrieve crypto engine from servlet context.
 			ServletContext oContext = oConfig.getServletContext();
-			
-//			_cryptoEngine = (CryptoEngine) oContext.getAttribute("CryptoEngine");
-//			if (_cryptoEngine == null) {
-//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No CryptoEngine found in servlet context.");
-//				throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR);
-//			}
-//			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded CryptoEngine.");
+			_cryptoEngine = (CryptoEngine) oContext.getAttribute("CryptoEngine");
+			if (_cryptoEngine == null) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No CryptoEngine found in servlet context.");
+				throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR);
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded CryptoEngine.");
 
 			// Retrieve friendly name
 			_sFriendlyName = (String) oContext.getAttribute("friendly_name");
@@ -445,29 +440,11 @@ public class LDAPAuthSP extends AbstractAuthSP
 
 				// Get the User its contexts
 				LDAPProtocolHandlerFactory.getContext(_oAuthSpConfig, sUid, _systemLogger);
-				
-				String formtoken = newToken();
-				Integer iRetryCounter = 1;	// first time
-				String sRetryCounter =  String.valueOf(iRetryCounter);	// for backward compatibility  we use the retry_counter to store our formtoken
-				sRetryCounter +=  ":" + formtoken;	// for backward compatibility  we use the retry_counter to store our formtoken
-				HashMap sessionContext = null; 
-				
-				if ( !_sessionManager.containsKey(sRid) ) {	// We expect there is no session yet
-					sessionContext = new HashMap();
-				} else  {
-					sessionContext = _sessionManager.getSessionContext(sRid);
-				}
-				sessionContext.put("ldap_formtoken", formtoken);
-				sessionContext.put("ldap_retry_counter", iRetryCounter);
-				_sessionManager.updateSession(sRid, sessionContext);
-				sRetryCounter += ":" + _cryptoEngine.generateSignature(sConcat(sAsId, sUid, sRetryCounter));
-				htServiceRequest.put("retry_counter", String.valueOf(sRetryCounter));
-
 
 				// show authentication form
 				htServiceRequest.put("as_url", sAsUrl);
 				htServiceRequest.put("uid", sUid);
-//				htServiceRequest.put("retry_counter", "1");
+				htServiceRequest.put("retry_counter", "1");
 				if (sCountry != null) htServiceRequest.put("country", sCountry);
 				if (sLanguage != null) htServiceRequest.put("language", sLanguage);
 
@@ -572,15 +549,6 @@ public class LDAPAuthSP extends AbstractAuthSP
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "LDAP POST " + servletRequest + " --> " + sMethod + ", "
 					+ sRid + ": " + sMyUrl);
 
-			HashMap sessionContext = _sessionManager.getSessionContext(sRid);
-			String formtoken;
-			Integer retry_counter;
-			if ( (sessionContext == null) ||  ( (formtoken = (String)sessionContext.get("ldap_formtoken")) == null)
-					 ||  ( (retry_counter = (Integer)sessionContext.get("ldap_retry_counter")) == null)) {
-				throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);			
-			}
-
-			
 			if (sPassword.trim().length() < 1) // invalid password
 			{
 				HashMap htServiceRequest = new HashMap();
@@ -618,24 +586,6 @@ public class LDAPAuthSP extends AbstractAuthSP
 					throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);
 				}
 
-				
-				// verify form signature
-				// formSignature is stored as part of the retryCounter
-				String[] sa = sRetryCounter.split(":");
-				String formSignature = sa[2];
-				sRetryCounter = sa[0] + ":" + sa[1]; // now also contains formtoken
-				String signedParms = sConcat(sAsId, sUid, sRetryCounter);
-				_systemLogger.log(Level.FINEST, MODULE, sMethod, "sRetryCounter:" +sa[1] + ", formtoken:" + formtoken);
-				if ( !_cryptoEngine.verifyMySignature(signedParms, formSignature) || !sa[1].equals(formtoken) ) {
-					StringBuffer sbWarning = new StringBuffer("Invalid signature from User form '");
-					sbWarning.append(sAsId).append("' for user: ").append(sUid);
-					sbWarning.append(" , handling error locally. ").append(sUid);
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString());
-					failureHandling = "local";	// RH, 20111021, n
-					throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);
-				}
-				
-				
 				// authenticate user
 				ILDAPProtocolHandler oProtocolHandler = LDAPProtocolHandlerFactory.instantiateProtocolHandler(
 						_oAuthSpConfig, sUid, _systemLogger);
@@ -643,8 +593,7 @@ public class LDAPAuthSP extends AbstractAuthSP
 				if (sResultCode.equals(Errors.ERROR_LDAP_INVALID_PASSWORD))
 				// invalid password
 				{
-//					int iRetriesDone = Integer.parseInt(sRetryCounter);
-					int iRetriesDone = retry_counter;
+					int iRetriesDone = Integer.parseInt(sRetryCounter);
 					if (iRetriesDone < _iAllowedRetries) // try again
 					{
 						HashMap htServiceRequest = new HashMap();
@@ -653,26 +602,13 @@ public class LDAPAuthSP extends AbstractAuthSP
 						htServiceRequest.put("uid", sUid);
 						htServiceRequest.put("rid", sRid);
 						htServiceRequest.put("a-select-server", sAsId);
-						
-						// add formsignature
-						sRetryCounter =  String.valueOf(iRetriesDone + 1);
-						sessionContext.put("ldap_retry_counter", iRetriesDone+1);
-						formtoken = newToken(); 
-						sessionContext.put("ldap_formtoken", formtoken);
-						_sessionManager.updateSession(sRid, sessionContext);
-
-						sRetryCounter +=  ":" + formtoken;	// for backward compatibility we use sRetryCounter to store the formtoken
-						sRetryCounter += ":" + _cryptoEngine.generateSignature( sConcat(sAsId, sUid, sRetryCounter));
-						htServiceRequest.put("retry_counter",  String.valueOf(sRetryCounter));
-
+						htServiceRequest.put("retry_counter", String.valueOf(iRetriesDone + 1));
 						htServiceRequest.put("signature", sSignature);
 						if (sCountry != null) htServiceRequest.put("country", sCountry);
 						if (sLanguage != null) htServiceRequest.put("language", sLanguage);
 						// show authentication form once again with warning message
 						showAuthenticateForm(pwOut, Errors.ERROR_LDAP_INVALID_PASSWORD, _configManager.getErrorMessage(
 								Errors.ERROR_LDAP_INVALID_PASSWORD, _oErrorProperties), htServiceRequest);
-						
-						
 					}
 					else {
 						// authenticate failed
@@ -1022,7 +958,6 @@ public class LDAPAuthSP extends AbstractAuthSP
 		String sRetryCounter = (String) htServiceRequest.get("retry_counter");
 		String sCountry = (String) htServiceRequest.get("country");
 		String sLanguage = (String) htServiceRequest.get("language");
-
 
 		// RH, 20100907, sn
 		String sFriendlyName = (String) htServiceRequest.get("requestorfriendlyname");

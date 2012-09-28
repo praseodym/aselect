@@ -435,7 +435,7 @@ public class JNDIConnector implements IUDBConnector
 	public String getUserAttributes(String sUserId, String sAuthSPId)
 	throws ASelectUDBException
 	{
-		String sMethod = "getUserAttributes()";
+		String sMethod = "getUserAttributes";
 
 		DirContext oDirContext = null;
 		NamingEnumeration oSearchResults = null;
@@ -465,7 +465,7 @@ public class JNDIConnector implements IUDBConnector
 			oScope.setSearchScope(SearchControls.SUBTREE_SCOPE);
 			oDirContext = getConnection();
 
-			_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "JndiATTR BASE=" + _sBaseDN + ", QRY=" + sbQuery);
+			_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "JndiATTR Base=" + _sBaseDN + ", Qry=" + sbQuery+" AuthSPId="+sAuthSPId);
 			try {
 				oSearchResults = oDirContext.search(_sBaseDN, sbQuery.toString(), oScope);
 			}
@@ -485,38 +485,34 @@ public class JNDIConnector implements IUDBConnector
 				oAttributes = oSearchResult.getAttributes();
 				boolean bFound = false; // attribute found
 
-				_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "JndiATTR Attr=" + oAttributes);
+				_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "JndiATTR Attrs=" + oAttributes);
+				StringBuffer sbUserAttributes = new StringBuffer("aselect");
+				sbUserAttributes.append(sAuthSPId);
+				sbUserAttributes.append("UserAttributes");
 				for (NamingEnumeration oAttrEnum = oAttributes.getAll(); oAttrEnum.hasMore() && !bFound;) {
 					oAttribute = (Attribute) oAttrEnum.next();
 					sAttributeName = oAttribute.getID();
 
-					StringBuffer sbUserAttributes = new StringBuffer("ASELECT");
-					sbUserAttributes.append(sAuthSPId);
-					sbUserAttributes.append("USERATTRIBUTES");
 					if (sAttributeName.equalsIgnoreCase(sbUserAttributes.toString())) {
 						try {
 							sAttributeValue = (String) oAttribute.get();
 						}
 						catch (Exception e) {
-							StringBuffer sb = new StringBuffer(
-									"Error retrieving A-Select attributes value for authsp: '");
-							sb.append(sAuthSPId).append("', user: '");
-							sb.append(sUserId).append("'");
+							StringBuffer sb = new StringBuffer("Error retrieving A-Select attributes value for authsp: '");
+							sb.append(sAuthSPId).append("', user: '").append(sUserId).append("'");
 							_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sb.toString(), e);
 						}
 						bFound = true;
 					}
 				}
 				if (sAttributeValue == null) {
-					StringBuffer sb = new StringBuffer("User attributes for AuthSP: '");
-					sb.append(sAuthSPId).append("' not found for user: '");
-					sb.append(sUserId).append("'");
+					StringBuffer sb = new StringBuffer("AuthSP=").append(sAuthSPId).append(" user=").append(sUserId);
+					sb.append(" attribute '").append(sbUserAttributes).append("' not found");
 					_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, sb.toString());
 				}
 			}
 			else {
-				StringBuffer sbBuffer = new StringBuffer("User '");
-				sbBuffer.append(sUserId);
+				StringBuffer sbBuffer = new StringBuffer("User '").append(sUserId);
 				sbBuffer.append("' not found during LDAP search. The filter was: ");
 				sbBuffer.append(sbQuery.toString());
 				_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, sbBuffer.toString());
@@ -542,6 +538,7 @@ public class JNDIConnector implements IUDBConnector
 			catch (Exception e) {
 			}
 		}
+		_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "Return=" + sAttributeValue);
 		return sAttributeValue;
 	}
 

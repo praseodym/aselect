@@ -461,9 +461,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				}
 				catch (ASelectUDBException e) {
 					StringBuffer sbFailed = new StringBuffer("Could not retrieve user attributes (for authsp '");
-					sbFailed.append(_sAuthSPUID);
-					sbFailed.append("') user: ");
-					sbFailed.append(sUID);
+					sbFailed.append(_sAuthSPUID).append("') user: ").append(sUID);
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
 					throw new ASelectAttributesException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 				}
@@ -472,7 +470,10 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 					sbFailed.append(_sAuthSPUID);
 					sbFailed.append("' does not map to any configured AuthSP (authsp_id)");
 					_systemLogger.log(Level.INFO, MODULE, sMethod, sbFailed.toString());
+					// 20120927, Bauke: added return to skip further gathering (ran into a null pointer exception)
+					return;
 				}
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "JNDIAttr use UDB finished");
 			}
 
 			// Regular JNDI gathering takes place here
@@ -498,7 +499,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				oScope.setReturningAttributes(saMappedAttributes);
 			}
 
-			if (!_bUseFullUid) {
+			if (!_bUseFullUid && sUID != null) {
 				int iIndex = sUID.indexOf('@');
 				if (iIndex > 0)
 					sUID = sUID.substring(0, iIndex);
