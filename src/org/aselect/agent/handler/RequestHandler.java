@@ -1830,8 +1830,6 @@ public class RequestHandler extends Thread
 		}
 	}
 
-	// "tgt_blob" "a-select-server" "signature"
-	// Optional: "logout_return_url"
 	/**
 	 * Process kill tgt request.
 	 * 

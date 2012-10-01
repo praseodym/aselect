@@ -2188,9 +2188,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			if (sRemoteAsUrl == null) {  // 20120809, Bauke: added
 				sRemoteAsUrl = (String)htServiceRequest.get("logout_return_url");
 			}
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR "+((sRemoteAsUrl!=null)? URLDecoder.decode(sRemoteAsUrl, "UTF-8"): "null")+" _sMyOrg="+_sMyOrg);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR "+
+					((sRemoteAsUrl!=null)? URLDecoder.decode(sRemoteAsUrl, "UTF-8"): "null")+" _sMyOrg="+_sMyOrg);
 			
-			if (sRemoteAsUrl != null) {
+			// 20120929, Bauke: only allow a redirect from our server when the user was logged in!!
+			if (sRemoteAsUrl != null && _htSessionContext != null) {
 				Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 				// no RID: _sessionManager.update(sRid, _htSessionContext); // Write session
 				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
@@ -2198,6 +2200,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				return;
 			}
 
+			// Otherwise present the "loggedout.html" form
 			String sLoggedOutForm = _configManager.getForm("loggedout", _sUserLanguage, _sUserCountry);
 			sLoggedOutForm = _configManager.updateTemplate(sLoggedOutForm, _htTGTContext);
 			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102

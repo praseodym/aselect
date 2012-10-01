@@ -169,7 +169,9 @@ public class Xsaml20_Logout extends Saml20_BaseHandler
 		// TgT is gone now
 		String sResultCode = ((htTGTContext == null) ? Errors.ERROR_ASELECT_SERVER_UNKNOWN_TGT
 				: Errors.ERROR_ASELECT_SUCCESS);
-		finishLogoutActions(response, sResultCode, sLogoutReturnUrl);
+
+		// 20120929, Bauke: only allow a redirect from our server when the user was logged in!!
+		finishLogoutActions(response, sResultCode, (htTGTContext!=null)? sLogoutReturnUrl: null);
 	}
 
 	/* (non-Javadoc)

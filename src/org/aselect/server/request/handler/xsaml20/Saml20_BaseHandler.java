@@ -316,18 +316,6 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 		}
 	}
 
-	/**
-	 * Process logout request. <br>
-	 * 
-	 * @throws ASelectException
-	 *             If processing of logout request fails.
-	 */
-	// public abstract RequestState process(HttpServletRequest request, HttpServletResponse response)
-	// throws ASelectException;
-	/*
-	 * { String sMethod = "process()"; return null; }
-	 */
-
 	@Override
 	public void destroy()
 	{
