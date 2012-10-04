@@ -2188,15 +2188,23 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			if (sRemoteAsUrl == null) {  // 20120809, Bauke: added
 				sRemoteAsUrl = (String)htServiceRequest.get("logout_return_url");
 			}
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR "+
-					((sRemoteAsUrl!=null)? URLDecoder.decode(sRemoteAsUrl, "UTF-8"): "null")+" _sMyOrg="+_sMyOrg);
 			
 			// 20120929, Bauke: only allow a redirect from our server when the user was logged in!!
+			//
+			// Also expect: logout_return_url=http:/www.google.com%2f%0aSet-Cookie%3a+my_cookie%3d%22hello%22%3b
+			// but we want to allow: url's with & or ? in them
 			if (sRemoteAsUrl != null && _htTGTContext != null) {
 				Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
-				// no RID: _sessionManager.update(sRid, _htSessionContext); // Write session
+				
+				sRemoteAsUrl = URLDecoder.decode(sRemoteAsUrl, "UTF-8");
+				int idx = sRemoteAsUrl.indexOf("\r");
+				if (idx > 0) sRemoteAsUrl = sRemoteAsUrl.substring(0, idx);
+				idx = sRemoteAsUrl.indexOf("\n");
+				if (idx > 0) sRemoteAsUrl = sRemoteAsUrl.substring(0, idx);
+				
 				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
-				servletResponse.sendRedirect(URLDecoder.decode(sRemoteAsUrl, "UTF-8"));
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR "+sRemoteAsUrl+" _sMyOrg="+_sMyOrg);
+				servletResponse.sendRedirect(sRemoteAsUrl);  // cannot have urlencoded stuff inside
 				return;
 			}
 
