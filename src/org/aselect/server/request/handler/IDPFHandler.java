@@ -62,6 +62,8 @@ public class IDPFHandler extends ProtoRequestHandler
 	
 	private String _sPostTemplate = null;
 	private String secretKey = null;
+	// if we want to use other signing key than de default privatekey
+	private String authsp4Signing = null;
 
 	/* @param oServletConfig
 	 *            the o servlet config
@@ -175,6 +177,13 @@ public class IDPFHandler extends ProtoRequestHandler
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'secretkey' found", e);
 			}
 
+			try {
+				setAuthsp4Signing(_configManager.getParam(oConfig, "authsp4signing"));
+			}
+			catch (ASelectConfigException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'authsp4signing' found", e);
+			}
+			
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -399,8 +408,8 @@ public class IDPFHandler extends ProtoRequestHandler
 		String b = formatter.format(new Date());	// generate currenttime in format "yyyy-MM-dd HH:mm:ss"
 		String c = userSelectedClaimedId;
 		String d = a + "," + b + "," + c;
-		String ssoCredentials = generateInlogindicatie(d, getSecretKey());
-		String sInputs = buildHtmlInput("ssoCredentials",  ssoCredentials);	// todo call the 3des encode
+		String ssoCredentials = generateInlogindicatie(d, getSecretKey(), getAuthsp4Signing());
+		String sInputs = buildHtmlInput("ssoCredentials",  ssoCredentials);
 		return sInputs;
 	}
 
@@ -483,12 +492,16 @@ public class IDPFHandler extends ProtoRequestHandler
 		return finalResult;
 	}
 
+	public String generateInlogindicatie(String d, String secretKey) throws ASelectException {
+		return generateInlogindicatie(d, secretKey, null);
+	}
 	
 
-	public String generateInlogindicatie(String d, String secretKey) throws ASelectException {
+		public String generateInlogindicatie(String d, String secretKey, String authsp4singing) throws ASelectException {
 
 		CryptoEngine c = CryptoEngine.getHandle();
-		String signature = c.generateSignature(null, d);
+//		String signature = c.generateSignature(null, d);
+		String signature = c.generateSignature(authsp4singing, d);
 		String inlogindicatie = c.generate3DES( d + "," + signature, secretKey );
 
 		return inlogindicatie;
@@ -550,6 +563,16 @@ public class IDPFHandler extends ProtoRequestHandler
 	public void setSecretKey(String secretKey)
 	{
 		this.secretKey = secretKey;
+	}
+
+	public synchronized String getAuthsp4Signing()
+	{
+		return authsp4Signing;
+	}
+
+	public synchronized void setAuthsp4Signing(String authsp4Signing)
+	{
+		this.authsp4Signing = authsp4Signing;
 	}
 
 }

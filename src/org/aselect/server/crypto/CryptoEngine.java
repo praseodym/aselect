@@ -566,6 +566,7 @@ public class CryptoEngine
 				sAuthsp = sAuthsp.toLowerCase();
 
 				oPrivateKey = (PrivateKey) _htAuthspSettings.get(sAuthsp + ".specific_private_key");
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Specific private key " + (oPrivateKey == null ? "NOT" : "") + " found for: "+ sAuthsp);
 			}
 			if (oPrivateKey == null)
 				oPrivateKey = _defaultPrivateKey;
