@@ -2198,9 +2198,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				
 				sRemoteAsUrl = URLDecoder.decode(sRemoteAsUrl, "UTF-8");
 				int idx = sRemoteAsUrl.indexOf("\r");
-				if (idx > 0) sRemoteAsUrl = sRemoteAsUrl.substring(0, idx);
+				if (idx >= 0) sRemoteAsUrl = sRemoteAsUrl.substring(0, idx);
 				idx = sRemoteAsUrl.indexOf("\n");
-				if (idx > 0) sRemoteAsUrl = sRemoteAsUrl.substring(0, idx);
+				if (idx >= 0) sRemoteAsUrl = sRemoteAsUrl.substring(0, idx);
 				
 				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR "+sRemoteAsUrl+" _sMyOrg="+_sMyOrg);

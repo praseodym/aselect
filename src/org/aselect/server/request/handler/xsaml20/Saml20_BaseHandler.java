@@ -268,22 +268,27 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 	 *            the http response
 	 * @param resultCode
 	 *            the result code
-	 * @param sReturnUrl
-	 *            the s return url
+	 * @param sLogoutReturnUrl
+	 *            the return url
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	protected void finishLogoutActions(HttpServletResponse httpResponse, String resultCode, String sReturnUrl)
+	protected void finishLogoutActions(HttpServletResponse httpResponse, String resultCode, String sLogoutReturnUrl)
 	throws ASelectException
 	{
 		String sMethod = "finishLogoutActions";
 		String sLogoutResultPage = "";
 
 		// And inform the caller or user
-		if (sReturnUrl != null && !"".equals(sReturnUrl)) {
+		if (Utils.hasValue(sLogoutReturnUrl)) {
+			int idx = sLogoutReturnUrl.indexOf("\r");
+			if (idx >= 0) sLogoutReturnUrl = sLogoutReturnUrl.substring(0, idx);
+			idx = sLogoutReturnUrl.indexOf("\n");
+			if (idx >= 0) sLogoutReturnUrl = sLogoutReturnUrl.substring(0, idx);
+			
 			// Redirect to the "RelayState" url
-			String sAmpQuest = (sReturnUrl.indexOf('?') >= 0) ? "&" : "?";
-			String url = sReturnUrl + sAmpQuest + "result_code=" + resultCode;
+			String sAmpQuest = (sLogoutReturnUrl.indexOf('?') >= 0) ? "&" : "?";
+			String url = sLogoutReturnUrl + sAmpQuest + "result_code=" + resultCode;
 			try {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + url);
 				httpResponse.sendRedirect(url);
