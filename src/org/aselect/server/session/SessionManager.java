@@ -503,7 +503,7 @@ public class SessionManager extends StorageManager
 		String sMethod = "finalSessionProcessing";
 		
 		if (htSessionContext == null) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Final NO Session OOPS!");  // may be legal
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Final NO Session!");  // may be legal
 			return;
 		}
 		String sStatus = (String)htSessionContext.get("status");

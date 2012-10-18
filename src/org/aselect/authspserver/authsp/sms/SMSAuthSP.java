@@ -642,7 +642,6 @@ public class SMSAuthSP extends AbstractAuthSP
 			
 			if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sPassword == null) || (sAsId == null)
 					|| (sRetryCounter == null) || (sSignature == null)) {
-//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: one or more mandatory parameters missing.");
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: one or more mandatory parameters missing, handling error locally.");
 				failureHandling = "local";	// RH, 20111021, n
 				throw new ASelectException(Errors.ERROR_SMS_INVALID_REQUEST);
@@ -773,8 +772,9 @@ public class SMSAuthSP extends AbstractAuthSP
 							htServiceRequest.put("language", sLanguage);
 						// show authentication form once again with warning message
 
-						showAuthenticateForm(pwOut, Errors.ERROR_SMS_INVALID_PASSWORD, _configManager.getErrorMessage(
-								Errors.ERROR_SMS_INVALID_PASSWORD, _oErrorProperties), htServiceRequest);
+						showAuthenticateForm(pwOut, Errors.ERROR_SMS_INVALID_PASSWORD, 
+								_configManager.getErrorMessage(Errors.ERROR_SMS_INVALID_PASSWORD, _oErrorProperties),
+								htServiceRequest);
 					}
 					else { // authenticate failed
 						_authenticationLogger.log(new Object[] {
@@ -863,7 +863,7 @@ public class SMSAuthSP extends AbstractAuthSP
 				sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[requestor_friendly_name]", URLDecoder.decode(sFriendlyName, "UTF-8"));
 			}
 			catch (UnsupportedEncodingException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "UTF-8 dencoding not supported, using undecoded", e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "UTF-8 encoding not supported, using undecoded", e);
 				sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[requestor_friendly_name]", sFriendlyName);
 			}
 		}
@@ -891,7 +891,7 @@ public class SMSAuthSP extends AbstractAuthSP
 		String sSpecials = Utils.getAselectSpecials(htServiceRequest, true/*decode too*/, _systemLogger);
 		sAuthenticateForm = Utils.handleAllConditionals(sAuthenticateForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Show Form");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Show Form: "+_sAuthenticateHtmlTemplate);
 		pwOut.println(sAuthenticateForm);
 	}
 
