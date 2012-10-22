@@ -1152,7 +1152,8 @@ static int aselect_filter_handler(request_rec *pRequest)
 		if ((pcRID = aselect_filter_get_param(pPool, pcResponseAU, "rid=", "&", TRUE))) {
 		    if ((pcASelectServer = aselect_filter_get_param(pPool, pcResponseAU, "a-select-server=", "&", TRUE))) {
 			if ((pcASUrl = aselect_filter_get_param(pPool, pcResponseAU, "as_url=", "&", TRUE))) {
-			    iRet = aselect_filter_gen_top_redirect(pPool, addedSecurity, pRequest, pcASUrl, pcASelectServer, pcRID);
+			    iRet = aselect_filter_gen_top_redirect(pPool, addedSecurity, pRequest, pcASUrl,
+									pcASelectServer, pcRID, pConfig->pCurrentApp->pcLocation);
 			}
 			else {
 			    iError = ASELECT_FILTER_ERROR_AGENT_RESPONSE;

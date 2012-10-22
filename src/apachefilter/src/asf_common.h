@@ -279,7 +279,8 @@ int         aselect_filter_url_decode(char *pszValue);
 void        aselect_filter_add_nocache_headers(table *headers_out);
 int         aselect_filter_gen_error_page(pool *pPool, request_rec *pRequest, int iError, char *pcErrorTemplate);
 int         aselect_filter_gen_authcomplete_redirect(pool *pPool, request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig); 
-int aselect_filter_gen_top_redirect(pool *pPool, char *addedSecurity, request_rec *pRequest, char *pcASUrl, char *pcASelectServer, char *pcRID);
+int aselect_filter_gen_top_redirect(pool *pPool, char *addedSecurity, request_rec *pRequest, char *pcASUrl,
+			char *pcASelectServer, char *pcRID, char *cookiePath);
 int XXXaselect_filter_verify_directory(pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcUri);
 int XXXaselect_filter_is_public_app(pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcUri);
 char *aselect_filter_get_cookie(pool *pPool, table *headers_in, char *pcAttribute );

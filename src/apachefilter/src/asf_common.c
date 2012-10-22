@@ -696,22 +696,22 @@ int aselect_filter_gen_authcomplete_redirect(pool * pPool, request_rec *pRequest
 //
 // Set top frame to redirect to a-select-server
 //
-int aselect_filter_gen_top_redirect(pool *pPool, char *addedSecurity, request_rec *pRequest, char *pcASUrl, char *pcASelectServer, char *pcRID)
+int aselect_filter_gen_top_redirect(pool *pPool, char *addedSecurity, request_rec *pRequest, char *pcASUrl, char *pcASelectServer, char *pcRID, char *cookiePath)
 {
     table   *headers_out = pRequest->headers_out;
     char    *pcRedirectURL;
     char    *pcASelectServerURL;
     char    *pcCookie;
 
-    TRACE3("aselect_filter_gen_top_redirect::\"%s\",\"%s\",\"%s\"", pcASUrl, pcASelectServer, pcRID); 
+    TRACE4("aselect_filter_gen_top_redirect::%s-%s-%s-%s.", pcASUrl, pcASelectServer, pcRID, cookiePath); 
     pRequest->content_type = "text/html";
 
     //
     // save the aselect-server-url parameter which is need to kill the ticket
     // but first strip any parameters from the url
-    //
+    // Cookie path should be: pConfig->pCurrentApp->pcLocation
     pcASelectServerURL = aselect_filter_strip_param(pPool, pcASUrl);
-    pcCookie = ap_psprintf(pPool, "aselectserverurl=%s; version=1; path=/;%s", pcASelectServerURL, addedSecurity);
+    pcCookie = ap_psprintf(pPool, "aselectserverurl=%s; version=1; path=%s;%s", pcASelectServerURL, cookiePath, addedSecurity);
     ap_table_add(headers_out, "Set-Cookie", pcCookie);
     TRACE1("Set-Cookie: %s", pcCookie);
 
