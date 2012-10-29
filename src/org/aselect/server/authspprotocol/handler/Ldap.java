@@ -584,7 +584,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	 */
 	// 20120403, Bauke: added htSessionContext to save on session reads
 	public boolean handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, HashMap htSessionContext,
-			PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
+			HashMap htAdditional, PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
 	throws ASelectException
 	{
 		String sMethod = "handleDirectLoginRequest";
@@ -599,7 +599,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			return true;
 		}
 		else if (sRequest.equalsIgnoreCase("direct_login2")) {
-			return handleDirectLogin2(htServiceRequest, servletResponse, htSessionContext, pwOut, sServerId);
+			return handleDirectLogin2(htServiceRequest, servletResponse, htSessionContext, htAdditional, pwOut, sServerId);
 		}
 		else {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request :'" + sRequest + "'");
@@ -624,13 +624,13 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	 * - <br>
 	 * 
 	 * @param htServiceRequest
-	 *            the ht service request
+	 *            the service request
 	 * @param pwOut
 	 *            the pw out
 	 * @param sServerId
-	 *            the s server id
+	 *            the server id
 	 * @throws ASelectException
-	 *             the a select exception
+	 *             the aselect exception
 	 */
 	private void handleDirectLogin1(HashMap htServiceRequest, HashMap htSessionContext, PrintWriter pwOut, String sServerId)
 	throws ASelectException
@@ -673,7 +673,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	 * @throws ASelectException
 	 */
 	private boolean handleDirectLogin2(HashMap htServiceRequest, HttpServletResponse servletResponse, HashMap htSessionContext,
-										PrintWriter pwOut, String sServerId)
+									HashMap htAdditional, PrintWriter pwOut, String sServerId)
 	throws ASelectException
 	{
 		String sMethod = "handleDirectLogin2";
@@ -793,7 +793,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				htSessionContext.put("sel_level", intAuthSPLevel.toString());  // equal to authsp_level in this case
 				htSessionContext.put("authsp_type", "ldap");
 
-				String next_authsp = _authSPHandlerManager.getNextAuthSP(sAuthSPId, app_id);;
+				String next_authsp = _authSPHandlerManager.getNextAuthSP(sAuthSPId, app_id);
 				if (next_authsp != null) {
 					htSessionContext.remove("direct_authsp");	// No other direct_authsp's yet
 					htSessionContext.put("forced_authsp", next_authsp);
@@ -816,7 +816,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				
 				TGTIssuer tgtIssuer = new TGTIssuer(sServerId);
 				String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
-				String sTgt = tgtIssuer.issueTGTandRedirect(sRid, htSessionContext, sAuthSPId, null, servletResponse, sOldTGT, false /* no redirect */);
+				String sTgt = tgtIssuer.issueTGTandRedirect(sRid, htSessionContext, sAuthSPId, htAdditional, servletResponse, sOldTGT, false /* no redirect */);
 				// Cookie was set on the 'servletResponse'
 
 				// The next user redirect will set the TGT cookie, the "nextauthsp" form below will also set the cookie

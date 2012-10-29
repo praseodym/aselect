@@ -246,7 +246,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	{
 		String sMethod = "handleSpecificSaml20Request " + Thread.currentThread().getId();
 		AuthnRequest authnRequest = (AuthnRequest) samlMessage;
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "PathInfo="+httpRequest.getPathInfo());
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "PathInfo="+httpRequest.getPathInfo()+" language="+httpRequest.getParameter("language"));
 
 		try {
 			Response errorResponse = validateAuthnRequest(authnRequest, httpRequest.getRequestURL().toString());
@@ -298,6 +298,10 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			if (sRelayState != null) {
 				_htSessionContext.put("RelayState", sRelayState);
 			}
+			// 20121029, Bauke, language bug solved.
+			String sLanguage = httpRequest.getParameter("language");
+			if (Utils.hasValue(sLanguage))
+				_htSessionContext.put("language", sLanguage);
 			_htSessionContext.put("sp_rid", sSPRid);
 			_htSessionContext.put("sp_issuer", sIssuer);
 			_htSessionContext.put("sp_assert_url", sAssertionConsumerServiceURL);

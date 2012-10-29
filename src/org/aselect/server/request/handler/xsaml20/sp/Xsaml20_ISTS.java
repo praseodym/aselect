@@ -505,7 +505,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				Endpoint samlEndpoint = endpointBuilder.buildObject();
 				samlEndpoint.setLocation(sDestination);
 				samlEndpoint.setResponseLocation(sMyUrl);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "EndPoint="+samlEndpoint+" Destination="+sDestination);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "GET EndPoint="+samlEndpoint+" Destination="+sDestination);
 				
 				//HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response, sDestination);
 				HttpServletResponseAdapter outTransport = new HttpServletResponseAdapter(response,

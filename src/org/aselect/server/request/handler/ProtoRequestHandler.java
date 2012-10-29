@@ -687,7 +687,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	{
 		String sMethod = "handlePostForm";
 		PrintWriter pwOut = null;
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "POST Form: Action=" + sAction);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "POST FORM: Action=" + sAction);
 
 		try {
 			sTemplate = Utils.replaceString(sTemplate, "[form_action]", sAction);
@@ -863,7 +863,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 
 		// Also return the rid used in a cookie
 		String sCookieDomain = _configManager.getCookieDomain();
-		HandlerTools.putCookieValue(response, sPrefix+"rid", sRid, sCookieDomain, null, -1, _systemLogger);
+		HandlerTools.putCookieValue(response, sPrefix+"rid", sRid, sCookieDomain, null, -1, 1/*httpOnly*/, _systemLogger);
 		return htSessionContext;
 	}
 
@@ -1147,6 +1147,10 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		// create cookie if single sign-on is enabled
 		if (_configManager.isSingleSignOn()) {
 			TGTIssuer tgtIssuer = new TGTIssuer(sServerId);
+			String sIdent = (String)htTGTContext.get("udb_user_ident");
+			if (Utils.hasValue(sIdent)) {
+				tgtIssuer.setUdbIdentCookie(sIdent, response);
+			}
 			tgtIssuer.setASelectCookie(sTgt, sUserId, response);
 		}
 		return sTgt;

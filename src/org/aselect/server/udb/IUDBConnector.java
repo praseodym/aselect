@@ -120,9 +120,6 @@ public interface IUDBConnector
 	 * <b>Description:</b> <br>
 	 * Returns the value for A-Select enabled for the given user. <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br>
-	 * - <br>
-	 * <br>
 	 * <b>Preconditions:</b> <br>
 	 * <code>sUserId != null</code> <br>
 	 * <br>
@@ -131,11 +128,13 @@ public interface IUDBConnector
 	 * 
 	 * @param sUserId
 	 *            the user to check.
-	 * @return <code>true</code> if user is A-Select enabled, otherwise </code>false</code>.
+	 * @param hmInfo
+	 *            returning user info
+	 * @return .
 	 * @throws ASelectUDBException
 	 *             If retrieving information from UDB fails.
 	 */
-	public boolean isUserEnabled(String sUserId)
+	public boolean isUserEnabled(String sUserId, HashMap<String, String> hmInfo)
 	throws ASelectUDBException;
 
 	/**

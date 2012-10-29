@@ -529,7 +529,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT to (sms_correction_facility): " + _sCorrectionFacility);
 		String sAppUrl = (String) htSessionContext.get("app_url");
 		HandlerTools.putCookieValue(servletResponse, _sCookiePrefix+"ApplicationUrl", sAppUrl,
-									_sCookieDomain, "/",  600/*seconds*/, _systemLogger);
+									_sCookieDomain, "/",  600/*seconds*/, 1/*httpOnly*/, _systemLogger);
 		servletResponse.sendRedirect(_sCorrectionFacility);
 	}
 }

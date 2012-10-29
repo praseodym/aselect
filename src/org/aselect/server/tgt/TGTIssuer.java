@@ -160,8 +160,10 @@ import org.aselect.server.session.SessionManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.BASE64Encoder;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
+import org.bouncycastle.util.encoders.Base64Encoder;
 
 /**
  * Issues ASelect TGT's. <br>
@@ -407,8 +409,14 @@ public class TGTIssuer
 
 				// Create cookie if single sign-on is enabled
 				// 20090617, Bauke: not for forced_authenticate
-				if (!bForcedAuthn && _configManager.isSingleSignOn())
+				if (!bForcedAuthn && _configManager.isSingleSignOn()) {
+					// 20121024, Bauke: added udb_user_ident mechanism
+					String sIdent = (String)htTGTContext.get("udb_user_ident");
+					if (Utils.hasValue(sIdent)) {
+						setUdbIdentCookie(sIdent, oHttpServletResponse);
+					}
 					setASelectCookie(sTgt, sUserId, oHttpServletResponse);
+				}
 			}
 
 			// A tgt was just issued, report sensor data
@@ -667,8 +675,14 @@ public class TGTIssuer
 
 				// Create cookie if single sign-on is enabled
 				// 20090617, Bauke: but not for forced_authenticate
-				if (!bForcedAuthn && _configManager.isSingleSignOn())
+				if (!bForcedAuthn && _configManager.isSingleSignOn()) {
+					// 20121024, Bauke: added udb_user_ident mechanism
+					String sIdent = (String)htTGTContext.get("udb_user_ident");
+					if (Utils.hasValue(sIdent)) {
+						setUdbIdentCookie(sIdent, oHttpServletResponse);
+					}
 					setASelectCookie(sTgt, sUserId, oHttpServletResponse);
+				}
 			}
 			else { // Update the old TGT
 				_tgtManager.updateTGT(sOldTGT, htTGTContext);
@@ -962,10 +976,26 @@ public class TGTIssuer
 			 */
 			// Bauke 20080617 only store tgt value from now on
 			String sCookieDomain = _configManager.getCookieDomain();
-			HandlerTools.putCookieValue(oHttpServletResponse, "aselect_credentials", sTgt, sCookieDomain, null, -1, _systemLogger);
+			HandlerTools.putCookieValue(oHttpServletResponse, "aselect_credentials", sTgt, sCookieDomain, null, -1, 1/*httpOnly*/, _systemLogger);
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not create an A-Select cookie for user: " + sUserId, e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+		}
+	}
+	
+	public void setUdbIdentCookie(String sIdent, HttpServletResponse oHttpServletResponse)
+	throws ASelectException
+	{
+		String sMethod = "setIdentCookie";
+		try {
+			String sCookieDomain = _configManager.getCookieDomain();
+			BASE64Encoder enc = new BASE64Encoder();
+			sIdent = enc.encode(sIdent.getBytes("UTF-8"));
+			HandlerTools.putCookieValue(oHttpServletResponse, "ssoname", sIdent, sCookieDomain, "/", -1, 0/*httpOnly*/, _systemLogger);
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not create UserIdent cookie for user: " + sIdent, e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 	}

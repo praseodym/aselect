@@ -323,7 +323,7 @@ public abstract class BasicRequestHandler
 	 * @throws ASelectException
 	 * @throws ASelectUDBException
 	 */
-	protected boolean isUserAselectEnabled(String sUID)
+	protected boolean isUserAselectEnabled(String sUID, HashMap<String, String> hmReturnInfo)
 	throws ASelectException, ASelectUDBException
 	{
 		String sMethod = "isUserAselectEnabled";
@@ -337,7 +337,8 @@ public abstract class BasicRequestHandler
 			throw e;
 		}
 
-		if (!oUDBConnector.isUserEnabled(sUID)) {
+		// 20121024, Bauke: added udb_user_ident mechanism
+		if (!oUDBConnector.isUserEnabled(sUID, hmReturnInfo)) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unknown user id or user account is not enabled.");
 			return false;
 		}

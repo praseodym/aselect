@@ -112,8 +112,9 @@ public interface IAuthSPDirectLoginProtocolHandler
 	 * @throws ASelectException
 	 */
 	// 20120403, Bauke: added htSessionContext to save on session reads
+	// 20121025, Bauke: added htAdditional to allow for attribute additions (e.g. udb_user_ident)
 	public boolean handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, HashMap htSessionContext,
-			PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
+			HashMap htAdditional, PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
 	throws ASelectException;
 
 }

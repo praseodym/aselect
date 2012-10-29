@@ -529,23 +529,25 @@ public class SASDBConnector implements IUDBConnector
 	 * <br>
 	 * 
 	 * @param sUserId
-	 *            the s user id
+	 *            the user id
+	 * @param hmInfo
+	 *            the resulting user info
 	 * @return true, if checks if is user enabled
 	 * @throws ASelectUDBException
 	 *             If database fails.
-	 * @see org.aselect.server.udb.IUDBConnector#isUserEnabled(java.lang.String)
+	 * @see org.aselect.server.udb.IUDBConnector#isUserEnabled()
 	 */
-	public boolean isUserEnabled(String sUserId)
+	public boolean isUserEnabled(String sUserId, HashMap<String, String> hmInfo)
 	throws ASelectUDBException
 	{
-		String sMethod = "isUserEnabled()";
+		String sMethod = "isUserEnabled";
 
 		boolean bEnabled = false;
 
 		try {
 			// Try to find the user in the "normal" UDB first
 			if (_oIUDBConnector != null) {
-				bEnabled = _oIUDBConnector.isUserEnabled(sUserId);
+				bEnabled = _oIUDBConnector.isUserEnabled(sUserId, hmInfo);
 			}
 
 			if (!bEnabled) {

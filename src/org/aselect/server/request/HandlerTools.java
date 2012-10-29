@@ -76,13 +76,15 @@ public class HandlerTools
 	 *            the cookie value
 	 * @param sCookieDomain
 	 *            the cookie domain
+	 * @param sCookiePath
+	 *            the cookie path
 	 * @param iAge
 	 *            the age
 	 * @param logger
 	 *            the logger
 	 */
 	public static void putCookieValue(HttpServletResponse response, String sCookieName, String sCookieValue,
-			String sCookieDomain, String sCookiePath, int iAge, ASelectSystemLogger logger)
+			String sCookieDomain, String sCookiePath, int iAge, int httpOnly, ASelectSystemLogger logger)
 	{
 		String sMethod = "putCookieValue";
 		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
@@ -100,11 +102,16 @@ public class HandlerTools
 		if (iAge >= 0)
 			sValue += "; Max-Age=" + iAge;
 
-		if (addedSecurity != null && addedSecurity.contains("cookies"))
-			sValue += "; Secure; HttpOnly";
-
+		sValue += "; Secure";
+		if (addedSecurity != null && addedSecurity.contains("cookies")) {
+			if (httpOnly == 1)
+				sValue += "; HttpOnly";
+		}
 		logger.log(Level.INFO, MODULE, sMethod, "Add Cookie, Header: " + sValue);
-		response.setHeader("Set-Cookie", sValue);
+		
+		//response.setHeader("Set-Cookie", sValue);
+		// 20121029, Bauke: It must be possible to have multiple "Set-Cookie" headers! Therefore use addHeader().
+		response.addHeader("Set-Cookie", sValue);
 	}
 
 	/**
@@ -126,12 +133,12 @@ public class HandlerTools
 		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
 		String sCookiePath = _configManager.getCookiePath();
 
-		Cookie cookie = new Cookie(sCookieName, "i am invisible");
+		Cookie cookie = new Cookie(sCookieName, "_deleted_");
 		if (sCookieDomain != null)
 			cookie.setDomain(sCookieDomain);
 		cookie.setPath(sCookiePath); // was: "/aselectserver/server");
 		cookie.setMaxAge(0);
-		logger.log(Level.INFO, MODULE, sMethod, "Delete Cookie=" + sCookieName + " Domain=" + sCookieDomain);
+		logger.log(Level.INFO, MODULE, sMethod, "Delete Cookie="+sCookieName+" Domain="+sCookieDomain+" Path="+sCookiePath);
 		response.addCookie(cookie);
 	}
 
@@ -157,7 +164,7 @@ public class HandlerTools
 		for (int i = 0; i < oCookie.length; i++) {
 			String sCookieName = oCookie[i].getName();
 			if (logger != null) { // allow for null logger
-				logger.log(Level.INFO, MODULE, sMethod, "Try " + sCookieName);
+				logger.log(Level.INFO, MODULE, sMethod, "Get "+sName+" try="+sCookieName);
 			}
 			if (sCookieName.equals(sName)) {
 				String sCookieValue = oCookie[i].getValue();

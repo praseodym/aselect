@@ -317,6 +317,7 @@ import org.aselect.server.config.Version;
 import org.aselect.server.cross.CrossASelectManager;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectAuthenticationLogger;
+import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.handler.aselect.ASelectAuthenticationProfile;
 import org.aselect.server.request.handler.xsaml20.ServiceProvider;
@@ -706,6 +707,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	{
 		String sMethod = "handleDirectLogin";
 		String sRid = null;
+		// 20121024, Bauke: added udb_user_ident mechanism
+		HashMap<String, String> hmUserIdent = new HashMap<String, String>();
 
 		String sRequest = (String) htServiceRequest.get("request");
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "request="+sRequest+" htServReq="+htServiceRequest);
@@ -870,7 +873,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						return;
 					}
 					if ("direct_login2".equals(sRequest)) {
-						if (!isUserAselectEnabled(sUid)) {  // Check the UDB using the "AselectAccountEnabled" field
+						if (!isUserAselectEnabled(sUid, hmUserIdent)) {  // Check the UDB using the "AselectAccountEnabled" field
 							htServiceRequest.put("password", "");  // Force error message in handleDirectLoginRequest()
 						}
 					}
@@ -879,7 +882,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					htServiceRequest.put("user_id", sUid);
 					// showDirectLoginForm(htServiceRequest,pwOut);
 					oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, _htSessionContext,
-								pwOut, _sMyServerId, _sUserLanguage, _sUserCountry);
+									hmUserIdent, pwOut, _sMyServerId, _sUserLanguage, _sUserCountry);
+					_systemLogger.log(Level.FINE, _sModule, sMethod, "DirectLoginRequest handled (TGT)");
 					return;
 				}
 			}
@@ -896,14 +900,15 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 			if ("direct_login2".equals(sRequest)) {
 				String sUid = (String) htServiceRequest.get("user_id");
-				if (!isUserAselectEnabled(sUid)) {  // Check the UDB using the "AselectAccountEnabled" field
+				if (!isUserAselectEnabled(sUid, hmUserIdent)) {  // Check the UDB using the "AselectAccountEnabled" field
 					htServiceRequest.put("password", "");  // Force error message in handleDirectLoginRequest()
 				}
 			}
 			
 			// Will issue a TGT if everything is ok
 			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, _htSessionContext,
-								pwOut, _sMyServerId, _sUserLanguage, _sUserCountry);
+									hmUserIdent, pwOut, _sMyServerId, _sUserLanguage, _sUserCountry);
+			_systemLogger.log(Level.FINE, _sModule, sMethod, "DirectLoginRequest handled (no TGT)");
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -1328,7 +1333,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				// Remember the user's answer by setting a Consent Cookie
 				String sCookieDomain = _configManager.getCookieDomain();
 				HandlerTools.putCookieValue(servletResponse, COOKIE_NAME, "true",
-						sCookieDomain, null, 157680101/*5 years*/, _systemLogger);
+						sCookieDomain, null, 157680101/*5 years*/, 1/*httpOnly*/, _systemLogger);
 			}
 			return true;
 		}
@@ -2152,7 +2157,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// HashMap _htTGTContext = _tgtManager.getTGT(sTgt);
 
 			String sCookieDomain = _configManager.getCookieDomain();
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "domain="+sCookieDomain);
 			HandlerTools.delCookieValue(servletResponse, "aselect_credentials", sCookieDomain, _systemLogger);
+			HandlerTools.delCookieValue(servletResponse, "ssoname", sCookieDomain, _systemLogger);
 			
 			if (_htTGTContext != null) {
 				// 20120611, Bauke: added "usi"
@@ -2306,7 +2313,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST, eNF);
 			}
 
-			isUserAselectEnabled(sUID);  // Check the UDB using the "AselectAccountEnabled" field
+			// 20121024, Bauke: added udb_user_ident mechanism
+			HashMap<String, String> hmUserIdent = new HashMap<String, String>();
+			isUserAselectEnabled(sUID, hmUserIdent);  // Check the UDB using the "AselectAccountEnabled" field
 
 			// Extend session context
 			_htSessionContext.put("user_id", sUID);  // 20101027 use _ht...
@@ -2321,7 +2330,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Issue TGT
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-			tgtIssuer.issueTGTandRedirect(sRid, _htSessionContext, sPrivilegedApplication, null, servletResponse, null, true/*redirect*/);
+			tgtIssuer.issueTGTandRedirect(sRid, _htSessionContext, sPrivilegedApplication, hmUserIdent/*additional*/, servletResponse, null, true/*redirect*/);
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -2755,12 +2764,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			if (sForcedUid != null)
 				_htSessionContext.put("fixed_uid", sForcedUid);
 
-			//Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-			//if (!_sessionManager.updateSession(sRid, _htSessionContext)) {
-			//	_systemLogger.log(Level.WARNING, _sModule, sMethod,
-			//			"Invalid request received: could not update session.");
-			//	throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_SESSION);
-			//}
 			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 			
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "htSessionContext=" + _htSessionContext);
@@ -2834,10 +2837,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		hmRequest.put("app_id", sAppId);
 		hmRequest.put("a-select-server", _sMyServerId);
 		hmRequest.put("app_url", "login_token");
-		
-		
 		hmRequest.put("shared_secret", sSharedSecret);
-		
 		
 		if ( sSigningRequired) {	// not defensive because of backward compatibility
 			hmRequest.put("check-signature", "true");
@@ -2861,18 +2861,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "} AUTHN htResponse=" + hmResponse);
 
-		// Check the UDB using the "AselectAccountEnabled" field
-		//if (!isUserAselectEnabled(sUid)) {
-		//	servletResponse.setStatus(401);
-		//	pwOut.append("<html><head><title>"+sStatus+"</title></head><body><h1>"+sStatus+"</h1></body></html>");
-		//	pwOut.close();
-		//	return;
-		//}
-
 		// Retrieve the session just created
 		String sRid = (String)hmResponse.get("rid");
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Supplied rid=" + sRid);
-		//_htSessionContext = _sessionManager.getSessionContext(sRid);
+
 		// The session was created by handleAuthenticateAndCreateSession()
 		_htSessionContext = (HashMap)hmResponse.get("session");  // 20120404, Bauke: was getSessionContext(sRid)
 		if (_htSessionContext == null) {
@@ -2882,8 +2874,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		_htSessionContext.put("organization", _sMyOrg);
 		_htSessionContext.put("client_ip", "login_token");
 		
-		//Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-		//_sessionManager.updateSession(sRid, _htSessionContext); // store too (545)
 		_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 		
 		// Check login user and password
@@ -2896,8 +2886,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		// Only perform user/password authentication (will update the session):
 		IAuthSPDirectLoginProtocolHandler oProtocolHandler = _authspHandlerManager.getAuthSPDirectLoginProtocolHandler(sAuthSp);
 		_systemLogger.log(Level.FINE, MODULE, sMethod, "HttpSR="+servletResponse);
-		boolean bSuccess = oProtocolHandler.handleDirectLoginRequest(hmDirectRequest, null /*servlet response*/, _htSessionContext,
-											null /*output writer*/, _sMyServerId, "en", "nl");
+		boolean bSuccess = oProtocolHandler.handleDirectLoginRequest(hmDirectRequest, null /*servlet response*/,
+					_htSessionContext, null/*additional*/, null /*output writer*/, _sMyServerId, "en", "nl");
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Success="+bSuccess+" hm="+hmDirectRequest);
 		
 		// Pass result in the header, but only if successful
@@ -2921,9 +2911,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
 			HashMap<String, Object> htAttribs = oAttributeGatherer.gatherAttributes(hmContext);
 			
-			
-			
-			
 			// Return Saml 20 token
 			String subject = sRid.toString(); // transientID, elsewhere the TGT value is used
 			
@@ -2934,41 +2921,42 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			if ("saml".equalsIgnoreCase(sOutputFormat)) {
 				sResponse = sResult;
-			} else if ("samlhtml".equalsIgnoreCase(sOutputFormat)) {
+			}
+			else if ("samlhtml".equalsIgnoreCase(sOutputFormat)) {
 				sResponse = StringEscapeUtils.escapeHtml(sResult);
-			} else if ("cgi".equalsIgnoreCase(sOutputFormat)) {
+			}
+			else if ("cgi".equalsIgnoreCase(sOutputFormat)) {
 				sResponse =  org.aselect.server.utils.Utils.serializeAttributes(htAttribs);
 				BASE64Decoder b64dec = new BASE64Decoder();
 				sResponse = new String(b64dec.decodeBuffer(sResponse));
-			} else if ("cgibase64".equalsIgnoreCase(sOutputFormat)) {
+			}
+			else if ("cgibase64".equalsIgnoreCase(sOutputFormat)) {
 				sResponse =  org.aselect.server.utils.Utils.serializeAttributes(htAttribs);
-			} else { // backward compatibility
+			}
+			else {
+				// backward compatibility
 				sResponse = "<html><head><title>"+sStatus+"</title></head><body><h1>"+sStatus+"</h1></body></html>";
-
-			
-			try {
-				BASE64Encoder b64enc = new BASE64Encoder();
-				sResult = b64enc.encode(sResult.getBytes("UTF-8"));
+				try {
+					BASE64Encoder b64enc = new BASE64Encoder();
+					sResult = b64enc.encode(sResult.getBytes("UTF-8"));
+				}
+				catch (UnsupportedEncodingException e) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
+					throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+				}
+				
+				// Set headers, split in chunks
+				for (int i=1; ; i++) {
+					int len = sResult.length();
+					int hdrLen = (len <= SPLIT_HEADER)? len: SPLIT_HEADER;
+					_systemLogger.log(Level.FINE, MODULE, sMethod, "i="+i+" len="+len+" hdrLen="+hdrLen);
+					servletResponse.setHeader("X-saml-attribute-token"+Integer.toString(i), sResult.substring(0, hdrLen));
+					// pwOut.flush() at this point will only set the first header 
+					if (len <= SPLIT_HEADER)
+						break;
+					sResult = sResult.substring(SPLIT_HEADER);
+				}
 			}
-			catch (UnsupportedEncodingException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
-				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-			}
-			
-			// Set headers, split in chunks
-			for (int i=1; ; i++) {
-				int len = sResult.length();
-				int hdrLen = (len <= SPLIT_HEADER)? len: SPLIT_HEADER;
-				_systemLogger.log(Level.FINE, MODULE, sMethod, "i="+i+" len="+len+" hdrLen="+hdrLen);
-				servletResponse.setHeader("X-saml-attribute-token"+Integer.toString(i), sResult.substring(0, hdrLen));
-				// pwOut.flush() at this point will only set the first header 
-				if (len <= SPLIT_HEADER)
-					break;
-				sResult = sResult.substring(SPLIT_HEADER);
-			}
-			
-			}
-
 			servletResponse.setStatus(HttpServletResponse.SC_OK);
 		}
 		else {
@@ -2977,7 +2965,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			servletResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 		}
 		pwOut.flush();  // otherwise: java.lang.ArrayIndexOutOfBoundsException: 8192 when output gets large
-//			pwOut.append("<html><head><title>"+sStatus+"</title></head><body><h1>"+sStatus+"</h1></body></html>");
+//		pwOut.append("<html><head><title>"+sStatus+"</title></head><body><h1>"+sStatus+"</h1></body></html>");
 		_systemLogger.log(Level.FINE, MODULE, sMethod, "Sending response="+sResponse);
 		pwOut.append(sResponse);
 		pwOut.close();

@@ -250,13 +250,17 @@ public class NoUDBConnector implements IUDBConnector
 	 * <br>
 	 * 
 	 * @param sUserId
-	 *            the s user id
+	 *            the user id
+	 * @param hmInfo
+	 *            the resulting user info
 	 * @return true, if checks if is user enabled
-	 * @see org.aselect.server.udb.IUDBConnector#isUserEnabled(java.lang.String)
+	 * 
+	 * @see org.aselect.server.udb.IUDBConnector#isUserEnabled()
 	 */
-	public boolean isUserEnabled(String sUserId)
+	public boolean isUserEnabled(String sUserId, HashMap<String, String> hmInfo)
 	{
-		String sMethod = "isUserEnabled()";
+		String sMethod = "isUserEnabled";
+		
 		boolean bEnabled = true;
 		_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "user=" + sUserId);
 		return bEnabled;

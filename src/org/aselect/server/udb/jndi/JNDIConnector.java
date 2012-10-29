@@ -141,6 +141,10 @@ public class JNDIConnector implements IUDBConnector
 	 * The ASelect Config Manager
 	 */
 	private ASelectConfigManager _oASelectConfigManager;
+	
+	// 201024, Bauke: added user identity from UDB
+	// User identification extracted from the Ldap UDB
+	private String _sUdbUserIdent = "";
 
 	/**
 	 * Initializes managers and opens a JNDI connection to the A-Select user db. <br>
@@ -155,7 +159,7 @@ public class JNDIConnector implements IUDBConnector
 	public void init(Object oConfigSection)
 	throws ASelectUDBException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		_htConfiguredAuthSPs = new HashMap();
 		Object oAuthSPs = null;
 		Object oAuthSP = null;
@@ -187,7 +191,6 @@ public class JNDIConnector implements IUDBConnector
 			catch (Exception e) {
 				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod,
 						"No config section 'authsps' found in main A-Select config", e);
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -197,7 +200,6 @@ public class JNDIConnector implements IUDBConnector
 			catch (Exception e) {
 				_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod,
 						"No config section 'authsps' found in main A-Select config", e);
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -208,10 +210,8 @@ public class JNDIConnector implements IUDBConnector
 				catch (Exception e) {
 					_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod,
 							"No config item 'id' found in 'authsp' section", e);
-
 					throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 				}
-
 				_htConfiguredAuthSPs.put(sAuthSPID.toUpperCase(), sAuthSPID);
 				oAuthSP = _oASelectConfigManager.getNextSection(oAuthSP);
 			}
@@ -548,23 +548,25 @@ public class JNDIConnector implements IUDBConnector
 	 * 
 	 * @param sUserId
 	 *            the s user id
+	 * @param hmReturnInfo
+	 *            the resulting user info
 	 * @return true, if checks if is user enabled
 	 * @throws ASelectUDBException
 	 *             the a select udb exception
-	 * @see org.aselect.server.udb.IUDBConnector#isUserEnabled(java.lang.String)
+	 * @see org.aselect.server.udb.IUDBConnector#isUserEnabled()
 	 */
-	public boolean isUserEnabled(String sUserId)
+	public boolean isUserEnabled(String sUserId, HashMap<String, String> hmReturnInfo)
 	throws ASelectUDBException
 	{
 		String sMethod = "isUserEnabled";
-
+		
 		DirContext oDirContext = null;
 		boolean bIsEnabled = false;
 		NamingEnumeration oSearchResults = null;
 		String sAttribute = null;
 		String sAttributeValue = null;
 		StringBuffer sbQuery = null;
-
+		String sUdbUserIdent = "";
 		Attribute oAttribute = null;
 		Attributes oAttributes = null;
 
@@ -582,51 +584,57 @@ public class JNDIConnector implements IUDBConnector
 					sUserId = sUserId.substring(0, iIndex);
 			}
 
-			sbQuery = new StringBuffer("(");
-			sbQuery.append(_sUserDN);
-			sbQuery.append("=");
-			sbQuery.append(sUserId);
-			sbQuery.append(")");
-
+			sbQuery = new StringBuffer("(").append(_sUserDN).append("=").append(sUserId).append(")");
+			_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "Search for "+sbQuery);
+			
 			SearchControls oScope = new SearchControls();
 			oScope.setSearchScope(SearchControls.SUBTREE_SCOPE);
-
 			oDirContext = getConnection();
-
-			_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "Search for "+sbQuery);
 			oSearchResults = oDirContext.search(_sBaseDN, sbQuery.toString(), oScope);
 
 			// Check if we got a result
 			if (oSearchResults.hasMore()) {
-				// Put all data in a hash table.
 				// We only handle the first returned record.
 				SearchResult oSearchResult = (SearchResult) oSearchResults.next();
 				oAttributes = oSearchResult.getAttributes();
 				_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "Found "+oAttributes);
+				
 				boolean bFound = false; // attribute found
 				for (NamingEnumeration oAttrEnum = oAttributes.getAll(); oAttrEnum.hasMore() && !bFound;) {
 					oAttribute = (Attribute) oAttrEnum.next();
 					sAttribute = oAttribute.getID();
 					if (sAttribute.equalsIgnoreCase("ASELECTACCOUNTENABLED")) {
 						try {
-							sAttributeValue = (String) oAttribute.get();
+							sAttributeValue = (String)oAttribute.get();
 						}
 						catch (Exception e) {
-							StringBuffer sb = new StringBuffer("Error retrieving A-Select account enabled attribute value for user '");
-							sb.append(sUserId).append("'");
-							_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, sb.toString(), e);
+							_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot get attribute value for "+sAttribute, e);
+							continue;
 						}
-						if (sAttributeValue != null && sAttributeValue.equalsIgnoreCase("true")) {
-							// account enabled
+						if (sAttributeValue != null && sAttributeValue.equalsIgnoreCase("true")) {  // account enabled
 							bIsEnabled = true;
 							bFound = true; // stop searching
 						}
-						else // user not enabled
-						{
+						else {  // user not enabled
 							bFound = true; // stop searching
 						}
 					}
 				}
+				
+				// 20121024, Bauke: Add the user identification fields in the requested order				
+				String[] userIdentFields = _sUdbUserIdent.split(",");  // could be empty ("")
+				sUdbUserIdent = "";
+				for (int i = 0; i < userIdentFields.length; i++) {
+					String sValue = getAttribute(oAttributes, userIdentFields[i]);
+					if (Utils.hasValue(sValue)) {
+						if (Utils.hasValue(sUdbUserIdent))
+							sUdbUserIdent += " " + sValue;
+						else
+							sUdbUserIdent = sValue;
+					}
+				}
+				_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "UserIdent="+sUdbUserIdent);
+				
 				if (!bIsEnabled) {
 					StringBuffer sb = new StringBuffer("User not A-Select enabled: '");
 					sb.append(sUserId).append("' ").append(Errors.ERROR_ASELECT_UDB_USER_ACCOUNT_DISABLED);
@@ -634,13 +642,10 @@ public class JNDIConnector implements IUDBConnector
 				}
 			}
 			else {
-				StringBuffer sbBuffer = new StringBuffer("User '");
-				sbBuffer.append(sUserId);
-				sbBuffer.append("' not found during LDAP search. The filter was: ");
-				sbBuffer.append(sbQuery.toString());
+				StringBuffer sbBuffer = new StringBuffer("User '").append(sUserId);
+				sbBuffer.append("' not found during LDAP search. The filter was: ").append(sbQuery.toString());
 				_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, sbBuffer.toString());
 			}
-
 		}
 		catch (NamingException e) {
 			_oASelectSystemLogger.log(Level.WARNING, MODULE, sMethod, "Could not execute JNDI query", e);
@@ -662,7 +667,30 @@ public class JNDIConnector implements IUDBConnector
 			catch (Exception e) {
 			}
 		}
+		// 20121024, Bauke: Pass result if requested
+		if (hmReturnInfo != null && Utils.hasValue(_sUdbUserIdent))
+			hmReturnInfo.put("udb_user_ident", sUdbUserIdent);
 		return bIsEnabled;
+	}
+	
+	/*
+	 * *
+	 * Gets attribute 'name' from 'attrs'.
+	 * 
+	 * @param attrs
+	 *            the attribute set
+	 * @param name
+	 *            the attribute name
+	 * @return the requested attribute's value
+	 */
+    private String getAttribute(Attributes attrs, String name)
+	{
+		try {
+			return attrs.get(name).get().toString();
+		}
+		catch (Exception e) {
+			return "";
+		}
 	}
 
 	/**
@@ -712,7 +740,7 @@ public class JNDIConnector implements IUDBConnector
 	private void readConfig(Object oConfigSection)
 	throws ASelectUDBException
 	{
-		String sMethod = "readConfig()";
+		String sMethod = "readConfig";
 		_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "JNDIConf oConfigSection=" + oConfigSection);
 		try {
 			try {
@@ -721,7 +749,6 @@ public class JNDIConnector implements IUDBConnector
 			catch (ASelectConfigException e) {
 				_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod,
 						"No valid config item 'base_dn' found in connector configuration", e);
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -731,7 +758,6 @@ public class JNDIConnector implements IUDBConnector
 			catch (ASelectConfigException e) {
 				_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod,
 						"No valid config item 'user_dn' found in connector configuration", e);
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -741,7 +767,6 @@ public class JNDIConnector implements IUDBConnector
 			}
 			catch (ASelectConfigException e) {
 				sFullUid = "false";
-
 				_oASelectSystemLogger.log(Level.CONFIG, MODULE, sMethod,
 						"No config item 'full_uid' found in connector configuration, using default: full_uid = "
 								+ sFullUid, e);
@@ -754,17 +779,20 @@ public class JNDIConnector implements IUDBConnector
 			else {
 				_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod,
 						"No valid config item 'full_uid' found in connector configuration: " + sFullUid);
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR);
 			}
 
+			_sUdbUserIdent = Utils.getSimpleParam(_oASelectConfigManager, _oASelectSystemLogger, oConfigSection, "udb_user_ident", false);
+			if (!Utils.hasValue(_sUdbUserIdent))
+				_sUdbUserIdent = "";
+			_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "udb_user_ident="+_sUdbUserIdent);
+			
 			try {
 				_sUDBResourceGroup = _oASelectConfigManager.getParam(oConfigSection, "resourcegroup");
 			}
 			catch (ASelectConfigException e) {
 				_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod,
 						"No 'resourcegroup' config item found in udb 'connector' config section.", e);
-
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 			_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "JNDIConf _sBaseDN=" + _sBaseDN + ", _sUserDN="
@@ -776,7 +804,6 @@ public class JNDIConnector implements IUDBConnector
 		catch (Exception e) {
 			_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod,
 					"Could not read the JNDI udb connector configuration", e);
-
 			throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}

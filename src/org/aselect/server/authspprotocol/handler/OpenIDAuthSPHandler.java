@@ -508,7 +508,7 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter, java.lang.String)
 	 */
 	public boolean handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, HashMap htSessonContext,
-			PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
+			HashMap htAdditional, PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
 	throws ASelectException
 	{
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);

@@ -549,18 +549,16 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	private void handleDirectLogin(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 	throws ASelectException
 	{
-		String sMethod = "handleDirectLogin()";
+		String sMethod = "handleDirectLogin";
 		String sRid = null;
 		try {
 			sRid = (String) htServiceRequest.get("rid");
 			String sAuthSPId = (String) _htSessionContext.get("direct_authsp");
 			if (sAuthSPId == null) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing 'direct_authsp' in session, rid='" + sRid
-						+ "'");
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing 'direct_authsp' in session, rid='" + sRid + "'");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
-			IAuthSPDirectLoginProtocolHandler oProtocolHandler = _authspHandlerManager
-					.getAuthSPDirectLoginProtocolHandler(sAuthSPId);
+			IAuthSPDirectLoginProtocolHandler oProtocolHandler = _authspHandlerManager.getAuthSPDirectLoginProtocolHandler(sAuthSPId);
 
 			// check if user already has a tgt so that he/she doesnt need to
 			// be authenticated again
@@ -645,8 +643,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					// The userid is already known from the TGT
 					htServiceRequest.put("user_id", sUid);
 					// showDirectLoginForm(htServiceRequest,pwOut);
-					oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, _htSessionContext, pwOut, _sMyServerId,
-							"", "");
+					oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, _htSessionContext, null, pwOut, _sMyServerId, "", "");
 					return;
 				}
 			}
@@ -659,11 +656,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			if (sForcedUid != null) {
 				htServiceRequest.put("user_id", sForcedUid);
 				// showDirectLoginForm(htServiceRequest,pwOut);
-				oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, _htSessionContext, pwOut, _sMyServerId, "",
-						"");
+				oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, _htSessionContext, null, pwOut, _sMyServerId, "", "");
 				return;
 			}
-			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, _htSessionContext, pwOut, _sMyServerId, "", "");
+			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, _htSessionContext, null, pwOut, _sMyServerId, "", "");
 
 			// Store changed session, for JDBC Storage Handler
 			if (!_sessionManager.updateSession(sRid, _htSessionContext)) {
@@ -1773,7 +1769,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				throw e;
 			}
 
-			if (!oUDBConnector.isUserEnabled(sUID)) {
+			// 20121024, Bauke: added udb_user_ident mechanism
+			HashMap<String, String> hmUserIdent = new HashMap<String, String>();
+			if (!oUDBConnector.isUserEnabled(sUID, hmUserIdent)) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request received: Unknown UID.");
 				throw new ASelectException(Errors.ERROR_ASELECT_UDB_UNKNOWN_USER);
 			}
@@ -1796,7 +1794,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Issue TGT
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-			tgtIssuer.issueTGTandRedirect(sRid, _htSessionContext, sPrivilegedApplication, null, servletResponse, null, true);
+			tgtIssuer.issueTGTandRedirect(sRid, _htSessionContext, sPrivilegedApplication, hmUserIdent/*additional*/, servletResponse, null, true);
 
 		}
 		catch (ASelectException e) {
