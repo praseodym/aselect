@@ -102,10 +102,8 @@ public class HandlerTools
 		if (iAge >= 0)
 			sValue += "; Max-Age=" + iAge;
 
-		sValue += "; Secure";
-		if (addedSecurity != null && addedSecurity.contains("cookies")) {
-			if (httpOnly == 1)
-				sValue += "; HttpOnly";
+		if (addedSecurity != null && addedSecurity.contains("cookies") && httpOnly == 1) {
+				sValue += "; Secure; HttpOnly";
 		}
 		logger.log(Level.INFO, MODULE, sMethod, "Add Cookie, Header: " + sValue);
 		

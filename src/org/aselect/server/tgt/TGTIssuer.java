@@ -140,6 +140,7 @@
 package org.aselect.server.tgt;
 
 import java.io.PrintWriter;
+import java.net.URLEncoder;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -990,8 +991,8 @@ public class TGTIssuer
 		String sMethod = "setIdentCookie";
 		try {
 			String sCookieDomain = _configManager.getCookieDomain();
-			BASE64Encoder enc = new BASE64Encoder();
-			sIdent = enc.encode(sIdent.getBytes("UTF-8"));
+			// 20121030, Bauke: changed from BASE64Encoder
+			sIdent = URLEncoder.encode(sIdent, "UTF-8");
 			HandlerTools.putCookieValue(oHttpServletResponse, "ssoname", sIdent, sCookieDomain, "/", -1, 0/*httpOnly*/, _systemLogger);
 		}
 		catch (Exception e) {
