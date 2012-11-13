@@ -34,6 +34,7 @@ import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.BASE64Encoder;
+import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
 import org.opensaml.common.SAMLObjectBuilder;
 import org.opensaml.common.SAMLVersion;
@@ -124,16 +125,17 @@ public class HandlerTools
 	 * @param logger
 	 *            the logger
 	 */
-	public static void delCookieValue(HttpServletResponse response, String sCookieName, String sCookieDomain,
-			ASelectSystemLogger logger)
+	public static void delCookieValue(HttpServletResponse response, String sCookieName,
+				String sCookieDomain, String sCookiePath, ASelectSystemLogger logger)
 	{
 		String sMethod = "delCookieValue";
 		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
-		String sCookiePath = _configManager.getCookiePath();
 
 		Cookie cookie = new Cookie(sCookieName, "_deleted_");
 		if (sCookieDomain != null)
 			cookie.setDomain(sCookieDomain);
+		if (!Utils.hasValue(sCookiePath))
+			sCookiePath = _configManager.getCookiePath();
 		cookie.setPath(sCookiePath); // was: "/aselectserver/server");
 		cookie.setMaxAge(0);
 		logger.log(Level.INFO, MODULE, sMethod, "Delete Cookie="+sCookieName+" Domain="+sCookieDomain+" Path="+sCookiePath);
