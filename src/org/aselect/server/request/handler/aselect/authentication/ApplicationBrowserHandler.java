@@ -317,7 +317,6 @@ import org.aselect.server.config.Version;
 import org.aselect.server.cross.CrossASelectManager;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectAuthenticationLogger;
-import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.handler.aselect.ASelectAuthenticationProfile;
 import org.aselect.server.request.handler.xsaml20.ServiceProvider;
@@ -2159,7 +2158,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			String sCookieDomain = _configManager.getCookieDomain();
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "domain="+sCookieDomain);
 			HandlerTools.delCookieValue(servletResponse, "aselect_credentials", sCookieDomain, _systemLogger);
-			HandlerTools.delCookieValue(servletResponse, "ssoname", sCookieDomain, _systemLogger);
+			// path=/ so applications can access it
+			HandlerTools.delCookieValue(servletResponse, "ssoname", "/", _systemLogger);
 			
 			if (_htTGTContext != null) {
 				// 20120611, Bauke: added "usi"
