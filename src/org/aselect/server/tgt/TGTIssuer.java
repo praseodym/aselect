@@ -992,7 +992,8 @@ public class TGTIssuer
 		try {
 			String sCookieDomain = _configManager.getCookieDomain();
 			// 20121030, Bauke: changed from BASE64Encoder
-			sIdent = URLEncoder.encode(sIdent, "UTF-8");
+			sIdent = URLEncoder.encode(sIdent, "UTF-8").replace("+", "%20");
+			// path=/ so applications can access it
 			HandlerTools.putCookieValue(oHttpServletResponse, "ssoname", sIdent, sCookieDomain, "/", -1, 0/*httpOnly*/, _systemLogger);
 		}
 		catch (Exception e) {

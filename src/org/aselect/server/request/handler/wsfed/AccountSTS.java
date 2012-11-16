@@ -387,7 +387,7 @@ public class AccountSTS extends ProtoRequestHandler
 			sInputs += buildHtmlInput("wresult", Tools.htmlEncode(sRequestorToken));
 
 			// Kill the cookie so it can not be used again (to prevent loops)
-			HandlerTools.delCookieValue(response, SESSION_ID_PREFIX + "rid", _sCookieDomain, _systemLogger);
+			HandlerTools.delCookieValue(response, SESSION_ID_PREFIX + "rid", _sCookieDomain, null, _systemLogger);
 			// To support wslogout, we need to store the realm with the browser
 			HandlerTools.putCookieValue(response, SESSION_ID_PREFIX + "realm", sAudience,
 						_sCookieDomain, null, -1, 1/*httpOnly*/, _systemLogger);
@@ -448,7 +448,9 @@ public class AccountSTS extends ProtoRequestHandler
 		}
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "wtrealm=" + sWtRealm);
 		// Remove the TGT cookie
-		HandlerTools.delCookieValue(response, "aselect_credentials", _sCookieDomain, _systemLogger);
+		HandlerTools.delCookieValue(response, "aselect_credentials", _sCookieDomain, null, _systemLogger);
+		// path=/ so applications can access it
+		HandlerTools.delCookieValue(response, "ssoname", _sCookieDomain, "/", _systemLogger);
 		// }
 
 		try {

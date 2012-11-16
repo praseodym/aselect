@@ -2157,9 +2157,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			String sCookieDomain = _configManager.getCookieDomain();
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "domain="+sCookieDomain);
-			HandlerTools.delCookieValue(servletResponse, "aselect_credentials", sCookieDomain, _systemLogger);
+			HandlerTools.delCookieValue(servletResponse, "aselect_credentials", sCookieDomain, null, _systemLogger);
 			// path=/ so applications can access it
-			HandlerTools.delCookieValue(servletResponse, "ssoname", "/", _systemLogger);
+			HandlerTools.delCookieValue(servletResponse, "ssoname", sCookieDomain, "/", _systemLogger);
 			
 			if (_htTGTContext != null) {
 				// 20120611, Bauke: added "usi"

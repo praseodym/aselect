@@ -162,8 +162,10 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 
 			// Delete the IdP client cookie
 			String sCookieDomain = _configManager.getCookieDomain();
-			HandlerTools.delCookieValue(httpResponse, "aselect_credentials", sCookieDomain, _systemLogger);
 			// NOTE: cookie GOES, TGT STAYS in admin (contains the sessions)!!
+			HandlerTools.delCookieValue(httpResponse, "aselect_credentials", sCookieDomain, null, _systemLogger);
+			// path=/ so applications can access it
+			HandlerTools.delCookieValue(httpResponse, "ssoname", sCookieDomain, "/", _systemLogger);
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Removed cookie for domain: " + sCookieDomain);
 
 			// Will save TGT (including the RelayState) as well

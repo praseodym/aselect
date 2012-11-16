@@ -142,7 +142,9 @@ public class Xsaml20_Logout extends Saml20_BaseHandler
 
 		// First get rid of the client cookie (if still present)
 		String sCookieDomain = _configManager.getCookieDomain();
-		HandlerTools.delCookieValue(response, "aselect_credentials", sCookieDomain, _systemLogger);
+		HandlerTools.delCookieValue(response, "aselect_credentials", sCookieDomain, null, _systemLogger);
+		// path=/ so applications can access it
+		HandlerTools.delCookieValue(response, "ssoname", sCookieDomain, "/", _systemLogger);
 
 		// 20090627, Bauke: added option to supply return URL
 		// can be done here, because this is a browser request

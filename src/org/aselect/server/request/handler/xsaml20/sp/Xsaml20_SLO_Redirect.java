@@ -231,7 +231,9 @@ public class Xsaml20_SLO_Redirect extends Saml20_BaseHandler
 
 		// Delete the client cookie
 		String sCookieDomain = _configManager.getCookieDomain();
-		HandlerTools.delCookieValue(httpResponse, "aselect_credentials", sCookieDomain, _systemLogger);
+		HandlerTools.delCookieValue(httpResponse, "aselect_credentials", sCookieDomain, null, _systemLogger);
+		// path=/ so applications can access it
+		HandlerTools.delCookieValue(httpResponse, "ssoname", sCookieDomain, "/", _systemLogger);
 
 		// Redirect the user to the federation-idp LogoutService with a LogoutResponse
 		String issuer = logoutRequest.getIssuer().getValue();
