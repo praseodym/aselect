@@ -370,6 +370,7 @@ import org.opensaml.xml.util.XMLHelper;
  */
 public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 {
+	private static final String SELECTFORMPREFIX = "select";
 	private ApplicationManager _applicationManager;
 	private CrossASelectManager _crossASelectManager;
 	private AuthSPHandlerManager _authspHandlerManager;
@@ -1544,7 +1545,20 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Multiple candidates, present the select.html form
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "Multiple authsps, show 'select' form");
-			String sSelectForm = _configManager.getForm("select", _sUserLanguage, _sUserCountry);
+
+			// RH, 20121119, sn
+			// Handle application specific select form
+			String sSelectFormName = SELECTFORMPREFIX;
+			String sAppId = (String) _htSessionContext.get("app_id");
+			if ( sAppId != null && (_applicationManager.getSelectForm(sAppId) != null) ) {
+				sSelectFormName +=  _applicationManager.getSelectForm(sAppId); // Add application specific suffix
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "Found application specific select form: " + sSelectFormName + " for app_id: " + sAppId);
+			}
+			String sSelectForm = _configManager.getForm(sSelectFormName, _sUserLanguage, _sUserCountry);
+			// RH, 20121119, en
+//			String sSelectForm = _configManager.getForm("select", _sUserLanguage, _sUserCountry);			// RH, 20121119, o
+
+
 			sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
 			sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", _sMyServerId);
 			sSelectForm = Utils.replaceString(sSelectForm, "[user_id]", sUid);

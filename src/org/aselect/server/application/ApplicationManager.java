@@ -348,7 +348,8 @@ public class ApplicationManager
 				String sFirstAuthsp = ASelectConfigManager.getSimpleParam(oApplication, "first_authsp", false);
 				// RH, 20110920, en
 				
-				
+				String sSelectform = ASelectConfigManager.getSimpleParam(oApplication, "selectform", false); // RH, 20121119, n
+
 				// Bauke 20101125: For DigiD4Bedrijven:
 				String sUseSsn = ASelectConfigManager.getSimpleParam(oApplication, "use_ssn", false);
 				application.setUseSsn(sUseSsn);
@@ -405,6 +406,8 @@ public class ApplicationManager
 				application.setAuthnContextDeclType(sAuthnContextDeclType); // RH, 20101217, n
 
 				application.setFirstAuthsp(sFirstAuthsp);// RH, 20110920, n
+				
+				application.setSelectform(sSelectform);	// RH, 20121119, n
 
 				_htApplications.put(sAppId, application);
 				oApplication = _oASelectConfigManager.getNextSection(oApplication);
@@ -1227,4 +1230,35 @@ public class ApplicationManager
 		}
 		return oApplication.getAuthnContextDeclType();
 	}
+	
+	
+	
+	/**
+	 * Returns the Application specific select form for an application. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Returns the configured selectform name for the application. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sAppId
+	 *            <code>String</code> containing an application id.
+	 * @return String containing the friendly name. <code>null</code> if no friendly name was found.
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	public String getSelectForm(String sAppId)
+	throws ASelectException
+	{
+		Application oApplication = getApplication(sAppId);
+		return oApplication.getSelectform();
+	}
+
 }

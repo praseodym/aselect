@@ -98,6 +98,8 @@ public class Application
 
 	private String _first_authsp = null;	// RH, 20110920, n
 
+	// Optional application specific select html form
+	private String _selectform = null;	// RH, 20121119, n
 
 	/**
 	 * Constructor which contains the default parameters for an Application <br>
@@ -647,4 +649,21 @@ public class Application
 	{
 		_first_authsp = firstAuthsp;
 	}
+
+	/**
+	 * @return the _selectform for application specific select html form
+	 */
+	public synchronized String getSelectform()
+	{
+		return _selectform;
+	}
+
+	/**
+	 * @param selectform the _selectform to set application specific select html form
+	 */
+	public synchronized void setSelectform(String selectform)
+	{
+		_selectform = selectform;
+	}
+
 }

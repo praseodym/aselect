@@ -1125,7 +1125,8 @@ public class ASelectConfigManager extends ConfigManager
 		if (sForm.equals("userinfo"))
 			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
 
-		if (sForm.equals("select"))
+//		if (sForm.equals("select"))	// RH, 20121119, o
+		if (sForm.startsWith("select")) // Allow for application specific select form, RH, 20121119, n
 			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
 
 		if (sForm.equals("popup"))
