@@ -11,7 +11,11 @@
  */
 package org.aselect.authspserver.authsp.sms;
 
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.logging.Level;
+
+import org.aselect.authspserver.log.AuthSPSystemLogger;
 
 /**
  * * A simple factory that creates SmsSender for various outbound sms providers <br>
@@ -27,40 +31,50 @@ import java.net.URL;
  */
 public class SmsSenderFactory
 {
-	private static final String PROVIDER_WIRELESSSERVICES = "wireless-services";
-
+	private static final String MODULE = "SmsSenderFactory";
+	static AuthSPSystemLogger _systemLogger = AuthSPSystemLogger.getHandle();
+	
 	/**
 	 * * creator method <br>
 	 * <br>
-	 * <b>Description:</b>
-	 * Creates an SmsSender depending on supplied provider parameter (mollie, wirelessservices)  
-	 * defaults to "mollie" provider
+	 * <b>Description:</b> Creates an SmsSender depending on supplied provider
+	 * defaults to the "mollie" provider <br>
 	 * <br>
-	 * <br>
-	 * 	 @param url
-	 * 		The sms gateway provider url. May be https if appropriate certificate is loaded in cacerts
-	 * 	 @param user
-	 * 		sms gateway account username
-	 * 	 @param password
-	 * 		sms gateway account password
-	 * 	 @param gateway
-	 * 		optional priority level, not supported by all sms providers
-	 * 	 @param gw_provider
-	 * 		identifier for sms gateway provider, currently [ wireless-services | mollie ] defaults to mollie
+	 * .
 	 * 
-	 * <b>Concurrency issues:</b> <br>
-	 * - <br>
+	 * @param sProviderUrl
+	 *            The sms gateway provider url. May be https if appropriate
+	 *            certificate is loaded in cacerts
+	 * @param user
+	 *            sms gateway account username
+	 * @param password
+	 *            sms gateway account password
+	 * @param gateway
+	 *            optional priority level, not supported by all sms providers
+	 * @param gw_provider
+	 *            identifier for sms gateway provider, defaults to mollie
+	 * @return the generic sms sender
+	 * @throws MalformedURLException
+	 * 			for bad url values
 	 */
-	public static SmsSender createSmsSender(URL url, String user, String password, String gateway, String gw_provider)
+	public static GenericSmsSender createSmsSender(String sProviderUrl, String user, String password, String gateway, String gw_provider)
+	throws MalformedURLException
 	{
-		if (PROVIDER_WIRELESSSERVICES.equalsIgnoreCase(gw_provider)) {
-			return new  WirelessServicesHttpSmsSender(url, user, password, gateway);
+		String sMethod = "createSmsSender";
+		new URL(sProviderUrl);  // check the sUrl given for correctness
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "SmsProvider="+gw_provider+" Url="+sProviderUrl); 
+		if ("wireless-service".equalsIgnoreCase(gw_provider)) {
+			return new WirelessServicesHttpSmsSender(sProviderUrl, user, password, gateway, true /*use POST*/);
+		}
+		if ("wireless_voice".equalsIgnoreCase(gw_provider)) {
+			return new WirelessVoiceSmsSender(sProviderUrl, user, password, gateway, true/*use POST*/);
+			//return new MollieHttpSmsSender(sProviderUrl, user, password, gateway, false/*use POST*/);  // TESTING with mollie!
 		}
 		else if ("GoldenBytes".equalsIgnoreCase(gw_provider)) {
-			return new GoldenBytesHttpSmsSender(url, user, password, gateway);
+			return new GoldenBytesHttpSmsSender(sProviderUrl, user, password, gateway, true/*use POST*/);
 		}
-		else {	// default to "mollie"
-			return new  MollieHttpSmsSender(url, user, password, gateway);
+		else {	// defaults to "mollie"
+			return new MollieHttpSmsSender(sProviderUrl, user, password, gateway, true/*use POST*/);
 		}
 	}
 }

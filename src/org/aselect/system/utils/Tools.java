@@ -49,23 +49,25 @@ public class Tools
 	protected final static String DEFAULT_CHARSET = "UTF8";
 
 	// Bauke: added
-	// if 'getContent' extract the content within the tags, otherwise extract with tags included
-	// <searchFor xxx >contents </searchFor>
-	// ^begin ^cntBegin ^cntEnd ^end
 	/**
-	 * Extract from xml.
+	 * Extract content from xml.
+	 * if 'getContent' extract the content within the tags, otherwise extract with tags included
 	 * 
 	 * @param message
 	 *            the message
 	 * @param searchFor
-	 *            the search for
+	 *            the tag to look for
 	 * @param getContent
-	 *            the get content
-	 * @return the string
+	 *            return content of the tag? (otherwise complete tag with content)
+	 * @return the result
 	 */
 	public static String extractFromXml(String message, String searchFor, boolean getContent)
 	{
 		String sMethod = "extractFromXml()";
+
+		// <searchFor xxxx>contents of the tag</searchFor>
+		// ^begin          ^cntBegin          ^cntEnd     ^end
+
 		int begin = message.indexOf("<" + searchFor + ">");
 		if (begin < 0) {
 			begin = message.indexOf("<" + searchFor + " ");

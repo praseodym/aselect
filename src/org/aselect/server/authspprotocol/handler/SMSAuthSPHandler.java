@@ -23,6 +23,7 @@ import org.aselect.server.session.SessionManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAuthSPException;
 import org.aselect.system.exception.ASelectConfigException;
+import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
 /**
@@ -103,6 +104,7 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 	private ASelectAuthenticationLogger _authenticationLogger;
 	private String _sAuthsp;
 	private String _sAuthspUrl;
+	private String _sAuthspVoice;
 
 	private static final String ERROR_SMS_OK = "000";
 	private static final String ERROR_SMS_INVALID_PHONE = "500";  // 20110718, bad phone number, redirect to selfservice
@@ -133,18 +135,17 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 						"Parameter 'id' not found in SMS AuthSP configuration", eAC);
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
 			}
-			try {
-				_sAuthspUrl = _configManager.getParam(oAuthSPResource, "url");
-			}
-			catch (ASelectConfigException eAC) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"Parameter 'url' not found in SMS AuthSP configuration", eAC);
-				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
-			}
+			
+			_sAuthspUrl = Utils.getSimpleParam(_configManager, _systemLogger, oAuthSPResource, "url", true/*mandatory*/);
+			_sAuthspVoice = Utils.getSimpleParam(_configManager, _systemLogger, oAuthSPResource, "voice_url", false);
 		}
 		catch (ASelectAuthSPException eAA) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initialisation failed due to configuration error", eAA);
 			throw eAA;
+		}
+		catch (ASelectException e) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initialisation failed due to configuration error", e);
+			throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initialisation failed due to internal error", e);
@@ -207,9 +208,21 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 			
 			// 20111013, Bauke: added absent phonenumber handling
 			String sCF = (String)htSessionContext.get("sms_correction_facility");
-			if (!Utils.hasValue(sUserId)) {
+			
+			// 20121124, Bauke: added SMS by Voice
+			// sPhoneNr will contain the phone number without the possible trailing "v"
+			// sUserId contains the combination.
+			// For an SMS by Voice a different url is used.
+			String sPhoneNr = sUserId;
+			boolean isVoice = false;
+			if (Utils.hasValue(sUserId) && sUserId.endsWith("v")) {
+				sPhoneNr = sUserId.substring(0, sUserId.length()-1);
+				isVoice = true;
+			}
+			if (!Utils.hasValue(sPhoneNr)) {  // no phone number
+				sPhoneNr = "";
 				if ("true".equals(sCF)) {  // let the sms AuthSP take care of bad phone numbers
-					sUserId = "";
+					sUserId = isVoice? "v": "";
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing SMS user attributes, but sms_correction_facility="+sCF);
 				}
 				else {
@@ -231,7 +244,7 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 			String sServerId = _configManager.getParam(_configManager.getSection(null, "aselect"), "server_id");
 			StringBuffer sbSignature = new StringBuffer(sRid);
 			sbSignature.append(sAsUrl);
-			sbSignature.append(sUserId);
+			sbSignature.append(sPhoneNr);  //sUserId);
 			sbSignature.append(sServerId);
 			if (sCountry != null) {
 				sbSignature.append(sCountry);
@@ -246,17 +259,19 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 			}
 
 			// Bauke: store additional sms attribute
-			htSessionContext.put("sms_phone", sUserId);  // from aselectSmsUserAttributes
-			//_sessionManager.updateSession(sRid, htSessionContext);  // 20120401, Bauke: changed, was update()
+			htSessionContext.put("sms_phone", sPhoneNr);  // sUserId);  // from aselectSmsUserAttributes
 			_sessionManager.setUpdateSession(htSessionContext, _systemLogger);  // 20120403, Bauke: was updateSession
 
+			// Build the AuthSP url
 			sSignature = URLEncoder.encode(sSignature, "UTF-8");
-			sUserId = URLEncoder.encode(sUserId, "UTF-8");
+			//sUserId = URLEncoder.encode(sUserId, "UTF-8");
+			sPhoneNr = URLEncoder.encode(sPhoneNr, "UTF-8");
 			sAsUrl = URLEncoder.encode(sAsUrl, "UTF-8");
-			StringBuffer sbRedirect = new StringBuffer(_sAuthspUrl);
+			StringBuffer sbRedirect = new StringBuffer(isVoice? _sAuthspVoice: _sAuthspUrl);  // here's the voice switch
 			sbRedirect.append("?as_url=").append(sAsUrl);
 			sbRedirect.append("&rid=").append(sRid);
-			sbRedirect.append("&uid=").append(sUserId);
+			//sbRedirect.append("&uid=").append(sUserId);
+			sbRedirect.append("&uid=").append(sPhoneNr);
 			sbRedirect.append("&a-select-server=").append(sServerId);
 			if (sCountry != null) {
 				sbRedirect.append("&country=").append(sCountry);
@@ -348,6 +363,11 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 			String sUserId = (String) htSessionContext.get("sel_uid");
 			if (sUserId == null)
 				sUserId = (String) htSessionContext.get("user_id");
+			//20121124, Bauke: strip of trailing voice indicator
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "sUserId="+sUserId);
+			if (Utils.hasValue(sUserId) && sUserId.endsWith("v"))
+				sUserId = sUserId.substring(0, sUserId.length()-1);
+			
 			String sOrg = (String) htSessionContext.get("organization");
 
 			// Log authentication

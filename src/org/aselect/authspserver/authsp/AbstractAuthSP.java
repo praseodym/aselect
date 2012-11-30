@@ -26,7 +26,6 @@ import org.aselect.authspserver.crypto.CryptoEngine;
 import org.aselect.authspserver.log.AuthSPAuthenticationLogger;
 import org.aselect.authspserver.log.AuthSPSystemLogger;
 import org.aselect.authspserver.session.AuthSPSessionManager;
-import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
 
@@ -39,12 +38,10 @@ import org.aselect.system.servlet.ASelectHttpServlet;
  */
 public abstract class AbstractAuthSP extends ASelectHttpServlet
 {
-
 	/** The name of this module, that is used in the system logging. */
 	public static final String MODULE = "AbstractAuthSP";
 
 	private static SecureRandom _random;
-
 	
 	/** The logger that logs system information. */
 	protected AuthSPSystemLogger _systemLogger;
@@ -66,8 +63,6 @@ public abstract class AbstractAuthSP extends ASelectHttpServlet
 	
 	private static final int TOKEN_SIZE = 16;
 
-
-	
 	/**
 	 * Initialization of the Abstract AuthSP. <br>
 	 * <br>
@@ -131,9 +126,7 @@ public abstract class AbstractAuthSP extends ASelectHttpServlet
 			throw new ServletException("Initializing failed");
 		}
 	}
-		
-	
-	
+			
 	/**
 	 * Process requests for the HTTP <code>GET</code> method. <br>
 	 * <br>
@@ -187,8 +180,7 @@ public abstract class AbstractAuthSP extends ASelectHttpServlet
 //		
 //		
 //	}
-	
-	
+
 	/**
 	 * 
 	 * @return new random hexString token of TOKEN_SIZE *2 length
@@ -210,8 +202,6 @@ public abstract class AbstractAuthSP extends ASelectHttpServlet
 		return false;
 	}
 
-
-
 	/**
 	 * Simple utility to concatenate strings
 	 * Only not null params are concatenated
@@ -228,5 +218,4 @@ public abstract class AbstractAuthSP extends ASelectHttpServlet
 	    		   sb.append(s); 
 	       return sb.toString();
 	}
-
 }

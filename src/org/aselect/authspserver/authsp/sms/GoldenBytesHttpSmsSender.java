@@ -12,10 +12,8 @@
 package org.aselect.authspserver.authsp.sms;
 
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.logging.Level;
 
@@ -75,28 +73,9 @@ Detailed list of error messages:
 166 - [GEN] Request type not allowed
 199 - [GEN] Message failed reason internal please call GB
 */
-public class GoldenBytesHttpSmsSender implements SmsSender
+public class GoldenBytesHttpSmsSender extends GenericSmsSender
 {
 	private static final String sModule = "GoldenBytes";
-//	private final String _user;  // not used
-//	private final String _password;  // not used
-	private final URL _url;
-//	private final String _gateway;  // not used
-
-	/**
-	 * Instantiates a new GoldenBytes http sms sender.
-	 * 
-	 * @param url
-	 *            the sms gateway provider url
-	 * @param user
-	 *            the account user
-	 * @param password
-	 *            the account password
-	 */
-	public GoldenBytesHttpSmsSender(URL url, String user, String password)
-	{
-		this(url, user, password, null);
-	}
 
 	/**
 	 * Instantiates a new GoldenBytes http sms sender.
@@ -110,109 +89,92 @@ public class GoldenBytesHttpSmsSender implements SmsSender
 	 * @param gateway
 	 *            the (optional) priority gateway if supported by the sms gateway provider
 	 */
-	public GoldenBytesHttpSmsSender(URL url, String user, String password, String gateway)
+	public GoldenBytesHttpSmsSender(String url, String user, String password, String gateway, boolean usePost)
 	{
-		super();
-		this._url = url;
-//		this._user = user;
-//		this._password = password;
-//		this._gateway = gateway;
+		super(url, user, password, gateway, usePost);
+	}
+
+	/**
+	 * @param sMethod
+	 * @param iReturnCode
+	 * @param _systemLogger
+	 * @param rd
+	 * @return
+	 * @throws IOException
+	 * @throws DataSendException
+	 */
+	protected int analyzeSmsResult(BufferedReader rd)
+	throws IOException, DataSendException
+	{
+		final Character SEPCHAR = '=';
+		String sMethod = "analyzeSmsReturn";
+		AuthSPSystemLogger _systemLogger = AuthSPSystemLogger.getHandle();
+
+		String line;
+		String sResult = "", sResultCode = "";
+		
+		// Look for a status code line
+		while ((line = rd.readLine()) != null) {
+			_systemLogger.log(Level.INFO, sModule, sMethod, "line["+line+"]");
+			if (line.length() <= 4)
+				continue;
+			if (Character.isDigit(line.charAt(0)) && Character.isDigit(line.charAt(1)) &&
+					Character.isDigit(line.charAt(2)) && line.charAt(3) == SEPCHAR) {
+				sResultCode = line.substring(0, 3);
+				sResult = line.substring(4);
+				break;
+			}
+		}
+		_systemLogger.log(Level.INFO, sModule, sMethod, "code="+sResultCode+"result="+sResult);
+
+		if (!Utils.hasValue(sResultCode)) {
+			throw new DataSendException("SMS may not have been sent, no returncode available");
+		}
+		if (sResultCode.equals("000"))
+			return 0;  // OK
+		else 
+			throw new DataSendException("Could not send sms, returncode=" + sResultCode);
 	}
 
 	/**
 	 * @param message
-	 * 		the body of the message to send
 	 * @param from
-	 * 		the 'from' info to put in the message, can be alpha (max 11 chars) or numeric (max. 16 digits)
 	 * @param recipients
-	 * 		comma seperated list of recipient numbers
-	 * @return progress step start=15, 19=finished
-	 * 
-	 * (non-Javadoc)
-	 * @see org.aselect.authspserver.authsp.sms.SmsSender#sendSms(java.lang.String, java.lang.String, java.lang.String)
+	 * @param sMethod
+	 * @param data
+	 * @param _systemLogger
+	 * @return
+	 * @throws UnsupportedEncodingException
 	 */
-	public int sendSms(String message, String from, String recipients)
-	throws SmsException
+	protected int assembleSmsMessage(String message, String from, String recipients, StringBuffer data)
+	throws UnsupportedEncodingException
 	{
-		String sMethod = "sendSms";
-		int iReturnCode = -1;
-		StringBuffer data = new StringBuffer();
-		AuthSPSystemLogger _systemLogger;
-		_systemLogger = AuthSPSystemLogger.getHandle();
+		String sMethod = "assembleSmsMessage";
+		AuthSPSystemLogger _systemLogger = AuthSPSystemLogger.getHandle();
+		final String EQUAL_SIGN = "=";
+		final String AMPERSAND = "&";
 
-		try {
-			final String EQUAL_SIGN = "=";
-			final String AMPERSAND = "&";
-			final Character SEPCHAR = '=';
-
-			// Your server is authenticated by source IP address.
-			// You may register one or more source IP addresses which are authorized to access your account.
-			data.append(URLEncoder.encode("REQUESTTYPE", "UTF-8"));
-			data.append(EQUAL_SIGN).append(URLEncoder.encode("0", "UTF-8"));  // zero: plain text
-			data.append(AMPERSAND);
-			data.append(URLEncoder.encode("OADCTYPE", "UTF-8"));
-			data.append(EQUAL_SIGN).append(URLEncoder.encode("2", "UTF-8"));  // Type of originator address: ASCII
-			data.append(AMPERSAND);
-			data.append(URLEncoder.encode("OADC", "UTF-8"));
-			data.append(EQUAL_SIGN).append(URLEncoder.encode(from, "UTF-8"));  // Originator address, alfanumeric, max length 11
-			data.append(AMPERSAND);
-			data.append(URLEncoder.encode("NUMBERS", "UTF-8")).append(EQUAL_SIGN);  // Recipient phone nunmbers
-			data.append(URLEncoder.encode(recipients, "UTF-8"));
-			//data.append(AMPERSAND);
-			//data.append(URLEncoder.encode("MESSAGEID", "UTF-8")).append(EQUAL_SIGN);  // max length 8
-			//data.append(URLEncoder.encode("xxx", "UTF-8"));
-			data.append(AMPERSAND);
-			data.append(URLEncoder.encode("BODY", "UTF-8")).append(EQUAL_SIGN);  // Text of the message
-			data.append(URLEncoder.encode(message, "UTF-8"));
-			
-			_systemLogger.log(Level.INFO, sModule, sMethod, "url=" + _url.toString() + " data=" + data.toString());
-			HttpURLConnection conn = (HttpURLConnection)_url.openConnection();
-//			conn.setRequestProperty("Connection", "close"); // use this if we will explicitly conn.disconnect();
-			conn.setRequestMethod("POST");
-			conn.setRequestProperty("Host", _url.getHost());
-			conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-			conn.setReadTimeout(10000);
-			conn.setDoOutput(true);
-			OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
-			wr.write(data.toString());
-			wr.flush();
-
-			// Get the response
-			BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-			String line;
-			String sResult = "", sResultCode = "";
-			// Look for a status code line
-			while ((line = rd.readLine()) != null) {
-				_systemLogger.log(Level.INFO, sModule, sMethod, "line["+line+"]");
-				if (line.length() <= 4)
-					continue;
-				if (Character.isDigit(line.charAt(0)) && Character.isDigit(line.charAt(1)) &&
-						Character.isDigit(line.charAt(2)) && line.charAt(3) == SEPCHAR) {
-					sResultCode = line.substring(0, 3);
-					sResult = line.substring(4);
-					break;
-				}
-			}
-			_systemLogger.log(Level.INFO, sModule, sMethod, "code="+sResultCode+"result="+sResult);
-
-			if (!Utils.hasValue(sResultCode)) {
-				throw new SmsException("SMS may not have been sent, no returncode available");
-			}
-			if (sResultCode.equals("000"))
-				iReturnCode = 0;  // OK
-			else 
-				throw new SmsException("Could not send sms, returncode from GoldenBytes: " + sResultCode + ".");
-			
-			wr.close();
-			rd.close();
-		}
-		catch (NumberFormatException e) {
-			throw new SmsException("Sending SMS, using \'" + this._url.toString()
-					+ "\' failed due to number format exception! " + e.getMessage(), e);
-		}
-		catch (Exception e) {
-			throw new SmsException("Sending SMS, using \'" + this._url.toString() + "\' failed " + e.getMessage(), e);
-		}
-		return iReturnCode;
+		// Your server is authenticated by source IP address.
+		// You may register one or more source IP addresses which are authorized to access your account.
+		data.append(URLEncoder.encode("REQUESTTYPE", "UTF-8"));
+		data.append(EQUAL_SIGN).append(URLEncoder.encode("0", "UTF-8"));  // zero: plain text
+		data.append(AMPERSAND);
+		data.append(URLEncoder.encode("OADCTYPE", "UTF-8"));
+		data.append(EQUAL_SIGN).append(URLEncoder.encode("2", "UTF-8"));  // Type of originator address: ASCII
+		data.append(AMPERSAND);
+		data.append(URLEncoder.encode("OADC", "UTF-8"));
+		data.append(EQUAL_SIGN).append(URLEncoder.encode(from, "UTF-8"));  // Originator address, alfanumeric, max length 11
+		data.append(AMPERSAND);
+		data.append(URLEncoder.encode("NUMBERS", "UTF-8")).append(EQUAL_SIGN);  // Recipient phone nunmbers
+		data.append(URLEncoder.encode(recipients, "UTF-8"));
+		//data.append(AMPERSAND);
+		//data.append(URLEncoder.encode("MESSAGEID", "UTF-8")).append(EQUAL_SIGN);  // max length 8
+		//data.append(URLEncoder.encode("xxx", "UTF-8"));
+		data.append(AMPERSAND);
+		data.append(URLEncoder.encode("BODY", "UTF-8")).append(EQUAL_SIGN);  // Text of the message
+		data.append(URLEncoder.encode(message, "UTF-8"));
+		
+		_systemLogger.log(Level.INFO, sModule, sMethod, "url=" + providerUrl + " data=" + data.toString());
+		return 0;
 	}
 }

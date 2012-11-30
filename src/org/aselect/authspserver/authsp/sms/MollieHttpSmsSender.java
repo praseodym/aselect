@@ -6,10 +6,8 @@
 package org.aselect.authspserver.authsp.sms;
 
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.logging.Level;
 
@@ -18,31 +16,14 @@ import org.aselect.system.utils.Tools;
 
 /*
  * 14-11-2007:  Adapted to the latest www.mollie.nl protocol
+ * Both POST and GET are allowed
+ * 
  * @author Bauke Hiemstra - www.anoigo.nl
  * Copyright UMC Nijmegen (http://www.umcn.nl)
  */
-public class MollieHttpSmsSender implements SmsSender
+public class MollieHttpSmsSender extends GenericSmsSender
 {
-	private static final String sModule = "Mollie";
-	private final String user;
-	private final String password;
-	private final URL url;
-	private final String gateway;
-
-	/**
-	 * Instantiates a new mollie http sms sender.
-	 * 
-	 * @param url
-	 *            the url
-	 * @param user
-	 *            the user
-	 * @param password
-	 *            the password
-	 */
-	public MollieHttpSmsSender(URL url, String user, String password)
-	{
-		this(url, user, password, null);
-	}
+	private static final String sModule = "MollieHttpSmsSender";
 
 	/**
 	 * Instantiates a new mollie http sms sender.
@@ -56,15 +37,63 @@ public class MollieHttpSmsSender implements SmsSender
 	 * @param gateway
 	 *            the gateway
 	 */
-	public MollieHttpSmsSender(URL url, String user, String password, String gateway)
+	public MollieHttpSmsSender(String url, String user, String password, String gateway, boolean usePost)
 	{
-		super();
-		this.url = url;
-		this.user = user;
-		this.password = password;
-		this.gateway = gateway;
+		super(url, user, password, gateway, usePost);
 	}
-	
+
+	/**
+	 * @param message
+	 * @param from
+	 * @param recipients
+	 * @param data
+	 */
+	protected int assembleSmsMessage(String message, String from, String recipients, StringBuffer data)
+	throws UnsupportedEncodingException
+	{
+		String sMethod = "assembleSmsMessage";
+		AuthSPSystemLogger _systemLogger = AuthSPSystemLogger.getHandle();
+
+		final String EQUAL_SIGN = "=";
+		final String AMPERSAND = "&";
+		
+		data.append(URLEncoder.encode("username", "UTF-8"));
+		data.append(EQUAL_SIGN).append(URLEncoder.encode(this.user, "UTF-8"));
+		
+		data.append(AMPERSAND).append(URLEncoder.encode("password", "UTF-8"));
+		data.append(EQUAL_SIGN).append(URLEncoder.encode(this.password, "UTF-8"));
+		
+		data.append(AMPERSAND).append(URLEncoder.encode("originator", "UTF-8"));
+		data.append(EQUAL_SIGN).append(URLEncoder.encode(from, "UTF-8"));
+		
+		data.append(AMPERSAND).append(URLEncoder.encode("message", "UTF-8"));
+		data.append(EQUAL_SIGN).append(URLEncoder.encode(message, "UTF-8"));
+		
+		data.append(AMPERSAND).append(URLEncoder.encode("recipients", "UTF-8"));
+		data.append(EQUAL_SIGN).append(URLEncoder.encode(recipients, "UTF-8"));
+
+		// RH, 20080729, sn
+		// gateway == null, use mollies default gateway
+		if (this.gateway != null && !"".equals(this.gateway.trim())) {
+			data.append(AMPERSAND).append(URLEncoder.encode("gateway", "UTF-8"));
+			data.append(EQUAL_SIGN).append(URLEncoder.encode(this.gateway, "UTF-8"));
+		}
+		// RH, 20080729, en
+		_systemLogger.log(Level.INFO, sModule, sMethod, "url=" + providerUrl + " data=" + data.toString());
+		return 0;
+	}
+
+/* Response:	
+	<?xml version="1.0" ?>
+	<response>
+	    <item type="sms">
+	        <recipients>1</recipients>
+	        <success>true</success>
+	        <resultcode>10</resultcode>
+	        <resultmessage>Message successfully sent.</resultmessage>
+	    </item>
+	</response>
+*/
 /*	Possible resultcodes from mollie.nl:
     10 - succesvol verzonden
     20 - geen 'username' opgegeven
@@ -82,79 +111,30 @@ public class MollieHttpSmsSender implements SmsSender
     98 - gateway onbereikbaar
     99 - onbekende fout
  */ 
-	/*
-	 * (non-Javadoc)
-	 * @see org.aselect.authspserver.authsp.sms.SmsSender#sendSms(java.lang.String, java.lang.String, java.lang.String)
+	/**
+	 * @param rd - Reader to get the result
+	 * @return: 0 = ok, 1 = bad phone number
 	 */
-	public int sendSms(String message, String from, String recipients)
-	throws SmsException
+	protected int analyzeSmsResult(BufferedReader rd)
+	throws IOException, DataSendException
 	{
-		String sMethod = "sendSms";
-		int iReturnCode = -1;
-		StringBuffer data = new StringBuffer();
-		AuthSPSystemLogger _systemLogger;
-		_systemLogger = AuthSPSystemLogger.getHandle();
-
-		try {
-			final String EQUAL_SIGN = "=";
-			final String AMPERSAND = "&";
-			data.append(URLEncoder.encode("username", "UTF-8"));
-			data.append(EQUAL_SIGN).append(URLEncoder.encode(this.user, "UTF-8"));
-			data.append(AMPERSAND).append(URLEncoder.encode("password", "UTF-8"));
-			data.append(EQUAL_SIGN).append(URLEncoder.encode(this.password, "UTF-8"));
-			data.append(AMPERSAND).append(URLEncoder.encode("originator", "UTF-8"));
-			data.append(EQUAL_SIGN).append(URLEncoder.encode(from, "UTF-8"));
-			data.append(AMPERSAND).append(URLEncoder.encode("message", "UTF-8"));
-			data.append(EQUAL_SIGN).append(URLEncoder.encode(message, "UTF-8"));
-			data.append(AMPERSAND).append(URLEncoder.encode("recipients", "UTF-8"));
-			data.append(EQUAL_SIGN).append(URLEncoder.encode(recipients, "UTF-8"));
-
-			// RH, 20080729, sn
-			// gateway == null, use mollies default gateway
-			if (this.gateway != null && !"".equals(this.gateway.trim())) {
-				data.append(AMPERSAND).append(URLEncoder.encode("gateway", "UTF-8"));
-				data.append(EQUAL_SIGN).append(URLEncoder.encode(this.gateway, "UTF-8"));
+		String sMethod = "analyzeSmsResult";
+		AuthSPSystemLogger _systemLogger = AuthSPSystemLogger.getHandle();
+		String line;
+		String sResult = "", sResultCode = "";
+		while ((line = rd.readLine()) != null) {
+			sResult = Tools.extractFromXml(line, "resultcode", true);
+			if (sResult != null) {
+				sResultCode = sResult;
+				break;
 			}
-			// RH, 20080729, en
-			_systemLogger.log(Level.INFO, sModule, sMethod, "url=" + url.toString() + " data=" + data.toString());
-			HttpURLConnection conn = (HttpURLConnection)url.openConnection();
-			conn.setDoOutput(true);
-			OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
-			wr.write(data.toString());
-			wr.flush();
-
-			// Get the response
-			// Bauke: adapted to latest protocol
-			BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-			String line;
-			String sResult = "", sResultCode = "";
-			while ((line = rd.readLine()) != null) {
-//				System.out.println(line);	// RH, 20110104, o
-				sResult = Tools.extractFromXml(line, "resultcode", true);
-				if (sResult != null) {
-					sResultCode = sResult;
-					break;
-				}
-			}
-			_systemLogger.log(Level.INFO, sModule, sMethod, "resultcode=" + sResultCode);
-			if (sResultCode.equals("10"))
-				iReturnCode = 0;  // OK
-			else if (sResultCode.equals("25"))
-				iReturnCode = 1;  // Bad phonenumber
-			else 
-				throw new SmsException("Mollie could not send sms, returncode from Mollie: " + sResultCode + ".");
-			
-			wr.close();
-			rd.close();
 		}
-		catch (NumberFormatException e) {
-			throw new SmsException("Sending SMS, using \'" + this.url.toString()
-					+ "\' failed due to number format exception! " + e.getMessage(), e);
-		}
-		catch (Exception e) {
-			throw new SmsException("Sending SMS, using \'" + this.url.toString() + "\' failed (progress=" + iReturnCode
-					+ ")! " + e.getMessage(), e);
-		}
-		return iReturnCode;
+		_systemLogger.log(Level.INFO, sModule, sMethod, "resultcode=" + sResultCode);
+		if (sResultCode.equals("10"))
+			return 0;  // OK
+		else if (sResultCode.equals("25"))
+			return 1;  // Bad phone number
+		else 
+			throw new DataSendException("Mollie could not send sms, returncode=" + sResultCode);
 	}
 }

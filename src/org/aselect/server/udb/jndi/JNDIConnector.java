@@ -145,6 +145,9 @@ public class JNDIConnector implements IUDBConnector
 	// 201024, Bauke: added user identity from UDB
 	// User identification extracted from the Ldap UDB
 	private String _sUdbUserIdent = "";
+	
+	// 20121123, Bauke: added SMS to voice phones
+	private String _sVoicePhoneAttribute = "";  // the attribute might contain a "v"
 
 	/**
 	 * Initializes managers and opens a JNDI connection to the A-Select user db. <br>
@@ -327,7 +330,7 @@ public class JNDIConnector implements IUDBConnector
 				// 20110107, Bauke: only return String attributes, and only aselect* attributes				
 				oAttribute = (Attribute) oAttrEnum.next();
 				sAttribute = oAttribute.getID();
-				if (!sAttribute.startsWith("aselect") && !sAttribute.startsWith("ASELECT"))
+				if (!sAttribute.startsWith("aselect") && !sAttribute.startsWith("ASELECT") && !sAttribute.equalsIgnoreCase(_sVoicePhoneAttribute))
 					continue;
 				try {
 					Object objValue = oAttribute.get();
@@ -359,9 +362,17 @@ public class JNDIConnector implements IUDBConnector
 
 			// resolve all user attributes
 			Set keys = htUserRecord.keySet();
+			String sVoicePhone = "";
+			if (Utils.hasValue(_sVoicePhoneAttribute)) {
+				// Attribute name was uppercased :-(
+				String sAttr = (String)htUserRecord.get(_sVoicePhoneAttribute.toUpperCase());
+				sVoicePhone = (Utils.hasValue(sAttr) && sAttr.indexOf("v")>=0)? "v": "";
+				_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "VoiceAttr="+sAttr+" VoicePhone="+sVoicePhone);
+			}
 			for (Object s : keys) {
 				String sAttributeName = (String) s;
 				sAttributeValue = (String) htUserRecord.get(sAttributeName);
+				_oASelectSystemLogger.log(Level.FINER, MODULE, sMethod, "Attr: "+sAttributeName+"="+sAttributeValue);
 				if (sAttributeName.startsWith("ASELECT") && sAttributeName.endsWith("REGISTERED")) {
 					// Only store user attributes of authsps that are registered for the user
 					if (sAttributeValue.equalsIgnoreCase("TRUE")) {
@@ -369,7 +380,7 @@ public class JNDIConnector implements IUDBConnector
 						String sAuthSPID = sAttributeName.substring(7, sAttributeName.length() - 10);
 						StringBuffer sbUserAttributes = new StringBuffer("ASELECT").append(sAuthSPID).append("USERATTRIBUTES");
 						sAttributeValue = (String)htUserRecord.get(sbUserAttributes.toString());
-						_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, sbUserAttributes+"="+sAttributeValue);
+						_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "Reg: "+sbUserAttributes+"="+sAttributeValue);
 						
 						// The user attribute is used as a login name later on,
 						// but apparently it can be empty too!
@@ -378,9 +389,10 @@ public class JNDIConnector implements IUDBConnector
 
 						String sCFGAuthSPID = (String) _htConfiguredAuthSPs.get(sAuthSPID);
 						if (sCFGAuthSPID != null)
-							htUserAttributes.put(sCFGAuthSPID, sAttributeValue);
+							htUserAttributes.put(sCFGAuthSPID, sAttributeValue+sVoicePhone);
 						// Result looks like: Ldap=<value of AselectLdapUserAttributes>
-						_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "Tranlated "+sAuthSPID+" to "+sCFGAuthSPID+" value="+sAttributeValue);
+						_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "Translated "+sAuthSPID+
+										" to "+sCFGAuthSPID+" value="+sAttributeValue+sVoicePhone);
 					}
 				}
 			}
@@ -786,6 +798,12 @@ public class JNDIConnector implements IUDBConnector
 			if (!Utils.hasValue(_sUdbUserIdent))
 				_sUdbUserIdent = "";
 			_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "udb_user_ident="+_sUdbUserIdent);
+
+			// 20121123, Bauke: added SMS to voice phones
+			_sVoicePhoneAttribute = Utils.getSimpleParam(_oASelectConfigManager, _oASelectSystemLogger, oConfigSection, "voice_phone_attribute", false);
+			if (!Utils.hasValue(_sVoicePhoneAttribute))
+				_sVoicePhoneAttribute = "";
+			_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "voice_phone_attribute="+_sVoicePhoneAttribute);
 			
 			try {
 				_sUDBResourceGroup = _oASelectConfigManager.getParam(oConfigSection, "resourcegroup");

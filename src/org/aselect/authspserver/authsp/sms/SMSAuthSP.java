@@ -56,7 +56,6 @@ import org.aselect.system.utils.Utils;
  */
 //public class SMSAuthSP extends ASelectHttpServlet
 public class SMSAuthSP extends AbstractAuthSP
-
 {
 	private static final int MAX_FIXED_SECRET_LENGTH = 50;
 
@@ -67,7 +66,7 @@ public class SMSAuthSP extends AbstractAuthSP
 	private final static String DEFAULT_FAILUREHANDLING = "aselect";
 
 	/** The version. */
-	public static final String VERSION = "A-Select SMS AuthSP " + "1.9.1";
+	public static final String VERSION = "A-Select SMS AuthSP";
 
 //	/** The logger that logs system information. */
 //	private AuthSPSystemLogger _systemLogger;
@@ -106,11 +105,10 @@ public class SMSAuthSP extends AbstractAuthSP
 	private int _iSmsSecretLength;
 	private String _sSmsText;
 	private String _sSmsFrom;
-	private SmsSender _oSmsSender;
-	private String _sSmsProvider;
+	private GenericSmsSender _oSmsSender;
+	private String _sSmsProvider;  // <gw_provider> from config
 	private String _fixed_secret;		// RH, 20110913, n
 	private boolean _bShow_challenge;		// RH, 20110919, n
-	
 
 	/**
 	 * Initialization of the SMS AuthSP. <br>
@@ -151,11 +149,6 @@ public class SMSAuthSP extends AbstractAuthSP
 		try {
 			// super init
 			super.init(oConfig);
-			// retrieve managers and loggers
-//			_systemLogger = AuthSPSystemLogger.getHandle();
-//			_authenticationLogger = AuthSPAuthenticationLogger.getHandle();
-//			_configManager = AuthSPConfigManager.getHandle();
-//			_sessionManager = AuthSPSessionManager.getHandle();
 
 			// log start
 			StringBuffer sbInfo = new StringBuffer("Starting : ").append(MODULE);
@@ -163,12 +156,6 @@ public class SMSAuthSP extends AbstractAuthSP
 
 			// Retrieve crypto engine from servlet context.
 			ServletContext oContext = oConfig.getServletContext();
-//			_cryptoEngine = (CryptoEngine) oContext.getAttribute("CryptoEngine");
-//			if (_cryptoEngine == null) {
-//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No CryptoEngine found in servlet context.");
-//				throw new ASelectException(Errors.ERROR_SMS_INTERNAL_ERROR);
-//			}
-//			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded CryptoEngine.");
 
 			// Retrieve friendly name
 			_sFriendlyName = (String) oContext.getAttribute("friendly_name");
@@ -279,7 +266,6 @@ public class SMSAuthSP extends AbstractAuthSP
 				sbWarning.append(_sFailureHandling);
 				sbWarning.append("', using default: aselect");
 				_sFailureHandling = DEFAULT_FAILUREHANDLING;
-
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbWarning.toString());
 			}
 
@@ -337,39 +323,23 @@ public class SMSAuthSP extends AbstractAuthSP
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod, "No 'from' parameter found in configuration", eAC);
 				throw new ASelectException(Errors.ERROR_SMS_INTERNAL_ERROR, eAC);
 			}
+			// NOTE: getSimpleParam() can return null values
 
-			// NOTE: ASelectConfigException results in a stack trace.
-			// Therefore non serious missing parameters should throw an ASelectException please.
-			try {
-				_sSmsGateway = _configManager.getParam(_oAuthSpConfig, "gateway");
-			}
-			catch (ASelectException eAC) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "No 'gateway' parameter found in configuration, using default of provider");
-				_sSmsGateway = null; // use default gateway
-			}
+			// if gateway is nog given, use the default gateway for the provider
+			_sSmsGateway = Utils.getSimpleParam(_configManager, _systemLogger, _oAuthSpConfig, "gateway", false/*not mandatory*/);
 
-			// _oSmsSender = new MollieHttpSmsSender(new URL(_sSmsUrl),
-			// _sSmsUser, _sSmsPassword); // RH, 20080729, o
-			// _oSmsSender = new MollieHttpSmsSender(new URL(_sSmsUrl), _sSmsUser, _sSmsPassword, _sSmsGateway);	// RH, 20110103, o
-			// RH, 20080729
-			// RH, 20110103, sn
-			try {
-				_sSmsProvider = _configManager.getParam(_oAuthSpConfig, "gw_provider");
-			}
-			catch (ASelectException eAC) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "No 'provider' parameter found in configuration, using default provider");
-				_sSmsProvider = null; // use default gateway
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "SmsProvider="+_sSmsProvider); 
-			_oSmsSender = SmsSenderFactory.createSmsSender(new URL(_sSmsUrl), _sSmsUser, _sSmsPassword, _sSmsGateway, _sSmsProvider);
-			// RH, 20110103, en
+			// if _sSmsProvider is null use default provider
+			_sSmsProvider = Utils.getSimpleParam(_configManager, _systemLogger, _oAuthSpConfig, "gw_provider", false/*not mandatory*/);
+
+			_oSmsSender = SmsSenderFactory.createSmsSender(_sSmsUrl, _sSmsUser, _sSmsPassword, _sSmsGateway, _sSmsProvider);
 			
 			// RH, 20110913, sn
 			try {
 				_fixed_secret = _configManager.getParam(_oAuthSpConfig, "fixed_secret");
-				if (_fixed_secret.length() == 0 || _fixed_secret.length() > MAX_FIXED_SECRET_LENGTH) throw new ASelectConfigException("Invalid _fixed_secret length");
+				if (_fixed_secret.length() == 0 || _fixed_secret.length() > MAX_FIXED_SECRET_LENGTH)
+					throw new ASelectConfigException("Invalid _fixed_secret length");
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-				"There is a 'fixed_secret' parameter found in configuration, all secret codes will be the same, which is not very secret !");
+					"There is a 'fixed_secret' parameter found in configuration, all secret codes will be the same, which is not very secret !");
 			}
 			catch (ASelectException eAC) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod,
@@ -377,7 +347,6 @@ public class SMSAuthSP extends AbstractAuthSP
 				_fixed_secret = null;
 			}
 			// RH, 20110913, en
-			
 			
 			sbInfo = new StringBuffer("Successfully started ");
 			sbInfo.append(VERSION).append(".");
@@ -422,7 +391,6 @@ public class SMSAuthSP extends AbstractAuthSP
 		
 		// super doGet for basics, future improvement
 //		super.doGet(servletRequest, servletResponse);
-
 		
 		try {
 			String sQueryString = servletRequest.getQueryString();
@@ -441,12 +409,10 @@ public class SMSAuthSP extends AbstractAuthSP
 
 			// check if the request is an API call
 			String sRequestName = (String) htServiceRequest.get("request");
-			if (sRequestName != null) // API request
-			{
+			if (sRequestName != null) {  // API request
 				// handleApiRequest(htServiceRequest,servletRequest,pwOut,servletResponse);
 			}
-			else // Browser request
-			{
+			else {  // Browser request
 				String sMyUrl = servletRequest.getRequestURL().toString();
 				htServiceRequest.put("my_url", sMyUrl);
 
@@ -484,16 +450,12 @@ public class SMSAuthSP extends AbstractAuthSP
 
 				if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), sSignature)) {
 					StringBuffer sbWarning = new StringBuffer("Invalid signature from A-Select Server '");
-//					sbWarning.append(sAsId).append("' for user: ").append(sUid);
-//					_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString());
-					_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"Invalid signature from A-Select Server, handling error locally.");
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid signature from A-Select Server, handling error locally.");
 					failureHandling = "local";	// RH, 20111021, n
 					throw new ASelectException(Errors.ERROR_SMS_INVALID_REQUEST);
 				}
 				htServiceRequest.put("as_url", sAsUrl);
 				htServiceRequest.put("uid", sUid);  // This is the user's phone number
-				
 				
 				String formtoken = newToken();
 				Integer iRetryCounter = 1;	// first time
@@ -519,7 +481,8 @@ public class SMSAuthSP extends AbstractAuthSP
 					htServiceRequest.put("language", sLanguage);
 				
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "SMS to sUid=" + sUid);
-				boolean bValid = isValidPhoneNumber(sUid);
+				// sUid can have a trailing "v" to indicate a voice phone (without SMS reception)
+				boolean bValid = isValidPhoneNumber(sUid.replace("v", ""));  // remove voice flag
 				int iReturnSend = -1;
 				if (bValid)
 					iReturnSend = generateAndSendSms(servletRequest, sUid);
@@ -553,7 +516,7 @@ public class SMSAuthSP extends AbstractAuthSP
 				servletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
 		}
-		catch (SmsException e) {
+		catch (DataSendException e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not send sms", e);
 			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_SMS_COULD_NOT_AUTHENTICATE_USER, sLanguage, failureHandling);
 		}
@@ -711,8 +674,6 @@ public class SMSAuthSP extends AbstractAuthSP
 				}
 				// RH, 20110104, en
 
-				
-				
 				// authenticate user
 				// IMPROVE, Should go to sessionmanager for clustering
 				String generatedPass = (String) servletRequest.getSession().getAttribute("generated_secret");
@@ -738,8 +699,7 @@ public class SMSAuthSP extends AbstractAuthSP
 //					}
 //					// RH, 20110104, en
 
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Invalid password, retry=" + retry_counter + " < "
-							+ _iAllowedRetries);
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Invalid password, retry=" + retry_counter + " < " + _iAllowedRetries);
 //					int iRetriesDone = Integer.parseInt(sRetryCounter);
 					int iRetriesDone = retry_counter;
 					if (iRetriesDone < _iAllowedRetries) // try again
@@ -770,8 +730,8 @@ public class SMSAuthSP extends AbstractAuthSP
 							htServiceRequest.put("country", sCountry);
 						if (sLanguage != null)
 							htServiceRequest.put("language", sLanguage);
+						
 						// show authentication form once again with warning message
-
 						showAuthenticateForm(pwOut, Errors.ERROR_SMS_INVALID_PASSWORD, 
 								_configManager.getErrorMessage(Errors.ERROR_SMS_INVALID_PASSWORD, _oErrorProperties),
 								htServiceRequest);
@@ -870,6 +830,7 @@ public class SMSAuthSP extends AbstractAuthSP
 		// RH, 20100907, en
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "error_code="+sError+" message="+sErrorMessage);
+		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[uid]", sUid);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[rid]", sRid);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[as_url]", sAsUrl);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[uid]", sUid);
@@ -891,7 +852,7 @@ public class SMSAuthSP extends AbstractAuthSP
 		String sSpecials = Utils.getAselectSpecials(htServiceRequest, true/*decode too*/, _systemLogger);
 		sAuthenticateForm = Utils.handleAllConditionals(sAuthenticateForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Show Form: "+_sAuthenticateHtmlTemplate);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Show Form: "+"authenticate.html");
 		pwOut.println(sAuthenticateForm);
 	}
 
@@ -941,6 +902,7 @@ public class SMSAuthSP extends AbstractAuthSP
 		// RH, 20100907, en
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "error_code="+sError+" message="+sErrorMessage);
+		sChallengeForm = Utils.replaceString(sChallengeForm, "[uid]", sUid);
 		sChallengeForm = Utils.replaceString(sChallengeForm, "[rid]", sRid);
 		sChallengeForm = Utils.replaceString(sChallengeForm, "[as_url]", sAsUrl);
 		sChallengeForm = Utils.replaceString(sChallengeForm, "[uid]", sUid);
@@ -992,7 +954,7 @@ public class SMSAuthSP extends AbstractAuthSP
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut, String sResultCode, String sLanguage, String failureHandling)
 	{
-		String sMethod = "handleResult()";
+		String sMethod = "handleResult";
 		StringBuffer sbTemp = null;
 
 		try {
@@ -1053,23 +1015,22 @@ public class SMSAuthSP extends AbstractAuthSP
 	 * Generate and send.
 	 * 
 	 * @param servRequest
-	 *            the serv request
+	 *            the servlet request
 	 * @param sRecipient
-	 *            the s recipient
-	 * @throws SmsException
-	 *             the sms exception
+	 *            the recipient phone numbers (a comma separated list)
 	 */
 	private int generateAndSendSms(HttpServletRequest servRequest, String sRecipient)
-	throws SmsException
+	throws DataSendException
 	{
-//		String sSecret = generateSecret();	// RH, 20110913, o
 		String sSecret = (_fixed_secret == null) ? generateSecret() : _fixed_secret;	// RH, 20110913, n
 		String sText = _sSmsText.replaceAll("0", sSecret);
 		
 		// TODO: add gateway here
 		_systemLogger.log(Level.INFO, MODULE, "generateAndSend", "SMS=" + sText + " Secret=" + sSecret);
-//		int result = _oSmsSender.sendSms(sText, _sSmsFrom, sRecipient);	// RH, 20110913, o
-		int result =  (_fixed_secret == null) ? _oSmsSender.sendSms(sText, _sSmsFrom, sRecipient) : 0;	// RH, 20110913, n
+		int result = 0;
+		if (_fixed_secret == null) {
+			result = _oSmsSender.sendSms(sText, _sSmsFrom, sRecipient);	// RH, 20110913, n
+		}
 		servRequest.getSession().setAttribute("generated_secret", sSecret);
 		return result;
 
