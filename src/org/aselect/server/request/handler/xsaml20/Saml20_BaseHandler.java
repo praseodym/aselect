@@ -60,6 +60,9 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 	// We (Bauke and I) decided that default should be NOT to verify
 	// SAML2 says it SHOULD be signed, therefore it's advisable to activate it in the configuration
 	private boolean _bVerifySignature = false;
+	private boolean verifyResponseSignature = false;
+	private boolean verifyAssertionSignature = false;
+	
 	private boolean _bVerifyInterval = false; // Checking of Saml2 NotBefore and NotOnOrAfter
 	private Long maxNotBefore = null; // relaxation period before NotBefore, validity period will be extended with this
 	// value (seconds)
@@ -104,6 +107,17 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 		if ("true".equalsIgnoreCase(sVerifySignature)) {
 			set_bVerifySignature(true);
 		}
+		
+		String sVerifyResponseSignature = ASelectConfigManager.getSimpleParam(oHandlerConfig, "verify_responsesignature", false);
+		if ("true".equalsIgnoreCase(sVerifyResponseSignature)) {
+			setVerifyResponseSignature(true);
+		}
+
+		String sVerifyAssertionSignature = ASelectConfigManager.getSimpleParam(oHandlerConfig, "verify_assertionsignature", false);
+		if ("true".equalsIgnoreCase(sVerifyAssertionSignature)) {
+			setVerifyAssertionSignature(true);
+		}
+		
 		String sIntervalInterval = ASelectConfigManager.getSimpleParam(oHandlerConfig, "verify_interval", false);
 		if ("true".equalsIgnoreCase(sIntervalInterval)) {
 			set_b_VerifyInterval(true);
@@ -482,6 +496,26 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 	public void setSslSocketFactory(SSLSocketFactory sslSocketFactory)
 	{
 		this.sslSocketFactory = sslSocketFactory;
+	}
+
+	public synchronized boolean isVerifyResponseSignature()
+	{
+		return verifyResponseSignature;
+	}
+
+	public synchronized void setVerifyResponseSignature(boolean verifyResponseSignature)
+	{
+		this.verifyResponseSignature = verifyResponseSignature;
+	}
+
+	public synchronized boolean isVerifyAssertionSignature()
+	{
+		return verifyAssertionSignature;
+	}
+
+	public synchronized void setVerifyAssertionSignature(boolean verifyAssertionSignature)
+	{
+		this.verifyAssertionSignature = verifyAssertionSignature;
 	}
 
 }

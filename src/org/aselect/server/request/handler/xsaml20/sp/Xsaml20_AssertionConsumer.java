@@ -97,6 +97,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 	// 20120712, Bauke: Store TGT in class variable to save on reads
 	protected HashMap _htTGTContext = null;
 
+	private boolean verifyArtifactResponseSignature = false;
+
 	//
 	// Example configuration:
 	// <handler id="saml20_assertionconsumer"
@@ -149,6 +151,15 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "use_backchannelclientcertificate: " + isUseBackchannelClientcertificate());
 		// RH, 20120322, en
 
+		// RH, 20121205, sn
+		String sVerifyArtifactresponseSignature = ASelectConfigManager.getSimpleParam(oHandlerConfig, "verify_artifactresponsesignature", false);
+		if ("true".equalsIgnoreCase(sVerifyArtifactresponseSignature)) {
+			setVerifyArtifactResponseSignature(true);
+		}
+		// RH, 20121205, en
+
+		
+		
 		_tgtManager = TGTManager.getHandle();
 		_authenticationLogger = ASelectAuthenticationLogger.getHandle();
 	}
@@ -289,7 +300,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				String artifactResponseIssuer = (sIssuer == null || "".equals(sIssuer))? sASelectServerUrl: sIssuer;
 	
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Do artifactResponse signature verification="+is_bVerifySignature());
-				if (is_bVerifySignature()) {
+//				if (is_bVerifySignature()) {	// RH, 20121205, o
+				if (is_bVerifySignature() || isVerifyArtifactResponseSignature()) {	// RH, 20121205, n
 					// Check signature of artifactResolve here
 					// We get the public key from the metadata
 					// Therefore we need a valid Issuer to lookup the entityID in the metadata
@@ -347,6 +359,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				//   if the HTTP POST binding is used, and MAY be signed if the HTTPArtifact binding is used.
 				if (is_bVerifySignature())
 					checkAssertionSigning = true;
+				
 			}
 			else {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No Artifact and no Response found in the message.");
@@ -360,6 +373,47 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				// SSO
 				Response samlResponse = (Response) samlResponseObject;
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Processing 'Response'");  // +XMLHelper.prettyPrintXML(samlResponse.getDOM()));
+
+				
+				// RH, 20121205, sn
+				MetaDataManagerSp metadataManager = MetaDataManagerSp.getHandle();
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Do Response signature verification="+isVerifyResponseSignature());
+				if (isVerifyResponseSignature()) {
+					Issuer issuer = samlResponse.getIssuer();
+					String sIssuer = (issuer == null)? null: issuer.getValue();
+					// If issuer is not present in the response, use sASelectServerUrl value retrieved from metadata
+					// else use value from the response
+//					String responseIssuer = (sIssuer == null || "".equals(sIssuer))? sASelectServerUrl: sIssuer;
+					String responseIssuer = (sIssuer == null || "".equals(sIssuer))? null: sIssuer;	// There must be an issuer for now
+					// Check signature of artifactResolve here
+					// We get the public key from the metadata
+					// Therefore we need a valid Issuer to lookup the entityID in the metadata
+					// We get the metadataURL from aselect.xml so we consider this safe and authentic
+					if (responseIssuer == null || "".equals(responseIssuer)) {
+						_systemLogger.log(Level.SEVERE, MODULE, sMethod,
+								"For signature verification the received response must have an Issuer");
+						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+					}
+					
+					PublicKey pkey = metadataManager.getSigningKeyFromMetadata(responseIssuer);
+					if (pkey == null || "".equals(pkey)) {
+						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No valid public key in metadata");
+						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+					}
+	
+					if (SamlTools.checkSignature(samlResponse, pkey)) {
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "Response was signed OK");
+					}
+					else {
+						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Response was NOT signed OK");
+						throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+					}
+				}
+				// RH, 20121205, en
+				
+				
+				
+				
 				
 				// Detect if this is a successful or an error Response		
 				String sStatusCode = samlResponse.getStatus().getStatusCode().getValue();
@@ -388,7 +442,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Issuer:" +sAssertIssuer+" checkAssertionSigning="+checkAssertionSigning);
 					
 					// 20120308: Bauke added signature checking
-					if (checkAssertionSigning) {
+//					if (checkAssertionSigning) {	// RH, 20121205, o
+					if (checkAssertionSigning || isVerifyAssertionSignature()) {	// RH, 20121205, n
 						// Check signature of artifactResolve here. We get the public key from the metadata
 						// Therefore we need a valid Issuer to lookup the entityID in the metadata
 						// We get the metadataURL from aselect.xml so we consider this safe and authentic
@@ -398,17 +453,17 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 							throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 						}
 						
-						MetaDataManagerSp metadataManager = MetaDataManagerSp.getHandle();
+//						MetaDataManagerSp metadataManager = MetaDataManagerSp.getHandle();	// RH, 20121205, n
 						PublicKey pkey = metadataManager.getSigningKeyFromMetadata(sAssertIssuer);
 						if (pkey == null || "".equals(pkey)) {
 							_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No valid public key in metadata");
 							throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 						}
 						if (!SamlTools.checkSignature(samlAssertion, pkey)) {
-							_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Response was NOT signed OK");
+							_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Assertion was NOT signed OK");
 							throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 						}
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "Response was signed OK");
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "Assertion was signed OK");
 					}
 					// 20120308
 					
@@ -937,5 +992,15 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 	public void setUseBackchannelClientcertificate(boolean useBackchannelClientcertificate)
 	{
 		this.useBackchannelClientcertificate = useBackchannelClientcertificate;
+	}
+
+	public synchronized boolean isVerifyArtifactResponseSignature()
+	{
+		return verifyArtifactResponseSignature;
+	}
+
+	public synchronized void setVerifyArtifactResponseSignature(boolean verifyArtifactResponseSignature)
+	{
+		this.verifyArtifactResponseSignature = verifyArtifactResponseSignature;
 	}
 }
