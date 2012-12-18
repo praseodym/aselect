@@ -147,7 +147,6 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 			handleAttributeRequest(request, response);
 		}
 		catch (IOException e) {
-			// TODO Auto-generated catch block
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, e.getMessage());
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
@@ -229,19 +228,15 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 					// ks.load(new FileInputStream(new File(_sKeystoreName)), null);
 				}
 				catch (KeyStoreException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				catch (NoSuchAlgorithmException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				catch (CertificateException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				if (assertion.isSigned()) {
-
 					// if (!SamlTools.checkSignature(assertion, getPublicKey(ks, "fippg"))) {
 					if (!SamlTools.checkSignature(assertion, _configManager.getDefaultCertificate().getPublicKey())) {
 						_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Signature not valid!");
@@ -252,7 +247,6 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 					}
 				}
 				subject = assertion.getSubject().getNameID().getValue();
-
 			}
 			else { // 
 				subject = token;
@@ -415,17 +409,10 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 	public PublicKey getPublicKey(KeyStore keystore, String alias)
 	{
 		java.security.cert.Certificate cert;
-		// try {
-		// cert = keystore.getCertificate(alias);
 		ASelectConfigManager _oASelectConfigManager = ASelectConfigManager.getHandle();
 		cert = _oASelectConfigManager.getDefaultCertificate();
 		// Get public key
 		PublicKey publicKey = cert.getPublicKey();
 		return publicKey;
-		// } catch (KeyStoreException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
-		// return null;
 	}
 }

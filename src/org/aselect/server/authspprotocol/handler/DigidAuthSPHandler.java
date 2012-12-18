@@ -284,7 +284,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			String sAppId = _htBetrouwbaarheidsNiveaus.get(sBetrouwbaarheidsNiveau);
 			String sSharedSecret = _htSharedSecrets.get(sBetrouwbaarheidsNiveau);
 			if (sAppId == null) {
-				// IMPROVE: we should get the next higher level
+				// TODO: we should get the next higher level
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No <application> found for level=" + sBetrouwbaarheidsNiveau);
 				throw new ASelectException(Errors.ERROR_ASELECT_CONFIG_ERROR);
 			}

@@ -171,8 +171,6 @@ public class PartnerData
 		}
 		return metadata4partner;
 	}
-
-	
 	
 	// Simple wrapper for handler info
 	public class HandlerInfo
@@ -247,22 +245,18 @@ public class PartnerData
 		public synchronized void setLocation(String location)
 		{
 			this.location = location;
-		}
-
-
-		
+		}	
 	}
 	
 	// SImple wrapper class for specific data 
-	public class Metadata4Partner {
-
+	public class Metadata4Partner
+	{
 		// signing information
 		private String addkeyname= null;
 		private String addcertificate = null;
 		private String specialsettings = null;
 		private Vector<HandlerInfo> handlers = new Vector<HandlerInfo>();
-		
-		
+			
 		// organization data
 		private String metaorgname = null;
 		private String metaorgnamelang = null;
@@ -273,7 +267,6 @@ public class PartnerData
 		
 		// contact data
 		String metacontacttype = null;
-		
 		String metacontactname = null;
 		String metacontactsurname = null;
 		String metacontactemail = null;
@@ -503,13 +496,10 @@ public class PartnerData
 		private String IssueInstantLogout= null;
 		private String IssuerLogout = null;
 		private String DestinationLogout = null;
-		
-		
 
 		@Override
 		public String toString()
 		{
-			// TODO Auto-generated method stub
 			return "IssueInstant=" + IssueInstant
 				+ ", Issuer=" + Issuer
 				+ ", AuthnContextClassRefURI=" + AuthnContextClassRefURI
@@ -522,10 +512,8 @@ public class PartnerData
 				+ ", IssueInstantLogout=" + IssueInstantLogout
 				+ ", IssuerLogout=" + IssuerLogout
 				+ ", DestinationLogout=" + DestinationLogout
-			;
-			
+			;			
 		}
-		
 		
 		/**
 		 * @return the issueInstant

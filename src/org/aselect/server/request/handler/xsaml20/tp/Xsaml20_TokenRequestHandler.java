@@ -38,11 +38,11 @@ import org.opensaml.xml.util.XMLHelper;
  *	<verify_signature>true</verify_signature>
  * </handler>
  */
-// IMPROVE, make this class abstract and implement specific extension class
+// TODO: make this class abstract and implement specific extension class
 public class Xsaml20_TokenRequestHandler extends Saml20_BaseHandler
 {
 
-	// IMPROVE: add URL decoding on query parameters
+	// TODO: add URL decoding on query parameters
 	// change query parameters to more unique values (e.q. "anoigorequest_encoding=base64")
 	// or even better, put them as parameters in de aselect.xml config file
 	private static final String PARM_NAME_SAMLREQUEST = "SAMLRequest";// only SAMLRequest=attributestatement is

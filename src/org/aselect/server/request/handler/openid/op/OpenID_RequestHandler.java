@@ -476,7 +476,7 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 			        }
 			        
 			        // --- process an authentication request ---
-			        // ? does authResponse verify the requestp signature ?
+			        // TODO ? does authResponse verify the requestp signature ?
 			        opResponse = serverManager.authResponse(requestp,
 			                userSelectedId,
 			                userSelectedClaimedId,
@@ -548,7 +548,6 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 		}
 		
 		  /**
-		   * TODO: document this
 		   * @return
 		   */
 		  public String createXrdsResponse() {
@@ -558,7 +557,6 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 
 		
 			/**
-		   * TODO: document this
 		   * @param the (optional) localID to return in the XRDS
 		   * @return
 		   */

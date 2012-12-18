@@ -1105,7 +1105,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		htAttributes.put("betrouwbaarheidsniveau", sSecLevel);
 		htAttributes.put("sel_level", sSecLevel);
 
-		// IMPROVE following code should go to tgt.TGTIssuer, RH 20080617
+		// TODO: following code should go to tgt.TGTIssuer, RH 20080617
 		HashMap htTGTContext = new HashMap();
 		htTGTContext.put("attributes", org.aselect.server.utils.Utils.serializeAttributes(htAttributes));
 		htTGTContext.put("uid", sUserId);

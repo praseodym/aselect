@@ -1125,8 +1125,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// Note the current session is available through _htSessionContext
 			Utils.copyHashmapValue("client_ip", _htSessionContext, htServiceRequest);
 			Utils.copyHashmapValue("user_agent", _htSessionContext, htServiceRequest);
-			// IMPROVE: could be that handleUserConsent() also saved the session, should be optimized
-			//_sessionManager.update(sRid, _htSessionContext);
 			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 
 			// no TGT found or killed (other uid)

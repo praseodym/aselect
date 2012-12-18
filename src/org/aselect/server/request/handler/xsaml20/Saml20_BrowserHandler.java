@@ -466,18 +466,16 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 		return response;
 	}
 
-	//
-	// Get the next SP session from the TgT and send it a Logout request
-	// Always save the TgT, caller may have changed it already.
-	//
 	/**
 	 * Logout next session sp.
-	 * 
+	 * Get the next SP session from the TgT and send it a Logout request
+	 * Always save the TgT, caller may have changed it already.
+	 *  
 	 * @param httpRequest
 	 *            the http request
 	 * @param httpResponse
 	 *            the http response
-	 * @param logoutRequest
+	 * @param originalLogoutRequest
 	 *            the logout request
 	 * @param initiatingSP
 	 *            the initiating sp
@@ -492,12 +490,10 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	 * @param responseIssuer
 	 *            the response issuer
 	 * @throws ASelectException
-	 *             the a select exception
 	 * @throws ASelectStorageException
-	 *             the a select storage exception
 	 */
 	protected void logoutNextSessionSP(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
-			LogoutRequest logoutRequest, String initiatingSP, String initiatingID, boolean tryRedirectLogoutFirst,
+			LogoutRequest originalLogoutRequest, String initiatingSP, String initiatingID, boolean tryRedirectLogoutFirst,
 			int redirectLogoutTimeout, HashMap<String, Serializable> htTGTContext, Issuer responseIssuer)
 	throws ASelectException, ASelectStorageException
 	{
@@ -505,13 +501,12 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 		String sRelayState = null;
 		TGTManager tgtManager = TGTManager.getHandle();
 
-		String sNameID = logoutRequest.getNameID().getValue();
+		String sNameID = originalLogoutRequest.getNameID().getValue();
 		if (htTGTContext == null) { // caller did not get the TGT yet
 			htTGTContext = tgtManager.getTGT(sNameID);
 		}
 
-		// TODO: if one or more session indexes are mentioned in the logout request
-		// only logout the ones mentioned!!
+		// TODO: if one or more session indexes are mentioned in the logout request, only logout the ones mentioned!!
 		// List SessionIndexes = logoutRequest.getSessionIndexes();
 		if (htTGTContext != null) {
 			UserSsoSession sso = (UserSsoSession) htTGTContext.get("sso_session");
@@ -564,10 +559,9 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 						_systemLogger.log(Level.INFO, MODULE, sMethod, "TIMER logout (as backup)");
 						SLOTimer timer = SLOTimer.getHandle(_systemLogger);
 						// Store the session with the remaining SP's in it
-						SLOTimerTask task = new SLOTimerTask(sNameID, logoutRequest.getID(), sso, _sASelectServerUrl);
+						SLOTimerTask task = new SLOTimerTask(sNameID, originalLogoutRequest.getID(), sso, _sASelectServerUrl);
 						long now = new Date().getTime();
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "Schedule timer +" + redirectLogoutTimeout
-								* 1000);
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "Schedule timer +"+redirectLogoutTimeout*1000);
 						timer.schedule(task, new Date(now + redirectLogoutTimeout * 1000));
 					}
 
@@ -589,7 +583,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 					// This will logout all SP's
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "TIMER logout for SP=" + serviceProvider);
 					SLOTimer timer = SLOTimer.getHandle(_systemLogger);
-					SLOTimerTask task = new SLOTimerTask(sNameID, logoutRequest.getID(), sso, _sASelectServerUrl);
+					SLOTimerTask task = new SLOTimerTask(sNameID, originalLogoutRequest.getID(), sso, _sASelectServerUrl);
 					// schedule it for now. No need to wait
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Schedule timer now");
 					timer.schedule(task, new Date());

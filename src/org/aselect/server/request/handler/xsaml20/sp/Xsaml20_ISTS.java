@@ -292,8 +292,8 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get MetaData FederationUrl=" + sFederationUrl);
 			MetaDataManagerSp metadataMgr = MetaDataManagerSp.getHandle();
-			// IMPROVE set RelayState to idp URL or requested resource URL
-			// IMPROVE maybe make "automatic" (based on metadata) selection between POST and REDIRECT
+			// TODO: set RelayState to idp URL or requested resource URL
+			// TODO: maybe make "automatic" (based on metadata) selection between POST and REDIRECT
 			// We now support the Redirect and POST Binding
 			String sDestination = null;
 			if ("POST".equalsIgnoreCase(_sHttpMethod)) {

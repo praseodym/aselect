@@ -232,7 +232,8 @@ public class SamlTools
 		try {
 			profileValidator.validate(sig);
 		}
-		catch (ValidationException e) {  // Indicates signature did not conform to SAML Signature profile
+		catch (ValidationException e) {
+			// Indicates signature did not conform to SAML Signature profile
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Cannot validate signature, signature did not conform to SAML Signature profile", e);
 			return false;
 		}

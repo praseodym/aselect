@@ -130,18 +130,15 @@ public class SoapLogoutRequestSender
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Send backchannel LogoutRequest to " + serviceProviderUrl
 				+ " for user: " + sNameID);
 
-//		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(serviceProviderUrl, null, sNameID, issuerUrl, reason);	// RH, 20120201, o
 		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(serviceProviderUrl, null, sNameID, issuerUrl, reason, sessionindexes);// RH, 20120201, n
-		// IMPROVE: SamlTools.setValidityInterval with only NotOnOrAfter, but we need this from calling object
+		// TODO: SamlTools.setValidityInterval with only NotOnOrAfter, but we need this from calling object
 		
 		// Always sign the logoutRequest
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the logoutRequest >======");
 		logoutRequest = (LogoutRequest)SamlTools.signSamlObject(logoutRequest);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the logoutRequest ======<");
 
-//		SoapManager soapManager = new SoapManager();
 		SoapManager soapManager = new SoapManager(sslSocketFactory);	// sslSocketFactory may be null
-		
 		Envelope envelope = soapManager.buildSOAPMessage(logoutRequest);
 
 		Element envelopeElem = null;

@@ -675,7 +675,7 @@ public class SMSAuthSP extends AbstractAuthSP
 				// RH, 20110104, en
 
 				// authenticate user
-				// IMPROVE, Should go to sessionmanager for clustering
+				// TODO: Should go to sessionmanager for clustering
 				String generatedPass = (String) servletRequest.getSession().getAttribute("generated_secret");
 				String sResultCode = (sPassword.compareTo(generatedPass) == 0) ? (Errors.ERROR_SMS_SUCCESS)
 						: Errors.ERROR_SMS_INVALID_PASSWORD;

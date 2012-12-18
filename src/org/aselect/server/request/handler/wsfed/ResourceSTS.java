@@ -115,7 +115,7 @@ public class ResourceSTS extends ProtoRequestHandler
 		String sPwa = request.getParameter("wa");
 		String sPwreply = request.getParameter("wreply"); // protected resource
 		String sPwctx = request.getParameter("wctx"); // pass context unchanged
-		// String sPwct = request.getParameter("wct"); // TODO: check
+		// String sPwct = request.getParameter("wct");
 		String sPwtrealm = request.getParameter("wtrealm"); // requestor's home realm
 
 		// Redirect to Requestor's IP/STS (Account Partner)

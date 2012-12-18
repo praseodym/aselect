@@ -43,7 +43,6 @@ public abstract class AbstractConnectionHandler implements IConnectionHandler
 	public Connection getConnection()
 	throws ASelectStorageException
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -53,8 +52,5 @@ public abstract class AbstractConnectionHandler implements IConnectionHandler
 	 */
 	public void releaseConnection(Connection c)
 	{
-		// TODO Auto-generated method stub
-
 	}
-
 }

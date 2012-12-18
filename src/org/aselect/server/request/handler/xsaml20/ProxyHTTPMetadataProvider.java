@@ -82,9 +82,7 @@ public class ProxyHTTPMetadataProvider extends HTTPMetadataProvider
 			l_metadataURI = new URI(getMetadataURI());
 		}
 		catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
 			throw new MetadataProviderException("Illegal URL syntax", e);
-
 		}
 
 		proxyauthScope = new AuthScope(l_metadataURI.getHost(), l_metadataURI.getPort());

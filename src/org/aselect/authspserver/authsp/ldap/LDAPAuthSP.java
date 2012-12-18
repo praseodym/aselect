@@ -677,7 +677,6 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	 */
 	protected boolean isRestartableServlet()
 	{
-		// IMPROVE: Restart functionality can be added (Erwin)
 		return false;
 	}
 

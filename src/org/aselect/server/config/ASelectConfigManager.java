@@ -1714,8 +1714,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *             if loading fails.
 	 */
 	// 20090930, Bauke: added localization
-	// IMPROVE: use a cache for the templates
-	// IMPROVE: move to ConfigManager, so AuthSP can also use this functionality
+	// TODO: move to ConfigManager, so AuthSP can also use this functionality
 	public String loadHTMLTemplate(String sUnUsed, String sFileName, String sLanguage, String sCountry)
 	throws ASelectException
 	{

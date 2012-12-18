@@ -34,7 +34,6 @@ public class ClosingConnectionHandler extends AbstractConnectionHandler
 	@Override
 	public void Init(ConfigManager configMan, SystemLogger systemLogger, SAMAgent sam, String resourcegroup)
 	{
-		// TODO Auto-generated method stub
 		super.Init(configMan, systemLogger, sam, resourcegroup);
 	}
 
@@ -46,7 +45,6 @@ public class ClosingConnectionHandler extends AbstractConnectionHandler
 	public Connection getConnection()
 	throws ASelectStorageException
 	{
-		// TODO Auto-generated method stub
 		super.getConnection();
 		String sMethod = "getConnection()";
 		String sPassword = null;
