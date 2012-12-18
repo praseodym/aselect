@@ -467,7 +467,7 @@ public class IPAuthSP extends ASelectHttpServlet
 	@Override
 	protected boolean isRestartableServlet()
 	{
-		// TODO Restart functionality has to be added (Erwin)
+		// RM_16_01
 		return false;
 	}
 

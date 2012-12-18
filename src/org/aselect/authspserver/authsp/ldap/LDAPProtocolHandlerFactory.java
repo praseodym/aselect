@@ -43,13 +43,11 @@
  * added full_uid support
  *
  * Revision 1.7  2005/04/08 12:41:50  martijn
- * fixed todo's
  *
  * Revision 1.6  2005/03/29 13:47:24  martijn
  * config item port has been removed from the config, now using ldap://www.test.com:port instead
  *
  * Revision 1.5  2005/03/29 08:56:25  tom
- * Changed fixme into todo
  *
  * Revision 1.4  2005/03/23 09:48:38  erwin
  * - Applied code style

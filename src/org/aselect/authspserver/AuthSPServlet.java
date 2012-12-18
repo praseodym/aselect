@@ -41,13 +41,11 @@
  * Fixed problem with error handling working_dir (bug #83)
  *
  * Revision 1.20  2005/04/08 12:42:20  martijn
- * fixed todo's
  *
  * Revision 1.19  2005/03/29 10:36:48  erwin
  * Added implementation of abstract method isRestartableServlet().
  *
  * Revision 1.18  2005/03/16 12:56:42  martijn
- * changed todo
  *
  * Revision 1.17  2005/03/16 11:41:37  tom
  * Fixed Javadoc comment

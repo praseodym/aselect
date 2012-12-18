@@ -234,7 +234,8 @@ public class IDPFHandler extends ProtoRequestHandler
 	    				"&a-select-server=" + URLEncoder.encode(ridAselectServer, "UTF-8") +
 	    				"&request=" + URLEncoder.encode(ridrequest, "UTF-8") +
 	    				"&uid=" + URLEncoder.encode(uid, "UTF-8") +
-	    				"&app_url=" + URLEncoder.encode(ridAppURL /* TODO + serialized version of requestp */ , "UTF-8") +
+	    				 // RM_30_01
+	    				"&app_url=" + URLEncoder.encode(ridAppURL, "UTF-8") +
 //			    				"&check-signature=" + URLEncoder.encode(ridCheckSignature, "UTF-8") +
 	    				"&app_id=" + URLEncoder.encode(appID, "UTF-8");
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Requesting rid through: " + ridURL);
@@ -426,7 +427,7 @@ public class IDPFHandler extends ProtoRequestHandler
 
 	/**
 	 * @param request
-	 * @param extracted_credentials TODO
+	 * @param extracted_credentials
 	 * @param sMethod
 	 * @param extractedAselect_credentials
 	 * @return 

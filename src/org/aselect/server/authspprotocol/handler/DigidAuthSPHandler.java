@@ -1,7 +1,6 @@
 /*
  * Created on 6-aug-2007
  *
- * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
 package org.aselect.server.authspprotocol.handler;
@@ -284,7 +283,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			String sAppId = _htBetrouwbaarheidsNiveaus.get(sBetrouwbaarheidsNiveau);
 			String sSharedSecret = _htSharedSecrets.get(sBetrouwbaarheidsNiveau);
 			if (sAppId == null) {
-				// TODO: we should get the next higher level
+				// RM_22_01
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No <application> found for level=" + sBetrouwbaarheidsNiveau);
 				throw new ASelectException(Errors.ERROR_ASELECT_CONFIG_ERROR);
 			}

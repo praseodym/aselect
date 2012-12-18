@@ -169,7 +169,7 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 				// and a response message will be sent to the browser
 				if (!SamlTools.isSigned(httpRequest)) {
 					String errorMessage = "SAML message must be signed.";
-					// TODO Why do we send return message here and throw
+					// RM_60_01
 					// exception in all other cases?
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, errorMessage);
 					PrintWriter pwOut = httpResponse.getWriter();
@@ -237,7 +237,7 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 		HashMap htTGTContext = tgtManager.getTGT(sTgT);
 		String sIdP = (htTGTContext == null) ? null : (String) htTGTContext.get("SendIdPLogout");
 
-		// 20091106, TODO: this mechanism should be replace by sending a LogoutResponse to the caller
+		// RM_60_02
 		String sReturnUrl = (htTGTContext == null) ? null : (String) htTGTContext.get("RelayState");
 		if (sIdP == null || sReturnUrl == null) {
 			sReturnUrl = httpRequest.getParameter("RelayState"); // fall back mechanism

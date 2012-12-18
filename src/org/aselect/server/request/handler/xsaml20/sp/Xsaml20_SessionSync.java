@@ -112,7 +112,6 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 
 	/**
 	 * Process incoming session synchronization message. <br>
-	 * TODO: Signature checking is missing
 	 * 
 	 * @param request
 	 *            The HttpServletRequest.
@@ -122,6 +121,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	 * @throws ASelectException
 	 *             If processing of request fails.synchronizeSession
 	 */
+	// RM_58_01
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{

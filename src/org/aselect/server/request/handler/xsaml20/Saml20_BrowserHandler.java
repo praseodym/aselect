@@ -506,7 +506,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			htTGTContext = tgtManager.getTGT(sNameID);
 		}
 
-		// TODO: if one or more session indexes are mentioned in the logout request, only logout the ones mentioned!!
+		// RM_49_01
 		// List SessionIndexes = logoutRequest.getSessionIndexes();
 		if (htTGTContext != null) {
 			UserSsoSession sso = (UserSsoSession) htTGTContext.get("sso_session");

@@ -70,7 +70,7 @@
  * Removed redundant code; now extends ASelectHttpServlet and uses AuthSP configmanager functionality.
  *
  * Revision 1.9  2005/03/24 09:56:30  erwin
- * Fixed todos with numberformat exception and problem with error handling
+ * Fixed numberformat exception and problem with error handling
  *
  * Revision 1.8  2005/03/23 12:41:18  erwin
  * Improved template loading (close)

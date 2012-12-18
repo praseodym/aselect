@@ -286,7 +286,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 
 
 			// get return url
-			// TODO maybe better get this from request? =Parameter less in config
+			// RM_18_01
 			
 			try {
 				_sUrl = _configManager.getParam(_oAuthSpConfig, "url");
@@ -358,7 +358,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 			if (sRequestName != null) // API request
 			{
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "API call");
-				// TODO API request NOT implemented !
+				// RM_18_02
 				// Maybe implement something which supports OpenID call without requesting user for OpenID identifier
 				handleApiRequest(htServiceRequest, servletRequest, pwOut, servletResponse);
 			}
@@ -370,7 +370,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 				
 				String sIsReturn = (String) htServiceRequest.get("is_return");
 				
-				// TODO handle tempering wirh is_return, although it probably won't harm
+				// RM_18_03
 				boolean isReturn = Boolean.parseBoolean(sIsReturn);
 				if (!isReturn) {	// handle inital request from aselectserver
 					
@@ -386,7 +386,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 					
 					htServiceRequest.put("my_url", sMyUrl);
 
-					// TODO not all these fields are mandatory
+					// RM_18_04
 					// if ((sRid == null) || (sUid == null) || (sAsId == null))
 					if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sAsId == null) || (sSignature == null)) {
 						_systemLogger.log(Level.WARNING, MODULE, sMethod,
@@ -483,7 +483,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 					String sMyUrl = servletRequest.getRequestURL().toString();
 
 					StringBuffer sbTemp = new StringBuffer(sRid);
-					// TODO take urldecode as necessary and verify signature from openid
+					// RM_18_05
 					sbTemp.append(sAsUrl);
 					sbTemp.append(sAsId);
 					sbTemp.append(sRetryCounter);
@@ -505,7 +505,8 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 					boolean matches = false;
 					// handle openidresponse and find out if the user is authentic
 			        RegistrationModel registrationModel = RegistrationService.processReturn(discoveryinfo, htServiceRequestAsMap, sReturnURL, _systemLogger);
-			        if (registrationModel != null) {	// TODO maybe do some extra checks here
+			        if (registrationModel != null) {
+			        	// RM_18_06
 						_systemLogger.log(Level.INFO, MODULE, sMethod, "Retrieved OpenID:" + registrationModel.getOpenId());
 			        	matches = true;
 			        }
@@ -565,7 +566,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 							_authenticationLogger.log(new Object[] {
 								MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied", Errors.ERROR_DB_INVALID_PASSWORD
 							});
-							// TODO change errors
+							// RM_18_07
 							handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_DB_INVALID_PASSWORD, sLanguage, sUid);
 						}
 					}
@@ -646,7 +647,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 			
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "User entered OpenID: " + sUid);
 
-			// TODO not all these fields are mandatory
+			// RM_18_08
 			if ((sRid == null) || (sAsUrl == null) || (sUid == null)  || (sAsId == null)
 					|| (sRetryCounter == null) || (sSignature == null)) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
@@ -654,7 +655,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 				throw new ASelectException(Errors.ERROR_DB_INVALID_REQUEST);
 			}
 			
-			// TODO better check for valid sUid
+			// RM_18_09
 			if (sUid.trim().length() < 1) // invalid OpenID
 			{
 				HashMap htServiceRequest = new HashMap();
@@ -670,7 +671,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 				if (sLanguage != null)
 					htServiceRequest.put("language", sLanguage);
 				// show authentication form once again with warning message
-				// TODO change errors
+				// RM_18_10
 				showAuthenticateForm(pwOut, Errors.ERROR_DB_INVALID_PASSWORD, _configManager.getErrorMessage(
 						Errors.ERROR_DB_INVALID_REQUEST, _oErrorProperties), htServiceRequest);
 			}
@@ -718,7 +719,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 					hDiscovery.put("a-select-server", sAsId);
 					hDiscovery.put("retry_counter", sRetryCounter);
 
-					// TODO, we probably can use the existing signature
+					// RM_18_11
 
 					StringBuffer sbTemp = new StringBuffer(sRid);
 //					sbTemp.append(sAsUrl).append(sResultCode);
@@ -781,7 +782,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 			        AuthRequest authRequest = RegistrationService.createOpenIdAuthRequest(discoveryInformation, returnURL);
 			        // Now take the AuthRequest and forward it on to the OP
 			        
-			        // TODO we have to handle the redirect
+			        // RM_18_12
 			        // maybe implement new handler or special request parameter in doGet
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Starting redirect with redirectURL:" + authRequest.getDestinationUrl(true));
 			        

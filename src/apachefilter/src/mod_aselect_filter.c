@@ -683,7 +683,7 @@ static int aselect_filter_handler(request_rec *pRequest)
     timer_data.td_type = 1;
 
     // 20091114, Bauke: report application language back to the Server
-    // TODO: Should look into the POST data as well!
+    // RM_12_01
     // Currently callers have to specify the language as an URL parameter
     pcRequestLanguage = aselect_filter_get_param(pPool, pRequest->args, "language=", "&", TRUE);
 

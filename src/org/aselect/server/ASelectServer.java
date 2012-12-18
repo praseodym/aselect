@@ -67,7 +67,6 @@
  * Removed old logging statements
  *
  * Revision 1.44  2005/04/08 12:41:12  martijn
- * fixed todo's
  *
  * Revision 1.43  2005/04/01 14:27:15  peter
  * cross aselect redesign
@@ -88,10 +87,9 @@
  * Fixed Javadoc comment
  *
  * Revision 1.37  2005/03/16 13:00:14  martijn
- * changed todo's
  *
  * Revision 1.36  2005/03/16 11:15:50  erwin
- * Fixed todo with configurable truststore:
+ * Fixed configurable truststore:
  * There will not be a configuration item, because this is a
  * VM wide option and is otherwise set for all web contexts/applications.
  *

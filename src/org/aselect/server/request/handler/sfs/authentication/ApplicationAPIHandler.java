@@ -161,7 +161,6 @@
  * changed attribute functionality
  *
  * Revision 1.7  2005/03/16 13:19:14  martijn
- * changed todo to fixme
  *
  * Revision 1.6  2005/03/16 13:12:11  remco
  * added attributes (initial version)

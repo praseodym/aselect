@@ -46,10 +46,8 @@
  * added ERROR_ASELECT_UNKNOWN_USER
  *
  * Revision 1.15  2005/03/16 13:48:35  tom
- * Added todo
  *
  * Revision 1.14  2005/03/16 13:11:27  martijn
- * changed todo
  *
  * Revision 1.13  2005/03/14 14:03:10  martijn
  * added ERROR_ASELECT_CONFIG_ERROR

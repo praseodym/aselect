@@ -754,7 +754,8 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
 			SAMLAssertion oSAMLAssertion = new SAMLAssertion(_sASelectServerID, // Our (IdP) Id
 					new Date(), // Valid from
 					dExpire, // Valid until
-					null, // TODO: add Audience condition
+					null,
+					// RM_33_01
 					null, // Advice(s)
 					vSAMLStatements // Contained statements
 			);

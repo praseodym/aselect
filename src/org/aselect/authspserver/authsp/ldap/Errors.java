@@ -28,8 +28,6 @@
  *
  * Revision 1.2  2005/02/04 10:12:40  leon
  * code restyle and license added
- *
- * TODO 4 digit error codes (Erwin)
  */
 
 package org.aselect.authspserver.authsp.ldap;

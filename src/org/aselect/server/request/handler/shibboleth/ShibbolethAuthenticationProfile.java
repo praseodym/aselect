@@ -369,7 +369,7 @@ public class ShibbolethAuthenticationProfile extends AbstractRequestHandler
 			// added 1.5.4
 			// https://wayf.surfnet.nl/aselectserver/server/shib-idp?target=https%3A%2F%2Fsdauth-cert3.sciencedirect.com&shire=https%3A%2F%2Fsdauth-cert3.sciencedirect.com%2FSHIRE&providerId=https%3A%2F%2Fsdauth.sciencedirect.com%2F
 			String pathInfo = request.getPathInfo();
-			// TODO: make this configurable or at least matching to handler target...
+			// RM_41_01
 			if (!pathInfo.endsWith("shib-idp")) {
 
 				String[] split = pathInfo.split("/");

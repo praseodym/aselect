@@ -54,7 +54,6 @@
  * Fixed problem with restart update
  *
  * Revision 1.18  2005/04/08 12:41:12  martijn
- * fixed todo's
  *
  * Revision 1.17  2005/04/07 13:14:39  erwin
  * Added "else" for adding redundant parameters.

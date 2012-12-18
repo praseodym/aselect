@@ -116,7 +116,6 @@
  * Added local A-Select signing support for cross A-Select.
  *
  * Revision 1.16  2005/04/08 11:58:19  martijn
- * fixed todo's
  *
  * Revision 1.15  2005/04/07 14:38:12  peter
  * added forced_authenticate
@@ -145,7 +144,6 @@
  * A-Select-Server ID is checked in higher function
  *
  * Revision 1.7  2005/03/16 13:08:19  martijn
- * changed todo to fixme
  *
  * Revision 1.6  2005/03/15 16:00:28  tom
  * Fixed import errors
@@ -417,7 +415,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 			_systemLogger.log(Level.FINE, _sModule, sMethod, "No optional 'forced_logon' parameter found.", e);
 		}
 
-		// TODO include other optional parameters as well (remco)
+		// RM_39_01
 		if (_crossASelectManager.isLocalSigningRequired()) {
 			StringBuffer sbData = new StringBuffer(sASelectServer);
 			if (sArpTarget != null)

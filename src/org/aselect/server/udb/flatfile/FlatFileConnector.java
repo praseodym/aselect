@@ -327,7 +327,8 @@ public class FlatFileConnector implements IUDBConnector
 		boolean bEnabled = false;
 
 		_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "user=" + sUserId);
-		String sUID = sUserId.replace(' ', '+'); // TODO this could be removed (Erwin)
+		// RM_64_01
+		String sUID = sUserId.replace(' ', '+');
 
 		StringBuffer sbAccountEnabled = new StringBuffer("user.");
 		sbAccountEnabled.append(sUID);

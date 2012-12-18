@@ -131,7 +131,7 @@ public class SoapLogoutRequestSender
 				+ " for user: " + sNameID);
 
 		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(serviceProviderUrl, null, sNameID, issuerUrl, reason, sessionindexes);// RH, 20120201, n
-		// TODO: SamlTools.setValidityInterval with only NotOnOrAfter, but we need this from calling object
+		// RM_51_01
 		
 		// Always sign the logoutRequest
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the logoutRequest >======");

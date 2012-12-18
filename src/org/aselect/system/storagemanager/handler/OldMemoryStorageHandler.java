@@ -22,7 +22,6 @@
  * Changed version number to 1.4.2
  *
  * Revision 1.11  2005/04/08 12:41:30  martijn
- * fixed todo's
  *
  * Revision 1.10  2005/03/16 13:31:51  tom
  * Added new log functionality
@@ -267,7 +266,7 @@ public class OldMemoryStorageHandler implements IStorageHandler
 	public void put(Object oKey, Object oValue, Long lTimestamp, IStorageHandler.UpdateMode eMode)
 	throws ASelectStorageException
 	{
-		// TODO, this implementation uses HashMap so we can probably not make any improvement here
+		// RM_71_01
 		// For now we just call the old one
 		switch (eMode) {
 		case INSERTFIRST: // do insert first

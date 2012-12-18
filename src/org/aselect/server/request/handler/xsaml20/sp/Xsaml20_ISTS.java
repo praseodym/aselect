@@ -292,8 +292,8 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get MetaData FederationUrl=" + sFederationUrl);
 			MetaDataManagerSp metadataMgr = MetaDataManagerSp.getHandle();
-			// TODO: set RelayState to idp URL or requested resource URL
-			// TODO: maybe make "automatic" (based on metadata) selection between POST and REDIRECT
+			// RM_57_01
+			// RM_57_02
 			// We now support the Redirect and POST Binding
 			String sDestination = null;
 			if ("POST".equalsIgnoreCase(_sHttpMethod)) {
@@ -436,7 +436,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 //					} else {
 						authnRequest.setIssueInstant(new DateTime().plus(1000*Long.parseLong(timeOffset)));
 //					}
-					// TODO implement setting of absolute timestamps
+					// RM_57_03
 				}
 				if (partnerData.getTestdata4partner().getIssuer() != null) {
 					authnRequest.getIssuer().setValue(partnerData.getTestdata4partner().getIssuer());
@@ -463,7 +463,8 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 					
 				}
 				if (partnerData.getTestdata4partner() .getAssertionConsumerServiceIndex() != null) {
-					authnRequest.setAssertionConsumerServiceIndex(Integer.parseInt(partnerData.getTestdata4partner() .getAssertionConsumerServiceIndex())); // TODO beware of exception
+					// RM_57_04
+					authnRequest.setAssertionConsumerServiceIndex(Integer.parseInt(partnerData.getTestdata4partner() .getAssertionConsumerServiceIndex()));
 				}
 				if (partnerData.getTestdata4partner() .getAssertionConsumerServiceURL() != null) {
 					authnRequest.setAssertionConsumerServiceURL(partnerData.getTestdata4partner() .getAssertionConsumerServiceURL());

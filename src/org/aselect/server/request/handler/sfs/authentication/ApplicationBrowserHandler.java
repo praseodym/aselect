@@ -180,7 +180,6 @@
  * Added local A-Select signing support for cross A-Select.
  *
  * Revision 1.37  2005/04/08 12:41:12  martijn
- * fixed todo's
  *
  * Revision 1.36  2005/04/08 08:06:08  peter
  * if user already has a TGT check if an optional requested uid equals the one in the TGT
@@ -210,19 +209,16 @@
  * save old_tgt if forced authenticate and user has already a tgt
  *
  * Revision 1.27  2005/04/05 11:30:44  martijn
- * added todo
  *
  * Revision 1.26  2005/04/05 09:11:15  peter
  * added cross proxy logica in showuserinfo (logout page)
  *
  * Revision 1.25  2005/04/05 08:17:03  martijn
- * added todo for handleIPLogin1
  *
  * Revision 1.24  2005/04/05 07:50:11  martijn
  * added forced_authenticate
  *
  * Revision 1.23  2005/04/04 12:33:34  erwin
- * Added a todo for error handling.
  *
  * Revision 1.22  2005/04/01 14:26:58  peter
  * cross aselect redesign
@@ -258,7 +254,6 @@
  * - Fixed javadoc
  *
  * Revision 1.11  2005/03/16 12:50:50  martijn
- * changed some todo's to fixme's
  *
  * Revision 1.10  2005/03/16 10:00:07  peter
  * Fixed Cross TGT if it already exists.
@@ -267,7 +262,6 @@
  * The config item 'cookie_domain' will now only be retrieved from the config at startup and not every time the ticket is issued.
  *
  * Revision 1.8  2005/03/15 16:04:10  erwin
- * Added TODo
  *
  * Revision 1.7  2005/03/15 15:29:04  martijn
  * renamed special authsp to privileged application
@@ -313,7 +307,6 @@
  * fixed bug in getAuthsps(): if the hashtable returned by the udbconnector doesn't contain a key=user_authsps with value=HashMap, then a wrong error message was logged.
  *
  * Revision 1.11  2005/03/09 15:11:20  martijn
- * added fixme in getAuthsps()
  *
  * Revision 1.10  2005/03/09 09:24:50  erwin
  * Renamed and moved errors.
@@ -1417,7 +1410,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @param pwOut
 	 *            Used to write information back to the user (HTML)
 	 * @throws ASelectException
-	 *             TODO add support for cross and force_authenticate (martijn)
 	 */
 	private void handleIPLogin1(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 	throws ASelectException
@@ -1436,7 +1428,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// check if user already has a tgt so that he/she doesnt need to
 			// be authenticated again
 
-			// TODO IP login is not used when a user already has a TGT (Peter)
+			// RM_38_01
 			// IP login is not used when a user already has a TGT. The origin
 			// ip-range will never be forced when already authenticated with an
 			// AuthSP with a higher level
@@ -1447,7 +1439,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				String sUid = (String) htServiceRequest.get("aselect_credentials_uid");
 				String sServerId = (String) htServiceRequest.get("aselect_credentials_server_id");
 
-				// TODO Check if TGT already exists for user id (Peter)
+				// RM_38_02
 				// If a user_id was provided in the request
 				// we have to check here if the already existing
 				// TGT is for the same user-id
@@ -1464,7 +1456,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							// The TGT should be created now
 							// TGTIssuer will redirect to local A-Select Server
 
-							// TODO Check if a new TGT must be created (Peter)
+							// RM_38_03
 							// A new TGT is created because the TGTIssuer
 							// implements the redirect with a create signature.
 							// It is not logical to create a new TGT.
@@ -1858,7 +1850,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			if (intRequiredLevel == null) {
 				// 'normal' request
 				intRequiredLevel = _applicationManager.getRequiredLevel((String) _htSessionContext.get("app_id"));
-				// TODO check if this is still necessary. (leon)
+				// RM_38_04
 			}
 			intMaxLevel = (Integer) _htSessionContext.get("max_level"); // 'max_level' may be null
 

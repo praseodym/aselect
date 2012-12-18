@@ -145,18 +145,7 @@ public class SFSIdpQueryHandler extends AbstractRequestHandler
 	}
 
 	/**
-	 * Main process function. <br>
-	 * <br>
-	 * <b>Description: </b> <br>
-	 * TODO <b>Concurrency issues: </b> <br>
-	 * - <br>
-	 * <br>
-	 * <b>Preconditions: </b> <br>
-	 * - <br>
-	 * <br>
-	 * <b>Postconditions: </b> <br>
-	 * - <br>
-	 * <br>
+	 * Main process function.
 	 * 
 	 * @param request
 	 *            the request

@@ -190,7 +190,7 @@ public class BrowserPost extends AbstractWebSSOProfile
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
 
-			// TODO this is also done in the SAML11RequestHandler.process() (Martijn)
+			// RM_36_01
 			HashMap htSession = _oSessionManager.getSessionContext(SESSION_ID_PREFIX + sRID);
 			if (htSession == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No SAML Session available for rid: " + sRID);

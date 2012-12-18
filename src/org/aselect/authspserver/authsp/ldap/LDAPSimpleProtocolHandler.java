@@ -28,7 +28,7 @@
  * config item port has been removed from the config, now using ldap://www.test.com:port instead
  *
  * Revision 1.6  2005/03/24 09:56:30  erwin
- * Fixed todos with numberformat exception and problem with error handling
+ * Fixed numberformat exception and problem with error handling
  *
  * Revision 1.5  2005/03/23 09:48:38  erwin
  * - Applied code style
@@ -36,7 +36,6 @@
  * - Improved error handling
  *
  * Revision 1.4  2005/03/14 12:15:17  martijn
- * added 2x fixme for url and port configuration
  *
  * Revision 1.3  2005/02/04 10:12:40  leon
  * code restyle and license added

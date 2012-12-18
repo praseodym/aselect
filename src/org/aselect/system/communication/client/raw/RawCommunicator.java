@@ -64,8 +64,7 @@
  * Fixed Javadoc warnings
  *
  * Revision 1.9  2005/02/25 15:51:52  erwin
- * Added fixme
- *
+ * 
  * Revision 1.8  2005/02/23 10:04:14  erwin
  * Improved Exception handling.
  *
@@ -88,7 +87,6 @@
  * Improved code style. Added Javadoc comment.
  *
  */
-
 package org.aselect.system.communication.client.raw;
 
 import java.io.BufferedReader;

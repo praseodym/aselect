@@ -202,7 +202,7 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 			ssoService.setBinding(singleSignOnServiceBindingConstantREDIRECT);
 			ssoService.setLocation(getIdpSsoUrl() + getSingleSignOnServiceTarget());
 			ssoDescriptor.getSingleSignOnServices().add(ssoService);
-			// TODO maybe make this configurable
+			// RM_47_01
 			// add HTTP-POST binding on same handler
 			SingleSignOnService ssoServicePOST = ssoServiceBuilder.buildObject();
 			ssoServicePOST.setBinding(singleSignOnServiceBindingConstantPOST);
@@ -296,7 +296,7 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 	}
 
 	// Create the KeyDescriptor
-	// TODO, this should probably be a utility in SAMLTools
+	// RM_47_02
 	/**
 	 * Creates the key descriptor.
 	 * 

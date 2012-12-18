@@ -74,10 +74,9 @@ public class SessionSyncRequestSender
 	private ASelectSystemLogger _oSystemLogger;
 	private final String MODULE = "SessionSyncRequestSender";
 	private PublicKey _pkey = null;
-	private Long _maxNotBefore = null; // TODO, this should be handled (passed) more elegantly, for now we just pass the
-	// values
-	private Long _maxNotOnOrAfter = null; // TODO, this should be handled (passed) more elegantly, for now we just pass
-	// the values
+	// RM_56_01
+	private Long _maxNotBefore = null;
+	private Long _maxNotOnOrAfter = null;
 	private boolean _checkValidityInterval = false;
 
 	private static HashMap<String, Object> htSessionSyncParameters = null;
@@ -661,7 +660,7 @@ public class SessionSyncRequestSender
 		List lijst = response.getAssertions();
 		if (lijst.size() == 1) {
 			Assertion assertion = (Assertion) lijst.get(0);
-			// TODO SamlTools.checkValidityInterval, but we need to now if the calling
+			// RM_56_02
 			// object wants us to verify (from aselect.xml), this is (for the moment) only known
 			// by the calling object
 			List authzLijst = assertion.getAuthzDecisionStatements();
@@ -816,7 +815,7 @@ public class SessionSyncRequestSender
 		List lijst = response.getAssertions();
 		if (lijst.size() == 1) {
 			Assertion assertion = (Assertion) lijst.get(0);
-			// TODO SamlTools.checkValidityInterval, but we need to now if the calling
+			// RM_56_03
 			// object wants us to verify (from aselect.xml), this is (for the moment) only known
 			// by the calling object
 

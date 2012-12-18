@@ -49,7 +49,7 @@
  * Renamed errors.
  *
  * Revision 1.10  2005/03/08 09:11:59  erwin
- * Added a \r\n\r\n after message. removed TODo.
+ * Added a \r\n\r\n after message.
  *
  * Revision 1.9  2005/03/04 15:50:13  erwin
  * Renamed Content-type -> Content-Type
@@ -695,7 +695,7 @@ public class SOAP11Communicator implements IClientCommunicator
 	 */
 	private String normalize(String s)
 	{
-		// TODO Move this redundant method (Erwin)
+		// RM_65_01
 		StringBuffer sb = new StringBuffer();
 
 		for (int i = 0; i < s.length(); i++) {

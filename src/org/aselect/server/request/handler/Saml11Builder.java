@@ -332,7 +332,7 @@ public class Saml11Builder
 				Object oValue = htAttributes.get(sKey);
 				oSAMLAttribute = createSAMLAttribute(sKey, oValue, _sAttributeNamespace);
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Attr Key=" + sKey + ", oValue=" + oValue); // +", oSAMLAttribute="+oSAMLAttribute);
-				// TODO: opensaml escapes < and > signs in an attribute which is fatal for SymLabs
+				// RM_37_01
 				if (!sKey.equals("DiscoveryResourceOffering"))
 					vAttributes.add(oSAMLAttribute);
 			}
@@ -442,7 +442,7 @@ public class Saml11Builder
 		}
 	}
 
-	// Bauke: TODO: createSAMLAttribute() html-escapes the attribute value
+	// RM_37_02
 	/**
 	 * Creates the saml attribute.
 	 * 

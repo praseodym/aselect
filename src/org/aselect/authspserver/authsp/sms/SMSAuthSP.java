@@ -675,7 +675,7 @@ public class SMSAuthSP extends AbstractAuthSP
 				// RH, 20110104, en
 
 				// authenticate user
-				// TODO: Should go to sessionmanager for clustering
+				// RM_20_01
 				String generatedPass = (String) servletRequest.getSession().getAttribute("generated_secret");
 				String sResultCode = (sPassword.compareTo(generatedPass) == 0) ? (Errors.ERROR_SMS_SUCCESS)
 						: Errors.ERROR_SMS_INVALID_PASSWORD;
@@ -915,10 +915,10 @@ public class SMSAuthSP extends AbstractAuthSP
 		sChallengeForm = Utils.replaceString(sChallengeForm, "[country]", (sCountry != null)? sCountry: "");
 		sChallengeForm = Utils.replaceString(sChallengeForm, "[language]", (sLanguage != null)? sLanguage: "");
 
-		// TODO, check for css injection
+		// RM_20_02
 		sChallengeForm = Utils.replaceString(sChallengeForm, "[challenge]", (sChallenge != null)? sChallenge: sUid );
 
-		// TODO check handling of all signatures with/without url en-/ decoding
+		// RM_20_03
 		// This message presents a get form, so it will url-encode field values, but the signature in our htRequest is already urlencoded
 		// so we decode it here
 		try {
@@ -1025,7 +1025,7 @@ public class SMSAuthSP extends AbstractAuthSP
 		String sSecret = (_fixed_secret == null) ? generateSecret() : _fixed_secret;	// RH, 20110913, n
 		String sText = _sSmsText.replaceAll("0", sSecret);
 		
-		// TODO: add gateway here
+		// RM_20_04
 		_systemLogger.log(Level.INFO, MODULE, "generateAndSend", "SMS=" + sText + " Secret=" + sSecret);
 		int result = 0;
 		if (_fixed_secret == null) {

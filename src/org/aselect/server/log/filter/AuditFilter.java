@@ -119,7 +119,7 @@ public class AuditFilter implements Filter
 		// Continue processing the rest of the filter chain.
 		chain.doFilter(request, response);
 
-		// TODO dynamically remove other attributes from MDC
+		// RM_27_01
 		// maybe set up some vector with all MDC attributes to easily remove
 		// them later
 		MDC.remove("a_remote_address");

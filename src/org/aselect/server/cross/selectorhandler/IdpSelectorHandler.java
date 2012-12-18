@@ -132,9 +132,9 @@ public class IdpSelectorHandler implements ISelectorHandler
 	private String _sIdPQueryServerRequest = null;
 	private String _sIdPQueryServerSharedSecret = null;
 
-	private static final int COOKIE_AGE = 31536000; // TODO: Cookie is set to be about a years time(not counting leap
-	// years), should be configurable?(seconds, not leap years)
-
+	// RM_25_01
+	private static final int COOKIE_AGE = 31536000;
+	
 	private static final String _sHtmlTemplateName = "idpcrossselect.html";
 
 	/**

@@ -150,7 +150,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BaseHandler
 				// and a responsemessage is send to the browser
 				if (!SamlTools.isSigned(httpRequest)) {
 					String errorMessage = "SAML message must be signed.";
-					// TODO Why do we send return message here and throw
+					// RM_59_01
 					// exception in all other cases?
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, errorMessage);
 					PrintWriter pwOut = httpResponse.getWriter();

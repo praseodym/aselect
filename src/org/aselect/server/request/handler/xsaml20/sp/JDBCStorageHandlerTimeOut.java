@@ -243,7 +243,8 @@ public class JDBCStorageHandlerTimeOut extends JDBCStorageHandler
 		Vector<String> sessionIndexes = (Vector<String>)  htTGTContext.get("remote_sessionlist");	// can be null	// RH, 20120201, n
 
 		if (sFederationUrl == null)
-			sFederationUrl = _sFederationUrl; // TODO: remove later on
+			 // RM_53_01
+			sFederationUrl = _sFederationUrl;
 		if (sFederationUrl == null || sFederationUrl.equals("")) {
 			_oSystemLogger.log(Level.SEVERE, MODULE, _sMethod, "No \"federation_url\" available in TGT");
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);

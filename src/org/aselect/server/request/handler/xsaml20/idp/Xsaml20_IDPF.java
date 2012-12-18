@@ -99,7 +99,7 @@ public class Xsaml20_IDPF extends ProtoRequestHandler
 				throw e;
 			}
 			
-			// TODO maybe get aselectserver url from other part of config, not redirect url
+			// RM_46_01
 			try {
 				aselectServerURL = _configManager.getParam(oASelect, "redirect_url");
 			}
@@ -222,22 +222,21 @@ public class Xsaml20_IDPF extends ProtoRequestHandler
     	extractedAselect_credentials = request.getParameter("aselect_credentials");
 
     	if (extractedAselect_credentials == null) {	// For now we don't care about previous authentication, let aselect handle that
-    		// TODO make this "sp" configurable
+    		// RM_46_02
     		consumer = request.getParameter("sp");
     		_systemLogger.log(Level.INFO, MODULE, sMethod, "Received an authenticate request with sp=: " + consumer);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Process an authenticate request for user: " + uid);
 	    	
-	    	// TODO, save  a better sessionid for requestp in user session somehow  in _oSessionManager
-	    	
+	    	// RM_46_03
 	    	// authenticate to the aselect server
     		String ridReqURL = aselectServerURL;
     		String ridSharedSecret = sharedSecret;
     		String ridAselectServer = _sMyServerID;
     		String ridrequest= "authenticate";
-//		    	String ridAppURL = consumer;
+//		    String ridAppURL = consumer;
     		String ridAppURL = idpfEndpointUrl;
     		
-//		   		String ridCheckSignature = verifySignature; 
+//		   	String ridCheckSignature = verifySignature; 
 			// maybe also forced_userid ?
     		
     		String ridResponse = "";
@@ -249,7 +248,8 @@ public class Xsaml20_IDPF extends ProtoRequestHandler
 	    				"&a-select-server=" + URLEncoder.encode(ridAselectServer, "UTF-8") +
 	    				"&request=" + URLEncoder.encode(ridrequest, "UTF-8") +
 	    				"&uid=" + URLEncoder.encode(uid, "UTF-8") +
-	    				"&app_url=" + URLEncoder.encode(ridAppURL /* TODO + serialized version of requestp */ , "UTF-8") +
+	    				 // RM_46_04
+	    				"&app_url=" + URLEncoder.encode(ridAppURL , "UTF-8") +
 //			    				"&check-signature=" + URLEncoder.encode(ridCheckSignature, "UTF-8") +
 	    				"&app_id=" + URLEncoder.encode(appID, "UTF-8");
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Requesting rid through: " + ridURL);
@@ -331,22 +331,22 @@ public class Xsaml20_IDPF extends ProtoRequestHandler
     	else {	// This should be a return from the aselect server
 //		    //////////////////// this does not work yet, user will be redirected straight from the Xsaml20_SSO
     		// This should be the aselectserver response
-    		// TODO retrieve requestp from session
+    		// RM_46_05
 	    	// handle the aselectserver response
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Handle the aselectserver response");
 			
 			String finalResult  = verify_credentials(request, extractedAselect_credentials);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "finalResult after verify_credentials: " + finalResult);
 			
-			// TODO fill tgt with AssertUrl (final recipient/application/consumer, ReqBInding, sRelayState (optional)
-			// TODO send to Xsaml20_sso
+			// RM_46_06
+			// RM_46_07
 	    }
 		return null;
 	}
 
 	/**
 	 * @param request
-	 * @param extracted_credentials TODO
+	 * @param extracted_credentials
 	 * @param sMethod
 	 * @param extractedAselect_credentials
 	 * @return 
@@ -367,7 +367,7 @@ public class Xsaml20_IDPF extends ProtoRequestHandler
 //		    											// in aselect.xml has require_signing="true"
 		
 		//Construct request data
-		// TODO implement signing?
+		// RM_46_08
 		String finalRequestURL = null;
 		try {
 			finalRequestURL = finalReqURL + "?" + "shared_secret=" + URLEncoder.encode(finalReqSharedSecret, "UTF-8") +

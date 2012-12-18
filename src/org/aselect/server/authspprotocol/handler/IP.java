@@ -305,7 +305,7 @@ public class IP implements IAuthSPProtocolHandler
 				}
 
 				if (sbRanges.length() > 0) {
-					// TODO The IP ranges CGI string must become an official CGI Array (Martijn)
+					// RM_23_01
 					_htIPRangesCGI.put(sAppID, sbRangesCGI.toString());
 					_htIPRanges.put(sAppID, sbRanges.toString());
 				}
@@ -439,7 +439,7 @@ public class IP implements IAuthSPProtocolHandler
 			if (sLanguage != null)
 				sbRedirect.append("&language=").append(sLanguage);
 
-			// TODO The id's of the ranges must be encoded (Martijn)
+			// RM_23_02
 			sbRedirect.append(sIPRangesCGI);
 			sbRedirect.append("&signature=").append(sSignature);
 

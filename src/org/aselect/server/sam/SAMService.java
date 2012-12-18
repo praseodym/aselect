@@ -212,7 +212,7 @@ public class SAMService extends SAMServiceServlet
 			HashMap htSessionContexts = null;
 			try {
 				htSessionContexts = oSessionManager.getAll();
-				// TODO: cheaper version: lSessions = oSessionManager.getCount();
+				// RM_63_01
 			}
 			catch (Exception e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No contexts available", e);
@@ -261,7 +261,7 @@ public class SAMService extends SAMServiceServlet
 			HashMap htTGTContexts = null;
 			try {
 				htTGTContexts = oTGTManager.getAll();
-				// TODO: cheaper version: lActiveTGTs = oTGTManager.getTGTCounter();
+				// RM_63_02
 			}
 			catch (Exception e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No contexts available", e);

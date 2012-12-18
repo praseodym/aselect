@@ -28,10 +28,8 @@
  * bug fixed: NullPointer occurred in some special cases: better error handling in readRequest()
  *
  * Revision 1.9  2005/04/08 12:41:30  martijn
- * fixed todo's
  *
  * Revision 1.8  2005/03/16 13:49:03  tom
- * Added todo
  *
  * Revision 1.7  2005/03/08 09:13:47  erwin
  * Removed ready() because this gave problems.

@@ -22,8 +22,7 @@
  * Changed version number to 1.4.2
  *
  * Revision 1.14  2005/09/07 12:30:23  erwin
- * Added todo for error handling in restart servlets
- *
+ * 
  * Revision 1.13  2005/04/27 14:58:11  erwin
  * Fixex restart logging
  *

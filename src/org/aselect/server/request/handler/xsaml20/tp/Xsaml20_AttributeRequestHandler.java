@@ -56,13 +56,13 @@ import org.xml.sax.SAXException;
  *         implemented --> </handler>
  */
 
-// TODO, make this class abstract and implement specific extension class
+// RM_61_01
 public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 {
 
-	// TODO add URL decoding on query parameters
-	// TODO change query parameters to more unique values (e.q. "anoigorequest_encoding=base64")
-	// TODO or even better, put them as parameters in de aselect.xml config file
+	// RM_61_02
+	// RM_61_03
+	// RM_61_04
 	private static final String PARM_NAME_SAMLREQUEST = "SAMLRequest";// only SAMLRequest=attributestatement is
 	// supported so far
 	private static final String PARM_NAME_ENCODING = "encoding"; // only encoding=base64 is supported yet
@@ -143,7 +143,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 		// createtgt = request.getParameter(PARM_NAME_CREATETGT);
 
 		try {
-			// TODO, verify signature, get CN, decrypt if necessary etc.
+			// RM_61_05
 			handleAttributeRequest(request, response);
 		}
 		catch (IOException e) {
@@ -155,7 +155,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 	}
 
 	// For now we use SAML URI Binding (which is simple but not very safe!)
-	// TODO, agree upon other (safer) binding protocol
+	// RM_61_06
 	/**
 	 * Handle attribute request.
 	 * 
@@ -183,7 +183,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "attributes[" + i + "]=" + atts[i]);
 		}
 
-		// TODO Allow for multiple request
+		// RM_61_07
 		// For now we only allow one request at the time, we take the first that comes up
 		String returnstring = null;
 		String subject = null;
@@ -209,8 +209,8 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 			if (PARM_VALUE_ATRRIBUTESTATEMENT.equalsIgnoreCase(samlrequest)) {
 
 				// String issuer = _sServerUrl;
-				// TODO marshall the SAML message here to an assertion
-				// TODO get the subject form the saml message to retrieve the TGT
+				// RM_61_08
+				// RM_61_09
 				// Assertion ass = createAttributeStatementAssertion(parms, issuer, subject,
 				// "true".equalsIgnoreCase(sign));
 				// returnstring = XMLHelper.prettyPrintXML(ass.getDOM());
@@ -256,10 +256,10 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 			HashMap ht = tgtm.getTGT(subject);
 			StringBuffer sb = new StringBuffer();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "ht:" + ht);
-			// TODO, check for allowed attributes, get these from aselect.xml
+			// RM_61_10
 			if (atts != null && ht != null && !ht.isEmpty()) {
 				for (int i = 0; i < atts.length; i++) {
-					// TODO, Escape double quotes and backslah within the quoted-strin
+					// RM_61_11
 					if (ht.containsKey(atts[i])) {
 						// Code to RFC822 header quoted strings
 						sb.append("\"").append(atts[i]).append('=').append(ht.get(atts[i]).toString()).append("\"")

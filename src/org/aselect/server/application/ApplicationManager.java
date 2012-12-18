@@ -60,7 +60,6 @@
  * resolved a fix-me
  *
  * Revision 1.19  2005/04/08 11:47:21  tom
- * Removed fixme from comment
  *
  * Revision 1.18  2005/04/07 14:36:17  martijn
  * added javadoc
@@ -81,7 +80,6 @@
  * added forced_authenticate
  *
  * Revision 1.12  2005/03/31 15:38:34  peter
- * added fixme
  *
  * Revision 1.11  2005/03/16 13:12:11  remco
  * added attributes (initial version)

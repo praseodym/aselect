@@ -249,34 +249,20 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 		 * Check is there are more sp's if not then remove whole tgt else check is sp is the first in the active list
 		 */
 		if (spList.size() == 1) {
-			// if (tgtManager.containsKey(sNameID)) {
-			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "IDP - One SP, Remove TGT=" + sCred + " and uid="
-					+ sNameID);
+			_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "IDP - One SP, Remove TGT=" + sCred + " and uid=" + sNameID);
 			tgtManager.remove(sNameID);
-			// ssoSessionManager.remove(sNameID);
-			// // TODO: could kill SLOTimer task for 'sNameID' at this point
-			// }
-			// else {
-			// _oSystemLogger.log(Level.INFO, MODULE, _sMethod, "IDP - One SP, but no TGT found");
-			// ssoSessionManager.remove(sNameID);
-			// TODO: could kill SLOTimer task for 'sNameID' at this point
-			// }
 		}
 		else if (spList.size() > 1) {
 			for (ServiceProvider sp : spList) {
 				_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "IDP - Multiple SP's Url="
 						+ sp.getServiceProviderUrl());
 				if (sp.getServiceProviderUrl().equals(initiatingSP)) {
-					// if (tgtManager.containsKey(sNameID)) {
-					_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "IDP - Remove SP=" + sp.getServiceProviderUrl()
-							+ "for TGT=" + sCred);
+					_oSystemLogger.log(Level.INFO, MODULE, _sMethod, "IDP - Remove SP="+sp.getServiceProviderUrl()+"for TGT="+sCred);
 					sso.removeServiceProvider(sp.getServiceProviderUrl());
 					// overwrite the session (needed for database storage)
 					htTGTContext.put("sso_session", sso);
 					tgtManager.updateTGT(sNameID, htTGTContext);
-					// ssoSessionManager.putSsoSession(ssoSession);
 					break;
-					// }
 				}
 			}
 		}

@@ -456,7 +456,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 		// Uid needed for authentication logging if access denied.;
 		String sUID = (String) htResponseTable.get("uid");
 		if (sUID != null) {
-			// TODO tripple decoding? (Erwin)
+			// RM_40_01
 			try {
 				sUID = URLDecoder.decode(sUID, "UTF-8");
 				sUID = URLDecoder.decode(sUID, "UTF-8");
@@ -490,7 +490,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, sbWarning.toString());
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
 		}
-		// TODO tripple decoding? (Erwin)
+		// RM_40_02
 		try {
 			sUID = URLDecoder.decode(sUID, "UTF-8");
 			sUID = URLDecoder.decode(sUID, "UTF-8");

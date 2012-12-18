@@ -203,7 +203,7 @@ public class SQLDatabaseConnector
 	 * 
 	 * @return A new created <code>Statement</code>.
 	 */
-	// TODO, we shouldn't use this method because it uses java.sql.Statement
+	// RM_67_01
 	// java.sql.Statement can be vulnerable to sql-injection attacks
 	// better use PreparedStatement
 	// At the moment this method is only used for configuration queries

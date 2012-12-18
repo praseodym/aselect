@@ -58,7 +58,6 @@
  * Added a-select-server to signing
  *
  * Revision 1.11  2005/03/16 13:13:18  martijn
- * changed todo
  *
  * Revision 1.10  2005/03/14 09:58:02  martijn
  * config section renamed, new config used an init-param from web.xml to retrieve the config section
@@ -655,7 +654,7 @@ public class RadiusAuthSP extends ASelectHttpServlet
 	 */
 	protected boolean isRestartableServlet()
 	{
-		// TODO Restart functionality has to be added (Erwin)
+		// RM_19_01
 		return false;
 	}
 

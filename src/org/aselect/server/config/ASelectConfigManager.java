@@ -92,7 +92,7 @@
  * Fixed javadoc
  *
  * Revision 1.49  2005/03/16 13:29:18  martijn
- * resolved todo in loadPrivilegedSettings(): better error handling
+ * loadPrivilegedSettings(): better error handling
  *
  * Revision 1.48  2005/03/16 13:12:11  remco
  * added attributes (initial version)
@@ -990,7 +990,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *            the s country
 	 * @return A <code>String</code> representation of the error message
 	 */
-	// TODO: move to ConfigManager, so AuthSP can also use this functionality
+	// RM_24_01
 	public String getErrorMessage(String sErrorCode, String sLanguage, String sCountry)
 	{
 		String sMethod = "getErrorMessage";
@@ -1010,7 +1010,7 @@ public class ASelectConfigManager extends ConfigManager
 		return sMessage;
 	}
 
-	// TODO: move to ConfigManager, so AuthSP can also use this functionality
+	// RM_24_02
 	/**
 	 * Gets the error message.
 	 * 
@@ -1024,7 +1024,7 @@ public class ASelectConfigManager extends ConfigManager
 	}
 
 	// 20090930, Bauke: added localization
-	// TODO: move to ConfigManager, so AuthSP can also use this functionality
+	// RM_24_03
 	/**
 	 * Load error file.
 	 * 
@@ -1714,7 +1714,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *             if loading fails.
 	 */
 	// 20090930, Bauke: added localization
-	// TODO: move to ConfigManager, so AuthSP can also use this functionality
+	// RM_24_04
 	public String loadHTMLTemplate(String sUnUsed, String sFileName, String sLanguage, String sCountry)
 	throws ASelectException
 	{

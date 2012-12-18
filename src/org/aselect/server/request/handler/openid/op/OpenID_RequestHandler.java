@@ -11,7 +11,6 @@
  */
 package org.aselect.server.request.handler.openid.op;
 
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -125,7 +124,7 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 			}
 
 			try {
-				// TODO maybe get this info dynamically from servletconfi and "target" parameter?
+				// RM_31_01
 				opEndpointUrl = _configManager.getParam(oConfig, "opendpointurl");
 			}
 			catch (ASelectConfigException e) {
@@ -205,7 +204,7 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 	{		
 			String sMethod = "process()";
 			//// maybe use "on the fly" endPointURL ?
-//			String handlerTarget = "/openidop_request";	// TODO Don't forget to fill in the target
+//			String handlerTarget = "/openidop_request";	// Don't forget to fill in the target
 //			String epu = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + handlerTarget;
 //			setOpEndpointUrl(epu);
 //			serverManager.setOPEndpointUrl(getOpEndpointUrl());
@@ -251,8 +250,8 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Process a checkid_setup or checkid_immediate request");
 		    	Utils.logRequestParameters(requestp, _systemLogger);
 		    	
-		    	// TODO ask the user to trust the realm in the openid.realm parameter
-		    	// TODO, save get a better sessionid for requestp in user session somehow  in _oSessionManager
+		    	// RM_31_02
+		    	// RM_31_03
 		    	
 		    	// authenticate to the aselect server
 	    		String ridReqURL = aselectServerURL;
@@ -273,7 +272,8 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 			    	Utils.sendPlainTextResponse(response, opResponse, _systemLogger);
 	    		}
 	    		String uid = null;
-	    		if ("http://specs.openid.net/auth/2.0/identifier_select".equals(identity)) {	// TODO get this constant somewhere from the openid4java library (probably some static somewhere
+	    		if ("http://specs.openid.net/auth/2.0/identifier_select".equals(identity)) {
+	    			// RM_31_04
 	    			// This should trigger a username input in  aselect
 	    			// Either by presenting a choice or an input box
 	    			// We let aselectserver handle this
@@ -295,7 +295,8 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 		    				"&a-select-server=" + URLEncoder.encode(ridAselectServer, "UTF-8") +
 		    				"&request=" + URLEncoder.encode(ridrequest, "UTF-8") +
 		    				"&uid=" + URLEncoder.encode(uid, "UTF-8") +
-		    				"&app_url=" + URLEncoder.encode(ridAppURL /* TODO + serialized version of requestp */ , "UTF-8") +
+		    				 // RM_31_05
+		    				"&app_url=" + URLEncoder.encode(ridAppURL, "UTF-8") +
 //			    				"&check-signature=" + URLEncoder.encode(ridCheckSignature, "UTF-8") +
 		    				"&app_id=" + URLEncoder.encode(appID, "UTF-8");
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Requesting rid through: " + ridURL);
@@ -384,7 +385,7 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 		    											// in aselect.xml has require_signing="true"
 
 		    		//Construct request data
-		    		// TODO implement signing
+		    		// RM_31_06
 		    		String finalRequestURL = null;
 					try {
 						finalRequestURL = finalReqURL + "?" + "shared_secret=" + URLEncoder.encode(finalReqSharedSecret, "UTF-8") +
@@ -458,7 +459,7 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 			    	requestp = (ParameterList) htSessionContext.get("openid_requestp");
 			    	
 			    	Utils.logRequestParameters(requestp, _systemLogger);
-			    	// TODO we should be able to kill the session now
+			    	// RM_31_07
 //			       _oSessionManager.killSession(sessionID);
 
 			        String userSelectedId = null;
@@ -476,7 +477,7 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 			        }
 			        
 			        // --- process an authentication request ---
-			        // TODO ? does authResponse verify the requestp signature ?
+			        // RM_31_08
 			        opResponse = serverManager.authResponse(requestp,
 			                userSelectedId,
 			                userSelectedClaimedId,

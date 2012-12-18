@@ -65,7 +65,7 @@
 //
 // NOTE: Best to create this file in advance, the owner must be the use running the Apache filter
 // During initialization "root" is running the filter, changes during operation
-// TODO: The init stage logging should go to the Apache log file!
+// RM_11_01
 //       
 static char *LogfileName = ASELECT_FILTER_TRACE_FILE;
 

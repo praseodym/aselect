@@ -25,7 +25,6 @@
  * added ASelectSAMAgent
  *
  * Revision 1.3  2005/03/17 10:13:43  martijn
- * added apidoc todo's
  *
  * Revision 1.2  2005/03/17 10:06:20  erwin
  * Removed abstract method.

@@ -274,7 +274,7 @@ public class AccountSTS extends ProtoRequestHandler
 				htAttributes = extractUidAndAttributes(sPwresult);
 				sUid = (String) htAttributes.get("uid");
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "From Resource Partner, uid=" + sUid);
-				// TODO check incoming token (signature?, time)
+				// RM_42_01
 			}
 			else {
 				// From A-Select server

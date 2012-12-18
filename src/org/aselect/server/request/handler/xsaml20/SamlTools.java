@@ -187,7 +187,7 @@ public class SamlTools
 			systemLogger.log(Level.FINEST, MODULE, sMethod, "Check [" + sData + "]");
 
 			java.security.Signature signature = java.security.Signature.getInstance(signingAlgo);
-			// TODO this uses SAML11, should be SAML20
+			// RM_50_01
 			signature.initVerify(key);
 			byte[] bData = sData.getBytes();
 			signature.update(bData);

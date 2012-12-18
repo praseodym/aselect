@@ -22,7 +22,6 @@
  * Changed version number to 1.4.2
  *
  * Revision 1.19  2005/04/08 12:41:30  martijn
- * fixed todo's
  *
  * Revision 1.18  2005/03/16 09:26:17  martijn
  * fixed typo in logging of method get()
@@ -243,7 +242,7 @@ public class JDBCStorageHandler implements IStorageHandler
 			// getIdentifierQuoteString() returns " " (space) if quoting is unsupported
 			if (intentifierQuoteString != null)
 				identifierQuote = intentifierQuoteString.trim();
-			// TODO, allow for forcing identifierQuote from config
+			// RM_69_01
 			// RH, 20090604, sn
 
 			try {
@@ -625,7 +624,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	throws ASelectStorageException
 	{
 		String sMethod = "put(), with MODE flag";
-		// TODO, make sure there is a primekey
+		// RM_69_02
 		switch (eMode) {
 		case INSERTFIRST: // do insert first
 			_systemLogger.log(Level.INFO, MODULE, sMethod,

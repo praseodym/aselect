@@ -25,10 +25,8 @@
  * Removed old logging statements
  *
  * Revision 1.6  2005/04/08 12:40:34  martijn
- * fixed todo's
  *
  * Revision 1.5  2005/03/14 13:01:28  erwin
- * Added TOdo in gui Window closing.
  *
  * Revision 1.4  2005/03/03 17:24:19  erwin
  * Applied code style, added javadoc comment.
@@ -467,7 +465,7 @@ public class AdminMonitor extends JFrame implements TableModelListener
 		{
 			Object oObject = xEvent.getSource();
 			if (oObject == AdminMonitor.this) {
-				// TODO stop GUI (Stop()) and/or agent? (Erwin)
+				// RM_13_01
 			}
 		}
 	}

@@ -1105,7 +1105,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		htAttributes.put("betrouwbaarheidsniveau", sSecLevel);
 		htAttributes.put("sel_level", sSecLevel);
 
-		// TODO: following code should go to tgt.TGTIssuer, RH 20080617
+		// RM_32_01
 		HashMap htTGTContext = new HashMap();
 		htTGTContext.put("attributes", org.aselect.server.utils.Utils.serializeAttributes(htAttributes));
 		htTGTContext.put("uid", sUserId);
@@ -1319,7 +1319,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			// Tools.visitNode(null, domElement, _systemLogger);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Create Assertion");
 			// MySAMLAssertion oAssert = new MySAMLAssertion(domElement, _systemLogger);
-			// TODO this is SAML11, is it also SAML20?
+			// RM_32_02
 			SAMLAssertion oAssert = new SAMLAssertion(domElement);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Created");
 

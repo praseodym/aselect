@@ -131,9 +131,8 @@ public class SFSSelectorHandler implements ISelectorHandler
 	private String _sMyOrgId;
 	private static final String _sHtmlTemplateName = "sfscrossselect.html";
 	private CrossASelectManager _crossAselectManager;
-	private static final int COOKIE_AGE = 3153600; // TODO: Cookie is set to be about a years time(not counting leap
-
-	// years), should be configurable?(seconds, not leap years)
+	// RM_26_01
+	private static final int COOKIE_AGE = 3153600;
 
 	/**
 	 * Initialization of this Handler. Initializes global class-variables that are needed within the whole handler

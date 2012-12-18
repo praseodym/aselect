@@ -502,7 +502,7 @@ public abstract class AbstractMetaDataManager
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "The certificate issuer is not valid");
 				return isTrusted;
 			}
-			// TODO: perform CRL checking?
+			// RM_43_01
 			return true;
 		}
 		catch (CertificateExpiredException e) {

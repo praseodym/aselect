@@ -46,7 +46,7 @@
  * if invalid request, then show error page
  *
  * Revision 1.15  2005/03/16 11:18:05  martijn
- * removed version todo, version is set to default
+ * version is set to default
  *
  * Revision 1.14  2005/03/14 09:58:02  martijn
  * config section renamed, new config used an init-param from web.xml to retrieve the config section
@@ -521,7 +521,7 @@ public class NullAuthSP extends ASelectHttpServlet
 	@Override
 	protected boolean isRestartableServlet()
 	{
-		// TODO Restart functionality has to be added (Erwin)
+		// RM_17_01
 		return false;
 	}
 

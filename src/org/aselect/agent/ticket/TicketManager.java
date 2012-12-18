@@ -25,10 +25,8 @@
  * Removed old logging statements
  *
  * Revision 1.13  2005/04/08 12:40:51  martijn
- * fixed todo's
  *
  * Revision 1.12  2005/04/04 14:46:35  erwin
- * Added todo for kill_ticket ticket validation.
  *
  * Revision 1.11  2005/03/14 10:09:07  erwin
  * The ticket and session expiration and start
@@ -252,7 +250,7 @@ public class TicketManager extends StorageManager
 		byte[] baTicketBytes = new byte[TICKET_LENGTH];
 
 		try {
-			// TODO, don't think we should synchronize here, will be done on lower level
+			// RM_15_01
 			synchronized (_oTicketTable) {
 				_oRandomGenerator.nextBytes(baTicketBytes);
 				sTicket = Utils.byteArrayToHexString(baTicketBytes);

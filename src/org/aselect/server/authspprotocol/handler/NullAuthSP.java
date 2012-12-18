@@ -28,7 +28,6 @@
  * Removed old logging statements
  *
  * Revision 1.16  2005/04/08 11:54:57  martijn
- * removed todo
  *
  * Revision 1.15  2005/04/01 14:17:41  martijn
  * added support for the optional attributes country and language
@@ -37,7 +36,6 @@
  * Added IP to authentication log
  *
  * Revision 1.13  2005/03/16 13:15:10  martijn
- * changed todo
  *
  * Revision 1.12  2005/03/14 07:24:37  tom
  * Minor code style changes

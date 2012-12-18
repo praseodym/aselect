@@ -221,7 +221,7 @@ public class MemoryStorageHandler implements IStorageHandler
 	public void put(Object oKey, Object oValue, Long lTimestamp, IStorageHandler.UpdateMode eMode)
 	throws ASelectStorageException
 	{
-		// TODO, this implementation uses ConcurrentHashMap so we could take advantage of that
+		// RM_70_01
 		// For now we just call the old one
 		switch (eMode) {
 		case INSERTFIRST: // do insert first

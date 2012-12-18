@@ -97,11 +97,9 @@
  * Revision 1.17  2005/03/17 07:59:28  erwin
  * The A-Select server ID is now set with the constructor,
  * instead of reading it from the configuration.
- * All possible errors are checked in the methods and
- * the fixme's are removed.
+ * All possible errors are checked in the methods
  *
  * Revision 1.16  2005/03/16 11:29:50  martijn
- * renamed todo's
  *
  * Revision 1.15  2005/03/16 11:15:50  martijn
  * Sessions will be verified after retrieving, if it fails an (session exprired) error will be returned

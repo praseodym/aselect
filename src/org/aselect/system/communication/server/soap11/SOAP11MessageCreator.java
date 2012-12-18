@@ -33,10 +33,8 @@
  * Renamed errors.
  *
  * Revision 1.8  2005/03/01 13:11:33  erwin
- * removed F. comment  -> fixme
  *
  * Revision 1.7  2005/03/01 13:04:19  erwin
- * Removed fixme
  *
  * Revision 1.6  2005/02/28 12:21:30  erwin
  * Changed some log levels to FINE.

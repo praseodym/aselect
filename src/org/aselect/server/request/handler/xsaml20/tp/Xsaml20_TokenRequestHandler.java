@@ -38,12 +38,12 @@ import org.opensaml.xml.util.XMLHelper;
  *	<verify_signature>true</verify_signature>
  * </handler>
  */
-// TODO: make this class abstract and implement specific extension class
+// RM_62_01
 public class Xsaml20_TokenRequestHandler extends Saml20_BaseHandler
 {
 
-	// TODO: add URL decoding on query parameters
-	// change query parameters to more unique values (e.q. "anoigorequest_encoding=base64")
+	// RM_62_02
+	// change query parameters to more unique values (e.q. 'anoigorequest_encoding=base64')
 	// or even better, put them as parameters in de aselect.xml config file
 	private static final String PARM_NAME_SAMLREQUEST = "SAMLRequest";// only SAMLRequest=attributestatement is
 	// supported so far
@@ -120,7 +120,7 @@ public class Xsaml20_TokenRequestHandler extends Saml20_BaseHandler
 		urlencoding = request.getParameter(PARM_NAME_URLENCODING);
 
 		try {
-			// TODO, verify signature, get CN, decrypt if necessary etc.
+			// RM_62_03
 			handleTokenRequest(request, response);
 		}
 		catch (IOException e) {
@@ -131,7 +131,7 @@ public class Xsaml20_TokenRequestHandler extends Saml20_BaseHandler
 	}
 
 	// For now we use SAML URI Binding (which is simple but not very safe!)
-	// TODO, agree upon other (safer) binding protocol
+	// RM_62_04
 	/**
 	 * Handle token request.
 	 * 
@@ -154,7 +154,7 @@ public class Xsaml20_TokenRequestHandler extends Saml20_BaseHandler
 		PrintWriter pwOut = response.getWriter();
 		HashMap parms = new HashMap();
 		parms.putAll(request.getParameterMap());
-		// TODO Allow for multiple request
+		// RM_62_05
 		// For now we only allow one request at the time, we take the first that comes up
 		String returnstring = null;
 		if (PARM_VALUE_ATRRIBUTESTATEMENT.equalsIgnoreCase(samlrequest)) {
@@ -163,10 +163,10 @@ public class Xsaml20_TokenRequestHandler extends Saml20_BaseHandler
 			parms.remove(PARM_NAME_ENCODING); // we do not want the encoding returned as attribute in the assertion
 			parms.remove(PARM_NAME_CREATETGT); // we do not want the createtgt returned as attribute in the assertion
 			String issuer = _sServerUrl;
-			// TODO generate transient id here
+			// RM_62_06
 			String subject = "myTansientID"; // for test only
 			if (createtgt != null && createtgt.equalsIgnoreCase("true")) {
-				// TODO, Get (or create) TGT
+				// RM_62_07
 				String uid = request.getParameter(PARM_NAME_UID);
 				if (uid == null || "".equals(uid)) {
 					_systemLogger.log(Level.SEVERE, MODULE, sMethod, "For setting TGT a uid is required");
@@ -185,7 +185,8 @@ public class Xsaml20_TokenRequestHandler extends Saml20_BaseHandler
 			// returnstring = XMLHelper.prettyPrintXML(ass.getDOM()); // better not do this if you have signed the
 			// message!
 			returnstring = XMLHelper.nodeToString(ass.getDOM());
-		}// TODO handle other request types here
+		}
+		// RM_62_08
 		else {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Request: " + samlrequest + " is not supported");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);

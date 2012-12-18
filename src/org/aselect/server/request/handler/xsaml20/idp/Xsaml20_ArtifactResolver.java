@@ -67,7 +67,7 @@ import org.xml.sax.InputSource;
  */
 public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler
 {
-	// TODO This is NOT a good default
+	// RM_45_01
 	// We have a problem if the SAML message send from the SP has no Issuer element
 	// How do we find the public key?
 	// If we take the public key from the KeyInfo (if it is present;-)
@@ -79,7 +79,7 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler
 	private boolean signingRequired = false; // OLD opensaml20 library
 
 	// true; // NEW opensaml20 library
-	// TODO see when signing is actually required
+	// RM_45_02
 	// get from aselect.xml <applications require_signing="false | true">
 
 	/**

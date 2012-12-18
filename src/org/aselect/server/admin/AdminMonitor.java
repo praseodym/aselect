@@ -519,7 +519,7 @@ public class AdminMonitor extends JFrame implements TableModelListener
 		{
 			Object o = xEvent.getSource();
 			if (o == AdminMonitor.this) {
-				// TODO stop() can be called here to stop Gui (Erwin)
+				// RM_21_01
 			}
 		}
 	}

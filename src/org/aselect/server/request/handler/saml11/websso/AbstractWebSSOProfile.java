@@ -271,7 +271,8 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
 			oSAMLAssertion = new SAMLAssertion(sIdp, // _sASelectServerID, // Our (IdP) Id
 					dCurrent, // Valid from
 					dExpire, // Valid until
-					null, // TODO: add Audience condition
+					null,
+					// RM_34_01
 					null, // Advice(s)
 					vSAMLStatements // Contained statements
 			);

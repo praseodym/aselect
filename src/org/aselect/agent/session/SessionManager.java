@@ -232,7 +232,7 @@ public class SessionManager
 		String sMethod = "createSession()";
 
 		try {
-			// TODO, don't think we should synchronize here, will be done on lower level
+			// RM_14_01
 			synchronized (_oSessionTable) {
 				////////////////////////////////
 				// RH, 20111121, so

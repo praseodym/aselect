@@ -159,9 +159,9 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 				}
 				while (metaHandler != null) {
 					String metahandlertype = Utils.getSimpleParam(_configManager, _systemLogger, metaHandler, "type", false);
-					// todo check for valid type
+					// RM_72_01
 					String metahandlerbinding = Utils.getSimpleParam(_configManager, _systemLogger, metaHandler, "binding", false);
-					// todo check for valid binding
+					// RM_72_02
 					String metahandlerisdefault = Utils.getSimpleParam(_configManager, _systemLogger, metaHandler, "isdefault", false);
 					Boolean bMetahandlerisdefault = null;
 					if (metahandlerisdefault != null) {
@@ -194,7 +194,6 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 				String metaspecialSettings = Utils.getSimpleParam(_configManager, _systemLogger, metadataSection, "special_settings", false);
 				if (metaspecialSettings != null)
 					idpData.getMetadata4partner().setSpecialsettings(specialSettings);
-
 
 				Object orgSection = Utils.getSimpleSection(_configManager, _systemLogger, metadataSection, "organization", false);
 				if (orgSection != null) {

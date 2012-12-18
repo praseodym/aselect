@@ -132,7 +132,7 @@ public class SoapManager
 			case 200: // ok
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Response OK: ContentType: "
 						+ connection.getContentType());
-				// TODO, we might want to parse the charset from the connection
+				// RM_52_01
 				// then we should use stream2string(connection.getInputStream, <charset>);
 				// For now we assume utf-8 (default)
 				sb = new StringBuffer(Tools.stream2string(connection.getInputStream())); // RH, 20080715, n

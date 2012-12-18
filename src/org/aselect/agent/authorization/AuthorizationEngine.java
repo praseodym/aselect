@@ -29,7 +29,6 @@
  * - Added ip parameter in request=verify_ticket
  *
  * Revision 1.6  2005/09/01 10:12:31  erwin
- * Removed todo, which is fixed in the filter.
  *
  * Revision 1.5  2005/08/30 08:13:46  erwin
  * Improved init()

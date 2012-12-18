@@ -227,7 +227,7 @@ public class BrowserArtifact extends AbstractWebSSOProfile
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No parameter 'rid' found");
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
-			// TODO this is also done in the SAML11RequestHandler.process() (Martijn)
+			// RM_35_01
 			HashMap htSession = _oSessionManager.getSessionContext(SESSION_ID_PREFIX + sRID);
 			if (htSession == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No SAML Session available for rid: " + sRID);
@@ -361,7 +361,7 @@ public class BrowserArtifact extends AbstractWebSSOProfile
 			sbRedirect.append("?TARGET=");
 			sbRedirect.append(URLEncoder.encode(sTarget, "UTF-8"));
 
-			// TODO: There can be more then one SAMLart in the redirect, maybe this must be supported in the future
+			// RM_35_02
 			// (Martijn)
 			sbRedirect.append("&SAMLart=");
 			sbRedirect.append(URLEncoder.encode(oSAMLArtifact.encode(), "UTF-8"));

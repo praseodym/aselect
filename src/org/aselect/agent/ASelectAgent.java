@@ -55,10 +55,8 @@
  * Removed old logging statements
  *
  * Revision 1.18  2005/04/08 12:40:34  martijn
- * fixed todo's
  *
  * Revision 1.17  2005/04/04 12:27:01  erwin
- * Added todo for AdminServiceHandler response.
  *
  * Revision 1.16  2005/03/30 08:39:02  erwin
  * Improved Javdoc.

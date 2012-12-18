@@ -125,7 +125,7 @@ public class SLOTimerTask extends TimerTask
 
 				// Unfortunately we have no handle to the aselect configuration
 				// so we have no way to know whether we should verify the signature
-				// TODO verify the signature if we know that we have to and set_bVerirfySignature accordingly
+				// RM_44_01
 				PublicKey pkey = null;
 				if (is_bVerifySignature()) {
 					pkey = metadataManager.getSigningKeyFromMetadata(sp);

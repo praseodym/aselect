@@ -117,7 +117,7 @@ public class LogoutRequestSender
 			DateTime dtIssueinstant = null;
 			if (issueinstant != null) {
 				dtIssueinstant = new DateTime().plus(1000*Long.parseLong(issueinstant));
-				// TODO implement setting of absolute timestamps
+				// RM_48_01
 			}
 
 			String issuer = partnerData.getTestdata4partner().getIssuerLogout();
@@ -137,7 +137,7 @@ public class LogoutRequestSender
 		
 		
 		
-		// TODO setValidityInterval with only NotOnOrAfter, but we need this from calling object (from aselect.xml)
+		// RM_48_02
 		SAMLObjectBuilder<Endpoint> endpointBuilder = (SAMLObjectBuilder<Endpoint>) builderFactory
 				.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);
 		Endpoint samlEndpoint = endpointBuilder.buildObject();
