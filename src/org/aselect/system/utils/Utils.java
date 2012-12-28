@@ -63,10 +63,15 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.Vector;
 import java.util.logging.Level;
 
 //import org.aselect.server.log.ASelectSystemLogger;
@@ -642,6 +647,21 @@ public class Utils
 						sbBuffer.append("&");
 				}
 			}
+			else if (oValue instanceof List) {	// Should be List of Strings
+				List<String> l = (List<String>) oValue;
+				ArrayList<String> aList = new ArrayList<String>(l);
+				String[] strArr = {};
+				strArr = 	aList.toArray(strArr);
+				for (int i = 0; i < strArr.length; i++) {
+					sbBuffer.append(sKey).append(ENCODED_BRACES);
+					sbBuffer.append("=");
+					String sValue = URLEncoder.encode(strArr[i], "UTF-8");
+					sbBuffer.append(sValue);
+					if (i < strArr.length - 1)
+						sbBuffer.append("&");
+				}
+			}
+			
 			// if (enumKeys.hasMoreElements()) {
 			// Append extra '&' after every parameter.
 			sbBuffer.append("&");
@@ -1035,4 +1055,136 @@ public class Utils
 		return (sOrgId != null && sOrgId.equals(""));
 	}
 
+	
+	/**
+	 * Serialize attributes contained in a HashMap. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * This method serializes attributes contained in a HashMap:
+	 * <ul>
+	 * <li>They are formatted as attr1=value1&attr2=value2;...
+	 * <li>If a "&amp;" or a "=" appears in either the attribute name or value, they are transformed to %26 or %3d
+	 * respectively.
+	 * <li>The end result is base64 encoded.
+	 * </ul>
+	 * <br>
+	 * 
+	 * @param htAttributes - HashMap containing all attributes
+	 * @return Serialized representation of the attributes
+	 * @throws ASelectException - If serialization fails.
+	 */
+	
+	
+	public static String serializeAttributes(Map htAttributes)
+	throws ASelectException
+	{
+		final String sMethod = "serializeAttributes";
+		try {
+			if (htAttributes == null || htAttributes.isEmpty())
+				return null;
+			StringBuffer sb = new StringBuffer();
+	
+			Set keys = htAttributes.keySet();
+			for (Object s : keys) {
+				String sKey = (String) s;
+				// for (Enumeration e = htAttributes.keys(); e.hasMoreElements(); ) {
+				// String sKey = (String)e.nextElement();
+				Object oValue = htAttributes.get(sKey);
+	
+				if (oValue instanceof Iterable) {// it's a multivalue attribute
+					Iterable vValue = (Iterable) oValue;
+	
+					sKey = URLEncoder.encode(sKey + "[]", "UTF-8");
+//					Enumeration eEnum = vValue.elements();
+					Iterator itr =  vValue.iterator();
+					while (itr.hasNext()) {
+						String sValue = (String) itr.next();
+	
+						// add: key[]=value
+						sb.append(sKey).append("=").append(URLEncoder.encode(sValue, "UTF-8"));
+						if (itr.hasNext())
+							sb.append("&");
+					}
+				}
+				else if (oValue instanceof String) {// it's a single value attribute
+					String sValue = (String) oValue;
+					sb.append(URLEncoder.encode(sKey, "UTF-8")).append("=").append(URLEncoder.encode(sValue, "UTF-8"));
+				}
+	
+				// if (e.hasMoreElements())
+				sb.append("&");
+			}
+			int len = sb.length();
+			String result = sb.substring(0, len - 1);
+			BASE64Encoder b64enc = new BASE64Encoder();
+			return b64enc.encode(result.getBytes("UTF-8"));
+		}
+		catch (Exception e) {
+			ASelectSystemLogger logger = ASelectSystemLogger.getHandle();
+			logger.log(Level.WARNING, MODULE, sMethod, "Could not serialize attributes", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		}
+	}
+
+	/**
+	 * Deserialize attributes and convertion to a <code>HashMap</code>. <br/>
+	 * Conatins support for multivalue attributes, with name of type <code>
+	 * String</code> and value of type <code>Vector</code>.
+	 * 
+	 * @param sSerializedAttributes
+	 *            the serialized attributes.
+	 * @return The deserialized attributes (key,value in <code>HashMap</code>)
+	 * @throws ASelectException
+	 *             If URLDecode fails
+	 */
+	public static HashMap deserializeAttributes(String sSerializedAttributes)
+	throws ASelectException
+	{
+		String sMethod = "deSerializeAttributes";
+		HashMap htAttributes = new HashMap();
+		if (sSerializedAttributes != null) {  // Attributes available
+			try {  // base64 decode
+				BASE64Decoder base64Decoder = new BASE64Decoder();
+				String sDecodedUserAttrs = new String(base64Decoder.decodeBuffer(sSerializedAttributes));
+	
+				// decode & and = chars
+				String[] saAttrs = sDecodedUserAttrs.split("&");
+				for (int i = 0; i < saAttrs.length; i++) {
+					int iEqualChar = saAttrs[i].indexOf("=");
+					String sKey = "";
+					String sValue = "";
+					Vector vVector = null;
+	
+					if (iEqualChar > 0) {
+						sKey = URLDecoder.decode(saAttrs[i].substring(0, iEqualChar), "UTF-8");
+						sValue = URLDecoder.decode(saAttrs[i].substring(iEqualChar + 1), "UTF-8");
+	
+						if (sKey.endsWith("[]")) { // it's a multi-valued attribute
+							// Strip [] from sKey
+							sKey = sKey.substring(0, sKey.length() - 2);
+							if ((vVector = (Vector) htAttributes.get(sKey)) == null)
+								vVector = new Vector();
+							vVector.add(sValue);
+						}
+					}
+					else
+						sKey = URLDecoder.decode(saAttrs[i], "UTF-8");
+	
+					if (vVector != null)  // store multivalue attribute
+						htAttributes.put(sKey, vVector);
+					else  // store singlevalue attribute
+						htAttributes.put(sKey, sValue);
+				}
+			}
+			catch (Exception e) {
+				ASelectSystemLogger logger = ASelectSystemLogger.getHandle();
+				logger.log(Level.WARNING, Utils.MODULE, sMethod, "Error during deserialization of attributes", e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+			}
+		}
+		return htAttributes;
+	}
+	
+	
+	
 }

@@ -1,0 +1,119 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="nl" xml:lang="nl">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<title>Challenge - Delegator</title>
+
+<meta name="description" content="" />
+<meta name="keywords" content="" />
+<meta name="distribution" content="global" />
+<meta name="robots" content="index, follow" />
+<meta name="language" content="nl" />
+
+<link rel="shortcut icon" href="./favicon.ico" type="image/x-icon" />
+<link rel="stylesheet" href="./css/screen.css" type="text/css" media="screen" />
+<link rel="stylesheet" href="./css/form-indicator.css" type="text/css" media="screen" />
+<link rel="stylesheet" href="./css/pwdmeter.css" type="text/css" media="screen" />
+
+<!--[if IE 8]><link rel="stylesheet" href="./css/ie/ie8.css" type="text/css" media="screen" /><![endif]-->
+<!--[if lte IE 7]><link rel="stylesheet" href="./css/ie/ie7.css" type="text/css" media="screen" /><![endif]-->
+<!--[if lte IE 6]><link rel="stylesheet" href="./css/ie/ie6.css" type="text/css" media="screen" /><![endif]-->
+
+<script type="text/javascript" src="./js/jquery-1.js"></script>
+<script type="text/javascript" src="./js/forms2.js"></script>
+<script type="text/javascript" src="./js/pwdmeter.js"></script>
+
+<!-- styles in screen.css -->
+
+</head>
+
+<body id="content" onload="document.authenticate.password.focus()">
+
+<div class="container yellow">
+
+	<!-- ######## -->
+	<div class="header"> 
+	<a href="http://www.anwb.nl" title="naar de ANWB homepage" id="homeANWBlink">&lt; Home anwb.nl</a>
+		<div class="title_bar">ANWB</div>
+	</div>
+	<!-- -->
+
+  <div class="content_wrapper1">
+    <div class="content_wrapper2">
+      <div class="content">
+      
+      <!-- START : CONTENT -->
+        <div class="content_main wide form" id="hoofd_content">
+
+<!-- End of GeneralHeader.jsp -->
+
+<form action="[authsp_server]" method="post" name="authenticate" class="form_ll process" autocomplete="off">
+
+<div [if_cond,user_change,,class="do_not_display"]>
+	<h1>Inloggen</h1>
+    <p>
+    	Het bij ons geregistreerde 06-nummer is niet geldig, Controleer uw mobiele nummer en wijzig het in navolgende scherm(en).<br/>
+    	Druk op OK om te wijzigen<br/>
+    </p>
+</div>
+<!--
+	<div [if_error,,class="do_not_display"]>
+		<div class="mod message_err">
+		<p class="message-head close">Er is een (aantal) veld(en) niet of onjuist ingevuld.</p>
+		<ul class="normal">
+			<li>[error_message]</li>
+		</ul>
+		</div>
+	</div>
+-->
+    <!-- p class="mandatory">* = verplicht in te vullen</p-->
+    <fieldset>	
+	<legend class="invisible">Uw 06-nummer</legend>
+	<ol>
+	    <li class="with-extra-information">
+		<label for="password" [if_error,class="err",]>Land + 06-nummer<em class="mandatory">*</em></label>
+		<input id="challenge" name="challenge" type="input" [if_error,class="text err",class="text"] maxlength="12" value="[challenge]"	READONLY="READONLY" />
+				<h4>Explanation</h4>
+                <div class="form-info"><span><p><a class="close-info"></a>Controleer uw nummer.en wijzig in volgende scherm(en)</p></span></div>
+	    </li>
+	</ol>
+    </fieldset>
+    <p class="mandatory"></p>
+    <p class="formbuttons">
+
+	    <input name="rid" value="[rid]" type="hidden">
+	    <input name="a-select-server" value="[a-select-server]" type="hidden">
+	    <input name="as_url" value="[as_url]" type="hidden">
+	    <input name="uid" value="[uid]" type="hidden">
+	    <input name="retry_counter" value="[retry_counter]" type="hidden">
+	    <input name="signature" value="[signature]" type="hidden">
+	    <input name="country" value="[country]" type="hidden">
+	    <input name="language" value="[language]" type="hidden">
+
+	 	<span class="richButton link nextButton">
+			<input type="submit" class="rich normal bold" name="send" value="OK">
+		</span>
+	</p>
+</form>
+
+<!-- GeneralFooter.jsp -->
+
+        </div>
+    <!-- END : CONTENT -->
+
+      </div>
+    </div>
+  </div>
+
+	<!-- ######## -->
+	<div class="footer">
+		<p><a href="http://www.anwb.nl/uw-privacy?popup=true" target="_blank">Uw privacy</a> |
+			<a href="http://www.anwb.nl/login,/Toelichting-inloggen.html" target="_blank">Veelgestelde vragen</a> |
+			<a href="http://www.anwb.nl/formulier,/ContactLogin.html" target="_blank">Contact</a></p>
+		<img src="./images/RO_footer.png" alt="" height="25" width="500" />
+	</div>
+</div>
+
+
+</body>
+</html>

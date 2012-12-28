@@ -1,0 +1,29 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+    <title>Authentication Failed | [organization_friendly]</title>
+    <link rel="stylesheet" type="text/css" href="style/aselect.css" >
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<script type="text/javascript" language="JavaScript">
+function load_action()
+{
+    var redirectUrl = "https://siam1.test.anoigo.nl/[requestor_friendly_name]/siamerror.html";
+    if (redirectUrl == "" || redirectUrl == "DEVSIA"+"M_AM_E"+"RROR_URL")
+        return;
+    document.redirect.submit();
+}
+</script>
+
+</head>
+<body onload="load_action()">
+
+<form name="redirect" method="get" action="https://siam1.test.anoigo.nl/siamerror.html">
+    <input type="hidden" name="error_code" value="[error]">
+    <input type="hidden" name="language" value="nl">
+    <a href="javascript: document.redirect.submit();"></a>
+</form>
+
+</body>
+</html>
+

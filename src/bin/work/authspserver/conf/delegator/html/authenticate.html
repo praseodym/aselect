@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<HEAD>
+    <title>[organization_friendly]</title>
+    <link rel="stylesheet" type="text/css" href="style/aselect.css" >
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</HEAD>
+<BODY onload="document.authenticateform.uid.focus()">
+    <table width="100%">
+	<tr><td>&nbsp;</td>
+	    <td align="right"><img align="right" src="img/aselectlogo.png" alt="A-Select"></td>
+	</tr>
+	<tr><td>&nbsp;</td>
+	    <td align="right"><p class="itemHead">[organization_friendly]</p></td>
+	</tr>
+</table>
+    <table width="100%">
+	<tr><td>&nbsp;</td>
+	    <td>
+		<p class="itemHead">A-Select Delegator AuthSP</p>
+		<form action="[authsp_server]" method="post" name="authenticateform">
+		    <input type="hidden" name="rid" value="[rid]">
+		    <input type="hidden" name="a-select-server" value="[a-select-server]">
+		    <input type="hidden" name="as_url" value="[as_url]">
+		    <input type="hidden" name="retry_counter" value="[retry_counter]">
+		    <input type="hidden" name="signature" value="[signature]">
+		    <input type="hidden" name="country" value="[country]">
+		    <input type="hidden" name="language" value="[language]">
+			<br/><br/>
+			    Enter your username to authenticate yourself.
+			<br/><br/><br/>
+		    <input type="text" name="uid" value="[uid]" size="26">
+			<br/><br/>
+			    Enter your password to authenticate yourself.
+			<br/><br/><br/>
+		    <input type="password" name="password" size="26">
+		    <input type="submit" value="  Submit ">
+		</form>
+		<i>[error]&nbsp;&nbsp;&nbsp;</i> 
+		<span class="error">[error_message]</span>
+	    </td>
+	</tr>
+    </table>
+</BODY>
+</html>
