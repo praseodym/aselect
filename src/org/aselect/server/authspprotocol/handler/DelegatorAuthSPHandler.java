@@ -1,27 +1,13 @@
-/*
- * Copyright (c) Stichting SURF. All rights reserved.
- * 
+/**
+ * * Copyright (c) Anoigo. All rights reserved.
+ *
  * A-Select is a trademark registered by SURFnet bv.
- * 
- * This program is distributed under the A-Select license.
+ *
+ * This program is distributed under the EUPL 1.0 (http://osor.eu/eupl)
  * See the included LICENSE file for details.
- * 
- * If you did not receive a copy of the LICENSE 
- * please contact SURFnet bv. (http://www.surfnet.nl)
- */
-
-/* 
- * $Id: PKI.java,v 1.3 2005/07/25 10:51:48 peter Exp $ 
  *
- * Changelog:
- * $Log: PKI.java,v $
- * Revision 1.3  2005/07/25 10:51:48  peter
- * Initial A-Select 1.4.1 version.
- *
- * Revision 1.2  2005/03/29 13:45:15  erwin
- * Fixed error handling for init() and computeAuthenticateRequest() partly.
- *
- *
+ * If you did not receive a copy of the LICENSE
+ * please contact Anoigo. (http://www.anoigo.nl) 
  */
 package org.aselect.server.authspprotocol.handler;
 
@@ -41,7 +27,6 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAuthSPException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.utils.BASE64Decoder;
-import org.aselect.system.utils.Utils;
 
 /**
  * The Delegator AuthSP Handler. <br>
@@ -139,9 +124,6 @@ public class DelegatorAuthSPHandler implements IAuthSPProtocolHandler
 	private ASelectAuthenticationLogger _authenticationLogger;
 	private String _sAuthsp;
 	private String _sAuthspUrl;
-//	private String _sTwoFactorAuthSp;
-//	private String _sTwoFactorAuthSpUrl;
-//	private String _sTwoFactorAuthSpRetries;
 	
 	/* (non-Javadoc)
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#myRidName()
@@ -158,7 +140,7 @@ public class DelegatorAuthSPHandler implements IAuthSPProtocolHandler
 	 * @throws ASelectAuthSPException
 	 *             the a select auth sp exception
 	 */
-	// private String _sServerId;
+	
 	/**
 	 * Initialize the <code>Delegator</code> AuthSP Handler. <br>
 	 * <br>
@@ -214,19 +196,6 @@ public class DelegatorAuthSPHandler implements IAuthSPProtocolHandler
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No main 'aselect' config section found", e);
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INIT_ERROR);
 			}
-			//////////////////// TODO remove two-factor stuff	///////////////////////////////////
-//			try {
-//				Object oTwoFactorConfig = _oConfigManager.getSection(oAuthSpConfig, "two_factor_authentication");
-//				_sTwoFactorAuthSp = _oConfigManager.getParam(oTwoFactorConfig, "id");
-//				_sTwoFactorAuthSpUrl = _oConfigManager.getParam(oTwoFactorConfig, "url"); // TODO maybe keep url to allow for multiple Delegates or let authsp handle that
-//				_sTwoFactorAuthSpRetries = _oConfigManager.getParam(oTwoFactorConfig, "retries");
-//			}
-//			catch (ASelectConfigException e) // no two factor authentication used.
-//			{
-//				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-//						"No valid two factor configuration found; two factor authentication disabled.");
-//			}
-			///////////////////////////////////////////////////////
 		}
 		catch (ASelectAuthSPException eAA) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize", eAA);
@@ -270,13 +239,6 @@ public class DelegatorAuthSPHandler implements IAuthSPProtocolHandler
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Allowed user AuthSPs missing in session context.");
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 			}
-			/////////////////// TODO remove two-factor stuff	/////////////////////////
-//			String sTwoFactorUserAttributes = null;
-//			if (_sTwoFactorAuthSp != null && _sTwoFactorAuthSpUrl != null) {
-//				sTwoFactorUserAttributes = (String) htAllowedAuthsps.get(_sTwoFactorAuthSp);
-//			}
-			////////////////////////////////////////////////////////////
-//			String sDelegatorUserAttributes = (String) htAllowedAuthsps.get(_sAuthsp);
 
 			sbTemp = new StringBuffer((String) htSessionContext.get("my_url"));
 			sbTemp.append("?authsp=").append(_sAuthsp);
@@ -316,15 +278,6 @@ public class DelegatorAuthSPHandler implements IAuthSPProtocolHandler
 			}
 
 			
-			///////////// TODO remove two-factor stuff	////////////////////////////////////
-//			if (_sTwoFactorAuthSp != null && _sTwoFactorAuthSpUrl != null && _sTwoFactorAuthSpRetries != null
-//					&& sTwoFactorUserAttributes != null) {
-//				sbTemp.append(_sTwoFactorAuthSp);
-//				sbTemp.append(_sTwoFactorAuthSpUrl);
-//				sbTemp.append(_sTwoFactorAuthSpRetries);
-//				sbTemp.append(sTwoFactorUserAttributes);
-//			}
-			////////////////////////////////////////////////////////////////////////////
 			sSignature = CryptoEngine.getHandle().generateSignature(_sAuthsp, sbTemp.toString());
 
 			if (sSignature == null) {
@@ -343,28 +296,12 @@ public class DelegatorAuthSPHandler implements IAuthSPProtocolHandler
 				if (sLanguage != null) {
 					sbTemp.append(URLEncoder.encode(sLanguage, "UTF-8"));
 				}
-				///////////// TODO remove two-factor stuff	////////////////////////////////////
-//				if (_sTwoFactorAuthSp != null && _sTwoFactorAuthSpUrl != null && sTwoFactorUserAttributes != null) {
-//					_sTwoFactorAuthSp = URLEncoder.encode(_sTwoFactorAuthSp, "UTF-8");
-//					_sTwoFactorAuthSpUrl = URLEncoder.encode(_sTwoFactorAuthSpUrl, "UTF-8");
-//					sTwoFactorUserAttributes = URLEncoder.encode(sTwoFactorUserAttributes, "UTF-8");
-//				}
-				//////////////////////////////////////////////////////////
 				sbTemp = new StringBuffer(_sAuthspUrl);
 				sbTemp.append("?as_url=").append(sAsUrl);
 				sbTemp.append("&app_id=").append(sAppId);
 				sbTemp.append("&rid=").append(sRid);
 //				sbTemp.append("&user_attribute=").append(sDelegatorUserAttributes);
 				sbTemp.append("&a-select-server=").append(sServerId);
-				///////////// TODO remove two-factor stuff	////////////////////////////////////
-//				if (_sTwoFactorAuthSp != null && _sTwoFactorAuthSpUrl != null && sTwoFactorUserAttributes != null
-//						&& _sTwoFactorAuthSpRetries != null) {
-//					sbTemp.append("&tf_authsp=").append(_sTwoFactorAuthSp);
-//					sbTemp.append("&tf_url=").append(_sTwoFactorAuthSpUrl);
-//					sbTemp.append("&tf_retries=").append(_sTwoFactorAuthSpRetries);
-//					sbTemp.append("&tf_uid=").append(sTwoFactorUserAttributes);
-//				}
-				///////////////////////////////////////////////////////////
 				sbTemp.append("&signature=").append(sSignature);
 				if (sCountry != null) {
 					sbTemp.append("&country=").append(sCountry);
@@ -487,8 +424,6 @@ public class DelegatorAuthSPHandler implements IAuthSPProtocolHandler
 				if (sDelegateTimeout != null)
 					htResponse.put("delegate_timeout", sDelegateTimeout);
 				if (sDelegateFields != null) {
-//					htResponse.put("delegate_fields", sDelegateFields);
-//					HashMap hDelegateFields = Utils.convertCGIMessage(sDelegateFields, true); // not working for multi valued atributes
 					_systemLogger.log(Level.FINER, MODULE, sMethod, "delegateFields=" + sDelegateFields);
 					htResponse.put("attributes", sDelegateFields);	// use special key for adding extra attributes
 				}

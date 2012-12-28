@@ -124,10 +124,6 @@ public class DelegatorAuthSP extends AbstractAuthSP
 	private String _sDelegateUser;
 	private String _sDelegatePassword;
 	private String _sDelegateGateway;
-	private int _iSmsSecretLength;
-	private String _sSmsText;
-	private String _sSmsFrom;
-//	private Delegate _oDelegate;
 	private String _sAuthProvider;
 	private String _fixed_secret;		// RH, 20110913, n
 	private boolean _bShow_challenge;		// RH, 20110919, n
@@ -184,12 +180,6 @@ public class DelegatorAuthSP extends AbstractAuthSP
 
 			// Retrieve crypto engine from servlet context.
 			ServletContext oContext = oConfig.getServletContext();
-//			_cryptoEngine = (CryptoEngine) oContext.getAttribute("CryptoEngine");
-//			if (_cryptoEngine == null) {
-//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No CryptoEngine found in servlet context.");
-//				throw new ASelectException(Errors.ERROR_SMS_INTERNAL_ERROR);
-//			}
-//			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded CryptoEngine.");
 
 			// Retrieve friendly name
 			_sFriendlyName = (String) oContext.getAttribute("friendly_name");
@@ -645,7 +635,6 @@ public class DelegatorAuthSP extends AbstractAuthSP
 				sbSignature.append(sAsUrl);
 //				sbSignature.append(sUid);
 				sbSignature.append(sAsId);
-				// TODO add delegate_challenge to signature
 				if (sCountry != null)
 					sbSignature.append(sCountry);
 				if (sLanguage != null)
@@ -750,7 +739,6 @@ public class DelegatorAuthSP extends AbstractAuthSP
 	//					sessionContext.put(_sAuthProvider + "_app_id", app_id);
 						_sessionManager.updateSession(sRid, sessionContext);
 						// RH, 20110104, add formsignature
-	//					sRetryCounter += ":" + _cryptoEngine.generateSignature(sConcat(sAsId, sUid, sRetryCounter));
 						sRetryCounter += ":" + _cryptoEngine.generateSignature(sConcat(sAsId, app_id, sRetryCounter));
 						htServiceRequest.put("retry_counter", String.valueOf(sRetryCounter));
 	
@@ -789,11 +777,6 @@ public class DelegatorAuthSP extends AbstractAuthSP
 				servletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
 		}
-//		catch (NumberFormatException eNF) {  // error parsing retry_counter
-//			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-//					"Invalid request received: The retry counter parameter is invalid.");
-//			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_SMS_INVALID_REQUEST, sLanguage, failureHandling);
-//		}
 		catch (Exception e) {  // internal error
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process request due to internal error", e);
 			handleResult(servletRequest, servletResponse, pwOut, Errors.DELEGATOR_INTERNAL_SERVER_ERROR, sLanguage, failureHandling);
@@ -934,13 +917,8 @@ public class DelegatorAuthSP extends AbstractAuthSP
 		sChallengeForm = Utils.replaceString(sChallengeForm, "[country]", (sCountry != null)? sCountry: "");
 		sChallengeForm = Utils.replaceString(sChallengeForm, "[language]", (sLanguage != null)? sLanguage: "");
 
-		// TODO, escapehtml and check for multiple HTML escaping
-//		sChallengeForm = Utils.replaceString(sChallengeForm, "[delegate_challenge]",  StringEscapeUtils.escapeHtml(sChallenge) );
 		sChallengeForm = Utils.replaceString(sChallengeForm, "[delegate_challenge]",  sChallenge );
 
-		// TODO check handling of all signatures with/without url en-/ decoding
-		// This message presents a 'post' form, so it will url-encode field values, but the signature in our htRequest is already urlencoded
-		// so we decode it here
 		try {
 			sChallengeForm = Utils.replaceString(sChallengeForm, "[signature]", URLDecoder.decode(sSignature, "UTF-8") );
 		}
@@ -1010,7 +988,7 @@ public class DelegatorAuthSP extends AbstractAuthSP
 				sUserId = sDelegateSession = sDelegateTimeout = sDelegateFields = null;
 				 
 				if (responseParameters != null) {
-					sUserId = (String) responseParameters.get(KEY_UID).get(0);	// should at least have a signle valued user_id
+					sUserId = (String) responseParameters.get(KEY_UID).get(0);	// should at least have a single valued user_id
 //					sDelegateSession = (String) responseParameters.get("delegate_session");
 //					sDelegateTimeout = (String) responseParameters.get("delegate_timeout");
 //					sDelegateOptions = (String) responseParameters.get("delegate_options");
@@ -1103,20 +1081,4 @@ public class DelegatorAuthSP extends AbstractAuthSP
 	}
 	
 	
-//	/**
-//	 * Generate secret.
-//	 * 
-//	 * @return the string
-//	 */
-//	private String generateSecret()
-//	{
-//		double multiply = Math.pow(10.0D, (double) this._iSmsSecretLength);
-//		double secretValue = Math.random() * multiply;
-//		char[] secretFormat = new char[this._iSmsSecretLength];
-//		for (int i = 0; i < secretFormat.length; i++) {
-//			secretFormat[i] = '0';
-//		}
-//		NumberFormat format = new DecimalFormat(new String(secretFormat));
-//		return format.format(secretValue);
-//	}
 }

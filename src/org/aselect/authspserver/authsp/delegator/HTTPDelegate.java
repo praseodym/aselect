@@ -82,8 +82,10 @@ public class HTTPDelegate implements Delegate
 	
 /*	Possible resultcodes from authentication server:
     200 - authentication success
+    204 - authentication success, testing fase
     300 - more information required
     400 - authentication failure
+    406 - authentication failure, testing fase
  */ 
 	
 	public int authenticate( Map<String, String> requestparameters, Map<String, List<String>> responseparameters )
@@ -110,7 +112,6 @@ public class HTTPDelegate implements Delegate
 			}
 			
 			if (data.length() > 0 ) data.deleteCharAt( data.length() - 1 );	// remove last AMPERSAND
-//			data.append(NEWLINE).append(NEWLINE);
 
 			_systemLogger.log(Level.FINE, sModule, sMethod, "url=" + url.toString() + " data={" + data.toString() + "}");
 
@@ -125,12 +126,11 @@ public class HTTPDelegate implements Delegate
 
 			}
 //			conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-			conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");	// They don't accept charset !!
+			conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");	// They (the delegate party) don't accept charset !!
 			conn.setDoOutput(true);
 			OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
 			wr.write(data.toString());
 			wr.flush();
-			// wr.close();	// maybe close already
 			wr.close();
 
 			// Get the response
@@ -143,19 +143,12 @@ public class HTTPDelegate implements Delegate
 			// Still to decide on response protocol
 			while ((line = rd.readLine()) != null) {
 				sResult += line;
-//				sResult = Tools.extractFromXml(line, "resultcode", true);
-//				if (sResult != null) {
-//					sResultCode = sResult;
-//					break;
-//				}
 			}
 			_systemLogger.log(Level.INFO, sModule, sMethod, "sResult=" + sResult);
 			// Parse response  here
 			// For test return request parameters
-//			responseparameters.putAll(requestparameters);
 			responseparameters.putAll(hFields);
 			
-//			wr.close();
 			rd.close();
 		}
 		catch (IOException e) {
