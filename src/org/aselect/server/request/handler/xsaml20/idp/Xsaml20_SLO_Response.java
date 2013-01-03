@@ -44,6 +44,7 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 
 	private int _iRedirectLogoutTimeout = 30;
 	private boolean _bTryRedirectLogoutFirst = true;
+	private boolean _bSkipInvalidRedirects = false;
 
 	/* (non-Javadoc)
 	 * @see org.aselect.server.request.handler.xsaml20.Saml20_BrowserHandler#destroy()
@@ -70,9 +71,14 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 		super.init(oServletConfig, oConfig);
 		String sMethod = "init()";
 
-		String sTryRedirect = ASelectConfigManager.getSimpleParam(oConfig, "try_redirect_logout_first", false);
-		if (sTryRedirect != null && !sTryRedirect.equals("true"))
+		String sValue = ASelectConfigManager.getSimpleParam(oConfig, "try_redirect_logout_first", false);
+		if (sValue != null && !sValue.equals("true"))
 			_bTryRedirectLogoutFirst = false;
+
+		// 20121220, Bauke: added ability to skip bad metadata entries
+		sValue = ASelectConfigManager.getSimpleParam(oConfig, "_bSkipInvalidRedirects", false);  // default is false
+		if ("true".equals(sValue))
+			_bSkipInvalidRedirects = true;
 
 		try {
 			_iRedirectLogoutTimeout = new Integer(_configManager.getParam(oConfig, "redirect_logout_timeout"))
@@ -142,8 +148,8 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 		LogoutRequest originalLogoutRequest = (LogoutRequest) originalRequest;
 		// String uid = originalLogoutRequest.getNameID().getValue();
 
-		logoutNextSessionSP(httpRequest, httpResponse, originalLogoutRequest, null, null, _bTryRedirectLogoutFirst,
-				_iRedirectLogoutTimeout, null, logoutResponse.getIssuer());
+		logoutNextSessionSP(httpRequest, httpResponse, originalLogoutRequest, null, null,
+				_bTryRedirectLogoutFirst, _bSkipInvalidRedirects, _iRedirectLogoutTimeout, null, logoutResponse.getIssuer());
 	}
 
 	/* (non-Javadoc)

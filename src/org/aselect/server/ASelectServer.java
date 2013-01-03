@@ -227,9 +227,7 @@ import org.aselect.system.servlet.ASelectHttpServlet;
  */
 public class ASelectServer extends ASelectHttpServlet
 {
-	/**
-	 * The module name.
-	 */
+	private static final long serialVersionUID = -2390043713278597255L;
 	public final static String MODULE = "ASelectServer";
 	private ASelectConfigManager _configManager;
 	private SessionManager _sessionManager;

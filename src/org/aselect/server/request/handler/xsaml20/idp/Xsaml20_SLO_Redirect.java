@@ -51,11 +51,11 @@ import org.opensaml.xml.util.XMLHelper;
 public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 {
 	private final static String MODULE = "idp.Xsaml20_SLO_Redirect";
-	// private final static String SESSION_ID_PREFIX = "saml20_";
 	private final String LOGOUTREQUEST = "LogoutRequest";
 
-	private boolean _bTryRedirectLogoutFirst = true;
 	private int _iRedirectLogoutTimeout = 30;
+	private boolean _bTryRedirectLogoutFirst = true;
+	private boolean _bSkipInvalidRedirects = false;
 
 	/* (non-Javadoc)
 	 * @see org.aselect.server.request.handler.xsaml20.Saml20_BrowserHandler#init(javax.servlet.ServletConfig, java.lang.Object)
@@ -68,17 +68,20 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 
 		super.init(oServletConfig, oConfig);
 
-		String sTryRedirect = ASelectConfigManager.getSimpleParam(oConfig, "try_redirect_logout_first", false);
-		if (sTryRedirect != null && !sTryRedirect.equals("true"))
+		String sValue = ASelectConfigManager.getSimpleParam(oConfig, "try_redirect_logout_first", false);
+		if (sValue != null && !sValue.equals("true"))
 			_bTryRedirectLogoutFirst = false;
 
+		// 20121220, Bauke: added ability to skip bad metadata entries
+		sValue = ASelectConfigManager.getSimpleParam(oConfig, "_bSkipInvalidRedirects", false);  // default is false
+		if ("true".equals(sValue))
+			_bSkipInvalidRedirects = true;
+
 		try {
-			_iRedirectLogoutTimeout = new Integer(_configManager.getParam(oConfig, "redirect_logout_timeout"))
-					.intValue();
+			_iRedirectLogoutTimeout = new Integer(_configManager.getParam(oConfig, "redirect_logout_timeout")).intValue();
 		}
 		catch (ASelectConfigException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"No config item 'redirect_logout_timeout' found in 'handler' section", e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'redirect_logout_timeout' found in 'handler' section", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}
@@ -172,7 +175,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 			// 20090616, Bauke: save initiator ID for the logout response
 			String sRequestID = logoutRequest.getID();
 			logoutNextSessionSP(httpRequest, httpResponse, logoutRequest, sInitiatingSP, sRequestID,
-					_bTryRedirectLogoutFirst, _iRedirectLogoutTimeout, htTGTContext, null);
+					_bTryRedirectLogoutFirst, _bSkipInvalidRedirects, _iRedirectLogoutTimeout, htTGTContext, null);
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request handled " + pathInfo);
 		}
 		catch (ASelectException e) {

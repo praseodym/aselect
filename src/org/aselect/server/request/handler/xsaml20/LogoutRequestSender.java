@@ -90,19 +90,18 @@ public class LogoutRequestSender
 		sendLogoutRequest(request, response, sTgT, sServiceProviderUrl, sIssuerUrl, sNameID, reason, sLogoutReturnUrl, null);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public void sendLogoutRequest(HttpServletRequest request, HttpServletResponse response, String sTgT,
 			String sServiceProviderUrl, String sIssuerUrl, String sNameID, String reason, String sLogoutReturnUrl, List<String>sessionindexes)
 	throws ASelectException
-		{	// for backward compatibility
-			sendLogoutRequest(request, response, sTgT, sServiceProviderUrl, sIssuerUrl, sNameID, reason, sLogoutReturnUrl, sessionindexes, null);
-		}
+	{	// for backward compatibility
+		sendLogoutRequest(request, response, sTgT, sServiceProviderUrl, sIssuerUrl, sNameID, reason, sLogoutReturnUrl, sessionindexes, null);
+	}
 		
 	@SuppressWarnings("unchecked")
 	public void sendLogoutRequest(HttpServletRequest request, HttpServletResponse response, String sTgT,
-			String sServiceProviderUrl, String sIssuerUrl, String sNameID, String reason, String sLogoutReturnUrl, List<String>sessionindexes, PartnerData partnerData)
-		throws ASelectException
-
+			String sServiceProviderUrl, String sIssuerUrl, String sNameID, String reason, String sLogoutReturnUrl,
+			List<String>sessionindexes, PartnerData partnerData)
+	throws ASelectException
 	{
 		String sMethod = "sendLogoutRequest";
 
@@ -124,19 +123,15 @@ public class LogoutRequestSender
 			String destination =  partnerData.getTestdata4partner().getDestinationLogout();
 			logoutRequest = SamlTools.buildLogoutRequest(
 					destination != null ? destination : sServiceProviderUrl,
-					sTgT, sNameID, 
-					issuer != null ? issuer: sIssuerUrl, 
-					reason, sessionindexes,
-					dtIssueinstant);
-					
-		} else {
+					sTgT, sNameID, issuer != null ? issuer: sIssuerUrl, 
+					reason, sessionindexes, dtIssueinstant);
+		}
+		else {
 			logoutRequest = SamlTools.buildLogoutRequest(sServiceProviderUrl, sTgT, sNameID, sIssuerUrl, reason, sessionindexes);
 		}
 		// RH, 20120307, en
 //		LogoutRequest logoutRequest = SamlTools.buildLogoutRequest(sServiceProviderUrl, sTgT, sNameID, sIssuerUrl, reason, sessionindexes);	// RH, 20120307, o
-		
-		
-		
+
 		// RM_48_02
 		SAMLObjectBuilder<Endpoint> endpointBuilder = (SAMLObjectBuilder<Endpoint>) builderFactory
 				.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);

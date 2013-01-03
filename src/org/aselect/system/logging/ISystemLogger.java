@@ -223,7 +223,7 @@ public interface ISystemLogger
 	 * Cleanup logger resources. <br>
 	 * <br>
 	 * <b>Description: </b> <br>
-	 * Closes all openend log handlers. <br>
+	 * Closes all opened log handlers. <br>
 	 * <br>
 	 * <b>Concurrency issues: </b> <br>
 	 * -<br>

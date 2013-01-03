@@ -37,6 +37,7 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.Audit;
+import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
 import org.opensaml.common.SAMLObjectBuilder;
 import org.opensaml.common.SAMLVersion;
@@ -494,7 +495,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	 */
 	protected void logoutNextSessionSP(HttpServletRequest httpRequest, HttpServletResponse httpResponse,
 			LogoutRequest originalLogoutRequest, String initiatingSP, String initiatingID, boolean tryRedirectLogoutFirst,
-			int redirectLogoutTimeout, HashMap<String, Serializable> htTGTContext, Issuer responseIssuer)
+			boolean skipInvalidRedirects, int redirectLogoutTimeout, HashMap<String, Serializable> htTGTContext, Issuer responseIssuer)
 	throws ASelectException, ASelectStorageException
 	{
 		String sMethod = "logoutNextSessionSP";
@@ -541,7 +542,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 						+ initiatingID + " thisSP=" + serviceProvider + " session=" + sso);
 
 				if (initiatingSP != null && serviceProvider.equals(initiatingSP)) {
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "SKIP " + initiatingSP);
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "SKIP initiatingSP=" + initiatingSP);
 					continue;
 				}
 
@@ -572,8 +573,19 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect logout for SP=" + serviceProvider);
 					LogoutRequestSender sender = new LogoutRequestSender();
-					_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">> Sending logoutrequest to: " + url);
+					
+					// 20121220, Bauke: added skipping invalid metadata entries
+					if (!Utils.hasValue(url)) {
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, "No logoutrequest url for "+serviceProvider+" skipInvalidRedirects="+skipInvalidRedirects);
+						if (!skipInvalidRedirects) {
+							throw new ASelectException(Errors.ERROR_ASELECT_CONFIG_ERROR);  // error message to the user
+						}
+						// Not necessary to call: sso.removeServiceProvider(responseIssuer.getValue());
+						// We'll keep skipping this entry
+						continue;  // Next!
+					}
 					// Will come back at this same handler
+					_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">> Sending logoutrequest to: " + url);
 					sender.sendLogoutRequest(httpRequest, httpResponse, sNameID, url, _sASelectServerUrl, sNameID,
 							"urn:oasis:names:tc:SAML:2.0:logout:user", null);
 					return;
@@ -590,12 +602,11 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 					// Continue with the rest
 				}
 			}
+			
 			// No SP's left (except the initiating SP)
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "No SP's left");
 			String sSendIdPLogout = (String) htTGTContext.get("SendIdPLogout");
 			String sAuthspType = (String) htTGTContext.get("authsp_type");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "No SP's left. SendIdPLogout=" + sSendIdPLogout
-					+ " authsp_type=" + sAuthspType);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "No SP's left. SendIdPLogout="+sSendIdPLogout + " authsp_type="+sAuthspType);
 			// For Saml20, will also send word to the IdP
 			if (sAuthspType != null && sAuthspType.equals("saml20") && sSendIdPLogout == null) {
 				htTGTContext.put("SendIdPLogout", "true");
