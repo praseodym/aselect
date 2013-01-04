@@ -73,7 +73,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 			_bTryRedirectLogoutFirst = false;
 
 		// 20121220, Bauke: added ability to skip bad metadata entries
-		sValue = ASelectConfigManager.getSimpleParam(oConfig, "_bSkipInvalidRedirects", false);  // default is false
+		sValue = ASelectConfigManager.getSimpleParam(oConfig, "skip_invalid_redirects", false);  // default is false
 		if ("true".equals(sValue))
 			_bSkipInvalidRedirects = true;
 
