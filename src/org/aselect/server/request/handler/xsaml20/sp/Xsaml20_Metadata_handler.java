@@ -247,8 +247,13 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 				HandlerInfo hHandler = eHandler.nextElement();
 				if (AssertionConsumerService.DEFAULT_ELEMENT_LOCAL_NAME.equalsIgnoreCase(hHandler.getType()) ) {
 					// Create the AssertionConsumerService
+					
+					// RH, 20121228, n, For assertionconsumer service we allow to define alternate location
+					String forcedLocation = hHandler.getLocation();	// returns null if not set
+
 					_systemLogger.log(Level.INFO, MODULE, sMethod, getAssertionConsumerTarget());
-					if (getAssertionConsumerTarget() != null) {
+//					if (getAssertionConsumerTarget() != null) {	// RH, 20121228, o
+					if ( (getAssertionConsumerTarget() != null) || (forcedLocation != null) ) {	// RH, 20121228, n
 						SAMLObjectBuilder<AssertionConsumerService> assResolutionSeviceBuilder = (SAMLObjectBuilder<AssertionConsumerService>) _oBuilderFactory
 								.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);
 						AssertionConsumerService assResolutionService = assResolutionSeviceBuilder.buildObject();
@@ -257,7 +262,14 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 						} else {
 							assResolutionService.setBinding(assertionConsumerServiceBindingConstantARTIFACT);
 						}
-						assResolutionService.setLocation(getRedirectURL() + getAssertionConsumerTarget());
+						if (forcedLocation != null) {	// RH, 20121228, sn
+							assResolutionService.setLocation(forcedLocation);
+						} else {	// RH, 20121228, en
+							assResolutionService.setLocation(getRedirectURL() + getAssertionConsumerTarget());
+						}
+						if (hHandler.getResponselocation() != null) {	// RH, 20121228, sn
+							assResolutionService.setResponseLocation(hHandler.getResponselocation());
+						}	// RH, 20121228, en
 						if (hHandler.getIsdefault() != null) {
 							assResolutionService.setIsDefault( hHandler.getIsdefault().booleanValue() );
 						}
@@ -271,7 +283,7 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 				if (SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME.equalsIgnoreCase(hHandler.getType()) ) {
 					String sBInding = null;
 					String sLocation = null;
-					// RH, 20120703, n, For singlelogout service we allow to define alternate location, maybe in future also for other services
+					// RH, 20120703, n, For singlelogout service we allow to define alternate location
 					String forcedLocation = hHandler.getLocation();	// returns null if not set
 					
 					if (SAMLConstants.SAML2_REDIRECT_BINDING_URI.equals(hHandler.getBinding())) {
