@@ -2405,6 +2405,7 @@ public class ASelectConfigManager extends ConfigManager
 			}
 
 			String sValue = "";
+			 boolean bSetNull = Boolean.parseBoolean(getSimpleParam(oProvider, "setnull", false));	// RH, 20130115, n
 			if (Utils.hasValue(sValueName)) {
 				try {
 					sValue = getHandle().getParam(oProvider, sValueName);
@@ -2424,7 +2425,8 @@ public class ASelectConfigManager extends ConfigManager
 					}
 				}
 			}
-			htAllKeys_Values.put(sKey, sValue);
+			htAllKeys_Values.put(sKey, bSetNull ? null : sValue);	// RH, 20130115, en
+//			htAllKeys_Values.put(sKey, sValue);	// RH, 20130115, o
 
 			oProvider = getHandle().getNextSection(oProvider);
 		}

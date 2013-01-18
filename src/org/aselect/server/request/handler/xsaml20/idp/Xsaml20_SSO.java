@@ -16,6 +16,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.Vector;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -949,8 +950,12 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				if (additionalAttributes != null) {
 					Set<String> keys = additionalAttributes.keySet();
 					for (String sKey : keys) {
-						String sValue = additionalAttributes.get(sKey);
-						_systemLogger.log(Level.FINE, MODULE, sMethod, "Attr "+sKey+"="+sValue);
+//						String sValue = additionalAttributes.get(sKey);	// RH, 20130115, o
+						Object sValue = additionalAttributes.get(sKey);	// RH, 20130115, sn
+						if (sValue == null) {	
+							sValue = htAttributes.get(sKey);
+						}// RH, 20130115, en
+						_systemLogger.log(Level.FINE, MODULE, sMethod, "Retrieved Attr "+sKey+"="+sValue);
 						htAllAttributes.put(sKey, sValue);
 					}
 				}
@@ -959,31 +964,59 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			Set keys = htAllAttributes.keySet();
 			for (Object s : keys) {
 				String sKey = (String)s;
-				Object oValue = htAllAttributes.get(sKey);
-
-				if (!(oValue instanceof String))
+//				Object oValue = htAllAttributes.get(sKey);
+//				if (!(oValue instanceof String))
+//					continue;
+				////////////////////////////////////////////////////////////////
+				Iterable aValues = null;
+				
+				Object anyValue = htAllAttributes.get(sKey);
+				if ((anyValue instanceof String)) {
+					Vector v = new Vector();
+					v.add(anyValue);
+					aValues = v;
+				} else	if ((anyValue instanceof Iterable)) {
+						aValues = (Iterable)anyValue;
+				} else {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Non Iterable attribute found, skipping:  "+sKey+"="+aValues);
 					continue;
-				String sValue = (String)oValue;
+				}
+
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Setting Attr "+sKey+"="+aValues);
 
 				Attribute theAttribute = attributeBuilder.buildObject();
-				theAttribute.setName(sKey);
-				XSString theAttributeValue = null;
-				boolean bNvlAttrName = _sAddedPatching.contains("nvl_attrname");
-				if (bNvlAttrName) {
-					// add namespaces to the attribute
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "nvl_attrname");
-					boolean bXS = _sAddedPatching.contains("nvl_attr_namexsd");
-					Namespace namespace = new Namespace(XMLConstants.XSD_NS, (bXS)? "xsd": XMLConstants.XSD_PREFIX);
-					theAttribute.addNamespace(namespace);
-					namespace = new Namespace(XMLConstants.XSI_NS, XMLConstants.XSI_PREFIX);
-					theAttribute.addNamespace(namespace);
-					theAttribute.setNameFormat(Attribute.BASIC);  // URI_REFERENCE);  // BASIC);
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Novell Attribute="+theAttribute);
-				}
-				theAttributeValue = (XSString)stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
-				theAttributeValue.setValue(sValue);
+				for ( Object oValue : aValues) {
+					String sValue = null;
+					if ((oValue instanceof String)) {
+						sValue = (String)oValue;
+					} else {
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "Non String attribute found, skipping:  "+sKey+"="+aValues);
+						continue;
+					}
+					
+	//				Attribute theAttribute = attributeBuilder.buildObject();
+					theAttribute.setName(sKey);
+					XSString theAttributeValue = null;
+					boolean bNvlAttrName = _sAddedPatching.contains("nvl_attrname");
+					if (bNvlAttrName) {
+						// add namespaces to the attribute
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "nvl_attrname");
+						boolean bXS = _sAddedPatching.contains("nvl_attr_namexsd");
+						Namespace namespace = new Namespace(XMLConstants.XSD_NS, (bXS)? "xsd": XMLConstants.XSD_PREFIX);
+						theAttribute.addNamespace(namespace);
+						namespace = new Namespace(XMLConstants.XSI_NS, XMLConstants.XSI_PREFIX);
+						theAttribute.addNamespace(namespace);
+						theAttribute.setNameFormat(Attribute.BASIC);  // URI_REFERENCE);  // BASIC);
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "Novell Attribute="+theAttribute);
+					}
+					theAttributeValue = (XSString)stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
+					theAttributeValue.setValue(sValue);
+					
+					theAttribute.getAttributeValues().add(theAttributeValue);
 				
-				theAttribute.getAttributeValues().add(theAttributeValue);
+				}
+				/////////////////////////////////////////////////////
+				
 				attributeStatement.getAttributes().add(theAttribute); // add this attribute
 			}
 			// CONSIDER maybe also add htAttributes as individual saml attributes
@@ -1084,8 +1117,25 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			
 			// 20100525, flag added for Novell, they need PERSISTENT
 			boolean bNvlPersist = _sAddedPatching.contains("nvl_persist");
-			if (bNvlPersist) _systemLogger.log(Level.INFO, MODULE, sMethod, "nvl_persist");
-			nameID.setFormat((bNvlPersist)? NameIDType.PERSISTENT: NameIDType.TRANSIENT); // was PERSISTENT originally
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "nvl_persist=" + bNvlPersist);
+			
+			//	RH, 20130117, sn
+			if ( _sAddedPatching.contains("saml_format_persist") ){
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "saml_format_persist");
+				nameID.setFormat(NameIDType.PERSISTENT);
+			} else if ( _sAddedPatching.contains("saml_format_trans") ){
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "saml_format_trans");
+				nameID.setFormat(NameIDType.TRANSIENT);
+			} else if ( _sAddedPatching.contains("saml_format_unspec") ){
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "saml_format_unspec");
+				nameID.setFormat(NameIDType.UNSPECIFIED);
+			} else if ( _sAddedPatching.contains("saml_format_none") ){	// do not set a nameid-format
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "saml_format_none");
+			} else { // backward compatibility with nvl
+				nameID.setFormat((bNvlPersist)? NameIDType.PERSISTENT: NameIDType.TRANSIENT);
+			}
+			//	RH, 20130117, en
+//			nameID.setFormat((bNvlPersist)? NameIDType.PERSISTENT: NameIDType.TRANSIENT); // was PERSISTENT originally, RH, 20130117, o
 			
 			// nvl_patch, Novell: added
 			if (_sAddedPatching.contains("nvl_patch")) {
