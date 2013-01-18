@@ -74,12 +74,14 @@ public class DelegatorAuthSP extends AbstractAuthSP
 	/** The version. */
 	public static final String VERSION = "A-Select DELEGATOR AuthSP " + "1.0";
 
-	/** The sessioncontext key for uid */
-//	public static final String KEY_UID = "uid";
-	public static final String KEY_UID = "username";
+	/** The sessioncontext key for uid in the request to the delegate */
+	public static final String DEFAULT_REQUEST_KEY_UID = "username";
 
-	/** The sessioncontext key for password */
-	public static final String KEY_PASSWD = "password";
+	/** The sessioncontext key for password  to the delegate */
+	public static final String DEFAULT_REQUEST_KEY_PASSWD = "password";
+
+	/** The sessioncontext key for password  from the delegate */
+	public static final String DEFAULT_RESPONSE_KEY_UID = "uid";
 
 	/** The sessioncontext key for delegate_session */
 	// Maybe make this configuration parameter
@@ -125,9 +127,13 @@ public class DelegatorAuthSP extends AbstractAuthSP
 	private String _sDelegatePassword;
 	private String _sDelegateGateway;
 	private String _sAuthProvider;
-	private String _fixed_secret;		// RH, 20110913, n
 	private boolean _bShow_challenge;		// RH, 20110919, n
 	
+	// RH, 20130115, sn
+	private String request_key_uid;
+	private String request_key_password;
+	private String response_key_uid;
+	// RH, 20130115, en
 
 	/**
 	 * Initialization of the DELEGATOR AuthSP. <br>
@@ -166,13 +172,7 @@ public class DelegatorAuthSP extends AbstractAuthSP
 		String sMethod = "init";
 		StringBuffer sbTemp = null;
 		try {
-			// super init
 			super.init(oConfig);
-			// retrieve managers and loggers
-//			_systemLogger = AuthSPSystemLogger.getHandle();
-//			_authenticationLogger = AuthSPAuthenticationLogger.getHandle();
-//			_configManager = AuthSPConfigManager.getHandle();
-//			_sessionManager = AuthSPSessionManager.getHandle();
 
 			// log start
 			StringBuffer sbInfo = new StringBuffer("Starting : ").append(MODULE);
@@ -342,18 +342,35 @@ public class DelegatorAuthSP extends AbstractAuthSP
 				_sAuthProvider = DelegateFactory.HTTP_DELEGATE; // choose as default privider
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "DelegateProvider="+_sAuthProvider); 
+
+			// RH, 20130115, sn
 			try {
-				_fixed_secret = _configManager.getParam(_oAuthSpConfig, "fixed_secret");
-				if (_fixed_secret.length() == 0 || _fixed_secret.length() > MAX_FIXED_SECRET_LENGTH) throw new ASelectConfigException("Invalid _fixed_secret length");
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-				"There is a 'fixed_secret' parameter found in configuration, all secret codes will be the same, which is not very secret !");
+				request_key_uid = _configManager.getParam(_oAuthSpConfig, "request_key_uid");
 			}
 			catch (ASelectException eAC) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod,
-						"No or invalid  'fixed_secret' parameter found  in configuration, random secret codes will be generated");
-				_fixed_secret = null;
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "No 'request_key_uid' parameter found in configuration, using default");
+				request_key_uid = DEFAULT_REQUEST_KEY_UID;
 			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "request_key_uid="+request_key_uid); 
 			
+			try {
+				request_key_password = _configManager.getParam(_oAuthSpConfig, "request_key_password");
+			}
+			catch (ASelectException eAC) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "No 'request_key_password' parameter found in configuration, using default");
+				request_key_password = DEFAULT_REQUEST_KEY_PASSWD;
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "request_key_password="+request_key_password); 
+
+			try {
+				response_key_uid = _configManager.getParam(_oAuthSpConfig, "response_key_uid");
+			}
+			catch (ASelectException eAC) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "No 'response_key_uid' parameter found in configuration, using default");
+				response_key_uid = DEFAULT_RESPONSE_KEY_UID;
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "response_key_uid="+response_key_uid); 
+			// RH, 20130115, en
 			
 			sbInfo = new StringBuffer("Successfully started ");
 			sbInfo.append(VERSION).append(".");
@@ -497,7 +514,6 @@ public class DelegatorAuthSP extends AbstractAuthSP
 				sessionContext.put(_sAuthProvider + "_app_id", sAppId);
 				_sessionManager.updateSession(sRid, sessionContext);
 				// RH, 20110104, add formsignature
-//				sRetryCounter += ":" + _cryptoEngine.generateSignature(sConcat(sAsId, sUid, sRetryCounter));
 				sRetryCounter += ":" + _cryptoEngine.generateSignature(sConcat(sAsId, sAppId, sRetryCounter));
 				htServiceRequest.put("retry_counter", String.valueOf(sRetryCounter));
 
@@ -583,7 +599,7 @@ public class DelegatorAuthSP extends AbstractAuthSP
 			String sChallenge = servletRequest.getParameter("delegate_challenge");
 			String sChallengeResponse = servletRequest.getParameter("delegate_challenge_response");
 			String sDelegateSession = servletRequest.getParameter("delegate_session");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "uid=" + sUid + " password=" + sPassword + " rid=" + sRid);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "uid=" + sUid + " rid=" + sRid);
 
 
 			
@@ -633,7 +649,6 @@ public class DelegatorAuthSP extends AbstractAuthSP
 				// generate signature
 				StringBuffer sbSignature = new StringBuffer(sRid);
 				sbSignature.append(sAsUrl);
-//				sbSignature.append(sUid);
 				sbSignature.append(sAsId);
 				if (sCountry != null)
 					sbSignature.append(sCountry);
@@ -665,10 +680,16 @@ public class DelegatorAuthSP extends AbstractAuthSP
 				HashMap<String, List<String>> responseparameters =  new HashMap<String, List<String>>();
 				
 				if (sessionContext.get(_sAuthProvider  + "_" + KEY_DELEGATE_SESSION) == null) {// If there is no delegate_session yet, this is a first (user/passwd) request
-					requestparameters.put(KEY_UID, sUid);
-					requestparameters.put(KEY_PASSWD, sPassword);
+					requestparameters.put(request_key_uid, sUid);
+					requestparameters.put(request_key_password, sPassword);
 				} else {	// this is a challenge request
+					sUid = (String)sessionContext.get(_sAuthProvider  + "_" + request_key_uid);	// use safed userid for this challenge
 					requestparameters.put(KEY_DELEGATE_SESSION, (String)sessionContext.get(_sAuthProvider  + "_" + KEY_DELEGATE_SESSION));
+					// remove old info from session context
+					sessionContext.remove(_sAuthProvider  + "_" + KEY_DELEGATE_SESSION);
+					sessionContext.remove(_sAuthProvider  + "_" + request_key_uid);
+					_sessionManager.updateSession(sRid, sessionContext);
+
 					requestparameters.put( sChallenge, sChallengeResponse);
 				}
 				// authenticate returns parameters in Map authenticate
@@ -685,35 +706,42 @@ public class DelegatorAuthSP extends AbstractAuthSP
 
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Success");
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "responseparameters:" + responseparameters);
-					String[] initialParms = { sUid };
-					responseparameters.put(KEY_UID, Arrays.asList(initialParms));	// for TESTING put at least user_id
+					if (responseparameters.get(response_key_uid) == null) {
+						String[] initialParms = { sUid };
+						responseparameters.put(response_key_uid, Arrays.asList(initialParms));	// if no user returned from delegate, use requested user
+					}
 					handleResult(servletRequest, servletResponse, pwOut, Integer.toString(iResultCode), sLanguage, failureHandling, responseparameters);
-
-					
 					
 					break;
 
 				case Delegate.DELEGATE_INQUIRE:	// Not implemented yet at the other side
 					// show challenge form
+					if (!_bShow_challenge) {
+						// Challenging not configured
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error communicating with delegate, challenging not configured");
+						throw new ASelectException(Errors.DELEGATOR_INTERNAL_SERVER_ERROR);
+					}
 					String delegateSession = (String) responseparameters.get(KEY_DELEGATE_SESSION).get(0);	// Should be single valued
 					// For testing give delegateSession a value
 					//////	TESTING	/////	// DELEGATE_INQUIRE not implemented yet on the other side
-					if (delegateSession == null) {
-						byte[] baRandomBytes = new byte[20];
-						CryptoEngine.nextRandomBytes(baRandomBytes);
-						delegateSession = "_" + app_id + "_" + sUid + Utils.byteArrayToHexString(baRandomBytes);
-					}
+//					if (delegateSession == null) {
+//						byte[] baRandomBytes = new byte[20];
+//						CryptoEngine.nextRandomBytes(baRandomBytes);
+//						delegateSession = "_" + app_id + "_" + sUid + Utils.byteArrayToHexString(baRandomBytes);
+//					}
 					//////	TESTING	/////	// DELEGATE_INQUIRE not implemented yet on the other side
 
 					if (delegateSession == null) {
-						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error communicating with delegate");
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error communicating with delegate, no Session from delegate");
 						throw new ASelectException(Errors.DELEGATOR_INTERNAL_SERVER_ERROR);
 					}
 					sChallenge =  (String) responseparameters.get(KEY_DELEGATE_CHALLENGE).get(0);	// Should be single valued
-					// For testing give sChallenge a value
-					sChallenge = "What is your mother's name";
+					if (sChallenge == null) {
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error communicating with delegate, no Challenge from delegate");
+						throw new ASelectException(Errors.DELEGATOR_INTERNAL_SERVER_ERROR);
+					}
 					sessionContext.put(_sAuthProvider  + "_" + KEY_DELEGATE_SESSION, delegateSession);
-					sessionContext.put(_sAuthProvider  + "_" + KEY_UID, sUid);	// safe userid for this challenge
+					sessionContext.put(_sAuthProvider  + "_" + request_key_uid, sUid);	// safe userid for this challenge
 					
 					_sessionManager.updateSession(sRid, sessionContext);
 					htServiceRequest.putAll(responseparameters);
@@ -736,9 +764,8 @@ public class DelegatorAuthSP extends AbstractAuthSP
 						
 						sessionContext.put(_sAuthProvider + "_formtoken", formtoken);
 						sessionContext.put(_sAuthProvider + "_retry_counter", retry_counter);
-	//					sessionContext.put(_sAuthProvider + "_app_id", app_id);
 						_sessionManager.updateSession(sRid, sessionContext);
-						// RH, 20110104, add formsignature
+
 						sRetryCounter += ":" + _cryptoEngine.generateSignature(sConcat(sAsId, app_id, sRetryCounter));
 						htServiceRequest.put("retry_counter", String.valueOf(sRetryCounter));
 	
@@ -988,10 +1015,10 @@ public class DelegatorAuthSP extends AbstractAuthSP
 				sUserId = sDelegateSession = sDelegateTimeout = sDelegateFields = null;
 				 
 				if (responseParameters != null) {
-					sUserId = (String) responseParameters.get(KEY_UID).get(0);	// should at least have a single valued user_id
+					sUserId = (String) responseParameters.get(response_key_uid).get(0);	// must at least have a single valued user_id
+					// delegate_session and delegate_timeout not implemented by the other side (yet)
 //					sDelegateSession = (String) responseParameters.get("delegate_session");
 //					sDelegateTimeout = (String) responseParameters.get("delegate_timeout");
-//					sDelegateOptions = (String) responseParameters.get("delegate_options");
 					sDelegateFields = Utils.serializeAttributes(responseParameters);	// creates base64
 					_systemLogger.log(Level.FINEST, MODULE, sMethod, "sDelegateFields=" + sDelegateFields);
 				}

@@ -118,7 +118,7 @@ public class HTTPSTrustAllDelegate implements Delegate
 			
 			if (data.length() > 0 ) data.deleteCharAt( data.length() - 1 );	// remove last AMPERSAND
 //			data.append(NEWLINE).append(NEWLINE);
-			_systemLogger.log(Level.FINE, sModule, sMethod, "url=" + url.toString() + " data={" + data.toString() + "}");
+//			_systemLogger.log(Level.FINE, sModule, sMethod, "url=" + url.toString() + " data={" + data.toString() + "}");	// no data shown in production environment
 
 			
 			/////////////	HERE WE DO THE TRUST ALL STUFF ///////////////////////////////
@@ -150,7 +150,7 @@ public class HTTPSTrustAllDelegate implements Delegate
 			
 			// Basic authentication
 			if (this.delegateuser != null) {
-				  byte [] bEncoded = Base64.encodeBase64((delegateuser+":"+(delegatepassword == null ? "" : delegatepassword) ).getBytes("UTF-8")); 
+				  byte [] bEncoded = Base64.encodeBase64((this.delegateuser+":"+(delegatepassword == null ? "" : delegatepassword) ).getBytes("UTF-8")); 
 				  String encoded = new String(bEncoded, "UTF-8");
 				  conn.setRequestProperty("Authorization", "Basic "+encoded);
 					_systemLogger.log(Level.INFO, sModule, sMethod, "Using basic authentication, user=" + this.delegateuser);
