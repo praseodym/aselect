@@ -166,13 +166,13 @@ public class SystemLogger_org implements ISystemLogger
 			Object oLogTargetConfig, String sWorkingDir)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		int iLogMaxSize = -1;
 		int iLogFiles = -1;
 		StringBuffer sbSysLogDir = null;
 
-		this.log(Level.INFO, MODULE, sMethod, "dir=" + sWorkingDir + " prefix=" + sLogFileNamePrefix);
+		this.log(Level.INFO, MODULE, sMethod, "dir="+sWorkingDir+" prefix="+sLogFileNamePrefix+" namespace="+sLoggerNamespace);
 		try {
 			if (oLogTargetConfig == null) {
 				this.log(Level.CONFIG, MODULE, sMethod, "No valid config section supplied, using default logging settings.");
@@ -185,7 +185,6 @@ public class SystemLogger_org implements ISystemLogger
 				sbSysLogDir.append(File.separator);
 			}
 			else {
-				this.log(Level.INFO, MODULE, sMethod, "target present");
 				try {
 					iLogMaxSize = new Integer(oConfigManager.getParam(oLogTargetConfig, "max_file_size")).intValue();
 				}
@@ -281,7 +280,7 @@ public class SystemLogger_org implements ISystemLogger
 			// FINEST also logs to stdout!
 			this.log(Level.INFO, MODULE, sMethod, "UseParent="+_oLogger.getUseParentHandlers());
 			_oLogger.addHandler(oFileHandler);
-			this.log(Level.INFO, MODULE, sMethod, "Done");
+			this.log(Level.INFO, MODULE, sMethod, "Done");  // This goes to the FileHandler
 			setLevel(Level.FINE);
 		}
 		catch (ASelectException e) {

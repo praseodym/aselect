@@ -51,6 +51,7 @@ import javax.naming.CommunicationException;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
+import javax.naming.NoPermissionException;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
@@ -279,18 +280,22 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 				// Check for selfBlockedTime
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "Attributes="+attr);
 			}
+			catch (NoPermissionException eP) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "No permission: expl=" + eP.getExplanation(), eP);
+				throw new ASelectException(Errors.ERROR_LDAP_INVALID_PASSWORD, eP);
+			}
 			catch (AuthenticationException e) {
-				StringBuffer sbFine = new StringBuffer("Could not authenticate user (invalid password): ");
-				sbFine.append(_sUid);
+				StringBuffer sbFine = new StringBuffer("Could not authenticate user (invalid password): ").append(_sUid)
+					.append(" expl="+e.getExplanation()).append(" cause="+e.getCause());
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, sbFine.toString());
 				throw new ASelectException(Errors.ERROR_LDAP_INVALID_PASSWORD);
 			}
 			catch (CommunicationException eC) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "A communication error has occured", eC);
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "A communication error has occured: expl="+eC.getExplanation(), eC);
 				throw new ASelectException(Errors.ERROR_LDAP_COULD_NOT_REACH_LDAP_SERVER, eC);
 			}
 			catch (NamingException eN) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "A naming error has occured", eN);
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "A naming error has occured: expl=" + eN.getExplanation(), eN);
 				throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR, eN);
 			}
 

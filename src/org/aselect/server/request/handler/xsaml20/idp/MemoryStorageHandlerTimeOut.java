@@ -29,6 +29,7 @@ import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMAgent;
 import org.aselect.system.storagemanager.handler.MemoryStorageHandler;
+import org.aselect.system.utils.Utils;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 
@@ -174,7 +175,7 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 			if (_oTGTManager != null) {
 				allTgts = _oTGTManager.getAll();
 			}
-		if (allTgts == null || allTgts.size() == 0)
+			if (allTgts == null || allTgts.size() == 0)
 				return;
 			_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "SPTO _serverUrl="+_serverUrl+" - TGT Count="+allTgts.size());
 
@@ -200,11 +201,10 @@ public class MemoryStorageHandlerTimeOut extends MemoryStorageHandler
 				}
 				boolean danishLogout = (now >= lCreateTime + timeOutTime);
 
-				// debug
 				_oSystemLogger.log(Level.FINER, MODULE, _sMethod, "ExpInt=" + lExpInterval + " Timeout=" + timeOutTime
 						+ " Create=" + (lCreateTime - now) + " Danish=" + danishLogout + " Initiator="
 						+ sso.getLogoutInitiator());
-				String sKey = (key.length() > 30) ? key.substring(0, 30) + "..." : key;
+				String sKey = Utils.firstPartOf(key, 30);
 				for (ServiceProvider sp : spList) {
 					_oSystemLogger.log(Level.FINER, MODULE, _sMethod, " IDPTO - NameID=" + sNameID + " key=" + sKey
 							+ " LastSessionSync=" + (sp.getLastSessionSync() - now));

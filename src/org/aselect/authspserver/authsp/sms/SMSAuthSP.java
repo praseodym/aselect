@@ -389,9 +389,6 @@ public class SMSAuthSP extends AbstractAuthSP
 		
 		String failureHandling = _sFailureHandling;	// Initially we use default from config, this might change if we suspect parameter tampering
 		
-		// super doGet for basics, future improvement
-//		super.doGet(servletRequest, servletResponse);
-		
 		try {
 			String sQueryString = servletRequest.getQueryString();
 			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, false);

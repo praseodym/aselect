@@ -875,10 +875,8 @@ public class PKIManager
 			while (_bActive) {
 				try {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Sleep "+_lMilliSeconds);
-					System.out.println(sMethod+" Sleep "+_lMilliSeconds);
 					Thread.sleep(_lMilliSeconds);
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Slept "+_lMilliSeconds);
-					System.out.println(sMethod+" Slept "+_lMilliSeconds);
 					Set keys = _htCRLs.keySet();
 					for (Object oCrlKey : keys) {
 						// Enumeration oCrlKeys = _htCRLs.keys();
@@ -902,9 +900,8 @@ public class PKIManager
 					}
 				}
 				catch (InterruptedException e) {
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "InterruptedException");
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "InterruptedException"+e);
 				}
-				System.out.println(sMethod+" Stopped");
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Stopped");
 			}
 		}
@@ -985,10 +982,8 @@ public class PKIManager
 			while (_bActive) {
 				try {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Sleep "+_lMilliSeconds);
-					System.out.println(sMethod+" Sleep "+_lMilliSeconds);
 					Thread.sleep(_lMilliSeconds);
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Slept "+_lMilliSeconds);
-					System.out.println(sMethod+" Slept "+_lMilliSeconds);
+					//_systemLogger.log(Level.INFO, MODULE, sMethod, "Slept "+_lMilliSeconds);
 					Set keys = _htFailedCRLs.keySet();
 					for (Object oFailedCrlKey : keys) {
 						try {
@@ -1002,10 +997,9 @@ public class PKIManager
 					}
 				}
 				catch (InterruptedException e) {
-					System.out.println(sMethod+" InterruptedException");
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "InterruptedException "+e);
 				}
 			}
-			System.out.println(sMethod+" Stopped");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Stopped");
 		}
 
@@ -1099,22 +1093,19 @@ public class PKIManager
 			while (_bActive) {
 				try {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Accept");
-					System.out.println(sMethod+" Accept");
 					Socket clientSocket = oSocket.accept();
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Accepted");
-					System.out.println(sMethod+" Accepted");
 					oRequestDispatcher = new PKIAdminRequestDispatcher(clientSocket);
 					oRequestThread = new Thread(oRequestDispatcher);
 					oRequestThread.setDaemon(true);
-					System.out.println(sMethod+" Start Thread");
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Start Thread");
 					oRequestThread.start();
-					System.out.println(sMethod+" Started Thread");
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Started Thread");
 				}
 				catch (Exception e) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
 				}
 			}
-			System.out.println(sMethod+" Stopped");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Stopped");
 		}
 
@@ -1210,7 +1201,6 @@ public class PKIManager
 			catch (IOException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
 			}
-			System.out.println(sMethod+" Stopped");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Stopped");
 		}
 

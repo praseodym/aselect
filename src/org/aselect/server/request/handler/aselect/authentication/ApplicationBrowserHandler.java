@@ -2843,10 +2843,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		hmRequest.put("app_url", "login_token");
 		hmRequest.put("shared_secret", sSharedSecret);
 		
-		if ( sSigningRequired) {	// not defensive because of backward compatibility
+		if (sSigningRequired) {	// not defensive because of backward compatibility
 			hmRequest.put("check-signature", "true");
 			hmRequest.put("signature", sSignature);
-		} else { 
+		}
+		else { 
 			hmRequest.put("check-signature", "false");  // this is an internal call, so don't
 		}
 	

@@ -171,6 +171,7 @@ public class SystemLoggerAudit implements ISystemLogger
 		int iLogFiles = -1;
 		StringBuffer sbSysLogDir = null;
 
+		this.log(Level.INFO, MODULE, sMethod, "Initialize SystemLoggerAudit");
 		try {
 			if (oLogTargetConfig == null) {
 				this.log(Level.CONFIG, MODULE, sMethod,

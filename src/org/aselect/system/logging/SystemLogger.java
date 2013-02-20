@@ -19,6 +19,7 @@ import org.aselect.system.exception.ASelectException;
 
 public class SystemLogger implements ISystemLogger
 {
+	private final static String MODULE = "SystemLogger";
 	// private String className = "org.aselect.system.logging.SystemLoggerAudit";
 	private final static String DEFAULTSYSTEMLOGGER = "org.aselect.system.logging.SystemLogger_org";
 	private ISystemLogger _logger;
@@ -34,7 +35,8 @@ public class SystemLogger implements ISystemLogger
 			if (className == null)
 				className = DEFAULTSYSTEMLOGGER;
 			_logger = (ISystemLogger) Class.forName(className).newInstance();
-			System.out.println("Using systemlogger:" + className);
+			System.out.println("OUT - Using systemlogger: " + className);
+			_logger.log(Level.INFO, MODULE, "SystemLogger", "LOG - Using systemlogger:" + className);
 		}
 		catch (InstantiationException e) {
 			System.err.println(Errors.ERROR_ASELECT_INIT_ERROR + ":" + e);

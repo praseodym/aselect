@@ -235,8 +235,7 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 	throws ASelectException
 	{
 		String sMethod = "sendLogoutToIdP";
-		// String sAuthspType = (String)htTGTContext.get("authsp_type");
-		// if (sAuthspType != null && sAuthspType.equals("saml20")) {
+
 		// Send a saml LogoutRequest to the federation idp
 		LogoutRequestSender logoutRequestSender = new LogoutRequestSender();
 		String sNameID = (String) htTGTContext.get("name_id");
@@ -244,10 +243,8 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 		// metadata
 		String sFederationUrl = (String) htTGTContext.get("federation_url");
 		
-		// RH, 20120307, sn
-		// Add partnerdata for later usage, this is the best point for geting the federationurl, we already retrieved the tgtcontext 
+		// RH, 20120307, Add partnerdata for later usage, this is the best point for geting the federationurl, we already retrieved the tgtcontext 
 		PartnerData partnerData = MetaDataManagerSp.getHandle().getPartnerDataEntry(sFederationUrl);
-		// RH, 20120307, en
 		
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Logout to IdP="+sFederationUrl + " returnUrl="+sLogoutReturnUrl);
 		// if (sFederationUrl == null) sFederationUrl = _sFederationUrl; // xxx for now
@@ -256,23 +253,15 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 				SAMLConstants.SAML2_REDIRECT_BINDING_URI);
 
 		if (url != null) {
-			// RH, 20120201, sn
 			// Get list of sessions to kill if present in tgt
 			Vector<String> sessionindexes = (Vector<String>) htTGTContext.get("remote_sessionlist");	// can be null
-			// RH, 20120201, en
-//			logoutRequestSender.sendLogoutRequest(request, response, sTgT, url, sIssuer/* issuer */, sNameID,
-//					"urn:oasis:names:tc:SAML:2.0:logout:user", sLogoutReturnUrl);					// RH, 20120201, o
 			logoutRequestSender.sendLogoutRequest(request, response, sTgT, url, sIssuer/* issuer */, sNameID,
-//					"urn:oasis:names:tc:SAML:2.0:logout:user", sLogoutReturnUrl, sessionindexes);					// RH, 20120201, n
-					"urn:oasis:names:tc:SAML:2.0:logout:user", sLogoutReturnUrl, sessionindexes, partnerData);					// RH, 201200307, n
+					"urn:oasis:names:tc:SAML:2.0:logout:user", sLogoutReturnUrl, sessionindexes, partnerData);
 		}
 		else {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "No IdP SingleLogoutService");
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 		}
-		// }
-		// else
-		// _systemLogger.log(Level.INFO, MODULE, sMethod, "authsp_type != saml20");
 	}
 
 	/**

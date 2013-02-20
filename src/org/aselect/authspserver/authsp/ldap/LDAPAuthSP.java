@@ -416,11 +416,6 @@ public class LDAPAuthSP extends ASelectHttpServlet
 					throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);
 				}
 
-				// 20120106, Bauke: no longer needed: URL decode values
-				//sAsUrl = URLDecoder.decode(sAsUrl, "UTF-8");
-				//sUid = URLDecoder.decode(sUid, "UTF-8");
-				//sSignature = URLDecoder.decode(sSignature, "UTF-8");
-
 				// validate signature
 				StringBuffer sbSignature = new StringBuffer(sRid);
 				sbSignature.append(sAsUrl).append(sUid).append(sAsId);

@@ -152,14 +152,10 @@ public class LogoutRequestSender
 		messageContext.setPeerEntityEndpoint(samlEndpoint);
 
 		// 20090627, Bauke: pass return url, will be used by the Logout Response handler
-		// 20091105, Bauke: always pass a RelayState, will make the consent forms easier to implement
-		// 20091118, Bauke: 20091105, bad decision, turn it back
 		if (sLogoutReturnUrl != null) { // && !"".equals(sLogoutReturnUrl))
 			messageContext.setRelayState(sLogoutReturnUrl);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Set RelayState=" + sLogoutReturnUrl);
 		}
-		// else
-		// messageContext.setRelayState("none");
 
 		BasicX509Credential credential = new BasicX509Credential();
 		credential.setPrivateKey(privateKey);
