@@ -99,10 +99,10 @@ public abstract class BasicRequestHandler
 //		if (_applicationManager.isSigningRequired() && bCheckSignature) {		// RH, 20100910, o
 //		if (_applicationManager.isSigningRequired(sAppId)) {		// RH, 20100910, n
 		
-		// 20110407, Bauke: use check-signature
+		// 20110407, Bauke: use check-signature, is programmatically set to "false" for internal calls (no signing needed then)
 		// check if request should be signed
 		String sCheckSignature = hmInput.get("check-signature");
-		if (_applicationManager.isSigningRequired(sAppId) && "true".equals(sCheckSignature)) {
+		if (_applicationManager.isSigningRequired(sAppId) && !"false".equals(sCheckSignature)) {  // changed from true to !false (also check if not set)
 			String sSignature = hmInput.get("signature");
 			if (sSignature == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Missing required 'signature' parameter");
