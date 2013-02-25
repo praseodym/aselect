@@ -27,8 +27,10 @@ import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
+import java.util.TreeSet;
 import java.util.logging.Level;
 
 import org.aselect.system.communication.client.IClientCommunicator;
@@ -731,7 +733,28 @@ public class Tools
 		}
 		return htAttributes;
 	}
-	
+
+	/**
+	 * Take the attribtues in 'htRequest', sort them and add them to the result
+	 * Skip some attributes (request, ...)
+	 * 
+	 * @param htRequest, contains the attributes that take part in the signing process
+	 * @return - data string to be signed
+	 */
+	public static StringBuffer assembleSigningData(HashMap htRequest)
+	{
+		StringBuffer sbCreateFrom = new StringBuffer();
+		
+		TreeSet sortedSet = new TreeSet(htRequest.keySet());
+		for (Iterator i = sortedSet.iterator(); i.hasNext();) {
+			String sKey = (String) i.next();
+			if ("request".equals(sKey) || "signature".equals(sKey) || "check-signature".equals(sKey))
+				continue;
+			sbCreateFrom.append(htRequest.get(sKey));
+		}
+		return sbCreateFrom;
+	}
+
 
 	/**
 	 * Gets the server ip address.

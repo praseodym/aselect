@@ -517,7 +517,7 @@ public class CryptoEngine
 	 */
 	public boolean verifyApplicationSignature(PublicKey oPublicKey, String sData, String sSignature)
 	{
-		String sMethod = "verifyApplicationSignature()";
+		String sMethod = "verifyApplicationSignature";
 		boolean bVerified = false;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "==== VAS " + sSignature);
 		try {

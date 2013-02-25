@@ -468,11 +468,11 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		
 		// check if request should be signed
 //		if (_applicationManager.isSigningRequired()) {	// RH, 20100910, o
-			if (_applicationManager.isSigningRequired(sAppId)) {	// RH, 20100910, n
+		if (_applicationManager.isSigningRequired(sAppId)) {	// RH, 20100910, n
 			// check signature
 			StringBuffer sbData = new StringBuffer(sASelectServer).append(sAppId);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "sbData=" + sbData);
-			verifyApplicationSignature(oInputMessage, sbData.toString(), sAppId);
+			verifyLocalApplicationSignature(oInputMessage, sbData.toString(), sAppId);
 		}
 
 		// check if application is registered
@@ -547,7 +547,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 //			String sAppId = (String) htTGTContext.get("app_id");	// RH, 20100910, o
 			StringBuffer sbData = new StringBuffer(sASelectServer).append(sEncTGT);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "sbData=" + sbData);
-			verifyApplicationSignature(oInputMessage, sbData.toString(), sAppId);
+			verifyLocalApplicationSignature(oInputMessage, sbData.toString(), sAppId);
 		}
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "KILL TICKET context=" + htTGTContext);
 
@@ -628,8 +628,8 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			}
 			if (Utils.hasValue(sUsi))
 				sbData = sbData.append(sUsi);
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "Signing required");
-			verifyApplicationSignature(oInputMessage, sbData.toString(), sAppId);
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "Signing required"+" data="+sbData);
+			verifyLocalApplicationSignature(oInputMessage, sbData.toString(), sAppId);
 		}
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "Upgrade TICKET");
 
@@ -828,7 +828,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			if (Utils.hasValue(sUsi))
 				sbData = sbData.append(sUsi);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "sbData=" + sbData);
-			verifyApplicationSignature(oInputMessage, sbData.toString(), sAppId);
+			verifyLocalApplicationSignature(oInputMessage, sbData.toString(), sAppId);
 		}
 
 		// 20090305, Bauke: Accept DigiD protocol, check the shared secret
@@ -995,7 +995,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	 * @throws ASelectException
 	 *             If signature is invalid.
 	 */
-	private void verifyApplicationSignature(IInputMessage oInputMessage, String sData, String sAppId)
+	private void verifyLocalApplicationSignature(IInputMessage oInputMessage, String sData, String sAppId)
 	throws ASelectException
 	{
 		String sMethod = "verifyApplicationSignature";

@@ -638,7 +638,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 	private void verifyLocalASelectServerSignature(IInputMessage oInputMessage, String sData, String sOrg)
 	throws ASelectException
 	{
-		String sMethod = "verifyLocalASelectServerSignature()";
+		String sMethod = "verifyLocalASelectServerSignature";
 
 		String sSignature = null;
 		try {

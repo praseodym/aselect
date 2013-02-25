@@ -2099,6 +2099,7 @@ public class RequestHandler extends Thread
 	private void signRequest(HashMap htRequest)
 	throws Exception
 	{
+		String sMethod = "signRequest";
 		if (!_configManager.isSigningEnabled())
 			return;
 		try {
@@ -2110,15 +2111,9 @@ public class RequestHandler extends Thread
 			else
 				oSignature = Signature.getInstance(sSignatureAlgorithm);
 
-			StringBuffer sbCreateFrom = new StringBuffer();
-			TreeSet sortedSet = new TreeSet(htRequest.keySet());
-			for (Iterator i = sortedSet.iterator(); i.hasNext();) {
-				String sKey = (String) i.next();
-				if (!sKey.equals("request"))
-					sbCreateFrom.append(htRequest.get(sKey));
-			}
+			StringBuffer sbCreateFrom = Tools.assembleSigningData(htRequest);
 
-			_systemLogger.log(Level.INFO, MODULE, "signRequest()", "Sign:" + sbCreateFrom);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign:" + sbCreateFrom);
 			oSignature.initSign(_configManager.getSigningKey());
 			oSignature.update(sbCreateFrom.toString().getBytes());
 			byte[] baRawSignature = oSignature.sign();
@@ -2127,7 +2122,7 @@ public class RequestHandler extends Thread
 			htRequest.put("signature", sRawSignature);
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, "signRequest()", "Could not sign request:", e);
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not sign request:", e);
 			throw new Exception("Unable to sign request.");
 		}
 	}

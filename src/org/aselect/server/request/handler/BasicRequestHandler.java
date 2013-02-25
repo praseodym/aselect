@@ -110,7 +110,9 @@ public abstract class BasicRequestHandler
 			}
 			// Check signature
 			// NOTE: add sbData items sorted!
-			StringBuffer sbData = new StringBuffer(sASelectServer);
+			StringBuffer sbData = Tools.assembleSigningData(hmInput);
+
+			/*StringBuffer sbData = new StringBuffer(sASelectServer);
 			sbData.append(sAppId).append(sAppUrl);
 			if (sAuthsp != null)
 				sbData.append(sAuthsp);
@@ -126,6 +128,7 @@ public abstract class BasicRequestHandler
 				sbData.append(sRemoteOrg);
 			if (sUid != null)
 				sbData.append(sUid);
+			*/
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "sbData=" + sbData);
 			verifyApplicationSignature(sSignature, sbData.toString(), sAppId);
 		}
