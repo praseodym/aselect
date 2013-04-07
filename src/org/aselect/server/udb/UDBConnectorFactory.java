@@ -87,7 +87,7 @@ public class UDBConnectorFactory
 	public static IUDBConnector getUDBConnector()
 	throws ASelectException
 	{
-		String sMethod = "getUDBConnector()";
+		String sMethod = "getUDBConnector";
 
 		ASelectConfigManager oASelectConfigManager = null;
 		ASelectSystemLogger systemLogger = null;
@@ -114,20 +114,17 @@ public class UDBConnectorFactory
 				sConnectorID = oASelectConfigManager.getParam(oUDBConfigSection, "connector");
 			}
 			catch (ASelectConfigException eAC) {
-				systemLogger.log(Level.SEVERE, MODULE, sMethod,
-						"No 'connector' config item found in 'udb' config section.", eAC);
+				systemLogger.log(Level.SEVERE, MODULE, sMethod, "No 'connector' config item found in 'udb' config section.", eAC);
 				throw eAC;
 			}
 
 			try {
 				// get udb connector handler from connector section
-				oConnectorSection = oASelectConfigManager.getSection(oUDBConfigSection, "connector", "id="
-						+ sConnectorID);
+				oConnectorSection = oASelectConfigManager.getSection(oUDBConfigSection, "connector", "id="+sConnectorID);
 			}
 			catch (ASelectConfigException eAC) {
 				StringBuffer sbFailed = new StringBuffer("No 'connector' config section found with id='");
-				sbFailed.append(sConnectorID);
-				sbFailed.append("'");
+				sbFailed.append(sConnectorID).append("'");
 				systemLogger.log(Level.SEVERE, MODULE, sMethod, sbFailed.toString(), eAC);
 				throw eAC;
 			}

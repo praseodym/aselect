@@ -1420,8 +1420,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "Login2 " + htServiceRequest);
 		try {
 			sRid = (String) htServiceRequest.get("rid");
-			String sAuthsp = (String) _htSessionContext.get("forced_authsp"); // 20090111, Bauke from SessionContext not, 20101027 _
-			// ServiceRequest
+			String sAuthsp = (String) _htSessionContext.get("forced_authsp");
 			if (sAuthsp != null) {
 				// Bauke 20080511: added
 				// Redirect to the AuthSP's ISTS
@@ -2362,7 +2361,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	private void getUserAuthsps(String sRid, String sUid)
 	throws ASelectException
 	{
-		String sMethod = "getAuthsps";
+		String sMethod = "getUserAuthsps";
 		HashMap htUserAuthsps = new HashMap();
 
 		try {
@@ -2386,7 +2385,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				_systemLogger.log(Level.SEVERE, _sModule, sMethod, "INTERNAL ERROR no \"user_authsps\" found");
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "uid=" + sUid + " profile=" + htUserProfile
+			String udbType = (String)htUserProfile.get("udb_type");
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "uid=" + sUid + " udb_type="+udbType+" profile=" + htUserProfile
 					+ " user_authsps=" + htUserAuthsps + " SessionContext=" + _htSessionContext);
 
 			// Which level is required for the application?
@@ -2407,11 +2407,17 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
 
+			// 20130405, Bauke:
+			// If "noudb" is in effect, the user attributes cannot have been set.
+			// In that case, we will substitute the uid that was entered by the user for it.
+			// Added so the Radius AuthSP could work without having a "UDB".
+			boolean isNoUdb = "noudb".equals(udbType);
 			HashMap htAllowedAuthsps = new HashMap();
 			for (int i = 0; i < vConfiguredAuthSPs.size(); i++) {
 				String sAuthSP = (String) vConfiguredAuthSPs.elementAt(i);
 				if (htUserAuthsps.containsKey(sAuthSP)) {
-					htAllowedAuthsps.put(sAuthSP, htUserAuthsps.get(sAuthSP));
+					String authSpAttr = (String)htUserAuthsps.get(sAuthSP);
+					htAllowedAuthsps.put(sAuthSP, isNoUdb? sUid: authSpAttr);
 				}
 			}
 			if (htAllowedAuthsps.size() == 0) {
@@ -2428,13 +2434,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// sets the idp address on the idp)
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip was "+
 					_htSessionContext.get("client_ip")+", set to "+get_servletRequest().getRemoteAddr());
-			_htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr());
 			
-			//Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-			//if (!_sessionManager.updateSession(sRid, _htSessionContext)) {
-				// logged in sessionmanager
-			//	throw new ASelectException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
-			//}
+			_htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr());			
 			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 			return;
 		}

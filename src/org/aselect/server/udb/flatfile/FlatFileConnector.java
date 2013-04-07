@@ -203,7 +203,7 @@ public class FlatFileConnector implements IUDBConnector
 	 */
 	public HashMap getUserProfile(String sUserId)
 	{
-		String sMethod = "getUserProfile()";
+		String sMethod = "getUserProfile";
 
 		_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "user=" + sUserId);
 		HashMap htResponse = new HashMap();
@@ -220,6 +220,7 @@ public class FlatFileConnector implements IUDBConnector
 
 		try {
 			htResponse.put("result_code", Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
+			htResponse.put("udb_type", "flatfile");
 
 			if (!_propFlatFile.containsKey(sbAccountEnabled.toString())) {
 				logAuthentication(sUID, Errors.ERROR_ASELECT_UDB_UNKNOWN_USER, "denied");

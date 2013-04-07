@@ -122,9 +122,9 @@ public class NoUDBConnector implements IUDBConnector
 	public void init(Object oConfigSection)
 	throws ASelectUDBException
 	{
-		// String sFlatFile = null;
+		String sMethod = "init";
 		String sUDBResourceGroup = null;
-		String sMethod = "init()";
+		
 		_oASelectSystemLogger = ASelectSystemLogger.getHandle();
 		_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "NoUDB");
 
@@ -180,7 +180,7 @@ public class NoUDBConnector implements IUDBConnector
 	 */
 	public HashMap getUserProfile(String sUserId)
 	{
-		String sMethod = "getUserProfile()";
+		String sMethod = "getUserProfile";
 
 		_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "user=" + sUserId);
 		HashMap htResponse = new HashMap();
@@ -191,6 +191,7 @@ public class NoUDBConnector implements IUDBConnector
 
 		try {
 			htResponse.put("result_code", Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
+			htResponse.put("udb_type", "noudb");
 			try {
 				oAuthSPsSection = _oASelectConfigManager.getSection(null, "authsps");
 			}

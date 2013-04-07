@@ -82,15 +82,6 @@ public class Xsaml20_Receiver extends Saml20_BrowserHandler
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-		
-		//try {
-		//	_sMyAppId = _configManager.getParam(oHandlerConfig, "app_id");
-		//}
-		//catch (ASelectConfigException e) {
-		//	_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'app_id' found", e);
-		//}
-		//_htKnownApplications = ASelectConfigManager.getTableFromConfig(oHandlerConfig, _htKnownApplications, 
-		//		"applications", "application", "id", null, true/* mandatory */, false/* unique values */);
 	}
 
 	/**
@@ -292,4 +283,4 @@ public class Xsaml20_Receiver extends Saml20_BrowserHandler
 	{
 		return ACCEPTREQUEST;
 	}
-	}
+}

@@ -259,7 +259,7 @@ public class JNDIConnector implements IUDBConnector
 	 */
 	public HashMap getUserProfile(String sUserId)
 	{
-		String sMethod = "getUserProfile()";
+		String sMethod = "getUserProfile";
 
 		DirContext oDirContext = null;
 		HashMap htResponse = new HashMap();
@@ -274,6 +274,7 @@ public class JNDIConnector implements IUDBConnector
 		HashMap htUserRecord = new HashMap();
 
 		htResponse.put("result_code", Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
+		htResponse.put("udb_type", "ldap");
 
 		try {
 			if (sUserId.indexOf("*") >= 0 || sUserId.indexOf("?") >= 0 || sUserId.indexOf("=") >= 0) {
@@ -388,8 +389,10 @@ public class JNDIConnector implements IUDBConnector
 							sAttributeValue = "";
 
 						String sCFGAuthSPID = (String) _htConfiguredAuthSPs.get(sAuthSPID);
-						if (sCFGAuthSPID != null)
-							htUserAttributes.put(sCFGAuthSPID, sAttributeValue+sVoicePhone);
+						if (sCFGAuthSPID != null) {
+							// 20130405, Bauke: only for SMS!
+							htUserAttributes.put(sCFGAuthSPID, sAttributeValue+("SMS".equals(sAuthSPID)? sVoicePhone: ""));
+						}
 						// Result looks like: Ldap=<value of AselectLdapUserAttributes>
 						_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "Translated "+sAuthSPID+
 										" to "+sCFGAuthSPID+" value="+sAttributeValue+sVoicePhone);

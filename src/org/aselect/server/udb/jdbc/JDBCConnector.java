@@ -261,7 +261,7 @@ public class JDBCConnector implements IUDBConnector
 	 */
 	public HashMap getUserProfile(String sUserId)
 	{
-		String sMethod = "getUserProfile()";
+		String sMethod = "getUserProfile";
 
 		HashMap htResponse = new HashMap();
 		HashMap htUserAttributes = new HashMap();
@@ -273,6 +273,7 @@ public class JDBCConnector implements IUDBConnector
 		ResultSetMetaData oResultSetMetaData = null;
 
 		htResponse.put("result_code", Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
+		htResponse.put("udb_type", "jdbc");
 
 		try {
 			oConnection = getConnection();

@@ -106,7 +106,7 @@ public class AuthorizationEngine
 	/**
 	 * Contains all evaluation trees.
 	 */
-	private HashMap _htEvaluationForrest;
+	private HashMap _htEvaluationForest;
 
 	/**
 	 * Can be used to evaluate the authorization rules.
@@ -177,8 +177,8 @@ public class AuthorizationEngine
 		_configManager = configManager;
 		_oEvaluator = new AuthorizationRuleEvaluator(_systemLogger);
 
-		// create new forrest
-		_htEvaluationForrest = new HashMap();
+		// create new forest
+		_htEvaluationForest = new HashMap();
 
 		try {
 			// Bauke: added
@@ -333,7 +333,7 @@ public class AuthorizationEngine
 	public synchronized void setAuthorizationRules(String sAppId, String[] saIDs, String[] saRules, String[] saURIs)
 	throws ASelectAuthorizationException
 	{
-		final String sMethod = "addAuthorizationRule()";
+		final String sMethod = "addAuthorizationRules";
 		String sId = null;
 		String sRule = null;
 		String sURI = null;
@@ -354,7 +354,7 @@ public class AuthorizationEngine
 				AuthorizationRule oRule = new AuthorizationRule(sRule, sURI, eTree);
 				htEvaluationTrees.put(sId, oRule);
 			}
-			_htEvaluationForrest.put(sAppId, htEvaluationTrees);
+			_htEvaluationForest.put(sAppId, htEvaluationTrees);
 		}
 		catch (ASelectAuthorizationException e) {
 			StringBuffer sb = new StringBuffer("Error parsing authorization rule : \"");
@@ -400,7 +400,7 @@ public class AuthorizationEngine
 		StringBuffer sb = null;
 		int iResult = 0;
 		// get all evaluation trees of the given application
-		HashMap htEvaluationTrees = (HashMap) _htEvaluationForrest.get(sAppId);
+		HashMap htEvaluationTrees = (HashMap) _htEvaluationForest.get(sAppId);
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "sAppID=" + sAppId
 				+ ((_bNeedFilterRules) ? " need_filter_rules" : "") + ", sURI=" + sURI);
@@ -460,14 +460,14 @@ public class AuthorizationEngine
 	public String toString()
 	{
 		StringBuffer sb = new StringBuffer();
-		Set keys = _htEvaluationForrest.keySet();
+		Set keys = _htEvaluationForest.keySet();
 		for (Object s : keys) {
 			String sAppId = (String) s;
 			// Enumeration eApplications = _htEvaluationForrest.keys();
 			// while (eApplications.hasMoreElements()) {
 			// String sAppId = (String) eApplications.nextElement();
 			sb.append(sAppId).append(": ");
-			HashMap htRule = (HashMap) _htEvaluationForrest.get(sAppId);
+			HashMap htRule = (HashMap) _htEvaluationForest.get(sAppId);
 			sb.append(htRule.keySet());
 			sb.append("\n");
 		}

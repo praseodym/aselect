@@ -2405,7 +2405,7 @@ public class ASelectConfigManager extends ConfigManager
 			}
 
 			String sValue = "";
-			 boolean bSetNull = Boolean.parseBoolean(getSimpleParam(oProvider, "setnull", false));	// RH, 20130115, n
+			boolean bSetNull = Boolean.parseBoolean(getSimpleParam(oProvider, "setnull", false));	// RH, 20130115, n
 			if (Utils.hasValue(sValueName)) {
 				try {
 					sValue = getHandle().getParam(oProvider, sValueName);

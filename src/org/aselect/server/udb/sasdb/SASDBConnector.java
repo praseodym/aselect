@@ -155,13 +155,8 @@ public class SASDBConnector implements IUDBConnector
 			catch (Exception e) {
 				oUdbStorage = null;
 
-				_oASelectSystemLogger
-						.log(
-								Level.CONFIG,
-								MODULE,
-								sMethod,
-								"No valid 'udb_storage' config section found in 'connector', disabling secondary user database.",
-								e);
+				_oASelectSystemLogger.log(Level.CONFIG, MODULE, sMethod,
+					"No valid 'udb_storage' config section found in 'connector', disabling secondary user database.", e);
 			}
 
 			if (oUdbStorage != null) {
@@ -330,13 +325,8 @@ public class SASDBConnector implements IUDBConnector
 			catch (Exception e) {
 				oFilterSection = null;
 
-				_oASelectSystemLogger
-						.log(
-								Level.CONFIG,
-								MODULE,
-								sMethod,
-								"No valid 'authsp' config section found in 'authsps' config section within 'connector' config section",
-								e);
+				_oASelectSystemLogger.log(Level.CONFIG, MODULE, sMethod,
+					"No valid 'authsp' config section found in 'authsps' config section within 'connector' config section", e);
 				throw new ASelectUDBException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 
@@ -383,7 +373,7 @@ public class SASDBConnector implements IUDBConnector
 	 */
 	public HashMap getUserProfile(String sUserId)
 	{
-		String sMethod = "getUserProfile()";
+		String sMethod = "getUserProfile";
 
 		HashMap htResponse = new HashMap();
 		HashMap htUserAttributes = new HashMap();
@@ -421,7 +411,6 @@ public class SASDBConnector implements IUDBConnector
 						_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, sbBuffer.toString());
 
 						logAuthentication(sUserId, Errors.ERROR_ASELECT_UDB_UNKNOWN_USER, "User unknown");
-
 						throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_UNKNOWN_USER);
 					}
 				}
@@ -436,7 +425,6 @@ public class SASDBConnector implements IUDBConnector
 					StringBuffer sbBuffer = new StringBuffer("No user attributes found for user: ");
 					sbBuffer.append(sUserId);
 					_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, sbBuffer.toString());
-
 					throw new ASelectUDBException(Errors.ERROR_ASELECT_UDB_COULD_NOT_AUTHENTICATE_USER);
 				}
 
@@ -453,10 +441,10 @@ public class SASDBConnector implements IUDBConnector
 			sbBuffer.append(": ");
 			sbBuffer.append(e.getMessage());
 			_oASelectSystemLogger.log(Level.SEVERE, MODULE, sMethod, sbBuffer.toString(), e);
-
 			htResponse.put("result_code", Errors.ERROR_ASELECT_UDB_INTERNAL);
 		}
 
+		htResponse.put("udb_type", "sasdb");
 		return htResponse;
 	}
 
