@@ -477,6 +477,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 	{
 		String sMethod = "getAuthspParametersFromConfig";
 		_systemLogger.log(Level.FINE, _sModule, sMethod, "AuthSp="+sAuthSp);
+		
 		Object authSPsection = null;
 		try {
 			authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp", "id="+sAuthSp);

@@ -287,6 +287,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -294,6 +295,7 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 
+import javax.crypto.SecretKey;
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse; //import org.aselect.system.servlet.HtmlInfo;
@@ -364,6 +366,7 @@ import org.opensaml.xml.util.XMLHelper;
 public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 {
 	private static final String SELECTFORMPREFIX = "select";
+	final String select_choice_COOKIE = "select_choice";
 	private ApplicationManager _applicationManager;
 	private CrossASelectManager _crossASelectManager;
 	private AuthSPHandlerManager _authspHandlerManager;
@@ -371,7 +374,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	private String _sConsentForm = null;
 	private final static String PARM_REQ_FRIENDLY_NAME = "requestorfriendlyname";
 	private String _sServerUrl;
-	
 	private static boolean firstTime = true;  // do Saml bootstrap only once
 
 	/**
@@ -1296,7 +1298,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			String sRid)
 	throws ASelectException
 	{
-		String COOKIE_NAME = "user_consent";
+		String user_consent_COOKIE = "user_consent";
 		final String sMethod = "handleUserConsent";
 
 		ASelectConfigManager configManager = ASelectConfigManager.getHandle();
@@ -1306,7 +1308,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 		Boolean setConsentCookie = sUserInfo.contains("save_consent");
 		if (setConsentCookie) {
-			String sUserConsent = HandlerTools.getCookieValue(_servletRequest, COOKIE_NAME, _systemLogger);
+			String sUserConsent = HandlerTools.getCookieValue(_servletRequest, user_consent_COOKIE, _systemLogger);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "user_consent=" + sUserConsent);
 			if (sUserConsent != null && sUserConsent.equals("true"))
 				return true;
@@ -1323,7 +1325,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			if (setConsentCookie) {
 				// Remember the user's answer by setting a Consent Cookie
 				String sCookieDomain = _configManager.getCookieDomain();
-				HandlerTools.putCookieValue(servletResponse, COOKIE_NAME, "true",
+				HandlerTools.putCookieValue(servletResponse, user_consent_COOKIE, "true",
 						sCookieDomain, null, 157680101/*5 years*/, 1/*httpOnly*/, _systemLogger);
 			}
 			return true;
@@ -1418,6 +1420,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 		StringBuffer sb;
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "Login2 " + htServiceRequest);
+
+		ASelectConfigManager configManager = ASelectConfigManager.getHandle();
+		String sUserInfo = configManager.getUserInfoSettings();
+		boolean bAuthspFromSelect = sUserInfo.contains("authsps_from_select");
 		try {
 			sRid = (String) htServiceRequest.get("rid");
 			String sAuthsp = (String) _htSessionContext.get("forced_authsp");
@@ -1512,7 +1518,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// if only one method is available?
 			String sFormShow = _configManager.getParam(_configManager.getSection(null, "authsps"), "always_show_select_form");
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "User="+sUid+" Authsps="+htAuthsps+" always_show_select_form="+sFormShow);
-			if (htAuthsps.size() == 1) {
+			if (htAuthsps.size() == 1 && !bAuthspFromSelect) {
 				try {
 					if (sFormShow.equalsIgnoreCase("false")) {
 						// continue with login3
@@ -1531,7 +1537,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							"Failed to retrieve config 'always_show_select_form'. Using default (yes).");
 				}
 			}
-			// end only 1 valid authsp
+			// end only 1 valid authsp or bAuthspFromSelect
 
 			// Multiple candidates, present the select.html form
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "Multiple authsps, show 'select' form");
@@ -1540,7 +1546,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// Handle application specific select form
 			String sSelectFormName = SELECTFORMPREFIX;
 			String sAppId = (String) _htSessionContext.get("app_id");
-			if ( sAppId != null && (_applicationManager.getSelectForm(sAppId) != null) ) {
+			if (sAppId != null && (_applicationManager.getSelectForm(sAppId) != null) ) {
 				sSelectFormName +=  _applicationManager.getSelectForm(sAppId); // Add application specific suffix
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "Found application specific select form: " + sSelectFormName + " for app_id: " + sAppId);
 			}
@@ -1548,38 +1554,82 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// RH, 20121119, en
 //			String sSelectForm = _configManager.getForm("select", _sUserLanguage, _sUserCountry);			// RH, 20121119, o
 
-
 			sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
 			sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", _sMyServerId);
 			sSelectForm = Utils.replaceString(sSelectForm, "[user_id]", sUid);
 			sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", (String) htServiceRequest.get("my_url"));
 			sSelectForm = Utils.replaceString(sSelectForm, "[request]", "login3");
-			String sLanguage = (String) _htSessionContext.get("language");  // 20101027 _
-			String sCountry = (String) _htSessionContext.get("country");  // 20101027 _
+			String sLanguage = (String)_htSessionContext.get("language");  // 20101027 _
+			String sCountry = (String)_htSessionContext.get("country");  // 20101027 _
 			sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
 			sSelectForm = Utils.replaceString(sSelectForm, "[country]", sCountry);
 			
-			String sFriendlyName = "";
-			String sAuthspName = "";
-			sb = new StringBuffer();
+			// 20130411: What AuthSP's must be presented to the user?
+			if (bAuthspFromSelect) {
+				// 20130411, Bauke: Take AuthSP's from select.html
+				String sUrl = "", sName = "";
+				String sSelectChoice = HandlerTools.getCookieValue(_servletRequest, select_choice_COOKIE, _systemLogger);
+				if (Utils.hasValue(sSelectChoice)) {
 
-			Set<String> keys = htAuthsps.keySet();
-			for (Object s : keys) {
-				sAuthspName = (String) s;
-				try {
-					Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"),
-							"authsp", "id=" + sAuthspName);
-					sFriendlyName = _configManager.getParam(authSPsection, "friendly_name");
-					sb.append("<OPTION VALUE=").append(sAuthspName).append(">");
-					sb.append(sFriendlyName);
-					sb.append("</OPTION>");
+					try {
+						byte[] baBytes = _cryptoEngine.decryptData(sSelectChoice);  // _configManager.getDefaultPrivateKey());
+						sSelectChoice = new String(baBytes);
+						_systemLogger.log(Level.INFO, _sModule, sMethod, "select_choice=" + sSelectChoice);
+						// Earlier choice present, get it selected
+						// Contents of the cookie: <authsp_url>;<authsp_name>
+						// In the form look for: <option value="..." ...
+						// Note the authsp_name can contain double quotes, they must be escaped for HTML usage.
+						sSelectChoice = sSelectChoice.replaceAll("\"", "&quot;");
+						int idxChoice = sSelectForm.indexOf(sSelectChoice);
+						if (idxChoice >= 0) {
+							int idxValue = sSelectForm.lastIndexOf("value", idxChoice);
+							if (idxValue >= 0) {
+								sSelectForm = sSelectForm.substring(0, idxValue).concat("selected ").concat(sSelectForm.substring(idxValue));
+							}
+						}
+						// Replacements in the form, split using the semicolon
+						// If no semicolon is present, we only have the "url" part available.
+						sUrl = sSelectChoice;
+						int idx = sSelectChoice.indexOf(';');
+						if (idx >= 0) {
+							sUrl = sSelectChoice.substring(0, idx);
+							sName = sSelectChoice.substring(idx+1);
+						}
+					}
+					catch (ASelectException ae) {
+						_systemLogger.log(Level.INFO, _sModule, sMethod, "Could not decrypt cookie: " + sSelectChoice);
+					}
+					
 				}
-				catch (ASelectConfigException ace) {
-					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to retrieve config for AuthSPs.");
-					throw ace;
-				}
+				// else: No earlier choice was made, sUrl and sName are empty
+				
+				sSelectForm = Utils.replaceString(sSelectForm, "[authsp_url]", sUrl);
+				sSelectForm = Utils.replaceString(sSelectForm, "[authsp_name]", sName);
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "url="+sUrl+" name="+sName);
 			}
-			sSelectForm = Utils.replaceString(sSelectForm, "[allowed_user_authsps]", sb.toString());
+			else {  // The Classic Solution, take authsp's from the configuration
+				String sFriendlyName = "";
+				String sAuthspName = "";
+				sb = new StringBuffer();
+				Set<String> keys = htAuthsps.keySet();
+				
+				for (Object s : keys) {
+					sAuthspName = (String) s;
+					try {
+						Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"),
+								"authsp", "id=" + sAuthspName);
+						sFriendlyName = _configManager.getParam(authSPsection, "friendly_name");
+						sb.append("<OPTION VALUE=").append(sAuthspName).append(">");
+						sb.append(sFriendlyName);
+						sb.append("</OPTION>");
+					}
+					catch (ASelectConfigException ace) {
+						_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to retrieve config for AuthSPs.");
+						throw ace;
+					}
+				}
+				sSelectForm = Utils.replaceString(sSelectForm, "[allowed_user_authsps]", sb.toString());
+			}
 
 			// Create the Cancel action:
 			sb = new StringBuffer((String) htServiceRequest.get("my_url")).append("?request=error")
@@ -1651,9 +1701,54 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request, missing parmeter 'authsp'");
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
+			// RH, 20100907, sn, add app_id, requestor_friendly_name so authsp can use this at will
+			// 20130411, Bauke: moved before the "authsp_from_select" code
+			String sAppId = (String)_htSessionContext.get("app_id");
+			String sFriendlyName = null;
+			try {
+				sFriendlyName = _applicationManager.getFriendlyName(sAppId);
+			}
+			catch (ASelectException ae) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Redirect without FriendlyName. Could not find or encode FriendlyName for: " + sAppId );
+			}
+			// RH, 20100907, en
+			
+			// 20130411, Bauke: Register the choice made by the user
+			ASelectConfigManager configManager = ASelectConfigManager.getHandle();
+			String sUserInfo = configManager.getUserInfoSettings();
+			
+			if (sUserInfo.contains("authsps_from_select")) {
+				// Save user choice (value of app_id) in the cookie
+				// Note: use the server's cookie domain, not the one set in the AuthSP, see getAuthspParametersFromConfig()
+				String sCookieDomain = _configManager.getCookieDomain();
+				String sChosenAppId = (String)htServiceRequest.get("app_id");  // looks like <url_or_id>;<user_frienly_name>
+				if (!Utils.hasValue(sChosenAppId)) {
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, "No app_id found in request");
+					throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+				}
+
+				// Split sChosenAppId
+				// Note the authsp_name can contain double quotes, they must be escaped for HTML usage.
+				// but the name is not used here: sChosenAppId = sChosenAppId.replaceAll("\"", "&quot;");
+				// If no semicolon is present, we only have the "url" part available.
+				sAppId = sChosenAppId;
+				int idx = sChosenAppId.indexOf(';');
+				if (idx >= 0) {
+					sAppId = sChosenAppId.substring(0, idx);
+				}
+				// And replace the provided "app_id" with the user's choice
+				_htSessionContext.put("app_id", sAppId);
+				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);
+				
+				sChosenAppId = _cryptoEngine.encryptData(sChosenAppId.getBytes());  // _configManager.getDefaultPrivateKey());
+				HandlerTools.putCookieValue(servletResponse, select_choice_COOKIE, sChosenAppId,
+						sCookieDomain, null, 157680101/*5 years*/, 1/*httpOnly*/, _systemLogger);
+			}
+			// End of registration
+			
 			// 20120815, Bauke: Before startAuthentication, because it reads from config
 			Object authSPsection = getAuthspParametersFromConfig(sAuthsp);
-			
+
 			// 20111013, Bauke: added absent phonenumber handling
 			HashMap htResponse = startAuthentication(sRid, htServiceRequest);
 			String sResultCode = (String) htResponse.get("result");
@@ -1671,17 +1766,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					// No popup configured -> sPopup is null already
 				}
 				// RH, 20100907, sn, add app_id, requestor_friendly_name so authsp can use this at will
-				String sAppId = (String)_htSessionContext.get("app_id");
-				try {
-					String sFName = _applicationManager.getFriendlyName(sAppId);
-					if (sFName != null && !"".equals(sFName)) {
-						sRedirectUrl = sRedirectUrl + "&" + PARM_REQ_FRIENDLY_NAME + "="  +  URLEncoder.encode(sFName, "UTF-8");
-					}
-				}
-				catch (ASelectException ae) {
-					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Redirect without FriendlyName. Could not find or encode FriendlyName for: " + sAppId );
+				if (Utils.hasValue(sFriendlyName)) {
+					sRedirectUrl = sRedirectUrl + "&" + PARM_REQ_FRIENDLY_NAME + "="  +  URLEncoder.encode(sFriendlyName, "UTF-8");
 				}
 				// RH, 20100907, en
+
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIRECT " + sRedirectUrl);
 				if (sPopup == null || sPopup.equalsIgnoreCase("false")) {
 					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102, control goes to a different server
@@ -2486,22 +2575,14 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		// 20111013, Bauke: added absent phonenumber handling, to be used by computeAuthenticationRequest():
 		_htSessionContext.put("sms_correction_facility", Boolean.toString(Utils.hasValue(_sCorrectionFacility)));
 		
-		//Tools.pauseSensorData(_systemLogger, _htSessionContext);  // 20111102, done one level higher, before redirection
-		
-		//Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-		//if (!_sessionManager.updateSession(sRid, _htSessionContext)) {
-		//	_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not write session context");
-		//	throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-		//}
+		//Tools.pauseSensorData(_systemLogger, _htSessionContext);  // 20111102, done one level higher, before redirection		
 		_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
 		// Everything seems okay -> instantiate the protocol handler for
 		// the selected authsp and let it compute a signed authentication request
 		IAuthSPProtocolHandler oProtocolHandler;
 		try {
-			Object oAuthSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp",
-					"id=" + sAuthsp);
-
+			Object oAuthSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp",	"id=" + sAuthsp);
 			String sHandlerName = _configManager.getParam(oAuthSPsection, "handler");
 
 			Class oClass = Class.forName(sHandlerName);

@@ -49,7 +49,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 	public final static String MODULE = "Idff12_SSO";
 	public final static String SESSION_ID_PREFIX = "idff12_";
 	public final static String RETURN_SUFFIX = "_return";
-	private final static String COOKIENAME = "idff12_idp";
+	private final static String idff12_idp_COOKIE = "idff12_idp";
 
 	private String _sTemplate = null;
 	private AssertionSessionManager _oAssertionSessionManager;
@@ -357,9 +357,9 @@ public class Idff12_SSO extends ProtoRequestHandler
 
 				// Let the user make his choice
 				// The cookie contains the previous choice
-				String sSelectedRedirectUrl = HandlerTools.getCookieValue(request, COOKIENAME, _systemLogger);
+				String sSelectedRedirectUrl = HandlerTools.getCookieValue(request, idff12_idp_COOKIE, _systemLogger);
 				if (sSelectedRedirectUrl != null && !_vIdPUrls.contains(sSelectedRedirectUrl)) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid '" + COOKIENAME
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid '" + idff12_idp_COOKIE
 							+ "' cookie, unknown IdP: " + sSelectedRedirectUrl);
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}

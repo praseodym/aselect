@@ -103,8 +103,7 @@ import org.aselect.system.utils.BASE64Decoder;
  * </table>
  * 
  * @author Alfa & Ariss
- * @version 1.0 14-11-2007 - Changes: - Receive and process Delegator attributes Subject DN and Issuer DN from the AuthSP
- *          server
+ * @version 1.0 14-11-2007 - Changes: - Receive and process Delegator attributes Subject DN and Issuer DN from the AuthSP server
  * @author Bauke Hiemstra - www.anoigo.nl Copyright UMC Nijmegen (http://www.umcn.nl)
  */
 public class DelegatorAuthSPHandler implements IAuthSPProtocolHandler
@@ -159,7 +158,7 @@ public class DelegatorAuthSPHandler implements IAuthSPProtocolHandler
 	public void init(Object oAuthSpConfig, Object oAuthSpResource)
 	throws ASelectAuthSPException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		Object oASelectConfig = null;
 		try {
 			// retrieve handles
@@ -227,7 +226,7 @@ public class DelegatorAuthSPHandler implements IAuthSPProtocolHandler
 		htResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
 
 		try {
-			// 20120403, Bauke: passes as parameter: HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
+			// 20120403, Bauke: passed as parameter: HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
 			if (htSessionContext == null) {
 				sbTemp = new StringBuffer("Could not fetch session context for rid='");
 				sbTemp.append(sRid).append("'.");
@@ -277,9 +276,7 @@ public class DelegatorAuthSPHandler implements IAuthSPProtocolHandler
 				sbTemp.append(sLanguage);
 			}
 
-			
 			sSignature = CryptoEngine.getHandle().generateSignature(_sAuthsp, sbTemp.toString());
-
 			if (sSignature == null) {
 				htResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 				return htResponse;

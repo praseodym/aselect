@@ -114,6 +114,7 @@ import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.storagemanager.StorageManager;
 import org.aselect.system.utils.BASE64Decoder;
 import org.aselect.system.utils.BASE64Encoder;
+import org.aselect.system.utils.Utils;
 
 /**
  * This class contains crypto-related (helper) methods. It is thread-safe. <br>
@@ -136,6 +137,7 @@ public class CryptoEngine
 	private boolean _bIsActive = false;
 
 	private SecretKey _secretKey;
+	private SecretKey _encryptionKey;  // 20130411, Bauke: used for symmetric encryption, key taken from config file
 	private Cipher _cipher;
 	private SecureRandom _secureRandom;
 
@@ -182,7 +184,7 @@ public class CryptoEngine
 	public void init()
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		try {
 			_systemLogger = ASelectSystemLogger.getHandle();
@@ -328,6 +330,13 @@ public class CryptoEngine
 					throw ee;
 				}
 			}
+			
+			// 20130411, Bauke: allow fixed valued key to symmetrically encode/decode data 
+			String sKey = ASelectConfigManager.getSimpleParam(oASelect, "encryption_key", false);
+			if (Utils.hasValue(sKey)) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Using configured encryption key: "+sKey);
+				_encryptionKey =  generate3DESKey(sKey, false /* not stored as base64 */);
+			}
 		}
 		catch (ASelectException eAS) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize", eAS);
@@ -358,7 +367,7 @@ public class CryptoEngine
 	public synchronized boolean verifyPrivilegedSignature(String sAlias, String sData, String sSignature)
 	{
 
-		String sMethod = "verifyPrivilegedSignature()";
+		String sMethod = "verifyPrivilegedSignature";
 		PublicKey oPublicKey = null;
 		boolean bVerified = false;
 		try {
@@ -411,8 +420,7 @@ public class CryptoEngine
 	 */
 	public synchronized boolean verifySignature(String sAlias, String sData, String sSignature)
 	{
-
-		String sMethod = "verifySignature()";
+		String sMethod = "verifySignature";
 		PublicKey oPublicKey = null;
 		int iLoop = 0;
 		boolean bVerified = false;
@@ -474,7 +482,7 @@ public class CryptoEngine
 	 */
 	public synchronized boolean verifyCrossASelectSignature(PublicKey oPublicKey, String sData, String sSignature)
 	{
-		String sMethod = "verifyCrossASelectSignature()";
+		String sMethod = "verifyCrossASelectSignature";
 		// PublicKey oPublicKey = null;
 		boolean bVerified = false;
 		// String sServer = "";
@@ -557,7 +565,7 @@ public class CryptoEngine
 	 */
 	public synchronized String generateSignature(String sAuthsp, String sData)
 	{
-		String sMethod = "CryptoEngine.generateSignature()";
+		String sMethod = "CryptoEngine.generateSignature";
 
 		try {
 			PrivateKey oPrivateKey = null;
@@ -568,8 +576,10 @@ public class CryptoEngine
 				oPrivateKey = (PrivateKey) _htAuthspSettings.get(sAuthsp + ".specific_private_key");
 				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Specific private key " + (oPrivateKey == null ? "NOT" : "") + " found for: "+ sAuthsp);
 			}
-			if (oPrivateKey == null)
+			if (oPrivateKey == null) {
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Using default private key");
 				oPrivateKey = _defaultPrivateKey;
+			}
 
 			Signature oSignature = null;
 			if (_oSignatureProvider != null)
@@ -585,7 +595,7 @@ public class CryptoEngine
 			return xBase64Enc.encode(xRawSignature);
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "could not compute signature", e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not compute signature", e);
 		}
 		return null;
 	}
@@ -608,37 +618,58 @@ public class CryptoEngine
 	 */
 	public synchronized String generate3DES(String sData, String sKeyBase64) throws ASelectException
 	{
-		String sMethod = "CryptoEngine.generate3DES()";
+		String sMethod = "CryptoEngine.generate3DES";
 
-
-			try {
-				SecretKey key = null;
-				if ( sKeyBase64 != null) {
-					BASE64Decoder b64dec = new BASE64Decoder();
-					DESedeKeySpec keyspec = new DESedeKeySpec(b64dec.decodeBuffer(sKeyBase64));
-					SecretKeyFactory keyfactory = SecretKeyFactory.getInstance("DESede");
-					key = keyfactory.generateSecret(keyspec);	
-				} else {
-					key = _secretKey;	// use default;
-				}
-				
-				_cipher.init(Cipher.ENCRYPT_MODE, key);
-				byte[]encrypted = _cipher.doFinal(sData.getBytes("UTF-8"));
-				BASE64Encoder b64enc = new BASE64Encoder();
-				String sBase64rep = b64enc.encode(encrypted);
-				return sBase64rep;
+		try {
+			SecretKey key = _secretKey;	// the default;
+			if (sKeyBase64 != null) {  // generate a new one
+				key = generate3DESKey(sKeyBase64, true);	
 			}
-			catch (Exception e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "could not encrypt", e);
-				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-
-			}
+			
+			_cipher.init(Cipher.ENCRYPT_MODE, key);
+			byte[]encrypted = _cipher.doFinal(sData.getBytes("UTF-8"));
+			BASE64Encoder b64enc = new BASE64Encoder();
+			String sBase64rep = b64enc.encode(encrypted);
+			return sBase64rep;
 		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "could not encrypt", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		}
+	}
 
-	
-	
+	/**
+	 * Generate a new 3DES key based on it's string representation.
+	 * 
+	 * @param sKeyValue
+	 *            the base64 key
+	 * @return the generated secret key
+	 * @throws ASelectException
+	 */
+	public SecretKey generate3DESKey(String sKeyValue, boolean isBase64)
+	throws ASelectException
+	{
+		String sMethod = "generate3DESKey";
+		DESedeKeySpec keyspec = null;
+		try {
+			BASE64Decoder b64dec = new BASE64Decoder();
+			if (isBase64)
+				keyspec = new DESedeKeySpec(b64dec.decodeBuffer(sKeyValue));
+			else
+				keyspec = new DESedeKeySpec(sKeyValue.getBytes());
+
+			SecretKeyFactory keyfactory = SecretKeyFactory.getInstance("DESede");
+			return keyfactory.generateSecret(keyspec);
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "could not encrypt", e);
+			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+		}
+	}
+
 	/**
 	 * Encrypt a TGT using the configured encryption algorithm (cipher). <br>
+	 * The encryption key may possibly be generated every time the server is started.
 	 * 
 	 * @param baData
 	 *            A byte array representing the TGT
@@ -649,25 +680,58 @@ public class CryptoEngine
 	public synchronized String encryptTGT(byte[] baData)
 	throws ASelectException
 	{
-		String sMethod = "encryptTGT()";
+		return encryptUsingKey(baData, _secretKey);
+	}
+	
+	/**
+	 * Encrypt data symmetrically.
+	 * The encryption key is taken from the configuration file
+	 * 
+	 * @param baData - the data to be encrypted
+	 * @return the encrypted result
+	 * @throws ASelectException
+	 */
+	// 20130411, Bauke: allow fixed valued key to symmetrically encode/decode data 
+	public synchronized String encryptData(byte[] baData)
+	throws ASelectException
+	{
+		return encryptUsingKey(baData, _encryptionKey);
+	}
 
+	private synchronized String encryptUsingKey(byte[] baData, SecretKey secretKey)
+	throws ASelectException
+	{
+		String sMethod = "encryptUsingKey";
+		BASE64Encoder b64enc = new BASE64Encoder();
+		if (secretKey == null)
+			secretKey = _secretKey;  // NOTE: this key is generated every time the server starts, unless database storage is used
+		
+/* TEST CODE
+ * 		// Convert key to a string
+		String stringKey = b64enc.encode(secretKey.getEncoded());
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "stringKey="+stringKey);
+		// And back to key again
+		BASE64Decoder b64dec = new BASE64Decoder();	
+	    byte[] encodedKey = b64dec.decodeBuffer(stringKey);
+	    SecretKey originalKey = new SecretKeySpec(encodedKey, 0, encodedKey.length, "DESede");	    
+	    secretKey = originalKey;  // Does it work?
+*/	
 		try {
-			_cipher.init(Cipher.ENCRYPT_MODE, _secretKey);
-			byte[] baEncTgt = _cipher.doFinal(baData);
-			BASE64Encoder b64enc = new BASE64Encoder();
-			String sBase64rep = b64enc.encode(baEncTgt);
-//			return sBase64rep.replace('+', '-').replace('=', '_');	// RH, 20100805, o
+			_cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+			byte[] baEncryped = _cipher.doFinal(baData);
+			String sBase64rep = b64enc.encode(baEncryped);
+			//_systemLogger.log(Level.FINEST, MODULE, sMethod, "encrypted["+sBase64rep+"]");
 			return sBase64rep.replace('+', '-').replace('=', '_').replace('/', '*');	// RH, 20100805, n, '/' is not nice for URLs
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "could not encrypt", e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encrypt, bad encryption key?");
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-
 		}
 	}
 
 	/**
 	 * Decrypt a TGT using the configured encryption algorithm (cipher). <br>
+	 * The encryption key may possibly be generated every time the server is started.
 	 * 
 	 * @param sEncTgt
 	 *            A String representation of the encrypted TGT
@@ -678,21 +742,44 @@ public class CryptoEngine
 	public synchronized byte[] decryptTGT(String sEncTgt)
 	throws ASelectException
 	{
-		String sMethod = "decryptTGT()";
+		return decryptUsingKey(sEncTgt, _secretKey);
+	}
+
+	/**
+	 * Decrypt data symmetrically.
+	 * The encryption key is taken from the configuration file
+	 * 
+	 * @param sEncTgt - the encrypted data
+	 * @return the decrypted result as a byte array
+	 * @throws ASelectException
+	 */
+	// 20130411, Bauke: allow fixed valued key to symmetrically encode/decode data 
+	public synchronized byte[] decryptData(String sEncTgt)
+	throws ASelectException
+	{
+		return decryptUsingKey(sEncTgt, _encryptionKey);
+	}
+
+	private synchronized byte[] decryptUsingKey(String sEncodedText, SecretKey secretKey)
+	throws ASelectException
+	{
+		String sMethod = "decryptUsingKey";
+		if (secretKey == null)
+			secretKey = _secretKey;  // NOTE: this key is generated every time the server starts, unless database storage is used
 
 		try {
-			BASE64Decoder b64dec = new BASE64Decoder();
+			BASE64Decoder b64dec = new BASE64Decoder();	
+			sEncodedText = sEncodedText.replace('_', '=').replace('-', '+').replace('*', '/');	// RH, 20100805, n, '/' is not nice for URLs
 			
-//			byte[] baData = b64dec.decodeBuffer(sEncTgt.replace('_', '=').replace('-', '+'));	// RH, 20100805, o
-			byte[] baData = b64dec.decodeBuffer(sEncTgt.replace('_', '=').replace('-', '+').replace('*', '/'));	// RH, 20100805, n, '/' is not nice for URLs
-			_cipher.init(Cipher.DECRYPT_MODE, _secretKey);
+			//_systemLogger.log(Level.FINEST, MODULE, sMethod, "decrypting["+sEncodedText+"]");
+			byte[] baData = b64dec.decodeBuffer(sEncodedText);
+			_cipher.init(Cipher.DECRYPT_MODE, secretKey);
 			return _cipher.doFinal(baData);
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "could not decrypt", e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not decrypt, bad decryption key or data?");
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
-
 	}
 
 	/**
@@ -797,7 +884,7 @@ public class CryptoEngine
 	private void readSignatureConfig(Object oCryptoSection, HashMap htProviders)
 	throws ASelectException
 	{
-		String sMethod = "readSignatureConfig()";
+		String sMethod = "readSignatureConfig";
 		String sProvider = null;
 
 		Object oSection = null;
@@ -874,7 +961,7 @@ public class CryptoEngine
 	private void readEncryptionConfig(Object oCryptoSection, HashMap htProviders)
 	throws ASelectException
 	{
-		String sMethod = "readEncryptionConfig()";
+		String sMethod = "readEncryptionConfig";
 		String sProvider = null;
 
 		Object oSection = null;
@@ -884,12 +971,8 @@ public class CryptoEngine
 		catch (ASelectConfigException e) {
 			oSection = null;
 			_sCipherAlgorithm = DEFAULT_ENCRYPTION_ALGORITHM;
-			_systemLogger
-					.log(
-							Level.CONFIG,
-							MODULE,
-							sMethod,
-							"Could not retrieve 'encryption_algorithm' config section in crypto config section. Using default algorithm and provider.");
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod, 
+				"Could not retrieve 'encryption_algorithm' config section in crypto config section. Using default algorithm and provider.");
 		}
 
 		if (oSection != null) {
@@ -949,7 +1032,7 @@ public class CryptoEngine
 	private void readRandomGeneratorConfig(Object oCryptoSection, HashMap htProviders)
 	throws ASelectException
 	{
-		String sMethod = "readRandomGeneratorConfig()";
+		String sMethod = "readRandomGeneratorConfig";
 		String sProvider = null;
 
 		Object oSection = null;
@@ -1058,7 +1141,7 @@ public class CryptoEngine
 			htRequest.put("signature", sRawSignature);
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, "signRequest()", "Could not sign request", e);
+			_systemLogger.log(Level.SEVERE, MODULE, "signRequest", "Could not sign request", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 	}

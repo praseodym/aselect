@@ -401,7 +401,7 @@ public class IDPFHandler extends ProtoRequestHandler
 	 * @throws ASelectException
 	 */
 	private String generatePostForm(String userSelectedClaimedId)
-		throws ASelectException
+	throws ASelectException
 	{
 		String a = String.valueOf(CryptoEngine.nextRandomInt());	// some random number
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -493,13 +493,13 @@ public class IDPFHandler extends ProtoRequestHandler
 		return finalResult;
 	}
 
-	public String generateInlogindicatie(String d, String secretKey) throws ASelectException {
+	public String generateInlogindicatie(String d, String secretKey) throws ASelectException
+	{
 		return generateInlogindicatie(d, secretKey, null);
 	}
 	
-
-		public String generateInlogindicatie(String d, String secretKey, String authsp4singing) throws ASelectException {
-
+	public String generateInlogindicatie(String d, String secretKey, String authsp4singing) throws ASelectException
+	{
 		CryptoEngine c = CryptoEngine.getHandle();
 //		String signature = c.generateSignature(null, d);
 		String signature = c.generateSignature(authsp4singing, d);
@@ -507,10 +507,8 @@ public class IDPFHandler extends ProtoRequestHandler
 
 		return inlogindicatie;
 
-		}
+	}
 
-	
-	
 	public void destroy()
 	{
 	}

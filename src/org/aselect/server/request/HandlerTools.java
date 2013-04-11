@@ -81,6 +81,8 @@ public class HandlerTools
 	 *            the cookie path
 	 * @param iAge
 	 *            the age
+	 * @param httpOnly
+	 *            the http only flag
 	 * @param logger
 	 *            the logger
 	 */

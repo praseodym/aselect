@@ -54,7 +54,7 @@ import org.aselect.system.utils.Utils;
 public class ShibbolethWAYFProfile extends AbstractRequestHandler
 {
 	private final static String MODULE = "ShibbolethWAYFProfile";
-	private final static String COOKIENAME = "idp";
+	private final static String idp_COOKIE = "idp";
 
 	private String _sCookieDomain;
 	private String _sTemplate;
@@ -337,10 +337,10 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 			}
 			else {
 				String sSelectedIdP = null;
-				String sCookieValue = HandlerTools.getCookieValue(request, COOKIENAME, _systemLogger);
+				String sCookieValue = HandlerTools.getCookieValue(request, idp_COOKIE, _systemLogger);
 
 				if (sCookieValue == null || !_vIdPs.contains(sCookieValue)) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid '" + COOKIENAME
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid '" + idp_COOKIE
 							+ "'  cookie, unknown value: " + sCookieValue);
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 				}
@@ -486,7 +486,7 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 	{
 		String sMethod = "handleSubmit()";
 		try {
-			HandlerTools.putCookieValue(response, COOKIENAME, sIdP, _sCookieDomain, null, -1, 1/*httpOnly*/, _systemLogger);
+			HandlerTools.putCookieValue(response, idp_COOKIE, sIdP, _sCookieDomain, null, -1, 1/*httpOnly*/, _systemLogger);
 			/*
 			 * Cookie oWAYFCookie = new Cookie(COOKIENAME, sIdP); if (_sCookieDomain != null)
 			 * oWAYFCookie.setDomain(_sCookieDomain); _systemLogger.log(Level.INFO, MODULE, sMethod,
