@@ -73,7 +73,7 @@ module AP_MODULE_DECLARE_DATA aselect_filter_module;
 //static handler_rec      aselect_filter_handlers[];
 static const command_rec    aselect_filter_cmds[];
 
-char *version_number = "====subversion_258====";
+char *version_number = "====subversion_285====";
 
 // -----------------------------------------------------
 // Functions 
@@ -113,7 +113,7 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, ch
 static void aselect_filter_removeUnwantedCharacters(char *args);
 static char *aselect_filter_findNoCasePattern(const char *text, const char *pattern);
 static void splitAttrFilter(char *attrFilter, char *condName, int condLen,
-			    char *ldapName, int ldapLen, char *applAttrName, int attrLen);
+			    char *attrValue, int ldapLen, char *applAttrName, int attrLen);
 static char *replaceAttributeValues(pool *pPool, char *pcAttributes, char *text, int bUrlDecode);
 static int conditionIsTrue(pool *pPool, char *pcAttributes, char *condName);
 static char *extractAttributeNames(pool *pPool, char *text, char *paramNames);
@@ -356,23 +356,23 @@ char *aselect_filter_auth_user(request_rec *pRequest, pool *pPool, PASELECT_FILT
 static char *getRequestedAttributes(pool *pPool, PASELECT_FILTER_CONFIG pConfig)
 {
     char *p, *q, *paramNames = ",";
-    char condName[1200], ldapName[400], applAttrName[200]; // check with other buffers with the same name
+    char condName[1200], attrValue[400], applAttrName[200]; // check with other buffers with the same name
     int i, len;
 
     for (i = 0; i < pConfig->iAttrCount; i++) {
 	//TRACE2("getRequestedAttributes:: %d: %s", i, pConfig->pAttrFilter[i]);
-	splitAttrFilter(pConfig->pAttrFilter[i], condName,sizeof(condName), ldapName,sizeof(ldapName), NULL,0);
+	splitAttrFilter(pConfig->pAttrFilter[i], condName,sizeof(condName), attrValue,sizeof(attrValue), NULL,0);
 
-	// Look in condName and ldapName for [attr,<name>] constructs
-	if (ldapName[0] != '\0') {
-	    // Decent ldapName present, extract attributes from expression
-	    if (ldapName[0] == '\'' && ldapName[strlen(ldapName)-1] == '\'')
-		paramNames = extractAttributeNames(pPool, ldapName, paramNames);
+	// Look in condName and attrValue for [attr,<name>] constructs
+	if (attrValue[0] != '\0') {
+	    // Decent attrValue present, extract attributes from expression
+	    if (attrValue[0] == '\'' && attrValue[strlen(attrValue)-1] == '\'')
+		paramNames = extractAttributeNames(pPool, attrValue, paramNames);
 	    else {
-		// Add ldapName itself, if not present yet
-		sprintf(applAttrName, ",%s,", ldapName);
+		// Add attrValue itself, if not present yet
+		sprintf(applAttrName, ",%s,", attrValue);
 		if (strstr(paramNames, applAttrName) == 0)
-		    paramNames = ap_psprintf(pPool, "%s%s,", paramNames, ldapName);
+		    paramNames = ap_psprintf(pPool, "%s%s,", paramNames, attrValue);
 	    }
 	}
 	if (condName[0] != '\0') {
@@ -1350,24 +1350,25 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, ch
 	}
 
 	// The config file tells us which attributes to pass on and from which source
-	// Three fields separted by a comma: <condition>,<ldap_name>,<attribute_name>
+	// Three fields separted by a comma: <condition>,<attribute_value>,<attribute_name>
 	// If <condition> is empty or it evaluates to 'true' the header is written,
 	// otherwise it's not.
-	// <ldap_name> can be an expression (it must be enclosed by single quotes)
-	// <condition> and <ldap_name> can contain attribute expressions [attr,...]
+	// <attribute_value> can be an expression (it must be enclosed by single quotes)
+	// <condition> and <attribute_value> can contain attribute expressions [attr,...]
+	// <attribute_name> is the name passed to the application behind the filter
 	//
 	for (i = 0; i < pConfig->iAttrCount; i++) {
 	    char *p, *q;
-	    char condName[1200], ldapName[400], applAttrName[200], buf[450]/*larger than ldapName*/;
+	    char condName[1200], attrValue[400], applAttrName[200], buf[450]/*larger than attrValue*/;
 	    int constant;
 
 	    TRACE2("attribute_check:: %d: %s", i, pConfig->pAttrFilter[i]);
 	    splitAttrFilter(pConfig->pAttrFilter[i], condName, sizeof(condName),
-			ldapName, sizeof(ldapName), applAttrName, sizeof(applAttrName));
+			attrValue, sizeof(attrValue), applAttrName, sizeof(applAttrName));
 
 	    if (applAttrName[0] == '\0')  // no HTTP header name
 		continue;
-	    //TRACE3("Attr[%s|%s|%s]", condName, ldapName, applAttrName);
+	    //TRACE3("Attr[%s|%s|%s]", condName, attrValue, applAttrName);
 
 	    // Check condition
 	    if (!conditionIsTrue(pPool, pcAttributes, condName)) {
@@ -1392,23 +1393,19 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, ch
 	    // Pass this attribute, either in the Query string or in the HTTP-header
 	    p = NULL;
 	    constant = 0;
-	    if (ldapName[0] != '\0') {  // try to use Ldap value
+	    if (attrValue[0] != '\0') {  // try to use Attribute Value
 		// Can also be a constant, e.g. 'I am a constant' (no quote escapes possible)
-		if (ldapName[0] == '\'' && ldapName[strlen(ldapName)-1] == '\'') {
-		    p = ldapName + 1;
-		    ldapName[strlen(ldapName)-1] = '\0';
+		if (attrValue[0] == '\'' && attrValue[strlen(attrValue)-1] == '\'') {
+		    p = attrValue + 1;
+		    attrValue[strlen(attrValue)-1] = '\0';
 		    constant = 1;  // Allows a value of '' (empty string)
 		}
 		else {
-		    sprintf(buf, "%s=", ldapName);
+		    sprintf(buf, "%s=", attrValue);
 		    p = aselect_filter_get_param(pPool, pcAttributes, buf, "&", TRUE/*urlDecode*/); // was FALSE
 		}
 	    }
-	    // 20111204: no more
-	    //if (!constant && !(p && *p) && digidName[0] != '\0') {  // try to use DigiD value
-	    //    sprintf(buf, "digid_%s=", digidName);
-	    //    p = aselect_filter_get_param(pPool, pcAttributes, buf, "&", FALSE);
-	    //}
+
 	    if (strcmp(applAttrName, "language")==0 && pcRequestLanguage != NULL) {
 		p = pcRequestLanguage; // replace attribute value
 		constant = 0;
@@ -1419,7 +1416,7 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, ch
 		// p points to the attribute value
 		//TRACE1("attribute_check:: value=%s", p);
 		if (constant) {
-		    p = replaceAttributeValues(pPool, pcAttributes, p, TRUE/*urlDecode*/); // was FALSE
+		    p = replaceAttributeValues(pPool, pcAttributes, p, TRUE/*urlDecode*/);
 		}
 		if (strcmp(applAttrName, "AuthHeader") != 0) { // 20111128
 		    // Only for passing parameters in the URL parameters
@@ -1433,15 +1430,20 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, ch
 
 		// 20111206: p is no longer url encoded
 		if (strcmp(applAttrName, "AuthHeader") == 0) {
-		    decoded = ap_psprintf(pPool, "%s:", p);  // <username>:<password>
-		    //aselect_filter_url_decode(decoded); // 20111206
+		    // Assemble a Basic authorization header
+		    // If 'p' already contains a colon, this is an AuthHeader expression, otherwise it's simply a username
+		    if (strchr(p, ':') != 0)
+			decoded = ap_psprintf(pPool, "%s", p);  // <username>:<password>
+		    else
+			decoded = ap_psprintf(pPool, "%s:", p);  // <username>:<no password>
+		    //aselect_filter_url_decode(decoded); // 20111206 removed
 		    encoded = aselect_filter_base64_encode(pPool, decoded);
 		    ap_table_set(headers_in, "Authorization", ap_psprintf(pPool, "Basic %s", encoded));
 		}
 		else if (strchr(pConfig->pcPassAttributes,'h')!=0) { // Pass in the header
 		    //TRACE2("X-Header - %s: %s", applAttrName, p);
-		    //decoded = ap_pstrdup(pPool, p); //20111206
-		    //aselect_filter_url_decode(decoded); //20111206
+		    //decoded = ap_pstrdup(pPool, p); //20111206 removed
+		    //aselect_filter_url_decode(decoded); //20111206 removed
 		    ap_table_set(headers_in, ap_psprintf(pPool, "X-%s", applAttrName), p);  // 20111206 decoded);
 		}
 		//TRACE1("attribute_check:: purge=%s", pRequest->args);
@@ -1504,14 +1506,14 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, ch
 // Split 'aselect_filter_add_attribute' value in three
 //
 static void splitAttrFilter(char *attrFilter, char *condName, int condLen,
-		char *ldapName, int ldapLen, char *applAttrName, int attrLen)
+		char *attrValue, int ldapLen, char *applAttrName, int attrLen)
 {
     char *p, *q, buf[40];
     int len, i;
 
     p = attrFilter;
     if (condName) condName[0] = '\0';
-    if (ldapName) ldapName[0] = '\0';
+    if (attrValue) attrValue[0] = '\0';
     if (applAttrName) applAttrName[0] = '\0';
 
     if (*p == ',')  // empty condName
@@ -1539,14 +1541,14 @@ static void splitAttrFilter(char *attrFilter, char *condName, int condLen,
 	condName[len] = '\0';
     }
     p = q+1;
-    // p points to start of <ldap_name>
+    // p points to start of <attribute_value>
     q = strrchr(p, ',');  // 20111128: find last comma
-    if (!q)  // ldapName
+    if (!q)  // attrValue
 	return;
-    if (ldapName) {
+    if (attrValue) {
 	len = (q-p < ldapLen)? q-p: ldapLen-1;
-	strncpy(ldapName, p, len);
-	ldapName[len] = '\0';
+	strncpy(attrValue, p, len);
+	attrValue[len] = '\0';
     }
     p = q+1;
     for (q=p; *q; q++)
