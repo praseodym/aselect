@@ -49,10 +49,15 @@
 <!--		
 	<property name="full.build.version" value="${build.current.revision}" />
 	-->
+	<!-- for comaptibility with Bauke makejar.sh
+	-->
+	<condition property="svnversion_file" value="subversion_${full.build.version}" else="subversion_unknown" >
+		<isset property="build.current.revision"/>
+		</condition>
+	
 	
 	
 	<echo message="Full build version: ${full.build.version}"/>
-	
 	
 	
   <macrodef name="build-jar">
@@ -74,6 +79,7 @@
 -->
       <jar basedir="target/classes" destfile="target/org.aselect.@{jar-name}.jar" >
       	<manifest-tag />
+	    <include name="${svnversion_file}" />
         <include name="@{include-pattern}" />
         <exclude name="@{exclude-pattern-1}" />
         <exclude name="@{exclude-pattern-2}" />
@@ -101,7 +107,13 @@
   <target name="compile" description="Compile the Java files.">
     <mkdir dir="target/classes" />
 
-    <javac destdir="target/classes" optimize="true" debug="true" debuglevel="vars" srcdir="src/org" sourcepath="">
+	<echo message="${full.build.version}${line.separator}" file="target/classes/${svnversion_file}" />
+    <!--
+
+	    <javac destdir="target/classes" optimize="true" debug="true" debuglevel="vars,source,lines" srcdir="src/org" sourcepath="">
+		-->
+        <javac destdir="target/classes" optimize="true" srcdir="src/org" sourcepath="">
+
       <classpath>
         <fileset dir="lib">
           <include name="*.jar" />
@@ -117,6 +129,7 @@
    	<tstamp>
     <format property="touch.time" pattern="d-MMMM-yyyy HH:mm" />
    	</tstamp>
+
 
     <build-jar jar-name="agent" include-pattern="org/aselect/agent/**/*.class" >
     	<manifest-tag>
