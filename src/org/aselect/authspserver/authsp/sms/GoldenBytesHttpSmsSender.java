@@ -137,16 +137,22 @@ public class GoldenBytesHttpSmsSender extends GenericSmsSender
 	}
 
 	/**
-	 * @param message
+	 * Assemble the sms message.
+	 * 
+	 * @param sTemplate
+	 *            the template
+	 * @param sSecret
+	 *            the secret code
 	 * @param from
+	 *            the sender
 	 * @param recipients
-	 * @param sMethod
+	 *            the recipients
 	 * @param data
-	 * @param _systemLogger
-	 * @return
+	 *            the data to be sent
+	 * @return - 0 = ok
 	 * @throws UnsupportedEncodingException
 	 */
-	protected int assembleSmsMessage(String message, String from, String recipients, StringBuffer data)
+	protected int assembleSmsMessage(String sTemplate, String sSecret, String from, String recipients, StringBuffer data)
 	throws UnsupportedEncodingException
 	{
 		String sMethod = "assembleSmsMessage";
@@ -154,6 +160,8 @@ public class GoldenBytesHttpSmsSender extends GenericSmsSender
 		final String EQUAL_SIGN = "=";
 		final String AMPERSAND = "&";
 
+		String sMessage = applySmsTemplate(sTemplate, sSecret, false);
+		
 		// Your server is authenticated by source IP address.
 		// You may register one or more source IP addresses which are authorized to access your account.
 		data.append(URLEncoder.encode("REQUESTTYPE", "UTF-8"));
@@ -172,7 +180,7 @@ public class GoldenBytesHttpSmsSender extends GenericSmsSender
 		//data.append(URLEncoder.encode("xxx", "UTF-8"));
 		data.append(AMPERSAND);
 		data.append(URLEncoder.encode("BODY", "UTF-8")).append(EQUAL_SIGN);  // Text of the message
-		data.append(URLEncoder.encode(message, "UTF-8"));
+		data.append(URLEncoder.encode(sMessage, "UTF-8"));
 		
 		_systemLogger.log(Level.INFO, sModule, sMethod, "url=" + providerUrl + " data=" + data.toString());
 		return 0;

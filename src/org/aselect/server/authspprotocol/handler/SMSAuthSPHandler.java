@@ -363,7 +363,7 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 			String sUserId = (String) htSessionContext.get("sel_uid");
 			if (sUserId == null)
 				sUserId = (String) htSessionContext.get("user_id");
-			//20121124, Bauke: strip of trailing voice indicator
+			//20121124, Bauke: strip trailing voice indicator
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "sUserId="+sUserId);
 			if (Utils.hasValue(sUserId) && sUserId.endsWith("v"))
 				sUserId = sUserId.substring(0, sUserId.length()-1);

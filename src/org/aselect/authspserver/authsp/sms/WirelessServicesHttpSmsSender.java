@@ -48,14 +48,22 @@ public class WirelessServicesHttpSmsSender extends GenericSmsSender
 	}
 
 	/**
-	 * @param message
+	 * Assemble the sms message.
+	 * 
+	 * @param sTemplate
+	 *            the template
+	 * @param sSecret
+	 *            the secret code
 	 * @param from
+	 *            the sender
 	 * @param recipients
+	 *            the recipients
 	 * @param data
+	 *            the data to be sent
 	 * @return - 0 = ok
 	 * @throws UnsupportedEncodingException
 	 */
-	protected int assembleSmsMessage(String message, String from, String recipients, StringBuffer data)
+	protected int assembleSmsMessage(String sTemplate, String sSecret, String from, String recipients, StringBuffer data)
 	throws UnsupportedEncodingException
 	{
 		String sMethod = "assembleSmsMessage";
@@ -63,6 +71,9 @@ public class WirelessServicesHttpSmsSender extends GenericSmsSender
 
 		final String EQUAL_SIGN = SEPCHAR;
 		final String AMPERSAND = "&";
+		
+		String sMessage = applySmsTemplate(sTemplate, sSecret, false);
+
 		data.append(URLEncoder.encode("VERSION", "UTF-8")).append(EQUAL_SIGN).append(URLEncoder.encode(GWVERSION, "UTF-8"));
 		data.append(AMPERSAND);
 		data.append(URLEncoder.encode("UID", "UTF-8")).append(EQUAL_SIGN).append(URLEncoder.encode(this.user, "UTF-8"));
@@ -71,7 +82,7 @@ public class WirelessServicesHttpSmsSender extends GenericSmsSender
 		data.append(AMPERSAND);
 		data.append(URLEncoder.encode("O", "UTF-8")).append(EQUAL_SIGN).append(URLEncoder.encode(from, "UTF-8"));
 		data.append(AMPERSAND);
-		data.append(URLEncoder.encode("M", "UTF-8")).append(EQUAL_SIGN).append(URLEncoder.encode(message, "UTF-8"));
+		data.append(URLEncoder.encode("M", "UTF-8")).append(EQUAL_SIGN).append(URLEncoder.encode(sMessage, "UTF-8"));
 		data.append(AMPERSAND);
 		data.append(URLEncoder.encode("N", "UTF-8")).append(EQUAL_SIGN).append(URLEncoder.encode(recipients, "UTF-8"));
 

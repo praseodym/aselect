@@ -1582,18 +1582,19 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						sSelectChoice = sSelectChoice.replaceAll("\"", "&quot;");
 						int idxChoice = sSelectForm.indexOf(sSelectChoice);
 						if (idxChoice >= 0) {
+							// Cookie choice is still present in the form, "select" it
 							int idxValue = sSelectForm.lastIndexOf("value", idxChoice);
 							if (idxValue >= 0) {
 								sSelectForm = sSelectForm.substring(0, idxValue).concat("selected ").concat(sSelectForm.substring(idxValue));
 							}
-						}
-						// Replacements in the form, split using the semicolon
-						// If no semicolon is present, we only have the "url" part available.
-						sUrl = sSelectChoice;
-						int idx = sSelectChoice.indexOf(';');
-						if (idx >= 0) {
-							sUrl = sSelectChoice.substring(0, idx);
-							sName = sSelectChoice.substring(idx+1);
+							// Replacements in the form, split using the semicolon
+							// If no semicolon is present, we only have the "url" part available.
+							sUrl = sSelectChoice;
+							int idx = sSelectChoice.indexOf(';');
+							if (idx >= 0) {
+								sUrl = sSelectChoice.substring(0, idx);
+								sName = sSelectChoice.substring(idx+1);
+							}
 						}
 					}
 					catch (ASelectException ae) {
@@ -1693,7 +1694,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		String sRedirectUrl = null;
 		String sPopup = null;
 
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "Login3 " + htServiceRequest);
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "login3 " + htServiceRequest);
 		try {
 			sRid = (String) htServiceRequest.get("rid");
 			sAuthsp = (String) htServiceRequest.get("authsp");
@@ -1717,40 +1718,50 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			ASelectConfigManager configManager = ASelectConfigManager.getHandle();
 			String sUserInfo = configManager.getUserInfoSettings();
 			
-			if (sUserInfo.contains("authsps_from_select")) {
+			// 20120815, Bauke: Before startAuthentication, because it reads from config
+			Object authSPsection = getAuthspParametersFromConfig(sAuthsp);
+
+			String sSaveAppId = sAppId;  // save session version of app_id
+			boolean bAuthspFromSelect = sUserInfo.contains("authsps_from_select");
+			String sChosenAppId = (String)htServiceRequest.get("app_id");  // looks like <url_or_id>;<user_frienly_name>
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "app_id="+sAppId+" chosenAppId="+sChosenAppId+" authsps_from_select="+bAuthspFromSelect);
+			if (bAuthspFromSelect && Utils.hasValue(sChosenAppId)) {
 				// Save user choice (value of app_id) in the cookie
 				// Note: use the server's cookie domain, not the one set in the AuthSP, see getAuthspParametersFromConfig()
-				String sCookieDomain = _configManager.getCookieDomain();
-				String sChosenAppId = (String)htServiceRequest.get("app_id");  // looks like <url_or_id>;<user_frienly_name>
-				if (!Utils.hasValue(sChosenAppId)) {
-					_systemLogger.log(Level.WARNING, _sModule, sMethod, "No app_id found in request");
-					throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-				}
+				// 20130502, Bauke: Handled by the test above:
+				//if (!Utils.hasValue(sChosenAppId)) {
+				//	_systemLogger.log(Level.WARNING, _sModule, sMethod, "No app_id found in request, \"authsps_from_select\"=true");
+				//	throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+				//}
 
 				// Split sChosenAppId
 				// Note the authsp_name can contain double quotes, they must be escaped for HTML usage.
 				// but the name is not used here: sChosenAppId = sChosenAppId.replaceAll("\"", "&quot;");
 				// If no semicolon is present, we only have the "url" part available.
-				sAppId = sChosenAppId;
+				String sChosenPart1 = sChosenAppId;
 				int idx = sChosenAppId.indexOf(';');
 				if (idx >= 0) {
-					sAppId = sChosenAppId.substring(0, idx);
+					sChosenPart1 = sChosenAppId.substring(0, idx);
 				}
-				// And replace the provided "app_id" with the user's choice
-				_htSessionContext.put("app_id", sAppId);
-				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);
-				
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "Using authsps_from_select mechanism, sChosenAppId="+sChosenAppId);
 				sChosenAppId = _cryptoEngine.encryptData(sChosenAppId.getBytes());  // _configManager.getDefaultPrivateKey());
+
+				String sCookieDomain = _configManager.getCookieDomain();
 				HandlerTools.putCookieValue(servletResponse, select_choice_COOKIE, sChosenAppId,
 						sCookieDomain, null, 157680101/*5 years*/, 1/*httpOnly*/, _systemLogger);
+				
+				// And temporarily replace the provided "app_id" with the user's choice
+				// This value will be used by startAuthentication() to create the redirect_url
+				_htSessionContext.put("app_id", sChosenPart1);  // need not be saved
 			}
 			// End of registration
-			
-			// 20120815, Bauke: Before startAuthentication, because it reads from config
-			Object authSPsection = getAuthspParametersFromConfig(sAuthsp);
 
 			// 20111013, Bauke: added absent phonenumber handling
 			HashMap htResponse = startAuthentication(sRid, htServiceRequest);
+			
+			if (bAuthspFromSelect && Utils.hasValue(sChosenAppId))  // restore app_id after startAuthentication() has done it's work
+				_htSessionContext.put("app_id", sSaveAppId);
+			
 			String sResultCode = (String) htResponse.get("result");
 			if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to create redirect url, result="+sResultCode);
@@ -2557,8 +2568,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 		if (!htAllowedAuthsps.containsKey(sAuthsp)) {
-			StringBuffer sbError = new StringBuffer("Invalid/unknown authsp id in request: ").append(sAuthsp);
-			sbError = sbError.append(" valid are: "+htAllowedAuthsps);
+			StringBuffer sbError = new StringBuffer("Invalid/unknown authsp id in request, authsp=").append(sAuthsp);
+			sbError = sbError.append(", valid are: "+htAllowedAuthsps);
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, sbError.toString());
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}

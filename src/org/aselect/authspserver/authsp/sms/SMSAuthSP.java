@@ -479,7 +479,8 @@ public class SMSAuthSP extends AbstractAuthSP
 				
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "SMS to sUid=" + sUid);
 				// sUid can have a trailing "v" to indicate a voice phone (without SMS reception)
-				boolean bValid = isValidPhoneNumber(sUid.replace("v", ""));  // remove voice flag
+				// Should not occur though, the SMSAuthSPHandler must take care of this
+				boolean bValid = isValidPhoneNumber(sUid.replace("v", ""));  // remove voice flag, just in case
 				int iReturnSend = -1;
 				if (bValid)
 					iReturnSend = generateAndSendSms(servletRequest, sUid);
@@ -1020,17 +1021,17 @@ public class SMSAuthSP extends AbstractAuthSP
 	throws DataSendException
 	{
 		String sSecret = (_fixed_secret == null) ? generateSecret() : _fixed_secret;	// RH, 20110913, n
-		String sText = _sSmsText.replaceAll("0", sSecret);
+		// 20130502, Bauke: moved to the SmsSender driver, method assembleSmsMessage()
+		//String sText = _sSmsText.replaceAll("0", sSecret);
 		
 		// RM_20_04
-		_systemLogger.log(Level.INFO, MODULE, "generateAndSend", "SMS=" + sText + " Secret=" + sSecret);
+		_systemLogger.log(Level.INFO, MODULE, "generateAndSend", "Text=" + _sSmsText+ " Secret=" + sSecret);
 		int result = 0;
 		if (_fixed_secret == null) {
-			result = _oSmsSender.sendSms(sText, _sSmsFrom, sRecipient);	// RH, 20110913, n
+			result = _oSmsSender.sendSms(_sSmsText, sSecret, _sSmsFrom, sRecipient);	// RH, 20110913, n
 		}
 		servRequest.getSession().setAttribute("generated_secret", sSecret);
 		return result;
-
 	}
 
 	/**

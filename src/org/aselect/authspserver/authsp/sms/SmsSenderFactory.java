@@ -63,18 +63,21 @@ public class SmsSenderFactory
 		String sMethod = "createSmsSender";
 		new URL(sProviderUrl);  // check the sUrl given for correctness
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "SmsProvider="+gw_provider+" Url="+sProviderUrl); 
-		if ("wireless-service".equalsIgnoreCase(gw_provider)) {
+		if ("wireless_service".equalsIgnoreCase(gw_provider) || "wireless-service".equalsIgnoreCase(gw_provider)) {
 			return new WirelessServicesHttpSmsSender(sProviderUrl, user, password, gateway, true /*use POST*/);
 		}
-		if ("wireless_voice".equalsIgnoreCase(gw_provider)) {
+		if ("wireless_voice".equalsIgnoreCase(gw_provider) || "wireless-voice".equalsIgnoreCase(gw_provider)) {
 			return new WirelessVoiceSmsSender(sProviderUrl, user, password, gateway, true/*use POST*/);
 			//return new MollieHttpSmsSender(sProviderUrl, user, password, gateway, false/*use POST*/);  // TESTING with mollie!
 		}
 		else if ("GoldenBytes".equalsIgnoreCase(gw_provider)) {
 			return new GoldenBytesHttpSmsSender(sProviderUrl, user, password, gateway, true/*use POST*/);
 		}
+		else if ("mollie_voice".equalsIgnoreCase(gw_provider)) {
+			return new MollieHttpSmsSender(sProviderUrl, user, password, gateway, true/*use POST*/, true/*voice*/);
+		}
 		else {	// defaults to "mollie"
-			return new MollieHttpSmsSender(sProviderUrl, user, password, gateway, true/*use POST*/);
+			return new MollieHttpSmsSender(sProviderUrl, user, password, gateway, true/*use POST*/, false/*sms*/);
 		}
 	}
 }

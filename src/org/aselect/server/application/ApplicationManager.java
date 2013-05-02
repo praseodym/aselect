@@ -592,7 +592,7 @@ public class ApplicationManager
 	throws ASelectException
 	{
 		Application oApplication = getApplication(sAppId);
-		return oApplication.getAttributePolicy();
+		return (oApplication==null)? null: oApplication.getAttributePolicy();
 	}
 
 	/**
@@ -620,7 +620,7 @@ public class ApplicationManager
 	throws ASelectException
 	{
 		Application oApplication = getApplication(sAppId);
-		return oApplication.getFriendlyName();
+		return (oApplication==null)? null: oApplication.getFriendlyName();
 	}
 
 	/**
@@ -648,7 +648,7 @@ public class ApplicationManager
 	throws ASelectException
 	{
 		Application oApplication = getApplication(sAppId);
-		return oApplication.getMaintainerEmail();
+		return (oApplication==null)? null: oApplication.getMaintainerEmail();
 	}
 
 	/**
@@ -705,7 +705,7 @@ public class ApplicationManager
 	throws ASelectException
 	{
 		Application oApplication = getApplication(sAppId);
-		return oApplication.isShowUrl();
+		return (oApplication==null)? null: oApplication.isShowUrl();
 	}
 
 	/**

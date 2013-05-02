@@ -156,7 +156,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	public void init(Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		Object oMain = null;
 		_htAttributes = new HashMap<String, String>();
 		_htReMapAttributes = new HashMap<String, String>();
@@ -790,7 +790,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	private DirContext getConnection()
 	throws ASelectUDBException, ASelectSAMException
 	{
-		String sMethod = "getConnection()";
+		String sMethod = "getConnection";
 
 		SAMResource oSAMResource = null;
 		String sDriver = null;

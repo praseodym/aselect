@@ -1246,7 +1246,8 @@ public class ASelectConfigManager extends ConfigManager
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not update template with optional parameters", e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
+			// 20130502, Bauke: don't throw an exception during error handling
+			//throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 		return sReturn;
 	}

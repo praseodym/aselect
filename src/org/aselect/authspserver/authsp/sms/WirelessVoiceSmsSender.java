@@ -47,12 +47,22 @@ public class WirelessVoiceSmsSender extends GenericSmsSender
 	}
 
 	/**
-	 * @param message
+	 * Assemble the sms message.
+	 * 
+	 * @param sTemplate
+	 *            the template
+	 * @param sSecret
+	 *            the secret code
 	 * @param from
+	 *            the sender
 	 * @param recipients
+	 *            the recipients
 	 * @param data
+	 *            the data to be sent
+	 * @return - 0 = ok
+	 * @throws UnsupportedEncodingException
 	 */
-	protected int assembleSmsMessage(String message, String from, String recipients, StringBuffer data)
+	protected int assembleSmsMessage(String sTemplate, String sSecret, String from, String recipients, StringBuffer data)
 	throws UnsupportedEncodingException
 	{
 		String sMethod = "assembleSmsMessage";
@@ -60,9 +70,11 @@ public class WirelessVoiceSmsSender extends GenericSmsSender
 
 		final String EQUAL_SIGN = "=";
 		final String AMPERSAND = "&";
-				
+
+		String sMessage = applySmsTemplate(sTemplate, sSecret, false);
+		
 		data.append(URLEncoder.encode("code", "UTF-8"));
-		data.append(EQUAL_SIGN).append(URLEncoder.encode(message, "UTF-8"));
+		data.append(EQUAL_SIGN).append(URLEncoder.encode(sMessage, "UTF-8"));
 		
 		data.append(AMPERSAND).append(URLEncoder.encode("phonenumber", "UTF-8"));
 		data.append(EQUAL_SIGN).append(URLEncoder.encode(recipients, "UTF-8"));

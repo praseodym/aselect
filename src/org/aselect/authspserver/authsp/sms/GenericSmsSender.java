@@ -50,7 +50,7 @@ public abstract class GenericSmsSender
 	 * @return the int
 	 * @throws UnsupportedEncodingException
 	 */
-	abstract protected int assembleSmsMessage(String message, String from, String recipients, StringBuffer data)
+	abstract protected int assembleSmsMessage(String sTemplate, String sSecret, String from, String recipients, StringBuffer data)
 	throws UnsupportedEncodingException;
 	
 	/**
@@ -88,12 +88,12 @@ public abstract class GenericSmsSender
 	}
 
 	/**
-	 * @param message	- the body of the message to send
+	 * @param sSecret	- the body of the message to send
 	 * @param from		- the 'from' info to put in the message, can be alpha (max 11 chars) or numeric (max. 16 digits)
 	 * @param recipients - comma seperated list of recipient numbers
 	 * @return: 0 = ok, 1 = invalid phone number, -1 = errors
 	 */
-	public int sendSms(String message, String from, String recipients)
+	public int sendSms(String sTemplate, String sSecret, String from, String recipients)
 	throws DataSendException
 	{
 		String sMethod = "sendSms";
@@ -104,7 +104,7 @@ public abstract class GenericSmsSender
 
 		// Assemble HTTP request
 		try {
-			iReturnCode = assembleSmsMessage(message, from, recipients, data);
+			iReturnCode = assembleSmsMessage(sTemplate, sSecret, from, recipients, data);
 			if (iReturnCode != 0)
 				return iReturnCode;
 			_systemLogger.log(Level.INFO, sModule, sMethod, "usePost=" + usePostMethod + " data=" + data.toString());
@@ -126,7 +126,7 @@ public abstract class GenericSmsSender
 			conn.setRequestProperty("Host", url.getHost());	// Wireless Services requires 'Host' header
 			conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");	// Wireless Services requires this for POST
 			conn.setReadTimeout(10000);
-//			conn.setRequestProperty("Connection", "close"); // use this if we will explicitly conn.disconnect();
+			// conn.setRequestProperty("Connection", "close"); // use this if we will explicitly conn.disconnect();
 			
 			if (usePostMethod) { // Send the POST request
 				OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
@@ -144,5 +144,36 @@ public abstract class GenericSmsSender
 			throw new DataSendException("Sending SMS, using \'" + this.providerUrl + "\' failed, " + e.getMessage(), e);
 		}
 		return iReturnCode;
+	}
+
+	/**
+	 * Apply sms template, by inserting the secret code into it.
+	 * 
+	 * @param sTemplate - the template
+	 * @param sSecret - the secret
+	 * @param expandDigits - add a space between digits?
+	 * @return - result after inserting the 'sSecret' in the 'sTemplate
+	 */
+	protected String applySmsTemplate(String sTemplate, String sSecret, boolean expandDigits)
+	{
+		String sMethod = "applySmsTemplate";
+//		AuthSPSystemLogger _systemLogger = AuthSPSystemLogger.getHandle();
+
+		if (expandDigits) {
+			// insert spaces between digits in sSecret
+			StringBuffer sWork = new StringBuffer(2*sSecret.length());
+			for (int i=0; i<sSecret.length(); i++) {
+				char c = sSecret.charAt(i);
+				if (i>0 && Character.isDigit(c) && Character.isDigit(sWork.charAt(sWork.length()-1))) {
+					sWork.append(' ');
+				}
+				sWork.append(c);
+			}
+			sSecret = sWork.toString();
+		}
+		// 20130502, Bauke: added '%s' alternative
+		String sReplace = (sTemplate.contains("%s"))? "%s": "0";
+		String sMessage = sTemplate.replaceAll(sReplace, sSecret);
+		return sMessage;
 	}
 }
