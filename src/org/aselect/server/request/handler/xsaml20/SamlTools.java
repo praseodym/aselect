@@ -968,4 +968,35 @@ public class SamlTools
 		}
 		return htResult;
 	}
+	
+	
+	/**
+	 * Map SAML statuscodes to aselect errorcodes.
+	 * 
+	 * @param samlstatuscode
+	 *            the saml statuscode ( urn:oasis:names:tc:SAML:2.0:status:xxxx )
+	 * 
+	 * @return the aselect errorcode
+	 */
+	public static String mapStatus(String s)
+	{
+		String sMethod = "mapStatus()";
+		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
+		systemLogger.log(Level.FINER, MODULE, sMethod, "Mapping StatusCode: " + s);
+
+		if (StatusCode.SUCCESS_URI.equals(s) ) {
+			return Errors.ERROR_ASELECT_SUCCESS;
+		} else if (StatusCode.AUTHN_FAILED_URI.equals(s) ) {
+			return Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER;
+		} else if (StatusCode.NO_AUTHN_CONTEXT_URI.equals(s) ) {
+			return Errors.ERROR_ASELECT_AUTHSP_NO_AUTHN_CONTEXT;
+		} else if (StatusCode.PARTIAL_LOGOUT_URI.equals(s) ) {
+			return Errors.ERROR_ASELECT_AUTHSP_PARTIAL_LOGOUT;
+		} else if (StatusCode.REQUEST_DENIED_URI.equals(s) ) {
+			return Errors.ERROR_ASELECT_AUTHSP_REQUEST_DENIED;
+		} else
+		return (String) null;
+		
+	}
+	
 }

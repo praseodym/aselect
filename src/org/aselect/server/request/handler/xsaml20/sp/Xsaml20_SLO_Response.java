@@ -38,6 +38,7 @@ import org.opensaml.saml2.core.Issuer;
 import org.opensaml.saml2.core.LogoutRequest;
 import org.opensaml.saml2.core.LogoutResponse;
 import org.opensaml.saml2.core.StatusCode;
+import org.opensaml.saml2.core.StatusMessage;
 import org.opensaml.ws.message.encoder.MessageEncodingException;
 import org.opensaml.ws.transport.http.HttpServletRequestAdapter;
 import org.opensaml.xml.XMLObject;
@@ -227,9 +228,31 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 	{
 		String sMethod = "handleLogoutResponse";
 		TGTManager tgtManager = TGTManager.getHandle();
+		
+		String resultCode = Errors.ERROR_ASELECT_INTERNAL_ERROR;	// backward compatibility
 		String statusCode = response.getStatus().getStatusCode().getValue();
-		String resultCode = (statusCode.equals(StatusCode.SUCCESS_URI)) ? Errors.ERROR_ASELECT_SUCCESS
-				: Errors.ERROR_ASELECT_INTERNAL_ERROR;
+//		String resultCode = (statusCode.equals(StatusCode.SUCCESS_URI)) ? Errors.ERROR_ASELECT_SUCCESS
+//				: Errors.ERROR_ASELECT_INTERNAL_ERROR;
+		if ( (StatusCode.SUCCESS_URI).equals(statusCode) ) {
+			resultCode = Errors.ERROR_ASELECT_SUCCESS;
+		} else {
+			String sErrorSubCode = null;
+			if ( response.getStatus().getStatusCode().getStatusCode() != null) {	// Get the subcode
+				sErrorSubCode = SamlTools.mapStatus(response.getStatus().getStatusCode().getStatusCode().getValue());
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "ErrorSubcode: " + sErrorSubCode);
+
+			}
+			StatusMessage statMsg = response.getStatus().getStatusMessage();
+			if (statMsg != null) {
+				resultCode = statMsg.getMessage();
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "StatusMessage found: " + resultCode);
+
+			} else {
+				if (sErrorSubCode != null && !"".equals(sErrorSubCode)) {
+					resultCode = sErrorSubCode;
+				}
+			}
+		}
 
 		String sTgT = response.getInResponseTo(); // hopefully contains the TgT
 		if (sTgT.startsWith("_"))

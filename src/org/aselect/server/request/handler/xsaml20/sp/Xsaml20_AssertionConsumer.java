@@ -695,10 +695,22 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				}
 				else {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Response was not successful: " + sStatusCode);
-					String sErrorCode = Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER;
+					// Handle various error conditions here
+					String sErrorCode = Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER;	// default
+					String sErrorSubCode = null;
+					if ( samlResponse.getStatus().getStatusCode().getStatusCode() != null) {	// Get the subcode
+						sErrorSubCode = SamlTools.mapStatus(samlResponse.getStatus().getStatusCode().getStatusCode().getValue());
+						_systemLogger.log(Level.FINER, MODULE, sMethod, "ErrorSubcode: " + sErrorSubCode);
+					}
 					StatusMessage statMsg = samlResponse.getStatus().getStatusMessage();
-					if (statMsg != null)
+					if (statMsg != null) {
 						sErrorCode = statMsg.getMessage();
+						_systemLogger.log(Level.FINER, MODULE, sMethod, "StatusMessage found: " + sErrorCode);
+					} else {
+						if (sErrorSubCode != null && !"".equals(sErrorSubCode)) {
+							sErrorCode = sErrorSubCode;
+						}
+					}
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "ErrorCode=" + sErrorCode);
 					//else if (samlResponse.getStatus().getStatusCode().getStatusCode().getValue().equals(StatusCode.AUTHN_FAILED_URI))
 					//	sErrorCode = Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER;

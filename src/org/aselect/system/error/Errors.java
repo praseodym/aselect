@@ -92,6 +92,8 @@
 
 package org.aselect.system.error;
 
+import org.opensaml.saml2.core.StatusCode;
+
 /**
  * A-Select error codes. <br>
  * <br>
@@ -163,8 +165,16 @@ public class Errors
 	 */
 	public final static String ERROR_ASELECT_AUTHSP_ACCESS_DENIED = "000b";
 	
+	
+	public final static String ERROR_ASELECT_AUTHSP_NO_AUTHN_CONTEXT = "000c";;
+	public final static String ERROR_ASELECT_AUTHSP_PARTIAL_LOGOUT = "000d";;
+	public final static String ERROR_ASELECT_AUTHSP_REQUEST_DENIED = "000e";;
+
+	
 	// INVALID PHONE for the SMS authsp, redirect to 'selfservice' if so configured
 	public final static String ERROR_ASELECT_AUTHSP_INVALID_PHONE = "0010";
+	
+	
 
 	/**
 	 * A-Select error: The A-Select Server received an invalid request from the A-Select Agent.
