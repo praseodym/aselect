@@ -146,7 +146,7 @@ public class Xsaml20_IDPF extends ProtoRequestHandler
 			}
 			catch (ASelectConfigException e) {
 				defaultUID = "siam_user";
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'uid' found, using default: " + defaultUID , e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'uid' found, using default: " + defaultUID);
 			}
 
 			try {
@@ -162,7 +162,7 @@ public class Xsaml20_IDPF extends ProtoRequestHandler
 			}
 			catch (ASelectConfigException e) {
 				endpointsigning = "sha1";	// set default to sha1
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'applicationendpointsigning' found, using default: " + endpointsigning , e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'applicationendpointsigning' found, using default: " + endpointsigning);
 			}
 			
 			try {

@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
@@ -56,8 +57,9 @@ public class IDPFHandler extends ProtoRequestHandler
 	private String appID = null;
 	private String sharedSecret = null;
 	private String defaultUID = null;
+	private String elected_uid_attributename = null;
+	private String passed_credentials_attributename = null;
 	private String aselectServerURL = null;
-//	private String endpointsigning = null;
 	private String endpointurl = null;
 	
 	private String _sPostTemplate = null;
@@ -145,14 +147,30 @@ public class IDPFHandler extends ProtoRequestHandler
 			}
 			catch (ASelectConfigException e) {
 				defaultUID = "siam_user";
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'uid' found, using default: " + defaultUID , e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'uid' found, using default: " + defaultUID);
 			}
 
+			try {
+				elected_uid_attributename = _configManager.getParam(oConfig, "elected_uid_attributename");
+			}
+			catch (ASelectConfigException e) {
+				elected_uid_attributename = "uid";
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'elected_uid_attributename' found, using default: " + elected_uid_attributename);
+			}
+
+			try {
+				passed_credentials_attributename = _configManager.getParam(oConfig, "passed_credentials_attributename");
+			}
+			catch (ASelectConfigException e) {
+				passed_credentials_attributename = "ssoCredentials";
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'passed_credentials_attributename' found, using default: " + passed_credentials_attributename);
+			}
+			
 			try {
 				endpointurl = _configManager.getParam(oConfig, "applicationendpointurl");
 			}
 			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'applicationendpointurl' found", e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'applicationendpointurl' found");
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 			
@@ -331,7 +349,7 @@ public class IDPFHandler extends ProtoRequestHandler
 	    		decodedAttributes = URLDecoder.decode(new String(org.apache.commons.codec.binary.Base64.decodeBase64(urlDecodedAttributes.getBytes())), "UTF-8");
 	    		String attribs[] = decodedAttributes.split("&");
 	    		for (int i=0;i<attribs.length;i++) {
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Retrieved attribute from aselectserver: " + attribs[i]);
+					_systemLogger.log(Level.FINER, MODULE, sMethod, "Retrieved attribute from aselectserver: " + attribs[i]);
 	    		}
 
 			}
@@ -342,12 +360,13 @@ public class IDPFHandler extends ProtoRequestHandler
 
 
 	    	
-	        String userSelectedId = null;
 	        String userSelectedClaimedId =  null;
 //	        userSelectedId =  finalResult.replaceFirst(".*uid=([^&]*).*$", "$1");
 //			_systemLogger.log(Level.INFO, MODULE, sMethod, "Retrieved uid from aselect query string (userSelectedId): " + userSelectedId);
-	        userSelectedClaimedId =  decodedAttributes.replaceFirst(".*uid=([^&]*).*$", "$1");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Retrieved uid from aselect attributes  (userSelectedClaimedId): " + userSelectedClaimedId);
+
+//	        userSelectedClaimedId =  decodedAttributes.replaceFirst(".*uid=([^&]*).*$", "$1");
+	        userSelectedClaimedId =  decodedAttributes.replaceFirst(".*" + Pattern.quote(elected_uid_attributename) + "=([^&]*).*$", "$1");	// configurable passed_uid
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Retrieved: " +elected_uid_attributename + " (elected_uid_attributename) from aselect attributes: " + userSelectedClaimedId);
 	        
 	        Boolean authenticatedAndApproved = false;
 	        try {
@@ -364,17 +383,6 @@ public class IDPFHandler extends ProtoRequestHandler
 	    			String sSelectForm = _configManager.loadHTMLTemplate(null, get_sPostTemplate(), _sUserLanguage, _sUserCountry);
 	    			
 	    			String sInputs = generatePostForm(userSelectedClaimedId);
-	    			// No lang or country requested (yet) 
-//	    			String sLang = null;
-//	    			if (htTGTContext  != null)
-//	    				sLang = (String) htTGTContext.get("language");
-//	    			if (sLang == null && htSessionContext != null )
-//	    				sLang = (String) htSessionContext.get("language");
-//	    			if (sLang != null)
-//	    				sInputs += buildHtmlInput("language",sLang);
-	    			
-//	    			sInputs += buildHtmlInput("uid", userSelectedClaimedId);	// this goes in final version
-//	    			sInputs += buildHtmlInput("ssoCredentials_uncoded",d);	// this goes in final version
 
 	    			// Keep logging short:
 	    			_systemLogger.log(Level.INFO, MODULE, sMethod, "Template="+get_sPostTemplate()+" sInputs="+sInputs+" ...");
@@ -410,7 +418,7 @@ public class IDPFHandler extends ProtoRequestHandler
 		String c = userSelectedClaimedId;
 		String d = a + "," + b + "," + c;
 		String ssoCredentials = generateInlogindicatie(d, getSecretKey(), getAuthsp4Signing());
-		String sInputs = buildHtmlInput("ssoCredentials",  ssoCredentials);
+		String sInputs = buildHtmlInput(passed_credentials_attributename,  ssoCredentials);
 		return sInputs;
 	}
 
@@ -501,7 +509,6 @@ public class IDPFHandler extends ProtoRequestHandler
 	public String generateInlogindicatie(String d, String secretKey, String authsp4singing) throws ASelectException
 	{
 		CryptoEngine c = CryptoEngine.getHandle();
-//		String signature = c.generateSignature(null, d);
 		String signature = c.generateSignature(authsp4singing, d);
 		String inlogindicatie = c.generate3DES( d + "," + signature, secretKey );
 
@@ -523,16 +530,6 @@ public class IDPFHandler extends ProtoRequestHandler
 		this.idpfEndpointUrl = idpfEndpointUrl;
 	}
 
-//	public synchronized String getEndpointsigning()
-//	{
-//		return endpointsigning;
-//	}
-//
-//	public synchronized void setEndpointsigning(String endpointsigning)
-//	{
-//		this.endpointsigning = endpointsigning;
-//	}
-//
 	public synchronized String getEndpointurl()
 	{
 		return endpointurl;
