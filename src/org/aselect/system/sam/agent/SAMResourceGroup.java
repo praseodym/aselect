@@ -161,7 +161,7 @@ public class SAMResourceGroup extends Thread
 	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger oSystemLogger)
 	throws ASelectSAMException
 	{
-		StringBuffer sbError = new StringBuffer(MODULE);
+		StringBuffer sbError = new StringBuffer(MODULE + " ");
 		String sMethod = "init()";
 
 		_htResources = new HashMap();
@@ -194,7 +194,7 @@ public class SAMResourceGroup extends Thread
 				sbWarning.append(". Setting interval to default value: '");
 				sbWarning.append(DEFAULT_UPDATE_INTERVAL);
 				sbWarning.append("'");
-				_oSystemLogger.log(Level.CONFIG, MODULE, sMethod, sbWarning.toString(), e);
+				_oSystemLogger.log(Level.CONFIG, MODULE, sMethod, sbWarning.toString());
 			}
 
 			try {
