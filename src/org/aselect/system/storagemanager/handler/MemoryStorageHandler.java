@@ -362,10 +362,14 @@ public class MemoryStorageHandler implements IStorageHandler
 
 			if (lTimestamp.longValue() >= lStorageTime.longValue()) {
 				// Try, report left-over sessions
-				HashMap hm = (HashMap)htStorageContainer.get("contents");
-				String sFirstContact = (String)hm.get("first_contact");
-				if (sFirstContact != null) {  // it's a session
-					Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_mem", (String)oKey, hm, null, false);
+				
+//				HashMap hm = (HashMap)htStorageContainer.get("contents");	// RH, 20130614, o 	// unfortunately we cannot be sure this is a HashMap
+				if ( htStorageContainer.get("contents") instanceof HashMap) {	// RH, 20130614, n 	// so test first
+					HashMap hm = (HashMap)htStorageContainer.get("contents");
+					String sFirstContact = (String)hm.get("first_contact");
+					if (sFirstContact != null) {  // it's a session
+						Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_mem", (String)oKey, hm, null, false);
+					}
 				}
 				_htStorage.remove(oKey);
 				countRemoved++;
