@@ -128,7 +128,7 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
 				catch (ASelectConfigException e) {
 					bDuplicate = false;
 					_systemLogger.log(Level.CONFIG, MODULE, sMethod, "No 'duplicate' config item found for attribute '"
-							+ sAttributeID + "', using default value 'false'", e);
+							+ sAttributeID + "', using default value 'false'");
 				}
 				_htReMapAttributes.put(sAttributeMap, sAttributeID);
 				if (bDuplicate) {
