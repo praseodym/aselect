@@ -1443,7 +1443,7 @@ public class RequestHandler extends Thread
 			int interval = 1000 * ASelectAgentConfigManager.getHandle().getUpgradeTgtInterval();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Last upgrade_tgt:"+(now - lLastTime)+
 						" ms ago, update="+(now - lLastTime >= interval)+" interval="+interval);
-			if (now - lLastTime >= interval) {  // default use 60 seconds intervals
+			if (now - lLastTime >= interval) {  // default use 60 seconds intervals //  for backward compatibility we now use default = 0
 				htTicketContext.put("last_upgrade_tgt", Long.toString(now));
 				String sCryptedCredentials = (String) htTicketContext.get("crypted_credentials");
 				String sAselectServer = (String) htTicketContext.get("a-select-server");

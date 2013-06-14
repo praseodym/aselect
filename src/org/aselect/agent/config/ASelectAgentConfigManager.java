@@ -197,7 +197,8 @@ public class ASelectAgentConfigManager extends ConfigManager
 		Object _oAgentSection = getSection(null, "agent");
 		_upgradeTgtInterval = Utils.getSimpleIntParam(this, _systemLogger, _oAgentSection, "upgrade_tgt_interval", false);
 		if (_upgradeTgtInterval < 0)
-			_upgradeTgtInterval = 60;  // seconds, value 0 means send always
+//			_upgradeTgtInterval = 60;  // seconds, value 0 means send always 
+			_upgradeTgtInterval = 0; 	//  for backward compatibility we now use default = 0 (always upgrade_tgt)
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "upgrade_tgt_interval="+_upgradeTgtInterval);
 
 		loadCrypto();
