@@ -250,7 +250,11 @@ public class RawCommunicator implements IClientCommunicator
 		try {
 			urlSomeServer = new URL(sbBuffer.toString());
 			brInput = new BufferedReader(new InputStreamReader(urlSomeServer.openStream()), 16000);
-			sInputLine = brInput.readLine();
+			String s = null;
+			while ( (s = brInput.readLine()) != null) {
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "Input from the other server=" +s);
+				sInputLine += s;
+			}
 			brInput.close();
 
 			if (sInputLine != null)

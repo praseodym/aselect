@@ -58,6 +58,7 @@
  */
 package org.aselect.system.communication.server.raw;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
@@ -584,9 +585,11 @@ public class RawMessageCreator implements IMessageCreatorInterface
 		String sMethod = "sendMessage()";
 		boolean bRetVal = false;
 		try {
-			OutputStream oStream = _oResponse.getOutputStream();
+//			OutputStream oStream = _oResponse.getOutputStream();
+			BufferedOutputStream oStream = new BufferedOutputStream(_oResponse.getOutputStream());
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Sending message:" + sMsg);
 			oStream.write(sMsg.getBytes());
-			oStream.close();
+			oStream.close();	// close() on BufferedOutputStream calls flush()
 			bRetVal = true;
 		}
 		catch (IOException eIO) // couldn't write response to requester
