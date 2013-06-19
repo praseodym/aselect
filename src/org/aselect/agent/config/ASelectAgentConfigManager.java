@@ -443,7 +443,7 @@ public class ASelectAgentConfigManager extends ConfigManager
 		catch (Exception e) {
 			StringBuffer sbError = new StringBuffer("Could not load default private key from keystore: ");
 			sbError.append(sKeystorePath);
-			_systemLogger.log(Level.SEVERE, MODULE, "loadDefaultPrivateKey()", sbError.toString(), e);
+			_systemLogger.log(Level.SEVERE, MODULE, "loadDefaultPrivateKey", sbError.toString(), e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
 	}

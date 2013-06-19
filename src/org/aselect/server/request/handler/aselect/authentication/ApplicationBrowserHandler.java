@@ -525,6 +525,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				//_systemLogger.log(Level.INFO, _sModule, sMethod, "Serverinfo [" + sServerInfoForm + "]");
 				Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 				//_sessionManager.update(sRid, _htSessionContext); // Write session
+				_htSessionContext.put("user_state", "state_serverinfo");
 				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 				pwOut.println(sServerInfoForm);
 				pwOut.close();
@@ -849,6 +850,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						String sCountry = (String) htServiceRequest.get("country");  // 20101027 _
 						sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
 						sSelectForm = Utils.replaceString(sSelectForm, "[country]", sCountry);
+						_htSessionContext.put("user_state", "state_nextauthsp");
 						Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 						//_sessionManager.update(sRid, _htSessionContext); // Write session
 						pwOut.println(sSelectForm);						
@@ -1132,6 +1134,12 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 			String sForcedUid = (String) _htSessionContext.get("forced_uid");
 			String sForcedAuthsp = (String) _htSessionContext.get("forced_authsp");
+			String sState = (String)_htSessionContext.get("user_state");
+			
+			// 20130514, Bauke: force user back to the 'select' screen! Probably pressed F5 (refresh screen)
+			if ("state_select".equals(sState)) {
+				// EXPERIMENTAL: sForcedUid = "saml20_user";  // works in simple cases
+			}
 			if (sForcedUid != null || sForcedAuthsp != null) {
 				if (sForcedUid != null)
 					htServiceRequest.put("user_id", sForcedUid);
@@ -1172,6 +1180,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			servletResponse.setContentType("text/html");
 			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 			//_sessionManager.update(sRid, _htSessionContext); // Write session
+			_htSessionContext.put("user_state", "state_login");
 			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 			pwOut.println(sLoginForm);
 		}
@@ -1268,6 +1277,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				}
 			}
 		}
+		_htSessionContext.put("user_state", "state_session_info");
 		sInfoForm = Utils.replaceString(sInfoForm, "[other_sps]", sOtherSPs);
 		sInfoForm = _configManager.updateTemplate(sInfoForm, _htSessionContext);
 		servletResponse.setContentType("text/html");
@@ -1294,8 +1304,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private boolean handleUserConsent(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut,
-			String sRid)
+	private boolean handleUserConsent(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut, String sRid)
 	throws ASelectException
 	{
 		String user_consent_COOKIE = "user_consent";
@@ -1540,7 +1549,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// end only 1 valid authsp or bAuthspFromSelect
 
 			// Multiple candidates, present the select.html form
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "Multiple authsps, show 'select' form");
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "Multiple authsps or 'authsps_from_select' was set: show 'select' form");
+			// 20130514, Bauke: remember what the user sees on the screen
+			_htSessionContext.put("user_state", "state_select");
+			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);
 
 			// RH, 20121119, sn
 			// Handle application specific select form
@@ -1551,8 +1563,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "Found application specific select form: " + sSelectFormName + " for app_id: " + sAppId);
 			}
 			String sSelectForm = _configManager.getForm(sSelectFormName, _sUserLanguage, _sUserCountry);
-			// RH, 20121119, en
-//			String sSelectForm = _configManager.getForm("select", _sUserLanguage, _sUserCountry);			// RH, 20121119, o
 
 			sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
 			sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", _sMyServerId);
@@ -1600,7 +1610,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					catch (ASelectException ae) {
 						_systemLogger.log(Level.INFO, _sModule, sMethod, "Could not decrypt cookie: " + sSelectChoice);
 					}
-					
 				}
 				// else: No earlier choice was made, sUrl and sName are empty
 				
@@ -1798,6 +1807,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				sPopupForm = Utils.replaceString(sPopupForm, "[authsp]", strFriendlyName);
 				sPopupForm = _configManager.updateTemplate(sPopupForm, _htSessionContext);
 				Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  // 20111102, control to the user
+				_htSessionContext.put("user_state", "state_popup");
 				_htSessionContext.put("authsp_visited", "true");
 				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 				pwOut.println(sPopupForm);
@@ -2325,6 +2335,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sLoggedOutForm = _configManager.updateTemplate(sLoggedOutForm, _htTGTContext);
 			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 			// no RID _sessionManager.update(sRid, _htSessionContext); // Write session
+			_htSessionContext.put("user_state", "state_loggedout");
 			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
 			pwOut.println(sLoggedOutForm);
 		}
@@ -2809,6 +2820,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				sUserInfoForm = Utils.replaceString(sUserInfoForm, "[org]", sTemp3);
 			}
 			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
+			_htSessionContext.put("user_state", "state_userinfo");
 			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
 			pwOut.println(sUserInfoForm);
 		}

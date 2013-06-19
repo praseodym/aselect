@@ -561,7 +561,7 @@ public class AttributeGatherer
 						StringBuffer sb = new StringBuffer("Could not gather attributes for user \"").append(sUid).append("\"");
 						_systemLogger.log(Level.WARNING, _MODULE, sMethod, sb.toString(), eA);
 					}
-					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER >> Requestor=" + sRequestorID + " htAttrsFromAR="+htAttrsFromAR);
+					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER >> Requestor=" + sRequestorID + " htAttrsFromAttrReq="+htAttrsFromAR);
 
 					// Merge the returned attributes with our set
 					if (htAttrsFromAR != null) {

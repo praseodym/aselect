@@ -359,14 +359,16 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 			}
 			
-			// 20120403, Bauke: session is available as a parameter
+			// 20120403, Bauke: session context is available as a parameter
 			String sUserId = (String) htSessionContext.get("sel_uid");
 			if (sUserId == null)
 				sUserId = (String) htSessionContext.get("user_id");
-			//20121124, Bauke: strip trailing voice indicator
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "sUserId="+sUserId);
-			if (Utils.hasValue(sUserId) && sUserId.endsWith("v"))
-				sUserId = sUserId.substring(0, sUserId.length()-1);
+			
+			// 20130618, Bauke: no don't, this is not the phonenumber as it is in the SMS authspserver
+			// 20121124, Bauke: strip trailing voice indicator
+			//if (Utils.hasValue(sUserId) && sUserId.endsWith("v"))
+			//	sUserId = sUserId.substring(0, sUserId.length()-1);
 			
 			String sOrg = (String) htSessionContext.get("organization");
 

@@ -554,7 +554,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 				SearchResult oSearchResult = (SearchResult) oSearchResults.next();
 				sFullDn = oSearchResult.getNameInNamespace();
 				String sSearchName = oSearchResult.getName(); 
-				_systemLogger.log(Level.FINE, MODULE, sMethod, ">> id=" + sSearchName +" full=" + sFullDn + " Result=" + oSearchResult);
+				_systemLogger.log(Level.FINE, MODULE, sMethod, ">> id=" + sSearchName +" full_dn=" + sFullDn + " Result=" + oSearchResult);
 				cntResults++;
 
 				// Compare the search result's name with the chosen organization (if specified)
@@ -603,7 +603,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 								Vector<Object> vMultiValues = new Vector<Object>();
 								for (int iCount = 0; iCount < oAttribute.size(); iCount++) {
 									Object oValue = oAttribute.get(iCount);
-									//_systemLogger.log(Level.FINEST, MODULE, sMethod, sAttributeName+" multi" + iCount + "=" + oValue);
+									_systemLogger.log(Level.FINEST, MODULE, sMethod, sAttributeName+" multi" + iCount + "=" + oValue);
 									vMultiValues.add(oAttribute.get(iCount));
 								}
 								hAttrResponse.put(sAttributeName, vMultiValues);

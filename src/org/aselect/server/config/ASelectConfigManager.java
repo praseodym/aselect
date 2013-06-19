@@ -1298,9 +1298,11 @@ public class ASelectConfigManager extends ConfigManager
 	private void loadDefaultPrivateKey(String sWorkingDir)
 	throws ASelectException
 	{
-		String sMethod = "loadDefaultPrivateKey()";
+		String sMethod = "loadDefaultPrivateKey";
 		String sKeyStoreName = "aselect.keystore";
 		String sPassword = null;
+		StringBuffer sbKeystoreLocation = new StringBuffer(sWorkingDir);
+		String sAlias = getParam(_oASelectConfigSection, "server_id");
 
 		try {
 			try {
@@ -1315,9 +1317,6 @@ public class ASelectConfigManager extends ConfigManager
 				return;
 			}
 
-			String sAlias = getParam(_oASelectConfigSection, "server_id");
-
-			StringBuffer sbKeystoreLocation = new StringBuffer(sWorkingDir);
 			sbKeystoreLocation.append(File.separator);
 			sbKeystoreLocation.append("keystores");
 			sbKeystoreLocation.append(File.separator);
@@ -1327,7 +1326,6 @@ public class ASelectConfigManager extends ConfigManager
 
 			// convert String to char[]
 			char[] caPassword = sPassword.toCharArray();
-
 			PrivateKey oPrivateKey = (PrivateKey) ksASelect.getKey(sAlias, caPassword);
 
 			java.security.cert.X509Certificate x509Cert = (java.security.cert.X509Certificate) ksASelect
@@ -1343,7 +1341,7 @@ public class ASelectConfigManager extends ConfigManager
 			_htServerCrypto.put("cert_id", sCertFingerPrint);
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not load my private key", e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not load private key from "+sbKeystoreLocation+" alias="+sAlias, e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 	}
