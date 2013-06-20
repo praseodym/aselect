@@ -2820,7 +2820,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				sUserInfoForm = Utils.replaceString(sUserInfoForm, "[org]", sTemp3);
 			}
 			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
-			_htSessionContext.put("user_state", "state_userinfo");
+			if (_htSessionContext != null)
+				_htSessionContext.put("user_state", "state_userinfo");
 			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
 			pwOut.println(sUserInfoForm);
 		}
