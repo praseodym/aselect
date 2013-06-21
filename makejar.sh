@@ -39,6 +39,7 @@ agent)
 	"$JAR" cmf ../META-INF/MANIFEST.MF \
 			org.aselect.agent.jar $VERSION_FILE org/aselect/agent
 	mv org.aselect.agent.jar $TARGET_DIR
+	cp StopAgent.class $TARGET_DIR
 	cd $HERE; ./makejar.sh system
 	;;
 server*)

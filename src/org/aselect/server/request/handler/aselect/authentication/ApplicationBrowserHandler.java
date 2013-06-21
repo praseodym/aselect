@@ -525,7 +525,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				//_systemLogger.log(Level.INFO, _sModule, sMethod, "Serverinfo [" + sServerInfoForm + "]");
 				Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 				//_sessionManager.update(sRid, _htSessionContext); // Write session
-				_htSessionContext.put("user_state", "state_serverinfo");
+				if (_htSessionContext != null)
+					_htSessionContext.put("user_state", "state_serverinfo");
 				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 				pwOut.println(sServerInfoForm);
 				pwOut.close();
@@ -1277,7 +1278,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				}
 			}
 		}
-		_htSessionContext.put("user_state", "state_session_info");
+		if (_htSessionContext != null)
+			_htSessionContext.put("user_state", "state_session_info");
 		sInfoForm = Utils.replaceString(sInfoForm, "[other_sps]", sOtherSPs);
 		sInfoForm = _configManager.updateTemplate(sInfoForm, _htSessionContext);
 		servletResponse.setContentType("text/html");
@@ -2335,7 +2337,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sLoggedOutForm = _configManager.updateTemplate(sLoggedOutForm, _htTGTContext);
 			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 			// no RID _sessionManager.update(sRid, _htSessionContext); // Write session
-			_htSessionContext.put("user_state", "state_loggedout");
+			if (_htSessionContext != null)
+				_htSessionContext.put("user_state", "state_loggedout");
 			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
 			pwOut.println(sLoggedOutForm);
 		}
