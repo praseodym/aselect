@@ -2111,11 +2111,34 @@ public class RequestHandler extends Thread
 			else
 				oSignature = Signature.getInstance(sSignatureAlgorithm);
 
-			StringBuffer sbCreateFrom = Tools.assembleSigningData(htRequest);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "htRequest=" + htRequest);
+			StringBuffer sbData = Tools.assembleSigningData(htRequest);
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign:" + sbCreateFrom);
+			/* the following only works for the authenticate request
+			String sValue = (String)htRequest.get("a-select-server");
+			StringBuffer sbData = new StringBuffer(sValue);
+			sValue = (String)htRequest.get("app_id");
+			sbData.append(sValue);
+			sValue = (String)htRequest.get("app_url");
+			sbData.append(sValue);
+			sValue = (String)htRequest.get("authsp");
+			if (sValue != null)	sbData.append(sValue);
+			sValue = (String)htRequest.get("country");
+			if (sValue != null)	sbData.append(sValue);
+			sValue = (String)htRequest.get("forced_authenticate");
+			if (sValue != null)	sbData.append(sValue);
+			sValue = (String)htRequest.get("forced_logon");
+			if (sValue != null)	sbData.append(sValue);
+			sValue = (String)htRequest.get("language");
+			if (sValue != null)	sbData.append(sValue);
+			sValue = (String)htRequest.get("remote_organization");
+			if (sValue != null)	sbData.append(sValue);
+			sValue = (String)htRequest.get("uid");
+			if (sValue != null)	sbData.append(sValue);*/
+			
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign:" + sbData);
 			oSignature.initSign(_configManager.getSigningKey());
-			oSignature.update(sbCreateFrom.toString().getBytes());
+			oSignature.update(sbData.toString().getBytes());
 			byte[] baRawSignature = oSignature.sign();
 			BASE64Encoder oBase64Enc = new BASE64Encoder();
 			String sRawSignature = oBase64Enc.encode(baRawSignature);

@@ -615,6 +615,8 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		
 		// check if request should be signed
 		if (_applicationManager.isSigningRequired(sAppId)) {
+			String sAddedPatching = _configManager.getAddedPatching();
+
 			// Note: we should do this earlier, but we don't have an app_id until now
 			StringBuffer sbData = new StringBuffer(sASelectServer).append(sEncTGT);
 			if (sLanguage != null)
@@ -622,12 +624,13 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			String sUsi = null;
 			try {
 				sUsi = oInputMessage.getParam("usi");  // unique sensor id
+				//20130623, Bauke: do not add "usi" to the signature check (this code was placed after the catch block)
+				if (Utils.hasValue(sUsi) && sAddedPatching.contains("use_usi_in_signing"))
+					sbData = sbData.append(sUsi);
 			}
 			catch (Exception e) {  // Generate our own usi here
 				sUsi = Long.toString(System.nanoTime());
 			}
-			if (Utils.hasValue(sUsi))
-				sbData = sbData.append(sUsi);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "Signing required"+" data="+sbData);
 			verifyLocalApplicationSignature(oInputMessage, sbData.toString(), sAppId);
 		}
@@ -764,8 +767,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		catch (ASelectCommunicationException eAC) { // ignore absence
 		}
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "a-select-server=" + sASelectServer + " rid=" + sRid
-				+ " aselect_credentials(encrypted TGT)=" + Utils.firstPartOf(sEncTgt,20) + " saml_attributes=" + sSamlAttributes
-				+ " signature=" + sSignature);
+				+ " aselect_credentials(encrypted TGT)=" + Utils.firstPartOf(sEncTgt,20) + " saml_attributes=" + sSamlAttributes);
 
 		try {
 			byte[] baTgtBytes = CryptoEngine.getHandle().decryptTGT(sEncTgt);
@@ -796,9 +798,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 
 			StringBuffer sbBuffer = new StringBuffer("RID is other than expected. Received ");
 			sbBuffer.append(sRid);
-			sbBuffer.append(" but expected ");
-			sbBuffer.append((String) htTGTContext.get("rid"));
-
+			sbBuffer.append(" but expected ").append((String) htTGTContext.get("rid"));
 			_systemLogger.log(Level.FINE, _sModule, sMethod, sbBuffer.toString());
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID);
 		}
@@ -813,6 +813,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		// Check if request should be signed
 //		if (_applicationManager.isSigningRequired()) {	// RH, 20100910, o
 		if (_applicationManager.isSigningRequired(sAppId)) {	// RH, 20100910, n
+			String sAddedPatching = _configManager.getAddedPatching();
 			// Note: we should do this earlier, but we don't have an app_id until now
 			// Another NOTE: see to it that all data is put in sData sorted on parameter name!
 			StringBuffer sbData = new StringBuffer(sASelectServer).append(sEncTgt).append(sRid);
@@ -821,12 +822,13 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			String sUsi = null;
 			try {
 				sUsi = oInputMessage.getParam("usi");  // unique sensor id
+				//20130623, Bauke: do not add "usi" to the signature check (this code was placed after the catch block)
+				if (Utils.hasValue(sUsi) && sAddedPatching.contains("use_usi_in_signing"))
+					sbData = sbData.append(sUsi);
 			}
 			catch (Exception e) {  // Generate our own usi here
 				sUsi = Long.toString(System.nanoTime());
 			}
-			if (Utils.hasValue(sUsi))
-				sbData = sbData.append(sUsi);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "sbData=" + sbData);
 			verifyLocalApplicationSignature(oInputMessage, sbData.toString(), sAppId);
 		}

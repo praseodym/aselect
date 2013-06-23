@@ -748,9 +748,11 @@ public class Tools
 		TreeSet sortedSet = new TreeSet(htRequest.keySet());
 		for (Iterator i = sortedSet.iterator(); i.hasNext();) {
 			String sKey = (String) i.next();
-			if ("request".equals(sKey) || "signature".equals(sKey) || "check-signature".equals(sKey))
+			// 20130623, Bauke: added "usi" to exceptions
+			if ("request".equals(sKey) || "signature".equals(sKey) || "check-signature".equals(sKey) || "usi".equals(sKey))
 				continue;
-			sbCreateFrom.append(htRequest.get(sKey));
+			if (sKey != null)
+				sbCreateFrom.append(htRequest.get(sKey));
 		}
 		return sbCreateFrom;
 	}

@@ -69,6 +69,7 @@ public abstract class BasicRequestHandler
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request since no applications are configured.");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmInput=" + hmInput);
 		String sUsi = hmInput.get("usi");
 		if (!Utils.hasValue(sUsi))
 			sUsi = Tools.generateUniqueSensorId();  // 20120111, Bauke added
@@ -94,7 +95,6 @@ public abstract class BasicRequestHandler
 		if (sForcedLogon != null)
 			boolForcedAuthn = new Boolean(sForcedLogon);
 
-
 		// RH, 20100910, Remove fishing leak and make signature verification configurable per application
 //		if (_applicationManager.isSigningRequired() && bCheckSignature) {		// RH, 20100910, o
 //		if (_applicationManager.isSigningRequired(sAppId)) {		// RH, 20100910, n
@@ -110,9 +110,9 @@ public abstract class BasicRequestHandler
 			}
 			// Check signature
 			// NOTE: add sbData items sorted!
-			StringBuffer sbData = Tools.assembleSigningData(hmInput);
+			//StringBuffer sbData = Tools.assembleSigningData(hmInput);
 
-			/*StringBuffer sbData = new StringBuffer(sASelectServer);
+			StringBuffer sbData = new StringBuffer(sASelectServer);
 			sbData.append(sAppId).append(sAppUrl);
 			if (sAuthsp != null)
 				sbData.append(sAuthsp);
@@ -128,7 +128,7 @@ public abstract class BasicRequestHandler
 				sbData.append(sRemoteOrg);
 			if (sUid != null)
 				sbData.append(sUid);
-			*/
+
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "sbData=" + sbData);
 			verifyApplicationSignature(sSignature, sbData.toString(), sAppId);
 		}
