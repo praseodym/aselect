@@ -433,21 +433,20 @@ char *aselect_filter_verify_credentials(request_rec *pRequest, pool *pPool,
     //
     TRACE("aselect_filter_verify_credentials");
     if (strchr(pConfig->pcPassAttributes,'t')!=0) {
-	// Need token later on, pass the attribute names we need
-	attrNames = getRequestedAttributes(pPool, pConfig);
+		// Need token later on, pass the attribute names we need
+		attrNames = getRequestedAttributes(pPool, pConfig);
     }
     // 20100521, Bauke: added, application args secured by Agent
     pcSendMessage = ap_psprintf(pPool, "request=verify_credentials&aselect_app_args=%s&rid=%s&aselect_credentials=%s%s%s&usi=%s\r\n", 
-	    aselect_filter_url_encode(pPool, applicationArguments),
-	    aselect_filter_url_encode(pPool, pcRID),
-	    aselect_filter_url_encode(pPool, pcCredentials),
-	    (attrNames)? "&saml_attributes=": "", (attrNames)? attrNames: "", timer_usi(pPool, pt));
+			aselect_filter_url_encode(pPool, applicationArguments),
+			aselect_filter_url_encode(pPool, pcRID),
+			aselect_filter_url_encode(pPool, pcCredentials),
+			(attrNames)? "&saml_attributes=": "", (attrNames)? attrNames: "", timer_usi(pPool, pt));
     ccSendMessage = strlen(pcSendMessage);
 
     //TRACE2("request(%d): %s", ccSendMessage, pcSendMessage);
     pcResponse = aselect_filter_send_request(pRequest->server, pPool, pConfig->pcASAIP,
                             pConfig->iASAPort, pcSendMessage, ccSendMessage, pt, 1);
-
     return pcResponse;
 }
 
@@ -527,26 +526,27 @@ static int aselect_filter_verify_config(request_rec *pRequest, PASELECT_FILTER_C
 char *extractApplicationParameters(pool *pPool, char *arguments)
 {
     char *pcStrippedParams  = NULL;
-    int bFirstParam = TRUE;
-    char *pcTmp = strtok(arguments, "?&");
     char *pcTmp2;
+    int bFirstParam = TRUE;
+	char *pcTmp = ap_pstrdup(pPool, arguments);
 
+    pcTmp = strtok(pcTmp, "?&");
     while (pcTmp != NULL) {
-	// Skip these parameters:
-	if ((pcTmp2 = strstr(pcTmp, "aselect_credentials")) == NULL) {
-	    if ((pcTmp2 = strstr(pcTmp, "rid")) == NULL) {
-		if ((pcTmp2 = strstr(pcTmp, "a-select-server")) == NULL) {
-		    // The rest will pass
-		    if (bFirstParam) {
-			pcStrippedParams = ap_psprintf(pPool, "?%s", pcTmp);
-			bFirstParam = FALSE;
-		    }
-		    else
-			pcStrippedParams = ap_psprintf(pPool, "%s&%s", pcStrippedParams, pcTmp);
-		 }
-	     }
-	}
-	pcTmp = strtok(NULL, "?&");
+		// Skip these parameters:
+		if ((pcTmp2 = strstr(pcTmp, "aselect_credentials")) == NULL) {
+			if ((pcTmp2 = strstr(pcTmp, "rid")) == NULL) {
+				if ((pcTmp2 = strstr(pcTmp, "a-select-server")) == NULL) {
+					// The rest will pass
+					if (bFirstParam) {
+						pcStrippedParams = ap_psprintf(pPool, "?%s", pcTmp);
+						bFirstParam = FALSE;
+					}
+					else
+						pcStrippedParams = ap_psprintf(pPool, "%s&%s", pcStrippedParams, pcTmp);
+				 }
+			 }
+		}
+		pcTmp = strtok(NULL, "?&");
     }
     return (pcStrippedParams != NULL)? pcStrippedParams: "";
 }
@@ -866,10 +866,11 @@ static int aselect_filter_handler(request_rec *pRequest)
             pcRID = aselect_filter_get_param(pPool, pRequest->args, "rid=", "&", TRUE);
             if (pcRID) {
                 // Found credentials, now verify them, if ok it returns a ticket
-		securedAselectAppArgs = extractApplicationParameters(pPool, pRequest->args);
-		// 20100521, Bauke: added, application args will be secured by Agent
+				securedAselectAppArgs = extractApplicationParameters(pPool, pRequest->args);
+				// 20100521, Bauke: added, application args will be secured by Agent
+				TRACE1("Verify Credentials, SecuredArgs: %s", securedAselectAppArgs);
                 pcResponseCred = aselect_filter_verify_credentials(pRequest, pPool, pConfig, pcRID,
-				    pcCredentials, securedAselectAppArgs, &timer_data);
+						pcCredentials, securedAselectAppArgs, &timer_data);
                 if (pcResponseCred) {
                     iError = aselect_filter_get_error(pPool, pcResponseCred);
                     if (iError == ASELECT_FILTER_ERROR_INTERNAL)
@@ -877,7 +878,7 @@ static int aselect_filter_handler(request_rec *pRequest)
 
                     if (iError == ASELECT_FILTER_ASAGENT_ERROR_OK) {
                         // User credentials are ok, set application ticket and let user through
-			TRACE1("aselect_credentials, response [%.50s...]", pcResponseCred?pcResponseCred:"NULL");
+						TRACE1("aselect_credentials, response [%.50s...]", pcResponseCred?pcResponseCred:"NULL");
                         pcTicketOut = aselect_filter_get_param(pPool, pcResponseCred, "ticket=", "&", TRUE);
                         if (pcTicketOut != NULL) {
                             // Save Uid
@@ -886,19 +887,19 @@ static int aselect_filter_handler(request_rec *pRequest)
                                     pcTmp = aselect_filter_get_param(pPool, pcResponseCred, "usi=", "&", TRUE);
                                     if (pcTmp) {
                                         passUsiAttribute = pcTmp;
-					TRACE1("From Agent(verify_credentials), usi=%s", passUsiAttribute);
-				    }
-				    // Will overwrite value from cookie (if it was present anyway)
+										TRACE1("From Agent(verify_credentials), usi=%s", passUsiAttribute);
+									}
+									// Will overwrite value from cookie (if it was present anyway)
                                     pcAttributes = aselect_filter_get_param(pPool, pcResponseCred, "attributes=", "&", TRUE);
                                     if (pcAttributes)
                                         pcAttributes = aselect_filter_base64_decode(pPool, pcAttributes);
-				    if (passUsiAttribute != NULL) {  // add "usi" 
-					if (pcAttributes != NULL)
-					    pcAttributes = ap_psprintf(pPool, "usi=%s&%s", passUsiAttribute, pcAttributes);
-					else
-					    pcAttributes = ap_psprintf(pPool, "usi=%s", passUsiAttribute);
-				    }
-				    TRACE2("ver_cred:: passUsi=%s attributes=%s", passUsiAttribute, pcAttributes);
+									if (passUsiAttribute != NULL) {  // add "usi" 
+									if (pcAttributes != NULL)
+										pcAttributes = ap_psprintf(pPool, "usi=%s&%s", passUsiAttribute, pcAttributes);
+									else
+										pcAttributes = ap_psprintf(pPool, "usi=%s", passUsiAttribute);
+									}
+									TRACE2("ver_cred:: passUsi=%s attributes=%s", passUsiAttribute, pcAttributes);
                                     iAction = ASELECT_FILTER_ACTION_SET_TICKET;
                                 }
                                 else {
@@ -921,7 +922,7 @@ static int aselect_filter_handler(request_rec *pRequest)
                         if (iError == ASELECT_SERVER_ERROR_TGT_NOT_VALID ||
                             iError == ASELECT_SERVER_ERROR_TGT_EXPIRED ||
                             iError == ASELECT_SERVER_ERROR_TGT_TOO_LOW ||
-			    iError == ASELECT_SERVER_ERROR_UNKNOWN_TGT ||  // Bauke, 20080928 added
+							iError == ASELECT_SERVER_ERROR_UNKNOWN_TGT ||  // Bauke, 20080928 added
                             iError == ASELECT_FILTER_ASAGENT_ERROR_TICKET_INVALID ||
                             iError == ASELECT_FILTER_ASAGENT_ERROR_TICKET_EXPIRED ||
                             iError == ASELECT_FILTER_ASAGENT_ERROR_UNKNOWN_TICKET)
@@ -943,6 +944,7 @@ static int aselect_filter_handler(request_rec *pRequest)
             iAction = ASELECT_FILTER_ACTION_AUTH_USER;
         }
     }
+	//TRACE1("==== 3. ARGUMENTS: %s", pRequest->args);
     TRACE3("==== 3. Action iError=%d iAction=%s, iRet=%s", iError, filter_action_text(iAction), filter_return_text(iRet));
 
     // If we do not have an error then act according to iAction
@@ -1334,19 +1336,19 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, ch
 	    // Note the minus signs in the header name instead of underscores
 	    len = (p)? strlen(p): 0;
 	    for (i = 1; p && *p && len > 0; i++) {
-		if (len > ASELECT_FILTER_MAX_HEADER_SIZE) {
-		    q = p + ASELECT_FILTER_MAX_HEADER_SIZE;
-		    save = *q;
-		    *q = '\0';
-		}
-		sprintf(hdrName, "X-saml-attribute-token%d", i);
-		TRACE2("%s: %.100s", hdrName, p);
-		ap_table_set(headers_in, hdrName, p);
-		if (len > ASELECT_FILTER_MAX_HEADER_SIZE) {  // restore
-		    *q = save;
-		    p = q;
-		}
-		len -= ASELECT_FILTER_MAX_HEADER_SIZE;
+			if (len > ASELECT_FILTER_MAX_HEADER_SIZE) {
+				q = p + ASELECT_FILTER_MAX_HEADER_SIZE;
+				save = *q;
+				*q = '\0';
+			}
+			sprintf(hdrName, "X-saml-attribute-token%d", i);
+			TRACE2("%s: %.100s", hdrName, p);
+			ap_table_set(headers_in, hdrName, p);
+			if (len > ASELECT_FILTER_MAX_HEADER_SIZE) {  // restore
+				*q = save;
+				p = q;
+			}
+			len -= ASELECT_FILTER_MAX_HEADER_SIZE;
 	    }
 	}
 
@@ -1373,22 +1375,22 @@ static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, ch
 
 	    // Check condition
 	    if (!conditionIsTrue(pPool, pcAttributes, condName)) {
-		TRACE("attribute_check:: Do NOT include in header");
-		continue;
+			TRACE("attribute_check:: Do NOT include in header");
+			continue;
 	    }
 
 	    // applAttrName has a value
 	    if (strcmp(applAttrName, "language")==0) {
-		char *p = (pRequest->args)? strstr(pRequest->args, "language="): NULL;
-		if (pcRequestLanguage != NULL) {
-		    // Server has a language for us, must be passed, don't skip
-		}
-		else if (p != NULL && (p == pRequest->args || *(p-1) == '&' || *(p-1) == ' ')) {
-		    // No server language, but language in application parameters, it takes precedence
-		    // over the A-Select attribute, leave application parameter in place
-		    TRACE1("Request: skip attr language: %s", p);
-		    continue; 
-		}
+			char *p = (pRequest->args)? strstr(pRequest->args, "language="): NULL;
+			if (pcRequestLanguage != NULL) {
+				// Server has a language for us, must be passed, don't skip
+			}
+			else if (p != NULL && (p == pRequest->args || *(p-1) == '&' || *(p-1) == ' ')) {
+				// No server language, but language in application parameters, it takes precedence
+				// over the A-Select attribute, leave application parameter in place
+				TRACE1("Request: skip attr language: %s", p);
+				continue; 
+			}
 	    }
 
 	    // Pass this attribute, either in the Query string or in the HTTP-header

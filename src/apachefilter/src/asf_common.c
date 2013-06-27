@@ -483,9 +483,10 @@ char *aselect_filter_url_encode(pool *pPool, const char *pszValue)
 {
     static char *_safe = ".-*_";
     char szHex[4+4];
-    int len;
+    int len, cnt=0;
     char *s, *result;
 
+    //TRACE1("aselect_filter_url_encode 1: [%s]", pszValue);
     // Calculate required length
     len = 0;
     for (s=(char *)pszValue; *s; ++s)
@@ -499,31 +500,29 @@ char *aselect_filter_url_encode(pool *pPool, const char *pszValue)
     }
 
     result = s = (char *)ap_palloc(pPool, len+1+10);
-    for (; *pszValue; ++pszValue)
-    {
-	if ((unsigned char)*pszValue >= 0x80) // leave 8-bit alone
-            *(s++) = *pszValue;
-        else if (isalnum(*pszValue) ||
-            (strchr(_safe, *pszValue) != NULL))
-        {
+    for (; *pszValue; ++pszValue) {
+		if ((unsigned char)*pszValue >= 0x80) // leave 8-bit alone
+			*(s++) = *pszValue;
+        else if (isalnum(*pszValue) || (strchr(_safe, *pszValue) != NULL)) {
             // no change
             *(s++) = *pszValue;
         }
-        else if (*pszValue == ' ')
-        {
+        else if (*pszValue == ' ') {
             // convert space to +
             *(s++) = '+';
+			cnt++;
         }
-        else
-        {
+        else {
             // convert to %xx
             sprintf(szHex, "%02x", *pszValue);
             *(s++) = '%';
             *(s++) = szHex[0];
             *(s++) = szHex[1];
+			cnt++;
         }
     }
     *s = 0;
+    //TRACE2("aselect_filter_url_encode 2: [%s] cnt=%d", result, cnt);
     return result;
 }
 
@@ -533,13 +532,15 @@ char *aselect_filter_url_encode(pool *pPool, const char *pszValue)
 int aselect_filter_url_decode(char *pszValue)
 {
     static char *_hexchars = "0123456789abcdef";
-    char *nh, *nl;
-    int v;
+    char *nh, *nl, *begin = pszValue;
+    int v, cnt=0;
 
+    //TRACE1("aselect_filter_url_decode 1: [%s]", pszValue);
     for (; *pszValue; ++pszValue)
     {
-        if (*pszValue == '+')
-            *pszValue = ' ';
+        if (*pszValue == '+') {
+            *pszValue = ' '; cnt++;
+		}
         else if (*pszValue == '%')
         {
             // decode %xx character
@@ -550,8 +551,10 @@ int aselect_filter_url_decode(char *pszValue)
             v = (nl-_hexchars) + ((nh-_hexchars)<<4);
             memmove(pszValue+1, pszValue+3, strlen(pszValue)-1);
             *pszValue = v;
+			cnt++;
         }
     }
+    //TRACE2("aselect_filter_url_decode 2: [%s] cnt=%d", begin, cnt);
     return TRUE;
 }
 
