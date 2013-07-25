@@ -9,9 +9,12 @@
  * If you did not receive a copy of the LICENSE 
  * please contact SURFnet bv. (http://www.surfnet.nl)
  *
- * Marked Parts:
- * Author: Bauke Hiemstra - www.anoigo.nl
- *
+// Marked Parts:
+// Author: Bauke Hiemstra - www.anoigo.nl
+//
+// 20130629, Bauke, corrected indentation and solved compilation warnings on 64 bits
+//   NOTE tab stops have to be set to 4 positions.
+//   In vi use ":set tabstop=4"
  */
  
 /* asf_common.c
@@ -91,7 +94,7 @@ void aselect_filter_trace_not_used(const char *fmt, ...)
     f = fopen(LogfileName, "a+");
     if (!f) {
     	fallBack = "/tmp/aselect_filter.log"; // fall back
-	f = fopen(fallBack, "a+");
+		f = fopen(fallBack, "a+");
     }
     if (f) {
         time(&t);
@@ -119,7 +122,7 @@ void aselect_filter_trace2(const char *filename, int line, const char *fmt, ...)
     f = fopen(LogfileName, "a+");
     if (!f) {
     	fallBack = "/tmp/aselect_filter.log";
-	f = fopen(fallBack, "a+");
+		f = fopen(fallBack, "a+");
     }
     if (f) {
         time(&t);
@@ -138,11 +141,19 @@ void aselect_filter_trace2(const char *filename, int line, const char *fmt, ...)
 
 //
 // Prints out the contents of a table if tracing is enabled
+// data is a pointer to user data
 //
-int aselect_filter_print_table(void * data, const char *key, const char *val)
+static int aselect_filter_print_table_item(void *data, const char *key, const char *value)
 {
-    TRACE2("%s - %s", key, val);
-    return 1;
+	TRACE2("+ %s: %s", key, value);
+    return 1;  // continue with other entries
+}
+
+// Log contents of a table, e.g. the header tables
+void aselect_filter_print_table(request_rec *r, apr_table_t *t, char *hdr_text)
+{
+	TRACE1("TABLE %s", hdr_text);
+	apr_table_do(aselect_filter_print_table_item, r, t, NULL);
 }
 
 // Convert a hex-formatted string into an array of bytes
@@ -153,10 +164,8 @@ char *aselect_filter_hex_to_bytes(pool *pPool, char *pcString, int *ccBytes)
     char *pcBytes, *pcEnd;
 
     length = strlen(pcString) >> 1;
-    if ((pcBytes = (char *)ap_palloc(pPool, strlen(pcString) >> 1)))
-    {
-        for (i=0; *pcString; i++)
-        {
+    if ((pcBytes = (char *)ap_palloc(pPool, strlen(pcString) >> 1))) {
+        for (i=0; *pcString; i++) {
             pcByte[0] = pcString[0];
             pcByte[1] = pcString[1];
             pcBytes[i] = (char)strtol(pcByte, &pcEnd, 16);
@@ -174,8 +183,7 @@ void aselect_filter_bytes_to_hex(const unsigned char *pcBytes, size_t length, ch
     int i;
     char szTemp[4];
 
-    for (i=0; (size_t)i < length; i++)
-    {
+    for (i=0; (size_t)i < length; i++) {
         sprintf(szTemp, "%02X", pcBytes[i]);
         memcpy(pcResult+(i*2), szTemp, 2);
     }
@@ -193,15 +201,13 @@ int aselect_filter_get_error(pool *pPool, char *pcError)
     char *pcTemp3;
     int iLength;
 
-    if ((pcTemp = strstr(pcError, "result_code=")))
-    {
+    if ((pcTemp = strstr(pcError, "result_code="))) {
         // copy 4 bytes of error code
         memcpy(pcTemp2, pcTemp+12, 4);
         pcTemp2[4] = 0;
         
         TRACE1("aselect_filter_get_error: error: %s", pcTemp2);
-        if ((pcTemp3 = aselect_filter_hex_to_bytes(pPool, pcTemp2, &iLength)))
-        {
+        if ((pcTemp3 = aselect_filter_hex_to_bytes(pPool, pcTemp2, &iLength))) {
             iError = pcTemp3[0];
             iError <<= 8;
             iError |= pcTemp3[1];
@@ -227,27 +233,21 @@ char *aselect_filter_replace_tag(pool *pPool, char *pcTag, char *pcValue, char *
     ccTag = strlen(pcTag);
     ccDest = strlen(pcSource) - ccTag + strlen(pcValue) + 1;
 
-    if ((pcDest = (char *) (ap_palloc(pPool, ccDest))))
-    {
+    if ((pcDest = (char *) (ap_palloc(pPool, ccDest)))) {
         //
         // Copy part of the source up till the tag
         //
-        if ((pcTemp = strstr(pcSource, pcTag)))
-        {
+        if ((pcTemp = strstr(pcSource, pcTag))) {
             i = pcTemp - pcSource;
-
             memcpy(pcDest, pcSource, i);
             memcpy(pcDest + i, pcValue, strlen(pcValue));
             memcpy(pcDest + i + strlen(pcValue), pcSource + i + ccTag, strlen(pcSource) - i);
-
             *(pcDest + ccDest) = '\0';
         }
     }
-    else
-    {
+    else {
         pcDest = NULL;
     }
-
     return pcDest;
 }
 
@@ -308,15 +308,15 @@ int aselect_filter_receive_msg(int sd, char *pcReceiveMsg, int ccReceiveMsg)
 //
 char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAIP, int iASAPort, char *pcSendMessage, int ccSendMessage, TIMER_DATA *pt, int toAgent)
 {
-    int                 sd;
-    struct sockaddr_in  pin;
-    struct hostent *    hp;
-    int                 timeout;
-    char                pcReceiveMessage[ASELECT_FILTER_MAX_RECV+1];
-    int                 ccReceiveMessage;
-    char                *pcResponse = NULL;
-    static int count = 0;
-    int cnt = ++count;
+	int sd;
+	struct sockaddr_in pin;
+	struct hostent *hp;
+	int  timeout;
+	char pcReceiveMessage[ASELECT_FILTER_MAX_RECV+1];
+	int  ccReceiveMessage;
+	char *pcResponse = NULL;
+	static int count = 0;
+	int cnt = ++count;
 
     char *sDest = (toAgent)? "AGENT": "LbSensor";
     TRACE3("To%s[%d] aselect_filter_send_request { [%s]", sDest, cnt, pcSendMessage);
@@ -324,16 +324,16 @@ char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAI
 
     // Retrieve the host information
     if ((hp = gethostbyname(pcASAIP)) != NULL) { // Initialize the connection information
-        memset(&pin, 0, sizeof(pin));
-        pin.sin_family = AF_INET;
-        pin.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
-        pin.sin_port = htons(iASAPort); 
+		memset(&pin, 0, sizeof(pin));
+		pin.sin_family = AF_INET;
+		pin.sin_addr.s_addr = ((struct in_addr *)(hp->h_addr))->s_addr;
+		pin.sin_port = htons(iASAPort); 
     }
     else { // gethostbyname failed, so try IP address
-        memset(&pin, 0, sizeof(pin));
-	pin.sin_family = AF_INET;
-	pin.sin_addr.s_addr = inet_addr(pcASAIP);
-	pin.sin_port = htons(iASAPort);
+		memset(&pin, 0, sizeof(pin));
+		pin.sin_family = AF_INET;
+		pin.sin_addr.s_addr = inet_addr(pcASAIP);
+		pin.sin_port = htons(iASAPort);
     }
 
     // Create a socket
@@ -347,68 +347,63 @@ char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAI
             if (setsockopt(sd, SOL_SOCKET, SO_SNDTIMEO, (char*) &timeout, sizeof(timeout)) != -1) {
                 // Could not connect to specified address and port
                 TRACE1("could not set socket send timeout (%d)", errno);
-                ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pServer,
-                    ap_psprintf(pPool, "ASELECT_FILTER:: could not set socket send timeout (%d)", errno));
+                ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, 0, pServer,
+						/*ap_psprintf(pPool, */"ASELECT_FILTER:: could not set socket send timeout (%d)", errno);
             }
 
             if (setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, (char*) &timeout, sizeof(timeout)) != -1) {
                 TRACE1("could not set socket receive timeout (%d)", errno);
-                ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, pServer,
-                    ap_psprintf(pPool, "ASELECT_FILTER:: could not set socket receive timeout (%d)", errno));
+                ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_WARNING, 0, pServer,
+						/*ap_psprintf(pPool, */"ASELECT_FILTER:: could not set socket receive timeout (%d)", errno);
             }
 
             // Check if information is not too large for message
             if ((ccSendMessage + 1) < ASELECT_FILTER_MAX_MSG) {
                 // Send the message, PAUSE TIMER
-		if (pt != NULL) timer_pause(pt);
-                if (send(sd, (void *) pcSendMessage, (ccSendMessage), 0) > 0) { // 20111116 don't send null-byte
-                    // Message has been sent, now wait for response
-                    ccReceiveMessage = aselect_filter_receive_msg(sd, pcReceiveMessage, sizeof(pcReceiveMessage)-1);
-                    if (ccReceiveMessage > 0) {
-                        if (ccReceiveMessage >= sizeof(pcReceiveMessage)-1) {
-                            // Received message too large
-                            TRACE1("received message too large (%d)", ccReceiveMessage);
-                            ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
-					"ASELECT_FILTER:: received message was too large");
-                        }
-                        else {
-                            pcResponse = ap_pstrndup(pPool, pcReceiveMessage, ccReceiveMessage+1);  // 20111110 added +1
-                            *(pcResponse + ccReceiveMessage) = '\0';
-                        }
-                    }
-                    else { // Could not receive data
-			TRACE1("error while receiving data (%d)", errno);
-                        ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
-				    ap_psprintf(pPool, "ASELECT_FILTER:: error while receiving data (%d)", errno));
-                    }
-                }
-                else { // Could not send data
-                    TRACE1("error while sending data (%d)", errno);
-                    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
-				ap_psprintf(pPool, "ASELECT_FILTER:: error while sending data (%d)", errno));
-                }
-		// RESUME TIMER
-		if (pt != NULL) timer_resume(pt);
+				if (pt != NULL) timer_pause(pt);
+				if (send(sd, (void *) pcSendMessage, (ccSendMessage), 0) > 0) { // 20111116 don't send null-byte
+					// Message has been sent, now wait for response
+					ccReceiveMessage = aselect_filter_receive_msg(sd, pcReceiveMessage, sizeof(pcReceiveMessage)-1);
+					if (ccReceiveMessage > 0) {
+						if (ccReceiveMessage >= sizeof(pcReceiveMessage)-1) {
+							// Received message too large
+							TRACE1("received message too large (%d)", ccReceiveMessage);
+							ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, 0, pServer, "ASELECT_FILTER:: received message was too large");
+						}
+						else {
+							pcResponse = ap_pstrndup(pPool, pcReceiveMessage, ccReceiveMessage+1);  // 20111110 added +1
+							*(pcResponse + ccReceiveMessage) = '\0';
+						}
+					}
+					else { // Could not receive data
+						TRACE1("error while receiving data (%d)", errno);
+						ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, 0, pServer,
+							/*ap_psprintf(pPool, */"ASELECT_FILTER:: error while receiving data (%d)", errno);
+					}
+				}
+				else { // Could not send data
+					TRACE1("error while sending data (%d)", errno);
+					ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, 0, pServer,
+						/*ap_psprintf(pPool, */"ASELECT_FILTER:: error while sending data (%d)", errno);
+				}
+				// RESUME TIMER
+				if (pt != NULL) timer_resume(pt);
             }
             else { // Message is too large for sending
                 TRACE("Message is too large for sending");
-                ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
-                        "ASELECT_FILTER:: message is too large for sending");
+                ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, 0, pServer, "ASELECT_FILTER:: message is too large for sending");
             }
-
         } // connect 
         else { // Could not connect to specified address and port
             TRACE4("Could not connect to %s at %s:%d (%d)", sDest, pcASAIP, iASAPort, errno);
-	    ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
-			ap_psprintf(pPool, "ASELECT_FILTER:: could not connect to %s at %s:%d (%d)",
-				    sDest, pcASAIP, iASAPort, errno));
+			ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, 0, pServer,
+				/*ap_psprintf(pPool, */"ASELECT_FILTER:: could not connect to %s at %s:%d (%d)", sDest, pcASAIP, iASAPort, errno);
         }
         close(sd);
     } // socket
-    else {
-        // Could not create socket
-        ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, pServer,
-		    ap_psprintf(pPool, "ASELECT_FILTER:: could not create socket (%d)", errno));
+    else { // Could not create socket
+        ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_ERR, 0, pServer,
+		    /*ap_psprintf(pPool, */"ASELECT_FILTER:: could not create socket (%d)", errno);
     }
     TRACE3("} From%s[%d] aselect_filter_send_request, response=[%s]", sDest, cnt, pcResponse?pcResponse:"NULL");
     return pcResponse;
@@ -416,58 +411,58 @@ char *aselect_filter_send_request(server_rec *pServer, pool *pPool, char *pcASAI
 
 char *aselect_filter_get_param(pool *pPool, char *pcArgs, char *pcParam, char *pcDelimiter, int bUrlDecode)
 {
-    char            *pcTemp;
-    char            *pcTemp2;
-    char            *pcValue = NULL;
-    int             ccValue = 0;
+    char *pcTemp;
+    char *pcTemp2;
+    char *pcValue = NULL;
+    int ccValue = 0;
     char *p;
 
     //TRACE2("aselect_filter_get_param: %s args=%s", pcParam, pcArgs);
     if (pcArgs) {
-	// Bauke: example args: my_uid=9876&uid2=0000&uid=1234&...
-	//        get parameter "uid=" must result in: 1234
-	// NOTE: Delimiter is a single character, but in pcArgs it can be followed by a space!
-	// pcParam has a '=' at the end
-	for (p = pcArgs; p != NULL; p = pcTemp+1) {
-	    pcTemp = strstr(p, pcParam);
-	    if (!pcTemp)
-		break;
-	    //TRACE2("aselect_filter_get_param: 1.TEMP=%s '%c'", pcTemp, (pcTemp==pcArgs)? '#': *(pcTemp-1));
-	    //TRACE3("%d %d %d", (pcTemp==pcArgs), *(pcTemp-1) == *pcDelimiter, *(pcTemp-1) == ' ');
-	    if (pcTemp==pcArgs || *(pcTemp-1) == *pcDelimiter || *(pcTemp-1) == ' ') {
-		break;
-	    }
-	}
+		// Bauke: example args: my_uid=9876&uid2=0000&uid=1234&...
+		//        get parameter "uid=" must result in: 1234
+		// NOTE: Delimiter is a single character, but in pcArgs it can be followed by a space!
+		// pcParam has a '=' at the end
+		for (p = pcArgs; p != NULL; p = pcTemp+1) {
+			pcTemp = strstr(p, pcParam);
+			if (!pcTemp)
+				break;
+			//TRACE2("aselect_filter_get_param: 1.TEMP=%s '%c'", pcTemp, (pcTemp==pcArgs)? '#': *(pcTemp-1));
+			//TRACE3("%d %d %d", (pcTemp==pcArgs), *(pcTemp-1) == *pcDelimiter, *(pcTemp-1) == ' ');
+			if (pcTemp==pcArgs || *(pcTemp-1) == *pcDelimiter || *(pcTemp-1) == ' ') {
+				break;
+			}
+		}
 
-        if (pcTemp) {
-            // Update pointer to point to parameter data 
-            pcTemp = pcTemp + strlen(pcParam);
+		if (pcTemp) {
+			// Update pointer to point to parameter data 
+			pcTemp = pcTemp + strlen(pcParam);
 
-            // Found the query parameter attribute
-            if ((pcTemp2 = strstr(pcTemp, pcDelimiter))) {
-                ccValue = pcTemp2 - pcTemp;
-            }
-            else {
-                ccValue = strlen(pcTemp);
-            }
+			// Found the query parameter attribute
+			if ((pcTemp2 = strstr(pcTemp, pcDelimiter))) {
+				ccValue = pcTemp2 - pcTemp;
+			}
+			else {
+				ccValue = strlen(pcTemp);
+			}
 
-	    //TRACE3("Value=%.*s %d", ccValue, pcTemp, ccValue);
-            if (ccValue >= 0) {
-                pcValue = ap_pstrndup(pPool, pcTemp, ccValue+1);
-                if (pcValue) {
-                    *(pcValue + ccValue) = '\0';
-                    if (bUrlDecode)
-                        aselect_filter_url_decode(pcValue);
-                }
-                else { // Not enough memory, Set error
-                    pcValue = NULL;
-                }
-            }
-            else { // parameter value is empty
-            }
-        }
-        else { // Arguments do not contain parameters
-        }
+			//TRACE3("Value=%.*s %d", ccValue, pcTemp, ccValue);
+			if (ccValue >= 0) {
+				pcValue = ap_pstrndup(pPool, pcTemp, ccValue+1);
+				if (pcValue) {
+					*(pcValue + ccValue) = '\0';
+					if (bUrlDecode)
+						aselect_filter_url_decode(pcValue);
+				}
+				else { // Not enough memory, Set error
+					pcValue = NULL;
+				}
+			}
+			else { // parameter value is empty
+			}
+		}
+		else { // Arguments do not contain parameters
+		}
     }
     else { // No arguments to read, return error
     }
@@ -489,11 +484,8 @@ char *aselect_filter_url_encode(pool *pPool, const char *pszValue)
     //TRACE1("aselect_filter_url_encode 1: [%s]", pszValue);
     // Calculate required length
     len = 0;
-    for (s=(char *)pszValue; *s; ++s)
-    {
-        if (isalnum(*s) ||
-            (strchr(_safe, *s) != NULL) ||
-            (*s == ' '))
+    for (s=(char *)pszValue; *s; ++s) {
+        if (isalnum(*s) || (strchr(_safe, *s) != NULL) || (*s == ' '))
             ++len;
         else
             len += 3;
@@ -532,17 +524,16 @@ char *aselect_filter_url_encode(pool *pPool, const char *pszValue)
 int aselect_filter_url_decode(char *pszValue)
 {
     static char *_hexchars = "0123456789abcdef";
-    char *nh, *nl, *begin = pszValue;
+    char *nh, *nl;
+	//char *begin = pszValue;
     int v, cnt=0;
 
     //TRACE1("aselect_filter_url_decode 1: [%s]", pszValue);
-    for (; *pszValue; ++pszValue)
-    {
+    for (; *pszValue; ++pszValue) {
         if (*pszValue == '+') {
             *pszValue = ' '; cnt++;
 		}
-        else if (*pszValue == '%')
-        {
+        else if (*pszValue == '%') {
             // decode %xx character
             nh = strchr(_hexchars, tolower(pszValue[1]));
             nl = strchr(_hexchars, tolower(pszValue[2]));
@@ -560,6 +551,7 @@ int aselect_filter_url_decode(char *pszValue)
 
 void aselect_filter_add_nocache_headers(table *headers_out)
 {
+    TRACE("Add no-cache hdrs");
     ap_table_add(headers_out, "Pragma", "no-cache");
     ap_table_add(headers_out, "Cache-Control", "no-cache, no-store, must-revalidate");
     ap_table_add(headers_out, "Expires", "-1");
@@ -587,18 +579,17 @@ int aselect_filter_gen_error_page(pool *pPool, request_rec *pRequest, int iError
     // Bauke: Added to facilitate a Continue button
     // NOTE: app_url is only available on successful calls
     if (pRequest->parsed_uri.port == 0)
-	pcContinueURL = ap_psprintf(pPool, "http://%s/%s", pRequest->hostname, pRequest->parsed_uri.path);
+		pcContinueURL = ap_psprintf(pPool, "http://%s/%s", pRequest->hostname, pRequest->parsed_uri.path);
     else
-	pcContinueURL = ap_psprintf(pPool, "http://%s:%d/%s", pRequest->hostname, pRequest->parsed_uri.port, pRequest->parsed_uri.path);
+		pcContinueURL = ap_psprintf(pPool, "http://%s:%d/%s", pRequest->hostname, pRequest->parsed_uri.port, pRequest->parsed_uri.path);
     TRACE1("ContinueUrl=%s", pcContinueURL);
     while (pcErrorHTML && (strstr(pcErrorHTML, "[continue_url]") != NULL))
 	    pcErrorHTML = aselect_filter_replace_tag(pPool, "[continue_url]", pcContinueURL, pcErrorHTML);
     // end of add
 
-    if (pcErrorHTML)
-    {
-	ap_rprintf(pRequest, "%s\n", pcErrorHTML);
-	iRet = ASELECT_FILTER_ERROR_OK;
+    if (pcErrorHTML) {
+		ap_rprintf(pRequest, "%s\n", pcErrorHTML);
+		iRet = ASELECT_FILTER_ERROR_OK;
     }
     return iRet;
 }
@@ -615,7 +606,7 @@ static char *constructShowBarURL(pool *pPool, char *urlAndArgs)
 
     TRACE1("constructShowBarURL, urlAndArgs=%s", urlAndArgs);
     if (strstr(urlAndArgs, pcFormat) != NULL)
-	return urlAndArgs;
+		return urlAndArgs;
 
     pcSep = (strchr(urlAndArgs, '?')) ? "&" : "?";
     pcEncodedUrl = aselect_filter_url_encode(pPool, urlAndArgs);
@@ -636,57 +627,56 @@ int aselect_filter_gen_authcomplete_redirect(pool * pPool, request_rec *pRequest
     char    *pcURL;
     char    *pcSep;
     char    *pcRedirectURL;
-    char *pcFrameUrl;
-    int bFrameHtml = 0;
+    //char *pcFrameUrl;
+    //int bFrameHtml = 0;
 
     pRequest->content_type = "text/html";
     aselect_filter_add_nocache_headers(headers_out);
     ap_send_http_header(pRequest);
    
-    bArgs = (pConfig->iRedirectMode == ASELECT_FILTER_REDIRECT_FULL &&
-			pRequest->args != NULL && *pRequest->args != 0);
+    bArgs = (pConfig->iRedirectMode == ASELECT_FILTER_REDIRECT_FULL && pRequest->args != NULL && *pRequest->args != 0);
 
     if (*pConfig->pCurrentApp->pcRedirectURL) {
-	pcRedirectURL = pConfig->pCurrentApp->pcRedirectURL;
-	TRACE4("1.RedirectURL=%s Args=%s bArgs=%d UseBar=%d", pcRedirectURL, pRequest->args, bArgs, pConfig->bUseASelectBar);
-        if (bArgs) {
-	    pcRedirectURL = ap_psprintf(pPool, "%s%s", pcRedirectURL, pRequest->args);
-        }
-        else {
-	    pcRedirectURL = pConfig->pCurrentApp->pcRedirectURL;
-	}
-	if (pConfig->bUseASelectBar) {
-	    pcRedirectURL = constructShowBarURL(pPool, pcRedirectURL);
-	    //bFrameHtml = 1;
-	    TRACE1("2.RedirectURL=%s", pcRedirectURL);
-	}        
+		pcRedirectURL = pConfig->pCurrentApp->pcRedirectURL;
+		TRACE4("1.RedirectURL=%s Args=%s bArgs=%d UseBar=%d", pcRedirectURL, pRequest->args, bArgs, pConfig->bUseASelectBar);
+		if (bArgs) {
+			pcRedirectURL = ap_psprintf(pPool, "%s%s", pcRedirectURL, pRequest->args);
+		}
+		else {
+			pcRedirectURL = pConfig->pCurrentApp->pcRedirectURL;
+		}
+		if (pConfig->bUseASelectBar) {
+			pcRedirectURL = constructShowBarURL(pPool, pcRedirectURL);
+			//bFrameHtml = 1;
+			TRACE1("2.RedirectURL=%s", pcRedirectURL);
+		}
     }
     else {
-	TRACE4("1.NoRedirectURL URI=%s Args=%s bArgs=%d UseBar=%d", pRequest->uri, pRequest->args, bArgs, pConfig->bUseASelectBar);
-	if (!bArgs)
-	    pcURI = pRequest->uri;
-	else {
-	    pcURI = ap_psprintf(pPool, "%s%s", pRequest->uri, pRequest->args);
-	    pcSep = strstr(pcURI, "a-select-server=");
-	    if (pcSep != NULL) {
-		*(pcSep-1) = 0;
-		if (strchr(pcURI, '?') == NULL)
-		    bArgs = FALSE;
-	    }
-	}
-	if (pConfig->bUseASelectBar) {
-	    pcURL = constructShowBarURL(pPool, pcURI);
-	    // Code below works, but cannot handle refresh page since the url does not contain: request=aselect_show_bar
-	    //pcFrameUrl = aselect_filter_url_encode(pPool, pcURI);
-	    //slash = (*pcURI == '/')? "": "/";
-	    //ap_rprintf(pRequest, ASELECT_LOGOUT_BAR_FRAME, pConfig->pCurrentApp->pcLocation, slash, pcURI);
-	    //bFrameHtml = 1;
-	}
-	else
-	    pcURL = pcURI;
-    
-	pcRedirectURL = ap_construct_url(pPool, pcURL, pRequest);
-	TRACE1("2.NoRedirectURL=%s", pcRedirectURL);
+		TRACE4("1.NoRedirectURL URI=%s Args=%s bArgs=%d UseBar=%d", pRequest->uri, pRequest->args, bArgs, pConfig->bUseASelectBar);
+		if (!bArgs)
+			pcURI = pRequest->uri;
+		else {
+			pcURI = ap_psprintf(pPool, "%s%s", pRequest->uri, pRequest->args);
+			pcSep = strstr(pcURI, "a-select-server=");
+			if (pcSep != NULL) {
+				*(pcSep-1) = 0;
+				if (strchr(pcURI, '?') == NULL)
+					bArgs = FALSE;
+			}
+		}
+		if (pConfig->bUseASelectBar) {
+			pcURL = constructShowBarURL(pPool, pcURI);
+			// Code below works, but cannot handle refresh page since the url does not contain: request=aselect_show_bar
+			//pcFrameUrl = aselect_filter_url_encode(pPool, pcURI);
+			//slash = (*pcURI == '/')? "": "/";
+			//ap_rprintf(pRequest, ASELECT_LOGOUT_BAR_FRAME, pConfig->pCurrentApp->pcLocation, slash, pcURI);
+			//bFrameHtml = 1;
+		}
+		else
+			pcURL = pcURI;
+		
+		pcRedirectURL = ap_construct_url(pPool, pcURL, pRequest);
+		TRACE1("2.NoRedirectURL=%s", pcRedirectURL);
     }
 
     //if (!bFrameHtml) {
@@ -709,7 +699,6 @@ int aselect_filter_gen_top_redirect(pool *pPool, char *addedSecurity, request_re
     TRACE4("aselect_filter_gen_top_redirect::%s-%s-%s-%s.", pcASUrl, pcASelectServer, pcRID, cookiePath); 
     pRequest->content_type = "text/html";
 
-    //
     // save the aselect-server-url parameter which is need to kill the ticket
     // but first strip any parameters from the url
     // Cookie path should be: pConfig->pCurrentApp->pcLocation
@@ -735,10 +724,10 @@ int XXXaselect_filter_is_public_app(pool *pPool, PASELECT_FILTER_CONFIG pConfig,
     int i;
     for (i = 0; i < pConfig->iPublicAppCount; i++) {
         TRACE3("aselect_filter_is_public_app::comparing directory(%d):\"%s\" to URI: \"%s\"", 
-		    i, pConfig->pPublicApps[i], pcUri);
+					i, pConfig->pPublicApps[i], pcUri);
         if (strstr(pcUri, pConfig->pPublicApps[i]) != NULL) {
-	    TRACE("aselect_filter_is_public_app::match"); 
-	    return ASELECT_FILTER_ERROR_OK;
+			TRACE("aselect_filter_is_public_app::match"); 
+			return ASELECT_FILTER_ERROR_OK;
         }
     }
     return ASELECT_FILTER_ERROR_FAILED;
@@ -752,7 +741,7 @@ int XXXaselect_filter_verify_directory(pool *pPool, PASELECT_FILTER_CONFIG pConf
     int i;
     for (i = 0; i < pConfig->iAppCount; i++) {
         TRACE4("aselect_filter_verify_directory::comparing directory(%d):\"%s\" to URI: \"%s\", enabled=%d", 
-            i, pConfig->pApplications[i].pcLocation, pcUri, pConfig->pApplications[i].bEnabled);
+					i, pConfig->pApplications[i].pcLocation, pcUri, pConfig->pApplications[i].bEnabled);
         if (strstr(pcUri, pConfig->pApplications[i].pcLocation) != NULL) {
             if (pConfig->pApplications[i].bEnabled) {
                 pConfig->pCurrentApp = &pConfig->pApplications[i];
@@ -785,41 +774,40 @@ int aselect_filter_check_app_uri(pool *pPool, PASELECT_FILTER_CONFIG pConfig, ch
 
     for (i = 0; i < pConfig->iAppCount; i++) {
         TRACE4("aselect_filter_check_app_uri::comparing directory(%d):\"%s\" to URI: \"%s\", enabled=%d", 
-            i, pConfig->pApplications[i].pcLocation, pcUri, pConfig->pApplications[i].bEnabled);
-	len = strlen(pConfig->pApplications[i].pcLocation);
+					i, pConfig->pApplications[i].pcLocation, pcUri, pConfig->pApplications[i].bEnabled);
+		len = strlen(pConfig->pApplications[i].pcLocation);
         if (len > 0 && len <= uriLen && strncmp(pcUri, pConfig->pApplications[i].pcLocation, len) == 0) {  // a match
             if (pConfig->pApplications[i].bEnabled) {  // skip disabled apps
-		if (len > lenBestSec) {
-		    TRACE2("aselect_filter_check_app_uri::better match secure[%d] len=%d", i, len); 
-		    iBestSec = i;
-		    lenBestSec = len;
-		}
+				if (len > lenBestSec) {
+					TRACE2("aselect_filter_check_app_uri::better match secure[%d] len=%d", i, len); 
+					iBestSec = i;
+					lenBestSec = len;
+				}
             }
             // else: App found, but the rule was disabled
         }
     }
     for (i = 0; i < pConfig->iPublicAppCount; i++) {
-        TRACE3("aselect_filter_check_app_uri::comparing directory[%d]:\"%s\" to URI: \"%s\"", 
-		    i, pConfig->pPublicApps[i], pcUri);
-	len = strlen(pConfig->pPublicApps[i]);
-        if (len > 0 && len <= uriLen && strncmp(pcUri, pConfig->pPublicApps[i], len) == 0) {  // a match
-	    if (strncmp(pcUri, pConfig->pPublicApps[i], len) == 0) {
-		if (len > lenBestPub) {
-		    TRACE2("aselect_filter_check_app_uri::better match public[%d] len=%d", i, len); 
-		    iBestPub = i;
-		    lenBestPub = len;
+        TRACE3("aselect_filter_check_app_uri::comparing directory[%d]:\"%s\" to URI: \"%s\"", i, pConfig->pPublicApps[i], pcUri);
+		len = strlen(pConfig->pPublicApps[i]);
+		if (len > 0 && len <= uriLen && strncmp(pcUri, pConfig->pPublicApps[i], len) == 0) {  // a match
+			if (strncmp(pcUri, pConfig->pPublicApps[i], len) == 0) {
+				if (len > lenBestPub) {
+					TRACE2("aselect_filter_check_app_uri::better match public[%d] len=%d", i, len); 
+					iBestPub = i;
+					lenBestPub = len;
+				}
+			}
 		}
-	    }
-	}
     }
-    TRACE4("aselect_filter_check_app_uri::Sec: i=%d len=%d Pub: i=%d len=%d", iBestSec, lenBestSec, iBestPub, lenBestPub);
+    TRACE4("aselect_filter_check_app_uri::Secure: index=%d len=%d Public: index=%d len=%d", iBestSec, lenBestSec, iBestPub, lenBestPub);
     if (iBestSec < 0 && iBestPub < 0) {
-	return -1;  // no match at all
+		return -1;  // no match at all
     }
 
     if (lenBestSec >= lenBestPub) {
-	pConfig->pCurrentApp = &pConfig->pApplications[iBestSec];
-	return 1;  // secure ok
+		pConfig->pCurrentApp = &pConfig->pApplications[iBestSec];
+		return 1;  // secure ok
     }
     return 0;  // public app ok
 }
@@ -833,28 +821,26 @@ char *aselect_filter_get_cookie(pool *pPool, table *headers_in, char *pcAttribut
     char        *pcValue = NULL;
 
     //TRACE1("GET-Cookie: %s", pcAttribute);
-    pcValues = (char *) ap_table_get(headers_in, "Cookie");
+    pcValues = (char *)ap_table_get(headers_in, "Cookie");
     if (pcValues) {
-	//TRACE1("GET-Cookie: CookieValues=%s", pcValues);
+		//TRACE1("GET-Cookie: CookieValues=%s", pcValues);
         pcValue = aselect_filter_get_param(pPool, pcValues, pcAttribute, ";", FALSE);
         if (pcValue) {
             TRACE3("Get-Cookie: %s%.30s%s", pcAttribute, pcValue, (strlen(pcValue)>30)? "...": "");
         }
         else {
-	    TRACE1("Get-Cookie: %s not found", pcAttribute);
+			TRACE1("Get-Cookie: %s not found", pcAttribute);
             pcValue = NULL;
         }
     }
     else {
-	TRACE("GET-Cookie: No Cookies");
-        // No cookies to read, return error
+		TRACE("GET-Cookie: No Cookies");
         pcValue = NULL;
     }
     return pcValue;
 }
 
-int aselect_filter_show_barhtml(pool *pPool, request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig,
-				char *pcASelectAppURL)
+int aselect_filter_show_barhtml(pool *pPool, request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig, char *pcASelectAppURL)
 {
     table *headers_out = pRequest->headers_out;
     char *slash;
@@ -893,8 +879,7 @@ char *aselect_filter_base64_decode(pool *pPool, const char *pszValue)
     memset(szDest, 0, iDestCount+1);
 
     TRACE2("decoding %.50s... into %d bytes", pszValue, iDestCount);
-    for (state=iDest=0; *pszValue; ++pszValue)
-    {
+    for (state = iDest = 0; *pszValue; ++pszValue) {
         if (*pszValue == '=')
             break;              // We're done
 
@@ -922,7 +907,8 @@ char *aselect_filter_base64_decode(pool *pPool, const char *pszValue)
             szDest[iDest++] |= iPos;
             break;
         }
-        state = (++state) & 0x3;
+		state++;
+        state = state & 0x3;
     }
 
     TRACE2("decoded %d bytes: %.50s...", iDest, szDest);
@@ -942,33 +928,33 @@ char *aselect_filter_base64_encode(pool *pPool, const char *pszValue)
     len = strlen(pszValue);
     pRet = retBuf = (char *)ap_palloc(pPool, (4*len+12)/3);
     while (len--) {
-	code3[i++] = *(pszValue++);
-	if (i == 3) {
-	    code4[0] = (code3[0] & 0xfc) >> 2;
-	    code4[1] = ((code3[0] & 0x03) << 4) + ((code3[1] & 0xf0) >> 4);
-	    code4[2] = ((code3[1] & 0x0f) << 2) + ((code3[2] & 0xc0) >> 6);
-	    code4[3] = code3[2] & 0x3f;
+		code3[i++] = *(pszValue++);
+		if (i == 3) {
+			code4[0] = (code3[0] & 0xfc) >> 2;
+			code4[1] = ((code3[0] & 0x03) << 4) + ((code3[1] & 0xf0) >> 4);
+			code4[2] = ((code3[1] & 0x0f) << 2) + ((code3[2] & 0xc0) >> 6);
+			code4[3] = code3[2] & 0x3f;
 
-	    for(i = 0; (i <4) ; i++)
-		*pRet++ = base64Chars[code4[i]];
-	    i = 0;
-	}
+			for(i = 0; (i <4) ; i++)
+			*pRet++ = base64Chars[code4[i]];
+			i = 0;
+		}
     }
 
     if (i) {
-	for(j = i; j < 3; j++)
-	    code3[j] = '\0';
+		for(j = i; j < 3; j++)
+			code3[j] = '\0';
 
-	code4[0] = (code3[0] & 0xfc) >> 2;
-	code4[1] = ((code3[0] & 0x03) << 4) + ((code3[1] & 0xf0) >> 4);
-	code4[2] = ((code3[1] & 0x0f) << 2) + ((code3[2] & 0xc0) >> 6);
-	code4[3] = code3[2] & 0x3f;
+		code4[0] = (code3[0] & 0xfc) >> 2;
+		code4[1] = ((code3[0] & 0x03) << 4) + ((code3[1] & 0xf0) >> 4);
+		code4[2] = ((code3[1] & 0x0f) << 2) + ((code3[2] & 0xc0) >> 6);
+		code4[3] = code3[2] & 0x3f;
 
-	for (j = 0; (j < i + 1); j++)
-	    *pRet++ = base64Chars[code4[j]];
+		for (j = 0; (j < i + 1); j++)
+			*pRet++ = base64Chars[code4[j]];
 
-	while((i++ < 3))
-	    *pRet++ = '=';
+		while((i++ < 3))
+			*pRet++ = '=';
     }
     *pRet++ = '\0';
     TRACE2("base64_encoded: %s --> %s", porig, retBuf);
@@ -1016,8 +1002,8 @@ static struct timeval timer_plus(struct timeval p1, struct timeval p2)
     tv.tv_usec = p1.tv_usec + p2.tv_usec;
 
     if (tv.tv_usec > 1000000) {
-	tv.tv_usec -= 1000000;
-	tv.tv_sec++;
+		tv.tv_usec -= 1000000;
+		tv.tv_sec++;
     }
     return tv;
 }
@@ -1029,8 +1015,8 @@ static struct timeval timer_minus(struct timeval p1, struct timeval p2)
     tv.tv_sec = p1.tv_sec - p2.tv_sec;
     tv.tv_usec = p1.tv_usec - p2.tv_usec;
     if (tv.tv_usec < 0) {
-	tv.tv_sec--;
-	tv.tv_usec += 1000000;
+		tv.tv_sec--;
+		tv.tv_usec += 1000000;
     }
     return tv;
 }
@@ -1039,14 +1025,16 @@ char *timer_usi(pool *pPool, TIMER_DATA *pTimer)
 {
     static char buf[60];
 
-    if (!pTimer) return "0";
+    if (!pTimer)
+		return "0";
     sprintf(buf, "%ld.%06ld", pTimer->td_start.tv_sec, pTimer->td_start.tv_usec);
     return buf;
 }
 
 void timer_start(TIMER_DATA *pTimer)
 {
-    if (!pTimer) return;
+    if (!pTimer)
+		return;
     pTimer->td_type = 1;  // initially
     pTimer->td_spent = timer_zero();
     gettimeofday(&pTimer->td_start, 0);
@@ -1056,7 +1044,8 @@ void timer_start(TIMER_DATA *pTimer)
 
 void timer_pause(TIMER_DATA *pTimer)
 {
-    if (!pTimer) return;
+    if (!pTimer)
+		return;
     gettimeofday(&pTimer->td_finish, 0);
     TRACE3("TM_%d pause: fi=%d.%06d", getpid(), pTimer->td_finish.tv_sec, pTimer->td_finish.tv_usec);
 }
@@ -1073,7 +1062,7 @@ void timer_resume(TIMER_DATA *pTimer)
     pTimer->td_spent = timer_plus(pTimer->td_spent, tvDiff);
     pTimer->td_finish = timer_zero();
     TRACE7("TM_%d resume: nw=%d.%06d df=%d.%06d sp=%d.%06d", getpid(), tvNow.tv_sec, tvNow.tv_usec, tvDiff.tv_sec,
-	    tvDiff.tv_usec, pTimer->td_spent.tv_sec, pTimer->td_spent.tv_usec);
+			tvDiff.tv_usec, pTimer->td_spent.tv_sec, pTimer->td_spent.tv_usec);
 }
 
 // round: (tv.tv_usec+500)/1000
@@ -1088,7 +1077,7 @@ void timer_finish(TIMER_DATA *pTimer)
     pTimer->td_spent = timer_minus(tvDiff, pTimer->td_spent);
     pTimer->td_finish = tvNow;
     TRACE7("TM_%d finish: %d.%06d %d.%06d %d.%06d", getpid(), pTimer->td_start.tv_sec, pTimer->td_start.tv_usec,
-	    pTimer->td_spent.tv_sec, pTimer->td_spent.tv_usec, pTimer->td_finish.tv_sec, pTimer->td_finish.tv_usec);
+			pTimer->td_spent.tv_sec, pTimer->td_spent.tv_usec, pTimer->td_finish.tv_sec, pTimer->td_finish.tv_usec);
 }
 
 char *timer_pack(pool *pPool, TIMER_DATA *pTimer, char *senderId, char *sAppId, int ok)
@@ -1096,9 +1085,9 @@ char *timer_pack(pool *pPool, TIMER_DATA *pTimer, char *senderId, char *sAppId, 
     char buf1[50], buf2[50], buf3[50];
     char *result;
 
-    sprintf(buf1, "%d.%06d", pTimer->td_start.tv_sec, pTimer->td_start.tv_usec);
-    sprintf(buf2, "%d.%06d", pTimer->td_finish.tv_sec, pTimer->td_finish.tv_usec);
-    sprintf(buf3, "%d.%06d", pTimer->td_spent.tv_sec, pTimer->td_spent.tv_usec);
+    sprintf(buf1, "%ld.%06ld", pTimer->td_start.tv_sec, pTimer->td_start.tv_usec);
+    sprintf(buf2, "%ld.%06ld", pTimer->td_finish.tv_sec, pTimer->td_finish.tv_usec);
+    sprintf(buf3, "%ld.%06ld", pTimer->td_spent.tv_sec, pTimer->td_spent.tv_usec);
     result = ap_psprintf(pPool, "%s,%s,%s,%d,%d,%d,%s,%s,%s,%s,,",
 		    senderId, buf1, sAppId, 1/*level*/, 1/*type*/,
 		    getpid()/*thread*/, buf1, buf2, buf3, ok? "true": "false");

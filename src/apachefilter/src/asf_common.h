@@ -40,6 +40,11 @@
 #include "apr_compat.h"
 #include "apr_sha1.h"
 
+// 20130629, Bauke added the following lines
+#include <ctype.h>   // tolower(), ...
+#include <unistd.h>  // getpid(), ...
+#include <arpa/inet.h>   // inet_addr()
+
 typedef apr_pool_t      pool;
 typedef apr_table_t     table;
 
@@ -47,8 +52,8 @@ typedef apr_table_t     table;
 #define AP_SHA1_CTX                 apr_sha1_ctx_t
 #define SHA_DIGESTSIZE              APR_SHA1_DIGESTSIZE
 
-#define ap_log_error(a,b,c,d)       ap_log_error(a,b,0,c,d)
-#define ap_log_rerror(a,b,c,d)      ap_log_rerror(a,b,0,c,d)
+//#define ap_log_error(a,b,c,d)       ap_log_error(a,b,0,c,d)
+//#define ap_log_rerror(a,b,c,d)      ap_log_rerror(a,b,0,c,d)
 #define ap_send_http_header(a)      ((void)0)
 #define ap_SHA1Init(a)              apr_sha1_init(a)
 #define ap_SHA1Update(a,b,c)        apr_sha1_update(a,b,c)
@@ -247,6 +252,7 @@ typedef struct _ASELECT_FILTER_CONFIG
     char    *pcLogoutTemplate;
     char    *pcLogFileName;
     char    pcAddedSecurity[20];  // can contain a 'c' (cookies)
+    char    *pcSpecialSettings;
 } ASELECT_FILTER_CONFIG, *PASELECT_FILTER_CONFIG;
 
 /*
@@ -264,7 +270,7 @@ typedef enum _ASELECT_FILTER_ACTION
 /*
  * Function declarations
  */
-int         aselect_filter_print_table(void * data, const char *key, const char *val);
+void aselect_filter_print_table(request_rec *r, apr_table_t *t, char *hdr_text);
 char *      aselect_filter_hex_to_bytes(pool *pPool, char *pcString, int *ccBytes);
 void        aselect_filter_bytes_to_hex(const unsigned char *pcBytes, size_t length, char *pcResult);
 int         aselect_filter_get_error(pool *pPool, char *pcError);
@@ -281,6 +287,7 @@ int         aselect_filter_gen_error_page(pool *pPool, request_rec *pRequest, in
 int         aselect_filter_gen_authcomplete_redirect(pool *pPool, request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig); 
 int aselect_filter_gen_top_redirect(pool *pPool, char *addedSecurity, request_rec *pRequest, char *pcASUrl,
 			char *pcASelectServer, char *pcRID, char *cookiePath);
+int aselect_filter_check_app_uri(pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcUri);
 int XXXaselect_filter_verify_directory(pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcUri);
 int XXXaselect_filter_is_public_app(pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcUri);
 char *aselect_filter_get_cookie(pool *pPool, table *headers_in, char *pcAttribute );
@@ -305,7 +312,6 @@ char *timer_pack(pool *pPool, TIMER_DATA *pTimer, char *senderId, char *sAppId, 
 
     void aselect_filter_trace_logfilename(char *fmt);
     void aselect_filter_trace(const char *fmt, ... );
-    int aselect_filter_print_table(void * data, const char *key, const char *val);    
     void aselect_filter_trace2(const char *filename, int line, const char *fmt, ...);    
     
     #define TRACE(x)              aselect_filter_trace2(__FILE__,__LINE__,x);
