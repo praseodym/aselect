@@ -148,6 +148,7 @@ import java.util.logging.Level;
 import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.attributes.AttributeGatherer;
+import org.aselect.server.authspprotocol.IAuthSPConditions;
 import org.aselect.server.authspprotocol.handler.AuthSPHandlerManager;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
@@ -205,6 +206,8 @@ public class TGTIssuer
 	private TGTManager _tgtManager;
 
 	private AuthSPHandlerManager _authSPHandlerManager;
+	
+	private IAuthSPConditions iAuthSPConditions = null;;
 
 	/**
 	 * The default constructor.
@@ -440,6 +443,34 @@ public class TGTIssuer
 		}
 	}
 
+/**
+ * 
+ * @param sRid
+ * @param htSessionContext
+ * @param sAuthSP
+ * @param htAdditional
+ * @param oHttpServletResponse
+ * @param sOldTGT
+ * @param redirectToo
+ * @param iAuthSPConditions
+ * @return
+ * @throws ASelectException
+ * 
+ * Wrapper method to avoid invalid redirection after posting form to user
+ */
+	
+public String issueTGTandRedirect(String sRid, HashMap htSessionContext, String sAuthSP, HashMap htAdditional,
+			HttpServletResponse oHttpServletResponse, String sOldTGT, boolean redirectToo, IAuthSPConditions iAuthSPConditions)
+throws ASelectException
+{
+		setiAuthSPConditions(iAuthSPConditions);
+		String tgt = issueTGTandRedirect( sRid, htSessionContext, sAuthSP, htAdditional,
+				 oHttpServletResponse, sOldTGT, redirectToo);
+		setiAuthSPConditions(null);
+		return tgt;
+		
+}
+	
 	/**
 	 * Creates a default TGT and redirects the user. <br>
 	 * <br>
@@ -702,6 +733,8 @@ public class TGTIssuer
 				PrintWriter pwOut = oHttpServletResponse.getWriter();
 				pwOut.println(sSelectForm);
 				pwOut.close();
+				IAuthSPConditions authspconditions = getiAuthSPConditions();
+				if (authspconditions != null) authspconditions.setOutputAvailable(false);	// We cannot communicate with the user after closing stream
 				return sTgt;
 			}
 			
@@ -1036,5 +1069,15 @@ public class TGTIssuer
 			}
 		}
 		return htReturn;
+	}
+
+	public synchronized IAuthSPConditions getiAuthSPConditions()
+	{
+		return iAuthSPConditions;
+	}
+
+	public synchronized void setiAuthSPConditions(IAuthSPConditions iAuthSPConditions)
+	{
+		this.iAuthSPConditions = iAuthSPConditions;
 	}
 }

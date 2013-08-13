@@ -86,6 +86,7 @@ import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.server.authspprotocol.IAuthSPConditions;
 import org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler;
 import org.aselect.server.authspprotocol.IAuthSPProtocolHandler;
 import org.aselect.server.config.ASelectConfigManager;
@@ -175,7 +176,7 @@ import org.aselect.system.utils.Utils;
  * 
  * @author Alfa & Ariss
  */
-public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolHandler
+public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolHandler, IAuthSPConditions
 {
 	private final String MODULE = "Ldap";
 
@@ -213,6 +214,8 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	// Localization
 	protected String _sUserLanguage = "";
 	protected String _sUserCountry = "";
+	
+	protected boolean outputAvailable = true;	// We assume output available presence per default
 	
 	/* (non-Javadoc)
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#myRidName()
@@ -816,7 +819,11 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				
 				TGTIssuer tgtIssuer = new TGTIssuer(sServerId);
 				String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
-				String sTgt = tgtIssuer.issueTGTandRedirect(sRid, htSessionContext, sAuthSPId, htAdditional, servletResponse, sOldTGT, false /* no redirect */);
+				
+				setOutputAvailable(true); // Assume browser still present, 	// RH, 20130813, n
+//				String sTgt = tgtIssuer.issueTGTandRedirect(sRid, htSessionContext, sAuthSPId, htAdditional, servletResponse, sOldTGT, false /* no redirect */);	// RH, 20130813, o
+				String sTgt = tgtIssuer.issueTGTandRedirect(sRid, htSessionContext, sAuthSPId, htAdditional, servletResponse, sOldTGT, false /* no redirect */, this);	// RH, 20130813, n
+
 				// Cookie was set on the 'servletResponse'
 
 				// The next user redirect will set the TGT cookie, the "nextauthsp" form below will also set the cookie
@@ -843,19 +850,22 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 						MODULE, sUid, (String) htSessionContext.get("client_ip"), sOrg, app_id, "granted"
 					});
 
-				String sAppUrl = (String) htSessionContext.get("app_url");
-				if (htSessionContext.get("remote_session") != null)
-					sAppUrl = (String) htSessionContext.get("local_as_url");
-				
-				// 20111101, Bauke: added Sensor
-				// Finish regular authsp handling
-				Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_ldp", sRid, htSessionContext, sTgt, true);
-				_sessionManager.setDeleteSession(htSessionContext, _systemLogger);  // 20120403, Bauke: changed from Session
-				// 20111018, Bauke: redirect is done below
-
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to: sAppUrl=" + sAppUrl);
-				String sLang = (String)htSessionContext.get("language");
-				tgtIssuer.sendTgtRedirect(sAppUrl, sTgt, sRid, servletResponse, sLang);  // no session changes
+				if (isOutputAvailable()) {	// only redirect of output available // RH, 20130813, n
+					String sAppUrl = (String) htSessionContext.get("app_url");
+					if (htSessionContext.get("remote_session") != null)
+						sAppUrl = (String) htSessionContext.get("local_as_url");
+					
+					// 20111101, Bauke: added Sensor
+					// Finish regular authsp handling
+					Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_ldp", sRid, htSessionContext, sTgt, true);
+					_sessionManager.setDeleteSession(htSessionContext, _systemLogger);  // 20120403, Bauke: changed from Session
+					// 20111018, Bauke: redirect is done below
+	
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to: sAppUrl=" + sAppUrl);
+					String sLang = (String)htSessionContext.get("language");
+					tgtIssuer.sendTgtRedirect(sAppUrl, sTgt, sRid, servletResponse, sLang);  // no session changes
+				}	// RH, 20130813, n
+				setOutputAvailable(true);	// restore original value	// RH, 20130813, n
 				return true;
 			}
 			else if (sResponseCode.equals(ERROR_LDAP_ACCESS_DENIED)) {
@@ -1034,6 +1044,16 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not show direct login page", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
+	}
+
+	public synchronized boolean isOutputAvailable()
+	{
+		return outputAvailable;
+	}
+
+	public synchronized void setOutputAvailable(boolean outputAvailable)
+	{
+		this.outputAvailable = outputAvailable;
 	}
 
 }
