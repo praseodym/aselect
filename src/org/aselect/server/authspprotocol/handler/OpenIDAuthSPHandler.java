@@ -19,6 +19,7 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.logging.Level;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler;
@@ -507,8 +508,8 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 	 * @see org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler#handleDirectLoginRequest(java.util.HashMap,
 	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter, java.lang.String)
 	 */
-	public boolean handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, HashMap htSessonContext,
-			HashMap htAdditional, PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
+	public boolean handleDirectLoginRequest(HashMap htServiceRequest, HttpServletRequest servletRequest, HttpServletResponse servletResponse,
+			HashMap htSessonContext, HashMap htAdditional, PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
 	throws ASelectException
 	{
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
@@ -609,5 +610,4 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 		String sMethod = "showDirectLoginForm()";
 		throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 	}
-
 }

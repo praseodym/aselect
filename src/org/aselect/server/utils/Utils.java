@@ -25,6 +25,8 @@ import java.util.Vector;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectSystemLogger;
@@ -68,7 +70,7 @@ public class Utils
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	public static String presentOrganizationChoice(ASelectConfigManager configManager, HashMap htSessionContext,
+	public static String presentOrganizationChoice(HttpServletRequest servletRequest, ASelectConfigManager configManager, HashMap htSessionContext,
 			String sRid, String sLanguage, HashMap<String, String> hUserOrganizations)
 	throws ASelectConfigException, ASelectException, IOException
 	{
@@ -93,7 +95,7 @@ public class Utils
 			sb.append("</option>");
 		}
 		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[user_organizations]", sb.toString());
-		sSelectForm = configManager.updateTemplate(sSelectForm, htSessionContext);
+		sSelectForm = configManager.updateTemplate(sSelectForm, htSessionContext, servletRequest);
 		return sSelectForm;
 	}
 

@@ -131,15 +131,6 @@ public class Xsaml20_Logout extends Saml20_BaseHandler
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_TGT_NOT_VALID, eIA);
 		}
 
-		// Improve: Is signing needed?
-		// _systemLogger.log(Level.INFO, _sModule, sMethod, "NOTE SIGNING CHECK DISABLED");
-		/*
-		 * if (_applicationManager.isSigningRequired()) { // Note: we should do this earlier, but we don't have an
-		 * app_id until now String sAppId = (String) htTGTContext.get("app_id"); StringBuffer sbData = new
-		 * StringBuffer(sASelectServer).append(sEncTGT); verifyApplicationSignature(request, sbData.toString(), sAppId);
-		 * }
-		 */
-
 		// First get rid of the client cookie (if still present)
 		String sCookieDomain = _configManager.getCookieDomain();
 		HandlerTools.delCookieValue(response, "aselect_credentials", sCookieDomain, null, _systemLogger);
@@ -173,7 +164,7 @@ public class Xsaml20_Logout extends Saml20_BaseHandler
 				: Errors.ERROR_ASELECT_SUCCESS);
 
 		// 20120929, Bauke: only allow a redirect from our server when the user was logged in!!
-		finishLogoutActions(response, sResultCode, (htTGTContext!=null)? sLogoutReturnUrl: null);
+		finishLogoutActions(request, response, sResultCode, (htTGTContext!=null)? sLogoutReturnUrl: null);
 	}
 
 	/* (non-Javadoc)

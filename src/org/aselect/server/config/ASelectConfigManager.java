@@ -250,10 +250,13 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.cross.CrossASelectManager;
 import org.aselect.server.log.ASelectAuthenticationLogger;
 import org.aselect.server.log.ASelectSystemLogger;
+import org.aselect.server.request.HandlerTools;
 import org.aselect.server.sam.ASelectSAMAgent;
 import org.aselect.server.udb.IUDBConnector;
 import org.aselect.system.configmanager.ConfigManager;
@@ -426,6 +429,12 @@ public class ASelectConfigManager extends ConfigManager
 	private String _sUserInfoSettings = "";
 	
 	private String _sSharedSecret = null;
+	
+	/**
+	 * Gets the shared secret.
+	 * 
+	 * @return the string
+	 */
 	public String getSharedSecret() { return _sSharedSecret; }
 
 	// Key is <template_name>_<lang> where _<lang> is optional (default entry)
@@ -712,15 +721,24 @@ public class ASelectConfigManager extends ConfigManager
 	}
 
 	/**
+	 * Load configuration.
+	 * 
 	 * @param sWorkingDir
+	 *            the s working dir
 	 * @param sSQLDriver
+	 *            the s sql driver
 	 * @param sSQLUser
+	 *            the s sql user
 	 * @param sSQLPassword
+	 *            the s sql password
 	 * @param sSQLURL
+	 *            the s sqlurl
 	 * @param sSQLTable
+	 *            the s sql table
 	 * @param sConfigIDName
-	 * @param sMethod
+	 *            the s config id name
 	 * @throws ASelectConfigException
+	 *             the a select config exception
 	 */
 	public void loadConfiguration(String sWorkingDir, String sSQLDriver, String sSQLUser, String sSQLPassword,
 								String sSQLURL, String sSQLTable, String sConfigIDName)
@@ -792,8 +810,8 @@ public class ASelectConfigManager extends ConfigManager
 	 * Returns the cookie domain, if specificaly set in the configuration. <br>
 	 * <br>
 	 * 
-	 * @return <code>null</code> if no domain is set or a <code>String</code> containing the cookie domain that is
-	 *         configured including the '.' as prefix.
+	 * @return containing the cookie domain that is configured including the '.'
+	 *         as prefix.
 	 */
 	public String getCookieDomain()
 	{
@@ -815,7 +833,7 @@ public class ASelectConfigManager extends ConfigManager
 	 * <b>Postconditions:</b> <br>
 	 * <br>
 	 * 
-	 * @return <code>String</code> containing the A-Select Server working dir.
+	 * @return containing the A-Select Server working dir.
 	 */
 	public String getWorkingdir()
 	{
@@ -826,8 +844,10 @@ public class ASelectConfigManager extends ConfigManager
 	 * Returns the A-Select Server redirect URL. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Returns the external URL of the A-Select Server which is used in redirects.<br/>
-	 * The optional 'redirect_url' config item is configured in the A-Select configuration (aselect.xml). <br>
+	 * Returns the external URL of the A-Select Server which is used in
+	 * redirects.<br/>
+	 * The optional 'redirect_url' config item is configured in the A-Select
+	 * configuration (aselect.xml). <br>
 	 * <br>
 	 * <b>Concurrency issues:</b> <br>
 	 * - <br>
@@ -838,7 +858,7 @@ public class ASelectConfigManager extends ConfigManager
 	 * <b>Postconditions:</b> <br>
 	 * <br>
 	 * 
-	 * @return <code>String</code> containing the A-Select Server redirect URL dir.
+	 * @return containing the A-Select Server redirect URL dir.
 	 */
 	public String getRedirectURL()
 	{
@@ -870,7 +890,7 @@ public class ASelectConfigManager extends ConfigManager
 	 * <b>Postconditions:</b> <br>
 	 * - <br>
 	 * 
-	 * @return A <code>HashMap</code> containing all AuthSP settings.
+	 * @return A containing all AuthSP settings.
 	 */
 	public HashMap getAuthspSettings()
 	{
@@ -960,7 +980,7 @@ public class ASelectConfigManager extends ConfigManager
 	 * <b>Postconditions:</b> <br>
 	 * - <br>
 	 * 
-	 * @return a <code>String</code> representation of the certificate ID
+	 * @return a representation of the certificate ID
 	 */
 	public String getDefaultCertId()
 	{
@@ -971,7 +991,8 @@ public class ASelectConfigManager extends ConfigManager
 	 * Get the error message that matches the error code that is supplied. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Returns the error message that is configured in the errors.conf file in the A-Select Server configuration. <br>
+	 * Returns the error message that is configured in the errors.conf file in
+	 * the A-Select Server configuration. <br>
 	 * <br>
 	 * <b>Concurrency issues:</b> <br>
 	 * - <br>
@@ -988,7 +1009,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *            the s language
 	 * @param sCountry
 	 *            the s country
-	 * @return A <code>String</code> representation of the error message
+	 * @return A representation of the error message
 	 */
 	// RM_24_01
 	public String getErrorMessage(String sErrorCode, String sLanguage, String sCountry)
@@ -1088,8 +1109,8 @@ public class ASelectConfigManager extends ConfigManager
 	 * Get a template of an A-Select Server form. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Returns a A-Select Server form that is located in the A-Select Server configuration (aselectserver/conf/html/*)
-	 * and can be used as a template. <br>
+	 * Returns a A-Select Server form that is located in the A-Select Server
+	 * configuration (aselectserver/conf/html/*) and can be used as a template. <br>
 	 * <br>
 	 * <b>Concurrency issues:</b> <br>
 	 * - <br>
@@ -1106,7 +1127,7 @@ public class ASelectConfigManager extends ConfigManager
 	 *            the s language
 	 * @param sCountry
 	 *            the s country
-	 * @return A <code>String</code> representation of the requested form.
+	 * @return A representation of the requested form.
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
@@ -1169,7 +1190,7 @@ public class ASelectConfigManager extends ConfigManager
 	{
 		return getForm(sForm, "", "");
 	}
-
+	
 	/**
 	 * Updates the supplied template with optional requestor information. <br>
 	 * <br>
@@ -1193,11 +1214,13 @@ public class ASelectConfigManager extends ConfigManager
 	 *            the template that must be updated
 	 * @param htSessionContext
 	 *            containing the session information
+	 * @param servletRequest
+	 *            the servlet request
 	 * @return String containing the updated template
 	 * @throws ASelectException
 	 *             if template could not be updated
 	 */
-	public String updateTemplate(String sTemplate, HashMap htSessionContext)
+	public String updateTemplate(String sTemplate, HashMap htSessionContext, HttpServletRequest servletRequest)
 	throws ASelectException
 	{
 		String sMethod = "updateTemplate";
@@ -1209,12 +1232,15 @@ public class ASelectConfigManager extends ConfigManager
 		try {
 			sReturn = sTemplate;
 
+			// Get tag info from the session
 			if (htSessionContext != null) {
 				String sLocalOrganization = (String) htSessionContext.get("local_organization");
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "org="+sLocalOrganization);
 				if (sLocalOrganization != null) {
 					HashMap htOrgInfo = CrossASelectManager.getHandle().getLocalServerInfo(sLocalOrganization);
 					if (htOrgInfo != null) {
 						sFriendlyName = (String) htOrgInfo.get(TAG_FRIENLDY_NAME);
+						_systemLogger.log(Level.FINE, MODULE, sMethod, "From Org="+sFriendlyName);
 						sMaintainerEmail = (String) htOrgInfo.get(TAG_MAINTAINER_EMAIL);
 						Boolean boolShowUrl = (Boolean) htOrgInfo.get(TAG_SHOW_URL);
 						if (boolShowUrl != null && boolShowUrl.booleanValue())
@@ -1223,8 +1249,10 @@ public class ASelectConfigManager extends ConfigManager
 				}
 				else {
 					String sAppId = (String) htSessionContext.get("app_id");
+					_systemLogger.log(Level.FINE, MODULE, sMethod, "app_id="+sAppId);
 					if (sAppId != null) {
 						sFriendlyName = ApplicationManager.getHandle().getFriendlyName(sAppId);
+						_systemLogger.log(Level.FINE, MODULE, sMethod, "From Session="+sFriendlyName);
 						sMaintainerEmail = ApplicationManager.getHandle().getMaintainerEmail(sAppId);
 						if (ApplicationManager.getHandle().isShowUrl(sAppId))
 							sUrl = (String) htSessionContext.get("app_url");
@@ -1232,8 +1260,15 @@ public class ASelectConfigManager extends ConfigManager
 				}
 			}
 
-			if (sFriendlyName == null)
+			// 20130821, Bauke: Get tag info from the cookie
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "FriendlyName="+sFriendlyName);
+			if (!Utils.hasValue(sFriendlyName)) {
+				sFriendlyName = HandlerTools.getEncryptedCookie(servletRequest, "requestor_friendly_name", _systemLogger);
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "From Cookie="+sFriendlyName);
+			}
+			if (sFriendlyName == null) {
 				sFriendlyName = "";
+			}
 			sReturn = Utils.replaceString(sReturn, TAG_FRIENLDY_NAME, sFriendlyName);
 
 			if (sMaintainerEmail == null)
@@ -1681,7 +1716,8 @@ public class ASelectConfigManager extends ConfigManager
 	}
 
 	/**
-	 * Loads a template from harddisk to the supplied <code>sTemplate</code> variable. <br>
+	 * Loads a template from harddisk to the supplied <code>sTemplate</code>
+	 * variable. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
 	 * Will load the template located in the file with name :<br>
@@ -1694,16 +1730,17 @@ public class ASelectConfigManager extends ConfigManager
 	 * <b>Preconditions:</b>
 	 * <ul>
 	 * <li><code>sWorkingDir != null</code></li>
-	 * <li> <code>sFileName</code> must contain an existing filename and may not be <code>null</code></li>
+	 * <li> <code>sFileName</code> must contain an existing filename and may not
+	 * be <code>null</code></li>
 	 * </ul>
 	 * <br>
 	 * <b>Postconditions:</b> <br>
 	 * - <br>
 	 * 
-	 * @param sFileName
-	 *            File name with extension of the template that must be loaded.
 	 * @param sUnUsed
 	 *            the s un used
+	 * @param sFileName
+	 *            File name with extension of the template that must be loaded.
 	 * @param sLanguage
 	 *            the s language
 	 * @param sCountry
@@ -2246,7 +2283,7 @@ public class ASelectConfigManager extends ConfigManager
 	}
 
 	/**
-	 * Gets special patching
+	 * Gets special patching.
 	 * 
 	 * @return the parameter value
 	 */

@@ -96,6 +96,7 @@ import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.HandlerTools;
@@ -288,7 +289,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 				}
 			}
 			catch (Exception e) { }
-			
+
 			// 20120330: Decide what to do with the locally cached session
 			_sessionManager.finalSessionProcessing(_htSessionContext, true/*update*/);
 		}
@@ -349,7 +350,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 				String sAppUrl = (String)_htSessionContext.get("app_url");
 				sErrorForm = Utils.replaceString(sErrorForm, "[app_url]", sAppUrl);
 			}
-			sErrorForm = _configManager.updateTemplate(sErrorForm, _htSessionContext);  // accepts a null Session!
+			sErrorForm = _configManager.updateTemplate(sErrorForm, _htSessionContext, _servletRequest);  // accepts a null Session!
 			//_systemLogger.log(Level.INFO, _sModule, sMethod, "FORM="+sErrorForm);
 			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 			pwOut.println(sErrorForm);
@@ -529,7 +530,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 		// User can possibly correct his phone number and retry
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT to (sms_correction_facility): " + _sCorrectionFacility);
 		String sAppUrl = (String) htSessionContext.get("app_url");
-		HandlerTools.putCookieValue(servletResponse, _sCookiePrefix+"ApplicationUrl", sAppUrl,
+		HandlerTools.putCookieValue(servletResponse, _sCookiePrefix/*e.g. U1NP*/+"ApplicationUrl", sAppUrl,
 									_sCookieDomain, "/",  600/*seconds*/, 1/*httpOnly*/, _systemLogger);
 		servletResponse.sendRedirect(_sCorrectionFacility);
 	}

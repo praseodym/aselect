@@ -145,6 +145,7 @@ import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.attributes.AttributeGatherer;
@@ -160,10 +161,8 @@ import org.aselect.server.session.SessionManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.utils.BASE64Encoder;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
-import org.bouncycastle.util.encoders.Base64Encoder;
 
 /**
  * Issues ASelect TGT's. <br>
@@ -449,7 +448,7 @@ public class TGTIssuer
  * @param htSessionContext
  * @param sAuthSP
  * @param htAdditional
- * @param oHttpServletResponse
+ * @param servletResponse
  * @param sOldTGT
  * @param redirectToo
  * @param iAuthSPConditions
@@ -460,12 +459,13 @@ public class TGTIssuer
  */
 	
 public String issueTGTandRedirect(String sRid, HashMap htSessionContext, String sAuthSP, HashMap htAdditional,
-			HttpServletResponse oHttpServletResponse, String sOldTGT, boolean redirectToo, IAuthSPConditions iAuthSPConditions)
+			HttpServletRequest servletRequest, HttpServletResponse servletResponse, String sOldTGT, boolean redirectToo,
+			IAuthSPConditions iAuthSPConditions)
 throws ASelectException
 {
 		setiAuthSPConditions(iAuthSPConditions);
 		String tgt = issueTGTandRedirect( sRid, htSessionContext, sAuthSP, htAdditional,
-				 oHttpServletResponse, sOldTGT, redirectToo);
+				 servletRequest, servletResponse, sOldTGT, redirectToo);
 		setiAuthSPConditions(null);
 		return tgt;
 		
@@ -505,7 +505,7 @@ throws ASelectException
 	 *            The AuthSP which the used to authenticate
 	 * @param htAdditional
 	 *            <code>HashMap</code> containing additional TGT information
-	 * @param oHttpServletResponse
+	 * @param servletResponse
 	 *            The servlet response that is used to redirect to
 	 * @param sOldTGT
 	 *            The aselect_credentials_tgt that is already set as a cookie at the user (can be null if not exists)
@@ -514,7 +514,7 @@ throws ASelectException
 	 */
 	// 20120403, Bauke: added htSessionContext
 	public String issueTGTandRedirect(String sRid, HashMap htSessionContext, String sAuthSP, HashMap htAdditional,
-					HttpServletResponse oHttpServletResponse, String sOldTGT, boolean redirectToo)
+					HttpServletRequest servletRequest, HttpServletResponse servletResponse, String sOldTGT, boolean redirectToo)
 	throws ASelectException
 	{
 		String sMethod = "issueTGTandRedirect";
@@ -545,7 +545,7 @@ throws ASelectException
 				// Authentication failed, no TGT issued, but need to send decent <Response>
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "no success, redirect to "+sAppUrl);
 				String sLang = (String)htSessionContext.get("language");  // we have no TGT Context yet
-				sendTgtRedirect(sAppUrl, null, sRid, oHttpServletResponse, sLang);
+				sendTgtRedirect(sAppUrl, null, sRid, servletResponse, sLang);
 				// Session must be killed by sAppUrl: _sessionManager.killSession(sRid);
 				return null;
 			}
@@ -709,9 +709,9 @@ throws ASelectException
 					// 20121024, Bauke: added udb_user_ident mechanism
 					String sIdent = (String)htTGTContext.get("udb_user_ident");
 					if (Utils.hasValue(sIdent)) {
-						setUdbIdentCookie(sIdent, oHttpServletResponse);
+						setUdbIdentCookie(sIdent, servletResponse);
 					}
-					setASelectCookie(sTgt, sUserId, oHttpServletResponse);
+					setASelectCookie(sTgt, sUserId, servletResponse);
 				}
 			}
 			else { // Update the old TGT
@@ -723,18 +723,19 @@ throws ASelectException
 			// Leaves the Rid session in place, needed for the application url
 			if (mustChooseOrg) {
 				// The user must choose his organization
-				String sSelectForm = org.aselect.server.utils.Utils.presentOrganizationChoice(_configManager, htSessionContext,
-						sRid, (String)htTGTContext.get("language"), hUserOrganizations);
-				oHttpServletResponse.setContentType("text/html");
+				String sSelectForm = org.aselect.server.utils.Utils.presentOrganizationChoice(servletRequest, _configManager,
+						htSessionContext, sRid, (String)htTGTContext.get("language"), hUserOrganizations);
+				servletResponse.setContentType("text/html");
 				
 				Tools.pauseSensorData(_configManager, _systemLogger, htSessionContext);
 				//_sessionManager.updateSession(sRid, htSessionContext); // Write session
 				// done by pauseSensorData(): _sessionManager.setUpdateSession(htSessionContext, _systemLogger);  // 20120403, Bauke: was updateSession()
-				PrintWriter pwOut = oHttpServletResponse.getWriter();
+				PrintWriter pwOut = servletResponse.getWriter();
 				pwOut.println(sSelectForm);
 				pwOut.close();
 				IAuthSPConditions authspconditions = getiAuthSPConditions();
-				if (authspconditions != null) authspconditions.setOutputAvailable(false);	// We cannot communicate with the user after closing stream
+				if (authspconditions != null)
+					authspconditions.setOutputAvailable(false);	// We cannot communicate with the user after closing stream
 				return sTgt;
 			}
 			
@@ -746,7 +747,7 @@ throws ASelectException
 				
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
 				String sLang = (String)htTGTContext.get("language");
-				sendTgtRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse, sLang);
+				sendTgtRedirect(sAppUrl, sTgt, sRid, servletResponse, sLang);
 			}
 			return sTgt;
 		}
@@ -1008,7 +1009,7 @@ throws ASelectException
 			 */
 			// Bauke 20080617 only store tgt value from now on
 			String sCookieDomain = _configManager.getCookieDomain();
-			HandlerTools.putCookieValue(oHttpServletResponse, "aselect_credentials", sTgt, sCookieDomain, null, -1, 1/*httpOnly*/, _systemLogger);
+			HandlerTools.putCookieValue(oHttpServletResponse, "aselect_credentials", sTgt, sCookieDomain, null/*path*/, -1/*age*/, 1/*httpOnly*/, _systemLogger);
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not create an A-Select cookie for user: " + sUserId, e);
@@ -1025,7 +1026,7 @@ throws ASelectException
 			// 20121030, Bauke: changed from BASE64Encoder
 			sIdent = URLEncoder.encode(sIdent, "UTF-8").replace("+", "%20");
 			// path=/ so applications can access it
-			HandlerTools.putCookieValue(oHttpServletResponse, "ssoname", sIdent, sCookieDomain, "/", -1, 0/*httpOnly*/, _systemLogger);
+			HandlerTools.putCookieValue(oHttpServletResponse, "ssoname", sIdent, sCookieDomain, "/"/*path*/, -1/*age*/, 0/*httpOnly*/, _systemLogger);
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not create UserIdent cookie for user: " + sIdent, e);

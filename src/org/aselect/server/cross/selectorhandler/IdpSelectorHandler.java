@@ -151,7 +151,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 	public void init(Object oHandlerConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			_crossASelectManager = CrossASelectManager.getHandle();
 			_configManager = ASelectConfigManager.getHandle();
@@ -229,7 +229,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 	public HashMap getRemoteServerId(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 	throws ASelectException
 	{
-		String sMethod = "IdpSelectorHandler.getRemoteServerId()";
+		String sMethod = "IdpSelectorHandler.getRemoteServerId";
 		HashMap htReturn = null;
 
 		String sRemoteOrg = (String) htServiceRequest.get("remote_organization");
@@ -302,7 +302,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 	private void showSelectForm(HashMap htServiceRequest, PrintWriter pwOut, HashMap htServers, String sDefaultRemoteOrg)
 	throws ASelectException
 	{
-		String sMethod = "showSelectForm()";
+		String sMethod = "showSelectForm";
 		try {
 			String sSelectForm = _sHTMLSelectForm;
 			String sRemoteServerUrl = null;
@@ -334,7 +334,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 			// Update template with the optional requestor information
 			HashMap htSession = SessionManager.getHandle().getSessionContext(sRid);
 			if (htSession != null)
-				sSelectForm = _configManager.updateTemplate(sSelectForm, htSession);
+				sSelectForm = _configManager.updateTemplate(sSelectForm, htSession, null);
 
 			pwOut.println(sSelectForm);
 
@@ -360,7 +360,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 	 */
 	private String getRemoteServerHTML(HashMap htServers, String sDefaultRemoteOrg)
 	{
-		String sMethod = "getRemoteServerHTML()";
+		String sMethod = "getRemoteServerHTML";
 		String sResult = null;
 
 		// Enumeration enumServers = htServers.keys();
@@ -409,7 +409,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 	private void loadHTMLTemplates()
 	throws ASelectException
 	{
-		String sMethod = "loadHTMLTemplates()";
+		String sMethod = "loadHTMLTemplates";
 		try {
 
 			String sWorkingdir = new StringBuffer(_configManager.getWorkingdir()).append(File.separator).append("conf")
@@ -445,7 +445,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 		String sTemplate = new String();
 		String sLine;
 		BufferedReader brIn = null;
-		String sMethod = "loadHTMLTemplate()";
+		String sMethod = "loadHTMLTemplate";
 		try {
 			brIn = new BufferedReader(new InputStreamReader(new FileInputStream(sLocation)));
 			while ((sLine = brIn.readLine()) != null) {
@@ -481,7 +481,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 	private void getIdpQueryServerResourceGroup()
 	throws ASelectException
 	{
-		String sMethod = "getIdpQueryServerResourceGroup()";
+		String sMethod = "getIdpQueryServerResourceGroup";
 		if (!_crossASelectManager.getRemoteServers().containsKey(_sIdPQueryServerId)) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"There's no 'organization' found within the remote_servers section with id: '" + _sIdPQueryServerId
@@ -518,7 +518,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 	private String getIdpQueryServerUrl()
 	throws ASelectException
 	{
-		String sMethod = "getUrl()";
+		String sMethod = "getUrl";
 		String sUrl = null;
 
 		SAMResource sRemoteServers = null;
@@ -562,7 +562,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 	private HashMap handleIdpApiCall()
 	throws ASelectException
 	{
-		String sMethod = "handleIdpApiCall()";
+		String sMethod = "handleIdpApiCall";
 		HashMap htResult = null;
 		String sRemoteServerUrl = getIdpQueryServerUrl();
 		HashMap htRequest = new HashMap();

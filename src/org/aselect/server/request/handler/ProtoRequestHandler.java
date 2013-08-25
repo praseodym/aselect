@@ -270,7 +270,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	public HashMap getAttributesFromTgtAndGatherer(HashMap htTGTContext)
 	throws ASelectException
 	{
-		String sMethod = "getAttributesFromTgtAndGatherer()";
+		String sMethod = "getAttributesFromTgtAndGatherer";
 		
 		String sTgtAttributes = (String) htTGTContext.get("attributes");
 		HashMap htTgtAttributes = org.aselect.server.utils.Utils.deserializeAttributes(sTgtAttributes);
@@ -560,7 +560,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 * @param pwOut
 	 *            the pw out
 	 */
-	protected void showErrorPage(String sErrorCode, HashMap htSessionContext, PrintWriter pwOut)
+	protected void showErrorPage(String sErrorCode, HashMap htSessionContext, PrintWriter pwOut, HttpServletRequest request)
 	{
 		String sMethod = "showErrorPage";
 
@@ -575,7 +575,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 
 			String sAppUrl = (String)htSessionContext.get("app_url");
 			sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), sAppUrl, _systemLogger);
-			sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext);
+			sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext, request);
 			Tools.pauseSensorData(_configManager, _systemLogger, htSessionContext);  //20111102
 			pwOut.println(sErrorForm);
 		}

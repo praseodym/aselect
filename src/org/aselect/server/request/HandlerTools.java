@@ -28,7 +28,9 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.config.ASelectConfigManager;
+import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.system.error.Errors;
@@ -64,7 +66,6 @@ public class HandlerTools
 {
 	final static String MODULE = "HandlerTools";
 
-	// Set-Cookie: aselect_credentials=329...283; Domain=.anoigo.nl; Path=/aselectserver/server; Secure
 	// This code can be used to set HttpOnly (not supported by Java Cookies)
 	/**
 	 * Put cookie value.
@@ -166,7 +167,7 @@ public class HandlerTools
 		for (int i = 0; i < oCookie.length; i++) {
 			String sCookieName = oCookie[i].getName();
 			if (logger != null) { // allow for null logger
-				logger.log(Level.INFO, MODULE, sMethod, "Get "+sName+" try="+sCookieName);
+				logger.log(Level.FINEST, MODULE, sMethod, "Get "+sName+" try="+sCookieName);
 			}
 			if (sCookieName.equals(sName)) {
 				String sCookieValue = oCookie[i].getValue();
@@ -176,13 +177,89 @@ public class HandlerTools
 					sCookieName = sCookieName.substring(1, iLength - 1);
 				}
 				if (logger != null) {// allow for null logger
-					logger.log(Level.INFO, MODULE, sMethod, sCookieName + "=" + sCookieValue);
+					logger.log(Level.FINE, MODULE, sMethod, sCookieName + "=" + sCookieValue);
 				}
 				sReturnValue = sCookieValue;
 				break;
 			}
 		}
 		return sReturnValue;
+	}
+
+	/**
+	 * @throws ASelectException
+	 */
+	public static void setRequestorFriendlyCookie(HttpServletResponse servletResponse, HashMap sessionContext, ASelectSystemLogger systemLogger)
+	throws ASelectException
+	{
+		ASelectConfigManager configManager = ASelectConfigManager.getHandle();
+		if (sessionContext == null)
+			return;
+	
+		String sStatus = (String)sessionContext.get("status");
+		String sAppId = (String)sessionContext.get("app_id");
+		if (/*"del".equals(sStatus) &&*/ Utils.hasValue(sAppId)) {
+			String sUF = ApplicationManager.getHandle().getFriendlyName(sAppId);
+			HandlerTools.setEncryptedCookie(servletResponse, "requestor_friendly_name", sUF, configManager.getCookieDomain(), -1/*age*/, systemLogger);
+		}
+	}
+	
+	/**
+	 * Sets an encrypted cookie.
+	 * 
+	 * @param servletResponse
+	 *            the servlet response
+	 * @param sCookieName
+	 *            the cookie name
+	 * @param sCookieValue
+	 *            the cookie value
+	 * @param sCookieDomain
+	 *            the cookie domain
+	 * @param systemLogger
+	 *            the systemlogger
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	public static void setEncryptedCookie(HttpServletResponse servletResponse,
+			String sCookieName, String sCookieValue, String sCookieDomain, int iAge, ASelectSystemLogger systemLogger)
+	throws ASelectException
+	{
+		String sMethod = "setEncryptedCookie";
+		CryptoEngine _cryptoEngine = CryptoEngine.getHandle();
+
+		systemLogger.log(Level.FINER, MODULE, sMethod, "Encrypt="+sCookieValue);
+		sCookieValue = _cryptoEngine.encryptData(sCookieValue.getBytes());
+
+		HandlerTools.putCookieValue(servletResponse, sCookieName, sCookieValue,
+				sCookieDomain, null/*default path*/, iAge/*5 years*/, 1/*httpOnly*/, systemLogger);
+	}
+
+	/**
+	 * Gets the encrypted cookie.
+	 * 
+	 * @param servletRequest
+	 *            the servlet request
+	 * @param sCookieName
+	 *            the cookie name
+	 * @param systemLogger
+	 *            the system logger
+	 * @return the string
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	public static String getEncryptedCookie(HttpServletRequest servletRequest, String sCookieName, ASelectSystemLogger systemLogger)
+	throws ASelectException
+	{
+		String sMethod = "getEncryptedCookie";
+		CryptoEngine _cryptoEngine = CryptoEngine.getHandle();
+		String sCookieValue = HandlerTools.getCookieValue(servletRequest, sCookieName, systemLogger);
+		if (!Utils.hasValue(sCookieValue))
+			return null;
+		
+		byte[] baBytes = _cryptoEngine.decryptData(sCookieValue);
+		sCookieValue = new String(baBytes);
+		systemLogger.log(Level.FINER, MODULE, sMethod, "Decrypt="+sCookieValue);
+		return sCookieValue;
 	}
 
 	/**

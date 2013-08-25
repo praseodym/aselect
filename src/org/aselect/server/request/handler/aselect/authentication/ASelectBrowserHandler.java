@@ -122,7 +122,6 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.sam.agent.SAMResource;
 import org.aselect.system.utils.Tools;
-import org.aselect.system.utils.Utils;
 
 /**
  * This class handles requests coming from a a-select server through a users browser. <br>
@@ -214,7 +213,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 			PrintWriter pwOut)
 	throws ASelectException
 	{
-		String sMethod = "handleCrossAuthenticateResponse()";
+		String sMethod = "handleCrossAuthenticateResponse";
 
 		try {
 			String sRemoteRid = null;
@@ -324,7 +323,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 	private HashMap verifyRemoteCredentials(String sCredentials, String sRemoteRid, String sRemoteOrg)
 	throws ASelectException
 	{
-		String sMethod = "verifyRemoteCredentials()";
+		String sMethod = "verifyRemoteCredentials";
 		Object oRemoteServer;
 		String sRemoteAsUrl;
 		String sRemoteServer;
@@ -483,6 +482,5 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 		if (sAttributes != null)
 			htTicketContext.put("attributes", sAttributes);
 		return htTicketContext;
-
 	}
 }

@@ -156,7 +156,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 	public void init(ServletConfig oConfig)
 	throws ServletException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		StringBuffer sbTemp = null;
 		try {
 			// super init
@@ -284,10 +284,8 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbWarning.toString());
 			}
 
-
 			// get return url
-			// RM_18_01
-			
+			// RM_18_01	
 			try {
 				_sUrl = _configManager.getParam(_oAuthSpConfig, "url");
 			}
@@ -295,7 +293,6 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'url' found", e);
 				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
 			}
-
 
 			sbInfo = new StringBuffer("Successfully started ");
 			sbInfo.append(VERSION).append(".");
@@ -332,7 +329,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 	protected void doGet(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws java.io.IOException
 	{
-		String sMethod = "doGet()";
+		String sMethod = "doGet";
 		PrintWriter pwOut = null;
 		String sLanguage = null;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "doGet");
@@ -613,7 +610,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 	protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws java.io.IOException
 	{
-		String sMethod = "doPost()";
+		String sMethod = "doPost";
 		PrintWriter pwOut = null;
 		String sUid = null;
 
@@ -838,7 +835,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 	 */
 	private void showAuthenticateForm(PrintWriter pwOut, String sError, String sErrorMessage, HashMap htServiceRequest)
 	{
-		String sMethod = "showAuthenticateForm()";
+		String sMethod = "showAuthenticateForm";
 
 		String sAuthenticateForm = new String(_sAuthenticateHtmlTemplate);
 		String sMyUrl = (String) htServiceRequest.get("my_url");
@@ -905,6 +902,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 		handleResult(servletRequest, servletResponse,
 				pwOut, sResultCode, sLanguage, null);
 	}
+	
 	/**
 	 * Handle result.
 	 * 
@@ -922,7 +920,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut, String sResultCode, String sLanguage, String sUid)
 	{
-		String sMethod = "handleResult()";
+		String sMethod = "handleResult";
 		StringBuffer sbTemp = null;
 
 		try {
@@ -1014,16 +1012,13 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 	 * @param pwOut
 	 *            The output.
 	 */
-	
 	private void handleApiRequest(HashMap htServiceRequest, HttpServletRequest servletRequest, PrintWriter pwOut,
 			HttpServletResponse servletResponse)
 	{
 		// API Request not implemented!!
 		// Maybe implement something which supports OpenID call without requesting user for OpenID identifier
 		
-		String sMethod = "handleApiRequest()";
-		
-		
+		String sMethod = "handleApiRequest";
 		_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received, API not supported");
 		
 		String sRid = (String) htServiceRequest.get("rid");
@@ -1041,7 +1036,6 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 			
 		}
 		catch (ASelectException eAS) {
-
 			// Allready logged
 			sbResponse.append("&").append(RESULT_CODE);
 			sbResponse.append("=").append(eAS.getMessage());
@@ -1065,5 +1059,4 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 		  String returnURL = _sUrl;
 	    return returnURL;
 	  }
-
 }

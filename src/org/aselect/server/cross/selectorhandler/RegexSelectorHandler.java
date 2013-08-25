@@ -113,7 +113,7 @@ public class RegexSelectorHandler implements ISelectorHandler
 	public void init(Object oHandlerConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			_systemLogger = ASelectSystemLogger.getHandle();
 			_configManager = ASelectConfigManager.getHandle();
@@ -209,7 +209,7 @@ public class RegexSelectorHandler implements ISelectorHandler
 	public HashMap getRemoteServerId(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 	throws ASelectException
 	{
-		String sMethod = "getRemoteServerId()";
+		String sMethod = "getRemoteServerId";
 		int i = 0;
 		boolean matchFound = false;
 		String sRemoteId = null;
@@ -357,7 +357,7 @@ public class RegexSelectorHandler implements ISelectorHandler
 			sLoginForm = Utils.replaceString(sLoginForm, "[cross_request]", "cross_login");
 
 			if (htSessionContext != null)
-				sLoginForm = _configManager.updateTemplate(sLoginForm, htSessionContext);
+				sLoginForm = _configManager.updateTemplate(sLoginForm, htSessionContext, null);
 
 			pwOut.println(sLoginForm);
 		}

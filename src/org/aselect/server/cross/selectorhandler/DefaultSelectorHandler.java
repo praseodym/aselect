@@ -108,7 +108,7 @@ public class DefaultSelectorHandler implements ISelectorHandler
 	public void init(Object oHandlerConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			_crossASelectManager = CrossASelectManager.getHandle();
 			_configManager = ASelectConfigManager.getHandle();
@@ -172,7 +172,7 @@ public class DefaultSelectorHandler implements ISelectorHandler
 	private void showSelectForm(HashMap htServiceRequest, PrintWriter pwOut, HashMap htServers)
 	throws ASelectException
 	{
-		String sMethod = "showSelectForm()";
+		String sMethod = "showSelectForm";
 		String sSelectForm = null;
 
 		try {
@@ -195,7 +195,7 @@ public class DefaultSelectorHandler implements ISelectorHandler
 
 			HashMap htSession = SessionManager.getHandle().getSessionContext(sRid);
 			if (htSession != null)
-				sSelectForm = _configManager.updateTemplate(sSelectForm, htSession);
+				sSelectForm = _configManager.updateTemplate(sSelectForm, htSession, null);
 
 			pwOut.println(sSelectForm);
 		}
@@ -259,18 +259,4 @@ public class DefaultSelectorHandler implements ISelectorHandler
 		_sHTMLSelectForm = Utils.replaceString(_sHTMLSelectForm, "[version]", Version.getVersion());
 		_sHTMLSelectForm = Utils.replaceString(_sHTMLSelectForm, "[organization_friendly]", _sFriendlyName);
 	}
-
-	/*
-	 * 20090930, Bauke: use _configManager version private String loadHTMLTemplate(String sLocation) throws
-	 * ASelectException { String sTemplate = new String(); String sLine; BufferedReader brIn = null; String sMethod =
-	 * "loadHTMLTemplate()"; _systemLogger.log(Level.INFO, "DefaultSelectorHandler", "loadHTMLTemplate", "FORM " +
-	 * sLocation); try { brIn = new BufferedReader(new InputStreamReader(new FileInputStream(sLocation))); while ((sLine
-	 * = brIn.readLine()) != null) { sTemplate += sLine + "\n"; } } catch (Exception e) { StringBuffer sbError = new
-	 * StringBuffer("Could not load '"); sbError.append(sLocation).append("'HTML template.");
-	 * _systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e); throw new
-	 * ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e); } finally { try { brIn.close(); } catch (Exception e) {
-	 * StringBuffer sbError = new StringBuffer("Could not close '");
-	 * sbError.append(sLocation).append("' FileInputStream."); _systemLogger.log(Level.WARNING, MODULE, sMethod,
-	 * sbError.toString(), e); } } return sTemplate; }
-	 */
 }

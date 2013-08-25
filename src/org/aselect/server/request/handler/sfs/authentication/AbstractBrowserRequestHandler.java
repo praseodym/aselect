@@ -277,14 +277,11 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
 			sErrorForm = Utils.replaceString(sErrorForm, "[language]", sLanguage);
 
+			HashMap htSessionContext = null;
 			String sRid = (String) htServiceRequest.get("rid");
 			if (sRid != null)
-				sErrorForm = _configManager.updateTemplate(sErrorForm, _sessionManager.getSessionContext(sRid));
-
-			HashMap htSessionContext = null;
-			if (sRid != null)
 				htSessionContext = SessionManager.getHandle().getSessionContext(sRid);
-			sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext);
+			sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext, _servletRequest);
 			String sSpecials = Utils.getAselectSpecials(htSessionContext, true/*decode too*/, _systemLogger);
 			sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
 			pwOut.println(sErrorForm);

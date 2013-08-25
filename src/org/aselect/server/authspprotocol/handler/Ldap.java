@@ -84,6 +84,8 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.logging.Level;
 
+import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.authspprotocol.IAuthSPConditions;
@@ -93,6 +95,7 @@ import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectAuthenticationLogger;
 import org.aselect.server.log.ASelectSystemLogger;
+import org.aselect.server.request.HandlerTools;
 import org.aselect.server.session.SessionManager;
 import org.aselect.server.tgt.TGTIssuer;
 import org.aselect.server.udb.IUDBConnector;
@@ -436,7 +439,6 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod,
 					"Could not compute authentication request due to internal error", e);
-
 			htResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 		}
 		return htResponse;
@@ -570,10 +572,16 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	 * 
 	 * @param htServiceRequest
 	 *            the service request
+	 * @param servletRequest
+	 *            the servlet request
 	 * @param servletResponse
 	 *            the servlet response
+	 * @param htSessionContext
+	 *            the session context
+	 * @param htAdditional
+	 *            the additional attributes
 	 * @param pwOut
-	 *            the pw out
+	 *            the pw output
 	 * @param sServerId
 	 *            the server id
 	 * @param sLanguage
@@ -583,11 +591,12 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	 * @return true if successful
 	 * @throws ASelectException
 	 * @see org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler#handleDirectLoginRequest(java.util.HashMap,
-	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter, java.lang.String)
+	 *      javax.servlet.http.HttpServletResponse, java.io.PrintWriter,
+	 *      java.lang.String)
 	 */
 	// 20120403, Bauke: added htSessionContext to save on session reads
-	public boolean handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, HashMap htSessionContext,
-			HashMap htAdditional, PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
+	public boolean handleDirectLoginRequest(HashMap htServiceRequest, HttpServletRequest servletRequest, HttpServletResponse servletResponse,
+			HashMap htSessionContext, HashMap htAdditional, PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
 	throws ASelectException
 	{
 		String sMethod = "handleDirectLoginRequest";
@@ -598,11 +607,11 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 		_sUserCountry = sCountry;
 
 		if (sRequest.equalsIgnoreCase("direct_login1")) {
-			handleDirectLogin1(htServiceRequest, htSessionContext, pwOut, sServerId);
+			handleDirectLogin1(servletRequest, htServiceRequest, htSessionContext, pwOut, sServerId);
 			return true;
 		}
 		else if (sRequest.equalsIgnoreCase("direct_login2")) {
-			return handleDirectLogin2(htServiceRequest, servletResponse, htSessionContext, htAdditional, pwOut, sServerId);
+			return handleDirectLogin2(htServiceRequest, servletRequest, servletResponse, htSessionContext, htAdditional, pwOut, sServerId);
 		}
 		else {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request :'" + sRequest + "'");
@@ -635,7 +644,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	 * @throws ASelectException
 	 *             the aselect exception
 	 */
-	private void handleDirectLogin1(HashMap htServiceRequest, HashMap htSessionContext, PrintWriter pwOut, String sServerId)
+	private void handleDirectLogin1(HttpServletRequest servletRequest, HashMap htServiceRequest, HashMap htSessionContext, PrintWriter pwOut, String sServerId)
 	throws ASelectException
 	{
 		// show direct login form
@@ -643,7 +652,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 		
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, "htServiceRequest: '"+htServiceRequest);
 		// not very useful: try {
-		showDirectLoginForm(htServiceRequest, htSessionContext, pwOut, sServerId);  // can change the session
+		showDirectLoginForm(servletRequest, htServiceRequest, htSessionContext, pwOut, sServerId);  // can change the session
 		//}
 		//catch (ASelectException e) { throw e; }
 	}
@@ -675,8 +684,8 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	 * @return true if successful
 	 * @throws ASelectException
 	 */
-	private boolean handleDirectLogin2(HashMap htServiceRequest, HttpServletResponse servletResponse, HashMap htSessionContext,
-									HashMap htAdditional, PrintWriter pwOut, String sServerId)
+	private boolean handleDirectLogin2(HashMap htServiceRequest, HttpServletRequest servletRequest, HttpServletResponse servletResponse,
+			HashMap htSessionContext, HashMap htAdditional, PrintWriter pwOut, String sServerId)
 	throws ASelectException
 	{
 		String sMethod = "handleDirectLogin2";
@@ -817,31 +826,34 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 					return true;  // No browser attached
 				}
 				
+				HandlerTools.setRequestorFriendlyCookie(servletResponse, htSessionContext, _systemLogger);  // 20130825
 				TGTIssuer tgtIssuer = new TGTIssuer(sServerId);
 				String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
 				
 				setOutputAvailable(true); // Assume browser still present, 	// RH, 20130813, n
-//				String sTgt = tgtIssuer.issueTGTandRedirect(sRid, htSessionContext, sAuthSPId, htAdditional, servletResponse, sOldTGT, false /* no redirect */);	// RH, 20130813, o
-				String sTgt = tgtIssuer.issueTGTandRedirect(sRid, htSessionContext, sAuthSPId, htAdditional, servletResponse, sOldTGT, false /* no redirect */, this);	// RH, 20130813, n
+				String sTgt = tgtIssuer.issueTGTandRedirect(sRid, htSessionContext, sAuthSPId, htAdditional, servletRequest, servletResponse,
+						sOldTGT, false /* no redirect */, this);	// RH, 20130813, n
 
 				// Cookie was set on the 'servletResponse'
 
 				// The next user redirect will set the TGT cookie, the "nextauthsp" form below will also set the cookie
 				if (next_authsp != null) {
 					// Direct the user to the next_authsp using the "nextauthsp" form
-					String sSelectForm = _configManager.getForm("nextauthsp", _sUserLanguage, _sUserCountry);
-					sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
-					sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]",  (String) htServiceRequest.get("a-select-server"));
-					sSelectForm = Utils.replaceString(sSelectForm, "[user_id]", sUid);
-					sSelectForm = Utils.replaceString(sSelectForm, "[authsp]", next_authsp);
-					sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", (String) htServiceRequest.get("my_url"));
-					sSelectForm = Utils.replaceString(sSelectForm, "[request]", "login3");
+					String sNextauthspForm = _configManager.getForm("nextauthsp", _sUserLanguage, _sUserCountry);
+					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[rid]", sRid);
+					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[a-select-server]",  (String) htServiceRequest.get("a-select-server"));
+					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[user_id]", sUid);
+					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[authsp]", next_authsp);
+					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[aselect_url]", (String) htServiceRequest.get("my_url"));
+					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[request]", "login3");
 					String sLanguage = (String) htServiceRequest.get("language");  // 20101027 _
 					String sCountry = (String) htServiceRequest.get("country");  // 20101027 _
-					sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
-					sSelectForm = Utils.replaceString(sSelectForm, "[country]", sCountry);
+					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[language]", sLanguage);
+					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[country]", sCountry);
+					sNextauthspForm = _configManager.updateTemplate(sNextauthspForm, htSessionContext, servletRequest);
+				
 					Tools.pauseSensorData(_configManager, _systemLogger, htSessionContext);  //20111102 can update the session
-					pwOut.println(sSelectForm);
+					pwOut.println(sNextauthspForm);
 					return true;
 				}
 				// End sequential authsp's
@@ -889,12 +901,12 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				sErrorForm = Utils.replaceString(sErrorForm, "[country]", _sUserCountry);
 				sErrorForm = Utils.replaceString(sErrorForm, "[app_id]",(String) htSessionContext.get("app_id"));
 				// RH, 20100819, en
-				
+				sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext, servletRequest);
+			
 				// Bauke 20100908: Extract if_cond=... from the application URL
 				String sSpecials = Utils.getAselectSpecials(htSessionContext, true/*decode too*/, _systemLogger);
 				sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
 
-				sErrorForm = _configManager.updateTemplate(sErrorForm, htSessionContext);
 				Tools.pauseSensorData(_configManager, _systemLogger, htSessionContext);  //20111102 can update the session
 				pwOut.println(sErrorForm);
 			}
@@ -906,7 +918,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 					String sErrorMessage = _configManager.getErrorMessage(ERROR_LDAP_PREFIX
 						+ ERROR_LDAP_INVALID_CREDENTIALS, _sUserLanguage, _sUserCountry);
 					htServiceRequest.put("error_message", sErrorMessage);
-					showDirectLoginForm(htServiceRequest, htSessionContext, pwOut, sServerId);  // can change the session
+					showDirectLoginForm(servletRequest, htServiceRequest, htSessionContext, pwOut, sServerId);  // can change the session
 				}  // else no browser attached
 			}
 			return false;
@@ -981,7 +993,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	 *            the server id
 	 * @throws ASelectException
 	 */
-	private void showDirectLoginForm(HashMap htServiceRequest, HashMap htSessionContext, PrintWriter pwOut, String sServerId)
+	private void showDirectLoginForm(HttpServletRequest servletRequest, HashMap htServiceRequest, HashMap htSessionContext, PrintWriter pwOut, String sServerId)
 	throws ASelectException
 	{
 		String sMethod = "showDirectLoginForm";
@@ -1022,6 +1034,8 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[user_id]", (sUid != null)? sUid: "");
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[error_message]", sErrorMessage);
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[language]", _sUserLanguage);
+			
+			sDirectLoginForm = _configManager.updateTemplate(sDirectLoginForm, htSessionContext, servletRequest);
 			// Extract if_cond=... from the application URL
 			
 			// 20100908, Bauke: conditions
@@ -1032,7 +1046,6 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 					Errors.ERROR_ASELECT_SERVER_CANCEL).append("&a-select-server=").append(sServerId).append("&rid=")
 					.append(sRid);
 			sDirectLoginForm = Utils.replaceString(sDirectLoginForm, "[cancel]", sbUrl.toString());
-			sDirectLoginForm = _configManager.updateTemplate(sDirectLoginForm, htSessionContext);
 			Tools.pauseSensorData(_configManager, _systemLogger, htSessionContext);  //20111102, can update the session
 			pwOut.println(sDirectLoginForm);
 		}

@@ -26,6 +26,7 @@ import javax.xml.namespace.QName;
 
 import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.config.ASelectConfigManager;
+import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.xsaml20.Saml20_BrowserHandler;
 import org.aselect.server.request.handler.xsaml20.Saml20_Metadata;
@@ -201,8 +202,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				handleSAMLMessage(request, response);
 			}
 			else {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Request: " + request.getQueryString()
-						+ " is not recognized");
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Request: "+request.getQueryString()+" is not recognized");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request handled ");
@@ -211,6 +211,15 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			throw e;
 		}
 		finally {
+			// 20130821, Bauke: save friendly name after session is gone
+			if (_htSessionContext != null) {
+				String sStatus = (String)_htSessionContext.get("status");
+				String sAppId = (String)_htSessionContext.get("app_id");
+				if ("del".equals(sStatus) && Utils.hasValue(sAppId)) {
+					String sUF = ApplicationManager.getHandle().getFriendlyName(sAppId);
+					HandlerTools.setEncryptedCookie(response, "requestor_friendly_name", sUF, _configManager.getCookieDomain(), -1/*age*/, _systemLogger);
+				}
+			}
 			_oSessionManager.finalSessionProcessing(_htSessionContext, true/*update session*/);
 		}
 		return new RequestState(null);

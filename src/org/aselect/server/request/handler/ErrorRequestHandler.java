@@ -169,7 +169,7 @@ public class ErrorRequestHandler extends AbstractRequestHandler
 			sErrorForm = Utils.replaceString(sErrorForm, "[app_id]", app_id);
 			sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), null, _systemLogger);
 			// updateTemplate() accepts a null session to remove unused special fields!
-			sErrorForm = _configManager.updateTemplate(sErrorForm, null /* no session available */);
+			sErrorForm = _configManager.updateTemplate(sErrorForm, null /* no session available */, request);
 
 			pwOut = response.getWriter();
 			response.setContentType("text/html");

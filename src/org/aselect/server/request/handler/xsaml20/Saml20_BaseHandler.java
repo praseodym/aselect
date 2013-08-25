@@ -267,7 +267,7 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 	/**
 	 * Finish logout actions.
 	 * 
-	 * @param httpResponse
+	 * @param servletResponse
 	 *            the http response
 	 * @param resultCode
 	 *            the result code
@@ -276,7 +276,7 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	protected void finishLogoutActions(HttpServletResponse httpResponse, String resultCode, String sLogoutReturnUrl)
+	protected void finishLogoutActions(HttpServletRequest servletRequest, HttpServletResponse servletResponse, String resultCode, String sLogoutReturnUrl)
 	throws ASelectException
 	{
 		String sMethod = "finishLogoutActions";
@@ -294,7 +294,7 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 			String url = sLogoutReturnUrl + sAmpQuest + "result_code=" + resultCode;
 			try {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + url);
-				httpResponse.sendRedirect(url);
+				servletResponse.sendRedirect(url);
 			}
 			catch (IOException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);
@@ -307,10 +307,11 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 						_sUserLanguage, _sUserCountry);
 				sLogoutResultPage = Utils.replaceString(sLogoutResultPage, "[version]", Version.getVersion());
 				sLogoutResultPage = Utils.replaceString(sLogoutResultPage, "[organization_friendly]", _sFriendlyName);
-				String sHtmlPage = Utils.replaceString(sLogoutResultPage, "[result_code]", resultCode);
-				pwOut = httpResponse.getWriter();
-				httpResponse.setContentType("text/html");
-				pwOut.println(sHtmlPage);
+				sLogoutResultPage = Utils.replaceString(sLogoutResultPage, "[result_code]", resultCode);
+				sLogoutResultPage = _configManager.updateTemplate(sLogoutResultPage, null/*no session*/, servletRequest);
+				pwOut = servletResponse.getWriter();
+				servletResponse.setContentType("text/html");
+				pwOut.println(sLogoutResultPage);
 			}
 			catch (IOException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);

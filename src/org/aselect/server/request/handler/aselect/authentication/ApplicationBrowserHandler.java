@@ -287,7 +287,6 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -295,7 +294,6 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 
-import javax.crypto.SecretKey;
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse; //import org.aselect.system.servlet.HtmlInfo;
@@ -372,7 +370,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	private AuthSPHandlerManager _authspHandlerManager;
 	private CryptoEngine _cryptoEngine;
 	private String _sConsentForm = null;
-	private final static String PARM_REQ_FRIENDLY_NAME = "requestorfriendlyname";
 	private String _sServerUrl;
 	private static boolean firstTime = true;  // do Saml bootstrap only once
 
@@ -522,9 +519,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				catch (Exception e) {
 					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Configuration error: " + e);
 				}
-				//_systemLogger.log(Level.INFO, _sModule, sMethod, "Serverinfo [" + sServerInfoForm + "]");
+				sServerInfoForm = _configManager.updateTemplate(sServerInfoForm, _htSessionContext, _servletRequest);
 				Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
-				//_sessionManager.update(sRid, _htSessionContext); // Write session
+				
 				if (_htSessionContext != null)
 					_htSessionContext.put("user_state", "state_serverinfo");
 				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
@@ -599,13 +596,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				handleLogin25(htServiceRequest, _servletResponse, pwOut);
 			}
 			else if (sRequest.equals("ip_login")) {
-				handleIPLogin1(htServiceRequest, _servletResponse, pwOut);
+				handleIPLogin1(htServiceRequest, pwOut);
 			}
 			else if (sRequest.startsWith("direct_login")) {
 				handleDirectLogin(htServiceRequest, _servletResponse, pwOut);
 			}
 			else if (sRequest.equals("create_tgt")) {
-				handleCreateTGT(htServiceRequest, _servletResponse);
+				handleCreateTGT(htServiceRequest);
 			}
 			else {
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
@@ -662,7 +659,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_sbh", sRid, _htSessionContext, sTgt, true);
 		_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 		
-		String sAppUrl = (String)_htSessionContext.get("app_url");	
+		String sAppUrl = (String)_htSessionContext.get("app_url");
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIRECT to " + sAppUrl);
 		
 		TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
@@ -699,7 +696,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private void handleDirectLogin(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+	private void handleDirectLogin(HashMap htServiceRequest, HttpServletResponse xservletResponse, PrintWriter pwOut)
 	throws ASelectException
 	{
 		String sMethod = "handleDirectLogin";
@@ -784,9 +781,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 								//_sessionManager.update(sRid, _htSessionContext); // Write session
 								// pauseSensorDate() already does this: _sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 								// The user must choose his organization
-								String sSelectForm = org.aselect.server.utils.Utils.presentOrganizationChoice(_configManager, _htSessionContext,
-										sRid, (String)_htTGTContext.get("language"), hUserOrganizations);
-								servletResponse.setContentType("text/html");
+								String sSelectForm = org.aselect.server.utils.Utils.presentOrganizationChoice(_servletRequest,
+										_configManager, _htSessionContext, sRid, (String)_htTGTContext.get("language"), hUserOrganizations);
+								_servletResponse.setContentType("text/html");
 								pwOut.println(sSelectForm);
 								pwOut.close();
 								return;
@@ -809,7 +806,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 							String sLang = (String)_htTGTContext.get("language");
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-							oTGTIssuer.sendTgtRedirect(sRedirectUrl, sTgt, sRid, servletResponse, sLang);
+							oTGTIssuer.sendTgtRedirect(sRedirectUrl, sTgt, sRid, _servletResponse, sLang);
 							return;
 						}
 						// else: forcedAuthenticate: fall through
@@ -840,21 +837,24 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						getUserAuthsps(sRid, sUid);  // can change the session too
 						_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 						
-						String sSelectForm = _configManager.getForm("nextauthsp", _sUserLanguage, _sUserCountry);
-						sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
-						sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]",  (String) htServiceRequest.get("a-select-server"));
-						sSelectForm = Utils.replaceString(sSelectForm, "[user_id]", sUid);
-						sSelectForm = Utils.replaceString(sSelectForm, "[authsp]", next_authsp);
-						sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", (String) htServiceRequest.get("my_url"));
-						sSelectForm = Utils.replaceString(sSelectForm, "[request]", "login3");
+						String sNextauthspForm = _configManager.getForm("nextauthsp", _sUserLanguage, _sUserCountry);
+						sNextauthspForm = Utils.replaceString(sNextauthspForm, "[rid]", sRid);
+						sNextauthspForm = Utils.replaceString(sNextauthspForm, "[a-select-server]",  (String) htServiceRequest.get("a-select-server"));
+						sNextauthspForm = Utils.replaceString(sNextauthspForm, "[user_id]", sUid);
+						sNextauthspForm = Utils.replaceString(sNextauthspForm, "[authsp]", next_authsp);
+						sNextauthspForm = Utils.replaceString(sNextauthspForm, "[aselect_url]", (String) htServiceRequest.get("my_url"));
+						sNextauthspForm = Utils.replaceString(sNextauthspForm, "[request]", "login3");
 						String sLanguage = (String) htServiceRequest.get("language");  // 20101027 _
 						String sCountry = (String) htServiceRequest.get("country");  // 20101027 _
-						sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
-						sSelectForm = Utils.replaceString(sSelectForm, "[country]", sCountry);
+						sNextauthspForm = Utils.replaceString(sNextauthspForm, "[language]", sLanguage);
+						sNextauthspForm = Utils.replaceString(sNextauthspForm, "[country]", sCountry);
+						sNextauthspForm = _configManager.updateTemplate(sNextauthspForm, _htSessionContext, _servletRequest);
+						
 						_htSessionContext.put("user_state", "state_nextauthsp");
+						_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);
 						Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 						//_sessionManager.update(sRid, _htSessionContext); // Write session
-						pwOut.println(sSelectForm);						
+						pwOut.println(sNextauthspForm);						
 						return;
 					}
 
@@ -867,7 +867,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						_htSessionContext.put("forced_uid", sUid);
 						_htSessionContext.put("forced_organization", sTempOrg);
 						_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added
-						handleCrossLogin(htServiceRequest, servletResponse, pwOut);
+						_htSessionContext.put("user_state", "state_crosslogin");
+						Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
+						handleCrossLogin(htServiceRequest, _servletResponse, pwOut);
 						return;
 					}
 					if ("direct_login2".equals(sRequest)) {
@@ -879,7 +881,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					// The userid is already known from the TGT
 					htServiceRequest.put("user_id", sUid);
 					// showDirectLoginForm(htServiceRequest,pwOut);
-					oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, _htSessionContext,
+					_htSessionContext.put("user_state", "state_directlogin");
+					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
+					oProtocolHandler.handleDirectLoginRequest(htServiceRequest, _servletRequest, _servletResponse, _htSessionContext,
 									hmUserIdent, pwOut, _sMyServerId, _sUserLanguage, _sUserCountry);
 					_systemLogger.log(Level.FINE, _sModule, sMethod, "DirectLoginRequest handled (TGT)");
 					return;
@@ -888,7 +892,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "No TGT, Continue");
 			// no TGT found or killed (other uid)
 			if (!_configManager.isUDBEnabled() || _htSessionContext.containsKey("forced_organization")) {
-				handleCrossLogin(htServiceRequest, servletResponse, pwOut);
+				handleCrossLogin(htServiceRequest, _servletResponse, pwOut);
 				return;
 			}
 			String sForcedUid = (String) _htSessionContext.get("forced_uid");
@@ -904,7 +908,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 			
 			// Will issue a TGT if everything is ok
-			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, _htSessionContext,
+			_htSessionContext.put("user_state", "state_directlogin");
+			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
+			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, _servletRequest, _servletResponse, _htSessionContext,
 									hmUserIdent, pwOut, _sMyServerId, _sUserLanguage, _sUserCountry);
 			_systemLogger.log(Level.FINE, _sModule, sMethod, "DirectLoginRequest handled (no TGT)");
 		}
@@ -1137,9 +1143,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			String sForcedAuthsp = (String) _htSessionContext.get("forced_authsp");
 			String sState = (String)_htSessionContext.get("user_state");
 			
-			// 20130514, Bauke: force user back to the 'select' screen! Probably pressed F5 (refresh screen)
+			// 20130820, Bauke: force user back to the 'select' screen! Probably pressed F5 (refresh screen)
 			if ("state_select".equals(sState)) {
-				// EXPERIMENTAL: sForcedUid = "saml20_user";  // works in simple cases
+				sForcedUid = "saml20_user";
 			}
 			if (sForcedUid != null || sForcedAuthsp != null) {
 				if (sForcedUid != null)
@@ -1172,7 +1178,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				sErrorMessage = _configManager.getErrorMessage(sErrorMessage, _sUserLanguage, _sUserCountry);
 				sLoginForm = Utils.replaceString(sLoginForm, "[error_message]", sErrorMessage);
 			}
-			sLoginForm = _configManager.updateTemplate(sLoginForm, _htSessionContext);
+			sLoginForm = _configManager.updateTemplate(sLoginForm, _htSessionContext, _servletRequest);
 			
 			// Bauke 20110720: Extract if_cond=... from the application URL
 			String sSpecials = Utils.getAselectSpecials(_htSessionContext, true/*decode too*/, _systemLogger);
@@ -1281,7 +1287,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		if (_htSessionContext != null)
 			_htSessionContext.put("user_state", "state_session_info");
 		sInfoForm = Utils.replaceString(sInfoForm, "[other_sps]", sOtherSPs);
-		sInfoForm = _configManager.updateTemplate(sInfoForm, _htSessionContext);
+		sInfoForm = _configManager.updateTemplate(sInfoForm, _htSessionContext, _servletRequest);
 		servletResponse.setContentType("text/html");
 		Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 		//_sessionManager.update(sRid, _htSessionContext); // Write session
@@ -1443,13 +1449,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				// Redirect to the AuthSP's ISTS
 				String sAsUrl = _configManager.getRedirectURL(); // <redirect_url> in aselect.xml
 				sAsUrl = sAsUrl + "/" + sAuthsp + "?rid=" + sRid; // e.g. saml20_ists
-				// RH, 20100907, sn, add app_id, requestor_friendly_name so authsp can use this at will
+				// RH, 20100907, sn, add app_id, requestorfriendlyname so authsp can use this at will
 				String sAppId = (String) _htSessionContext.get("app_id");  // 20101027 _
 				String sFName = null;
 				try {
 					sFName = _applicationManager.getFriendlyName(sAppId);
 					if (sFName != null && !"".equals(sFName)) {
-						sAsUrl = sAsUrl + "&" + PARM_REQ_FRIENDLY_NAME + "="  +  URLEncoder.encode(sFName, "UTF-8");
+						sAsUrl = sAsUrl + "&" + "requestorfriendlyname" + "="  +  URLEncoder.encode(sFName, "UTF-8");
 					}
 				}
 				catch (ASelectException ae) {
@@ -1579,41 +1585,38 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// 20130411: What AuthSP's must be presented to the user?
 			if (bAuthspFromSelect) {
 				// 20130411, Bauke: Take AuthSP's from select.html
-				String sUrl = "", sName = "";
-				String sSelectChoice = HandlerTools.getCookieValue(_servletRequest, select_choice_COOKIE, _systemLogger);
-				if (Utils.hasValue(sSelectChoice)) {
+				String sUrl = "", sName = "", sSelectChoice = "";
 
-					try {
-						byte[] baBytes = _cryptoEngine.decryptData(sSelectChoice);  // _configManager.getDefaultPrivateKey());
-						sSelectChoice = new String(baBytes);
-						_systemLogger.log(Level.INFO, _sModule, sMethod, "select_choice=" + sSelectChoice);
-						// Earlier choice present, get it selected
-						// Contents of the cookie: <authsp_url>;<authsp_name>
-						// In the form look for: <option value="..." ...
-						// Note the authsp_name can contain double quotes, they must be escaped for HTML usage.
-						sSelectChoice = sSelectChoice.replaceAll("\"", "&quot;");
-						int idxChoice = sSelectForm.indexOf(sSelectChoice);
-						if (idxChoice >= 0) {
-							// Cookie choice is still present in the form, "select" it
-							int idxValue = sSelectForm.lastIndexOf("value", idxChoice);
-							if (idxValue >= 0) {
-								sSelectForm = sSelectForm.substring(0, idxValue).concat("selected ").concat(sSelectForm.substring(idxValue));
-							}
-							// Replacements in the form, split using the semicolon
-							// If no semicolon is present, we only have the "url" part available.
-							sUrl = sSelectChoice;
-							int idx = sSelectChoice.indexOf(';');
-							if (idx >= 0) {
-								sUrl = sSelectChoice.substring(0, idx);
-								sName = sSelectChoice.substring(idx+1);
-							}
+				try {
+					sSelectChoice = HandlerTools.getEncryptedCookie(_servletRequest, select_choice_COOKIE, _systemLogger);
+				}
+				catch (ASelectException ae) {
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not decrypt cookie: " + select_choice_COOKIE);
+				}
+				if (Utils.hasValue(sSelectChoice)) {
+					_systemLogger.log(Level.INFO, _sModule, sMethod, "select_choice=" + sSelectChoice);
+					// Earlier choice present, get it selected
+					// Contents of the cookie: <authsp_url>;<authsp_name>
+					// In the form look for: <option value="..." ...
+					// Note the authsp_name can contain double quotes, they must be escaped for HTML usage.
+					sSelectChoice = sSelectChoice.replaceAll("\"", "&quot;");
+					int idxChoice = sSelectForm.indexOf(sSelectChoice);
+					if (idxChoice >= 0) {
+						// Cookie choice is still present in the form, "select" it
+						int idxValue = sSelectForm.lastIndexOf("value", idxChoice);
+						if (idxValue >= 0) {
+							sSelectForm = sSelectForm.substring(0, idxValue).concat("selected ").concat(sSelectForm.substring(idxValue));
+						}
+						// Replacements in the form, split using the semicolon
+						// If no semicolon is present, we only have the "url" part available.
+						sUrl = sSelectChoice;
+						int idx = sSelectChoice.indexOf(';');
+						if (idx >= 0) {
+							sUrl = sSelectChoice.substring(0, idx);
+							sName = sSelectChoice.substring(idx+1);
 						}
 					}
-					catch (ASelectException ae) {
-						_systemLogger.log(Level.INFO, _sModule, sMethod, "Could not decrypt cookie: " + sSelectChoice);
-					}
 				}
-				// else: No earlier choice was made, sUrl and sName are empty
 				
 				sSelectForm = Utils.replaceString(sSelectForm, "[authsp_url]", sUrl);
 				sSelectForm = Utils.replaceString(sSelectForm, "[authsp_name]", sName);
@@ -1649,7 +1652,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					.append(_sMyServerId).append("&rid=").append(sRid);
 
 			sSelectForm = Utils.replaceString(sSelectForm, "[cancel]", sb.toString());
-			sSelectForm = _configManager.updateTemplate(sSelectForm, _htSessionContext);
+			sSelectForm = _configManager.updateTemplate(sSelectForm, _htSessionContext, _servletRequest);
 			// _systemLogger.log(Level.FINER, _sModule, sMethod, "Form select=["+sSelectForm+"]");
 			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 			//_sessionManager.update(sRid, _htSessionContext); // Write session
@@ -1713,7 +1716,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request, missing parmeter 'authsp'");
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
-			// RH, 20100907, sn, add app_id, requestor_friendly_name so authsp can use this at will
 			// 20130411, Bauke: moved before the "authsp_from_select" code
 			String sAppId = (String)_htSessionContext.get("app_id");
 			String sFriendlyName = null;
@@ -1755,11 +1757,14 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					sChosenPart1 = sChosenAppId.substring(0, idx);
 				}
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "Using authsps_from_select mechanism, sChosenAppId="+sChosenAppId);
-				sChosenAppId = _cryptoEngine.encryptData(sChosenAppId.getBytes());  // _configManager.getDefaultPrivateKey());
-
-				String sCookieDomain = _configManager.getCookieDomain();
-				HandlerTools.putCookieValue(servletResponse, select_choice_COOKIE, sChosenAppId,
-						sCookieDomain, null, 157680101/*5 years*/, 1/*httpOnly*/, _systemLogger);
+				
+				// 20130821, Bauke: introduced setEntrypedCookie() method
+				HandlerTools.setEncryptedCookie(servletResponse, select_choice_COOKIE, sChosenAppId, _configManager.getCookieDomain(), 157680101/*5 years*/, _systemLogger);
+				// Old:
+				//sChosenAppId = _cryptoEngine.encryptData(sChosenAppId.getBytes());  // _configManager.getDefaultPrivateKey());
+				//String sCookieDomain = _configManager.getCookieDomain();
+				//HandlerTools.putCookieValue(servletResponse, select_choice_COOKIE, sChosenAppId,
+				//		sCookieDomain, null, 157680101/*5 years*/, 1/*httpOnly*/, _systemLogger);
 				
 				// And temporarily replace the provided "app_id" with the user's choice
 				// This value will be used by startAuthentication() to create the redirect_url
@@ -1787,9 +1792,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				catch (ASelectConfigException e) {
 					// No popup configured -> sPopup is null already
 				}
-				// RH, 20100907, sn, add app_id, requestor_friendly_name so authsp can use this at will
+				// RH, 20100907, sn, add app_id, requestorfriendlyname so authsp can use this at will
 				if (Utils.hasValue(sFriendlyName)) {
-					sRedirectUrl = sRedirectUrl + "&" + PARM_REQ_FRIENDLY_NAME + "="  +  URLEncoder.encode(sFriendlyName, "UTF-8");
+					sRedirectUrl = sRedirectUrl + "&" + "requestorfriendlyname" + "="  +  URLEncoder.encode(sFriendlyName, "UTF-8");
 				}
 				// RH, 20100907, en
 
@@ -1797,6 +1802,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				if (sPopup == null || sPopup.equalsIgnoreCase("false")) {
 					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102, control goes to a different server
 					_htSessionContext.put("authsp_visited", "true");
+					_htSessionContext.put("user_state", "state_redirect");
 					_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 					servletResponse.sendRedirect(sRedirectUrl);
 					return;
@@ -1807,8 +1813,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				sPopupForm = Utils.replaceString(sPopupForm, "[authsp_url]", sRedirectUrl);
 				String strFriendlyName = _configManager.getParam(authSPsection, "friendly_name");
 				sPopupForm = Utils.replaceString(sPopupForm, "[authsp]", strFriendlyName);
-				sPopupForm = _configManager.updateTemplate(sPopupForm, _htSessionContext);
+				sPopupForm = _configManager.updateTemplate(sPopupForm, _htSessionContext, _servletRequest);
 				Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  // 20111102, control to the user
+				
 				_htSessionContext.put("user_state", "state_popup");
 				_htSessionContext.put("authsp_visited", "true");
 				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
@@ -2092,7 +2099,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *            Used to write information back to the user (HTML)
 	 * @throws ASelectException
 	 */
-	private void handleIPLogin1(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+	private void handleIPLogin1(HashMap htServiceRequest, PrintWriter pwOut)
 	throws ASelectException
 	{
 		String sMethod = "handleIPLogin1";
@@ -2134,23 +2141,19 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip was "
 								+ _htSessionContext.get("client_ip"));
 						_htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr());
+						_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 						_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip is now "
 								+ _htSessionContext.get("client_ip"));
-
-						//Utils.setSessionStatus(_htSessionContext, "upd", _systemLogger);
-						//_sessionManager.updateSession(sRid, _htSessionContext);
-						_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
 						String sAuthsp = (String) _htTGTContext.get("authsp");
 						_tgtManager.remove(sTgt);
 
+						HandlerTools.setRequestorFriendlyCookie(_servletResponse, _htSessionContext, _systemLogger);  // 20130825
+
 						// issue new one but with the same lifetime as the existing one
 						HashMap htAdditional = new HashMap();
-						// FIXME StorageManager can't update timestamp, this doesn't work. (Erwin, Peter)
-						// htAdditional.put("tgt_exp_time", htTgtContext.get("tgt_exp_time"));
-
 						TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-						oTGTIssuer.issueTGTandRedirect(sRid, _htSessionContext, sAuthsp, htAdditional, servletResponse, null, true);
+						oTGTIssuer.issueTGTandRedirect(sRid, _htSessionContext, sAuthsp, htAdditional, _servletRequest, _servletResponse, null, true);
 						return;
 					}
 
@@ -2181,7 +2184,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
 						_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sb);
-						servletResponse.sendRedirect(sb.toString());
+						_servletResponse.sendRedirect(sb.toString());
 					}
 					catch (UnsupportedEncodingException e) {
 						_systemLogger.log(Level.WARNING, _sModule, sMethod, "Failed to encode user id.");
@@ -2228,7 +2231,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			// go for IP authsp
 			htServiceRequest.put("authsp", "Ip");
-			handleLogin3(htServiceRequest, servletResponse, pwOut);
+			handleLogin3(htServiceRequest, _servletResponse, pwOut);
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -2334,12 +2337,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Otherwise present the "loggedout.html" form
 			String sLoggedOutForm = _configManager.getForm("loggedout", _sUserLanguage, _sUserCountry);
-			sLoggedOutForm = _configManager.updateTemplate(sLoggedOutForm, _htTGTContext);
+			sLoggedOutForm = _configManager.updateTemplate(sLoggedOutForm, null/*no session*/, _servletRequest);
 			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 			// no RID _sessionManager.update(sRid, _htSessionContext); // Write session
-			if (_htSessionContext != null)
+			if (_htSessionContext != null) {
 				_htSessionContext.put("user_state", "state_loggedout");
-			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
+				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
+			}
 			pwOut.println(sLoggedOutForm);
 		}
 		catch (Exception e) {
@@ -2372,7 +2376,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private void handleCreateTGT(HashMap htServiceRequest, HttpServletResponse servletResponse)
+	private void handleCreateTGT(HashMap htServiceRequest)
 	throws ASelectException
 	{
 		String sMethod = "handleCreateTGTRequest";
@@ -2445,9 +2449,12 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				"Login", sUID, (String) htServiceRequest.get("client_ip"), _sMyOrg, sPrivilegedApplication, "granted"
 			});
 
+			// 20130825, Bauke: save friendly name after session is gone
+			HandlerTools.setRequestorFriendlyCookie(_servletResponse, _htSessionContext, _systemLogger);  // 20130825
+			
 			// Issue TGT
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-			tgtIssuer.issueTGTandRedirect(sRid, _htSessionContext, sPrivilegedApplication, hmUserIdent/*additional*/, servletResponse, null, true/*redirect*/);
+			tgtIssuer.issueTGTandRedirect(sRid, _htSessionContext, sPrivilegedApplication, hmUserIdent/*additional*/, _servletRequest, _servletResponse, null, true/*redirect*/);
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -2758,12 +2765,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			sTemp = (String) _htTGTContext.get("app_id");
 			// RH, 20100805, Experimental insert of friendly_name
 			String sFName = _applicationManager.getFriendlyName(sTemp);
-			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[friendly_name]", sFName);
+			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[friendly_name]", sFName);  // backward compatibility
+			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[requestor_friendly_name]", sFName);  // 20130822, Bauke: added
 			
 			if (sTemp == null)
 				sTemp = "[unknown]";
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[app_id]", sTemp);
-			sUserInfoForm = _configManager.updateTemplate(sUserInfoForm, _htTGTContext);
+			sUserInfoForm = _configManager.updateTemplate(sUserInfoForm, null/*no session*/, _servletRequest);
 
 			sTemp = (String) _htTGTContext.get("authsp");
 			if (sTemp != null) {
@@ -2823,9 +2831,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				sUserInfoForm = Utils.replaceString(sUserInfoForm, "[org]", sTemp3);
 			}
 			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
-			if (_htSessionContext != null)
+			if (_htSessionContext != null) {
 				_htSessionContext.put("user_state", "state_userinfo");
-			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
+				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added, was update()
+			}
 			pwOut.println(sUserInfoForm);
 		}
 		catch (IOException eIO) {
@@ -3000,7 +3009,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		// Only perform user/password authentication (will update the session):
 		IAuthSPDirectLoginProtocolHandler oProtocolHandler = _authspHandlerManager.getAuthSPDirectLoginProtocolHandler(sAuthSp);
 		_systemLogger.log(Level.FINE, MODULE, sMethod, "HttpSR="+servletResponse);
-		boolean bSuccess = oProtocolHandler.handleDirectLoginRequest(hmDirectRequest, null /*servlet response*/,
+		boolean bSuccess = oProtocolHandler.handleDirectLoginRequest(hmDirectRequest, null/*serlvet request*/, null/*servlet response*/,
 					_htSessionContext, null/*additional*/, null /*output writer*/, _sMyServerId, "en", "nl");
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Success="+bSuccess+" hm="+hmDirectRequest);
 		

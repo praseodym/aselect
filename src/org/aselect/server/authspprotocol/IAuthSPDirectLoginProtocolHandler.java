@@ -38,6 +38,7 @@ package org.aselect.server.authspprotocol;
 import java.io.PrintWriter;
 import java.util.HashMap;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.system.exception.ASelectAuthSPException;
@@ -56,7 +57,6 @@ import org.aselect.system.exception.ASelectException;
  */
 public interface IAuthSPDirectLoginProtocolHandler
 {
-
 	/**
 	 * Initializes the AuthSP direct login protocol handler. <br>
 	 * <br>
@@ -113,8 +113,7 @@ public interface IAuthSPDirectLoginProtocolHandler
 	 */
 	// 20120403, Bauke: added htSessionContext to save on session reads
 	// 20121025, Bauke: added htAdditional to allow for attribute additions (e.g. udb_user_ident)
-	public boolean handleDirectLoginRequest(HashMap htServiceRequest, HttpServletResponse servletResponse, HashMap htSessionContext,
-			HashMap htAdditional, PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
+	public boolean handleDirectLoginRequest(HashMap htServiceRequest, HttpServletRequest servletRequest, HttpServletResponse servletResponse,
+			HashMap htSessionContext, HashMap htAdditional, PrintWriter pwOut, String sServerId, String sLanguage, String sCountry)
 	throws ASelectException;
-
 }

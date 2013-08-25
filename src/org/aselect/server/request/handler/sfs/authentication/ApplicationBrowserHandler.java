@@ -121,208 +121,7 @@
  *
  * Revision 1.2  2006/01/25 14:40:05  martijn
  * TGTManager and SessionManager changed
- *
- * Revision 1.1  2006/01/13 08:40:26  martijn
- * *** empty log message ***
- *
- * Revision 1.1.2.1  2005/12/30 12:05:23  martijn
- * initial version
- *
- * Revision 1.53  2005/09/08 12:46:35  erwin
- * Changed version number to 1.4.2
- *
- * Revision 1.52  2005/09/07 08:28:51  erwin
- * Fixed problem with popup configuration handling (bug #77)
- *
- * Revision 1.51  2005/05/04 14:22:06  martijn
- * updates logging
- *
- * Revision 1.50  2005/05/04 09:34:59  martijn
- * bugfixes, improved logging
- *
- * Revision 1.49  2005/05/03 07:38:02  erwin
- * Added UID check in create TGT
- *
- * Revision 1.48  2005/04/28 09:11:30  erwin
- * Reformatted if/else structure in handleLogin1
- *
- * Revision 1.47  2005/04/27 14:17:14  erwin
- * - Added URL decoding for uid
- * - Added AuthSP level check
- *
- * Revision 1.46  2005/04/27 07:07:32  erwin
- * log level changed for "failed to retrieve..."
- *
- * Revision 1.45  2005/04/15 14:04:31  peter
- * javadoc and comment
- *
- * Revision 1.44  2005/04/12 11:21:44  peter
- * undo last commit (1.43)
- *
- * Revision 1.43  2005/04/12 10:13:44  peter
- * fixed sso_groups bug
- *
- * Revision 1.42  2005/04/11 14:56:31  peter
- * code restyle
- *
- * Revision 1.41  2005/04/11 12:53:18  peter
- * Solved cross issues:
- * - Handle logout now redirects to remote A-Select Server in case of cross.
- * - Logged out form is now static and has no dynamic [message] tag anymore.
- *
- * Revision 1.40  2005/04/11 09:36:31  erwin
- * Added useRemoteSigning() as check.
- *
- * Revision 1.39  2005/04/11 09:24:24  remco
- * also implemented forced_logon protocol change in cross (untested)
- *
- * Revision 1.38  2005/04/11 08:57:29  erwin
- * Added local A-Select signing support for cross A-Select.
- *
- * Revision 1.37  2005/04/08 12:41:12  martijn
- *
- * Revision 1.36  2005/04/08 08:06:08  peter
- * if user already has a TGT check if an optional requested uid equals the one in the TGT
- *
- * Revision 1.35  2005/04/08 07:56:13  erwin
- * Added localisation support for cross A-Select.
- *
- * Revision 1.34  2005/04/07 14:39:45  peter
- * added forced_authenticate; redesign of login1 in case of valid TGT
- *
- * Revision 1.33  2005/04/07 12:14:34  martijn
- * added single sign-on groups
- *
- * Revision 1.32  2005/04/07 07:37:38  peter
- * forced logon for cross aselect
- *
- * Revision 1.31  2005/04/07 06:37:12  erwin
- * Renamed "attribute" -> "param" to be compatible with configManager.
- *
- * Revision 1.30  2005/04/06 11:40:28  peter
- * Added support for optional uid in request authenticate
- *
- * Revision 1.29  2005/04/05 15:25:08  martijn
- * TGTIssuer.issueTGT() now only needs an optional old tgt and the printwriter isn't needed anymore
- *
- * Revision 1.28  2005/04/05 13:12:29  martijn
- * save old_tgt if forced authenticate and user has already a tgt
- *
- * Revision 1.27  2005/04/05 11:30:44  martijn
- *
- * Revision 1.26  2005/04/05 09:11:15  peter
- * added cross proxy logica in showuserinfo (logout page)
- *
- * Revision 1.25  2005/04/05 08:17:03  martijn
- *
- * Revision 1.24  2005/04/05 07:50:11  martijn
- * added forced_authenticate
- *
- * Revision 1.23  2005/04/04 12:33:34  erwin
- *
- * Revision 1.22  2005/04/01 14:26:58  peter
- * cross aselect redesign
- *
- * Revision 1.21  2005/03/24 13:23:45  erwin
- * Improved URL encoding/decoding
- * (this is handled in communication package for API calls)
- *
- * Revision 1.20  2005/03/22 15:19:22  peter
- * handleCrossLogin makes use of the CrossSelectorManager
- *
- * Revision 1.18  2005/03/18 13:43:35  remco
- * made credentials shorter (base64 encoding instead of hex representation)
- *
- * Revision 1.17  2005/03/17 15:27:58  tom
- * Fixed javadoc
- *
- * Revision 1.16  2005/03/17 15:16:48  tom
- * Removed redundant code,
- * A-Select-Server ID is checked in higher function
- *
- * Revision 1.15  2005/03/17 13:42:34  tom
- * Minor code style fix
- *
- * Revision 1.14  2005/03/17 07:58:43  erwin
- * The A-Select server ID is now set with the constructor,
- * instead of reading it from the configuration.
- *
- * Revision 1.13  2005/03/16 13:30:05  erwin
- * Application manager was null and protected, this is fixed.
- *
- * Revision 1.12  2005/03/16 12:52:10  tom
- * - Fixed javadoc
- *
- * Revision 1.11  2005/03/16 12:50:50  martijn
- *
- * Revision 1.10  2005/03/16 10:00:07  peter
- * Fixed Cross TGT if it already exists.
- *
- * Revision 1.9  2005/03/16 09:28:03  martijn
- * The config item 'cookie_domain' will now only be retrieved from the config at startup and not every time the ticket is issued.
- *
- * Revision 1.8  2005/03/15 16:04:10  erwin
- *
- * Revision 1.7  2005/03/15 15:29:04  martijn
- * renamed special authsp to privileged application
- *
- * Revision 1.6  2005/03/15 10:52:01  tom
- * Fixed import errors
- *
- * Revision 1.5  2005/03/15 10:51:41  tom
- * - Added new Abstract class functionality
- * - Added Javadoc
- *
- * Revision 1.4  2005/03/15 10:10:36  tom
- * Small Javadoc changes
- *
- * Revision 1.3  2005/03/15 10:06:52  tom
- * Added JavaDoc and Error Handling
- *
- * Revision 1.2  2005/03/15 08:29:56  tom
- * Added new tgt_exp_time handling
- *
- * Revision 1.1  2005/03/15 08:21:19  tom
- * Redesign of request handling
- *
- * Revision 1.18  2005/03/14 10:17:21  tom
- * Changed return parameters in cancel to match new error request
- *
- * Revision 1.17  2005/03/14 10:05:34  martijn
- * config item 'select_form_show_always' is renamed to 'always_show_select_form' in 'authsps' config section
- *
- * Revision 1.16  2005/03/14 09:39:04  peter
- * code-styling and error handling
- *
- * Revision 1.15  2005/03/10 16:44:12  erwin
- * Made compatible with new UDBConnectorFactory
- *
- * Revision 1.14  2005/03/10 14:17:45  erwin
- * Improved Javadoc.
- *
- * Revision 1.13  2005/03/09 17:08:54  remco
- * Fixed whole bunch of warnings
- *
- * Revision 1.12  2005/03/09 15:16:51  martijn
- * fixed bug in getAuthsps(): if the hashtable returned by the udbconnector doesn't contain a key=user_authsps with value=HashMap, then a wrong error message was logged.
- *
- * Revision 1.11  2005/03/09 15:11:20  martijn
- *
- * Revision 1.10  2005/03/09 09:24:50  erwin
- * Renamed and moved errors.
- *
- * Revision 1.9  2005/03/08 10:16:32  remco
- * javadoc added
- *
- * Revision 1.8  2005/03/08 10:03:40  remco
- * javadoc added
- *
- * Revision 1.3  2005/03/08 09:51:53  remco
- * javadoc added
- *
- *
  */
-
 package org.aselect.server.request.handler.sfs.authentication;
 
 import java.io.IOException;
@@ -411,7 +210,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 *            The A-Select Server organisation.
 	 */
 	public ApplicationBrowserHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-			String sMyServerId, String sMyOrg) {
+			String sMyServerId, String sMyOrg)
+	{
 		super(servletRequest, servletResponse, sMyServerId, sMyOrg);
 		_sModule = "ApplicationBrowserHandler()";
 		_applicationManager = ApplicationManager.getHandle();
@@ -499,7 +299,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				handleIPLogin1(htServiceRequest, _servletResponse, pwOut);
 			}
 			else if (sRequest.indexOf("direct_login") >= 0) {
-				handleDirectLogin(htServiceRequest, _servletResponse, pwOut);
+				handleDirectLogin(htServiceRequest, _servletRequest, _servletResponse, pwOut);
 			}
 			else if (sRequest.equals("create_tgt")) {
 				handleCreateTGT(htServiceRequest, _servletResponse);
@@ -539,7 +339,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private void handleDirectLogin(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+	private void handleDirectLogin(HashMap htServiceRequest, HttpServletRequest servletRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 	throws ASelectException
 	{
 		String sMethod = "handleDirectLogin";
@@ -636,7 +436,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					// The userid is already known from the TGT
 					htServiceRequest.put("user_id", sUid);
 					// showDirectLoginForm(htServiceRequest,pwOut);
-					oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, _htSessionContext, null, pwOut, _sMyServerId, "", "");
+					oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletRequest, servletResponse, _htSessionContext, null, pwOut, _sMyServerId, "", "");
 					return;
 				}
 			}
@@ -649,10 +449,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			if (sForcedUid != null) {
 				htServiceRequest.put("user_id", sForcedUid);
 				// showDirectLoginForm(htServiceRequest,pwOut);
-				oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, _htSessionContext, null, pwOut, _sMyServerId, "", "");
+				oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletRequest, servletResponse, _htSessionContext, null, pwOut, _sMyServerId, "", "");
 				return;
 			}
-			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletResponse, _htSessionContext, null, pwOut, _sMyServerId, "", "");
+			oProtocolHandler.handleDirectLoginRequest(htServiceRequest, servletRequest, servletResponse, _htSessionContext, null, pwOut, _sMyServerId, "", "");
 
 			// Store changed session, for JDBC Storage Handler
 			if (!_sessionManager.updateSession(sRid, _htSessionContext)) {
@@ -836,7 +636,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					_sMyServerId).append("&rid=").append(sRid);
 			sLoginForm = Utils.replaceString(sLoginForm, "[cancel]", sbUrl.toString());
 
-			sLoginForm = _configManager.updateTemplate(sLoginForm, _htSessionContext);
+			sLoginForm = _configManager.updateTemplate(sLoginForm, _htSessionContext, _servletRequest);
 			pwOut.println(sLoginForm);
 		}
 		catch (ASelectException ae) {
@@ -985,7 +785,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			sSelectForm = Utils.replaceString(sSelectForm, "[cancel]", sb.toString());
 
-			sSelectForm = _configManager.updateTemplate(sSelectForm, _htSessionContext);
+			sSelectForm = _configManager.updateTemplate(sSelectForm, _htSessionContext, _servletRequest);
 			pwOut.println(sSelectForm);
 		}
 		catch (ASelectException ae) {
@@ -1046,7 +846,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 
 			sRedirectUrl = startAuthentication(sRid, htServiceRequest);
-
 			try {
 				Object authSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"), "authsp",
 						"id=" + sAuthsp);
@@ -1070,7 +869,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 				sPopupForm = Utils.replaceString(sPopupForm, "[authsp]", strFriendlyName);
 
-				sPopupForm = _configManager.updateTemplate(sPopupForm, _htSessionContext);
+				sPopupForm = _configManager.updateTemplate(sPopupForm, _htSessionContext, _servletRequest);
 				pwOut.println(sPopupForm);
 				return;
 
@@ -1477,7 +1276,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							// .get("tgt_exp_time"));
 
 							TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
-							oTGTIssuer.issueTGTandRedirect(sRid, _htSessionContext, sAuthsp, htAdditional, servletResponse, null, true);
+							oTGTIssuer.issueTGTandRedirect(sRid, _htSessionContext, sAuthsp, htAdditional, _servletRequest, servletResponse, null, true);
 							return;
 						}
 					}
@@ -1651,7 +1450,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				}
 			}
 
-			sLoggedOutForm = _configManager.updateTemplate(sLoggedOutForm, htTGTContext);
+			sLoggedOutForm = _configManager.updateTemplate(sLoggedOutForm, htTGTContext, _servletRequest);
 
 			pwOut.println(sLoggedOutForm);
 
@@ -1786,7 +1585,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Issue TGT
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-			tgtIssuer.issueTGTandRedirect(sRid, _htSessionContext, sPrivilegedApplication, hmUserIdent/*additional*/, servletResponse, null, true);
+			tgtIssuer.issueTGTandRedirect(sRid, _htSessionContext, sPrivilegedApplication, hmUserIdent/*additional*/, _servletRequest, servletResponse, null, true);
 
 		}
 		catch (ASelectException e) {
@@ -2063,7 +1862,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				sTemp = "[unknown]";
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[app_id]", sTemp);
 
-			sUserInfoForm = _configManager.updateTemplate(sUserInfoForm, htTGTContext);
+			sUserInfoForm = _configManager.updateTemplate(sUserInfoForm, htTGTContext, _servletRequest);
 
 			sTemp = (String) htTGTContext.get("authsp");
 			if (sTemp != null) {

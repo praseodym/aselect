@@ -107,7 +107,7 @@ public class RequestHandlerFactory
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			_systemLogger = ASelectSystemLogger.getHandle();
 			_configManager = ASelectConfigManager.getHandle();
@@ -221,7 +221,7 @@ public class RequestHandlerFactory
 	public void process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		boolean bMatches = false;
 		IRequestHandler oRequestHandler = null;
 		RequestState oRequestState = null;
@@ -396,7 +396,6 @@ public class RequestHandlerFactory
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not match pattern", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
-
 		return bReturn;
 	}
 
@@ -437,7 +436,7 @@ public class RequestHandlerFactory
 			sErrorForm = Utils.replaceString(sErrorForm, "[language]", _sUserLanguage);
 			sErrorForm = Utils.handleAllConditionals(sErrorForm, Utils.hasValue(sErrorMessage), null, _systemLogger);
 			// updateTemplate() accepts a null session to remove unused special fields!
-			sErrorForm = _configManager.updateTemplate(sErrorForm, null /* no session available */);
+			sErrorForm = _configManager.updateTemplate(sErrorForm, null /* no session available */, request);
 
 			pwOut = response.getWriter();
 			response.setContentType("text/html");
@@ -459,5 +458,4 @@ public class RequestHandlerFactory
 			}
 		}
 	}
-
 }

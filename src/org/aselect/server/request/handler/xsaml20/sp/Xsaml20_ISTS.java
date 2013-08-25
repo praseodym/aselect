@@ -21,7 +21,9 @@ import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.config.ASelectConfigManager;
+import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.xsaml20.PartnerData;
 import org.aselect.server.request.handler.xsaml20.Saml20_BaseHandler;
@@ -118,8 +120,8 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 		if (_sHttpMethod.equals("POST"))
 			_sPostTemplate = readTemplateFromConfig(oConfig, "post_template");
 
-		String sIdpSelectForm = ASelectConfigManager.getSimpleParam(oConfig, "use_idp_select", false);
-		if (sIdpSelectForm != null && sIdpSelectForm.equals("true"))
+		String sUseIdpSelectForm = ASelectConfigManager.getSimpleParam(oConfig, "use_idp_select", false);
+		if (sUseIdpSelectForm != null && sUseIdpSelectForm.equals("true"))
 			bIdpSelectForm = true;
 
 		_sIdpResourceGroup = ASelectConfigManager.getSimpleParam(oConfig, "resourcegroup", false);
@@ -206,7 +208,6 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			}
 			// Session present
 			Tools.resumeSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102, can change the session
-			
 			// 20091028, Bauke, let the user choose which IdP to use
 			// 20110308, Bauke: changed, user chooses when "use_idp_select" is "true"
 			//     otherwise this handler uses it's own resource group to get a resource and sets "federation_url"
@@ -219,29 +220,33 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			//}
 			if (bIdpSelectForm && (!Utils.hasValue(sFederationUrl))) {
 				// No Federation URL choice made yet, allow the user to choose
-				String sSelectForm = _configManager.loadHTMLTemplate(null, "idpselect", _sUserLanguage, _sUserCountry);
-				sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
+				String sIdpSelectForm = _configManager.loadHTMLTemplate(null, "idpselect", _sUserLanguage, _sUserCountry);
+				sIdpSelectForm = Utils.replaceString(sIdpSelectForm, "[rid]", sRid);
 				// Not backward compatible! [aselect_url] used to be server_url/handler_id,
 				// they're separated now to allow use of [aselect_url] in the traditional way too!
-				sSelectForm = Utils.replaceString(sSelectForm, "[handler_url]", sMyUrl + "/" + getID());
-				sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", sMyUrl); // 20110310 + "/" + getID());
-				sSelectForm = Utils.replaceString(sSelectForm, "[handler_id]", getID());
-				sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", _sServerId);  // 20110310
+				sIdpSelectForm = Utils.replaceString(sIdpSelectForm, "[handler_url]", sMyUrl + "/" + getID());
+				sIdpSelectForm = Utils.replaceString(sIdpSelectForm, "[aselect_url]", sMyUrl); // 20110310 + "/" + getID());
+				sIdpSelectForm = Utils.replaceString(sIdpSelectForm, "[handler_id]", getID());
+				sIdpSelectForm = Utils.replaceString(sIdpSelectForm, "[a-select-server]", _sServerId);  // 20110310
 				//sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
-				sSelectForm = _configManager.updateTemplate(sSelectForm, _htSessionContext);
+				sIdpSelectForm = _configManager.updateTemplate(sIdpSelectForm, _htSessionContext, request);  // 20130822, Bauke: added to show requestor_friendly_name
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Template updated, [handler_url]="+sMyUrl + "/" + getID());
 				response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 				response.setContentType("text/html");
 				response.setHeader("Pragma", "no-cache");
 				PrintWriter pwOut = response.getWriter();
+				_htSessionContext.put("user_state", "state_idpselect");			
+				_oSessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120403, Bauke: was updateSession
 				Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102 can update the session
-				pwOut.println(sSelectForm);
+				pwOut.println(sIdpSelectForm);
 				pwOut.close();
 				return new RequestState(null);
 			}
 			// federation_url was set or bIdpSelectForm is false
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "federation_url="+sFederationUrl);
-			
+			_htSessionContext.put("user_state", "state_toidp");  // at least remove state_select
+			_oSessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120403, Bauke: was updateSession
+
 			// 20110308, Bauke: new mechanism to get to the IdP using the SAM agent (allows redundant resources)
 			// User choice was made, or "federation_url" was set programmatically
 			ASelectSAMAgent samAgent = ASelectSAMAgent.getHandle();
@@ -589,6 +594,15 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 		finally {
+			// 20130821, Bauke: save friendly name after session is gone
+			if (_htSessionContext != null) {
+				String sStatus = (String)_htSessionContext.get("status");
+				String sAppId = (String)_htSessionContext.get("app_id");
+				if ("del".equals(sStatus) && Utils.hasValue(sAppId)) {
+					String sUF = ApplicationManager.getHandle().getFriendlyName(sAppId);
+					HandlerTools.setEncryptedCookie(response, "requestor_friendly_name", sUF, _configManager.getCookieDomain(), -1/*age*/, _systemLogger);
+				}
+			}
 			_oSessionManager.finalSessionProcessing(_htSessionContext, true/*update session*/);
 		}
 		return new RequestState(null);

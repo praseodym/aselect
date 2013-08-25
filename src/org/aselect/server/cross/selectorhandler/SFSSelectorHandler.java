@@ -148,7 +148,7 @@ public class SFSSelectorHandler implements ISelectorHandler
 	public void init(Object oHandlerConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			_systemLogger = ASelectSystemLogger.getHandle();
 			_configManager = ASelectConfigManager.getHandle();
@@ -336,7 +336,7 @@ public class SFSSelectorHandler implements ISelectorHandler
 	public HashMap getRemoteServerId(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 	throws ASelectException
 	{
-		String sMethod = "getRemoteServerId()";
+		String sMethod = "getRemoteServerId";
 		String sErrorMessage = null;
 		int i = 0;
 		boolean matchFound = false;
@@ -493,10 +493,9 @@ public class SFSSelectorHandler implements ISelectorHandler
 			String sDefaultHomeIdp)
 	throws ASelectException
 	{
-		String sMethod = "showAuthenticationForm()";
+		String sMethod = "showAuthenticationForm";
 
 		try {
-
 			String sRid = (String) htServiceRequest.get("rid");
 			if (sRid == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "parameter 'rid' not found in service request");
@@ -540,7 +539,7 @@ public class SFSSelectorHandler implements ISelectorHandler
 			String sSpecials = Utils.getAselectSpecials(htSessionContext, true/*decode too*/, _systemLogger);
 			sLoginForm = Utils.handleAllConditionals(sLoginForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
 			if (htSessionContext != null)
-				sLoginForm = _configManager.updateTemplate(sLoginForm, htSessionContext);
+				sLoginForm = _configManager.updateTemplate(sLoginForm, htSessionContext, null);
 
 			pwOut.println(sLoginForm);
 		}

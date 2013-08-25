@@ -84,6 +84,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.authspprotocol.IAuthSPProtocolHandler;
 import org.aselect.server.log.ASelectAuthenticationLogger;
+import org.aselect.server.request.HandlerTools;
 import org.aselect.server.sam.ASelectSAMAgent;
 import org.aselect.server.tgt.TGTIssuer;
 import org.aselect.system.error.Errors;
@@ -152,10 +153,10 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 		String sRequest = (String) htServiceRequest.get("request");
 
 		if (sRequest == null && _servletRequest.getParameter("authsp") != null) {
-			handleAuthSPResponse(htServiceRequest, _servletResponse);
+			handleAuthSPResponse(htServiceRequest);
 		}
 		else if (sRequest.equals("error")) {
-			handleError(htServiceRequest, _servletResponse);
+			handleError(htServiceRequest);
 		}
 		else {
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
@@ -173,7 +174,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private void handleAuthSPResponse(HashMap htServiceRequest, HttpServletResponse servletResponse)
+	private void handleAuthSPResponse(HashMap htServiceRequest)
 	throws ASelectException
 	{
 		String sMethod = "handleAuthSPResponse";
@@ -268,7 +269,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Saml20: Any errors must be reported back to the SP (so no Exception throwing in that case)
 			if (sResultCode.equals(Errors.ERROR_ASELECT_AUTHSP_INVALID_PHONE)) {
-				handleInvalidPhone(servletResponse, sRid, _htSessionContext);
+				handleInvalidPhone(_servletResponse, sRid, _htSessionContext);
 				return;
 			}
 			
@@ -335,29 +336,35 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "No next_authsp defined for app_id: "+app_id+ ", continuing");
 			}
 
+			HandlerTools.setRequestorFriendlyCookie(_servletResponse, _htSessionContext, _systemLogger);  // 20130825
+			
 			// 20111020, Bauke: split redirection from issueTGTandRedirect, so next_authsp variant will also set the TGT
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
 			String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
-			String sTgt = tgtIssuer.issueTGTandRedirect(sRid, _htSessionContext, sAuthSp, htAdditional, servletResponse, sOldTGT, false /* no redirect */);
+			String sTgt = tgtIssuer.issueTGTandRedirect(sRid, _htSessionContext, sAuthSp, htAdditional, _servletRequest, _servletResponse, sOldTGT, false /* no redirect */);
 			// Cookie was set on the 'servletResponse'
 
 			// If there is a next_authsp, "present" form to user (auto post) and do not set tgt 
 			if (next_authsp != null ) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Found next_authsp: "+ next_authsp + " defined for app_id: "+app_id);
-				if (servletResponse != null) {					// Direct user to next_authsp with form
-					String sSelectForm = _configManager.getForm("nextauthsp", _sUserLanguage, _sUserCountry);
-					sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
-					sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", (String)htServiceRequest.get("a-select-server"));
-					sSelectForm = Utils.replaceString(sSelectForm, "[user_id]", sUid);
-					sSelectForm = Utils.replaceString(sSelectForm, "[authsp]", next_authsp);
-					sSelectForm = Utils.replaceString(sSelectForm, "[aselect_url]", (String)htServiceRequest.get("my_url"));
-					sSelectForm = Utils.replaceString(sSelectForm, "[request]", "login3");
+				if (_servletResponse != null) {					// Direct user to next_authsp with form
+					String sNextauthspForm = _configManager.getForm("nextauthsp", _sUserLanguage, _sUserCountry);
+					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[rid]", sRid);
+					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[a-select-server]", (String)htServiceRequest.get("a-select-server"));
+					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[user_id]", sUid);
+					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[authsp]", next_authsp);
+					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[aselect_url]", (String)htServiceRequest.get("my_url"));
+					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[request]", "login3");
 					String sLanguage = (String) htServiceRequest.get("language");
-					sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
+					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[language]", sLanguage);
 					String sCountry = (String) htServiceRequest.get("country");
-					sSelectForm = Utils.replaceString(sSelectForm, "[country]", sCountry);
+					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[country]", sCountry);
+					sNextauthspForm = _configManager.updateTemplate(sNextauthspForm, _htSessionContext, _servletRequest);
+
+					_htSessionContext.put("user_state", "state_nextauthsp");
+					_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);
 					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
-					servletResponse.getWriter().println(sSelectForm);
+					_servletResponse.getWriter().println(sNextauthspForm);
 				}
 				return;
 			}
@@ -373,7 +380,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 				sAppUrl = (String) _htSessionContext.get("local_as_url");
 			String sLang = (String)_htSessionContext.get("language");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
-			tgtIssuer.sendTgtRedirect(sAppUrl, sTgt, sRid, servletResponse, sLang);					
+			tgtIssuer.sendTgtRedirect(sAppUrl, sTgt, sRid, _servletResponse, sLang);					
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -396,10 +403,10 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private void handleError(HashMap htServiceRequest, HttpServletResponse servletResponse)
+	private void handleError(HashMap htServiceRequest)
 	throws ASelectException
 	{
-		String sMethod = "handleError()";
+		String sMethod = "handleError";
 		AuthenticationLogger authenticationLogger = ASelectAuthenticationLogger.getHandle();
 
 		try {
@@ -414,8 +421,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			String sResultCode = (String) htServiceRequest.get("result_code");
 			if (sResultCode == null) // result_code missing
 			{
-				_systemLogger.log(Level.WARNING, _sModule, sMethod,
-						"Invalid request: Parameter 'result_code' is missing.");
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request: Parameter 'result_code' is missing.");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 			if (sResultCode.length() != 4) // result_code invalid
@@ -452,7 +458,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Issue error TGT
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
-			tgtIssuer.issueErrorTGTandRedirect(sRid, _htSessionContext, sResultCode, servletResponse);
+			tgtIssuer.issueErrorTGTandRedirect(sRid, _htSessionContext, sResultCode, _servletResponse);
 		}
 		catch (ASelectException ae) {
 			throw ae;

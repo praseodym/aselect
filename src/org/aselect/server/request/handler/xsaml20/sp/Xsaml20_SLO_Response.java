@@ -231,11 +231,10 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 		
 		String resultCode = Errors.ERROR_ASELECT_INTERNAL_ERROR;	// backward compatibility
 		String statusCode = response.getStatus().getStatusCode().getValue();
-//		String resultCode = (statusCode.equals(StatusCode.SUCCESS_URI)) ? Errors.ERROR_ASELECT_SUCCESS
-//				: Errors.ERROR_ASELECT_INTERNAL_ERROR;
 		if ( (StatusCode.SUCCESS_URI).equals(statusCode) ) {
 			resultCode = Errors.ERROR_ASELECT_SUCCESS;
-		} else {
+		}
+		else {
 			String sErrorSubCode = null;
 			if ( response.getStatus().getStatusCode().getStatusCode() != null) {	// Get the subcode
 				sErrorSubCode = SamlTools.mapStatus(response.getStatus().getStatusCode().getStatusCode().getValue());
@@ -270,7 +269,7 @@ public class Xsaml20_SLO_Response extends Saml20_BaseHandler
 		if (htTGTContext != null)
 			tgtManager.remove(sTgT);
 
-		finishLogoutActions(httpResponse, resultCode, sReturnUrl);
+		finishLogoutActions(httpRequest, httpResponse, resultCode, sReturnUrl);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Logout Succeeded");
 	}
 

@@ -214,19 +214,19 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 		final String sMethod = "showLogoutInfo";
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "redirect_url=" + sRedirectUrl);
-		String sInfoForm = _configManager.getForm("logout_info", _sUserLanguage, _sUserCountry);
-		sInfoForm = Utils.replaceString(sInfoForm, "[aselect_url]", sRedirectUrl);
-		sInfoForm = Utils.replaceString(sInfoForm, "[SAMLRequest]", httpRequest.getParameter("SAMLRequest"));
+		String sLogout_infoForm = _configManager.getForm("logout_info", _sUserLanguage, _sUserCountry);
+		sLogout_infoForm = Utils.replaceString(sLogout_infoForm, "[aselect_url]", sRedirectUrl);
+		sLogout_infoForm = Utils.replaceString(sLogout_infoForm, "[SAMLRequest]", httpRequest.getParameter("SAMLRequest"));
 		if (sRelayState != null)
-			sInfoForm = Utils.replaceString(sInfoForm, "[RelayState]", sRelayState);
-		sInfoForm = Utils.replaceString(sInfoForm, "[SigAlg]", httpRequest.getParameter("SigAlg"));
-		sInfoForm = Utils.replaceString(sInfoForm, "[Signature]", httpRequest.getParameter("Signature"));
-		sInfoForm = Utils.replaceString(sInfoForm, "[consent]", "true");
+			sLogout_infoForm = Utils.replaceString(sLogout_infoForm, "[RelayState]", sRelayState);
+		sLogout_infoForm = Utils.replaceString(sLogout_infoForm, "[SigAlg]", httpRequest.getParameter("SigAlg"));
+		sLogout_infoForm = Utils.replaceString(sLogout_infoForm, "[Signature]", httpRequest.getParameter("Signature"));
+		sLogout_infoForm = Utils.replaceString(sLogout_infoForm, "[consent]", "true");
 
 		String sFriendlyName = ApplicationManager.getHandle().getFriendlyName(sInitiatingSP);
 		if (sFriendlyName == null)
 			sFriendlyName = sInitiatingSP;
-		sInfoForm = Utils.replaceString(sInfoForm, "[current_sp]", sFriendlyName);
+		sLogout_infoForm = Utils.replaceString(sLogout_infoForm, "[current_sp]", sFriendlyName);
 
 		String sOtherSPs = "";
 		UserSsoSession ssoSession = (UserSsoSession) htTGTContext.get("sso_session");
@@ -242,13 +242,13 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 				}
 			}
 		}
-		sInfoForm = Utils.replaceString(sInfoForm, "[other_sps]", sOtherSPs);
+		sLogout_infoForm = Utils.replaceString(sLogout_infoForm, "[other_sps]", sOtherSPs);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "display form");
 
-		// sInfoForm = _configManager.updateTemplate(sInfoForm, _htSessionContext);
+		sLogout_infoForm = _configManager.updateTemplate(sLogout_infoForm, _htSessionContext, httpRequest);  // 20130822, Bauke: added to show requestor_friendly_name
 		httpResponse.setContentType("text/html");
 		Tools.pauseSensorData(_configManager, _systemLogger, null);  //20111102, there's no session available at this point (will be logged)
-		pwOut.println(sInfoForm);
+		pwOut.println(sLogout_infoForm);
 		pwOut.close();
 	}
 

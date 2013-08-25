@@ -156,7 +156,7 @@ public class SamlTools
 	public static boolean verifySignature(PublicKey key, HttpServletRequest httpRequest)
 	throws MessageDecodingException
 	{
-		String sMethod = "verifySignature()";
+		String sMethod = "verifySignature";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
 		systemLogger.log(Level.INFO, MODULE, sMethod, "Public key=" + key + " hashcode=" + key.hashCode());
 
@@ -184,7 +184,7 @@ public class SamlTools
 				}
 			}
 			sData = sData.substring(0, sData.length() - 1); // Delete the last '&'
-			systemLogger.log(Level.FINEST, MODULE, sMethod, "Check [" + sData + "]");
+			systemLogger.log(Level.FINE, MODULE, sMethod, "Check [" + sData + "]");
 
 			java.security.Signature signature = java.security.Signature.getInstance(signingAlgo);
 			// RM_50_01

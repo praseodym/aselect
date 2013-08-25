@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectAuthenticationLogger;
 import org.aselect.server.request.HandlerTools;
@@ -411,10 +412,6 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				}
 				// RH, 20121205, en
 				
-				
-				
-				
-				
 				// Detect if this is a successful or an error Response		
 				String sStatusCode = samlResponse.getStatus().getStatusCode().getValue();
 				String sRemoteRid = samlResponse.getID();
@@ -727,7 +724,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					// 2. throw new ASelectException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED); // Standard server error
 					// 3. Show error page:
 					response.setContentType("text/html");
-					showErrorPage(sErrorCode, _htSessionContext, response.getWriter());
+					showErrorPage(sErrorCode, _htSessionContext, response.getWriter(), request);
 				}
 			}
 			else {  // SLO
@@ -743,6 +740,15 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 		finally {
+			// 20130821, Bauke: save friendly name after session is gone
+			if (_htSessionContext != null) {
+				String sStatus = (String)_htSessionContext.get("status");
+				String sAppId = (String)_htSessionContext.get("app_id");
+				if ("del".equals(sStatus) && Utils.hasValue(sAppId)) {
+					String sUF = ApplicationManager.getHandle().getFriendlyName(sAppId);
+					HandlerTools.setEncryptedCookie(response, "requestor_friendly_name", sUF, _configManager.getCookieDomain(), -1/*age*/, _systemLogger);
+				}
+			}
 			_oSessionManager.finalSessionProcessing(_htSessionContext, true/*really do it*/);
 		}
 		return null;
@@ -753,7 +759,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 	 */
 	public void destroy()
 	{
-		String sMethod = "destroy()";
+		String sMethod = "destroy";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "<--");
 	}
 
@@ -822,6 +828,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					"Saml", sUID, (String) htServiceRequest.get("client_ip"), sRemoteOrg,
 					htSessionContext.get("app_id"), "granted", sFederationId
 				});
+				
+				HandlerTools.setRequestorFriendlyCookie(servletResponse, htSessionContext, _systemLogger);  // 20130825
 
 				// Issue a cross TGT since we do not know the AuthSP
 				// and we might have received remote attributes.
@@ -829,7 +837,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
 				// Will also redirect the user, this call can update/delete the session in the local cache
 				// Final session updates will be done by finalSessionProcessing()
-				oTGTIssuer.issueTGTandRedirect(sLocalRid, htSessionContext, null, htRemoteAttributes, servletResponse, sOldTGT, true);
+				oTGTIssuer.issueTGTandRedirect(sLocalRid, htSessionContext, null, htRemoteAttributes, servletRequest, servletResponse, sOldTGT, true);
 				// 20090909: oTGTIssuer.issueCrossTGT(sLocalRid, null, htRemoteAttributes, servletResponse, sOldTGT);
 			}
 		}
