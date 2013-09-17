@@ -232,10 +232,10 @@ public class ResourceSTS extends ProtoRequestHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Token OUT: RequestorToken=" + sRequestorToken);
 
 			String sInputs = buildHtmlInput("wa", "wsignin1.0");
-			sInputs += buildHtmlInput("wctx", sPwctx);
+			sInputs += buildHtmlInput("wctx", Tools.htmlEncode(sPwctx));
 			sInputs += buildHtmlInput("wresult", Tools.htmlEncode(sRequestorToken));
 
-			handlePostForm(_sPostTemplate, sPwctx, sInputs, response);
+			handlePostForm(_sPostTemplate, Tools.htmlEncode(sPwctx), sInputs, response);
 			return new RequestState(null);
 		}
 		catch (SAMLException e) {

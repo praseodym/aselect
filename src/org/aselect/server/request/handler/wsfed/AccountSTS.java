@@ -16,8 +16,10 @@
 package org.aselect.server.request.handler.wsfed;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Vector;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
@@ -31,6 +33,7 @@ import org.aselect.server.tgt.TGTManager;
 import org.aselect.server.utils.Utils;
 import org.aselect.system.communication.client.IClientCommunicator;
 import org.aselect.system.error.Errors;
+import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.*;
 import org.opensaml.SAMLException;
@@ -44,6 +47,8 @@ public class AccountSTS extends ProtoRequestHandler
 	public final static String MODULE = "AccountSTS";
 	private final static String RETURN_SUFFIX = "_return";
 	private final static String SESSION_ID_PREFIX = ""; // 20081125 "wsfed_";
+	
+	private static final String WCTX_DEFAULT_PATTERN = "[\\w-]*";	// wsfed standard wctx content complies to letters, digits and minus
 
 	private IClientCommunicator _oClientCommunicator;
 	private TGTManager _oTGTManager;
@@ -61,6 +66,9 @@ public class AccountSTS extends ProtoRequestHandler
 	protected HashMap _htSecLevels;
 	protected HashMap _htSP_LoginReturn;
 	protected HashMap _htSP_LogoutReturn;
+
+	protected HashMap<String, Pattern> _htSP_wctxregex;	// RH, 20130916, n
+
 
 	// protected HashMap _htSP_ErrorUrl;
 
@@ -122,6 +130,39 @@ public class AccountSTS extends ProtoRequestHandler
 			getTableFromConfig(oConfig, null, _htSP_LoginReturn, "service_providers", "sp", "uri",/*->*/
 			"login_return_url", false/* mandatory */, false/* unique values */);
 
+			// RH, 20130916, sn
+			// We just parse the config multiple times, since it's only done once
+			// Restrict wctx parameter input
+			_htSP_wctxregex = new HashMap<String, Pattern>();
+//			getTableFromConfig(oConfig, null, _htSP_wctxregex, "service_providers", "sp", "uri",/*->*/
+//			"wctx_regex", false/* mandatory */, false/* unique values */);
+			Iterator itr = _htSP_LoginReturn.keySet().iterator();
+			while (itr.hasNext()) {
+				String sKey = (String)itr.next();
+
+				Object oProviders_section = ASelectConfigManager.getSimpleSection(oConfig, "service_providers", true);
+				Object oSP_section = _configManager.getSection(oProviders_section, "sp", "uri=" + sKey);
+				String sRegex = (String) ASelectConfigManager.getSimpleParam(oSP_section, "wctx_regex", false);
+
+//				String sRegex = (String)_htSP_wctxregex.get(sKey);
+				if (sRegex == null || "".equals(sRegex))	{
+					sRegex  = WCTX_DEFAULT_PATTERN;	
+				}
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "regex for: " + sKey + " = " + sRegex);
+				Pattern _pRexex;
+				try {
+					_pRexex = Pattern.compile(sRegex);
+					_htSP_wctxregex.put(sKey, _pRexex);
+				}
+				catch (Exception e) {
+					_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Not a valid pattern: " + sRegex, e);
+					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+				}
+			}
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "regexes loaded: " + _htSP_wctxregex);
+			// RH, 20130916, en			
+			
+			
 			_htSP_LogoutReturn = new HashMap();
 			getTableFromConfig(oConfig, null, _htSP_LogoutReturn, "service_providers", "sp", "uri",/*->*/
 			"logout_return_url", false/* mandatory */, false/* unique values */);
@@ -180,6 +221,13 @@ public class AccountSTS extends ProtoRequestHandler
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Unknown or missing \"wtrealm\" in call");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
+		
+		// If wctx doesn't match the required pattern, kick them out
+		if ( !((Pattern)_htSP_wctxregex.get(sPwtrealm)).matcher(sPwctx).matches()) {
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "wctx doesn't match pattern for realm: " + sPwtrealm);
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+
 		String sReply = (String) _htSP_LoginReturn.get(sPwtrealm);
 		// ADFS does not pass a 'wreply' parameter!!
 		if (sPwreply == null) {
@@ -393,7 +441,7 @@ public class AccountSTS extends ProtoRequestHandler
 						_sCookieDomain, null, -1, 1/*httpOnly*/, _systemLogger);
 
 			// _systemLogger.log(Level.INFO, MODULE, sMethod, "Inputs=" + sInputs);
-			handlePostForm(_sPostTemplate, sPwreply, sInputs, response);
+			handlePostForm(_sPostTemplate, Tools.htmlEncode(sPwreply), sInputs, response);
 
 			return new RequestState(null);
 		}
