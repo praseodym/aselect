@@ -37,6 +37,7 @@
 
 package org.aselect.system.sam.agent.polling;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
@@ -163,11 +164,12 @@ public class SAMICMPPollingMethod implements ISAMPollingMethod
 		String sMethod = "poll()";
 
 		boolean bPing = false;
-
+		Process oPingProcess = null;
 		try {
 			Runtime oRuntime = Runtime.getRuntime();
-			Process oPingProcess = oRuntime.exec(_sbPingCommand.toString());
+			oPingProcess = oRuntime.exec(_sbPingCommand.toString());
 			bPing = (oPingProcess.waitFor() == 0);
+//			_oSystemLogger.log(Level.FINEST, MODULE, sMethod, "Finished: " + _sbPingCommand.toString() + ", result == 0 ;" + bPing);
 		}
 		catch (Exception e) {
 			sbError.append("An error occured during the polling of the resource with command '");
@@ -175,6 +177,33 @@ public class SAMICMPPollingMethod implements ISAMPollingMethod
 			sbError.append("'");
 			_oSystemLogger.log(Level.FINE, MODULE, sMethod, sbError.toString(), e);
 		}
+		finally {
+			if (oPingProcess != null ) {
+				try {
+					oPingProcess.getErrorStream().close();
+				}
+				catch (Exception e) {
+					_oSystemLogger.log(Level.FINEST, MODULE, sMethod, _sbPingCommand.toString() + ", Couldn't close ErrorStream of this process, ignored"  );
+					// We can't fix that
+				}
+				try {
+					oPingProcess.getInputStream().close();
+				}
+				catch (Exception e) {
+					_oSystemLogger.log(Level.FINEST, MODULE, sMethod, _sbPingCommand.toString() + ", Couldn't close InputStream of this process, ignored"  );
+					// We can't fix that
+				}
+				try {
+					oPingProcess.getOutputStream().close();
+				}
+				catch (Exception e) {
+					_oSystemLogger.log(Level.FINEST, MODULE, sMethod, _sbPingCommand.toString() + ", Couldn't close OutputStream of this process, ignored"  );
+					// We can't fix that
+				}
+				oPingProcess.destroy();
+			}
+		}
+		
 		return bPing;
 	}
 
