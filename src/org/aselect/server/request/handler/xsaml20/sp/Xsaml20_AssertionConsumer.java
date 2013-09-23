@@ -146,7 +146,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 
 		// RH, 20120322, sn
 		String sUseBackChannelClientCertificate = ASelectConfigManager.getSimpleParam(oHandlerConfig, "use_backchannelclientcertificate", false);
-		if ("true".equalsIgnoreCase(sIncludeSessionindexes)) {
+//		if ("true".equalsIgnoreCase(sIncludeSessionindexes)) {		// RH, 20130923, o
+		if ("true".equalsIgnoreCase(sUseBackChannelClientCertificate)) {		// RH, 20130923, n
 			setUseBackchannelClientcertificate(true);
 		}
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "use_backchannelclientcertificate: " + isUseBackchannelClientcertificate());
