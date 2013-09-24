@@ -100,6 +100,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 
 	private boolean verifyArtifactResponseSignature = false;
 
+	private boolean useNameIDAsAuthID = false;
+
 	//
 	// Example configuration:
 	// <handler id="saml20_assertionconsumer"
@@ -160,6 +162,12 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 		}
 		// RH, 20121205, en
 
+		// RH, 20130923, sn
+		String sUseNameIDAsAuthID = ASelectConfigManager.getSimpleParam(oHandlerConfig, "use_nameidasauthid", false);
+		if ("true".equalsIgnoreCase(sUseNameIDAsAuthID)) {
+			setUseNameIDAsAuthID(true);
+		}
+		// RH, 20130923, en
 		
 		
 		_tgtManager = TGTManager.getHandle();
@@ -335,8 +343,11 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				// Could be Base64 encoded
 				// RelayState should contain intended application resource URL
 				sRelayState = new String(Base64Codec.decode(sRelayState));
+				
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "Received Response: " + sReceivedResponse);	//	RH, 20130924, n
 				sReceivedResponse = new String(Base64Codec.decode(sReceivedResponse));
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Received Response: " + sReceivedResponse + " RelayState="+sRelayState);
+//				sReceivedResponse = new String(org.apache.commons.codec.binary.Base64.decodeBase64(sReceivedResponse.getBytes("UTF-8")));	//	RH, 20130924, n
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Received Response after base64 decoding: " + sReceivedResponse + " RelayState="+sRelayState);	//	RH, 20130924, n
 				DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 				dbFactory.setNamespaceAware(true);
 				// dbFactory.setExpandEntityReferences(false);
@@ -605,23 +616,27 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					}
 					
 					// eHerkenning: AuthID = Unique Persistent Identifier
+					if ( isUseNameIDAsAuthID() ) {		// RH, 20130923, sn
+						hmSamlAttributes.put("authid", sNameID);
+					} else {	// RH, 20130923, en
 					// Use the fifth word from sAuthnAuthority (split using :) and add sNameID
-					if (sNameIDQualifier != null) {
-						String sAuthID = "", sAuthSubID = "";
-						String[] tokens = sNameIDQualifier.split(":");
-						if (tokens.length > 4)
-							sAuthID = tokens[4];
-
-//						if (tokens.length > 5)
-//							sAuthSubID = tokens[5];
-						// Test  new layout of eherkenning
-						// Maybe do something with pattern search here
-						if (tokens.length > 6)
-							sAuthSubID = tokens[6];
-						
-						sAuthID += "_"+sAuthSubID+"_"+sNameID;  // add separator
-						hmSamlAttributes.put("authid", sAuthID);
-					}
+						if (sNameIDQualifier != null) {
+							String sAuthID = "", sAuthSubID = "";
+							String[] tokens = sNameIDQualifier.split(":");
+							if (tokens.length > 4)
+								sAuthID = tokens[4];
+	
+	//						if (tokens.length > 5)
+	//							sAuthSubID = tokens[5];
+							// Test  new layout of eherkenning
+							// Maybe do something with pattern search here
+							if (tokens.length > 6)
+								sAuthSubID = tokens[6];
+							
+							sAuthID += "_"+sAuthSubID+"_"+sNameID;  // add separator
+							hmSamlAttributes.put("authid", sAuthID);
+						}
+					}	// RH, 20130923, n
 					
 					// And serialize them back to where they came from
 					sEncodedAttributes = org.aselect.server.utils.Utils.serializeAttributes(hmSamlAttributes);
@@ -1023,5 +1038,15 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 	public synchronized void setVerifyArtifactResponseSignature(boolean verifyArtifactResponseSignature)
 	{
 		this.verifyArtifactResponseSignature = verifyArtifactResponseSignature;
+	}
+
+	public synchronized boolean isUseNameIDAsAuthID()
+	{
+		return useNameIDAsAuthID;
+	}
+
+	public synchronized void setUseNameIDAsAuthID(boolean useNameIDAsAuthID)
+	{
+		this.useNameIDAsAuthID = useNameIDAsAuthID;
 	}
 }
