@@ -345,8 +345,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				sRelayState = new String(Base64Codec.decode(sRelayState));
 				
 				_systemLogger.log(Level.FINER, MODULE, sMethod, "Received Response: " + sReceivedResponse);	//	RH, 20130924, n
-				sReceivedResponse = new String(Base64Codec.decode(sReceivedResponse));
-//				sReceivedResponse = new String(org.apache.commons.codec.binary.Base64.decodeBase64(sReceivedResponse.getBytes("UTF-8")));	//	RH, 20130924, n
+//				sReceivedResponse = new String(Base64Codec.decode(sReceivedResponse));	//	RH, 20130924, o
+				sReceivedResponse = new String(org.apache.commons.codec.binary.Base64.decodeBase64(sReceivedResponse.getBytes("UTF-8")));	//	RH, 20130924, n
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Received Response after base64 decoding: " + sReceivedResponse + " RelayState="+sRelayState);	//	RH, 20130924, n
 				DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 				dbFactory.setNamespaceAware(true);
