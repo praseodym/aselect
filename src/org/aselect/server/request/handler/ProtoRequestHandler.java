@@ -1156,6 +1156,17 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		return sTgt;
 	}
 
+	//	RH, 20130924, sn
+	// Convenience backward compatibility wrapper for createRequestorToken
+	protected String createRequestorToken(HttpServletRequest request, String sProviderId, String sUid,
+			String sUserDomain, String sNameIdFormat, String sAudience, HashMap htAttributes, String sSubjConf)
+	throws ASelectException, SAMLException
+	{
+		return createRequestorToken( request, sProviderId, sUid,
+				sUserDomain, sNameIdFormat, sAudience, htAttributes, sSubjConf, null);
+	}
+	//	RH, 20130924, en
+	
 	/**
 	 * Creates the requestor token.
 	 * 
@@ -1175,6 +1186,8 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 *            the ht attributes
 	 * @param sSubjConf
 	 *            the s subj conf
+	 * @param sSignAlg
+	 *            the s signature algorithm to use sha1, sha256, sha384, sha256, null (defaults to sha1)
 	 * @return the string
 	 * @throws ASelectException
 	 *             the a select exception
@@ -1182,7 +1195,8 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	 *             the SAML exception
 	 */
 	protected String createRequestorToken(HttpServletRequest request, String sProviderId, String sUid,
-			String sUserDomain, String sNameIdFormat, String sAudience, HashMap htAttributes, String sSubjConf)
+			String sUserDomain, String sNameIdFormat, String sAudience, HashMap htAttributes, String sSubjConf,
+			String sSignAlg)
 	throws ASelectException, SAMLException
 	{
 		String sMethod = "createRequestorToken";
@@ -1209,8 +1223,10 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		vCertificatesToInclude.add(_configManager.getDefaultCertificate());
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign");
-		oSAMLAssertion.sign(XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA1, _configManager.getDefaultPrivateKey(),
-				vCertificatesToInclude);
+//		oSAMLAssertion.sign(XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA1, _configManager.getDefaultPrivateKey(),
+//				vCertificatesToInclude);	//	RH, 20130924, o
+		oSAMLAssertion.sign(getXMLSignatureAlg(sSignAlg), _configManager.getDefaultPrivateKey(),
+				vCertificatesToInclude);	//	RH, 20130924, n
 		// String sAdfs = "<wsp:AppliesTo xmlns:wsp=\"http://schemas.xmlsoap.org/ws/2004/09/policy\">" +
 		// "<wsa:EndpointReference xmlns:wsa=\"http://schemas.xmlsoap.org/ws/2004/08/addressing\">" +
 		// "<wsa:Address>http://www.anoigo.nl/wsfed_idp.xml</wsa:Address>" +
@@ -1477,6 +1493,33 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		}
 	}
 
+	/**
+	 * Returns w3 xmldsig representation of the signature algorithm
+	 * @param sAlg
+	 *            simple string representation sha1, sha256, sha384, sha512, defaults to sha1
+	 * @return String w3 xmldsig representation of the signature algorithm
+	 */
+	protected String getXMLSignatureAlg(String sAlg) {
+		String _sMethod = "getXMLSignatureAlg";
+		String signatureAlg;
+		
+		if ( "sha1".equalsIgnoreCase(sAlg) ) {
+			signatureAlg = XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA1;
+		}	else if ( "sha256".equalsIgnoreCase(sAlg) ) {
+			signatureAlg = XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA256;
+		}	else if ( "sha384".equalsIgnoreCase(sAlg) ) {
+			signatureAlg = XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA384;
+		}	else if ( "sha512".equalsIgnoreCase(sAlg) ) {
+			signatureAlg = XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA512;
+		}	else{	//	defaults to sha1
+			signatureAlg = XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA1;
+			_systemLogger.log(Level.WARNING, MODULE, _sMethod, "Unknown signature algoritm requested: " + sAlg + ", defaulting to sha1");
+		}
+		return signatureAlg;
+	}
+	
+	
+	
 	/**
 	 * Gets the _s a select server id.
 	 * 

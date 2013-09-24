@@ -68,6 +68,7 @@ public class AccountSTS extends ProtoRequestHandler
 	protected HashMap _htSP_LogoutReturn;
 
 	protected HashMap<String, Pattern> _htSP_wctxregex;	// RH, 20130916, n
+	protected HashMap<String, String>	_htSP_SignAlgorithm;	// RH, 20130924, n
 
 
 	// protected HashMap _htSP_ErrorUrl;
@@ -130,6 +131,8 @@ public class AccountSTS extends ProtoRequestHandler
 			getTableFromConfig(oConfig, null, _htSP_LoginReturn, "service_providers", "sp", "uri",/*->*/
 			"login_return_url", false/* mandatory */, false/* unique values */);
 
+			_htSP_SignAlgorithm = new HashMap<String, String>();// RH, 20130924, n
+
 			// RH, 20130916, sn
 			// We just parse the config multiple times, since it's only done once
 			// Restrict wctx parameter input
@@ -158,6 +161,12 @@ public class AccountSTS extends ProtoRequestHandler
 					_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Not a valid pattern: " + sRegex, e);
 					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 				}
+				// RH, 20130924, sn
+				String sAlg = (String) ASelectConfigManager.getSimpleParam(oSP_section, "signature_algorithm", false);
+				if ( sAlg != null ) {
+					_htSP_SignAlgorithm.put(sKey, sAlg);
+				}
+				// RH, 20130924, en				
 			}
 			_systemLogger.log(Level.FINEST, MODULE, sMethod, "regexes loaded: " + _htSP_wctxregex);
 			// RH, 20130916, en			
@@ -423,8 +432,10 @@ public class AccountSTS extends ProtoRequestHandler
 				if (urn != null)
 					sSubjConf = urn; // default when not found
 			}
+//			String sRequestorToken = createRequestorToken(request, _sProviderId, sUid, _sUserDomain, _sNameIdFormat,
+//					sAudience, htAttributes, sSubjConf);	// RH, 20130924, o
 			String sRequestorToken = createRequestorToken(request, _sProviderId, sUid, _sUserDomain, _sNameIdFormat,
-					sAudience, htAttributes, sSubjConf);
+					sAudience, htAttributes, sSubjConf, _htSP_SignAlgorithm.get(sAudience));	// RH, 20130924, n
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Token OUT: RequestorToken wresult=" + sRequestorToken);
 
 			// Return Requestor Token - Step 6
