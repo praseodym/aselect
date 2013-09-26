@@ -664,6 +664,47 @@ public class AttributeGatherer
 		Utils.copyHashmapValue("language", htAttributes, htTGTContext);
 		Utils.copyHashmapValue("sms_phone", htAttributes, htTGTContext);
 
+		addPkiAttributesFromTGT(htTGTContext, htAttributes);
+		// End of additions
+		
+		if ("last".equals(_sRemoteLast))
+			addRemoteAttributesFromTgt(htAttributes, htTGTContext);
+
+		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Try authsp with id: " + sAuthsp); // if present
+		try {
+			Object authSPs = Utils.getSimpleSection(_configManager, _systemLogger, null, "authsps", true);
+			Object authSPsection = Utils.getSectionFromSection(_configManager, _systemLogger, authSPs, "authsp", "id=" + sAuthsp, false);
+			if (authSPsection != null) {
+				String sHandler = _configManager.getParam(authSPsection, "handler");
+				int iDot = sHandler.lastIndexOf(".");
+				sHandler = sHandler.substring(iDot + 1, sHandler.length());
+
+				_systemLogger.log(Level.INFO, _MODULE, sMethod, "sHandler=" + sHandler);
+				htAttributes.put("handler", sHandler);
+			}
+			else
+				_systemLogger.log(Level.INFO, _MODULE, sMethod, "Authsp " + sAuthsp + " not present");
+		}
+		catch (ASelectConfigException e) {
+			_systemLogger.log(Level.WARNING, _MODULE, sMethod, "Failed to retrieve config for AuthSPs.", e);
+			htAttributes.put("handler", sAuthsp);
+		}
+
+		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER END htAttributes=" + htAttributes);
+		return htAttributes;
+	}
+
+	/**
+	 * Adds the pki attributes.
+	 * 
+	 * @param htTGTContext
+	 *            the tgt context
+	 * @param htAttributes
+	 *            the attributes
+	 */
+	private void addPkiAttributesFromTGT(HashMap htTGTContext, HashMap<String, Object> htAttributes)
+	{
+		final String sMethod = "handlePKIAttributes";
 		String sSubjectDN = (String) htTGTContext.get("pki_subject_dn");
 		String sToken;
 		int idx;
@@ -707,33 +748,6 @@ public class AttributeGatherer
 				htAttributes.put(sFld, sToken);
 			}
 		}
-		// End of additions
-		
-		if ("last".equals(_sRemoteLast))
-			addRemoteAttributesFromTgt(htAttributes, htTGTContext);
-
-		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Try authsp with id: " + sAuthsp); // if present
-		try {
-			Object authSPs = Utils.getSimpleSection(_configManager, _systemLogger, null, "authsps", true);
-			Object authSPsection = Utils.getSectionFromSection(_configManager, _systemLogger, authSPs, "authsp", "id=" + sAuthsp, false);
-			if (authSPsection != null) {
-				String sHandler = _configManager.getParam(authSPsection, "handler");
-				int iDot = sHandler.lastIndexOf(".");
-				sHandler = sHandler.substring(iDot + 1, sHandler.length());
-
-				_systemLogger.log(Level.INFO, _MODULE, sMethod, "sHandler=" + sHandler);
-				htAttributes.put("handler", sHandler);
-			}
-			else
-				_systemLogger.log(Level.INFO, _MODULE, sMethod, "Authsp " + sAuthsp + " not present");
-		}
-		catch (ASelectConfigException e) {
-			_systemLogger.log(Level.WARNING, _MODULE, sMethod, "Failed to retrieve config for AuthSPs.", e);
-			htAttributes.put("handler", sAuthsp);
-		}
-
-		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER END htAttributes=" + htAttributes);
-		return htAttributes;
 	}
 
 	/**

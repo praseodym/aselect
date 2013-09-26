@@ -155,7 +155,7 @@ public class TimerSensor
 	 * 
 	 * @return the packed string that represents the TimerSensor object
 	 *
-     * Output example: 1320673143.256681,1,1,1320673143.281,1320673143.739,0.458
+     * Output example: agt_vtk,1378644913.063682,,1,2,1102,1378644913.068,1378644913.068,0.000,false,,
 	 */
     public String timerSensorPack()
     {

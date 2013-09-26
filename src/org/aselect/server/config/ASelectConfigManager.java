@@ -1261,7 +1261,7 @@ public class ASelectConfigManager extends ConfigManager
 			}
 
 			// 20130821, Bauke: Get tag info from the cookie
-			_systemLogger.log(Level.FINE, MODULE, sMethod, "FriendlyName="+sFriendlyName);
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "FriendlyName="+sFriendlyName+" servletRequest="+servletRequest);
 			if (!Utils.hasValue(sFriendlyName)) {
 				sFriendlyName = HandlerTools.getEncryptedCookie(servletRequest, "requestor_friendly_name", _systemLogger);
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "From Cookie="+sFriendlyName);

@@ -92,6 +92,11 @@ public class HandlerTools
 	{
 		String sMethod = "putCookieValue";
 		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
+		if (response == null) {
+			logger.log(Level.WARNING, MODULE, sMethod, "No servletResponse to set cookie "+sCookieName);
+			return;
+		}
+
 		String addedSecurity = _configManager.getAddedSecurity();
 		if (sCookiePath == null)
 			sCookiePath = _configManager.getCookiePath();
@@ -133,6 +138,10 @@ public class HandlerTools
 	{
 		String sMethod = "delCookieValue";
 		ASelectConfigManager _configManager = ASelectConfigManager.getHandle();
+		if (response == null) {
+			logger.log(Level.WARNING, MODULE, sMethod, "No servletResponse to set cookie "+sCookieName);
+			return;
+		}
 
 		Cookie cookie = new Cookie(sCookieName, "_deleted_");
 		if (sCookieDomain != null)
@@ -161,6 +170,11 @@ public class HandlerTools
 	{
 		String sMethod = "getCookieValue";
 		String sReturnValue = null;
+		
+		if (request == null) {
+			logger.log(Level.WARNING, MODULE, sMethod, "No servletRequest to retrieve cookie "+sName);
+			return null;
+		}
 		Cookie oCookie[] = request.getCookies();
 		if (oCookie == null)
 			return null;
@@ -227,7 +241,15 @@ public class HandlerTools
 		String sMethod = "setEncryptedCookie";
 		CryptoEngine _cryptoEngine = CryptoEngine.getHandle();
 
-		systemLogger.log(Level.FINER, MODULE, sMethod, "Encrypt="+sCookieValue);
+		systemLogger.log(Level.FINER, MODULE, sMethod, "Encrypt cookie="+sCookieName+", value="+sCookieValue);
+		if (servletResponse == null) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod, "No servletResponse to set cookie");
+			return;
+		}
+		if (!Utils.hasValue(sCookieValue)) {
+			systemLogger.log(Level.FINER, MODULE, sMethod, "No cookie value given for "+sCookieName);
+			return;
+		}
 		sCookieValue = _cryptoEngine.encryptData(sCookieValue.getBytes());
 
 		HandlerTools.putCookieValue(servletResponse, sCookieName, sCookieValue,
@@ -251,6 +273,10 @@ public class HandlerTools
 	throws ASelectException
 	{
 		String sMethod = "getEncryptedCookie";
+		if (servletRequest == null) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod, "No servletRequest to retrieve cookie");
+			return null;
+		}
 		CryptoEngine _cryptoEngine = CryptoEngine.getHandle();
 		String sCookieValue = HandlerTools.getCookieValue(servletRequest, sCookieName, systemLogger);
 		if (!Utils.hasValue(sCookieValue))
