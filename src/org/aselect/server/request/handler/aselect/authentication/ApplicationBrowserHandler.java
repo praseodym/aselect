@@ -493,7 +493,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			Utils.transferLocalization(_htSessionContext, _sUserLanguage, _sUserCountry);
 			// And copy language back
 			_sUserLanguage = (String) _htSessionContext.get("language"); // override
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "After transfer: userLanguage=" + _sUserLanguage);
+			String sUserState = (String)_htSessionContext.get("user_state");
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "After transfer: userLanguage=" + _sUserLanguage+
+					" user_state="+sUserState);
 		}
 
 		boolean bAllowLoginToken = "true".equals(ASelectAuthenticationProfile.get_sAllowLoginToken());
@@ -2886,7 +2888,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			if (sForcedUid != null)
 				_htSessionContext.put("fixed_uid", sForcedUid);
 
-			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
+			_htSessionContext.put("user_state", "state_login25");  // 20131019, Bauke: remove "state_select"
+			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);
 			
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "htSessionContext=" + _htSessionContext);
 			handleLogin1(htServiceRequest, servletResponse, pwOut);
