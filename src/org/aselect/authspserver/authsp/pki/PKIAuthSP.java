@@ -681,7 +681,7 @@ public class PKIAuthSP extends HttpServlet
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", sError);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
 			sErrorForm = Utils.replaceString(sErrorForm, "[language]", sLanguage);
-			sErrorForm = Utils.replaceConditional(sErrorForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
+			sErrorForm = Utils.replaceConditional(sErrorForm, "[if_error,", ",", "]", sErrorMessage != null && !sErrorMessage.equals(""), _systemLogger);
 			try {
 				sendPage(sErrorForm, servletRequest, servletResponse);
 			}

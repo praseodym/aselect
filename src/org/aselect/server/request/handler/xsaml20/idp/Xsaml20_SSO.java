@@ -188,7 +188,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	{
 		String sMethod = "process()";
 		String sPathInfo = request.getPathInfo();
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "==== Path=" + sPathInfo + " RequestQuery: "	+ request.getQueryString());
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "==== Path="+sPathInfo + " RequestQuery: "+request.getQueryString());
 		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request received === Path=" + sPathInfo+
 				" Locale="+request.getLocale().getLanguage()+" Method="+request.getMethod());
 
@@ -256,8 +256,11 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	{
 		String sMethod = "handleSpecificSaml20Request " + Thread.currentThread().getId();
 		AuthnRequest authnRequest = (AuthnRequest) samlMessage;
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "PathInfo="+httpRequest.getPathInfo()+" language="+httpRequest.getParameter("language"));
-
+		String sQuery = httpRequest.getQueryString();
+		String sSpecials = Utils.getParameterValueFromUrl(sQuery, "aselect_specials");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "PathInfo="+httpRequest.getPathInfo()+
+				" Query="+sQuery+" language="+" Specials="+sSpecials+httpRequest.getParameter("language"));
+		
 		try {
 			Response errorResponse = validateAuthnRequest(authnRequest, httpRequest.getRequestURL().toString());
 			if (errorResponse != null) {
@@ -312,6 +315,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			String sLanguage = httpRequest.getParameter("language");
 			if (Utils.hasValue(sLanguage))
 				_htSessionContext.put("language", sLanguage);
+			if (Utils.hasValue(sSpecials))
+				_htSessionContext.put("aselect_specials", sSpecials);
 			_htSessionContext.put("sp_rid", sSPRid);
 			_htSessionContext.put("sp_issuer", sIssuer);
 			_htSessionContext.put("sp_assert_url", sAssertionConsumerServiceURL);

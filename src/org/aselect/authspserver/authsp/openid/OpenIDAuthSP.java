@@ -885,7 +885,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", (sLanguage == null) ? "" : sLanguage);	// This "" is important for verification of signature
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[country]", (sCountry == null) ? "" :  sCountry);	// This "" is important for verification of signature
 		// RH, 20100921, en
-		sAuthenticateForm = Utils.replaceConditional(sAuthenticateForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
+		sAuthenticateForm = Utils.replaceConditional(sAuthenticateForm, "[if_error,", ",", "]", sErrorMessage != null && !sErrorMessage.equals(""), _systemLogger);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[signature]", sSignature);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[retry_counter]", sRetryCounter);
 

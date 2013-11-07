@@ -313,9 +313,14 @@ public class Utils
 		
 		String sRelay = (String)htSessionContext.get("RelayState");
 		if (Utils.hasValue(sRelay) && !sRelay.startsWith("idp=")) {  // try RelayState passed from SP
+			// Found a base64 encoded RelayState
 			sRelay = new String(Base64Codec.decode(sRelay));
 			sSpecials = Utils.getParameterValueFromUrl(sRelay, "aselect_specials");
 			logger.log(Level.INFO, MODULE, sMethod, "sRelay="+sRelay+" sSpecials="+sSpecials);
+		}
+		if (sSpecials == null) {
+			sSpecials = (String)htSessionContext.get("aselect_specials");
+			logger.log(Level.INFO, MODULE, sMethod, "aselect_specials="+sSpecials);
 		}
 		if (sSpecials == null) {  // try application url
 			String sAppUrl = (String)htSessionContext.get("app_url");
@@ -358,38 +363,6 @@ public class Utils
 	}
 
 	/**
-	 * Handle all conditional keywords in a HTML form.
-	 * 
-	 * @param sText
-	 *            the HTML text to examine
-	 * @param bErrCond
-	 *            is if_err true?
-	 * @param sSpecials
-	 *             the specials to look for
-	 * @param logger
-	 *            any logger
-	 * @return the modified HTML text
-	 */
-	public static String handleAllConditionals(String sText, boolean bErrCond, String sSpecials, ISystemLogger logger)
-	{
-		final String sMethod = "handleAllConditionals";
-
-		logger.log(Level.INFO, MODULE, sMethod, "error="+bErrCond+" specials="+sSpecials);
-		sText = Utils.replaceConditional(sText, "if_error", bErrCond, logger);
-		
-		if (sSpecials != null) {
-			String sParCond = getParameterValueFromUrl(sSpecials, "if_cond");
-			logger.log(Level.INFO, MODULE, sMethod, "parCond="+sParCond);
-			if (sParCond != null)
-				sText = Utils.replaceConditional(sText, "if_cond,"+sParCond, true, logger);
-		}
-		
-		// Other conditions are false
-		sText = Utils.removeAllConditionals(sText, "if_cond", logger);
-		return sText;
-	}
-
-	/**
 	 * Retrieve parameter value from the given URL.
 	 * 
 	 * @param sUrl
@@ -418,85 +391,83 @@ public class Utils
 		}
 		return sParCond;
 	}
-	
+
 	/**
-	 * Replace all unused conditions. Syntax:
-	 * [&lt;condition_keyword&gt;,&lt;condition_name&gt;,&lt;true_branch&gt;,&lt;false_branch&gt;]
-	 * Currently no escape mechanism for the comma and right bracket.
+	 * Handle all conditional keywords in a HTML form.
 	 * 
 	 * @param sText
-	 * 			The source text.
+	 *            the HTML text to examine
+	 * @param bErrCond
+	 *            is if_err true?
+	 * @param sSpecials
+	 *             the specials to look for
+	 * @param logger
+	 *            any logger
+	 * @return the modified HTML text
+	 */
+	public static String handleAllConditionals(String sText, boolean bErrCond, String sSpecials, ISystemLogger logger)
+	{
+		final String sMethod = "handleAllConditionals";
+
+		logger.log(Level.INFO, MODULE, sMethod, "error="+bErrCond+" specials="+sSpecials);
+		sText = Utils.replaceConditional(sText, "[if_error,", ",", "]", bErrCond, logger);
+		
+		// 20131028, Bauke: added multiple conditions
+		if (sSpecials != null) {
+			String sParCond = getParameterValueFromUrl(sSpecials, "if_cond");
+			// Can take the form: if_cond=condition1,condition2,...
+			logger.log(Level.INFO, MODULE, sMethod, "parCond="+sParCond);
+			if (sParCond != null) {
+				// Replace true conditions
+				String[] saCond = sParCond.split(",");
+				for (int i = 0; i < saCond.length; i++) {
+					// sText example: ...[if_cond,user_change,class="row",class="do_not_display"]...
+					// First handle: if_cond,user_change
+					logger.log(Level.INFO, MODULE, sMethod, "saCond["+i+"]="+saCond[i]);
+					sText = Utils.replaceConditional(sText, "[if_cond,"+saCond[i]+",", ",", "]", true, logger);
+					sText = Utils.replaceConditional(sText, "#if_cond,"+saCond[i]+"#", "#else_cond,"+saCond[i]+"#", "#end_cond,"+saCond[i]+"#", true, logger);
+				}
+			}
+		}
+		
+		// Other conditions are false
+		sText = Utils.removeAllConditionals(sText, "[if_cond,", ",", "]", logger);
+		sText = Utils.removeAllConditionals(sText, "#if_cond,", "#else_cond,", "#end_cond,", logger);
+		return sText;
+	}
+
+	/**
+	 * Replace text based on a condition. Syntax:
+	 * [&lt;keyword&gt;,&lt;true_branch&gt;,&lt;false_branch&gt;] Currently no
+	 * escape mechanism for the comma and right bracket.
+	 * 
+	 * @param sText
+	 *            The source text.
 	 * @param sKeyword
 	 *            The keyword used to look for the conditional replacement.
-	 * @return result with replacements applied
-	 */
-	public static String removeAllConditionals(String sText, String sKeyword, ISystemLogger logger)
-	{
-		String sMethod = "removeAllConditionals";
-		String sSearch = "[" + sKeyword + ",";
-		int idx, len = sSearch.length();
-		String sResult = "";
-		
-		if (sText == null)
-			return sText;
-		if (logger!=null) logger.log(Level.INFO, MODULE, sMethod, "Search="+sSearch);
-		
-		while (true) {
-			//logger.log(Level.INFO, MODULE, sMethod, "Text="+Utils.firstPartOf(sText, 45));
-			idx = sText.indexOf(sSearch);
-			if (idx < 0)
-				break;
-			//logger.log(Level.INFO, MODULE, sMethod, "Cond="+Utils.firstPartOf(sText.substring(idx), 45)+" idx="+idx);
-			int iComma = sText.indexOf(',', idx + len);
-			int iNextComma = (iComma < 0) ? -1: sText.indexOf(',', iComma+1);
-			int iRight = (iNextComma < 0) ? -1: sText.indexOf(']', iNextComma+1);
-			//logger.log(Level.INFO, MODULE, sMethod, "comma="+iComma+" next="+iNextComma+" right="+iRight);
-			if (iRight < 0) {
-				sResult += sText.substring(0, idx + len);
-				sText = sText.substring(idx + len);
-				continue;
-			}
-			if (iNextComma < 0 || iComma < 0) {
-				sResult += sText.substring(0, iRight+1);
-				sText = sText.substring(iRight+1);
-				continue;
-			}
-			// Commas and right bracket found
-			// Use the false part
-			sResult += sText.substring(0, idx) + sText.substring(iNextComma+1, iRight);
-			sText = sText.substring(iRight+1);
-		}
-		return sResult + sText;
-	}
-	
-	/**
-	 * Replace text based on a condition (no logging).
-	 */
-	public static String replaceConditional(String sText, String sKeyword, boolean bCondition)
-	{
-		return replaceConditional(sText, sKeyword, bCondition, null);
-	}
-
-	/**
-	 * Replace text based on a condition.
-	 * Syntax: [&lt;keyword&gt;,&lt;true_branch&gt;,&lt;false_branch&gt;]
-	 * Currently no escape mechanism for the comma and right bracket.
-	 * 
-	 * @param sText
-	 * 			The source text.
-	 * @param sKeyword
-	 *          The keyword used to look for the conditional replacement.
+	 * @param sMidSep
+	 *            the mid separator
+	 * @param sFinal
+	 *            the final string
 	 * @param bCondition
-	 *          Use the true branch of the condition?
+	 *            Use the true branch of the condition?
+	 * @param logger
+	 *            the logger
 	 * @return result with replacements applied
 	 */
-	public static String replaceConditional(String sText, String sKeyword, boolean bCondition, ISystemLogger logger)
+	public static String replaceConditional(String sText, String sKeyword, String sMidSep, String sFinal, boolean bCondition, ISystemLogger logger)
 	{
 		String sMethod = "replaceConditional";
-		String sSearch = "[" + sKeyword + ",";
+		String sSearch = sKeyword; // "[" + sKeyword + ",";
 		int idx, len = sSearch.length();
 		String sResult = "";
-
+		
+		// 20131030, Bauke: added sMidSep and sFinal parameters
+		// Replace constructions like: [if_cond,org_login,password,user_id]
+		//                             ^idx...............        ^mid    ^fin
+		// And: #if_cond,ui_mobile#<true_part>#else_cond,ui_mobile#<false_part>#end_cond,ui_mobile#\n...
+		//      ^idx...............<true_part>^mid.................<false_part>^fin................
+		//
 		if (sText == null)
 			return sText;
 
@@ -507,27 +478,104 @@ public class Utils
 			if (idx < 0)
 				break;
 			//if (logger!=null) logger.log(Level.INFO, MODULE, sMethod, "Text="+Utils.firstPartOf(sText.substring(idx), 15)+" idx="+idx);
-			int iComma = sText.indexOf(',', idx + len);
-			int iRight = sText.indexOf(']', (iComma >= 0) ? iComma+1 : idx + len);
+			int iMid = sText.indexOf(sMidSep/*","*/, idx + len);
+			int iFinal = sText.indexOf(sFinal/*"]"*/, (iMid >= 0) ? iMid+1 : idx + len);
 			//if (logger!=null) logger.log(Level.INFO, MODULE, sMethod, "comma="+iComma+" right="+iRight);
-			if (iRight < 0) {
+			if (iFinal < 0) {
 				sResult += sText.substring(0, idx + len);
 				sText = sText.substring(idx + len);
 				continue;
 			}
-			if (iComma < 0) {
-				sResult += sText.substring(0, iRight+1);
-				sText = sText.substring(iRight+1);
+			if (iMid < 0) {
+				sResult += sText.substring(0, iFinal+1);
+				sText = sText.substring(iFinal+1);
 				continue;
 			}
-			// Comma and right bracket found
+			// sMid and sFinal found
 			if (bCondition) {  // Use the true part
-				sResult += sText.substring(0, idx) + sText.substring(idx + len, iComma);
+				sResult += sText.substring(0, idx) + sText.substring(idx + len, iMid);
 			}
 			else {  // Use the false part
-				sResult += sText.substring(0, idx) + sText.substring(iComma+1, iRight);
+				sResult += sText.substring(0, idx) + sText.substring(iMid+sMidSep.length(), iFinal);
 			}
-			sText = sText.substring(iRight+1);
+			sText = sText.substring(iFinal+sFinal.length());
+		}
+		return sResult + sText;
+	}
+	
+	/**
+	 * Replace all unused or false conditions. Syntax:
+	 * [&lt;keyword&gt;,&lt;true_branch&gt;,&lt;false_branch&gt;].
+	 * Currently no escape mechanism for the comma and right bracket.
+	 * 
+	 * @param sText
+	 * 			The source text.
+	 * @param sKeyword
+	 *            The keyword used to look for the conditional replacement.
+	 * @return result with replacements applied
+	 */
+	public static String removeAllConditionals(String sText, String sKeyword, String sMidSep, String sFinal, ISystemLogger logger)
+	{
+		String sMethod = "removeAllConditionals";
+		String sSearch = sKeyword;  // "[" + sKeyword + ",";
+		int idx, len = sSearch.length();
+		String sResult = "";
+		
+		// 20131030, Bauke: added sMidSep and sFinal
+		// Remove constructions like: [if_cond,org_login,password,user_id]
+		//                            ^idx.....org_login^mid     ^next   ^fin
+		//		  sKeyword contains: "[if_cond,"
+		// And: #if_cond,ui_mobile#<true_part>#else_cond,ui_mobile#<false_part>#end_cond,ui_mobile#...
+		//      ^idx.....         ^idx2       ^mid.......                      ^fin......
+		//
+		if (sText == null)
+			return sText;
+		if (logger!=null) logger.log(Level.INFO, MODULE, sMethod, "Search="+sSearch);
+		
+		while (true) {
+			//logger.log(Level.INFO, MODULE, sMethod, "Text="+Utils.firstPartOf(sText, 45));
+			idx = sText.indexOf(sSearch);
+			if (idx < 0)
+				break;
+			int len2 = 0;
+			String sFullMid = sMidSep, sFullFin = sFinal;
+			if (sText.charAt(idx) == '#') {  // need to skip "ui_mobile#" too!
+				int idx2 = sText.indexOf("#", idx+len);
+				if (idx2 >= 0) {
+					// Add condition part to allow nested conditions
+					len2 = ((idx2+1)-idx)-len;
+					String sCond = sText.substring(idx+len, idx2+1);
+					sFullMid = sMidSep + sCond; 
+					sFullFin = sFinal + sCond;
+					logger.log(Level.FINER, MODULE, sMethod, "sCond="+sCond);
+				}
+			}
+			logger.log(Level.FINER, MODULE, sMethod, "idx="+idx+" Cond="+Utils.firstPartOf(sText.substring(idx), 60));
+			int iMidSep = sText.indexOf(sFullMid/*","*/, idx+len+len2);
+			// Only one mid separator for the #if_cond construction, so don't set iNextMid
+			int iNextMid = (sText.charAt(idx)=='#' || iMidSep < 0) ? -1: sText.indexOf(sFullMid/*","*/, iMidSep+sFullMid.length());
+			if (sText.charAt(idx) == '#') {
+				iNextMid = iMidSep;
+			}
+			int iFinal = (iNextMid < 0) ? -1: sText.indexOf(sFullFin/*"]"*/, iNextMid+sFullMid.length());
+			//logger.log(Level.FINER, MODULE, sMethod, "mid="+iMidSep+" next="+iNextMid+" final="+iFinal);
+			if (iFinal < 0) {  // skip keyword
+				sResult += sText.substring(0, idx+len+len2);
+				sText = sText.substring(idx+len+len2);
+				//logger.log(Level.FINER, MODULE, sMethod, "SkipFinal="+Utils.firstPartOf(sText, 80));
+				continue;
+			}
+			if (iMidSep < 0) {  // iNextMid can be -1
+			//if (iNextMid < 0 || iMidSep < 0) {  // skip till end
+				sResult += sText.substring(0, iFinal+sFullFin.length());
+				sText = sText.substring(iFinal+sFullFin.length());
+				//logger.log(Level.FINER, MODULE, sMethod, "SkipMid="+Utils.firstPartOf(sText, 80));
+				continue;
+			}
+			// sMidSep and sFinal found, find and use the false part
+			sResult += sText.substring(0, idx) + sText.substring(iNextMid+sFullMid.length(), iFinal);
+			sText = sText.substring(iFinal+sFullFin.length());
+			//logger.log(Level.FINER, MODULE, sMethod, "Continue="+Utils.firstPartOf(sText, 80));
 		}
 		return sResult + sText;
 	}
