@@ -76,7 +76,7 @@ module AP_MODULE_DECLARE_DATA aselect_filter_module;
 //static handler_rec      aselect_filter_handlers[];
 static const command_rec    aselect_filter_cmds[];
 
-char *version_number = "====subversion_313====";
+char *version_number = "====subversion_314====";
 
 // -----------------------------------------------------
 // Functions 
@@ -165,7 +165,7 @@ int aselect_filter_init(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *pPool, 
 	}
 	ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, 0, pServer, "ASELECT_FILTER:: done");
 	TRACE1("aselect_filter_init: } %x done", pServer);
-	TRACE1("aselect_filter_init: %s", version_number);
+	TRACE1("aselect_filter_init: filter_version=%s", version_number);
 	return 0;
 }
 
