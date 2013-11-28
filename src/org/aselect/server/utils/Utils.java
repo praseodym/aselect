@@ -27,6 +27,7 @@ import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectSystemLogger;
@@ -91,7 +92,8 @@ public class Utils
 		while(it.hasNext()) {
 			String sOrgId = it.next();
 			String sOrgName = hUserOrganizations.get(sOrgId);
-			sb.append("<option value=").append(sOrgId).append(">").append(sOrgName);
+//			sb.append("<option value=").append(sOrgId).append(">").append(sOrgName);
+			sb.append("<option value=").append(sOrgId).append(">").append(StringEscapeUtils.escapeHtml(sOrgName));
 			sb.append("</option>");
 		}
 		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[user_organizations]", sb.toString());
