@@ -422,9 +422,19 @@ public class PKIAuthSP extends HttpServlet
 	{
 		String sResultCode = Errors.PKI_CLIENT_CERT_SUCCESS;
 		StringBuffer sbTemp;
-		String sSubjectDN = ""; // Bauke: added
-		String sIssuerDN = ""; // Bauke: added
-		String sSubjectId = ""; // Bauke: added
+		
+		// RH, 20131216, so
+//		String sSubjectDN = ""; // Bauke: added
+//		String sIssuerDN = ""; // Bauke: added
+//		String sSubjectId = ""; // Bauke: added
+		// RH, 20131216, eo
+		
+		// RH, 20131216, sn
+		String sSubjectDN = null;
+		String sIssuerDN = null;
+		String sSubjectId = null;
+		// RH, 20131216, en
+		
 		String sMethod = "handleAuthenticate()";
 		try {
 			X509Certificate[] oCerts = null;
@@ -508,42 +518,54 @@ public class PKIAuthSP extends HttpServlet
 				}
 			}
 			// Bauke: Retrieve data
-			sSubjectDN = oClientCert.getSubjectDN().toString().trim();
-			sIssuerDN = oClientCert.getIssuerDN().toString().trim();
+//	RH, 20131216, so			
+//			sSubjectDN = oClientCert.getSubjectDN().toString().trim();
+//			sIssuerDN = oClientCert.getIssuerDN().toString().trim();
+//			RH, 20131216, eo			
+//			RH, 20131216, sn, allow for nulls	, although they shouldn't be	
+			if ( oClientCert.getSubjectDN() != null )
+				sSubjectDN = oClientCert.getSubjectDN().toString().trim();
+			if ( oClientCert.getIssuerDN() != null )
+				sIssuerDN = oClientCert.getIssuerDN().toString().trim();
+//			RH, 20131216, en			
 			try {
 				Collection altNames = oClientCert.getSubjectAlternativeNames();
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "altNames=" + altNames);
-				for (Iterator i = altNames.iterator(); i.hasNext();) {
-					Object obj = i.next();
-					List item = (List) obj;
-					Integer type = (Integer) item.get(0);
-					Object value = item.get(1);
-					byte[] bValue = (byte[]) value;
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Type=" + type.toString() + " Value="
-							+ value.toString() + " Bytes=" + bValue.length);
-					String result = "";
-					for (int j = 0; j < bValue.length; j++)
-						result += "." + Integer.toHexString(bValue[j]);
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Value=" + result);
-					int j;
-					for (j = bValue.length - 1; j >= 0; j--) {
-						Character c = (char) bValue[j];
-						if (!(Character.isLetterOrDigit(c) || c == '-' || c == '.'))
-							break;
+				if ( altNames != null ) {	// RH, 20131216, n, altnames might be absent
+					for (Iterator i = altNames.iterator(); i.hasNext();) {
+						Object obj = i.next();
+						List item = (List) obj;
+						Integer type = (Integer) item.get(0);
+						Object value = item.get(1);
+						byte[] bValue = (byte[]) value;
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "Type=" + type.toString() + " Value="
+								+ value.toString() + " Bytes=" + bValue.length);
+						String result = "";
+						for (int j = 0; j < bValue.length; j++)
+							result += "." + Integer.toHexString(bValue[j]);
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "Value=" + result);
+						int j;
+						for (j = bValue.length - 1; j >= 0; j--) {
+							Character c = (char) bValue[j];
+							if (!(Character.isLetterOrDigit(c) || c == '-' || c == '.'))
+								break;
+						}
+						if (j < 0)
+							j = 0;
+						for (; j < bValue.length; j++) {
+							Character c = (char) bValue[j];
+							if (c == '-')
+								break;
+						}
+						if (j < bValue.length)
+							j++;
+						for (; j < bValue.length; j++) {
+							sSubjectId += Character.toString((char) bValue[j]);
+						}
 					}
-					if (j < 0)
-						j = 0;
-					for (; j < bValue.length; j++) {
-						Character c = (char) bValue[j];
-						if (c == '-')
-							break;
-					}
-					if (j < bValue.length)
-						j++;
-					for (; j < bValue.length; j++) {
-						sSubjectId += Character.toString((char) bValue[j]);
-					}
-				}
+				} else {	// RH, 20131216, sn
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Certificate does not contain any AlternativeNames -> No SubjectId retrieved");
+				}	// RH, 20131216, en
 			}
 			catch (CertificateParsingException e) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Cert.Pars.Exc=" + e.toString());
@@ -696,17 +718,36 @@ public class PKIAuthSP extends HttpServlet
 		try {
 			// Bauke, 20091002: Base64 encoded to pass non ASCII characters
 			BASE64Encoder base64Encoder = new BASE64Encoder();
-			sSubjectDN = base64Encoder.encode(sSubjectDN.getBytes("UTF-8"));
-			sIssuerDN = base64Encoder.encode(sIssuerDN.getBytes("UTF-8"));
-			sSubjectId = base64Encoder.encode(sSubjectId.getBytes("UTF-8"));
+//	RH, 20131216, so			
+//			sSubjectDN = base64Encoder.encode(sSubjectDN.getBytes("UTF-8"));
+//			sIssuerDN = base64Encoder.encode(sIssuerDN.getBytes("UTF-8"));
+//			sSubjectId = base64Encoder.encode(sSubjectId.getBytes("UTF-8"));
+//			sbTemp = new StringBuffer(sRid);
+//			sbTemp.append(sAsUrl).append(sResultCode).append(sAsId);
+//			if (sSubjectDN != null)
+//				sbTemp.append(sSubjectDN); // Bauke: added
+//			if (sIssuerDN != null)
+//				sbTemp.append(sIssuerDN); // Bauke: added
+//			if (sSubjectId != null)
+//				sbTemp.append(sSubjectId); // Bauke: added
+//			RH, 20131216, eo
+
+//			RH, 20131216, sn, allow for nulls		
 			sbTemp = new StringBuffer(sRid);
 			sbTemp.append(sAsUrl).append(sResultCode).append(sAsId);
-			if (sSubjectDN != null)
+			if (sSubjectDN != null) {
+				sSubjectDN = base64Encoder.encode(sSubjectDN.getBytes("UTF-8"));
 				sbTemp.append(sSubjectDN); // Bauke: added
-			if (sIssuerDN != null)
+			}
+			if (sIssuerDN != null) {
+				sIssuerDN = base64Encoder.encode(sIssuerDN.getBytes("UTF-8"));
 				sbTemp.append(sIssuerDN); // Bauke: added
-			if (sSubjectId != null)
+			}
+			if (sSubjectId != null) {
+				sSubjectId = base64Encoder.encode(sSubjectId.getBytes("UTF-8"));
 				sbTemp.append(sSubjectId); // Bauke: added
+			}
+//			RH, 20131216, en			
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign[" + sbTemp + "]");
 			sSignature = _oCryptoEngine.generateSignature(sbTemp.toString());
