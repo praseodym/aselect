@@ -298,6 +298,7 @@ public class SAMResourceGroup extends Thread
 			_oSystemLogger.log(getCriticalResourceGroupNoticeLevel(), MODULE, sMethod, sbError.toString());	// RH, 20120628, n
 			throw new ASelectSAMException(Errors.ERROR_ASELECT_SAM_NO_RESOURCE_ACTIVE);
 		}
+		_oSystemLogger.log(Level.FINEST, MODULE, sMethod, "Returning resource: " + ( (SAMResource)_vActive.firstElement() ).getId());
 
 		return (SAMResource) _vActive.firstElement();
 	}
@@ -428,9 +429,11 @@ public class SAMResourceGroup extends Thread
 						index++;
 					} else break;
 				}
+				_oSystemLogger.log(Level.FINEST, MODULE, "updateStatus()", "Inserting resource " +oSAMResource.getId() + "  into vLive at position: " + index);
 				vLive.add(index, oSAMResource);
 				// RH, 20110202, en
 //				vLive.add(oSAMResource);			// RH, 20110202, o
+				_oSystemLogger.log(Level.FINEST, MODULE, "updateStatus()", "Size of vLive is now: " + vLive.size());
 			}
 		}
 		// RH, 20120628, sn

@@ -54,7 +54,10 @@ public class NonClosingConnectionHandler extends AbstractConnectionHandler
 		String sUsername = null;
 		String sURL = null;
 		try {
-			if (_oActiveResource == null || !_oActiveResource.live()) {
+//			if (_oActiveResource == null || !_oActiveResource.live()) {
+				// Get 'most recent'  active resource		// RH, 20131125, n
+				if (_oActiveResource == null || !_oActiveResource.live()	 ||	!_oActiveResource.getId().equals(  _oSAMAgent.getActiveResource(_sResourceGroup).getId() ) 	)	{	// RH, 20131125, n
+
 				_oActiveResource = _oSAMAgent.getActiveResource(_sResourceGroup);
 				Object oConfigSection = _oActiveResource.getAttributes();
 

@@ -54,9 +54,11 @@ public class ClosingConnectionHandler extends AbstractConnectionHandler
 
 		Connection _oActiveConnection = null;
 		try {
-			if (_oActiveResource == null || !_oActiveResource.live()) {
-				_oActiveResource = _oSAMAgent.getActiveResource(_sResourceGroup);
-				Object oConfigSection = _oActiveResource.getAttributes();
+//				if (_oActiveResource == null || !_oActiveResource.live()) {	// RH, 20131125, o
+				// Get 'most recent'   active resource		// RH, 20131125, n
+				if (_oActiveResource == null || !_oActiveResource.live()	 ||	!_oActiveResource.getId().equals(  _oSAMAgent.getActiveResource(_sResourceGroup).getId() ) 	)	{	// RH, 20131125, n
+					_oActiveResource = _oSAMAgent.getActiveResource(_sResourceGroup);
+					Object oConfigSection = _oActiveResource.getAttributes();
 
 				try {
 					sJDBCDriver = _oConfigManager.getParam(oConfigSection, "driver");

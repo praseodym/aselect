@@ -217,7 +217,9 @@ public class JDBCStorageHandler implements IStorageHandler
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'resourcegroup' section found");
 				throw new ASelectStorageException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
-			if (_oActiveResource == null || !_oActiveResource.live())
+//			if (_oActiveResource == null || !_oActiveResource.live())	// RH, 20131125, o
+			// Get 'most recent'  active resource		// RH, 20131125, n
+			if (_oActiveResource == null || !_oActiveResource.live()	 ||	!_oActiveResource.getId().equals(  _oSAMAgent.getActiveResource(_sResourceGroup).getId() ) 	)	// RH, 20131125, n
 				_oActiveResource = _oSAMAgent.getActiveResource(_sResourceGroup);
 			Object oResourceConfigSection = _oActiveResource.getAttributes();
 			try {
