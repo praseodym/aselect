@@ -22,9 +22,12 @@ import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.Vector;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -128,6 +131,7 @@ public class DelegatorAuthSP extends AbstractAuthSP
 	private String _sDelegateGateway;
 	private String _sAuthProvider;
 	private boolean _bShow_challenge;		// RH, 20110919, n
+	private boolean _bUrldecode_responseheaders;		// RH, 20131220, n
 	
 	// RH, 20130115, sn
 	private String request_key_uid;
@@ -371,6 +375,20 @@ public class DelegatorAuthSP extends AbstractAuthSP
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "response_key_uid="+response_key_uid); 
 			// RH, 20130115, en
+
+			// RH, 20131220, sn
+			// get urldecode_responseheaders
+			try {
+				String sUrldecode_responseheaders = _configManager.getParam(_oAuthSpConfig, "urldecode_responseheaders");
+				_bUrldecode_responseheaders = Boolean.parseBoolean(sUrldecode_responseheaders);
+			}
+			catch (ASelectConfigException eAC) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod,
+						"No or invalid 'urldecode_responseheaders' parameter found in configuration, not decoding");
+				_bUrldecode_responseheaders = false;
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "_bUrldecode_responseheaders="+_bUrldecode_responseheaders); 
+			// RH, 20131220, en
 			
 			sbInfo = new StringBuffer("Successfully started ");
 			sbInfo.append(VERSION).append(".");
@@ -694,6 +712,29 @@ public class DelegatorAuthSP extends AbstractAuthSP
 				}
 				// authenticate returns parameters in Map authenticate
 				int iResultCode = _oDelegate.authenticate(requestparameters, responseparameters);
+				
+				// RH, 20131220, sn
+				if ( _bUrldecode_responseheaders ) {
+					// responseparameters is modifiable
+					Set<String> sKeys = responseparameters.keySet();
+					Iterator<String> iKeys = sKeys.iterator();
+					while ( iKeys.hasNext() ) {
+						String sKey = iKeys.next();
+						List<String> lValues = responseparameters.get(sKey);
+						Iterator<String> iValues = lValues.iterator();
+						Vector<String> decoded = new Vector<String>();
+						while ( iValues.hasNext() ) {
+							String iValue = iValues.next();
+							_systemLogger.log(Level.FINEST, MODULE, sMethod, "responseparameter value before decode=" + iValue);
+							iValue = URLDecoder.decode( iValue, "UTF-8" );
+							_systemLogger.log(Level.FINEST, MODULE, sMethod, "responseparameter value after decode=" + iValue);
+							decoded.add(iValue);
+						}
+						responseparameters.put(sKey, decoded);
+					}
+				}
+				// RH, 20131220, en
+				
 				
 				switch (iResultCode) {
 				case Delegate.DELEGATE_SUCCESS:
