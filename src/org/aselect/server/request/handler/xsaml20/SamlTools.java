@@ -927,14 +927,23 @@ public class SamlTools
 		final String CONTENT_TYPE = "text/xml; charset=utf-8";
 
 		response.setContentType(CONTENT_TYPE);
+		response.setCharacterEncoding("UTF-8");	// RH, 20131230, n
 		response.setHeader("Pragma", "no-cache");
 		response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 
-		ServletOutputStream sos = response.getOutputStream();
-		sos.print(envelope);
-		sos.println("\r\n\r\n");
+		// RH, 20131230, so
+//		ServletOutputStream sos = response.getOutputStream();
+//		sos.print(envelope);
+//		sos.println("\r\n\r\n");
+		// RH, 20131230, eo
+		// RH, 20131230, sn
+		java.io.PrintWriter sos = response.getWriter();
+		sos.write(envelope);
+		sos.write("\r\n\r\n\r\n");	// Backward compatibility
 		sos.close();
+		// RH, 20131230, en
 	}
+
 
 	//
 	// Create a new HashMap based on an htSource
