@@ -78,6 +78,7 @@ import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.utils.Tools;
+import org.aselect.system.utils.Utils;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -138,10 +139,9 @@ public class SOAP12Communicator implements IClientCommunicator
 	 */
 	public SOAP12Communicator(String sCallMethod, SystemLogger systemLogger)
 	{
-//		_systemLogger.log(Level.INFO, MODULE, "SOAP12Communicator", "CallMethod=" + sCallMethod);	// RH, 20110124, o
 		_sCallMethod = sCallMethod;
 		_systemLogger = systemLogger;
-		_systemLogger.log(Level.INFO, MODULE, "SOAP12Communicator", "CallMethod=" + sCallMethod);	// RH, 20110124, n
+		_systemLogger.log(Level.INFO, MODULE, "SOAP12Communicator", "CallMethod=" + sCallMethod);
 
 	}
 
@@ -173,7 +173,7 @@ public class SOAP12Communicator implements IClientCommunicator
 		String sMessage = null;
 		String sResponse = null;
 		Element elBody = null;
-		String sMethod = "sendMessage()";
+		String sMethod = "sendMessage";
 
 		// Create a new message
 		sMessage = createMessage(htParameters, sTarget);
@@ -191,7 +191,7 @@ public class SOAP12Communicator implements IClientCommunicator
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString(), eMU);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR, eMU);
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Response=" + sResponse);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Response=" + Utils.firstPartOf(sResponse, 120));
 
 		// Parse and return response
 		elBody = this.parse(sResponse);
@@ -206,8 +206,8 @@ public class SOAP12Communicator implements IClientCommunicator
 	public String sendStringMessage(String soapMessage, String sTarget)
 	throws ASelectCommunicationException
 	{
+		String sMethod = "sendStringMessage";
 		String sResponse = null;
-		String sMethod = "sendStringMessage()";
 
 		// Create a new message
 		StringBuffer sbMessage = new StringBuffer();
@@ -347,13 +347,14 @@ public class SOAP12Communicator implements IClientCommunicator
 	private String send(String sMessage, String sUrl)
 	throws java.net.MalformedURLException, ASelectCommunicationException
 	{
+		String sMethod = "send";
 		StringBuffer sbBuf = new StringBuffer();
-		String sMethod = "send()";
 		URL url = null;
 		HttpURLConnection connection = null;
 
 		// http://[target address]/[schema target]
 		url = new URL(sUrl);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "url="+sUrl+" msg="+sMessage);
 
 		try {
 			// open HTTP connection to URL
@@ -387,6 +388,7 @@ public class SOAP12Communicator implements IClientCommunicator
 				 * stream isInput.close();
 				 */// RH, 20080717, eo
 				sbBuf = new StringBuffer(Tools.stream2string(connection.getInputStream(), true)); // RH, 20080717, n
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "result="+Utils.firstPartOf(sbBuf.toString(), 40));
 				break;
 			}
 			case 400: // Bad request
@@ -461,8 +463,8 @@ public class SOAP12Communicator implements IClientCommunicator
 	private Element parse(String sMessage)
 	throws ASelectCommunicationException
 	{
+		String sMethod = "parse";
 		Element elBody = null;
-		String sMethod = "parse()";
 		if (!sMessage.equals("")) {
 			try {
 				// create new DOM parser
@@ -630,8 +632,8 @@ public class SOAP12Communicator implements IClientCommunicator
 	private String[] resolveArray(Element elRoot, NodeList nlChildElements)
 	throws ASelectCommunicationException
 	{
+		String sMethod = "resolveArray";
 		String[] sa = null;
-		String sMethod = "resolveArray()";
 		String sItemType = elRoot.getAttributeNS(SOAPConstants.URI_SOAP12_ENC, "itemType");
 		if (sItemType.equalsIgnoreCase("xsd:string")) {
 			String sSize = elRoot.getAttributeNS(URI_SOAP12_ENC, "arraySize");

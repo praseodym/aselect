@@ -350,12 +350,13 @@ public class IPAuthSP extends ASelectHttpServlet
 	protected void doGet(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ServletException, java.io.IOException
 	{
-		String sMethod = "doGet()";
+		String sMethod = "doGet";
 		PrintWriter pwOut = null;
-		String sQueryString = "";
 		String sLanguage = null;
 
 		try {
+			String sQueryString = servletRequest.getQueryString();
+			_oAuthSPSystemLogger.log(Level.INFO, MODULE, sMethod, "IP GET {"+servletRequest+", sQueryString="+sQueryString);
 			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, false);
 			sLanguage = (String) htServiceRequest.get("language");  // optional language code
 			if (sLanguage == null || sLanguage.trim().length() < 1)
@@ -367,7 +368,6 @@ public class IPAuthSP extends ASelectHttpServlet
 			servletResponse.setContentType("text/html");
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 			pwOut = servletResponse.getWriter();
-			sQueryString = servletRequest.getQueryString();
 
 			String sMyUrl = servletRequest.getRequestURL().toString();
 			htServiceRequest.put("my_url", sMyUrl);
@@ -381,19 +381,14 @@ public class IPAuthSP extends ASelectHttpServlet
 
 			if ((sRid == null) || (sUid == null) || (sIpRange == null) || (sAsUrl == null) || (sAsId == null)
 					|| (sSignature == null)) {
-				_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod,
-						"Invalid request received: one or more mandatory parameters missing.");
+				_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: one or more mandatory parameters missing.");
 				throw new ASelectException(Errors.ERROR_IP_INVALID_REQUEST);
 			}
-
-			_oAuthSPSystemLogger.log(Level.INFO, MODULE, sMethod, "IP GET {" + servletRequest + ", sQueryString="
-					+ sQueryString);
 
 			StringBuffer sbIpRangesData = new StringBuffer();
 			int i = 1;
 			while (sIpRange != null) {
 				sbIpRangesData.append(sIpRange);
-
 				// get next ip range
 				i++;
 				sIpRange = (String) htServiceRequest.get("ip_range" + i);

@@ -656,7 +656,7 @@ static int aselect_filter_handler(request_rec *pRequest)
 		iRet = HTTP_NOT_FOUND;
 		goto finish_filter_handler; // we don't want to do anything with this request
     }
-    // else 1="secure" or -1="not found"
+    // else 1="secure"
     // 20120530 end
 
     /*
