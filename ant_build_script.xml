@@ -20,6 +20,7 @@
 
 	
 	<exec outputproperty="build.current.revision" executable="svnversion" failifexecutionfails="false"  >
+		<!-- version 1.7 or later	-->
 	         <arg line="-n -c" />
 	         <redirector>
 	           <outputfilterchain>
