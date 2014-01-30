@@ -91,18 +91,18 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 	private String _sSOAPMethod;
 
 	/** The name of the attributes array */
-	private String _sAttributesName;
+	protected String _sAttributesName;
 
 	/** The communicator */
-	private IClientCommunicator _communicator;
+	protected IClientCommunicator _communicator;
 
 	/** All parameters that should be send */
-	private Vector _vTGTParameters;
-	private HashMap _htConfigParameters;
+	protected Vector _vTGTParameters;
+	protected HashMap _htConfigParameters;
 
 	/** All attributes that can be retrieved */
-	private Vector _vAllAttributes;
-	private Vector _vAllAttributesMappings;
+	protected Vector _vAllAttributes;
+	protected Vector _vAllAttributesMappings;
 
 	/** The recourcegroup */
 	private String _sAPIResourceGroup;
@@ -469,7 +469,7 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 	 * @throws ASelectSAMException
 	 *             If retrieving fails.
 	 */
-	private String getConnection()
+	protected String getConnection()
 	throws ASelectSAMException
 	{
 		String sMethod = "getConnection";
