@@ -112,7 +112,7 @@ public class PKIAuthSP extends HttpServlet
 	public void init(ServletConfig oServletConfig)
 	throws ServletException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			super.init(oServletConfig);
 
@@ -217,7 +217,7 @@ public class PKIAuthSP extends HttpServlet
 	throws ServletException
 	{
 		StringBuffer sbTemp;
-		String sMethod = "initHtmlTemplates()";
+		String sMethod = "initHtmlTemplates";
 		String sLine = null;
 		BufferedReader oBufInputReader;
 
@@ -274,7 +274,7 @@ public class PKIAuthSP extends HttpServlet
 	protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ServletException, IOException
 	{
-		String sMethod = "doPost()";
+		String sMethod = "doPost";
 		StringBuffer sbTemp = null;
 		try {
 			String sAsUrl = servletRequest.getParameter("as_url");
@@ -347,7 +347,7 @@ public class PKIAuthSP extends HttpServlet
 	protected void doGet(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ServletException
 	{
-		String sMethod = "doGet()";
+		String sMethod = "doGet";
 		try {
 			String sAsUrl = servletRequest.getParameter("as_url");
 			String sRid = servletRequest.getParameter("rid");
@@ -435,7 +435,7 @@ public class PKIAuthSP extends HttpServlet
 		String sSubjectId = null;
 		// RH, 20131216, en
 		
-		String sMethod = "handleAuthenticate()";
+		String sMethod = "handleAuthenticate";
 		try {
 			X509Certificate[] oCerts = null;
 			X509Certificate oClientCert = null;
@@ -543,7 +543,7 @@ public class PKIAuthSP extends HttpServlet
 						String result = "";
 						for (int j = 0; j < bValue.length; j++)
 							result += "." + Integer.toHexString(bValue[j]);
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "Value=" + result);
+						_systemLogger.log(Level.FINEST, MODULE, sMethod, "Value=" + result);
 						int j;
 						for (j = bValue.length - 1; j >= 0; j--) {
 							Character c = (char) bValue[j];
@@ -560,10 +560,14 @@ public class PKIAuthSP extends HttpServlet
 						if (j < bValue.length)
 							j++;
 						for (; j < bValue.length; j++) {
+							if (sSubjectId == null)
+								sSubjectId = "";
 							sSubjectId += Character.toString((char) bValue[j]);
 						}
+						_systemLogger.log(Level.FINEST, MODULE, sMethod, "sSubjectId="+sSubjectId);
 					}
-				} else {	// RH, 20131216, sn
+				}
+				else {	// RH, 20131216, sn
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Certificate does not contain any AlternativeNames -> No SubjectId retrieved");
 				}	// RH, 20131216, en
 			}
@@ -623,7 +627,7 @@ public class PKIAuthSP extends HttpServlet
 	public boolean validateBinaryBlob(Object oConfig, String sSubjectDn, X509Certificate oClientCert)
 	throws ASelectException
 	{
-		String sMethod = "validateBinaryBlob()";
+		String sMethod = "validateBinaryBlob";
 		boolean bFound = false;
 		KeyStore oCertificates = null;
 		ICertificateHandler oCertificateHandler = new LDAPCertificateHandler();
@@ -687,7 +691,8 @@ public class PKIAuthSP extends HttpServlet
 			String sResultCode, String sSubjectDN, String sIssuerDN, String sSubjectId)
 	throws ServletException
 	{
-		String sMethod = "handleResult()";
+		String sMethod = "handleResult";
+		
 		StringBuffer sbTemp = null;
 		String sRid = servletRequest.getParameter("rid");
 		String sAsUrl = servletRequest.getParameter("as_url");
@@ -844,7 +849,7 @@ public class PKIAuthSP extends HttpServlet
 			String sSignature)
 	throws ASelectException
 	{
-		String sMethod = "verifySignature()";
+		String sMethod = "verifySignature";
 		boolean bValid = false;
 		if (sRid == null || sAsUrl == null || sUserAttributes == null || sAsId == null || sSignature == null) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "not all parameters are provided");
@@ -897,7 +902,7 @@ public class PKIAuthSP extends HttpServlet
 			String sRid, HashMap htSessionInfo)
 	throws ASelectException
 	{
-		String sMethod = "handleTFAuthenticationRequest()";
+		String sMethod = "handleTFAuthenticationRequest";
 		StringBuffer sbTemp;
 		String sTFHtmlTemplate = _sTFHtmlTemplate;
 
@@ -972,7 +977,7 @@ public class PKIAuthSP extends HttpServlet
 			String sPassword)
 	throws ASelectException
 	{
-		String sMethod = "verifyTFAuthentication()";
+		String sMethod = "verifyTFAuthentication";
 		boolean bAuthenticated = false;
 		try {
 			// create API call URL
