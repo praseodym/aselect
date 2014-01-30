@@ -38,5 +38,8 @@
 	<classpathentry kind="lib" path="lib/openid4java-full-0.9.5.jar"/>
 	<classpathentry kind="lib" path="lib/jdom.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/ezmorph-1.0.6.jar"/>
+	<classpathentry kind="lib" path="lib/json-lib-2.4-jdk15.jar"/>
+	<classpathentry kind="lib" path="lib/commons-beanutils-1.9.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
