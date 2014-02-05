@@ -37,7 +37,7 @@
  * fixed bug in getNextSection()
  *
  * Revision 1.10  2005/03/04 09:12:39  peter
- * Replaced deprecated call "Date.toLocaleString()" in saveConfig()
+ * Replaced deprecated call "Date.toLocaleString" in saveConfig()
  *
  * Revision 1.9  2005/03/01 15:13:11  martijn
  * getNextSection() will now return only a section with the same node name
@@ -265,7 +265,7 @@ public class XMLConfigHandler implements IConfigHandler
 	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		String sData = null;
 		Statement oStatement = null;
@@ -358,7 +358,7 @@ public class XMLConfigHandler implements IConfigHandler
 	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
-		String sMethod = "getSection()";
+		String sMethod = "getSection";
 
 		Node nSection = null;
 		Node nRoot = null;
@@ -414,7 +414,7 @@ public class XMLConfigHandler implements IConfigHandler
 	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
-		String sMethod = "getSection()";
+		String sMethod = "getSection";
 
 		Node nSection = null;
 		Node nRoot = null;
@@ -467,7 +467,7 @@ public class XMLConfigHandler implements IConfigHandler
 	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
-		String sMethod = "setSection()";
+		String sMethod = "setSection";
 
 		Node nRoot = null;
 		Node nValue = null;
@@ -534,7 +534,7 @@ public class XMLConfigHandler implements IConfigHandler
 	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
-		String sMethod = "getParam()";
+		String sMethod = "getParam";
 		String sId = null;
 
 		String sValue = null;
@@ -644,7 +644,7 @@ public class XMLConfigHandler implements IConfigHandler
 	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
-		String sMethod = "setParam()";
+		String sMethod = "setParam";
 
 		boolean bReturn = false;
 
@@ -717,7 +717,7 @@ public class XMLConfigHandler implements IConfigHandler
 	public synchronized Object getNextSection(Object oSection)
 	throws ASelectConfigException
 	{
-		String sMethod = "getNextSection()";
+		String sMethod = "getNextSection";
 
 		Node nNext = null;
 
@@ -754,7 +754,7 @@ public class XMLConfigHandler implements IConfigHandler
 	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
-		String sMethod = "removeSection()";
+		String sMethod = "removeSection";
 
 		Node nSection = null;
 		Node nRoot = null;
@@ -837,7 +837,7 @@ public class XMLConfigHandler implements IConfigHandler
 	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
-		String sMethod = "removeSection()";
+		String sMethod = "removeSection";
 
 		Node nSection = null;
 		Node nRoot = null;
@@ -909,7 +909,7 @@ public class XMLConfigHandler implements IConfigHandler
 	public synchronized void saveConfig()
 	throws ASelectConfigException
 	{
-		String sMethod = "saveConfig()";
+		String sMethod = "saveConfig";
 
 		// add date to configuration
 		boolean bFound = false;
@@ -1024,7 +1024,7 @@ public class XMLConfigHandler implements IConfigHandler
 	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
-		String sMethod = "importConfig()";
+		String sMethod = "importConfig";
 
 		try {
 			Document _oNewDomDocument = parseXML(configFile);
@@ -1178,7 +1178,7 @@ public class XMLConfigHandler implements IConfigHandler
 	private void serializeTo(OutputStream osOutput)
 	throws ASelectConfigException
 	{
-		String sMethod = "serializeTo()";
+		String sMethod = "serializeTo";
 
 		try {
 			// create output format which uses new lines and tabs
@@ -1312,7 +1312,7 @@ public class XMLConfigHandler implements IConfigHandler
 	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
-		String sMethod = "getSubSectionByID()";
+		String sMethod = "getSubSectionByID";
 
 		// split sectionID (id=ticket) to key/value pair
 		Element elReturn = null;
@@ -1396,7 +1396,7 @@ public class XMLConfigHandler implements IConfigHandler
 	throws ASelectConfigException
 	{
 		StringBuffer sbError = new StringBuffer();
-		String sMethod = "getSubSection()";
+		String sMethod = "getSubSection";
 
 		Element elTemp = null;
 		Node nTemp = null;

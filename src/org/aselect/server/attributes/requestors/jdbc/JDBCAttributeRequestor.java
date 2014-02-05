@@ -55,6 +55,7 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 		String sMethod = "init()";
 		// _htReMapAttributes = new HashMap();
 
+		super.init(oConfig);
 		try {
 			try {
 				_sResourceGroup = _configManager.getParam(oConfig, "resourcegroup");
@@ -294,7 +295,7 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 	private Connection getConnection()
 	throws ASelectSAMException
 	{
-		String sMethod = "getConnection()";
+		String sMethod = "getConnection";
 
 		Connection oConnection = null;
 		SAMResource oSAMResource = null;
@@ -308,8 +309,7 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 			oSAMResource = _samAgent.getActiveResource(_sResourceGroup);
 		}
 		catch (ASelectSAMException e) {
-			StringBuffer sbFailed = new StringBuffer(
-					"No active resource found in JDBCAttributeRequestor resourcegroup: ");
+			StringBuffer sbFailed = new StringBuffer("No active resource found in JDBCAttributeRequestor resourcegroup: ");
 			sbFailed.append(_sResourceGroup);
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
 			throw e;
@@ -356,13 +356,8 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 		}
 		catch (Exception e) {
 			sPassword = "";
-			_systemLogger
-					.log(
-							Level.CONFIG,
-							MODULE,
-							sMethod,
-							"No or empty config item 'security_principal_password' found, using empty password. Don't use this in a live production environment.",
-							e);
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+				"No or empty config item 'security_principal_password' found, using empty password. Don't use this in a live production environment.", e);
 		}
 
 		try {

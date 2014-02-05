@@ -75,11 +75,12 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
 	public void init(Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		_htReMapAttributes = new HashMap();
 		_htDuplicate = new HashMap();
 
+		super.init(oConfig);
 		Object oAttributes = null;
 		try {
 			oAttributes = _configManager.getSection(oConfig, "attribute_mapping");
@@ -156,7 +157,7 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
 	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes, HashMap hmAttributes)
 	throws ASelectAttributesException
 	{
-		String sMethod = "getAttributes()";
+		String sMethod = "getAttributes";
 		HashMap htAttributes = new HashMap();
 
 		try {
@@ -166,7 +167,7 @@ public class TGTAttributeRequestor extends GenericAttributeRequestor
 				htAttributes = org.aselect.server.utils.Utils.deserializeAttributes(sSerializedRemoteAttributes);
 			}
 			else {
-				_systemLogger.log(Level.FINE, MODULE, sMethod, "No 'attributes' found in TGT.");
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "No attribute called 'attributes' found in TGT.");
 			}
 			HashMap htMapped = new HashMap();
 			Set keys = htAttributes.keySet();

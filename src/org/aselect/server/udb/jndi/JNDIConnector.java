@@ -441,7 +441,7 @@ public class JNDIConnector implements IUDBConnector
 	 * @param sUserId
 	 *            the s user id
 	 * @param sAuthSPId
-	 *            the s auth sp id
+	 *            the AuthSP that was used
 	 * @return the user attributes
 	 * @throws ASelectUDBException
 	 *             the a select udb exception
@@ -461,6 +461,7 @@ public class JNDIConnector implements IUDBConnector
 		Attribute oAttribute = null;
 		Attributes oAttributes = null;
 
+		_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "sUserId=" + sUserId + " sAuthSPId="+sAuthSPId);
 		try {
 			if (sUserId.indexOf("*") >= 0 || sUserId.indexOf("?") >= 0 || sUserId.indexOf("=") >= 0) {
 				StringBuffer sbBuffer = new StringBuffer("User id contains illegal characters: '");
@@ -480,7 +481,7 @@ public class JNDIConnector implements IUDBConnector
 			oScope.setSearchScope(SearchControls.SUBTREE_SCOPE);
 			oDirContext = getConnection();
 
-			_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "JndiATTR Base=" + _sBaseDN + ", Qry=" + sbQuery+" AuthSPId="+sAuthSPId);
+			_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "JndiATTR Base=" + _sBaseDN + ", Qry=" + sbQuery);
 			try {
 				oSearchResults = oDirContext.search(_sBaseDN, sbQuery.toString(), oScope);
 			}

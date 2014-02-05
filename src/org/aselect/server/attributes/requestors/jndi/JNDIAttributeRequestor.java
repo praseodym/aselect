@@ -106,6 +106,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.exception.ASelectUDBException;
 import org.aselect.system.sam.agent.SAMResource;
+import org.aselect.system.utils.Utils;
 
 /**
  * The JNDI Attribute Requestor. <br>
@@ -148,7 +149,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	 * <br>
 	 * 
 	 * @param oConfig
-	 *            the o config
+	 *            the config object
 	 * @throws ASelectException
 	 *             the a select exception
 	 * @see org.aselect.server.attributes.requestors.IAttributeRequestor#init(java.lang.Object)
@@ -161,6 +162,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 		_htAttributes = new HashMap<String, String>();
 		_htReMapAttributes = new HashMap<String, String>();
 
+		super.init(oConfig);
 		initSubAttributes(oConfig);
 		try {
 			try {
@@ -431,8 +433,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 		Vector<String> vMappedAttributes = new Vector<String>();
 		String sUID = null;
 	
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "JNDIAttr htTGTContext=" + htTGTContext +
-				", _sAuthSPUID=" + _sAuthSPUID + ", _sUserDN=" + _sUserDN);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "GathererVersion="+_iGathererVersion);
 		
 		// Bauke: circumvent udb attribute problems
 		String sAuthspType = (String) htTGTContext.get("authsp_type");
@@ -440,20 +441,32 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 
 		NamingEnumeration<SearchResult> oSearchResults = null;
 		try {
-			sUID = (String) htTGTContext.get("uid");
+			// 20140127, Bauke: new in version 2, alternate gather key
+			if (_iGathererVersion >= 2)
+				sUID = (String)(_bFromTgt? htTGTContext: hmAttributes).get(_sUseKey);
+			else
+				sUID = (String) htTGTContext.get("uid");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "authsp_type="+sAuthspType+" _sAuthSPUID="+_sAuthSPUID+
+					", _sUserDN="+_sUserDN+" numerical="+_bNumericalUid+" "+_sUseKey+"="+sUID+" fromTgt="+_bFromTgt);
+			
+			if (!Utils.hasValue(sUID)) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Attribute '"+_sUseKey+"' not found, from_tgt="+_bFromTgt);
+				return;
+			}
+			
 			if (_bNumericalUid) { // Uid must be treated as a number, so strip leading zeroes
 				sUID = sUID.replaceFirst("0*", "");
 			}
 
-			if (!bIsDigid && _sAuthSPUID != null) // Bauke: not a DigiD authsp
-			{
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "JNDIAttr use UDB too (no DigiD authsp)");
+			if (!bIsDigid && _sAuthSPUID != null) {
+				// Bauke: "authsp_uid" configured and not a DigiD authsp, get user id through 'udb'
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "JNDIAttr use UDB too (not for DigiD authsp)");
 				IUDBConnector oUDBConnector = null;
 				try {
 					oUDBConnector = UDBConnectorFactory.getUDBConnector();
 				}
 				catch (ASelectException e) {
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to connect with UDB.", e);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed connecting to UDB.", e);
 					throw e;
 				}
 				try {

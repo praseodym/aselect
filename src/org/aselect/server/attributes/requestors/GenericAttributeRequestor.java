@@ -38,13 +38,13 @@ package org.aselect.server.attributes.requestors;
 import java.util.HashMap;
 import java.util.logging.Level;
 
+import org.aselect.server.attributes.AttributeGatherer;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.sam.ASelectSAMAgent;
-import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAttributesException;
-import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.Utils;
 
 /**
  * A base class for attribute requestors. <br>
@@ -67,6 +67,10 @@ public abstract class GenericAttributeRequestor implements IAttributeRequestor
 	protected ASelectSystemLogger _systemLogger;
 
 	private static final String MODULE = "GenericAttributeRequestor";
+	
+	protected String _sUseKey = null;
+	protected boolean _bFromTgt = false;
+	protected int _iGathererVersion = -1;
 
 	/**
 	 * The default constructor. <br>
@@ -93,7 +97,24 @@ public abstract class GenericAttributeRequestor implements IAttributeRequestor
 		_samAgent = ASelectSAMAgent.getHandle();
 		_systemLogger = ASelectSystemLogger.getHandle();
 	}
+	
+	public void init(Object oConfig)
+	throws ASelectException
+	{
+		String sMethod = "init";
 
+		String sID = _configManager.getParam(oConfig, "id");					
+		_sUseKey = ASelectConfigManager.getSimpleParam(oConfig, "use_key", false);
+		if (!Utils.hasValue(_sUseKey)) {
+			_sUseKey = ASelectConfigManager.getSimpleParam(oConfig, "use_tgt_key", false);
+			if (!Utils.hasValue(_sUseKey))
+				_sUseKey = "uid";
+			_bFromTgt = true;
+		}
+		_iGathererVersion = AttributeGatherer.getHandle().getGathererVersion();
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Requestor id="+sID+" version="+_iGathererVersion+" use_key="+_sUseKey+" tgt="+_bFromTgt);
+}
+	
 	/**
 	 * Gather a user's organizations. <br>
 	 * <br>

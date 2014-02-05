@@ -23,31 +23,6 @@
  *
  * Also extracted the parameter "id" from the <attribute_mapping> configuration within the APIRequestor and created a own tag <attribute_parameter_name> which also is added to the aselect.xml.sample
  *
- * Revision 1.8  2005/04/27 13:04:48  erwin
- * AGENT -> SERVER Error codes.
- *
- * Revision 1.7  2005/03/31 10:05:22  erwin
- * Made the message to be send fully configurable.
- *
- * Revision 1.6  2005/03/30 14:31:07  erwin
- * - Changed uid -> session context.
- * - Added wildcard (*) support.
- *
- * Revision 1.5  2005/03/21 10:13:35  erwin
- * Added mapping support.
- *
- * Revision 1.4  2005/03/18 08:20:01  erwin
- * Fixed problem with SOAP communicators.
- *
- * Revision 1.3  2005/03/17 15:55:54  erwin
- * Fixed error handling, added javadoc.
- *
- * Revision 1.2  2005/03/17 14:17:50  erwin
- * Removed main() method, added uid parameter.
- *
- * Revision 1.1  2005/03/17 13:45:43  erwin
- * Initial version.
- *
  */
 package org.aselect.server.attributes.requestors.api;
 
@@ -116,9 +91,9 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 	 * 
 	 * @see GenericAttributeRequestor#GenericAttributeRequestor()
 	 */
-	public APIAttributeRequestor() {
+	public APIAttributeRequestor()
+	{
 		super();
-
 	}
 
 	/**
@@ -144,6 +119,8 @@ public class APIAttributeRequestor extends GenericAttributeRequestor implements 
 	throws ASelectException
 	{
 		String sMethod = "init";
+		
+		super.init(oConfig);
 		try {
 			// Get main configuration
 			Object oMainConfiguration = null;

@@ -189,8 +189,7 @@ public class PKI implements IAuthSPProtocolHandler
 	public void init(Object oAuthSpConfig, Object oAuthSpResource)
 	throws ASelectAuthSPException
 	{
-		String sMethod = "init()";
-		Object oASelectConfig = null;
+		String sMethod = "init";
 		try {
 			// retrieve handles
 			_oConfigManager = ASelectConfigManager.getHandle();
@@ -216,14 +215,6 @@ public class PKI implements IAuthSPProtocolHandler
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
 						"No valid 'id' config item found in authsp resource section");
-				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INIT_ERROR);
-			}
-
-			try {
-				oASelectConfig = _oConfigManager.getSection(null, "aselect");
-			}
-			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No main 'aselect' config section found", e);
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INIT_ERROR);
 			}
 
@@ -461,14 +452,13 @@ public class PKI implements IAuthSPProtocolHandler
 					htResponse.put("pki_subject_id", sSubjectId); // Bauke: added
 					htResponse.put("uid", sSubjectId);  // 20120615, Bauke: set default value for uid
 				}
-				
+				htResponse.put("authsp_type", "pki");				
 				return htResponse;
 			}
 			_authenticationLogger.log(new Object[] {
 				MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg, (String) htSessionContext.get("app_id"),
 				"denied", sResultCode
 			});
-			htResponse.put("authsp_type", "pki");
 			if (sResultCode.equalsIgnoreCase(PKI_INVALID_REQUEST)) {
 				sbTemp = new StringBuffer(sMethod);
 				sbTemp.append("error from from AuthSP: ").append(sResultCode);

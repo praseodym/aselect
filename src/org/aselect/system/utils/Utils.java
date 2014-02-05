@@ -948,8 +948,7 @@ public class Utils
 	 * @throws ASelectConfigException
 	 *             the aselect config exception
 	 */
-	public static Object getSimpleSection(ConfigManager oConfMgr, SystemLogger oSysLog,
-					Object oConfig, String sSection, boolean bMandatory)
+	public static Object getSimpleSection(ConfigManager oConfMgr, SystemLogger oSysLog, Object oConfig, String sSection, boolean bMandatory)
 	throws ASelectConfigException
 	{
 		final String sMethod = "getSimpleSection";

@@ -114,8 +114,10 @@ import java.net.URLDecoder;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
 import java.util.Vector;
 import java.util.logging.Level;
 
@@ -190,7 +192,14 @@ public class AttributeGatherer
 	private String _sDefaultReleasePolicy;
 
 	// Copy remote attributes after TGT attributes
-	String _sRemoteLast = null;
+	private String _sRemoteLast = null;
+	
+	private int _iGathererVersion = 1;  // 20140127, Bauke: new functionality in later versions only
+	public int getGathererVersion() {
+		return _iGathererVersion;
+	}
+
+	private NavigableSet<String> _sortedRequestors = new TreeSet<String>();  // 20140127, Bauke: use gatherers in configured order
 
 	/**
 	 * Is used to acquire an instance of the AttributeGatherer. <br>
@@ -247,7 +256,7 @@ public class AttributeGatherer
 
 		_configManager = ASelectConfigManager.getHandle();
 		_systemLogger = ASelectSystemLogger.getHandle();
-
+		
 		try {
 			try {
 				oAttributeGatheringConfig = _configManager.getSection(null, "attribute_gathering");
@@ -257,7 +266,12 @@ public class AttributeGatherer
 			}
 
 			if (oAttributeGatheringConfig != null) {  // Obtain and verify requestors
-
+				int seqRequestor = 1;  // the first one
+				String sVersion = ASelectConfigManager.getSimpleParam(oAttributeGatheringConfig, "version", false);
+				try {
+					_iGathererVersion = Integer.valueOf(sVersion);
+				} catch(Exception e) { }
+				
 				oRequestorsSection = _configManager.getSection(oAttributeGatheringConfig, sConfigItem = "attribute_requestors");
 				_htRequestors = new HashMap();
 				Object oRequestorConfig = null;
@@ -267,15 +281,15 @@ public class AttributeGatherer
 				catch (ASelectConfigException e) {
 				}
 				_sRemoteLast = ASelectConfigManager.getSimpleParam(oRequestorsSection, "remote", false);
-				_systemLogger.log(Level.INFO, _MODULE, sMethod, "sRemoteLast="+_sRemoteLast);
+				_systemLogger.log(Level.INFO, _MODULE, sMethod, "gathererVersion="+_iGathererVersion+" sRemoteLast="+_sRemoteLast);
 				
 				// For all attribute requestors
 				while (oRequestorConfig != null) {
 					// Load/verify a single requestor from config
-					String sID = _configManager.getParam(oRequestorConfig, sConfigItem = "id");
-					_systemLogger.log(Level.INFO, _MODULE, sMethod, "Requestor id="+sID);
+					String sID = _configManager.getParam(oRequestorConfig, sConfigItem = "id");					
 					String sUsage = ASelectConfigManager.getSimpleParam(oRequestorConfig, sConfigItem = "usage", false);
-					
+					_systemLogger.log(Level.INFO, _MODULE, sMethod, "Requestor id="+sID+" usage="+sUsage);
+
 					Object oRequestorSpecificSection;
 					try {
 						oRequestorSpecificSection = _configManager.getSection(null, "requestor", "id=" + sID);
@@ -292,12 +306,13 @@ public class AttributeGatherer
 						attributeRequestor.init(oRequestorSpecificSection);
 						if ("org".equals(sUsage))
 							_organizationResolver = attributeRequestor;
-						else
+						else {
 							_htRequestors.put(sID, attributeRequestor);
+							_sortedRequestors.add(String.format("%03d_%s", seqRequestor++, sID));
+						}
 					}
 					catch (Exception e) {
-						StringBuffer sb = new StringBuffer("Class \"").append(sRequestorClassName).append(
-								"\" is not a valid attribute requestor");
+						StringBuffer sb = new StringBuffer("Class \"").append(sRequestorClassName).append("\" is not a valid attribute requestor");
 						_systemLogger.log(Level.SEVERE, _MODULE, sMethod, sb.toString(), e);
 						throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 					}
@@ -459,7 +474,7 @@ public class AttributeGatherer
 		String sArpTarget = null;
 		boolean bFound = false;
 
-		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER BEGIN _htReleasePolicies=" + _htReleasePolicies);
+		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER BEGIN _htReleasePolicies=" + _htReleasePolicies+" _vReleasePolicies="+_vReleasePolicies);
 		//_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER TGTContext=" + htTGTContext);
 
 		// Release policies available?
@@ -492,21 +507,18 @@ public class AttributeGatherer
 			return null;
 		}
 
-		// First, determine our release policy because this can
-		// potentially save us some work
+		// First, determine our release policy because this can potentially save us some work
 		String sReleasePolicy = null;
 		String sLocalOrg = (String) htTGTContext.get("local_organization");
 		String sAppID = (String) htTGTContext.get("app_id");
 
 		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER == sUid=" + sUid + " sLocalOrg=" + sLocalOrg + " user organization="+sOrgId);
 		if (sLocalOrg != null) {
-			// use specific attribute policy, 1.5.4
-			// Enumeration enumPolicies = _htReleasePolicies.keys();
-			// while (enumPolicies.hasMoreElements() && !bFound)
 			if (sArpTarget != null) {
 				Enumeration enumPolicies = _vReleasePolicies.elements();
 				while (enumPolicies.hasMoreElements() && !bFound) {
 					String sKey = (String) enumPolicies.nextElement();
+					_systemLogger.log(Level.FINE, _MODULE, sMethod, "sKey="+sKey+" sArpTarget="+sArpTarget);
 					if (Utils.matchWildcardMask(sArpTarget, sKey)) {
 						sReleasePolicy = sKey;
 						bFound = true;
@@ -527,7 +539,8 @@ public class AttributeGatherer
 		if (sReleasePolicy == null) { // No release policy -> no attributes
 			return htAttributes;
 		}
-
+		_systemLogger.log(Level.INFO, _MODULE, sMethod, "sReleasePolicy="+sReleasePolicy);
+		
 		HashMap htReleasePolicy = (HashMap) _htReleasePolicies.get(sReleasePolicy);
 		if (htReleasePolicy == null) {
 			// Unknown release policy -> log warning; no attributes
@@ -538,9 +551,11 @@ public class AttributeGatherer
 		else {
 			try {
 				// Use all configured attribute requestors to gather attributes
-				Set keys = htReleasePolicy.keySet();
-				for (Object s : keys) {
-					String sRequestorID = (String) s;
+				Set keys = htReleasePolicy.keySet();  // more or less random sequence
+				_systemLogger.log(Level.INFO, _MODULE, sMethod, "Version="+_iGathererVersion+" keys="+((_iGathererVersion>=2)?_sortedRequestors: keys));
+				//for (Object s : keys) {
+				for (Object s : (_iGathererVersion>=2)?_sortedRequestors: keys) {
+					String sRequestorID = ((String)s).substring(4);
 					Vector vAttributes = (Vector) htReleasePolicy.get(sRequestorID);
 					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER << Requestor=" + sRequestorID+" vAttr="+vAttributes);
 					
@@ -618,8 +633,7 @@ public class AttributeGatherer
 									else {
 										// unknown option: no action
 										_systemLogger.log(Level.WARNING, _MODULE, sMethod,
-												"Unknown attribute policy \"duplicate\" option: \"" + sDuplicateOption
-														+ "\"!");
+												"Unknown attribute policy \"duplicate\" option: \""+sDuplicateOption+"\"!");
 									}
 								} // else: backwards compatibility: no action,
 								// end of 1.5.4
@@ -639,11 +653,12 @@ public class AttributeGatherer
 
 		// Considered using the TGTAttributeRequestor for this,
 		// but attribute requestors are not handled in a defined order
-		if (!"last".equals(_sRemoteLast))
+		// 20140127, Bauke: In version 2 gatherers are handled in configured order, therefore removed
+		if (_iGathererVersion <= 1 && !"last".equals(_sRemoteLast))
 			addRemoteAttributesFromTgt(htAttributes, htTGTContext);
 
 		// Bauke: added additional attributes, they can take precedence over the values in "attributes"
-		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Add additional attributes from TGT");
+		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Add additional fixed set of attributes from TGT");
 		Utils.copyHashmapValue("uid", htAttributes, htTGTContext);
 		Utils.copyHashmapValue("sel_uid", htAttributes, htTGTContext);
 		// 20120606, Bauke: Certainly not, is added by the filter: Utils.copyHashmapValue("usi", htAttributes, htTGTContext);
@@ -664,13 +679,16 @@ public class AttributeGatherer
 		Utils.copyHashmapValue("language", htAttributes, htTGTContext);
 		Utils.copyHashmapValue("sms_phone", htAttributes, htTGTContext);
 
-		addPkiAttributesFromTGT(htTGTContext, htAttributes);
+		// 20140127, Bauke: replaced by copy gatherer functionality
+		if (_iGathererVersion <= 1)
+			addPkiAttributesFromTGT(htTGTContext, htAttributes);
 		// End of additions
 		
-		if ("last".equals(_sRemoteLast))
+		// 20140127, Bauke: In version 2 gatherers are handled in configured order, therefore removed
+		if (_iGathererVersion <= 1 && "last".equals(_sRemoteLast))
 			addRemoteAttributesFromTgt(htAttributes, htTGTContext);
 
-		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Try authsp with id: " + sAuthsp); // if present
+		_systemLogger.log(Level.INFO, _MODULE, sMethod, "Retrieve handler class name from authsp with id=" + sAuthsp); // if present
 		try {
 			Object authSPs = Utils.getSimpleSection(_configManager, _systemLogger, null, "authsps", true);
 			Object authSPsection = Utils.getSectionFromSection(_configManager, _systemLogger, authSPs, "authsp", "id=" + sAuthsp, false);
@@ -679,7 +697,7 @@ public class AttributeGatherer
 				int iDot = sHandler.lastIndexOf(".");
 				sHandler = sHandler.substring(iDot + 1, sHandler.length());
 
-				_systemLogger.log(Level.INFO, _MODULE, sMethod, "sHandler=" + sHandler);
+				_systemLogger.log(Level.INFO, _MODULE, sMethod, "Attribute 'handler'="+sHandler);
 				htAttributes.put("handler", sHandler);
 			}
 			else
@@ -718,21 +736,19 @@ public class AttributeGatherer
 				sToken = st.nextToken(); // C=NL
 				idx = sToken.indexOf('=');
 				if (idx > 0)
-					htAttributes.put("pki_subject_" + sToken.substring(0, idx).trim().toLowerCase(), sToken
-							.substring(idx + 1));
+					htAttributes.put("pki_subject_" + sToken.substring(0, idx).trim().toLowerCase(), sToken.substring(idx + 1));
 			}
 		}
 		String sIssuerDN = (String) htTGTContext.get("pki_issuer_dn");
 		if (sIssuerDN != null) {
 			htAttributes.put("pki_issuer_dn", sIssuerDN);
 			StringTokenizer st = new StringTokenizer(sIssuerDN, ",");
-			_systemLogger.log(Level.INFO, _MODULE, sMethod, "Tokens=" + st.countTokens() + " sIssuerDN=" + sIssuerDN);
+			_systemLogger.log(Level.INFO, _MODULE, sMethod, "Tokens="+st.countTokens() + " sIssuerDN="+sIssuerDN);
 			while (st.hasMoreTokens()) {
 				sToken = st.nextToken(); // C=NL
 				idx = sToken.indexOf('=');
 				if (idx > 0)
-					htAttributes.put("pki_issuer_" + sToken.substring(0, idx).trim().toLowerCase(), sToken
-							.substring(idx + 1));
+					htAttributes.put("pki_issuer_" + sToken.substring(0, idx).trim().toLowerCase(), sToken.substring(idx + 1));
 			}
 		}
 
@@ -840,8 +856,8 @@ public class AttributeGatherer
 			// for (Enumeration enumRetrievedAttributes = htAttributes.keys();
 			// enumRetrievedAttributes.hasMoreElements();) {
 			// String sKey = (String) enumRetrievedAttributes.nextElement();
-			for (Enumeration enumRequestedAttributes = vRequestedAttributes.elements(); enumRequestedAttributes
-					.hasMoreElements();) {
+			for (Enumeration enumRequestedAttributes = vRequestedAttributes.elements();
+					enumRequestedAttributes.hasMoreElements(); ) {
 				String sRequestedAttribute = (String) enumRequestedAttributes.nextElement();
 				if (Utils.matchWildcardMask(sKey, sRequestedAttribute)) {
 					// The value can be a String or a Vector

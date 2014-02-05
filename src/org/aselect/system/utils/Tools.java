@@ -735,7 +735,7 @@ public class Tools
 	}
 
 	/**
-	 * Take the attribtues in 'htRequest', sort them and add them to the result
+	 * Take the attributes in 'htRequest', sort them and add them to the result
 	 * Skip some attributes (request, ...)
 	 * 
 	 * @param htRequest, contains the attributes that take part in the signing process

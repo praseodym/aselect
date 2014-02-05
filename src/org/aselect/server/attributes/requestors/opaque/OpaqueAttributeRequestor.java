@@ -88,11 +88,16 @@ public class OpaqueAttributeRequestor extends GenericAttributeRequestor
 	public HashMap getAttributes(HashMap htTGTContext, Vector vAttributes, HashMap hmAttributes)
 	throws ASelectAttributesException
 	{
-		final String sMethod = "getAttributes()";
+		final String sMethod = "getAttributes";
 
 		try {
-			String sUID = (String) htTGTContext.get("uid");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "vAttributes=" + vAttributes + "hash sUid=" + sUID);
+			String sUID = (String)(_bFromTgt? htTGTContext: hmAttributes).get(_sUseKey);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "vAttr="+vAttributes+" hmAttr="+hmAttributes+" "+_sUseKey+"="+sUID+" fromTgt="+_bFromTgt);
+
+			if (!Utils.hasValue(sUID)) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Attribute '"+_sUseKey+"' not found, from_tgt="+_bFromTgt);
+				return null;
+			}
 
 			if (vAttributes == null)
 				return null;
@@ -128,7 +133,7 @@ public class OpaqueAttributeRequestor extends GenericAttributeRequestor
 	public void init(Object oConfig)
 	throws ASelectException
 	{
-		// Does nothing
+		super.init(oConfig);
 	}
 
 	/**

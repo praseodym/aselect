@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 
+import org.aselect.server.attributes.AttributeGatherer;
 import org.aselect.server.attributes.requestors.GenericAttributeRequestor;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.system.configmanager.ConfigManager;
@@ -67,6 +68,7 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 		Object oResourceConfig = null;
 		String sKey = null;
 
+		super.init(oConfig);
 		try {
 			String sResourceGroup = null;
 			try {
@@ -165,37 +167,47 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 	{
 		String sMethod = "getAttributes";
 		HashMap htReturn = new HashMap();
-		String sKey = "uid";
 		String sSection = "user";
 		String sKeyValue = null;
-
+		
 		try {
 			htReturn.putAll(_htGlobalAttributes);
 
-			// 20120627, Bauke: added attributes gathered so far, added alternate key to gather
-			// First try alternate key
-			if (Utils.hasValue(_sKey)) {
-				sKeyValue = (String)hmAttributes.get(_sKey);
+			if (_iGathererVersion >= 2) {
+				// 20140127, Bauke: allow alternate key
+				sSection = (_bFromTgt && "uid".equals(_sUseKey))? "user": _sUseKey;  // section follows 'udb' mechanism
+				sKeyValue = (String)(_bFromTgt? htTGTContext: hmAttributes).get(_sUseKey);
 				if (!Utils.hasValue(sKeyValue)) {
-					sKeyValue = (String)htTGTContext.get(_sKey);
-				}
-				if (Utils.hasValue(sKeyValue)) {
-					sSection = sKey = _sKey;  // value available for this key
-					_systemLogger.log(Level.FINE, MODULE, sMethod, "Get "+sKey+"=" + sKeyValue);
-				}
-			}
-			
-			// Alternate key did not work, default is "uid"
-			if (!Utils.hasValue(sKeyValue)) {
-				sKeyValue = (String)htTGTContext.get("uid");
-				if (sKeyValue == null) {
-					_systemLogger.log(Level.FINE, MODULE, sMethod, "'uid' not found in TGT");
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Attribute '"+_sUseKey+"' not found, from_tgt="+_bFromTgt);
 					return htReturn;
 				}
-				_systemLogger.log(Level.FINE, MODULE, sMethod, "Get uid=" + sKeyValue);
+			}
+			else {
+				// 20120627, Bauke: added attributes gathered so far, added alternate key to gather
+				// First try alternate key
+				if (Utils.hasValue(_sKey)) {
+					sKeyValue = (String)hmAttributes.get(_sKey);
+					if (!Utils.hasValue(sKeyValue)) {
+						sKeyValue = (String)htTGTContext.get(_sKey);
+					}
+					if (Utils.hasValue(sKeyValue)) {
+						sSection = _sKey;  // value available for this key
+						_systemLogger.log(Level.FINE, MODULE, sMethod, "Get "+sSection+"=" + sKeyValue);
+					}
+				}
+				
+				// Alternate key did not work, default is "uid"
+				if (!Utils.hasValue(sKeyValue)) {
+					sKeyValue = (String)htTGTContext.get("uid");  // from section "user"
+					if (sKeyValue == null) {
+						_systemLogger.log(Level.FINE, MODULE, sMethod, "'uid' not found in TGT");
+						return htReturn;
+					}
+					_systemLogger.log(Level.FINE, MODULE, sMethod, "Get uid=" + sKeyValue);
+				}
 			}
 
-			// sKeyValue available
+			// sSection and sKeyValue available
 			Object oUser = null;
 			try {
 				oUser = _oFlatFileManager.getSection(null, sSection, "id=" + sKeyValue);
