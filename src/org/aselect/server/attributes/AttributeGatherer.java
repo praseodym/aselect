@@ -555,7 +555,7 @@ public class AttributeGatherer
 				_systemLogger.log(Level.INFO, _MODULE, sMethod, "Version="+_iGathererVersion+" keys="+((_iGathererVersion>=2)?_sortedRequestors: keys));
 				//for (Object s : keys) {
 				for (Object s : (_iGathererVersion>=2)?_sortedRequestors: keys) {
-					String sRequestorID = ((String)s).substring(4);
+					String sRequestorID = (_iGathererVersion>=2)? ((String)s).substring(4): (String)s;
 					Vector vAttributes = (Vector) htReleasePolicy.get(sRequestorID);
 					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER << Requestor=" + sRequestorID+" vAttr="+vAttributes);
 					
