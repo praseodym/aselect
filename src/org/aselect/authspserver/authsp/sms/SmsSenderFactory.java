@@ -57,16 +57,19 @@ public class SmsSenderFactory
 	 * @throws MalformedURLException
 	 * 			for bad url values
 	 */
-	public static GenericSmsSender createSmsSender(String sProviderUrl, String user, String password, String gateway, String gw_provider)
+	public static GenericSmsSender createSmsSender(String sProviderUrl, String customer, String user, String password, String gateway, String gw_provider)
 	throws MalformedURLException
 	{
 		String sMethod = "createSmsSender";
 		new URL(sProviderUrl);  // check the sUrl given for correctness
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "SmsProvider="+gw_provider+" Url="+sProviderUrl); 
-		if ("wireless_service".equalsIgnoreCase(gw_provider) || "wireless-service".equalsIgnoreCase(gw_provider)) {
+		if ("cm".equalsIgnoreCase(gw_provider)) {
+			return new CmHttpSmsSender(sProviderUrl, customer, user, password, gateway, true/*use POST*/);
+		}
+		else if ("wireless_service".equalsIgnoreCase(gw_provider) || "wireless-service".equalsIgnoreCase(gw_provider)) {
 			return new WirelessServicesHttpSmsSender(sProviderUrl, user, password, gateway, true /*use POST*/);
 		}
-		if ("wireless_voice".equalsIgnoreCase(gw_provider) || "wireless-voice".equalsIgnoreCase(gw_provider)) {
+		else if ("wireless_voice".equalsIgnoreCase(gw_provider) || "wireless-voice".equalsIgnoreCase(gw_provider)) {
 			return new WirelessVoiceSmsSender(sProviderUrl, user, password, gateway, true/*use POST*/);
 			//return new MollieHttpSmsSender(sProviderUrl, user, password, gateway, false/*use POST*/);  // TESTING with mollie!
 		}

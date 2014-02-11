@@ -352,19 +352,15 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 
 			// check if the request is an API call
 			String sRequestName = (String) htServiceRequest.get("request");
-			if (sRequestName != null) // API request
-			{
+			if (sRequestName != null) { // API request
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "API call");
 				// RM_18_02
 				// Maybe implement something which supports OpenID call without requesting user for OpenID identifier
 				handleApiRequest(htServiceRequest, servletRequest, pwOut, servletResponse);
 			}
-			else
+			else {
 			// Browser request
-			{
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Browser request");
-
-				
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Browser request");		
 				String sIsReturn = (String) htServiceRequest.get("is_return");
 				
 				// RM_18_03

@@ -99,6 +99,7 @@ public class SMSAuthSP extends AbstractAuthSP
 	private String _sFriendlyName;
 	private int _iAllowedRetries;
 	private String _sSmsUrl;
+	private String _sSmsCustomer;  // 20140206, Bauke: added for CM
 	private String _sSmsUser;
 	private String _sSmsPassword;
 	private String _sSmsGateway;
@@ -277,6 +278,9 @@ public class SMSAuthSP extends AbstractAuthSP
 				throw new ASelectException(Errors.ERROR_SMS_INTERNAL_ERROR, eAC);
 			}
 
+			// For CM a Customer ID is needed
+			_sSmsCustomer = Utils.getSimpleParam(_configManager, _systemLogger, _oAuthSpConfig, "customer", false/*not mandatory*/);
+
 			try {
 				_sSmsUser = _configManager.getParam(_oAuthSpConfig, "user");
 			}
@@ -331,7 +335,7 @@ public class SMSAuthSP extends AbstractAuthSP
 			// if _sSmsProvider is null use default provider
 			_sSmsProvider = Utils.getSimpleParam(_configManager, _systemLogger, _oAuthSpConfig, "gw_provider", false/*not mandatory*/);
 
-			_oSmsSender = SmsSenderFactory.createSmsSender(_sSmsUrl, _sSmsUser, _sSmsPassword, _sSmsGateway, _sSmsProvider);
+			_oSmsSender = SmsSenderFactory.createSmsSender(_sSmsUrl, _sSmsCustomer, _sSmsUser, _sSmsPassword, _sSmsGateway, _sSmsProvider);
 			
 			// RH, 20110913, sn
 			try {
