@@ -1116,6 +1116,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		htTGTContext.put("organization", sOrg);
 		Utils.copyHashmapValue("authsp", htTGTContext, htAttributes);  // overwrite
 		Utils.copyHashmapValue("authsp_type", htTGTContext, htAttributes);
+		Utils.copyHashmapValue("social_login", htTGTContext, htAttributes);  // 20140219, Bauke: new
 		htTGTContext.put("app_id", sAppId);
 		htTGTContext.put("app_level", "2");  // should be taken from the application config OR session
 		if (sRid != null)

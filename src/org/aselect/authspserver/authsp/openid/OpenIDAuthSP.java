@@ -348,18 +348,16 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 				sLanguage = null;
 			String sCountry = (String) htServiceRequest.get("country");  // optional country code
 			if (sCountry == null || sCountry.trim().length() < 1)
-				sCountry = null;				
+				sCountry = null;
 
 			// check if the request is an API call
 			String sRequestName = (String) htServiceRequest.get("request");
 			if (sRequestName != null) { // API request
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "API call");
-				// RM_18_02
 				// Maybe implement something which supports OpenID call without requesting user for OpenID identifier
 				handleApiRequest(htServiceRequest, servletRequest, pwOut, servletResponse);
 			}
-			else {
-			// Browser request
+			else {  // Browser request
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Browser request");		
 				String sIsReturn = (String) htServiceRequest.get("is_return");
 				
@@ -376,11 +374,9 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 					String sRetryCounter = "0";
 					
 					String sMyUrl = servletRequest.getRequestURL().toString();
-					
 					htServiceRequest.put("my_url", sMyUrl);
 
 					// RM_18_04
-					// if ((sRid == null) || (sUid == null) || (sAsId == null))
 					if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sAsId == null) || (sSignature == null)) {
 						_systemLogger.log(Level.WARNING, MODULE, sMethod,
 								"Invalid request received: one or more mandatory parameters missing.");
@@ -400,17 +396,13 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 					sbSignature.append(sAsUrl);
 					sbSignature.append(sUid);
 					sbSignature.append(sAsId);
-					// optional country code
-					if (sCountry != null)
-						sbSignature.append(sCountry);
-					// optional language code
-					if (sLanguage != null)
-						sbSignature.append(sLanguage);
+					if (sCountry != null) sbSignature.append(sCountry);
+					if (sLanguage != null) sbSignature.append(sLanguage);
+
 					if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), sSignature)) {
 						StringBuffer sbWarning = new StringBuffer("Invalid signature from A-Select Server '");
 						sbWarning.append(sAsId);
-						sbWarning.append("' for user: ");
-						sbWarning.append(sUid);
+						sbWarning.append("' for user: ").append(sUid);
 						_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString());
 						throw new ASelectException(Errors.ERROR_DB_INVALID_REQUEST);
 					}
@@ -418,11 +410,8 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 					htServiceRequest.put("uid", sUid);
 					htServiceRequest.put("retry_counter", sRetryCounter);
 	
-					if (sCountry != null)
-						htServiceRequest.put("country", sCountry);
-					if (sLanguage != null)
-						htServiceRequest.put("language", sLanguage);
-	
+					if (sCountry != null) htServiceRequest.put("country", sCountry);
+					if (sLanguage != null) htServiceRequest.put("language", sLanguage);	
 					
 					sbSignature = new StringBuffer(sRid);
 					sbSignature.append(sAsUrl);
@@ -438,14 +427,10 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 					sSignature = _cryptoEngine.generateSignature(sbSignature.toString());
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "signature:" + sSignature);
 
-//					sSignature = URLEncoder.encode(sSignature, "UTF-8");
 					htServiceRequest.put("signature", sSignature);
-
 					showAuthenticateForm(pwOut, " ", " ", htServiceRequest);
 				}
-				else {	// handle return from openid	
-//					String sRid = (String) servletRequest.getParameter("rid");
-					
+				else {	// handle return from openid					
 					// get info from QueryString
 					String sRid = URLDecoder.decode((String) htServiceRequest.get("rid"), "UTF-8");
 			        HashMap<String , Object> htSessionContext = _sessionManager.getSessionContext(sRid + RID_POSTFIX);
@@ -455,24 +440,18 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 					DiscoveryInformation discoveryinfo = (DiscoveryInformation) htSessionContext.get("discoveryinfo");
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Retrieved discoveryinfo:" + discoveryinfo);
 					
-					String sReturnURL = (String) htSessionContext.get("siam_url");
-					
+					String sReturnURL = (String) htSessionContext.get("siam_url");					
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Retrieved ReturnURL:" + sReturnURL);
 					
-//					String sAsUrl = (String) htServiceRequest.get("as_url");
 					String sAsUrl = URLDecoder.decode((String) htServiceRequest.get("as_url"), "UTF-8");
-//					String sUid = (String) htServiceRequest.get("uid");
 					String sUid = URLDecoder.decode((String) htServiceRequest.get("uid"), "UTF-8");
-//					String sAsId = (String) htServiceRequest.get("a-select-server");
 					String sAsId = URLDecoder.decode((String) htServiceRequest.get("a-select-server"), "UTF-8");
-//					String sSignature = (String) htServiceRequest.get("signature");
 					String sSignature = URLDecoder.decode((String) htServiceRequest.get("signature"), "UTF-8");
 					
 					String sRetryCounter = (String) htServiceRequest.get("retry_counter");
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "sRetryCounter:" + sRetryCounter);
 					sCountry = (String) htSessionContext.get("country");
 					sLanguage = (String) htSessionContext.get("language");
-					
 					String sMyUrl = servletRequest.getRequestURL().toString();
 
 					StringBuffer sbTemp = new StringBuffer(sRid);
@@ -499,7 +478,6 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 					// handle openidresponse and find out if the user is authentic
 			        RegistrationModel registrationModel = RegistrationService.processReturn(discoveryinfo, htServiceRequestAsMap, sReturnURL, _systemLogger);
 			        if (registrationModel != null) {
-			        	// RM_18_06
 						_systemLogger.log(Level.INFO, MODULE, sMethod, "Retrieved OpenID:" + registrationModel.getOpenId());
 			        	matches = true;
 			        }
@@ -513,14 +491,11 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 					}
 					else {
 						_systemLogger.log(Level.INFO, MODULE, sMethod, "Authenticate failure");
-
 						int iRetriesDone = Integer.parseInt(sRetryCounter);
 						_systemLogger.log(Level.INFO, MODULE, sMethod, "Authenticate failure#:" + iRetriesDone);
 
-						if (iRetriesDone < _iAllowedRetries) // try again
-						{
+						if (iRetriesDone < _iAllowedRetries) {  // try again
 							sRetryCounter = String.valueOf(++iRetriesDone); 
-							// htServiceRequest = new HashMap();
 							htServiceRequest.put("my_url", sMyUrl);
 							htServiceRequest.put("as_url", sAsUrl);
 							htServiceRequest.put("uid", sUid);
@@ -546,13 +521,10 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 
 							sSignature = _cryptoEngine.generateSignature(sbSignature.toString());
 							_systemLogger.log(Level.INFO, MODULE, sMethod, "signature:" + sSignature);
-
-//							sSignature = URLEncoder.encode(sSignature, "UTF-8");
 							htServiceRequest.put("signature", sSignature);
 							
 							showAuthenticateForm(pwOut, Errors.ERROR_DB_INVALID_PASSWORD, _configManager
-									.getErrorMessage(Errors.ERROR_DB_INVALID_PASSWORD, _oErrorProperties),
-									htServiceRequest);
+									.getErrorMessage(Errors.ERROR_DB_INVALID_PASSWORD, _oErrorProperties), htServiceRequest);
 						}
 						else {
 							// authenticate failed
@@ -611,7 +583,6 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 		String sUid = null;
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "doPost");
-
 		String sLanguage = servletRequest.getParameter("language");  // optional language code
 		if (sLanguage == null || sLanguage.trim().length() < 1)
 			sLanguage = null;
@@ -619,8 +590,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 		if (sCountry == null || sCountry.trim().length() < 1)
 			sCountry = null;
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Starting openid stuff");
-		
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Starting openid stuff");		
 		try {
 			servletResponse.setContentType("text/html");
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
@@ -649,8 +619,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 			}
 			
 			// RM_18_09
-			if (sUid.trim().length() < 1) // invalid OpenID
-			{
+			if (sUid.trim().length() < 1) {  // invalid OpenID
 				HashMap htServiceRequest = new HashMap();
 				htServiceRequest.put("my_url", sMyUrl);
 				htServiceRequest.put("as_url", sAsUrl);
@@ -674,15 +643,12 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 				
 				StringBuffer sbSignature = new StringBuffer(sRid);
 				sbSignature.append(sAsUrl);
-//				sbSignature.append(sUid);
 				sbSignature.append(sAsId);
 				sbSignature.append(sRetryCounter);	// sUid for now empty for signature calculation
 				if (sCountry != null)
 					sbSignature.append(sCountry);
 				if (sLanguage != null)
 					sbSignature.append(sLanguage);
-//				if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), URLDecoder
-//						.decode(sSignature, "UTF-8"))) {
 				if ( !_cryptoEngine.verifyMySignature(sbSignature.toString(), sSignature) ) {
 					StringBuffer sbWarning = new StringBuffer("Invalid signature from User form '");
 					sbWarning.append(sAsId);
@@ -691,14 +657,11 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString());
 					throw new ASelectException(Errors.ERROR_DB_INVALID_REQUEST);
 				}
-
 				// Signing is OK
 				{
 			        // Delegate to Open ID code
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Delegate to Open ID code");
-
 			        String userSuppliedIdentifier = sUid;
-//			        DiscoveryInformation discoveryInformation = RegistrationService.performDiscoveryOnUserSuppliedIdentifier(userSuppliedIdentifier);
 			        DiscoveryInformation discoveryInformation = RegistrationService.performDiscoveryOnUserSuppliedIdentifier(userSuppliedIdentifier.trim(), _systemLogger);
 			        // Store the discovery results in session.
 			        HashMap<String, Object> hDiscovery = new HashMap<String, Object>();
@@ -712,10 +675,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 					hDiscovery.put("a-select-server", sAsId);
 					hDiscovery.put("retry_counter", sRetryCounter);
 
-					// RM_18_11
-
 					StringBuffer sbTemp = new StringBuffer(sRid);
-//					sbTemp.append(sAsUrl).append(sResultCode);
 					sbTemp.append(sAsUrl); // resultcode still empty
 					sbTemp.append(sAsId);
 					sbTemp.append(sRetryCounter);
@@ -724,8 +684,6 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 					if (sLanguage != null)
 						sbTemp.append(sLanguage);
 					sSignature = _cryptoEngine.generateSignature(sbTemp.toString());
-
-//					sSignature = URLEncoder.encode(sSignature, "UTF-8");
 
 					hDiscovery.put("signature", sSignature);
 					if (sCountry != null)
@@ -737,12 +695,10 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 						"&uid=" + URLEncoder.encode(sUid, "UTF-8") + "&signature=" + URLEncoder.encode(sSignature, "UTF-8") +
 						"&retry_counter=" + URLEncoder.encode(sRetryCounter, "UTF-8");
 					
-//					String returnURL = servletRequest.getRequestURL().toString() + "?is_return=true&rid="+sRid;
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Stored returnURL:" + returnURL);
 					hDiscovery.put("siam_url", returnURL);
 					
-			        // We must NOT overwrite our aselectsession, therefore the RID_POSTFIX construction will store a separate session
-					
+			        // We must NOT overwrite our aselectsession, therefore the RID_POSTFIX construction will store a separate session					
 					// 20120401, Bauke: rewritten to clear up usage of updateSession()
 					HashMap htSessionContext = null;
 					String sFabricatedRid = sRid + RID_POSTFIX;
@@ -761,26 +717,14 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 				        _sessionManager.createSession(sFabricatedRid, hDiscovery);
 						_systemLogger.log(Level.INFO, MODULE, sMethod, "Created session for storing discoveryinfo with id:" + sFabricatedRid);
 					}
-					/*try {
-						_sessionManager.updateSession_TestAndGet(sRid + "98765", hDiscovery);
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "Updated session for storing discoveryinfo with id:" + sRid + "98765");
-					}
-					catch (ASelectException ae) {
-				        _sessionManager.createSession(sRid + "98765", hDiscovery);
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "Created session for storing discoveryinfo with id:" + sRid + "98765");
-					}*/
-			        
 			        // Create the AuthRequest
-//			        AuthRequest authRequest = RegistrationService.createOpenIdAuthRequest(discoveryInformation, getReturnToUrl());
 			        AuthRequest authRequest = RegistrationService.createOpenIdAuthRequest(discoveryInformation, returnURL);
 			        // Now take the AuthRequest and forward it on to the OP
 			        
-			        // RM_18_12
 			        // maybe implement new handler or special request parameter in doGet
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Starting redirect with redirectURL:" + authRequest.getDestinationUrl(true));
-			        
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Starting redirect with redirectURL:" + authRequest.getDestinationUrl(true));			        
 			        servletResponse.sendRedirect(authRequest.getDestinationUrl(true));
-			      }
+				}
 			}
 		}
 		catch (ASelectException eAS) {
@@ -867,20 +811,13 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 			sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[uid]", sUid);
 		}
 
-
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[openid_server]", sMyUrl);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[a-select-server]", sAsId);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error]", sError);  // obsoleted 20100817
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error_code]", sError);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error_message]", sErrorMessage);
-		// RH, 20100921, so
-//		if (sLanguage != null) sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", sLanguage);
-//		if (sCountry != null) sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[country]", sCountry);
-		// RH, 20100921, eo
-		// RH, 20100921, sn
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[language]", (sLanguage == null) ? "" : sLanguage);	// This "" is important for verification of signature
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[country]", (sCountry == null) ? "" :  sCountry);	// This "" is important for verification of signature
-		// RH, 20100921, en
 		sAuthenticateForm = Utils.replaceConditional(sAuthenticateForm, "[if_error,", ",", "]", sErrorMessage != null && !sErrorMessage.equals(""), _systemLogger);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[signature]", sSignature);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[retry_counter]", sRetryCounter);
@@ -895,8 +832,7 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut, String sResultCode, String sLanguage)
 	{
-		handleResult(servletRequest, servletResponse,
-				pwOut, sResultCode, sLanguage, null);
+		handleResult(servletRequest, servletResponse, pwOut, sResultCode, sLanguage, null);
 	}
 	
 	/**
@@ -1018,12 +954,10 @@ public class OpenIDAuthSP extends ASelectHttpServlet
 		_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received, API not supported");
 		
 		String sRid = (String) htServiceRequest.get("rid");
-//		HashMap htSessionContext = null;
 		// create response HashTable
 		StringBuffer sbResponse = new StringBuffer("&rid=");
 		// add rid to response
 		sbResponse.append(sRid);
-//		int iAllowedRetries = 0;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "sbResponse so far:" + sbResponse );
 
 		try {

@@ -4,9 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
-import org.apache.log4j.Logger;
 import org.aselect.system.logging.SystemLogger;
-import org.joda.time.YearMonthDay;
 import org.openid4java.consumer.ConsumerException;
 import org.openid4java.consumer.ConsumerManager;
 import org.openid4java.consumer.InMemoryConsumerAssociationStore;
@@ -60,7 +58,8 @@ public class RegistrationService {
 	 *  returned by openid4java following successful association with the OP.
 	 */
 	@SuppressWarnings("unchecked")
-	public static DiscoveryInformation performDiscoveryOnUserSuppliedIdentifier(String userSuppliedIdentifier, SystemLogger _systemLogger) {
+	public static DiscoveryInformation performDiscoveryOnUserSuppliedIdentifier(String userSuppliedIdentifier, SystemLogger _systemLogger)
+	{
 		String sMethod = "performDiscoveryOnUserSuppliedIdentifier()";
 
 		DiscoveryInformation ret = null;
@@ -105,7 +104,8 @@ public class RegistrationService {
 	 *  must take this object and forward it on to the OP. Or call
 	 *  processAuthRequest() - part of this Service Class.
 	 */
-	public static AuthRequest createOpenIdAuthRequest(DiscoveryInformation discoveryInformation, String returnToUrl) {
+	public static AuthRequest createOpenIdAuthRequest(DiscoveryInformation discoveryInformation, String returnToUrl)
+	{
 		AuthRequest ret = null;
 		//
 		try {
@@ -151,7 +151,8 @@ public class RegistrationService {
 	 *  information returned, make sure your Default profile is completely filled
 	 *  out.
 	 */
-	public static RegistrationModel processReturn(DiscoveryInformation discoveryInformation, Map pageParameters, String returnToUrl, SystemLogger _systemLogger) {
+	public static RegistrationModel processReturn(DiscoveryInformation discoveryInformation, Map pageParameters, String returnToUrl, SystemLogger _systemLogger)
+	{
 		String sMethod = "processReturn";
 		RegistrationModel ret = null;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Verify the Information returned from the OP");
@@ -219,7 +220,8 @@ public class RegistrationService {
 	 * @return ConsumerManager - The ConsumerManager object that handles
 	 *  communication with the openid4java API.
 	 */
-	private static ConsumerManager getConsumerManager() {
+	private static ConsumerManager getConsumerManager()
+	{
 		try {
 			if (consumerManager == null) {
 				consumerManager = new ConsumerManager();

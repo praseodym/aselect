@@ -42,7 +42,7 @@ agent)
 	cp StopAgent.class $TARGET_DIR
 	cd $HERE; ./makejar.sh system
 	;;
-server*)
+serv*)
 	"$JAR" cf org.aselect.server.jar $VERSION_FILE org/aselect/server
 	mv org.aselect.server.jar "$TARGET_DIR"
 	"$JAR" cf org.aselect.authspserver.jar $VERSION_FILE org/aselect/authspserver

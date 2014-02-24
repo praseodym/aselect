@@ -424,7 +424,7 @@ public class CryptoEngine
 		PublicKey oPublicKey = null;
 		int iLoop = 0;
 		boolean bVerified = false;
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "==== VS " + sAlias + " - " + sSignature);
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "==== VS alias="+sAlias + " data="+sData);
 		try {
 			Signature oSignature = null;
 			if (_oSignatureProvider != null)
@@ -570,10 +570,11 @@ public class CryptoEngine
 		try {
 			PrivateKey oPrivateKey = null;
 
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "sAuthsp="+sAuthsp+" data=["+sData+"]");
 			if (sAuthsp != null) {
 				sAuthsp = sAuthsp.toLowerCase();
 
-				oPrivateKey = (PrivateKey) _htAuthspSettings.get(sAuthsp + ".specific_private_key");
+				oPrivateKey = (PrivateKey)_htAuthspSettings.get(sAuthsp + ".specific_private_key");
 				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Specific private key " + (oPrivateKey == null ? "NOT" : "") + " found for: "+ sAuthsp);
 			}
 			if (oPrivateKey == null) {

@@ -32,7 +32,7 @@ public class CopyAttributeRequestor extends GenericAttributeRequestor
 {
 	final private String MODULE = "CopyAttributeRequestor";
 
-	LinkedList<AttributeSetter> setters = new LinkedList<AttributeSetter>();
+	LinkedList<AttributeSetter> attributeSetters = new LinkedList<AttributeSetter>();
 	
 	private class AttributeSetter
 	{
@@ -112,7 +112,7 @@ public class CopyAttributeRequestor extends GenericAttributeRequestor
 				iIndex = Integer.valueOf(sIndex);
 			} catch (Exception e) { }
 			_systemLogger.log(Level.INFO, MODULE, sMethod, (bDestTgt?"tgt_":"")+"dest="+sDest+" "+(bSrcTgt?"tgt_":"")+"src="+sSrc+" name="+sName+" sep="+sSep+" index="+sIndex);
-			setters.add(new AttributeSetter(sDest, sSrc, sSep, sName, iIndex, bDestTgt, bSrcTgt));
+			attributeSetters.add(new AttributeSetter(sDest, sSrc, sSep, sName, iIndex, bDestTgt, bSrcTgt));
 			
 			// Obtain handle to the next requestor
 			try {
@@ -122,11 +122,11 @@ public class CopyAttributeRequestor extends GenericAttributeRequestor
 				oSetAttr = null;
 			}
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "size="+setters.size());
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "size="+attributeSetters.size());
 	}
 
 	/**
-	 * Retrieve PKI attributes. <br>
+	 * Retrieve the requested attributes. <br>
 	 * <br>
 	 * 
 	 * @param htTGTContext
@@ -142,14 +142,14 @@ public class CopyAttributeRequestor extends GenericAttributeRequestor
 	{
 		final String sMethod = "getAttributes";
 		String sUid = (String)(_bFromTgt? htTGTContext: hmAttributes).get(_sUseKey);  // serves as an example
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "vAttr="+vAttributes+" hmAttr="+hmAttributes+" "+_sUseKey+"="+sUid+" fromTgt="+_bFromTgt);
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "release="+vAttributes+" all so far="+hmAttributes+" "+_sUseKey+"="+sUid+" fromTgt="+_bFromTgt);
 
 		HashMap htNewAttrs = new HashMap();
 		try {
 			String sValue = null;
 			
-			for (int idx = 0; idx < setters.size(); idx++) {
-				AttributeSetter setter = setters.get(idx);
+			for (int idx = 0; idx < attributeSetters.size(); idx++) {
+				AttributeSetter setter = attributeSetters.get(idx);
 				String sDest = setter.getDest();
 				if (!Utils.hasValue(sDest))
 					continue;
@@ -157,12 +157,14 @@ public class CopyAttributeRequestor extends GenericAttributeRequestor
 				String sSrc = setter.getSrc();
 				if (!Utils.hasValue(sSrc))
 					continue;
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "sSrc="+sSrc+",isTgt="+setter.isSrcTgt()+" sDest="+sDest+",isTgt="+setter.isDestTgt());
 				
 				// Take from source
 				if (setter.isSrcTgt())
 					sValue = (String)htTGTContext.get(sSrc);
 				else
-					sValue = (String)htNewAttrs.get(sSrc);
+					sValue = (String)hmAttributes.get(sSrc);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "sValue="+sValue);
 				if (!Utils.hasValue(sValue))
 					continue;
 				
@@ -181,7 +183,7 @@ public class CopyAttributeRequestor extends GenericAttributeRequestor
 						// index and name combined?
 						if (Utils.hasValue(sName) && Utils.hasValue(sNewValue)) {
 							if (sNewValue.startsWith(sName+"="))
-								sNewValue = sNewValue.substring(sName.length()+1);	
+								sNewValue = sNewValue.substring(sName.length()+1);
 						}
 					}
 					else {

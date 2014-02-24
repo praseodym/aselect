@@ -1712,8 +1712,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "login3 " + htServiceRequest);
 		try {
-			sRid = (String) htServiceRequest.get("rid");
-			sAuthsp = (String) htServiceRequest.get("authsp");
+			sRid = (String)htServiceRequest.get("rid");
+			sAuthsp = (String)htServiceRequest.get("authsp");
 			if (sAuthsp == null) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid request, missing parmeter 'authsp'");
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
@@ -1739,7 +1739,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			String sSaveAppId = sAppId;  // save session version of app_id
 			boolean bAuthspFromSelect = sUserInfo.contains("authsps_from_select");
 			String sChosenAppId = (String)htServiceRequest.get("app_id");  // looks like <url_or_id>;<user_frienly_name>
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "app_id="+sAppId+" chosenAppId="+sChosenAppId+" authsps_from_select="+bAuthspFromSelect);
+			String sSocialLogin = (String)htServiceRequest.get("social_login");  // 20140216, Bauke: added
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "app_id="+sAppId+" chosenAppId="+sChosenAppId+
+						" authsps_from_select="+bAuthspFromSelect+" social_login="+sSocialLogin);
 			if (bAuthspFromSelect && Utils.hasValue(sChosenAppId)) {
 				// Save user choice (value of app_id) in the cookie
 				// Note: use the server's cookie domain, not the one set in the AuthSP, see getAuthspParametersFromConfig()
@@ -1799,6 +1801,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					sRedirectUrl = sRedirectUrl + "&" + "requestorfriendlyname" + "="  +  URLEncoder.encode(sFriendlyName, "UTF-8");
 				}
 				// RH, 20100907, en
+				// 20140216, Bauke: added social login
+				//if (Utils.hasValue(sSocialLogin)) {
+				//	sRedirectUrl = sRedirectUrl + "&" + "social_login" + "="  +  URLEncoder.encode(sSocialAuth, "UTF-8");
+				//}
 
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIRECT " + sRedirectUrl);
 				if (sPopup == null || sPopup.equalsIgnoreCase("false")) {
@@ -2147,7 +2153,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						_systemLogger.log(Level.INFO, _sModule, sMethod, "_htSessionContext client_ip is now "
 								+ _htSessionContext.get("client_ip"));
 
-						String sAuthsp = (String) _htTGTContext.get("authsp");
+						String sAuthsp = (String)_htTGTContext.get("authsp");
 						_tgtManager.remove(sTgt);
 
 						HandlerTools.setRequestorFriendlyCookie(_servletResponse, _htSessionContext, _systemLogger);  // 20130825
@@ -2584,7 +2590,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	{
 		String sMethod = "startAuthentication";
 		
-		String sAuthsp = (String) htLoginRequest.get("authsp");
+		String sAuthsp = (String)htLoginRequest.get("authsp");
+		String sSocialLogin = (String)htLoginRequest.get("social_login");  // 20140216, Bauke: added, can be null
 		HashMap htAllowedAuthsps = (HashMap) _htSessionContext.get("allowed_user_authsps");
 		if (htAllowedAuthsps == null) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "allowed_user_authsps not found in session context");
@@ -2598,6 +2605,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 		// _systemLogger.log(Level.INFO, _sModule, sMethod, "session="+_htSessionContext+" login="+htLoginRequest);
 		_htSessionContext.put("authsp", sAuthsp);
+		_htSessionContext.put("social_login", sSocialLogin);
 		_htSessionContext.put("my_url", htLoginRequest.get("my_url"));
 
 		// RH, should be set through AbstractBrowserRequestHandler
@@ -2629,11 +2637,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			oProtocolHandler.init(oAuthSPsection, objAuthSPResource);
 		}
 		catch (ASelectConfigException e) {
-			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to retrieve config for AuthSPs.");
+			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to retrieve config for AuthSPHandler="+sAuthsp);
 			throw new ASelectException(e.getMessage());
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to initialize handler AuthSPHandler.");
+			_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Failed to initialize handler AuthSPHandler="+sAuthsp);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 

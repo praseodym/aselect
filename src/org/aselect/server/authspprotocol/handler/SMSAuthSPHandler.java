@@ -264,13 +264,11 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 
 			// Build the AuthSP url
 			sSignature = URLEncoder.encode(sSignature, "UTF-8");
-			//sUserId = URLEncoder.encode(sUserId, "UTF-8");
 			sPhoneNr = URLEncoder.encode(sPhoneNr, "UTF-8");
 			sAsUrl = URLEncoder.encode(sAsUrl, "UTF-8");
 			StringBuffer sbRedirect = new StringBuffer(isVoice? _sAuthspVoice: _sAuthspUrl);  // here's the voice switch
 			sbRedirect.append("?as_url=").append(sAsUrl);
 			sbRedirect.append("&rid=").append(sRid);
-			//sbRedirect.append("&uid=").append(sUserId);
 			sbRedirect.append("&uid=").append(sPhoneNr);
 			sbRedirect.append("&a-select-server=").append(sServerId);
 			if (sCountry != null) {
@@ -349,6 +347,7 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 			sbBuffer.append(_sAuthsp);
 			sAsUrl = sbBuffer.toString();
 			sSignature = URLDecoder.decode(sSignature, "UTF-8");
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "sSignature="+sSignature);
 			StringBuffer sbSignature = new StringBuffer(sRid);
 			sbSignature.append(sAsUrl);
 			sbSignature.append(sResultCode);

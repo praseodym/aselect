@@ -607,35 +607,34 @@ public class Utils
 		int iPos;
 		HashMap<String, String> xResponse = new HashMap<String, String>();
 
-		if (xMessage != null) {
-			xST = new StringTokenizer(xMessage, "&");
+		if (xMessage == null)
+			return xResponse;
 
-			while (xST.hasMoreElements()) {
-				xToken = (String) xST.nextElement();
-				if (!xToken.trim().equals("")) {
-					iPos = xToken.indexOf('=');
-					if (iPos != -1) {
-						xKey = xToken.substring(0, iPos);
+		xST = new StringTokenizer(xMessage, "&");
+		while (xST.hasMoreElements()) {
+			xToken = (String) xST.nextElement();
+			if (!xToken.trim().equals("")) {
+				iPos = xToken.indexOf('=');
+				if (iPos != -1) {
+					xKey = xToken.substring(0, iPos);
 
-						try {
-							xValue = xToken.substring(iPos + 1);
-						}
-						catch (Exception e) {
-							xValue = "";
-						}
+					try {
+						xValue = xToken.substring(iPos + 1);
+					}
+					catch (Exception e) {
+						xValue = "";
+					}
 
-						if (xKey != null && xValue != null) {
-							// 20120106, Bauke: added URL decode option
-							if (doUrlDecode) {	// RH, 20120202, n, fix on option doUrlDecode
-								try {
-									xValue = URLDecoder.decode(xValue, "UTF-8");
-								}
-								catch (UnsupportedEncodingException e) {
-									
-								}
-							}	// RH, 20120202, n, fix on option doUrlDecode
-							xResponse.put(xKey, xValue);
-						}
+					if (xKey != null && xValue != null) {
+						// 20120106, Bauke: added URL decode option
+						if (doUrlDecode) {	// RH, 20120202, n, fix on option doUrlDecode
+							try {
+								xValue = URLDecoder.decode(xValue, "UTF-8");
+							}
+							catch (UnsupportedEncodingException e) {								
+							}
+						}	// RH, 20120202, n, fix on option doUrlDecode
+						xResponse.put(xKey, xValue);
 					}
 				}
 			}

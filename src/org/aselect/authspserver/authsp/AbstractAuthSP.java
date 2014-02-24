@@ -38,6 +38,8 @@ import org.aselect.system.servlet.ASelectHttpServlet;
  */
 public abstract class AbstractAuthSP extends ASelectHttpServlet
 {
+	private static final long serialVersionUID = 1L;
+
 	/** The name of this module, that is used in the system logging. */
 	public static final String MODULE = "AbstractAuthSP";
 
@@ -111,15 +113,10 @@ public abstract class AbstractAuthSP extends ASelectHttpServlet
 				throw new ASelectException(Errors.ERROR_SMS_INTERNAL_ERROR);
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded CryptoEngine.");
-			
-
 			_random = SecureRandom.getInstance("SHA1PRNG");
 
 			// set allowed retries to some default
 			_iAllowedRetries = 0;	// Must be set by each AuthSP
-
-
-
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initializing failed", e);

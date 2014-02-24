@@ -70,9 +70,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-// RH, 20100621, Remove cyclic dependency system<->server
-//import org.aselect.server.log.ASelectSystemLogger;
-import org.aselect.system.error.Errors;
 import org.aselect.system.logging.ISystemLogger;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.utils.Utils;

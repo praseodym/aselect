@@ -73,6 +73,7 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.BASE64Decoder;
 import org.aselect.system.utils.BASE64Encoder;
+import org.aselect.system.utils.Utils;
 
 /**
  * The A-Select AuthSP CryptoEngine. <br>
@@ -177,7 +178,7 @@ public class CryptoEngine
 	{
 		_systemLogger = oAuthSPSystemLogger;
 		_htPublicKeys = new HashMap();
-		String sMethod = "CryptoEngine()";
+		String sMethod = "CryptoEngine";
 
 		try {
 			_oAuthSPConfigManager = AuthSPConfigManager.getHandle();
@@ -314,8 +315,9 @@ public class CryptoEngine
 	public synchronized String generateSignature(String sData)
 	throws ASelectException
 	{
-		String sMethod = "generateSignature()";
+		String sMethod = "generateSignature";
 		String sSignature = null;
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "Sign ["+sData+"]");
 		try {
 			Signature oSignature = null;
 			if (_oSignatureProvider != null)
@@ -369,9 +371,10 @@ public class CryptoEngine
 	 */
 	public synchronized boolean verifySignature(String sAlias, String sData, String sSignature)
 	{
-		String sMethod = "verifySignature()";
+		String sMethod = "verifySignature";
 		boolean bVerifies = false;
 		sAlias = sAlias.toLowerCase();
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "sAlias="+sAlias+" sData=["+sData+"]");
 
 		try {
 			Signature oSignature = null;
@@ -400,7 +403,6 @@ public class CryptoEngine
 				sbInfo.append(sData);
 				sbInfo.append("' with a public key with Alias: ");
 				sbInfo.append(sAlias);
-
 				_systemLogger.log(Level.FINE, MODULE, sMethod, sbInfo.toString());
 			}
 		}
@@ -453,7 +455,7 @@ public class CryptoEngine
 	 */
 	public synchronized boolean verifyMySignature(String sData, String sSignature)
 	{
-		String sMethod = "verifyMySignature()";
+		String sMethod = "verifyMySignature";
 
 		boolean bVerifies = false;
 
@@ -499,7 +501,7 @@ public class CryptoEngine
 	private void loadDefaultKeys(String sWorkingDir)
 	throws ASelectException
 	{
-		String sMethod = "loadDefaultKeys()";
+		String sMethod = "loadDefaultKeys";
 		Object oAuthSPConfig = null;
 		String sPassword = null;
 
@@ -575,7 +577,7 @@ public class CryptoEngine
 	private void loadPublicKeys(String sWorkingDir)
 	throws ASelectException
 	{
-		String sMethod = "loadPublicKeys()";
+		String sMethod = "loadPublicKeys";
 
 		try {
 			StringBuffer sbKeystoreLocation = new StringBuffer(sWorkingDir);
@@ -629,7 +631,7 @@ public class CryptoEngine
 	private void readSignatureConfig(Object oCryptoSection, HashMap htProviders)
 	throws ASelectException
 	{
-		String sMethod = "readSignatureConfig()";
+		String sMethod = "readSignatureConfig";
 		String sProvider = null;
 
 		Object oSection = null;

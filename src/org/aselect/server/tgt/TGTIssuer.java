@@ -319,10 +319,11 @@ public class TGTIssuer
 			// Bauke 20081203: Store saml20 remote token in the context
 			Utils.copyHashmapValue("saml_remote_token", htTGTContext, htRemoteAttributes);
 
+			Utils.copyHashmapValue("authsp", htTGTContext, htRemoteAttributes);
 			Utils.copyHashmapValue("authsp_type", htTGTContext, htRemoteAttributes);
 			Utils.copyHashmapValue("authsp_level", htTGTContext, htRemoteAttributes);
 			Utils.copyHashmapValue("sel_level", htTGTContext, htRemoteAttributes);
-			Utils.copyHashmapValue("authsp", htTGTContext, htRemoteAttributes);
+			Utils.copyHashmapValue("social_login", htTGTContext, htRemoteAttributes);  // 20140219, Bauke: new
 			htTGTContext.put("uid", sUserId);
 			htTGTContext.put("organization", sUserOrganization);
 			Integer intAppLevel = (Integer) htSessionContext.get("level");
@@ -630,6 +631,7 @@ throws ASelectException
 			Utils.copyHashmapValue("sel_uid", htTGTContext, htSessionContext);
 			// 20090811, Bauke: save authsp_type for use by the Saml20 session sync
 			Utils.copyHashmapValue("authsp_type", htTGTContext, htSessionContext);
+			Utils.copyHashmapValue("social_login", htTGTContext, htSessionContext);  // 20140219, Bauke: new
 
 			// 20090617, Bauke:forced_authenticate specials
 			Boolean bForcedAuthn = (Boolean) htSessionContext.get("forced_authenticate");

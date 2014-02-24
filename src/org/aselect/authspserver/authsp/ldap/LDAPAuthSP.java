@@ -93,7 +93,6 @@
  * Revision 1.3  2005/02/04 10:12:40  leon
  * code restyle and license added
  */
-
 package org.aselect.authspserver.authsp.ldap;
 
 import java.io.File;

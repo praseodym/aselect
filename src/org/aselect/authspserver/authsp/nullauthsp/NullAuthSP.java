@@ -212,7 +212,7 @@ public class NullAuthSP extends ASelectHttpServlet
 	public void init(ServletConfig oServletConfig)
 	throws ServletException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		Object oAuthSPConfig = null;
 
@@ -387,7 +387,7 @@ public class NullAuthSP extends ASelectHttpServlet
 	protected void doGet(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ServletException, java.io.IOException
 	{
-		String sMethod = "doGet()";
+		String sMethod = "doGet";
 		String sQueryString = "";
 		String sLanguage = null;
 		
@@ -542,7 +542,7 @@ public class NullAuthSP extends ASelectHttpServlet
 								String sResultCode, String sLanguage)
 	throws IOException
 	{
-		String sMethod = "handleResult()";
+		String sMethod = "handleResult";
 
 		PrintWriter pwOut = null;
 		try {

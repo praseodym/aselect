@@ -113,7 +113,7 @@ public class AuthSPSessionManager extends StorageManager
 	public void init()
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			_systemLogger = AuthSPSystemLogger.getHandle();
 			_configManager = AuthSPConfigManager.getHandle();
@@ -164,7 +164,7 @@ public class AuthSPSessionManager extends StorageManager
 	public void createSession(String sRid, HashMap htContext)
 	throws ASelectException
 	{
-		String sMethod = "createSession()";
+		String sMethod = "createSession";
 		try {
 			/////////////////////////////////////////////////////
 //			if (containsKey(sRid)) {	// RH, 20111121, o	
@@ -308,7 +308,7 @@ public class AuthSPSessionManager extends StorageManager
 	public HashMap getSessionContext(String sRid)
 	throws ASelectException
 	{
-		String sMethod = "getSessionContext()";
+		String sMethod = "getSessionContext";
 		HashMap htContext = null;
 		try {
 			htContext = (HashMap)get(sRid);

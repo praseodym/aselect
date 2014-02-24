@@ -129,7 +129,7 @@ public class AuthSPHandlerManager
 	public void init()
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			_oASelectConfigManager = ASelectConfigManager.getHandle();
 			_systemLogger = ASelectSystemLogger.getHandle();
@@ -175,8 +175,7 @@ public class AuthSPHandlerManager
 					sLevel = _oASelectConfigManager.getParam(oAuthSPHandlerConfig, "level");
 				}
 				catch (ASelectConfigException e) {
-					_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-							"failed to retrieve required parameter for configured authsp.", e);
+					_systemLogger.log(Level.CONFIG, MODULE, sMethod, "failed to retrieve required parameter for configured authsp.", e);
 					throw e;
 				}
 				try {
@@ -192,7 +191,7 @@ public class AuthSPHandlerManager
 					intLevel = new Integer(sLevel);
 				}
 				catch (NumberFormatException e) {
-					_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Error during initializing", e);
+					_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Error during initialization", e);
 					throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
 				}
 				Boolean bPopup = new Boolean(sPopup);
@@ -200,6 +199,7 @@ public class AuthSPHandlerManager
 				AuthSPHandler oAuthSPHandler = new AuthSPHandler(sAuthSPId, sHandler, sResourceGroup, sType,
 						sFriendlyName, intLevel, bPopup.booleanValue());
 				oAuthSPHandler.setDirectAuthSP(bDirectAuthSP);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "AutSP "+sAuthSPId+" added type="+sType+" friendly="+sFriendlyName);
 				_htAuthSPHandlers.put(sAuthSPId, oAuthSPHandler);
 				oAuthSPHandlerConfig = _oASelectConfigManager.getNextSection(oAuthSPHandlerConfig);
 			}
@@ -447,7 +447,7 @@ public class AuthSPHandlerManager
 	public String getType(String sAuthSPId)
 	throws ASelectException
 	{
-		String sMethod = "getType()";
+		String sMethod = "getType";
 		AuthSPHandler oAuthSPHandler = (AuthSPHandler) _htAuthSPHandlers.get(sAuthSPId);
 		if (oAuthSPHandler == null) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No AuthSPHandler found with Id: '" + sAuthSPId + "'.");
@@ -481,7 +481,7 @@ public class AuthSPHandlerManager
 	public Integer getLevel(String sAuthSPId)
 	throws ASelectException
 	{
-		String sMethod = "getLevel()";
+		String sMethod = "getLevel";
 		AuthSPHandler oAuthSPHandler = (AuthSPHandler) _htAuthSPHandlers.get(sAuthSPId);
 		if (oAuthSPHandler == null) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No AuthSPHandler found with Id: '" + sAuthSPId + "'.");
@@ -514,7 +514,7 @@ public class AuthSPHandlerManager
 	public String getResourceGroup(String sAuthSPId)
 	throws ASelectException
 	{
-		String sMethod = "getResourceGroup()";
+		String sMethod = "getResourceGroup";
 		AuthSPHandler oAuthSPHandler = (AuthSPHandler) _htAuthSPHandlers.get(sAuthSPId);
 		if (oAuthSPHandler == null) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No AuthSPHandler found with Id: '" + sAuthSPId + "'.");
@@ -547,7 +547,7 @@ public class AuthSPHandlerManager
 	public String getUrl(String sAuthSPId)
 	throws ASelectException
 	{
-		String sMethod = "getUrl()";
+		String sMethod = "getUrl";
 		String sUrl = null;
 		String sResourceGroup = getResourceGroup(sAuthSPId);
 		SAMResource mySAMResource = null;
@@ -587,7 +587,7 @@ public class AuthSPHandlerManager
 	 */
 	public String getNextAuthSP(String sAuthSPId, String app_id)
 	{
-		String sMethod = "getNextAuthSP()";
+		String sMethod = "getNextAuthSP";
 
 		String next_authsp = null;
 
@@ -640,7 +640,7 @@ public class AuthSPHandlerManager
 	public IAuthSPDirectLoginProtocolHandler getAuthSPDirectLoginProtocolHandler(String sAuthSPId)
 	throws ASelectException
 	{
-		String sMethod = "getAuthSPAPIProtocolHandler()";
+		String sMethod = "getAuthSPAPIProtocolHandler";
 		IAuthSPDirectLoginProtocolHandler oProtocolHandler = null;
 		String sHandlerName = getHandler(sAuthSPId);
 		try {

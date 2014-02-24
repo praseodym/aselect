@@ -512,7 +512,7 @@ public class AttributeGatherer
 		String sLocalOrg = (String) htTGTContext.get("local_organization");
 		String sAppID = (String) htTGTContext.get("app_id");
 
-		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER == sUid=" + sUid + " sLocalOrg=" + sLocalOrg + " user organization="+sOrgId);
+		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER --- sUid=" + sUid + " sLocalOrg=" + sLocalOrg + " user organization="+sOrgId);
 		if (sLocalOrg != null) {
 			if (sArpTarget != null) {
 				Enumeration enumPolicies = _vReleasePolicies.elements();
@@ -557,7 +557,7 @@ public class AttributeGatherer
 				for (Object s : (_iGathererVersion>=2)?_sortedRequestors: keys) {
 					String sRequestorID = (_iGathererVersion>=2)? ((String)s).substring(4): (String)s;
 					Vector vAttributes = (Vector) htReleasePolicy.get(sRequestorID);
-					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER << Requestor=" + sRequestorID+" vAttr="+vAttributes);
+					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER << Requestor=" + sRequestorID+" release="+vAttributes);
 					
 					IAttributeRequestor attributeRequestor = (IAttributeRequestor) _htRequestors.get(sRequestorID);
 					if (attributeRequestor == null) {
@@ -576,7 +576,7 @@ public class AttributeGatherer
 						StringBuffer sb = new StringBuffer("Could not gather attributes for user \"").append(sUid).append("\"");
 						_systemLogger.log(Level.WARNING, _MODULE, sMethod, sb.toString(), eA);
 					}
-					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER >> Requestor=" + sRequestorID + " htAttrsFromAttrReq="+htAttrsFromAR);
+					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER >> Requestor=" + sRequestorID + " attrs from this requestor="+htAttrsFromAR);
 
 					// Merge the returned attributes with our set
 					if (htAttrsFromAR != null) {
@@ -641,7 +641,7 @@ public class AttributeGatherer
 							else
 								htAttributes.put(sKey, htAttrsFromAR.get(sKey));
 						}
-						_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER -- htAttributes="+htAttributes);
+						_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER === all attrs after merge="+htAttributes);
 					}
 				}
 			}

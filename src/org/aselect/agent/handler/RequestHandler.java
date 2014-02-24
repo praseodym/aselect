@@ -1113,7 +1113,7 @@ public class RequestHandler extends Thread
 
 			// all parameters are there; create a ticket for this user and
 			// store it in a ticket context
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Create the ticket");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Create the ticket for "+sUID);
 			HashMap htTicketContext = new HashMap();
 			htTicketContext.put("uid", sUID);
 			htTicketContext.put("organization", sOrg);
@@ -1158,7 +1158,7 @@ public class RequestHandler extends Thread
 			}
 
 			// prepare the response parameters for the calling application
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Prepare response");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Prepare response, ticket="+sTicket);
 			oOutputMessage.setParam("ticket", sTicket);
 			oOutputMessage.setParam("ticket_start_time", new Long(_ticketManager.getTicketStartTime(sTicket))
 					.toString());

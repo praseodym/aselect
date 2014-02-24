@@ -90,8 +90,10 @@
 
 package org.aselect.authspserver;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Set;
@@ -110,7 +112,6 @@ import org.aselect.authspserver.log.AuthSPAuthenticationLogger;
 import org.aselect.authspserver.log.AuthSPSystemLogger;
 import org.aselect.authspserver.sam.AuthSPSAMAgent;
 import org.aselect.authspserver.session.AuthSPSessionManager;
-import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
@@ -132,6 +133,8 @@ import org.aselect.system.utils.Utils;
  */
 public class AuthSPServlet extends ASelectHttpServlet
 {
+	private static final long serialVersionUID = 1L;
+
 	/**
 	 * The name of the class, used for logging.
 	 */
@@ -183,7 +186,7 @@ public class AuthSPServlet extends ASelectHttpServlet
 	public void init(ServletConfig oServletConfig)
 	throws ServletException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		Object oAuthSPServerConfig = null;
 		String sWorkingDir = null;
@@ -200,13 +203,24 @@ public class AuthSPServlet extends ASelectHttpServlet
 			else
 				_authenticationLogger = AuthSPAuthenticationLogger.getHandle();
 
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "AuthSPServlet initializing");
 			// reading all parameters from the servlet context
 			ServletContext oServletContext = oServletConfig.getServletContext();
 			sWorkingDir = oServletConfig.getInitParameter("working_dir");
 			if (sWorkingDir == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"Could not retrieve 'working_dir' parameter from deployment descriptor.");
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not retrieve 'working_dir' parameter from deployment descriptor.");
 				throw new ASelectConfigException(Errors.ERROR_ASELECT_INIT_ERROR);
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "working_dir="+sWorkingDir);
+			{
+				String[] cmd = {"/bin/sh","-c","pwd"};
+	        	Process p = Runtime.getRuntime().exec(cmd);
+	        	BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
+	        	String line;
+				while ((line = input.readLine()) != null) {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "Running in directory (pwd)="+line);
+	        	}
+	        	input.close();
 			}
 
 			String sSqlDriver = oServletConfig.getInitParameter("sql_driver");
@@ -236,9 +250,7 @@ public class AuthSPServlet extends ASelectHttpServlet
 				StringBuffer sbInfo = new StringBuffer("Reading config from database: ");
 				sbInfo.append(sSqlURL);
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString());
-
-				oAuthSPConfigManager.init(sSqlDriver, sSqlUser, sSqlPassword, sSqlURL, sSqlTable, CONFIG_ID,
-						_systemLogger);
+				oAuthSPConfigManager.init(sSqlDriver, sSqlUser, sSqlPassword, sSqlURL, sSqlTable, CONFIG_ID, _systemLogger);
 			}
 			else {
 				StringBuffer sbConfigFile = new StringBuffer(sWorkingDir);
@@ -252,14 +264,12 @@ public class AuthSPServlet extends ASelectHttpServlet
 					StringBuffer sbFailed = new StringBuffer("Could not access the config file: ");
 					sbFailed.append(sbConfigFile);
 					_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbFailed.toString());
-
 					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
 				}
 
 				StringBuffer sbInfo = new StringBuffer("Reading config from file: ");
 				sbInfo.append(sbConfigFile);
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString());
-
 				oAuthSPConfigManager.init(sbConfigFile.toString(), _systemLogger);
 			}
 
@@ -465,7 +475,7 @@ public class AuthSPServlet extends ASelectHttpServlet
 	public void destroy()
 	{
 		closeResources();
-		_systemLogger.log(Level.WARNING, MODULE, "destroy()", "A-Select AuthSP Server stopped.");
+		_systemLogger.log(Level.WARNING, MODULE, "destroy", "A-Select AuthSP Server stopped.");
 		closeLoggers();
 		System.out.println("AuthSPServlet Loggers closed");
 		super.destroy();
