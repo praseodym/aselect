@@ -151,7 +151,7 @@
 				<attribute name="SIAM-BuiltStamp" value="${touch.time}"/>
     			<attribute name="Main-Class" value="org.aselect.lbsensor.LbSensor"/>
     			<attribute name="Class-Path" value="org.aselect.system.jar mysql-connector-java-5.1.7-bin.jar  
-    			 commons-dbcp-1.2.2.jar commons-pool-1.4.jar . "/>
+    			 commons-dbcp-1.2.2.jar commons-pool-1.4.jar log4j-1.2.15.jar . "/>
     		</manifest>
     	</manifest-tag>
     </build-jar>
