@@ -135,7 +135,12 @@ public class SamlTools
 		while (enumParameterNames.hasMoreElements() && (!bSigAlg || !bSignature)) {
 			String sParameterName = enumParameterNames.nextElement();
 			if (!bSigAlg)
-				bSigAlg = httpRequest.getParameter(sParameterName).contains(XMLConstants.XMLSIG_NS);
+				bSigAlg = ( httpRequest.getParameter(sParameterName).contains(XMLConstants.XMLSIG_NS) )	// Backward compatibility, 
+								//though should be equal to SignatureConstants.ALGO_ID_DIGEST_SHA1 
+				// RH, 20140310, sn
+							|| ( httpRequest.getParameter(sParameterName).contains(SignatureConstants.ALGO_ID_DIGEST_SHA1) )
+							|| ( httpRequest.getParameter(sParameterName).contains(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256) );
+				// RH, 20140310, en
 			if (!bSignature)
 				bSignature = sParameterName.equals(Signature.DEFAULT_ELEMENT_LOCAL_NAME);
 		}
@@ -169,27 +174,60 @@ public class SamlTools
 		}
 
 		// The signature was set on the complete query string, except the Signature parameter
+		// RH, 20140310, Now following SAML specs
 		try {
-			String sQuery = httpRequest.getQueryString();
+			String sQuery = httpRequest.getQueryString();// use query string because original urlencoded values must be used
+														// do not url re-encode because url-encoding is not canonical
+														// (other party may have different, though equally valid, url-encoding algoritm
 			StringTokenizer tokenizer = new StringTokenizer(sQuery, "&");
 			String sData = "";
+			String[] verifyData = new String[3];
 			while (tokenizer.hasMoreTokens()) {
 				String s = tokenizer.nextToken();
 				systemLogger.log(Level.FINEST, MODULE, sMethod, "Token=[" + s + "]");
 				String sDecoded = URLDecoder.decode(s, "UTF-8");
+				// RH, 20140307, so
+//				if (sDecoded.equals("RelayState=[RelayState]"))
+//					///////////////// empty RelayState should not be have been send, so we'll ignore it
+//					; // 20091118, Bauke: ignore "empty" RelayState (came from logout_info.html)
+//				else if (!s.startsWith("Signature=") && !s.startsWith("consent=")) {
+//					sData += s + "&";
+//				}
+				// RH, 20140307, eo
+				// RH, 20140307, sn
 				if (sDecoded.equals("RelayState=[RelayState]"))
-					; // 20091118, Bauke: ignore "empty" RelayState (came from logout_info.html)
-				else if (!s.startsWith("Signature=") && !s.startsWith("consent=")) {
-					sData += s + "&";
+					continue; // 20091118, Bauke: ignore "empty" RelayState (came from logout_info.html)
+								// keep this for backward compatibility
+				
+				// SAMLRequest=value&RelayState=value&SigAlg=value
+				// SAMLResponse=value&RelayState=value&SigAlg=value
+				if (s.startsWith("SAMLRequest=")) {
+					verifyData[0] = s;
+				} else if (s.startsWith("SAMLResponse=")) {
+					verifyData[0] = s;
+				} else if (s.startsWith("RelayState=")) {
+					verifyData[1] = s;
+				} else if (s.startsWith("SigAlg=")) {
+					verifyData[2] = s;
+					String sigAlgDecoded = URLDecoder.decode(s, "UTF-8");
+					if ( (key instanceof RSAPublicKey) 
+							&& (sigAlgDecoded.contains(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA256)) ) {
+						signingAlgo = "SHA256withRSA";	// Allow for SHA256
+					}
+					
 				}
+				// RH, 20140307, en
 			}
-			sData = sData.substring(0, sData.length() - 1); // Delete the last '&'
+			
+//			sData = sData.substring(0, sData.length() - 1); // Delete the last '&'
+			sData = verifyData[0] + "&" + (verifyData[1] != null ? verifyData[1] + "&" : "") + verifyData[2];
 			systemLogger.log(Level.FINE, MODULE, sMethod, "Check [" + sData + "]");
 
 			java.security.Signature signature = java.security.Signature.getInstance(signingAlgo);
 			// RM_50_01
 			signature.initVerify(key);
-			byte[] bData = sData.getBytes();
+//			byte[] bData = sData.getBytes();	// RH, 20140307, o
+			byte[] bData = sData.getBytes("UTF-8");	// RH, 20140307, o
 			signature.update(bData);
 
 			String sSig = httpRequest.getParameter("Signature");
