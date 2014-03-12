@@ -41,6 +41,6 @@
 	<classpathentry kind="lib" path="lib/ezmorph-1.0.6.jar"/>
 	<classpathentry kind="lib" path="lib/json-lib-2.4-jdk15.jar"/>
 	<classpathentry kind="lib" path="lib/commons-beanutils-1.9.1.jar"/>
-	<classpathentry kind="lib" path="lib/socialauth-4.4.jar"/>
+	<classpathentry kind="lib" path="lib/socialauth-4.4.jar" sourcepath="/socialauth/src/socialauth"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

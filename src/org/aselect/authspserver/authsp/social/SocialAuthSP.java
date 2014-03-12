@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +29,7 @@ import org.aselect.system.utils.BASE64Decoder;
 import org.aselect.system.utils.BASE64Encoder;
 import org.aselect.system.utils.Utils;
 import org.brickred.socialauth.AuthProvider;
+import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.SocialAuthConfig;
 import org.brickred.socialauth.SocialAuthManager;
@@ -52,7 +52,7 @@ public class SocialAuthSP extends ASelectHttpServlet
 	/**
 	 * The version string
 	 */
-	private static String VERSION = "Social AuthSP " + "1.9";
+	private static String VERSION = "Social AuthSP";
 
 	/** Default failure_handling option. */
 	private final static String DEFAULT_FAILUREHANDLING = "aselect";
@@ -100,7 +100,7 @@ public class SocialAuthSP extends ASelectHttpServlet
 	private String _sFailureHandling;
 
 	private String _sUrlOverride;
-	
+//	private SocialAuthManager _socialAuthManager;	
 	/* (non-Javadoc)
 	 * @see org.aselect.system.servlet.ASelectHttpServlet#init(javax.servlet.ServletConfig)
 	 */
@@ -184,8 +184,7 @@ public class SocialAuthSP extends ASelectHttpServlet
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 
 			// Load HTML templates.
-			_sErrorHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "error.html", sConfigID,
-					_sFriendlyName, VERSION);
+			_sErrorHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "error.html", sConfigID, _sFriendlyName, VERSION);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'error.html' template.");
 
 			// get failure handling
@@ -210,8 +209,8 @@ public class SocialAuthSP extends ASelectHttpServlet
 				_sUrlOverride = _configManager.getParam(_oAuthSpConfig, "url_override");
 			}
 			catch (Exception e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'url' found", e);
-				throw new ASelectException(Errors.ERROR_SOCIAL_INTERNAL_ERROR, e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'url_override' found, using server url", e);
+				//throw new ASelectException(Errors.ERROR_SOCIAL_INTERNAL_ERROR, e);
 			}
 
 			sbInfo = new StringBuffer("Successfully started ");
@@ -253,6 +252,8 @@ public class SocialAuthSP extends ASelectHttpServlet
 	{
 		String sMethod = "doGet";
 		HashMap<String,Object> htSessionContext = null;
+		String sRid = null;
+		String sSignRid = null;
 		
 		servletResponse.setContentType("text/html");	// Content type must be set (before getwriter)
 		setDisableCachingHttpHeaders(servletRequest, servletResponse);
@@ -263,23 +264,37 @@ public class SocialAuthSP extends ASelectHttpServlet
 		HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, true);  // URL decoded result
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Enter - htServiceRequest:" + htServiceRequest);
 		
+		// If 'state' is present this is the return call from the socialauth provider
+		String sState = (String)htServiceRequest.get("state");
+		if (Utils.hasValue(sState)) {
+			BASE64Decoder base64Dec = new BASE64Decoder();
+			sState = new String(base64Dec.decodeBuffer(sState));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "state="+sState);
+			String[] aStateArgs = sState.split("_");
+			sRid = aStateArgs[0];
+			if (aStateArgs.length > 1)
+				sSignRid = aStateArgs[1];
+			doGetReturn(servletRequest, servletResponse, sRid, sSignRid, pwOut);
+			return;
+		}
+		
 		String sLanguage = (String) htServiceRequest.get("language");  // optional language code
 		if (sLanguage == null || sLanguage.trim().length() < 1)
 			sLanguage = null;
 
-		String sRid = (String)htServiceRequest.get("rid");
-		String sIsReturn = (String)htServiceRequest.get("is_return");		
-		boolean isReturn = Boolean.parseBoolean(sIsReturn);
+		sRid = (String)htServiceRequest.get("rid");
+		//String sIsReturn = (String)htServiceRequest.get("is_return");		
+		//boolean isReturn = Boolean.parseBoolean(sIsReturn);
 		
-		if (isReturn) {
+		/*if (!Utils.hasValue(sRid) || isReturn) {
 			// handle return from social login provider
-			String sSignRid = (String)htServiceRequest.get("sign_rid");
+			sSignRid = (String)htServiceRequest.get("sign_rid");
 			BASE64Decoder base64Dec = new BASE64Decoder();
 			if (Utils.hasValue(sSignRid))
 				sSignRid = new String(base64Dec.decodeBuffer(sSignRid));  //URLDecoder.decode(sSignRid, "UTF-8");  // should not be necessary
 			doGetReturn(servletRequest, servletResponse, sRid, sSignRid, pwOut);
 			return;
-		}
+		}*/
 
 		// To social login provider
 		try {
@@ -303,13 +318,13 @@ public class SocialAuthSP extends ASelectHttpServlet
 			}
 
 			// User chooses provider - Create a page where you ask the user to choose a provider.
-			// When the user clicks on a provider, in your handling code you should do the follwing:
+			// When the user clicks on a provider, in your handling code you should do the following:
 			// Create a instance of !SocialAuthConfig and call load() method to load configuration for providers.
 			// Create a instance of !SocialAuthManager and call setSocialAuthConfig() to set the configuration.
 			// Store !!SocialAuthManager object in session.
 			// Redirect to the URL obtained by calling the function getAuthenticationUrl()
 	
-			//Create an instance of SocialAuthConfgi object
+			//Create an instance of SocialAuthConfig object
 			SocialAuthConfig config = SocialAuthConfig.getDefault();
 	
 			_systemLogger.log(Level.FINE, MODULE, sMethod, "config="+config);
@@ -323,9 +338,9 @@ public class SocialAuthSP extends ASelectHttpServlet
 			
 			// URL of YOUR application which will be called after authentication
 			String sMyUrl = servletRequest.getRequestURL().toString();
-			_systemLogger.log(Level.FINE, MODULE, sMethod, "myUrl="+sMyUrl+" manager="+socialAuthspManager);
 			if (Utils.hasValue(_sUrlOverride))
 				sMyUrl = _sUrlOverride;
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "myUrl="+sMyUrl+" manager="+socialAuthspManager);
 
 			// Protect the rid against unauthorized changes. Using URL encoding did not work correctly.
 			// The sReturnUrl will completely be URL encoded, but upon return it was not properly decoded.
@@ -334,15 +349,27 @@ public class SocialAuthSP extends ASelectHttpServlet
 			// Since 'google' and 'facebook' do not know how to correctly URL decode our Return URL, just leave the =-signs at the end out
 			sMySignRid = sMySignRid.replaceAll("=*$", "");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SignRid="+sMySignRid);
-			BASE64Encoder base64Enc = new BASE64Encoder();
-			// String sReturnUrl = "http://opensource.brickred.com/authspserver/social?is_return=true&rid="+sRid;
-			String sReturnUrl = sMyUrl + "?is_return=true&rid="+sRid+"&sign_rid="+base64Enc.encode(sMySignRid.getBytes("UTF-8")); // URLEncoder.encode(sMySignRid, "UTF-8");
+			String sData = sRid+"_"+sMySignRid;
 			
-			// Get Provider URL to which you should redirect for authentication.
-			// id can have values "facebook", "twitter", "yahoo" etc. or the OpenID URL
-			String sUrl = socialAuthspManager.getAuthenticationUrl(sSocialLogin, sReturnUrl);
-			// The complete value of sUrl is URL encoded now
+			{	// This works (no state passed though):
+				// https://accounts.google.com/o/oauth2/auth?
+				//client_id=346265140534-8rp175o275hrtv2cehdcl2hvd1cbol4q.apps.googleusercontent.com&
+				//response_type=code&redirect_uri=https%3A%2F%2Fsiam1.test.anoigo.nl%2Fauthspserver%2Fsocial&
+				//scope=https://www.googleapis.com/auth/userinfo.profile+https://www.googleapis.com/auth/userinfo.email+https://www.googleapis.com/auth/plus.login+https://www.google.com/m8/feeds+https://picasaweb.google.com/data/
+				// Result:
+				// qry=code=4/2JRIkUGfnd7e54pbb8fw33U6RehE.gmWiNKbSnuEROl05ti8ZT3ZDcH1XiQI&
+				//authuser=0&num_sessions=1&hd=anoigo.nl&prompt=consent&
+				//session_state=6fb52ad8dbda78c168d8e3249370804701ca7672..da7d
+			}
+			
+			// GooglePlus must be tricked
+			BASE64Encoder base64Enc = new BASE64Encoder();
+			String sReturnUrl = sMyUrl + ("googleplus".equals(sSocialLogin)? "?state=googleplus_": "?state=") + base64Enc.encode(sData.getBytes("UTF-8"));
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "sReturnUrl="+sReturnUrl);
 
+			//String sUrl = socialAuthspManager.getAuthenticationUrl(sSocialLogin, sReturnUrl, Permission.AUTHENTICATE_ONLY); 
+			String sUrl = socialAuthspManager.getAuthenticationUrl(sSocialLogin, sReturnUrl, Permission.AUTHENTICATE_ONLY);
+			// The complete value of sUrl is URL encoded now
 			// Store in session
 			String sFabricatedRid = sRid + RID_POSTFIX;
 			try {
@@ -357,6 +384,7 @@ public class SocialAuthSP extends ASelectHttpServlet
 				htSessionContext = new HashMap();
 			htSessionContext.put("rid", sRid);
 			htSessionContext.put("social_authsp_manager", socialAuthspManager);
+			//_socialAuthManager = socialAuthspManager;
 			htSessionContext.put("social_login", sSocialLogin);
 			Utils.copyHashmapValue("language", htSessionContext, htServiceRequest);
 			Utils.copyHashmapValue("country", htSessionContext, htServiceRequest);
@@ -379,7 +407,7 @@ public class SocialAuthSP extends ASelectHttpServlet
 			handleResult(htSessionContext, servletResponse, pwOut, ae.toString(), sLanguage, null);
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process request due to internal error", e);
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process request due to internal error: "+e);
 			handleResult(htSessionContext, servletResponse, pwOut, Errors.ERROR_SOCIAL_COULD_NOT_AUTHENTICATE_USER, sLanguage, null);
 		}
 		finally {
@@ -418,7 +446,7 @@ public class SocialAuthSP extends ASelectHttpServlet
 	 * openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0
 	 */
 	protected void doGetReturn(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
-								String sRid, String sSignRid, PrintWriter pwOut)
+								String sRid, String sRequestSignRid, PrintWriter pwOut)
 	throws ServletException
 	{
 		String sMethod = "doGetReturn";
@@ -427,7 +455,10 @@ public class SocialAuthSP extends ASelectHttpServlet
 		HashMap<String,Object> htSessionContext = null;
         
 		try {
+			SocialAuthManager socialAuthManager;
+//if (Utils.hasValue(sRid)) {
 			// get session from sRid
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "get session "+sRid);
 			String sFabricatedRid = sRid + RID_POSTFIX;
 			try {
 				htSessionContext = _sessionManager.getSessionContext(sFabricatedRid);
@@ -442,13 +473,16 @@ public class SocialAuthSP extends ASelectHttpServlet
 			String sMySignRid = _cryptoEngine.generateSignature(sbWork.toString());
 			// Since 'google' and 'facebook' do not know how to correctly URL decode our Return URL, just leave the =-signs at the end out
 			sMySignRid = sMySignRid.replaceAll("=*$", "");
-			if (!sMySignRid.equals(sSignRid)) {
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Rid signature does not match, has 'rid' been tampered with?");
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "mySign="+sMySignRid+" Sign="+sSignRid);
+			if (!Utils.hasValue(sRequestSignRid))
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No SIGNATURE received");
+//else {
+			if (!Utils.hasValue(sRequestSignRid) || !sMySignRid.equals(sRequestSignRid)) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Rid signature does not match or absent, has 'rid' been tampered with?");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "mySign="+sMySignRid+" Sign="+sRequestSignRid);
 				handleResult(htSessionContext, servletResponse, pwOut, Errors.ERROR_SOCIAL_COULD_NOT_AUTHENTICATE_USER, sLanguage, sUid);
 				return;
 			}
-	        
+//}   
 			// Provider redirects back
 			//
 			// When you redirect the user to the provider URL, the provider would validate the user,
@@ -457,15 +491,19 @@ public class SocialAuthSP extends ASelectHttpServlet
 			// i.e. "http://opensource.brickred.com/socialauthdemo/socialAuthSuccessAction.do".
 			// Now you can obtain any profile information using the following code
 	
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signing OK, get manager");
 			// Get the auth provider manager from session
-			SocialAuthManager socialAuthspManager = (SocialAuthManager)htSessionContext.get("social_authsp_manager");
+			socialAuthManager = (SocialAuthManager)htSessionContext.get("social_authsp_manager");
+//}
+//else 
+//	socialAuthManager = _socialAuthManager;
 			
 			// Call the manager's connect method which returns the provider object. 
 			// Pass request parameter map while calling connect method.
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "getRequestParametersMap");
 			Map<String, String> paramsMap = SocialAuthUtil.getRequestParametersMap(servletRequest); 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "connect");
-			AuthProvider provider = socialAuthspManager.connect(paramsMap);
+			AuthProvider provider = socialAuthManager.connect(paramsMap);
 			
 			// Get the user profile
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "getUserProfile");
@@ -485,11 +523,11 @@ public class SocialAuthSP extends ASelectHttpServlet
 			// OR also obtain list of contacts
 			// List<Contact> contactsList = provider.getContactList();
 			// _systemLogger.log(Level.INFO, MODULE, sMethod, "Contacts="+contactsList);
-
 			provider.getAccessGrant();
-			String sSocialLogin = (String)htSessionContext.get("social_login");
+			
+			String sSocialLogin = "google"; //= (String)htSessionContext.get("social_login");
 			_authenticationLogger.log(new Object[] {
-				MODULE, sUid, servletRequest.getRemoteAddr(), p.getEmail(), "granted by "+sSocialLogin
+				MODULE, sUid, servletRequest.getRemoteAddr(), p.getEmail(), "granted,"+sSocialLogin
 			});
 			handleResult(htSessionContext, servletResponse, pwOut, Errors.ERROR_SOCIAL_SUCCESS, sLanguage, sUid);
 		}
@@ -565,6 +603,7 @@ public class SocialAuthSP extends ASelectHttpServlet
 		String sMethod = "handleResult";
 		StringBuffer sbTemp = null;
 
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Result="+sResultCode);
 		try {
 			if (_sFailureHandling.equalsIgnoreCase("aselect") || sResultCode.equals(Errors.ERROR_SOCIAL_SUCCESS)) {
 				// A-Select handles error or success

@@ -266,10 +266,11 @@ public class SocialAuthSPHandler implements IAuthSPProtocolHandler
 
 			// 20120403, Bauke: session is available as a parameter
 			String sOrg = (String) htSessionContext.get("organization");
+			String sSocialLogin = (String)htSessionContext.get("social_login");
 			if (sResultCode.equalsIgnoreCase(SOCIAL_NO_ERROR)) {
 				// Log the user authentication
 				_authenticationLogger.log(new Object[] { MODULE, sUid, htAuthspResponse.get("client_ip"),
-						sOrg, (String) htSessionContext.get("app_id"), "granted"
+						sOrg, (String) htSessionContext.get("app_id"), "granted,"+sSocialLogin
 				});
 				htResponse.put("rid", sRid);
 				htResponse.put("uid", sUid);  // NOTE: this actually is the user's email address
@@ -279,7 +280,7 @@ public class SocialAuthSPHandler implements IAuthSPProtocolHandler
 			
 			// Access denied
 			_authenticationLogger.log(new Object[] { MODULE, sUid, htAuthspResponse.get("client_ip"),
-				sOrg, (String) htSessionContext.get("app_id"), "denied", sResultCode
+				sOrg, (String) htSessionContext.get("app_id"), "denied", sResultCode+","+sSocialLogin
 			});
 			htResponse.put("authsp_type", "social");
 			if (sResultCode.equalsIgnoreCase(SOCIAL_INVALID_REQUEST)) {
