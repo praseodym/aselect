@@ -86,7 +86,7 @@ public abstract class GenericSmsSender
 		String sMethod = "sendSms";
 		
 		int iReturnCode = -1;
-		StringBuffer data = new StringBuffer();
+		StringBuffer data = new StringBuffer("");
 		AuthSPSystemLogger _systemLogger = AuthSPSystemLogger.getHandle();
 		_systemLogger.log(Level.INFO, sModule, sMethod, "usePost=" + usePostMethod + " content="+getContentType());
 
@@ -165,7 +165,7 @@ public abstract class GenericSmsSender
 		// 20130502, Bauke: added '%s' alternative
 		String sReplace = (sTemplate.contains("%s"))? "%s": "0";
 		String sMessage = sTemplate.replaceAll(sReplace, sSecret);
-		//_systemLogger.log(Level.INFO, sModule, sMethod, "sMessage="+sMessage);
+		_systemLogger.log(Level.INFO, sModule, sMethod, "sMessage="+sMessage);
 		return sMessage;
 	}
 

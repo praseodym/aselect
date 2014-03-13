@@ -99,7 +99,8 @@ public class CmHttpSmsSender extends GenericSmsSender
 		_systemLogger.log(Level.INFO, sModule, sMethod, "url=" + providerUrl);
 		
 		String sMessage = applySmsTemplate(sTemplate, sSecret, false);
-		//_systemLogger.log(Level.INFO, sModule, sMethod, "msg="+escapeXmlString(sMessage));
+		_systemLogger.log(Level.INFO, sModule, sMethod, "msg="+escapeXmlString(sMessage)+" cust="+sCustomerId+
+				" user="+this.user+" password="+this.password+" from="+from+" rcp="+recipients);
 		String sData = xmlSmsMessage.replaceAll("\\[MESSAGE\\]", escapeXmlString(sMessage));
 		sData = sData.replaceAll("\\[CUSTOMER\\]", sCustomerId);
 		sData = sData.replaceAll("\\[LOGIN\\]", escapeXmlString(this.user));
@@ -108,9 +109,10 @@ public class CmHttpSmsSender extends GenericSmsSender
 		sData = sData.replaceAll("\\[NUMBER\\]", recipients);  // a single phone number
 		
 		// gateway has no value
-		if (Utils.hasValue(this.gateway.trim())) {
+		if (Utils.hasValue(this.gateway)) {
 			_systemLogger.log(Level.WARNING, sModule, sMethod, "Alternate gateway supplied, but not supported");
 		}
+		_systemLogger.log(Level.INFO, sModule, sMethod, "append");
 		sbResult.append(sData);
 		_systemLogger.log(Level.INFO, sModule, sMethod, "data=" + sbResult.toString());
 		return 0;
