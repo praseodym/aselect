@@ -12,13 +12,16 @@
 package org.aselect.server.request.handler.xsaml20.sp;
 
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
+import javax.xml.namespace.QName;
 
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.request.handler.xsaml20.AbstractMetaDataManager;
 import org.aselect.server.request.handler.xsaml20.PartnerData;
+import org.aselect.server.request.handler.xsaml20.PartnerData.NamespaceInfo;
 import org.aselect.server.request.handler.xsaml20.Saml20_Metadata;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.server.request.handler.xsaml20.PartnerData.HandlerInfo;
@@ -44,6 +47,7 @@ import org.opensaml.saml2.metadata.SPSSODescriptor;
 import org.opensaml.saml2.metadata.SingleLogoutService;
 import org.opensaml.saml2.metadata.SurName;
 import org.opensaml.saml2.metadata.TelephoneNumber;
+import org.opensaml.xml.Namespace;
 import org.opensaml.xml.io.Marshaller;
 import org.opensaml.xml.io.MarshallerFactory;
 import org.opensaml.xml.io.MarshallingException;
@@ -200,7 +204,23 @@ public class Xsaml20_Metadata_handler extends Saml20_Metadata
 			entityDescriptor.setValidUntil(tStamp.plus(getValidUntil().longValue()));
 		if (getCacheDuration() != null)
 			entityDescriptor.setCacheDuration(getCacheDuration());
-
+		
+		//	RH, 20140320, sn
+		if (partnerData != null && partnerData.getMetadata4partner().getNamespaceInfo().size() > 0) {	// Get namespaceinfo + additional attributes to publish from partnerdata
+			Enumeration<NamespaceInfo> eHandler = partnerData.getMetadata4partner().getNamespaceInfo().elements();
+			while (eHandler.hasMoreElements()) {
+				NamespaceInfo nsi = eHandler.nextElement();
+				entityDescriptor.addNamespace(new Namespace(nsi.getUri(), nsi.getPrefix()));
+				Hashtable<String, String> atts = nsi.getAttributes();
+				Enumeration<String> attenum = atts.keys();
+				while (attenum.hasMoreElements()) {
+				String localp = attenum.nextElement();	
+					entityDescriptor.getUnknownAttributes().put(new QName(nsi.getUri(), localp, nsi.getPrefix()), atts.get(localp));
+				}
+			}
+		}
+		//	RH, 20140320, en
+		
 		// Create the KeyDescriptor
 		SAMLObjectBuilder<KeyDescriptor> keyDescriptorBuilder = (SAMLObjectBuilder<KeyDescriptor>) _oBuilderFactory
 				.getBuilder(KeyDescriptor.DEFAULT_ELEMENT_NAME);

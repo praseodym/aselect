@@ -11,6 +11,7 @@
  */
 package org.aselect.server.request.handler.xsaml20.sp;
 
+import java.util.Hashtable;
 import java.util.logging.Level;
 
 import org.aselect.server.config.ASelectConfigManager;
@@ -183,6 +184,46 @@ public class MetaDataManagerSp extends AbstractMetaDataManager
 					idpData.getMetadata4partner().getHandlers().add(idpData.new HandlerInfo(metahandlertype,metahandlerbinding,  bMetahandlerisdefault,  iMetahandlerindex, metahandlerresponselocation, metahandlerlocation) );
 					metaHandler = _configManager.getNextSection(metaHandler);
 				}
+
+				// RH, 20140320, sn, get optional entitydescriptorextension
+				Object extensionSection = Utils.getSimpleSection(_configManager, _systemLogger, metadataSection, "entitydescriptorextension", false);
+				if (extensionSection != null) {
+					Object metaNamespace = Utils.getSimpleSection(_configManager, _systemLogger, extensionSection, "namespace", false);
+					if (metaNamespace == null) {
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, "No namespace element found in entitydescriptorextension section for: "+ sId);
+					}
+					while (metaNamespace != null) {
+						String metaNamespacePrefix = Utils.getSimpleParam(_configManager, _systemLogger, metaNamespace, "prefix", false);
+						_systemLogger.log(Level.FINEST, MODULE, sMethod, "prefix found in entitydescriptorextension section: "+ metaNamespacePrefix);
+						String metaNamespaceUri = Utils.getSimpleParam(_configManager, _systemLogger, metaNamespace, "uri", false);
+						_systemLogger.log(Level.FINEST, MODULE, sMethod, "uri found in entitydescriptorextension section: "+ metaNamespaceUri);
+						if ( metaNamespacePrefix != null && metaNamespaceUri != null ) {
+							Object metaAttribute = Utils.getSimpleSection(_configManager, _systemLogger, metaNamespace, "attribute", false);
+							if (metaAttribute == null) {
+								_systemLogger.log(Level.WARNING, MODULE, sMethod, "No attribute element found in entitydescriptorextension section for uri: "+ metaNamespaceUri);
+							}
+							Hashtable<String, String> attributes = new Hashtable<String, String>();
+							while (metaAttribute != null) {
+								String metaAttributeValue = Utils.getSimpleParam(_configManager, _systemLogger, metaAttribute, "value", false);
+								String metaAttributeLocalPart = Utils.getSimpleParam(_configManager, _systemLogger, metaAttribute, "localpart", false);
+								_systemLogger.log(Level.FINEST, MODULE, sMethod, "localpart found in attribute section: "+ metaAttributeLocalPart + " with value: " + metaAttributeValue);
+								if ( metaAttributeValue != null && metaAttributeLocalPart != null) {
+									attributes.put(metaAttributeLocalPart, metaAttributeValue);
+								} else {
+									_systemLogger.log(Level.WARNING, MODULE, sMethod, "one of localpart or value == null section with uri: "+ metaNamespaceUri);
+								}
+								metaAttribute = _configManager.getNextSection(metaAttribute);
+							}
+							idpData.getMetadata4partner().getNamespaceInfo().add(idpData.new NamespaceInfo(metaNamespacePrefix, metaNamespaceUri, attributes));
+						} else {
+							_systemLogger.log(Level.WARNING, MODULE, sMethod, "one of prefix or uri == null namespace section");
+						}
+						metaNamespace = _configManager.getNextSection(metaNamespace);
+					}
+				} else {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "No entitydescriptorextension found in metadata section for: "+ sId);
+				}
+				// RH, 20140320, en
 				
 				String metaaddkeyname = Utils.getSimpleParam(_configManager, _systemLogger, metadataSection, "addkeyname", false);
 				if (metaaddkeyname != null)

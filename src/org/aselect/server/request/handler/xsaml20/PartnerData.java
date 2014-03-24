@@ -11,6 +11,7 @@
  */
 package org.aselect.server.request.handler.xsaml20;
 
+import java.util.Hashtable;
 import java.util.Vector;
 
 /**
@@ -247,6 +248,55 @@ public class PartnerData
 			this.location = location;
 		}	
 	}
+
+	
+	// Simple wrapper for NamespaceInfo info
+	public class NamespaceInfo
+	{
+		private String prefix = null;
+		private String uri = null;
+	
+		private Hashtable<String, String> attributes = null;
+
+		private NamespaceInfo()
+		{
+			// hide this constructor
+		}
+
+		public NamespaceInfo(String prefix, String uri, Hashtable<String, String> attributes)
+		{
+			this.prefix = prefix;
+			this.uri = uri;
+			this.attributes = attributes;
+		}
+
+		/**
+		 * @return the prefix
+		 */
+		public synchronized String getPrefix()
+		{
+			return prefix;
+		}
+
+		/**
+		 * @return the uri
+		 */
+		public synchronized String getUri()
+		{
+			return uri;
+		}
+
+		/**
+		 * @return the attributes
+		 */
+		public synchronized Hashtable<String, String> getAttributes()
+		{
+			return attributes;
+		}
+
+	}
+
+	
 	
 	// SImple wrapper class for specific data 
 	public class Metadata4Partner
@@ -271,6 +321,8 @@ public class PartnerData
 		String metacontactsurname = null;
 		String metacontactemail = null;
 		String metacontactephone = null;
+		
+		private Vector<NamespaceInfo> namespaces = new Vector<NamespaceInfo>();
 		
 		// Set Organization info, only change values if not null
 		public void setOrganizationInfo(		String metaorgname, String metaorgnamelang,
@@ -477,7 +529,30 @@ public class PartnerData
 		public boolean removeHandlerInfo(HandlerInfo handler) {
 			return handlers.removeElement(handler);
 		}
+
+		/**
+		 * @return the handlers
+		 */
+		public synchronized Vector<NamespaceInfo> getNamespaceInfo()
+		{
+			return namespaces;
+		}
+
+		/**
+		 * @param namespaceinfo the namespaceinfo to add
+		 */
+		public void addNamespaceInfo(NamespaceInfo namespaceinfo) {
+			namespaces.addElement(namespaceinfo);
+		}
 		
+		/**
+		 * @param namespaceinfo the namespaceinfo to remove
+		 * @return true if handler was present
+		 */
+		public boolean removeNamespaceInfo(HandlerInfo namespaceinfo) {
+			return namespaces.removeElement(namespaceinfo);
+		}
+
 	}
 
 	// SImple wrapper class for test data 
