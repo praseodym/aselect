@@ -874,7 +874,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					htSessionContext.get("app_id"), "granted", sFederationId
 				});
 				if ( isLogAuthProof() ) {	// Log auth_proof here if enabled
-					ASelectAuthProofLogger.getHandle().log( (String)htRemoteAttributes.get("uid"), (String)htRemoteAttributes.get("client_ip"), (String)htRemoteAttributes.get("appid"), (String)null, (String)htRemoteAttributes.get("auth_proof") );
+					ASelectAuthProofLogger.getHandle().log( sUID, (String) htRemoteAttributes.get("client_ip"), (String)htSessionContext.get("app_id"), (String)null, (String)htRemoteAttributes.get("auth_proof") );
 //					_systemLogger.log(Level.FINEST, MODULE, sMethod, "auth_proof logged after successful authentication=" + 
 //							htRemoteAttributes.get("auth_proof"));
 				}
