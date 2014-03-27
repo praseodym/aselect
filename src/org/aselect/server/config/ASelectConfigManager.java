@@ -254,7 +254,9 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.cross.CrossASelectManager;
+import org.aselect.server.log.ASelectAuthProofLogger;
 import org.aselect.server.log.ASelectAuthenticationLogger;
+import org.aselect.server.log.ASelectEntrustmentLogger;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.HandlerTools;
 import org.aselect.server.sam.ASelectSAMAgent;
@@ -410,6 +412,16 @@ public class ASelectConfigManager extends ConfigManager
 	 * The logger used for authentication logging
 	 */
 	private ASelectAuthenticationLogger _oASelectAuthenticationLogger;
+
+	/**
+	 * The logger used for entrustment logging like on-behalf-of
+	 */
+	private ASelectEntrustmentLogger _oASelectEntrustmentLogger;
+
+	/**
+	 * The logger used for entrustment logging like on-behalf-of
+	 */
+	private ASelectAuthProofLogger _oASelectAuthProofLogger;
 
 	/**
 	 * The domain name which is used to set A-Select cookies
@@ -709,6 +721,35 @@ public class ASelectConfigManager extends ConfigManager
 				_bUDBEnabled = false;
 			}
 		}
+		
+		// RH, 20140228, sn
+		// initialize entrust (on-behalf-of) logger
+		Object oEntrustLogging = null;
+		try {
+			oEntrustLogging = getSection(_oASelectConfigSection, "logging", "id=entrustment");
+			_oASelectEntrustmentLogger.init(oEntrustLogging, sWorkingDir);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully initialized ASelectEntrustmentLogger.");
+		}
+		catch (ASelectException e) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod,
+					"No valid 'logging' config section with id='entrustment' found, entrustment logging not enabled.");
+		}
+		// RH, 20140228, sn
+
+		// RH, 20140327, sn
+		// initialize authentication proof logger
+		Object oAuthProofLogging = null;
+		try {
+			oAuthProofLogging = getSection(_oASelectConfigSection, "logging", "id=authproof");
+			_oASelectAuthProofLogger.init(oAuthProofLogging, sWorkingDir);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully initialized ASelectAuthProofLogger.");
+		}
+		catch (ASelectException e) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod,
+					"No valid 'logging' config section with id='authproof' found, authproof logging not enabled.");
+		}
+		// RH, 20140327, sn
+		
 
 		// loading html templates
 		loadHTMLTemplates(sWorkingDir);
@@ -750,7 +791,8 @@ public class ASelectConfigManager extends ConfigManager
 		_sWorkingDir = sWorkingDir;
 		_systemLogger = ASelectSystemLogger.getHandle();
 		_oASelectAuthenticationLogger = ASelectAuthenticationLogger.getHandle();
-
+		_oASelectEntrustmentLogger = ASelectEntrustmentLogger.getHandle();
+		_oASelectAuthProofLogger = ASelectAuthProofLogger.getHandle();
 		// read config
 		if (sSQLDriver != null || sSQLPassword != null || sSQLURL != null || sSQLTable != null) {
 			sbInfo = new StringBuffer("Reading config from database: ");
@@ -2468,4 +2510,5 @@ public class ASelectConfigManager extends ConfigManager
 		}
 		return htAllKeys_Values;
 	}
+
 }

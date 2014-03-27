@@ -31,7 +31,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.config.ASelectConfigManager;
+import org.aselect.server.log.ASelectAuthProofLogger;
 import org.aselect.server.log.ASelectAuthenticationLogger;
+import org.aselect.server.log.ASelectEntrustmentLogger;
 import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.xsaml20.PartnerData;
@@ -102,6 +104,9 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 
 	private boolean useNameIDAsAuthID = false;
 
+	private boolean carryAuthProof = false;
+	private boolean logAuthProof = false;
+	
 	//
 	// Example configuration:
 	// <handler id="saml20_assertionconsumer"
@@ -169,6 +174,20 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 		}
 		// RH, 20130923, en
 		
+		// Because carrying and/or logging the quite large auth_proof may have some impact on resources we can enable/disable
+		// RH, 20140327, sn
+		String sCarryAuthProof = ASelectConfigManager.getSimpleParam(oHandlerConfig, "carry_auth_proof", false);
+		if ("true".equalsIgnoreCase(sCarryAuthProof)) {
+			setCarryAuthProof(true);
+		}
+		// RH, 20140327, en
+
+		// RH, 20140327, sn
+		String sLogAuthProof = ASelectConfigManager.getSimpleParam(oHandlerConfig, "log_auth_proof", false);
+		if ("true".equalsIgnoreCase(sLogAuthProof)) {
+			setLogAuthProof(true);
+		}
+		// RH, 20140327, en
 		
 		_tgtManager = TGTManager.getHandle();
 		_authenticationLogger = ASelectAuthenticationLogger.getHandle();
@@ -192,6 +211,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 		String sMethod = "process";
 		boolean checkAssertionSigning = false;
 		Object samlResponseObject = null;
+		String auth_proof = null;
 
 		try {
 			String sReceivedArtifact = request.getParameter("SAMLart");
@@ -281,7 +301,10 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				String sSamlResponse = soapManager.sendSOAP(XMLHelper.nodeToString(envelopeElem), sASelectServerUrl);  // x_AssertionConsumer_x
 				//byte[] sSamlResponseAsBytes = sSamlResponse.getBytes();
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Received response: "+sSamlResponse+" length=" + sSamlResponse.length());
-	
+				
+				// save original, but, for (internal) transport, encode base64 
+				auth_proof = new String(org.apache.commons.codec.binary.Base64.encodeBase64(sSamlResponse.getBytes("UTF-8")));
+				
 				DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 				dbFactory.setNamespaceAware(true);
 				// dbFactory.setExpandEntityReferences(false);
@@ -346,6 +369,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 				
 				_systemLogger.log(Level.FINER, MODULE, sMethod, "Received Response: " + sReceivedResponse);	//	RH, 20130924, n
 //				sReceivedResponse = new String(Base64Codec.decode(sReceivedResponse));	//	RH, 20130924, o
+				auth_proof = sReceivedResponse;	// save original
+
 				sReceivedResponse = new String(org.apache.commons.codec.binary.Base64.decodeBase64(sReceivedResponse.getBytes("UTF-8")));	//	RH, 20130924, n
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Received Response after base64 decoding: " + sReceivedResponse + " RelayState="+sRelayState);	//	RH, 20130924, n
 				DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -638,6 +663,10 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 						}
 					}	// RH, 20130923, n
 					
+					if ( isCarryAuthProof() ) { // Put the original authentication proof in hmSamlAttributes
+						hmSamlAttributes.put("auth_proof", auth_proof); // original response, still base64 encoded
+//						_systemLogger.log(Level.FINEST, MODULE, sMethod, "auth_proof=" + auth_proof);
+					}
 					// And serialize them back to where they came from
 					sEncodedAttributes = org.aselect.server.utils.Utils.serializeAttributes(hmSamlAttributes);
 					hmSamlAttributes.put("attributes", sEncodedAttributes);
@@ -844,6 +873,11 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					"Saml", sUID, (String) htServiceRequest.get("client_ip"), sRemoteOrg,
 					htSessionContext.get("app_id"), "granted", sFederationId
 				});
+				if ( isLogAuthProof() ) {	// Log auth_proof here if enabled
+					ASelectAuthProofLogger.getHandle().log( (String)htRemoteAttributes.get("uid"), (String)htRemoteAttributes.get("client_ip"), (String)htRemoteAttributes.get("appid"), (String)null, (String)htRemoteAttributes.get("auth_proof") );
+//					_systemLogger.log(Level.FINEST, MODULE, sMethod, "auth_proof logged after successful authentication=" + 
+//							htRemoteAttributes.get("auth_proof"));
+				}
 				
 				HandlerTools.setRequestorFriendlyCookie(servletResponse, htSessionContext, _systemLogger);  // 20130825
 
@@ -1048,5 +1082,21 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 	public synchronized void setUseNameIDAsAuthID(boolean useNameIDAsAuthID)
 	{
 		this.useNameIDAsAuthID = useNameIDAsAuthID;
+	}
+
+	public boolean isCarryAuthProof() {
+		return carryAuthProof;
+	}
+
+	public void setCarryAuthProof(boolean carryAuthProof) {
+		this.carryAuthProof = carryAuthProof;
+	}
+
+	public boolean isLogAuthProof() {
+		return logAuthProof;
+	}
+
+	public void setLogAuthProof(boolean logAuthProof) {
+		this.logAuthProof = logAuthProof;
 	}
 }
