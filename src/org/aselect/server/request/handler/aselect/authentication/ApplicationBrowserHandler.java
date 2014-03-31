@@ -576,8 +576,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			while (true) {
 				if (sRequest.equals("login1")) {
-					handleLogin1(htServiceRequest, _servletResponse, pwOut);
-					return;
+					int rc = handleLogin1(htServiceRequest, _servletResponse, pwOut);
+					if ( rc != 1 )
+						return;
+					sRequest = "login1";  // allow new login attempt
 				}
 				else if (sRequest.equals("login2")) {
 					int rc = handleLogin2(htServiceRequest, _servletResponse, pwOut);
@@ -958,7 +960,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private void handleLogin1(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+//	private void handleLogin1(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+	private int handleLogin1(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 	throws ASelectException
 	{
 		String sMethod = "handleLogin1";
@@ -1017,7 +1020,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 								Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102 can update the session
 								pwOut.println(sSelectForm);
 								pwOut.close();
-								return;
+								return 0;
 							}
 
 							// redirect to application as user has already a valid tgt
@@ -1087,7 +1090,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 								String sLang = (String)_htTGTContext.get("language");
 								oTGTIssuer.sendTgtRedirect(sRedirectUrl, sTgt, sRid, servletResponse, sLang);
 							}
-							return;
+							return 0;
 						}
 						// bad TGT or forced_authenticate
 					}
@@ -1095,7 +1098,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 					if (!handleUserConsent(htServiceRequest, servletResponse, pwOut, sRid)) {
 						_systemLogger.log(Level.INFO, _sModule, sMethod, "No user consent");
-						return; // No consent, Quit
+						return 0; // No consent, Quit
 					}
 
 					// Authenicate with same user-id that was stored in the TGT
@@ -1112,20 +1115,23 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added
 						_systemLogger.log(Level.INFO, _sModule, sMethod, "To CROSS MyOrg="+_sMyOrg+" != org="+sTempOrg);
 						handleCrossLogin(htServiceRequest, servletResponse, pwOut);
-						return;
+						return 0;
 					}
 					// User was originally authenticated at this A-Select Server
 					// The userid is already known from the TGT
 					htServiceRequest.put("user_id", sUid);
 					rc = handleLogin2(htServiceRequest, servletResponse, pwOut);
-					return;
+					_systemLogger.log(Level.FINEST, _sModule, sMethod, "Return for retry, rc=" + rc);
+					_tgtManager.remove(sTgt);	// remove tgt, retry login
+//					return;	// RH, 20140328, o
+					return rc;	// RH, 20140328, n
 				}
 			}
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "No TGT or removed (other uid) tgt_read="+(_htTGTContext!=null));
 			boolean bSuccess = handleUserConsent(htServiceRequest, servletResponse, pwOut, sRid);
 			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added
 			if (!bSuccess)
-				return; // Quit
+				return 0; // Quit
 
 			// 20090120, Bauke store Client IP and User Agent in the Session
 			// Note the current session is available through _htSessionContext
@@ -1139,7 +1145,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "UDBEnabled="+_configManager.isUDBEnabled()+
 						" forced_organzation="+_htSessionContext.containsKey("forced_organization")+": To Cross 2");
 				handleCrossLogin(htServiceRequest, servletResponse, pwOut);
-				return;
+				return 0;
 			}
 			String sForcedUid = (String) _htSessionContext.get("forced_uid");
 			String sForcedAuthsp = (String) _htSessionContext.get("forced_authsp");
@@ -1156,7 +1162,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					htServiceRequest.put("forced_authsp", sForcedAuthsp);
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "Forced uid:"+sForcedUid+" OR forced authsp:"+sForcedAuthsp+", to login2");
 				handleLogin2(htServiceRequest, servletResponse, pwOut);
-				return;
+//				int rc = handleLogin2(htServiceRequest, servletResponse, pwOut);
+				int rc = 0;
+				_systemLogger.log(Level.FINEST, _sModule, sMethod, "Return, rc=" + rc);
+//				return rc;
+				return 0;
 			}
 
 			// Show login (user_id) form
@@ -1200,6 +1210,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Internal error.", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
+		return 0;
 	}
 
 	/**
