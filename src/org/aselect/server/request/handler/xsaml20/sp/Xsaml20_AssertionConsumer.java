@@ -663,7 +663,8 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 						}
 					}	// RH, 20130923, n
 					
-					if ( isCarryAuthProof() ) { // Put the original authentication proof in hmSamlAttributes
+					if ( isCarryAuthProof() ) { // Put the original authentication proof in hmSamlAttributes before serialization in attributes
+															// so they will be available for gatherer
 						hmSamlAttributes.put("auth_proof", auth_proof); // original response, still base64 encoded
 //						_systemLogger.log(Level.FINEST, MODULE, sMethod, "auth_proof=" + auth_proof);
 					}
@@ -671,6 +672,11 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					sEncodedAttributes = org.aselect.server.utils.Utils.serializeAttributes(hmSamlAttributes);
 					hmSamlAttributes.put("attributes", sEncodedAttributes);
 					
+					if ( !isCarryAuthProof() && isLogAuthProof() ) { // Put the original authentication proof in hmSamlAttributes only temporarily to be removed later
+													// if isCarryAuthProof() true they were already there
+						hmSamlAttributes.put("auth_proof", auth_proof); // original response, still base64 encoded
+//						_systemLogger.log(Level.FINEST, MODULE, sMethod, "auth_proof=" + auth_proof);
+					}
 					// This is the quickest way to get "name_id" into the Context
 					hmSamlAttributes.put("name_id", sNameID);  // also as plain attribute
 					
@@ -877,6 +883,14 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					ASelectAuthProofLogger.getHandle().log( sUID, (String) htRemoteAttributes.get("client_ip"), (String)htSessionContext.get("app_id"), (String)null, (String)htRemoteAttributes.get("auth_proof") );
 //					_systemLogger.log(Level.FINEST, MODULE, sMethod, "auth_proof logged after successful authentication=" + 
 //							htRemoteAttributes.get("auth_proof"));
+					if ( !isCarryAuthProof() ) {	// We do not want to carry the auth_proof any  further
+						Object removed_auth_proof = htRemoteAttributes.remove("auth_proof");
+						if ( removed_auth_proof != null ) {
+							_systemLogger.log(Level.FINEST, MODULE, sMethod, "Successfully removed auth_proof from htRemoteAttributes" );
+						} else {
+							_systemLogger.log(Level.FINEST, MODULE, sMethod, "Could not remove auth_proof from htRemoteAttributes" );
+						}
+					}
 				}
 				
 				HandlerTools.setRequestorFriendlyCookie(servletResponse, htSessionContext, _systemLogger);  // 20130825
