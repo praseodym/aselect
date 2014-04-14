@@ -723,7 +723,7 @@ public class SamlTools
 		SAMLObjectBuilder<NameID> nameIdBuilder = (SAMLObjectBuilder<NameID>) builderFactory
 				.getBuilder(NameID.DEFAULT_ELEMENT_NAME);
 		NameID nameId = nameIdBuilder.buildObject();
-		nameId.setFormat(NameIDType.TRANSIENT);
+//		nameId.setFormat(NameIDType.TRANSIENT);	// Rh, 20140331, o 	// saml specs say, MUST  be omitted or "entity"
 		nameId.setValue(sNameID);
 		logoutRequest.setNameID(nameId);
 
