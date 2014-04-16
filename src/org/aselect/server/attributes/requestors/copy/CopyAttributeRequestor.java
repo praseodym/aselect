@@ -159,12 +159,12 @@ public class CopyAttributeRequestor extends GenericAttributeRequestor
 					continue;
 				_systemLogger.log(Level.FINER, MODULE, sMethod, "sSrc="+sSrc+",isTgt="+setter.isSrcTgt()+" sDest="+sDest+",isTgt="+setter.isDestTgt());
 				
-				// Take from source
-				if (setter.isSrcTgt())
-					sValue = (String)htTGTContext.get(sSrc);
-				else
-					sValue = (String)hmAttributes.get(sSrc);
-				_systemLogger.log(Level.FINER, MODULE, sMethod, "sValue="+sValue);
+				// Take from source, multi valued (Vector) attributes will be converted to a string
+				Object oValue = (setter.isSrcTgt())? htTGTContext.get(sSrc): hmAttributes.get(sSrc);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "oValue="+oValue);
+				if (oValue == null)
+					continue;
+				sValue = oValue.toString();
 				if (!Utils.hasValue(sValue))
 					continue;
 				
