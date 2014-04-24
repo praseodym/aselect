@@ -199,7 +199,7 @@ public class AuthSPHandlerManager
 				AuthSPHandler oAuthSPHandler = new AuthSPHandler(sAuthSPId, sHandler, sResourceGroup, sType,
 						sFriendlyName, intLevel, bPopup.booleanValue());
 				oAuthSPHandler.setDirectAuthSP(bDirectAuthSP);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "AutSP "+sAuthSPId+" added type="+sType+" friendly="+sFriendlyName);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "AuthSP "+sAuthSPId+" added type="+sType+" friendly="+sFriendlyName);
 				_htAuthSPHandlers.put(sAuthSPId, oAuthSPHandler);
 				oAuthSPHandlerConfig = _oASelectConfigManager.getNextSection(oAuthSPHandlerConfig);
 			}

@@ -136,7 +136,7 @@ public class AuthSPConfigManager extends ConfigManager
 			String sVersion)
 	throws ASelectException
 	{
-		String sMethod = "loadHTMLTemplate()";
+		String sMethod = "loadHTMLTemplate";
 		String sLine = null;
 		StringBuffer sbTemplate = new StringBuffer();
 		String sTemplate = "";

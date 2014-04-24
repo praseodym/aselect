@@ -615,8 +615,8 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 							if (hAttrResponse != null) {
 								Vector<Object> vMultiValues = new Vector<Object>();
 								for (int iCount = 0; iCount < oAttribute.size(); iCount++) {
-									Object oValue = oAttribute.get(iCount);
-									_systemLogger.log(Level.FINEST, MODULE, sMethod, sAttributeName+" multi" + iCount + "=" + oValue);
+									//Object oValue = oAttribute.get(iCount);
+									//_systemLogger.log(Level.FINEST, MODULE, sMethod, sAttributeName+" multi" + iCount + "=" + oValue);
 									vMultiValues.add(oAttribute.get(iCount));
 								}
 								hAttrResponse.put(sAttributeName, vMultiValues);

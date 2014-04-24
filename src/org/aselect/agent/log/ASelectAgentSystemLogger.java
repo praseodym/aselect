@@ -88,16 +88,6 @@ public class ASelectAgentSystemLogger extends SystemLogger
 	 * <li>Reads the 'target' config section</li> <li>Calls the init of the <i>_oASelectAuthenticationLogger</i></li>
 	 * <li>Reads the 'target' config section</li> <br>
 	 * <br>
-	 * <b>Concurrency issues:</b> <br>
-	 * - <br>
-	 * <br>
-	 * <b>Preconditions:</b> <br>
-	 * <li>The <i>ASelectSystemLogger</i> must be initialized.</li> <li>The <i>ASelectConfigManager</i> must be
-	 * initialized.</li> <li>The <i>oSysLogging</i> may not be <code>NULL</code>.</li> <li>The <i>sWorkingDir</i> may
-	 * not be <code>NULL</code>.</li> <br>
-	 * <br>
-	 * <b>Postconditions:</b> <br>
-	 * An initialized <i>_oASelectAuthenticationLogger</i>. <br>
 	 * 
 	 * @param oSysLogging
 	 *            The logger config section with id='system'

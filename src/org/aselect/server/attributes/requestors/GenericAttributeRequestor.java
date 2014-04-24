@@ -42,6 +42,7 @@ import org.aselect.server.attributes.AttributeGatherer;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.sam.ASelectSAMAgent;
+import org.aselect.system.configmanager.ConfigManager;
 import org.aselect.system.exception.ASelectAttributesException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;

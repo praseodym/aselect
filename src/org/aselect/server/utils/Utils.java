@@ -17,12 +17,9 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
-import java.util.Map.Entry;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
@@ -252,6 +249,4 @@ public class Utils
 		}
 		return htAttributes;
 	}
-	
-
 }

@@ -29,6 +29,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.logging.Level;
 
 import org.aselect.server.authspprotocol.IAuthSPProtocolHandler;
@@ -37,10 +38,13 @@ import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectAuthenticationLogger;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.session.SessionManager;
+import org.aselect.server.utils.AttributeSetter;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAuthSPException;
 import org.aselect.system.exception.ASelectConfigException;
+import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.BASE64Decoder;
+import org.aselect.system.utils.Utils;
 
 /**
  * The PKI AuthSP Handler. <br>
@@ -154,7 +158,10 @@ public class PKI implements IAuthSPProtocolHandler
 	private String _sTwoFactorAuthSp;
 	private String _sTwoFactorAuthSpUrl;
 	private String _sTwoFactorAuthSpRetries;
-	
+
+	// 20140417, Bauke: User id manipulation
+	private LinkedList<AttributeSetter> attributeSetters = new LinkedList<AttributeSetter>();
+
 	/* (non-Javadoc)
 	 * @see org.aselect.server.authspprotocol.IAuthSPProtocolHandler#myRidName()
 	 */
@@ -229,6 +236,10 @@ public class PKI implements IAuthSPProtocolHandler
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
 						"No valid two factor configuration found; two factor authentication disabled.");
 			}
+
+			// 20140417, Bauke: User id manipulation
+			AttributeSetter.initAttributesConfig(_oConfigManager, oAuthSpConfig, attributeSetters, _systemLogger);			
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "size="+attributeSetters.size());
 		}
 		catch (ASelectAuthSPException eAA) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize", eAA);
@@ -365,8 +376,8 @@ public class PKI implements IAuthSPProtocolHandler
 		StringBuffer sbTemp;
 		_systemLogger.log(Level.INFO, sMethod + " htAuthspResponse=" + htAuthspResponse);
 
-		HashMap htResponse = new HashMap();
-		htResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
+		HashMap hmResponse = new HashMap();
+		hmResponse.put("result", Errors.ERROR_ASELECT_SUCCESS);
 		try {
 			String sRid = (String) htAuthspResponse.get("rid");
 			String sAsUrl = (String) htAuthspResponse.get("my_url");
@@ -381,8 +392,8 @@ public class PKI implements IAuthSPProtocolHandler
 				sbTemp = new StringBuffer(sMethod);
 				sbTemp.append("incorrect AuthSP response");
 				_systemLogger.log(Level.WARNING, sbTemp.toString());
-				htResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
-				return htResponse;
+				hmResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
+				return hmResponse;
 			}
 			sbTemp = new StringBuffer(sAsUrl);
 			sbTemp.append("?authsp=");
@@ -415,8 +426,8 @@ public class PKI implements IAuthSPProtocolHandler
 				sbTemp.append("invalid signature in response from AuthSP:" + _sAuthsp);
 				_systemLogger.log(Level.INFO, sbTemp.toString());
 
-				htResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
-				return htResponse;
+				hmResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
+				return hmResponse;
 			}
 
 			BASE64Decoder base64Decoder = new BASE64Decoder();
@@ -441,19 +452,30 @@ public class PKI implements IAuthSPProtocolHandler
 					"granted"
 				});
 
-				htResponse.put("rid", sRid);
+				HashMap hmAttrs = new HashMap();
+				hmResponse.put("rid", sRid);
 				// Bauke: transfer additional attributes to caller
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "to Response: sSubjectId=" + sSubjectId);
-				if (sSubjectDN != null)
-					htResponse.put("pki_subject_dn", sSubjectDN); // Bauke: added
-				if (sIssuerDN != null)
-					htResponse.put("pki_issuer_dn", sIssuerDN); // Bauke: added
-				if (sSubjectId != null) {
-					htResponse.put("pki_subject_id", sSubjectId); // Bauke: added
-					htResponse.put("uid", sSubjectId);  // 20120615, Bauke: set default value for uid
+				hmResponse.put("authsp_type", "pki");				
+				if (sSubjectDN != null) {
+					hmResponse.put("pki_subject_dn", sSubjectDN); // Bauke: added
+					hmAttrs.put("pki_subject_dn", sSubjectDN);
 				}
-				htResponse.put("authsp_type", "pki");				
-				return htResponse;
+				if (sIssuerDN != null) {
+					hmResponse.put("pki_issuer_dn", sIssuerDN); // Bauke: added
+					hmAttrs.put("pki_issuer_dn", sIssuerDN);
+				}
+				if (sSubjectId != null) {
+					hmResponse.put("pki_subject_id", sSubjectId); // Bauke: added
+					hmAttrs.put("pki_subject_id", sSubjectId); // Bauke: added
+					hmResponse.put("uid", sSubjectId);  // 20120615, Bauke: set default value for uid
+				}
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "hmAttrs="+hmAttrs);
+				HashMap hmWork = new HashMap();
+				HashMap hmNewAttrs = AttributeSetter.attributeProcessing(hmWork/*is empty*/, hmAttrs, attributeSetters, _systemLogger);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "hmNewAttrs="+hmNewAttrs);
+				hmResponse.putAll(hmNewAttrs);
+				return hmResponse;
 			}
 			_authenticationLogger.log(new Object[] {
 				MODULE, sUserId, htAuthspResponse.get("client_ip"), sOrg, (String) htSessionContext.get("app_id"),
@@ -462,15 +484,15 @@ public class PKI implements IAuthSPProtocolHandler
 			if (sResultCode.equalsIgnoreCase(PKI_INVALID_REQUEST)) {
 				sbTemp = new StringBuffer(sMethod);
 				sbTemp.append("error from from AuthSP: ").append(sResultCode);
-				htResponse.put("result", Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+				hmResponse.put("result", Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
 			else if (sResultCode.equalsIgnoreCase(PKI_INTERNAL_SERVER_ERROR)) {
 				sbTemp = new StringBuffer(sMethod);
 				sbTemp.append("error from from AuthSP: ").append(sResultCode);
-				htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
+				hmResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
 			}
 			else {
-				htResponse.put("result", PKI_ERROR_PREFIX + sResultCode);
+				hmResponse.put("result", PKI_ERROR_PREFIX + sResultCode);
 				sbTemp = new StringBuffer(sMethod);
 				sbTemp.append("error from from AuthSP: ").append(sResultCode);
 			}
@@ -480,8 +502,8 @@ public class PKI implements IAuthSPProtocolHandler
 			sbTemp = new StringBuffer(sMethod);
 			sbTemp.append(e.getMessage());
 			_systemLogger.log(Level.INFO, sbTemp.toString());
-			htResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
+			hmResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_COULD_NOT_AUTHENTICATE_USER);
 		}
-		return htResponse;
+		return hmResponse;
 	}
 }

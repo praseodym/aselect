@@ -220,7 +220,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	public void init(ServletConfig oConfig)
 	throws ServletException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		StringBuffer sbTemp = null;
 		try {
 			// super init
@@ -368,7 +368,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	protected void doGet(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws java.io.IOException
 	{
-		String sMethod = "doGet()";
+		String sMethod = "doGet";
 		PrintWriter pwOut = null;
 		String sLanguage = null;
 		String failureHandling = _sFailureHandling;	// Initially we use default from config, this might change if we suspect parameter tampering
@@ -487,7 +487,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws java.io.IOException
 	{
-		String sMethod = "doPost()";
+		String sMethod = "doPost";
 		PrintWriter pwOut = null;
 		String sLanguage = null;
 		String failureHandling = _sFailureHandling;	// Initially we use default from config, this might change if we suspect parameter tampering
@@ -783,7 +783,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	private void handleApiRequest(HashMap htServiceRequest, HttpServletRequest servletRequest, PrintWriter pwOut,
 			HttpServletResponse servletResponse)
 	{
-		String sMethod = "handleApiRequest()";
+		String sMethod = "handleApiRequest";
 		String sRid = (String) htServiceRequest.get("rid");
 		HashMap htSessionContext = null;
 		// create response HashTable
@@ -869,7 +869,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	private void handleAuthenticate(HashMap htServiceRequest, HttpServletRequest servletRequest)
 	throws ASelectException
 	{
-		String sMethod = "handleAuthenticate()";
+		String sMethod = "handleAuthenticate";
 
 		String sUid = (String) htServiceRequest.get("user");
 		String sPassword = (String) htServiceRequest.get("password");

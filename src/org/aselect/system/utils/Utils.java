@@ -64,7 +64,6 @@ import java.net.URLEncoder;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -74,7 +73,6 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Level;
 
-//import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.communication.server.IInputMessage;
 import org.aselect.system.configmanager.ConfigManager;
@@ -1119,8 +1117,6 @@ public class Utils
 	 * @return Serialized representation of the attributes
 	 * @throws ASelectException - If serialization fails.
 	 */
-	
-	
 	public static String serializeAttributes(Map htAttributes)
 	throws ASelectException
 	{
@@ -1230,7 +1226,4 @@ public class Utils
 		}
 		return htAttributes;
 	}
-	
-	
-	
 }
