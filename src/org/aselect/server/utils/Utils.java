@@ -99,6 +99,59 @@ public class Utils
 	}
 
 	/**
+	 * Present organization choice to the user.
+	 * 
+	 * @param configManager
+	 *            the config manager
+	 * @param htSessionContext
+	 *            the session context
+	 * @param sRid
+	 *            the rid
+	 * @param sLanguage
+	 *            the language
+	 * @param hUserOrganizations
+	 *            the list of user organizations
+	 * @return the string
+	 * @throws ASelectConfigException
+	 * @throws ASelectException
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 */
+	public static String presentOnBehalfOf(HttpServletRequest servletRequest, ASelectConfigManager configManager, HashMap htSessionContext,
+			String sRid, String sLanguage, int step)
+	throws ASelectConfigException, ASelectException, IOException
+	{
+		String sUserId = (String)htSessionContext.get("user_id");
+		String sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true);
+		String sServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
+		String sSelectForm = configManager.loadHTMLTemplate(null, "onbehalfof_step"+String.valueOf(step), sLanguage, sLanguage);	// maybe get this from application config
+		String sRequest = "obo_choice";	// can we keep old request?
+		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[request]", sRequest);
+		if (sUserId != null) sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[user_id]", sUserId);
+		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[rid]", sRid);
+		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[a-select-server]", sServerId);
+		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[aselect_url]", sServerUrl + "/obo_choice");
+		
+		StringBuffer sb = new StringBuffer();
+		/*	// unfortunately we have no list of "machtigingen"
+		Set<String> keySet = hUserOrganizations.keySet();
+		Iterator<String> it = keySet.iterator();
+		while(it.hasNext()) {
+			String sOrgId = it.next();
+			String sOrgName = hUserOrganizations.get(sOrgId);
+//			sb.append("<option value=").append(sOrgId).append(">").append(sOrgName);
+			sb.append("<option value=").append(sOrgId).append(">").append(StringEscapeUtils.escapeHtml(sOrgName));
+			sb.append("</option>");
+		}
+		*/
+		String sOBO = servletRequest.getParameter("obo_id");	// get this from user or ...
+		sb.append(sOBO == null ? "" : sOBO);
+		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[onbehalfof]", StringEscapeUtils.escapeHtml(sb.toString()));
+		sSelectForm = configManager.updateTemplate(sSelectForm, htSessionContext, servletRequest);
+		return sSelectForm;
+	}
+
+	/**
 	 * Decode the credentials passed.
 	 * 
 	 * @param credentials
