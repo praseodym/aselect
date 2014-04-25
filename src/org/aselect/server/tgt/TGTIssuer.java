@@ -139,7 +139,6 @@ package org.aselect.server.tgt;
 
 import java.io.PrintWriter;
 import java.net.URLEncoder;
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Vector;
@@ -148,6 +147,7 @@ import java.util.logging.Level;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.attributes.AttributeGatherer;
 import org.aselect.server.authspprotocol.IAuthSPConditions;
 import org.aselect.server.authspprotocol.handler.AuthSPHandlerManager;
@@ -720,6 +720,26 @@ throws ASelectException
 				_tgtManager.updateTGT(sOldTGT, htTGTContext);
 				sTgt = sOldTGT;
 			}
+
+			// handle On Behalf Of if applicable
+			if ( ApplicationManager.getHandle().getApplication(sAppId).isOBOEnabled() ) {
+				// RH, 20140204,  Present On Behalf Of selection to the user
+				// The user must present obo
+				String sSelectForm = org.aselect.server.utils.Utils.presentOnBehalfOf(servletRequest, _configManager,
+						htSessionContext, sRid, (String)htTGTContext.get("language"), 0 /*step 0, do obo or not */);
+				servletResponse.setContentType("text/html");
+				
+				Tools.pauseSensorData(_configManager, _systemLogger, htSessionContext);
+				//_sessionManager.updateSession(sRid, htSessionContext); // Write session
+				// done by pauseSensorData(): _sessionManager.setUpdateSession(htSessionContext, _systemLogger);  // 20120403, Bauke: was updateSession()
+				PrintWriter pwOut = servletResponse.getWriter();
+				pwOut.println(sSelectForm);
+				pwOut.close();
+				IAuthSPConditions authspconditions = getiAuthSPConditions();
+				if (authspconditions != null)
+					authspconditions.setOutputAvailable(false);	// We cannot communicate with the user after closing stream
+				return sTgt;
+			}
 			
 			// 20100210, Bauke: Present the Organization selection to the user
 			// Leaves the Rid session in place, needed for the application url
@@ -740,6 +760,8 @@ throws ASelectException
 					authspconditions.setOutputAvailable(false);	// We cannot communicate with the user after closing stream
 				return sTgt;
 			}
+			
+			
 			
 			if (redirectToo) {
 				// No organization selection, the tgt was just issued, report sensor data
