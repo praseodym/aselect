@@ -754,6 +754,62 @@ int XXXaselect_filter_verify_directory(pool *pPool, PASELECT_FILTER_CONFIG pConf
     return ASELECT_FILTER_ERROR_FAILED;
 }
 
+// Find the longest regular expression match in a string.
+// NOTE: there can be multiple matches.
+int longest_re_match(char *pcRegexp, char *pcString)
+{
+	ap_regex_t regex;
+	ap_regmatch_t regpm;
+	int retval, offset, i, longest = 0;
+	char msgbuf[200];
+
+	// Find all substrings in a string that match the pattern.
+	// Compile regular expression.
+	retval = ap_regcomp(&regex, pcRegexp, 0);
+	if (retval) {
+		TRACE1("longest_re_match:: Could not compile regex:%s", pcRegexp);
+		return -2;
+	}
+	/* This call to regexec() finds the first match on the line. */
+	retval = ap_regexec(&regex, pcString, 1, &regpm, 0);
+	if (retval != 0 && retval != AP_REG_NOMATCH) {
+		ap_regerror(retval, &regex, msgbuf, sizeof(msgbuf));
+		TRACE1("longest_re_match:: Regex match failed: %s", msgbuf);
+		return -2;
+	}
+	for (i=0, offset=0; i<20 && retval==0; i++) {  /* While matches found. */
+		/* Substring found between regpm.rm_so and regpm.rm_eo. */
+		TRACE5("longest_re_match:: Match: >%.*s<, %d:%d-%d", regpm.rm_eo-regpm.rm_so,
+						pcString+offset+regpm.rm_so, offset, regpm.rm_so, regpm.rm_eo);
+		if (regpm.rm_eo-regpm.rm_so > longest)
+			longest = regpm.rm_eo-regpm.rm_so;
+		offset += regpm.rm_eo;
+		if (regpm.rm_eo == 0)  // we need to make progress
+			offset++;
+		if (offset >= strlen(pcString))  // nothing left
+			break;
+		/* This call to regexec() finds the next match. */
+		retval = ap_regexec(&regex, pcString+offset, 1, &regpm, 0); //AP_REG_NOTBOL);
+		if (retval != 0 && retval != AP_REG_NOMATCH) {
+			ap_regerror(retval, &regex, msgbuf, sizeof(msgbuf));
+			TRACE1("longest_re_match:: Regex match failed: %s", msgbuf);
+			return -2;
+		}
+	}
+	ap_regfree(&regex);
+	return longest;
+}
+
+// Just perform a simple length compare
+int longest_cmp_match(char *pcRegexp, char *pcString)
+{
+	int len = strlen(pcRegexp);
+	if (len > 0 && len <= strlen(pcString) && strncmp(pcString, pcRegexp, len) == 0) {  // a match
+		return len;
+	}
+	return -1;
+}
+
 /*
  * The cockpit wil use the first 'aselect_filter_add_secure_app' line as default for "protected" apps
     aselect_filter_add_secure_app "/" "app1" "uid=siam_user,language=NL,country=NL"
@@ -775,8 +831,14 @@ int aselect_filter_check_app_uri(pool *pPool, PASELECT_FILTER_CONFIG pConfig, ch
     for (i = 0; i < pConfig->iAppCount; i++) {
         TRACE4("aselect_filter_check_app_uri::comparing directory(%d):\"%s\" to URI: \"%s\", enabled=%d", 
 					i, pConfig->pApplications[i].pcLocation, pcUri, pConfig->pApplications[i].bEnabled);
-		len = strlen(pConfig->pApplications[i].pcLocation);
-        if (len > 0 && len <= uriLen && strncmp(pcUri, pConfig->pApplications[i].pcLocation, len) == 0) {  // a match
+		if (pConfig->bUseRegexp == TRUE)
+			len = longest_re_match(pConfig->pApplications[i].pcLocation, pcUri);
+		else
+			len = longest_cmp_match(pConfig->pApplications[i].pcLocation, pcUri);
+		TRACE1("aselect_filter_check_app_uri:: secure match_len=%d", len); 
+		//len = strlen(pConfig->pApplications[i].pcLocation);
+        //if (len > 0 && len <= uriLen && strncmp(pcUri, pConfig->pApplications[i].pcLocation, len) == 0) {  // a match
+		if (len > 0) {
             if (pConfig->pApplications[i].bEnabled) {  // skip disabled apps
 				if (len > lenBestSec) {
 					TRACE2("aselect_filter_check_app_uri::better match secure[%d] len=%d", i, len); 
@@ -789,15 +851,21 @@ int aselect_filter_check_app_uri(pool *pPool, PASELECT_FILTER_CONFIG pConfig, ch
     }
     for (i = 0; i < pConfig->iPublicAppCount; i++) {
         TRACE3("aselect_filter_check_app_uri::comparing directory[%d]:\"%s\" to URI: \"%s\"", i, pConfig->pPublicApps[i], pcUri);
-		len = strlen(pConfig->pPublicApps[i]);
-		if (len > 0 && len <= uriLen && strncmp(pcUri, pConfig->pPublicApps[i], len) == 0) {  // a match
-			if (strncmp(pcUri, pConfig->pPublicApps[i], len) == 0) {
+		if (pConfig->bUseRegexp == TRUE)
+			len = longest_re_match(pConfig->pPublicApps[i], pcUri);
+		else
+			len = longest_cmp_match(pConfig->pPublicApps[i], pcUri);
+		TRACE1("aselect_filter_check_app_uri:: public match_len=%d", len); 
+		//len = strlen(pConfig->pPublicApps[i]);
+		//if (len > 0 && len <= uriLen && strncmp(pcUri, pConfig->pPublicApps[i], len) == 0) {  // a match
+		if (len > 0) {
+			//if (strncmp(pcUri, pConfig->pPublicApps[i], len) == 0) {
 				if (len > lenBestPub) {
 					TRACE2("aselect_filter_check_app_uri::better match public[%d] len=%d", i, len); 
 					iBestPub = i;
 					lenBestPub = len;
 				}
-			}
+			//}
 		}
     }
     TRACE4("aselect_filter_check_app_uri::Secure: index=%d len=%d Public: index=%d len=%d", iBestSec, lenBestSec, iBestPub, lenBestPub);

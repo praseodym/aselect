@@ -39,6 +39,7 @@
 #include "apr_strings.h"
 #include "apr_compat.h"
 #include "apr_sha1.h"
+#include "ap_regex.h"
 
 // 20130629, Bauke added the following lines
 #include <ctype.h>   // tolower(), ...
@@ -244,6 +245,7 @@ typedef struct _ASELECT_FILTER_CONFIG
     int     bConfigError;
  // Bauke: added lines
     int     bSecureUrl;
+    int     bUseRegexp;
     char    pcPassAttributes[20];  // can contain a combination of 'c', 'q', 'h' (cookie, query string, header)
     char    *pAttrFilter[ASELECT_FILTER_MAX_ATTR];
     int     iAttrCount;

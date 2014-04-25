@@ -76,7 +76,7 @@ module AP_MODULE_DECLARE_DATA aselect_filter_module;
 //static handler_rec      aselect_filter_handlers[];
 static const command_rec    aselect_filter_cmds[];
 
-char *version_number = "====subversion_314====";
+char *version_number = "====subversion_325====";
 
 // -----------------------------------------------------
 // Functions 
@@ -89,26 +89,27 @@ char *aselect_filter_kill_ticket(request_rec *pRequest, pool *pPool, PASELECT_FI
 char *aselect_filter_auth_user(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcAppUrl, TIMER_DATA *pt);
 char *aselect_filter_verify_credentials(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcRID,
 					char *pcCredentials, char *applicationArguments, TIMER_DATA *pt);
-static int      aselect_filter_handler(request_rec *pRequest );
-//static void *   aselect_filter_create_config(pool *pPool, server_rec *pServer );
-static int      aselect_filter_verify_config(request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig );
-static const char * aselect_filter_set_agent_address(cmd_parms *parms, void *mconfig, const char *arg );
-static const char * aselect_filter_set_agent_port(cmd_parms *parms, void *mconfig, const char *arg );
+static int      aselect_filter_handler(request_rec *pRequest);
+//static void *   aselect_filter_create_config(pool *pPool, server_rec *pServer);
+static int      aselect_filter_verify_config(request_rec *pRequest, PASELECT_FILTER_CONFIG pConfig);
+static const char * aselect_filter_set_agent_address(cmd_parms *parms, void *mconfig, const char *arg);
+static const char * aselect_filter_set_agent_port(cmd_parms *parms, void *mconfig, const char *arg);
 static const char * aselect_filter_add_secure_app(cmd_parms *parms, void *mconfig, const char *arg1, const char *arg2, const char *arg3);
 static const char * aselect_filter_add_authz_rule(cmd_parms *parms, void *mconfig, const char *arg1, const char *arg2, const char *arg3);
-static const char * aselect_filter_set_html_error_template(cmd_parms *parms, void *mconfig, const char *arg );
-static const char * aselect_filter_set_html_logout_template(cmd_parms *parms, void *mconfig, const char *arg );
-static const char * aselect_filter_set_redirection_mode(cmd_parms *parms, void *mconfig, const char *arg );
-static const char * aselect_filter_set_use_aselect_bar(cmd_parms *parms, void *mconfig, const char *arg );
-static const char *aselect_filter_secure_url(cmd_parms *parms, void *mconfig, const char *arg );
-static const char *aselect_filter_pass_attributes(cmd_parms *parms, void *mconfig, const char *arg );
-static const char *aselect_filter_add_attribute(cmd_parms *parms, void *mconfig, const char *arg );
+static const char * aselect_filter_set_html_error_template(cmd_parms *parms, void *mconfig, const char *arg);
+static const char * aselect_filter_set_html_logout_template(cmd_parms *parms, void *mconfig, const char *arg);
+static const char * aselect_filter_set_redirection_mode(cmd_parms *parms, void *mconfig, const char *arg);
+static const char * aselect_filter_set_use_aselect_bar(cmd_parms *parms, void *mconfig, const char *arg);
+static const char *aselect_filter_secure_url(cmd_parms *parms, void *mconfig, const char *arg);
+static const char *aselect_filter_pass_attributes(cmd_parms *parms, void *mconfig, const char *arg);
+static const char *aselect_filter_add_attribute(cmd_parms *parms, void *mconfig, const char *arg);
 static const char *aselect_filter_add_public_app(cmd_parms *parms, void *mconfig, const char *arg);
-static const char *aselect_filter_set_logfile(cmd_parms *parms, void *mconfig, const char *arg );
-static const char *aselect_filter_added_security(cmd_parms *parms, void *mconfig, const char *arg );
-static const char *aselect_filter_set_sensor_address(cmd_parms *parms, void *mconfig, const char *arg );
-static const char *aselect_filter_set_sensor_port(cmd_parms *parms, void *mconfig, const char *arg );
-static const char *aselect_filter_special_settings(cmd_parms *parms, void *mconfig, const char *arg );
+static const char *aselect_filter_set_logfile(cmd_parms *parms, void *mconfig, const char *arg);
+static const char *aselect_filter_added_security(cmd_parms *parms, void *mconfig, const char *arg);
+static const char *aselect_filter_set_sensor_address(cmd_parms *parms, void *mconfig, const char *arg);
+static const char *aselect_filter_set_sensor_port(cmd_parms *parms, void *mconfig, const char *arg);
+static const char *aselect_filter_special_settings(cmd_parms *parms, void *mconfig, const char *arg);
+static const char *aselect_filter_add_app_regexp(cmd_parms *parms, void *mconfig, const char *arg);
 
 static char * aselect_filter_attributes(request_rec *pRequest, pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcTicket, TIMER_DATA *pt);
 static int aselect_filter_passAttributesInUrl(int iError, char *pcAttributes, char *usiAttr, pool *pPool, request_rec *pRequest,
@@ -152,7 +153,7 @@ int aselect_filter_init(apr_pool_t *pconf, apr_pool_t *plog, apr_pool_t *pPool, 
 
 		if (pConfig->iRedirectMode == ASELECT_FILTER_REDIRECT_TO_APP)
 			ap_log_error( APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, 0, pServer,
-				"ASELECT_FILTER:: configured to redirect to application entry point" );
+				"ASELECT_FILTER:: configured to redirect to application entry point");
 		else if (pConfig->iRedirectMode == ASELECT_FILTER_REDIRECT_FULL)
 			ap_log_error(APLOG_MARK, APLOG_NOERRNO|APLOG_NOTICE, 0, pServer,
 				"ASELECT_FILTER:: configured to redirect to user entry point");
@@ -1921,6 +1922,29 @@ static const char *aselect_filter_add_authz_rule(cmd_parms *parms, void *mconfig
     return NULL;
 }
 
+// 20140422, Bauke added
+// Boolean to use regular expressions in the add_public_app and add_secure_app handling
+//
+static const char *aselect_filter_add_app_regexp(cmd_parms *parms, void *mconfig, const char *arg)
+{
+    PASELECT_FILTER_CONFIG pConfig = (PASELECT_FILTER_CONFIG)ap_get_module_config(parms->server->module_config, &aselect_filter_module);
+    char *p;
+
+    if (!pConfig)
+		return "A-Select ERROR: Internal error when setting add_app_regexp";
+
+	p = ap_pstrdup(parms->pool, arg);
+	if (!p)
+		return "A-Select ERROR: Internal error when setting add_app_regexp";
+
+	TRACE1("aselect_filter_add_app_regexp:: %s", p);
+	pConfig->bUseRegexp = TRUE;  // the default
+	if (strcmp(p, "0") == 0) {
+		pConfig->bUseRegexp = FALSE;
+	}
+    return NULL;
+}
+
 static const char *aselect_filter_add_secure_app(cmd_parms *parms, void *mconfig, const char *arg1, const char *arg2, const char *arg3)
 {
     static char *_empty = "";
@@ -2385,7 +2409,7 @@ static const command_rec aselect_filter_cmds[] =
         "Usage: aselect_filter_pass_attributes < c | q | h >, example: aselect_filter_pass_attributes \"ch\"" ),
 
     AP_INIT_TAKE1("aselect_filter_add_attribute", aselect_filter_add_attribute, NULL, RSRC_CONF,
-        "Usage: aselect_filter_add_attribute < 0 | 1 >, example: aselect_filter_add_attribute \"0\""),
+        "Usage: aselect_filter_add_attribute <vaule>, example: aselect_filter_add_attribute \"0\""),
 
     AP_INIT_TAKE1("aselect_filter_add_public_app", aselect_filter_add_public_app, NULL, RSRC_CONF,
         "Usage: aselect_filter_add_public_app < app_url >, example: aselect_filter_add_public_app \"/website\""),
@@ -2404,6 +2428,9 @@ static const command_rec aselect_filter_cmds[] =
 
     AP_INIT_TAKE1("aselect_filter_special_settings", aselect_filter_special_settings, NULL, RSRC_CONF,
         "Usage aselect_filter_special_settings <value>"),
+
+    AP_INIT_TAKE1("aselect_filter_add_app_regexp", aselect_filter_add_app_regexp, NULL, RSRC_CONF,
+        "Usage aselect_filter_add_app_regexp < 0 | 1 >"),
 
     { NULL }
 };
