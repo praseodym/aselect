@@ -302,6 +302,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.aselect.server.application.Application;
 import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.attributes.AttributeGatherer;
+import org.aselect.server.authspprotocol.IAuthSPConditions;
 import org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler;
 import org.aselect.server.authspprotocol.IAuthSPProtocolHandler;
 import org.aselect.server.authspprotocol.handler.AuthSPHandlerManager;
@@ -310,6 +311,7 @@ import org.aselect.server.config.Version;
 import org.aselect.server.cross.CrossASelectManager;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectAuthenticationLogger;
+import org.aselect.server.log.ASelectEntrustmentLogger;
 import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.handler.aselect.ASelectAuthenticationProfile;
 import org.aselect.server.request.handler.xsaml20.ServiceProvider;
@@ -537,6 +539,11 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		else if (sRequest.equals("org_choice")) {
 			handleOrgChoice(htServiceRequest, _servletResponse);
 		}
+		
+		// handle OnBehalfOf
+		else if ( sRequest.equals("obo_choice")) {
+			handleOnBehalfOf(htServiceRequest, _servletResponse);
+		}
 		else if (sRequest.equals("alive")) {
 			pwOut.println("<html><body>Server is ALIVE</body></html>");
 		}
@@ -571,8 +578,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				String sSearch = Utils.getParameterValueFromUrl(sSpecials, "set_forced_uid");
 				if (sSearch != null)
 					_htSessionContext.put("user_id", sSearch);
-					_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added
-				}
+				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added
+			}
 
 			while (true) {
 				if (sRequest.equals("login1")) {
@@ -671,6 +678,143 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		oTGTIssuer.sendTgtRedirect(sAppUrl, sTgt, sRid, servletResponse, sLang);
 	}
 
+	/**
+	 * Handles the <code>request=org_choice</code> request. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Store the user's organization choice in the TGT and redirect the user
+	 * to the application he desires.
+	 * TGT has already been issued, Rid is still present (contains the application url)
+	 * 
+	 * @param htServiceRequest
+	 *            HashMap containing request parameters
+	 * @param servletResponse
+	 *            Used to send (HTTP) information back to user
+	 * @param pwOut
+	 *            Used to write information back to the user (HTML)
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	private void handleOnBehalfOf(HashMap htServiceRequest, HttpServletResponse servletResponse)
+	throws ASelectException
+	{
+		String sMethod = "handleOnBehalfOf";
+		// fixme: verify if obo is enabled for this app_id
+
+		String sRid = (String)htServiceRequest.get("rid");
+		String sOBOId = (String)htServiceRequest.get("obouid");
+		String sTgt = (String)htServiceRequest.get("aselect_credentials_tgt");
+		String sStep = (String)htServiceRequest.get("step");
+		String sOBOyn = (String)htServiceRequest.get("oboyn");
+		// fixme: validate step and oboyn
+		if (sRid == null || sTgt == null || sStep == null ) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing some request parameter");
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+		String sAppId = (String)_htTGTContext.get("app_id");
+		if ( !Utils.hasValue(sAppId) ||  !ApplicationManager.getHandle().getApplication(sAppId).isOBOEnabled() ) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "On Behalf Of not enabled for application: " + sAppId);
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+		_systemLogger.log(Level.FINER, _sModule, sMethod, "obouid="+sOBOId + ", step="+sStep + ", oboyn="+sOBOyn);
+		
+		int iStep = Integer.parseInt(sStep);
+
+//		// Stop the user-time pause
+//		Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);
+//		// No need to write the session, it's used below by calculateAndReportSensorData() and then discarded
+
+		switch (iStep) {
+		case 0:
+			if ("y".equalsIgnoreCase(sOBOyn)) {
+				try {
+					String sSelectForm;
+					sSelectForm = org.aselect.server.utils.Utils.presentOnBehalfOf(_servletRequest, _configManager,
+							_htSessionContext, sRid, (String)_htTGTContext.get("language"), 1 /* step 1, present obo request */);
+					servletResponse.setContentType("text/html");
+					
+					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);
+					PrintWriter pwOut = servletResponse.getWriter();
+					pwOut.println(sSelectForm);
+					pwOut.close();
+				} catch (IOException e) {
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Cannot present OnBehalfOf form");
+					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+				}
+				return;
+			} else {	// no obo requested
+				_systemLogger.log(Level.FINEST, _sModule, sMethod, "No obo requested by user");
+			}
+			
+			break;
+		case 1:
+		case 2:
+			// test obo_id here 11-proef, also prevents XSS on obo
+			// allow for re-entering obo from user
+			// fixme: implement maximum number of retries
+			////////////////////////////////////////////////
+			boolean oboK = false;
+			String status = null; // Permit  Deny / Inderterminate / Invalid
+			if (org.aselect.system.utils.Utils.bsnCheck(sOBOId)) {
+				// fixme: implement obo validate and set status and oboK
+				oboK = true;	// for testing
+				status = "Permit"; 	// For testing
+			} else {
+				status = "Invalid"; 	// For testing
+			}
+			if ( oboK ) {
+				_systemLogger.log(Level.FINEST, _sModule, sMethod, "Valide obo requested by user");
+				_htTGTContext.put("obouid", sOBOId);
+				// store oriuid, OBOServiceId, OBOValidFrom in tgt
+				_tgtManager.updateTGT(sTgt, _htTGTContext);
+				
+				ASelectEntrustmentLogger.getHandle().log((String)_htTGTContext.get("uid"), (String)_htTGTContext.get("client_ip"), (String)_htTGTContext.get("app_id"), sOBOId, status);
+			} else {	// not a bsn or invalid obo
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "Invalid bsn for obo, status: " + status );
+				ASelectEntrustmentLogger.getHandle().log((String)_htTGTContext.get("uid"), (String)_htTGTContext.get("client_ip"), (String)_htTGTContext.get("app_id"), sOBOId, status);
+				
+				// allow for re-entering obo from user
+				try {
+					String sSelectForm;
+					sSelectForm = org.aselect.server.utils.Utils.presentOnBehalfOf(_servletRequest, _configManager,
+							_htSessionContext, sRid, (String)_htTGTContext.get("language"), 2 /* step 2, retry obo */);
+					servletResponse.setContentType("text/html");
+					
+					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);
+					PrintWriter pwOut = servletResponse.getWriter();
+					pwOut.println(sSelectForm);
+					pwOut.close();
+				} catch (IOException e) {
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Cannot present OnBehalfOf form");
+					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+				}
+				return;
+			}
+			break;
+		default:
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid step parameter received");
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+		
+		if (_htTGTContext == null) {
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Cannot get TGT");
+			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+		}
+
+		// The tgt was just issued and updated, report sensor data
+		Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_sbh", sRid, _htSessionContext, sTgt, true);
+		_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
+		
+		String sAppUrl = (String)_htSessionContext.get("app_url");
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIRECT to " + sAppUrl);
+		
+		TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
+		String sLang = (String)_htTGTContext.get("language");
+		oTGTIssuer.sendTgtRedirect(sAppUrl, sTgt, sRid, servletResponse, sLang);
+	}
+	
+	
+	
 	/**
 	 * Handles the <code>request=direct_login</code> requests. <br>
 	 * <br>
@@ -838,6 +982,17 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						
 						_htSessionContext.remove("direct_authsp");	// No other direct_authsp's yet
 						_htSessionContext.put("forced_authsp", next_authsp);
+						// RH, 20140424, sn
+						Integer iSubLevel = null;
+						try {
+							iSubLevel = _applicationManager.getSubLevel(sAppId);
+							_htSessionContext.put("sub_level", iSubLevel);  // need not be saved
+						}
+						catch (ASelectException ae) {
+							_systemLogger.log(Level.FINER, _sModule, sMethod, "No min_level found for application: " + sAppId );
+						}
+						// RH, 20140424, en
+
 						getUserAuthsps(sRid, sUid);  // can change the session too
 						_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 						
@@ -1457,13 +1612,14 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		try {
 			sRid = (String) htServiceRequest.get("rid");
 			String sAuthsp = (String) _htSessionContext.get("forced_authsp");
+			String sAppId = (String) _htSessionContext.get("app_id"); // RH, 20140424, n
 			if (sAuthsp != null) {
 				// Bauke 20080511: added
 				// Redirect to the AuthSP's ISTS
 				String sAsUrl = _configManager.getRedirectURL(); // <redirect_url> in aselect.xml
 				sAsUrl = sAsUrl + "/" + sAuthsp + "?rid=" + sRid; // e.g. saml20_ists
 				// RH, 20100907, sn, add app_id, requestorfriendlyname so authsp can use this at will
-				String sAppId = (String) _htSessionContext.get("app_id");  // 20101027 _
+//				String sAppId = (String) _htSessionContext.get("app_id");  // 20101027 // RH, 20140424, o, moved to top
 				String sFName = null;
 				try {
 					sFName = _applicationManager.getFriendlyName(sAppId);
@@ -1500,6 +1656,19 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 			}
 
+			// RH, 20140424, sn
+			Integer iSubLevel = null;
+			try {
+				iSubLevel = _applicationManager.getSubLevel(sAppId);
+				_htSessionContext.put("sub_level", iSubLevel);  // need not be saved
+			}
+			catch (ASelectException ae) {
+				_systemLogger.log(Level.FINER, _sModule, sMethod, "No min_level found for application: " + sAppId );
+			}
+			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger); 
+			// RH, 20140424, en
+			
+			
 			try {
 				// Get authsps for this user, result is a collection of authsps with a login name to be used for that authsp
 				// Stored in the session under "allowed_user_authsps"
@@ -1523,6 +1692,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			if (sFixedAuthsp != null) {
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "fixed_authsp=" + sFixedAuthsp);
 				htServiceRequest.put("authsp", sFixedAuthsp);
+				
 				// Also save entered uid as 'sel_uid'
 				String sUserId = (String) _htSessionContext.get("user_id");
 				if (sUserId != null) {
@@ -1578,7 +1748,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// RH, 20121119, sn
 			// Handle application specific select form
 			String sSelectFormName = SELECTFORMPREFIX;
-			String sAppId = (String) _htSessionContext.get("app_id");
+//			String sAppId = (String) _htSessionContext.get("app_id");	// RH, 20121119, o, moved to top
 			if (sAppId != null && (_applicationManager.getSelectForm(sAppId) != null) ) {
 				sSelectFormName +=  _applicationManager.getSelectForm(sAppId); // Add application specific suffix
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "Found application specific select form: " + sSelectFormName + " for app_id: " + sAppId);
@@ -1787,6 +1957,48 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 			// End of registration
 
+			
+			//	RH, 20140424, sn
+			Object oAuthSPsection = _configManager.getSection(_configManager.getSection(null, "authsps"),
+					"authsp", "id=" + sAuthsp);
+//			boolean bUDBLookup = _configManager.getParam(oAuthSPsection, "udb_lookup");
+			boolean bUDBLookup = false;
+			String sUDBLookup = null;
+			try {
+				sUDBLookup = _configManager.getParam(oAuthSPsection, "udb_lookup");
+				bUDBLookup = Boolean.parseBoolean(sUDBLookup);
+				_systemLogger.log(Level.FINEST, _sModule, sMethod, "Found udb_lookup=" + sUDBLookup);
+			} catch (ASelectConfigException ace) {
+				// No problem, just skip
+				_systemLogger.log(Level.FINEST, _sModule, sMethod, "Found udb_lookup=" + sUDBLookup);
+			}
+			if (bUDBLookup) {	// do extra udb lookup
+				// we want to change user_id but not sure if this will work because tgt might get destroyed when finding other user_id
+				// for test get user_id from form
+				HashMap htAllowedAuthsps = (HashMap) _htSessionContext.get("allowed_user_authsps");
+				_systemLogger.log(Level.FINEST, _sModule, sMethod, "Before lookup htAllowedAuthsps=" + htAllowedAuthsps);
+				_systemLogger.log(Level.FINEST, _sModule, sMethod, "Before lookup _htSessionContext=" + _htSessionContext);
+				String sUid = (String) _htSessionContext.get("user_id");
+				_systemLogger.log(Level.FINEST, _sModule, sMethod, "Looking up in UDB user_id:" + sUid);
+				// RH, 20140424, sn
+				Integer iSubLevel = null;
+				try {
+					iSubLevel = _applicationManager.getSubLevel(sAppId);
+					_htSessionContext.put("sub_level", iSubLevel);  // need not be saved
+				}
+				catch (ASelectException ae) {
+					_systemLogger.log(Level.FINER, _sModule, sMethod, "No min_level found for application: " + sAppId );
+				}
+				// RH, 20140424, en
+
+				getUserAuthsps(sRid, sUid);
+				htAllowedAuthsps = (HashMap) _htSessionContext.get("allowed_user_authsps");
+				_systemLogger.log(Level.FINEST, _sModule, sMethod, "After lookup htAllowedAuthsps=" + htAllowedAuthsps);
+			}
+			//	RH, 20140424, en
+
+			
+			
 			// 20111013, Bauke: added absent phonenumber handling
 			HashMap htResponse = startAuthentication(sRid, htServiceRequest);
 			
@@ -2528,12 +2740,15 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			String udbType = (String)htUserProfile.get("udb_type");
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "uid=" + sUid + " udb_type="+udbType+" profile=" + htUserProfile
 					+ " user_authsps=" + htUserAuthsps + " SessionContext=" + _htSessionContext);
+			
+			
 
 			// Which level is required for the application?
 			// 20090110, Bauke added required_level!
 			Integer intMaxLevel = (Integer) _htSessionContext.get("max_level"); // 'max_level' can be null
 			Integer intLevel = (Integer) _htSessionContext.get("level");
 			String sRequiredLevel = (String) _htSessionContext.get("required_level");
+			Integer intSubLevel = (Integer) _htSessionContext.get("sub_level");
 
 			Integer intRequiredLevel = (sRequiredLevel == null) ? intLevel : Integer.valueOf(sRequiredLevel);
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "required_level=" + intRequiredLevel + " level="
@@ -2541,7 +2756,17 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Fetch the authsps that the user has registered for and
 			// that satisfy the level for the current application
-			Vector vConfiguredAuthSPs = _authspHandlerManager.getConfiguredAuthSPs(intRequiredLevel, intMaxLevel);
+			
+//			Vector vConfiguredAuthSPs = _authspHandlerManager.getConfiguredAuthSPs(intRequiredLevel, intMaxLevel);	// RH, 20140424, o
+			// RH, 20140424, sn
+			Vector vConfiguredAuthSPs = null;
+			if ( intSubLevel == null) {	// They old way
+				vConfiguredAuthSPs = _authspHandlerManager.getConfiguredAuthSPs(intRequiredLevel, intMaxLevel);
+			} else {
+				vConfiguredAuthSPs = _authspHandlerManager.getConfiguredAuthSPs(intSubLevel, intMaxLevel);
+			}
+			// RH, 20140424, sn
+
 			if (vConfiguredAuthSPs == null) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "INTERNAL ERROR" + sUid);
 				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);

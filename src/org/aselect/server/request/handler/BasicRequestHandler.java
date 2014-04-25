@@ -186,6 +186,14 @@ public abstract class BasicRequestHandler
 
 		String sOrg = ASelectConfigManager.getParamFromSection(null, "aselect", "organization", true);
 		htSessionContext.put("organization", sOrg);
+		
+		// RH, 20140422, sn
+		if (sAuthsp == null && aApp.getFirstAuthsp() != null ) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "found first_authsp="+aApp.getFirstAuthsp()+" ,setting fixed_authsp to:"+aApp.getFirstAuthsp());
+			htSessionContext.put("fixed_authsp", aApp.getFirstAuthsp());
+		}			
+		// RH, 20140422, en
+		
 
 		// Organization and uid are stored in the session context with a temporary identifier.
 		// This because the values are not validated yet.
