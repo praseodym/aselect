@@ -1226,4 +1226,26 @@ public class Utils
 		}
 		return htAttributes;
 	}
+	
+	public static boolean bsnCheck(String bsnNumber) {
+		final int bsnModuloNumber = 11;
+		final int bsnLength = 9;
+
+		boolean testOK = false;
+		int len = bsnNumber.length();
+		int weightedSum = 0;
+		boolean isNumberOK = (bsnLength == len);
+		for (int i=0;isNumberOK && i<len-1;i++) {
+			if (Character.isDigit(bsnNumber.charAt(i))) {
+				weightedSum += (len-i)*Character.getNumericValue(bsnNumber.charAt(i));
+			} else {
+				isNumberOK = false;
+			}
+		}
+		if (isNumberOK && (weightedSum % bsnModuloNumber == Character.getNumericValue(bsnNumber.charAt(len-1))) ) {
+			testOK = true;
+		}
+		return testOK;
+	}
+
 }
