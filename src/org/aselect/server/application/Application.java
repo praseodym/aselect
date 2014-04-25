@@ -69,6 +69,7 @@ public class Application
 	private boolean _bUseOpaqueUId;
 	private Integer _iMinLevel;
 	private Integer _iMaxLevel;
+	private Integer _iSubLevel;
 	private boolean _bSigningRequired;
 	private boolean _bForcedAuthenticate;
 	private boolean _bDirectAuthSPPrefered;
@@ -100,6 +101,11 @@ public class Application
 
 	// Optional application specific select html form
 	private String _selectform = null;	// RH, 20121119, n
+	
+	/**
+	 * Boolean indicates that On-Behalf-Of is enabled. Will trigger OnBehalfOf form after tgt has been issued.
+	 */
+	private boolean _OBOEnabled = false;
 
 	/**
 	 * Constructor which contains the default parameters for an Application <br>
@@ -141,6 +147,7 @@ public class Application
 		_sAttributePolicy = null;
 		_iMinLevel = null;
 		_iMaxLevel = null;
+		_iSubLevel = null;
 		_bSigningRequired = false;
 		_bForcedAuthenticate = false;
 		_oSigningKey = null;
@@ -664,6 +671,22 @@ public class Application
 	public synchronized void setSelectform(String selectform)
 	{
 		_selectform = selectform;
+	}
+
+	public synchronized boolean isOBOEnabled() {
+		return _OBOEnabled;
+	}
+
+	public synchronized void setOBOEnabled(boolean _OBOEnabled) {
+		this._OBOEnabled = _OBOEnabled;
+	}
+
+	public synchronized Integer getSubLevel() {
+		return _iSubLevel;
+	}
+
+	public synchronized void setSubLevel(Integer _iSubLevel) {
+		this._iSubLevel = _iSubLevel;
 	}
 
 }

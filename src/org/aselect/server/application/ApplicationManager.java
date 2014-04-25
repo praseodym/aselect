@@ -281,6 +281,11 @@ public class ApplicationManager
 				String sMax = ASelectConfigManager.getSimpleParam(oApplication, "max_level", false);
 				if (sMax != null)
 					intMaxLevel = new Integer(sMax);
+				
+				Integer intSubLevel = null;
+				String sSub = ASelectConfigManager.getSimpleParam(oApplication, "sub_level", false);
+				if (sSub != null)
+					intSubLevel = new Integer(sSub);
 				String sForced = ASelectConfigManager.getSimpleParam(oApplication, "forced_authenticate", false);
 				boolean bForced = new Boolean(sForced);
 				String sFriendlyName = ASelectConfigManager.getSimpleParam(oApplication, "friendly_name", false);
@@ -348,6 +353,8 @@ public class ApplicationManager
 				
 				String sSelectform = ASelectConfigManager.getSimpleParam(oApplication, "selectform", false); // RH, 20121119, n
 
+				boolean onBehalfOf = Boolean.parseBoolean(ASelectConfigManager.getSimpleParam(oApplication, "onbehalfof", false));  // RH, 20140303, n
+
 				// Bauke 20101125: For DigiD4Bedrijven:
 				String sUseSsn = ASelectConfigManager.getSimpleParam(oApplication, "use_ssn", false);
 				application.setUseSsn(sUseSsn);
@@ -358,6 +365,7 @@ public class ApplicationManager
 
 				// optional params.
 				application.setMaxLevel(intMaxLevel);
+				application.setSubLevel(intSubLevel);  // RH, 20140424, n
 				application.setForcedAuthenticate(bForced);
 				application.setFriendlyName(sFriendlyName);
 				application.setMaintainerEmail(sMaintainerEmail);
@@ -406,6 +414,8 @@ public class ApplicationManager
 				application.setFirstAuthsp(sFirstAuthsp);// RH, 20110920, n
 				
 				application.setSelectform(sSelectform);	// RH, 20121119, n
+				
+				application.setOBOEnabled(onBehalfOf);  // RH, 20140303, n
 
 				_htApplications.put(sAppId, application);
 				oApplication = _oASelectConfigManager.getNextSection(oApplication);
@@ -535,6 +545,36 @@ public class ApplicationManager
 		return oApplication.getMaxLevel();
 	}
 
+	
+	/**
+	 * Returns the sub level for an application. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Returns the configured sub_level for the application. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sAppId
+	 *            <code>String</code> containing an application id.
+	 * @return String containing the level. <code>null</code> if no level was found.
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	public Integer getSubLevel(String sAppId)
+	throws ASelectException
+	{
+		Application oApplication = getApplication(sAppId);
+		return oApplication.getSubLevel();
+	}
+
+	
 	/**
 	 * Retrieve a signing key.
 	 * 
