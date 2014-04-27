@@ -295,6 +295,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			if (sUid != null) { // For all AuthSP's that can set the user id
 				// (and thereby replace the 'siam_user' value)
 				_htSessionContext.put("user_id", sUid);
+				_htSessionContext.put("sel_uid", sUid);  // 20140427, Bauke added for 'nextauthsp' mechanism, we don't want 'siam_user' any more
 				_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 
 				Utils.copyHashmapValue("betrouwbaarheidsniveau", htAdditional, htAuthspResponse);

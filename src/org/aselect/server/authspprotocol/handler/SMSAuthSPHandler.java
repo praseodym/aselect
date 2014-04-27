@@ -359,9 +359,13 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 			}
 			
 			// 20120403, Bauke: session context is available as a parameter
-			String sUserId = (String) htSessionContext.get("sel_uid");
+			//String sUserId = (String) htSessionContext.get("sel_uid");
+			//if (sUserId == null)
+			//	sUserId = (String) htSessionContext.get("user_id");
+			// 20140427, Bauke: we think "user_id" is better
+			String sUserId = (String) htSessionContext.get("user_id");
 			if (sUserId == null)
-				sUserId = (String) htSessionContext.get("user_id");
+				sUserId = (String) htSessionContext.get("sel_uid");
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "sUserId="+sUserId);
 			
 			// 20130618, Bauke: no don't, this is not the phonenumber as it is in the SMS authspserver
