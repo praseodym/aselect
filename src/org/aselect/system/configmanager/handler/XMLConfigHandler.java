@@ -1332,13 +1332,25 @@ public class XMLConfigHandler implements IConfigHandler
 			throw new ASelectConfigException(Errors.ERROR_ASELECT_NOT_FOUND);
 		}
 
-		sID = sSectionID.split("=");
+		//	More than one '=' must be allowed
+		// RH, 20140503, so
+//		sID = sSectionID.split("=");
+//		if (sID.length != 2) {
+//			sbError.append("sSectionID isn't correct (must contain only one '='): ");
+//			sbError.append(sID);
+//			_oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
+//			throw new ASelectConfigException(Errors.ERROR_ASELECT_NOT_FOUND);
+//		}
+		// RH, 20140503, eo
+		// RH, 20140503, sn
+		sID = sSectionID.split("=", 2);	// allow more than one '=', all after first '=' put in sValue
 		if (sID.length != 2) {
-			sbError.append("sSectionID isn't correct (must contain only one '='): ");
+			sbError.append("sSectionID isn't correct (must contain <key>=<value>): ");
 			sbError.append(sID);
 			_oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
 			throw new ASelectConfigException(Errors.ERROR_ASELECT_NOT_FOUND);
 		}
+		// RH, 20140503, en
 
 		String sKey = sID[0];
 		String sValue = sID[1];
