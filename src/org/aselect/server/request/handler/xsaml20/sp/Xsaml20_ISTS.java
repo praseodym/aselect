@@ -398,13 +398,22 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 					authnRequest.setAssertionConsumerServiceURL(_sAssertionConsumerUrl);
 				}
 			}
-						
-			if  (partnerData != null && partnerData.getAttributeConsumerServiceindex() != null) {
-				authnRequest.setAttributeConsumingServiceIndex(Integer.parseInt(partnerData.getAttributeConsumerServiceindex() ));
-			} else {	// be backwards compatible
-				authnRequest.setAttributeConsumingServiceIndex(2);
-			}
+			
+			// RH, 20140505, sn
+			String sForcedAttrConServInd = ApplicationManager.getHandle().getForcedAttrConsServIndex(sApplicationId);
+			if ( sForcedAttrConServInd != null ) {
+				authnRequest.setAttributeConsumingServiceIndex(Integer.parseInt(sForcedAttrConServInd));
+			} else {
+				// RH, 20140505, en
 
+				if  (partnerData != null && partnerData.getAttributeConsumerServiceindex() != null) {
+					authnRequest.setAttributeConsumingServiceIndex(Integer.parseInt(partnerData.getAttributeConsumerServiceindex() ));
+				} else {	// be backwards compatible
+					authnRequest.setAttributeConsumingServiceIndex(2);
+				}
+
+			}// RH, 20140505, n
+			
 			authnRequest.setDestination(sDestination);
 			DateTime tStamp = new DateTime();
 			// Set interval conditions

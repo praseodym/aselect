@@ -355,6 +355,8 @@ public class ApplicationManager
 
 				boolean onBehalfOf = Boolean.parseBoolean(ASelectConfigManager.getSimpleParam(oApplication, "onbehalfof", false));  // RH, 20140303, n
 
+				String sForcedAttrConsServIndex = ASelectConfigManager.getSimpleParam(oApplication, "forced_attrconsservindex", false); // RH, 20140505, n
+
 				// Bauke 20101125: For DigiD4Bedrijven:
 				String sUseSsn = ASelectConfigManager.getSimpleParam(oApplication, "use_ssn", false);
 				application.setUseSsn(sUseSsn);
@@ -417,6 +419,8 @@ public class ApplicationManager
 				
 				application.setOBOEnabled(onBehalfOf);  // RH, 20140303, n
 
+				application.setForcedAttrConsServIndex(sForcedAttrConsServIndex);  // RH, 20140505, n
+				
 				_htApplications.put(sAppId, application);
 				oApplication = _oASelectConfigManager.getNextSection(oApplication);
 			}
@@ -1297,6 +1301,35 @@ public class ApplicationManager
 	{
 		Application oApplication = getApplication(sAppId);
 		return oApplication.getSelectform();
+	}
+
+	
+	/**
+	 * Returns the Optional AttributeConsumerServiceIndex to force in the SAML AuthnRequest for an application. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Returns the configured ForcedAttributeConsumerServiceIndex for the application. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sAppId
+	 *            <code>String</code> containing an application id.
+	 * @return String containing the AttrConsServIndex. <code>null</code> if no AttrConsServIndex name was found.
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+	public String getForcedAttrConsServIndex(String sAppId)
+	throws ASelectException
+	{
+		Application oApplication = getApplication(sAppId);
+		return (oApplication==null)? null: oApplication.getForcedAttrConsServIndex();
 	}
 
 }

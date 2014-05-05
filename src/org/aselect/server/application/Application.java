@@ -107,6 +107,9 @@ public class Application
 	 */
 	private boolean _OBOEnabled = false;
 
+	// Optional application specific AttributeConsumerServiveIndex for SAML AuthnRequest
+	private String _sForcedAttrConsServIndex = null;	// RH, 20140505, n
+
 	/**
 	 * Constructor which contains the default parameters for an Application <br>
 	 * <br>
@@ -687,6 +690,14 @@ public class Application
 
 	public synchronized void setSubLevel(Integer _iSubLevel) {
 		this._iSubLevel = _iSubLevel;
+	}
+
+	public synchronized String getForcedAttrConsServIndex() {
+		return _sForcedAttrConsServIndex;
+	}
+
+	public synchronized void setForcedAttrConsServIndex(String _sForcedAttrConsServIndex) {
+		this._sForcedAttrConsServIndex = _sForcedAttrConsServIndex;
 	}
 
 }
