@@ -39,6 +39,7 @@ package org.aselect.system.sam.agent.polling;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 
@@ -134,9 +135,19 @@ public class SAMICMPPollingMethod implements ISAMPollingMethod
 				}
 				sHost = oUri.getHost();
 			}
-			catch (Exception e) {
+			catch (Exception e) {	// Some non rfc2396 string was supplied
 				_oSystemLogger.log(Level.INFO, MODULE, sMethod, "URL="+sUrl+" Exeption ignored:"+e);
-				sHost = sUrl;
+//				sHost = sUrl;	// RH, 20140505, o
+				// RH, 20140505, sn
+				sHost = guessHost(sUrl);
+				if ( sHost == null || sHost.length() == 0 ) {
+					_oSystemLogger.log(Level.INFO, MODULE, sMethod, "Could not guess host to ping, you might try adding this host to 'pingcommand' section" );
+					sHost =  "";
+					
+				} else {
+					_oSystemLogger.log(Level.INFO, MODULE, sMethod, "Guessing host to ping="+sHost);
+				}
+				// RH, 20140505, en
 			}
 			_sbPingCommand = new StringBuffer(sPingCommand).append(" ").append(sHost);
 		}
@@ -249,4 +260,47 @@ public class SAMICMPPollingMethod implements ISAMPollingMethod
 		}
 		return uriResponse;
 	}
+
+
+	/**
+	 * Will parse the JDBC URI to an <code>URI</code> Object.
+	 * 
+	 * @param sUri
+	 *            The JDBC URI to parse.
+	 * @return the parsed URI object
+	 * @throws ASelectSAMException
+	 *             if the uri couldn't be parsed or the result is empty.
+	 */
+	private String guessHost(String sUri)
+	{
+		StringBuffer sbError = new StringBuffer();
+		String sMethod = "findHost()";
+		String hostResponse = null;
+
+		StringTokenizer stUri = new StringTokenizer(sUri, ":;\\");	// maybe some more needed ( note also want to find backslash)
+		while (stUri.hasMoreElements()) {
+			String sToken = (String) stUri.nextElement();
+			if (sToken.startsWith("//")) {	// Lets assume the host part is right behind the double slash
+				hostResponse = sToken.substring(2);
+			}
+		}
+
+		if (hostResponse != null) {
+			try {
+				URI uriResponse = new URI("jdbc", hostResponse, null, null);
+				hostResponse = uriResponse.getHost();
+			} catch (URISyntaxException e) {
+				hostResponse = null;
+			}
+
+		} else {
+			sbError.append("No host part could be found in '");
+			sbError.append(sUri);
+			sbError.append("'");
+			_oSystemLogger.log(Level.FINE, MODULE, sMethod, sbError.toString());
+		}
+		return hostResponse;
+	}
+
+
 }
