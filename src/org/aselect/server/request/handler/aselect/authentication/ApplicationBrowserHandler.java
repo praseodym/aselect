@@ -3334,6 +3334,12 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_systemLogger.log(Level.FINE, MODULE, sMethod, "Sending UNAUTHORIZED");
 			servletResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 		}
+				
+		AuthenticationLogger authenticationLogger = ASelectAuthenticationLogger.getHandle();
+		authenticationLogger.log(new Object[] {
+				"login_token", sUid, (String) htServiceRequest.get("client_ip"), _sMyOrg, sAppId, bSuccess ? "granted" : "denied"
+			});
+		
 		pwOut.flush();  // otherwise: java.lang.ArrayIndexOutOfBoundsException: 8192 when output gets large
 //		pwOut.append("<html><head><title>"+sStatus+"</title></head><body><h1>"+sStatus+"</h1></body></html>");
 		_systemLogger.log(Level.FINE, MODULE, sMethod, "Sending response="+sResponse);
