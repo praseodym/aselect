@@ -247,6 +247,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
@@ -459,6 +460,10 @@ public class ASelectConfigManager extends ConfigManager
 	 * Check if CrossFallback is enabled when user not is found in local A-Select UDB.
 	 */
 	private boolean _bCrossFallbackEnabled = false;
+	
+	// <String> will contain query parameters, <Vector<String>> will contain app_id's
+	// If <Vector<String>> == null, urldecoding will take place for all applications
+	private HashMap<String, Vector<String>> parameters2decode = null;
 
 	/**
 	 * Must be used to get an ASelectConfigManager instance. <br>
@@ -750,7 +755,41 @@ public class ASelectConfigManager extends ConfigManager
 		}
 		// RH, 20140327, sn
 		
+		///////////////////////////////////////////////////////// querystringparameterurldecoding configuration
+		try {
+			Object oURLDecoding = getSection(_oASelectConfigSection, "transformation", "id=querystringparameterurldecoding");
+			parameters2decode = new HashMap<String, Vector<String>>();
+			Object oURLDecodingParameter = getSection(oURLDecoding, "parameter");
+			while (oURLDecodingParameter != null) {
+				Vector<String> apps = null;
+				String queryparametername = getParam(oURLDecodingParameter, "name");
+				String application = null;
+				try {
+					application = getParam(oURLDecodingParameter, "application");
+					apps = parameters2decode.get(queryparametername); // Get applications so far
+					if (apps == null) {
+						apps = new Vector<String>();
+					}
+					apps.add(application);
+				} catch (ASelectConfigException e) {
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, 
+							"No attribute 'application' found, decoding all GET requestparameters with name: " + queryparametername);
+				}
+				parameters2decode.put(queryparametername, apps);	// apps can be null
 
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Setting URLDecode for parameter: " + queryparametername + " in application: " + application);
+				oURLDecodingParameter = getNextSection(oURLDecodingParameter);
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded querystringparameterurldecoding configuration: " + parameters2decode);
+
+		} catch (ASelectConfigException e) {
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, 
+					"No valid 'transformation' section with id='querystringparameterurldecoding' found or no 'parameter' section found or no 'name' section found, urldecoding on GET not enabled.");
+		}
+		
+		//////////////////////////////////////////////////////////////////////////////
+		
+		
 		// loading html templates
 		loadHTMLTemplates(sWorkingDir);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded HTML templates");
@@ -2509,6 +2548,10 @@ public class ASelectConfigManager extends ConfigManager
 			oProvider = getHandle().getNextSection(oProvider);
 		}
 		return htAllKeys_Values;
+	}
+
+	public HashMap<String, Vector<String>> getParameters2decode() {
+		return parameters2decode;
 	}
 
 }

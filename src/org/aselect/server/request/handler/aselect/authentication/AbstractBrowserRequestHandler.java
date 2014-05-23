@@ -88,15 +88,18 @@ package org.aselect.server.request.handler.aselect.authentication;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Locale;
+import java.util.Vector;
 import java.util.logging.Level;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.HandlerTools;
@@ -420,10 +423,33 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 	 */
 	private HashMap createServiceRequest(HttpServletRequest servletRequest)
 	{
+		String sMethod = "createServiceRequest";
 		// Extract parameters into htServiceRequest
 		HashMap htServiceRequest = null;
 		if (servletRequest.getMethod().equalsIgnoreCase("GET")) {
+
+
 			htServiceRequest = Utils.convertCGIMessage(servletRequest.getQueryString(), false);
+			// Optionally activate selective url decoding
+			// Find query parameter and app_id in config and request. If a match is found then do urldecode
+			HashMap<String, Vector<String>> parameters2decode = _configManager.getParameters2decode();
+			if ( parameters2decode != null && !parameters2decode.isEmpty() ) {
+				Iterator<String> iparm = parameters2decode.keySet().iterator();
+				while ( iparm.hasNext()) {
+					String parmnname = iparm.next();
+					Vector<String> appl = parameters2decode.get(parmnname);
+					if ( htServiceRequest.containsKey(parmnname) && ( appl == null || appl.contains(htServiceRequest.get("app_id"))) ) {
+						String xValue = (String) htServiceRequest.get(parmnname);
+						try {
+							xValue = URLDecoder.decode(xValue, "UTF-8");
+							htServiceRequest.put(parmnname, xValue);	// replace with decoded version
+						} catch (UnsupportedEncodingException e) {
+							// should not happen, if it does, ignore, old value remains
+							_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unsupported encoding exception for UTF-8, ignored");
+						}
+					}
+				}
+			}
 		}
 		else {
 			htServiceRequest = new HashMap();
@@ -455,6 +481,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 		}
 		return htServiceRequest;
 	}
+
 
 	/**
 	 * Gets the _servlet request.
