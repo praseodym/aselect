@@ -701,13 +701,20 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		String sMethod = "handleOnBehalfOf";
 		// fixme: verify if obo is enabled for this app_id
 
-		String sRid = (String)htServiceRequest.get("rid");
+//		String sRid = (String)htServiceRequest.get("rid");	// we are logged in, old rid has gone
 		String sOBOId = (String)htServiceRequest.get("obouid");
 		String sTgt = (String)htServiceRequest.get("aselect_credentials_tgt");
 		String sStep = (String)htServiceRequest.get("step");
 		String sOBOyn = (String)htServiceRequest.get("oboyn");
+		String sAppUrl = (String)htServiceRequest.get("app_url");	// session already deleted, we need the app_url
+		String sUid = (String)_htTGTContext.get("uid");
+		HashMap tempContext = new HashMap(); 
+		tempContext.put("uid", sUid);	// session has been deleted so we cannot use _htSessionContext
+		tempContext.put("app_url", sAppUrl);
+		
 		// fixme: validate step and oboyn
-		if (sRid == null || sTgt == null || sStep == null ) {
+//		if (sRid == null || sTgt == null || sStep == null ) {
+		if (sStep == null ) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing some request parameter");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
@@ -730,7 +737,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				try {
 					String sSelectForm;
 					sSelectForm = org.aselect.server.utils.Utils.presentOnBehalfOf(_servletRequest, _configManager,
-							_htSessionContext, sRid, (String)_htTGTContext.get("language"), 1 /* step 1, present obo request */);
+							tempContext, null, (String)_htTGTContext.get("language"), 1 /* step 1, present obo request */);
 					servletResponse.setContentType("text/html");
 					
 					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);
@@ -777,7 +784,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				try {
 					String sSelectForm;
 					sSelectForm = org.aselect.server.utils.Utils.presentOnBehalfOf(_servletRequest, _configManager,
-							_htSessionContext, sRid, (String)_htTGTContext.get("language"), 2 /* step 2, retry obo */);
+							tempContext, null, (String)_htTGTContext.get("language"), 2 /* step 2, retry obo */);
 					servletResponse.setContentType("text/html");
 					
 					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);
@@ -802,15 +809,16 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 
 		// The tgt was just issued and updated, report sensor data
-		Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_sbh", sRid, _htSessionContext, sTgt, true);
+		Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_sbh", null, _htSessionContext, sTgt, true);
+//		String sAppUrl = (String)_htSessionContext.get("app_url");
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIRECT to " + sAppUrl);
+
 		_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
 		
-		String sAppUrl = (String)_htSessionContext.get("app_url");
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIRECT to " + sAppUrl);
 		
 		TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
 		String sLang = (String)_htTGTContext.get("language");
-		oTGTIssuer.sendTgtRedirect(sAppUrl, sTgt, sRid, servletResponse, sLang);
+		oTGTIssuer.sendTgtRedirect(sAppUrl, sTgt, null, servletResponse, sLang);
 	}
 	
 	

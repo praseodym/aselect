@@ -121,14 +121,19 @@ public class Utils
 			String sRid, String sLanguage, int step)
 	throws ASelectConfigException, ASelectException, IOException
 	{
+		
+		
 		String sUserId = (String)htSessionContext.get("user_id");
+		String sAppUrl = (String)htSessionContext.get("app_url");
 		String sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true);
 		String sServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
 		String sSelectForm = configManager.loadHTMLTemplate(null, "onbehalfof_step"+String.valueOf(step), sLanguage, sLanguage);	// maybe get this from application config
 		String sRequest = "obo_choice";	// can we keep old request?
 		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[request]", sRequest);
 		if (sUserId != null) sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[user_id]", sUserId);
-		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[rid]", sRid);
+//		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[rid]", sRid);
+		
+		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[app_url]", sAppUrl);
 		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[a-select-server]", sServerId);
 		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[aselect_url]", sServerUrl + "/obo_choice");
 		
