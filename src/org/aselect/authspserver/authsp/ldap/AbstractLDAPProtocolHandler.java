@@ -77,13 +77,13 @@ public abstract class AbstractLDAPProtocolHandler implements ILDAPProtocolHandle
 	protected String _sUserDn;
 	/** The user ID. */
 	protected String _sUid;
-	/** The princial DN */
-	protected String _sPrincipalDn;
-	/** The principal password. */
-	protected String _sPrincipalPwd;
-	/** The complete user ID. */
-	protected boolean _bFullUid;
-
+	protected String _sPrincipalDn;  // The princial DN
+	protected String _sPrincipalPwd;  // The principal password.
+	protected boolean _bFullUid;  // The complete user ID.
+	
+	protected String _sAttrAllowedLogins;
+	protected String _sAttrValidUntil;
+	
 	/**
 	 * The logger that logs system information
 	 */
@@ -94,30 +94,30 @@ public abstract class AbstractLDAPProtocolHandler implements ILDAPProtocolHandle
 	 * <br>
 	 * 
 	 * @param sLDAPUrl
-	 *            the s ldap url
+	 *            the ldap url
 	 * @param sDriver
-	 *            the s driver
+	 *            the driver
 	 * @param sBaseDn
-	 *            the s base dn
+	 *            the base dn
 	 * @param sUserDn
-	 *            the s user dn
+	 *            the user dn
 	 * @param bFullUid
-	 *            the b full uid
+	 *            the full uid
 	 * @param sUid
-	 *            the s uid
+	 *            the uid
 	 * @param sPrincipalDn
-	 *            the s principal dn
+	 *            the principal dn
 	 * @param sPrincipalPwd
-	 *            the s principal pwd
+	 *            the principal pwd
 	 * @param systemLogger
 	 *            the system logger
-	 * @return true, if inits the
+	 * @return true - always
 	 * @see org.aselect.authspserver.authsp.ldap.ILDAPProtocolHandler#init(java.lang.String, java.lang.String,
 	 *      java.lang.String, java.lang.String, boolean, java.lang.String, java.lang.String, java.lang.String,
 	 *      org.aselect.authspserver.log.AuthSPSystemLogger)
 	 */
 	public boolean init(String sLDAPUrl, String sDriver, String sBaseDn, String sUserDn, boolean bFullUid, String sUid,
-			String sPrincipalDn, String sPrincipalPwd, AuthSPSystemLogger systemLogger)
+			String sPrincipalDn, String sPrincipalPwd, String sAttrAllowedLogins, String sAttrValidUntil, AuthSPSystemLogger systemLogger)
 	{
 		_systemLogger = systemLogger;
 
@@ -129,6 +129,8 @@ public abstract class AbstractLDAPProtocolHandler implements ILDAPProtocolHandle
 		_sPrincipalDn = sPrincipalDn;
 		_sPrincipalPwd = sPrincipalPwd;
 		_bFullUid = bFullUid;
+		_sAttrAllowedLogins = sAttrAllowedLogins;
+		_sAttrValidUntil = sAttrValidUntil;
 		return true;
 	}
 

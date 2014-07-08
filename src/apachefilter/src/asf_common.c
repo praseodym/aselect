@@ -824,7 +824,8 @@ int longest_cmp_match(char *pcRegexp, char *pcString)
 //
 int aselect_filter_check_app_uri(pool *pPool, PASELECT_FILTER_CONFIG pConfig, char *pcUri)
 {
-    int i, len, uriLen = strlen(pcUri);
+    int i, len;
+	//int uriLen = strlen(pcUri);
     int iBestSec = -1, iBestPub = -1;
     int lenBestSec = 0, lenBestPub = 0;
 

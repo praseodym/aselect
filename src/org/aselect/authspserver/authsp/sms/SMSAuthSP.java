@@ -420,10 +420,10 @@ public class SMSAuthSP extends AbstractAuthSP
 				String sRid = (String) htServiceRequest.get("rid");
 				String sAsUrl = (String) htServiceRequest.get("as_url");
 				String sUid = (String) htServiceRequest.get("uid");
-				String sAsId = (String) htServiceRequest.get("a-select-server");
+				String sAserverId = (String) htServiceRequest.get("a-select-server");
 				String sSignature = (String) htServiceRequest.get("signature");
 
-				if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sAsId == null) || (sSignature == null)) {
+				if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sAserverId == null) || (sSignature == null)) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod,
 						"Invalid request received: one or more mandatory parameters missing, handling error locally.");
 					failureHandling = "local";	// RH, 20111021, n
@@ -436,20 +436,16 @@ public class SMSAuthSP extends AbstractAuthSP
 				sSignature = URLDecoder.decode(sSignature, "UTF-8");
 
 				// validate signature
-				StringBuffer sbSignature = new StringBuffer(sRid);
-				sbSignature.append(sAsUrl);
-				sbSignature.append(sUid);
-				sbSignature.append(sAsId);
-				// optional country code
-				if (sCountry != null)
-					sbSignature.append(sCountry);
-				// optional language code
-				if (sLanguage != null)
-					sbSignature.append(sLanguage);
+				StringBuffer sbData = new StringBuffer(sRid);
+				sbData.append(sAsUrl);
+				sbData.append(sUid);
+				sbData.append(sAserverId);
+				if (sCountry != null) sbData.append(sCountry);
+				if (sLanguage != null) sbData.append(sLanguage);
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Verifying alias data signature:" 
-						+ sAsId + " " +  sbSignature.toString() + " " + sSignature );
+						+ sAserverId + " Data=" +  sbData.toString() + " Sign=" + sSignature );
 
-				if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), sSignature)) {
+				if (!_cryptoEngine.verifySignature(sAserverId, sbData.toString(), sSignature)) {
 					StringBuffer sbWarning = new StringBuffer("Invalid signature from A-Select Server '");
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid signature from A-Select Server, handling error locally.");
 					failureHandling = "local";	// RH, 20111021, n
@@ -473,7 +469,7 @@ public class SMSAuthSP extends AbstractAuthSP
 				sessionContext.put("sms_retry_counter", iRetryCounter);
 				_sessionManager.updateSession(sRid, sessionContext);
 				// RH, 20110104, add formsignature
-				sRetryCounter += ":" + _cryptoEngine.generateSignature(sConcat(sAsId, sUid, sRetryCounter));
+				sRetryCounter += ":" + _cryptoEngine.generateSignature(sConcat(sAserverId, sUid, sRetryCounter));
 				htServiceRequest.put("retry_counter", String.valueOf(sRetryCounter));
 
 				if (sCountry != null)
@@ -596,16 +592,13 @@ public class SMSAuthSP extends AbstractAuthSP
 			String sMyUrl = servletRequest.getRequestURL().toString();
 			String sRid = servletRequest.getParameter("rid");
 			String sAsUrl = servletRequest.getParameter("as_url");
-			String sAsId = servletRequest.getParameter("a-select-server");
+			String sAserverId = servletRequest.getParameter("a-select-server");
 			sPassword = servletRequest.getParameter("password");  // is code
 			sUid = servletRequest.getParameter("uid");
 			String sSignature = servletRequest.getParameter("signature");
 			String sRetryCounter = servletRequest.getParameter("retry_counter");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "uid=" + sUid + " password=" + sPassword + " rid=" + sRid);
-
-
-			
-			if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sPassword == null) || (sAsId == null)
+			if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sPassword == null) || (sAserverId == null)
 					|| (sRetryCounter == null) || (sSignature == null)) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: one or more mandatory parameters missing, handling error locally.");
 				failureHandling = "local";	// RH, 20111021, n
@@ -626,7 +619,7 @@ public class SMSAuthSP extends AbstractAuthSP
 				htServiceRequest.put("as_url", sAsUrl);
 				htServiceRequest.put("uid", sUid);
 				htServiceRequest.put("rid", sRid);
-				htServiceRequest.put("a-select-server", sAsId);
+				htServiceRequest.put("a-select-server", sAserverId);
 				htServiceRequest.put("retry_counter", sRetryCounter);
 				htServiceRequest.put("signature", sSignature);
 				if (sCountry != null)
@@ -640,19 +633,18 @@ public class SMSAuthSP extends AbstractAuthSP
 			}
 			else {
 				// generate signature
-				StringBuffer sbSignature = new StringBuffer(sRid);
-				sbSignature.append(sAsUrl);
-				sbSignature.append(sUid);
-				sbSignature.append(sAsId);
+				StringBuffer sbData = new StringBuffer(sRid);
+				sbData.append(sAsUrl);
+				sbData.append(sUid);
+				sbData.append(sAserverId);
 				if (sCountry != null)
-					sbSignature.append(sCountry);
+					sbData.append(sCountry);
 				if (sLanguage != null)
-					sbSignature.append(sLanguage);
-				if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), URLDecoder
-						.decode(sSignature, "UTF-8"))) {
+					sbData.append(sLanguage);
+				if (!_cryptoEngine.verifySignature(sAserverId, sbData.toString(), URLDecoder.decode(sSignature, "UTF-8"))) {
 					StringBuffer sbWarning = new StringBuffer("Invalid signature from A-Select Server '");
-					sbWarning.append(sAsId).append("' for user: ").append(sUid);
-					sbWarning.append(" , handling error locally. ").append(sUid);	// RH, 20111021, n
+					sbWarning.append(sAserverId).append("' for user: ").append(sUid);
+					sbWarning.append(" , handling error locally. Data=").append(sbData.toString());	// RH, 20111021, n
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString());
 					failureHandling = "local";	// RH, 20111021, n
 					throw new ASelectException(Errors.ERROR_SMS_INVALID_REQUEST);
@@ -664,12 +656,12 @@ public class SMSAuthSP extends AbstractAuthSP
 				String[] sa = sRetryCounter.split(":");
 				String formSignature = sa[2];
 				sRetryCounter = sa[0] + ":" + sa[1]; // now also contains formtoken
-				String signedParms = sConcat(sAsId, sUid, sRetryCounter);
+				String signedParms = sConcat(sAserverId, sUid, sRetryCounter);
 				_systemLogger.log(Level.FINEST, MODULE, sMethod, "sRetryCounter:" +sa[1] + ", formtoken:" + formtoken);
 				if ( !_cryptoEngine.verifyMySignature(signedParms, formSignature) || !sa[1].equals(formtoken) ) {
 					StringBuffer sbWarning = new StringBuffer("Invalid signature from User form '");
-					sbWarning.append(sAsId).append("' for user: ").append(sUid);
-					sbWarning.append(" , handling error locally. ").append(sUid);	// RH, 20111021, n
+					sbWarning.append(sAserverId).append("' for user: ").append(sUid);
+					sbWarning.append(" , handling error locally. Data=").append(sbData.toString());	// RH, 20111021, n
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString());
 					failureHandling = "local";	// RH, 20111021, n
 					throw new ASelectException(Errors.ERROR_SMS_INVALID_REQUEST);
@@ -678,7 +670,7 @@ public class SMSAuthSP extends AbstractAuthSP
 
 				// authenticate user
 				// RM_20_01
-				String generatedPass = (String) servletRequest.getSession().getAttribute("generated_secret");
+				String generatedPass = (String) servletRequest.getSession(true).getAttribute("generated_secret");
 				String sResultCode = (sPassword.compareTo(generatedPass) == 0) ? (Errors.ERROR_SMS_SUCCESS)
 						: Errors.ERROR_SMS_INVALID_PASSWORD;
 
@@ -711,7 +703,7 @@ public class SMSAuthSP extends AbstractAuthSP
 						htServiceRequest.put("as_url", sAsUrl);
 						htServiceRequest.put("uid", sUid);
 						htServiceRequest.put("rid", sRid);
-						htServiceRequest.put("a-select-server", sAsId);
+						htServiceRequest.put("a-select-server", sAserverId);
 						// RH, 20110104, sn
 						// add formsignature
 						sRetryCounter =  String.valueOf(iRetriesDone + 1);
@@ -723,7 +715,7 @@ public class SMSAuthSP extends AbstractAuthSP
 //						sRetryCounter =  String.valueOf(formtoken);
 						sRetryCounter +=  ":" + formtoken;	// for backward compatibility we use sRetryCounter to store the formtoken
 						
-						sRetryCounter += ":" + _cryptoEngine.generateSignature( sConcat(sAsId, sUid, sRetryCounter));
+						sRetryCounter += ":" + _cryptoEngine.generateSignature( sConcat(sAserverId, sUid, sRetryCounter));
 						// RH, 20110104, en
 //						htServiceRequest.put("retry_counter", String.valueOf(iRetriesDone + 1));	// RH, 20110104, o
 						htServiceRequest.put("retry_counter", sRetryCounter);	// RH, 20110104, n
@@ -740,7 +732,7 @@ public class SMSAuthSP extends AbstractAuthSP
 					}
 					else { // authenticate failed
 						_authenticationLogger.log(new Object[] {
-							MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied", Errors.ERROR_SMS_INVALID_PASSWORD
+							MODULE, sUid, servletRequest.getRemoteAddr(), sAserverId, "denied", Errors.ERROR_SMS_INVALID_PASSWORD
 						});
 						handleResult(servletRequest, servletResponse, pwOut, sResultCode, sLanguage, failureHandling);
 					}
@@ -748,7 +740,7 @@ public class SMSAuthSP extends AbstractAuthSP
 				else if (sResultCode.equals(Errors.ERROR_SMS_SUCCESS)) {  // success
 					// Authentication successfull
 					_authenticationLogger.log(new Object[] {
-						MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "granted"
+						MODULE, sUid, servletRequest.getRemoteAddr(), sAserverId, "granted"
 					});
 
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Success");
@@ -1034,7 +1026,7 @@ public class SMSAuthSP extends AbstractAuthSP
 		if (_fixed_secret == null) {
 			result = _oSmsSender.sendSms(_sSmsText, sSecret, _sSmsFrom, sRecipient);	// RH, 20110913, n
 		}
-		servRequest.getSession().setAttribute("generated_secret", sSecret);
+		servRequest.getSession(true).setAttribute("generated_secret", sSecret);
 		return result;
 	}
 

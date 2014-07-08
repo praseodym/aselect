@@ -179,7 +179,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	private String _sErrorHtmlTemplate;
 	/** HTML error templates */
 	private String _sAuthenticateHtmlTemplate;
-
+	
 	// failure handling properties
 	private Properties _oErrorProperties;
 	private String _sFailureHandling;
@@ -606,7 +606,6 @@ public class LDAPAuthSP extends ASelectHttpServlet
 					}
 					else {
 						// authenticate failed
-						// set selfBlockedTime in the directory
 						_authenticationLogger.log(new Object[] {
 							MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied", Errors.ERROR_LDAP_INVALID_PASSWORD
 						});
@@ -888,38 +887,25 @@ public class LDAPAuthSP extends ASelectHttpServlet
 			throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);
 		}
 
-		// 20120105, Bauke: URL decoding has been done earlier
-//		try {  // Authenticate the user
-//			sUid = URLDecoder.decode(sUid, "UTF-8");
-//			sPassword = URLDecoder.decode(sPassword, "UTF-8");
-
-			ILDAPProtocolHandler oProtocolHandler = LDAPProtocolHandlerFactory.instantiateProtocolHandler(
-					_oAuthSpConfig, sUid, _systemLogger);
-			
-			// The authentication is here, handled by the actual ProtocolHandler
-			// Must check for selfBlockedTime
-			String sResultCode = oProtocolHandler.authenticate(sPassword);
-			
-			if (sResultCode.equals(Errors.ERROR_LDAP_SUCCESS)) {  // Authentication successful
-				_authenticationLogger.log(new Object[] {
-					MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "granted"
-				});
-			}
-			else if (sResultCode.equals(Errors.ERROR_LDAP_INVALID_PASSWORD)) {  // invalid password
-				_authenticationLogger.log(new Object[] {
-					MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "denied", Errors.ERROR_LDAP_INVALID_PASSWORD
-				});
-				throw new ASelectException(sResultCode);
-			}
-			else {  // other error
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not authenticate user, cause:" + sResultCode);
-				throw new ASelectException(sResultCode);
-			}
-//		}
-//		catch (UnsupportedEncodingException eUE) {
-//			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not decode request parameter", eUE);
-//			throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR);
-//		}
+		ILDAPProtocolHandler oProtocolHandler = LDAPProtocolHandlerFactory.instantiateProtocolHandler(_oAuthSpConfig, sUid, _systemLogger);
+		
+		// The authentication is here, handled by the actual ProtocolHandler
+		String sResultCode = oProtocolHandler.authenticate(sPassword);
+		if (sResultCode.equals(Errors.ERROR_LDAP_SUCCESS)) {  // Authentication successful
+			_authenticationLogger.log(new Object[] {
+				MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "granted"
+			});
+		}
+		else if (sResultCode.equals(Errors.ERROR_LDAP_INVALID_PASSWORD)) {  // invalid password
+			_authenticationLogger.log(new Object[] {
+				MODULE, sUid, servletRequest.getRemoteAddr(), sAsID, "denied", Errors.ERROR_LDAP_INVALID_PASSWORD
+			});
+			throw new ASelectException(sResultCode);
+		}
+		else {  // other error
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not authenticate user, cause:" + sResultCode);
+			throw new ASelectException(sResultCode);
+		}
 	}
 
 	/**

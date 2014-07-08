@@ -71,6 +71,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.sam.agent.SAMResource;
+import org.aselect.system.utils.Utils;
 
 
 /**
@@ -139,12 +140,14 @@ public class LDAPProtocolHandlerFactory
 			String sPrincipalDn = (String) htContext.get("security_principal_dn");
 			String sPrincipalPwd = (String) htContext.get("security_principal_password");
 			Boolean boolFullUid = (Boolean) htContext.get("full_uid");
+			String sAttrAllowedLogins = (String) htContext.get("attr_allowed_logins");
+			String sAttrValidUntil = (String) htContext.get("attr_valid_until");
 
 			Class cClass = Class.forName(sProtocolHandlerName);
 			ILDAPProtocolHandler oProtocolHandler = (ILDAPProtocolHandler) cClass.newInstance();
 
-			if (!oProtocolHandler.init(sLDAPUrl, sStorageDriver, sUsersDn, sUserIdDn, boolFullUid.booleanValue(), sUid,
-					sPrincipalDn, sPrincipalPwd, systemLogger)) {
+			if (!oProtocolHandler.init(sLDAPUrl, sStorageDriver, sUsersDn, sUserIdDn, boolFullUid.booleanValue(),
+					sUid, sPrincipalDn, sPrincipalPwd, sAttrAllowedLogins, sAttrValidUntil, systemLogger)) {
 				systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not initialize LDAP protocol handler.");
 				throw new ASelectException(Errors.ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER);
 			}
@@ -395,6 +398,8 @@ public class LDAPProtocolHandlerFactory
 			catch (ASelectConfigException e) {
 				sPrincipalPwd = ""; // use default
 			}
+			String sAttrAllowedLogins = Utils.getSimpleParam(oConfigManager, oSystemLogger, oBackendServer, "attr_allowed_logins", false);
+			String sAttrValidUntil = Utils.getSimpleParam(oConfigManager, oSystemLogger, oBackendServer, "attr_valid_until", false);
 
 			boolean bFullUid = false;
 			String sFullUid = null;
@@ -430,6 +435,8 @@ public class LDAPProtocolHandlerFactory
 			htResponse.put("security_principal_dn", sPrincipalDn);
 			htResponse.put("security_principal_password", sPrincipalPwd);
 			htResponse.put("full_uid", new Boolean(bFullUid));
+			htResponse.put("attr_allowed_logins", sAttrAllowedLogins);
+			htResponse.put("attr_valid_until", sAttrValidUntil);
 
 			return htResponse;
 		}

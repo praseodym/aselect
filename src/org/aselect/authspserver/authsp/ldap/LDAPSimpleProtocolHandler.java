@@ -9,40 +9,9 @@
  * If you did not receive a copy of the LICENSE 
  * please contact SURFnet bv. (http://www.surfnet.nl)
  */
-
-/* 
- * $Id: LDAPSimpleProtocolHandler.java,v 1.10 2006/05/03 10:06:47 tom Exp $ 
- *
- * Changelog:
- * $Log: LDAPSimpleProtocolHandler.java,v $
- * Revision 1.10  2006/05/03 10:06:47  tom
- * Removed Javadoc version
- *
- * Revision 1.9  2005/09/08 13:07:37  erwin
- * Changed version number to 1.4.2
- *
- * Revision 1.8  2005/04/29 11:38:47  martijn
- * fixed bugs in logging
- *
- * Revision 1.7  2005/03/29 13:47:24  martijn
- * config item port has been removed from the config, now using ldap://www.test.com:port instead
- *
- * Revision 1.6  2005/03/24 09:56:30  erwin
- * Fixed numberformat exception and problem with error handling
- *
- * Revision 1.5  2005/03/23 09:48:38  erwin
- * - Applied code style
- * - Added javadoc
- * - Improved error handling
- *
- * Revision 1.4  2005/03/14 12:15:17  martijn
- *
- * Revision 1.3  2005/02/04 10:12:40  leon
- * code restyle and license added
- *
- */
 package org.aselect.authspserver.authsp.ldap;
 
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.logging.Level;
 
@@ -53,12 +22,14 @@ import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.NoPermissionException;
 import javax.naming.directory.Attributes;
+import javax.naming.directory.BasicAttributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.Utils;
 
 /**
  * A basic LDAP protocol handler. <br>
@@ -77,6 +48,7 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 	// Set the module name.
 	public LDAPSimpleProtocolHandler()
 	{
+		//_systemLogger.log(Level.FINE, _sModule, "creator", "simple");
 		_sModule = "LDAPSimpleProtocolHandler";
 	}
 
@@ -111,14 +83,13 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 	protected void doBind(String sPassword)
 	throws ASelectException
 	{
-		String sMethod = "doBind()";
+		String sMethod = "doBind";
 		StringBuffer sbTemp = null;
-		DirContext oDirContext = null;
+		DirContext oDirContext = null, oPrincipalContext = null;
 		String sQuery = null;
 		String sRelUserDn = null;
-		NamingEnumeration enumSearchResults = null;
-
-		Hashtable htEnvironment = new Hashtable();
+		NamingEnumeration<SearchResult> enumSearchResults = null;
+		Hashtable<String, String> htEnvironment = new Hashtable<String, String>();
 
 		if (_sPrincipalDn.equals("")) {
 			// If no principal DN is known, we do a simple binding
@@ -130,12 +101,14 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 			sbTemp.append(", ").append(_sBaseDn);
 			htEnvironment.put(Context.SECURITY_PRINCIPAL, sbTemp.toString());
 			htEnvironment.put(Context.SECURITY_CREDENTIALS, sPassword);
+			additionalSettings(htEnvironment);
 
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "BIND " + _sLDAPUrl + "_" + _sDriver + "_" + "simple1"
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "USR_BIND " + _sLDAPUrl + "_" + _sDriver + "_" + "simple1"
 					+ "_" + sbTemp.toString());
 			try {
-				/////////////////////////////////////////////////////////////////////
 				oDirContext = new InitialDirContext(htEnvironment);
+				// NOTE: the user may not have permissions to upd/del his own account
+				// So, just forget it: checkAllowedLogins(sbTemp.toString(), oDirContext);
 			}
 			catch (AuthenticationException e) {
 				/*
@@ -154,131 +127,139 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 				 * service. The inability to communicate with the service might be a result of many factors, such as
 				 * network partitioning, hardware or interface problems, failures on either the client or server side.
 				 * This exception is meant to be used to capture such communication problems.
+				 * The root cause can contain additional SSL error information.
 				 */
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "A communication error has occured", eC);
+				Throwable tRoot = eC.getRootCause();
+				if (tRoot == null) {
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, "A communication error has occurred", eC);
+				}
+				else {
+					sbTemp = new StringBuffer("A communication error has occurred, root cause: \"");
+					sbTemp.append(tRoot.getMessage()).append("\"");
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, sbTemp.toString(), eC);
+				}
 				throw new ASelectException(Errors.ERROR_LDAP_COULD_NOT_REACH_LDAP_SERVER, eC);
 			}
 			catch (NamingException eN) {
 				// The initial directory context could not be created.
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "A naming error has occured", eN);
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "A naming error has occurred", eN);
 				throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR, eN);
 			}
-
-			try {
-				oDirContext.close();
+			finally {
+				try {
+					if (oDirContext != null)
+						oDirContext.close();
+				}
+				catch (Exception e) {
+					sbTemp = new StringBuffer("Could not close connection to '").append(_sLDAPUrl).append("'");
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, sbTemp.toString(), e);
+				}
 			}
-			catch (Exception e) {
-				sbTemp = new StringBuffer("Could not close connection to '");
-				sbTemp.append(_sLDAPUrl);
-				sbTemp.append("'");
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, sbTemp.toString(), e);
-			}
+			return;
 		}
-		else { // otherwise we do a subtree search
+
+		oDirContext = null;  // just to make sure
+		try {
+			// Otherwise we do a subtree search using the principal dn
 			// Step 1: bind to LDAP using security principal's DN & PWD
 			htEnvironment.put(Context.PROVIDER_URL, _sLDAPUrl);
 			htEnvironment.put(Context.INITIAL_CONTEXT_FACTORY, _sDriver); // USED TO BE: _sLDAPUrl);
 			htEnvironment.put(Context.SECURITY_AUTHENTICATION, "simple");
 			htEnvironment.put(Context.SECURITY_PRINCIPAL, _sPrincipalDn);
 			htEnvironment.put(Context.SECURITY_CREDENTIALS, _sPrincipalPwd);
-
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "BIND " + _sLDAPUrl + "_" + _sDriver + "_" + "simple2"
+			additionalSettings(htEnvironment);
+	
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "PRINCP_BIND " + _sLDAPUrl + "_" + _sDriver + "_" + "simple2"
 					+ "_" + _sPrincipalDn + "_" + _sPrincipalPwd);
 			try {
-				oDirContext = new InitialDirContext(htEnvironment);
+				oPrincipalContext = new InitialDirContext(htEnvironment);
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "Principal login OK");
 			}
 			catch (AuthenticationException eA) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not bind to LDAP server", eA);
 				throw new ASelectException(Errors.ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER, eA);
 			}
 			catch (CommunicationException eC) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "An communication error has occured", eC);
+				Throwable tRoot = eC.getRootCause();
+				if (tRoot == null) {
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, "A communication error has occurred", eC);
+				}
+				else {
+					sbTemp = new StringBuffer("A communication error has occurred, root cause: \"");
+					sbTemp.append(tRoot.getMessage()).append("\"");
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, sbTemp.toString(), eC);
+				}
 				throw new ASelectException(Errors.ERROR_LDAP_COULD_NOT_REACH_LDAP_SERVER, eC);
 			}
 			catch (NamingException eN) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "An naming error has occured", eN);
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "An naming error has occurred", eN);
 				throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR, eN);
 			}
-
+	
 			// DirContext creation using the principal DN succeeded
 			// Step 2: search for user's DN relative to base DN
 			sbTemp = new StringBuffer("(").append(_sUserDn).append("=").append(_sUid).append(")");
 			sQuery = sbTemp.toString();
-
+	
 			SearchControls oScope = new SearchControls();
 			oScope.setSearchScope(SearchControls.SUBTREE_SCOPE);
-
+	
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "SRCH " + _sBaseDn + "_" + sQuery + "_sub");
 			try {
-				enumSearchResults = oDirContext.search(_sBaseDn, sQuery, oScope);
+				enumSearchResults = oPrincipalContext.search(_sBaseDn, sQuery, oScope);
 			}
 			catch (NamingException eN) {
-				sbTemp = new StringBuffer("User '");
-				sbTemp.append(_sUid);
-				sbTemp.append("' is unknown");
+				sbTemp = new StringBuffer("User '").append(_sUid).append("' is unknown");
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, sbTemp.toString(), eN);
 				throw new ASelectException(Errors.ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER);
 			}
-			finally {
-				try {
-					if (oDirContext != null) {
-						oDirContext.close();
-						oDirContext = null;
-					}
-				}
-				catch (Exception e) {
-					sbTemp = new StringBuffer("Could not close connection with '");
-					sbTemp.append(_sLDAPUrl);
-					sbTemp.append("'");
-					_systemLogger.log(Level.WARNING, _sModule, sMethod, sbTemp.toString(), e);
-				}
-			}
-
-			try {
-				// Check if we got a result
+	
+			try {  // Check if we got a result
 				if (!enumSearchResults.hasMore()) {
 					sbTemp = new StringBuffer("User '").append(_sUid);
-					sbTemp.append("' not found during LDAP search. The filter was: '");
-					sbTemp.append(sQuery).append("'.");
+					sbTemp.append("' not found during LDAP search. The filter was: '").append(sQuery).append("'.");
 					_systemLogger.log(Level.WARNING, _sModule, sMethod, sbTemp.toString());
 					throw new ASelectException(Errors.ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER);
 				}
-
-				SearchResult searchResult = (SearchResult) enumSearchResults.next();
-				sRelUserDn = searchResult.getName();
+	
+				SearchResult oSearchResult = (SearchResult) enumSearchResults.next();
+				sRelUserDn = oSearchResult.getName();
+				// prevent memory leaks in shaky LDAP implementations(154)
 				enumSearchResults.close();
 				if (sRelUserDn == null) {
-					sbTemp = new StringBuffer("No user DN was returned for '");
-					sbTemp.append(_sUid).append("'.");
+					sbTemp = new StringBuffer("No user DN was returned for '").append(_sUid).append("'.");
 					_systemLogger.log(Level.WARNING, _sModule, sMethod, sbTemp.toString());
 					throw new ASelectException(Errors.ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER);
 				}
 			}
 			catch (NamingException eN) {
-				sbTemp = new StringBuffer("failed to fetch profile of user '");
-				sbTemp.append(_sUid);
-				sbTemp.append("'");
+				sbTemp = new StringBuffer("failed to fetch profile of user '").append(_sUid).append("'");
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, sbTemp.toString(), eN);
 				throw new ASelectException(Errors.ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER);
 			}
-
-			// Step 3: Bind using user's credentials
+	
+			// Step 3: Bind using the user's credentials
 			sbTemp = new StringBuffer(sRelUserDn).append(",").append(_sBaseDn);
-
-			htEnvironment = new Hashtable();
+			htEnvironment = new Hashtable<String, String>();
 			htEnvironment.put(Context.PROVIDER_URL, _sLDAPUrl);
 			htEnvironment.put(Context.INITIAL_CONTEXT_FACTORY, _sDriver);
 			htEnvironment.put(Context.SECURITY_AUTHENTICATION, "simple");
 			htEnvironment.put(Context.SECURITY_PRINCIPAL, sbTemp.toString());
 			htEnvironment.put(Context.SECURITY_CREDENTIALS, sPassword);
-
+			additionalSettings(htEnvironment);
+	
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "USR_BIND " + _sLDAPUrl + "_" + _sDriver +
 					"_" + "simple3"	+ "_" + sbTemp.toString());
 			try {
 				oDirContext = new InitialDirContext(htEnvironment);
-				Attributes attr = oDirContext.getAttributes(sbTemp.toString());
-				// Check for selfBlockedTime
-				_systemLogger.log(Level.INFO, _sModule, sMethod, "Attributes="+attr);
+				// User login succeeded
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "User login OK");
+				// The user may not have permissions to upd/del account, therefore use the Principal account
+				int rc = checkAllowedLogins(sbTemp.toString(), oPrincipalContext);
+				if (rc != 0) {
+					_systemLogger.log(Level.INFO, _sModule, sMethod, "Account not OK, either no logins left, or login no longer valid");
+					throw new ASelectException(Errors.ERROR_LDAP_INVALID_PASSWORD);
+				}
 			}
 			catch (NoPermissionException eP) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, "No permission: expl=" + eP.getExplanation(), eP);
@@ -286,28 +267,179 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 			}
 			catch (AuthenticationException e) {
 				StringBuffer sbFine = new StringBuffer("Could not authenticate user (invalid password): ").append(_sUid)
-					.append(" expl="+e.getExplanation()).append(" cause="+e.getCause());
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, sbFine.toString());
+									.append(" expl="+e.getExplanation()).append(" cause="+e.getCause());
+				_systemLogger.log(Level.INFO, _sModule, sMethod, sbFine.toString());
 				throw new ASelectException(Errors.ERROR_LDAP_INVALID_PASSWORD);
 			}
 			catch (CommunicationException eC) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "A communication error has occured: expl="+eC.getExplanation(), eC);
+				Throwable tRoot = eC.getRootCause();
+				if (tRoot == null) {
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, "A communication error has occurred", eC);
+				}
+				else {
+					sbTemp = new StringBuffer("A communication error has occurred, root cause: '");
+					sbTemp.append(tRoot.getMessage()).append("'");
+					_systemLogger.log(Level.WARNING, _sModule, sMethod, sbTemp.toString(), eC);
+				}
 				throw new ASelectException(Errors.ERROR_LDAP_COULD_NOT_REACH_LDAP_SERVER, eC);
 			}
 			catch (NamingException eN) {
-				_systemLogger.log(Level.WARNING, _sModule, sMethod, "A naming error has occured: expl=" + eN.getExplanation(), eN);
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "A naming error has occurred: expl=" + eN.getExplanation(), eN);
 				throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR, eN);
 			}
-
+		}
+		finally {
 			try {
-				oDirContext.close();
+				if (oDirContext != null) oDirContext.close();
 			}
 			catch (Exception e) {
-				sbTemp = new StringBuffer("Could not close connection to '");
-				sbTemp.append(_sLDAPUrl).append("'");
+				sbTemp = new StringBuffer("Could not close connection to '").append(_sLDAPUrl).append("'");
 				_systemLogger.log(Level.WARNING, _sModule, sMethod, sbTemp.toString(), e);
 			}
-		}
-		//
+			try {
+				if (oPrincipalContext != null) oPrincipalContext.close();
+			}
+			catch (Exception e) {
+				sbTemp = new StringBuffer("Could not close connection to '").append(_sLDAPUrl).append("'");
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, sbTemp.toString(), e);
+			}
+		}			
 	}
+
+	/**
+	 * Check allowed logins.
+	 * 
+	 * @param sUserDN
+	 *            the user's DN
+	 * @param oDirContext
+	 *            the directory context
+	 * @return 0: ok, -1: not enough logins, or validity time has passed
+	 * @throws NamingException
+	 * @throws ASelectException
+	 */
+	private int checkAllowedLogins(String sUserDN, DirContext oDirContext)
+	throws NamingException, ASelectException
+	{
+		final String sMethod = "checkAllowedLogins";
+		int rc;
+		
+		Attributes attrs = oDirContext.getAttributes(sUserDN);
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "attr_valid_until="+_sAttrValidUntil+" attr_allowed_logins="+_sAttrAllowedLogins+" Attributes="+attrs);
+		
+		// Check validity time first
+		if (Utils.hasValue(_sAttrValidUntil)) {
+			String sValidUntil = getAttribute(attrs, _sAttrValidUntil);
+			if (Utils.hasValue(sValidUntil)) {  // validity time was set
+				long now = new Date().getTime();
+				long validUntil = Long.valueOf(sValidUntil);
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "now="+now+" validUntil="+validUntil+" Seconds left: "+String.valueOf((validUntil-now)/1000));
+				if (now > validUntil) {
+					return -1;  // not OK
+				}
+			}
+		}
+
+		// Check number of allowed logins
+		if (Utils.hasValue(_sAttrAllowedLogins)) {
+			String sLoginsLeft = getAttribute(attrs, _sAttrAllowedLogins);
+			if (Utils.hasValue(sLoginsLeft)) {
+				int loginsLeft = Integer.valueOf(sLoginsLeft);
+				_systemLogger.log(Level.INFO, _sModule, sMethod, "loginsLeft="+loginsLeft);
+				loginsLeft--;
+				if (loginsLeft <= 0) {
+					// delete account
+					rc = delLDAPEntry(oDirContext, sUserDN.toString());
+				}
+				else {
+					Attributes newAttrs = new BasicAttributes();
+					newAttrs.put(_sAttrAllowedLogins, String.valueOf(loginsLeft));
+					// update account
+					rc = updLDAPEntry(oDirContext, sUserDN.toString(), newAttrs);
+				}
+				if (rc < 0) {
+					throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR);
+				}
+				return (loginsLeft >= 0)? 0: -1;
+			}
+		}
+		return 0;  // OK
+	}
+
+	/**
+	 * @param htEnvironment
+	 */
+	protected void additionalSettings(Hashtable<String, String> htEnvironment)
+	{
+		//_systemLogger.log(Level.FINE, _sModule, "additionalSettings", "simple");
+	}
+	
+	/**
+	 * Gets attribute 'name' from 'attrs'.
+	 * 
+	 * @param attrs
+	 *            the attribute set
+	 * @param name
+	 *            the attribute name
+	 * @return the requested attribute's value
+	 */
+    static public String getAttribute(Attributes attrs, String name)
+	{
+		try {
+			return attrs.get(name).get().toString();
+		}
+		catch (Exception e) {
+			return "";
+		}
+	}
+
+    /**
+	 * Upd ldap entry.
+	 * Expect "cn=<value>" in 'cn' argument.
+	 * 
+	 * @param cn - the cn
+	 * @param attrs - the attrs
+	 * @param bDel - delete attribute?
+	 * @return 0: success, -1: failure
+	 */
+    public int updLDAPEntry(DirContext ldapContext, String userDN, Attributes attrs)
+    {
+    	final String sMethod = "updLDAPEntry";
+
+    	int mode = DirContext.REPLACE_ATTRIBUTE;
+    	try {
+    		_systemLogger.log(Level.FINE, _sModule, sMethod, "Upd: "+userDN+" mode="+mode);
+    		ldapContext.modifyAttributes(userDN, mode, attrs);
+		}
+    	catch (NamingException e) {
+    		_systemLogger.log(Level.FINE, _sModule, sMethod, "updLDAPentry("+userDN+") -> FAILED: "+e);
+    		return -1;
+		}
+    	return 0;
+    }
+
+    /**
+	 * Delete an LDAP entry.
+	 * Expect "cn=<value>" in 'cn' argument.
+	 * 
+	 * @param cn
+	 *            the cn of the entry
+	 * @param subContainer
+	 *            the sub container within the user Container
+	 *            use null when entry is directly below the user Container
+	 * @return result: 0 or -1
+	 */
+    public int delLDAPEntry(DirContext ldapContext, String userDN)
+    {
+    	final String sMethod = "delLDAPEntry";
+    	
+    	try {
+    		_systemLogger.log(Level.FINE, _sModule, sMethod, "Del: "+userDN);
+			ldapContext.destroySubcontext(userDN);
+		}
+    	catch (NamingException e) {
+    		_systemLogger.log(Level.FINE, _sModule, sMethod, "delLDAPentry("+userDN+") -> FAILED: "+e);
+    		return -1;
+		}
+    	return 0;
+    }
 }
