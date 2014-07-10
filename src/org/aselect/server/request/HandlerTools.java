@@ -33,7 +33,6 @@ import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
-import org.aselect.server.request.handler.xsaml20.SecurityLevel;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.BASE64Encoder;
@@ -54,7 +53,6 @@ import org.opensaml.saml2.core.NameID;
 import org.opensaml.saml2.core.NameIDType;
 import org.opensaml.saml2.core.Subject;
 import org.opensaml.saml2.core.SubjectConfirmation;
-import org.opensaml.xml.Namespace;
 import org.opensaml.xml.XMLObjectBuilder;
 import org.opensaml.xml.XMLObjectBuilderFactory;
 import org.opensaml.xml.io.Marshaller;
@@ -63,8 +61,6 @@ import org.opensaml.xml.io.MarshallingException;
 import org.opensaml.xml.schema.XSString;
 import org.opensaml.xml.util.XMLHelper;
 import org.w3c.dom.Node;
-
-import antlr.NameSpace;
 
 /*
  * Generic Tools for all Handler routines
