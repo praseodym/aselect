@@ -106,6 +106,8 @@ public class Application
 	 * Boolean indicates that On-Behalf-Of is enabled. Will trigger OnBehalfOf form after tgt has been issued.
 	 */
 	private boolean _OBOEnabled = false;
+	// Fixed parameters for OBO
+	private HashMap<String, String> _htOBOParameters = null;	// RH, 20140707, n
 
 	// Optional application specific AttributeConsumerServiveIndex for SAML AuthnRequest
 	private String _sForcedAttrConsServIndex = null;	// RH, 20140505, n
@@ -698,6 +700,16 @@ public class Application
 
 	public synchronized void setForcedAttrConsServIndex(String _sForcedAttrConsServIndex) {
 		this._sForcedAttrConsServIndex = _sForcedAttrConsServIndex;
+	}
+
+	public synchronized HashMap<String, String> getOBOParameters()
+	{
+		return _htOBOParameters;
+	}
+
+	public synchronized void setOBOParameters(HashMap<String, String> htOBOParameters)
+	{
+		_htOBOParameters = htOBOParameters;
 	}
 
 }

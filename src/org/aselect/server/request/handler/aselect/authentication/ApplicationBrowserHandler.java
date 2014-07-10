@@ -296,13 +296,12 @@ import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse; //import org.aselect.system.servlet.HtmlInfo;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.aselect.server.application.Application;
 import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.attributes.AttributeGatherer;
-import org.aselect.server.authspprotocol.IAuthSPConditions;
 import org.aselect.server.authspprotocol.IAuthSPDirectLoginProtocolHandler;
 import org.aselect.server.authspprotocol.IAuthSPProtocolHandler;
 import org.aselect.server.authspprotocol.handler.AuthSPHandlerManager;
@@ -320,6 +319,8 @@ import org.aselect.server.sam.ASelectSAMAgent;
 import org.aselect.server.tgt.TGTIssuer;
 import org.aselect.server.udb.IUDBConnector;
 import org.aselect.server.udb.UDBConnectorFactory;
+import org.aselect.system.communication.client.IClientCommunicator;
+import org.aselect.system.communication.client.json.JSONCommunicator;
 import org.aselect.system.communication.client.raw.RawCommunicator;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
@@ -336,7 +337,12 @@ import org.aselect.system.utils.Utils;
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.saml2.core.Assertion;
 import org.opensaml.xml.ConfigurationException;
+import org.opensaml.xml.io.Marshaller;
+import org.opensaml.xml.io.MarshallerFactory;
+import org.opensaml.xml.io.MarshallingException;
+import org.opensaml.xml.util.Base64;
 import org.opensaml.xml.util.XMLHelper;
+import org.w3c.dom.Node;
 
 /**
  * This class handles login requests coming from applications through a users browser. <br>
@@ -365,6 +371,7 @@ import org.opensaml.xml.util.XMLHelper;
  */
 public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 {
+	private static final int OBO_MAXTRIES = 3;
 	private static final String SELECTFORMPREFIX = "select";
 	final String select_choice_COOKIE = "select_choice";
 	private ApplicationManager _applicationManager;
@@ -699,37 +706,40 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	throws ASelectException
 	{
 		String sMethod = "handleOnBehalfOf";
-		// fixme: verify if obo is enabled for this app_id
 
 //		String sRid = (String)htServiceRequest.get("rid");	// we are logged in, old rid has gone
 		String sOBOId = (String)htServiceRequest.get("obouid");
 		String sTgt = (String)htServiceRequest.get("aselect_credentials_tgt");
 		String sStep = (String)htServiceRequest.get("step");
 		String sOBOyn = (String)htServiceRequest.get("oboyn");
-		String sAppUrl = (String)htServiceRequest.get("app_url");	// session already deleted, we need the app_url
-		String sUid = (String)_htTGTContext.get("uid");
-		HashMap tempContext = new HashMap(); 
-		tempContext.put("uid", sUid);	// session has been deleted so we cannot use _htSessionContext
-		tempContext.put("app_url", sAppUrl);
+		String sAppUrl = (String)_htTGTContext.get("app_url");	// session already deleted, we need the app_url
+		String sAppId = (String)_htTGTContext.get("app_id");
 		
-		// fixme: validate step and oboyn
-//		if (sRid == null || sTgt == null || sStep == null ) {
+		String sUid = (String)_htTGTContext.get("uid");
+		Integer iOboRetries = (Integer)_htTGTContext.get("obo_retries");
+		
 		if (sStep == null ) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing some request parameter");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
-		String sAppId = (String)_htTGTContext.get("app_id");
 		if ( !Utils.hasValue(sAppId) ||  !ApplicationManager.getHandle().getApplication(sAppId).isOBOEnabled() ) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "On Behalf Of not enabled for application: " + sAppId);
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
-		_systemLogger.log(Level.FINER, _sModule, sMethod, "obouid="+sOBOId + ", step="+sStep + ", oboyn="+sOBOyn);
-		
-		int iStep = Integer.parseInt(sStep);
 
-//		// Stop the user-time pause
-//		Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);
-//		// No need to write the session, it's used below by calculateAndReportSensorData() and then discarded
+		HashMap oboParms = ApplicationManager.getHandle().getApplication(sAppId).getOBOParameters();
+		int obo_maxRetries = OBO_MAXTRIES; 
+		try {
+			obo_maxRetries = Integer.parseInt((String)oboParms.get("maxtries"));
+		} catch (NumberFormatException nfe ){
+			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Invalid parameter maxtries: " +  oboParms.get("maxtries") + ", using default:" + obo_maxRetries );
+		}
+		
+		_systemLogger.log(Level.FINER, _sModule, sMethod, "obouid="+sOBOId + ", step="+sStep + ", oboyn="+sOBOyn + ", obo_retries="+iOboRetries);
+		if ( iOboRetries == null ) {
+			iOboRetries = 0;
+		}
+		int iStep = Integer.parseInt(sStep);
 
 		switch (iStep) {
 		case 0:
@@ -737,7 +747,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				try {
 					String sSelectForm;
 					sSelectForm = org.aselect.server.utils.Utils.presentOnBehalfOf(_servletRequest, _configManager,
-							tempContext, null, (String)_htTGTContext.get("language"), 1 /* step 1, present obo request */);
+							htServiceRequest, null, (String)_htTGTContext.get("language"), 1 /* step 1, present obo request */);
 					servletResponse.setContentType("text/html");
 					
 					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);
@@ -758,20 +768,146 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		case 2:
 			// test obo_id here 11-proef, also prevents XSS on obo
 			// allow for re-entering obo from user
-			// fixme: implement maximum number of retries
-			////////////////////////////////////////////////
+			iOboRetries++;
+			if (iOboRetries > obo_maxRetries) {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "Maximum nuber of retries reached for on behalf of");
+				// maybe be more user friendly here, prsent some other form
+				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
+			}
 			boolean oboK = false;
 			String status = null; // Permit  Deny / Inderterminate / Invalid
 			if (org.aselect.system.utils.Utils.bsnCheck(sOBOId)) {
-				// fixme: implement obo validate and set status and oboK
-				oboK = true;	// for testing
-				status = "Permit"; 	// For testing
+
+				String sIssuer = (String)htServiceRequest.get("a-select-server");
+				if (oboParms.get("issuer") != null) {
+					sIssuer = (String)oboParms.get("issuer") ;	// overrule issuer
+				}
+				
+				String prefix = "";
+				if ( oboParms.get("prefix") != null ) {
+					prefix = (String)oboParms.get("prefix");
+				}
+				
+				if ( oboParms.get("identificatieCodeGemachtigde") != null ) {	// FOR TESTING 
+					sUid = (String)oboParms.get("identificatieCodeGemachtigde");	// only for wsserver request, does not update tgt
+				}
+
+				String sSubjectPrefix = "";
+				if ( oboParms.get("subjectprefix") != null ) {
+					sSubjectPrefix = (String)oboParms.get("subjectprefix");
+				}
+				
+				String sSubject = sSubjectPrefix + sUid;
+				String identificatieCodeVertegenwoordigde = prefix + sOBOId;
+				String identificatieSoortVertegenwoordigde = (String)oboParms.get("identificatieSoortVertegenwoordigde");
+				String identificatieCodeGemachtigde = prefix + sUid;
+				String identificatieSoortGemachtigde = (String)oboParms.get("identificatieSoortGemachtigde");
+				String identificatieCodeDienst = (String)oboParms.get("identificatieCodeDienst");
+				String identificatieCodeDienstAanbieder= (String)oboParms.get("identificatieCodeDienstAanbieder");
+
+				HashMap<String, String> parms = new HashMap<String, String>();
+				// No attributes to add for assertion (yet)
+
+				Assertion assertion = HandlerTools.createAuthnStatmeentAttributeStatementAssertion(parms, sIssuer, sSubject, true); //
+
+				// Maybe do it this way
+//				SamlTools.signSamlObject(assertion, String sAlgo,
+//						boolean addKeyName, boolean addCertificate)
+
+				// Marshall to the Node
+				MarshallerFactory factory = org.opensaml.xml.Configuration.getMarshallerFactory();
+				Marshaller marshaller = factory.getMarshaller(assertion);
+
+				Node node = null;
+				try {
+					node = marshaller.marshall(assertion);
+				}
+				catch (MarshallingException e) {
+					_systemLogger.log(Level.SEVERE, MODULE, sMethod, e.getMessage(), e);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not marshall assertion", e);
+					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+				}
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Marshalling done");
+				String sAssertion = XMLHelper.nodeToString(node);
+
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "sAssertion: " + sAssertion);
+
+				///////////////////////////////////////////////////
+//				net.sf.json.xml.XMLSerializer ser = new net.sf.json.xml.XMLSerializer();
+//				JSON jAssertion = ser.read(sAssertion);
+//				StringWriter jWriter = new StringWriter();
+//				jAssertion.write(jWriter);
+//				sAssertion = jWriter.toString();
+				// java.lang.ClassNotFoundException: nu.xom.Serializer
+
+				 IClientCommunicator _communicator;
+				
+				_communicator = new JSONCommunicator(_systemLogger);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "communicator= 'json' loaded");
+
+				String sURL = (String)oboParms.get("wsserverurl");
+
+				HashMap jsonrequest = new HashMap();
+				HashMap htRequestpairs = new HashMap();
+				try {
+//					sAssertion = Base64.encodeBytes(sAssertion.getBytes("UTF-8"));	// gives newlines, not accepted by json on receiver
+					sAssertion = Base64.encodeBytes(sAssertion.getBytes("UTF-8"), Base64.DONT_BREAK_LINES);	// violates strict Base64 specification
+					String key_assertion = "assertion";
+					htRequestpairs.put(key_assertion, URLEncoder.encode(sAssertion,  "UTF-8"));
+					String key_identificatiecodevertegenwoordigde = "identificatiecodevertegenwoordigde";
+					htRequestpairs.put(key_identificatiecodevertegenwoordigde, URLEncoder.encode(identificatieCodeVertegenwoordigde, "UTF-8"));
+					String key_identificatiesoortvertegenwoordigde = "identificatiesoortvertegenwoordigde";
+					htRequestpairs.put(key_identificatiesoortvertegenwoordigde, URLEncoder.encode(identificatieSoortVertegenwoordigde, "UTF-8"));
+					String key_identificatiecodegemachtigde = "identificatiecodegemachtigde";
+					htRequestpairs.put(key_identificatiecodegemachtigde, URLEncoder.encode(identificatieCodeGemachtigde, "UTF-8"));
+					String key_identificatiesoortgemachtigde = "identificatiesoortgemachtigde";
+					htRequestpairs.put(key_identificatiesoortgemachtigde, URLEncoder.encode(identificatieSoortGemachtigde, "UTF-8"));
+					String key_identificatiecodedienst = "identificatiecodedienst";
+					htRequestpairs.put(key_identificatiecodedienst, URLEncoder.encode(identificatieCodeDienst, "UTF-8"));
+					String key_identificatiecodedienstaanbieder = "identificatiecodedienstaanbieder";
+					htRequestpairs.put(key_identificatiecodedienstaanbieder, URLEncoder.encode(identificatieCodeDienstAanbieder, "UTF-8"));
+				}
+				catch (UnsupportedEncodingException e) {
+					_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Could not find or encode parameters for: " + sURL );
+					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+				}
+				
+				String jsonkey = "jsoninput";
+//				jsonrequest.put("request", "opvragenaanwezigheidmachtiging");
+				jsonrequest.put("request", (String)oboParms.get("wsserverrequest"));
+				jsonrequest.put(jsonkey, htRequestpairs);
+//				// set Configuration parameters
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "jsonrequest:" + jsonrequest);
+				
+				// send message
+				HashMap jsonResponse = new HashMap();
+
+				try {
+					jsonResponse = _communicator.sendMessage(jsonrequest, sURL);
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "jsonResponse:" + jsonResponse);
+					status = (String)jsonResponse.get((String)oboParms.get("wsserverresponse"));
+					// status can be null if request failed with error
+				} catch ( ASelectCommunicationException cex) {
+					////////////////////////////////////////////
+//					if ( "900034014".equalsIgnoreCase(sOBOId) ) {	// FOR TESTING ONLY 
+//						status = "Permit";
+//					} else {
+						status = "Deny"; 
+//					}
+				}
+				
+//				oboK = true;	// for testing
+				_systemLogger.log(Level.FINEST, "MachtigenClient returned status: " + status);
+				oboK = "Permit".equalsIgnoreCase(status);
+				
 			} else {
-				status = "Invalid"; 	// For testing
+//				status = "Invalid"; 	// For testing
+				status = "Deny";
 			}
 			if ( oboK ) {
 				_systemLogger.log(Level.FINEST, _sModule, sMethod, "Valide obo requested by user");
 				_htTGTContext.put("obouid", sOBOId);
+				_htTGTContext.remove("obo_retries");
 				// store oriuid, OBOServiceId, OBOValidFrom in tgt
 				_tgtManager.updateTGT(sTgt, _htTGTContext);
 				
@@ -779,12 +915,16 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			} else {	// not a bsn or invalid obo
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "Invalid bsn for obo, status: " + status );
 				ASelectEntrustmentLogger.getHandle().log((String)_htTGTContext.get("uid"), (String)_htTGTContext.get("client_ip"), (String)_htTGTContext.get("app_id"), sOBOId, status);
-				
+				_systemLogger.log(Level.FINEST, _sModule, sMethod, "Retrying, retry number:" +iOboRetries);
+				_htTGTContext.put("obo_retries", iOboRetries);
+				// store oriuid, OBOServiceId, OBOValidFrom in tgt
+				_tgtManager.updateTGT(sTgt, _htTGTContext);
+
 				// allow for re-entering obo from user
 				try {
 					String sSelectForm;
 					sSelectForm = org.aselect.server.utils.Utils.presentOnBehalfOf(_servletRequest, _configManager,
-							tempContext, null, (String)_htTGTContext.get("language"), 2 /* step 2, retry obo */);
+							htServiceRequest, null, (String)_htTGTContext.get("language"), 2 /* step 2, retry obo */);
 					servletResponse.setContentType("text/html");
 					
 					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);
@@ -810,7 +950,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 		// The tgt was just issued and updated, report sensor data
 		Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_sbh", null, _htSessionContext, sTgt, true);
-//		String sAppUrl = (String)_htSessionContext.get("app_url");
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIRECT to " + sAppUrl);
 
 		_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action

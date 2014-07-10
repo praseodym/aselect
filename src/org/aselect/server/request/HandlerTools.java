@@ -53,6 +53,8 @@ import org.opensaml.saml2.core.Issuer;
 import org.opensaml.saml2.core.NameID;
 import org.opensaml.saml2.core.NameIDType;
 import org.opensaml.saml2.core.Subject;
+import org.opensaml.saml2.core.SubjectConfirmation;
+import org.opensaml.xml.Namespace;
 import org.opensaml.xml.XMLObjectBuilder;
 import org.opensaml.xml.XMLObjectBuilderFactory;
 import org.opensaml.xml.io.Marshaller;
@@ -61,6 +63,8 @@ import org.opensaml.xml.io.MarshallingException;
 import org.opensaml.xml.schema.XSString;
 import org.opensaml.xml.util.XMLHelper;
 import org.w3c.dom.Node;
+
+import antlr.NameSpace;
 
 /*
  * Generic Tools for all Handler routines
@@ -430,6 +434,8 @@ public class HandlerTools
 	}
 
 	
+	
+	
 	/**
 	 * Creates the authn + attribute statement assertion.
 	 * 
@@ -470,15 +476,24 @@ public class HandlerTools
 		SAMLObjectBuilder<NameID> nameIDBuilder = (SAMLObjectBuilder<NameID>) _oBuilderFactory
 				.getBuilder(NameID.DEFAULT_ELEMENT_NAME);
 		NameID nameID = nameIDBuilder.buildObject();
-		nameID.setFormat(NameIDType.TRANSIENT); // was PERSISTENT
-		nameID.setNameQualifier(sIssuer);
+//		nameID.setFormat(NameIDType.TRANSIENT);
+//		nameID.setNameQualifier(sIssuer);
 		nameID.setValue(sSubject);
+		
+		SAMLObjectBuilder<SubjectConfirmation> subjectConfirmationBuilder = (SAMLObjectBuilder<SubjectConfirmation>) _oBuilderFactory
+		.getBuilder(SubjectConfirmation.DEFAULT_ELEMENT_NAME);
+		SubjectConfirmation subjectConfirmation = subjectConfirmationBuilder.buildObject();
+		subjectConfirmation.setMethod(SubjectConfirmation.METHOD_SENDER_VOUCHES);
+
+		
 		
 		systemLogger.log(Level.INFO, MODULE, sMethod, nameID.getValue());
 		SAMLObjectBuilder<Subject> subjectBuilder = (SAMLObjectBuilder<Subject>) _oBuilderFactory
 				.getBuilder(Subject.DEFAULT_ELEMENT_NAME);
 		Subject subject = subjectBuilder.buildObject();
 		subject.setNameID(nameID);
+		subject.getSubjectConfirmations().add(subjectConfirmation);
+
 
 		SAMLObjectBuilder<Issuer> assertionIssuerBuilder = (SAMLObjectBuilder<Issuer>) _oBuilderFactory
 				.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
@@ -542,7 +557,6 @@ public class HandlerTools
 			while (itr.hasNext()) {
 				String parmName = (String) itr.next();
 	
-				// Bauke, 20081202 replaced, cannot convert parms.get() to a String[]
 				Object oValue = parms.get(parmName);
 				if (!(oValue instanceof String)) {
 					systemLogger.log(Level.INFO, MODULE, sMethod, "Skip, not a String: "+parmName);
@@ -570,16 +584,9 @@ public class HandlerTools
 			systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the Assertion ======<" + assertion);
 		}
 
-		// // Only for testing
-		// if (!SamlTools.checkSignature(assertion, _configManager.getDefaultCertificate().getPublicKey()) ) {
-		// _systemLogger.log(Level.INFO, MODULE, sMethod, "Signing verification says signature NOT valid ?!?" );
-		// } else {
-		// _systemLogger.log(Level.INFO, MODULE, sMethod, "Signing verification says signature is valid!" );
-		// }
 		return assertion;
 	}
 
-	
 	
 	
 	/**

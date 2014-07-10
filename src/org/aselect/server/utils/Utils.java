@@ -123,19 +123,27 @@ public class Utils
 	{
 		
 		
-		String sUserId = (String)htSessionContext.get("user_id");
-		String sAppUrl = (String)htSessionContext.get("app_url");
 		String sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true);
 		String sServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
-		String sSelectForm = configManager.loadHTMLTemplate(null, "onbehalfof_step"+String.valueOf(step), sLanguage, sLanguage);	// maybe get this from application config
+		
+//		// sign various variables against tampering and xss
+//		/////////////////////////////////////////////////////
+//		HashMap hm = new HashMap();
+//		hm.put("redirect_url", sServerUrl);
+//		hm.put("server_id", sServerId);
+//		CryptoEngine c =CryptoEngine.getHandle();
+//		c.signRequest(hm);
+
 		String sRequest = "obo_choice";	// can we keep old request?
+		
+		
+		String sSelectForm = configManager.loadHTMLTemplate(null, "onbehalfof_step"+String.valueOf(step), sLanguage, sLanguage);	// maybe get this from application config
 		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[request]", sRequest);
-		if (sUserId != null) sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[user_id]", sUserId);
 //		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[rid]", sRid);
 		
-		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[app_url]", sAppUrl);
 		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[a-select-server]", sServerId);
 		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[aselect_url]", sServerUrl + "/obo_choice");
+//		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[signature]", (String)hm.get("signature"));
 		
 		StringBuffer sb = new StringBuffer();
 		/*	// unfortunately we have no list of "machtigingen"

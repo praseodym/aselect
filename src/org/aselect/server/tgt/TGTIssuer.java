@@ -557,6 +557,8 @@ throws ASelectException
 			htTGTContext.put("app_id", sAppId);
 			if (sLocalOrg != null)
 				htTGTContext.put("local_organization", sLocalOrg);
+			if (sAppUrl != null)	// should be
+				htTGTContext.put("app_url", sAppUrl);	// RH, 20140707, n
 
 			String sUserId = (String) htSessionContext.get("user_id");
 			htTGTContext.put("uid", sUserId);

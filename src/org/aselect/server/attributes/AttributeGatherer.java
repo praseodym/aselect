@@ -662,6 +662,7 @@ public class AttributeGatherer
 		Utils.copyHashmapValue("uid", htAttributes, htTGTContext);
 		Utils.copyHashmapValue("sel_uid", htAttributes, htTGTContext);
 		// 20120606, Bauke: Certainly not, is added by the filter: Utils.copyHashmapValue("usi", htAttributes, htTGTContext);
+		Utils.copyHashmapValue("obouid", htAttributes, htTGTContext);	// RH, 20140707, n
 
 		String sAuthsp = (String) htTGTContext.get("authsp");
 		if (sAuthsp != null)

@@ -353,8 +353,16 @@ public class ApplicationManager
 				
 				String sSelectform = ASelectConfigManager.getSimpleParam(oApplication, "selectform", false); // RH, 20121119, n
 
-				boolean onBehalfOf = Boolean.parseBoolean(ASelectConfigManager.getSimpleParam(oApplication, "onbehalfof", false));  // RH, 20140303, n
-
+//				boolean onBehalfOf = Boolean.parseBoolean(ASelectConfigManager.getSimpleParam(oApplication, "onbehalfof", false));  // RH, 20140303, n	// 20140707, o
+				boolean onBehalfOf =  false;  // RH, 20140707, sn
+				HashMap<String, String> _htOnBehalfOf = new HashMap<String, String>();
+				_htOnBehalfOf = ASelectConfigManager.getTableFromConfig(oApplication, _htOnBehalfOf,
+						"onbehalfof", "parameter", "name",/*->*/"value", false/* mandatory */, false/* unique values */);
+				if ( _htOnBehalfOf != null && !_htOnBehalfOf.isEmpty()) {
+					onBehalfOf = true;
+				}
+				 // RH, 20140707, en
+				
 				String sForcedAttrConsServIndex = ASelectConfigManager.getSimpleParam(oApplication, "forced_attrconsservindex", false); // RH, 20140505, n
 
 				// Bauke 20101125: For DigiD4Bedrijven:
@@ -418,6 +426,9 @@ public class ApplicationManager
 				application.setSelectform(sSelectform);	// RH, 20121119, n
 				
 				application.setOBOEnabled(onBehalfOf);  // RH, 20140303, n
+				if (onBehalfOf) { // RH, 20140707, sn
+					application.setOBOParameters(_htOnBehalfOf);
+				} // RH, 20140707, en
 
 				application.setForcedAttrConsServIndex(sForcedAttrConsServIndex);  // RH, 20140505, n
 				
