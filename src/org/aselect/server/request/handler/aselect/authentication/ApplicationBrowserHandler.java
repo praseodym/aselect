@@ -866,6 +866,12 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					htRequestpairs.put(key_identificatiecodedienst, URLEncoder.encode(identificatieCodeDienst, "UTF-8"));
 					String key_identificatiecodedienstaanbieder = "identificatiecodedienstaanbieder";
 					htRequestpairs.put(key_identificatiecodedienstaanbieder, URLEncoder.encode(identificatieCodeDienstAanbieder, "UTF-8"));
+
+					String key_issuer = "issuer";
+					htRequestpairs.put(key_issuer, URLEncoder.encode(sIssuer, "UTF-8"));
+					String key_subjectprefix = "subjectprefix";
+					htRequestpairs.put(key_subjectprefix, URLEncoder.encode(sSubjectPrefix, "UTF-8"));
+					
 				}
 				catch (UnsupportedEncodingException e) {
 					_systemLogger.log(Level.SEVERE, _sModule, sMethod, "Could not find or encode parameters for: " + sURL );
