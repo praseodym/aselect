@@ -810,10 +810,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 				Assertion assertion = HandlerTools.createAuthnStatmeentAttributeStatementAssertion(parms, sIssuer, sSubject, true); //
 
-				// Maybe do it this way
-//				SamlTools.signSamlObject(assertion, String sAlgo,
-//						boolean addKeyName, boolean addCertificate)
-
 				// Marshall to the Node
 				MarshallerFactory factory = org.opensaml.xml.Configuration.getMarshallerFactory();
 				Marshaller marshaller = factory.getMarshaller(assertion);
@@ -831,14 +827,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				String sAssertion = XMLHelper.nodeToString(node);
 
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "sAssertion: " + sAssertion);
-
-				///////////////////////////////////////////////////
-//				net.sf.json.xml.XMLSerializer ser = new net.sf.json.xml.XMLSerializer();
-//				JSON jAssertion = ser.read(sAssertion);
-//				StringWriter jWriter = new StringWriter();
-//				jAssertion.write(jWriter);
-//				sAssertion = jWriter.toString();
-				// java.lang.ClassNotFoundException: nu.xom.Serializer
 
 				 IClientCommunicator _communicator;
 				
@@ -879,7 +867,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				}
 				
 				String jsonkey = "jsoninput";
-//				jsonrequest.put("request", "opvragenaanwezigheidmachtiging");
 				jsonrequest.put("request", (String)oboParms.get("wsserverrequest"));
 				jsonrequest.put(jsonkey, htRequestpairs);
 //				// set Configuration parameters
@@ -894,28 +881,21 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					status = (String)jsonResponse.get((String)oboParms.get("wsserverresponse"));
 					// status can be null if request failed with error
 				} catch ( ASelectCommunicationException cex) {
-					////////////////////////////////////////////
-//					if ( "900034014".equalsIgnoreCase(sOBOId) ) {	// FOR TESTING ONLY 
-//						status = "Permit";
-//					} else {
 						status = "Deny"; 
-//					}
 				}
 				
-//				oboK = true;	// for testing
-				_systemLogger.log(Level.FINEST, "MachtigenClient returned status: " + status);
-				oboK = "Permit".equalsIgnoreCase(status);
+				_systemLogger.log(Level.FINER, "MachtigenClient returned status: " + status);
 				
 			} else {
-//				status = "Invalid"; 	// For testing
+				_systemLogger.log(Level.FINER, "BSN check failed");
 				status = "Deny";
 			}
+			oboK = "Permit".equalsIgnoreCase(status);
 			if ( oboK ) {
 				_systemLogger.log(Level.FINEST, _sModule, sMethod, "Valide obo requested by user");
 				_htTGTContext.put("obouid", sOBOId);
 				_htTGTContext.remove("obo_retries");
 				_htTGTContext.remove("obo_app_url");
-				// store oriuid, OBOServiceId, OBOValidFrom in tgt
 				_tgtManager.updateTGT(sTgt, _htTGTContext);
 				
 				ASelectEntrustmentLogger.getHandle().log((String)_htTGTContext.get("uid"), (String)_htTGTContext.get("client_ip"), (String)_htTGTContext.get("app_id"), sOBOId, status);

@@ -117,12 +117,9 @@ public class JSONCommunicator implements IClientCommunicator
 		if (sResponse != null) {
 //				htReturn = convertCGIMessage(sResponse);
 			_systemLogger.log( Level.FINEST, MODULE, sMethod, "parsing message." );
-//			JSONArray jsonArray = (JSONArray) JSONSerializer.toJSON( sResponse );  
-			JSONObject jsonObject = (JSONObject) JSONSerializer.toJSON( sResponse );  
-//			_systemLogger.log( Level.FINEST, MODULE, sMethod, "received message parsed:" + jsonArray.toString() );
-			_systemLogger.log( Level.FINEST, MODULE, sMethod, "received message parsed:" + jsonObject.toString() );
-//			htReturn = new HashMap((Map<String, Object>) JSONObject.toBean(jsonArray.getJSONObject(0), Map.class));
-			htReturn = new HashMap((Map<String, Object>) JSONObject.toBean(jsonObject, Map.class));
+			JSONArray jsonArray = (JSONArray) JSONSerializer.toJSON( sResponse );  
+			_systemLogger.log( Level.FINEST, MODULE, sMethod, "received message parsed:" + jsonArray.toString() );
+			htReturn = new HashMap((Map<String, Object>) JSONObject.toBean(jsonArray.getJSONObject(0), Map.class));
 			_systemLogger.log( Level.FINEST, MODULE, sMethod, "created HashMap:" + htReturn );
 		}
 		
