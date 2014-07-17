@@ -884,10 +884,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						status = "Deny"; 
 				}
 				
-				_systemLogger.log(Level.FINER, "MachtigenClient returned status: " + status);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "MachtigenClient returned status: " + status);
 				
 			} else {
-				_systemLogger.log(Level.FINER, "BSN check failed");
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "BSN check failed");
 				status = "Deny";
 			}
 			oboK = "Permit".equalsIgnoreCase(status);
