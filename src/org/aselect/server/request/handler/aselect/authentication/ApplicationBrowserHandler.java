@@ -712,7 +712,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		String sTgt = (String)htServiceRequest.get("aselect_credentials_tgt");
 		String sStep = (String)htServiceRequest.get("step");
 		String sOBOyn = (String)htServiceRequest.get("oboyn");
-		String sAppUrl = (String)_htTGTContext.get("app_url");	// session already deleted, we need the app_url
+		String sAppUrl = (String)_htTGTContext.get("obo_app_url");	// session already deleted, we need the app_url
 		String sAppId = (String)_htTGTContext.get("app_id");
 		
 		String sUid = (String)_htTGTContext.get("uid");
@@ -914,6 +914,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				_systemLogger.log(Level.FINEST, _sModule, sMethod, "Valide obo requested by user");
 				_htTGTContext.put("obouid", sOBOId);
 				_htTGTContext.remove("obo_retries");
+				_htTGTContext.remove("obo_app_url");
 				// store oriuid, OBOServiceId, OBOValidFrom in tgt
 				_tgtManager.updateTGT(sTgt, _htTGTContext);
 				
