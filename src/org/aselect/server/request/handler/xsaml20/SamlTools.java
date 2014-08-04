@@ -723,7 +723,7 @@ public class SamlTools
 		SAMLObjectBuilder<NameID> nameIdBuilder = (SAMLObjectBuilder<NameID>) builderFactory
 				.getBuilder(NameID.DEFAULT_ELEMENT_NAME);
 		NameID nameId = nameIdBuilder.buildObject();
-//		nameId.setFormat(NameIDType.TRANSIENT);	// Rh, 20140331, o 	// saml specs say, MUST  be omitted or "entity"
+		nameId.setFormat(NameIDType.TRANSIENT);	// RH, 20140801, n. We use transient id's for nameid
 		nameId.setValue(sNameID);
 		logoutRequest.setNameID(nameId);
 
@@ -748,6 +748,7 @@ public class SamlTools
 		SAMLObjectBuilder<Issuer> issuerBuilder = (SAMLObjectBuilder<Issuer>) builderFactory
 				.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
 		Issuer issuer = issuerBuilder.buildObject();
+//		issuer.setFormat(Issuer.ENTITY); 	// saml specs say, MUST  be omitted or "entity" for Issuer
 		issuer.setValue(issuerUrl);
 		logoutRequest.setIssuer(issuer);
 
