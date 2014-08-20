@@ -632,6 +632,16 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			logoutResponseLocation = metadataManager.getLocation(initiatingSP,
 					SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME, SAMLConstants.SAML2_REDIRECT_BINDING_URI);
 		}
+		////////////////////
+		if (logoutResponseLocation == null) {
+			// see if "initiatingSP" == idp
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "initiatingSP: " + initiatingSP + ", _sASelectServerUrl: " +  _sASelectServerUrl);
+			
+			if (initiatingSP.equalsIgnoreCase(_sASelectServerUrl)) {
+				logoutResponseLocation = _sASelectServerUrl + "/saml20_idp_slo_http_response";
+			}
+		}
+		///////////////////////////////////
 		if (logoutResponseLocation == null) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No logout ResponseLocation in metadata for "
 					+ initiatingSP);

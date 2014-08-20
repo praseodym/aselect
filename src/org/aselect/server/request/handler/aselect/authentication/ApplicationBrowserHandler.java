@@ -313,6 +313,7 @@ import org.aselect.server.log.ASelectAuthenticationLogger;
 import org.aselect.server.log.ASelectEntrustmentLogger;
 import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.handler.aselect.ASelectAuthenticationProfile;
+import org.aselect.server.request.handler.xsaml20.LogoutRequestSender;
 import org.aselect.server.request.handler.xsaml20.ServiceProvider;
 import org.aselect.server.request.handler.xsaml20.idp.UserSsoSession;
 import org.aselect.server.sam.ASelectSAMAgent;
@@ -541,7 +542,21 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 		}
 		else if (sRequest.equals("logout")) {
-			handleLogout(htServiceRequest, _servletResponse, pwOut);
+//			handleLogout(htServiceRequest, _servletResponse, pwOut);	// RH, 20140819, o
+			// RH, 20140819, sn
+			//////////////////////////////////////////////////////
+			boolean doSamlLogout = false;	// true = for testing, get this from e.g. presence of sp_issuer and/or sso_session in tgtcontext
+			doSamlLogout = ( _htTGTContext != null ) && ( _htTGTContext.get("sp_issuer") != null ) &&  ( _htTGTContext.get("sso_session") != null );
+
+			if (doSamlLogout) {
+				_systemLogger.log(Level.FINER, _sModule, sMethod, "doSamlLogout, _htTGTContext:" + _htTGTContext);
+				handleSamlLogout(htServiceRequest, _servletRequest, _servletResponse, pwOut);
+			}
+			else {
+				handleLogout(htServiceRequest, _servletResponse, pwOut);
+			}
+			// RH, 20140819, en
+
 		}
 		else if (sRequest.equals("org_choice")) {
 			handleOrgChoice(htServiceRequest, _servletResponse);
@@ -2717,6 +2732,71 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 	}
 
+	/**
+	 * This method handles the <code>request=logout</code> user request. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * The request can be used to logout a user by sending a saml logoutrequest. <br>
+	 * e.g. if the user sends a normal request=logout but actually was a saml user and should have send a samlrequest <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * Valid TGT <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * <br>
+	 * 
+	 * @param htServiceRequest
+	 *            HashMap containing request parameters
+	 * @param servletResponse
+	 *            Used to send (HTTP) information back to user
+	 * @param pwOut
+	 *            Used to write information back to the user (HTML)
+	 * @throws ASelectException
+	 */
+	private void handleSamlLogout(HashMap htServiceRequest, HttpServletRequest servletRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
+	throws ASelectException
+	{
+		String sMethod = "handleSamlLogout";
+		String sRemoteAsUrl = null;
+
+		_systemLogger.log(Level.FINER, _sModule, sMethod, "handleSamlLogout");
+
+			String sTgt = (String)htServiceRequest.get("aselect_credentials_tgt");
+			
+			if (_htTGTContext != null) {	// must be true for samllogout
+				LogoutRequestSender logoutRequestSender = new LogoutRequestSender();
+//				String sIssuer = (String)_htTGTContext.get("sp_issuer");
+				String sIssuer = _sServerUrl;	// set idp as issuer
+				String sNameID = (String)_htTGTContext.get("name_id");
+				String sLogoutReturnUrl = ""; //  find a way to get the default, maybe from application section
+				// If we allow this we must sanitize this url !!!
+				sLogoutReturnUrl = (String)htServiceRequest.get("logout_return_url");
+				_systemLogger.log(Level.FINER, _sModule, sMethod, "Found logout_return_url in request: " + sLogoutReturnUrl);
+				// We need to get the logout url from somewhere too
+				String url = _sServerUrl + "/saml20_idp_slo_http_request";
+
+				// 20120611, Bauke: added "usi"
+				String sUsi = (String)_htTGTContext.get("usi");
+				if (Utils.hasValue(sUsi))  // overwrite
+					_timerSensor.setTimerSensorId(sUsi);
+				String sAppId = (String)_htTGTContext.get("app_id");
+				if (Utils.hasValue(sAppId))
+					_timerSensor.setTimerSensorAppId(sAppId);
+
+				_systemLogger.log(Level.FINER, _sModule, sMethod, "Compose sendLogoutRequest to: " + url);
+
+				logoutRequestSender.sendLogoutRequest(servletRequest, servletResponse, sTgt, url, sIssuer/* issuer */, sNameID,
+						"urn:oasis:names:tc:SAML:2.0:logout:user", sLogoutReturnUrl, null, null);
+
+				return;
+			} else {
+				_systemLogger.log(Level.WARNING, _sModule, sMethod, "No tgt found!");
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			}
+	}
+
+	
+	
 	/**
 	 * This method handles the <code>request=create_tgt</code> user request. <br>
 	 * <br>

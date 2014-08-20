@@ -11,6 +11,7 @@
  */
 package org.aselect.server.request.handler.xsaml20.idp;
 
+import java.io.IOException;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -22,6 +23,7 @@ import org.aselect.server.request.handler.xsaml20.Saml20_BrowserHandler;
 import org.aselect.server.request.handler.xsaml20.SamlHistoryManager;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.system.error.Errors;
+import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.opensaml.common.SignableSAMLObject;
@@ -148,6 +150,21 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 		LogoutRequest originalLogoutRequest = (LogoutRequest) originalRequest;
 		// String uid = originalLogoutRequest.getNameID().getValue();
 
+		///////////////////////////////////////
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "originalLogoutRequest.getIssuer().getValue(): " +originalLogoutRequest.getIssuer().getValue() 
+				+ ", logoutResponse.getIssuer().getValue()" +  logoutResponse.getIssuer().getValue());
+		if (originalLogoutRequest.getIssuer().getValue().equals(logoutResponse.getIssuer().getValue())) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "LogoutResponse initiated by ourselves, no need to logoutNextSessionSP, redirecting user to: " + sRelayState);
+			// if sRelayState = null maybe present the loggedout form?
+			try {
+				httpResponse.sendRedirect(sRelayState);
+			}
+			catch (IOException e) {
+				throw	new ASelectCommunicationException("Could not redirect user", e);
+			}
+			return;
+		}
+		///////////////////////////////////////
 		logoutNextSessionSP(httpRequest, httpResponse, originalLogoutRequest, null, null,
 				_bTryRedirectLogoutFirst, _bSkipInvalidRedirects, _iRedirectLogoutTimeout, null, logoutResponse.getIssuer());
 	}
