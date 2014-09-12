@@ -255,6 +255,7 @@ typedef struct _ASELECT_FILTER_CONFIG
     char    *pcLogFileName;
     char    pcAddedSecurity[20];  // can contain a 'c' (cookies)
     char    *pcSpecialSettings;
+    char    *pcCookiePath;
 } ASELECT_FILTER_CONFIG, *PASELECT_FILTER_CONFIG;
 
 /*

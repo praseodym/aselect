@@ -108,6 +108,7 @@ static const char *aselect_filter_set_logfile(cmd_parms *parms, void *mconfig, c
 static const char *aselect_filter_added_security(cmd_parms *parms, void *mconfig, const char *arg);
 static const char *aselect_filter_set_sensor_address(cmd_parms *parms, void *mconfig, const char *arg);
 static const char *aselect_filter_set_sensor_port(cmd_parms *parms, void *mconfig, const char *arg);
+static const char *aselect_filter_cookie_path(cmd_parms *parms, void *mconfig, const char *arg);
 static const char *aselect_filter_special_settings(cmd_parms *parms, void *mconfig, const char *arg);
 static const char *aselect_filter_add_app_regexp(cmd_parms *parms, void *mconfig, const char *arg);
 
@@ -586,6 +587,7 @@ static int aselect_filter_handler(request_rec *pRequest)
     char *addedSecurity = "";
     char *securedAselectAppArgs = NULL;
     char *passUsiAttribute = NULL; 
+	char *pcCookiePath = NULL;
     int try, rc;
     TIMER_DATA timer_data;
 
@@ -699,6 +701,13 @@ static int aselect_filter_handler(request_rec *pRequest)
     TRACE3("==== 1. Start iError=%d iAction=%s, iRet=%s", iError, filter_action_text(iAction), filter_return_text(iRet));
     TRACE4("     (DECLINED=%d DONE=%d FORBIDDEN=%d OK=%d)", DECLINED, DONE, FORBIDDEN, OK);
     addedSecurity = (strchr(pConfig->pcAddedSecurity, 'c')!=NULL)? " secure; HttpOnly": "";
+
+	//
+	// Set Cookie Path for all cookies
+	//
+	pcCookiePath = pConfig->pcCookiePath;
+	if (!pcCookiePath || !*pcCookiePath) pcCookiePath = pConfig->pCurrentApp->pcLocation;
+
     //
     // Check for application ticket
     //
@@ -797,20 +806,17 @@ static int aselect_filter_handler(request_rec *pRequest)
 					}
 					else {
 						pRequest->content_type = "text/html";
-						pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectticket",
-								pConfig->pCurrentApp->pcLocation, addedSecurity);
+						pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectticket", pcCookiePath, addedSecurity);
 						TRACE1("Delete cookie: %s", pcCookie);
 						ap_table_add(headers_out, "Set-Cookie", pcCookie);
 
-						pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectattributes",
-								pConfig->pCurrentApp->pcLocation, addedSecurity);
+						pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectattributes", pcCookiePath, addedSecurity);
 						TRACE1("Delete cookie: %s", pcCookie);
 						ap_table_add(headers_out, "Set-Cookie", pcCookie);
 
 						if (strchr(pConfig->pcPassAttributes,'c')!=0 ||
 							strchr(pConfig->pcPassAttributes,'C')!=0) {  // Bauke: added
-							pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectattributes",
-									pConfig->pCurrentApp->pcLocation, addedSecurity);
+							pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectattributes", pcCookiePath, addedSecurity);
 							TRACE1("Delete cookie: %s", pcCookie);
 							ap_table_add(headers_out, "Set-Cookie", pcCookie);
 						}
@@ -1003,28 +1009,24 @@ static int aselect_filter_handler(request_rec *pRequest)
 									// Successfully killed the ticket, now redirect to the aselect-server
 									if ((pcASelectServerURL = aselect_filter_get_cookie(pPool, headers_in, "aselectserverurl="))) {
 										pRequest->content_type = "text/html";
-										pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectticket",
-												pConfig->pCurrentApp->pcLocation, addedSecurity);
+										pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectticket", pcCookiePath, addedSecurity);
 										TRACE1("Delete cookie: %s", pcCookie);
 										ap_table_add(headers_out, "Set-Cookie", pcCookie);
 										if (strchr(pConfig->pcPassAttributes,'C')!=0) {  // 20120703: Bauke: added
-											pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectuid",
-													pConfig->pCurrentApp->pcLocation, addedSecurity);
+											pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectuid", pcCookiePath, addedSecurity);
 											TRACE1("Delete cookie: %s", pcCookie);
 											ap_table_add(headers_out, "Set-Cookie", pcCookie);
 										}
 										//pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectorganization",
-										//		pConfig->pCurrentApp->pcLocation, addedSecurity);
+										//		pcCookiePath, addedSecurity);
 										//TRACE1("Delete cookie: %s", pcCookie);
 										//ap_table_add(headers_out, "Set-Cookie", pcCookie);
-										pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectserverurl",
-												pConfig->pCurrentApp->pcLocation, addedSecurity);
+										pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectserverurl", pcCookiePath, addedSecurity);
 										TRACE1("Delete cookie: %s", pcCookie);
 										ap_table_add(headers_out, "Set-Cookie", pcCookie);
 										if (strchr(pConfig->pcPassAttributes,'c')!=0 ||
 											strchr(pConfig->pcPassAttributes,'C')!=0) {  // Bauke: added
-											pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectattributes",
-													pConfig->pCurrentApp->pcLocation, addedSecurity);
+											pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectattributes", pcCookiePath, addedSecurity);
 											TRACE1("Delete cookie: %s", pcCookie);
 											ap_table_add(headers_out, "Set-Cookie", pcCookie);
 										}
@@ -1178,7 +1180,7 @@ static int aselect_filter_handler(request_rec *pRequest)
 			// Bauke: added: Pass attributes in a cookie
 			if (strchr(pConfig->pcPassAttributes,'c')!=0 || strchr(pConfig->pcPassAttributes,'C')!=0) {
 				pcCookie4 = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectattributes", 
-					(pcAttributes == NULL) ? "" : pcAttributes, pConfig->pCurrentApp->pcLocation, addedSecurity);
+					(pcAttributes == NULL) ? "" : pcAttributes, pcCookiePath, addedSecurity);
 				TRACE1("Set-Cookie: %s", pcCookie4);
 				ap_table_add(headers_out, "Set-Cookie", pcCookie4); 
 			}
@@ -1189,17 +1191,17 @@ static int aselect_filter_handler(request_rec *pRequest)
 						pRequest, pConfig, pcTicketOut, pcRequestLanguage, headers_in, &timer_data);
 			}
 			pcCookie = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectticket",
-					pcTicketOut, pConfig->pCurrentApp->pcLocation, addedSecurity);
+					pcTicketOut, pcCookiePath, addedSecurity);
 			TRACE1("Set-Cookie: %s", pcCookie);
 			ap_table_add(headers_out, "Set-Cookie", pcCookie); 
 			if (strchr(pConfig->pcPassAttributes,'C')!=0) {  // 20120703: Bauke: added for backward compatibility
 				pcCookie2 = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectuid",
-						pcUIDOut, pConfig->pCurrentApp->pcLocation, addedSecurity);
+						pcUIDOut, pcCookiePath, addedSecurity);
 				TRACE1("Set-Cookie: %s", pcCookie2);
 				ap_table_add(headers_out, "Set-Cookie", pcCookie2); 
 			}
 			//pcCookie3 = ap_psprintf(pPool, "%s=%s; version=1; path=%s;%s", "aselectorganization",
-			//		pcOrganizationOut, pConfig->pCurrentApp->pcLocation, addedSecurity);
+			//		pcOrganizationOut, pcCookiePath, addedSecurity);
 			//TRACE1("Set-Cookie: %s", pcCookie3);
 			//ap_table_add(headers_out, "Set-Cookie", pcCookie3); 
 
@@ -1865,6 +1867,17 @@ static const char *aselect_filter_set_sensor_address(cmd_parms *parms, void *mco
     return NULL;
 }
 
+static const char *aselect_filter_cookie_path(cmd_parms *parms, void *mconfig, const char *arg)
+{
+    PASELECT_FILTER_CONFIG pConfig = (PASELECT_FILTER_CONFIG) ap_get_module_config(parms->server->module_config, &aselect_filter_module);
+
+    if (!pConfig || !(pConfig->pcCookiePath = ap_pstrdup(parms->pool, arg)))
+		return "A-Select ERROR: Internal error when setting CookiePath";
+
+    TRACE1("aselect_filter_cookie_path:: %s", pConfig->pcCookiePath);
+    return NULL;
+}
+
 static const char *aselect_filter_special_settings(cmd_parms *parms, void *mconfig, const char *arg)
 {
     PASELECT_FILTER_CONFIG pConfig = (PASELECT_FILTER_CONFIG) ap_get_module_config(parms->server->module_config, &aselect_filter_module);
@@ -2425,6 +2438,9 @@ static const command_rec aselect_filter_cmds[] =
 
     AP_INIT_TAKE1( "aselect_filter_set_sensor_port", aselect_filter_set_sensor_port, NULL, RSRC_CONF,
         "Usage aselect_filter_set_sensor_port <port of a Sensor process>, example: aselect_filter_set_sensor_port \"1805\"" ),
+
+    AP_INIT_TAKE1("aselect_filter_cookie_path", aselect_filter_cookie_path, NULL, RSRC_CONF,
+        "Usage aselect_filter_cookie_path <value>"),
 
     AP_INIT_TAKE1("aselect_filter_special_settings", aselect_filter_special_settings, NULL, RSRC_CONF,
         "Usage aselect_filter_special_settings <value>"),
