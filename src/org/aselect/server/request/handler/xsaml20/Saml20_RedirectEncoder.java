@@ -45,40 +45,49 @@ public class Saml20_RedirectEncoder extends HTTPRedirectDeflateEncoder
     protected void doEncode(MessageContext messageContext)
 	throws MessageEncodingException
     {
+		// Because of incompatibility between opensaml <= v. 2.3.0 and > v. 2.3.0 in getEndpointURL(samlMsgCtx) we must
+		// delegate back to superclass
 		String sMethod = "doEncode";
-		
     	_systemLogger = ASelectSystemLogger.getHandle();
-        if (!(messageContext instanceof SAMLMessageContext)) {
-    		_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid message context type, this encoder only support SAMLMessageContext");
-            throw new MessageEncodingException(
-                    "Invalid message context type, this encoder only support SAMLMessageContext");
-        }
+        _systemLogger.log(Level.FINER, MODULE, sMethod, "Delegating to super.encode(messageContext). messageContext="+messageContext);
 
-        if (!(messageContext.getOutboundMessageTransport() instanceof HTTPOutTransport)) {
-        	_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid outbound message transport type, this encoder only support HTTPOutTransport");
-            throw new MessageEncodingException(
-                    "Invalid outbound message transport type, this encoder only support HTTPOutTransport");
-        }
-
-        SAMLMessageContext samlMsgCtx = (SAMLMessageContext) messageContext;
-        String endpointURL = getEndpointURL(samlMsgCtx);
-        _systemLogger.log(Level.INFO, MODULE, sMethod, "endpointURL="+endpointURL);
-
-        setResponseDestination(samlMsgCtx.getOutboundSAMLMessage(), endpointURL);
-
-        removeSignature(samlMsgCtx);
-
-        String encodedMessage = deflateAndBase64Encode(samlMsgCtx.getOutboundSAMLMessage());
-        _systemLogger.log(Level.INFO, MODULE, sMethod, "encodedMessage="+encodedMessage);
-
-        String redirectURL = buildRedirectURL(samlMsgCtx, endpointURL, encodedMessage);
-        _systemLogger.log(Level.INFO, MODULE, sMethod, "redirectURL="+redirectURL);
-
-        HTTPOutTransport out = (HTTPOutTransport) messageContext.getOutboundMessageTransport();
-        HTTPTransportUtils.addNoCacheHeaders(out);
-        HTTPTransportUtils.setUTF8Encoding(out);
-
-        out.sendRedirect(redirectURL);
+		super.doEncode(messageContext);
+		
+//        _systemLogger.log(Level.FINER, MODULE, sMethod, "messageContext="+messageContext);
+//        if (!(messageContext instanceof SAMLMessageContext)) {
+//    		_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid message context type, this encoder only support SAMLMessageContext");
+//            throw new MessageEncodingException(
+//                    "Invalid message context type, this encoder only support SAMLMessageContext");
+//        }
+//
+//        if (!(messageContext.getOutboundMessageTransport() instanceof HTTPOutTransport)) {
+//        	_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid outbound message transport type, this encoder only support HTTPOutTransport");
+//            throw new MessageEncodingException(
+//                    "Invalid outbound message transport type, this encoder only support HTTPOutTransport");
+//        }
+//
+//        SAMLMessageContext samlMsgCtx = (SAMLMessageContext) messageContext;
+//        _systemLogger.log(Level.FINER, MODULE, sMethod, "retrieving EndpointURL, samlMsgCtx: " + samlMsgCtx);
+////      String endpointURL = getEndpointURL(samlMsgCtx);	// RH, 20140710, o
+////        _systemLogger.log(Level.FINER, MODULE, sMethod, "EndpointURL:" + endpointURL);
+//        String endpointURL = getEndpointURL(samlMsgCtx).buildURL();	// RH, 20140710, n, fix for opensaml 2.6.1
+//        _systemLogger.log(Level.INFO, MODULE, sMethod, "endpointURL="+endpointURL);
+//
+//        setResponseDestination(samlMsgCtx.getOutboundSAMLMessage(), endpointURL);
+//
+//        removeSignature(samlMsgCtx);
+//
+//        String encodedMessage = deflateAndBase64Encode(samlMsgCtx.getOutboundSAMLMessage());
+//        _systemLogger.log(Level.INFO, MODULE, sMethod, "encodedMessage="+encodedMessage);
+//
+//        String redirectURL = buildRedirectURL(samlMsgCtx, endpointURL, encodedMessage);
+//        _systemLogger.log(Level.INFO, MODULE, sMethod, "redirectURL="+redirectURL);
+//
+//        HTTPOutTransport out = (HTTPOutTransport) messageContext.getOutboundMessageTransport();
+//        HTTPTransportUtils.addNoCacheHeaders(out);
+//        HTTPTransportUtils.setUTF8Encoding(out);
+//
+//        out.sendRedirect(redirectURL);
     }
 
 	/**
