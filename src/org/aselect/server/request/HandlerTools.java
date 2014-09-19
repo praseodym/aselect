@@ -449,7 +449,7 @@ public class HandlerTools
 	@SuppressWarnings( {
 		"unchecked"
 	})
-	public static Assertion createAuthnStatmeentAttributeStatementAssertion(Map parms, String sIssuer, String sSubject, boolean sign)
+	public static Assertion createAuthnStatementAttributeStatementAssertion(Map parms, String sIssuer, String sSubject, boolean sign)
 	throws ASelectException
 	{
 		String sMethod = "createAuthnStatmeentAttributeStatementAssertion";
@@ -576,7 +576,8 @@ public class HandlerTools
 		assertion = marshallAssertion(assertion, false);
 		if (sign) {
 			systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the final Assertion >======");
-			assertion = (Assertion)SamlTools.signSamlObject(assertion);
+//			assertion = (Assertion)SamlTools.signSamlObject(assertion);
+			assertion = (Assertion)SamlTools.signSamlObject(assertion, null, true, true); // sha1 default algorithm
 			systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the Assertion ======<" + assertion);
 		}
 

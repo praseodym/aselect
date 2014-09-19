@@ -823,7 +823,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				HashMap<String, String> parms = new HashMap<String, String>();
 				// No attributes to add for assertion (yet)
 
-				Assertion assertion = HandlerTools.createAuthnStatmeentAttributeStatementAssertion(parms, sIssuer, sSubject, true); //
+				Assertion assertion = HandlerTools.createAuthnStatementAttributeStatementAssertion(parms, sIssuer, sSubject, true); //
 
 				// Marshall to the Node
 				MarshallerFactory factory = org.opensaml.xml.Configuration.getMarshallerFactory();
@@ -2768,10 +2768,33 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 //				String sIssuer = (String)_htTGTContext.get("sp_issuer");
 				String sIssuer = _sServerUrl;	// set idp as issuer
 				String sNameID = (String)_htTGTContext.get("name_id");
-				String sLogoutReturnUrl = ""; //  find a way to get the default, maybe from application section
+				String sAppId = (String)_htTGTContext.get("app_id");
+				//  find a way to get the default, maybe from application section
 				// If we allow this we must sanitize this url !!!
-				sLogoutReturnUrl = (String)htServiceRequest.get("logout_return_url");
-				_systemLogger.log(Level.FINER, _sModule, sMethod, "Found logout_return_url in request: " + sLogoutReturnUrl);
+				String sLogoutReturnUrl = (String)htServiceRequest.get("logout_return_url");
+				if (sLogoutReturnUrl != null) {
+					_systemLogger.log(Level.FINER, _sModule, sMethod, "Found logout_return_url in request: " + sLogoutReturnUrl);
+					// For backward compatibility, avoid double decoding
+					boolean doDecode = true; // backward compatibility
+					HashMap<String, Vector<String>> parameters2decode = _configManager.getParameters2decode();
+					if ( parameters2decode != null && !parameters2decode.isEmpty()) {
+						Vector<String> appl = parameters2decode.get("logout_return_url");
+						if ( Utils.hasValue(sAppId) && appl != null && appl.contains(sAppId) ) {	// already decoded
+							doDecode = false;
+							_systemLogger.log(Level.FINER, _sModule, sMethod, "logout_return_url already urldecoded");
+						}
+					}
+					if ( doDecode ) {
+						try {
+							sLogoutReturnUrl = URLDecoder.decode(sLogoutReturnUrl, "UTF-8");
+							_systemLogger.log(Level.FINER, _sModule, sMethod, "logout_return_url after decoding: " + sLogoutReturnUrl);
+						}
+						catch (UnsupportedEncodingException e) {
+							_systemLogger.log(Level.WARNING, _sModule, sMethod, "Unable to urldecode, unsupported encoding UTF-8");
+							throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);					
+						}
+					}
+				}
 				// We need to get the logout url from somewhere too
 				String url = _sServerUrl + "/saml20_idp_slo_http_request";
 
@@ -2779,7 +2802,6 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				String sUsi = (String)_htTGTContext.get("usi");
 				if (Utils.hasValue(sUsi))  // overwrite
 					_timerSensor.setTimerSensorId(sUsi);
-				String sAppId = (String)_htTGTContext.get("app_id");
 				if (Utils.hasValue(sAppId))
 					_timerSensor.setTimerSensorAppId(sAppId);
 
