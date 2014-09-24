@@ -314,7 +314,11 @@ public class Errors
 	 */
 	public final static String ERROR_ASELECT_AGENT_AUTHORIZATION_NOT_ENABLED = "0141";
 
+	// No rules were sent
 	public final static String ERROR_ASELECT_AGENT_NO_RULES = "0142";
+
+	// Ticket for a different app_id
+	public final static String ERROR_ASELECT_AGENT_DIFFERENT_APPID = "0143";
 
 	/**
 	 * Error: Can't open datasource

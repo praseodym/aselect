@@ -396,7 +396,7 @@ public class AuthorizationEngine
 	public int checkUserAuthorization(String sAppId, String sURI, HashMap htUserAttributes)
 	throws ASelectAuthorizationException
 	{
-		final String sMethod = "isUserAuthorized";
+		final String sMethod = "checkUserAuthorization";
 		StringBuffer sb = null;
 		int iResult = 0;
 		// get all evaluation trees of the given application

@@ -773,6 +773,7 @@ static int aselect_filter_handler(request_rec *pRequest)
 				}
 				if (iError == ASELECT_FILTER_ASAGENT_ERROR_NO_RULES)
 					iError = ASELECT_FILTER_ASAGENT_ERROR_NOT_AUTHORIZED; // 140
+
 				if (pcResponseVT) {
 					// 20120527, Bauke: use the Agent setting for sending data to LbSensor
 					// if batch_size < 0, no Agent configuration, ignore Agent
@@ -822,7 +823,11 @@ static int aselect_filter_handler(request_rec *pRequest)
 						}
 						ap_send_http_header(pRequest);
 
-						if (iError == ASELECT_SERVER_ERROR_TGT_NOT_VALID ||
+						if (iError == ASELECT_FILTER_ASAGENT_ERROR_DIFFERENT_APPID) {
+							iError = ASELECT_FILTER_ERROR_OK;
+							iAction = ASELECT_FILTER_ACTION_AUTH_USER;
+						}
+						else if (iError == ASELECT_SERVER_ERROR_TGT_NOT_VALID ||
 							iError == ASELECT_SERVER_ERROR_TGT_EXPIRED ||
 							iError == ASELECT_SERVER_ERROR_TGT_TOO_LOW ||
 							iError == ASELECT_SERVER_ERROR_UNKNOWN_TGT ||  // Bauke, 20080928 added

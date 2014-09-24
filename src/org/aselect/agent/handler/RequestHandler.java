@@ -1308,7 +1308,8 @@ public class RequestHandler extends Thread
 		//String sUid = null;
 		//String sOrg = null;
 		String sAttributesHash = null;
-		String sRequestURI = null;
+		String sReqURI = null;
+		String sReqAppId = null;
 		String sIP = null;
 		String sLanguage = null;
 
@@ -1337,7 +1338,7 @@ public class RequestHandler extends Thread
 			catch (ASelectCommunicationException e) {
 			}
 			try {
-				sRequestURI = oInputMessage.getParam("request_uri");
+				sReqURI = oInputMessage.getParam("request_uri");
 			}
 			catch (ASelectCommunicationException e) {
 			}
@@ -1351,8 +1352,13 @@ public class RequestHandler extends Thread
 			}
 			catch (ASelectCommunicationException e) {
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET attributes_hash=" + sAttributesHash
-					+ ", request_uri=" + sRequestURI + ", ip=" + sIP);
+			try {
+				sReqAppId = oInputMessage.getParam("app_id");
+			}
+			catch (ASelectCommunicationException e) {
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET attributes_hash="+sAttributesHash+
+					" req_uri=" + sReqURI+" reqAppId="+sReqAppId+" ip="+sIP);
 
 			// 20120527, Bauke: Communicate our batch_size to the filter, if it's 0, the filter will disable LbSensor output
 			SendQueue hQueue = SendQueue.getHandle();
@@ -1408,6 +1414,12 @@ public class RequestHandler extends Thread
 			
 			// Authorize if applicable
 			if (_bAuthorization) {
+				
+				if (sAppId==null || sReqAppId == null || !sAppId.equals(sReqAppId)) {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "No match for app_ids: req="+sReqAppId+" ticket="+sAppId);
+					_sErrorCode = Errors.ERROR_ASELECT_AGENT_DIFFERENT_APPID;
+					return;
+				}
 				// Get user attributes
 				HashMap htUserAttributes = deserializeAttributes((String) htTicketContext.get("attributes"));
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET attr=" + htUserAttributes);
@@ -1422,7 +1434,7 @@ public class RequestHandler extends Thread
 				htUserAttributes.putAll(htTicketContext);
 				// Remove encoded attributes
 				htUserAttributes.remove("attributes");
-				int iResult = AuthorizationEngine.getHandle().checkUserAuthorization(sAppId, sRequestURI, htUserAttributes);
+				int iResult = AuthorizationEngine.getHandle().checkUserAuthorization(sAppId, sReqURI, htUserAttributes);
 				if (iResult != 0) {  // not authorized
 					_sErrorCode = (iResult==1)? Errors.ERROR_ASELECT_AGENT_AUTHORIZATION_FAILED: Errors.ERROR_ASELECT_AGENT_NO_RULES;
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "User not authorized "+sAppId+" error="+_sErrorCode);

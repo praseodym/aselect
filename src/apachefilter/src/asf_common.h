@@ -180,6 +180,7 @@ typedef apr_table_t     table;
 #define ASELECT_FILTER_ASAGENT_ERROR_INVALID_REQUEST        0x0130  // Invalid request
 #define ASELECT_FILTER_ASAGENT_ERROR_NOT_AUTHORIZED         0x0140  // Not authorized
 #define ASELECT_FILTER_ASAGENT_ERROR_NO_RULES               0x0142  // Haven't received any auhtz rules
+#define ASELECT_FILTER_ASAGENT_ERROR_DIFFERENT_APPID        0x0143  // Have a ticket but for a different app_id
 
 /*
  * A-Select Server errors
