@@ -324,6 +324,8 @@ public class TGTIssuer
 			Utils.copyHashmapValue("authsp_level", htTGTContext, htRemoteAttributes);
 			Utils.copyHashmapValue("sel_level", htTGTContext, htRemoteAttributes);
 			Utils.copyHashmapValue("social_login", htTGTContext, htRemoteAttributes);  // 20140219, Bauke: new
+			Utils.copyHashmapValue("forced_passive", htTGTContext, htRemoteAttributes);  // RH, 20140925, n
+			
 			htTGTContext.put("uid", sUserId);
 			htTGTContext.put("organization", sUserOrganization);
 			Integer intAppLevel = (Integer) htSessionContext.get("level");
@@ -544,9 +546,12 @@ throws ASelectException
 			String sResult = (String) htSessionContext.get("result_code");
 			if (sResult != null && !sResult.equals(Errors.ERROR_ASELECT_SUCCESS)) {
 				// Authentication failed, no TGT issued, but need to send decent <Response>
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "no success, redirect to "+sAppUrl);
 				String sLang = (String)htSessionContext.get("language");  // we have no TGT Context yet
-				sendTgtRedirect(sAppUrl, null, sRid, servletResponse, sLang);
+//				sendTgtRedirect(sAppUrl, null, sRid, servletResponse, sLang);	// RH, 20140924, o
+				if (redirectToo) {
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "no success, redirect to "+sAppUrl);
+					sendTgtRedirect(sAppUrl, null, sRid, servletResponse, sLang);	// RH, 20140924, n
+				}
 				// Session must be killed by sAppUrl: _sessionManager.killSession(sRid);
 				return null;
 			}
@@ -633,7 +638,9 @@ throws ASelectException
 			Utils.copyHashmapValue("sel_uid", htTGTContext, htSessionContext);
 			// 20090811, Bauke: save authsp_type for use by the Saml20 session sync
 			Utils.copyHashmapValue("authsp_type", htTGTContext, htSessionContext);
-			Utils.copyHashmapValue("social_login", htTGTContext, htSessionContext);  // 20140219, Bauke: new
+			Utils.copyHashmapValue("social_login", htTGTContext, htSessionContext);  // 20140219, Bauke: new			
+			Utils.copyHashmapValue("forced_passive", htTGTContext, htSessionContext);  // RH, 20140925, n
+
 
 			// 20090617, Bauke:forced_authenticate specials
 			Boolean bForcedAuthn = (Boolean) htSessionContext.get("forced_authenticate");

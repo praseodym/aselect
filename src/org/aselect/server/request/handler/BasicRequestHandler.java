@@ -95,6 +95,12 @@ public abstract class BasicRequestHandler
 		if (sForcedLogon != null)
 			boolForcedAuthn = new Boolean(sForcedLogon);
 
+		// RH, 20140922, sn
+		String sForcedPassive = hmInput.get("forced_passive");
+		Boolean boolForcedPassive = new Boolean(sForcedPassive);
+		// RH, 20140922, en
+		
+
 		// RH, 20100910, Remove fishing leak and make signature verification configurable per application
 //		if (_applicationManager.isSigningRequired() && bCheckSignature) {		// RH, 20100910, o
 //		if (_applicationManager.isSigningRequired(sAppId)) {		// RH, 20100910, n
@@ -212,6 +218,8 @@ public abstract class BasicRequestHandler
 			boolForcedAuthn = new Boolean(true);
 		}
 		htSessionContext.put("forced_authenticate", boolForcedAuthn); // NOTE: the Boolean object, not a string
+
+		htSessionContext.put("forced_passive", boolForcedPassive); // NOTE: the Boolean object, not a string.	// RH, 20140922 n
 
 		// check single sign-on groups
 		if (_configManager.isSingleSignOn()) {

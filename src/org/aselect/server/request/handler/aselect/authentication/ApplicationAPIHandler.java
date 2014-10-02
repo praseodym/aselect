@@ -395,6 +395,8 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		Utils.copyMsgValueToHashmap("language", hmRequest, oInputMessage);
 		Utils.copyMsgValueToHashmap("forced_authenticate", hmRequest, oInputMessage);  // 20100605 added (a String at this point)
 		Utils.copyMsgValueToHashmap("forced_logon", hmRequest, oInputMessage);
+		Utils.copyMsgValueToHashmap("forced_passive", hmRequest, oInputMessage);	// RH, 20140924, n
+		
 		// 20130220, Bauke: Do not set externally: Utils.copyMsgValueToHashmap("check-signature", hmRequest, oInputMessage);
 		hmRequest.put("check-signature", "true");
 		Utils.copyMsgValueToHashmap("signature", hmRequest, oInputMessage);

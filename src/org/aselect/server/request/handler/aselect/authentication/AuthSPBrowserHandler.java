@@ -343,6 +343,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			TGTIssuer tgtIssuer = new TGTIssuer(_sMyServerId);
 			String sOldTGT = (String) htServiceRequest.get("aselect_credentials_tgt");
 			String sTgt = tgtIssuer.issueTGTandRedirect(sRid, _htSessionContext, sAuthSp, htAdditional, _servletRequest, _servletResponse, sOldTGT, false /* no redirect */);
+			// sTgt could be null
 			// Cookie was set on the 'servletResponse'
 
 			// If there is a next_authsp, "present" form to user (auto post) and do not set tgt 
@@ -373,7 +374,8 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			
 			// Continue with regular processing
 			Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_pbh", sRid, _htSessionContext, sTgt, true);
-			_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action
+//			_sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: postpone session action	// RH, 20140924, o
+			if (sTgt != null && sTgt.length() > 0) _sessionManager.setDeleteSession(_htSessionContext, _systemLogger);  // RH, 20140924, n, if user has no tgt (yet) keep the session
 			// 20111020, Bauke: redirect is done below
 
 			String sAppUrl = (String) _htSessionContext.get("app_url");

@@ -375,6 +375,18 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 			boolForcedAuthn = new Boolean(sForcedAuthn);
 		}
 
+		// RH, 20140924, sn
+		// check if the request must be handled as a forced passive
+		String sForcedPassive = null;
+		try {
+			sForcedPassive = oInputMessage.getParam("forced_passive");
+		}
+		catch (ASelectCommunicationException e) {
+		}
+		Boolean boolForcedPassive = new Boolean(sForcedPassive);
+		// RH, 20140924, en
+		
+		
 		if (_crossASelectManager.isLocalSigningRequired()) {
 			StringBuffer sbData = new StringBuffer(sASelectServer);
 			if (sCountry != null)
@@ -422,6 +434,10 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 		}
 		htSessionContext.put("forced_authenticate", boolForcedAuthn); // NOTE: Boolean object
 
+		if (boolForcedPassive.booleanValue())	
+			htSessionContext.put("forced_passive", boolForcedPassive); // NOTE: Boolean object, 		// RH, 20140924, n
+
+		
 		// RH, 20080619, for now we only set the client_ip if it's an
 		// application browserrequests (ApplicationBrowserHandler)
 		// htSessionContext.put("client_ip", get_servletRequest().getRemoteAddr()); // RH, 20080716, n // RH,

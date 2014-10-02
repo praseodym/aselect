@@ -290,6 +290,7 @@ import java.net.URLEncoder;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -1067,8 +1068,48 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 							Utils.copyHashmapValue("app_id", _htTGTContext, _htSessionContext);
 							Utils.copyHashmapValue("local_organization", _htTGTContext, _htSessionContext);
 							Utils.copyHashmapValue("language", _htTGTContext, _htSessionContext);
-							
+
 							_htTGTContext.put("rid", sRid);
+
+							//	RH, 20140925, sn
+							///////////////////////////////////////////////////////////////////////////////////////////////////////////
+							Utils.copyHashmapValue("local_organization", _htTGTContext, _htSessionContext);
+							// Copy sp_rid as well: xsaml20
+							Utils.copyHashmapValue("sp_rid", _htTGTContext, _htSessionContext);
+							// 20110526, Bauke, copy sp_reqbinding too, it must survive SSO
+							Utils.copyHashmapValue("sp_reqbinding", _htTGTContext, _htSessionContext);
+							Utils.copyHashmapValue("RelayState", _htTGTContext, _htSessionContext);
+
+							// Add the SP to SSO administration - xsaml20
+							String sAppId = (String) _htSessionContext.get("app_id");
+							String sTgtAppId = (String) _htTGTContext.get("app_id");
+							String spIssuer = (String) _htSessionContext.get("sp_issuer");
+							// Utils.copyHashmapValue("app_id", htTGTContext, _htSessionContext);
+							if (sAppId != null) {
+								if (spIssuer == null || sTgtAppId == null)
+									_htTGTContext.put("app_id", sAppId);
+							}
+							if (spIssuer != null) { // saml20 sessions
+								_htTGTContext.put("sp_issuer", spIssuer); // save latest issuer
+								UserSsoSession ssoSession = (UserSsoSession) _htTGTContext.get("sso_session");
+								if (ssoSession == null) {
+									_systemLogger.log(Level.INFO, MODULE, sMethod, "NEW SSO session for " + sUid
+											+ " issuer=" + spIssuer);
+									ssoSession = new UserSsoSession(sUid, ""); // sTgt);
+								}
+								ServiceProvider sp = new ServiceProvider(spIssuer);
+								ssoSession.addServiceProvider(sp);
+								_systemLogger.log(Level.INFO, _sModule, sMethod, "UPD SSO session " + ssoSession);
+								_htTGTContext.put("sso_session", ssoSession);
+							}
+
+							// Overwrite with the latest value of sp_assert_url,
+							// so the customer can reach his home-SP again.
+							Utils.copyHashmapValue("sp_assert_url", _htTGTContext, _htSessionContext);
+							/////////////////////////////////////////////////////////////////////////////////////
+							//	RH, 20140925, en
+							
+							
 							_tgtManager.updateTGT(sTgt, _htTGTContext);
 							
 							// 20100210, Bauke: Present the Organization selection to the user
@@ -1086,14 +1127,19 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 								return;
 							}
 
+
 							// Redirect to application as user has already a valid tgt
-							String sRedirectUrl;
-							if (_htSessionContext.get("remote_session") == null) {
-								sRedirectUrl = (String)_htSessionContext.get("app_url");
-							}
-							else {
-								sRedirectUrl = (String)_htSessionContext.get("local_as_url");
-							}
+							// RH, 20140925, so
+//							String sRedirectUrl;
+//							if (_htSessionContext.get("remote_session") == null) {
+//								sRedirectUrl = (String)_htSessionContext.get("app_url");
+//							}
+//							else {
+//								sRedirectUrl = (String)_htSessionContext.get("local_as_url");
+//							}
+							// RH, 20140925, eo
+							String sRedirectUrl = extractRedirectURL(_htSessionContext);		// RH, 20140925, n
+
 							
 							_systemLogger.log(Level.INFO, _sModule, sMethod, "REDIR " + sRedirectUrl);
 							// 20111101, Bauke: added Sensor
@@ -1108,6 +1154,21 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						}
 						// else: forcedAuthenticate: fall through
 					}
+					
+					////////////////////////////////////////////// handle forced_passive	////////////////////////////////////
+					Boolean forced_passive = (Boolean) _htSessionContext.get("forced_passive");
+					_systemLogger.log(Level.INFO, _sModule, sMethod, "forced_passive=" + forced_passive);
+					if (forced_passive != null && forced_passive.booleanValue()) {
+						TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
+						String sLang = (String)_htSessionContext.get("language");// maybe no tgt context
+						String sRedirectUrl = extractRedirectURL(_htSessionContext);
+						oTGTIssuer.sendTgtRedirect(sRedirectUrl, null, sRid, _servletResponse, sLang);	// redirect without tgt
+						return; // Quit
+					}
+					//////////////////////////////////////////////////////////////////////////////////////////////
+					
+					
+					
 					// TGT found but not sufficient. It could be partially sufficient though
 					// (see the "next_authsp" mechanism).
 					
@@ -1199,6 +1260,20 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "No TGT, Continue");
 			// no TGT found or killed (other uid)
+			
+			////////////////////////////////////////////// handle forced_passive	////////////////////////////////////
+			Boolean forced_passive = (Boolean) _htSessionContext.get("forced_passive");
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "forced_passive=" + forced_passive);
+			if (forced_passive != null && forced_passive.booleanValue()) {
+				TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
+				String sLang = (String)_htSessionContext.get("language");// maybe no tgt context
+				String sRedirectUrl = extractRedirectURL(_htSessionContext);
+				oTGTIssuer.sendTgtRedirect(sRedirectUrl, null, sRid, _servletResponse, sLang);	// redirect without tgt
+				return; // Quit
+			}
+			//////////////////////////////////////////////////////////////////////////////////////////////
+
+			
 			if (!_configManager.isUDBEnabled() || _htSessionContext.containsKey("forced_organization")) {
 				handleCrossLogin(htServiceRequest, _servletResponse, pwOut);
 				return;
@@ -1329,16 +1404,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 							// redirect to application as user has already a valid tgt
 							String sRedirectUrl;
-							if (_htSessionContext.get("remote_session") == null) {
-								sRedirectUrl = (String) _htSessionContext.get("app_url");
-							}
-							else if (_htSessionContext.get("sp_assert_url") != null) {
-								// xsaml20 addition
-								sRedirectUrl = (String) _htSessionContext.get("sp_assert_url");
-							}
-							else {
-								sRedirectUrl = (String) _htSessionContext.get("local_as_url");
-							}
+							sRedirectUrl = extractRedirectURL(_htSessionContext);
 							_systemLogger.log(Level.INFO, _sModule, sMethod, "No forced_authenticate, redirect="+sRedirectUrl);
 							// update TGT with app_id or local_organization
 							// needed for attribute gathering in verify_tgt
@@ -1400,6 +1466,18 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					}
 					_systemLogger.log(Level.INFO, _sModule, sMethod, "TGT not OK");
 
+					////////////////////////////////////////////// handle forced_passive	////////////////////////////////////
+					Boolean forced_passive = (Boolean) _htSessionContext.get("forced_passive");
+					_systemLogger.log(Level.INFO, _sModule, sMethod, "forced_passive=" + forced_passive);
+					if (forced_passive != null && forced_passive.booleanValue()) {
+						TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
+						String sLang = (String)_htSessionContext.get("language");// maybe no tgt context
+						String sRedirectUrl = extractRedirectURL(_htSessionContext);
+						oTGTIssuer.sendTgtRedirect(sRedirectUrl, null, sRid, servletResponse, sLang);	// redirect without tgt
+						return 0; // Quit
+					}
+					//////////////////////////////////////////////////////////////////////////////////////////////
+					
 					if (!handleUserConsent(htServiceRequest, servletResponse, pwOut, sRid)) {
 						_systemLogger.log(Level.INFO, _sModule, sMethod, "No user consent");
 						return 0; // No consent, Quit
@@ -1432,6 +1510,20 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				}
 			}
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "No TGT or removed (other uid) tgt_read="+(_htTGTContext!=null));
+
+			////////////////////////////////////////////// handle forced_passive	////////////////////////////////////
+			Boolean forced_passive = (Boolean) _htSessionContext.get("forced_passive");
+			_systemLogger.log(Level.INFO, _sModule, sMethod, "forced_passive=" + forced_passive);
+			if (forced_passive != null && forced_passive.booleanValue()) {
+				TGTIssuer oTGTIssuer = new TGTIssuer(_sMyServerId);
+				String sLang = (String)_htSessionContext.get("language");	// no tgt context
+				String sRedirectUrl = extractRedirectURL(_htSessionContext);
+				oTGTIssuer.sendTgtRedirect(sRedirectUrl, null, sRid, servletResponse, sLang);	// redirect without tgt
+				return 0; // Quit
+			}
+			//////////////////////////////////////////////////////////////////////////////////////////////
+
+			
 			boolean bSuccess = handleUserConsent(htServiceRequest, servletResponse, pwOut, sRid);
 			_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: added
 			if (!bSuccess)
@@ -1515,6 +1607,25 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 		return 0;
+	}
+
+	/**
+	 * @return
+	 */
+	private String extractRedirectURL(Map _htSessionContext)
+	{
+		String sRedirectUrl;
+		if (_htSessionContext.get("remote_session") == null) {
+			sRedirectUrl = (String) _htSessionContext.get("app_url");
+		}
+		else if (_htSessionContext.get("sp_assert_url") != null) {
+			// xsaml20 addition
+			sRedirectUrl = (String) _htSessionContext.get("sp_assert_url");
+		}
+		else {
+			sRedirectUrl = (String) _htSessionContext.get("local_as_url");
+		}
+		return sRedirectUrl;
 	}
 
 	/**
