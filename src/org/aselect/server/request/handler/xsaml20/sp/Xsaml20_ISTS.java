@@ -440,6 +440,15 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Setting the ForceAuthn attribute");
 				authnRequest.setForceAuthn(true);
 			}
+
+			// 20140924, RH: "force_passive" special_setting (only for testing yet)
+			// If needed in production must have its own element/attribuut in config
+			Boolean bForcedPassive = (Boolean)_htSessionContext.get("forced_passive");
+			if (bForcedPassive || (specialSettings != null && specialSettings.contains("passive"))) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Setting the IsPassive attribute");
+				authnRequest.setIsPassive(true);
+			}
+
 			
 			// Handle testdata
 			if (partnerData.getTestdata4partner() != null) {
