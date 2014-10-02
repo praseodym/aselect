@@ -100,6 +100,9 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	private String _sAddKeyName = null;
 	private String _sAddCertificate = null;
 	boolean _bSignAssertion = false;  // must be retrieved from the metadata
+	private String _sDefaultSigning = null;
+	private String _sDefaultAddKeyname = null;
+	private String _sDefaultAddCertificate = null;
 	
 	/**
 	 * Initializes the request handler by reading the following configuration: <br/>
@@ -157,6 +160,40 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		catch (ASelectConfigException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'post_template' found", e);
 		}
+		
+		// RH, 20140925,sn
+		try {
+			String use_sha256 =_sReqSigning = _configManager.getParam(oHandlerConfig, "use_sha256");
+			if ( Boolean.parseBoolean(use_sha256 ))  {
+				_sDefaultSigning = "sha256";
+			}
+		}
+		catch (ASelectConfigException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'use_sha256' found, normal operation resumes");
+		}
+
+		try {
+			String add_keyname = _configManager.getParam(oHandlerConfig, "add_keyname");
+			if ( Boolean.parseBoolean(add_keyname ))  {
+				_sDefaultAddKeyname = "true";	// lowercase
+			}
+		}
+		catch (ASelectConfigException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'add_keyname' found, normal operation resumes");
+		}
+
+		try {
+			String add_certifcate = _configManager.getParam(oHandlerConfig, "add_certificate");
+			if ( Boolean.parseBoolean(add_certifcate ))  {
+				_sDefaultAddCertificate = "true";	// lowercase
+			}
+		}
+		catch (ASelectConfigException e) {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'add_certificate' found, normal operation resumes");
+		}
+		// RH, 20140925,en
+
+	
 	}
 	
 	
@@ -277,7 +314,13 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			//  RH, 20101101, get the requested binding, can be null
 			String sReqBinding = authnRequest.getProtocolBinding();
 			boolean bForcedAuthn = authnRequest.isForceAuthn();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested binding="+sReqBinding+" ForceAuthn = " + bForcedAuthn);
+			
+//			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested binding="+sReqBinding+" ForceAuthn = " + bForcedAuthn);
+			// RH, 20140922, sn
+			boolean bIsPassive = authnRequest.isPassive();
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested binding="+sReqBinding+" ForceAuthn = " + bForcedAuthn + " IsPassive = " + bIsPassive);
+			// RH, 20140922, en
+
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SPRid=" + sSPRid + " RelayState=" + sRelayState);
 
 			HashMap<String, String> hmBinding = new HashMap<String, String>();
@@ -325,6 +368,14 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			if (Utils.hasValue(sReqBinding))  // 20120313, Bauke: added test
 				_htSessionContext.put("sp_reqbinding", sReqBinding);  // 20120313: hmBinding.get("binding"));  // 20110323: sReqBinding);
 
+			// RH, 20140922, sn
+			if (bIsPassive) {
+				_htSessionContext.put("forced_passive", new Boolean(bIsPassive)); 
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "'forced_passive' in htSession set to: "
+						+ bIsPassive);
+			}
+			// RH, 20140922, en
+			
 			// RH, 20081117, strictly speaking forced_logon != forced_authenticate
 			// 20090613, Bauke: 'forced_login' is used as API parameter (a String value)
 			// 'forced_authenticate' is used in the Session (a Boolean value), the meaning of both is identical
@@ -365,6 +416,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			sbURL.append("&a-select-server=").append(_sASelectServerID);
 			if (bForcedAuthn)
 				sbURL.append("&forced_logon=").append(bForcedAuthn);
+			if (bIsPassive)
+				sbURL.append("&forced_passive=").append(bIsPassive);	// RH, 20140925, n
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sbURL.toString());
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Challenge for credentials, redirect to:"
 					+ sbURL.toString());
@@ -645,7 +698,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Return from AuthSP handled");
 
 			// Cleanup for a forced_authenticate session
-			Boolean bForcedAuthn = (Boolean) htTGTContext.get("forced_authenticate");
+//			Boolean bForcedAuthn = (Boolean) htTGTContext.get("forced_authenticate");	// 20140924, o
+			Boolean bForcedAuthn = (htTGTContext == null) ? null : (Boolean) htTGTContext.get("forced_authenticate");	// 20140924, n
 			if (bForcedAuthn == null)
 				bForcedAuthn = false;
 			if (bForcedAuthn && htTGTContext != null) {
@@ -861,7 +915,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		if (_sReqSigning == null && htSessionContext != null )
 			_sReqSigning = (String) htSessionContext.get("sp_reqsigning");
 		if (_sReqSigning == null) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested signing \"sp_reqsigning\" is missing, using default" );
+			_sReqSigning = _sDefaultSigning;
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested signing \"sp_reqsigning\" is missing, using default: " + _sReqSigning);
 		}
 		
 		if (!"sha256".equals(_sReqSigning))  // we only support sha256 and sha1
@@ -873,7 +928,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		if (_sAddKeyName == null && htSessionContext != null )
 			_sAddKeyName = (String) htSessionContext.get("sp_addkeyname");
 		if (_sAddKeyName == null) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested signing \"sp_addkeyname\" is missing, using default" );
+			_sAddKeyName = _sDefaultAddKeyname;
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested signing \"sp_addkeyname\" is missing, using default:" + _sAddKeyName );
 		}
 
 		// RH, 2011116, retrieve whether addcertificate requested
@@ -882,7 +938,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		if (_sAddCertificate == null && htSessionContext != null )
 			_sAddCertificate = (String) htSessionContext.get("sp_addcertificate");
 		if (_sAddCertificate == null) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested signing \"sp_addcertificate\" is missing, using default" );
+			_sAddCertificate = _sDefaultAddCertificate;
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested signing \"sp_addcertificate\" is missing, using default:" + _sAddCertificate);
 		}
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "SignAssertion="+_bSignAssertion+" ReqSigning="+_sReqSigning);
 	}
@@ -1214,7 +1271,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			SAMLObjectBuilder<StatusMessage> statusMessageBuilder = (SAMLObjectBuilder<StatusMessage>) builderFactory
 					.getBuilder(StatusMessage.DEFAULT_ELEMENT_NAME);
 			StatusMessage msg = statusMessageBuilder.buildObject();
-			msg.setMessage((sResultCode != null) ? sResultCode : "unspecified error");
+//			msg.setMessage((sResultCode != null) ? sResultCode : "unspecified error");	// RH, 20140925, o
+			msg.setMessage((sResultCode != null) ? sResultCode : Errors.ERROR_ASELECT_SERVER_USER_NOT_ALLOWED);	// RH, 20140925, n
 			status.setStatusMessage(msg);
 		}
 
@@ -1235,6 +1293,18 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		
 		response.setID("_" + sRid); // 20090512, Bauke: must be NCNAME format
 		response.setIssueInstant(tStamp);
+		
+		String sAssertUrl = null;
+		if (htTGTContext != null)
+			sAssertUrl = (String) htTGTContext.get("sp_assert_url");
+		if (sAssertUrl == null && htSessionContext != null)
+			sAssertUrl = (String) htSessionContext.get("sp_assert_url");
+		if (sAssertUrl != null) {
+			response.setDestination(sAssertUrl);
+		} else {
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Return url \"sp_assert_url\" is missing, no Destination in response");
+		}
+
 
 		response.setVersion(SAMLVersion.VERSION_20);
 		response.setStatus(status);
