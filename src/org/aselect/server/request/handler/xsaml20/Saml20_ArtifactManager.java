@@ -42,6 +42,8 @@ public class Saml20_ArtifactManager extends StorageManager
 
 	// Make me a singleton
 	private static Saml20_ArtifactManager artifactManager;
+	
+	protected boolean bUseRedirect = false;
 
 	/**
 	 * Gets the the artifact manager.
@@ -100,21 +102,28 @@ public class Saml20_ArtifactManager extends StorageManager
 			sRedirectUrl += "&RelayState=" + URLEncoder.encode(sRelayState, "UTF-8");
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sRedirectUrl);
+		
+		
 		// RH, 20081113, Set appropriate headers here
 		oHttpServletResponse.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-		oHttpServletResponse.setContentType("text/html");
 		oHttpServletResponse.setHeader("Pragma", "no-cache");
-
-		// oHttpServletResponse.sendRedirect(sRedirectUrl);
-		// OR:
-		PrintWriter out = oHttpServletResponse.getWriter();
-		String htmlResponse = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n"
-				+ "<html><head><title>Redirect</title>\n"
-				+ "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">"
-				+ "<meta http-equiv=\"refresh\" content=\"0;URL=" + sRedirectUrl + "\">"
-				+ "</head><body></body></html>";
-		out.println(htmlResponse);
-		out.close();
+		
+		if (bUseRedirect) {
+			oHttpServletResponse.sendRedirect(sRedirectUrl);
+		} else {
+			oHttpServletResponse.setContentType("text/html");
+	
+			// oHttpServletResponse.sendRedirect(sRedirectUrl);
+			// OR:
+			PrintWriter out = oHttpServletResponse.getWriter();
+			String htmlResponse = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n"
+					+ "<html><head><title>Redirect</title>\n"
+					+ "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">"
+					+ "<meta http-equiv=\"refresh\" content=\"0;URL=" + sRedirectUrl + "\">"
+					+ "</head><body></body></html>";
+			out.println(htmlResponse);
+			out.close();
+		}
 	}
 
 	// We want an XMLObject out
@@ -326,6 +335,22 @@ public class Saml20_ArtifactManager extends StorageManager
 						"No valid 'storagemanager' config section found with id='artifact'", e);
 				throw e;
 			}
+			
+			//	RH, 20140929, sn
+			// Allow for http redirect as opposed to html meta-refresh
+			try {
+				String sUseRedirect = oASelectConfigManager.getParam(oArtifactSection, "use_redirect");
+				bUseRedirect = Boolean.parseBoolean(sUseRedirect);
+			}
+			catch (ASelectConfigException e) {
+				_systemLogger.log(Level.FINER, MODULE, sMethod,
+				"No 'use_redirect' config item found in artifactmanager config section, using default");
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod,
+					"Artifactmanager using redirect = " + bUseRedirect);
+			//	RH, 20140929, en
+
+			
 
 			super.init(oArtifactSection, oASelectConfigManager, _systemLogger, ASelectSAMAgent.getHandle());
 
