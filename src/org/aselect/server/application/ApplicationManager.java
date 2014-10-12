@@ -347,6 +347,13 @@ public class ApplicationManager
 				}
 				// RH, 20101217, en
 
+				// RH, 20141002, sn
+				String sAssertionAuthnStatementAuthenticatingAuthorityValue = ASelectConfigManager.getSimpleParam(oApplication, "authn_auth_authority",  false);
+				String sAssertionSubjectNameIDNameQualifierValue = ASelectConfigManager.getSimpleParam(oApplication, "assert_subject_nameid_qual",  false);
+
+				// RH, 20141002, en
+				
+
 				// RH, 20110920, sn
 				String sFirstAuthsp = ASelectConfigManager.getSimpleParam(oApplication, "first_authsp", false);
 				// RH, 20110920, en
@@ -421,6 +428,10 @@ public class ApplicationManager
 				application.setAuthnContextDeclValue(sAuthnContextDeclValue); // RH, 20101217, n
 				application.setAuthnContextDeclType(sAuthnContextDeclType); // RH, 20101217, n
 
+				application.setAuthenticatingAuthority(sAssertionAuthnStatementAuthenticatingAuthorityValue); 				// RH, 20141002, n
+				application.setAssertionSubjectNameIDNameQualifier(sAssertionSubjectNameIDNameQualifierValue);				// RH, 20141002, n
+				
+				
 				application.setFirstAuthsp(sFirstAuthsp);// RH, 20110920, n
 				
 				application.setSelectform(sSelectform);	// RH, 20121119, n
@@ -1284,6 +1295,72 @@ public class ApplicationManager
 		return oApplication.getAuthnContextDeclType();
 	}
 	
+
+	/**
+	 * Returns the AuthenticatingAuthority for an application. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Returns the configured AuthenticatingAuthority  for the application. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sAppId
+	 *            <code>String</code> containing an application id.
+	 * @return String containing the AuthenticatingAuthority. <code>null</code> if no AuthenticatingAuthority was found.
+	 */
+	public String getAuthenticatingAuthority(String sAppId)
+	{
+		Application oApplication;
+		try {
+			oApplication = getApplication(sAppId);
+		}
+		catch (ASelectException e) {
+			String sMethod = "getAuthenticatingAuthority()";
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No application configuration found for: " + sAppId);
+			return null;
+		}
+		return oApplication.getAuthenticatingAuthority();
+	}
+
+	/**
+	 * Returns the AssertionSubjectNameIDNameQualifier for an application. <br>
+	 * <br>
+	 * <b>Description:</b> <br>
+	 * Returns the configured AssertionSubjectNameIDNameQualifier  for the application. <br>
+	 * <br>
+	 * <b>Concurrency issues:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Preconditions:</b> <br>
+	 * - <br>
+	 * <br>
+	 * <b>Postconditions:</b> <br>
+	 * - <br>
+	 * 
+	 * @param sAppId
+	 *            <code>String</code> containing an application id.
+	 * @return String containing the AssertionSubjectNameIDNameQualifier. <code>null</code> if no AssertionSubjectNameIDNameQualifier was found.
+	 */
+	public String getAssertionSubjectNameIDNameQualifier(String sAppId)
+	{
+		Application oApplication;
+		try {
+			oApplication = getApplication(sAppId);
+		}
+		catch (ASelectException e) {
+			String sMethod = "getAssertionSubjectNameIDNameQualifier()";
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No application configuration found for: " + sAppId);
+			return null;
+		}
+		return oApplication.getAssertionSubjectNameIDNameQualifier();
+	}
 	
 	
 	/**
@@ -1313,6 +1390,7 @@ public class ApplicationManager
 		Application oApplication = getApplication(sAppId);
 		return oApplication.getSelectform();
 	}
+
 
 	
 	/**

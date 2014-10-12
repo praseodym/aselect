@@ -52,6 +52,7 @@ import org.opensaml.saml2.core.AttributeStatement;
 import org.opensaml.saml2.core.AttributeValue;
 import org.opensaml.saml2.core.Audience;
 import org.opensaml.saml2.core.AudienceRestriction;
+import org.opensaml.saml2.core.AuthenticatingAuthority;
 import org.opensaml.saml2.core.AuthnContext;
 import org.opensaml.saml2.core.AuthnContextClassRef;
 import org.opensaml.saml2.core.AuthnContextDecl;
@@ -1113,7 +1114,21 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 					.getBuilder(AuthnContext.DEFAULT_ELEMENT_NAME);
 			AuthnContext authnContext = authnContextBuilder.buildObject();
 			authnContext.setAuthnContextClassRef(authnContextClassRef);
-
+			
+			
+			// RH, 20141002, sn
+			////////////////////////////
+			// for eHerk authnContext AuthenticatingAuthorities MUST contain EntityID of AD
+			if ( ApplicationManager.getHandle().getAuthenticatingAuthority(_sAppId) != null ) {
+				SAMLObjectBuilder<AuthenticatingAuthority> authenticatingAuthorityBuilder = (SAMLObjectBuilder<AuthenticatingAuthority>) builderFactory
+				.getBuilder(AuthenticatingAuthority.DEFAULT_ELEMENT_NAME);
+				AuthenticatingAuthority authAuth = authenticatingAuthorityBuilder.buildObject();
+				authAuth.setURI(ApplicationManager.getHandle().getAuthenticatingAuthority(_sAppId));		// get from application section
+				authnContext.getAuthenticatingAuthorities().add(authAuth);
+			}
+			// RH, 20141002, en
+			
+			
 			// RH, 20101217, sn
 			// Add application specific context from aselect.xml
 			if ( ApplicationManager.getHandle().getAuthnContextDeclValue(_sAppId) != null ) {
@@ -1141,9 +1156,21 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			// Sun doesn't like this:
 			// authnStatement.setSessionIndex((String) htTGTContext.get("sp_issuer"));
 			String sSessionIndex = sAssertionID.replaceAll("_", "");
-			authnStatement.setSessionIndex(sSessionIndex);
+
+			//			authnStatement.setSessionIndex(sSessionIndex);	// RH, 20141006, o
+			// RH, 20141006, sn
+			if ( (!_sAddedPatching.contains("saml_sessionindex_none")) && sSessionIndex != null && !"".equals(sSessionIndex) ) {	
+				authnStatement.setSessionIndex(sSessionIndex);			}
+			// RH, 20141006, sn
+			
+			
+			/////////////////////////////////////////////////////////////////
 			// Always try to set the locality address, except when null or empty
-			if (sSubjectLocalityAddress != null && !"".equals(sSubjectLocalityAddress)) {
+			// or forced supression through added_patching
+			// _sAddedPatching.contains("saml_subjectlocality_none")
+			
+//			if (sSubjectLocalityAddress != null && !"".equals(sSubjectLocalityAddress)) {	// RH, 20141002, o
+			if ( (!_sAddedPatching.contains("saml_subjectlocality_none")) && sSubjectLocalityAddress != null && !"".equals(sSubjectLocalityAddress) ) {		// RH, 20141002, n
 				SAMLObjectBuilder<SubjectLocality> subjectLocalityBuilder = (SAMLObjectBuilder<SubjectLocality>) builderFactory
 						.getBuilder(SubjectLocality.DEFAULT_ELEMENT_NAME);
 				SubjectLocality locality = subjectLocalityBuilder.buildObject();
@@ -1151,7 +1178,8 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				authnStatement.setSubjectLocality(locality);
 				// We could also set DNSName in locality, but for now, that's not requested
 			}
-
+			// RH, 20141002, sn
+			// RH, 20141002, en
 			authnStatement.setAuthnContext(authnContext);
 			SAMLObjectBuilder<Audience> audienceBuilder = (SAMLObjectBuilder<Audience>) builderFactory
 					.getBuilder(Audience.DEFAULT_ELEMENT_NAME);
@@ -1212,7 +1240,15 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			if (_sAddedPatching.contains("nvl_patch")) {
 				nameID.setNameQualifier(_sASelectServerUrl);  // NameQualifier
 				nameID.setSPNameQualifier((String) htTGTContext.get("sp_issuer"));  // SPNameQualifier
+			// RH, 20141002, sn
+			} else if (ApplicationManager.getHandle().getAssertionSubjectNameIDNameQualifier(_sAppId) != null) {
+				//////////////////////////////////////////////
+				// for eHerk this MUST contain NameQualiifier with EntityID of MR
+				////////////////////////////////////////////
+				nameID.setNameQualifier(ApplicationManager.getHandle().getAssertionSubjectNameIDNameQualifier(_sAppId));
 			}
+			// RH, 20141002, en
+			
 			
 			// 20090602, Bauke Saml-core-2.0, section 2.2.2: SHOULD be omitted:
 			// nameID.setNameQualifier(_sASelectServerUrl);
@@ -1223,12 +1259,22 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 					.getBuilder(Subject.DEFAULT_ELEMENT_NAME);
 			Subject subject = subjectBuilder.buildObject();
 			subject.setNameID(nameID);
+			
 			subject.getSubjectConfirmations().add(subjectConfirmation);
 
 			SAMLObjectBuilder<Issuer> assertionIssuerBuilder = (SAMLObjectBuilder<Issuer>) builderFactory
 					.getBuilder(Issuer.DEFAULT_ELEMENT_NAME);
 			Issuer assertionIssuer = assertionIssuerBuilder.buildObject();
-			assertionIssuer.setFormat(NameIDType.ENTITY);
+			
+			// RH, 20141002, sn
+			//////////////////////////////////
+			// for eHerk this MUST be ommitted
+			if (!_sAddedPatching.contains("saml_format_none")) {
+				assertionIssuer.setFormat(NameIDType.ENTITY);
+			}
+			////////////////////////////////////////
+			// RH, 20141002, en
+
 			assertionIssuer.setValue(_sASelectServerUrl);
 
 			SAMLObjectBuilder<Assertion> assertionBuilder = (SAMLObjectBuilder<Assertion>) builderFactory

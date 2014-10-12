@@ -96,6 +96,10 @@ public class Application
 
 	private String _AuthnContextDeclValue;	// RH, 20101217, n
 	private String _AuthnContextDeclType;	// RH, 20101217, n
+	
+	private String _AssertionAuthnStatementAuthenticatingAuthority = null;	// RH, 20141002, n
+	private String _AssertionSubjectNameIDNameQualifier = null;	// RH, 20141002, n
+	
 
 	private String _first_authsp = null;	// RH, 20110920, n
 
@@ -710,6 +714,26 @@ public class Application
 	public synchronized void setOBOParameters(HashMap<String, String> htOBOParameters)
 	{
 		_htOBOParameters = htOBOParameters;
+	}
+
+	public synchronized String getAuthenticatingAuthority()
+	{
+		return _AssertionAuthnStatementAuthenticatingAuthority;
+	}
+
+	public synchronized void setAuthenticatingAuthority(String authenticatingAuthority)
+	{
+		_AssertionAuthnStatementAuthenticatingAuthority = authenticatingAuthority;
+	}
+
+	public synchronized String getAssertionSubjectNameIDNameQualifier()
+	{
+		return _AssertionSubjectNameIDNameQualifier;
+	}
+
+	public synchronized void setAssertionSubjectNameIDNameQualifier(String assertionSubjectNameIDNameQualifier)
+	{
+		_AssertionSubjectNameIDNameQualifier = assertionSubjectNameIDNameQualifier;
 	}
 
 }
