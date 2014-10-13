@@ -731,11 +731,26 @@ throws ASelectException
 			}
 
 			// handle On Behalf Of if applicable
+			// RH, 20141013, sn
 			if ( ApplicationManager.getHandle().getApplication(sAppId).isOBOEnabled() ) {
+				int step = 0;
+				String sFirstStep = ApplicationManager.getHandle().getApplication(sAppId).getOBOParameters().get("firststep");
+				if (sFirstStep != null ) {
+					try {
+						step = Integer.parseInt(sFirstStep);
+					} catch (NumberFormatException nfe) {
+						step = 0;
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, "OnBehalfOf contains non integer value for firststep:" + sFirstStep );
+					}
+				}
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "Using firststep:" + step );
+				// RH, 20141013, sn
+
 				// RH, 20140204,  Present On Behalf Of selection to the user
 				// The user must present obo
 				String sSelectForm = org.aselect.server.utils.Utils.presentOnBehalfOf(servletRequest, _configManager,
-						htSessionContext, sRid, (String)htTGTContext.get("language"), 0 /*step 0, do obo or not */);
+//						htSessionContext, sRid, (String)htTGTContext.get("language"), 0 /*step 0, do obo or not */);
+				htSessionContext, sRid, (String)htTGTContext.get("language"), step /*step 0 = do obo or not */);
 				servletResponse.setContentType("text/html");
 				
 				Tools.pauseSensorData(_configManager, _systemLogger, htSessionContext);
