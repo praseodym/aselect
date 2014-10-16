@@ -38,6 +38,7 @@ import org.aselect.system.exception.ASelectException;
  */
 public class ASelectAuthenticationProfile extends AbstractRequestHandler
 {
+
 	private final static String MODULE = "ASelectAuthenticationProfile";
 
 	private ASelectRequestHandlerFactory _oRequestHandlerFactory;
@@ -45,9 +46,15 @@ public class ASelectAuthenticationProfile extends AbstractRequestHandler
 	private String _sMyOrg;
 
 	static String _sAllowLoginToken = null;
+	static String _sAllowedLoginTokenMethod = null;
 
 	public static String get_sAllowLoginToken() {
 		return _sAllowLoginToken;
+	}
+
+	public static String get_sAllowedLoginTokenMethod()
+	{
+		return _sAllowedLoginTokenMethod;
 	}
 
 	/**
@@ -91,6 +98,14 @@ public class ASelectAuthenticationProfile extends AbstractRequestHandler
 			catch (ASelectConfigException e) {
 			}
 
+			try {
+				_sAllowedLoginTokenMethod = _configManager.getParamFromSection(oConfig, "allow_login_token", "allowed_http_request_method", false);
+			}
+			catch (ASelectConfigException e) {
+			}
+
+			_systemLogger.log(Level.FINER, MODULE, sMethod,	"allow_login_token: " + _sAllowLoginToken + ", for allowed_http_request_method: " + _sAllowedLoginTokenMethod);
+			
 			Object oASelect = null;
 			try {
 				oASelect = _configManager.getSection(null, "aselect");
@@ -189,4 +204,5 @@ public class ASelectAuthenticationProfile extends AbstractRequestHandler
 	public void destroy()
 	{
 	}
+
 }

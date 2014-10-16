@@ -510,7 +510,9 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		}
 
 		boolean bAllowLoginToken = "true".equals(ASelectAuthenticationProfile.get_sAllowLoginToken());
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "bAllowLoginToken="+bAllowLoginToken);
+		String sAllowedLoginTokenMethod = ASelectAuthenticationProfile.get_sAllowedLoginTokenMethod();
+		
+		_systemLogger.log(Level.INFO, _sModule, sMethod, "bAllowLoginToken="+bAllowLoginToken + ", sAllowedLoginTokenMethod: " + sAllowedLoginTokenMethod);
 
 		if (sRequest == null) {
 			// Show info page if nothing else to do
@@ -570,7 +572,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		else if (sRequest.equals("alive")) {
 			pwOut.println("<html><body>Server is ALIVE</body></html>");
 		}
-		else if (bAllowLoginToken && sRequest.equals("login_token")) {
+//		else if (bAllowLoginToken && sRequest.equals("login_token")) {
+		else if ( bAllowLoginToken && sRequest.equals("login_token") && ( sAllowedLoginTokenMethod == null || _servletRequest.getMethod().equalsIgnoreCase(sAllowedLoginTokenMethod)) ) {
 			handleLoginToken(htServiceRequest, _servletResponse, pwOut);
 		}
 		else {  // Precondition, need a session
