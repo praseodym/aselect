@@ -67,6 +67,8 @@ public class AccountSTS extends ProtoRequestHandler
 	protected HashMap _htSP_LoginReturn;
 	protected HashMap _htSP_LogoutReturn;
 
+	protected HashMap _htWauthMapping;	// RH, 20141014, n
+
 	protected HashMap<String, Pattern> _htSP_wctxregex;	// RH, 20130916, n
 	protected HashMap<String, String>	_htSP_SignAlgorithm;	// RH, 20130924, n
 
@@ -176,6 +178,13 @@ public class AccountSTS extends ProtoRequestHandler
 			getTableFromConfig(oConfig, null, _htSP_LogoutReturn, "service_providers", "sp", "uri",/*->*/
 			"logout_return_url", false/* mandatory */, false/* unique values */);
 
+			// RH, 20141014, sn
+			//	wauth to app_id mapping
+			_htWauthMapping = new HashMap();
+			getTableFromConfig(oConfig, null, _htWauthMapping, "application_mapping", "app", "wauth",/*->*/
+			"app_id", false/* mandatory */, false/* unique values */);
+			// RH, 20141014, sn
+
 			_sPostTemplate = readTemplateFromConfig(oConfig, "post_template");
 		}
 		catch (ASelectException e) {
@@ -216,6 +225,10 @@ public class AccountSTS extends ProtoRequestHandler
 		// String sPwct = request.getParameter("wct"); // current time
 		String sPwtrealm = request.getParameter("wtrealm"); // requesting realm (resource accessed)
 		String sPwhr = request.getParameter("whr"); // requestor's home realm (account partner's client realm)
+		
+		String sPwauth = request.getParameter("wauth"); // authentication method, will be (mis)used to select app_id which then determines authentication method
+		
+		
 
 		if (sPwa != null && sPwa.equals("wsignout1.0"))
 			return processSignout(request, response);
@@ -270,8 +283,23 @@ public class AccountSTS extends ProtoRequestHandler
 		String sASelectURL = _sServerUrl;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Start Authenticate");
 
+		// RH, 20141014, so
+//		HashMap<String, Object> htResponse = performAuthenticateRequest(sASelectURL, sPathInfo, RETURN_SUFFIX,
+//					_sMyAppId, false/*don't check signature*/, _oClientCommunicator);
+		// RH, 20141014, eo
+
+		// RH, 20141014, sn
+		String sMappedAppId = _sMyAppId;	// _sMyAppId becomes default
+		if (_htWauthMapping.size() > 0 && sPwauth != null && !"".equals(sPwauth) ) {	// do we have at least one mapping defined and is there a mapping query parm
+			String s = (String)_htWauthMapping.get(sPwauth);
+			if (s != null ) {	// we found a mapping
+				sMappedAppId = s;
+			}
+		}
 		HashMap<String, Object> htResponse = performAuthenticateRequest(sASelectURL, sPathInfo, RETURN_SUFFIX,
-					_sMyAppId, false/*don't check signature*/, _oClientCommunicator);
+				sMappedAppId, false/*don't check signature*/, _oClientCommunicator);
+		// RH, 20141014, en
+
 		
 		String sRid = (String) htResponse.get("rid");  // rid for the newly generated session
 		_htSessionContext = (HashMap)htResponse.get("session");
@@ -364,14 +392,28 @@ public class AccountSTS extends ProtoRequestHandler
 					+ _sPassTransientId);
 
 			if (htCredentials == null) {
-				// No credentials were made yet, Issue a TGT
-				sTgt = createContextAndIssueTGT(response, null, null, _sASelectServerID, _sASelectOrganization,
-						_sMyAppId, sTgt, htAttributes);
-
 				// Create Token and POST it to the caller
+				// No credentials were made yet, Issue a TGT
+				// RH, 20141014, sn
+				// Wauth: we need app_id from session so first do a retrieveSessionDataFromRid(request, SESSION_ID_PREFIX) and then createContextAndIssueTGT
 				HashMap htSessionData = retrieveSessionDataFromRid(request, SESSION_ID_PREFIX);
 				if (htSessionData == null)
 					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
+				String sAppId = (String)htSessionData.get("app_id");
+				if (sAppId == null || "".equals(sAppId)) sAppId = _sMyAppId; 	// defaults
+				sTgt = createContextAndIssueTGT(response, null, null, _sASelectServerID, _sASelectOrganization,
+						sAppId, sTgt, htAttributes);
+				// RH, 20141014, en
+
+//				sTgt = createContextAndIssueTGT(response, null, null, _sASelectServerID, _sASelectOrganization,
+//						_sMyAppId, sTgt, htAttributes);// RH, 20141014, o
+
+				// Create Token and POST it to the caller
+				// RH, 20141014, so
+//				HashMap htSessionData = retrieveSessionDataFromRid(request, SESSION_ID_PREFIX);
+//				if (htSessionData == null)
+//					throw new ASelectException(Errors.ERROR_ASELECT_SERVER_SESSION_EXPIRED);
+				// RH, 20141014, eo
 				if ("true".equals(_sPassTransientId))
 					htAttributes.put("transient_id", sTgt);
 				return postRequestorToken(request, response, sUid, htSessionData, htAttributes);
