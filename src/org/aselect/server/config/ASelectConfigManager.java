@@ -465,6 +465,10 @@ public class ASelectConfigManager extends ConfigManager
 	// If <Vector<String>> == null, urldecoding will take place for all applications
 	private HashMap<String, Vector<String>> parameters2decode = null;
 
+	private String _sPreviousSessionCookieName = null;
+	private String _sPreviousSessionAuthspID = null;
+	private int _iPreviousSessionCookieAge = 0;
+
 	/**
 	 * Must be used to get an ASelectConfigManager instance. <br>
 	 * <br>
@@ -706,6 +710,29 @@ public class ASelectConfigManager extends ConfigManager
 			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
 					"No specific cookie domain configured, using the default domain");
 		}
+		
+		// RH, 20141121, sn
+		// get PreviousSession parameters
+		Object oPreviousSession = null;
+		try {
+			oPreviousSession = getSection(_oASelectConfigSection, "store_cookie", "id=previous_session");
+			_sPreviousSessionCookieName = getParam(oPreviousSession, "cookiename");
+			String _sPreviousSessionCookieAge = getParam(oPreviousSession, "cookieage");
+			try {
+			_iPreviousSessionCookieAge = Integer.parseInt(_sPreviousSessionCookieAge);
+			} catch ( NumberFormatException nfe) {
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Could not parse cookieage");
+				throw new ASelectConfigException(nfe.getMessage());
+			}
+			_sPreviousSessionAuthspID = getParam(oPreviousSession, "authspid");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully initialized PreviousSession");
+		}
+		catch (ASelectConfigException e) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod,
+					"No valid 'store_cookie' config section with id='previous_session' found, previous_session not enabled.");
+		}
+		// RH, 20141121, en
+		
 
 		if (_htServerCrypto.size() > 0) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded default private key.");
@@ -2553,5 +2580,23 @@ public class ASelectConfigManager extends ConfigManager
 	public HashMap<String, Vector<String>> getParameters2decode() {
 		return parameters2decode;
 	}
+	
+	
+	public String getPreviousSessionCookieName()
+	{
+		return _sPreviousSessionCookieName;
+	}
+
+	public String getPreviousSessionAuthspID()
+	{
+		return _sPreviousSessionAuthspID;
+	}
+
+	public int getPreviousSessionCookieAge()
+	{
+		return _iPreviousSessionCookieAge;
+	}
+
+
 
 }

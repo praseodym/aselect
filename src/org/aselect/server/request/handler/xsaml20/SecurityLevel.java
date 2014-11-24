@@ -25,24 +25,27 @@ public class SecurityLevel
 	final static String MODULE = "SecurityLevel";
 
 	// Saml text
+	final private static String PREVIOUSSESSION_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:PreviousSession";	// RH, 20141113, n
 	final private static String UNSPECIFIED_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified";
 	final private static String PASSWORD_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:Password";
-	
+
 	final private static String PASSWORDPROTECTEDTRANSPORT_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport";
 	final private static String MOBILETWOFACTORUNREGISTERED_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorUnregistered";
 	//final private static String MOBILETWOFACTORCONTRACT_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:TimeSyncToken";  // Novell
 	final private static String MOBILETWOFACTORCONTRACT_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:MobileTwoFactorContract";
 	final private static String SMARTCARDPKI_URI = "urn:oasis:names:tc:SAML:2.0:ac:classes:SmartcardPKI";
 
-	final private static int LEVEL_NOT_FOUND = -1;
-	final private static int LEVEL_MIN = 0;  // used for searching
-	final private static int LEVEL_NULL = 5;
-	final private static int LEVEL_POOR = 7;	// RH, 20120124, n
-	final private static int LEVEL_LOW = 10;
-	final private static int LEVEL_BETTER = 15;  // 20100714 was 5?!?
-	final private static int LEVEL_MEDIUM = 20;
-	final private static int LEVEL_HIGH = 30;
-	final private static int LEVEL_MAX = 999; // used for searching
+	// We might want to refer to these levels from other Classes so make them public
+	final public static int LEVEL_NOT_FOUND = -1;
+	final public static int LEVEL_MIN = 0;  // used for searching
+	final public static int LEVEL_PREVIOUS = 2;	// RH, 20141113, n, used for previous_session
+	final public static int LEVEL_NULL = 5;
+	final public static int LEVEL_POOR = 7;	// RH, 20120124, n
+	final public static int LEVEL_LOW = 10;
+	final public static int LEVEL_BETTER = 15;  // 20100714 was 5?!?
+	final public static int LEVEL_MEDIUM = 20;
+	final public static int LEVEL_HIGH = 30;
+	final public static int LEVEL_MAX = 999; // used for searching
 	
 	// 20090109: Bauke changed levels
 	//final private static int LEVEL_NULL = 5; // 1;
@@ -51,6 +54,7 @@ public class SecurityLevel
 	//final private static int LEVEL_HIGH = 30; // 4;
 
 	// public final static String BN_EMPTY = "empty"; // no longer 20090501
+	final private static String BN_VORIG = "2";	// RH, 20141113, n, used for previous_session
 	final private static String BN_NUL = "5";
 	final private static String BN_POVER = "7";	// RH, 20120124, n
 	final private static String BN_LAAG = "10";
@@ -60,7 +64,8 @@ public class SecurityLevel
 	
 	final public static String BN_NOT_FOUND = "not_found";
 //	private static String[] aAlllowedLevels = {BN_NUL, BN_LAAG, BN_BETTER, BN_MEDIUM,  BN_HOOG} ;	// RH, 20120124, o
-	private static String[] aAlllowedLevels = {BN_NUL, BN_POVER, BN_LAAG, BN_BETTER, BN_MEDIUM,  BN_HOOG} ;	// RH, 20120124, n
+//	private static String[] aAlllowedLevels = {BN_NUL, BN_POVER, BN_LAAG, BN_BETTER, BN_MEDIUM,  BN_HOOG} ;	// RH, 20120124, n // RH, 20141113, o
+	private static String[] aAlllowedLevels = {BN_VORIG, BN_NUL, BN_POVER, BN_LAAG, BN_BETTER, BN_MEDIUM,  BN_HOOG} ;	//  RH, 20141113, n
 	public static Set<String> ALLOWEDLEVELS = new HashSet( Arrays.asList(aAlllowedLevels) );
 
 	/**
@@ -90,6 +95,10 @@ public class SecurityLevel
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 		switch (iLevel) {
+		// RH, 20141113, sn
+		case LEVEL_PREVIOUS:
+			return PREVIOUSSESSION_URI;
+			// RH, 20141113, en
 		case LEVEL_NULL:
 			return UNSPECIFIED_URI;
 		case LEVEL_POOR:	// RH, 20120124, sn
@@ -128,7 +137,12 @@ public class SecurityLevel
 		String sMethod = "convertAuthnContextClassRefURIToLevel";
 
 		try {
-			if (sAuthnContextClassRefURI.equals(UNSPECIFIED_URI))
+			// RH, 20141113, sn
+			if (sAuthnContextClassRefURI.equals(PREVIOUSSESSION_URI))
+				return String.valueOf(LEVEL_PREVIOUS);
+			// RH, 20141113, en
+//			if (sAuthnContextClassRefURI.equals(UNSPECIFIED_URI))// RH, 20141113, o
+			else if (sAuthnContextClassRefURI.equals(UNSPECIFIED_URI))// RH, 20141113, n
 				return String.valueOf(LEVEL_NULL);
 			else if (sAuthnContextClassRefURI.equals(PASSWORD_URI))		// RH, 20120124, sn
 				return String.valueOf(LEVEL_POOR);	// RH, 20120124, en
@@ -247,6 +261,8 @@ public class SecurityLevel
 				}
 				if (iCurrentBestBetrouwheidsNiveau == LEVEL_NULL)
 					iCurrentBestBetrouwheidsNiveau = LEVEL_LOW;
+				else if (iCurrentBestBetrouwheidsNiveau == LEVEL_PREVIOUS)			// RH, 2014113, sn
+					iCurrentBestBetrouwheidsNiveau = LEVEL_LOW;			// RH, 2014113, en
 				else if (iCurrentBestBetrouwheidsNiveau == LEVEL_POOR)			// RH, 20120124, sn
 					iCurrentBestBetrouwheidsNiveau = LEVEL_LOW;			// RH, 20120124, en
 				else if (iCurrentBestBetrouwheidsNiveau == LEVEL_LOW)
@@ -291,7 +307,10 @@ public class SecurityLevel
 	 */
 	private static String getSecurityLevelFromContext(String sAuthnContextClassRef)
 	{
-		if (sAuthnContextClassRef.equals(UNSPECIFIED_URI))
+		if (sAuthnContextClassRef.equals(PREVIOUSSESSION_URI))			// RH, 20141113, sn
+			return BN_VORIG;			// RH, 20141113, en
+//		if (sAuthnContextClassRef.equals(UNSPECIFIED_URI))			// RH, 20141113, o
+		else if (sAuthnContextClassRef.equals(UNSPECIFIED_URI))			// RH, 20141113, n
 			return BN_NUL;
 		else if (sAuthnContextClassRef.equals(PASSWORD_URI))				// RH, 20120124, sn
 			return BN_POVER;						// RH, 20120124, en
@@ -344,7 +363,10 @@ public class SecurityLevel
 	 */
 	private static String getStringSecurityLevel(int iSecurityLevel)
 	{
-		if (iSecurityLevel == LEVEL_NULL)
+		if (iSecurityLevel == LEVEL_PREVIOUS)				// RH, 20141113, sn
+			return BN_VORIG;			// RH, 20141113, en
+//		if (iSecurityLevel == LEVEL_NULL)			// RH, 20141113, o
+		else	if (iSecurityLevel == LEVEL_NULL)			// RH, 20141113, n
 			return BN_NUL;
 		else if (iSecurityLevel == LEVEL_POOR)				// RH, 20120124, sn
 			return BN_POVER;							// RH, 20120124, en
@@ -369,7 +391,10 @@ public class SecurityLevel
 	 */
 	private static int getIntSecurityLevel(String sCurrentAuthnContextClassRef)
 	{
-		if (sCurrentAuthnContextClassRef.equals(UNSPECIFIED_URI))
+		if (sCurrentAuthnContextClassRef.equals(PREVIOUSSESSION_URI))					// RH, 20141113, sn
+			return LEVEL_PREVIOUS;					// RH, 20141113, en
+//		if (sCurrentAuthnContextClassRef.equals(UNSPECIFIED_URI))					// RH, 20141113, o
+		else if (sCurrentAuthnContextClassRef.equals(UNSPECIFIED_URI))					// RH, 20141113, n
 			return LEVEL_NULL;
 		else if (sCurrentAuthnContextClassRef.equals(PASSWORD_URI))						// RH, 20120124, sn
 			return LEVEL_POOR;									// RH, 20120124, en

@@ -407,7 +407,9 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			_htSessionContext.put("level", Integer.parseInt(sBetrouwbaarheidsNiveau)); // 20090111, Bauke added, NOTE: it's an Integer
 			
 			// 20110722, Bauke conditional setting, should come from configuration however
-			if (Integer.parseInt(sBetrouwbaarheidsNiveau) <= 10)
+//			if (Integer.parseInt(sBetrouwbaarheidsNiveau) <= 10)	// RH, 20141113, o
+			// Quick fix for PreviousSession. Should somehow be done a different way
+			if (Integer.parseInt(sBetrouwbaarheidsNiveau) != SecurityLevel.LEVEL_PREVIOUS && Integer.parseInt(sBetrouwbaarheidsNiveau) <= 10)	// RH, 20141113, n, not clear why this is here, try to be backwards compatible anyway
 				_htSessionContext.put("forced_uid", "saml20_user");
 			_oSessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120403, Bauke: was updateSession
 
@@ -693,6 +695,9 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				sendSAMLResponsePOST(sAssertUrl, sRid, _htSessionContext, sTgt, htTGTContext, httpResponse, sRelayState);
 			}
 			else {	// use artifact as default (for backward compatibility) 
+				if (Saml20_Metadata.singleSignOnServiceBindingConstantPOST.equals(sReqBInding)) {
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Requested POST binding but post_template missing, doing redirect" );
+				}
 				_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Redirecting with artifact to: " + sAssertUrl);
 				sendSAMLArtifactRedirect(sAssertUrl, sRid, _htSessionContext, sTgt, htTGTContext, httpResponse, sRelayState);
 			}

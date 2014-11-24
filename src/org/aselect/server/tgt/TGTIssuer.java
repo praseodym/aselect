@@ -137,7 +137,17 @@
  */
 package org.aselect.server.tgt;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Date;
 import java.util.HashMap;
@@ -151,6 +161,7 @@ import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.attributes.AttributeGatherer;
 import org.aselect.server.authspprotocol.IAuthSPConditions;
 import org.aselect.server.authspprotocol.handler.AuthSPHandlerManager;
+import org.aselect.server.authspprotocol.handler.CookieAuthSP;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectSystemLogger;
@@ -159,6 +170,7 @@ import org.aselect.server.request.handler.xsaml20.ServiceProvider;
 import org.aselect.server.request.handler.xsaml20.idp.UserSsoSession;
 import org.aselect.server.session.SessionManager;
 import org.aselect.system.error.Errors;
+import org.aselect.system.exception.ASelectAuthSPException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Tools;
@@ -1058,6 +1070,80 @@ throws ASelectException
 			// Bauke 20080617 only store tgt value from now on
 			String sCookieDomain = _configManager.getCookieDomain();
 			HandlerTools.putCookieValue(oHttpServletResponse, "aselect_credentials", sTgt, sCookieDomain, null/*path*/, -1/*age*/, 1/*httpOnly*/, _systemLogger);
+
+			
+			////////////////////////////////////////////////////////////////////
+			// For  PreviousSession
+			String _sPreviousSessionCookiename = _configManager.getPreviousSessionCookieName();
+			if ( _sPreviousSessionCookiename != null ) {			
+				String _sAuthSP = _configManager.getPreviousSessionAuthspID();
+				if ( _sAuthSP != null ) {
+					int cookieAge =_configManager.getPreviousSessionCookieAge();
+					HandlerTools.putCookieValue(oHttpServletResponse, _sPreviousSessionCookiename, sTgt, sCookieDomain, "/"/*path*/, cookieAge, 1/*httpOnly*/, _systemLogger);
+					String _sAuthspURL = _authSPHandlerManager.getUrl(_sAuthSP);
+					String _sRequest = "storecookie";
+					StringBuffer sbSignature = new StringBuffer(_sRequest);
+					sbSignature.append(_sPreviousSessionCookiename);
+					sbSignature.append(sTgt);
+					sbSignature.append(_sServerId);
+		
+					String sSignature = _cryptoEngine.generateSignature(_sAuthSP, sbSignature.toString());
+					if (sSignature == null) {
+						StringBuffer sbBuffer = new StringBuffer("Could not generate signature for authsp: ");
+						sbBuffer.append(_sAuthSP);
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
+						throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+					}
+		
+					StringBuffer sbReqArgs = new StringBuffer("request="+ _sRequest);
+					sbReqArgs.append("&cookiename=").append(URLEncoder.encode(_sPreviousSessionCookiename, "UTF-8"));
+					sbReqArgs.append("&tgt=").append(URLEncoder.encode(sTgt, "UTF-8"));
+					sbReqArgs.append("&a-select-server=").append(URLEncoder.encode(_sServerId, "UTF-8"));
+					sbReqArgs.append("&signature=").append(URLEncoder.encode(sSignature, "UTF-8"));
+					String sArgs = sbReqArgs.toString();
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "To AUTHSP: " + _sAuthspURL+" Args="+sArgs);
+		
+					String sResponse = null;
+					try {
+						URL oServer = new URL(_sAuthspURL);
+						HttpURLConnection conn = (HttpURLConnection)oServer.openConnection();
+						conn.setDoOutput(true);
+			
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "POST Host="+oServer.getHost()+" Length="+sArgs.length());
+						conn.setRequestMethod("POST");
+						conn.setRequestProperty("Host", oServer.getHost());
+						conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+						conn.setRequestProperty("Content-Length", Integer.toString(sArgs.length()));
+						
+						OutputStream oStream = conn.getOutputStream();
+						BufferedWriter oOutputWriter = new BufferedWriter(new OutputStreamWriter(oStream), 16000);
+						oOutputWriter.write(sArgs);
+						oOutputWriter.close();
+						
+						// And retrieve the response
+						InputStream iStream = conn.getInputStream();
+						BufferedReader oInputReader = new BufferedReader(new InputStreamReader(iStream), 16000);
+						sResponse = oInputReader.readLine();
+						oInputReader.close();
+			
+					} catch (MalformedURLException mue) {
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid URL:"+ _sAuthspURL + " for authsp: " + _sAuthSP);
+						
+					}catch (IOException ioe) {
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not reach authsp: " + _sAuthSP);
+					}
+					// verify response here
+					HashMap htResponse = Utils.convertCGIMessage(sResponse, false);
+					String sResponseCode = ((String) htResponse.get("status"));
+					_systemLogger.log(Level.INFO, MODULE, sMethod, "ResponseCode from CookieAuthsp="+ sResponseCode);
+					if ( !CookieAuthSP.ERROR_NO_ERROR.equals(sResponseCode)) {
+						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error storing cookie to authsp: " + _sAuthSP);
+					}
+				}
+			} else {
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "No previoussession cookie set, continuing");
+			}
+			/////////////////////////////////////////////////////////////
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not create an A-Select cookie for user: " + sUserId, e);
