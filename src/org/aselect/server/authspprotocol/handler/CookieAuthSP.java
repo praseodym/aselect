@@ -278,7 +278,9 @@ public class CookieAuthSP implements IAuthSPProtocolHandler
 			sSignature = URLEncoder.encode(sSignature, "UTF-8");
 			_sCookiename = URLEncoder.encode(_sCookiename, "UTF-8");
 			sAsUrl = URLEncoder.encode(sAsUrl, "UTF-8");
-
+			// rid those not need to be url encoded by definition contains no characters to be encoded
+			// a-select-server is never url encoded because of the way aselectserver handles this parameter
+			
 			StringBuffer sbRedirect = new StringBuffer(_sAuthSPUrl);
 			sbRedirect.append("?as_url=").append(sAsUrl);
 			sbRedirect.append("&rid=").append(sRid);
@@ -361,10 +363,11 @@ public class CookieAuthSP implements IAuthSPProtocolHandler
 		htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
 
 		try {
-			String sRid = (String) htAuthspResponse.get("rid");
-			String sAsUrl = (String) htAuthspResponse.get("my_url");
+			String sRid = (String) htAuthspResponse.get("rid");	// rid by definition not url ecnoded
+			String sAsUrl = (String) htAuthspResponse.get("my_url");	// my_url is contructed by aselectserver, no need to url decode
 			String sResultCode = (String) htAuthspResponse.get("result_code");
-			String sAsId = (String) htAuthspResponse.get("a-select-server");
+			String uid = (String) htAuthspResponse.get("uid");
+			String sAsId = (String) htAuthspResponse.get("a-select-server");	// a-select-server never url encoded
 			String sSignature = (String) htAuthspResponse.get("signature");
 			if ((sRid == null) || (sResultCode == null) || (sSignature == null) || (sAsId == null)) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod,
@@ -378,9 +381,12 @@ public class CookieAuthSP implements IAuthSPProtocolHandler
 			sAsUrl = sbAsUrl.toString();
 
 			sSignature = URLDecoder.decode(sSignature, "UTF-8");
+			uid = URLDecoder.decode( ((uid == null)  ? "" : uid), "UTF-8");
+			sResultCode = URLDecoder.decode(sResultCode, "UTF-8");
+			
 			StringBuffer sbSignature = new StringBuffer(sRid);
-			sbSignature.append(sAsUrl);
 			sbSignature.append(sResultCode);
+			sbSignature.append(uid);
 			sbSignature.append(sAsId);
 
 			if (!_cryptoEngine.verifySignature(_sAuthSP, sbSignature.toString(), sSignature)) {
@@ -390,7 +396,7 @@ public class CookieAuthSP implements IAuthSPProtocolHandler
 			}
 
 			// 20120403, Bauke: session is available as a parameter
-			sUserId = (String) htSessionContext.get("user_id");
+			sUserId = uid == null ? (String) htSessionContext.get("user_id") : uid;
 			sAppID = (String) htSessionContext.get("app_id");
 
 			// must be retrieved from the session, because it can be an remote organtization
@@ -419,8 +425,9 @@ public class CookieAuthSP implements IAuthSPProtocolHandler
 			});
 
 			htResponse.put("rid", sRid);
-			htResponse.put("authsp_type", "null");
+			htResponse.put("authsp_type", _sAuthSP);
 			sLogResultCode = Errors.ERROR_ASELECT_SUCCESS;
+			htResponse.put("uid", sUserId);
 			htResponse.put("result", sLogResultCode);
 		}
 		catch (ASelectAuthSPException e) {

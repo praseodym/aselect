@@ -1078,67 +1078,77 @@ throws ASelectException
 			if ( _sPreviousSessionCookiename != null ) {			
 				String _sAuthSP = _configManager.getPreviousSessionAuthspID();
 				if ( _sAuthSP != null ) {
-					int cookieAge =_configManager.getPreviousSessionCookieAge();
-					HandlerTools.putCookieValue(oHttpServletResponse, _sPreviousSessionCookiename, sTgt, sCookieDomain, "/"/*path*/, cookieAge, 1/*httpOnly*/, _systemLogger);
-					String _sAuthspURL = _authSPHandlerManager.getUrl(_sAuthSP);
-					String _sRequest = "storecookie";
-					StringBuffer sbSignature = new StringBuffer(_sRequest);
-					sbSignature.append(_sPreviousSessionCookiename);
-					sbSignature.append(sTgt);
-					sbSignature.append(_sServerId);
-		
-					String sSignature = _cryptoEngine.generateSignature(_sAuthSP, sbSignature.toString());
-					if (sSignature == null) {
-						StringBuffer sbBuffer = new StringBuffer("Could not generate signature for authsp: ");
-						sbBuffer.append(_sAuthSP);
-						_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
-						throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
-					}
-		
-					StringBuffer sbReqArgs = new StringBuffer("request="+ _sRequest);
-					sbReqArgs.append("&cookiename=").append(URLEncoder.encode(_sPreviousSessionCookiename, "UTF-8"));
-					sbReqArgs.append("&tgt=").append(URLEncoder.encode(sTgt, "UTF-8"));
-					sbReqArgs.append("&a-select-server=").append(URLEncoder.encode(_sServerId, "UTF-8"));
-					sbReqArgs.append("&signature=").append(URLEncoder.encode(sSignature, "UTF-8"));
-					String sArgs = sbReqArgs.toString();
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "To AUTHSP: " + _sAuthspURL+" Args="+sArgs);
-		
-					String sResponse = null;
-					try {
-						URL oServer = new URL(_sAuthspURL);
-						HttpURLConnection conn = (HttpURLConnection)oServer.openConnection();
-						conn.setDoOutput(true);
+					HashMap tgtContext = _tgtManager.getTGT(sTgt);
+					if (tgtContext != null) {	// should be
+						String uid = (String) tgtContext.get("uid");
+						int cookieAge =_configManager.getPreviousSessionCookieAge();
+						HandlerTools.putCookieValue(oHttpServletResponse, _sPreviousSessionCookiename, sTgt, sCookieDomain, "/"/*path*/, cookieAge, 1/*httpOnly*/, _systemLogger);
+						String _sAuthspURL = _authSPHandlerManager.getUrl(_sAuthSP);
+						String _sRequest = "storecookie";
+						StringBuffer sbSignature = new StringBuffer(_sRequest);
+						sbSignature.append(_sPreviousSessionCookiename);
+						sbSignature.append(sTgt);
+						sbSignature.append(uid == null ? "" : uid);
+						sbSignature.append(_sServerId);
 			
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "POST Host="+oServer.getHost()+" Length="+sArgs.length());
-						conn.setRequestMethod("POST");
-						conn.setRequestProperty("Host", oServer.getHost());
-						conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-						conn.setRequestProperty("Content-Length", Integer.toString(sArgs.length()));
-						
-						OutputStream oStream = conn.getOutputStream();
-						BufferedWriter oOutputWriter = new BufferedWriter(new OutputStreamWriter(oStream), 16000);
-						oOutputWriter.write(sArgs);
-						oOutputWriter.close();
-						
-						// And retrieve the response
-						InputStream iStream = conn.getInputStream();
-						BufferedReader oInputReader = new BufferedReader(new InputStreamReader(iStream), 16000);
-						sResponse = oInputReader.readLine();
-						oInputReader.close();
+						String sSignature = _cryptoEngine.generateSignature(_sAuthSP, sbSignature.toString());
+						if (sSignature == null) {
+							StringBuffer sbBuffer = new StringBuffer("Could not generate signature for authsp: ");
+							sbBuffer.append(_sAuthSP);
+							_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
+							throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+						}
 			
-					} catch (MalformedURLException mue) {
-						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid URL:"+ _sAuthspURL + " for authsp: " + _sAuthSP);
-						
-					}catch (IOException ioe) {
-						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not reach authsp: " + _sAuthSP);
+						StringBuffer sbReqArgs = new StringBuffer("request="+ _sRequest);
+						sbReqArgs.append("&cookiename=").append(URLEncoder.encode(_sPreviousSessionCookiename, "UTF-8"));
+						sbReqArgs.append("&tgt=").append(URLEncoder.encode(sTgt, "UTF-8"));
+						sbReqArgs.append("&uid=").append(URLEncoder.encode((uid== null ? "" : uid), "UTF-8"));
+						sbReqArgs.append("&a-select-server=").append(URLEncoder.encode(_sServerId, "UTF-8"));
+						sbReqArgs.append("&signature=").append(URLEncoder.encode(sSignature, "UTF-8"));
+						String sArgs = sbReqArgs.toString();
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "To AUTHSP: " + _sAuthspURL+" Args="+sArgs);
+			
+						String sResponse = null;
+						try {
+							URL oServer = new URL(_sAuthspURL);
+							HttpURLConnection conn = (HttpURLConnection)oServer.openConnection();
+							conn.setDoOutput(true);
+				
+							_systemLogger.log(Level.INFO, MODULE, sMethod, "POST Host="+oServer.getHost()+" Length="+sArgs.length());
+							conn.setRequestMethod("POST");
+							conn.setRequestProperty("Host", oServer.getHost());
+							conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+							conn.setRequestProperty("Content-Length", Integer.toString(sArgs.length()));
+							
+							OutputStream oStream = conn.getOutputStream();
+							BufferedWriter oOutputWriter = new BufferedWriter(new OutputStreamWriter(oStream), 16000);
+							oOutputWriter.write(sArgs);
+							oOutputWriter.close();
+							
+							// And retrieve the response
+							InputStream iStream = conn.getInputStream();
+							BufferedReader oInputReader = new BufferedReader(new InputStreamReader(iStream), 16000);
+							sResponse = oInputReader.readLine();
+							oInputReader.close();
+				
+						} catch (MalformedURLException mue) {
+							_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid URL:"+ _sAuthspURL + " for authsp: " + _sAuthSP);
+							
+						}catch (IOException ioe) {
+							_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not reach authsp: " + _sAuthSP);
+						}
+						// verify response here
+						HashMap htResponse = Utils.convertCGIMessage(sResponse, false);
+						String sResponseCode = ((String) htResponse.get("status"));
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "ResponseCode from CookieAuthsp="+ sResponseCode);
+						if ( !CookieAuthSP.ERROR_NO_ERROR.equals(sResponseCode)) {
+							_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error storing cookie to authsp: " + _sAuthSP);
+						}
+					} else {
+						_systemLogger.log(Level.FINER, MODULE, sMethod, "tgt context emtpy, nothing to send to previoussession authsp, continuing");
 					}
-					// verify response here
-					HashMap htResponse = Utils.convertCGIMessage(sResponse, false);
-					String sResponseCode = ((String) htResponse.get("status"));
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "ResponseCode from CookieAuthsp="+ sResponseCode);
-					if ( !CookieAuthSP.ERROR_NO_ERROR.equals(sResponseCode)) {
-						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error storing cookie to authsp: " + _sAuthSP);
-					}
+				} else {
+					_systemLogger.log(Level.FINER, MODULE, sMethod, "No previoussession authsp set, continuing");
 				}
 			} else {
 				_systemLogger.log(Level.FINER, MODULE, sMethod, "No previoussession cookie set, continuing");

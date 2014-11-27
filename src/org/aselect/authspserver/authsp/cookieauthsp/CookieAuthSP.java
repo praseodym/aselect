@@ -396,6 +396,7 @@ public class CookieAuthSP extends ASelectHttpServlet
 			Cookie[] cookies = servletRequest.getCookies();
 			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Number of cookies found= " + (cookies == null ? 0 : cookies.length));
 			String v = null;
+			Hashtable htPreviousSessionContext = null;
 			for ( Cookie c : cookies) {
 				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Found cookie: " + c.getName() + ", with value: " +  c.getValue());
 				if (c.getName().equalsIgnoreCase(sCookiename)) {
@@ -408,15 +409,15 @@ public class CookieAuthSP extends ASelectHttpServlet
 			if ( v != null ) { // we found a value for our cookie
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Found cookie value:" + v);
 				// We verify if we know this cookie here
-				Hashtable h = null;
+				
 				try {
-					h = (Hashtable) _previousSessionManager.getHandle().get(v);
-					// W don't use the value (yet)
+					htPreviousSessionContext = (Hashtable) _previousSessionManager.getHandle().get(v);
+					
 				} catch (ASelectStorageException e) {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Cookie value not in storage");
-					h = null;
+					htPreviousSessionContext = null;
 				}
-				if (h != null) {
+				if (htPreviousSessionContext != null) {
 					_sAuthMode = Errors.ERROR_NULL_SUCCESS;
 					_authenticationLogger.log(new Object[] {
 							MODULE, sCookiename, servletRequest.getRemoteAddr(), sAsId, "granted"
@@ -438,7 +439,7 @@ public class CookieAuthSP extends ASelectHttpServlet
 				});
 			}
 			
-			handleResult(htServiceRequest, servletResponse, _sAuthMode, sLanguage, _sFailureHandling);
+			handleResult(htServiceRequest, servletResponse, _sAuthMode, sLanguage, _sFailureHandling, htPreviousSessionContext);
 		}
 		catch (ASelectException e) {
 			handleResult(htServiceRequest, servletResponse, e.getMessage(), sLanguage, _sFailureHandling);
@@ -479,14 +480,16 @@ public class CookieAuthSP extends ASelectHttpServlet
 
 		String request = (String)servletRequest.getParameter("request");  // is URLdecoded
 		String cookiename = (String)servletRequest.getParameter("cookiename");
-		String tgt = (String)servletRequest.getParameter("tgt");
+		String sTgt = (String)servletRequest.getParameter("tgt");
+		String uid = (String)servletRequest.getParameter("uid");
 		
 		String sAsId = (String)servletRequest.getParameter("a-select-server");
 		String sSignature = (String)servletRequest.getParameter("signature");
 		
 		StringBuffer sbSignature = new StringBuffer(request);
 		sbSignature.append(cookiename);
-		sbSignature.append(tgt);
+		sbSignature.append(sTgt);
+		sbSignature.append(uid == null ? "" : uid);
 		sbSignature.append(sAsId);
 
 
@@ -502,14 +505,16 @@ public class CookieAuthSP extends ASelectHttpServlet
 			// Do the cookie save stuff here
 			Hashtable htPreviousSessionContext = new Hashtable();
 
-			htPreviousSessionContext.put(cookiename, tgt);
+			htPreviousSessionContext.put(cookiename, sTgt);
+			htPreviousSessionContext.put("uid", uid);
 			try {
-				_previousSessionManager.create(tgt, htPreviousSessionContext);
+				_previousSessionManager.create(sTgt, htPreviousSessionContext);
+				sbResponse.append(Errors.ERROR_NULL_SUCCESS);
 			}
 			catch (ASelectStorageException e) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Cookie already present:" + tgt);
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "Cookie already present:" + sTgt);
+				sbResponse.append(Errors.ERROR_NULL_INVALID_REQUEST);
 			}
-			sbResponse.append(Errors.ERROR_NULL_SUCCESS);
 		}
 
 	
@@ -535,6 +540,13 @@ public class CookieAuthSP extends ASelectHttpServlet
 		return false;
 	}
 
+	private void handleResult(HashMap servletRequest, HttpServletResponse servletResponse,
+			String sResultCode, String sLanguage, String failureHandling)
+	throws IOException
+	{	
+		handleResult(servletRequest, servletResponse,
+				sResultCode, sLanguage, failureHandling, null);
+	}
 	/**
 	 * Creates a redirect url and redirects the user back to the A-Select Server. <br>
 	 * <br>
@@ -549,7 +561,7 @@ public class CookieAuthSP extends ASelectHttpServlet
 	 *             Signals that an I/O exception has occurred.
 	 */
 	private void handleResult(HashMap servletRequest, HttpServletResponse servletResponse,
-								String sResultCode, String sLanguage, String failureHandling)
+								String sResultCode, String sLanguage, String failureHandling, Hashtable previousSessionContext)
 	throws IOException
 	{
 		String sMethod = "handleResult";
@@ -569,17 +581,25 @@ public class CookieAuthSP extends ASelectHttpServlet
 				}
 				else {
 					StringBuffer sbSignature = new StringBuffer(sRid);
-					sbSignature.append(sAsUrl);
 					sbSignature.append(sResultCode);
+					
+					String uid = "";
+					if (previousSessionContext != null && previousSessionContext.get("uid") != null ) {
+						uid = (String) previousSessionContext.get("uid");
+					}
+					sbSignature.append(uid);
 					sbSignature.append(sAsId);
 					String sSignature = _cryptoEngine.generateSignature(sbSignature.toString());
-					sSignature = URLEncoder.encode(sSignature, "UTF-8");
+
+					// rid those not need to be url encoded by definition contains no characters to be encoded
+					// a-select-server is never url encoded because of the way aselectserver handles this parameter
 
 					StringBuffer sbRedirect = new StringBuffer(sAsUrl);
 					sbRedirect.append("&rid=").append(sRid);
-					sbRedirect.append("&result_code=").append(sResultCode);
+					sbRedirect.append("&result_code=").append(URLEncoder.encode(sResultCode, "UTF-8"));
+					sbRedirect.append("&uid=").append(URLEncoder.encode(uid, "UTF-8"));
 					sbRedirect.append("&a-select-server=").append(sAsId);
-					sbRedirect.append("&signature=").append(sSignature);
+					sbRedirect.append("&signature=").append(URLEncoder.encode(sSignature, "UTF-8"));
 
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIR " + sbRedirect);
 					servletResponse.sendRedirect(sbRedirect.toString());
