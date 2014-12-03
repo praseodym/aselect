@@ -89,31 +89,21 @@
 
 package org.aselect.authspserver.authsp.nullauthsp;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.HashMap;
-import java.util.Properties;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.aselect.authspserver.config.AuthSPConfigManager;
-import org.aselect.authspserver.crypto.CryptoEngine;
-import org.aselect.authspserver.log.AuthSPAuthenticationLogger;
-import org.aselect.authspserver.log.AuthSPSystemLogger;
+import org.aselect.authspserver.authsp.AbstractAuthSP;
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.servlet.ASelectHttpServlet;
 import org.aselect.system.utils.Utils;
-
 
 /**
  * . <br>
@@ -126,8 +116,9 @@ import org.aselect.system.utils.Utils;
  * 
  * @author Alfa & Ariss
  */
-public class NullAuthSP extends ASelectHttpServlet
+public class NullAuthSP extends AbstractAuthSP
 {
+	private static final long serialVersionUID = 1L;
 	/**
 	 * The name of this module, that is used in the system logging.
 	 */
@@ -135,47 +126,12 @@ public class NullAuthSP extends ASelectHttpServlet
 	/**
 	 * The Null AuthSP version string
 	 */
-	private static String VERSION = "A-Select Null AuthSP " + "1.9";
-
-	/**
-	 * The logger that logs authentication information
-	 */
-	private AuthSPAuthenticationLogger _authenticationLogger;
-	/**
-	 * The logger that logs system information
-	 */
-	private AuthSPSystemLogger _systemLogger;
-	/**
-	 * The config manager which contains the configuration
-	 */
-	private AuthSPConfigManager _configManager;
-
-	/**
-	 * The AuthSP crypto engine
-	 */
-	private CryptoEngine _cryptoEngine;
-	/**
-	 * The workingdir configured in the web.xml of the AuthSP Server
-	 */
-	private String _sWorkingDir;
-	/**
-	 * Error page template
-	 */
-	private String _sErrorHtmlTemplate;
-	/**
-	 * <code>Properties</code> containing the error codes with the corresponding error messages
-	 */
-	private Properties _propErrorMessages;
-	/**
-	 * The AuthSP Server user friendly name
-	 */
-	private String _sFriendlyName;
-
+	private static String VERSION = "A-Select Null AuthSP 2.0";
 	/**
 	 * The authentication mode that is configured
 	 */
 	private String _sAuthMode;
-
+	
 	/**
 	 * Initialization of the Null AuthSP. <br>
 	 * <br>
@@ -214,99 +170,23 @@ public class NullAuthSP extends ASelectHttpServlet
 	{
 		String sMethod = "init";
 
-		Object oAuthSPConfig = null;
-
 		try {
-			super.init(oServletConfig);
+			super.init(oServletConfig, false, "");
 
-			_authenticationLogger = AuthSPAuthenticationLogger.getHandle();
-			_systemLogger = AuthSPSystemLogger.getHandle();
-			_configManager = AuthSPConfigManager.getHandle();
-
-			StringBuffer sbInfo = new StringBuffer("Starting : ");
-			sbInfo.append(MODULE);
+			StringBuffer sbInfo = new StringBuffer("Starting : ").append(MODULE);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
-
-			String sConfigID = oServletConfig.getInitParameter("config_id");
-			if (sConfigID == null) {
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No 'config_id' found as init-parameter in web.xml.");
-				throw new ASelectException(Errors.ERROR_NULL_INTERNAL);
-			}
-
-			ServletContext servletContext = oServletConfig.getServletContext();
-			_cryptoEngine = (CryptoEngine) servletContext.getAttribute("CryptoEngine");
-			if (_cryptoEngine == null) {
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No CryptoEngine found in servlet context.");
-
-				throw new ASelectException(Errors.ERROR_NULL_INTERNAL);
-			}
-
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded CryptoEngine");
-
-			_sFriendlyName = (String) servletContext.getAttribute("friendly_name");
-			if (_sFriendlyName == null) {
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No friendly_name found in servlet context.");
-				throw new ASelectException(Errors.ERROR_NULL_INTERNAL);
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded friendly_name");
-
-			_sWorkingDir = (String) servletContext.getAttribute("working_dir");
-			if (_sWorkingDir == null) {
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No working_dir found in servlet context.");
-				throw new ASelectException(Errors.ERROR_NULL_INTERNAL);
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded working_dir");
-
-			StringBuffer sbErrorsConfig = new StringBuffer(_sWorkingDir);
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("conf");
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append(MODULE.toLowerCase());
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("errors");
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("errors.conf");
-
-			File fErrorsConfig = new File(sbErrorsConfig.toString());
-			if (!fErrorsConfig.exists()) {
-				StringBuffer sbFailed = new StringBuffer("The errors.conf doesn't exist: ");
-				sbFailed.append(sbErrorsConfig.toString());
-
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbFailed.toString());
-
-				throw new ASelectException(Errors.ERROR_NULL_INTERNAL);
-			}
-			_propErrorMessages = new Properties();
-			_propErrorMessages.load(new FileInputStream(sbErrorsConfig.toString()));
-
-			sbInfo = new StringBuffer("Successfully loaded ");
-			sbInfo.append(_propErrorMessages.size());
-			sbInfo.append(" error messages from: ");
-			sbInfo.append(sbErrorsConfig.toString());
-			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
-
-			_sErrorHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "error.html", sConfigID,
-					_sFriendlyName, VERSION);
+			
+			Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, _sConfigID, "error.html", null, _sFriendlyName, VERSION);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'error.html' template.");
 
-			try {
-				oAuthSPConfig = _configManager.getSection(null, "authsp", "id=" + sConfigID);
-			}
-			catch (Exception e) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "No valid 'authsp' config section found with id='"
-						+ sConfigID + "', using default setting: authentication mode = granted.");
-			}
-
+			// _oAuthSPConfig can be null
 			String sAuthMode = null;
 			try {
-				sAuthMode = _configManager.getParam(oAuthSPConfig, "authentication_mode");
+				sAuthMode = _configManager.getParam(_oAuthSpConfig, "authentication_mode");
 			}
 			catch (Exception e) {
 				sAuthMode = null;
-
-				_systemLogger
-						.log(Level.INFO, MODULE, sMethod,
-								"No valid 'authentication_mode' config item found, using default: authentication mode = granted.");
+				_systemLogger.log(Level.INFO, MODULE, sMethod, "No valid 'authentication_mode' config item found, using default: authentication mode = granted.");
 			}
 			if (sAuthMode == null)
 				sAuthMode = "";
@@ -316,8 +196,7 @@ public class NullAuthSP extends ASelectHttpServlet
 			else
 				_sAuthMode = Errors.ERROR_NULL_SUCCESS;
 
-			sbInfo = new StringBuffer("Successfully started: ");
-			sbInfo.append(MODULE);
+			sbInfo = new StringBuffer("Successfully started: ").append(MODULE);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 		}
 		catch (ASelectException ase) {
@@ -325,11 +204,8 @@ public class NullAuthSP extends ASelectHttpServlet
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "INTERNAL ERROR", e);
-
 			StringBuffer sbError = new StringBuffer("Could not initialize ");
-			sbError.append(MODULE);
-			sbError.append(" : ");
-			sbError.append(e.getMessage());
+			sbError.append(MODULE).append(" : ").append(e.getMessage());
 			throw new ServletException(sbError.toString(), e);
 		}
 	}
@@ -552,57 +428,49 @@ public class NullAuthSP extends ASelectHttpServlet
 				String sAsUrl = (String)servletRequest.get("as_url");
 				String sAsId = (String)servletRequest.get("a-select-server");
 				if (sRid == null || sAsUrl == null || sAsId == null) {
-					showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-							// RH, 20100621, Remove cyclic dependency system<->server
-//							_propErrorMessages), sLanguage);
-							_propErrorMessages), sLanguage, _systemLogger);
+					getTemplateAndShowErrorPage(pwOut, sResultCode, sResultCode, sLanguage, VERSION);
 				}
 				else {
 					StringBuffer sbSignature = new StringBuffer(sRid);
 					sbSignature.append(sAsUrl);
 					sbSignature.append(sResultCode);
 					sbSignature.append(sAsId);
+					
 					String sSignature = _cryptoEngine.generateSignature(sbSignature.toString());
 					sSignature = URLEncoder.encode(sSignature, "UTF-8");
-
 					StringBuffer sbRedirect = new StringBuffer(sAsUrl);
 					sbRedirect.append("&rid=").append(sRid);
 					sbRedirect.append("&result_code=").append(sResultCode);
 					sbRedirect.append("&a-select-server=").append(sAsId);
 					sbRedirect.append("&signature=").append(sSignature);
-
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIR " + sbRedirect);
 					servletResponse.sendRedirect(sbRedirect.toString());
 				}
 			}
 			else {
-				// RH, 20100621, Remove cyclic dependency system<->server
-				showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-//						_propErrorMessages), sLanguage);
-						_propErrorMessages), sLanguage, _systemLogger);
+				getTemplateAndShowErrorPage(pwOut, sResultCode, sResultCode, sLanguage, VERSION);
 			}
 		}
 		catch (ASelectException eAS) // could not generate signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate NULL AuthSP signature", eAS);
-			// RH, 20100621, Remove cyclic dependency system<->server
-//			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _configManager
-//					.getErrorMessage(Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _propErrorMessages), sLanguage);
-			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _propErrorMessages), sLanguage, _systemLogger);
+			try {
+				getTemplateAndShowErrorPage(pwOut, sResultCode, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, sLanguage, VERSION);
+			}
+			catch (ASelectException e) {
+			}
 
 		}
 		catch (UnsupportedEncodingException eUE) // could not encode signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode NULL AuthSP signature", eUE);
-			// RH, 20100621, Remove cyclic dependency system<->server
-//			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _configManager
-//					.getErrorMessage(Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _propErrorMessages), sLanguage);
-			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _propErrorMessages), sLanguage, _systemLogger);
+			try {
+				getTemplateAndShowErrorPage(pwOut, sResultCode, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, sLanguage, VERSION);
+			}
+			catch (ASelectException e) {
+			}
 		}
-		catch (IOException eIO) // Could not write output
-		{
+		catch (IOException eIO) { // Could not write output
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "IO error while handling authentication result", eIO);
 			throw eIO;
 		}

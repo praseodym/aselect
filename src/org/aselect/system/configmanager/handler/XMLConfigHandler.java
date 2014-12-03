@@ -362,7 +362,8 @@ public class XMLConfigHandler implements IConfigHandler
 
 		Node nSection = null;
 		Node nRoot = null;
-
+		_oSystemLogger.log(Level.FINER, MODULE, sMethod, "Find:"+oRootSection+"/type="+sSectionType+"/id="+sSectionID);
+		
 		// rootSection can be null if the first section is requested
 		if (oRootSection != null) {
 			if (oRootSection instanceof Element)
@@ -394,6 +395,7 @@ public class XMLConfigHandler implements IConfigHandler
 			_oSystemLogger.log(Level.FINE, MODULE, sMethod, sbError.toString());
 			throw new ASelectConfigException(Errors.ERROR_ASELECT_NOT_FOUND);
 		}
+		_oSystemLogger.log(Level.FINER, MODULE, sMethod, "Found/"+nSection);
 		return nSection;
 	}
 
@@ -547,12 +549,12 @@ public class XMLConfigHandler implements IConfigHandler
 		NamedNodeMap nnmAttributes = null;
 
 		if (oSection == null) {
-			sbError.append("Supplied section is null.");
+			sbError.append("Supplied section is null. ConfigItem="+sConfigItem);
 			_oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
 			throw new ASelectConfigException(Errors.ERROR_ASELECT_NOT_FOUND);
 		}
 		if (!(oSection instanceof Node)) {
-			sbError.append("Supplied section is not of type Node. Looking for:"+sConfigItem);
+			sbError.append("Supplied section is not of type Node. ConfigItem="+sConfigItem);
 			_oSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
 			throw new ASelectConfigException(Errors.ERROR_ASELECT_NOT_FOUND);
 		}

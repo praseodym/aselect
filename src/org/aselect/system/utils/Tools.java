@@ -65,7 +65,7 @@ public class Tools
 	 */
 	public static String extractFromXml(String message, String searchFor, boolean getContent)
 	{
-		String sMethod = "extractFromXml()";
+		String sMethod = "extractFromXml";
 
 		// <searchFor xxxx>contents of the tag</searchFor>
 		// ^begin          ^cntBegin          ^cntEnd     ^end

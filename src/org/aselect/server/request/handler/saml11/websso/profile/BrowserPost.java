@@ -54,7 +54,8 @@ import org.opensaml.SAMLSubject;
 public class BrowserPost extends AbstractWebSSOProfile
 {
 	private final static String MODULE = "BrowserPost";
-	private String _sTemplate;
+	//private String _sTemplate;
+	private String _sTemplateName = null;
 	private String _sIssuer;
 
 	/**
@@ -91,37 +92,19 @@ public class BrowserPost extends AbstractWebSSOProfile
 			boolean bSendAttributeStatement)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			super.init(oConfig, lAssertionExpireTime, sAttributeNamespace, bSendAttributeStatement);
 
-			String sTemplateName = null;
 			try {
-				sTemplateName = _configManager.getParam(oConfig, "template");
+				_sTemplateName = _configManager.getParam(oConfig, "template");
+				Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(), null/*language*/,
+						_sTemplateName, null, null/*friendly_name*/, null/*version*/);
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'template' found", e);
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
-
-			String sWorkingDir = _configManager.getWorkingdir();
-			StringBuffer sbTemplateFilename = new StringBuffer();
-			sbTemplateFilename.append(sWorkingDir);
-			if (!sWorkingDir.endsWith(File.separator))
-				sbTemplateFilename.append(File.separator);
-			sbTemplateFilename.append("conf");
-			sbTemplateFilename.append(File.separator);
-			sbTemplateFilename.append("html");
-			sbTemplateFilename.append(File.separator);
-			sbTemplateFilename.append(sTemplateName);
-
-			File fTemplate = new File(sbTemplateFilename.toString());
-			if (!fTemplate.exists()) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Configured template does not exists: "
-						+ sbTemplateFilename.toString());
-				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
-			}
-			_sTemplate = readTemplate(fTemplate);
 
 			// added 1.5.4
 			try {
@@ -307,13 +290,12 @@ public class BrowserPost extends AbstractWebSSOProfile
 	{
 		String sMethod = "send()";
 		PrintWriter pwOut = null;
-		String sHTMLResponse = null;
 		try {
 			response.setContentType("text/html");
 
 			pwOut = response.getWriter();
-
-			sHTMLResponse = _sTemplate;
+			String sHTMLResponse = Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(),
+					null/*language*/, _sTemplateName, null, null/*friendly_name*/, null/*version*/);
 
 			sHTMLResponse = Utils.replaceString(sHTMLResponse, "[action]", sAction);
 			sHTMLResponse = Utils.replaceString(sHTMLResponse, "[target]", sTarget);
@@ -342,46 +324,4 @@ public class BrowserPost extends AbstractWebSSOProfile
 				pwOut.close();
 		}
 	}
-
-	/**
-	 * Reads the given file and returns it as String. <br>
-	 * <br>
-	 * 
-	 * @param fTemplate
-	 *            the full file name to the template
-	 * @return the template as String
-	 * @throws ASelectException
-	 *             if the file couldn't be read
-	 */
-	private String readTemplate(File fTemplate)
-	throws ASelectException
-	{
-		String sMethod = "readTemplate()";
-		BufferedReader brIn = null;
-		String sLine = null;
-		StringBuffer sbReturn = new StringBuffer();
-		try {
-			brIn = new BufferedReader(new InputStreamReader(new FileInputStream(fTemplate)));
-
-			while ((sLine = brIn.readLine()) != null) {
-				sbReturn.append(sLine);
-				sbReturn.append("\n");
-			}
-		}
-		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not read template", e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-		}
-		finally {
-			try {
-				if (brIn != null)
-					brIn.close();
-			}
-			catch (IOException e) {
-				_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close BufferedReader", e);
-			}
-		}
-		return sbReturn.toString();
-	}
-
 }

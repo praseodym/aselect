@@ -164,22 +164,24 @@ public abstract class SAMServiceServlet extends HttpServlet
 	throws ServletException
 	{
 		StringBuffer sbError = new StringBuffer();
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		try {
 			super.init(oServletConfig);
 
+			// Get: workingdir/html/samservice.html
+			// and: workingdir/html/samservice_status.html
+			//
+			// NOTE: we're not using Utils.loadHTMLTemplate()
+			//
 			_sWorkingDir = oServletConfig.getInitParameter("working_dir");
-
 			if (_sWorkingDir == null) {
 				throw new Exception("No working_dir init-param found in web.xml");
 			}
-
 			if (!_sWorkingDir.endsWith(File.separator))
 				_sWorkingDir += File.separator;
-
 			_sWorkingDir += "html" + File.separator;
-
+			
 			File fWorkingDir = new File(_sWorkingDir);
 			if (!fWorkingDir.exists()) {
 				StringBuffer sbTemp = new StringBuffer("No valid template directory found: ");
@@ -450,7 +452,7 @@ public abstract class SAMServiceServlet extends HttpServlet
 	protected void service(HttpServletRequest oHttpServletRequest, HttpServletResponse oHttpServletResponse)
 	throws ServletException, IOException
 	{
-		String sMethod = "service()";
+		String sMethod = "service";
 		IMessageCreatorInterface oMsgCreator = null;
 		Communicator oCommunicator = null;
 
@@ -537,7 +539,7 @@ public abstract class SAMServiceServlet extends HttpServlet
 			HttpServletResponse oHttpServletResponse)
 	{
 		StringBuffer sbError = new StringBuffer();
-		String sMethod = "processRequest()";
+		String sMethod = "processRequest";
 
 		IProtocolRequest protRequest = new ServletRequestWrapper(oHttpServletRequest);
 		IProtocolResponse protResponse = new ServletResponseWrapper(oHttpServletResponse);

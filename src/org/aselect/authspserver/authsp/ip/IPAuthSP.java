@@ -66,8 +66,6 @@
  */
 package org.aselect.authspserver.authsp.ip;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
@@ -76,19 +74,15 @@ import java.net.InetAddress;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.HashMap;
-import java.util.Properties;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.aselect.authspserver.config.AuthSPConfigManager;
-import org.aselect.authspserver.crypto.CryptoEngine;
-import org.aselect.authspserver.log.AuthSPAuthenticationLogger;
-import org.aselect.authspserver.log.AuthSPSystemLogger;
+import org.aselect.authspserver.authsp.AbstractAuthSP;
+import org.aselect.authspserver.authsp.ip.Errors;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
@@ -103,25 +97,27 @@ import org.aselect.system.utils.Utils;
  * 
  * @author Alfa & Ariss
  */
-public class IPAuthSP extends ASelectHttpServlet
+public class IPAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodies from AbstractAuthSP
 {
+	private static final long serialVersionUID = 1L;
+
 	private final static String MODULE = "IPAuthSP";
-	private final static String VERSION = "A-Select IP AuthSP " + "1.9";
-	private final static String DEFAULT_FAILUREHANDLING = "aselect";
+	private final static String VERSION = "A-Select IP AuthSP 2.0";
 
-	private CryptoEngine _oCryptoEngine;
-	private AuthSPAuthenticationLogger _oAuthSPAuthenticationLogger;
-	private AuthSPSystemLogger _oAuthSPSystemLogger;
-	private AuthSPConfigManager _oAuthSPConfigManager;
-
-	private Properties _propErrorMessages;
 	private HashMap _htIPRanges;
 
-	private String _sWorkingDir;
-	private String _sErrorHTMLTemplate;
-	private String _sFailureHandling;
-	private String _sFriendlyName;
+	//private CryptoEngine _cryptoEngine;
+	//private AuthSPAuthenticationLogger _authenticationLogger;
+	//private AuthSPSystemLogger _systemLogger;
+	//private AuthSPConfigManager _configManager;
 
+	//private Properties _propErrorMessages;
+
+	//private String _sWorkingDir;
+	//private String _sFriendlyName;
+	//private String _sErrorHTMLTemplate;
+	//private String _sFailureHandling;
+	//private String _sConfigID = null;
 	/**
 	 * Initialization of the IP AuthSP. <br>
 	 * <br>
@@ -158,80 +154,29 @@ public class IPAuthSP extends ASelectHttpServlet
 	public void init(ServletConfig oServletConfig)
 	throws ServletException
 	{
-		String sMethod = "init()";
-		Object oAuthSPConfig = null;
+		String sMethod = "init";
 		try {
-			super.init(oServletConfig);
+			super.init(oServletConfig, true, Errors.ERROR_IP_INTERNAL_ERROR);
 
-			_oAuthSPSystemLogger = AuthSPSystemLogger.getHandle();
-			_oAuthSPAuthenticationLogger = AuthSPAuthenticationLogger.getHandle();
-			_oAuthSPConfigManager = AuthSPConfigManager.getHandle();
-
-			// log start
-			StringBuffer sbInfo = new StringBuffer("Starting : ");
-			sbInfo.append(MODULE);
-			_oAuthSPSystemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
-
-			// Retrieve crypto engine from servlet context.
-			ServletContext oContext = oServletConfig.getServletContext();
-			_oCryptoEngine = (CryptoEngine) oContext.getAttribute("CryptoEngine");
-			if (_oCryptoEngine == null) {
-				_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, "No CryptoEngine found in servlet context.");
-				throw new ASelectException(Errors.ERROR_IP_INTERNAL_ERROR);
-			}
-			_oAuthSPSystemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded CryptoEngine.");
-
-			// Retrieve friendly name
-			_sFriendlyName = (String) oContext.getAttribute("friendly_name");
-			if (_sFriendlyName == null) {
-				_oAuthSPSystemLogger
-						.log(Level.WARNING, MODULE, sMethod, "No 'friendly_name' found in servlet context.");
-				throw new ASelectException(Errors.ERROR_IP_INTERNAL_ERROR);
-			}
-			_oAuthSPSystemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'friendly_name'.");
-
-			// Retrieve working directory
-			_sWorkingDir = (String) oContext.getAttribute("working_dir");
-			if (_sWorkingDir == null) {
-				_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, "No working_dir found in servlet context.");
-				throw new ASelectException(Errors.ERROR_IP_INTERNAL_ERROR);
-			}
-			_oAuthSPSystemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded working_dir");
-
-			// Retrieve configuration
-			String sConfigID = oServletConfig.getInitParameter("config_id");
-			if (sConfigID == null) {
-				_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod,
-						"No 'config_id' found as init-parameter in web.xml.");
-				throw new ASelectException(Errors.ERROR_IP_INTERNAL_ERROR);
-			}
-
-			try {
-				oAuthSPConfig = _oAuthSPConfigManager.getSection(null, "authsp", "id=" + sConfigID);
-			}
-			catch (ASelectConfigException e) {
-				StringBuffer sbError = new StringBuffer("No valid 'authsp' config section found with id='");
-				sbError.append(sConfigID);
-				_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
-				throw new ASelectException(Errors.ERROR_IP_INTERNAL_ERROR, e);
-			}
+			StringBuffer sbInfo = new StringBuffer("Starting: ").append(MODULE);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 
 			_htIPRanges = new HashMap();
 			Object oIPRanges = null;
 			try {
-				oIPRanges = _oAuthSPConfigManager.getSection(oAuthSPConfig, "ipranges");
+				oIPRanges = _configManager.getSection(_oAuthSpConfig, "ipranges");
 			}
 			catch (ASelectConfigException e) {
-				_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'ipranges' config section found", e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'ipranges' config section found", e);
 				throw new ASelectException(Errors.ERROR_IP_INTERNAL_ERROR, e);
 			}
 
 			Object oIPRange = null;
 			try {
-				oIPRange = _oAuthSPConfigManager.getSection(oIPRanges, "iprange");
+				oIPRange = _configManager.getSection(oIPRanges, "iprange");
 			}
 			catch (ASelectConfigException e) {
-				_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod,
+				_systemLogger.log(Level.WARNING, MODULE, sMethod,
 						"Not even one valid 'iprange' config item found", e);
 				throw new ASelectException(Errors.ERROR_IP_INTERNAL_ERROR, e);
 			}
@@ -239,94 +184,49 @@ public class IPAuthSP extends ASelectHttpServlet
 			while (oIPRange != null) {
 				String sID = null;
 				try {
-					sID = _oAuthSPConfigManager.getParam(oIPRange, "id");
+					sID = _configManager.getParam(oIPRange, "id");
 				}
 				catch (ASelectConfigException e) {
-					_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'id' config item found", e);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'id' config item found", e);
 					throw new ASelectException(Errors.ERROR_IP_INTERNAL_ERROR, e);
 				}
 
 				String sBegin = null;
 				try {
-					sBegin = _oAuthSPConfigManager.getParam(oIPRange, "begin");
+					sBegin = _configManager.getParam(oIPRange, "begin");
 				}
 				catch (ASelectConfigException e) {
-					_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'begin' config item found", e);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'begin' config item found", e);
 					throw new ASelectException(Errors.ERROR_IP_INTERNAL_ERROR, e);
 				}
 
 				String sEnd = null;
 				try {
-					sEnd = _oAuthSPConfigManager.getParam(oIPRange, "end");
+					sEnd = _configManager.getParam(oIPRange, "end");
 				}
 				catch (ASelectConfigException e) {
-					_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'end' config item found", e);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "No valid 'end' config item found", e);
 					throw new ASelectException(Errors.ERROR_IP_INTERNAL_ERROR, e);
 				}
 
 				_htIPRanges.put(sID + ".begin", sBegin.trim());
 				_htIPRanges.put(sID + ".end", sEnd.trim());
 
-				oIPRange = _oAuthSPConfigManager.getNextSection(oIPRange);
+				oIPRange = _configManager.getNextSection(oIPRange);
 			}
-
-			// Load error properties
-			StringBuffer sbErrorsConfig = new StringBuffer(_sWorkingDir);
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("conf");
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append(sConfigID);
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("errors");
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("errors.conf");
-			File fErrorsConfig = new File(sbErrorsConfig.toString());
-			if (!fErrorsConfig.exists()) {
-				StringBuffer sbFailed = new StringBuffer("The error configuration file does not exist: \"");
-				sbFailed.append(sbErrorsConfig.toString()).append("\".");
-				_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString());
-				throw new ASelectException(Errors.ERROR_IP_INTERNAL_ERROR);
-			}
-			_propErrorMessages = new Properties();
-			_propErrorMessages.load(new FileInputStream(sbErrorsConfig.toString()));
-			sbInfo = new StringBuffer("Successfully loaded ");
-			sbInfo.append(_propErrorMessages.size());
-			sbInfo.append(" error messages from: \"");
-			sbInfo.append(sbErrorsConfig.toString()).append("\".");
-			_oAuthSPSystemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 
 			// Load HTML template
-			_sErrorHTMLTemplate = _oAuthSPConfigManager.loadHTMLTemplate(_sWorkingDir, "error.html", sConfigID,
-					_sFriendlyName, VERSION);
-			_oAuthSPSystemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'error.html' template.");
+			Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, _sConfigID, "error.html", null, _sFriendlyName, VERSION);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'error.html' template.");
 
-			// get failure handling
-			try {
-				_sFailureHandling = _oAuthSPConfigManager.getParam(oAuthSPConfig, "failure_handling");
-			}
-			catch (ASelectConfigException e) {
-				_sFailureHandling = DEFAULT_FAILUREHANDLING;
-				_oAuthSPSystemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No 'failure_handling' parameter found in configuration, using default: aselect");
-			}
+			// Get allowed retries
+			//_iAllowedRetries = Utils.getSimpleIntParam(_configManager, _systemLogger, _oAuthSpConfig, "allowed_retries", true);
 
-			if (!_sFailureHandling.equalsIgnoreCase("aselect") && !_sFailureHandling.equalsIgnoreCase("local")) {
-				StringBuffer sbWarning = new StringBuffer(
-						"Invalid 'failure_handling' parameter found in configuration: '");
-				sbWarning.append(_sFailureHandling);
-				sbWarning.append("', using default: aselect");
-
-				_sFailureHandling = DEFAULT_FAILUREHANDLING;
-
-				_oAuthSPSystemLogger.log(Level.CONFIG, MODULE, sMethod, sbWarning.toString());
-			}
-
-			sbInfo = new StringBuffer("Successfully started ");
-			sbInfo.append(VERSION).append(".");
-			_oAuthSPSystemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
+			sbInfo = new StringBuffer("Successfully started ").append(VERSION);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 		}
 		catch (Exception e) {
-			_oAuthSPSystemLogger.log(Level.SEVERE, MODULE, sMethod, "Initializing failed", e);
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initializing failed", e);
 			throw new ServletException("Initializing failed");
 		}
 	}
@@ -356,7 +256,7 @@ public class IPAuthSP extends ASelectHttpServlet
 
 		try {
 			String sQueryString = servletRequest.getQueryString();
-			_oAuthSPSystemLogger.log(Level.INFO, MODULE, sMethod, "IP GET {"+servletRequest+", sQueryString="+sQueryString);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "IP GET {"+servletRequest+", sQueryString="+sQueryString);
 			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, false);
 			sLanguage = (String) htServiceRequest.get("language");  // optional language code
 			if (sLanguage == null || sLanguage.trim().length() < 1)
@@ -381,7 +281,7 @@ public class IPAuthSP extends ASelectHttpServlet
 
 			if ((sRid == null) || (sUid == null) || (sIpRange == null) || (sAsUrl == null) || (sAsId == null)
 					|| (sSignature == null)) {
-				_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: one or more mandatory parameters missing.");
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: one or more mandatory parameters missing.");
 				throw new ASelectException(Errors.ERROR_IP_INVALID_REQUEST);
 			}
 
@@ -412,35 +312,31 @@ public class IPAuthSP extends ASelectHttpServlet
 			if (sLanguage != null)
 				sbSignature.append(sLanguage);
 
-			if (!_oCryptoEngine.verifySignature(sAsId, sbSignature.toString(), sSignature)) {
+			if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), sSignature)) {
 				throw new ASelectException(Errors.ERROR_IP_INVALID_REQUEST);
 			}
 
 			String sResultCode = checkIP(htServiceRequest, servletRequest.getRemoteAddr());
 			if (!sResultCode.equals(Errors.ERROR_IP_SUCCESS)) {
 				// authenticate failed
-				_oAuthSPAuthenticationLogger.log(new Object[] {
+				_authenticationLogger.log(new Object[] {
 					MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied", sResultCode
 				});
 			}
 			else {
 				// Authentication successful
-				_oAuthSPAuthenticationLogger.log(new Object[] {
+				_authenticationLogger.log(new Object[] {
 					MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "granted"
 				});
 			}
-
 			handleResult(servletRequest, servletResponse, pwOut, sResultCode, sLanguage);
 		}
 		catch (ASelectException e) {
-			_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, "Sending error to client", e);
-
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Sending error to client", e);
 			handleResult(servletRequest, servletResponse, pwOut, e.getMessage(), sLanguage);
 		}
 		catch (Exception e) {
-			_oAuthSPSystemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process request due to internal error",
-					e);
-
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not process request due to internal error", e);
 			handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER, sLanguage);
 		}
 		finally {
@@ -449,7 +345,7 @@ public class IPAuthSP extends ASelectHttpServlet
 				pwOut = null;
 			}
 		}
-		_oAuthSPSystemLogger.log(Level.INFO, MODULE, sMethod, "} IP GET");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "} IP GET");
 	}
 
 	/**
@@ -478,7 +374,7 @@ public class IPAuthSP extends ASelectHttpServlet
 	 */
 	private String checkIP(HashMap htIpRanges, String sIpClient)
 	{
-		String sMethod = "checkIP()";
+		String sMethod = "checkIP";
 
 		String sBeginIpRange;
 		String sEndIpRange;
@@ -504,7 +400,7 @@ public class IPAuthSP extends ASelectHttpServlet
 				if ((sBeginIpRange == null) || (sEndIpRange == null)) {
 					StringBuffer sbError = new StringBuffer("ip range not configured: ");
 					sbError.append(sIpRange);
-					_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString());
 					return Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER;
 				}
 
@@ -514,7 +410,7 @@ public class IPAuthSP extends ASelectHttpServlet
 				catch (Exception e) {
 					StringBuffer sbWarning = new StringBuffer("Configured 'begin' address isn't a valid ip address: ");
 					sbWarning.append(sBeginIpRange);
-					_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString(), e);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString(), e);
 
 					throw new ASelectException(Errors.ERROR_IP_INTERNAL_ERROR, e);
 				}
@@ -525,7 +421,7 @@ public class IPAuthSP extends ASelectHttpServlet
 				catch (Exception e) {
 					StringBuffer sbWarning = new StringBuffer("Configured 'end' address isn't a valid ip address: ");
 					sbWarning.append(sEndIpRange);
-					_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString(), e);
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString(), e);
 
 					throw new ASelectException(Errors.ERROR_IP_INTERNAL_ERROR, e);
 				}
@@ -554,10 +450,10 @@ public class IPAuthSP extends ASelectHttpServlet
 			}
 		}
 		catch (ASelectException e) {
-			_oAuthSPSystemLogger.log(Level.SEVERE, MODULE, sMethod, "could not perform ip check", e);
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "could not perform ip check", e);
 		}
 		catch (Exception e) {
-			_oAuthSPSystemLogger.log(Level.SEVERE, MODULE, sMethod, "internal error during ip check", e);
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "internal error during ip check", e);
 		}
 		return Errors.ERROR_IP_ACCESS_DENIED;
 	}
@@ -585,63 +481,52 @@ public class IPAuthSP extends ASelectHttpServlet
 			PrintWriter pwOut, String sResultCode, String sLanguage)
 	throws IOException
 	{
-		String sMethod = "handleResult()";
+		String sMethod = "handleResult";
 
 		try {
 			if (_sFailureHandling.equalsIgnoreCase("aselect") || sResultCode.equals(Errors.ERROR_IP_SUCCESS)) {
 				String sRid = servletRequest.getParameter("rid");
 				String sAsUrl = servletRequest.getParameter("as_url");
 				if (sRid == null || sAsUrl == null) {
-					// RH, 20100621, Remove cyclic dependency system<->server
-					showErrorPage(pwOut, _sErrorHTMLTemplate, sResultCode, _oAuthSPConfigManager.getErrorMessage(
-//							sResultCode, _propErrorMessages), sLanguage);
-							sResultCode, _propErrorMessages), sLanguage, _oAuthSPSystemLogger);
-					
+					getTemplateAndShowErrorPage(pwOut, sResultCode, sResultCode, sLanguage, VERSION);					
 				}
 				else {
 					StringBuffer sbSignature = new StringBuffer(sRid);
 					sbSignature.append(sAsUrl);
 					sbSignature.append(sResultCode);
-					String sSignature = _oCryptoEngine.generateSignature(sbSignature.toString());
+					String sSignature = _cryptoEngine.generateSignature(sbSignature.toString());
 					if (sSignature != null) {
 						sSignature = URLEncoder.encode(sSignature, "UTF-8");
-
 						StringBuffer sbRedirect = new StringBuffer(sAsUrl);
 						sbRedirect.append("&rid=").append(sRid);
 						sbRedirect.append("&result_code=").append(sResultCode);
 						sbRedirect.append("&signature=").append(sSignature);
-
-						_oAuthSPSystemLogger.log(Level.INFO, MODULE, sMethod, "REDIR " + sbRedirect);
-
+						_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIR " + sbRedirect);
 						servletResponse.sendRedirect(sbRedirect.toString());
 					}
 				}
 			}
-			else // Local error handling
-			{
-				// RH, 20100621, Remove cyclic dependency system<->server
-				showErrorPage(pwOut, _sErrorHTMLTemplate, sResultCode, _oAuthSPConfigManager.getErrorMessage(
-//						sResultCode, _propErrorMessages), sLanguage);
-						sResultCode, _propErrorMessages), sLanguage, _oAuthSPSystemLogger);
+			else { // Local error handling
+				getTemplateAndShowErrorPage(pwOut, sResultCode, sResultCode, sLanguage, VERSION);
 			}
 		}
 		catch (ASelectException e) // could not generate signature
 		{
-			_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate IP AuthSP signature", e);
-			String sErrorMessage = _oAuthSPConfigManager.getErrorMessage(Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER,
-					_propErrorMessages);
-			// RH, 20100621, Remove cyclic dependency system<->server
-//			showErrorPage(pwOut, _sErrorHTMLTemplate, Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER, sErrorMessage, sLanguage);
-			showErrorPage(pwOut, _sErrorHTMLTemplate, Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER, sErrorMessage, sLanguage, _oAuthSPSystemLogger);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate IP AuthSP signature", e);
+			try {
+				getTemplateAndShowErrorPage(pwOut, sResultCode, Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER, sLanguage, VERSION);
+			}
+			catch (ASelectException e1) {
+			}
 		}
 		catch (UnsupportedEncodingException e) // could not encode signature
 		{
-			_oAuthSPSystemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode IP AuthSP signature", e);
-			String sErrorMessage = _oAuthSPConfigManager.getErrorMessage(Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER,
-					_propErrorMessages);
-			// RH, 20100621, Remove cyclic dependency system<->server
-//			showErrorPage(pwOut, _sErrorHTMLTemplate, Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER, sErrorMessage, sLanguage);
-			showErrorPage(pwOut, _sErrorHTMLTemplate, Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER, sErrorMessage, sLanguage, _oAuthSPSystemLogger);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode IP AuthSP signature", e);
+			try {
+				getTemplateAndShowErrorPage(pwOut, sResultCode, Errors.ERROR_IP_COULD_NOT_AUTHENTICATE_USER, sLanguage, VERSION);
+			}
+			catch (ASelectException e1) {
+			}
 		}
 	}
 }

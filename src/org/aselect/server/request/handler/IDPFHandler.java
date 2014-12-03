@@ -28,12 +28,14 @@ import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.server.config.Version;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.request.RequestState;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectCommunicationException;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.utils.Utils;
 
 /**
  * IDPF RequestHandler. <br>
@@ -79,7 +81,7 @@ public class IDPFHandler extends ProtoRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		try {
 			super.init(oServletConfig, oConfig);
@@ -183,7 +185,7 @@ public class IDPFHandler extends ProtoRequestHandler
 //			}
 			
 			try {
-				set_sPostTemplate(_configManager.getParam(oConfig, "post_template"));
+				setPostTemplate(_configManager.getParam(oConfig, "post_template"));
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'post_template' found", e);
@@ -226,7 +228,7 @@ public class IDPFHandler extends ProtoRequestHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{		
-		String sMethod = "process()";
+		String sMethod = "process";
 		String uid = defaultUID;
 		String extractedAselect_credentials = null;
 	    
@@ -351,14 +353,11 @@ public class IDPFHandler extends ProtoRequestHandler
 	    		for (int i=0;i<attribs.length;i++) {
 					_systemLogger.log(Level.FINER, MODULE, sMethod, "Retrieved attribute from aselectserver: " + attribs[i]);
 	    		}
-
 			}
 			catch (UnsupportedEncodingException e2) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not URLDecode from UTF-8, this should not happen!");
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e2);
-			} 
-
-
+			}
 	    	
 	        String userSelectedClaimedId =  null;
 //	        userSelectedId =  finalResult.replaceFirst(".*uid=([^&]*).*$", "$1");
@@ -378,14 +377,14 @@ public class IDPFHandler extends ProtoRequestHandler
 	        if (authenticatedAndApproved) {
 				// If authenticatedAndApproved then send off the user with either POST or GET
 	        	// (Only POST for now)
-	    		// Let's POST the token
-	    		if (get_sPostTemplate() != null) {
-	    			String sSelectForm = _configManager.loadHTMLTemplate(null, get_sPostTemplate(), _sUserLanguage, _sUserCountry);
+	    		if (getPostTemplate() != null) {
+	    			String sSelectForm = Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(), null, getPostTemplate(),
+	    					_sUserLanguage, _configManager.getOrgFriendlyName(), Version.getVersion());
 	    			
 	    			String sInputs = generatePostForm(userSelectedClaimedId);
 
 	    			// Keep logging short:
-	    			_systemLogger.log(Level.INFO, MODULE, sMethod, "Template="+get_sPostTemplate()+" sInputs="+sInputs+" ...");
+	    			_systemLogger.log(Level.INFO, MODULE, sMethod, "Template="+getPostTemplate()+" sInputs="+sInputs+" ...");
 
 	    			handlePostForm(sSelectForm, getEndpointurl(), sInputs, response);
 	    		}
@@ -427,7 +426,7 @@ public class IDPFHandler extends ProtoRequestHandler
 	 */
 	protected HashMap setupSessionContext(HashMap htSessionContext)
 	{
-		String sMethod = "setupSessionContext()";
+		String sMethod = "setupSessionContext";
 
 		
 		return htSessionContext;
@@ -444,7 +443,7 @@ public class IDPFHandler extends ProtoRequestHandler
 	private String verify_credentials(HttpServletRequest request, String extracted_credentials)
 	throws ASelectCommunicationException
 	{
-		String sMethod = "verify_credentials()";
+		String sMethod = "verify_credentials";
 		// This could be done by getting request parametermap
 		String queryData = request.getQueryString();
 		String extractedRid = queryData.replaceFirst(".*rid=([^&]*).*$", "$1");
@@ -541,11 +540,11 @@ public class IDPFHandler extends ProtoRequestHandler
 	}
 
 	
-	public synchronized String get_sPostTemplate()
+	public synchronized String getPostTemplate()
 	{
 		return _sPostTemplate;
 	}
-	public synchronized void set_sPostTemplate(String sPostTemplate)
+	public synchronized void setPostTemplate(String sPostTemplate)
 	{
 		_sPostTemplate = sPostTemplate;
 	}

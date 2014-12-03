@@ -11,8 +11,6 @@
  */
 package org.aselect.authspserver.authsp.db;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
@@ -28,24 +26,17 @@ import java.util.Properties;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.aselect.authspserver.config.AuthSPConfigManager;
-import org.aselect.authspserver.crypto.CryptoEngine;
-import org.aselect.authspserver.log.AuthSPAuthenticationLogger;
-import org.aselect.authspserver.log.AuthSPSystemLogger;
+import org.aselect.authspserver.authsp.AbstractAuthSP;
 import org.aselect.authspserver.sam.AuthSPSAMAgent;
-import org.aselect.authspserver.session.AuthSPSessionManager;
 
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
-import org.aselect.system.exception.ASelectUDBException;
 import org.aselect.system.sam.agent.SAMResource;
-import org.aselect.system.servlet.ASelectHttpServlet;
 import org.aselect.system.utils.Utils;
 
 /**
@@ -69,9 +60,8 @@ import org.aselect.system.utils.Utils;
  * @author Cristina Gavrila, BTTSD
  * @author Hans Zandbelt, SURFnet
  */
-public class DBAuthSP extends ASelectHttpServlet
+public class DBAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodies from AbstractAuthSP
 {
-	/**	 */
 	private static final long serialVersionUID = 8572776954706719972L;
 
 	/** The status parameter name for API calls. */
@@ -80,64 +70,10 @@ public class DBAuthSP extends ASelectHttpServlet
 	/** The name of this module, that is used in the system logging. */
 	public static final String MODULE = "DBAuthSP";
 
-	/** Default failure_handling option. */
-	private final static String DEFAULT_FAILUREHANDLING = "aselect";
-
 	/** The version. */
 	public static final String VERSION = "DB AuthSP";
 
 	private final static boolean DEFAULT_ENCRYPTION = false;
-
-	/** The logger that logs system information. */
-	private AuthSPSystemLogger _systemLogger;
-
-	/** The logger that logs authentication information. */
-	private AuthSPAuthenticationLogger _authenticationLogger;
-
-	/** The crypto engine */
-	private CryptoEngine _cryptoEngine;
-
-	/** The configuration */
-	private AuthSPConfigManager _configManager;
-
-	/** The Sessionmanager */
-	private AuthSPSessionManager _sessionManager;
-
-	private String _sWorkingDir;
-
-	private Object _oAuthSpConfig;
-
-	/** HTML error templates */
-	private String _sErrorHtmlTemplate;
-
-	/** HTML error templates */
-	private String _sAuthenticateHtmlTemplate;
-
-	// failure handling properties
-	private Properties _oErrorProperties;
-
-	private String _sFailureHandling;
-
-	private String _sFriendlyName;
-
-	private int _iAllowedRetries;
-
-//	// database properties
-//	private String _sDriver;
-//
-//	private String _sUrl;
-//
-//	private String _sUserName;
-//
-//	private String _sUserPassword;
-//
-//	// password/query properties
-//	private String _sQuery;
-//
-//	private String _sColumn;
-//
-//	private boolean _bEncrypedPassword;
-	
 
 	/**
 	 * Initialization of the DB AuthSP. <br>
@@ -166,7 +102,7 @@ public class DBAuthSP extends ASelectHttpServlet
 	 * </ul>
 	 * 
 	 * @param oConfig
-	 *            the o config
+	 *            the config
 	 * @throws ServletException
 	 *             the servlet exception
 	 * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
@@ -174,224 +110,25 @@ public class DBAuthSP extends ASelectHttpServlet
 	public void init(ServletConfig oConfig)
 	throws ServletException
 	{
-		String sMethod = "init()";
-		StringBuffer sbTemp = null;
+		String sMethod = "init";
 		try {
 			// super init
 			super.init(oConfig);
-			// retrieve managers and loggers
-			_systemLogger = AuthSPSystemLogger.getHandle();
-			_authenticationLogger = AuthSPAuthenticationLogger.getHandle();
-			_configManager = AuthSPConfigManager.getHandle();
-			_sessionManager = AuthSPSessionManager.getHandle();
-			
 
-			// log start
-			StringBuffer sbInfo = new StringBuffer("Starting : ");
-			sbInfo.append(MODULE);
+			StringBuffer sbInfo = new StringBuffer("Starting: ").append(MODULE);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 
-			// Retrieve crypto engine from servlet context.
-			ServletContext oContext = oConfig.getServletContext();
-			_cryptoEngine = (CryptoEngine) oContext.getAttribute("CryptoEngine");
-			if (_cryptoEngine == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No CryptoEngine found in servlet context.");
-				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR);
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded CryptoEngine.");
-
-			// Retrieve friendly name
-			_sFriendlyName = (String) oContext.getAttribute("friendly_name");
-			if (_sFriendlyName == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'friendly_name' found in servlet context.");
-				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR);
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'friendly_name'.");
-
-			// Retrieve working directory
-			_sWorkingDir = (String) oContext.getAttribute("working_dir");
-			if (_sWorkingDir == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No working_dir found in servlet context.");
-				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR);
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded working_dir");
-
-			// Retrieve configuration
-			String sConfigID = oConfig.getInitParameter("config_id");
-			if (sConfigID == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'config_id' found as init-parameter in web.xml.");
-				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR);
-			}
-			try {
-				_oAuthSpConfig = _configManager.getSection(null, "authsp", "id=" + sConfigID);
-			}
-			catch (ASelectConfigException eAC) {
-				sbTemp = new StringBuffer("No valid 'authsp' config section found with id='");
-				sbTemp.append(sConfigID);
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbTemp.toString(), eAC);
-				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR);
-			}
-
-			// Load error properties
-			StringBuffer sbErrorsConfig = new StringBuffer(_sWorkingDir);
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("conf");
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append(sConfigID);
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("errors");
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("errors.conf");
-			File fErrorsConfig = new File(sbErrorsConfig.toString());
-			if (!fErrorsConfig.exists()) {
-				StringBuffer sbFailed = new StringBuffer("The error configuration file does not exist: \"");
-				sbFailed.append(sbErrorsConfig.toString()).append("\".");
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString());
-				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR);
-			}
-			_oErrorProperties = new Properties();
-			_oErrorProperties.load(new FileInputStream(sbErrorsConfig.toString()));
-			sbInfo = new StringBuffer("Successfully loaded ");
-			sbInfo.append(_oErrorProperties.size());
-			sbInfo.append(" error messages from: \"");
-			sbInfo.append(sbErrorsConfig.toString()).append("\".");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
-
-			// Load HTML templates.
-			_sErrorHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "error.html", sConfigID,
-					_sFriendlyName, VERSION);
+			// Load HTML templates to make sure they're present
+			Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, _sConfigID, "error.html", null/*language*/, _sFriendlyName, VERSION);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'error.html' template.");
-			_sAuthenticateHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "authenticate.html", sConfigID,
-					_sFriendlyName, VERSION);
+			
+			Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, _sConfigID, "authenticate.html", null/*language*/, _sFriendlyName, VERSION);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'authenticate.html' template.");
 
-			// get allowed retries
-			try {
-				String sAllowedRetries = _configManager.getParam(_oAuthSpConfig, "allowed_retries");
-				_iAllowedRetries = Integer.parseInt(sAllowedRetries);
-			}
-			catch (ASelectConfigException eAC) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"No 'allowed_retries' parameter found in configuration", eAC);
-				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, eAC);
-			}
-			catch (NumberFormatException eNF) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"Invalid 'allowed_retries' parameter found in configuration", eNF);
-				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, eNF);
-			}
-
-			// get failure handling
-			try {
-				_sFailureHandling = _configManager.getParam(_oAuthSpConfig, "failure_handling");
-			}
-			catch (ASelectConfigException eAC) {
-				_sFailureHandling = DEFAULT_FAILUREHANDLING;
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No 'failure_handling' parameter found in configuration, using default: aselect");
-			}
-
-			if (!_sFailureHandling.equalsIgnoreCase("aselect") && !_sFailureHandling.equalsIgnoreCase("local")) {
-				StringBuffer sbWarning = new StringBuffer(
-						"Invalid 'failure_handling' parameter found in configuration: '");
-				sbWarning.append(_sFailureHandling);
-				sbWarning.append("', using default: aselect");
-
-				_sFailureHandling = DEFAULT_FAILUREHANDLING;
-
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbWarning.toString());
-			}
-
-			///////////////////////////////////////////////////////////
-//			// get driver
-//			try {
-//				_sDriver = _configManager.getParam(_oAuthSpConfig, "driver");
-//			}
-//			catch (ASelectConfigException eAC) {
-//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'driver' parameter found in configuration", eAC);
-//				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, eAC);
-//			}
-//			try {
-//				// initialize driver
-//				Class.forName(_sDriver);
-//			}
-//			catch (Exception e) {
-//				StringBuffer sbFailed = new StringBuffer("Can't initialize driver: ");
-//				sbFailed.append(_sDriver);
-//				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
-//				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
-//			}
-//
-//			// get url
-//			try {
-//				_sUrl = _configManager.getParam(_oAuthSpConfig, "url");
-//			}
-//			catch (Exception e) {
-//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'url' found", e);
-//				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
-//			}
-//
-//			// get user
-//			try {
-//				_sUserName = _configManager.getParam(_oAuthSpConfig, "user");
-//			}
-//			catch (Exception e) {
-//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'username' found", e);
-//				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
-//			}
-//
-//			// get password
-//			try {
-//				_sUserPassword = _configManager.getParam(_oAuthSpConfig, "password");
-//			}
-//			catch (Exception e) {
-//				_sUserPassword = "";
-//				_systemLogger
-//						.log(
-//								Level.WARNING,
-//								MODULE,
-//								sMethod,
-//								"No or empty config item 'password' found, using empty password. Don't use this in a live production environment.",
-//								e);
-//				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
-//			}
-//
-//			// get password query
-//			try {
-//				_sQuery = _configManager.getParam(_oAuthSpConfig, "query");
-//			}
-//			catch (ASelectConfigException eAC) {
-//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'query' parameter found in configuration", eAC);
-//				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, eAC);
-//			}
-//
-//			// get password column name
-//			try {
-//				_sColumn = _configManager.getParam(_oAuthSpConfig, "column");
-//			}
-//			catch (ASelectConfigException eAC) {
-//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'column' parameter found in configuration", eAC);
-//				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, eAC);
-//			}
-//
-//			try {
-//				String sEncryptedPassword = _configManager.getParam(_oAuthSpConfig, "encrypted");
-//				_bEncrypedPassword = Boolean.parseBoolean(sEncryptedPassword);
-//			}
-//			catch (ASelectConfigException eAC) {
-//				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-//						"No 'encrypted' parameter found in configuration, taking default: " + DEFAULT_ENCRYPTION, eAC);
-//				_bEncrypedPassword = DEFAULT_ENCRYPTION;
-//			}
-//			catch (Exception e) {
-//				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-//						"Could not parse pasword encryption setting, taking default: " + DEFAULT_ENCRYPTION, e);
-//				throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
-//			}
-			///////////////////////////////////////////////////////////////////////////////////////////////
+			// Get allowed retries
+			_iAllowedRetries = Utils.getSimpleIntParam(_configManager, _systemLogger, _oAuthSpConfig, "allowed_retries", true);
 			
-			sbInfo = new StringBuffer("Successfully started ");
-			sbInfo.append(VERSION).append(".");
+			sbInfo = new StringBuffer("Successfully started ").append(VERSION).append(".");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 		}
 		catch (Exception e) {
@@ -425,7 +162,7 @@ public class DBAuthSP extends ASelectHttpServlet
 	protected void doGet(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws java.io.IOException
 	{
-		String sMethod = "doGet()";
+		String sMethod = "doGet";
 		PrintWriter pwOut = null;
 		String sLanguage = null;
 
@@ -502,7 +239,7 @@ public class DBAuthSP extends ASelectHttpServlet
 				if (sLanguage != null)
 					htServiceRequest.put("language", sLanguage);
 
-				showAuthenticateForm(pwOut, " ", " ", htServiceRequest);
+				showAuthenticateForm(pwOut, "", htServiceRequest);
 			}
 		}
 		catch (ASelectException eAS) {
@@ -546,7 +283,7 @@ public class DBAuthSP extends ASelectHttpServlet
 	protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws java.io.IOException
 	{
-		String sMethod = "doPost()";
+		String sMethod = "doPost";
 		PrintWriter pwOut = null;
 		String sUid = null;
 		String sPassword = null;
@@ -597,8 +334,7 @@ public class DBAuthSP extends ASelectHttpServlet
 				if (sLanguage != null)
 					htServiceRequest.put("language", sLanguage);
 				// show authentication form once again with warning message
-				showAuthenticateForm(pwOut, Errors.ERROR_DB_INVALID_PASSWORD, _configManager.getErrorMessage(
-						Errors.ERROR_DB_INVALID_PASSWORD, _oErrorProperties), htServiceRequest);
+				showAuthenticateForm(pwOut, Errors.ERROR_DB_INVALID_PASSWORD, htServiceRequest);
 			}
 			else {
 				// generate signature
@@ -671,15 +407,10 @@ public class DBAuthSP extends ASelectHttpServlet
 							htServiceRequest.put("a-select-server", sAsId);
 							htServiceRequest.put("retry_counter", String.valueOf(iRetriesDone + 1));
 							htServiceRequest.put("signature", sSignature);
-							if (sCountry != null)
-								htServiceRequest.put("country", sCountry);
-							if (sLanguage != null)
-								htServiceRequest.put("language", sLanguage);
-							// show authentication form once again with warning
-							// message
-							showAuthenticateForm(pwOut, Errors.ERROR_DB_INVALID_PASSWORD, _configManager
-									.getErrorMessage(Errors.ERROR_DB_INVALID_PASSWORD, _oErrorProperties),
-									htServiceRequest);
+							if (sCountry != null) htServiceRequest.put("country", sCountry);
+							if (sLanguage != null) htServiceRequest.put("language", sLanguage);
+							// show authentication form once again with warningmessage
+							showAuthenticateForm(pwOut, Errors.ERROR_DB_INVALID_PASSWORD, htServiceRequest);
 						}
 						else {
 							// authenticate failed
@@ -740,7 +471,6 @@ public class DBAuthSP extends ASelectHttpServlet
 			}
 			catch (Exception e) {
 			}
-			;
 		}
 	}
 
@@ -758,13 +488,13 @@ public class DBAuthSP extends ASelectHttpServlet
 	 *            The error message that should be shown in the page.
 	 * @param htServiceRequest
 	 *            The request parameters.
+	 * @throws ASelectException 
 	 */
-	private void showAuthenticateForm(PrintWriter pwOut, String sError, String sErrorMessage, HashMap htServiceRequest)
+	private void showAuthenticateForm(PrintWriter pwOut, String sError, HashMap htServiceRequest)
+	throws ASelectException
 	{
-		String sMethod = "showAuthenticateForm()";
+		String sMethod = "showAuthenticateForm";
 
-		
-		String sAuthenticateForm = new String(_sAuthenticateHtmlTemplate);
 		String sMyUrl = (String) htServiceRequest.get("my_url");
 		String sRid = (String) htServiceRequest.get("rid");
 		String sAsUrl = (String) htServiceRequest.get("as_url");
@@ -774,6 +504,15 @@ public class DBAuthSP extends ASelectHttpServlet
 		String sRetryCounter = (String) htServiceRequest.get("retry_counter");
 		String sCountry = (String) htServiceRequest.get("country");
 		String sLanguage = (String) htServiceRequest.get("language");
+		
+		String sAuthenticateForm = Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, _sConfigID,
+				"authenticate.html", sLanguage, _sFriendlyName, VERSION);
+		
+		String sErrorMessage = null;
+		if (Utils.hasValue(sError)) {  // translate error code
+			Properties propErrorMessages = Utils.loadPropertiesFromFile(_systemLogger, _sWorkingDir, _sConfigID, "errors.conf", sLanguage);
+			sErrorMessage = _configManager.getErrorMessage(MODULE, sError, propErrorMessages);
+		}
 
 		// RH, 20100907, sn
 		String sFriendlyName = (String) htServiceRequest.get("requestorfriendlyname");
@@ -786,8 +525,7 @@ public class DBAuthSP extends ASelectHttpServlet
 				sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[requestor_friendly_name]", sFriendlyName);
 			}
 		}
-		// RH, 20100907, en
-		
+		// RH, 20100907, en	
 
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[rid]", sRid);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[as_url]", sAsUrl);
@@ -816,34 +554,31 @@ public class DBAuthSP extends ASelectHttpServlet
 	 * @param pwOut
 	 *            the pw out
 	 * @param sResultCode
-	 *            the s result code
+	 *            the result code
+	 * @param sLanguage
+	 *            the language
 	 */
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut, String sResultCode, String sLanguage)
 	{
-		String sMethod = "handleResult()";
+		String sMethod = "handleResult";
 		StringBuffer sbTemp = null;
 
 		try {
-			if (_sFailureHandling.equalsIgnoreCase("aselect") || sResultCode.equals(Errors.ERROR_DB_SUCCESS))
+			if (_sFailureHandling.equalsIgnoreCase(DEFAULT_FAILUREHANDLING) || sResultCode.equals(Errors.ERROR_DB_SUCCESS))
 			// A-Select handles error or success
 			{
 				String sRid = servletRequest.getParameter("rid");
 				String sAsUrl = servletRequest.getParameter("as_url");
 				String sAsId = servletRequest.getParameter("a-select-server");
 				if (sRid == null || sAsUrl == null || sAsId == null) {
-					showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-							// RH, 20100621, Remove cyclic dependency system<->server
-//							_oErrorProperties), sLanguage);
-							_oErrorProperties), sLanguage, _systemLogger);
+					getTemplateAndShowErrorPage(pwOut, sResultCode, sResultCode, sLanguage, VERSION);
 				}
 				else {
-
 					sbTemp = new StringBuffer(sRid);
 					sbTemp.append(sAsUrl).append(sResultCode);
 					sbTemp.append(sAsId);
 					String sSignature = _cryptoEngine.generateSignature(sbTemp.toString());
-
 					sSignature = URLEncoder.encode(sSignature, "UTF-8");
 
 					sbTemp = new StringBuffer(sAsUrl);
@@ -863,35 +598,27 @@ public class DBAuthSP extends ASelectHttpServlet
 					}
 				}
 			}
-			else
-			// Local error handling
-			{
-				// RH, 20100621, Remove cyclic dependency system<->server
-//				showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-//						_oErrorProperties), sLanguage);
-				showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-						_oErrorProperties), sLanguage, _systemLogger);
+			else {	// Local error handling
+				getTemplateAndShowErrorPage(pwOut, sResultCode, sResultCode, sLanguage, VERSION);
 			}
 		}
 		catch (ASelectException eAS) // could not generate signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate DB AuthSP signature", eAS);
-			// RH, 20100621, Remove cyclic dependency system<->server
-//			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_DB_COULD_NOT_AUTHENTICATE_USER, _configManager
-//					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage);
-			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_DB_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage, _systemLogger);
+			try {
+				getTemplateAndShowErrorPage(pwOut, sResultCode, Errors.ERROR_DB_COULD_NOT_AUTHENTICATE_USER, sLanguage, VERSION);
+			}
+			catch (ASelectException e) {
+			}
 		}
-		catch (UnsupportedEncodingException eUE) // could not encode
-		// signature
+		catch (UnsupportedEncodingException eUE) // could not encode signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode DB AuthSP signature", eUE);
-			// RH, 20100621, Remove cyclic dependency system<->server
-//			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_DB_COULD_NOT_AUTHENTICATE_USER, _configManager
-//					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage);
-			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_DB_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage, _systemLogger);
-
+			try {
+				getTemplateAndShowErrorPage(pwOut, sResultCode, Errors.ERROR_DB_COULD_NOT_AUTHENTICATE_USER, sLanguage, VERSION);
+			}
+			catch (ASelectException e) {
+			}
 		}
 	}
 
@@ -910,7 +637,7 @@ public class DBAuthSP extends ASelectHttpServlet
 	private void handleApiRequest(HashMap htServiceRequest, HttpServletRequest servletRequest, PrintWriter pwOut,
 			HttpServletResponse servletResponse)
 	{
-		String sMethod = "handleApiRequest()";
+		String sMethod = "handleApiRequest";
 		String sRid = (String) htServiceRequest.get("rid");
 		HashMap htSessionContext = null;
 		// create response HashTable
@@ -992,7 +719,7 @@ public class DBAuthSP extends ASelectHttpServlet
 	private void handleAuthenticate(HashMap htServiceRequest, HttpServletRequest servletRequest)
 	throws ASelectException
 	{
-		String sMethod = "handleAuthenticate()";
+		String sMethod = "handleAuthenticate";
 		String sResultCode = null;
 		String sUid = (String) htServiceRequest.get("uid");
 		String sPassword = (String) servletRequest.getParameter("password");
@@ -1017,7 +744,6 @@ public class DBAuthSP extends ASelectHttpServlet
 			sResultCode = (oResultSet.next()) ? (Errors.ERROR_DB_SUCCESS) : Errors.ERROR_DB_INTERNAL_ERROR;
 		}
 		catch (Exception e) {
-//			_authenticationLogger.log("SEVERE", MODULE, sMethod, "Could not execute query: " + _sQuery, e.getMessage());
 			_authenticationLogger.log("SEVERE", MODULE, sMethod, "Could not execute query: " + dbSParms.getQuery(), e.getMessage());
 			// RH, 20090605, sn
 			try {
@@ -1103,45 +829,6 @@ public class DBAuthSP extends ASelectHttpServlet
 			throw new ASelectException(sResultCode);
 		}
 	}
-
-	/**
-	 * Opens a new JDBC connection to the resource that is retrieved from the authsp configuration. <br>
-	 * <br>
-	 * 
-	 * @return <code>Connection</code> that contains the JDBC connection
-	 * @throws ASelectException
-	 *             if the connection could not be opened
-	 */
-//	private Connection getConnection()
-//	throws ASelectException
-//	{
-//		String sMethod = "getConnection()";
-//
-//		Connection oConnection = null;
-//
-//		try {
-//			// initialize driver
-//			Class.forName(_sDriver);
-//		}
-//		catch (Exception e) {
-//			StringBuffer sbFailed = new StringBuffer("Can't initialize driver: ");
-//			sbFailed.append(_sDriver);
-//			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
-//			throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
-//		}
-//
-//		try {
-//			oConnection = DriverManager.getConnection(_sUrl, _sUserName, _sUserPassword);
-//		}
-//		catch (SQLException e) {
-//			StringBuffer sbFailed = new StringBuffer("Could not open connection to: ");
-//			sbFailed.append(_sUrl);
-//			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString(), e);
-//			throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
-//		}
-//
-//		return oConnection;
-//	}
 	
 	/**
 	 * Opens a new JDBC connection to the resource with parameters passed through serverParms. <br>
@@ -1155,7 +842,7 @@ public class DBAuthSP extends ASelectHttpServlet
 	private Connection getConnection(DBServerParms serverParms)
 	throws ASelectException
 	{
-		String sMethod = "getConnection()";
+		String sMethod = "getConnection";
 
 		Connection oConnection = null;
 
@@ -1183,7 +870,6 @@ public class DBAuthSP extends ASelectHttpServlet
 		return oConnection;
 	}
 
-	
 	/**
 	 *	Wrapper to hold DBServer information. <br>
 	 * On construction it finds active (actual) parameters either from resource group or config section
@@ -1200,9 +886,6 @@ public class DBAuthSP extends ASelectHttpServlet
 		private String passwordcolumn = null;
 		private boolean encrypedPassword = DEFAULT_ENCRYPTION;
 		
-		
-		
-		
 		/**
 		 * Empty constructor
 		 * @throws ASelectException 
@@ -1213,19 +896,9 @@ public class DBAuthSP extends ASelectHttpServlet
 		}
 				
 		private void  setActiveParameters() throws ASelectException
-	{
-		String sMethod = "setActiveParameters()";
-
-//		SAMResource oSAMResource = null;
-//		String sDriver = null;
-//		String sUsername = null;
-//		String sPassword = null;
-//		String sUrl = null;
-//		String sQuery = null;
-//		String sColumn = null;
-//		boolean bEncrypedPassword = DEFAULT_ENCRYPTION;
+		{
+		String sMethod = "setActiveParameters";
 		Object oBackendServer = _oAuthSpConfig;	// use  config section as default
-
 		
 		/////////////////////////////////////////////////////////////////
 		String sDBResourceGroup = null;
@@ -1291,13 +964,8 @@ public class DBAuthSP extends ASelectHttpServlet
 		}
 		catch (Exception e) {
 			setPassword("");
-			_systemLogger
-					.log(
-							Level.WARNING,
-							MODULE,
-							sMethod,
-							"No or empty config item 'password' found, using empty password. Don't use this in a live production environment.",
-							e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod,
+				"No or empty config item 'password' found, using empty password. Don't use this in a live production environment.", e);
 			throw new ASelectException(Errors.ERROR_DB_INTERNAL_ERROR, e);
 		}
 
@@ -1434,6 +1102,5 @@ public class DBAuthSP extends ASelectHttpServlet
 		{
 			this.encrypedPassword = encrypedPassword;
 		}
-
 	}
 }

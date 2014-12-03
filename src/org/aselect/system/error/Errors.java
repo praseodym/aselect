@@ -92,8 +92,6 @@
 
 package org.aselect.system.error;
 
-import org.opensaml.saml2.core.StatusCode;
-
 /**
  * A-Select error codes. <br>
  * <br>

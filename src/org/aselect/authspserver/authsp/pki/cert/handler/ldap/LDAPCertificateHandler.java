@@ -91,7 +91,7 @@ public class LDAPCertificateHandler implements ICertificateHandler
 	public void init(AuthSPSystemLogger oSystemLogger, Object oBackendConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		_oConfigManager = AuthSPConfigManager.getHandle();
 		_systemLogger = oSystemLogger;
 		try {
@@ -132,7 +132,7 @@ public class LDAPCertificateHandler implements ICertificateHandler
 	public KeyStore getCertificates(String sSubjectDn)
 	throws ASelectException
 	{
-		String sMethod = "getCertificates()";
+		String sMethod = "getCertificates";
 		DirContext oDirCtx = null;
 		NamingEnumeration oAttributesEnumeration = null;
 		NamingEnumeration oCertEnumeration = null;

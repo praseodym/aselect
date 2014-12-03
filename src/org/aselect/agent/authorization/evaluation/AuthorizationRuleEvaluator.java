@@ -125,7 +125,7 @@ public class AuthorizationRuleEvaluator
 	public boolean evaluate(HashMap htAttributes, EvaluationTree tEvaluation)
 	throws ASelectAuthorizationException
 	{
-		final String sMethod = "evaluate()";
+		final String sMethod = "evaluate";
 		boolean bAuthorized = false;
 		// check not empty
 		if (tEvaluation == null || tEvaluation.isEmpty()) {
@@ -289,7 +289,7 @@ public class AuthorizationRuleEvaluator
 			AuthorizationRuleToken oExpectedValue, Vector vValue)
 	throws ASelectAuthorizationException
 	{
-		final String sMethod = "evaluateSimpleMultiValuedAttribute()";
+		final String sMethod = "evaluateSimpleMultiValuedAttribute";
 		boolean bAuthorized = false;
 		Enumeration eEnum = vValue.elements();
 
@@ -409,7 +409,7 @@ public class AuthorizationRuleEvaluator
 	private boolean evaluateLogic(HashMap htAttributes, EvaluationTree tEvaluation)
 	throws ASelectAuthorizationException
 	{
-		final String sMethod = "evaluateLogic()";
+		final String sMethod = "evaluateLogic";
 		boolean bAuthorized = false;
 		AuthorizationRuleToken oToken = (AuthorizationRuleToken) tEvaluation._oNode;
 		_systemLogger.log(Level.FINE, MODULE, sMethod, "Kind=" + oToken._iKind);
@@ -450,7 +450,7 @@ public class AuthorizationRuleEvaluator
 	private Comparable convertAttributeValue(Comparable cExpected, String sValue)
 	throws ASelectAuthorizationException
 	{
-		final String sMethod = "convertAttributeValue()";
+		final String sMethod = "convertAttributeValue";
 		StringBuffer sb = null;
 		Comparable cRet = null;
 

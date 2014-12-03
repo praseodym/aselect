@@ -350,7 +350,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 			if (next_authsp != null ) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Found next_authsp: "+ next_authsp + " defined for app_id: "+app_id);
 				if (_servletResponse != null) {					// Direct user to next_authsp with form
-					String sNextauthspForm = _configManager.getForm("nextauthsp", _sUserLanguage, _sUserCountry);
+					String sNextauthspForm = _configManager.getHTMLForm("nextauthsp", _sUserLanguage, _sUserCountry);
 					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[rid]", sRid);
 					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[a-select-server]", (String)htServiceRequest.get("a-select-server"));
 					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[user_id]", sUid);

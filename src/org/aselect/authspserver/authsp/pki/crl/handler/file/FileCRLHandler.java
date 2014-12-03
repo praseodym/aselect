@@ -82,7 +82,7 @@ public class FileCRLHandler implements ICRLHandler
 	public CRL getCRL(String sUri)
 	throws ASelectException
 	{
-		String sMethod = "getCRL()";
+		String sMethod = "getCRL";
 		CertificateFactory oCertificateFactory = null;
 		FileInputStream oFileInputStream = null;
 		CRL crl = null;

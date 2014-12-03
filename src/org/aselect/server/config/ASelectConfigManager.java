@@ -233,12 +233,10 @@
  */
 package org.aselect.server.config;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.KeyStore;
@@ -268,6 +266,7 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectSAMException;
 import org.aselect.system.exception.ASelectUDBException;
+import org.aselect.system.utils.FileCache;
 import org.aselect.system.utils.Utils;
 
 /**
@@ -348,7 +347,7 @@ public class ASelectConfigManager extends ConfigManager
 	 * Contains the error messages identified by error codes, that are configured in the A-Select Server errors.conf
 	 * file
 	 */
-	private Properties _propErrorMessages = new Properties();
+	//private Properties _propErrorMessages = new Properties();
 
 	/**
 	 * Contains the Server private key (default siging key) and it's certificate id.
@@ -359,50 +358,6 @@ public class ASelectConfigManager extends ConfigManager
 	 * Containing siging keys for privileged application
 	 */
 	private HashMap _htPrivilegedPublicKeys = new HashMap();
-
-	/**
-	 * The A-Select login form template
-	 */
-	private String _sLoginForm;
-
-	/**
-	 * The A-Select direct login form template
-	 */
-	private String _sDirectLoginForm;
-
-	/**
-	 * The A-Select selection form template
-	 */
-	private String _sSelectForm;
-
-	/**
-	 * The A-Select error form template
-	 */
-	private String _sErrorForm;
-
-	/**
-	 * The A-Select popup form template
-	 */
-	private String _sPopupForm;
-
-	/**
-	 * The A-Select server information form template
-	 */
-	private String _sServerInfoForm;
-
-	/**
-	 * The A-Select user information form template
-	 */
-	private String _sUserInfoForm;
-
-	private String _sSessionInfoForm;
-
-	private String _sLogoutInfoForm;
-
-	/**
-	 * The A-Select logged out form template
-	 */
-	private String _sLoggedOutForm;
 
 	/**
 	 * The logger used for system logging
@@ -443,6 +398,8 @@ public class ASelectConfigManager extends ConfigManager
 	
 	private String _sSharedSecret = null;
 	
+	private String _sOrgFriendlyName = null;
+
 	/**
 	 * Gets the shared secret.
 	 * 
@@ -574,32 +531,6 @@ public class ASelectConfigManager extends ConfigManager
 		_oASelectAuthenticationLogger.init(oAuthLogging, sWorkingDir);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully initialized ASelectAuthenticationLogger.");
 
-		// loading error message info
-		StringBuffer sbErrorFile = new StringBuffer(sWorkingDir);
-		if (!sWorkingDir.endsWith(File.separator))
-			sbErrorFile.append(File.separator);
-		sbErrorFile.append("conf").append(File.separator).append("errors").append(File.separator).append("errors.conf");
-
-		File fErrors = new File(sbErrorFile.toString());
-		if (!fErrors.exists()) {
-			StringBuffer sbError = new StringBuffer("No errors config file found: ");
-			sbError.append(sbErrorFile.toString());
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbError.toString());
-			throw new ASelectConfigException(Errors.ERROR_ASELECT_NOT_FOUND);
-		}
-
-		try {
-			_propErrorMessages.load(new FileInputStream(sbErrorFile.toString()));
-		}
-		catch (FileNotFoundException eFNF) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error loading error messages", eFNF);
-			throw new ASelectException(Errors.ERROR_ASELECT_NOT_FOUND);
-		}
-		catch (IOException eIO) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error loading error messages", eIO);
-			throw new ASelectException(Errors.ERROR_ASELECT_IO);
-		}
-
 		// read redirect URL
 		try {
 			_sRedirectURL = getParam(_oASelectConfigSection, "redirect_url");
@@ -628,12 +559,6 @@ public class ASelectConfigManager extends ConfigManager
 					"Configured configuration item 'federation_url' isn't an URL: " + _sFederationUrl);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
-
-		sbInfo = new StringBuffer("Successfully loaded ");
-		sbInfo.append(_propErrorMessages.size());
-		sbInfo.append(" error messages from: ");
-		sbInfo.append(sbErrorFile.toString());
-		_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 
 		// checking essentional config
 		checkEssentialConfig();
@@ -681,7 +606,22 @@ public class ASelectConfigManager extends ConfigManager
 		if (_sUserInfoSettings == null)
 			_sUserInfoSettings = "";
 		_sSharedSecret = ASelectConfigManager.getSimpleParam(_oASelectConfigSection, "shared_secret", false);
-
+		
+		_sOrgFriendlyName = getParam(_oASelectConfigSection, "organization_friendly_name");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Organization friendly name: "+_sOrgFriendlyName);
+		
+		String sKeep = ASelectConfigManager.getSimpleParam(_oASelectConfigSection, "file_cache_keep", false);
+		if (sKeep != null) {
+			try {
+				long lKeep = Integer.parseInt(sKeep);
+				if (lKeep >= 0)
+					FileCache.setFileCacheKeep(lKeep);
+			}
+			catch (NumberFormatException e) {
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod, "Bad value for file_cache_keep");
+				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+			}
+		}
 		// In a redundant environment a domain cookie wil be set.
 		// This way, all A-Select servers in, for example:
 		// .aselect.domain.com, will receive the TGT cookie from the
@@ -732,7 +672,6 @@ public class ASelectConfigManager extends ConfigManager
 					"No valid 'store_cookie' config section with id='previous_session' found, previous_session not enabled.");
 		}
 		// RH, 20141121, en
-		
 
 		if (_htServerCrypto.size() > 0) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded default private key.");
@@ -748,8 +687,7 @@ public class ASelectConfigManager extends ConfigManager
 				_bUDBEnabled = true;
 			}
 			catch (ASelectException eAS) {
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No valid UDB settings found, resume starting with UDB disabled.");
+				_systemLogger.log(Level.CONFIG, MODULE, sMethod, "No valid UDB settings found, resume starting with UDB disabled.");
 				_bUDBEnabled = false;
 			}
 		}
@@ -816,9 +754,8 @@ public class ASelectConfigManager extends ConfigManager
 		
 		//////////////////////////////////////////////////////////////////////////////
 		
-		
 		// loading html templates
-		loadHTMLTemplates(sWorkingDir);
+		loadAllHTMLTemplates(sWorkingDir);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded HTML templates");
 
 		// loading privileged application settings
@@ -1119,98 +1056,24 @@ public class ASelectConfigManager extends ConfigManager
 	 *            the s country
 	 * @return A representation of the error message
 	 */
-	// RM_24_01
-	public String getErrorMessage(String sErrorCode, String sLanguage, String sCountry)
+	// 20141201, Bauke: now using loadPropertiesFromFile
+	public String getErrorMessage(String sModule, String sErrorCode, String sLanguage, String sCountry)
 	{
 		String sMethod = "getErrorMessage";
 		String sMessage = null;
 
-		boolean langDefault = (sLanguage == null || sLanguage.equals(""));
+		// aselectserver/conf/errors/errors.conf
 		try {
-			Properties props = (langDefault) ? _propErrorMessages : loadErrorFile(sLanguage, sCountry);
-			sMessage = props.getProperty(sErrorCode).trim();
-			if (sMessage == null)
-				sMessage = "[" + sErrorCode + "].";
+			Properties propErrorMessages = Utils.loadPropertiesFromFile(_systemLogger, _sWorkingDir, null/*subdir*/, "errors.conf", sLanguage);
+			sMessage = propErrorMessages.getProperty(sErrorCode);
+			if (!Utils.hasValue(sMessage))
+				sMessage = "[" + sErrorCode + "]";
 		}
-		catch (Exception e) { // value was probably null so trim() function failed
+		catch (ASelectException e) { // could not translate the error code
 			sMessage = "[" + sErrorCode + "]";
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "MSG-" + sMessage);
+		_systemLogger.log(Level.INFO, sModule/*callers module*/, sMethod, "MSG["+sErrorCode+"]->" + sMessage);
 		return sMessage;
-	}
-
-	// RM_24_02
-	/**
-	 * Gets the error message.
-	 * 
-	 * @param sErrorCode
-	 *            the s error code
-	 * @return the error message
-	 */
-	public String getErrorMessage(String sErrorCode)
-	{
-		return getErrorMessage(sErrorCode, "", "");
-	}
-
-	// 20090930, Bauke: added localization
-	// RM_24_03
-	/**
-	 * Load error file.
-	 * 
-	 * @param sLanguage
-	 *            the s language
-	 * @param sCountry
-	 *            the s country
-	 * @return the properties
-	 * @throws ASelectException
-	 *             the a select exception
-	 */
-	public Properties loadErrorFile(String sLanguage, String sCountry)
-	throws ASelectException
-	{
-		String sMethod = "loadErrorFile";
-		File fTemplate = null;
-
-		StringBuffer sbErrorFile = new StringBuffer(getWorkingdir());
-		if (!getWorkingdir().endsWith(File.separator))
-			sbErrorFile.append(File.separator);
-		sbErrorFile.append("conf");
-		sbErrorFile.append(File.separator);
-		sbErrorFile.append("errors");
-		sbErrorFile.append(File.separator);
-		sbErrorFile.append("errors");
-
-		boolean langDefault = (sLanguage == null || sLanguage.equals(""));
-		String sLangExt = (langDefault) ? "" : "_" + sLanguage.toLowerCase();
-		for (;;) {
-			StringBuffer sbFilePath = new StringBuffer(sbErrorFile);
-			sbFilePath.append(sLangExt).append(".conf");
-
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "HTML " + sbFilePath);
-			fTemplate = new File(sbFilePath.toString());
-			if (fTemplate.exists())
-				break;
-			if (sLangExt.equals("")) { // already tried the default
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error config file not found: "
-						+ sbFilePath.toString());
-				throw new ASelectException(Errors.ERROR_ASELECT_NOT_FOUND);
-			}
-			sLangExt = ""; // try the default file
-		}
-
-		try {
-			Properties errorProps = new Properties();
-			errorProps.load(new FileInputStream(fTemplate));
-			return errorProps;
-		}
-		catch (FileNotFoundException eFNF) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error loading error messages", eFNF);
-			throw new ASelectException(Errors.ERROR_ASELECT_NOT_FOUND);
-		}
-		catch (IOException eIO) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error loading error messages", eIO);
-			throw new ASelectException(Errors.ERROR_ASELECT_IO);
-		}
 	}
 
 	/**
@@ -1232,71 +1095,55 @@ public class ASelectConfigManager extends ConfigManager
 	 * @param sForm
 	 *            The id of the form that must be returned.
 	 * @param sLanguage
-	 *            the s language
+	 *            the language
 	 * @param sCountry
-	 *            the s country
+	 *            the country
 	 * @return A representation of the requested form.
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
-	public String getForm(String sForm, String sLanguage, String sCountry)
+	public String getHTMLForm(String sForm, String sLanguage, String sCountry)
 	throws ASelectException
 	{
 		_systemLogger.log(Level.INFO, "ASelectConfigManager", "getForm", "Get FORM '" + sForm + "' _" + sLanguage + "_"
 				+ sCountry);
 
 		if (sForm.equals("login"))
-			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
+			return Utils.loadTemplateFromFile(_systemLogger, getWorkingdir(), null, sForm, sLanguage, _sOrgFriendlyName, Version.getVersion());
 
 		if (sForm.equals("directlogin"))
-			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
+			return Utils.loadTemplateFromFile(_systemLogger, getWorkingdir(), null, sForm, sLanguage, _sOrgFriendlyName, Version.getVersion());
 
 		if (sForm.equals("userinfo"))
-			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
+			return Utils.loadTemplateFromFile(_systemLogger, getWorkingdir(), null, sForm, sLanguage, _sOrgFriendlyName, Version.getVersion());
 
 //		if (sForm.equals("select"))	// RH, 20121119, o
 		if (sForm.startsWith("select")) // Allow for application specific select form, RH, 20121119, n
-			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
+			return Utils.loadTemplateFromFile(_systemLogger, getWorkingdir(), null, sForm, sLanguage, _sOrgFriendlyName, Version.getVersion());
 
 		if (sForm.equals("popup"))
-			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
+			return Utils.loadTemplateFromFile(_systemLogger, getWorkingdir(), null, sForm, sLanguage, _sOrgFriendlyName, Version.getVersion());
 
 		if (sForm.equals("serverinfo"))
-			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
+			return Utils.loadTemplateFromFile(_systemLogger, getWorkingdir(), null, sForm, sLanguage, _sOrgFriendlyName, Version.getVersion());
 
 		if (sForm.equals("logout_info"))
-			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
+			return Utils.loadTemplateFromFile(_systemLogger, getWorkingdir(), null, sForm, sLanguage, _sOrgFriendlyName, Version.getVersion());
 
 		if (sForm.equals("session_info"))
-			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
+			return Utils.loadTemplateFromFile(_systemLogger, getWorkingdir(), null, sForm, sLanguage, _sOrgFriendlyName, Version.getVersion());
 
 		if (sForm.equals("error"))
-			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
+			return Utils.loadTemplateFromFile(_systemLogger, getWorkingdir(), null, sForm, sLanguage, _sOrgFriendlyName, Version.getVersion());
 
 		if (sForm.equals("loggedout"))
-			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
+			return Utils.loadTemplateFromFile(_systemLogger, getWorkingdir(), null, sForm, sLanguage, _sOrgFriendlyName, Version.getVersion());
 
 		// Start sequential authsp's
 		if (sForm.equals("nextauthsp"))
-			return loadHTMLTemplate(getWorkingdir(), sForm, sLanguage, sCountry);
+			return Utils.loadTemplateFromFile(_systemLogger, getWorkingdir(), null, sForm, sLanguage, _sOrgFriendlyName, Version.getVersion());
 		// End sequential authsp's
 
 		return "Form '" + sForm + "' not found, not a standard form";
-	}
-
-	/**
-	 * Gets the form.
-	 * 
-	 * @param sForm
-	 *            the s form
-	 * @return the form
-	 * @throws ASelectException
-	 *             the a select exception
-	 */
-	public String getForm(String sForm)
-	throws ASelectException
-	{
-		return getForm(sForm, "", "");
 	}
 	
 	/**
@@ -1512,7 +1359,7 @@ public class ASelectConfigManager extends ConfigManager
 	private void loadAuthSPSettings(String sWorkingDir)
 	throws ASelectException
 	{
-		String sMethod = "loadAuthSPSettings()";
+		String sMethod = "loadAuthSPSettings";
 		Object oAuthSP = null;
 		Object oAuthSPsSection = null;
 
@@ -1592,7 +1439,7 @@ public class ASelectConfigManager extends ConfigManager
 	private void loadAuthSPPublicKey(String sWorkingDir, Object oAuthSPSection)
 	throws ASelectException
 	{
-		String sMethod = "loadAuthSPPublicKey()";
+		String sMethod = "loadAuthSPPublicKey";
 
 		PublicKey pkAuthSP = null;
 		StringBuffer sbKeystoreFile = null;
@@ -1697,7 +1544,7 @@ public class ASelectConfigManager extends ConfigManager
 	private void loadAuthSPSpecificPrivateKey(String sWorkingDir, Object oAuthSPConfig)
 	throws ASelectException
 	{
-		String sMethod = "loadAuthSPSpecificPrivateKey()";
+		String sMethod = "loadAuthSPSpecificPrivateKey";
 		String sAlias = null;
 		String sPassword = null;
 
@@ -1792,26 +1639,24 @@ public class ASelectConfigManager extends ConfigManager
 	 * @throws ASelectException
 	 *             If loading templates fails.
 	 */
-	public void loadHTMLTemplates(String sWorkingDir)
+	public void loadAllHTMLTemplates(String sWorkingDir)
 	throws ASelectException
 	{
-		String sMethod = "loadHTMLTemplates()";
+		String sMethod = "loadAllHTMLTemplates";
 
-		// 20090930, Bauke:
-		// The _s...Form variables are no longer used, these calls still check the presence of the templates
 		try {
-			_sServerInfoForm = loadHTMLTemplate(sWorkingDir, "serverinfo.html");
-			_sUserInfoForm = loadHTMLTemplate(sWorkingDir, "userinfo.html");
-			_sLoggedOutForm = loadHTMLTemplate(sWorkingDir, "loggedout.html");
-			_sErrorForm = loadHTMLTemplate(sWorkingDir, "error.html");
-			_sSessionInfoForm = loadHTMLTemplate(sWorkingDir, "session_info.html");
-			_sLogoutInfoForm = loadHTMLTemplate(sWorkingDir, "logout_info.html");
+			Utils.loadTemplateFromFile(_systemLogger, sWorkingDir, null, "serverinfo.html", ""/*language*/, _sOrgFriendlyName, Version.getVersion());
+			Utils.loadTemplateFromFile(_systemLogger, sWorkingDir, null, "userinfo.html", "", _sOrgFriendlyName, Version.getVersion());
+			Utils.loadTemplateFromFile(_systemLogger, sWorkingDir, null, "loggedout.html", "", _sOrgFriendlyName, Version.getVersion());
+			Utils.loadTemplateFromFile(_systemLogger, sWorkingDir, null, "error.html", "", _sOrgFriendlyName, Version.getVersion());
+			Utils.loadTemplateFromFile(_systemLogger, sWorkingDir, null, "session_info.html", "", _sOrgFriendlyName, Version.getVersion());
+			Utils.loadTemplateFromFile(_systemLogger, sWorkingDir, null, "logout_info.html", "", _sOrgFriendlyName, Version.getVersion());
 
 			if (_htServerCrypto.size() > 0) {
-				_sLoginForm = loadHTMLTemplate(sWorkingDir, "login.html");
-				_sSelectForm = loadHTMLTemplate(sWorkingDir, "select.html");
-				_sPopupForm = loadHTMLTemplate(sWorkingDir, "popup.html");
-				_sDirectLoginForm = loadHTMLTemplate(sWorkingDir, "directlogin.html");
+				Utils.loadTemplateFromFile(_systemLogger, sWorkingDir, null, "login.html", "", _sOrgFriendlyName, Version.getVersion());
+				Utils.loadTemplateFromFile(_systemLogger, sWorkingDir, null, "select.html", "", _sOrgFriendlyName, Version.getVersion());
+				Utils.loadTemplateFromFile(_systemLogger, sWorkingDir, null, "popup.html", "", _sOrgFriendlyName, Version.getVersion());
+				Utils.loadTemplateFromFile(_systemLogger, sWorkingDir, null, "directlogin.html", "", _sOrgFriendlyName, Version.getVersion());
 			}
 		}
 		catch (ASelectException eAS) {
@@ -1821,122 +1666,6 @@ public class ASelectConfigManager extends ConfigManager
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error loading HTML templates", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
-	}
-
-	/**
-	 * Loads a template from harddisk to the supplied <code>sTemplate</code>
-	 * variable. <br>
-	 * <br>
-	 * <b>Description:</b> <br>
-	 * Will load the template located in the file with name :<br>
-	 * <i>sWorkingDir</i>\conf\html\<i>sFileName</i> <br>
-	 * to the variable <i>sTemplate</i>. <br>
-	 * <br>
-	 * <b>Concurrency issues:</b> <br>
-	 * - <br>
-	 * <br>
-	 * <b>Preconditions:</b>
-	 * <ul>
-	 * <li><code>sWorkingDir != null</code></li>
-	 * <li> <code>sFileName</code> must contain an existing filename and may not
-	 * be <code>null</code></li>
-	 * </ul>
-	 * <br>
-	 * <b>Postconditions:</b> <br>
-	 * - <br>
-	 * 
-	 * @param sUnUsed
-	 *            the s un used
-	 * @param sFileName
-	 *            File name with extension of the template that must be loaded.
-	 * @param sLanguage
-	 *            the s language
-	 * @param sCountry
-	 *            the s country
-	 * @return The loaded HTML template.
-	 * @throws ASelectException
-	 *             if loading fails.
-	 */
-	// 20090930, Bauke: added localization
-	// RM_24_04
-	public String loadHTMLTemplate(String sUnUsed, String sFileName, String sLanguage, String sCountry)
-	throws ASelectException
-	{
-		String sMethod = "loadHTMLTemplate";
-		String sLine = null;
-		String sTemplate = "";
-		File fTemplate = null;
-		BufferedReader brIn = null;
-
-		boolean langDefault = (sLanguage == null || sLanguage.equals(""));
-		try {
-			String sLangExt = (langDefault) ? "" : "_" + sLanguage.toLowerCase();
-			if (sFileName.endsWith(".html"))
-				sFileName = sFileName.substring(0, sFileName.length()-5);
-			for (;;) {
-				StringBuffer sbFilePath = new StringBuffer(getWorkingdir());
-				sbFilePath.append(File.separator).append("conf").append(File.separator).append("html").append(
-						File.separator).append(sFileName).append(sLangExt).append(".html");
-
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "HTML " + sbFilePath);
-				fTemplate = new File(sbFilePath.toString());
-				if (fTemplate.exists())
-					break;
-				if (sLangExt.equals("")) { // already tried the default
-					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Required template not found: "
-							+ sbFilePath.toString());
-					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
-				}
-				sLangExt = ""; // try the default file
-			}
-
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Read file");
-			brIn = new BufferedReader(new InputStreamReader(new FileInputStream(fTemplate)));
-			while ((sLine = brIn.readLine()) != null) {
-				sTemplate += sLine + "\n";
-			}
-			sTemplate = Utils.replaceString(sTemplate, "[version]", Version.getVersion());
-			sTemplate = Utils.replaceString(sTemplate, "[organization_friendly]", getParam(_oASelectConfigSection,
-					"organization_friendly_name"));
-		}
-		catch (ASelectException e) {
-			throw e;
-		}
-		catch (Exception e) {
-			StringBuffer sbError = new StringBuffer("Could not load '");
-			sbError.append(sFileName).append("' HTML template.");
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-		}
-		finally {
-			try {
-				if (brIn != null)
-					brIn.close();
-			}
-			catch (Exception e) {
-				StringBuffer sbError = new StringBuffer("Could not close '");
-				sbError.append(sFileName).append("' FileInputStream");
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
-			}
-		}
-		return sTemplate;
-	}
-
-	/**
-	 * Load html template.
-	 * 
-	 * @param sWorkingDir
-	 *            the s working dir
-	 * @param sFileName
-	 *            the s file name
-	 * @return the string
-	 * @throws ASelectException
-	 *             the a select exception
-	 */
-	public String loadHTMLTemplate(String sWorkingDir, String sFileName)
-	throws ASelectException
-	{
-		return loadHTMLTemplate(sWorkingDir, sFileName, "", "");
 	}
 
 	/**
@@ -1963,7 +1692,7 @@ public class ASelectConfigManager extends ConfigManager
 	private void loadPrivilegedSettings(String sWorkingDir)
 	throws ASelectException
 	{
-		String sMethod = "loadPrivilegedSettings()";
+		String sMethod = "loadPrivilegedSettings";
 
 		_htPrivilegedPublicKeys = new HashMap();
 
@@ -2033,7 +1762,7 @@ public class ASelectConfigManager extends ConfigManager
 	private void loadPrivilegedPublicKey(String sWorkingDir, String sAlias)
 	throws ASelectException
 	{
-		String sMethod = "loadPrivilegedPublicKey()";
+		String sMethod = "loadPrivilegedPublicKey";
 		try {
 			sAlias = sAlias.toLowerCase();
 
@@ -2085,7 +1814,7 @@ public class ASelectConfigManager extends ConfigManager
 	private boolean checkAuthSPConfig(Object oAuthSPSection)
 	{
 		String sID = null;
-		String sMethod = "checkAuthSPConfig()";
+		String sMethod = "checkAuthSPConfig";
 
 		try {
 			sID = this.getParam(oAuthSPSection, "id");
@@ -2167,7 +1896,7 @@ public class ASelectConfigManager extends ConfigManager
 		String sConnectorClass = null;
 		IUDBConnector oUDBConnector = null;
 
-		String sMethod = "checkUDBSettings()";
+		String sMethod = "checkUDBSettings";
 
 		try {
 			oUdbCfgSection = this.getSection(null, "udb");
@@ -2263,7 +1992,7 @@ public class ASelectConfigManager extends ConfigManager
 	private void checkEssentialConfig()
 	throws ASelectException
 	{
-		String sMethod = "checkEssentialConfig()";
+		String sMethod = "checkEssentialConfig";
 
 		// check aselect config
 		try {
@@ -2409,6 +2138,9 @@ public class ASelectConfigManager extends ConfigManager
 	{
 		return _sUserInfoSettings;
 	}
+
+	public String getOrgFriendlyName() { return _sOrgFriendlyName; }
+	public void set_sOrgFriendlyName(String sOrgFriendlyName) { _sOrgFriendlyName = sOrgFriendlyName; }
 
 	// Convenience function
 	/**

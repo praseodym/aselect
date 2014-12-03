@@ -49,7 +49,6 @@
 
 package org.aselect.server.cross.selectorhandler;
 
-import java.io.File;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Set;
@@ -117,7 +116,9 @@ public class DefaultSelectorHandler implements ISelectorHandler
 			Object oASelectConfig = _configManager.getSection(null, "aselect");
 			_sMyServerId = _configManager.getParam(oASelectConfig, "server_id");
 			_sFriendlyName = _configManager.getParam(oASelectConfig, "organization_friendly_name");
-			loadHTMLTemplates();
+			// pre-load the form
+			Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(), null,
+					"defaultcrossselect", "", _configManager.getOrgFriendlyName(), Version.getVersion());
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not initialize the default selector handler", e);
@@ -173,10 +174,14 @@ public class DefaultSelectorHandler implements ISelectorHandler
 	throws ASelectException
 	{
 		String sMethod = "showSelectForm";
-		String sSelectForm = null;
 
 		try {
-			sSelectForm = _sHTMLSelectForm;
+			String sLanguage = (String) htServiceRequest.get("language");
+			String sSelectForm = Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(), null/*subdir*/,
+					"defaultcrossselect", sLanguage, _configManager.getOrgFriendlyName(), Version.getVersion());
+			sSelectForm = Utils.replaceString(_sHTMLSelectForm, "[version]", Version.getVersion());
+			sSelectForm = Utils.replaceString(_sHTMLSelectForm, "[organization_friendly]", _sFriendlyName);
+
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM " + "selectform");
 
 			String sRid = (String) htServiceRequest.get("rid");
@@ -228,35 +233,5 @@ public class DefaultSelectorHandler implements ISelectorHandler
 			sResult += "<OPTION VALUE='" + sOrganization + "'>" + sFriendlyName + "</OPTION>\n";
 		}
 		return sResult;
-	}
-
-	/**
-	 * Loads all HTML Templates needed. <br>
-	 * <br>
-	 * <b>Description:</b> <br>
-	 * At initialization all HTML templates are loaded once.<br>
-	 * 
-	 * @throws ASelectException
-	 * <br>
-	 * <br>
-	 *             <b>Concurrency issues:</b> <br>
-	 *             Run once at startup. <br>
-	 * <br>
-	 *             <b>Preconditions:</b> <br>
-	 *             Manager and ISelectorHandler should be initialized. <br>
-	 * <br>
-	 *             <b>Postconditions:</b> <br>
-	 *             Global HashMap _htHtmlTemplates variabele contains the templates. <br>
-	 */
-	private void loadHTMLTemplates()
-	throws ASelectException
-	{
-		String sWorkingdir = new StringBuffer(_configManager.getWorkingdir()).append(File.separator).append("conf")
-				.append(File.separator).append("html").append(File.separator).toString();
-
-		_sHTMLSelectForm = _configManager.loadHTMLTemplate(sWorkingdir, "defaultcrossselect");
-
-		_sHTMLSelectForm = Utils.replaceString(_sHTMLSelectForm, "[version]", Version.getVersion());
-		_sHTMLSelectForm = Utils.replaceString(_sHTMLSelectForm, "[organization_friendly]", _sFriendlyName);
 	}
 }

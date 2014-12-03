@@ -89,7 +89,7 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		super.init(oServletConfig, oHandlerConfig);
 
@@ -303,10 +303,8 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 		else {
 			PrintWriter pwOut = null;
 			try {
-				sLogoutResultPage = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "logoutresult",
-						_sUserLanguage, _sUserCountry);
-				sLogoutResultPage = Utils.replaceString(sLogoutResultPage, "[version]", Version.getVersion());
-				sLogoutResultPage = Utils.replaceString(sLogoutResultPage, "[organization_friendly]", _sFriendlyName);
+				sLogoutResultPage = Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(), null/*subdir*/,
+						"logoutresult", _sUserLanguage, _sFriendlyName, Version.getVersion());
 				sLogoutResultPage = Utils.replaceString(sLogoutResultPage, "[result_code]", resultCode);
 				sLogoutResultPage = _configManager.updateTemplate(sLogoutResultPage, null/*no session*/, servletRequest);
 				pwOut = servletResponse.getWriter();

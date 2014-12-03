@@ -523,7 +523,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			if (sAsUid != null)
 				showUserInfo(htServiceRequest, _servletResponse);  // pauses sensor
 			else {
-				String sServerInfoForm = _configManager.getForm("serverinfo", _sUserLanguage, _sUserCountry);
+				String sServerInfoForm = _configManager.getHTMLForm("serverinfo", _sUserLanguage, _sUserCountry);
 				sServerInfoForm = Utils.replaceString(sServerInfoForm, "[message]", " ");
 
 				try {
@@ -1209,7 +1209,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 						getUserAuthsps(sRid, sUid);  // can change the session too
 						_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 						
-						String sNextauthspForm = _configManager.getForm("nextauthsp", _sUserLanguage, _sUserCountry);
+						String sNextauthspForm = _configManager.getHTMLForm("nextauthsp", _sUserLanguage, _sUserCountry);
 						sNextauthspForm = Utils.replaceString(sNextauthspForm, "[rid]", sRid);
 						sNextauthspForm = Utils.replaceString(sNextauthspForm, "[a-select-server]",  (String) htServiceRequest.get("a-select-server"));
 						sNextauthspForm = Utils.replaceString(sNextauthspForm, "[user_id]", sUid);
@@ -1391,8 +1391,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 								// redirect to the ISTS
 								String sIsts = (String)_htTGTContext.get("redirect_ists_url");
 								String sPostForm = (String)_htTGTContext.get("redirect_post_form");
-								String sSelectForm = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(),
-												sPostForm, _sUserLanguage, _sUserCountry);
+								String sSelectForm = Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(), null/*subdir*/,
+										sPostForm, _sUserLanguage, _configManager.getOrgFriendlyName(), Version.getVersion());
 								sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
 								sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", _sMyServerId);
 								sSelectForm = Utils.replaceString(sSelectForm, "[handler_url]", sIsts);
@@ -1570,7 +1570,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Show login (user_id) form
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "No user id, show LOGIN form");
-			String sLoginForm = _configManager.getForm("login", _sUserLanguage, _sUserCountry);
+			String sLoginForm = _configManager.getHTMLForm("login", _sUserLanguage, _sUserCountry);
 			sLoginForm = Utils.replaceString(sLoginForm, "[rid]", sRid);
 			sLoginForm = Utils.replaceString(sLoginForm, "[aselect_url]", (String) htServiceRequest.get("my_url"));
 			sLoginForm = Utils.replaceString(sLoginForm, "[a-select-server]", _sMyServerId);
@@ -1586,7 +1586,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "error_message="+sErrorMessage);
 			
 			if (sErrorMessage != null) {
-				sErrorMessage = _configManager.getErrorMessage(sErrorMessage, _sUserLanguage, _sUserCountry);
+				sErrorMessage = _configManager.getErrorMessage(MODULE, sErrorMessage, _sUserLanguage, _sUserCountry);
 				sLoginForm = Utils.replaceString(sLoginForm, "[error_message]", sErrorMessage);
 			}
 			sLoginForm = _configManager.updateTemplate(sLoginForm, _htSessionContext, _servletRequest);
@@ -1660,7 +1660,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		long now = new Date().getTime();
 
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "redirect url=" + sRedirectUrl);
-		String sInfoForm = _configManager.getForm("session_info", _sUserLanguage, _sUserCountry);
+		String sInfoForm = _configManager.getHTMLForm("session_info", _sUserLanguage, _sUserCountry);
 		sInfoForm = Utils.replaceString(sInfoForm, "[aselect_url]", sRedirectUrl);
 		sInfoForm = Utils.replaceString(sInfoForm, "[a-select-server]", _sMyServerId);
 		sInfoForm = Utils.replaceString(sInfoForm, "[rid]", sRid);
@@ -1782,25 +1782,13 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_CANCEL);
 		}
 
-		// Display the consent form
-		String sFriendlyName = "";
-		try {
-			Object aselect = _configManager.getSection(null, "aselect");
-			sFriendlyName = ASelectConfigManager.getSimpleParam(aselect, "organization_friendly_name", false);
-		}
-		catch (Exception e) {
-			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Configuration error: " + e);
-		}
-
 		// Ask for consent by presenting the userconsent.html form
 		Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);
 		//_sessionManager.update(sRid, _htSessionContext); // Write session
 		_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
 		try {
-			_sConsentForm = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), "userconsent",
-					_sUserLanguage, _sUserCountry);
-			_sConsentForm = Utils.replaceString(_sConsentForm, "[version]", Version.getVersion());
-			_sConsentForm = Utils.replaceString(_sConsentForm, "[organization_friendly]", sFriendlyName);
+			_sConsentForm = Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(), null/*subdir*/,
+					"userconsent", _sUserLanguage, _configManager.getOrgFriendlyName(), Version.getVersion());
 			_sConsentForm = Utils.replaceString(_sConsentForm, "[request]", "login1");
 			_sConsentForm = Utils.replaceString(_sConsentForm, "[rid]", sRid);
 			_sConsentForm = Utils.replaceString(_sConsentForm, "[a-select-server]", _sMyServerId);
@@ -2016,7 +2004,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				sSelectFormName +=  _applicationManager.getSelectForm(sAppId); // Add application specific suffix
 				_systemLogger.log(Level.INFO, _sModule, sMethod, "Found application specific select form: " + sSelectFormName + " for app_id: " + sAppId);
 			}
-			String sSelectForm = _configManager.getForm(sSelectFormName, _sUserLanguage, _sUserCountry);
+			String sSelectForm = _configManager.getHTMLForm(sSelectFormName, _sUserLanguage, _sUserCountry);
 
 			sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
 			sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", _sMyServerId);
@@ -2303,7 +2291,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				}
 
 				// must use popup so show the popup page
-				String sPopupForm = _configManager.getForm("popup", _sUserLanguage, _sUserCountry);
+				String sPopupForm = _configManager.getHTMLForm("popup", _sUserLanguage, _sUserCountry);
 				sPopupForm = Utils.replaceString(sPopupForm, "[authsp_url]", sRedirectUrl);
 				String strFriendlyName = _configManager.getParam(authSPsection, "friendly_name");
 				sPopupForm = Utils.replaceString(sPopupForm, "[authsp]", strFriendlyName);
@@ -2830,7 +2818,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 
 			// Otherwise present the "loggedout.html" form
-			String sLoggedOutForm = _configManager.getForm("loggedout", _sUserLanguage, _sUserCountry);
+			String sLoggedOutForm = _configManager.getHTMLForm("loggedout", _sUserLanguage, _sUserCountry);
 			sLoggedOutForm = _configManager.updateTemplate(sLoggedOutForm, null/*no session*/, _servletRequest);
 			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 			// no RID _sessionManager.update(sRid, _htSessionContext); // Write session
@@ -3337,7 +3325,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			String sMyUrl = (String) htServiceRequest.get("my_url");
 			String sTgt = (String) htServiceRequest.get("aselect_credentials_tgt");
 
-			String sUserInfoForm = _configManager.getForm("userinfo", _sUserLanguage, _sUserCountry);
+			String sUserInfoForm = _configManager.getHTMLForm("userinfo", _sUserLanguage, _sUserCountry);
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[uid]", sUserId);
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[a-select-server]", _sMyServerId);
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[aselect_url]", sMyUrl);

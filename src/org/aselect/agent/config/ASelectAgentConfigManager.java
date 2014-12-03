@@ -302,7 +302,7 @@ public class ASelectAgentConfigManager extends ConfigManager
 	private void loadCrypto()
 	throws ASelectException
 	{
-		String sMethod = "loadCrypto()";
+		String sMethod = "loadCrypto";
 
 		// Retrieve crypto configuration
 		Object oAgent = null;
@@ -461,7 +461,7 @@ public class ASelectAgentConfigManager extends ConfigManager
 	private void readSignatureConfig(Object oCryptoSection, HashMap htProviders)
 	throws ASelectException
 	{
-		String sMethod = "readSignatureConfig()";
+		String sMethod = "readSignatureConfig";
 		String sProvider = null;
 
 		Object oSection = null;

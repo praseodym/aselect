@@ -26,6 +26,7 @@ import javax.xml.namespace.QName;
 
 import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.config.ASelectConfigManager;
+import org.aselect.server.config.Version;
 import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.xsaml20.Saml20_BrowserHandler;
@@ -142,7 +143,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		try {
 			super.init(oServletConfig, oHandlerConfig);
@@ -156,7 +157,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		}
 		
 		try {
-			set_sPostTemplate(_configManager.getParam(oHandlerConfig, "post_template"));
+			setPostTemplate(_configManager.getParam(oHandlerConfig, "post_template"));
 		}
 		catch (ASelectConfigException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'post_template' found", e);
@@ -224,7 +225,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		String sPathInfo = request.getPathInfo();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "==== Path="+sPathInfo + " RequestQuery: "+request.getQueryString());
 		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request received === Path=" + sPathInfo+
@@ -594,7 +595,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			String sRelayState)
 	throws IOException, ASelectException
 	{
-		String sMethod = "sendErrorArtifact()";
+		String sMethod = "sendErrorArtifact";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
 
 		String sId = errorResponse.getID();
@@ -632,7 +633,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 	private void processReturn(HttpServletRequest httpRequest, HttpServletResponse httpResponse)
 	throws ASelectException
 	{
-		String sMethod = "processReturn()";
+		String sMethod = "processReturn";
 		HashMap htTGTContext = null;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
 		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Handle return from the AuthSP");
@@ -690,7 +691,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			retrieveLocalSettings(_htSessionContext, htTGTContext);  // results are placed in this object
 
 			// 20120719, Bauke added test for post_template!
-			if (Saml20_Metadata.singleSignOnServiceBindingConstantPOST.equals(sReqBInding) && get_sPostTemplate() != null) {
+			if (Saml20_Metadata.singleSignOnServiceBindingConstantPOST.equals(sReqBInding) && getPostTemplate() != null) {
 				_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Redirecting with post to: " + sAssertUrl);
 				sendSAMLResponsePOST(sAssertUrl, sRid, _htSessionContext, sTgt, htTGTContext, httpResponse, sRelayState);
 			}
@@ -862,12 +863,13 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			sInputs += buildHtmlInput("language",sLang);
 		
 		// Keep logging short:
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Template="+get_sPostTemplate()+" sInputs="+sInputs+" ...");
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Template="+getPostTemplate()+" sInputs="+sInputs+" ...");
 		sInputs += buildHtmlInput("SAMLResponse", sResponse);  //Tools.htmlEncode(nodeMessageContext.getTextContent()));
 
 		// Let's POST the token
-		if (get_sPostTemplate() != null) {
-			String sSelectForm = _configManager.loadHTMLTemplate(null, get_sPostTemplate(), _sUserLanguage, _sUserCountry);
+		if (getPostTemplate() != null) {
+			String sSelectForm = Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(), null/*subdir*/,
+					getPostTemplate(), _sUserLanguage, _configManager.getOrgFriendlyName(), Version.getVersion());
 			handlePostForm(sSelectForm, sp_assert_url, sInputs, oHttpServletResponse);
 		}
 		else {
@@ -1366,11 +1368,11 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		return response;
 	}
 
-	public synchronized String get_sPostTemplate()
+	public synchronized String getPostTemplate()
 	{
 		return _sPostTemplate;
 	}
-	public synchronized void set_sPostTemplate(String sPostTemplate)
+	public synchronized void setPostTemplate(String sPostTemplate)
 	{
 		_sPostTemplate = sPostTemplate;
 	}

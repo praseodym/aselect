@@ -9,19 +9,14 @@
  */
 package org.aselect.authspserver.authsp.delegator;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -31,17 +26,13 @@ import java.util.Vector;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringEscapeUtils;
 import org.aselect.authspserver.authsp.AbstractAuthSP;
-import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.utils.BASE64Decoder;
 import org.aselect.system.utils.BASE64Encoder;
 import org.aselect.system.utils.Utils;
 
@@ -63,19 +54,15 @@ import org.aselect.system.utils.Utils;
  * 
  * @author RH
  */
-public class DelegatorAuthSP extends AbstractAuthSP
-
+public class DelegatorAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodies from AbstractAuthSP
 {
-	private static final int MAX_FIXED_SECRET_LENGTH = 50;
+	private static final long serialVersionUID = 1L;
 
 	/** The name of this module, that is used in the system logging. */
 	public static final String MODULE = "DelegatorAuthSP";
 
-	/** Default failure_handling option. */
-	private final static String DEFAULT_FAILUREHANDLING = "aselect";
-
 	/** The version. */
-	public static final String VERSION = "A-Select DELEGATOR AuthSP " + "1.0";
+	public static final String VERSION = "A-Select Delegator AuthSP 1.0";
 
 	/** The sessioncontext key for uid in the request to the delegate */
 	public static final String DEFAULT_REQUEST_KEY_UID = "username";
@@ -93,38 +80,14 @@ public class DelegatorAuthSP extends AbstractAuthSP
 	/** The parameter key for the delegate to put the additional challenge in */
 	// Maybe make this configuration parameter
 	public static final String KEY_DELEGATE_CHALLENGE = "delegate_challenge";
-	
 
-	//	/** The logger that logs system information. */
-//	private AuthSPSystemLogger _systemLogger;
-//
-//	/** The logger that logs authentication information. */
-//	private AuthSPAuthenticationLogger _authenticationLogger;
-//
-//	/** The crypto engine */
-//	private CryptoEngine _cryptoEngine;
-//
-//	/** The configuration */
-//	private AuthSPConfigManager _configManager;
-//
-//	/** The Sessionmanager */
-//	private AuthSPSessionManager _sessionManager;
-
-	private String _sWorkingDir;
-	private Object _oAuthSpConfig;
-
-	/** HTML error templates */
-	private String _sErrorHtmlTemplate;
+	//private Object _oAuthSPConfig;
 
 	/** HTML authenticate templates */
-	private String _sAuthenticateHtmlTemplate;
-	private String _sChallengeHtmlTemplate;
+	//private String _sAuthenticateHtmlTemplate;
+	//private String _sChallengeHtmlTemplate;
 
-	// failure handling properties
-	private Properties _oErrorProperties;
-	private String _sFailureHandling;
-	private String _sFriendlyName;
-	private int _iAllowedRetries;
+	//private String _sFailureHandling;
 	private String _sDelegateUrl;
 	private String _sDelegateUser;
 	private String _sDelegatePassword;
@@ -138,7 +101,7 @@ public class DelegatorAuthSP extends AbstractAuthSP
 	private String request_key_password;
 	private String response_key_uid;
 	// RH, 20130115, en
-
+	
 	/**
 	 * Initialization of the DELEGATOR AuthSP. <br>
 	 * <br>
@@ -174,68 +137,11 @@ public class DelegatorAuthSP extends AbstractAuthSP
 	throws ServletException
 	{
 		String sMethod = "init";
-		StringBuffer sbTemp = null;
 		try {
-			super.init(oConfig);
+			super.init(oConfig, true, Errors.DELEGATOR_CONFIG_ERROR);
 
 			// log start
-			StringBuffer sbInfo = new StringBuffer("Starting : ").append(MODULE);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
-
-			// Retrieve crypto engine from servlet context.
-			ServletContext oContext = oConfig.getServletContext();
-
-			// Retrieve friendly name
-			_sFriendlyName = (String) oContext.getAttribute("friendly_name");
-			if (_sFriendlyName == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'friendly_name' found in servlet context.");
-				throw new ASelectException(Errors.DELEGATOR_CONFIG_ERROR);
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'friendly_name'.");
-
-			// Retrieve working directory
-			_sWorkingDir = (String) oContext.getAttribute("working_dir");
-			if (_sWorkingDir == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No working_dir found in servlet context.");
-				throw new ASelectException(Errors.DELEGATOR_CONFIG_ERROR);
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded working_dir");
-
-			// Retrieve configuration
-			String sConfigID = oConfig.getInitParameter("config_id");
-			if (sConfigID == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'config_id' found as init-parameter in web.xml.");
-				throw new ASelectException(Errors.DELEGATOR_CONFIG_ERROR);
-			}
-			try {
-				_oAuthSpConfig = _configManager.getSection(null, "authsp", "id=" + sConfigID);
-			}
-			catch (ASelectConfigException eAC) {
-				sbTemp = new StringBuffer("No valid 'authsp' config section found with id='");
-				sbTemp.append(sConfigID).append("'");
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbTemp.toString(), eAC);
-				throw new ASelectException(Errors.DELEGATOR_CONFIG_ERROR);
-			}
-
-			// Load error properties
-			StringBuffer sbErrorsConfig = new StringBuffer(_sWorkingDir);
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("conf").append(File.separator).append(sConfigID);
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("errors").append(File.separator).append("errors.conf");
-			File fErrorsConfig = new File(sbErrorsConfig.toString());
-			if (!fErrorsConfig.exists()) {
-				StringBuffer sbFailed = new StringBuffer("The error configuration file does not exist: \"");
-				sbFailed.append(sbErrorsConfig.toString()).append("\".");
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString());
-				throw new ASelectException(Errors.DELEGATOR_CONFIG_ERROR);
-			}
-			_oErrorProperties = new Properties();
-			_oErrorProperties.load(new FileInputStream(sbErrorsConfig.toString()));
-			sbInfo = new StringBuffer("Successfully loaded ");
-			sbInfo.append(_oErrorProperties.size());
-			sbInfo.append(" error messages from: \"");
-			sbInfo.append(sbErrorsConfig.toString()).append("\".");
+			StringBuffer sbInfo = new StringBuffer("Starting: ").append(MODULE);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 
 			// get show_challenge
@@ -248,55 +154,20 @@ public class DelegatorAuthSP extends AbstractAuthSP
 						"No or invalid 'show_challenge' parameter found in configuration, no challenge form will be presented");
 				_bShow_challenge = false;
 			}
-
-			// Load HTML templates.
-			_sErrorHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "error.html", sConfigID,
-					_sFriendlyName, VERSION);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'error.html' template.");
-			_sAuthenticateHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "authenticate.html", sConfigID,
-					_sFriendlyName, VERSION);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'authenticate.html' template.");
 			
 			if (_bShow_challenge) {	// Only load form if needed
-				_sChallengeHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "challenge.html", sConfigID,
-						_sFriendlyName, VERSION);
+				Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, _sConfigID, "challenge.html", null, _sFriendlyName, VERSION);
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'challenge.html' template.");
 			}
 
-			// get allowed retries
-			try {
-				String sAllowedRetries = _configManager.getParam(_oAuthSpConfig, "allowed_retries");
-				_iAllowedRetries = Integer.parseInt(sAllowedRetries);
-			}
-			catch (ASelectConfigException eAC) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"No 'allowed_retries' parameter found in configuration", eAC);
-				throw new ASelectException(Errors.DELEGATOR_CONFIG_ERROR, eAC);
-			}
-			catch (NumberFormatException eNF) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"Invalid 'allowed_retries' parameter found in configuration", eNF);
-				throw new ASelectException(Errors.DELEGATOR_CONFIG_ERROR, eNF);
-			}
+			// Load HTML templates.
+			Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, _sConfigID, "error.html", null, _sFriendlyName, VERSION);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'error.html' template.");
+			Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, _sConfigID, "authenticate.html", null, _sFriendlyName, VERSION);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'authenticate.html' template.");
 
-			// get failure handling
-			try {
-				_sFailureHandling = _configManager.getParam(_oAuthSpConfig, "failure_handling");
-			}
-			catch (ASelectConfigException eAC) {
-				_sFailureHandling = DEFAULT_FAILUREHANDLING;
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No 'failure_handling' parameter found in configuration, using default: aselect");
-			}
-
-			if (!_sFailureHandling.equalsIgnoreCase("aselect") && !_sFailureHandling.equalsIgnoreCase("local")) {
-				StringBuffer sbWarning = new StringBuffer("Invalid 'failure_handling' parameter found in configuration: '");
-				sbWarning.append(_sFailureHandling);
-				sbWarning.append("', using default: aselect");
-				_sFailureHandling = DEFAULT_FAILUREHANDLING;
-
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbWarning.toString());
-			}
+			// Get allowed retries
+			_iAllowedRetries = Utils.getSimpleIntParam(_configManager, _systemLogger, _oAuthSpConfig, "allowed_retries", true);
 
 			try {
 				_sDelegateUrl = _configManager.getParam(_oAuthSpConfig, "url");
@@ -325,7 +196,6 @@ public class DelegatorAuthSP extends AbstractAuthSP
 						"Invalid 'secret_length' parameter found in configuration", eNF);
 				throw new ASelectException(Errors.DELEGATOR_CONFIG_ERROR, eNF);
 			}
-
 
 			// NOTE: ASelectConfigException results in a stack trace.
 			// Therefore non serious missing parameters should throw an ASelectException please.
@@ -390,8 +260,7 @@ public class DelegatorAuthSP extends AbstractAuthSP
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "_bUrldecode_responseheaders="+_bUrldecode_responseheaders); 
 			// RH, 20131220, en
 			
-			sbInfo = new StringBuffer("Successfully started ");
-			sbInfo.append(VERSION).append(".");
+			sbInfo = new StringBuffer("Successfully started ").append(VERSION);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 		}
 		catch (Exception e) {
@@ -433,8 +302,6 @@ public class DelegatorAuthSP extends AbstractAuthSP
 		
 		// super doGet for basics, future improvement
 //		super.doGet(servletRequest, servletResponse);
-
-		
 		try {
 			String sQueryString = servletRequest.getQueryString();
 			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, false);
@@ -469,8 +336,7 @@ public class DelegatorAuthSP extends AbstractAuthSP
 				String sAsId = (String) htServiceRequest.get("a-select-server");
 				String sSignature = (String) htServiceRequest.get("signature");
 
-//				if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sAsId == null) || (sSignature == null)) {
-					if ((sRid == null) || (sAsUrl == null)  || (sAppId == null) || (sAsId == null) || (sSignature == null)) {
+				if ((sRid == null) || (sAsUrl == null)  || (sAppId == null) || (sAsId == null) || (sSignature == null)) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod,
 						"Invalid request received: one or more mandatory parameters missing, handling error locally.");
 					failureHandling = "local";	// RH, 20111021, n
@@ -503,10 +369,7 @@ public class DelegatorAuthSP extends AbstractAuthSP
 
 				if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), sSignature)) {
 					StringBuffer sbWarning = new StringBuffer("Invalid signature from A-Select Server '");
-//					sbWarning.append(sAsId).append("' for user: ").append(sUid);
-//					_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString());
-					_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"Invalid signature from A-Select Server, handling error locally.");
+					_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid signature from A-Select Server, handling error locally.");
 					failureHandling = "local";	// RH, 20111021, n
 					throw new ASelectException(Errors.DELEGATOR_INVALID_REQUEST);
 				}
@@ -539,10 +402,9 @@ public class DelegatorAuthSP extends AbstractAuthSP
 					htServiceRequest.put("country", sCountry);
 				if (sLanguage != null)
 					htServiceRequest.put("language", sLanguage);
-				
-				
+
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM htServiceRequest=" + htServiceRequest);
-				showAuthenticateForm(pwOut, null, null, htServiceRequest);
+				showAuthenticateForm(pwOut, ""/*no error*/, htServiceRequest);
 			}
 		}
 		catch (ASelectException eAS) {
@@ -568,7 +430,6 @@ public class DelegatorAuthSP extends AbstractAuthSP
 		}
 	}
 
-	
 	/**
 	 * Process requests for the HTTP <code>POST</code> method. <br>
 	 * <br>
@@ -586,7 +447,7 @@ public class DelegatorAuthSP extends AbstractAuthSP
 	protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws java.io.IOException
 	{
-		String sMethod = "doPost()";
+		String sMethod = "doPost";
 		PrintWriter pwOut = null;
 		String sUid = null;
 		String sPassword = null;
@@ -619,11 +480,8 @@ public class DelegatorAuthSP extends AbstractAuthSP
 			String sDelegateSession = servletRequest.getParameter("delegate_session");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "uid=" + sUid + " rid=" + sRid);
 
-
-			
 			if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sAsId == null)
 					|| (sRetryCounter == null) || (sSignature == null)) {
-//				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: one or more mandatory parameters missing.");
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: one or more mandatory parameters missing, handling error locally.");
 				failureHandling = "local";	// RH, 20111021, n
 				throw new ASelectException(Errors.DELEGATOR_INVALID_REQUEST);
@@ -659,9 +517,7 @@ public class DelegatorAuthSP extends AbstractAuthSP
 
 			if (sUid.trim().length() < 1 ) {  // empty user , retry
 				// show authentication form once again with warning message
-				String sMsg = _configManager.getErrorMessage(Errors.DELEGATOR_INVALID_USER_PASSWORD_FORMAT, _oErrorProperties);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Msg="+sMsg+" props="+_oErrorProperties.toString());
-				showAuthenticateForm(pwOut, Errors.DELEGATOR_INVALID_USER_PASSWORD_FORMAT, sMsg, htServiceRequest);
+				showAuthenticateForm(pwOut, Errors.DELEGATOR_INVALID_USER_PASSWORD_FORMAT, htServiceRequest);
 			}
 			else {
 				// generate signature
@@ -789,11 +645,9 @@ public class DelegatorAuthSP extends AbstractAuthSP
 					
 					htServiceRequest.put(KEY_DELEGATE_CHALLENGE, sChallenge);
 					showChallengeForm(pwOut, null, null, htServiceRequest);
-
 					break;
 
 				default:	// default to retry / fail
-					
 					// Handle retries
 					if ( retry_counter < _iAllowedRetries ) {
 						retry_counter++;	// next time around
@@ -815,23 +669,20 @@ public class DelegatorAuthSP extends AbstractAuthSP
 						if (sLanguage != null)
 							htServiceRequest.put("language", sLanguage);
 						
-						
 						_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM htServiceRequest=" + htServiceRequest);
-						showAuthenticateForm(pwOut, null, null, htServiceRequest);
-					
-					} else {
+						showAuthenticateForm(pwOut, ""/*no error*/, htServiceRequest);
+					}
+					else {
 						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Too many retries" );
 						_authenticationLogger.log(new Object[] {
 							MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied", Errors.DELEGATOR_DELEGATE_FAIL
 							});
 						_systemLogger.log(Level.INFO, MODULE, sMethod, "Fail");
 						_systemLogger.log(Level.INFO, MODULE, sMethod, "responseparameters:" + responseparameters);
-					
-						handleResult(servletRequest, servletResponse, pwOut,  Integer.toString(iResultCode), sLanguage, failureHandling);
+						handleResult(servletRequest, servletResponse, pwOut, Integer.toString(iResultCode), sLanguage, failureHandling);
 					}					
 					break;
 				}
-
 			}
 		}
 		catch (ASelectException eAS) {
@@ -840,8 +691,7 @@ public class DelegatorAuthSP extends AbstractAuthSP
 		}
 		catch (IOException eIO) {  // could not send response
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error sending response", eIO);
-			if (!servletResponse.isCommitted()) {
-				// send response if no headers have been written
+			if (!servletResponse.isCommitted()) {  // send response if no headers have been written
 				servletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
 		}
@@ -861,22 +711,28 @@ public class DelegatorAuthSP extends AbstractAuthSP
 	 * Show an HTML authentication page. <br>
 	 * <br>
 	 * <b>Description:</b> <br>
-	 * Shows a authentication form with, if applicable, an error or warning message.
+	 * Shows a authentication form with, if applicable, an error or warning
+	 * message.
 	 * 
 	 * @param pwOut
-	 *            the <code>PrintWriter</code> that is the target for displaying the html page.
+	 *            the <code>PrintWriter</code> that is the target for displaying
+	 *            the html page.
 	 * @param sError
-	 *            The error that should be shown in the page. Can be null (no errors)
+	 *            The error that should be shown in the page. Can be null (no
+	 *            errors)
 	 * @param sErrorMessage
 	 *            The error message that should be shown in the page.
 	 * @param htServiceRequest
 	 *            The request parameters.
+	 * @throws ASelectException
 	 */
-	private void showAuthenticateForm(PrintWriter pwOut, String sError, String sErrorMessage, HashMap htServiceRequest)
+	private void showAuthenticateForm(PrintWriter pwOut, String sError, HashMap htServiceRequest)
+	throws ASelectException
 	{
 		String sMethod = "showAuthenticateForm";
 		
-		String sAuthenticateForm = new String(_sAuthenticateHtmlTemplate);
+		if (sError == null)
+			sError = "";
 		String sMyUrl = (String) htServiceRequest.get("my_url");
 		String sRid = (String) htServiceRequest.get("rid");
 		String sAsUrl = (String) htServiceRequest.get("as_url");
@@ -887,7 +743,17 @@ public class DelegatorAuthSP extends AbstractAuthSP
 		String sCountry = (String) htServiceRequest.get("country");
 		String sLanguage = (String) htServiceRequest.get("language");
 		
+		String sAuthenticateForm = Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, _sConfigID,
+				"authenticate.html", sLanguage, _sFriendlyName, VERSION);
+		
+		String sErrorMessage = null;
+		if (Utils.hasValue(sError)) {  // translate error code
+			Properties propErrorMessages = Utils.loadPropertiesFromFile(_systemLogger, _sWorkingDir, _sConfigID, "errors.conf", sLanguage);
+			sErrorMessage = _configManager.getErrorMessage(MODULE, sError, propErrorMessages);
+		}
+		
 		// RH, 20100907, sn
+		// NOTE: friendly name is taken from the request, not the value produced by init()
 		String sFriendlyName = (String) htServiceRequest.get("requestorfriendlyname");
 		if (sFriendlyName != null) {
 			try {
@@ -943,11 +809,11 @@ public class DelegatorAuthSP extends AbstractAuthSP
 	 *            The request parameters.
 	 */
 	private void showChallengeForm(PrintWriter pwOut, String sError, String sErrorMessage, HashMap htServiceRequest)
+	throws ASelectException
 	{
 		String sMethod = "showChallengeForm";
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, "htServiceRequest=" + htServiceRequest);
 
-		String sChallengeForm = new String(_sChallengeHtmlTemplate);
 		String sMyUrl = (String) htServiceRequest.get("my_url");
 		String sRid = (String) htServiceRequest.get("rid");
 		String sAsUrl = (String) htServiceRequest.get("as_url");
@@ -956,8 +822,11 @@ public class DelegatorAuthSP extends AbstractAuthSP
 		String sSignature = (String) htServiceRequest.get("signature");
 		String sRetryCounter = (String) htServiceRequest.get("retry_counter");
 		String sCountry = (String) htServiceRequest.get("country");
-		String sLanguage = (String) htServiceRequest.get("language");
 		String sChallenge = (String) htServiceRequest.get("delegate_challenge");
+		String sLanguage = (String) htServiceRequest.get("language");
+		
+		String sChallengeForm = Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, _sConfigID,
+						"challenge.html", sLanguage, _sFriendlyName, VERSION);
 		
 		// RH, 20100907, sn
 		String sFriendlyName = (String) htServiceRequest.get("requestorfriendlyname");
@@ -984,7 +853,6 @@ public class DelegatorAuthSP extends AbstractAuthSP
 		}
 		sChallengeForm = Utils.replaceString(sChallengeForm, "[country]", (sCountry != null)? sCountry: "");
 		sChallengeForm = Utils.replaceString(sChallengeForm, "[language]", (sLanguage != null)? sLanguage: "");
-
 		sChallengeForm = Utils.replaceString(sChallengeForm, "[delegate_challenge]",  sChallenge );
 
 		try {
@@ -1020,8 +888,7 @@ public class DelegatorAuthSP extends AbstractAuthSP
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut, String sResultCode, String sLanguage, String failureHandling)
 	{
-		handleResult(servletRequest, servletResponse,
-				pwOut, sResultCode, sLanguage, failureHandling, null);
+		handleResult(servletRequest, servletResponse, pwOut, sResultCode, sLanguage, failureHandling, null);
 	}
 	
 	/**
@@ -1039,7 +906,7 @@ public class DelegatorAuthSP extends AbstractAuthSP
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			PrintWriter pwOut, String sResultCode, String sLanguage, String failureHandling, Map<String, List<String>> responseParameters)
 	{
-		String sMethod = "handleResult()";
+		String sMethod = "handleResult";
 		StringBuffer sbTemp = null;
 		
 		try {
@@ -1047,7 +914,7 @@ public class DelegatorAuthSP extends AbstractAuthSP
 			sResultCode = translateResult(sResultCode);
 
 			// Prevent tampering with request parameters, potential fishing leak
-			if (failureHandling.equalsIgnoreCase("aselect") || sResultCode.equals(Errors.DELEGATOR_SUCCESS)) {
+			if (failureHandling.equalsIgnoreCase(DEFAULT_FAILUREHANDLING) || sResultCode.equals(Errors.DELEGATOR_SUCCESS)) {
 				// A-Select handles error or success
 				String sRid = servletRequest.getParameter("rid");
 				String sAsUrl = servletRequest.getParameter("as_url");
@@ -1064,8 +931,7 @@ public class DelegatorAuthSP extends AbstractAuthSP
 					_systemLogger.log(Level.FINEST, MODULE, sMethod, "sDelegateFields=" + sDelegateFields);
 				}
 				if (sRid == null || sAsUrl == null || sAsId == null) {
-					showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode,
-							_configManager.getErrorMessage(sResultCode, _oErrorProperties), sLanguage, _systemLogger);
+					getTemplateAndShowErrorPage(pwOut, sResultCode, sResultCode, sLanguage, VERSION);
 				}
 				else {
 					sbTemp = new StringBuffer(sRid);
@@ -1114,22 +980,26 @@ public class DelegatorAuthSP extends AbstractAuthSP
 				}
 			}
 			else {  // Local error handling
-				showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-						_oErrorProperties), sLanguage, _systemLogger);
+				getTemplateAndShowErrorPage(pwOut, sResultCode, sResultCode, sLanguage, VERSION);
 			}
 		}
 		catch (ASelectException eAS) {  // could not generate signature
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate Delegator AuthSP signature", eAS);
-			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.DELEGATOR_DELEGATE_FAIL, _configManager
-					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage, _systemLogger);
+			try {
+				getTemplateAndShowErrorPage(pwOut, sResultCode, Errors.DELEGATOR_DELEGATE_FAIL, sLanguage, VERSION);
+			}
+			catch (ASelectException e) {
+			}
 		}
 		catch (UnsupportedEncodingException eUE) {  // could not encode signature
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode Delegator AuthSP signature", eUE);
-			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.DELEGATOR_DELEGATE_FAIL, _configManager
-					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage, _systemLogger);
+			try {
+				getTemplateAndShowErrorPage(pwOut, sResultCode, Errors.DELEGATOR_DELEGATE_FAIL, sLanguage, VERSION);
+			}
+			catch (ASelectException e) {
+			}
 		}
 	}
-
 
 	/**
 	 * Translate delegator resultcode to server DelegatorAuthSPHandler resultcode.
@@ -1141,12 +1011,9 @@ public class DelegatorAuthSP extends AbstractAuthSP
 		if (Errors.DELEGATOR_DELEGATE_SUCCESS.equals(resultcode) || Errors.DELEGATOR_DELEGATE_SUCCESS_NO_CONTENT.equals(resultcode)) {	
 			// For testing we allow DELEGATOR_DELEGATE_SUCCESS_NO_CONTENT
 			return Errors.DELEGATOR_SUCCESS;
-		} else {	// Default to invalid request
+		}
+		else {	// Default to invalid request
 			return Errors.DELEGATOR_INVALID_REQUEST;
 		}
-		
-		
 	}
-	
-	
 }

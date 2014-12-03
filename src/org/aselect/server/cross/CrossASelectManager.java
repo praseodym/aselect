@@ -292,7 +292,7 @@ public class CrossASelectManager
 	public void init()
 	throws ASelectConfigException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		_oASelectConfigManager = ASelectConfigManager.getHandle();
 		_systemLogger = ASelectSystemLogger.getHandle();
 		_bRemoteServersEnabled = false;
@@ -380,7 +380,7 @@ public class CrossASelectManager
 	 */
 	public boolean isForcedAuthenticateEnabled(String sOrg)
 	{
-		String sMethod = "isForcedAuthenticateEnabled()";
+		String sMethod = "isForcedAuthenticateEnabled";
 		boolean bForced = false;
 		try {
 			Boolean boolForced = (Boolean) _htForcedOrganisations.get(sOrg.toLowerCase());
@@ -481,7 +481,7 @@ public class CrossASelectManager
 	public String getRemoteParam(String sOrgId, String sName)
 	{
 		String sReturn = null;
-		String sMethod = "getRemoteParam()";
+		String sMethod = "getRemoteParam";
 		Object oRemoteOrg = null;
 
 		try {
@@ -537,7 +537,7 @@ public class CrossASelectManager
 	public String getLocalParam(String sOrgId, String sName)
 	{
 		String sReturn = null;
-		String sMethod = "getLocalParam()";
+		String sMethod = "getLocalParam";
 		Object oLocalOrg = null;
 
 		try {
@@ -598,7 +598,7 @@ public class CrossASelectManager
 	throws ASelectException
 	{
 		String sReturn = null;
-		String sMethod = "getOptionalLocalParam()";
+		String sMethod = "getOptionalLocalParam";
 		Object oLocalOrg = null;
 
 		try {
@@ -672,7 +672,7 @@ public class CrossASelectManager
 	 */
 	public String getHandlerConfig(String sKey)
 	{
-		String sMethod = "getHandlerConfig()";
+		String sMethod = "getHandlerConfig";
 		String sValue;
 		try {
 			sValue = _oASelectConfigManager.getParam(_oHandlerConfigSection, sKey);
@@ -749,7 +749,7 @@ public class CrossASelectManager
 	private boolean loadLocalServerSettings()
 	throws ASelectException
 	{
-		String sMethod = "loadLocalServerSettings()";
+		String sMethod = "loadLocalServerSettings";
 		Object oLocalServer = null;
 		try {
 			_oLocalConfigSection = _oASelectConfigManager.getSection(_oCrossConfigSection, "local_servers");
@@ -878,7 +878,7 @@ public class CrossASelectManager
 	private boolean loadRemoteServerSettings()
 	throws ASelectException
 	{
-		String sMethod = "loadRemoteServerSettings()";
+		String sMethod = "loadRemoteServerSettings";
 		_htRemoteServers = new HashMap();
 		try {
 			_oRemoteConfigSection = _oASelectConfigManager.getSection(_oCrossConfigSection, "remote_servers");
@@ -959,7 +959,7 @@ public class CrossASelectManager
 	private boolean loadRemoteSelectorSettings()
 	throws ASelectException
 	{
-		String sMethod = "loadRemoteSelectorSettings()";
+		String sMethod = "loadRemoteSelectorSettings";
 		Object ocross_selector_ConfigSection;
 		try {
 			ocross_selector_ConfigSection = _oASelectConfigManager.getSection(_oCrossConfigSection, "cross_selector");
@@ -1013,7 +1013,7 @@ public class CrossASelectManager
 	private void loadLocalServerSigningKeys(String sWorkingDir)
 	throws ASelectException
 	{
-		String sMethod = "loadLocalServerSigningKeys()";
+		String sMethod = "loadLocalServerSigningKeys";
 
 		try {
 			// Build local_servers.keystore path
@@ -1061,7 +1061,7 @@ public class CrossASelectManager
 	private PublicKey loadPublicKeyFromKeystore(String sKeystorePath, String sAlias)
 	throws ASelectException
 	{
-		String sMethod = "loadPublicKeyFromKeystore()";
+		String sMethod = "loadPublicKeyFromKeystore";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Loading public key " + sAlias + " from " + sKeystorePath);
 		try {
 			sAlias = sAlias.toLowerCase();

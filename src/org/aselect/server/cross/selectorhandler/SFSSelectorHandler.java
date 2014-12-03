@@ -121,7 +121,7 @@ public class SFSSelectorHandler implements ISelectorHandler
 {
 	// Name of this module, used for logging
 	private static final String MODULE = "SFSSelectorHandler";
-	private String _sCrossRegexSelectorPage;
+	//private String _sCrossRegexSelectorPage;
 	private String _sFriendlyName;
 	private ASelectConfigManager _configManager;
 	private ASelectSystemLogger _systemLogger;
@@ -129,7 +129,6 @@ public class SFSSelectorHandler implements ISelectorHandler
 	private Vector _vPatterns;
 	private String _sMyServerId;
 	private String _sMyOrgId;
-	private static final String _sHtmlTemplateName = "sfscrossselect.html";
 	private CrossASelectManager _crossAselectManager;
 	// RM_26_01
 	private static final int COOKIE_AGE = 3153600;
@@ -167,12 +166,12 @@ public class SFSSelectorHandler implements ISelectorHandler
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to load basic A-Select configuration", e);
 				throw new ASelectConfigException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
-			try {
-				loadHTMLTemplates();
+			try {  // pre-load the default
+				Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(), null/*subdir*/,
+						"sfscrossselect", null/*language*/, _configManager.getOrgFriendlyName(), Version.getVersion());
 			}
 			catch (ASelectException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to load SFS Cross Selector HTML templates.",
-						e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to load SFS Cross Selector HTML templates.", e);
 				throw new ASelectConfigException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 			try {
@@ -262,7 +261,6 @@ public class SFSSelectorHandler implements ISelectorHandler
 								_htSFSOrganizations.put(sFriendlyName, ht);
 						}
 						oIdpCfg = _configManager.getNextSection(oIdpCfg);
-
 					}
 				}
 				catch (ASelectConfigException e) {
@@ -412,74 +410,12 @@ public class SFSSelectorHandler implements ISelectorHandler
 		return htResult;
 	}
 
-	// Private function which loads the HTML Templates
-	/**
-	 * Load html templates.
-	 * 
-	 * @throws ASelectException
-	 *             the a select exception
-	 */
-	private void loadHTMLTemplates()
-	throws ASelectException
-	{
-		String sWorkingdir = new StringBuffer(_configManager.getWorkingdir()).append(File.separator).append("conf")
-				.append(File.separator).append("html").append(File.separator).toString();
-
-		_sCrossRegexSelectorPage = loadHTMLTemplate(sWorkingdir + _sHtmlTemplateName);
-
-		_sCrossRegexSelectorPage = Utils.replaceString(_sCrossRegexSelectorPage, "[version]", Version.getVersion());
-		_sCrossRegexSelectorPage = Utils.replaceString(_sCrossRegexSelectorPage, "[organization_friendly]",
-				_sFriendlyName);
-	}
-
-	// Private funtion which load the HTML template on location sLocation.
-	/**
-	 * Load html template.
-	 * 
-	 * @param sLocation
-	 *            the s location
-	 * @return the string
-	 * @throws ASelectException
-	 *             the a select exception
-	 */
-	private String loadHTMLTemplate(String sLocation)
-	throws ASelectException
-	{
-		String sTemplate = new String();
-		String sLine;
-		BufferedReader brIn = null;
-		String sMethod = "loadHTMLTemplate()";
-		try {
-			brIn = new BufferedReader(new InputStreamReader(new FileInputStream(sLocation)));
-			while ((sLine = brIn.readLine()) != null) {
-				sTemplate += sLine + "\n";
-			}
-		}
-		catch (Exception e) {
-			StringBuffer sbError = new StringBuffer("Could not load '");
-			sbError.append(sLocation).append("'HTML template.");
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-		}
-		finally {
-			try {
-				brIn.close();
-			}
-			catch (Exception e) {
-				StringBuffer sbError = new StringBuffer("Could not close '");
-				sbError.append(sLocation).append("' FileInputStream.");
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
-			}
-		}
-		return sTemplate;
-	}
-
 	// private function which shows the authentication form if no user_id was provided
 	/**
 	 * Show authentication form.
 	 * 
 	 * @param htServiceRequest
-	 *            the ht service request
+	 *            the service request
 	 * @param pwOut
 	 *            the pw out
 	 * @param sErrorCode
@@ -489,8 +425,7 @@ public class SFSSelectorHandler implements ISelectorHandler
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
-	private void showAuthenticationForm(HashMap htServiceRequest, PrintWriter pwOut, String sErrorCode,
-			String sDefaultHomeIdp)
+	private void showAuthenticationForm(HashMap htServiceRequest, PrintWriter pwOut, String sErrorCode, String sDefaultHomeIdp)
 	throws ASelectException
 	{
 		String sMethod = "showAuthenticationForm";
@@ -506,9 +441,11 @@ public class SFSSelectorHandler implements ISelectorHandler
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "parameter 'my_url' not found in service request");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
+			
 			String sLanguage = (String) htServiceRequest.get("language");
-
-			String sLoginForm = _sCrossRegexSelectorPage;
+			String sLoginForm = Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(), null/*subdir*/,
+						"sfscrossselect", sLanguage, _configManager.getOrgFriendlyName(), Version.getVersion());
+			
 			sLoginForm = Utils.replaceString(sLoginForm, "[rid]", sRid);
 			sLoginForm = Utils.replaceString(sLoginForm, "[aselect_url]", sMyUrl);
 			sLoginForm = Utils.replaceString(sLoginForm, "[request]", "cross_login");
@@ -516,7 +453,7 @@ public class SFSSelectorHandler implements ISelectorHandler
 
 			String sErrorMessage = null;
 			if (sErrorCode != null) {
-				sErrorMessage = _configManager.getErrorMessage(sErrorCode);
+				sErrorMessage = _configManager.getErrorMessage(MODULE, sErrorCode, sLanguage, "");
 				sLoginForm = Utils.replaceString(sLoginForm, "[error_message]", sErrorMessage);
 				sLoginForm = Utils.replaceString(sLoginForm, "[language]", sLanguage);
 			}
@@ -564,6 +501,7 @@ public class SFSSelectorHandler implements ISelectorHandler
 	private String getRemoteServerHTML(HashMap htServers, String sDefaultRemoteOrg)
 	{
 		String sMethod = "getRemoteServerHTML";
+		
 		String sResult = new String();
 		String sOrganization;
 		String sFriendlyName;

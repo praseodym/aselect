@@ -192,7 +192,7 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 	public void processRequest()
 	throws ASelectException
 	{
-		String sMethod = "processRequest()";
+		String sMethod = "processRequest";
 		PrintWriter pwOut = null;
 		HashMap htServiceRequest = null;
 		try {
@@ -267,13 +267,13 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 	 */
 	protected void showErrorPage(String sErrorCode, HashMap htServiceRequest, PrintWriter pwOut)
 	{
-		String sMethod = "showErrorPage()";
+		String sMethod = "showErrorPage";
 		try {
 			String sLanguage = (String) htServiceRequest.get("language");
-			String sErrorForm = _configManager.getForm("error");
+			String sErrorForm = _configManager.getHTMLForm("error", "", "");
 			sErrorForm = Utils.replaceString(sErrorForm, "[error]", sErrorCode);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", sErrorCode);
-			String sErrorMessage = _configManager.getErrorMessage(sErrorCode);
+			String sErrorMessage = _configManager.getErrorMessage(_sModule, sErrorCode, sLanguage, "");
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
 			sErrorForm = Utils.replaceString(sErrorForm, "[language]", sLanguage);
 

@@ -126,7 +126,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 
 	private String _sMyServerId = null;
 	private String _sFriendlyName = null;
-	private String _sHTMLSelectForm = null;
+	//private String _sHTMLSelectForm = null;
 	private String _sIdPQueryServerId = null;
 	private String _sIdPQueryServerResourceGroup = null;
 	private String _sIdPQueryServerRequest = null;
@@ -134,8 +134,6 @@ public class IdpSelectorHandler implements ISelectorHandler
 
 	// RM_25_01
 	private static final int COOKIE_AGE = 31536000;
-	
-	private static final String _sHtmlTemplateName = "idpcrossselect.html";
 
 	/**
 	 * Initialization of this Handler. Initializes global class-variables that are needed within the whole handler
@@ -198,7 +196,9 @@ public class IdpSelectorHandler implements ISelectorHandler
 				throw e;
 			}
 
-			loadHTMLTemplates();
+			// pre-load select form
+			Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(), null/*subdir*/,
+					"idpcrossselect", null/*language*/, _configManager.getOrgFriendlyName(), Version.getVersion());
 		}
 		catch (ASelectException e) {
 			// Already handled.
@@ -229,7 +229,7 @@ public class IdpSelectorHandler implements ISelectorHandler
 	public HashMap getRemoteServerId(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 	throws ASelectException
 	{
-		String sMethod = "IdpSelectorHandler.getRemoteServerId";
+		String sMethod = "getRemoteServerId";
 		HashMap htReturn = null;
 
 		String sRemoteOrg = (String) htServiceRequest.get("remote_organization");
@@ -237,10 +237,8 @@ public class IdpSelectorHandler implements ISelectorHandler
 		String sHomeOrg = (String) htServiceRequest.get("home_organization");
 		String sUid = (String) htServiceRequest.get("user_id");
 
-		_systemLogger.log(Level.FINER, MODULE, sMethod, "remote_organization: " + sRemoteOrg);
-		_systemLogger.log(Level.FINER, MODULE, sMethod, "home_idp: " + sHomeIdpFriendlyName);
-		_systemLogger.log(Level.FINER, MODULE, sMethod, "home_organization: " + sHomeOrg);
-		_systemLogger.log(Level.FINER, MODULE, sMethod, "user_id: " + sUid);
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "remote_organization=" + sRemoteOrg+
+			" home_idp=" + sHomeIdpFriendlyName+" home_organization=" + sHomeOrg+" user_id=" + sUid);
 
 		if ((sRemoteOrg != null) && (!sRemoteOrg.equalsIgnoreCase(""))) {
 			htReturn = new HashMap();
@@ -304,7 +302,10 @@ public class IdpSelectorHandler implements ISelectorHandler
 	{
 		String sMethod = "showSelectForm";
 		try {
-			String sSelectForm = _sHTMLSelectForm;
+			String sLanguage = (String) htServiceRequest.get("language");  // if present
+			String sSelectForm = Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(), null/*subdir*/,
+					"idpcrossselect", sLanguage, _configManager.getOrgFriendlyName(), Version.getVersion());
+
 			String sRemoteServerUrl = null;
 			String sRid = (String) htServiceRequest.get("rid");
 			String sMyUrl = (String) htServiceRequest.get("my_url");
@@ -388,88 +389,6 @@ public class IdpSelectorHandler implements ISelectorHandler
 		return sResult;
 	}
 
-	/**
-	 * Loads all HTML Templates needed. <br>
-	 * <br>
-	 * <b>Description:</b> <br>
-	 * At initialization all HTML templates are loaded once.<br>
-	 * 
-	 * @throws ASelectException
-	 * <br>
-	 * <br>
-	 *             <b>Concurrency issues:</b> <br>
-	 *             Run once at startup. <br>
-	 * <br>
-	 *             <b>Preconditions:</b> <br>
-	 *             Manager and ISelectorHandler should be initialized. <br>
-	 * <br>
-	 *             <b>Postconditions:</b> <br>
-	 *             Global HashMap _htHtmlTemplates variabele contains the templates. <br>
-	 */
-	private void loadHTMLTemplates()
-	throws ASelectException
-	{
-		String sMethod = "loadHTMLTemplates";
-		try {
-
-			String sWorkingdir = new StringBuffer(_configManager.getWorkingdir()).append(File.separator).append("conf")
-					.append(File.separator).append("html").append(File.separator).toString();
-
-			_sHTMLSelectForm = loadHTMLTemplate(sWorkingdir + _sHtmlTemplateName);
-
-			_sHTMLSelectForm = Utils.replaceString(_sHTMLSelectForm, "[version]", Version.getVersion());
-			_sHTMLSelectForm = Utils.replaceString(_sHTMLSelectForm, "[organization_friendly]", _sFriendlyName);
-		}
-		catch (ASelectException e) {
-			throw e;
-		}
-		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Unexpected runtime error occurred :", e);
-			throw new ASelectException(Errors.ERROR_ASELECT_AGENT_INTERNAL_ERROR);
-		}
-
-	}
-
-	/**
-	 * Load html template.
-	 * 
-	 * @param sLocation
-	 *            the s location
-	 * @return the string
-	 * @throws ASelectException
-	 *             the a select exception
-	 */
-	private String loadHTMLTemplate(String sLocation)
-	throws ASelectException
-	{
-		String sTemplate = new String();
-		String sLine;
-		BufferedReader brIn = null;
-		String sMethod = "loadHTMLTemplate";
-		try {
-			brIn = new BufferedReader(new InputStreamReader(new FileInputStream(sLocation)));
-			while ((sLine = brIn.readLine()) != null) {
-				sTemplate += sLine + "\n";
-			}
-		}
-		catch (Exception e) {
-			StringBuffer sbError = new StringBuffer("Could not load '");
-			sbError.append(sLocation).append("'HTML template.");
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-		}
-		finally {
-			try {
-				brIn.close();
-			}
-			catch (Exception e) {
-				StringBuffer sbError = new StringBuffer("Could not close '");
-				sbError.append(sLocation).append("' FileInputStream.");
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
-			}
-		}
-		return sTemplate;
-	}
 
 	/**
 	 * Gets the idp query server resource group.

@@ -363,7 +363,7 @@ public class RequestHandlerFactory
 	private boolean matchTarget(HttpServletRequest request, Pattern pTargetPattern)
 	throws ASelectException
 	{
-		String sMethod = "matchTarget()";
+		String sMethod = "matchTarget";
 		boolean bReturn = false;
 		StringBuffer sbCompareTo = new StringBuffer();
 
@@ -426,10 +426,10 @@ public class RequestHandlerFactory
 		Locale loc = request.getLocale();
 		String _sUserLanguage = loc.getLanguage();
 		String _sUserCountry = loc.getCountry();
-		String sErrorMessage = _configManager.getErrorMessage(sErrorCode, _sUserLanguage, _sUserCountry);
+		String sErrorMessage = _configManager.getErrorMessage(MODULE, sErrorCode, _sUserLanguage, _sUserCountry);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM[error] " + sErrorCode + ":" + sErrorMessage);
 		try {
-			String sErrorForm = _configManager.getForm("error", _sUserLanguage, _sUserCountry);
+			String sErrorForm = _configManager.getHTMLForm("error", _sUserLanguage, _sUserCountry);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error]", sErrorCode);  // obsoleted 20100817
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", sErrorCode);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);

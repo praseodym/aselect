@@ -21,9 +21,6 @@
 package org.aselect.authspserver.authsp.pki;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
@@ -38,21 +35,18 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.authspserver.authsp.AbstractAuthSP;
+import org.aselect.authspserver.authsp.pki.Errors;
 import org.aselect.authspserver.authsp.pki.cert.handler.ICertificateHandler;
 import org.aselect.authspserver.authsp.pki.cert.handler.ldap.LDAPCertificateHandler;
-import org.aselect.authspserver.config.AuthSPConfigManager;
-import org.aselect.authspserver.crypto.CryptoEngine;
-import org.aselect.authspserver.log.AuthSPAuthenticationLogger;
-import org.aselect.authspserver.log.AuthSPSystemLogger;
 import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.BASE64Encoder;
@@ -76,26 +70,21 @@ import org.aselect.system.utils.Utils;
  *         optionally skip the Subject DN check, controled by the <subject_validation> parameter
  * @author Bauke Hiemstra - www.anoigo.nl Copyright UMC Nijmegen (http://www.umcn.nl)
  */
-public class PKIAuthSP extends HttpServlet
+public class PKIAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodies from AbstractAuthSP
 {
+	private static final long serialVersionUID = 1L;
+
 	/** The name of this module, that is used in the system logging. */
 	public static final String MODULE = "PKIAuthSP";
 
-	private String _sVersion = "1.0";
-	private String _sErrorHtmlTemplate = "";
-	private String _sTFHtmlTemplate = "";
-	private String _sFriendlyName = null;
-	private String _sWorkingDir = null;
-	private CryptoEngine _oCryptoEngine = null;
-
-	/** The logger that logs authentication information. */
-	private AuthSPAuthenticationLogger _authenticationLogger;
-
-	/** The logger that logs system information. */
-	private AuthSPSystemLogger _systemLogger;
-
-	private AuthSPConfigManager _oConfigManager = null;
-	private Object _oAuthSpConfig = null;
+	private String VERSION = "PKI AuthSP 2.0";
+	
+	//private String _sErrorHtmlTemplate = "";
+	//private String _sTFHtmlTemplate = "";
+	//private String _sFriendlyName = null;
+	//private String _sWorkingDir = null;
+	//private Object _oAuthSpConfig = null;
+	
 	private PKIManager _oPkiManager = null;
 
 	/**
@@ -114,58 +103,19 @@ public class PKIAuthSP extends HttpServlet
 	{
 		String sMethod = "init";
 		try {
-			super.init(oServletConfig);
+			super.init(oServletConfig, true, Errors.PKI_CONFIG_ERROR);
 
-			ServletContext oServletContext = oServletConfig.getServletContext();
+			StringBuffer sbInfo = new StringBuffer("Starting : ").append(MODULE);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
+
+			// Pre-load html templates
+			Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, "pki", "error.html", null, _sFriendlyName, VERSION);
+			Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, "pki", "twofactor.html", null, _sFriendlyName, VERSION);
 
 			try {
-				_systemLogger = AuthSPSystemLogger.getHandle();
-				_authenticationLogger = AuthSPAuthenticationLogger.getHandle();
-			}
-			catch (Exception e) {
-				System.out.println(e.getMessage());
-				throw new ServletException("Error occured by init SystemLogger");
-			}
-
-			_sWorkingDir = (String) oServletContext.getAttribute("working_dir");
-			if (_sWorkingDir == null) {
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "working_dir attribute not found");
-				throw new ServletException("working_dir attribute not found");
-			}
-			_oConfigManager = AuthSPConfigManager.getHandle();
-
-			// Retrieve configuration
-			String sConfigID = oServletConfig.getInitParameter("config_id");
-			if (sConfigID == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'config_id' found as init-parameter in web.xml.");
-				throw new ASelectException(Errors.PKI_INTERNAL_SERVER_ERROR);
-			}
-			try {
-				_oAuthSpConfig = _oConfigManager.getSection(null, "authsp", "id=" + sConfigID);
-			}
-			catch (ASelectConfigException e) {
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, e.getMessage(), e);
-				throw new ServletException(
-						"Error occured by init PKI AuthSP, see the PKI AuthSP log files for more information");
-			}
-
-			_oCryptoEngine = (CryptoEngine) oServletContext.getAttribute("CryptoEngine");
-			if (_oCryptoEngine == null) {
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "CryptoEngine not found");
-				throw new ServletException("CryptoEngine not found");
-			}
-
-			_sFriendlyName = (String) oServletContext.getAttribute("friendly_name");
-			if (_sFriendlyName == null) {
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "friendly_name attribute not found");
-				throw new ServletException("friendly_name attribute not found");
-			}
-			initHtmlTemplates();
-			try {
-				Object oCaValidationConfig = _oConfigManager.getSection(_oAuthSpConfig, "ca_validation");
+				Object oCaValidationConfig = _configManager.getSection(_oAuthSpConfig, "ca_validation");
 				_oPkiManager = new PKIManager();
 				_oPkiManager.init(oCaValidationConfig, _systemLogger);
-
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to read 'ca_validation' configuration", e);
@@ -175,12 +125,14 @@ public class PKIAuthSP extends HttpServlet
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to initialize PKIManager", e);
 				throw e;
 			}
+			
+			sbInfo = new StringBuffer("Successfully started ").append(VERSION);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Initializing failed", e);
 			throw new ServletException("Initializing failed");
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "PKI AuthSP successfully initialized.");
 	}
 
 	/**
@@ -193,67 +145,6 @@ public class PKIAuthSP extends HttpServlet
 		_systemLogger.log(Level.INFO, MODULE, "destroy", "Destroy PKIManager");
 		_oPkiManager.destroy();
 		super.destroy();
-	}
-
-	/**
-	 * Initializes the HTML Templates. <br>
-	 * <br>
-	 * <b>Description: </b> <br>
-	 * Initialize the Error and the Two Factor HTML Templates<br>
-	 * <br>
-	 * <b>Concurrency issues: </b> <br>
-	 * None<br>
-	 * <br>
-	 * <b>Preconditions: </b> <br>
-	 * None<br>
-	 * <br>
-	 * <b>Postconditions: </b> <br>
-	 * None<br>
-	 * 
-	 * @throws ServletException
-	 *             when a template file can't be found or read.
-	 */
-	public void initHtmlTemplates()
-	throws ServletException
-	{
-		StringBuffer sbTemp;
-		String sMethod = "initHtmlTemplates";
-		String sLine = null;
-		BufferedReader oBufInputReader;
-
-		try {
-			sbTemp = new StringBuffer(_sWorkingDir);
-			sbTemp.append(File.separator).append("conf").append(File.separator);
-			sbTemp.append("pki").append(File.separator).append("html");
-			sbTemp.append(File.separator).append("error.html");
-			oBufInputReader = new BufferedReader(new InputStreamReader(new FileInputStream(sbTemp.toString())));
-			while ((sLine = oBufInputReader.readLine()) != null) {
-				_sErrorHtmlTemplate += sLine;
-			}
-			_sErrorHtmlTemplate = Utils.replaceString(_sErrorHtmlTemplate, "[version]", _sVersion);
-			_sErrorHtmlTemplate = Utils.replaceString(_sErrorHtmlTemplate, "[organization_friendly]", _sFriendlyName);
-
-			sbTemp = new StringBuffer(_sWorkingDir);
-			sbTemp.append(File.separator).append("conf").append(File.separator);
-			sbTemp.append("pki").append(File.separator).append("html");
-			sbTemp.append(File.separator).append("twofactor.html");
-			oBufInputReader = new BufferedReader(new InputStreamReader(new FileInputStream(sbTemp.toString())));
-			while ((sLine = oBufInputReader.readLine()) != null) {
-				_sTFHtmlTemplate += sLine + "\r";
-			}
-			_sTFHtmlTemplate = Utils.replaceString(_sTFHtmlTemplate, "[version]", _sVersion);
-			_sTFHtmlTemplate = Utils.replaceString(_sTFHtmlTemplate, "[organization_friendly]", _sFriendlyName);
-		}
-		catch (FileNotFoundException e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, e.getMessage(), e);
-			throw new ServletException(
-					"Error occured by init PKI AuthSP, see the PKI AuthSP log files for more information");
-		}
-		catch (IOException e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, e.getMessage(), e);
-			throw new ServletException(
-					"Error occured by init PKI AuthSP, see the PKI AuthSP log files for more information");
-		}
 	}
 
 	/**
@@ -294,7 +185,7 @@ public class PKIAuthSP extends HttpServlet
 
 			sbTemp = new StringBuffer(sRid).append(sAsUrl).append(sUserAttributes).append(sAsId).append(sTFAuthSpName)
 					.append(sTFAuthSpUrl).append(sTFAuthSpUserAttributes).append(sRetryCounter).append(sMyUrl);
-			String sGeneratedSignature = _oCryptoEngine.generateSignature(sbTemp.toString());
+			String sGeneratedSignature = _cryptoEngine.generateSignature(sbTemp.toString());
 			if (!sGeneratedSignature.equals(sSignature)) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Invalid signature");
 				throw new ASelectException(Errors.PKI_INVALID_REQUEST);
@@ -420,22 +311,14 @@ public class PKIAuthSP extends HttpServlet
 	public void handleAuthenticate(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ServletException
 	{
+		String sMethod = "handleAuthenticate";
 		String sResultCode = Errors.PKI_CLIENT_CERT_SUCCESS;
 		StringBuffer sbTemp;
 		
-		// RH, 20131216, so
-//		String sSubjectDN = ""; // Bauke: added
-//		String sIssuerDN = ""; // Bauke: added
-//		String sSubjectId = ""; // Bauke: added
-		// RH, 20131216, eo
-		
-		// RH, 20131216, sn
 		String sSubjectDN = null;
 		String sIssuerDN = null;
 		String sSubjectId = null;
-		// RH, 20131216, en
 		
-		String sMethod = "handleAuthenticate";
 		try {
 			X509Certificate[] oCerts = null;
 			X509Certificate oClientCert = null;
@@ -447,16 +330,16 @@ public class PKIAuthSP extends HttpServlet
 			String sBinBlobCheck = "false";
 			String sUserAttributes = servletRequest.getParameter("user_attribute");
 			// Read some necessary information from the configuration file
-			Object oValidationConfig = _oConfigManager.getSection(_oAuthSpConfig, "date_validation");
-			sValidateDateCheck = _oConfigManager.getParam(oValidationConfig, "enabled");
-			Object oCaValidationConfig = _oConfigManager.getSection(_oAuthSpConfig, "ca_validation");
-			sSignedByCaCheck = _oConfigManager.getParam(oCaValidationConfig, "enabled");
+			Object oValidationConfig = _configManager.getSection(_oAuthSpConfig, "date_validation");
+			sValidateDateCheck = _configManager.getParam(oValidationConfig, "enabled");
+			Object oCaValidationConfig = _configManager.getSection(_oAuthSpConfig, "ca_validation");
+			sSignedByCaCheck = _configManager.getParam(oCaValidationConfig, "enabled");
 
 			// Bauke: added option to skip the SubjectDN check
 			String sValidateSubjectCheck = "true";
 			try {
-				Object oCnValidationConfig = _oConfigManager.getSection(_oAuthSpConfig, "subject_validation");
-				sValidateSubjectCheck = _oConfigManager.getParam(oCnValidationConfig, "enabled");
+				Object oCnValidationConfig = _configManager.getSection(_oAuthSpConfig, "subject_validation");
+				sValidateSubjectCheck = _configManager.getParam(oCnValidationConfig, "enabled");
 			}
 			catch (ASelectConfigException e) {
 			}
@@ -497,9 +380,9 @@ public class PKIAuthSP extends HttpServlet
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "CA cert: " + sCaAlias + " is expired.");
 					throw new ASelectException(Errors.PKI_CA_CERT_IS_EXPIRED);
 				}
-				Object oCaConfig = _oConfigManager.getSection(oCaValidationConfig, "ca", "alias=" + sCaAlias);
-				Object oCrlConfig = _oConfigManager.getSection(oCaConfig, "crl_check");
-				sCrlCheck = _oConfigManager.getParam(oCrlConfig, "enabled");
+				Object oCaConfig = _configManager.getSection(oCaValidationConfig, "ca", "alias=" + sCaAlias);
+				Object oCrlConfig = _configManager.getSection(oCaConfig, "crl_check");
+				sCrlCheck = _configManager.getParam(oCrlConfig, "enabled");
 				if (!sCrlCheck.equalsIgnoreCase("false")) {
 					if (_oPkiManager.isClientCertRevoked(sCaAlias, oClientCert)) {
 						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Client Certifcate is Revoked.");
@@ -508,8 +391,8 @@ public class PKIAuthSP extends HttpServlet
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "CA Cert alias=" + sCaAlias + " OK");
 				}
 
-				Object oBinBlobConfig = _oConfigManager.getSection(oCaConfig, "binary_blob_check");
-				sBinBlobCheck = _oConfigManager.getParam(oBinBlobConfig, "enabled");
+				Object oBinBlobConfig = _configManager.getSection(oCaConfig, "binary_blob_check");
+				sBinBlobCheck = _configManager.getParam(oBinBlobConfig, "enabled");
 				if (sBinBlobCheck.equalsIgnoreCase("true")) {
 					if (!validateBinaryBlob(oBinBlobConfig, sUserAttributes, oClientCert)) {
 						_systemLogger.log(Level.WARNING, MODULE, sMethod, "Client Certifcate Blob is not valid.");
@@ -518,16 +401,11 @@ public class PKIAuthSP extends HttpServlet
 				}
 			}
 			// Bauke: Retrieve data
-//	RH, 20131216, so			
-//			sSubjectDN = oClientCert.getSubjectDN().toString().trim();
-//			sIssuerDN = oClientCert.getIssuerDN().toString().trim();
-//			RH, 20131216, eo			
-//			RH, 20131216, sn, allow for nulls	, although they shouldn't be	
 			if ( oClientCert.getSubjectDN() != null )
 				sSubjectDN = oClientCert.getSubjectDN().toString().trim();
 			if ( oClientCert.getIssuerDN() != null )
 				sIssuerDN = oClientCert.getIssuerDN().toString().trim();
-//			RH, 20131216, en			
+
 			try {
 				Collection altNames = oClientCert.getSubjectAlternativeNames();
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "altNames=" + altNames);
@@ -633,7 +511,7 @@ public class PKIAuthSP extends HttpServlet
 		ICertificateHandler oCertificateHandler = new LDAPCertificateHandler();
 
 		try {
-			Object oBackendConfig = _oConfigManager.getSection(oConfig, "backend");
+			Object oBackendConfig = _configManager.getSection(oConfig, "backend");
 			oCertificateHandler.init(_systemLogger, oBackendConfig);
 
 			oCertificates = oCertificateHandler.getCertificates(sSubjectDn);
@@ -686,6 +564,7 @@ public class PKIAuthSP extends HttpServlet
 	 *            the s subject id
 	 * @throws ServletException
 	 *             if something goes wrong during handling the response
+	 * @throws ASelectException 
 	 */
 	private void handleResult(HttpServletRequest servletRequest, HttpServletResponse servletResponse,
 			String sResultCode, String sSubjectDN, String sIssuerDN, String sSubjectId)
@@ -701,20 +580,31 @@ public class PKIAuthSP extends HttpServlet
 		String sLanguage = servletRequest.getParameter("language");
 
 		if (sRid == null || sAsUrl == null || sAsId == null) {
-			String sError = Errors.PKI_INVALID_REQUEST;
-			String sErrorMessage = "Invalid Request";
-			String sErrorForm = new String(_sErrorHtmlTemplate);
-			sErrorForm = Utils.replaceString(sErrorForm, "[error]", sError);  // obsoleted 20100817
-			sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", sError);
-			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
-			sErrorForm = Utils.replaceString(sErrorForm, "[language]", sLanguage);
-			sErrorForm = Utils.replaceConditional(sErrorForm, "[if_error,", ",", "]", sErrorMessage != null && !sErrorMessage.equals(""), _systemLogger);
-			try {
+
+			try {  // Translate error code
+				String sError = Errors.PKI_INVALID_REQUEST;
+				String sErrorMessage = null;
+				if (Utils.hasValue(sError)) {  // translate error code
+					Properties propErrorMessages = Utils.loadPropertiesFromFile(_systemLogger, _sWorkingDir, _sConfigID, "errors.conf", sLanguage);
+					sErrorMessage = _configManager.getErrorMessage(MODULE, sError, propErrorMessages);
+				}
+
+				String sErrorForm = Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, "pki", "error.html",
+						sLanguage, _sFriendlyName, VERSION);
+				sErrorForm = Utils.replaceString(sErrorForm, "[error]", sError);  // obsoleted 20100817
+				sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", sError);
+				sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
+				sErrorForm = Utils.replaceString(sErrorForm, "[language]", sLanguage);
+				sErrorForm = Utils.replaceConditional(sErrorForm, "[if_error,", ",", "]", sErrorMessage != null && !sErrorMessage.equals(""), _systemLogger);
 				sendPage(sErrorForm, servletRequest, servletResponse);
 			}
 			catch (IOException e) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Failed to show error message", e);
 				throw new ServletException("Failed to show error message");
+			}
+			catch (ASelectException e1) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Failed to retrieve template", e1);
+				throw new ServletException("Failed to retrieve template");
 			}
 			return;
 		}
@@ -755,7 +645,7 @@ public class PKIAuthSP extends HttpServlet
 //			RH, 20131216, en			
 
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign[" + sbTemp + "]");
-			sSignature = _oCryptoEngine.generateSignature(sbTemp.toString());
+			sSignature = _cryptoEngine.generateSignature(sbTemp.toString());
 			if (sSignature == null) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Error occured during signature creation");
 				throw new ServletException("Error occured during signature creation");
@@ -786,15 +676,13 @@ public class PKIAuthSP extends HttpServlet
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT: " + sbTemp);
 			servletResponse.sendRedirect(sbTemp.toString());
 
-			if (sResultCode.equals(Errors.PKI_CLIENT_CERT_SUCCESS)) // user authenticated
-			{
+			if (sResultCode.equals(Errors.PKI_CLIENT_CERT_SUCCESS)) {  // user authenticated
 				// Authentication successfull
 				_authenticationLogger.log(new Object[] {
 					MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "granted"
 				});
 			}
-			else {
-				// authenticate failed
+			else {  // authenticate failed
 				_authenticationLogger.log(new Object[] {
 					MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied: " + sResultCode
 				});
@@ -866,7 +754,7 @@ public class PKIAuthSP extends HttpServlet
 			sbTemp.append(sTFAuthSpRetries);
 			sbTemp.append(sTFAuthSpUserAttributes);
 		}
-		bValid = _oCryptoEngine.verifySignature(sAsId, sbTemp.toString(), sSignature);
+		bValid = _cryptoEngine.verifySignature(sAsId, sbTemp.toString(), sSignature);
 		return bValid;
 	}
 
@@ -904,7 +792,7 @@ public class PKIAuthSP extends HttpServlet
 	{
 		String sMethod = "handleTFAuthenticationRequest";
 		StringBuffer sbTemp;
-		String sTFHtmlTemplate = _sTFHtmlTemplate;
+		//String sTFHtmlTemplate = _sTFHtmlTemplate;
 
 		String sAsUrl = (String) htSessionInfo.get("as_url");
 		String sUserAttributes = (String) htSessionInfo.get("user_attribute");
@@ -922,9 +810,12 @@ public class PKIAuthSP extends HttpServlet
 		sbTemp = new StringBuffer(sRid).append(sAsUrl).append(sUserAttributes).append(sAsId).append(sTFAuthSpName)
 				.append(sTFAuthSpUrl).append(sTFAuthSpUserAttributes).append(sRetries).append(sMyUrl);
 
-		String sSignature = _oCryptoEngine.generateSignature(sbTemp.toString());
+		String sLanguage = servletRequest.getParameter("language");
+		String sTFHtmlTemplate = Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, "pki", "twofactor.html",
+								sLanguage, _sFriendlyName, VERSION);
+		
+		String sSignature = _cryptoEngine.generateSignature(sbTemp.toString());
 		sTFHtmlTemplate = Utils.replaceString(sTFHtmlTemplate, "[server]", sMyUrl);
-
 		sTFHtmlTemplate = Utils.replaceString(sTFHtmlTemplate, "[rid]", sRid);
 		sTFHtmlTemplate = Utils.replaceString(sTFHtmlTemplate, "[as_url]", sAsUrl);
 		sTFHtmlTemplate = Utils.replaceString(sTFHtmlTemplate, "[user_attribute]", sUserAttributes);
@@ -1075,14 +966,10 @@ public class PKIAuthSP extends HttpServlet
 	throws IOException
 	{
 		// disable caching
-		if (servletRequest.getProtocol().equals("HTTP/1.1"))// HTTP 1.1 protocol
-		// used
-		{
+		if (servletRequest.getProtocol().equals("HTTP/1.1")) {  // HTTP 1.1 protocol used
 			servletResponse.setHeader("Cache-Control", "no-cache, must-revalidate");
 		}
-		else
-		// other protocol versions
-		{
+		else {  // other protocol versions
 			servletResponse.setHeader("Pragma", "no-cache");
 		}
 		servletResponse.setHeader("Expires", "0"); // date in the past

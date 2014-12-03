@@ -144,7 +144,7 @@ public abstract class AbstractLDAPProtocolHandler implements ILDAPProtocolHandle
 	 */
 	public String authenticate(String sPassword)
 	{
-		String sMethod = "authenticate()";
+		String sMethod = "authenticate";
 		String sErrorCode = null;
 
 		if (!_bFullUid) {

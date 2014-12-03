@@ -12,7 +12,7 @@
 package org.aselect.authspserver.authsp.sms;
 
 /**
- * Contains specific DB AuthSP errors. <br>
+ * Contains specific SMS AuthSP errors. <br>
  * <br>
  * <b>Description:</b><br>
  * The DB result codes. <br>

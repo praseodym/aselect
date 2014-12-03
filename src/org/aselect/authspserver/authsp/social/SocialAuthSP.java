@@ -1,30 +1,20 @@
 package org.aselect.authspserver.authsp.social;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.aselect.authspserver.config.AuthSPConfigManager;
-import org.aselect.authspserver.crypto.CryptoEngine;
-import org.aselect.authspserver.log.AuthSPAuthenticationLogger;
-import org.aselect.authspserver.log.AuthSPSystemLogger;
-import org.aselect.authspserver.session.AuthSPSessionManager;
-import org.aselect.system.exception.ASelectConfigException;
+import org.aselect.authspserver.authsp.AbstractAuthSP;
 import org.aselect.system.exception.ASelectException;
-import org.aselect.system.servlet.ASelectHttpServlet;
 import org.aselect.system.utils.BASE64Decoder;
 import org.aselect.system.utils.BASE64Encoder;
 import org.aselect.system.utils.Utils;
@@ -42,7 +32,7 @@ import org.brickred.socialauth.util.SocialAuthUtil;
  * and id is the provider id from which you want to logout or disconnect in your application.
  * For more info http://code.google.com/p/socialauth/issues/detail?id=88 
  */
-public class SocialAuthSP extends ASelectHttpServlet
+public class SocialAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodies from AbstractAuthSP
 {
 	private static final long serialVersionUID = 1L;
 	/**
@@ -54,53 +44,13 @@ public class SocialAuthSP extends ASelectHttpServlet
 	 */
 	private static String VERSION = "Social AuthSP";
 
-	/** Default failure_handling option. */
-	private final static String DEFAULT_FAILUREHANDLING = "aselect";
-
 	// different from the server-rid
 	public static final String RID_POSTFIX = "_Social";
 
-	/**
-	 * The logger that logs authentication information
-	 */
-	private AuthSPAuthenticationLogger _authenticationLogger;
-	/**
-	 * The logger that logs system information
-	 */
-	private AuthSPSystemLogger _systemLogger;
-	/**
-	 * The config manager which contains the configuration
-	 */
-	private AuthSPConfigManager _configManager;
-
-	/** The Sessionmanager */
-	private AuthSPSessionManager _sessionManager;
-
-	/**
-	 * The AuthSP crypto engine
-	 */
-	private CryptoEngine _cryptoEngine;
-	/**
-	 * The workingdir configured in the web.xml of the AuthSP Server
-	 */
-	private String _sWorkingDir;
-	/**
-	 * Error page template
-	 */
-	private String _sErrorHtmlTemplate;
-	/**
-	 * <code>Properties</code> containing the error codes with the corresponding error messages
-	 */
-	private Properties _oErrorProperties;
-	/**
-	 * The AuthSP Server user friendly name
-	 */
-	private String _sFriendlyName;
-
-	private String _sFailureHandling;
-
+	//private String _sFailureHandling;
+	
 	private String _sUrlOverride;
-//	private SocialAuthManager _socialAuthManager;	
+	
 	/* (non-Javadoc)
 	 * @see org.aselect.system.servlet.ASelectHttpServlet#init(javax.servlet.ServletConfig)
 	 */
@@ -108,102 +58,15 @@ public class SocialAuthSP extends ASelectHttpServlet
 	throws ServletException
 	{
 		String sMethod = "init";
-		super.init(oConfig);
-
-		_systemLogger = AuthSPSystemLogger.getHandle();
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Start-up");
-		_authenticationLogger = AuthSPAuthenticationLogger.getHandle();
-		_configManager = AuthSPConfigManager.getHandle();
-		_sessionManager = AuthSPSessionManager.getHandle();
-		StringBuffer sbTemp = null;
 
 		try {
-			// Retrieve crypto engine from servlet context.
-			ServletContext oContext = oConfig.getServletContext();
-			_cryptoEngine = (CryptoEngine) oContext.getAttribute("CryptoEngine");
-			if (_cryptoEngine == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No CryptoEngine found in servlet context.");
-				throw new ASelectException(Errors.ERROR_SOCIAL_INTERNAL_ERROR);
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded CryptoEngine.");
-
-			// Retrieve friendly name
-			_sFriendlyName = (String) oContext.getAttribute("friendly_name");
-			if (_sFriendlyName == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'friendly_name' found in servlet context.");
-				throw new ASelectException(Errors.ERROR_SOCIAL_INTERNAL_ERROR);
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded friendly_name="+_sFriendlyName);
-
-			// Retrieve working directory
-			_sWorkingDir = (String) oContext.getAttribute("working_dir");
-			if (_sWorkingDir == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No working_dir found in servlet context.");
-				throw new ASelectException(Errors.ERROR_SOCIAL_INTERNAL_ERROR);
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded working_dir="+_sWorkingDir);
-
-			// Retrieve configuration
-			String sConfigID = oConfig.getInitParameter("config_id");
-			if (sConfigID == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'config_id' found as init-parameter in web.xml.");
-				throw new ASelectException(Errors.ERROR_SOCIAL_INTERNAL_ERROR);
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "config_id="+sConfigID);
-			
-			Object _oAuthSpConfig = null;
-			try {
-				_oAuthSpConfig = _configManager.getSection(null, "authsp", "id=" + sConfigID);
-			}
-			catch (ASelectConfigException eAC) {
-				sbTemp = new StringBuffer("No valid 'authsp' config section found with id='");
-				sbTemp.append(sConfigID);
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbTemp.toString(), eAC);
-				throw new ASelectException(Errors.ERROR_SOCIAL_INTERNAL_ERROR);
-			}
-
-			// Load error properties
-			StringBuffer sbErrorsConfig = new StringBuffer(_sWorkingDir);
-			sbErrorsConfig.append(File.separator).append("conf");
-			sbErrorsConfig.append(File.separator).append(sConfigID);
-			sbErrorsConfig.append(File.separator).append("errors");
-			sbErrorsConfig.append(File.separator).append("errors.conf");
-			File fErrorsConfig = new File(sbErrorsConfig.toString());
-			if (!fErrorsConfig.exists()) {
-				StringBuffer sbFailed = new StringBuffer("The error configuration file does not exist: \"");
-				sbFailed.append(sbErrorsConfig.toString()).append("\".");
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString());
-				throw new ASelectException(Errors.ERROR_SOCIAL_INTERNAL_ERROR);
-			}
-			_oErrorProperties = new Properties();
-			_oErrorProperties.load(new FileInputStream(sbErrorsConfig.toString()));
-			StringBuffer sbInfo = new StringBuffer("Successfully loaded ");
-			sbInfo.append(_oErrorProperties.size());
-			sbInfo.append(" error messages from: \"");
-			sbInfo.append(sbErrorsConfig.toString()).append("\".");
+			super.init(oConfig, true, Errors.ERROR_SOCIAL_INTERNAL_ERROR);
+			StringBuffer sbInfo = new StringBuffer("Starting: ").append(MODULE);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 
 			// Load HTML templates.
-			_sErrorHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "error.html", sConfigID, _sFriendlyName, VERSION);
+			Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, _sConfigID, "error.html", null, _sFriendlyName, VERSION);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'error.html' template.");
-
-			// get failure handling
-			try {
-				_sFailureHandling = _configManager.getParam(_oAuthSpConfig, "failure_handling");
-			}
-			catch (ASelectConfigException eAC) {
-				_sFailureHandling = DEFAULT_FAILUREHANDLING;
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod, "No 'failure_handling' parameter found in configuration, using default: aselect");
-			}
-
-			if (!_sFailureHandling.equalsIgnoreCase("aselect") && !_sFailureHandling.equalsIgnoreCase("local")) {
-				StringBuffer sbWarning = new StringBuffer("Invalid 'failure_handling' parameter found in configuration: '");
-				sbWarning.append(_sFailureHandling);
-				sbWarning.append("', using default: aselect");
-
-				_sFailureHandling = DEFAULT_FAILUREHANDLING;
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbWarning.toString());
-			}
 
 			try {  // for testing purposes, to use instead of the real authspserver URL
 				_sUrlOverride = _configManager.getParam(_oAuthSpConfig, "url_override");
@@ -213,8 +76,7 @@ public class SocialAuthSP extends ASelectHttpServlet
 				//throw new ASelectException(Errors.ERROR_SOCIAL_INTERNAL_ERROR, e);
 			}
 
-			sbInfo = new StringBuffer("Successfully started ");
-			sbInfo.append(VERSION).append(".");
+			sbInfo = new StringBuffer("Successfully started ").append(VERSION);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 		}
 		catch (Exception e) {
@@ -456,7 +318,6 @@ public class SocialAuthSP extends ASelectHttpServlet
         
 		try {
 			SocialAuthManager socialAuthManager;
-//if (Utils.hasValue(sRid)) {
 			// get session from sRid
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "get session "+sRid);
 			String sFabricatedRid = sRid + RID_POSTFIX;
@@ -475,14 +336,14 @@ public class SocialAuthSP extends ASelectHttpServlet
 			sMySignRid = sMySignRid.replaceAll("=*$", "");
 			if (!Utils.hasValue(sRequestSignRid))
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No SIGNATURE received");
-//else {
+
 			if (!Utils.hasValue(sRequestSignRid) || !sMySignRid.equals(sRequestSignRid)) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Rid signature does not match or absent, has 'rid' been tampered with?");
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "mySign="+sMySignRid+" Sign="+sRequestSignRid);
 				handleResult(htSessionContext, servletResponse, pwOut, Errors.ERROR_SOCIAL_COULD_NOT_AUTHENTICATE_USER, sLanguage, sUid);
 				return;
 			}
-//}   
+
 			// Provider redirects back
 			//
 			// When you redirect the user to the provider URL, the provider would validate the user,
@@ -490,13 +351,9 @@ public class SocialAuthSP extends ASelectHttpServlet
 			// and will then redirect the user back to you application URL mentioned above,
 			// i.e. "http://opensource.brickred.com/socialauthdemo/socialAuthSuccessAction.do".
 			// Now you can obtain any profile information using the following code
-	
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Signing OK, get manager");
 			// Get the auth provider manager from session
 			socialAuthManager = (SocialAuthManager)htSessionContext.get("social_authsp_manager");
-//}
-//else 
-//	socialAuthManager = _socialAuthManager;
 			
 			// Call the manager's connect method which returns the provider object. 
 			// Pass request parameter map while calling connect method.
@@ -611,8 +468,7 @@ public class SocialAuthSP extends ASelectHttpServlet
 				String sAsUrl = (String)htSessionContext.get("as_url");
 				String sAsServer = (String)htSessionContext.get("a-select-server");
 				if (sRid == null || sAsUrl == null || sAsServer == null) {
-					showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode,
-							_configManager.getErrorMessage(sResultCode, _oErrorProperties), sLanguage, _systemLogger);
+					getTemplateAndShowErrorPage(pwOut, sResultCode, sResultCode, sLanguage, VERSION);
 				}
 				else {
 					sbTemp = new StringBuffer(sRid).append(sAsUrl).append(sResultCode).append(sAsServer);
@@ -634,26 +490,34 @@ public class SocialAuthSP extends ASelectHttpServlet
 				}
 			}
 			else {  // Local error handling
-				showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.
-						getErrorMessage(sResultCode, _oErrorProperties), sLanguage, _systemLogger);
+				getTemplateAndShowErrorPage(pwOut, sResultCode, sResultCode, sLanguage, VERSION);
 			}
 		}
 		catch (ASelectException eAS) // could not generate signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate signature", eAS);
-			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_SOCIAL_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage, _systemLogger);
+			try {
+				getTemplateAndShowErrorPage(pwOut, sResultCode, sResultCode, sLanguage, VERSION);
+			}
+			catch (ASelectException e) {
+			}
 		}
 		catch (UnsupportedEncodingException eUE) // could not encode signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode signature", eUE);
-			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_SOCIAL_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage, _systemLogger);
+			try {
+				getTemplateAndShowErrorPage(pwOut, sResultCode, Errors.ERROR_SOCIAL_COULD_NOT_AUTHENTICATE_USER, sLanguage, VERSION);
+			}
+			catch (ASelectException e) {
+			}
 		}
 		catch (IOException eIO) {  // Redirect failed
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not redirect to: '"+sbTemp.toString()+"', "+eIO);
-			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_SOCIAL_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage, _systemLogger);
+			try {
+				getTemplateAndShowErrorPage(pwOut, sResultCode, Errors.ERROR_SOCIAL_COULD_NOT_AUTHENTICATE_USER, sLanguage, VERSION);
+			}
+			catch (ASelectException e) {
+			}
 		}
 	}
 }

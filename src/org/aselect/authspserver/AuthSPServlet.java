@@ -118,6 +118,7 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.logging.Audit;
 import org.aselect.system.logging.SystemLogger;
 import org.aselect.system.servlet.ASelectHttpServlet;
+import org.aselect.system.utils.FileCache;
 import org.aselect.system.utils.Utils;
 
 /**
@@ -324,6 +325,20 @@ public class AuthSPServlet extends ASelectHttpServlet
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod, "No 'shared_secret' configured, disabling servlet restart.");
 				_bRestartable = false;
 			}
+
+			String sKeep = Utils.getSimpleParam(oAuthSPConfigManager, _systemLogger, oAuthSPServerConfig, "file_cache_keep", false);
+			if (sKeep != null) {
+				try {
+					long lKeep = Integer.parseInt(sKeep);
+					if (lKeep >= 0)
+						FileCache.setFileCacheKeep(lKeep);
+				}
+				catch (NumberFormatException e) {
+					_systemLogger.log(Level.CONFIG, MODULE, sMethod, "Bad value for file_cache_keep");
+					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
+				}
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "file_cache_keep="+FileCache.getFileCacheKeep());
 
 			// Remove the instances, if their already is one.
 			// For restarting purposes.

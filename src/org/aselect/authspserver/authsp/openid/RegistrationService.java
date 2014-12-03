@@ -60,7 +60,7 @@ public class RegistrationService {
 	@SuppressWarnings("unchecked")
 	public static DiscoveryInformation performDiscoveryOnUserSuppliedIdentifier(String userSuppliedIdentifier, SystemLogger _systemLogger)
 	{
-		String sMethod = "performDiscoveryOnUserSuppliedIdentifier()";
+		String sMethod = "performDiscoveryOnUserSuppliedIdentifier";
 
 		DiscoveryInformation ret = null;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Starting performDiscoveryOnUserSuppliedIdentifier");

@@ -17,11 +17,8 @@
  */
 package org.aselect.server.request.handler;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.security.KeyStore;
@@ -100,7 +97,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			super.init(oServletConfig, oConfig);
 			_tgtManager = TGTManager.getHandle();
@@ -137,7 +134,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	public String serializeTheseAttributes(HashMap htAttribs)
 	throws ASelectException
 	{
-		_systemLogger.log(Level.INFO, MODULE, "serializeTheseAttributes()", "No OVERRIDE for this method!!");
+		_systemLogger.log(Level.INFO, MODULE, "serializeTheseAttributes", "No OVERRIDE for this method!!");
 		return "";
 	}
 
@@ -306,7 +303,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	public HashMap getContextFromTgt(String sTgt, boolean checkExpiration)
 	throws ASelectException
 	{
-		String sMethod = "getContextFromTgt()";
+		String sMethod = "getContextFromTgt";
 		TGTManager _tgtManager = TGTManager.getHandle();
 
 		int len = sTgt.length();
@@ -360,48 +357,6 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		return sCredentialsCookie;
 	}
 
-	// Bauke: moved from ShibbolethWAYFProfile
-	/**
-	 * Read template.
-	 * 
-	 * @param fTemplate
-	 *            the f template
-	 * @return the string
-	 * @throws ASelectException
-	 *             the a select exception
-	 */
-	protected String readTemplate(File fTemplate)
-	throws ASelectException
-	{
-		String sMethod = "readTemplate()";
-		BufferedReader brIn = null;
-		String sLine = null;
-		StringBuffer sbReturn = new StringBuffer();
-		try {
-			brIn = new BufferedReader(new InputStreamReader(new FileInputStream(fTemplate)));
-
-			while ((sLine = brIn.readLine()) != null) {
-				sbReturn.append(sLine);
-				sbReturn.append("\n");
-			}
-		}
-		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not read template", e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-		}
-		finally {
-			try {
-				if (brIn != null)
-					brIn.close();
-			}
-			catch (IOException e) {
-				_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close BufferedReader", e);
-			}
-		}
-		return sbReturn.toString();
-	}
-
-	// Bauke: added
 	/**
 	 * Read template from config.
 	 * 
@@ -416,7 +371,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	protected String readTemplateFromConfig(Object oConfig, String sName)
 	throws ASelectException
 	{
-		String sMethod = "readTemplateFromConfig()";
+		String sMethod = "readTemplateFromConfig";
 		String sTemplateName = null;
 		try {
 			sTemplateName = _configManager.getParam(oConfig, sName);
@@ -425,25 +380,9 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item '" + sName + "' found", e);
 			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Read template: " + sTemplateName);
-		String sWorkingDir = _configManager.getWorkingdir();
-		StringBuffer sbTemplateFilename = new StringBuffer();
-		sbTemplateFilename.append(sWorkingDir);
-		if (!sWorkingDir.endsWith(File.separator))
-			sbTemplateFilename.append(File.separator);
-		sbTemplateFilename.append("conf");
-		sbTemplateFilename.append(File.separator);
-		sbTemplateFilename.append("html");
-		sbTemplateFilename.append(File.separator);
-		sbTemplateFilename.append(sTemplateName);
-
-		File fTemplate = new File(sbTemplateFilename.toString());
-		if (!fTemplate.exists()) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Configured template does not exists: "
-					+ sbTemplateFilename.toString());
-			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
-		}
-		return readTemplate(fTemplate);
+		
+		return Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(),
+					_sUserLanguage, sTemplateName, null, _sFriendlyName, null/*version*/);
 	}
 
 	/*
@@ -564,10 +503,10 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	{
 		String sMethod = "showErrorPage";
 
-		String sErrorMessage = _configManager.getErrorMessage(sErrorCode, _sUserLanguage, _sUserCountry);
+		String sErrorMessage = _configManager.getErrorMessage(MODULE, sErrorCode, _sUserLanguage, _sUserCountry);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM[error] " + sErrorCode + ":" + sErrorMessage);
 		try {
-			String sErrorForm = _configManager.getForm("error", _sUserLanguage, _sUserCountry);
+			String sErrorForm = _configManager.getHTMLForm("error", _sUserLanguage, _sUserCountry);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error]", sErrorCode);  // obsoleted 20100817
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", sErrorCode);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
@@ -618,7 +557,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "handleShowForm()";
+		String sMethod = "handleShowForm";
 		PrintWriter pwOut = null;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Form Action=" + sAction + " Context=" + sPassContext
 				+ " ReplyTo=" + sReplyTo + " AselectUrl=" + sAselectUrl + " Rid=" + sRid + " Server=" + sAselectServer);
@@ -811,7 +750,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	public String decryptCredentials(String encrypted)
 	throws ASelectException
 	{
-		String sMethod = "decryptCredentials()";
+		String sMethod = "decryptCredentials";
 		try {
 			byte[] baTgtBytes = CryptoEngine.getHandle().decryptTGT(encrypted);
 			return Utils.byteArrayToHexString(baTgtBytes);
@@ -908,7 +847,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	protected Saml11Builder createSAML11Builder(Object oConfig, String sPrefix)
 	throws ASelectException
 	{
-		String sMethod = "createSAML11Builder()";
+		String sMethod = "createSAML11Builder";
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "sPrefix=" + sPrefix);
 		String sSendStatement = ASelectConfigManager.getParamFromSection(oConfig, "attribute", "send_statement", true);
@@ -979,7 +918,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			// We want at least the "uid" attribute, so other A-Select servers can work with the result
 			htAttributes.put("uid", sUid);
 		}
-		_systemLogger.log(Level.INFO, MODULE, "extractUidAndAttributes()", "htAttributes=" + htAttributes);
+		_systemLogger.log(Level.INFO, MODULE, "extractUidAndAttributes", "htAttributes=" + htAttributes);
 		return htAttributes;
 	}
 
@@ -1084,7 +1023,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			String sServerId, String sOrg, String sAppId, String sTgt, HashMap htAttributes)
 	throws ASelectException
 	{
-		String sMethod = "createContextAndIssueTGT()";
+		String sMethod = "createContextAndIssueTGT";
 		SessionManager _sessionManager = SessionManager.getHandle(); // RH, 20080617, n
 		if (sRid != null && htSessionContext == null)
 			htSessionContext = _sessionManager.getSessionContext(sRid);
@@ -1324,7 +1263,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	throws ASelectException
 	{
 		ASelectConfigManager _oASelectConfigManager;
-		String sMethod = "checkSignature()";
+		String sMethod = "checkSignature";
 		// The Assertion is the signed object, so get it first
 		String sAssertion = Tools.extractFromXml(sResults, "saml:Assertion", false);
 		if (sAssertion == null)
@@ -1411,7 +1350,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	throws ASelectCommunicationException
 	{
 		Element elBody = null;
-		String sMethod = "parse()";
+		String sMethod = "parse";
 		if (!sMessage.equals("")) {
 			try {
 				DOMParser parser = new DOMParser();

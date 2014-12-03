@@ -25,6 +25,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.aselect.server.config.Version;
 import org.aselect.server.request.RequestState;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectConfigException;
@@ -54,7 +55,7 @@ public class ErrorRequestHandler extends AbstractRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			super.init(oServletConfig, oConfig);
 		}
@@ -136,7 +137,7 @@ public class ErrorRequestHandler extends AbstractRequestHandler
 		Locale loc = new Locale(_sUserLanguage, _sUserCountry);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Using locale language=" + loc.getLanguage() + ", country=" + loc.getCountry());
 		
-		String sErrorMessage = _configManager.getErrorMessage(sErrorCode, _sUserLanguage, _sUserCountry);
+		String sErrorMessage = _configManager.getErrorMessage(MODULE, sErrorCode, _sUserLanguage, _sUserCountry);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM[error] " + sErrorCode + ":" + sErrorMessage);
 		try {
 			String app_id = request.getParameter("app_id");
@@ -160,7 +161,8 @@ public class ErrorRequestHandler extends AbstractRequestHandler
 				}
 			}
 			// .html will be stripped from sFileName
-			String sErrorForm = _configManager.loadHTMLTemplate(_configManager.getWorkingdir(), sFileName, loc.getLanguage(), loc.getCountry());
+			String sErrorForm = Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(), null, sFileName, 
+								loc.getLanguage(), _configManager.getOrgFriendlyName(), Version.getVersion());
 			sErrorForm = Utils.replaceString(sErrorForm, "[error]", sErrorCode);  // obsoleted 20100817
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", sErrorCode);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);

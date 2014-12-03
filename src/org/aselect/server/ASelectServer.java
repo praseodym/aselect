@@ -263,7 +263,7 @@ public class ASelectServer extends ASelectHttpServlet
 	public void init(ServletConfig oServletConfig)
 	throws ServletException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		// Initialize Configuration
 		try {
 			super.init(oServletConfig);
@@ -446,7 +446,7 @@ public class ASelectServer extends ASelectHttpServlet
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Successfully started A-Select server.");
 		}
 		catch (ASelectException eAS) {
-			String sErrorMessage = _configManager.getErrorMessage(eAS.getMessage());
+			String sErrorMessage = _configManager.getErrorMessage(MODULE, eAS.getMessage(), ""/*language*/, "");
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sErrorMessage, eAS);
 
 			closeResources();
@@ -454,7 +454,7 @@ public class ASelectServer extends ASelectHttpServlet
 			throw new ServletException(sErrorMessage);
 		}
 		catch (Exception e) {
-			String sErrorMessage = _configManager.getErrorMessage(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			String sErrorMessage = _configManager.getErrorMessage(MODULE, Errors.ERROR_ASELECT_INTERNAL_ERROR, ""/*language*/, "");
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sErrorMessage, e);
 
 			closeResources();
@@ -650,7 +650,7 @@ public class ASelectServer extends ASelectHttpServlet
 			_timerSensorThread = ConfigManager.timerSensorStartThread(_configManager, _systemLogger, "aselect");
 		}
 		catch (ASelectException e) {
-			String sErrorMessage = _configManager.getErrorMessage(e.getMessage());
+			String sErrorMessage = _configManager.getErrorMessage(MODULE, e.getMessage(), ""/*language*/, "");
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, sErrorMessage, e);
 		}
 		return 0;

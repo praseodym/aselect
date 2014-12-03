@@ -185,7 +185,7 @@ public class PKIManager
 	throws ASelectException
 	{
 		_htCRLs = new HashMap();
-		String sMethod = "loadCRLs()";
+		String sMethod = "loadCRLs";
 		Enumeration oCaAliases;
 		try {
 			oCaAliases = _oCaKeystore.aliases();
@@ -229,7 +229,7 @@ public class PKIManager
 	private void loadCRLForCA(String sCaAlias)
 	throws ASelectException
 	{
-		String sMethod = "loadCRLForCA()";
+		String sMethod = "loadCRLForCA";
 		Object oCaConfig;
 		Object oCrlConfig;
 		String sCrlCheck;
@@ -303,7 +303,7 @@ public class PKIManager
 	public HashMap getTrustedCACertificate(X509Certificate oCert)
 	throws ASelectException
 	{
-		String sMethod = "getTrustedCACertificate()";
+		String sMethod = "getTrustedCACertificate";
 		HashMap htResult = new HashMap();
 		Certificate oCaCert = null;
 		String sCaAlias = null;
@@ -357,7 +357,7 @@ public class PKIManager
 	 */
 	public boolean validateCertificateIsSignedByCA(Certificate oClientCert, Certificate oCaCert)
 	{
-		String sMethod = "validateCertificateIsSignedByCA()";
+		String sMethod = "validateCertificateIsSignedByCA";
 		boolean isSignedByCA = true;
 		PublicKey caPublicKey = oCaCert.getPublicKey();
 		try {
@@ -424,7 +424,7 @@ public class PKIManager
 	public void validateCertificateDate(X509Certificate oCert)
 	throws ASelectException
 	{
-		String sMethod = "validateCertificateDate()";
+		String sMethod = "validateCertificateDate";
 		try {
 			oCert.checkValidity();
 		}
@@ -461,7 +461,7 @@ public class PKIManager
 	 */
 	public boolean validateCrl(X509CRL crl, X509Certificate crlIssuerCert)
 	{
-		String sMethod = "getValidCrl()";
+		String sMethod = "getValidCrl";
 		boolean bValidCRL = true;
 		PublicKey oPublicKey = crlIssuerCert.getPublicKey();
 		try {
@@ -516,7 +516,7 @@ public class PKIManager
 	public boolean isClientCertRevoked(String sCaAlias, X509Certificate oClientCert)
 	throws ASelectException
 	{
-		String sMethod = "isCRLisSignedByCA()";
+		String sMethod = "isCRLisSignedByCA";
 		X509CRL oCrl = null;
 		if (!_htCRLs.containsKey(sCaAlias)) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No Valid CRL Found for CA: " + sCaAlias);
@@ -552,7 +552,7 @@ public class PKIManager
 	private Vector getCRLUrls(Object oCrlConfig, String sCaAlias)
 	throws ASelectException
 	{
-		String sMethod = "getCRLUrls()";
+		String sMethod = "getCRLUrls";
 		Vector oCrlUrls = null;
 		String sCRLDistrPointLocation;
 		try {
@@ -607,7 +607,7 @@ public class PKIManager
 	 */
 	private X509CRL getCRL(String sUri)
 	{
-		String sMethod = "getCRL()";
+		String sMethod = "getCRL";
 		ICRLHandler oCrlHandler = null;
 		X509CRL oCrl = null;
 		if (sUri.indexOf("http://") >= 0) {
@@ -659,7 +659,7 @@ public class PKIManager
 	private void loadCaKeyStoreFromPFXFile(String aFileName, String aKeyStorePassword)
 	throws ASelectException
 	{
-		String sMethod = "loadCaKeyStoreFromPFXFile()";
+		String sMethod = "loadCaKeyStoreFromPFXFile";
 		try {
 			KeyStore oKeyStore = KeyStore.getInstance("JKS");
 			FileInputStream keyStoreStream = new FileInputStream(aFileName);
@@ -713,7 +713,7 @@ public class PKIManager
 	private Vector getCrlUrls(X509Certificate oCertificate)
 	throws ASelectException
 	{
-		String sMethod = "getCRLUrls()";
+		String sMethod = "getCRLUrls";
 		Vector vOctetValues = new Vector();
 		Vector vCrlUrls = new Vector();
 		byte[] baCrlDistributionPoints = oCertificate.getExtensionValue(_sCrlDistributionPointOid);
@@ -770,7 +770,7 @@ public class PKIManager
 	private DERObject getDERObject(byte[] baExtensionValue)
 	throws ASelectException
 	{
-		String sMethod = "getDERObject()";
+		String sMethod = "getDERObject";
 		try {
 			ASN1InputStream oInputStream = new ASN1InputStream(new ByteArrayInputStream(baExtensionValue));
 			byte[] baExtOctets = ((ASN1OctetString) oInputStream.readObject()).getOctets();
@@ -1227,7 +1227,7 @@ public class PKIManager
 				}
 				catch (ASelectException e) {
 					_pwOutput.println("The Following exception occured: " + e.getMessage());
-					_systemLogger.log(Level.WARNING, MODULE, "PKIAdminRequestDispatcher->handleRequest()", e
+					_systemLogger.log(Level.WARNING, MODULE, "PKIAdminRequestDispatcher->handleRequest", e
 							.getMessage(), e);
 				}
 			}
@@ -1237,7 +1237,7 @@ public class PKIManager
 				}
 				catch (ASelectException e) {
 					_pwOutput.println("The Following exception occured: " + e.getMessage());
-					_systemLogger.log(Level.WARNING, MODULE, "PKIAdminRequestDispatcher->handleRequest()", e
+					_systemLogger.log(Level.WARNING, MODULE, "PKIAdminRequestDispatcher->handleRequest", e
 							.getMessage(), e);
 				}
 				_pwOutput.println("Successfully Reloaded CRL's");
@@ -1265,12 +1265,12 @@ public class PKIManager
 				}
 				catch (IOException e) {
 					_pwOutput.println("The Following exception occured: " + e.getMessage());
-					_systemLogger.log(Level.WARNING, MODULE, "PKIAdminRequestDispatcher->handleRequest()", e
+					_systemLogger.log(Level.WARNING, MODULE, "PKIAdminRequestDispatcher->handleRequest", e
 							.getMessage(), e);
 				}
 				catch (KeyStoreException e) {
 					_pwOutput.println("The Following exception occured: " + e.getMessage());
-					_systemLogger.log(Level.WARNING, MODULE, "PKIAdminRequestDispatcher->handleRequest()", e
+					_systemLogger.log(Level.WARNING, MODULE, "PKIAdminRequestDispatcher->handleRequest", e
 							.getMessage(), e);
 				}
 			}

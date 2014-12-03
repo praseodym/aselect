@@ -94,7 +94,7 @@ public class RADIUSCHAPProtocolHandler extends AbstractRADIUSProtocolHandler
 	@Override
 	public String authenticate(String sPassword)
 	{
-		String sMethod = "authenticate()";
+		String sMethod = "authenticate";
 		_sErrorCode = Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER;
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "CHAP uid=" + _sUid);
 		try {
@@ -165,7 +165,7 @@ public class RADIUSCHAPProtocolHandler extends AbstractRADIUSProtocolHandler
 	public void composeRequest(String sPassword, DatagramPacket oRADIUSPacket)
 	throws Exception
 	{
-		String sMethod = "composeRequest()";
+		String sMethod = "composeRequest";
 		_sErrorCode = Errors.ERROR_RADIUS_INTERNAL_ERROR;
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "uid=" + _sUid);
@@ -251,7 +251,7 @@ public class RADIUSCHAPProtocolHandler extends AbstractRADIUSProtocolHandler
 		int iLength;
 		int iReponseBufferIndex;
 
-		String sMethod = "handleResponse()";
+		String sMethod = "handleResponse";
 		_sErrorCode = Errors.ERROR_RADIUS_INTERNAL_ERROR;
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "uid=" + _sUid);

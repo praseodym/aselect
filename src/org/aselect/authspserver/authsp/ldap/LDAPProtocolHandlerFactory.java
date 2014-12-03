@@ -122,7 +122,7 @@ public class LDAPProtocolHandlerFactory
 			AuthSPSystemLogger systemLogger)
 	throws ASelectException
 	{
-		String sMethod = "instantiateProtocolHandler()";
+		String sMethod = "instantiateProtocolHandler";
 
 		try {
 			HashMap htContext = getContext(oConfig, sUid, systemLogger);
@@ -200,7 +200,7 @@ public class LDAPProtocolHandlerFactory
 	{
 		HashMap htResponse = new HashMap();
 		StringBuffer sbTemp = null;
-		String sMethod = "getContext()";
+		String sMethod = "getContext";
 		String sTemp = null;
 		AuthSPConfigManager oConfigManager = AuthSPConfigManager.getHandle();
 		try {

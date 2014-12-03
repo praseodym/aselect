@@ -16,11 +16,6 @@
 
 package org.aselect.server.request.handler.shibboleth;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.URLEncoder;
 import java.util.HashMap;
@@ -39,7 +34,6 @@ import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.utils.Utils;
 
-
 /**
  * Where are you from request handler. <br>
  * <br>
@@ -57,7 +51,8 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 	private final static String idp_COOKIE = "idp";
 
 	private String _sCookieDomain;
-	private String _sTemplate;
+	//private String _sTemplate;
+	private String _sTemplateName = null;
 	private long _lTimeOffset;
 	private Vector _vIdPs;
 	private HashMap _htIdPs;
@@ -104,7 +99,7 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			super.init(oServletConfig, oConfig);
 
@@ -207,33 +202,15 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 				oIdP = _configManager.getNextSection(oIdP);
 			}
 
-			String sTemplateName = null;
 			try {
-				sTemplateName = _configManager.getParam(oConfig, "template");
+				_sTemplateName = _configManager.getParam(oConfig, "template");
+				Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(), null/*language*/,
+						_sTemplateName, null, null/*friendly_name*/, null/*version*/);
 			}
 			catch (ASelectConfigException e) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No config item 'template' found", e);
 				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
-
-			String sWorkingDir = _configManager.getWorkingdir();
-			StringBuffer sbTemplateFilename = new StringBuffer();
-			sbTemplateFilename.append(sWorkingDir);
-			if (!sWorkingDir.endsWith(File.separator))
-				sbTemplateFilename.append(File.separator);
-			sbTemplateFilename.append("conf");
-			sbTemplateFilename.append(File.separator);
-			sbTemplateFilename.append("html");
-			sbTemplateFilename.append(File.separator);
-			sbTemplateFilename.append(sTemplateName);
-
-			File fTemplate = new File(sbTemplateFilename.toString());
-			if (!fTemplate.exists()) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Configured template does not exists: "
-						+ sbTemplateFilename.toString());
-				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
-			}
-			_sTemplate = readTemplate(fTemplate);
 		}
 		catch (ASelectException e) {
 			throw e;
@@ -278,7 +255,7 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		try {
 			String sProviderId = request.getParameter("providerId"); // application ID
 			if (sProviderId == null) {
@@ -408,12 +385,13 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 			HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "handleSubmit()";
+		String sMethod = "handleSubmit";
 		PrintWriter pwOut = null;
 
 		try {
 			pwOut = response.getWriter();
-			String sTemplate = _sTemplate;
+			String sTemplate = Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(),
+					null/*language*/, _sTemplateName, null, null/*friendly_name*/, null/*version*/);
 
 			StringBuffer sbSelection = new StringBuffer();
 			for (int i = 0; i < _vIdPs.size(); i++) {
@@ -484,7 +462,7 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 			HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "handleSubmit()";
+		String sMethod = "handleSubmit";
 		try {
 			HandlerTools.putCookieValue(response, idp_COOKIE, sIdP, _sCookieDomain, null, -1, 1/*httpOnly*/, _systemLogger);
 			/*
@@ -512,45 +490,4 @@ public class ShibbolethWAYFProfile extends AbstractRequestHandler
 		}
 	}
 
-	/**
-	 * Reads the given file and returns it as String <br>
-	 * <br>
-	 * .
-	 * 
-	 * @param fTemplate
-	 *            the full file name to the template
-	 * @return the template as String
-	 * @throws ASelectException
-	 *             if the file couldn't be read
-	 */
-	protected String readTemplate(File fTemplate)
-	throws ASelectException
-	{
-		String sMethod = "readTemplate()";
-		BufferedReader brIn = null;
-		String sLine = null;
-		StringBuffer sbReturn = new StringBuffer();
-		try {
-			brIn = new BufferedReader(new InputStreamReader(new FileInputStream(fTemplate)));
-
-			while ((sLine = brIn.readLine()) != null) {
-				sbReturn.append(sLine);
-				sbReturn.append("\n");
-			}
-		}
-		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not read template", e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
-		}
-		finally {
-			try {
-				if (brIn != null)
-					brIn.close();
-			}
-			catch (IOException e) {
-				_systemLogger.log(Level.FINE, MODULE, sMethod, "Could not close BufferedReader", e);
-			}
-		}
-		return sbReturn.toString();
-	}
 }

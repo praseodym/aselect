@@ -224,7 +224,7 @@ public class ApplicationManager
 	public void init()
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		// FIXME: Double initialization of _oApplicationsConfigSection
 		Object _oApplicationsConfigSection;
 		_htApplications = new HashMap();
@@ -876,7 +876,7 @@ public class ApplicationManager
 	public String getParam(String sAppId, String sName)
 	{
 		String sReturn = null;
-		String sMethod = "getParam()";
+		String sMethod = "getParam";
 		Object oApp = null;
 
 		try {
@@ -937,7 +937,7 @@ public class ApplicationManager
 	throws ASelectException
 	{
 		String sReturn = null;
-		String sMethod = "getOptionalParam()";
+		String sMethod = "getOptionalParam";
 		Object oApp = null;
 
 		try {
@@ -977,7 +977,7 @@ public class ApplicationManager
 	public Application getApplication(String sAppId)
 	throws ASelectException
 	{
-		String sMethod = "getApplication()";
+		String sMethod = "getApplication";
 		Application oApplication = (Application) _htApplications.get(sAppId);
 		if (oApplication == null) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No application found with Id: '" + sAppId + "'.");
@@ -1001,7 +1001,7 @@ public class ApplicationManager
 	private HashMap resolveSSOGroups()
 	throws ASelectException
 	{
-		String sMethod = "resolveSSOGroups()";
+		String sMethod = "resolveSSOGroups";
 		HashMap htReturn = new HashMap();
 		try {
 			Object oSSOGroups = null;
@@ -1109,7 +1109,7 @@ public class ApplicationManager
 	private PublicKey loadPublicKeyFromKeystore(String sAlias)
 	throws ASelectException
 	{
-		String sMethod = "loadPublicKeyFromKeystore()";
+		String sMethod = "loadPublicKeyFromKeystore";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Load public key=" + sAlias + ", from="
 				+ _sApplicationsKeystoreName);
 		try {
@@ -1180,7 +1180,7 @@ public class ApplicationManager
 			oApplication = getApplication(sAppId);
 		}
 		catch (ASelectException e) {
-			String sMethod = "getAddedPatching()";
+			String sMethod = "getAddedPatching";
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No application configuration found for: " + sAppId);
 			return null;
 		}
@@ -1202,7 +1202,7 @@ public class ApplicationManager
 			oApplication = getApplication(sAppId);
 		}
 		catch (ASelectException e) {
-			String sMethod = "getSecLevels()";
+			String sMethod = "getSecLevels";
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No application configuration found for: " + sAppId);
 			return null;
 		}
@@ -1255,7 +1255,7 @@ public class ApplicationManager
 			oApplication = getApplication(sAppId);
 		}
 		catch (ASelectException e) {
-			String sMethod = "getAuthnContextDeclValue()";
+			String sMethod = "getAuthnContextDeclValue";
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No application configuration found for: " + sAppId);
 			return null;
 		}
@@ -1288,7 +1288,7 @@ public class ApplicationManager
 			oApplication = getApplication(sAppId);
 		}
 		catch (ASelectException e) {
-			String sMethod = "getAuthnContextDeclType()";
+			String sMethod = "getAuthnContextDeclType";
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No application configuration found for: " + sAppId);
 			return null;
 		}
@@ -1322,7 +1322,7 @@ public class ApplicationManager
 			oApplication = getApplication(sAppId);
 		}
 		catch (ASelectException e) {
-			String sMethod = "getAuthenticatingAuthority()";
+			String sMethod = "getAuthenticatingAuthority";
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No application configuration found for: " + sAppId);
 			return null;
 		}
@@ -1355,7 +1355,7 @@ public class ApplicationManager
 			oApplication = getApplication(sAppId);
 		}
 		catch (ASelectException e) {
-			String sMethod = "getAssertionSubjectNameIDNameQualifier()";
+			String sMethod = "getAssertionSubjectNameIDNameQualifier";
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No application configuration found for: " + sAppId);
 			return null;
 		}

@@ -25,25 +25,25 @@ public class Errors
 	/**
 	 * No error
 	 */
-	public final static String ERROR_NULL_SUCCESS = "000";
+	public final static String ERROR_COOKIE_SUCCESS = "000";
 
 	/**
 	 * Internal error has occurred
 	 */
-	public final static String ERROR_NULL_INTERNAL = "100";
+	public final static String ERROR_COOKIE_INTERNAL = "100";
 
 	/**
 	 * An invalid request has been sent
 	 */
-	public final static String ERROR_NULL_INVALID_REQUEST = "200";
+	public final static String ERROR_COOKIE_INVALID_REQUEST = "200";
 
 	/**
 	 * Access is denied
 	 */
-	public final static String ERROR_NULL_ACCESS_DENIED = "800";
+	public final static String ERROR_COOKIE_ACCESS_DENIED = "800";
 
 	/**
 	 * User could not be authenticated
 	 */
-	public final static String ERROR_NULL_COULD_NOT_AUTHENTICATE_USER = "900";
+	public final static String ERROR_COOKIE_COULD_NOT_AUTHENTICATE_USER = "900";
 }

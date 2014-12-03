@@ -184,8 +184,8 @@ public abstract class ASelectHttpServlet extends HttpServlet
 	public void showErrorPage(PrintWriter pwOut, String sTemplate, String sError, String sErrorMessage, String sLanguage, ISystemLogger sLogger)
 	{
 		String sMethod = "showErrorPage";
-		sLogger.log(Level.INFO, MODULE, sMethod, "FORM[" + sTemplate + "] Error=" + sError + ":" + sErrorMessage);
 
+		sLogger.log(Level.INFO, MODULE, sMethod, "FORM[" + sTemplate + "] Error=" + sError + ":" + sErrorMessage);
 		String sErrorForm = new String(sTemplate);
 		sErrorForm = Utils.replaceString(sErrorForm, "[error]", sError);  // made obsolete 20100817
 		sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", sError);

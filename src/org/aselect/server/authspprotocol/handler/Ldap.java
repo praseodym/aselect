@@ -248,7 +248,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	public void init(Object oAuthSPConfig, Object oAuthSPResource)
 	throws ASelectAuthSPException
 	{
-		final String sMethod = "init()";
+		final String sMethod = "init";
 		_configManager = ASelectConfigManager.getHandle();
 		_sessionManager = SessionManager.getHandle();
 		_authenticationLogger = ASelectAuthenticationLogger.getHandle();
@@ -294,7 +294,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	public void init(String sAuthSPId)
 	throws ASelectAuthSPException
 	{
-		final String sMethod = "init()";
+		final String sMethod = "init";
 		_configManager = ASelectConfigManager.getHandle();
 		_sessionManager = SessionManager.getHandle();
 		_authenticationLogger = ASelectAuthenticationLogger.getHandle();
@@ -839,7 +839,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				// The next user redirect will set the TGT cookie, the "nextauthsp" form below will also set the cookie
 				if (next_authsp != null) {
 					// Direct the user to the next_authsp using the "nextauthsp" form
-					String sNextauthspForm = _configManager.getForm("nextauthsp", _sUserLanguage, _sUserCountry);
+					String sNextauthspForm = _configManager.getHTMLForm("nextauthsp", _sUserLanguage, _sUserCountry);
 					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[rid]", sRid);
 					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[a-select-server]",  (String) htServiceRequest.get("a-select-server"));
 					sNextauthspForm = Utils.replaceString(sNextauthspForm, "[user_id]", sUid);
@@ -889,10 +889,10 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				if (servletResponse == null)  // no browser attached
 					return false;
 				
-				String sErrorForm = _configManager.getForm("error", _sUserLanguage, _sUserCountry);
+				String sErrorForm = _configManager.getHTMLForm("error", _sUserLanguage, _sUserCountry);
 				sErrorForm = Utils.replaceString(sErrorForm, "[error]", ERROR_LDAP_PREFIX + ERROR_LDAP_ACCESS_DENIED);
 				sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", ERROR_LDAP_PREFIX + ERROR_LDAP_ACCESS_DENIED);
-				String sErrorMessage = _configManager.getErrorMessage(ERROR_LDAP_PREFIX + ERROR_LDAP_ACCESS_DENIED,
+				String sErrorMessage = _configManager.getErrorMessage(MODULE, ERROR_LDAP_PREFIX + ERROR_LDAP_ACCESS_DENIED,
 						_sUserLanguage, _sUserCountry);
 				sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);
 				sErrorForm = Utils.replaceString(sErrorForm, "[language]", _sUserLanguage);
@@ -915,7 +915,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 						+ "' from DirectAuthSP: '" + sAuthSPId + "'.");
 
 				if (servletResponse != null) {
-					String sErrorMessage = _configManager.getErrorMessage(ERROR_LDAP_PREFIX
+					String sErrorMessage = _configManager.getErrorMessage(MODULE, ERROR_LDAP_PREFIX
 						+ ERROR_LDAP_INVALID_CREDENTIALS, _sUserLanguage, _sUserCountry);
 					htServiceRequest.put("error_message", sErrorMessage);
 					showDirectLoginForm(servletRequest, htServiceRequest, htSessionContext, pwOut, sServerId);  // can change the session
@@ -998,7 +998,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	{
 		String sMethod = "showDirectLoginForm";
 		try {
-			String sDirectLoginForm = _configManager.getForm("directlogin", _sUserLanguage, _sUserCountry);
+			String sDirectLoginForm = _configManager.getHTMLForm("directlogin", _sUserLanguage, _sUserCountry);
 			if (sDirectLoginForm == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "template file 'directlogin.html' not found");
 				throw new ASelectException(Errors.ERROR_ASELECT_NOT_FOUND);

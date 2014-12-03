@@ -58,6 +58,9 @@
 
 package org.aselect.system.utils;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -68,6 +71,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -545,10 +549,10 @@ public class Utils
 					String sCond = sText.substring(idx+len, idx2+1);
 					sFullMid = sMidSep + sCond; 
 					sFullFin = sFinal + sCond;
-					logger.log(Level.FINER, MODULE, sMethod, "sCond="+sCond);
+					//logger.log(Level.FINER, MODULE, sMethod, "sCond="+sCond);
 				}
 			}
-			logger.log(Level.FINER, MODULE, sMethod, "idx="+idx+" Cond="+Utils.firstPartOf(sText.substring(idx), 60));
+			//logger.log(Level.FINER, MODULE, sMethod, "idx="+idx+" Cond="+Utils.firstPartOf(sText.substring(idx), 60));
 			int iMidSep = sText.indexOf(sFullMid/*","*/, idx+len+len2);
 			// Only one mid separator for the #if_cond construction, so don't set iNextMid
 			int iNextMid = (sText.charAt(idx)=='#' || iMidSep < 0) ? -1: sText.indexOf(sFullMid/*","*/, iMidSep+sFullMid.length());
@@ -857,18 +861,17 @@ public class Utils
 	 * Gets the simple param.
 	 * 
 	 * @param oConfMgr
-	 *            the o conf mgr
+	 *            the config mgr
 	 * @param oSysLog
-	 *            the o sys log
+	 *            the systemlogger
 	 * @param oConfig
-	 *            the o config
+	 *            the config section
 	 * @param sParam
-	 *            the s param
+	 *            the param to retrieve
 	 * @param bMandatory
-	 *            the b mandatory
-	 * @return the simple param
+	 *            mandatory?
+	 * @return the param value
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
 	public static String getSimpleParam(ConfigManager oConfMgr, SystemLogger oSysLog, Object oConfig, String sParam,
 			boolean bMandatory)
@@ -887,21 +890,20 @@ public class Utils
 	}
 
 	/**
-	 * Gets the simple int param.
+	 * Gets a simple integer parameter from the configuration.
 	 * 
 	 * @param oConfMgr
-	 *            the o conf mgr
+	 *            the config mgr
 	 * @param oSysLog
-	 *            the o sys log
+	 *            the systemlogger
 	 * @param oConfig
-	 *            the o config
+	 *            the config section
 	 * @param sParam
-	 *            the s param
+	 *            the param to retrieve
 	 * @param bMandatory
-	 *            the b mandatory
-	 * @return the simple int param
+	 *            mandatory?
+	 * @return the param value as an integer
 	 * @throws ASelectException
-	 *             the a select exception
 	 */
 	public static int getSimpleIntParam(ConfigManager oConfMgr, SystemLogger oSysLog, Object oConfig, String sParam,
 			boolean bMandatory)
@@ -1227,7 +1229,8 @@ public class Utils
 		return htAttributes;
 	}
 	
-	public static boolean bsnCheck(String bsnNumber) {
+	public static boolean bsnCheck(String bsnNumber)
+	{
 		final int bsnModuloNumber = 11;
 		final int bsnLength = 9;
 
@@ -1246,6 +1249,120 @@ public class Utils
 			testOK = true;
 		}
 		return testOK;
+	}
+	
+	/**
+	 * Load properties from file.
+	 * 
+	 * @param oSysLog
+	 *            the system logger
+	 * @param sWorkingDir
+	 *            The working directory
+	 * @param sSubDir
+	 *            the authsp subdirectory
+	 * @param sFileName
+	 *            the name of the template that must be loaded (can be without .html)
+	 * @param sLanguage
+	 *            the language version
+	 * @return the properties
+	 * @throws ASelectException
+	 */
+	public static Properties loadPropertiesFromFile(SystemLogger oSysLog, String sWorkingDir, String sSubDir,
+					String sFileName, String sLanguage)
+	throws ASelectException
+	{
+		String sErrorsConf = Utils.loadTemplateFromFile(oSysLog, sWorkingDir, sSubDir,
+				sFileName, sLanguage, null, null);
+		
+		Properties propErrorMessages = new Properties();
+		try {
+			propErrorMessages.load(new StringReader(sErrorsConf));
+		}
+		catch (IOException e) {
+			throw new ASelectException(Errors.ERROR_ASELECT_PARSE_ERROR);
+		}
+		return propErrorMessages;
+	}
+
+	/**
+	 * Loads a html template from harddisk.
+	 * For example:
+	 *	 aselectserver/conf/html/directlogin_nl.html
+	 *	 authspserver/conf/sms/html/authenticate.html
+	 * 
+	 * @param oSysLog
+	 *            the system logger
+	 * @param sWorkingDir
+	 *            The working directory
+	 * @param sSubDir
+	 *            the authsp subdirectory
+	 * @param sFileName
+	 *            the name of the template that must be loaded (can be without .html)
+	 * @param sLanguage
+	 *            the language version
+	 * @param sFriendlyName
+	 *            the friendly name
+	 * @param sVersion
+	 *            the version
+	 * @return The loaded HTML template.
+	 * @throws ASelectException
+	 *             if loading fails.
+	 */
+	// 20141119, Bauke: Merge from aselectserver and authspserver versions
+	public static String loadTemplateFromFile(SystemLogger oSysLog, String sWorkingDir, String sSubDir,
+					String sFileName, String sLanguage, String sFriendlyName, String sVersion)
+	throws ASelectException
+	{
+		String sMethod = "loadTemplateFromFile";
+		String sTemplate = "";
+		String sExtension = ".html";
+		String sExtSubDir = "html";
+
+		// Support these example file paths:
+		//   aselectserver/conf/html/directlogin_nl.html  (sSubDir = null)
+		//   authspserver/conf/sms/html/authenticate.html (sLanguage = null)
+		// Error files:
+		//   authspserver/conf/ldap/errors/errors.conf
+		//   aselectserver/conf/errors/errors_nl.conf
+		
+		String sLangExt = (Utils.hasValue(sLanguage))? "_" + sLanguage.toLowerCase(): "";
+		if (sFileName.endsWith(".conf")) {
+			sExtension = ".conf";  // errors.conf file detected
+			sExtSubDir = "errors";
+			sFileName = sFileName.substring(0, sFileName.length()-5);
+		}
+		else if (sFileName.endsWith(".html")) {
+			sExtension = ".html";
+			sExtSubDir = "html";
+			sFileName = sFileName.substring(0, sFileName.length()-5);
+		}
+		// else html file without extension
+		
+		for (;;) {
+			StringBuffer sbFilePath = new StringBuffer(sWorkingDir).append(File.separator).append("conf");
+			if (Utils.hasValue(sSubDir))
+				sbFilePath = sbFilePath.append(File.separator).append(sSubDir);
+			sbFilePath = sbFilePath.append(File.separator).append(sExtSubDir).
+					append(File.separator).append(sFileName).append(sLangExt).append(sExtension);
+			String sFilePath = sbFilePath.toString();
+			
+			// get file
+			sTemplate = FileCache.getFile(sFilePath, oSysLog);
+			if (Utils.hasValue(sTemplate))
+				break;
+			
+			if (sLangExt.equals("")) { // already tried the default
+				oSysLog.log(Level.WARNING, MODULE, sMethod, "Required template not found: "+sFilePath);
+				throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR);
+			}
+			sLangExt = ""; // try the default file
+		}
+		if (Utils.hasValue(sVersion))
+			sTemplate = Utils.replaceString(sTemplate, "[version]", sVersion);  // 20141118 old: Version.getVersion());
+		if (Utils.hasValue(sFriendlyName))
+			sTemplate = Utils.replaceString(sTemplate, "[organization_friendly]", sFriendlyName);
+							// 20141118 old: getParam(_oASelectConfigSection, "organization_friendly_name"));
+		return sTemplate;
 	}
 
 }

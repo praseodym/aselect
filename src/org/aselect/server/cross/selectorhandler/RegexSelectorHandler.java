@@ -89,9 +89,9 @@ import org.aselect.system.utils.Utils;
 
 public class RegexSelectorHandler implements ISelectorHandler
 {
-	// Name of this module, used for logging
 	private static final String MODULE = "RegexSelectorHandler";
-	private String _sCrossRegexSelectorPage;
+
+	//private String _sCrossRegexSelectorPage;
 	private String _sFriendlyName;
 	private ASelectConfigManager _configManager;
 	private ASelectSystemLogger _systemLogger;
@@ -130,11 +130,12 @@ public class RegexSelectorHandler implements ISelectorHandler
 				throw new ASelectConfigException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 			try {
-				loadHTMLTemplates();
+				// pre-load select form
+				Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(), null/*subdir*/,
+						"regexselect", null/*language*/, _configManager.getOrgFriendlyName(), Version.getVersion());
 			}
 			catch (ASelectException e) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"Failed to load Regex Cross Selector HTML templates.", e);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Failed to load Regex Cross Selector HTML templates.", e);
 				throw new ASelectConfigException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 			}
 			try {
@@ -245,68 +246,6 @@ public class RegexSelectorHandler implements ISelectorHandler
 		return htResult;
 	}
 
-	// Private function which loads the HTML Templates
-	/**
-	 * Load html templates.
-	 * 
-	 * @throws ASelectException
-	 *             the a select exception
-	 */
-	private void loadHTMLTemplates()
-	throws ASelectException
-	{
-		String sWorkingdir = new StringBuffer(_configManager.getWorkingdir()).append(File.separator).append("conf")
-				.append(File.separator).append("html").append(File.separator).toString();
-
-		_sCrossRegexSelectorPage = loadHTMLTemplate(sWorkingdir + "regexselect.html");
-
-		_sCrossRegexSelectorPage = Utils.replaceString(_sCrossRegexSelectorPage, "[version]", Version.getVersion());
-		_sCrossRegexSelectorPage = Utils.replaceString(_sCrossRegexSelectorPage, "[organization_friendly]",
-				_sFriendlyName);
-	}
-
-	// Private funtion which load the HTML template on location sLocation.
-	/**
-	 * Load html template.
-	 * 
-	 * @param sLocation
-	 *            the s location
-	 * @return the string
-	 * @throws ASelectException
-	 *             the a select exception
-	 */
-	private String loadHTMLTemplate(String sLocation)
-	throws ASelectException
-	{
-		String sTemplate = new String();
-		String sLine;
-		BufferedReader brIn = null;
-		String sMethod = "loadHTMLTemplate()";
-		try {
-			brIn = new BufferedReader(new InputStreamReader(new FileInputStream(sLocation)));
-			while ((sLine = brIn.readLine()) != null) {
-				sTemplate += sLine + "\n";
-			}
-		}
-		catch (Exception e) {
-			StringBuffer sbError = new StringBuffer("Could not load '");
-			sbError.append(sLocation).append("'HTML template.");
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
-			throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
-		}
-		finally {
-			try {
-				brIn.close();
-			}
-			catch (Exception e) {
-				StringBuffer sbError = new StringBuffer("Could not close '");
-				sbError.append(sLocation).append("' FileInputStream.");
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbError.toString(), e);
-			}
-		}
-		return sTemplate;
-	}
-
 	// private function which shows the authentication form if no user_id was provided
 	/**
 	 * Show authentication form.
@@ -335,14 +274,16 @@ public class RegexSelectorHandler implements ISelectorHandler
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "parameter 'my_url' not found in service request");
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 			}
+			
 			String sLanguage = (String) htServiceRequest.get("language");
-
-			String sLoginForm = _sCrossRegexSelectorPage;
+			String sLoginForm = Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(), null/*subdir*/,
+					"regexselect", sLanguage, _configManager.getOrgFriendlyName(), Version.getVersion());
+			
 			sLoginForm = Utils.replaceString(sLoginForm, "[rid]", sRid);
 			sLoginForm = Utils.replaceString(sLoginForm, "[aselect_url]", sMyUrl);
 			sLoginForm = Utils.replaceString(sLoginForm, "[request]", "cross_login");
 			sLoginForm = Utils.replaceString(sLoginForm, "[a-select-server]", _sMyServerId);
-			String sErrorMessage = _configManager.getErrorMessage(sErrorCode);
+			String sErrorMessage = _configManager.getErrorMessage(MODULE, sErrorCode, sLanguage, "");
 			sLoginForm = Utils.replaceString(sLoginForm, "[error_message]", sErrorMessage);
 			sLoginForm = Utils.replaceString(sLoginForm, "[language]", sLanguage);
 			

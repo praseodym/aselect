@@ -18,7 +18,7 @@ public abstract class Utils
 
 	public static void sendPlainTextResponse(HttpServletResponse response, Message message, ASelectSystemLogger _systemLogger)
 	{
-		String sMethod = "sendPlainTextResponse()";
+		String sMethod = "sendPlainTextResponse";
 
 		response.setContentType("text/plain");
 		OutputStream os = null;
@@ -42,7 +42,7 @@ public abstract class Utils
 	public static void sendDiscoveryResponse(HttpServletResponse response, String message, ASelectSystemLogger _systemLogger)
 	throws IOException
 	{
-		String sMethod = "sendDiscoveryResponse()";
+		String sMethod = "sendDiscoveryResponse";
 		_systemLogger.log(Level.INFO, MODULE, sMethod,
 				"sending XRDS Response: " + message);
 
@@ -61,7 +61,7 @@ public abstract class Utils
 	@SuppressWarnings("unchecked")
 	public static void logRequestParameters(ParameterList request, ASelectSystemLogger _systemLogger)
 	{
-		String sMethod = "logRequestParameters()";
+		String sMethod = "logRequestParameters";
 		_systemLogger.log(Level.INFO, MODULE, sMethod,
 				"Dumping request parameters:");
 		if (request != null) {

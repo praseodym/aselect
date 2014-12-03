@@ -9,44 +9,28 @@
  * If you did not receive a copy of the LICENSE 
  * please contact SURFnet bv. (http://www.surfnet.nl)
  */
-
-/* 
-*
- */
-
 package org.aselect.authspserver.authsp.cookieauthsp;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Properties;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.aselect.authspserver.config.AuthSPConfigManager;
-import org.aselect.authspserver.crypto.CryptoEngine;
-import org.aselect.authspserver.log.AuthSPAuthenticationLogger;
-import org.aselect.authspserver.log.AuthSPSystemLogger;
+import org.aselect.authspserver.authsp.AbstractAuthSP;
+import org.aselect.authspserver.authsp.cookieauthsp.Errors;
 import org.aselect.authspserver.session.AuthSPPreviousSessionManager;
-import org.aselect.authspserver.session.AuthSPSessionManager;
-import org.aselect.system.exception.ASelectConfigException;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
-import org.aselect.system.servlet.ASelectHttpServlet;
 import org.aselect.system.utils.Utils;
-
 
 /**
  * . <br>
@@ -54,72 +38,30 @@ import org.aselect.system.utils.Utils;
  * <b>Description: </b> <br>
  * The CookieAuthSP uses the existence of a previously stored cookie as an access denied or access granted. <br>
  * <br>
- * <b>Concurrency issues: </b> <br>
- * - <br>
  * 
  */
-public class CookieAuthSP extends ASelectHttpServlet
+public class CookieAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodies from AbstractAuthSP
 {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -2996268295941444515L;
 	/**
 	 * The name of this module, that is used in the system logging.
 	 */
 	private static String MODULE = "CookieAuthSP";
 	/**
-	 * The Null AuthSP version string
+	 * The Cookie AuthSP version string
 	 */
-	private static String VERSION = "A-Select CookieAuthSP " + "1.9";
-	
-	private final static String DEFAULT_FAILUREHANDLING = "aselect";
-
-
-	/**
-	 * The logger that logs authentication information
-	 */
-	private AuthSPAuthenticationLogger _authenticationLogger;
-	/**
-	 * The logger that logs system information
-	 */
-	private AuthSPSystemLogger _systemLogger;
-	/**
-	 * The config manager which contains the configuration
-	 */
-	private AuthSPConfigManager _configManager;
+	private static String VERSION = "A-Select CookieAuthSP 1.0";
 
 	/** The PreviousSessionmanager */
 	private AuthSPPreviousSessionManager _previousSessionManager;
-
-	/**
-	 * The AuthSP crypto engine
-	 */
-	private CryptoEngine _cryptoEngine;
-	/**
-	 * The workingdir configured in the web.xml of the AuthSP Server
-	 */
-	private String _sWorkingDir;
-	/**
-	 * Error page template
-	 */
-	private String _sErrorHtmlTemplate;
-	/**
-	 * <code>Properties</code> containing the error codes with the corresponding error messages
-	 */
-	private Properties _propErrorMessages;
-	/**
-	 * The AuthSP Server user friendly name
-	 */
-	private String _sFriendlyName;
 
 	/**
 	 * The authentication mode that is configured
 	 */
 	private String _sAuthMode;
 
-	private String _sFailureHandling;
-
+	//private String _sFailureHandling;
+	
 	/**
 	 * Initialization of the CookieAuthSPP. <br>
 	 * <br>
@@ -147,7 +89,7 @@ public class CookieAuthSP extends ASelectHttpServlet
 	 * <br>
 	 * 
 	 * @param oServletConfig
-	 *            the o servlet config
+	 *            the servlet config
 	 * @throws ServletException
 	 *             the servlet exception
 	 * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
@@ -158,116 +100,19 @@ public class CookieAuthSP extends ASelectHttpServlet
 	{
 		String sMethod = "init";
 
-		Object _oAuthSPConfig = null;
-
 		try {
-			super.init(oServletConfig);
+			super.init(oServletConfig, true, Errors.ERROR_COOKIE_INTERNAL);
 
-			_authenticationLogger = AuthSPAuthenticationLogger.getHandle();
-			_systemLogger = AuthSPSystemLogger.getHandle();
-			_configManager = AuthSPConfigManager.getHandle();
+			StringBuffer sbInfo = new StringBuffer("Starting: ").append(MODULE);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
+
 			_previousSessionManager = AuthSPPreviousSessionManager.getHandle();
-
-
-			StringBuffer sbInfo = new StringBuffer("Starting : ");
-			sbInfo.append(MODULE);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
-
-			String sConfigID = oServletConfig.getInitParameter("config_id");
-			if (sConfigID == null) {
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No 'config_id' found as init-parameter in web.xml.");
-				throw new ASelectException(Errors.ERROR_NULL_INTERNAL);
-			}
-
-			ServletContext servletContext = oServletConfig.getServletContext();
-			_cryptoEngine = (CryptoEngine) servletContext.getAttribute("CryptoEngine");
-			if (_cryptoEngine == null) {
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No CryptoEngine found in servlet context.");
-
-				throw new ASelectException(Errors.ERROR_NULL_INTERNAL);
-			}
-
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded CryptoEngine");
-
-			_sFriendlyName = (String) servletContext.getAttribute("friendly_name");
-			if (_sFriendlyName == null) {
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No friendly_name found in servlet context.");
-				throw new ASelectException(Errors.ERROR_NULL_INTERNAL);
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded friendly_name");
-
-			_sWorkingDir = (String) servletContext.getAttribute("working_dir");
-			if (_sWorkingDir == null) {
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No working_dir found in servlet context.");
-				throw new ASelectException(Errors.ERROR_NULL_INTERNAL);
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded working_dir");
-
-			StringBuffer sbErrorsConfig = new StringBuffer(_sWorkingDir);
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("conf");
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append(MODULE.toLowerCase());
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("errors");
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("errors.conf");
-
-			File fErrorsConfig = new File(sbErrorsConfig.toString());
-			if (!fErrorsConfig.exists()) {
-				StringBuffer sbFailed = new StringBuffer("The errors.conf doesn't exist: ");
-				sbFailed.append(sbErrorsConfig.toString());
-
-				_systemLogger.log(Level.SEVERE, MODULE, sMethod, sbFailed.toString());
-
-				throw new ASelectException(Errors.ERROR_NULL_INTERNAL);
-			}
-			_propErrorMessages = new Properties();
-			_propErrorMessages.load(new FileInputStream(sbErrorsConfig.toString()));
-
-			sbInfo = new StringBuffer("Successfully loaded ");
-			sbInfo.append(_propErrorMessages.size());
-			sbInfo.append(" error messages from: ");
-			sbInfo.append(sbErrorsConfig.toString());
-			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
-
-			_sErrorHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "error.html", sConfigID,
-					_sFriendlyName, VERSION);
+			
+			// pre-load error form
+			Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, _sConfigID, "error.html", null, _sFriendlyName, VERSION);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'error.html' template.");
 
-			try {
-				_oAuthSPConfig = _configManager.getSection(null, "authsp", "id=" + sConfigID);
-			}
-			catch (ASelectConfigException eAC) {
-				StringBuffer sbTemp = new StringBuffer("No valid 'authsp' config section found with id='");
-				sbTemp.append(sConfigID).append("'");
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbTemp.toString(), eAC);
-				throw new ASelectException(Errors.ERROR_NULL_INTERNAL);
-			}
-
-
-			// get failure handling
-			try {
-				_sFailureHandling = _configManager.getParam(_oAuthSPConfig, "failure_handling");
-			}
-			catch (ASelectConfigException eAC) {
-				_sFailureHandling = DEFAULT_FAILUREHANDLING;
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No 'failure_handling' parameter found in configuration, using default: " + DEFAULT_FAILUREHANDLING);
-			}
-
-			if (!_sFailureHandling.equalsIgnoreCase("aselect") && !_sFailureHandling.equalsIgnoreCase("local")) {
-				StringBuffer sbWarning = new StringBuffer("Invalid 'failure_handling' parameter found in configuration: '");
-				sbWarning.append(_sFailureHandling);
-				sbWarning.append("', using default: " + DEFAULT_FAILUREHANDLING);
-				_sFailureHandling = DEFAULT_FAILUREHANDLING;
-
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbWarning.toString());
-			}
-
-
-			sbInfo = new StringBuffer("Successfully started: ");
-			sbInfo.append(MODULE);
+			sbInfo = new StringBuffer("Successfully started: ").append(MODULE);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 		}
 		catch (ASelectException ase) {
@@ -275,11 +120,8 @@ public class CookieAuthSP extends ASelectHttpServlet
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "INTERNAL ERROR", e);
-
 			StringBuffer sbError = new StringBuffer("Could not initialize ");
-			sbError.append(MODULE);
-			sbError.append(" : ");
-			sbError.append(e.getMessage());
+			sbError.append(MODULE).append(" : ").append(e.getMessage());
 			throw new ServletException(sbError.toString(), e);
 		}
 	}
@@ -364,30 +206,25 @@ public class CookieAuthSP extends ASelectHttpServlet
 			String sSignature = (String) htServiceRequest.get("signature");
 
 			if ((sRid == null) || (sAsUrl == null) || (sCookiename == null) || (sAsId == null) || (sSignature == null)) {
-				_systemLogger.log(Level.FINE, MODULE, sMethod,
-						"Invalid request, at least one mandatory parameter is missing.");
-				throw new ASelectException(Errors.ERROR_NULL_INVALID_REQUEST);
+				_systemLogger.log(Level.FINE, MODULE, sMethod, "Invalid request, at least one mandatory parameter is missing.");
+				throw new ASelectException(Errors.ERROR_COOKIE_INVALID_REQUEST);
 			}
-
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "GET {" + servletRequest + " --> " + sMethod + ": "
-					+ sQueryString);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "GET {"+servletRequest+" --> "+sMethod+": "+sQueryString);
 
 			// 20120110, Bauke: no longer needed, done by convertCGIMessage()
 			//sAsUrl = URLDecoder.decode(sAsUrl, "UTF-8");
 			//sUid = URLDecoder.decode(sUid, "UTF-8");
 			//sSignature = URLDecoder.decode(sSignature, "UTF-8");
 
-			StringBuffer sbSignature = new StringBuffer(sRid);
-			sbSignature.append(sAsUrl);
-			sbSignature.append(sCookiename);
-			sbSignature.append(sAsId);
+			StringBuffer sbSignature = new StringBuffer(sRid).append(sAsUrl);
+			sbSignature.append(sCookiename).append(sAsId);
 
 			// optional country and language code
 			if (sCountry != null) sbSignature.append(sCountry);
 			if (sLanguage != null) sbSignature.append(sLanguage);
 
 			if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), sSignature)) {
-				throw new ASelectException(Errors.ERROR_NULL_INVALID_REQUEST);
+				throw new ASelectException(Errors.ERROR_COOKIE_INVALID_REQUEST);
 			}
 
 			// Get cookie value here and verify if we know this cookie
@@ -404,7 +241,7 @@ public class CookieAuthSP extends ASelectHttpServlet
 					break;
 				}
 			}
-			_sAuthMode = Errors.ERROR_NULL_ACCESS_DENIED;
+			_sAuthMode = Errors.ERROR_COOKIE_ACCESS_DENIED;
 			
 			if ( v != null ) { // we found a value for our cookie
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Found cookie value:" + v);
@@ -418,14 +255,14 @@ public class CookieAuthSP extends ASelectHttpServlet
 					htPreviousSessionContext = null;
 				}
 				if (htPreviousSessionContext != null) {
-					_sAuthMode = Errors.ERROR_NULL_SUCCESS;
+					_sAuthMode = Errors.ERROR_COOKIE_SUCCESS;
 					_authenticationLogger.log(new Object[] {
 							MODULE, sCookiename, servletRequest.getRemoteAddr(), sAsId, "granted"
 					});
 					
 				} else {
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "No cookie found with name:" + sCookiename);
-					_sAuthMode = Errors.ERROR_NULL_ACCESS_DENIED;
+					_sAuthMode = Errors.ERROR_COOKIE_ACCESS_DENIED;
 					_authenticationLogger.log(new Object[] {
 							MODULE, sCookiename, servletRequest.getRemoteAddr(), sAsId, "denied", _sAuthMode
 					});
@@ -433,7 +270,7 @@ public class CookieAuthSP extends ASelectHttpServlet
 				}
 			} else {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "No cookie found with name:" + sCookiename);
-				_sAuthMode = Errors.ERROR_NULL_ACCESS_DENIED;
+				_sAuthMode = Errors.ERROR_COOKIE_ACCESS_DENIED;
 				_authenticationLogger.log(new Object[] {
 						MODULE, sCookiename, servletRequest.getRemoteAddr(), sAsId, "denied", _sAuthMode
 				});
@@ -446,7 +283,7 @@ public class CookieAuthSP extends ASelectHttpServlet
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Internal error", e);
-			handleResult(htServiceRequest, servletResponse, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, sLanguage, _sFailureHandling);
+			handleResult(htServiceRequest, servletResponse, Errors.ERROR_COOKIE_COULD_NOT_AUTHENTICATE_USER, sLanguage, _sFailureHandling);
 		}
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "} NULL GET");
 	}
@@ -499,7 +336,7 @@ public class CookieAuthSP extends ASelectHttpServlet
 		StringBuffer sbResponse = new StringBuffer("status=");
 		
 		if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), sSignature)) {
-			sbResponse.append(Errors.ERROR_NULL_INVALID_REQUEST);
+			sbResponse.append(Errors.ERROR_COOKIE_INVALID_REQUEST);
 		} else {
 			
 			// Do the cookie save stuff here
@@ -509,14 +346,13 @@ public class CookieAuthSP extends ASelectHttpServlet
 			htPreviousSessionContext.put("uid", uid);
 			try {
 				_previousSessionManager.create(sTgt, htPreviousSessionContext);
-				sbResponse.append(Errors.ERROR_NULL_SUCCESS);
+				sbResponse.append(Errors.ERROR_COOKIE_SUCCESS);
 			}
 			catch (ASelectStorageException e) {
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Cookie already present:" + sTgt);
-				sbResponse.append(Errors.ERROR_NULL_INVALID_REQUEST);
+				sbResponse.append(Errors.ERROR_COOKIE_INVALID_REQUEST);
 			}
 		}
-
 	
 		String response = sbResponse.toString();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Respond with result:" + response);
@@ -544,9 +380,9 @@ public class CookieAuthSP extends ASelectHttpServlet
 			String sResultCode, String sLanguage, String failureHandling)
 	throws IOException
 	{	
-		handleResult(servletRequest, servletResponse,
-				sResultCode, sLanguage, failureHandling, null);
+		handleResult(servletRequest, servletResponse, sResultCode, sLanguage, failureHandling, null);
 	}
+	
 	/**
 	 * Creates a redirect url and redirects the user back to the A-Select Server. <br>
 	 * <br>
@@ -561,7 +397,7 @@ public class CookieAuthSP extends ASelectHttpServlet
 	 *             Signals that an I/O exception has occurred.
 	 */
 	private void handleResult(HashMap servletRequest, HttpServletResponse servletResponse,
-								String sResultCode, String sLanguage, String failureHandling, Hashtable previousSessionContext)
+					String sResultCode, String sLanguage, String failureHandling, Hashtable previousSessionContext)
 	throws IOException
 	{
 		String sMethod = "handleResult";
@@ -569,15 +405,12 @@ public class CookieAuthSP extends ASelectHttpServlet
 		PrintWriter pwOut = null;
 		try {
 			pwOut = servletResponse.getWriter();
-			if (failureHandling.equalsIgnoreCase("aselect") || sResultCode.equals(Errors.ERROR_NULL_SUCCESS)) {
+			if (failureHandling.equalsIgnoreCase(DEFAULT_FAILUREHANDLING) || sResultCode.equals(Errors.ERROR_COOKIE_SUCCESS)) {
 				String sRid = (String)servletRequest.get("rid");
 				String sAsUrl = (String)servletRequest.get("as_url");
 				String sAsId = (String)servletRequest.get("a-select-server");
 				if (sRid == null || sAsUrl == null || sAsId == null) {
-					showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-							// RH, 20100621, Remove cyclic dependency system<->server
-//							_propErrorMessages), sLanguage);
-							_propErrorMessages), sLanguage, _systemLogger);
+					getTemplateAndShowErrorPage(pwOut, sResultCode, sResultCode, sLanguage, VERSION);
 				}
 				else {
 					StringBuffer sbSignature = new StringBuffer(sRid);
@@ -606,30 +439,26 @@ public class CookieAuthSP extends ASelectHttpServlet
 				}
 			}
 			else {
-				// RH, 20100621, Remove cyclic dependency system<->server
-				showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-//						_propErrorMessages), sLanguage);
-						_propErrorMessages), sLanguage, _systemLogger);
+				getTemplateAndShowErrorPage(pwOut, sResultCode, sResultCode, sLanguage, VERSION);
 			}
 		}
 		catch (ASelectException eAS) // could not generate signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate CookieAuthSP signature", eAS);
-			// RH, 20100621, Remove cyclic dependency system<->server
-//			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _configManager
-//					.getErrorMessage(Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _propErrorMessages), sLanguage);
-			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _propErrorMessages), sLanguage, _systemLogger);
-
+			try {
+				getTemplateAndShowErrorPage(pwOut, sResultCode, Errors.ERROR_COOKIE_COULD_NOT_AUTHENTICATE_USER, sLanguage, VERSION);
+			}
+			catch (ASelectException e) {
+			}
 		}
 		catch (UnsupportedEncodingException eUE) // could not encode signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode NULL AuthSP signature", eUE);
-			// RH, 20100621, Remove cyclic dependency system<->server
-//			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _configManager
-//					.getErrorMessage(Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _propErrorMessages), sLanguage);
-			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(Errors.ERROR_NULL_COULD_NOT_AUTHENTICATE_USER, _propErrorMessages), sLanguage, _systemLogger);
+			try {
+				getTemplateAndShowErrorPage(pwOut, sResultCode, Errors.ERROR_COOKIE_COULD_NOT_AUTHENTICATE_USER, sLanguage, VERSION);
+			}
+			catch (ASelectException e) {
+			}
 		}
 		catch (IOException eIO) // Could not write output
 		{

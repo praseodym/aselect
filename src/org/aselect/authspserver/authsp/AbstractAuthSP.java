@@ -12,8 +12,10 @@
 
 package org.aselect.authspserver.authsp;
 
+import java.io.PrintWriter;
 import java.security.SecureRandom;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
@@ -28,6 +30,7 @@ import org.aselect.authspserver.log.AuthSPSystemLogger;
 import org.aselect.authspserver.session.AuthSPSessionManager;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
+import org.aselect.system.utils.Utils;
 
 /**
  * Superclass various AuthSP's
@@ -35,6 +38,8 @@ import org.aselect.system.servlet.ASelectHttpServlet;
  * 
  * @author remy
  *
+ * 20141201, Bauke: added lots of functionality in the init() method,
+ *     all AuthSP's inherit from AbstractAuthSP now. Functionality moved from AuthSP's to here.
  */
 public abstract class AbstractAuthSP extends ASelectHttpServlet
 {
@@ -43,7 +48,8 @@ public abstract class AbstractAuthSP extends ASelectHttpServlet
 	/** The name of this module, that is used in the system logging. */
 	public static final String MODULE = "AbstractAuthSP";
 
-	private static SecureRandom _random;
+	/** Default failure_handling option. */
+	protected final static String DEFAULT_FAILUREHANDLING = "aselect";
 	
 	/** The logger that logs system information. */
 	protected AuthSPSystemLogger _systemLogger;
@@ -51,17 +57,34 @@ public abstract class AbstractAuthSP extends ASelectHttpServlet
 	/** The logger that logs authentication information. */
 	protected AuthSPAuthenticationLogger _authenticationLogger;
 
-	/** The crypto engine */
-	protected CryptoEngine _cryptoEngine;
-
 	/** The configuration */
 	protected AuthSPConfigManager _configManager;
 
 	/** The Sessionmanager */
 	protected AuthSPSessionManager _sessionManager;
 
+	/** The crypto engine */
+	protected CryptoEngine _cryptoEngine;
+
+	// ID of this AuthSP
+	protected String _sConfigID = null;
+	
+	// The AuthSP Config Section
+	protected Object _oAuthSpConfig;// = null;
+
+	/* The AuthSP Server user friendly name */
+	protected String _sFriendlyName;
+	
+	/* The workingdir configured in the web.xml of the AuthSP Server */
+	protected String _sWorkingDir;
+
+	protected String _sFailureHandling = null;
+	
 	protected HashMap htSessionContext = null;
-	protected int _iAllowedRetries;
+	
+	protected int _iAllowedRetries = 0;
+
+	protected static SecureRandom _random;
 	
 	private static final int TOKEN_SIZE = 16;
 
@@ -86,19 +109,18 @@ public abstract class AbstractAuthSP extends ASelectHttpServlet
 	 * </ul>
 	 * 
 	 * @param oConfig
-	 *            the o config
+	 *            the configuration
 	 * @throws ServletException
 	 *             the servlet exception
 	 * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
 	 */
-	public void init(ServletConfig oConfig)
+	public void init(ServletConfig oConfig, boolean needSection, String sErrorCode)
 	throws ServletException
 	{
 		String sMethod = "init";
-//		StringBuffer sbTemp = null;
 		try {
-			// super init
 			super.init(oConfig);
+			
 			// retrieve managers and loggers
 			_systemLogger = AuthSPSystemLogger.getHandle();
 			_authenticationLogger = AuthSPAuthenticationLogger.getHandle();
@@ -113,9 +135,42 @@ public abstract class AbstractAuthSP extends ASelectHttpServlet
 				throw new ASelectException(Errors.ERROR_SMS_INTERNAL_ERROR);
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded CryptoEngine.");
+
+			_sFriendlyName = (String)oContext.getAttribute("friendly_name");
+			if (_sFriendlyName == null) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No friendly_name found in servlet context.");
+				throw new ASelectException(Errors.ERROR_SMS_INTERNAL_ERROR);
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded friendly_name");
+			
+			_sWorkingDir = (String)oContext.getAttribute("working_dir");
+			if (_sWorkingDir == null) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No working_dir found in servlet context.");
+				throw new ASelectException(Errors.ERROR_SMS_INTERNAL_ERROR);
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded working_dir");
+
+			_sConfigID = oConfig.getInitParameter("config_id");
+			if (_sConfigID == null) {
+				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "No 'config_id' found as init-parameter in web.xml.");
+				throw new ASelectException(Errors.ERROR_SMS_INTERNAL_ERROR);
+			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "ConfigID="+_sConfigID);
+
+			// pre load error messages
+			Utils.loadPropertiesFromFile(_systemLogger, _sWorkingDir, _sConfigID, "errors.conf", null/*language*/);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully read messages from errors.conf");
+
+			// Call before extracting _oAuthSpConfig configuration items
+			getAuthSpConfigSection(needSection, sErrorCode);
+			
+			// _oAuthSpConfig is set now
+			getFailureHandlingFromConfig();
+
+			// Get random generator
 			_random = SecureRandom.getInstance("SHA1PRNG");
 
-			// set allowed retries to some default
+			// Set allowed retries to some default
 			_iAllowedRetries = 0;	// Must be set by each AuthSP
 		}
 		catch (Exception e) {
@@ -123,18 +178,108 @@ public abstract class AbstractAuthSP extends ASelectHttpServlet
 			throw new ServletException("Initializing failed");
 		}
 	}
-			
+
+	// 20141201, Bauke: added
+	/**
+	 * Get the AuthSP config section.
+	 * 
+	 * @param needSection
+	 *            is section mandatory?
+	 * @throws ASelectException
+	 */
+	private void getAuthSpConfigSection(boolean needSection, String sErrorCode)
+	throws ASelectException
+	{
+		String sMethod = "getAuthSpConfigSection";
+		try {
+			_oAuthSpConfig = _configManager.getSection(null, "authsp", "id=" + _sConfigID);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Found AuthSP config section id="+ _sConfigID+" ->"+_oAuthSpConfig);
+		}
+		catch (Exception e) {
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "No valid 'authsp' config section found with id="+ _sConfigID);
+			if (needSection)
+				throw new ASelectException(sErrorCode);
+		}
+	}
+		
+	// 20141201, Bauke: added
+	/**
+	 * Get failure handling from configuration.
+	 * 
+	 * @param sDefaultHandling
+	 *            the default handling
+	 * @throws ASelectException
+	 */
+	protected void getFailureHandlingFromConfig()
+	throws ASelectException
+	{
+		String sMethod = "getFailureHandlingFromConfig";
+		
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "Id="+ _sConfigID+" ->"+_oAuthSpConfig);
+		_sFailureHandling = Utils.getSimpleParam(_configManager, _systemLogger, _oAuthSpConfig, "failure_handling", false);
+		if (_sFailureHandling == null) {
+			_sFailureHandling = DEFAULT_FAILUREHANDLING;
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod,
+					"No 'failure_handling' parameter found in configuration, using default: "+DEFAULT_FAILUREHANDLING);
+		}
+
+		if (!_sFailureHandling.equalsIgnoreCase(DEFAULT_FAILUREHANDLING) && !_sFailureHandling.equalsIgnoreCase("local")) {
+			_sFailureHandling = DEFAULT_FAILUREHANDLING;
+			StringBuffer sbWarning = new StringBuffer("Invalid 'failure_handling' parameter found in configuration: '");
+			sbWarning.append(_sFailureHandling).append("', using default: "+DEFAULT_FAILUREHANDLING);
+			_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbWarning.toString());
+		}
+		_systemLogger.log(Level.INFO, MODULE, sMethod, "failure_handling="+_sFailureHandling);
+	}
+
+	// 20141201, Bauke: added
+	/**
+	 * Gets the template and show error page.
+	 * 
+	 * @param pwOut
+	 *            the output writer
+	 * @param sResultCode
+	 *            the result code
+	 * @param sErrorCode
+	 *            the error code
+	 * @param sLanguage
+	 *            the language
+	 * @throws ASelectException
+	 */
+	protected void getTemplateAndShowErrorPage(PrintWriter pwOut, String sResultCode, String sErrorCode, String sLanguage, String sVersion)
+	throws ASelectException
+	{
+		String sMethod = "getTemplateAndShowErrorPage";
+		
+		String sErrorHtmlTemplate = Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, _sConfigID,
+				"error.html", sLanguage, _sFriendlyName, sVersion);
+		
+		String sErrorMessage = null;
+		if (Utils.hasValue(sErrorCode)) {  // translate error code
+			Properties propErrorMessages = Utils.loadPropertiesFromFile(_systemLogger, _sWorkingDir, _sConfigID, "errors.conf", sLanguage);
+			sErrorMessage = _configManager.getErrorMessage(MODULE, sErrorCode, propErrorMessages);
+		}
+		
+		showErrorPage(pwOut, sErrorHtmlTemplate, sResultCode, sErrorMessage, sLanguage, _systemLogger);
+	}
+
 	/**
 	 * Process requests for the HTTP <code>GET</code> method. <br>
 	 * <br>
 	 * Retrieves or sets up htSessionContext and iAllowedRetries
 	 * 
-	 * @param servletRequest
-	 *            the servlet request
-	 * @param servletResponse
-	 *            the servlet response
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
+	 * @param pwOut
+	 *            the pw out
+	 * @param sResultCode
+	 *            the s result code
+	 * @param sErrorCode
+	 *            the s error code
+	 * @param sLanguage
+	 *            the s language
+	 * @param sVersion
+	 *            the s version
+	 * @throws ASelectException
+	 *             the a select exception
 	 * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest,
 	 *      javax.servlet.http.HttpServletResponse)
 	 */
@@ -186,9 +331,7 @@ public abstract class AbstractAuthSP extends ASelectHttpServlet
 		byte[] r = new byte[TOKEN_SIZE];
 		_random.nextBytes(r);
 		return org.aselect.system.utils.Utils.byteArrayToHexString(r);
-	}
-	
-	
+	}	
 	
 	/* (non-Javadoc)
 	 * @see org.aselect.system.servlet.ASelectHttpServlet#isRestartableServlet()

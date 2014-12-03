@@ -95,8 +95,6 @@
  */
 package org.aselect.authspserver.authsp.ldap;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
@@ -106,17 +104,12 @@ import java.util.Properties;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.aselect.authspserver.config.AuthSPConfigManager;
-import org.aselect.authspserver.crypto.CryptoEngine;
-import org.aselect.authspserver.log.AuthSPAuthenticationLogger;
-import org.aselect.authspserver.log.AuthSPSystemLogger;
-import org.aselect.authspserver.session.AuthSPSessionManager;
-import org.aselect.system.exception.ASelectConfigException;
+import org.aselect.authspserver.authsp.AbstractAuthSP;
+import org.aselect.authspserver.authsp.ldap.Errors;
 import org.aselect.system.exception.ASelectException;
 import org.aselect.system.servlet.ASelectHttpServlet;
 import org.aselect.system.utils.Utils;
@@ -141,7 +134,7 @@ import org.aselect.system.utils.Utils;
  * 
  * @author Alfa & Ariss
  */
-public class LDAPAuthSP extends ASelectHttpServlet
+public class LDAPAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodies from AbstractAuthSP
 {
 	private static final long serialVersionUID = 1L;
 
@@ -151,41 +144,12 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	/** The name of this module, that is used in the system logging. */
 	public static final String MODULE = "LDAPAuthSP";
 
-	/** Default failure_handling option. */
-	private final static String DEFAULT_FAILUREHANDLING = "aselect";
-
 	/** The version. */
 	public static final String VERSION = "A-Select LDAP AuthSP";
-
-	/** The logger that logs system information. */
-	private AuthSPSystemLogger _systemLogger;
-
-	/** The logger that logs authentication information. */
-	private AuthSPAuthenticationLogger _authenticationLogger;
-
-	/** The crypto engine */
-	private CryptoEngine _cryptoEngine;
-
-	/** The configuration */
-	private AuthSPConfigManager _configManager;
-
-	/** The Sessionmanager */
-	private AuthSPSessionManager _sessionManager;
-
-	private String _sWorkingDir;
-	private Object _oAuthSpConfig;
-
-	/** HTML error templates */
-	private String _sErrorHtmlTemplate;
-	/** HTML error templates */
-	private String _sAuthenticateHtmlTemplate;
 	
 	// failure handling properties
-	private Properties _oErrorProperties;
-	private String _sFailureHandling;
-	private String _sFriendlyName;
-	private int _iAllowedRetries;
-
+	//private Properties _oErrorProperties;
+	
 	/**
 	 * Initialization of the LDAP AuthSP. <br>
 	 * <br>
@@ -221,127 +185,24 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	throws ServletException
 	{
 		String sMethod = "init";
-		StringBuffer sbTemp = null;
 		try {
 			// super init
-			super.init(oConfig);
-			// retrieve managers and loggers
-			_systemLogger = AuthSPSystemLogger.getHandle();
-			_authenticationLogger = AuthSPAuthenticationLogger.getHandle();
-			_configManager = AuthSPConfigManager.getHandle();
-			_sessionManager = AuthSPSessionManager.getHandle();
-			// log start
-			StringBuffer sbInfo = new StringBuffer("Starting : ");
-			sbInfo.append(MODULE);
+			super.init(oConfig, true, Errors.ERROR_LDAP_INTERNAL_ERROR);
+
+			StringBuffer sbInfo = new StringBuffer("Starting: ").append(MODULE);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
-
-			// Retrieve crypto engine from servlet context.
-			ServletContext oContext = oConfig.getServletContext();
-			_cryptoEngine = (CryptoEngine) oContext.getAttribute("CryptoEngine");
-			if (_cryptoEngine == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No CryptoEngine found in servlet context.");
-				throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR);
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded CryptoEngine.");
-
-			// Retrieve friendly name
-			_sFriendlyName = (String) oContext.getAttribute("friendly_name");
-			if (_sFriendlyName == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'friendly_name' found in servlet context.");
-				throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR);
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'friendly_name'.");
-
-			// Retrieve working directory
-			_sWorkingDir = (String) oContext.getAttribute("working_dir");
-			if (_sWorkingDir == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No working_dir found in servlet context.");
-				throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR);
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded working_dir");
-
-			// Retrieve configuration
-			String sConfigID = oConfig.getInitParameter("config_id");
-			if (sConfigID == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'config_id' found as init-parameter in web.xml.");
-				throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR);
-			}
-			try {
-				_oAuthSpConfig = _configManager.getSection(null, "authsp", "id=" + sConfigID);
-			}
-			catch (ASelectConfigException eAC) {
-				sbTemp = new StringBuffer("No valid 'authsp' config section found with id='");
-				sbTemp.append(sConfigID);
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbTemp.toString(), eAC);
-				throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR);
-			}
-
-			// Load error properties
-			StringBuffer sbErrorsConfig = new StringBuffer(_sWorkingDir);
-			sbErrorsConfig.append(File.separator).append("conf");
-			sbErrorsConfig.append(File.separator).append(sConfigID);
-			sbErrorsConfig.append(File.separator).append("errors");
-			sbErrorsConfig.append(File.separator).append("errors.conf");
-			File fErrorsConfig = new File(sbErrorsConfig.toString());
-			if (!fErrorsConfig.exists()) {
-				StringBuffer sbFailed = new StringBuffer("The error configuration file does not exist: \"");
-				sbFailed.append(sbErrorsConfig.toString()).append("\".");
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString());
-				throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR);
-			}
-			_oErrorProperties = new Properties();
-			_oErrorProperties.load(new FileInputStream(sbErrorsConfig.toString()));
-			sbInfo = new StringBuffer("Successfully loaded ");
-			sbInfo.append(_oErrorProperties.size());
-			sbInfo.append(" error messages from: \"");
-			sbInfo.append(sbErrorsConfig.toString()).append("\".");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
-
+			
 			// Load HTML templates.
-			_sErrorHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "error.html", sConfigID,
-					_sFriendlyName, VERSION);
+			Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, _sConfigID, "error.html", null, _sFriendlyName, VERSION);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'error.html' template.");
-			_sAuthenticateHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "authenticate.html", sConfigID,
-					_sFriendlyName, VERSION);
+			Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, _sConfigID, "authenticate.html", null, _sFriendlyName, VERSION);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'authenticate.html' template.");
 
-			// get allowed retries
-			try {
-				String sAllowedRetries = _configManager.getParam(_oAuthSpConfig, "allowed_retries");
-				_iAllowedRetries = Integer.parseInt(sAllowedRetries);
-			}
-			catch (ASelectConfigException eAC) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"No 'allowed_retries' parameter found in configuration", eAC);
-				throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR, eAC);
-			}
-			catch (NumberFormatException eNF) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"Invalid 'allowed_retries' parameter found in configuration", eNF);
-				throw new ASelectException(Errors.ERROR_LDAP_INTERNAL_ERROR, eNF);
-			}
-
-			// get failure handling
-			try {
-				_sFailureHandling = _configManager.getParam(_oAuthSpConfig, "failure_handling");
-			}
-			catch (ASelectConfigException eAC) {
-				_sFailureHandling = DEFAULT_FAILUREHANDLING;
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No 'failure_handling' parameter found in configuration, using default: aselect");
-			}
-
-			if (!_sFailureHandling.equalsIgnoreCase("aselect") && !_sFailureHandling.equalsIgnoreCase("local")) {
-				StringBuffer sbWarning = new StringBuffer("Invalid 'failure_handling' parameter found in configuration: '");
-				sbWarning.append(_sFailureHandling);
-				sbWarning.append("', using default: aselect");
-
-				_sFailureHandling = DEFAULT_FAILUREHANDLING;
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbWarning.toString());
-			}
-
-			sbInfo = new StringBuffer("Successfully started ");
-			sbInfo.append(VERSION).append(".");
+			// Get allowed retries
+			_iAllowedRetries = Utils.getSimpleIntParam(_configManager, _systemLogger, _oAuthSpConfig, "allowed_retries", true);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "allowed_retries="+_iAllowedRetries);
+			
+			sbInfo = new StringBuffer("Successfully started ").append(VERSION);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 		}
 		catch (Exception e) {
@@ -442,7 +303,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 				if (sCountry != null) htServiceRequest.put("country", sCountry);
 				if (sLanguage != null) htServiceRequest.put("language", sLanguage);
 
-				showAuthenticateForm(pwOut, " ", " ", htServiceRequest);
+				showAuthenticateForm(pwOut, "", htServiceRequest);
 			}
 		}
 		catch (ASelectException eAS) {
@@ -557,8 +418,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 				if (sLanguage != null) htServiceRequest.put("language", sLanguage);
 				
 				// show authentication form once again with warning message
-				showAuthenticateForm(pwOut, Errors.ERROR_LDAP_INVALID_PASSWORD, _configManager.getErrorMessage(
-						Errors.ERROR_LDAP_INVALID_PASSWORD, _oErrorProperties), htServiceRequest);
+				showAuthenticateForm(pwOut, Errors.ERROR_LDAP_INVALID_PASSWORD, htServiceRequest);
 			}
 			else {
 				// generate signature
@@ -601,8 +461,7 @@ public class LDAPAuthSP extends ASelectHttpServlet
 						if (sCountry != null) htServiceRequest.put("country", sCountry);
 						if (sLanguage != null) htServiceRequest.put("language", sLanguage);
 						// show authentication form once again with warning message
-						showAuthenticateForm(pwOut, Errors.ERROR_LDAP_INVALID_PASSWORD, _configManager.getErrorMessage(
-								Errors.ERROR_LDAP_INVALID_PASSWORD, _oErrorProperties), htServiceRequest);
+						showAuthenticateForm(pwOut, Errors.ERROR_LDAP_INVALID_PASSWORD, htServiceRequest);
 					}
 					else {
 						// authenticate failed
@@ -698,25 +557,20 @@ public class LDAPAuthSP extends ASelectHttpServlet
 
 		try {
 			// Prevent tampering with request parameters, potential fishing leak
-			if (failureHandling.equalsIgnoreCase("aselect") || sResultCode.equals(Errors.ERROR_LDAP_SUCCESS))
+			if (failureHandling.equalsIgnoreCase(DEFAULT_FAILUREHANDLING) || sResultCode.equals(Errors.ERROR_LDAP_SUCCESS))
 			// A-Select handles error or success
 			{
 				String sRid = servletRequest.getParameter("rid");
 				String sAsUrl = servletRequest.getParameter("as_url");
 				String sAsId = servletRequest.getParameter("a-select-server");
 				if (sRid == null || sAsUrl == null || sAsId == null) {
-					showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-							// RH, 20100621, Remove cyclic dependency system<->server
-//							_oErrorProperties), sLanguage);
-							_oErrorProperties), sLanguage, _systemLogger);
+					getTemplateAndShowErrorPage(pwOut, sResultCode, sResultCode, sLanguage, VERSION);
 				}
 				else {
-
 					sbTemp = new StringBuffer(sRid);
 					sbTemp.append(sAsUrl).append(sResultCode);
 					sbTemp.append(sAsId);
 					String sSignature = _cryptoEngine.generateSignature(sbTemp.toString());
-
 					sSignature = URLEncoder.encode(sSignature, "UTF-8");
 
 					sbTemp = new StringBuffer(sAsUrl);
@@ -724,7 +578,6 @@ public class LDAPAuthSP extends ASelectHttpServlet
 					sbTemp.append("&result_code=").append(sResultCode);
 					sbTemp.append("&a-select-server=").append(sAsId);
 					sbTemp.append("&signature=").append(sSignature);
-
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIR " + sbTemp);
 					try {
 						servletResponse.sendRedirect(sbTemp.toString());
@@ -737,32 +590,27 @@ public class LDAPAuthSP extends ASelectHttpServlet
 					}
 				}
 			}
-			else // Local error handling
-			{
-				// RH, 20100621, Remove cyclic dependency system<->server
-//				showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-//						_oErrorProperties), sLanguage);
-				showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-						_oErrorProperties), sLanguage, _systemLogger);
+			else { // Local error handling
+				getTemplateAndShowErrorPage(pwOut, sResultCode, sResultCode, sLanguage, VERSION);
 			}
 		}
 		catch (ASelectException eAS) // could not generate signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate LDAP AuthSP signature", eAS);
-			// RH, 20100621, Remove cyclic dependency system<->server
-//			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER, _configManager
-//					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage);
-			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage, _systemLogger);
+			try {
+				getTemplateAndShowErrorPage(pwOut, sResultCode, Errors.ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER, sLanguage, VERSION);
+			}
+			catch (ASelectException e) {
+			}
 		}
 		catch (UnsupportedEncodingException eUE) // could not encode signature
 		{
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode LDAP AuthSP signature", eUE);
-			// RH, 20100621, Remove cyclic dependency system<->server
-//			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER, _configManager
-//					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage);
-			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage, _systemLogger);
+			try {
+				getTemplateAndShowErrorPage(pwOut, sResultCode, Errors.ERROR_LDAP_COULD_NOT_AUTHENTICATE_USER, sLanguage, VERSION);
+			}
+			catch (ASelectException e) {
+			}
 		}
 	}
 
@@ -922,12 +770,13 @@ public class LDAPAuthSP extends ASelectHttpServlet
 	 *            The error message that should be shown in the page.
 	 * @param htServiceRequest
 	 *            The request parameters.
+	 * @throws ASelectException 
 	 */
-	private void showAuthenticateForm(PrintWriter pwOut, String sError, String sErrorMessage, HashMap htServiceRequest)
+	private void showAuthenticateForm(PrintWriter pwOut, String sError, HashMap htServiceRequest)
+	throws ASelectException
 	{
 		String sMethod = "showAuthenticateForm";
 		
-		String sAuthenticateForm = new String(_sAuthenticateHtmlTemplate);
 		String sMyUrl = (String) htServiceRequest.get("my_url");
 		String sRid = (String) htServiceRequest.get("rid");
 		String sAsUrl = (String) htServiceRequest.get("as_url");
@@ -937,21 +786,18 @@ public class LDAPAuthSP extends ASelectHttpServlet
 		String sRetryCounter = (String) htServiceRequest.get("retry_counter");
 		String sCountry = (String) htServiceRequest.get("country");
 		String sLanguage = (String) htServiceRequest.get("language");
-
-		// RH, 20100907, sn
+		
+		String sAuthenticateForm =  Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, _sConfigID,
+					"authenticate.html", sLanguage, _sFriendlyName, VERSION);
+		
+		String sErrorMessage = null;
+		if (Utils.hasValue(sError)) {  // translate error code
+			Properties propErrorMessages = Utils.loadPropertiesFromFile(_systemLogger, _sWorkingDir, _sConfigID, "errors.conf", sLanguage);
+			sErrorMessage = _configManager.getErrorMessage(MODULE, sError, propErrorMessages);
+		}
+		
 		String sFriendlyName = (String) htServiceRequest.get("requestorfriendlyname");
-		//if (sFriendlyName != null) {
-			//try {
-				// 20120106, Bauke: decodeing already done
-				//sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[requestor_friendly_name]", URLDecoder.decode(sFriendlyName, "UTF-8"));
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[requestor_friendly_name]", sFriendlyName);
-			//}
-			//catch (UnsupportedEncodingException e) {
-			//	_systemLogger.log(Level.WARNING, MODULE, sMethod, "UTF-8 dencoding not supported, using undecoded", e);
-			//	sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[requestor_friendly_name]", sFriendlyName);
-			//}
-		//}
-		// RH, 20100907, en
 
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[rid]", sRid);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[as_url]", sAsUrl);

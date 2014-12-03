@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.aselect.server.config.ASelectConfigManager;
+import org.aselect.server.config.Version;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.system.error.Errors;
@@ -72,10 +73,12 @@ public class Utils
 			String sRid, String sLanguage, HashMap<String, String> hUserOrganizations)
 	throws ASelectConfigException, ASelectException, IOException
 	{
+		ASelectSystemLogger logger = ASelectSystemLogger.getHandle();
 		String sUserId = (String)htSessionContext.get("user_id");
 		String sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true);
 		String sServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
-		String sSelectForm = configManager.loadHTMLTemplate(null, "orgselect", sLanguage, sLanguage);
+		String sSelectForm = org.aselect.system.utils.Utils.loadTemplateFromFile(logger, configManager.getWorkingdir(), null, "orgselect",
+								sLanguage, configManager.getOrgFriendlyName(), Version.getVersion());
 		
 		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[request]", "org_choice");
 		if (sUserId != null) sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[user_id]", sUserId);
@@ -89,7 +92,6 @@ public class Utils
 		while(it.hasNext()) {
 			String sOrgId = it.next();
 			String sOrgName = hUserOrganizations.get(sOrgId);
-//			sb.append("<option value=").append(sOrgId).append(">").append(sOrgName);
 			sb.append("<option value=").append(sOrgId).append(">").append(StringEscapeUtils.escapeHtml(sOrgName));
 			sb.append("</option>");
 		}
@@ -121,7 +123,7 @@ public class Utils
 			String sRid, String sLanguage, int step)
 	throws ASelectConfigException, ASelectException, IOException
 	{
-		
+		ASelectSystemLogger logger = ASelectSystemLogger.getHandle();
 		
 		String sServerUrl = ASelectConfigManager.getParamFromSection(null, "aselect", "redirect_url", true);
 		String sServerId = ASelectConfigManager.getParamFromSection(null, "aselect", "server_id", true);
@@ -134,10 +136,10 @@ public class Utils
 //		CryptoEngine c =CryptoEngine.getHandle();
 //		c.signRequest(hm);
 
-		String sRequest = "obo_choice";	// can we keep old request?
+		String sRequest = "obo_choice";	// can we keep old request?		
 		
-		
-		String sSelectForm = configManager.loadHTMLTemplate(null, "onbehalfof_step"+String.valueOf(step), sLanguage, sLanguage);	// maybe get this from application config
+		String sSelectForm = org.aselect.system.utils.Utils.loadTemplateFromFile(logger, configManager.getWorkingdir(), null, "onbehalfof_step"+String.valueOf(step),
+								sLanguage, configManager.getOrgFriendlyName(), Version.getVersion());	// maybe get this from application config
 		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[request]", sRequest);
 //		sSelectForm = org.aselect.system.utils.Utils.replaceString(sSelectForm, "[rid]", sRid);
 		

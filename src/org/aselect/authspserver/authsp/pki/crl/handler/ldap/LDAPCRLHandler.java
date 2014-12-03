@@ -89,7 +89,7 @@ public class LDAPCRLHandler implements ICRLHandler
 	public CRL getCRL(String URI)
 	throws ASelectException
 	{
-		String sMethod = "getCRL()";
+		String sMethod = "getCRL";
 		CRL oCrl = null;
 		CertificateFactory oCertificateFactory = null;
 		LDAPURL oLdapUrl = null;

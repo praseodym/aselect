@@ -54,7 +54,7 @@ public class RADIUSProtocolHandlerFactory
 	 */
 	static IRADIUSProtocolHandler instantiateProtocolHandler(Object oConfig, String sUid, SystemLogger oSystemLogger)
 	{
-		String sMethod = "instantiateProtocolHandler()";
+		String sMethod = "instantiateProtocolHandler";
 
 		try {
 			HashMap htContext;
@@ -98,7 +98,7 @@ public class RADIUSProtocolHandlerFactory
 	{
 		HashMap htResponse = new HashMap();
 		StringBuffer sbTemp;
-		String sMethod = "getContext()";
+		String sMethod = "getContext";
 
 		AuthSPConfigManager oConfigManager = AuthSPConfigManager.getHandle();
 		try {

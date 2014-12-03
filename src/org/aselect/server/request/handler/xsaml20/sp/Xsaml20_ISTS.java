@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.config.ASelectConfigManager;
+import org.aselect.server.config.Version;
 import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.RequestState;
 import org.aselect.server.request.handler.xsaml20.PartnerData;
@@ -186,7 +187,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		String sRid;
 		String sFederationUrl = null;
 
@@ -220,7 +221,8 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			//}
 			if (bIdpSelectForm && (!Utils.hasValue(sFederationUrl))) {
 				// No Federation URL choice made yet, allow the user to choose
-				String sIdpSelectForm = _configManager.loadHTMLTemplate(null, "idpselect", _sUserLanguage, _sUserCountry);
+				String sIdpSelectForm = Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(), null/*subdir*/,
+						"idpselect", _sUserLanguage, _configManager.getOrgFriendlyName(), Version.getVersion());
 				sIdpSelectForm = Utils.replaceString(sIdpSelectForm, "[rid]", sRid);
 				// Not backward compatible! [aselect_url] used to be server_url/handler_id,
 				// they're separated now to allow use of [aselect_url] in the traditional way too!
@@ -638,7 +640,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 	private String getApplicationLevel(String sApplicationId)
 	throws ASelectException
 	{
-		String sMethod = "getApplicationLevel()";
+		String sMethod = "getApplicationLevel";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Id=" + sApplicationId);
 
 		Object oApplications = null;

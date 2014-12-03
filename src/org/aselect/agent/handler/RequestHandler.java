@@ -595,7 +595,7 @@ public class RequestHandler extends Thread
 	private void processAuthenticateRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
 	throws ASelectCommunicationException
 	{
-		String sMethod = "processAuthenticateRequest()";
+		String sMethod = "processAuthenticateRequest";
 		StringBuffer sbBuffer = new StringBuffer();
 		try {
 			String sAppUrl = null;
@@ -1966,7 +1966,7 @@ public class RequestHandler extends Thread
 	private void processSetAuthorizationRulesRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
 	throws ASelectCommunicationException
 	{
-		final String sMethod = "processSetAuthorizationRulesRequest()";
+		final String sMethod = "processSetAuthorizationRulesRequest";
 		if (!_bAuthorization) { // Authorization not enabled
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: authorization is not enabled.");
 			_sErrorCode = Errors.ERROR_ASELECT_AGENT_AUTHORIZATION_NOT_ENABLED;

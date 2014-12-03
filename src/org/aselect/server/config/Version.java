@@ -73,7 +73,7 @@ public class Version
 	/**
 	 * The main release version of this A-Select Server
 	 */
-	private final static String VERSION = "1.9";
+	private final static String VERSION = "2.0";
 
 	/**
 	 * The service pack version of this A-Select Server

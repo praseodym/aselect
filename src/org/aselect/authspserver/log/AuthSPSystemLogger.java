@@ -118,7 +118,7 @@ public class AuthSPSystemLogger extends SystemLogger
 	public void init(Object oSysLogging, String sWorkingDir)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		Level levelSysLog = null;
 		String sSysLogTarget = null;

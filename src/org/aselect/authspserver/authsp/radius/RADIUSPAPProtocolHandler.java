@@ -100,7 +100,7 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 	@Override
 	public String authenticate(String sPassword)
 	{
-		String sMethod = "authenticate()";
+		String sMethod = "authenticate";
 		_sErrorCode = Errors.ERROR_RADIUS_COULD_NOT_AUTHENTICATE_USER;
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "PAP uid=" + _sUid);

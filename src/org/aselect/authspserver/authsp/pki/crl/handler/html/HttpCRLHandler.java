@@ -84,7 +84,7 @@ public class HttpCRLHandler implements ICRLHandler
 	public CRL getCRL(String sUri)
 	throws ASelectException
 	{
-		String sMethod = "getCRL()";
+		String sMethod = "getCRL";
 
 		CertificateFactory cf = null;
 		InputStream oConnectionInputStream = null;

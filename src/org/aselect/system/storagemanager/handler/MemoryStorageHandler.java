@@ -114,7 +114,7 @@ public class MemoryStorageHandler implements IStorageHandler
 		Object oValue = null;
 
 		String sTxt = Utils.firstPartOf(oKey.toString(), 30);
-		_systemLogger.log(Level.FINEST, MODULE, sMethod, "key="+sTxt+" this=" + this); // +" store="+_htStorage);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "key="+sTxt); // +" store="+_htStorage);
 		try {
 			HashMap htStorageContainer = (HashMap) _htStorage.get(oKey);
 			if (htStorageContainer != null) {
@@ -128,7 +128,7 @@ public class MemoryStorageHandler implements IStorageHandler
 		}
 
 		if (oValue == null) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Key was not found, cause: "
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Key "+sTxt+" was not found, cause: "
 					+ Errors.ERROR_ASELECT_STORAGE_NO_SUCH_KEY);
 			throw new ASelectStorageException(Errors.ERROR_ASELECT_STORAGE_NO_SUCH_KEY);
 		}

@@ -331,10 +331,10 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 	{
 		String sMethod = "showErrorPage";
 
-		String sErrorMessage = _configManager.getErrorMessage(sErrorCode, _sUserLanguage, _sUserCountry);
+		String sErrorMessage = _configManager.getErrorMessage(MODULE, sErrorCode, _sUserLanguage, _sUserCountry);
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "FORM[error] " + sErrorCode + ":" + sErrorMessage);
 		try {
-			String sErrorForm = _configManager.getForm("error", _sUserLanguage, _sUserCountry);
+			String sErrorForm = _configManager.getHTMLForm("error", _sUserLanguage, _sUserCountry);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error]", sErrorCode);  // obsoleted 20100817
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_code]", sErrorCode);
 			sErrorForm = Utils.replaceString(sErrorForm, "[error_message]", sErrorMessage);

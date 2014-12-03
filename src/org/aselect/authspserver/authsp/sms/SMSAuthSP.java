@@ -11,12 +11,9 @@
  */
 package org.aselect.authspserver.authsp.sms;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.text.DecimalFormat;
@@ -26,7 +23,6 @@ import java.util.Properties;
 import java.util.logging.Level;
 
 import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -54,50 +50,29 @@ import org.aselect.system.utils.Utils;
  * 
  * @author Cristina Gavrila, BTTSD
  */
-//public class SMSAuthSP extends ASelectHttpServlet
-public class SMSAuthSP extends AbstractAuthSP
+public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodies from AbstractAuthSP
 {
+	private static final long serialVersionUID = 1L;
+
 	private static final int MAX_FIXED_SECRET_LENGTH = 50;
 
 	/** The name of this module, that is used in the system logging. */
 	public static final String MODULE = "SMSAuthSP";
 
-	/** Default failure_handling option. */
-	private final static String DEFAULT_FAILUREHANDLING = "aselect";
-
 	/** The version. */
 	public static final String VERSION = "A-Select SMS AuthSP";
 
-//	/** The logger that logs system information. */
-//	private AuthSPSystemLogger _systemLogger;
-//
-//	/** The logger that logs authentication information. */
-//	private AuthSPAuthenticationLogger _authenticationLogger;
-//
-//	/** The crypto engine */
-//	private CryptoEngine _cryptoEngine;
-//
-//	/** The configuration */
-//	private AuthSPConfigManager _configManager;
-//
-//	/** The Sessionmanager */
-//	private AuthSPSessionManager _sessionManager;
-
-	private String _sWorkingDir;
-	private Object _oAuthSpConfig;
+	//private Object _oAuthSpConfig;
 
 	/** HTML error templates */
-	private String _sErrorHtmlTemplate;
+	//private String _sErrorHtmlTemplate;
 
 	/** HTML authenticate templates */
-	private String _sAuthenticateHtmlTemplate;
-	private String _sChallengeHtmlTemplate;
+	//private String _sAuthenticateHtmlTemplate;
+	//private String _sChallengeHtmlTemplate;
 
-	// failure handling properties
-	private Properties _oErrorProperties;
-	private String _sFailureHandling;
-	private String _sFriendlyName;
-	private int _iAllowedRetries;
+	//private String _sFailureHandling;
+
 	private String _sSmsUrl;
 	private String _sSmsCustomer;  // 20140206, Bauke: added for CM
 	private String _sSmsUser;
@@ -137,7 +112,7 @@ public class SMSAuthSP extends AbstractAuthSP
 	 * </ul>
 	 * 
 	 * @param oConfig
-	 *            the o config
+	 *            the configuration
 	 * @throws ServletException
 	 *             the servlet exception
 	 * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
@@ -146,71 +121,13 @@ public class SMSAuthSP extends AbstractAuthSP
 	throws ServletException
 	{
 		String sMethod = "init";
-		StringBuffer sbTemp = null;
 		try {
 			// super init
-			super.init(oConfig);
+			super.init(oConfig, true, Errors.ERROR_SMS_INTERNAL_ERROR);
 
-			// log start
-			StringBuffer sbInfo = new StringBuffer("Starting : ").append(MODULE);
+			StringBuffer sbInfo = new StringBuffer("Starting: ").append(MODULE);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
-
-			// Retrieve crypto engine from servlet context.
-			ServletContext oContext = oConfig.getServletContext();
-
-			// Retrieve friendly name
-			_sFriendlyName = (String) oContext.getAttribute("friendly_name");
-			if (_sFriendlyName == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'friendly_name' found in servlet context.");
-				throw new ASelectException(Errors.ERROR_SMS_INTERNAL_ERROR);
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'friendly_name'.");
-
-			// Retrieve working directory
-			_sWorkingDir = (String) oContext.getAttribute("working_dir");
-			if (_sWorkingDir == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No working_dir found in servlet context.");
-				throw new ASelectException(Errors.ERROR_SMS_INTERNAL_ERROR);
-			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded working_dir");
-
-			// Retrieve configuration
-			String sConfigID = oConfig.getInitParameter("config_id");
-			if (sConfigID == null) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, "No 'config_id' found as init-parameter in web.xml.");
-				throw new ASelectException(Errors.ERROR_SMS_INTERNAL_ERROR);
-			}
-			try {
-				_oAuthSpConfig = _configManager.getSection(null, "authsp", "id=" + sConfigID);
-			}
-			catch (ASelectConfigException eAC) {
-				sbTemp = new StringBuffer("No valid 'authsp' config section found with id='");
-				sbTemp.append(sConfigID).append("'");
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbTemp.toString(), eAC);
-				throw new ASelectException(Errors.ERROR_SMS_INTERNAL_ERROR);
-			}
-
-			// Load error properties
-			StringBuffer sbErrorsConfig = new StringBuffer(_sWorkingDir);
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("conf").append(File.separator).append(sConfigID);
-			sbErrorsConfig.append(File.separator);
-			sbErrorsConfig.append("errors").append(File.separator).append("errors.conf");
-			File fErrorsConfig = new File(sbErrorsConfig.toString());
-			if (!fErrorsConfig.exists()) {
-				StringBuffer sbFailed = new StringBuffer("The error configuration file does not exist: \"");
-				sbFailed.append(sbErrorsConfig.toString()).append("\".");
-				_systemLogger.log(Level.WARNING, MODULE, sMethod, sbFailed.toString());
-				throw new ASelectException(Errors.ERROR_SMS_INTERNAL_ERROR);
-			}
-			_oErrorProperties = new Properties();
-			_oErrorProperties.load(new FileInputStream(sbErrorsConfig.toString()));
-			sbInfo = new StringBuffer("Successfully loaded ");
-			sbInfo.append(_oErrorProperties.size());
-			sbInfo.append(" error messages from: \"");
-			sbInfo.append(sbErrorsConfig.toString()).append("\".");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
-
+			
 			// get show_challenge
 			try {
 				String sShow_challenge = _configManager.getParam(_oAuthSpConfig, "show_challenge");
@@ -223,52 +140,18 @@ public class SMSAuthSP extends AbstractAuthSP
 			}
 
 			// Load HTML templates.
-			_sErrorHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "error.html", sConfigID,
-					_sFriendlyName, VERSION);
+			Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, _sConfigID, "error.html", null/*language*/, _sFriendlyName, VERSION);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'error.html' template.");
-			_sAuthenticateHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "authenticate.html", sConfigID,
-					_sFriendlyName, VERSION);
+			Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, _sConfigID, "authenticate.html", null, _sFriendlyName, VERSION);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'authenticate.html' template.");
 			
 			if (_bShow_challenge) {	// Only load form if needed
-				_sChallengeHtmlTemplate = _configManager.loadHTMLTemplate(_sWorkingDir, "challenge.html", sConfigID,
-						_sFriendlyName, VERSION);
+				Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, _sConfigID, "challenge.html", null, _sFriendlyName, VERSION);
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Successfully loaded 'challenge.html' template.");
 			}
 
-			// get allowed retries
-			try {
-				String sAllowedRetries = _configManager.getParam(_oAuthSpConfig, "allowed_retries");
-				_iAllowedRetries = Integer.parseInt(sAllowedRetries);
-			}
-			catch (ASelectConfigException eAC) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"No 'allowed_retries' parameter found in configuration", eAC);
-				throw new ASelectException(Errors.ERROR_SMS_INTERNAL_ERROR, eAC);
-			}
-			catch (NumberFormatException eNF) {
-				_systemLogger.log(Level.WARNING, MODULE, sMethod,
-						"Invalid 'allowed_retries' parameter found in configuration", eNF);
-				throw new ASelectException(Errors.ERROR_SMS_INTERNAL_ERROR, eNF);
-			}
-
-			// get failure handling
-			try {
-				_sFailureHandling = _configManager.getParam(_oAuthSpConfig, "failure_handling");
-			}
-			catch (ASelectConfigException eAC) {
-				_sFailureHandling = DEFAULT_FAILUREHANDLING;
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod,
-						"No 'failure_handling' parameter found in configuration, using default: aselect");
-			}
-
-			if (!_sFailureHandling.equalsIgnoreCase("aselect") && !_sFailureHandling.equalsIgnoreCase("local")) {
-				StringBuffer sbWarning = new StringBuffer("Invalid 'failure_handling' parameter found in configuration: '");
-				sbWarning.append(_sFailureHandling);
-				sbWarning.append("', using default: aselect");
-				_sFailureHandling = DEFAULT_FAILUREHANDLING;
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbWarning.toString());
-			}
+			_iAllowedRetries = Utils.getSimpleIntParam(_configManager, _systemLogger, _oAuthSpConfig, "allowed_retries", true);
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "allowed_retries="+_iAllowedRetries);
 
 			try {
 				_sSmsUrl = _configManager.getParam(_oAuthSpConfig, "url");
@@ -277,6 +160,7 @@ public class SMSAuthSP extends AbstractAuthSP
 				_systemLogger.log(Level.CONFIG, MODULE, sMethod, "No 'url' parameter found in configuration", eAC);
 				throw new ASelectException(Errors.ERROR_SMS_INTERNAL_ERROR, eAC);
 			}
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "url="+_sSmsUrl);
 
 			// For CM a Customer ID is needed
 			_sSmsCustomer = Utils.getSimpleParam(_configManager, _systemLogger, _oAuthSpConfig, "customer", false/*not mandatory*/);
@@ -352,8 +236,7 @@ public class SMSAuthSP extends AbstractAuthSP
 			}
 			// RH, 20110913, en
 			
-			sbInfo = new StringBuffer("Successfully started ");
-			sbInfo.append(VERSION).append(".");
+			sbInfo = new StringBuffer("Successfully started ").append(VERSION);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
 		}
 		catch (Exception e) {
@@ -500,7 +383,7 @@ public class SMSAuthSP extends AbstractAuthSP
 
 				// Code sent successfully
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM htServiceRequest=" + htServiceRequest);
-				showAuthenticateForm(pwOut, null, null, htServiceRequest);
+				showAuthenticateForm(pwOut, ""/*no error*/, htServiceRequest);
 			}
 		}
 		catch (ASelectException eAS) {
@@ -569,7 +452,7 @@ public class SMSAuthSP extends AbstractAuthSP
 	protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws java.io.IOException
 	{
-		String sMethod = "doPost()";
+		String sMethod = "doPost";
 		PrintWriter pwOut = null;
 		String sUid = null;
 		String sPassword = null;
@@ -627,20 +510,15 @@ public class SMSAuthSP extends AbstractAuthSP
 				if (sLanguage != null)
 					htServiceRequest.put("language", sLanguage);
 				// show authentication form once again with warning message
-				String sMsg = _configManager.getErrorMessage(Errors.ERROR_SMS_INVALID_PASSWORD, _oErrorProperties);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Msg="+sMsg+" props="+_oErrorProperties.toString());
-				showAuthenticateForm(pwOut, Errors.ERROR_SMS_INVALID_PASSWORD, sMsg, htServiceRequest);
+				showAuthenticateForm(pwOut, Errors.ERROR_SMS_INVALID_PASSWORD, htServiceRequest);
 			}
 			else {
 				// generate signature
-				StringBuffer sbData = new StringBuffer(sRid);
-				sbData.append(sAsUrl);
-				sbData.append(sUid);
+				StringBuffer sbData = new StringBuffer(sRid).append(sAsUrl).append(sUid);
 				sbData.append(sAserverId);
-				if (sCountry != null)
-					sbData.append(sCountry);
-				if (sLanguage != null)
-					sbData.append(sLanguage);
+				if (sCountry != null) sbData.append(sCountry);
+				if (sLanguage != null) sbData.append(sLanguage);
+				
 				if (!_cryptoEngine.verifySignature(sAserverId, sbData.toString(), URLDecoder.decode(sSignature, "UTF-8"))) {
 					StringBuffer sbWarning = new StringBuffer("Invalid signature from A-Select Server '");
 					sbWarning.append(sAserverId).append("' for user: ").append(sUid);
@@ -726,9 +604,7 @@ public class SMSAuthSP extends AbstractAuthSP
 							htServiceRequest.put("language", sLanguage);
 						
 						// show authentication form once again with warning message
-						showAuthenticateForm(pwOut, Errors.ERROR_SMS_INVALID_PASSWORD, 
-								_configManager.getErrorMessage(Errors.ERROR_SMS_INVALID_PASSWORD, _oErrorProperties),
-								htServiceRequest);
+						showAuthenticateForm(pwOut, Errors.ERROR_SMS_INVALID_PASSWORD, htServiceRequest);
 					}
 					else { // authenticate failed
 						_authenticationLogger.log(new Object[] {
@@ -794,12 +670,13 @@ public class SMSAuthSP extends AbstractAuthSP
 	 *            The error message that should be shown in the page.
 	 * @param htServiceRequest
 	 *            The request parameters.
+	 * @throws ASelectException 
 	 */
-	private void showAuthenticateForm(PrintWriter pwOut, String sError, String sErrorMessage, HashMap htServiceRequest)
+	private void showAuthenticateForm(PrintWriter pwOut, String sError, HashMap htServiceRequest)
+	throws ASelectException
 	{
 		String sMethod = "showAuthenticateForm";
-		
-		String sAuthenticateForm = new String(_sAuthenticateHtmlTemplate);
+
 		String sMyUrl = (String) htServiceRequest.get("my_url");
 		String sRid = (String) htServiceRequest.get("rid");
 		String sAsUrl = (String) htServiceRequest.get("as_url");
@@ -807,10 +684,19 @@ public class SMSAuthSP extends AbstractAuthSP
 		String sAsId = (String) htServiceRequest.get("a-select-server");
 		String sSignature = (String) htServiceRequest.get("signature");
 		String sRetryCounter = (String) htServiceRequest.get("retry_counter");
+		String sLanguage = (String)htServiceRequest.get("language");  // optional language code
 		String sCountry = (String) htServiceRequest.get("country");
-		String sLanguage = (String) htServiceRequest.get("language");
+		String sAuthenticateForm = Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, _sConfigID,
+				"authenticate.html", sLanguage, _sFriendlyName, VERSION);
+		
+		String sErrorMessage = null;
+		if (Utils.hasValue(sError)) {  // translate error code
+			Properties propErrorMessages = Utils.loadPropertiesFromFile(_systemLogger, _sWorkingDir, _sConfigID, "errors.conf", sLanguage);
+			sErrorMessage = _configManager.getErrorMessage(MODULE, sError, propErrorMessages);
+		}
 		
 		// RH, 20100907, sn
+		// NOTE: friendly name is taken from the request, not the value produced by init()
 		String sFriendlyName = (String) htServiceRequest.get("requestorfriendlyname");
 		if (sFriendlyName != null) {
 			try {
@@ -840,7 +726,6 @@ public class SMSAuthSP extends AbstractAuthSP
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[retry_counter]", sRetryCounter);
 		
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[error_message]", sErrorMessage);
-		//sAuthenticateForm = Utils.replaceConditional(sAuthenticateForm, "if_error", sErrorMessage != null && !sErrorMessage.equals(""));
 		
 		// Bauke 20110721: Extract if_cond=... from the application URL
 		String sSpecials = Utils.getAselectSpecials(htServiceRequest, true/*decode too*/, _systemLogger);
@@ -865,12 +750,13 @@ public class SMSAuthSP extends AbstractAuthSP
 	 *            The error message that should be shown in the page.
 	 * @param htServiceRequest
 	 *            The request parameters.
+	 * @throws ASelectException 
 	 */
 	private void showChallengeForm(PrintWriter pwOut, String sError, String sErrorMessage, HashMap htServiceRequest)
+	throws ASelectException
 	{
 		String sMethod = "showChallengeForm";
 		
-		String sChallengeForm = new String(_sChallengeHtmlTemplate);
 		String sMyUrl = (String) htServiceRequest.get("my_url");
 		String sRid = (String) htServiceRequest.get("rid");
 		String sAsUrl = (String) htServiceRequest.get("as_url");
@@ -879,8 +765,11 @@ public class SMSAuthSP extends AbstractAuthSP
 		String sSignature = (String) htServiceRequest.get("signature");
 		String sRetryCounter = (String) htServiceRequest.get("retry_counter");
 		String sCountry = (String) htServiceRequest.get("country");
-		String sLanguage = (String) htServiceRequest.get("language");
 		String sChallenge = (String) htServiceRequest.get("challenge");
+		String sLanguage = (String) htServiceRequest.get("language");
+		
+		String sChallengeForm = Utils.loadTemplateFromFile(_systemLogger, _sWorkingDir, _sConfigID,
+				"challenge.html", sLanguage, _sFriendlyName, VERSION);
 		
 		// RH, 20100907, sn
 		String sFriendlyName = (String) htServiceRequest.get("requestorfriendlyname");
@@ -953,20 +842,18 @@ public class SMSAuthSP extends AbstractAuthSP
 
 		try {
 			// Prevent tampering with request parameters, potential fishing leak
-			if (failureHandling.equalsIgnoreCase("aselect") || sResultCode.equals(Errors.ERROR_SMS_SUCCESS) ||
+			if (failureHandling.equalsIgnoreCase(DEFAULT_FAILUREHANDLING) || sResultCode.equals(Errors.ERROR_SMS_SUCCESS) ||
 								sResultCode.equals(Errors.ERROR_SMS_INVALID_PHONE)) {  // 20111020, Bauke: added
 				// A-Select handles error or success
 				String sRid = servletRequest.getParameter("rid");
 				String sAsUrl = servletRequest.getParameter("as_url");
 				String sAsId = servletRequest.getParameter("a-select-server");
 				if (sRid == null || sAsUrl == null || sAsId == null) {
-					showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode,
-							_configManager.getErrorMessage(sResultCode, _oErrorProperties), sLanguage, _systemLogger);
+					getTemplateAndShowErrorPage(pwOut, sResultCode, sResultCode, sLanguage, VERSION);
 				}
 				else {
 					sbTemp = new StringBuffer(sRid);
-					sbTemp.append(sAsUrl).append(sResultCode);
-					sbTemp.append(sAsId);
+					sbTemp.append(sAsUrl).append(sResultCode).append(sAsId);
 					String sSignature = _cryptoEngine.generateSignature(sbTemp.toString());
 					sSignature = URLEncoder.encode(sSignature, "UTF-8");
 
@@ -989,19 +876,24 @@ public class SMSAuthSP extends AbstractAuthSP
 				}
 			}
 			else {  // Local error handling
-				showErrorPage(pwOut, _sErrorHtmlTemplate, sResultCode, _configManager.getErrorMessage(sResultCode,
-						_oErrorProperties), sLanguage, _systemLogger);
+				getTemplateAndShowErrorPage(pwOut, sResultCode, sResultCode, sLanguage, VERSION);
 			}
 		}
 		catch (ASelectException eAS) {  // could not generate signature
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not generate SMS AuthSP signature", eAS);
-			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_SMS_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage, _systemLogger);
+			try {
+				getTemplateAndShowErrorPage(pwOut, sResultCode, Errors.ERROR_SMS_COULD_NOT_AUTHENTICATE_USER, sLanguage, VERSION);
+			}
+			catch (ASelectException e) {
+			}
 		}
 		catch (UnsupportedEncodingException eUE) {  // could not encode signature
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not encode SMS AuthSP signature", eUE);
-			showErrorPage(pwOut, _sErrorHtmlTemplate, Errors.ERROR_SMS_COULD_NOT_AUTHENTICATE_USER, _configManager
-					.getErrorMessage(sResultCode, _oErrorProperties), sLanguage, _systemLogger);
+			try {
+				getTemplateAndShowErrorPage(pwOut, sResultCode, Errors.ERROR_SMS_COULD_NOT_AUTHENTICATE_USER, sLanguage, VERSION);
+			}
+			catch (ASelectException e) {
+			}
 		}
 	}
 

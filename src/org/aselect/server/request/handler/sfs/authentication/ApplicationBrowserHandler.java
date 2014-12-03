@@ -213,7 +213,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			String sMyServerId, String sMyOrg)
 	{
 		super(servletRequest, servletResponse, sMyServerId, sMyOrg);
-		_sModule = "ApplicationBrowserHandler()";
+		_sModule = "ApplicationBrowserHandler";
 		_applicationManager = ApplicationManager.getHandle();
 		_authspHandlerManager = AuthSPHandlerManager.getHandle();
 		_crossASelectManager = CrossASelectManager.getHandle();
@@ -242,7 +242,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	{
 		String sRequest;
 		String sRid;
-		String sMethod = "processBrowserRequest()";
+		String sMethod = "processBrowserRequest";
 
 		sRequest = (String) htServiceRequest.get("request");
 		if (sRequest == null) {
@@ -250,7 +250,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			if (htServiceRequest.containsKey("aselect_credentials_uid"))
 				showUserInfo(htServiceRequest, _servletResponse);
 			else {
-				String sServerInfoForm = _configManager.getForm("serverinfo");
+				String sServerInfoForm = _configManager.getHTMLForm("serverinfo", "", "");
 				sServerInfoForm = Utils.replaceString(sServerInfoForm, "[message]", " ");
 				pwOut.println(sServerInfoForm);
 			}
@@ -504,9 +504,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	private void handleLogin1(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 	throws ASelectException
 	{
-		String sMethod = "handleLogin1()";
+		String sMethod = "handleLogin1";
 		String sRid = null;
-		String sLoginForm = _configManager.getForm("login");
 		StringBuffer sbUrl;
 
 		try {
@@ -625,6 +624,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 
 			// show login (user_id) form
+			String sLoginForm = _configManager.getHTMLForm("login", "", "");
 			sLoginForm = Utils.replaceString(sLoginForm, "[rid]", sRid);
 			sLoginForm = Utils.replaceString(sLoginForm, "[aselect_url]", (String) htServiceRequest.get("my_url"));
 			sLoginForm = Utils.replaceString(sLoginForm, "[a-select-server]", _sMyServerId);
@@ -684,7 +684,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	{
 		String sRid = null;
 		String sUid = null;
-		String sMethod = "handleLogin2()";
+		String sMethod = "handleLogin2";
 
 		StringBuffer sb;
 		try {
@@ -746,7 +746,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			}
 			// end only 1 valid authsp
 
-			String sSelectForm = _configManager.getForm("select");
+			String sSelectForm = _configManager.getHTMLForm("select", "", "");
 			sSelectForm = Utils.replaceString(sSelectForm, "[rid]", sRid);
 			sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", _sMyServerId);
 			sSelectForm = Utils.replaceString(sSelectForm, "[user_id]", sUid);
@@ -862,7 +862,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 				}
 
 				// must use popup so show the popup page
-				String sPopupForm = _configManager.getForm("popup");
+				String sPopupForm = _configManager.getHTMLForm("popup", "", "");
 				sPopupForm = Utils.replaceString(sPopupForm, "[authsp_url]", sRedirectUrl);
 
 				String strFriendlyName = _configManager.getParam(authSPsection, "friendly_name");
@@ -927,7 +927,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		String sRemoteOrg = null;
 		String sUid = null;
 		String sHomeIdp = null;
-		String sMethod = "handleCrossLogin()";
+		String sMethod = "handleCrossLogin";
 
 		try {
 			// is cross enabled? (configuration)
@@ -1213,7 +1213,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	private void handleIPLogin1(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 	throws ASelectException
 	{
-		String sMethod = "handleIPLogin1()";
+		String sMethod = "handleIPLogin1";
 		String sRid = null;
 		Integer intRequiredLevel = null;
 		String sLevel = null;
@@ -1390,8 +1390,8 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	private void handleLogout(HashMap htServiceRequest, HttpServletResponse servletResponse, PrintWriter pwOut)
 	throws ASelectException
 	{
-		String sMethod = "handleLogout()";
-		String sLoggedOutForm = _configManager.getForm("loggedout");
+		String sMethod = "handleLogout";
+		String sLoggedOutForm = _configManager.getHTMLForm("loggedout", "", "");
 
 		try {
 			String sTgt = (String) htServiceRequest.get("aselect_credentials_tgt");
@@ -1489,7 +1489,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	private void handleCreateTGT(HashMap htServiceRequest, HttpServletResponse servletResponse)
 	throws ASelectException
 	{
-		String sMethod = "handleCreateTGTRequest()";
+		String sMethod = "handleCreateTGTRequest";
 		AuthenticationLogger authenticationLogger = ASelectAuthenticationLogger.getHandle();
 
 		try {
@@ -1618,7 +1618,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		Integer intMaxLevel = null;
 		HashMap htUserAuthsps = new HashMap();
 		HashMap htAllowedAuthsps = new HashMap();
-		String sMethod = "getAuthsps()";
+		String sMethod = "getAuthsps";
 
 		try {
 
@@ -1705,7 +1705,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	{
 		HashMap htAllowedAuthsps;
 		String sAuthsp = null;
-		String sMethod = "startAuthentication()";
+		String sMethod = "startAuthentication";
 
 		sAuthsp = (String) htLoginRequest.get("authsp");
 
@@ -1830,7 +1830,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	private void showUserInfo(HashMap htServiceRequest, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "showUserInfo()";
+		String sMethod = "showUserInfo";
 		PrintWriter pwOut = null;
 
 		try {
@@ -1841,7 +1841,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			String sMyUrl = (String) htServiceRequest.get("my_url");
 			String sTgt = (String) htServiceRequest.get("aselect_credentials_tgt");
 
-			String sUserInfoForm = _configManager.getForm("userinfo");
+			String sUserInfoForm = _configManager.getHTMLForm("userinfo", "", "");
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[uid]", sUserId);
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[a-select-server]", _sMyServerId);
 			sUserInfoForm = Utils.replaceString(sUserInfoForm, "[aselect_url]", sMyUrl);
