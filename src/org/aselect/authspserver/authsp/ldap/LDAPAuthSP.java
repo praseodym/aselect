@@ -235,7 +235,8 @@ public class LDAPAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit good
 		String failureHandling = _sFailureHandling;	// Initially we use default from config, this might change if we suspect parameter tampering
 
 		try {
-			servletResponse.setContentType("text/html");	// RH, 20111021, n 	// contenttype must be set before getwriter
+			// 20141208, Bauke: utf-8 added
+			servletResponse.setContentType("text/html; charset=utf-8");	// RH, 20111021, n 	// contenttype must be set before getwriter
 
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 			pwOut = servletResponse.getWriter();
@@ -357,7 +358,8 @@ public class LDAPAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit good
 		String sRequest = servletRequest.getParameter("request");
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "LDAP POST { req="+sRequest+" query-->" + servletRequest.getQueryString()+" len="+servletRequest.getContentLength());
 		try {
-			servletResponse.setContentType("text/html");	// RH, 20111021, n	// contenttype must be set before getwriter
+			// 20141208, Bauke: utf-8 added
+			servletResponse.setContentType("text/html; charset=utf-8");	// RH, 20111021, n	// contenttype must be set before getwriter
 			pwOut = servletResponse.getWriter();
 
 			// NOTE: getParameter() returns an URL decoded value

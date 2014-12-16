@@ -83,7 +83,7 @@ public class XSAML11RequestHandler extends ProtoRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			super.init(oServletConfig, oConfig);
 
@@ -157,7 +157,7 @@ public class XSAML11RequestHandler extends ProtoRequestHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "XSaml11 request=" + request);
 		try {
 			HashMap htResponse = getASelectCredentials(request);
@@ -242,7 +242,7 @@ public class XSAML11RequestHandler extends ProtoRequestHandler
 	private void send(HttpServletResponse response, SAMLArtifact oSAMLArtifact, String sRedirectUrl, String sTarget)
 	throws ASelectException
 	{
-		String sMethod = "send()";
+		String sMethod = "send";
 		try {
 			StringBuffer sbRedirect = new StringBuffer();
 			sbRedirect.append(sRedirectUrl);
@@ -273,7 +273,7 @@ public class XSAML11RequestHandler extends ProtoRequestHandler
 	public String serializeTheseAttributes(HashMap htAttribs)
 	throws ASelectException
 	{
-		String sMethod = "serializeTheseAttributes()";
+		String sMethod = "serializeTheseAttributes";
 		String sSerializedAttributes = org.aselect.server.utils.Utils.serializeAttributes(htAttribs);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "sSerializedAttributes=" + sSerializedAttributes);
 		return sSerializedAttributes;

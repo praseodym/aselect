@@ -285,7 +285,7 @@ public class TGTIssuer
 	{
 		// A 'cross TGT' is issued if this Server is acting as 'local' A-Select Server.
 		// The user was authenticated at another (remote) A-Select Server.
-		String sMethod = "issueCrossTGT()";
+		String sMethod = "issueCrossTGT";
 		String sTgt = null;
 		String sArpTarget = null; // added 1.5.4
 
@@ -763,7 +763,7 @@ throws ASelectException
 				String sSelectForm = org.aselect.server.utils.Utils.presentOnBehalfOf(servletRequest, _configManager,
 //						htSessionContext, sRid, (String)htTGTContext.get("language"), 0 /*step 0, do obo or not */);
 				htSessionContext, sRid, (String)htTGTContext.get("language"), step /*step 0 = do obo or not */);
-				servletResponse.setContentType("text/html");
+				servletResponse.setContentType("text/html; charset=utf-8");
 				
 				Tools.pauseSensorData(_configManager, _systemLogger, htSessionContext);
 				//_sessionManager.updateSession(sRid, htSessionContext); // Write session
@@ -783,7 +783,7 @@ throws ASelectException
 				// The user must choose his organization
 				String sSelectForm = org.aselect.server.utils.Utils.presentOrganizationChoice(servletRequest, _configManager,
 						htSessionContext, sRid, (String)htTGTContext.get("language"), hUserOrganizations);
-				servletResponse.setContentType("text/html");
+				servletResponse.setContentType("text/html; charset=utf-8");
 				
 				Tools.pauseSensorData(_configManager, _systemLogger, htSessionContext);
 				//_sessionManager.updateSession(sRid, htSessionContext); // Write session

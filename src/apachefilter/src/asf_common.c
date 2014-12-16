@@ -564,10 +564,10 @@ int aselect_filter_gen_error_page(pool *pPool, request_rec *pRequest, int iError
     char    pcError[256];
     int     iRet;
 
-    TRACE("aselect_filter_gen_error_page()");
+    TRACE("aselect_filter_gen_error_page");
 
     iRet = ASELECT_FILTER_ERROR_FAILED;
-    pRequest->content_type = "text/html";
+    pRequest->content_type = "text/html; charset=utf-8";
     aselect_filter_add_nocache_headers(headers_out);
     ap_send_http_header(pRequest);
     sprintf(pcError, "%x", iError);
@@ -630,7 +630,7 @@ int aselect_filter_gen_authcomplete_redirect(pool * pPool, request_rec *pRequest
     //char *pcFrameUrl;
     //int bFrameHtml = 0;
 
-    pRequest->content_type = "text/html";
+    pRequest->content_type = "text/html; charset=utf-8";
     aselect_filter_add_nocache_headers(headers_out);
     ap_send_http_header(pRequest);
    
@@ -697,7 +697,7 @@ int aselect_filter_gen_top_redirect(pool *pPool, char *addedSecurity, request_re
     char    *pcCookie;
 
     TRACE4("aselect_filter_gen_top_redirect::%s-%s-%s-%s.", pcASUrl, pcASelectServer, pcRID, cookiePath); 
-    pRequest->content_type = "text/html";
+    pRequest->content_type = "text/html; charset=utf-8";
 
     // save the aselect-server-url parameter which is need to kill the ticket
     // but first strip any parameters from the url
@@ -916,7 +916,7 @@ int aselect_filter_show_barhtml(pool *pPool, request_rec *pRequest, PASELECT_FIL
 
     // Expect /?apparg=bla in url
     TRACE2("aselect_filter_show_barhtml: loc=%s url=%s", pConfig->pCurrentApp->pcLocation, pcASelectAppURL);
-    pRequest->content_type = "text/html";
+    pRequest->content_type = "text/html; charset=utf-8";
     aselect_filter_add_nocache_headers(headers_out);
 
     ap_send_http_header(pRequest);

@@ -86,7 +86,7 @@ public class Xsaml20_HandleMetadata extends AbstractRequestHandler
 
 		try {
 			out = response.getWriter();
-			response.setContentType("text/xml");
+			response.setContentType("text/xml; charset=utf-8");
 		}
 		catch (IOException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not handle the request", e);

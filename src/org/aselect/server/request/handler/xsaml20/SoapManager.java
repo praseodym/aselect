@@ -55,7 +55,7 @@ public class SoapManager
 	@SuppressWarnings("unchecked")
 	public Envelope buildSOAPMessage(SAMLObject samlMessage)
 	{
-		String sMethod = "buildSOAPMessage()";
+		String sMethod = "buildSOAPMessage";
 		XMLObjectBuilderFactory builderFactory = org.opensaml.xml.Configuration.getBuilderFactory();
 
 		SOAPObjectBuilder<Envelope> envBuilder = (SOAPObjectBuilder<Envelope>) builderFactory

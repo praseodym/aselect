@@ -81,7 +81,7 @@ public abstract class AbstractRequestHandler extends BasicRequestHandler impleme
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			_systemLogger = ASelectSystemLogger.getHandle();
 			_configManager = ASelectConfigManager.getHandle();

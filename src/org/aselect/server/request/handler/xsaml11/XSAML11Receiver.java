@@ -59,7 +59,7 @@ public class XSAML11Receiver extends SamlAssertionConsumer
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		super.init(oServletConfig, oConfig);
 
 		_sArtifactUrl = null;

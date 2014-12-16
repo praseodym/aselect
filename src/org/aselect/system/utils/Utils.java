@@ -1322,8 +1322,8 @@ public class Utils
 		//   aselectserver/conf/html/directlogin_nl.html  (sSubDir = null)
 		//   authspserver/conf/sms/html/authenticate.html (sLanguage = null)
 		// Error files:
-		//   authspserver/conf/ldap/errors/errors.conf
-		//   aselectserver/conf/errors/errors_nl.conf
+		//   authspserver/conf/ldap/errors/errors.conf (sFileName ends with .conf and subdir is set)
+		//   aselectserver/conf/errors/errors_nl.conf (sFileName ends with .conf)
 		
 		String sLangExt = (Utils.hasValue(sLanguage))? "_" + sLanguage.toLowerCase(): "";
 		if (sFileName.endsWith(".conf")) {
@@ -1364,5 +1364,4 @@ public class Utils
 							// 20141118 old: getParam(_oASelectConfigSection, "organization_friendly_name"));
 		return sTemplate;
 	}
-
 }

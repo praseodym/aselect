@@ -45,7 +45,7 @@ public class JDBCStorageHandlerVarChar extends JDBCStorageHandler
 	public Object get(Object oKey)
 	throws ASelectStorageException
 	{
-		String sMethod = "get()";
+		String sMethod = "get";
 		Object oRet = null;
 		PreparedStatement oStatement = null;
 		ResultSet oResultSet = null;
@@ -138,7 +138,7 @@ public class JDBCStorageHandlerVarChar extends JDBCStorageHandler
 	public void put(Object oKey, Object oValue, Long lTimestamp)
 	throws ASelectStorageException
 	{
-		String sMethod = "put()";
+		String sMethod = "put";
 		PreparedStatement oStatement = null;
 		ResultSet oResultSet = null;
 		Connection oConnection = null; // RH, 20090605, n

@@ -94,7 +94,7 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
 			boolean bSendAttributeStatement)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			_systemLogger = ASelectSystemLogger.getHandle();
 			_configManager = ASelectConfigManager.getHandle();
@@ -228,7 +228,7 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
 			String sHost, String sConfirmationMethod, String sIdp)
 	throws ASelectException
 	{
-		String sMethod = "createSAMLAssertion()";
+		String sMethod = "createSAMLAssertion";
 		SAMLAssertion oSAMLAssertion = null;
 		SAMLAttributeStatement oSAMLAttributeStatement = null;
 		SAMLAuthenticationStatement oSAMLAuthenticationStatement = null;
@@ -377,7 +377,7 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
 			HashMap htAttributes)
 	throws ASelectException
 	{
-		String sMethod = "storeAttributesSession()";
+		String sMethod = "storeAttributesSession";
 		try {
 			String sSAMLID = SESSION_ID_PREFIX + sUid;
 
@@ -468,7 +468,7 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
 
 	throws ASelectException
 	{
-		String sMethod = "generateSAMLAuthenticationStatement()";
+		String sMethod = "generateSAMLAuthenticationStatement";
 		SAMLAuthenticationStatement oSAMLAuthenticationStatement = null;
 		try {
 
@@ -521,7 +521,7 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
 	private SAMLAttributeStatement generateSAMLAttributeStatement(String sUid, HashMap htAttributes)
 	throws ASelectException
 	{
-		String sMethod = "generateSAMLAttributeStatement()";
+		String sMethod = "generateSAMLAttributeStatement";
 		SAMLAttributeStatement oSAMLAttributeStatement = null;
 		try {
 			Vector vAttributes = new Vector();
@@ -580,7 +580,7 @@ public abstract class AbstractWebSSOProfile implements IWebSSOProfile
 	private SAMLAttribute createSAMLAttribute(String sName, Object oValue)
 	throws ASelectException
 	{
-		String sMethod = "generateSAMLAttribute()";
+		String sMethod = "generateSAMLAttribute";
 		SAMLAttribute oSAMLAttribute = new SAMLAttribute();
 
 		try {

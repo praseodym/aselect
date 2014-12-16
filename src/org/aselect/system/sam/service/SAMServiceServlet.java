@@ -466,7 +466,7 @@ public abstract class SAMServiceServlet extends HttpServlet
 				String sQueryString = oHttpServletRequest.getQueryString();
 				if (sQueryString != null) {
 					if (sQueryString.equalsIgnoreCase("status")) {
-						oHttpServletResponse.setContentType("text/html");
+						oHttpServletResponse.setContentType("text/html; charset=utf-8");
 						// display status info
 						showSAMStatusPage(oHttpServletResponse.getWriter(), getSAMInfo());
 					}
@@ -478,7 +478,7 @@ public abstract class SAMServiceServlet extends HttpServlet
 					}
 				}
 				else {
-					oHttpServletResponse.setContentType("text/html");
+					oHttpServletResponse.setContentType("text/html; charset=utf-8");
 					// display status refresh page
 					String sTargetUrl = oHttpServletRequest.getRequestURL().append("?status").toString();
 					showSAMPage(oHttpServletResponse.getWriter(), sTargetUrl);

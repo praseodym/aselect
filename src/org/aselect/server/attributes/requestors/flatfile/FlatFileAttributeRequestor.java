@@ -260,7 +260,7 @@ public class FlatFileAttributeRequestor extends GenericAttributeRequestor
 	private HashMap readAttributes(Object oAttribute)
 	throws ASelectException
 	{
-		String sMethod = "readAttributes()";
+		String sMethod = "readAttributes";
 		HashMap htReturn = new HashMap();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Read");
 		try {

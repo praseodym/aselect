@@ -79,7 +79,7 @@ public class ASelectRestartRequestHandler extends AbstractRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 //		try {
 		super.init(oServletConfig, oConfig);

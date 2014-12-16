@@ -74,7 +74,7 @@ public class Xsaml20_TokenRequestHandler extends Saml20_BaseHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		try {
 			super.init(oServletConfig, oConfig);
@@ -100,7 +100,7 @@ public class Xsaml20_TokenRequestHandler extends Saml20_BaseHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		String sPathInfo = request.getPathInfo();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "==== Path=" + sPathInfo + " TokenRequestQuery: "
 				+ request.getQueryString());
@@ -147,7 +147,7 @@ public class Xsaml20_TokenRequestHandler extends Saml20_BaseHandler
 	protected void handleTokenRequest(HttpServletRequest request, HttpServletResponse response)
 	throws IOException, ASelectException
 	{
-		String sMethod = "handleTokenRequest()";
+		String sMethod = "handleTokenRequest";
 
 		response.setHeader("Pragma", "no-cache");
 		response.setHeader("Cache-Control", "no-cache, no-store");

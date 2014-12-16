@@ -95,7 +95,7 @@ public class BrowserArtifact extends AbstractWebSSOProfile
 			boolean bSendAttributeStatement)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			_oAssertionSessionManager = AssertionSessionManager.getHandle();
 
@@ -219,7 +219,7 @@ public class BrowserArtifact extends AbstractWebSSOProfile
 	public void process(HashMap htInfo, HttpServletResponse response, String sIP, String sHost)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		SAMLArtifact oSAMLArtifact = null;
 		try {
 			String sRID = (String) htInfo.get("rid");
@@ -354,7 +354,7 @@ public class BrowserArtifact extends AbstractWebSSOProfile
 	private void send(HttpServletResponse response, SAMLArtifact oSAMLArtifact, String sShire, String sTarget)
 	throws ASelectException
 	{
-		String sMethod = "send()";
+		String sMethod = "send";
 		try {
 			StringBuffer sbRedirect = new StringBuffer();
 			sbRedirect.append(sShire);

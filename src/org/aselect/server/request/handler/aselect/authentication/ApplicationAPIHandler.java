@@ -862,7 +862,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			{
 				_oTGTManager.remove(sTGT);
 				throw new ASelectCommunicationException(sResultCode);
-				// message with error code and rid is send in "processAPIRequest()"
+				// message with error code and rid is send in "processAPIRequest"
 			}
 		}
 

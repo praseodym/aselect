@@ -282,7 +282,7 @@ public class RadiusAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 			if (sCountry == null || sCountry.trim().length() < 1)
 				sCountry = null;
 
-			servletResponse.setContentType("text/html");
+			servletResponse.setContentType("text/html; charset=utf-8");
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 			pwOut = servletResponse.getWriter();
 
@@ -397,7 +397,7 @@ public class RadiusAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 		
 		try {
 			pwOut = servletResponse.getWriter();
-			servletResponse.setContentType("text/html");
+			servletResponse.setContentType("text/html; charset=utf-8");
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 
 			String sMyUrl = servletRequest.getRequestURL().toString();

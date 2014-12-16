@@ -308,7 +308,7 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 				sLogoutResultPage = Utils.replaceString(sLogoutResultPage, "[result_code]", resultCode);
 				sLogoutResultPage = _configManager.updateTemplate(sLogoutResultPage, null/*no session*/, servletRequest);
 				pwOut = servletResponse.getWriter();
-				servletResponse.setContentType("text/html");
+				servletResponse.setContentType("text/html; charset=utf-8");
 				pwOut.println(sLogoutResultPage);
 			}
 			catch (IOException e) {

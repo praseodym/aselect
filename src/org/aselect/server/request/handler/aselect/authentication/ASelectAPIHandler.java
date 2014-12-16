@@ -265,7 +265,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 			IOutputMessage oOutputMessage)
 	throws ASelectException
 	{
-		String sMethod = "processAPIRequest()";
+		String sMethod = "processAPIRequest";
 		String sRequest = oInputMessage.getParam("request");
 
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "AselApiREQ " + sRequest);
@@ -297,7 +297,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 			IOutputMessage oOutputMessage)
 	throws ASelectException
 	{
-		String sMethod = "handleAuthenticateRequest()";
+		String sMethod = "handleAuthenticateRequest";
 		String sSessionId = null;
 		String sASelectServer = null;
 		String sLocalASUrl = null;
@@ -495,7 +495,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 	private void handleVerifyCredentialsRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
 	throws ASelectException
 	{
-		String sMethod = "handleVerifyCredentialsRequest()";
+		String sMethod = "handleVerifyCredentialsRequest";
 
 		HashMap htTGTContext = null;
 		String sRid = null;
@@ -581,7 +581,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 			{
 				_tgtManager.remove(sTGT);
 				throw new ASelectCommunicationException(sResultCode);
-				// message with error code and rid is send in "processAPIRequest()"
+				// message with error code and rid is send in "processAPIRequest"
 			}
 		}
 

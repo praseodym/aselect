@@ -806,7 +806,7 @@ static int aselect_filter_handler(request_rec *pRequest)
 						TRACE("aselect_filter_handler: User has ticket: ACCESS_GRANTED");
 					}
 					else {
-						pRequest->content_type = "text/html";
+						pRequest->content_type = "text/html; charset=utf-8";
 						pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectticket", pcCookiePath, addedSecurity);
 						TRACE1("Delete cookie: %s", pcCookie);
 						ap_table_add(headers_out, "Set-Cookie", pcCookie);
@@ -994,7 +994,7 @@ static int aselect_filter_handler(request_rec *pRequest)
 						char *pcLogoutHTML = pConfig->pcLogoutTemplate;  // configurable logout template
 
 						TRACE1("aselect_generate_bar, logout loc=%s", pConfig->pCurrentApp->pcLocation);
-						pRequest->content_type = "text/html";
+						pRequest->content_type = "text/html; charset=utf-8";
 						ap_send_http_header(pRequest);
 
 						// Bauke 20080928: added configurable Logout Bar
@@ -1013,7 +1013,7 @@ static int aselect_filter_handler(request_rec *pRequest)
 								if (iError == ASELECT_FILTER_ASAGENT_ERROR_OK) {
 									// Successfully killed the ticket, now redirect to the aselect-server
 									if ((pcASelectServerURL = aselect_filter_get_cookie(pPool, headers_in, "aselectserverurl="))) {
-										pRequest->content_type = "text/html";
+										pRequest->content_type = "text/html; charset=utf-8";
 										pcCookie = ap_psprintf(pPool, "%s=; version=1; max-age=0; path=%s;%s", "aselectticket", pcCookiePath, addedSecurity);
 										TRACE1("Delete cookie: %s", pcCookie);
 										ap_table_add(headers_out, "Set-Cookie", pcCookie);

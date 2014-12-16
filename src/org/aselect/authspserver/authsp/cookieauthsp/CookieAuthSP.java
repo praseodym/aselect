@@ -183,7 +183,7 @@ public class CookieAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 		String sQueryString = "";
 		String sLanguage = null;
 		
-		servletResponse.setContentType("text/html");
+		servletResponse.setContentType("text/html; charset=utf-8");
 		setDisableCachingHttpHeaders(servletRequest, servletResponse);
 		sQueryString = servletRequest.getQueryString();
 		HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, true);  // URL decoded result
@@ -309,7 +309,7 @@ public class CookieAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 	{
 		String sMethod = "doPost";
 
-		servletResponse.setContentType("text/html");
+		servletResponse.setContentType("text/html; charset=utf-8");
 		setDisableCachingHttpHeaders(servletRequest, servletResponse);
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "CookieAuthSP POST {" + servletRequest + ", qry="

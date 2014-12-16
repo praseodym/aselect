@@ -76,7 +76,7 @@ public class LogoutResponseSender
 			String inResponseTo, String sRelayState, HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "sendLogoutResponse()";
+		String sMethod = "sendLogoutResponse";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Send LogoutResponse to: " + logoutResponseLocation
 				+ " RelayState=" + sRelayState);
 

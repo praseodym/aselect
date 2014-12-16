@@ -205,7 +205,7 @@ public class DBAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodie
 					throw new ASelectException(Errors.ERROR_DB_INVALID_REQUEST);
 				}
 
-				servletResponse.setContentType("text/html");
+				servletResponse.setContentType("text/html; charset=utf-8");
 				// URL decode values
 				sAsUrl = URLDecoder.decode(sAsUrl, "UTF-8");
 				sUid = URLDecoder.decode(sUid, "UTF-8");
@@ -299,7 +299,7 @@ public class DBAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodie
 			sCountry = null;
 
 		try {
-			servletResponse.setContentType("text/html");
+			servletResponse.setContentType("text/html; charset=utf-8");
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 			pwOut = servletResponse.getWriter();
 

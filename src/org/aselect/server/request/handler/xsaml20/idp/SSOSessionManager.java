@@ -71,7 +71,7 @@ public class SSOSessionManager extends StorageManager
 	private void init()
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		ASelectConfigManager oASelectConfigManager = null;
 		Object oSsoSessionSection = null;
 
@@ -117,7 +117,7 @@ public class SSOSessionManager extends StorageManager
 	public void XXXputSsoSession(UserSsoSession session)
 	throws ASelectException
 	{
-		String sMethod = "putSsoSession()";
+		String sMethod = "putSsoSession";
 		String sKey = session.getTgtId(); // used to be: getUserId();
 
 		if (session == null || sKey == null) {
@@ -153,7 +153,7 @@ public class SSOSessionManager extends StorageManager
 	 */
 	public UserSsoSession XXXgetSsoSession(String sKey)
 	{
-		String sMethod = "getSsoSession()";
+		String sMethod = "getSsoSession";
 
 		UserSsoSession session = null;
 		try {
@@ -174,7 +174,7 @@ public class SSOSessionManager extends StorageManager
 	 */
 	public void XXXdelSsoSession(String sKey)
 	{
-		String sMethod = "delSsoSession()";
+		String sMethod = "delSsoSession";
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "SESN Key=" + sKey);
 			remove(sKey);

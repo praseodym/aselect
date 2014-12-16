@@ -222,7 +222,7 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 						throw new ASelectException(Errors.ERROR_DB_INVALID_REQUEST);
 					}
 	
-					servletResponse.setContentType("text/html");
+					servletResponse.setContentType("text/html; charset=utf-8");
 					// URL decode values
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "URL decode values");
 					sAsUrl = URLDecoder.decode(sAsUrl, "UTF-8");
@@ -311,7 +311,7 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 						_systemLogger.log(Level.WARNING, MODULE, sMethod, sbWarning.toString());
 						throw new ASelectException(Errors.ERROR_DB_INVALID_REQUEST);
 					}
-					servletResponse.setContentType("text/html");
+					servletResponse.setContentType("text/html; charset=utf-8");
 
 					boolean matches = false;
 					// handle openidresponse and find out if the user is authentic
@@ -430,7 +430,7 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Starting openid stuff");		
 		try {
-			servletResponse.setContentType("text/html");
+			servletResponse.setContentType("text/html; charset=utf-8");
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 			pwOut = servletResponse.getWriter();
 

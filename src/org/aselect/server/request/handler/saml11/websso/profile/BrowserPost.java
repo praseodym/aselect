@@ -165,7 +165,7 @@ public class BrowserPost extends AbstractWebSSOProfile
 	public void process(HashMap htInfo, HttpServletResponse response, String sIP, String sHost)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		try {
 			String sRID = (String) htInfo.get("rid");
 			if (sRID == null) {
@@ -288,10 +288,10 @@ public class BrowserPost extends AbstractWebSSOProfile
 	private void send(HttpServletResponse response, SAMLResponse oSAMLResponse, String sAction, String sTarget)
 	throws ASelectException
 	{
-		String sMethod = "send()";
+		String sMethod = "send";
 		PrintWriter pwOut = null;
 		try {
-			response.setContentType("text/html");
+			response.setContentType("text/html; charset=utf-8");
 
 			pwOut = response.getWriter();
 			String sHTMLResponse = Utils.loadTemplateFromFile(_systemLogger, _configManager.getWorkingdir(),

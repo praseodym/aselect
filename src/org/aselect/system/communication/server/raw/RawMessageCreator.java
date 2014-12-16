@@ -193,7 +193,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	{
 		_oRequest = oRequest;
 		_oResponse = oResponse;
-		String sMethod = "init()";
+		String sMethod = "init";
 		boolean bRetVal = false;
 
 		String sQueryString = _oRequest.getProperty("QueryString");
@@ -238,7 +238,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	public String getParam(String sName)
 	throws ASelectCommunicationException
 	{
-		String sMethod = "getParam()";
+		String sMethod = "getParam";
 		StringBuffer sbBuffer = null;
 		String sRetVal = null;
 		// _systemLogger.log(Level.INFO, MODULE, sMethod, "param:"+sName);
@@ -274,7 +274,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	public String[] getArray(String sName)
 	throws ASelectCommunicationException
 	{
-		String sMethod = "getArray()";
+		String sMethod = "getArray";
 		StringBuffer sbBuffer = null;
 		String[] saRetVal = null;
 
@@ -396,7 +396,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	public boolean setParam(String sName, String[] saValue)
 	throws ASelectCommunicationException
 	{
-		String sMethod = "setParam()";
+		String sMethod = "setParam";
 		StringBuffer sbBuffer = null;
 
 		boolean bRetValue = false;
@@ -461,7 +461,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	public HashMap convertCGIMessage(String sMessage)
 	throws ASelectCommunicationException
 	{
-		String sMethod = "convertCGIMessage()";
+		String sMethod = "convertCGIMessage";
 		HashMap htResponse = new HashMap();
 		String sToken, sKey, sValue;
 		StringTokenizer oTokenizer = null;
@@ -539,7 +539,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	public boolean send()
 	throws ASelectCommunicationException
 	{
-		String sMethod = "send()";
+		String sMethod = "send";
 		boolean bRetVal = false;
 		// parse xOutputTable to URL string
 		// String xOutput = convertHashtable(xOutputTable);
@@ -582,7 +582,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 	private boolean sendMessage(String sMsg)
 	throws ASelectCommunicationException
 	{
-		String sMethod = "sendMessage()";
+		String sMethod = "sendMessage";
 		boolean bRetVal = false;
 		try {
 //			OutputStream oStream = _oResponse.getOutputStream();

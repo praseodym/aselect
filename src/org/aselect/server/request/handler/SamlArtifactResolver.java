@@ -59,7 +59,7 @@ public abstract class SamlArtifactResolver extends ProtoRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			super.init(oServletConfig, oConfig);
 			_oAssertionSessionManager = AssertionSessionManager.getHandle();
@@ -81,7 +81,7 @@ public abstract class SamlArtifactResolver extends ProtoRequestHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		SAMLRequest oSAMLRequest = null;
 		SAMLResponse oSAMLResponse = null;
 		SAMLArtifact oSAMLArtifact = null;
@@ -90,7 +90,7 @@ public abstract class SamlArtifactResolver extends ProtoRequestHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "ARTRES request=" + request + ", Method=" + request.getMethod()
 				+ ", Url=" + request.getRequestURL() + ", Type=" + request.getContentType());
 		try {
-			response.setContentType("text/xml");
+			response.setContentType("text/xml; charset=utf-8");
 			String sRequestUrl = request.getRequestURL().toString();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "sRequestUrl=" + sRequestUrl);
 
@@ -201,7 +201,7 @@ public abstract class SamlArtifactResolver extends ProtoRequestHandler
 	private void respondError(HttpServletResponse response, SAMLRequest oSAMLRequest, SAMLException oSAMLException)
 	throws ASelectException
 	{
-		String sMethod = "respondError()";
+		String sMethod = "respondError";
 		String sResponseId = null;
 		try {
 			if (oSAMLRequest != null)

@@ -975,7 +975,7 @@ public class PKIAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 		servletResponse.setHeader("Expires", "0"); // date in the past
 
 		// sent content type and length
-		servletResponse.setContentType("text/html");
+		servletResponse.setContentType("text/html; charset=utf-8");
 		servletResponse.setContentLength(sTemplate.length());
 
 		// write to output

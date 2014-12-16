@@ -75,7 +75,7 @@ public class ASelectAuthenticationProfile extends AbstractRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			super.init(oServletConfig, oConfig);
 
@@ -150,9 +150,9 @@ public class ASelectAuthenticationProfile extends AbstractRequestHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 
-		_systemLogger.log(Level.FINER, MODULE, "ASelectAuthenticationProfile.process()",
+		_systemLogger.log(Level.FINER, MODULE, "ASelectAuthenticationProfile.process",
 				"SFS Authentication Profile request: " + request.getRequestURI().toString() + "?"
 						+ request.getQueryString());
 

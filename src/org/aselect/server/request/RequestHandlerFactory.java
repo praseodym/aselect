@@ -439,7 +439,7 @@ public class RequestHandlerFactory
 			sErrorForm = _configManager.updateTemplate(sErrorForm, null /* no session available */, request);
 
 			pwOut = response.getWriter();
-			response.setContentType("text/html");
+			response.setContentType("text/html; charset=utf-8");
 			Tools.pauseSensorData(_configManager, _systemLogger, null);  //20111102, no session available at this point
 			pwOut.println(sErrorForm);
 		}

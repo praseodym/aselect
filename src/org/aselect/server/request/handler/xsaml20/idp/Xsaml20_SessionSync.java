@@ -88,7 +88,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		super.init(oServletConfig, oHandlerConfig);
 	}
 
@@ -538,7 +538,7 @@ public class Xsaml20_SessionSync extends Saml20_BaseHandler
 
 		String finalResponse = buildXACMLResponse(uid, permit);
 		_systemLogger.log(Level.INFO, MODULE, _sMethod, "Send XACML response: " + finalResponse);
-		response.setContentType("text/xml");
+		response.setContentType("text/xml; charset=utf-8");
 		try {
 			PrintWriter writer = response.getWriter();
 			writer.write(finalResponse);

@@ -246,7 +246,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "display form");
 
 		sLogout_infoForm = _configManager.updateTemplate(sLogout_infoForm, _htSessionContext, httpRequest);  // 20130822, Bauke: added to show requestor_friendly_name
-		httpResponse.setContentType("text/html");
+		httpResponse.setContentType("text/html; charset=utf-8");
 		Tools.pauseSensorData(_configManager, _systemLogger, null);  //20111102, there's no session available at this point (will be logged)
 		pwOut.println(sLogout_infoForm);
 		pwOut.close();

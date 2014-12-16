@@ -767,7 +767,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					String sSelectForm;
 					sSelectForm = org.aselect.server.utils.Utils.presentOnBehalfOf(_servletRequest, _configManager,
 							htServiceRequest, null, (String)_htTGTContext.get("language"), 1 /* step 1, present obo request */);
-					servletResponse.setContentType("text/html");
+					servletResponse.setContentType("text/html; charset=utf-8");
 					
 					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);
 					PrintWriter pwOut = servletResponse.getWriter();
@@ -931,7 +931,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					String sSelectForm;
 					sSelectForm = org.aselect.server.utils.Utils.presentOnBehalfOf(_servletRequest, _configManager,
 							htServiceRequest, null, (String)_htTGTContext.get("language"), 2 /* step 2, retry obo */);
-					servletResponse.setContentType("text/html");
+					servletResponse.setContentType("text/html; charset=utf-8");
 					
 					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);
 					PrintWriter pwOut = servletResponse.getWriter();
@@ -1124,7 +1124,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 								// The user must choose his organization
 								String sSelectForm = org.aselect.server.utils.Utils.presentOrganizationChoice(_servletRequest,
 										_configManager, _htSessionContext, sRid, (String)_htTGTContext.get("language"), hUserOrganizations);
-								_servletResponse.setContentType("text/html");
+								_servletResponse.setContentType("text/html; charset=utf-8");
 								pwOut.println(sSelectForm);
 								pwOut.close();
 								return;
@@ -1397,7 +1397,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 								sSelectForm = Utils.replaceString(sSelectForm, "[a-select-server]", _sMyServerId);
 								sSelectForm = Utils.replaceString(sSelectForm, "[handler_url]", sIsts);
 								servletResponse.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-								servletResponse.setContentType("text/html");
+								servletResponse.setContentType("text/html; charset=utf-8");
 								servletResponse.setHeader("Pragma", "no-cache");
 								Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102 can update the session
 								pwOut.println(sSelectForm);
@@ -1595,7 +1595,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			String sSpecials = Utils.getAselectSpecials(_htSessionContext, true/*decode too*/, _systemLogger);
 			sLoginForm = Utils.handleAllConditionals(sLoginForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
 			
-			servletResponse.setContentType("text/html");
+			servletResponse.setContentType("text/html; charset=utf-8");
 			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 			//_sessionManager.update(sRid, _htSessionContext); // Write session
 			_htSessionContext.put("user_state", "state_login");
@@ -1719,7 +1719,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			_htSessionContext.put("user_state", "state_session_info");
 		sInfoForm = Utils.replaceString(sInfoForm, "[other_sps]", sOtherSPs);
 		sInfoForm = _configManager.updateTemplate(sInfoForm, _htSessionContext, _servletRequest);
-		servletResponse.setContentType("text/html");
+		servletResponse.setContentType("text/html; charset=utf-8");
 		Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102
 		//_sessionManager.update(sRid, _htSessionContext); // Write session
 		_sessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120401, Bauke: changed, was update()
@@ -1800,7 +1800,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 					.append("&a-select-server=").append(_sMyServerId).append("&consent=false");
 			_sConsentForm = Utils.replaceString(_sConsentForm, "[cancel]", sCancel.toString());
 
-			servletResponse.setContentType("text/html");
+			servletResponse.setContentType("text/html; charset=utf-8");
 			_systemLogger.log(Level.INFO, _sModule, sMethod, "Display ConsentForm");
 			pwOut.println(_sConsentForm);
 		}

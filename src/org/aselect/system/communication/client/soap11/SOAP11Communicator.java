@@ -181,7 +181,7 @@ public class SOAP11Communicator implements IClientCommunicator
 	public HashMap sendMessage(HashMap htParameters, String sUrl)
 	throws ASelectCommunicationException
 	{
-		String sMethod = "sendMessage()";
+		String sMethod = "sendMessage";
 		HashMap htResult = new HashMap();
 		String sMessage = null;
 		String sResponse = null;
@@ -220,7 +220,7 @@ public class SOAP11Communicator implements IClientCommunicator
 	throws ASelectCommunicationException
 	{
 		String sResponse = null;
-		String sMethod = "sendStringMessage()";
+		String sMethod = "sendStringMessage";
 
 		// Create a new message
 		StringBuffer sbMessage = new StringBuffer();
@@ -273,7 +273,7 @@ public class SOAP11Communicator implements IClientCommunicator
 	 */
 	public String createMessage(HashMap htParameters, String sTargetUrl)
 	{
-		String sMethod = "createMessage()";
+		String sMethod = "createMessage";
 		StringBuffer sbMessage = new StringBuffer();
 		if (htParameters != null || !sTargetUrl.equals(""))
 		// Params and target url may not be empty to create a message
@@ -356,7 +356,7 @@ public class SOAP11Communicator implements IClientCommunicator
 	throws java.net.MalformedURLException, ASelectCommunicationException
 	{
 		StringBuffer sb = new StringBuffer();
-		String sMethod = "send()";
+		String sMethod = "send";
 		URL url = null;
 		HttpURLConnection connection = null;
 
@@ -471,7 +471,7 @@ public class SOAP11Communicator implements IClientCommunicator
 	throws ASelectCommunicationException
 	{
 		Element elBody = null;
-		String sMethod = "parse()";
+		String sMethod = "parse";
 		if (!sMessage.equals("")) {
 			try {
 				// create new DOM parser
@@ -644,7 +644,7 @@ public class SOAP11Communicator implements IClientCommunicator
 	private String[] resolveArray(Element elRoot, NodeList nlChildElements)
 	throws ASelectCommunicationException
 	{
-		String sMethod = "resolveArray()";
+		String sMethod = "resolveArray";
 		String[] sa = null;
 		String sAttr = elRoot.getAttribute("m:arrayType");
 		String s = (String) sAttr.subSequence(sAttr.lastIndexOf("[") + 1, sAttr.lastIndexOf("]"));

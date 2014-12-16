@@ -114,7 +114,7 @@ public abstract class GenericSmsSender
 			conn.setRequestProperty("Host", url.getHost());	// Wireless Services requires 'Host' header
 
 			//conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");	// Wireless Services requires this for POST
-			conn.setRequestProperty("Content-Type", getContentType());
+			conn.setRequestProperty("Content-Type", getContentType());  // x-www-form-urlencoded
 			conn.setReadTimeout(10000);
 			// conn.setRequestProperty("Connection", "close"); // use this if we will explicitly conn.disconnect();
 			

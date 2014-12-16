@@ -182,7 +182,7 @@ public class RequestHandlerFactory
 	public IRequestHandler createRequestHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ASelectCommunicationException
 	{
-		String sMethod = "createRequestHandler()";
+		String sMethod = "createRequestHandler";
 
 		IRequestHandler oRequestHandler = null;
 

@@ -168,7 +168,7 @@ public class NullAuthSP implements IAuthSPProtocolHandler
 	public void init(Object oAuthSPConfig, Object oAuthSPResource)
 	throws ASelectAuthSPException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		Object oASelectConfig = null;
 

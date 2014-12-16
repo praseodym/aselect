@@ -197,7 +197,7 @@ public abstract class AbstractBrowserRequestHandler implements IRequestHandler
 		HashMap htServiceRequest = null;
 		try {
 			pwOut = _servletResponse.getWriter();
-			_servletResponse.setContentType("text/html");
+			_servletResponse.setContentType("text/html; charset=utf-8");
 			htServiceRequest = createServiceRequest(_servletRequest);
 
 			String sRequest = (String) htServiceRequest.get("request");

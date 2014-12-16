@@ -176,7 +176,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	private void handleAuthSPResponse(HashMap htServiceRequest, HttpServletResponse servletResponse)
 	throws ASelectException
 	{
-		String sMethod = "handleAuthSPResponse()";
+		String sMethod = "handleAuthSPResponse";
 		String sHandlerName = null;
 		Object authSPsection = null;
 		try {
@@ -270,7 +270,7 @@ public class AuthSPBrowserHandler extends AbstractBrowserRequestHandler
 	private void handleError(HashMap htServiceRequest, HttpServletResponse servletResponse)
 	throws ASelectException
 	{
-		String sMethod = "handleError()";
+		String sMethod = "handleError";
 		AuthenticationLogger authenticationLogger = ASelectAuthenticationLogger.getHandle();
 
 		try {

@@ -146,7 +146,7 @@ public class AuthSPAPIHandler extends AbstractAPIRequestHandler
 			IOutputMessage oOutputMessage)
 	throws ASelectException
 	{
-		String sMethod = "processAPIRequest()";
+		String sMethod = "processAPIRequest";
 
 		String sAPIRequest = null;
 		try {
@@ -184,7 +184,7 @@ public class AuthSPAPIHandler extends AbstractAPIRequestHandler
 		String sSignature = null;
 		String sAuthSP = null;
 		HashMap htSessionContext;
-		String sMethod = "handleKillSessionRequest()";
+		String sMethod = "handleKillSessionRequest";
 
 		try {
 			sSessionId = oInputMessage.getParam("rid");

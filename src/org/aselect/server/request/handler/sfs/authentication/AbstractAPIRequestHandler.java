@@ -152,7 +152,7 @@ public abstract class AbstractAPIRequestHandler implements IRequestHandler
 	public AbstractAPIRequestHandler(RequestParser reqParser, HttpServletRequest servletRequest,
 			HttpServletResponse servletResponse, String sMyServerId, String sMyOrg)
 	throws ASelectCommunicationException {
-		String sMethod = "AbstractAPIRequestHandler()";
+		String sMethod = "AbstractAPIRequestHandler";
 
 		_systemLogger = ASelectSystemLogger.getHandle();
 		_servletRequest = servletRequest;
@@ -191,7 +191,7 @@ public abstract class AbstractAPIRequestHandler implements IRequestHandler
 	public void processRequest()
 	throws ASelectException
 	{
-		String sMethod = "processRequest()";
+		String sMethod = "processRequest";
 
 		// create protocol wrappers
 		IProtocolRequest protocolRequest = new ServletRequestWrapper(_servletRequest);

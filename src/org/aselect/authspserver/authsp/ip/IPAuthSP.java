@@ -265,7 +265,7 @@ public class IPAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodie
 			if (sCountry == null || sCountry.trim().length() < 1)
 				sCountry = null;
 			
-			servletResponse.setContentType("text/html");
+			servletResponse.setContentType("text/html; charset=utf-8");
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 			pwOut = servletResponse.getWriter();
 

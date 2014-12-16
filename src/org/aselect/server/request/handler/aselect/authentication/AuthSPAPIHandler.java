@@ -137,7 +137,7 @@ public class AuthSPAPIHandler extends AbstractAPIRequestHandler
 			IOutputMessage oOutputMessage)
 	throws ASelectException
 	{
-		String sMethod = "processAPIRequest()";
+		String sMethod = "processAPIRequest";
 
 		String sAPIRequest = null;
 		try {

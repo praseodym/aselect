@@ -213,7 +213,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 	private void handleCrossAuthenticateResponse(HashMap htServiceRequest, HttpServletResponse servletResponse)
 	throws ASelectException
 	{
-		String sMethod = "handleCrossAuthenticateResponse()";
+		String sMethod = "handleCrossAuthenticateResponse";
 
 		try {
 			String sRemoteRid = null;
@@ -309,7 +309,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 	static public String getSFSRelay(String sOrg)
 	throws ASelectConfigException
 	{
-		String sMethod = "getSFSRelay()";
+		String sMethod = "getSFSRelay";
 		String sRelay = null;
 
 		if (_htSFSOrganizations == null) {
@@ -389,7 +389,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 	private HashMap verifyRemoteCredentials(String sCredentials, String sRemoteRid, String sRemoteOrg)
 	throws ASelectException
 	{
-		String sMethod = "verifyRemoteCredentials()";
+		String sMethod = "verifyRemoteCredentials";
 		Object oRemoteServer;
 		String sRemoteAsUrl;
 		String sRemoteServer;

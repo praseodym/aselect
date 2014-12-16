@@ -97,7 +97,7 @@ public class AccountSTS extends ProtoRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		_oTGTManager = TGTManager.getHandle();
 
 		try {
@@ -209,7 +209,7 @@ public class AccountSTS extends ProtoRequestHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		String sPathInfo = request.getPathInfo();
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Path=" + sPathInfo);
@@ -338,7 +338,7 @@ public class AccountSTS extends ProtoRequestHandler
 	public RequestState processReturn(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "processReturn()";
+		String sMethod = "processReturn";
 		// Redirection from RP?
 		String sPwa = request.getParameter("wa"); // action
 		String sPwresult = request.getParameter("wresult"); // resource token
@@ -454,7 +454,7 @@ public class AccountSTS extends ProtoRequestHandler
 			HashMap htSessionData, HashMap htAttributes)
 	throws ASelectException
 	{
-		String sMethod = "postRequestorToken()";
+		String sMethod = "postRequestorToken";
 
 		// Retrieve data stored in Step 5
 		String sAudience = (String) htSessionData.get("wtrealm");
@@ -531,7 +531,7 @@ public class AccountSTS extends ProtoRequestHandler
 	public RequestState processSignout(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "processSignout()";
+		String sMethod = "processSignout";
 
 		// First look for a possible TGT
 		// HashMap htCredentialsParams = getCredentialsFromCookie(request);

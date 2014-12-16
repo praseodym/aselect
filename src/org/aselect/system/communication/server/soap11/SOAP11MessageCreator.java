@@ -230,7 +230,7 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	{
 
 		StringBuffer sbBuffer = null;
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		// set class variabeles
 		_oRequest = oRequest;
@@ -319,7 +319,7 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	public String getParam(String sName)
 	throws ASelectCommunicationException
 	{
-		String sMethod = "getParam()";
+		String sMethod = "getParam";
 		// _systemLogger.log(Level.INFO, MODULE, sMethod, "param:"+sName);
 		if (_oInputMessage == null) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No input message available, cause: "
@@ -383,7 +383,7 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	public String[] getArray(String sName)
 	throws ASelectCommunicationException
 	{
-		String sMethod = "getArray()";
+		String sMethod = "getArray";
 		if (_oInputMessage == null) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No input message available, cause: "
 					+ Errors.ERROR_ASELECT_USE_ERROR);
@@ -435,7 +435,7 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	public boolean setParam(String sName, String sValue)
 	throws ASelectCommunicationException
 	{
-		String sMethod = "setParam()";
+		String sMethod = "setParam";
 		if (_oOutputMessage == null) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No output message available, cause: "
 					+ Errors.ERROR_ASELECT_USE_ERROR);
@@ -479,7 +479,7 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	public boolean setParam(String sName, String[] saValue)
 	throws ASelectCommunicationException
 	{
-		String sMethod = "setParam()";
+		String sMethod = "setParam";
 		if (_oOutputMessage == null) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "No output message available, cause: "
 					+ Errors.ERROR_ASELECT_USE_ERROR);
@@ -523,7 +523,7 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	public boolean send()
 	throws ASelectCommunicationException
 	{
-		String sMethod = "send()";
+		String sMethod = "send";
 		if (_oOutputMessage == null) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod,
 					"Message is already sent, there is no output message, cause: " + Errors.ERROR_ASELECT_USE_ERROR);
@@ -646,7 +646,7 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	private String[] resolveArray(Element elParam)
 	throws ASelectCommunicationException
 	{
-		String sMethod = "resolveArray()";
+		String sMethod = "resolveArray";
 		String[] saReturn = null;
 		String sArrayLength = null;
 
@@ -724,7 +724,7 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 	private Document createInputMessage()
 	throws ASOAPException
 	{
-		String sMethod = "createInputMessage()";
+		String sMethod = "createInputMessage";
 		Document oInputMessage = null;
 		try {
 			// create DocumentBuilderFactory to parse SOAP message.

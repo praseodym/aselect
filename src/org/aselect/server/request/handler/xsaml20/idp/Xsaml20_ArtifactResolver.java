@@ -376,7 +376,7 @@ public class Xsaml20_ArtifactResolver extends Saml20_BaseHandler
 	@Override
 	public void destroy()
 	{
-		String sMethod = "destroy()";
+		String sMethod = "destroy";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
 	}
 

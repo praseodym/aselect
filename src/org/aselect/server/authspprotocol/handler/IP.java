@@ -183,7 +183,7 @@ public class IP implements IAuthSPProtocolHandler
 	public void init(Object oAuthSPConfig, Object oAuthSPResource)
 	throws ASelectAuthSPException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		_htIPRanges = new HashMap();
 		_htIPRangesCGI = new HashMap();

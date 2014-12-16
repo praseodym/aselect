@@ -53,7 +53,7 @@ public class OldMemoryStorageHandlerTimeOut extends OldMemoryStorageHandler
 	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger systemLogger, SAMAgent oSAMAgent)
 	throws ASelectStorageException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		Object oTicketSection;
 
 		super.init(oConfigSection, oConfigManager, systemLogger, oSAMAgent);

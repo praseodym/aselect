@@ -74,7 +74,7 @@ public class MetaDataManagerIdp extends AbstractMetaDataManager
 	protected void init()
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		Object applications = null;
 		Object application = null;
 
@@ -120,7 +120,7 @@ public class MetaDataManagerIdp extends AbstractMetaDataManager
 	 */
 	protected void addMetaDataURLToList(Object application)
 	{
-		String sMethod = "addMetaDataURLToList()";
+		String sMethod = "addMetaDataURLToList";
 		String sId = null;
 		Element metadata = null;
 

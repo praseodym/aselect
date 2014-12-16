@@ -303,7 +303,7 @@ public class HandlerTools
 	 */
 	public static void logCookies(HttpServletRequest servletRequest, ASelectSystemLogger logger)
 	{
-		String sMethod = "logCookies()";
+		String sMethod = "logCookies";
 		Cookie[] aCookies = servletRequest.getCookies();
 		if (aCookies == null) {
 			logger.log(Level.FINER, MODULE, sMethod, "No Cookies");

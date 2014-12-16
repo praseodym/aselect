@@ -175,7 +175,7 @@ public class ASelectRequestHandlerFactory
 	public IAuthnRequestHandler createRequestHandler(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
 	throws ASelectCommunicationException
 	{
-		String sMethod = "createRequestHandler()";
+		String sMethod = "createRequestHandler";
 		IAuthnRequestHandler oRequestHandler = null;
 
 		// Process all other requests

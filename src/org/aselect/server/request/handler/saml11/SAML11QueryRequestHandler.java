@@ -127,7 +127,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			super.init(oServletConfig, oConfig);
 
@@ -291,14 +291,14 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		SAMLRequest oSAMLRequest = null;
 		SAMLResponse oSAMLResponse = null;
 		SAMLSubjectQuery oSAMLSubjectQuery = null;
 		SAMLSubjectStatement oSAMLSubjectStatement = null;
 
 		try {
-			response.setContentType("text/xml");
+			response.setContentType("text/xml; charset=utf-8");
 
 			try {
 				oSAMLRequest = _oSAMLBinding.receive(request, 1);
@@ -449,7 +449,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
 			String sHost)
 	throws SAMLException
 	{
-		String sMethod = "handleAuthenticationQuery()";
+		String sMethod = "handleAuthenticationQuery";
 		String sAuthSPID = null;
 		String sAuthenticationMethod = null;
 		SAMLAuthenticationStatement oSAMLAuthenticationStatement = null;
@@ -544,7 +544,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
 			String sNameIdentifier)
 	throws SAMLException
 	{
-		String sMethod = "handleAttributeQuery()";
+		String sMethod = "handleAttributeQuery";
 		SAMLAttributeStatement oSAMLAttributeStatement = null;
 		HashMap htAppIDAttributes = null;
 
@@ -661,7 +661,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
 			SAMLAuthorizationDecisionQuery oSAMLAuthorizationDecisionQuery, String sNameIdentifier)
 	throws SAMLException
 	{
-		String sMethod = "handleAuthorizationDecisionQuery()";
+		String sMethod = "handleAuthorizationDecisionQuery";
 		SAMLAuthorizationDecisionStatement oSAMLAuthorizationDecisionStatement = null;
 		String sSAMLDecision = null;
 		try {
@@ -742,7 +742,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
 			SAMLSubjectStatement oSAMLSubjectStatement)
 	throws SAMLException
 	{
-		String sMethod = "generateSAMLResponse()";
+		String sMethod = "generateSAMLResponse";
 		SAMLResponse oSAMLResponse = null;
 
 		try {
@@ -793,7 +793,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
 	private void respondError(HttpServletResponse response, SAMLRequest oSAMLRequest, SAMLException oSAMLException)
 	throws ASelectException
 	{
-		String sMethod = "respondError()";
+		String sMethod = "respondError";
 		String sResponseId = null;
 		try {
 			if (oSAMLRequest != null)
@@ -839,7 +839,7 @@ public class SAML11QueryRequestHandler extends AbstractRequestHandler
 	private SAMLAttribute createSAMLAttribute(String sName, Object oValue)
 	throws ASelectException
 	{
-		String sMethod = "generateSAMLAttribute()";
+		String sMethod = "generateSAMLAttribute";
 		SAMLAttribute oSAMLAttribute = new SAMLAttribute();
 
 		try {

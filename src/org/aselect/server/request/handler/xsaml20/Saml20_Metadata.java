@@ -91,7 +91,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		try {
 			super.init(oServletConfig, oConfig);
@@ -293,7 +293,7 @@ public class Saml20_Metadata extends ProtoRequestHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		try {
 			// These method calls could be made more transparent
 			// all kind of things get set that we don't know off

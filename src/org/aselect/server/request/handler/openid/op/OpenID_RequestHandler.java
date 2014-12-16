@@ -83,7 +83,7 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		try {
 			super.init(oServletConfig, oConfig);
@@ -202,7 +202,7 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{		
-			String sMethod = "process()";
+			String sMethod = "process";
 			//// maybe use "on the fly" endPointURL ?
 //			String handlerTarget = "/openidop_request";	// Don't forget to fill in the target
 //			String epu = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + handlerTarget;
@@ -562,7 +562,7 @@ public class OpenID_RequestHandler extends AbstractRequestHandler
 		   * @return
 		   */
 		  public String createXrdsResponse(String localID) {
-				String sMethod = "createXrdsResponse()";
+				String sMethod = "createXrdsResponse";
 			  
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "BEGIN");
 			  

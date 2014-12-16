@@ -65,7 +65,7 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			super.init(oServletConfig, oConfig);
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Specific initialization");
@@ -149,7 +149,7 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
 	 */
 	public String getRedirectUrl(HttpServletRequest request)
 	{
-		_systemLogger.log(Level.INFO, MODULE, "getRedirectUrl()", "Default impl. TARGET="
+		_systemLogger.log(Level.INFO, MODULE, "getRedirectUrl", "Default impl. TARGET="
 				+ request.getParameter("TARGET"));
 		return request.getParameter("TARGET");
 	}
@@ -160,7 +160,7 @@ public abstract class SamlAssertionConsumer extends ProtoRequestHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		String sSessionId = null;
 		String sRedirectUrl = getRedirectUrl(request);
 		String sArtifact = request.getParameter("SAMLart");

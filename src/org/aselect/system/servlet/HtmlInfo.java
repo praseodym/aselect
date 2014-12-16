@@ -95,7 +95,7 @@ public class HtmlInfo extends HttpServlet
 		systemLogger.log(Level.INFO, _sModule, sMethod, "path=" + path + ", uri=" + url);
 
 		response.setHeader("Pragma", "no-cache");
-		response.setContentType("text/html");
+		response.setContentType("text/html; charset=utf-8");
 
 		PrintWriter htmlpage;
 		htmlpage = response.getWriter();

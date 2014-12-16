@@ -234,7 +234,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				sIdpSelectForm = _configManager.updateTemplate(sIdpSelectForm, _htSessionContext, request);  // 20130822, Bauke: added to show requestor_friendly_name
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "Template updated, [handler_url]="+sMyUrl + "/" + getID());
 				response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-				response.setContentType("text/html");
+				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Pragma", "no-cache");
 				PrintWriter pwOut = response.getWriter();
 				_htSessionContext.put("user_state", "state_idpselect");			
@@ -275,7 +275,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Fallback REDIRECT to: " + sRedirectUrl);
 					
 					response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-					response.setContentType("text/html");
+					response.setContentType("text/html; charset=utf-8");
 					response.setHeader("Pragma", "no-cache");
 					Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102 can change the session
 					//_oSessionManager.updateSession(sRid, _htSessionContext);  // 20120403, Bauke: removed

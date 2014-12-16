@@ -78,7 +78,7 @@ public class Xsaml20_SLO_Soap extends Saml20_BaseHandler
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		super.init(oServletConfig, oHandlerConfig);
 		_oSystemLogger = _systemLogger;

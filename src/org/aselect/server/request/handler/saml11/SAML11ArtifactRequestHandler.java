@@ -72,7 +72,7 @@ public class SAML11ArtifactRequestHandler extends AbstractRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			super.init(oServletConfig, oConfig);
 
@@ -109,14 +109,14 @@ public class SAML11ArtifactRequestHandler extends AbstractRequestHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		SAMLRequest oSAMLRequest = null;
 		SAMLResponse oSAMLResponse = null;
 		SAMLArtifact oSAMLArtifact = null;
 		SAMLAssertion oSAMLAssertion = null;
 
 		try {
-			response.setContentType("text/xml");
+			response.setContentType("text/xml; charset=utf-8");
 
 			String sShire = request.getRequestURL().toString();
 
@@ -222,7 +222,7 @@ public class SAML11ArtifactRequestHandler extends AbstractRequestHandler
 	private void respondError(HttpServletResponse response, SAMLRequest oSAMLRequest, SAMLException oSAMLException)
 	throws ASelectException
 	{
-		String sMethod = "respondError()";
+		String sMethod = "respondError";
 		String sResponseId = null;
 		try {
 			if (oSAMLRequest != null)

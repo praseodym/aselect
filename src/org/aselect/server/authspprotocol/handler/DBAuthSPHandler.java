@@ -126,7 +126,7 @@ public class DBAuthSPHandler implements IAuthSPProtocolHandler
 	public void init(Object oAuthSPConfig, Object oAuthSPResource)
 	throws ASelectAuthSPException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		_configManager = ASelectConfigManager.getHandle();
 		_sessionManager = SessionManager.getHandle();
 		_authenticationLogger = ASelectAuthenticationLogger.getHandle();
@@ -136,7 +136,7 @@ public class DBAuthSPHandler implements IAuthSPProtocolHandler
 				_sAuthsp = _configManager.getParam(oAuthSPConfig, "id");
 			}
 			catch (ASelectConfigException eAC) {
-				_systemLogger.log(Level.WARNING, "DBAuthSPHandler", "init()",
+				_systemLogger.log(Level.WARNING, "DBAuthSPHandler", sMethod,
 						"Parameter 'id' not found in DB AuthSP configuration", eAC);
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
 			}
@@ -144,18 +144,18 @@ public class DBAuthSPHandler implements IAuthSPProtocolHandler
 				_sAuthspUrl = _configManager.getParam(oAuthSPResource, "url");
 			}
 			catch (ASelectConfigException eAC) {
-				_systemLogger.log(Level.WARNING, "DBAuthSPHandler", "init()",
+				_systemLogger.log(Level.WARNING, "DBAuthSPHandler", sMethod,
 						"Parameter 'url' not found in DB AuthSP configuration", eAC);
 				throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INIT_ERROR, eAC);
 			}
 		}
 		catch (ASelectAuthSPException eAA) {
-			_systemLogger.log(Level.SEVERE, "DBAuthSPHandler", "init()",
+			_systemLogger.log(Level.SEVERE, "DBAuthSPHandler", sMethod,
 					"Initialisation failed due to configuration error", eAA);
 			throw eAA;
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, "DBAuthSPHandler", "init()", "Initialisation failed due to internal error",
+			_systemLogger.log(Level.SEVERE, "DBAuthSPHandler", sMethod, "Initialisation failed due to internal error",
 					e);
 			throw new ASelectAuthSPException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}

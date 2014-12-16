@@ -70,7 +70,7 @@ public class Xsaml20_Receiver extends Saml20_BrowserHandler
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		try {
 			super.init(oServletConfig, oHandlerConfig);
@@ -97,7 +97,7 @@ public class Xsaml20_Receiver extends Saml20_BrowserHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		String sPathInfo = request.getPathInfo();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "==== Path=" + sPathInfo + " RequestQuery: "	+ request.getQueryString());
 		_systemLogger.log(Audit.AUDIT, MODULE, sMethod, "> Request received === Path=" + sPathInfo+

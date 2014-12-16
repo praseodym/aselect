@@ -563,7 +563,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 				+ " ReplyTo=" + sReplyTo + " AselectUrl=" + sAselectUrl + " Rid=" + sRid + " Server=" + sAselectServer);
 
 		try {
-			response.setContentType("text/html");
+			response.setContentType("text/html; charset=utf-8");
 			pwOut = response.getWriter();
 
 			StringBuffer sbSelection = new StringBuffer();
@@ -633,7 +633,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			sTemplate = Utils.replaceString(sTemplate, "[input_area]", sInputLines);
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "sTemplate=" + Utils.firstPartOf(sTemplate, 160));
 
-			response.setContentType("text/html");
+			response.setContentType("text/html; charset=utf-8");
 			response.setHeader("Pragma", "no-cache");
 			response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 			pwOut = response.getWriter();

@@ -165,7 +165,7 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 	public void init(Object oAuthSPConfig, Object oAuthSPResource)
 	throws ASelectAuthSPException
 	{
-		final String sMethod = "init()";
+		final String sMethod = "init";
 		_configManager = ASelectConfigManager.getHandle();
 		_sessionManager = SessionManager.getHandle();
 		_authenticationLogger = ASelectAuthenticationLogger.getHandle();
@@ -212,7 +212,7 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 	public void init(String sAuthSPId)
 	throws ASelectAuthSPException
 	{
-		final String sMethod = "init()";
+		final String sMethod = "init";
 		_configManager = ASelectConfigManager.getHandle();
 		_sessionManager = SessionManager.getHandle();
 		_authenticationLogger = ASelectAuthenticationLogger.getHandle();
@@ -394,7 +394,7 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 	// 20120403, Bauke: added htSessionContext
 	public HashMap verifyAuthenticationResponse(HashMap htAuthspResponse, HashMap htSessionContext)
 	{
-		String sMethod = "verifyAuthenticationResponse()";
+		String sMethod = "verifyAuthenticationResponse";
 		StringBuffer sbBuffer = null;
 
 		HashMap htResponse = new HashMap();
@@ -607,7 +607,7 @@ public class OpenIDAuthSPHandler implements IAuthSPProtocolHandler, IAuthSPDirec
 	private void showDirectLoginForm(HashMap htServiceRequest, PrintWriter pwOut, String sServerId)
 	throws ASelectException
 	{
-		String sMethod = "showDirectLoginForm()";
+		String sMethod = "showDirectLoginForm";
 		throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 	}
 }

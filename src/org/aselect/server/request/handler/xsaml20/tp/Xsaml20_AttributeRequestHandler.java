@@ -97,7 +97,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		try {
 			super.init(oServletConfig, oConfig);
@@ -124,7 +124,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 	throws ASelectException
 	{
 		// SUGGEST allow for direct transient ID handling
-		String sMethod = "process()";
+		String sMethod = "process";
 		String sPathInfo = request.getPathInfo();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "==== Path=" + sPathInfo + " TokenRequestQuery: "
 				+ request.getQueryString());
@@ -172,7 +172,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 	throws IOException, ASelectException
 	{
 
-		String sMethod = "handleAttributeRequest()";
+		String sMethod = "handleAttributeRequest";
 
 		response.setHeader("Pragma", "no-cache");
 		response.setHeader("Cache-Control", "no-cache, no-store");
@@ -308,7 +308,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 	throws ASelectException
 	{
 
-		String sMethod = "createAssertion()";
+		String sMethod = "createAssertion";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Creating the Assertion");
 
 		Assertion assertion = null;

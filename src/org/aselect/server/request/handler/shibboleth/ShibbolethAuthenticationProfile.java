@@ -101,7 +101,7 @@ public class ShibbolethAuthenticationProfile extends AbstractRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			super.init(oServletConfig, oConfig);
 
@@ -283,7 +283,7 @@ public class ShibbolethAuthenticationProfile extends AbstractRequestHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		HashMap htSession = new HashMap();
 		try {
 			String sProviderId = request.getParameter("providerId"); // application ID

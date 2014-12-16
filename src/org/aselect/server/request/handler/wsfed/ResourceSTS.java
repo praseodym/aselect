@@ -70,7 +70,7 @@ public class ResourceSTS extends ProtoRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			super.init(oServletConfig, oConfig);
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Specific init processing");
@@ -103,7 +103,7 @@ public class ResourceSTS extends ProtoRequestHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		String sPathInfo = request.getPathInfo();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Path=" + sPathInfo);
 
@@ -194,7 +194,7 @@ public class ResourceSTS extends ProtoRequestHandler
 	public RequestState processReturn(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "processReturn()";
+		String sMethod = "processReturn";
 		// String sPwa = request.getParameter("wa");
 		String sPwresult = request.getParameter("wresult");
 		String sPwctx = request.getParameter("wctx"); // POST to this URL (the protected resource)

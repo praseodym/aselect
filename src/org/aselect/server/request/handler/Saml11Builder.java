@@ -89,7 +89,7 @@ public class Saml11Builder
 	public SAMLAssertion createAssertionFromString(String s)
 	throws SAMLException
 	{
-		_systemLogger.log(Level.WARNING, MODULE, "createAssertionFromString()", "Assert=" + s);
+		_systemLogger.log(Level.WARNING, MODULE, "createAssertionFromString", "Assert=" + s);
 		InputStream i = new ByteArrayInputStream(s.getBytes());
 		SAMLAssertion p = new SAMLAssertion(i);
 		return p;
@@ -124,7 +124,7 @@ public class Saml11Builder
 			String sIP, String sHost, String sConfirmationMethod, String sProviderId, String sAudience, HashMap htInfo)
 	throws ASelectException
 	{
-		String sMethod = "createSAMLAssertion()";
+		String sMethod = "createSAMLAssertion";
 		HashMap htAttributes = null;
 		try {
 			String sAuthSPID = (String) htInfo.get("authsp");
@@ -207,7 +207,7 @@ public class Saml11Builder
 			String sHost, String sConfirmationMethod, String sAudience, HashMap htAttributes)
 	throws ASelectException, SAMLException
 	{
-		String sMethod = "createMySAMLAssertion()";
+		String sMethod = "createMySAMLAssertion";
 		Date dCurrent = new Date();
 		Vector vSAMLStatements = new Vector();
 
@@ -271,7 +271,7 @@ public class Saml11Builder
 			String sIP, String sHost, Date dCurrent, String sConfirmationMethod)
 	throws ASelectException
 	{
-		String sMethod = "generateSAMLAuthenticationStatement()";
+		String sMethod = "generateSAMLAuthenticationStatement";
 		SAMLAuthenticationStatement oSAMLAuthenticationStatement = null;
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "IDENT Uid=" + sUid + " ServerID=" + _sASelectServerID);
@@ -316,7 +316,7 @@ public class Saml11Builder
 			HashMap htAttributes)
 	throws ASelectException
 	{
-		String sMethod = "generateSAMLAttributeStatement()";
+		String sMethod = "generateSAMLAttributeStatement";
 		SAMLAttributeStatement oSAMLAttributeStatement = null;
 		SAMLAttribute oSAMLAttribute = null;
 		try {
@@ -459,7 +459,7 @@ public class Saml11Builder
 	private SAMLAttribute createSAMLAttribute(String sName, Object oValue, String sNameSpace)
 	throws ASelectException
 	{
-		String sMethod = "generateSAMLAttribute()";
+		String sMethod = "generateSAMLAttribute";
 		SAMLAttribute oSAMLAttribute = new SAMLAttribute();
 
 		try {

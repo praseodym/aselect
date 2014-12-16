@@ -364,7 +364,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			IOutputMessage oOutputMessage)
 	throws ASelectException
 	{
-		String sMethod = "handleAuthenticateRequest()";
+		String sMethod = "handleAuthenticateRequest";
 		String sSessionId = null;
 		Integer intAppLevel = null;
 		Integer intMaxAppLevel = null;
@@ -575,7 +575,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	private void handleGetAppLevelRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
 	throws ASelectException
 	{
-		String sMethod = "handleGetAppLevelRequest()";
+		String sMethod = "handleGetAppLevelRequest";
 		String sAppId = null;
 		String sASelectServer = null;
 
@@ -628,7 +628,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	private void handleKillTGTRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
 	throws ASelectException
 	{
-		String sMethod = "handleKillTGTRequest()";
+		String sMethod = "handleKillTGTRequest";
 		String sEncTGT = null;
 		String sASelectServer = null;
 
@@ -701,7 +701,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	private void handleVerifyCredentialsRequest(IInputMessage oInputMessage, IOutputMessage oOutputMessage)
 	throws ASelectException
 	{
-		String sMethod = "handleVerifyCredentialsRequest()";
+		String sMethod = "handleVerifyCredentialsRequest";
 
 		HashMap htTGTContext = null;
 		String sRid = null;
@@ -792,7 +792,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 			{
 				_oTGTManager.remove(sTGT);
 				throw new ASelectCommunicationException(sResultCode);
-				// message with error code and rid is send in "processAPIRequest()"
+				// message with error code and rid is send in "processAPIRequest"
 			}
 		}
 
@@ -896,7 +896,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	private void verifyApplicationSignature(IInputMessage oInputMessage, String sData, String sAppId)
 	throws ASelectException
 	{
-		String sMethod = "verifyApplicationSignature()";
+		String sMethod = "verifyApplicationSignature";
 
 		String sSignature = null;
 		try {

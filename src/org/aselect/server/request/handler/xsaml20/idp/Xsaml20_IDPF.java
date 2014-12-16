@@ -76,7 +76,7 @@ public class Xsaml20_IDPF extends ProtoRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		try {
 			super.init(oServletConfig, oConfig);
@@ -214,7 +214,7 @@ public class Xsaml20_IDPF extends ProtoRequestHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{		
-		String sMethod = "process()";
+		String sMethod = "process";
 		String uid = defaultUID;
 		String extractedAselect_credentials = null;
 		String consumer = null;
@@ -355,7 +355,7 @@ public class Xsaml20_IDPF extends ProtoRequestHandler
 	private String verify_credentials(HttpServletRequest request, String extracted_credentials)
 	throws ASelectCommunicationException
 	{
-		String sMethod = "verify_credentials()";
+		String sMethod = "verify_credentials";
 		// This could be done by getting request parametermap
 		String queryData = request.getQueryString();
 		String extractedRid = queryData.replaceFirst(".*rid=([^&]*).*$", "$1");

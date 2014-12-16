@@ -267,7 +267,7 @@ public class NullAuthSP extends AbstractAuthSP
 		String sQueryString = "";
 		String sLanguage = null;
 		
-		servletResponse.setContentType("text/html");
+		servletResponse.setContentType("text/html; charset=utf-8");
 		setDisableCachingHttpHeaders(servletRequest, servletResponse);
 		sQueryString = servletRequest.getQueryString();
 		HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, true);  // URL decoded result
@@ -359,7 +359,7 @@ public class NullAuthSP extends AbstractAuthSP
 	{
 		String sMethod = "doPost";
 
-		servletResponse.setContentType("text/html");
+		servletResponse.setContentType("text/html; charset=utf-8");
 		setDisableCachingHttpHeaders(servletRequest, servletResponse);
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "NULL POST {" + servletRequest + ", qry="

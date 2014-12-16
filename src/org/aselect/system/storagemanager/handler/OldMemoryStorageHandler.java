@@ -152,7 +152,7 @@ public class OldMemoryStorageHandler implements IStorageHandler
 	public Object get(Object oKey)
 	throws ASelectStorageException
 	{
-		String sMethod = "get()";
+		String sMethod = "get";
 		Object oValue = null;
 
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, this + " store=" + _htStorage);
@@ -191,7 +191,7 @@ public class OldMemoryStorageHandler implements IStorageHandler
 	public long getTimestamp(Object oKey)
 	throws ASelectStorageException
 	{
-		String sMethod = "getTimestamp()";
+		String sMethod = "getTimestamp";
 		long lTimestamp = 0;
 
 		try {
@@ -242,7 +242,7 @@ public class OldMemoryStorageHandler implements IStorageHandler
 	public HashMap getAll()
 	throws ASelectStorageException
 	{
-		String sMethod = "getAll()";
+		String sMethod = "getAll";
 		HashMap htReturnTable = new HashMap();
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, " this=" + /* this.getClass()+" "+ */this + " store="
 				+ _htStorage);
@@ -345,7 +345,7 @@ public class OldMemoryStorageHandler implements IStorageHandler
 	public void remove(Object oKey)
 	throws ASelectStorageException
 	{
-		String sMethod = "remove()";
+		String sMethod = "remove";
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, " this=" + /* this.getClass()+" "+ */this + " " + _htStorage);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "MSH remove(" + Utils.firstPartOf(oKey.toString(), 30) + ") ");
 		try {
@@ -389,7 +389,7 @@ public class OldMemoryStorageHandler implements IStorageHandler
 	public void cleanup(Long lTimestamp)
 	throws ASelectStorageException
 	{
-		String sMethod = "cleanup()";
+		String sMethod = "cleanup";
 		int countAll = 0, countRemoved = 0;
 
 		_systemLogger.log(Level.FINER, MODULE, sMethod, " CleanupTime=" + lTimestamp);

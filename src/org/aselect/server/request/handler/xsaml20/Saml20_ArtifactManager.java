@@ -110,8 +110,9 @@ public class Saml20_ArtifactManager extends StorageManager
 		
 		if (bUseRedirect) {
 			oHttpServletResponse.sendRedirect(sRedirectUrl);
-		} else {
-			oHttpServletResponse.setContentType("text/html");
+		}
+		else {
+			oHttpServletResponse.setContentType("text/html; charset=utf-8");
 	
 			// oHttpServletResponse.sendRedirect(sRedirectUrl);
 			// OR:
@@ -319,7 +320,7 @@ public class Saml20_ArtifactManager extends StorageManager
 	public void init()
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		ASelectConfigManager oASelectConfigManager = null;
 		Object oArtifactSection = null;
 

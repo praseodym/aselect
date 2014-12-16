@@ -313,7 +313,7 @@ public class DelegatorAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit
 			if (sCountry == null || sCountry.trim().length() < 1)
 				sCountry = null;
 			
-			servletResponse.setContentType("text/html");	// RH, 20111021, n			// Content type must be set (before getwriter)
+			servletResponse.setContentType("text/html; charset=utf-8");	// RH, 20111021, n			// Content type must be set (before getwriter)
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 			pwOut = servletResponse.getWriter();
 
@@ -463,7 +463,7 @@ public class DelegatorAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit
 			if (sCountry == null || sCountry.trim().length() < 1)
 				sCountry = null;
 			
-			servletResponse.setContentType("text/html");
+			servletResponse.setContentType("text/html; charset=utf-8");
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 			pwOut = servletResponse.getWriter();
 

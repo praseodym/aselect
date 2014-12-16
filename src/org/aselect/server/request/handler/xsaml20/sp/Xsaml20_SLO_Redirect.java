@@ -90,7 +90,7 @@ public class Xsaml20_SLO_Redirect extends Saml20_BaseHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
 		if (request.getParameter("SAMLRequest") != null) {
 			handleSAMLRequest(request, response);

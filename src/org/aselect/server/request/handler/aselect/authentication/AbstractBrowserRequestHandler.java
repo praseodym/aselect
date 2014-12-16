@@ -234,7 +234,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 			_timerSensor.timerSensorStart(-1/*level unused*/, 3/*type=server*/, _lMyThreadId);  // unused by default
 
 			pwOut = _servletResponse.getWriter();
-			_servletResponse.setContentType("text/html");
+			_servletResponse.setContentType("text/html; charset=utf-8");
 			
 			// Also reads TGT into _htTGTContext if available
 			htServiceRequest = createServiceRequest(_servletRequest);

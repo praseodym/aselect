@@ -70,7 +70,7 @@ public class SamlHistoryManager extends StorageManager
 	public void init()
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		ASelectConfigManager oASelectConfigManager = null;
 		Object oSsoSessionSection = null;
 

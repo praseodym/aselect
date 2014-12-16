@@ -179,7 +179,7 @@ public class RawCommunicator implements IClientCommunicator
 				htReturn = convertCGIMessage(sResponse);
 		}
 		catch (UnsupportedEncodingException eUE) {
-			_systemLogger.log(Level.WARNING, MODULE, "sendMessage()", "Could not URL encode/decode one or more values");
+			_systemLogger.log(Level.WARNING, MODULE, "sendMessage", "Could not URL encode/decode one or more values");
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 		return htReturn;
@@ -419,7 +419,7 @@ public class RawCommunicator implements IClientCommunicator
 						arrTemp = (String[]) vTmp.toArray(arrTemp);
 					}
 					catch (Exception e) {
-						_systemLogger.log(Level.WARNING, MODULE, "convertCGIMessage()",
+						_systemLogger.log(Level.WARNING, MODULE, "convertCGIMessage",
 								"Could not convert Vector to array", e);
 					}
 					xResponse.put(sArrName, arrTemp);

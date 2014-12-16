@@ -116,7 +116,7 @@ public class SensorDataDispatcher extends BasicSensorHandler
 		String sMsg = (iCode == STATUS_OK) ? "Running" : (iCode == STATUS_UNAVAILABLE) ? "Unavailable" : "Not Found";
 
 		outWriter.write("HTTP/1.1 " + iCode + " " + sCode + "\r\n");
-		outWriter.write("Content-Type: text/plain\r\n\r\n");
+		outWriter.write("Content-Type: \"text/plain; charset=utf-8\"\r\n\r\n");
 		outWriter.write(sMsg + ", average=" + lAverage + "\r\n\r\n");
 	}
 

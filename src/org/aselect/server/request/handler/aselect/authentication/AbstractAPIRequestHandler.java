@@ -198,7 +198,7 @@ public abstract class AbstractAPIRequestHandler extends BasicRequestHandler impl
 	public void processRequest()
 	throws ASelectException
 	{
-		String sMethod = "processRequest()";
+		String sMethod = "processRequest";
 		ApplicationManager _applicationManager = ApplicationManager.getHandle();
 		boolean bSuccess = false;
 		_systemLogger.log(Level.INFO, _sModule, sMethod, "processRequest");

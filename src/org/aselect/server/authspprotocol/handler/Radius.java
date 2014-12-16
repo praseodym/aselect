@@ -201,7 +201,7 @@ public class Radius implements IAuthSPProtocolHandler
 	public void init(Object authSPConfig, Object authSPResource)
 	throws ASelectAuthSPException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		Object oASelectConfig = null;
 		try {
 			_oConfigManager = ASelectConfigManager.getHandle();

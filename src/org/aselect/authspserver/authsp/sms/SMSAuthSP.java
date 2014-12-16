@@ -287,7 +287,8 @@ public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 			if (sCountry == null || sCountry.trim().length() < 1)
 				sCountry = null;
 			
-			servletResponse.setContentType("text/html");	// RH, 20111021, n			// Content type must be set (before getwriter)
+			// 20141208, Bauke: utf-8 added
+			servletResponse.setContentType("text/html; charset=utf-8");	// RH, 20111021, n			// Content type must be set (before getwriter)
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 			pwOut = servletResponse.getWriter();
 
@@ -373,8 +374,10 @@ public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 					// therefore make sure the form contains a "challenge" input field.
 					if (_bShow_challenge && htServiceRequest.get("challenge") == null ) {
 						_systemLogger.log(Level.INFO, MODULE, sMethod, "challenge FORM htServiceRequest=" + htServiceRequest);
+						
 						// Challenge form should inform user about invalid phone number 
-						showChallengeForm(pwOut, null, null, htServiceRequest);
+						/* 20141216, Bauke: set error_code to activate the error message in challenge.html: */
+						showChallengeForm(pwOut, Errors.ERROR_SMS_INVALID_PHONE/*was null*/, null, htServiceRequest);
 						return;
 					}
 					handleResult(servletRequest, servletResponse, pwOut, Errors.ERROR_SMS_INVALID_PHONE, sLanguage, failureHandling);
@@ -468,7 +471,8 @@ public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 			if (sCountry == null || sCountry.trim().length() < 1)
 				sCountry = null;
 			
-			servletResponse.setContentType("text/html");
+			// 20141208, Bauke: utf-8 added
+			servletResponse.setContentType("text/html; charset=utf-8");
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 			pwOut = servletResponse.getWriter();
 
@@ -816,7 +820,7 @@ public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 		
 		// Bauke 20110721: Extract if_cond=... from the application URL
 		String sSpecials = Utils.getAselectSpecials(htServiceRequest, true/*decode too*/, _systemLogger);
-		sChallengeForm = Utils.handleAllConditionals(sChallengeForm, Utils.hasValue(sErrorMessage), sSpecials, _systemLogger);
+		sChallengeForm = Utils.handleAllConditionals(sChallengeForm, Utils.hasValue(sError/*20141216,Bauke:was sErrorMessage*/), sSpecials, _systemLogger);
 
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Show Form");
 		pwOut.println(sChallengeForm);

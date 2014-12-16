@@ -110,7 +110,7 @@ public class SAML11RequestHandler extends AbstractRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		String sAttributeNamespace = null;
 		long lAssertionExpireTime = -1;
 
@@ -395,7 +395,7 @@ public class SAML11RequestHandler extends AbstractRequestHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		try {
 			String sCredentials = request.getParameter("aselect_credentials");
 			if (sCredentials == null) {
@@ -498,7 +498,7 @@ public class SAML11RequestHandler extends AbstractRequestHandler
 	private HashMap handleVerifyCredentials(String sCredentials, String sRid, HttpServletRequest request)
 	throws ASelectException
 	{
-		String sMethod = "handleVerifyCredentials()";
+		String sMethod = "handleVerifyCredentials";
 		HashMap htRequest = new HashMap();
 		HashMap htResponse = new HashMap();
 		try {

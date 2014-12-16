@@ -201,7 +201,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	public void init(Object oConfigSection, ConfigManager oConfigManager, SystemLogger systemLogger, SAMAgent oSAMAgent)
 	throws ASelectStorageException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		Object oTableSection = null;
 
 		try {
@@ -324,7 +324,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	public Object get(Object oKey)
 	throws ASelectStorageException
 	{
-		String sMethod = "get()";
+		String sMethod = "get";
 		Object oRet = null;
 		Connection oConnection = null; // RH, 20090604, n
 		PreparedStatement oStatement = null;
@@ -504,7 +504,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	public long getCount()
 	throws ASelectStorageException
 	{
-		String sMethod = "getCount()";
+		String sMethod = "getCount";
 		long lCount = -1;
 		StringBuffer sbBuffer = null;
 		Connection oConnection = null; // RH, 20090604, n
@@ -561,7 +561,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	{
 		HashMap htResponse = new HashMap();
 		StringBuffer sbBuffer = null;
-		String sMethod = "getAll()";
+		String sMethod = "getAll";
 		Connection oConnection = null; // RH, 20090604, n
 		PreparedStatement oStatement = null;
 		ResultSet oResultSet = null;
@@ -715,7 +715,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	private void create(Object oKey, Object oValue, Long lTimestamp)
 	throws SQLException, ASelectStorageException
 	{
-		String sMethod = "create()";
+		String sMethod = "create";
 		Connection oConnection = null; // RH, 20090604, n
 		PreparedStatement oStatement = null;
 		ResultSet oResultSet = null;
@@ -841,7 +841,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	private void update(Object oKey, Object oValue, Long lTimestamp)
 	throws SQLException, ASelectStorageException
 	{
-		String sMethod = "update()";
+		String sMethod = "update";
 		Connection oConnection = null; // RH, 20090604, n
 		PreparedStatement oStatement = null;
 		ResultSet oResultSet = null;
@@ -968,7 +968,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	public void put(Object oKey, Object oValue, Long lTimestamp)
 	throws ASelectStorageException
 	{
-		String sMethod = "put()";
+		String sMethod = "put";
 		Connection oConnection = null; // RH, 20090604, n
 		PreparedStatement oStatement = null;
 		ResultSet oResultSet = null;
@@ -1084,7 +1084,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	public void remove(Object oKey)
 	throws ASelectStorageException
 	{
-		String sMethod = "remove()";
+		String sMethod = "remove";
 		StringBuffer sbBuffer = null;
 		Connection oConnection = null; // RH, 20090604, n
 		PreparedStatement oStatement = null;
@@ -1155,7 +1155,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	public void removeAll()
 	throws ASelectStorageException
 	{
-		String sMethod = "removeAll()";
+		String sMethod = "removeAll";
 		StringBuffer sbBuffer = null;
 		Connection oConnection = null; // RH, 20090604, n
 		PreparedStatement oStatement = null;
@@ -1206,7 +1206,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	public void cleanup(Long lTimestamp)
 	throws ASelectStorageException
 	{
-		String sMethod = "cleanup()";
+		String sMethod = "cleanup";
 		StringBuffer sbBuffer = null;
 		Connection oConnection = null; // RH, 20090604, n
 		PreparedStatement oStatement = null;
@@ -1259,7 +1259,7 @@ public class JDBCStorageHandler implements IStorageHandler
 		// }
 		// }
 		// catch (Exception e) { // Only log to system logger.
-		// _systemLogger.log(Level.FINE, MODULE, "destroy()", "An error occured while trying to destroy the module", e);
+		// _systemLogger.log(Level.FINE, MODULE, "destroy", "An error occured while trying to destroy the module", e);
 		// }
 	}
 
@@ -1341,7 +1341,7 @@ public class JDBCStorageHandler implements IStorageHandler
 	public boolean containsKey(Object oKey)
 	throws ASelectStorageException
 	{
-		String sMethod = "containsKey()";
+		String sMethod = "containsKey";
 		boolean bReturn = false;
 		Connection oConnection = null; // RH, 20090604, n
 		PreparedStatement oStatement = null;
@@ -1439,7 +1439,7 @@ public class JDBCStorageHandler implements IStorageHandler
 
 		return _oConnectionHandler.getConnection();
 		/*
-		 * String sMethod = "getConnection()"; String sPassword = null; String sJDBCDriver = null; String sUsername =
+		 * String sMethod = "getConnection"; String sPassword = null; String sJDBCDriver = null; String sUsername =
 		 * null; String sURL = null; Connection _oActiveConnection = null; int i=1; try { if (_oActiveResource == null
 		 * || !_oActiveResource.live()) { _oActiveResource = _oSAMAgent.getActiveResource(_sResourceGroup); Object
 		 * oConfigSection = _oActiveResource.getAttributes(); try { sJDBCDriver =

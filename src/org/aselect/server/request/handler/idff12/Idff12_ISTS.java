@@ -72,7 +72,7 @@ public class Idff12_ISTS extends ProtoRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			super.init(oServletConfig, oConfig);
 		}
@@ -99,7 +99,7 @@ public class Idff12_ISTS extends ProtoRequestHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		try {
 			String sRelayState = request.getParameter("RelayState");
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "ISTS RelayState=" + sRelayState);
@@ -139,7 +139,7 @@ public class Idff12_ISTS extends ProtoRequestHandler
 	private void handleSubmit(String sIdPUrl, String sRelayState, String sProviderId, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "handleSubmit()";
+		String sMethod = "handleSubmit";
 		try {
 			// Store the current choice in a cookie
 			HandlerTools.putCookieValue(response, COOKIENAME, sIdPUrl, _sCookieDomain, null, -1, 1/*httpOnly*/, _systemLogger);

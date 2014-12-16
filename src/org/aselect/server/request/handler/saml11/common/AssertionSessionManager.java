@@ -69,7 +69,7 @@ public class AssertionSessionManager extends StorageManager
 	public void init(Object oConfig)
 	throws ASelectStorageException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			_systemLogger = ASelectSystemLogger.getHandle();
 
@@ -138,7 +138,7 @@ public class AssertionSessionManager extends StorageManager
 	public void putAssertion(Artifact oArtifact, SAMLAssertion oSAMLAssertion)
 	throws ASelectException
 	{
-		String sMethod = "putAssertion()";
+		String sMethod = "putAssertion";
 		try {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Store Artifact=" + oArtifact);
 			if (containsKey(oArtifact)) {
@@ -191,7 +191,7 @@ public class AssertionSessionManager extends StorageManager
 	 */
 	public SAMLAssertion getAssertion(Artifact oArtifact)
 	{
-		String sMethod = "getAssertion()";
+		String sMethod = "getAssertion";
 		SAMLAssertion oSAMLAssertion = null;
 		try {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "oArtifact=" + oArtifact);

@@ -170,7 +170,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	public void init(ServletConfig oServletConfig, Object oHandlerConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		try {
 			super.init(oServletConfig, oHandlerConfig);
@@ -261,7 +261,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		String sPathInfo = request.getPathInfo();
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "==== Path=" + sPathInfo + " RequestQuery: "
 				+ request.getQueryString());
@@ -432,7 +432,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			String sStatusMessage)
 	throws ASelectException
 	{
-		String sMethod = "errorResponse()";
+		String sMethod = "errorResponse";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
 
 		SAMLObjectBuilder<StatusCode> statusCodeBuilder = (SAMLObjectBuilder<StatusCode>) _oBuilderFactory
@@ -666,7 +666,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 	@Override
 	public void destroy()
 	{
-		String sMethod = "destroy()";
+		String sMethod = "destroy";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
 	}
 }

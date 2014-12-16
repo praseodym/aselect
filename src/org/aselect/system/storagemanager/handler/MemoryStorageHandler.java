@@ -199,7 +199,7 @@ public class MemoryStorageHandler implements IStorageHandler
 	public HashMap getAll()
 	throws ASelectStorageException
 	{
-		String sMethod = "getAll()";
+		String sMethod = "getAll";
 		HashMap htReturnTable = new HashMap();
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, "this=" + this); // +" store="+_htStorage);
 
@@ -302,7 +302,7 @@ public class MemoryStorageHandler implements IStorageHandler
 	public void remove(Object oKey)
 	throws ASelectStorageException
 	{
-		String sMethod = "remove()";
+		String sMethod = "remove";
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, " this=" + this); // +" "+_htStorage);
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "MSH remove(" + Utils.firstPartOf(oKey.toString(), 30) + ") ");
 		try {

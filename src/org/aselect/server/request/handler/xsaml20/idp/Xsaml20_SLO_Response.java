@@ -71,7 +71,7 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 	throws ASelectException
 	{
 		super.init(oServletConfig, oConfig);
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		String sValue = ASelectConfigManager.getSimpleParam(oConfig, "try_redirect_logout_first", false);
 		if (sValue != null && !sValue.equals("true"))
@@ -152,7 +152,7 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 
 		///////////////////////////////////////
 		_systemLogger.log(Level.FINER, MODULE, sMethod, "originalLogoutRequest.getIssuer().getValue(): " +originalLogoutRequest.getIssuer().getValue() 
-				+ ", logoutResponse.getIssuer().getValue()" +  logoutResponse.getIssuer().getValue());
+				+ ", logoutResponse.getIssuer().getValue" +  logoutResponse.getIssuer().getValue());
 		if (originalLogoutRequest.getIssuer().getValue().equals(logoutResponse.getIssuer().getValue())) {
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "LogoutResponse initiated by ourselves, no need to logoutNextSessionSP, redirecting user to: " + sRelayState);
 			// if sRelayState = null maybe present the loggedout form?

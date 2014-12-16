@@ -75,7 +75,7 @@ public class SLOTimerTask extends TimerTask
 	@Override
 	public void run()
 	{
-		String sMethod = "run()";
+		String sMethod = "run";
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "RUN user=" + sso.getUserId() + " - requestId=" + requestId
 				+ " - " + tgtId + " mySso=" + this.sso);
 

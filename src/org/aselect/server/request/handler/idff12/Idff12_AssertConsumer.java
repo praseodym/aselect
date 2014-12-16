@@ -63,7 +63,7 @@ public class Idff12_AssertConsumer extends SamlAssertionConsumer
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		super.init(oServletConfig, oConfig);
 
 		// <identity_providers>
@@ -143,7 +143,7 @@ public class Idff12_AssertConsumer extends SamlAssertionConsumer
 	public String findArtifactUrl(String sArtifact)
 	throws ASelectException
 	{
-		String sMethod = "findArtifactUrl()";
+		String sMethod = "findArtifactUrl";
 		String sSamlSite = "";
 		try {
 			// String sDecoded = Base64.decode(sArtifact);
@@ -177,7 +177,7 @@ public class Idff12_AssertConsumer extends SamlAssertionConsumer
 	@Override
 	public String getRedirectUrl(HttpServletRequest request)
 	{
-		_systemLogger.log(Level.INFO, MODULE, "getRedirectUrl()", "RelayState=" + request.getParameter("RelayState"));
+		_systemLogger.log(Level.INFO, MODULE, "getRedirectUrl", "RelayState=" + request.getParameter("RelayState"));
 		return request.getParameter("RelayState");
 	}
 }

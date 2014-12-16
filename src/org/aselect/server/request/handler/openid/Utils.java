@@ -20,14 +20,13 @@ public abstract class Utils
 	{
 		String sMethod = "sendPlainTextResponse";
 
-		response.setContentType("text/plain");
+		response.setContentType("text/plain; charset=utf-8");
 		OutputStream os = null;
 		try {
 			os = response.getOutputStream();
 			os.write(message.keyValueFormEncoding().getBytes());
 		} catch (IOException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod,
-					"Could not send response message", e);
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Could not send response message", e);
 		} finally {
 			try {
 				if (os != null)

@@ -82,10 +82,10 @@ public class Idff12_SSO extends ProtoRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 		try {
 			super.init(oServletConfig, oConfig);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Idff12_SSO.init()");
+			_systemLogger.log(Level.INFO, MODULE, sMethod, "Idff12_SSO.init");
 
 			_oClientCommunicator = initClientCommunicator(oConfig);
 			_sProviderId = ASelectConfigManager.getSimpleParam(oConfig, "provider_id", true);
@@ -212,7 +212,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 	public RequestState process(HttpServletRequest request, HttpServletResponse response)
 	throws ASelectException
 	{
-		String sMethod = "process()";
+		String sMethod = "process";
 		HashMap htTgtContext = null;
 		HashMap htIdffSession = null;
 		String sSerAttributes = null;

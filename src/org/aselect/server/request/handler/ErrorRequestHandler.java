@@ -174,7 +174,7 @@ public class ErrorRequestHandler extends AbstractRequestHandler
 			sErrorForm = _configManager.updateTemplate(sErrorForm, null /* no session available */, request);
 
 			pwOut = response.getWriter();
-			response.setContentType("text/html");
+			response.setContentType("text/html; charset=utf-8");
 			pwOut.println(sErrorForm);
 		}
 		catch (IOException e) {

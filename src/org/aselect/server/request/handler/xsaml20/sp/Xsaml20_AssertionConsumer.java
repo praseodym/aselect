@@ -774,7 +774,7 @@ public class Xsaml20_AssertionConsumer extends Saml20_BaseHandler
 					// 1. handleSSOResponse(htRemoteAttributes, request, response); // Lets application display error
 					// 2. throw new ASelectException(Errors.ERROR_ASELECT_AUTHSP_ACCESS_DENIED); // Standard server error
 					// 3. Show error page:
-					response.setContentType("text/html");
+					response.setContentType("text/html; charset=utf-8");
 					showErrorPage(sErrorCode, _htSessionContext, response.getWriter(), request);
 				}
 			}

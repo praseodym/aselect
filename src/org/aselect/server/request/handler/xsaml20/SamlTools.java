@@ -772,7 +772,7 @@ public class SamlTools
 	public static LogoutResponse buildLogoutResponse(String issuer, String statusCodeValue, String inResponseTo)
 	throws ASelectException
 	{
-		String sMethod = "buildLogoutResponse()";
+		String sMethod = "buildLogoutResponse";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
 
 		XMLObjectBuilderFactory builderFactory = org.opensaml.xml.Configuration.getBuilderFactory();
@@ -859,7 +859,7 @@ public class SamlTools
 	public static Element marshallMessage(XMLObject message)
 	throws MessageEncodingException
 	{
-		String sMethod = "marshallMessage()";
+		String sMethod = "marshallMessage";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
 
 		try {
@@ -892,7 +892,7 @@ public class SamlTools
 	public static XMLObject unmarshallElement(Element element)
 	throws MessageEncodingException
 	{
-		String sMethod = "unmarshallMessage()";
+		String sMethod = "unmarshallMessage";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
 
 		try {
@@ -1028,7 +1028,7 @@ public class SamlTools
 	 */
 	public static String mapStatus(String s)
 	{
-		String sMethod = "mapStatus()";
+		String sMethod = "mapStatus";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
 		systemLogger.log(Level.FINER, MODULE, sMethod, "Mapping StatusCode: " + s);
 

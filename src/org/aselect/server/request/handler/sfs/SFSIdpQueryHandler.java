@@ -68,7 +68,7 @@ public class SFSIdpQueryHandler extends AbstractRequestHandler
 	public void init(ServletConfig oServletConfig, Object oConfig)
 	throws ASelectException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		_htSFSOrganizations = new HashMap();
 		super.init(oServletConfig, oConfig);
@@ -161,7 +161,7 @@ public class SFSIdpQueryHandler extends AbstractRequestHandler
 	throws ASelectException
 	{
 		boolean bContinue = true;
-		String sMethod = "process()";
+		String sMethod = "process";
 		HashMap htResult = new HashMap();
 		try {
 			StringBuffer sbResult = null;

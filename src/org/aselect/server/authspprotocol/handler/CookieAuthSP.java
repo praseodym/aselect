@@ -25,11 +25,9 @@ import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.crypto.CryptoEngine;
 import org.aselect.server.log.ASelectAuthenticationLogger;
 import org.aselect.server.log.ASelectSystemLogger;
-import org.aselect.server.request.HandlerTools;
 import org.aselect.server.session.SessionManager;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectAuthSPException;
-import org.aselect.system.exception.ASelectConfigException;
 
 /**
  * The CookieAuthSP handler. <br>
@@ -112,7 +110,7 @@ public class CookieAuthSP implements IAuthSPProtocolHandler
 	public void init(Object oAuthSPConfig, Object oAuthSPResource)
 	throws ASelectAuthSPException
 	{
-		String sMethod = "init()";
+		String sMethod = "init";
 
 		Object oASelectConfig = null;
 
