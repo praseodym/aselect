@@ -603,6 +603,7 @@ public class RequestHandler extends Thread
 			String sUid = null;
 			String sAuthsp = null;
 			String sRemoteOrg = null;
+			String sForcedPassive = null;
 
 			try {
 				sAppUrl = oInputMessage.getParam("app_url");
@@ -611,6 +612,7 @@ public class RequestHandler extends Thread
 					_sErrorCode = Errors.ERROR_ASELECT_AGENT_INVALID_REQUEST;
 					return;
 				}
+				sForcedPassive = Utils.getParameterValueFromUrl(sAppUrl, "forced_passive");	// RH, 20141208, n
 				sAppId = oInputMessage.getParam("app_id");
 				if (sAppId.length() == 0) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, "invalid 'app_id'");
@@ -665,6 +667,17 @@ public class RequestHandler extends Thread
 				}
 			}
 
+			// RH, 20141128, sn
+			// handle forced_passive
+			if (sForcedPassive == null) {
+				try {
+					sForcedPassive = oInputMessage.getParam("forced_passive");
+				}
+				catch (ASelectCommunicationException eAC) {
+				}
+			}
+			// RH, 20141128, en
+
 			try {
 				sRemoteOrg = oInputMessage.getParam("remote_organization");
 				if (sRemoteOrg.length() == 0) {
@@ -694,6 +707,10 @@ public class RequestHandler extends Thread
 				htRequest.put("remote_organization", sRemoteOrg);
 			if (sForcedLogon != null)
 				htRequest.put("forced_logon", sForcedLogon); // To Server API, change to forced_authenticate later!!
+			// RH, 20141128, sn
+			if (sForcedPassive != null)
+				htRequest.put("forced_passive", sForcedPassive);
+			// RH, 20141128, en
 
 			String sCountry = null;
 			try {
@@ -1488,6 +1505,32 @@ public class RequestHandler extends Thread
 				if (sLanguage != null) {
 					oOutputMessage.setParam("language", sLanguage);
 				}
+				
+				//	20141229, RH, sn
+				// The attributes parameter is optional.
+				String sAttributes = (String) htResponseParameters.get("attributes");
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "attributes from server=" + sAttributes);
+				if (sAttributes != null) {
+					HashMap newAttr = org.aselect.system.utils.Utils.deserializeAttributes(sAttributes);
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "newAttr=" + newAttr);
+					String sStoredAttr = (String) htTicketContext.get("attributes");
+
+					HashMap storedAttr = org.aselect.system.utils.Utils.deserializeAttributes(sStoredAttr);
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "storedAttr=" + storedAttr);
+
+					storedAttr.putAll(newAttr);// replace stored attributes with new attributes
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "storedAttr after merge=" + storedAttr);
+					sAttributes = org.aselect.system.utils.Utils.serializeAttributes(storedAttr);
+					
+					htTicketContext.put("attributes", sAttributes);	// save the new to be retrieved by processAttributeRequest
+					// Store hash of attributes (we use this in verify_ticket)
+					BASE64Decoder b64d = new BASE64Decoder();
+					MessageDigest md = MessageDigest.getInstance("SHA1");
+					md.update(b64d.decodeBuffer(sAttributes));
+					htTicketContext.put("attributes_hash", org.aselect.system.utils.Utils.byteArrayToHexString(md.digest()));
+				}
+				//	20141229, RH, en
+				
 				if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {
 					sbBuffer = new StringBuffer("A-Select Server returned error: '");
 					sbBuffer.append(sResultCode).append("'.");

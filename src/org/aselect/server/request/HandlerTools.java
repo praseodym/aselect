@@ -11,13 +11,16 @@
  */
 package org.aselect.server.request;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -27,6 +30,9 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.config.ASelectConfigManager;
@@ -35,6 +41,8 @@ import org.aselect.server.log.ASelectSystemLogger;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.system.error.Errors;
 import org.aselect.system.exception.ASelectException;
+import org.aselect.system.exception.ASelectStorageException;
+import org.aselect.system.utils.BASE64Decoder;
 import org.aselect.system.utils.BASE64Encoder;
 import org.aselect.system.utils.Utils;
 import org.joda.time.DateTime;
@@ -53,14 +61,23 @@ import org.opensaml.saml2.core.NameID;
 import org.opensaml.saml2.core.NameIDType;
 import org.opensaml.saml2.core.Subject;
 import org.opensaml.saml2.core.SubjectConfirmation;
+import org.opensaml.ws.message.encoder.MessageEncodingException;
+import org.opensaml.xml.XMLObject;
 import org.opensaml.xml.XMLObjectBuilder;
 import org.opensaml.xml.XMLObjectBuilderFactory;
 import org.opensaml.xml.io.Marshaller;
 import org.opensaml.xml.io.MarshallerFactory;
 import org.opensaml.xml.io.MarshallingException;
 import org.opensaml.xml.schema.XSString;
+import org.opensaml.xml.signature.KeyName;
+import org.opensaml.xml.signature.Signature;
+import org.opensaml.xml.signature.X509Data;
 import org.opensaml.xml.util.XMLHelper;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 /*
  * Generic Tools for all Handler routines
@@ -317,6 +334,7 @@ public class HandlerTools
 		}
 	}
 
+	
 	/**
 	 * Creates the attribute statement assertion.
 	 * 
@@ -584,14 +602,86 @@ public class HandlerTools
 		return assertion;
 	}
 
+
+/**
+ * @param ass
+ *             the assertion
+ * @return the updated assertion
+ * @throws ASelectException
+ */
+	public static Assertion updateAssertionIssueInstant(Assertion ass)
+	throws ASelectException
+	{
+		String sMethod = "updateAssertionIssueInstant";
+		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
+		systemLogger.log(Level.INFO, MODULE, sMethod, "Refreshing assertion");
+		Assertion refreshedAss = null;
+		
+		String alg = null;
+		boolean adkeyname = false;
+		boolean addcert = false;
+		boolean sign = false;
+		Signature sig = ass.getSignature();
+		if (sig != null) { // (re)sign the assertion
+			systemLogger.log(Level.FINER, MODULE, sMethod, "Assertion was signed");
+			sign = true;
+			alg = sig.getSignatureAlgorithm();
+			systemLogger.log(Level.FINER, MODULE, sMethod, "Found signature algortithm: "+alg);
+			if ( sig.getKeyInfo() != null) {
+				adkeyname = true;
+				List <X509Data> x509data = sig.getKeyInfo().getX509Datas();
+				// We might safely assume this is a certificate
+				if (x509data != null) {
+					for (X509Data data : x509data) {
+						String localPart = data.getElementQName().getLocalPart();
+						systemLogger.log(Level.FINER, MODULE, sMethod, "Found local part: "+ localPart);
+						addcert = true;
+						if (localPart.equals("")) {	// maybe verify localpart
+							
+						}
+					}
+				}
+				List<KeyName> keynames = sig.getKeyInfo().getKeyNames();
+				if (keynames != null) {
+					for (KeyName k : keynames) {
+						systemLogger.log(Level.FINER, MODULE, sMethod, "Found keyname: "+alg);
+					}
+					
+				}
+			} else {
+				systemLogger.log(Level.FINER, MODULE, sMethod, "No KeyInfo found, skipping");
+			}
+			systemLogger.log(Level.FINER, MODULE, sMethod, "Removing old signature");
+			List<XMLObject> childList = ass.getOrderedChildren();
+			for (XMLObject child : childList) { // we assume there are children
+				if (child instanceof Signature) {
+					ass.getDOM().removeChild(child.getDOM());
+				}
+			}
+		} else {
+			systemLogger.log(Level.FINER, MODULE, sMethod, "Assertion was not signed");
+		}
+		refreshedAss = (Assertion) rebuildAssertion(ass);
+		refreshedAss.setIssueInstant(new DateTime());
+		refreshedAss = (Assertion) rebuildAssertion(refreshedAss);
+		if (sign) {
+			systemLogger.log(Level.FINER, MODULE, sMethod, "ReSigning the Assertion");
+			Assertion signedAss = (Assertion)SamlTools.signSamlObject(refreshedAss, alg.endsWith("sha256") ? "sha256" : null, adkeyname, addcert); // sha1 default algorithm
+			return signedAss;
+		}
+		return refreshedAss;
+	}
+
 	
 	
 	/**
 	 * Marshall assertion.
-	 * 
+	 *
+	 * Attention, the returned Assertion is not actually marshalled, only logs the marshalled assertion if doLog is true
+	 * For actual Marshalling use {@link SamlTools}
 	 * @param assertion
 	 *            the assertion
-	 * @return the assertion
+	 * @return the original assertion
 	 * @throws ASelectException
 	 *             the a select exception
 	 */
@@ -616,6 +706,41 @@ public class HandlerTools
 		return assertion;
 	}
 
+	
+	/**
+	 * Rebuild assertion.
+	 *
+	 * 
+	 * @param assertion
+	 *            the assertion
+	 * @return the rebuilded assertion
+	 * @throws ASelectException
+	 *             the a select exception
+	 */
+//	public static Assertion rebuildAssertion(Assertion assertion)
+	public static XMLObject rebuildAssertion(XMLObject assertion)
+	throws ASelectException
+	{
+		String sMethod = "rebuildAssertion";
+//		Assertion rebuildedAssertion = null;
+		XMLObject rebuildedAssertion = null;
+		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
+		
+			Element e;
+			try {
+				e = SamlTools.marshallMessage(assertion);
+//				rebuildedAssertion = (Assertion) SamlTools.unmarshallElement(e);
+				rebuildedAssertion = SamlTools.unmarshallElement(e);
+			}
+			catch (MessageEncodingException e1) {
+				systemLogger.log(Level.WARNING, MODULE, sMethod, e1.getMessage(), e1);
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			}
+			
+		return rebuildedAssertion;
+	}
+
+	
 	/**
 	 * Create a signed and base64 encoded Saml Token
 	 * containing the attributes present in htAttributes.
@@ -635,10 +760,28 @@ public class HandlerTools
 		String sMethod = "createAttributeToken";
 		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
 
+		systemLogger.log(Level.FINER, MODULE, sMethod, "Creating AttributeToken");
+
 		Assertion samlAssert = HandlerTools.createAttributeStatementAssertion(htAttributes, sIssuer/* Issuer */,
 				sTgt/* Subject */, true/* sign */);
+		String sSamlAssert = base64EncodeAssertion(samlAssert);
+		return sSamlAssert;
+	}
+
+	/**
+	 * @param sMethod
+	 * @param samlAssert
+	 * @return
+	 * @throws ASelectException
+	 */
+//	public static String base64EncodeAssertion(Assertion samlAssert)
+	public static String base64EncodeAssertion(XMLObject samlAssert)
+		throws ASelectException
+	{
+		String sMethod = "base64EncodeAssertion";
+		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
 		String sAssertion = XMLHelper.nodeToString(samlAssert.getDOM());
-		systemLogger.log(Level.INFO, MODULE, sMethod, "Assertion=" + sAssertion);
+		systemLogger.log(Level.FINER, MODULE, sMethod, "Assertion=" + sAssertion);
 
 		try {
 			byte[] bBase64Assertion = sAssertion.getBytes("UTF-8");
@@ -650,6 +793,63 @@ public class HandlerTools
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 	}
+	
+	
+	/**
+	 * @param sMethod
+	 * @param sSamlAssert
+	 * @return
+	 * @throws ASelectException
+	 */
+//	public static Assertion base64DecodeAssertion(String sSamlAssert)
+	public static XMLObject base64DecodeAssertion(String sSamlAssert)
+		throws ASelectException
+	{
+		String sMethod = "base64DecodeAssertion";
+		XMLObject xmlObject = null;
+		ASelectSystemLogger systemLogger = ASelectSystemLogger.getHandle();
+		systemLogger.log(Level.FINER, MODULE, sMethod, "base64Decoding: " + sSamlAssert);
+		BASE64Decoder b64dec = new BASE64Decoder();
+		byte[] tokenArray = b64dec.decodeBuffer(sSamlAssert);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try {
+			baos.write(tokenArray);
+			String token = baos.toString("UTF-8"); // We should have gotten UTF-8 formatted strings
+	
+			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+			dbFactory.setNamespaceAware(true);
+			// dbFactory.setExpandEntityReferences(false);
+			// dbFactory.setIgnoringComments(true);
+			StringReader stringReader = new StringReader(token);
+			InputSource inputSource = new InputSource(stringReader);
+	
+			DocumentBuilder builder = null;
+			Document samlResponse = null;
+			Element dom = null;
+			builder = dbFactory.newDocumentBuilder();
+			samlResponse = builder.parse(inputSource);
+			dom = samlResponse.getDocumentElement();
+			xmlObject = SamlTools.unmarshallElement(dom);
+		}
+		catch (MessageEncodingException e) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod, "Error while marshalling message", e);
+			throw new ASelectStorageException(Errors.ERROR_ASELECT_PARSE_ERROR, e);
+		}
+		catch (IOException e) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod, "Error while marshalling message", e);
+			throw new ASelectStorageException(Errors.ERROR_ASELECT_IO, e);
+		}
+		catch (ParserConfigurationException e) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod, "Error while getting parser");
+			throw new ASelectStorageException(Errors.ERROR_ASELECT_PARSE_ERROR, e);
+		}
+		catch (SAXException e) {
+			systemLogger.log(Level.WARNING, MODULE, sMethod, "Error while parsing message", e);
+			throw new ASelectStorageException(Errors.ERROR_ASELECT_PARSE_ERROR, e);
+		}
+		return  xmlObject;
+	}
+	
 	
 	
 	/*

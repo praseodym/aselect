@@ -220,6 +220,8 @@ import org.aselect.system.exception.ASelectException;
 import org.aselect.system.exception.ASelectStorageException;
 import org.aselect.system.utils.Tools;
 import org.aselect.system.utils.Utils;
+import org.joda.time.DateTime;
+import org.opensaml.saml2.core.Assertion;
 
 /**
  * Handle API requests from Applications and A-Select Agents. <br>
@@ -249,6 +251,7 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 	private CryptoEngine _cryptoEngine;
 	private MetaDataManagerSp _metadataManager;
 	protected String _sServerUrl;
+	protected boolean bUpdateTokenIssueinstant = false;
 
 	/**
 	 * Create a new instance. <br>
@@ -293,6 +296,14 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 		catch (ASelectConfigException e) {
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_CONFIG_ERROR, e);
+		}
+
+		try {
+			String _sUpdateTokenIssueinstant = ASelectConfigManager.getParamFromSection(null, "aselect", "updatetokenissueinstant", false);
+			bUpdateTokenIssueinstant = Boolean.parseBoolean(_sUpdateTokenIssueinstant);
+		}
+		catch (ASelectConfigException e1) {
+			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_CONFIG_ERROR, e1);
 		}
 
 		try {
@@ -719,6 +730,23 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 		}
 		try {
 			oOutputMessage.setParam("result_code", sResult);
+			//	20141229, RH, sn
+			if (sResult == Errors.ERROR_ASELECT_SUCCESS) {	// on success try to update the saml_attribute_token as well (if present)
+				String sSaml2token = (String) htTGTContext.get("saml_attribute_token");	// still base64 encoded
+				if (bUpdateTokenIssueinstant && sSaml2token != null) {
+					Assertion saml2token = (Assertion)HandlerTools.base64DecodeAssertion(sSaml2token);
+					saml2token = HandlerTools.updateAssertionIssueInstant(saml2token);
+					String sToken = HandlerTools.base64EncodeAssertion(saml2token);
+					HashMap<String, Object> htAttribs = new HashMap<String, Object>();
+					htAttribs.put("saml_attribute_token", sToken);
+					String sSerializedAttributes = org.aselect.server.utils.Utils.serializeAttributes(htAttribs);
+					oOutputMessage.setParam("attributes", sSerializedAttributes);	// only send new atttribute(s)
+					// update tgt in storage as well
+					htTGTContext.put("saml_attribute_token", sToken);
+					_oTGTManager.updateTGT(sTgT, htTGTContext);
+				}
+			}
+			//	20141229, RH, en
 		}
 		catch (ASelectCommunicationException eAC) {
 			_systemLogger.log(Level.WARNING, _sModule, sMethod, "Could not set response parameter", eAC);
@@ -896,7 +924,16 @@ public class ApplicationAPIHandler extends AbstractAPIRequestHandler
 				htSelectedAttr.put("saml_remote_token", sRemoteToken);
 
 			// Add Saml Token to the attributes, must be signed and base64 encoded
+			
+//			sToken = HandlerTools.createAttributeToken(_sServerUrl, sTGT, htSelectedAttr);
+			// Because this is relatively expensive we might consider making this application dependent
 			sToken = HandlerTools.createAttributeToken(_sServerUrl, sTGT, htSelectedAttr);
+			
+			if ( bUpdateTokenIssueinstant ) {
+				htTGTContext.put("saml_attribute_token", sToken);	// store the token for use with handleUpgradeTGTRequest
+				_oTGTManager.updateTGT(sTGT, htTGTContext);
+			}
+			
 			htAttribs.put("saml_attribute_token", sToken);
 		}
 		String sSerializedAttributes = org.aselect.server.utils.Utils.serializeAttributes(htAttribs);
