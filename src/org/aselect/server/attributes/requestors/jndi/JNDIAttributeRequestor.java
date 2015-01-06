@@ -136,6 +136,8 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 	private HashMap<String, String> _htReMapAttributes;
 	private boolean _bUseFullUid = false;
 	private boolean _bNumericalUid = false;
+	private String _sQueryPreFrase = null;
+	private String _sQueryPostFrase = null;
 	
 	// Store <sub_attributes> data
 	protected HashMap<String,String> _hmAttributes = new HashMap<String,String>();
@@ -233,15 +235,41 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 			catch (ASelectConfigException e) {
 				_sAltUserDN = "";
 			}
+
+			//	20150102, RH, sn
+			try {
+				_sQueryPreFrase = _configManager.getParam(oMain, "query_prefrase");
+			}
+			catch (ASelectConfigException e) {
+				_sQueryPreFrase = null;
+				_systemLogger.log(Level.INFO, MODULE, sMethod,
+						"No valid 'query_prefrase' config item in 'main' section found so not using any");
+			}
+
+			try {
+				_sQueryPostFrase = _configManager.getParam(oMain, "query_postfrase");
+			}
+			catch (ASelectConfigException e) {
+				_sQueryPostFrase = null;
+				_systemLogger.log(Level.INFO, MODULE, sMethod,
+						"No valid 'query_postfrase' config item in 'main' section found so not using any");
+			}
+			//	20150102, RH, en
+			
 			
 			// 20100201, Bauke: Organization Resolver additional items
 			// Search tree until container starts with [search_tree]=
 			_sSearchTree = ASelectConfigManager.getSimpleParam(oMain, "search_tree", false);
 			_sOrgDN = ASelectConfigManager.getSimpleParam(oMain, "org_dn", false);
 			_sOrgName = ASelectConfigManager.getSimpleParam(oMain, "org_name", false);
+//			_systemLogger.log(Level.INFO, MODULE, sMethod, "Config _sBaseDN=" + _sBaseDN + " _sUserDN=" + _sUserDN
+//					+ " _sAltUserDN=" + _sAltUserDN + " _sAuthSPUID=" + _sAuthSPUID + " _sResourceGroup="
+//					+ _sResourceGroup+" org_dn="+_sOrgDN+" org_name="+_sOrgName+" search_tree="+_sSearchTree);		//	20150102, RH, o
+
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Config _sBaseDN=" + _sBaseDN + " _sUserDN=" + _sUserDN
 					+ " _sAltUserDN=" + _sAltUserDN + " _sAuthSPUID=" + _sAuthSPUID + " _sResourceGroup="
-					+ _sResourceGroup+" org_dn="+_sOrgDN+" org_name="+_sOrgName+" search_tree="+_sSearchTree);
+					+ _sResourceGroup+" org_dn="+_sOrgDN+" org_name="+_sOrgName+" search_tree="+_sSearchTree
+					+ " _sQueryPreFrase=" + _sQueryPreFrase + " _sQueryPostFrase=" + _sQueryPostFrase );		//	20150102, RH, n
 
 			Object oAttributes = null;
 			try {
@@ -521,6 +549,15 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 			// Bauke: Allow use of an alternative user DN when the DigiD AuthSP was used
 			String useDnField = (bIsDigid) ? _sAltUserDN: _sUserDN;
 			sbQuery = new StringBuffer("(").append(useDnField).append("=").append(sUID).append(")");
+//			20150102, RH, sn
+			// add prefrase and pos-frase
+			if ( _sQueryPreFrase != null ) {
+				sbQuery.insert(0, _sQueryPreFrase);
+			}
+			if ( _sQueryPostFrase != null ) {
+				sbQuery.append(_sQueryPostFrase);
+			}
+//			20150102, RH, en
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Search BaseDN=" + _sBaseDN +
 					", sbQuery=" + sbQuery + ", oScope=" + oScope.getSearchScope());
 
