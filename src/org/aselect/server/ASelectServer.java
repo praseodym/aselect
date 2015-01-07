@@ -515,20 +515,20 @@ public class ASelectServer extends ASelectHttpServlet
 				response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
 				return;
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "TimerSensor thread="+_timerSensorThread+" this="+this);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "TimerSensor thread="+_timerSensorThread+" this="+this);
 
 			_numRequests++;
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "SERVICE {" + " T="+System.currentTimeMillis()+", t="+Thread.currentThread().getId()+
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "Entering SERVICE {" + " currentTimeMillis T="+System.currentTimeMillis()+", currentThreadId t="+Thread.currentThread().getId()+
 					" nReq="+_numRequests+" "+request.getMethod() + " Query: "+request.getQueryString());
 			//HandlerTools.logCookies(request, _systemLogger);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, request.getRemoteHost() + " / " + request.getRequestURL()
+			_systemLogger.log(Level.FINER, MODULE, sMethod, request.getRemoteHost() + " / " + request.getRequestURL()
 					+ " / " + request.getRemoteAddr());
 			_oRequestHandlerFactory.process(request, response);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "} SERVICE" + " T=" + System.currentTimeMillis()+", t="+Thread.currentThread().getId()+ "\n====");
+			_systemLogger.log(Level.FINE, MODULE, sMethod, "} Exiting SERVICE" + " currentTimeMillis T=" + System.currentTimeMillis()+", currentThreadId t="+Thread.currentThread().getId()+ "\n====");
 		}
 		catch (ASelectException e) {
-			_systemLogger.log(Level.WARNING, MODULE, sMethod, "} SERVICE" + " T=" + System.currentTimeMillis()
-					+", t="+Thread.currentThread().getId()+" ASelectException while processing request: " + e + " commit="+response.isCommitted()+"\n====");
+			_systemLogger.log(Level.WARNING, MODULE, sMethod, "} Exiting SERVICE" + "  currentTimeMillis T=" + System.currentTimeMillis()
+					+", currentThreadId t="+Thread.currentThread().getId()+" ASelectException while processing request: " + e + " commit="+response.isCommitted()+"\n====");
 			if (!response.isCommitted()) {
 				// send response if no headers have been written
 				if (e.getMessage().equals(Errors.ERROR_ASELECT_INTERNAL_ERROR))
@@ -538,8 +538,8 @@ public class ASelectServer extends ASelectHttpServlet
 			}
 		}
 		catch (Exception e) {
-			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "} SERVICE" + " T=" + System.currentTimeMillis()
-					+", t="+Thread.currentThread().getId()+" Exception occurred: " + e +  " commit="+response.isCommitted()+"\n====");
+			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "} Exiting SERVICE" + " currentTimeMillis T=" + System.currentTimeMillis()
+					+", currentThreadId t="+Thread.currentThread().getId()+" Exception occurred: " + e +  " commit="+response.isCommitted()+"\n====");
 			if (!response.isCommitted()) {
 				// send response if no headers have been written
 				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

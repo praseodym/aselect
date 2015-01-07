@@ -403,7 +403,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		super(servletRequest, servletResponse, sMyServerId, sMyOrg);
 		String sMethod = "ApplicationBrowserHandler";
 		_sModule = "ApplicationBrowserHandler";
-		_systemLogger.log(Level.INFO, _sModule, _sModule, "== create == user language=" + _sUserLanguage);
+		_systemLogger.log(Level.FINER, _sModule, _sModule, "== create == user language=" + _sUserLanguage);
 		_applicationManager = ApplicationManager.getHandle();
 		_authspHandlerManager = AuthSPHandlerManager.getHandle();
 		_crossASelectManager = CrossASelectManager.getHandle();
@@ -464,7 +464,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		boolean useUsi = false;
 
 		String sRequest = (String) htServiceRequest.get("request");
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplBrowREQ sRequest="+sRequest + " user language="+_sUserLanguage);
+		_systemLogger.log(Level.FINER, _sModule, sMethod, "ApplBrowREQ sRequest="+sRequest + " user language="+_sUserLanguage);
 		
 		// 20120611, Bauke: added "usi" handling
 		if (sRequest != null && ("logout".equals(sRequest) || sRequest.startsWith("direct_login") || sRequest.startsWith("login"))) {
@@ -475,7 +475,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		String sReqLanguage = (String) htServiceRequest.get("language");
 		if (sReqLanguage != null && !sReqLanguage.equals("")) {
 			_sUserLanguage = sReqLanguage;
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "Set user language=" + _sUserLanguage + " from Request");
+			_systemLogger.log(Level.FINER, _sModule, sMethod, "Set user language=" + _sUserLanguage + " from Request");
 		}
 		// TGT was read if available
 
@@ -505,20 +505,20 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 			// And copy language back
 			_sUserLanguage = (String) _htSessionContext.get("language"); // override
 			String sUserState = (String)_htSessionContext.get("user_state");
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "After transfer: userLanguage=" + _sUserLanguage+
+			_systemLogger.log(Level.FINER, _sModule, sMethod, "After transfer: userLanguage=" + _sUserLanguage+
 					" user_state="+sUserState);
 		}
 
 		boolean bAllowLoginToken = "true".equals(ASelectAuthenticationProfile.get_sAllowLoginToken());
 		String sAllowedLoginTokenMethod = ASelectAuthenticationProfile.get_sAllowedLoginTokenMethod();
 		
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "bAllowLoginToken="+bAllowLoginToken + ", sAllowedLoginTokenMethod: " + sAllowedLoginTokenMethod);
+		_systemLogger.log(Level.FINER, _sModule, sMethod, "bAllowLoginToken="+bAllowLoginToken + ", sAllowedLoginTokenMethod: " + sAllowedLoginTokenMethod);
 
 		if (sRequest == null) {
 			// Show info page if nothing else to do
 			String sUrl = (String)htServiceRequest.get("my_url");
 			String sAsUid = (String)htServiceRequest.get("aselect_credentials_uid");
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "ApplBrowREQ request=null sUrl=" + sUrl+" aselect_credentials_uid="+sAsUid);
+			_systemLogger.log(Level.FINER, _sModule, sMethod, "ApplBrowREQ request=null sUrl=" + sUrl+" aselect_credentials_uid="+sAsUid);
 
 			if (sAsUid != null)
 				showUserInfo(htServiceRequest, _servletResponse);  // pauses sensor
@@ -590,7 +590,7 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 
 			// Session is available
 			String sDirectAuthSP = (String) _htSessionContext.get("direct_authsp");
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "direct_authsp="+sDirectAuthSP);
+			_systemLogger.log(Level.FINER, _sModule, sMethod, "direct_authsp="+sDirectAuthSP);
 			if (sDirectAuthSP != null && !sRequest.startsWith("direct_login")) {
 				_systemLogger.log(Level.WARNING, _sModule, sMethod,
 						"'direct_authsp' found, but not a 'direct_login' request, rid='" + sRid + "'");

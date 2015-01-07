@@ -213,7 +213,7 @@ public class SAMAgent
 		String sMethod = "getActiveResource";
 		SAMResource oSAMResource = null;
 		
-		_oSystemLogger.log(Level.INFO, MODULE, sMethod, "Getting active resource for: " + sID);		// RH, 20110202, n
+		_oSystemLogger.log(Level.FINER, MODULE, sMethod, "Getting active resource for: " + sID);		// RH, 20110202, n
 		SAMResourceGroup oSAMResourceGroup = (SAMResourceGroup) _htResourceGroups.get(sID);
 
 		if (oSAMResourceGroup != null) {

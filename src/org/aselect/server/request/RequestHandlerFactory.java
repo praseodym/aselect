@@ -228,7 +228,7 @@ public class RequestHandlerFactory
 
 		try {
 			String qry = request.getQueryString();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "TRY2MATCH " + request.getRequestURI() + ": "
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "TRY2MATCH " + request.getRequestURI() + ": "
 					+ request.getContextPath() + "~" + request.getServletPath() + "~" + Utils.firstPartOf(qry, 30));
 
 			Enumeration enumHandlers = _vRequestHandlers.elements();
@@ -247,18 +247,18 @@ public class RequestHandlerFactory
 			}
 
 			if (bMatches && oRequestHandler != null) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "HANDLE<< oRequestHandler=" + oRequestHandler.getID());
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "HANDLE<< oRequestHandler id=" + oRequestHandler.getID());
 				oRequestState = oRequestHandler.process(request, response);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, ">>HANDLE oRequestHandler=" + oRequestHandler.getID());
+				_systemLogger.log(Level.FINER, MODULE, sMethod, ">>HANDLE oRequestHandler id=" + oRequestHandler.getID());
 			}
 
 			// request handler chaining
 			while (oRequestState != null && oRequestState.hasNextHandler()) {
 				oRequestHandler = (IRequestHandler) _htRequestHandlers.get(oRequestState.getNextHandler());
 				if (oRequestHandler != null) {
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "CHAIN<< oRequestHandler=" + oRequestHandler.getID());
+					_systemLogger.log(Level.FINER, MODULE, sMethod, "CHAIN<< oRequestHandler=" + oRequestHandler.getID());
 					oRequestState = oRequestHandler.process(request, response);
-					_systemLogger.log(Level.INFO, MODULE, sMethod, ">>CHAIN oRequestHandler=" + oRequestHandler.getID());
+					_systemLogger.log(Level.FINER, MODULE, sMethod, ">>CHAIN oRequestHandler=" + oRequestHandler.getID());
 				}
 				else
 					oRequestState = null;

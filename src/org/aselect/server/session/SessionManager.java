@@ -503,23 +503,23 @@ public class SessionManager extends StorageManager
 		String sMethod = "finalSessionProcessing";
 		
 		if (htSessionContext == null) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Final NO Session!");  // may be legal
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Final NO Session!");  // may be legal
 			return;
 		}
 		String sStatus = (String)htSessionContext.get("status");
 		String sRid = (String)htSessionContext.get("rid");
 		if (sRid != null && "upd".equals(sStatus)) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Final upd Session "+sRid);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Final upd Session "+sRid);
 			if (doReally)
 				updateSession(sRid, htSessionContext);
 		}
 		else if (sRid != null && "del".equals(sStatus)) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Final del Session "+sRid);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Final del Session "+sRid);
 			if (doReally)
 				deleteSession(sRid, htSessionContext);  // can throw an exception
 		}
 		else
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Final Session status="+sStatus+" - "+sRid);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Final Session status="+sStatus+" - "+sRid);
 	}
 
 	/**

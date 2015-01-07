@@ -211,7 +211,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 		Locale loc = servletRequest.getLocale();
 		_sUserLanguage = loc.getLanguage();
 		_sUserCountry = loc.getCountry();
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "Locale: _" + _sUserLanguage + "_" + _sUserCountry);
+		_systemLogger.log(Level.FINER, _sModule, sMethod, "Locale: _" + _sUserLanguage + "_" + _sUserCountry);
 	}
 
 	/**
@@ -239,7 +239,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 			// Also reads TGT into _htTGTContext if available
 			htServiceRequest = createServiceRequest(_servletRequest);
 			String sRequest = (String) htServiceRequest.get("request");
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ "+_servletRequest.getMethod()+" htServiceRequest=" + htServiceRequest);
+			_systemLogger.log(Level.FINER, _sModule, sMethod, "AbstBrowREQ "+_servletRequest.getMethod()+" htServiceRequest=" + htServiceRequest);
 			String sUsi = null;
 			try {
 				sUsi = (String)htServiceRequest.get("usi");  // unique sensor id
@@ -253,7 +253,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 			// only check a-select-server if request != null
 			if (sRequest != null && !sRequest.equals("alive")) {
 				String sServerId = (String) htServiceRequest.get("a-select-server");
-				_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ _sMyServerId=" + _sMyServerId
+				_systemLogger.log(Level.FINER, _sModule, sMethod, "AbstBrowREQ _sMyServerId=" + _sMyServerId
 						+ ", sServerId=" + sServerId);
 				if (sServerId == null) {
 					_systemLogger.log(Level.WARNING, _sModule, sMethod, "Missing required parameter \"a-select-server\"");
@@ -269,7 +269,7 @@ public abstract class AbstractBrowserRequestHandler extends BasicRequestHandler 
 			processBrowserRequest(htServiceRequest, _servletResponse, pwOut);
 			
 			bSuccess = true;  // no exceptions thrown
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "AbstBrowREQ Done");
+			_systemLogger.log(Level.FINER, _sModule, sMethod, "AbstBrowREQ Done");
 		}
 		catch (ASelectException ae) {
 			_timerSensor.setTimerSensorType(0);
