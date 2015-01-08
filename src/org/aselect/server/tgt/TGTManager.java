@@ -247,7 +247,7 @@ public class TGTManager extends StorageManager
 				if (sNameID == null)
 					htTGTContext.put("name_id", sTGT);
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "New TGT=" + Utils.firstPartOf(sTGT, 30));	// RH, 209111121, n
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "New TGT=" + Utils.firstPartOf(sTGT, 30));	// RH, 209111121, n
 			// RH, 20111121, en
 //			put(sTGT, htTGTContext);			// RH, 20111121, o
 
@@ -302,7 +302,7 @@ public class TGTManager extends StorageManager
 		boolean bReturn = false;
 		//20120405, Bauke: if (getTGT(sTGT) != null) {
 			try {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "updateTGT(" + Utils.firstPartOf(sTGT, 30) + ")");
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "updateTGT(" + Utils.firstPartOf(sTGT, 30) + ")");
 				htTGTContext.remove("status");
 				update(sTGT, htTGTContext);
 				htTGTContext.put("status", "get");  // 20120405: unmodified
@@ -344,7 +344,7 @@ public class TGTManager extends StorageManager
 		HashMap htContext = null;
 
 		try {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "getTGT(" + Utils.firstPartOf(sTGT, 30) + ")");
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "getTGT(" + Utils.firstPartOf(sTGT, 30) + ")");
 			htContext = (HashMap) get(sTGT);
 			if (htContext != null)
 				htContext.put("status", "get");  // 20120405: unmodified

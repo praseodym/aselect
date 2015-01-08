@@ -180,9 +180,9 @@ public class ASelectAuthenticationProfile extends AbstractRequestHandler
 		String sMethod = "process";
 		try {
 			// create the appropriate handler
-			_systemLogger.log(Level.FINER, MODULE, sMethod, "HANDLER request=" + request.getParameter("request"));
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "HANDLER request=" + request.getParameter("request"));
 			IAuthnRequestHandler iHandler = _oRequestHandlerFactory.createRequestHandler(request, response);
-			_systemLogger.log(Level.FINER, MODULE, sMethod, "PROCESS by " + iHandler.getClass());
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "PROCESS by " + iHandler.getClass());
 			iHandler.processRequest();
 		}
 		catch (ASelectException e) {

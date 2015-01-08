@@ -366,7 +366,7 @@ public class SessionManager extends StorageManager
 		String sMethod = "getSessionContext";
 		HashMap htContext = null;
 		try {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "SessionId=" + sSessionId); // + ", Context=" + htContext);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "SessionId=" + sSessionId); // + ", Context=" + htContext);
 			htContext = (HashMap) get(sSessionId);
 			if (htContext != null) {
 				htContext.put("status", "get");  // 20120401: indicates unchanged session
@@ -409,7 +409,7 @@ public class SessionManager extends StorageManager
 		String sMethod = "updateSession";
 		boolean bReturn = false;
 		try {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "SessionId=" + sSessionId);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "SessionId=" + sSessionId);
 //			RH, 20111117: writeSession is mostly used for updating sessions so use update instead of put
 //			put(sSessionId, htSessionContext); // insert or update
 			
@@ -465,7 +465,7 @@ public class SessionManager extends StorageManager
 	{
 		String sMethod = "deleteSession";
 		try {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "SessionId=" + sSessionId);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "SessionId=" + sSessionId);
 			// Retrieve session start time (timestamp) and calculate last processing time
 			// 20120405, Bauke, disabled, only used by the GUI
 			_lProcessTime = 0;  // System.currentTimeMillis() - getTimestamp(sSessionId);
@@ -503,23 +503,23 @@ public class SessionManager extends StorageManager
 		String sMethod = "finalSessionProcessing";
 		
 		if (htSessionContext == null) {
-			_systemLogger.log(Level.FINER, MODULE, sMethod, "Final NO Session!");  // may be legal
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Final NO Session!");  // may be legal
 			return;
 		}
 		String sStatus = (String)htSessionContext.get("status");
 		String sRid = (String)htSessionContext.get("rid");
 		if (sRid != null && "upd".equals(sStatus)) {
-			_systemLogger.log(Level.FINER, MODULE, sMethod, "Final upd Session "+sRid);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Final upd Session "+sRid);
 			if (doReally)
 				updateSession(sRid, htSessionContext);
 		}
 		else if (sRid != null && "del".equals(sStatus)) {
-			_systemLogger.log(Level.FINER, MODULE, sMethod, "Final del Session "+sRid);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Final del Session "+sRid);
 			if (doReally)
 				deleteSession(sRid, htSessionContext);  // can throw an exception
 		}
 		else
-			_systemLogger.log(Level.FINER, MODULE, sMethod, "Final Session status="+sStatus+" - "+sRid);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Final Session status="+sStatus+" - "+sRid);
 	}
 
 	/**

@@ -518,13 +518,13 @@ public class ASelectServer extends ASelectHttpServlet
 			_systemLogger.log(Level.FINEST, MODULE, sMethod, "TimerSensor thread="+_timerSensorThread+" this="+this);
 
 			_numRequests++;
-			_systemLogger.log(Level.FINE, MODULE, sMethod, "Entering SERVICE {" + " currentTimeMillis T="+System.currentTimeMillis()+", currentThreadId t="+Thread.currentThread().getId()+
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Entering SERVICE {" + " currentTimeMillis T="+System.currentTimeMillis()+", currentThreadId t="+Thread.currentThread().getId()+
 					" nReq="+_numRequests+" "+request.getMethod() + " Query: "+request.getQueryString());
 			//HandlerTools.logCookies(request, _systemLogger);
-			_systemLogger.log(Level.FINER, MODULE, sMethod, request.getRemoteHost() + " / " + request.getRequestURL()
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, request.getRemoteHost() + " / " + request.getRequestURL()
 					+ " / " + request.getRemoteAddr());
 			_oRequestHandlerFactory.process(request, response);
-			_systemLogger.log(Level.FINE, MODULE, sMethod, "} Exiting SERVICE" + " currentTimeMillis T=" + System.currentTimeMillis()+", currentThreadId t="+Thread.currentThread().getId()+ "\n====");
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "} Exiting SERVICE" + " currentTimeMillis T=" + System.currentTimeMillis()+", currentThreadId t="+Thread.currentThread().getId()+ "\n====");
 		}
 		catch (ASelectException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "} Exiting SERVICE" + "  currentTimeMillis T=" + System.currentTimeMillis()

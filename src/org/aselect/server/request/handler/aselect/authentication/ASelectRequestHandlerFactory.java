@@ -181,7 +181,7 @@ public class ASelectRequestHandlerFactory
 		// Process all other requests
 		RequestParser reqParser = new RequestParser(servletRequest);
 		int orig = reqParser.getRequestOrigin();
-		_systemLogger.log(Level.FINER, MODULE, sMethod, "HANDLER Orig="
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "HANDLER Orig="
 				+ ((orig == RequestParser.ORIGIN_APPLICATION) ? "APPL"
 					: (orig == RequestParser.ORIGIN_ASELECTSERVER) ? "ASELECT"
 					: (orig == RequestParser.ORIGIN_AUTHSP) ? "AUTHSP"

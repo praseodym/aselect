@@ -195,7 +195,7 @@ public class TimerSensor
 	    	timerSensorTgt = sUnpacked[i++];
     	}
     	catch (Exception e) {
-			_oSystemLogger.log(Level.FINER, MODULE, sMethod, "Exception:"+e.getClass()+" "+e.getMessage()+" i="+i);
+			_oSystemLogger.log(Level.FINEST, MODULE, sMethod, "Exception:"+e.getClass()+" "+e.getMessage()+" i="+i);
     	}
     }
 
@@ -226,7 +226,7 @@ public class TimerSensor
 	    td_start.timeValThen(lStartTime);
 	    td_spent.timeValZero();
 	    td_finish.timeValZero();
-		_oSystemLogger.log(Level.FINER, MODULE, sMethod, "TS_"+timerSensorThread+" start: st="+td_start.toString());
+		_oSystemLogger.log(Level.FINEST, MODULE, sMethod, "TS_"+timerSensorThread+" start: st="+td_start.toString());
 	}
 
 	/**
@@ -236,7 +236,7 @@ public class TimerSensor
 	{
 		String sMethod = "timerSensorPause";
 		td_finish.timeValNow();
-		_oSystemLogger.log(Level.FINER, MODULE, sMethod, "TS_"+timerSensorThread+" pause: fi="+td_finish.toString());
+		_oSystemLogger.log(Level.FINEST, MODULE, sMethod, "TS_"+timerSensorThread+" pause: fi="+td_finish.toString());
 	}
 
 	/**
@@ -254,7 +254,7 @@ public class TimerSensor
 	    String sDiff = tvNow.toString();
 	    td_spent.timeValPlus(tvNow);
 	    td_finish.timeValZero();
-	    _oSystemLogger.log(Level.FINER, MODULE, sMethod, "TS_"+timerSensorThread+
+	    _oSystemLogger.log(Level.FINEST, MODULE, sMethod, "TS_"+timerSensorThread+
 	    				" resume: nw="+sNow+" df="+sDiff+" sp="+td_spent.toString());
 	}
 
@@ -279,7 +279,7 @@ public class TimerSensor
 	    tvNow.timeValMinus(td_spent);
 	    td_spent.timeValCopy(tvNow);
 	    timerSensorSuccess = bSuccess;
-	    _oSystemLogger.log(Level.FINER, MODULE, sMethod, "TS_"+timerSensorThread+" finish: "+
+	    _oSystemLogger.log(Level.FINEST, MODULE, sMethod, "TS_"+timerSensorThread+" finish: "+
 	    			td_start.toString()+" "+td_spent.toString()+" "+td_finish.toString()+
 	    			" id="+timerSensorId+" level="+timerSensorLevel+" type="+timerSensorType+" ok="+timerSensorSuccess);
 	}
