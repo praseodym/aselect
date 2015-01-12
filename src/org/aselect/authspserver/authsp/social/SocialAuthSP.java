@@ -122,16 +122,16 @@ public class SocialAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 		PrintWriter pwOut = servletResponse.getWriter();
 
 		String sQueryString = servletRequest.getQueryString();
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "qry="+sQueryString);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "qry="+sQueryString);
 		HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, true);  // URL decoded result
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Enter - htServiceRequest:" + htServiceRequest);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "Enter - htServiceRequest:" + htServiceRequest);
 		
 		// If 'state' is present this is the return call from the socialauth provider
 		String sState = (String)htServiceRequest.get("state");
 		if (Utils.hasValue(sState)) {
 			BASE64Decoder base64Dec = new BASE64Decoder();
 			sState = new String(base64Dec.decodeBuffer(sState));
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "state="+sState);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "state="+sState);
 			String[] aStateArgs = sState.split("_");
 			sRid = aStateArgs[0];
 			if (aStateArgs.length > 1)
@@ -210,7 +210,7 @@ public class SocialAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 			String sMySignRid = _cryptoEngine.generateSignature(sbWork.toString());
 			// Since 'google' and 'facebook' do not know how to correctly URL decode our Return URL, just leave the =-signs at the end out
 			sMySignRid = sMySignRid.replaceAll("=*$", "");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "SignRid="+sMySignRid);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "SignRid="+sMySignRid);
 			String sData = sRid+"_"+sMySignRid;
 			
 			{	// This works (no state passed though):
@@ -227,7 +227,7 @@ public class SocialAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 			// GooglePlus must be tricked
 			BASE64Encoder base64Enc = new BASE64Encoder();
 			String sReturnUrl = sMyUrl + ("googleplus".equals(sSocialLogin)? "?state=googleplus_": "?state=") + base64Enc.encode(sData.getBytes("UTF-8"));
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "sReturnUrl="+sReturnUrl);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "sReturnUrl="+sReturnUrl);
 
 			//String sUrl = socialAuthspManager.getAuthenticationUrl(sSocialLogin, sReturnUrl, Permission.AUTHENTICATE_ONLY); 
 			String sUrl = socialAuthspManager.getAuthenticationUrl(sSocialLogin, sReturnUrl, Permission.AUTHENTICATE_ONLY);
@@ -255,14 +255,14 @@ public class SocialAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 			
 			if (doUpd) {
 				_sessionManager.updateSession(sFabricatedRid, htSessionContext);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Updated session with id:" + sFabricatedRid);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Updated session with id:" + sFabricatedRid);
 			}
 			else {
 		        _sessionManager.createSession(sFabricatedRid, htSessionContext);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Created session with id:" + sFabricatedRid);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Created session with id:" + sFabricatedRid);
 			}
 			
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT to: " + sUrl);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "REDIRECT to: " + sUrl);
 			servletResponse.sendRedirect(sUrl);
 		}
 		catch (ASelectException ae) {
@@ -339,7 +339,7 @@ public class SocialAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 
 			if (!Utils.hasValue(sRequestSignRid) || !sMySignRid.equals(sRequestSignRid)) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Rid signature does not match or absent, has 'rid' been tampered with?");
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "mySign="+sMySignRid+" Sign="+sRequestSignRid);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "mySign="+sMySignRid+" Sign="+sRequestSignRid);
 				handleResult(htSessionContext, servletResponse, pwOut, Errors.ERROR_SOCIAL_COULD_NOT_AUTHENTICATE_USER, sLanguage, sUid);
 				return;
 			}
@@ -426,7 +426,7 @@ public class SocialAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 		String sMethod = "doPost";
 
 		// Google likes to return using a POST request
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "POST " + servletRequest + ", qry="+servletRequest.getQueryString());
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "POST " + servletRequest + ", qry="+servletRequest.getQueryString());
 		doGet(servletRequest, servletResponse);
 	}
 
@@ -460,7 +460,7 @@ public class SocialAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 		String sMethod = "handleResult";
 		StringBuffer sbTemp = null;
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Result="+sResultCode);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "Result="+sResultCode);
 		try {
 			if (_sFailureHandling.equalsIgnoreCase("aselect") || sResultCode.equals(Errors.ERROR_SOCIAL_SUCCESS)) {
 				// A-Select handles error or success
@@ -485,7 +485,7 @@ public class SocialAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 					}
 					sbTemp.append("&signature=").append(URLEncoder.encode(sSignature, "UTF-8"));
 
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT TO: "+sbTemp.toString());
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "REDIRECT TO: "+sbTemp.toString());
 					servletResponse.sendRedirect(sbTemp.toString());
 				}
 			}

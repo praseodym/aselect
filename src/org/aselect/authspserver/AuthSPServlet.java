@@ -219,7 +219,7 @@ public class AuthSPServlet extends ASelectHttpServlet
 	        	BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	        	String line;
 				while ((line = input.readLine()) != null) {
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Running in directory (pwd)="+line);
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Running in directory (pwd)="+line);
 	        	}
 	        	input.close();
 			}
@@ -250,7 +250,7 @@ public class AuthSPServlet extends ASelectHttpServlet
 			if (sSqlDriver != null || sSqlPassword != null || sSqlURL != null || sSqlTable != null) {
 				StringBuffer sbInfo = new StringBuffer("Reading config from database: ");
 				sbInfo.append(sSqlURL);
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString());
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, sbInfo.toString());
 				oAuthSPConfigManager.init(sSqlDriver, sSqlUser, sSqlPassword, sSqlURL, sSqlTable, CONFIG_ID, _systemLogger);
 			}
 			else {
@@ -270,7 +270,7 @@ public class AuthSPServlet extends ASelectHttpServlet
 
 				StringBuffer sbInfo = new StringBuffer("Reading config from file: ");
 				sbInfo.append(sbConfigFile);
-				_systemLogger.log(Level.CONFIG, MODULE, sMethod, sbInfo.toString());
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, sbInfo.toString());
 				oAuthSPConfigManager.init(sbConfigFile.toString(), _systemLogger);
 			}
 
@@ -338,7 +338,7 @@ public class AuthSPServlet extends ASelectHttpServlet
 					throw new ASelectException(Errors.ERROR_ASELECT_INIT_ERROR, e);
 				}
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "file_cache_keep="+FileCache.getFileCacheKeep());
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "file_cache_keep="+FileCache.getFileCacheKeep());
 
 			// Remove the instances, if their already is one.
 			// For restarting purposes.
@@ -440,7 +440,7 @@ public class AuthSPServlet extends ASelectHttpServlet
 
 			// handle request=restart
 			String sRequest = oHttpServletRequest.getParameter("request");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "request=" + sRequest);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "request=" + sRequest);
 			String sResult = Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST;
 			if (sRequest != null) {
 				PrintWriter pwOut = null;
@@ -604,7 +604,7 @@ public class AuthSPServlet extends ASelectHttpServlet
 					sbResult.append(")");
 				}
 			}
-			logger.log(Level.INFO, MODULE, sMethod, sbResult.toString());
+			logger.log(Level.FINEST, MODULE, sMethod, sbResult.toString());
 		}
 		catch (Exception e) {
 			if (logger != null)

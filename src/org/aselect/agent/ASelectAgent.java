@@ -786,9 +786,9 @@ public class ASelectAgent
 					PrintStream osOutput = new PrintStream(oSocket.getOutputStream());
 
 					String sRequestString = isInput.readLine();
-					_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "Request="+sRequestString);
+					_oASelectAgentSystemLogger.log(Level.FINEST, MODULE, sMethod, "Request="+sRequestString);
 					HashMap htParameters = Utils.convertCGIMessage(sRequestString, false);
-					_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "Parameters="+htParameters);
+					_oASelectAgentSystemLogger.log(Level.FINEST, MODULE, sMethod, "Parameters="+htParameters);
 					String sRequest = (String) htParameters.get("request");
 					if ("reload_config".equals(sRequest)) {
 						restartTimerSensorThread(_oASelectAgentConfigManager, _oASelectAgentSystemLogger, _sWorkingDir);
@@ -798,7 +798,7 @@ public class ASelectAgent
 						if (Utils.hasValue(sLevel)) {
 							Level level = Audit.parse(sLevel);
 							_oASelectAgentSystemLogger.setLevel(level);
-							_oASelectAgentSystemLogger.log(Level.INFO, MODULE, sMethod, "Level set to: "+sLevel);
+							_oASelectAgentSystemLogger.log(Level.FINER, MODULE, sMethod, "Level set to: "+sLevel);
 						}
 					}
 					else if (sRequest.equalsIgnoreCase("stop")) {

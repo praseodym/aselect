@@ -166,7 +166,7 @@ public class RegistrationService {
 			if (verifiedIdentifier != null) {
 				AuthSuccess authSuccess = (AuthSuccess)verificationResult.getAuthResponse();
 				ret = new RegistrationModel();
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "--->verifiedIdentifier.getIdentifier():" + verifiedIdentifier.getIdentifier());
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "--->verifiedIdentifier.getIdentifier():" + verifiedIdentifier.getIdentifier());
 				ret.setOpenId(verifiedIdentifier.getIdentifier());
 				if (authSuccess.hasExtension(SRegMessage.OPENID_NS_SREG)) {
 					MessageExtension extension = authSuccess.getExtension(SRegMessage.OPENID_NS_SREG);

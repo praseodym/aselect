@@ -149,7 +149,7 @@ public class ProxyHTTPMetadataProvider extends HTTPMetadataProvider
 					new URI(getMetadataURI()).getPort(), protocol);
 		}
 		catch (URISyntaxException e) {
-			_systemLogger.log(Level.FINEST, "This should not happen, same URI has been instantiated before");
+			_systemLogger.log(Level.INFO, "This should not happen, same URI has been instantiated before");
 		}
 	}
 
@@ -175,7 +175,7 @@ public class ProxyHTTPMetadataProvider extends HTTPMetadataProvider
 		}
 		proxyhttpClient.executeMethod(getMethod);
 
-		_systemLogger.log(Level.INFO, "Retrieved the following metadata document\n{}"
+		_systemLogger.log(Level.FINER, "Retrieved the following metadata document\n{}"
 				+ getMethod.getResponseBodyAsString());
 		XMLObject metadata = unmarshallMetadata(getMethod.getResponseBodyAsStream());
 

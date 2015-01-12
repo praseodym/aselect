@@ -87,7 +87,7 @@ public class JdbcPoller extends TimerTask
 			jdbcResult = jdbcStm.executeQuery(_sQuery);
 			if (jdbcResult.next()) {
 				iCnt++;
-				_oLbSensorLogger.log(Level.INFO, MODULE, sMethod, "Result=" + jdbcResult.getString(1));
+				_oLbSensorLogger.log(Level.FINEST, MODULE, sMethod, "Result=" + jdbcResult.getString(1));
 			}
 			long tThen = System.currentTimeMillis();
 			oSensorStore.setServerUp(iCnt > 0);

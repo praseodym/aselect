@@ -180,7 +180,7 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 			String sQueryString = servletRequest.getQueryString();
 			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, false);
 			HashMap htServiceRequestAsMap = (HashMap) servletRequest.getParameterMap();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "htServiceRequest:" + htServiceRequest);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "htServiceRequest:" + htServiceRequest);
 
 			sLanguage = (String) htServiceRequest.get("language");  // optional language code
 			if (sLanguage == null || sLanguage.trim().length() < 1)
@@ -224,13 +224,13 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 	
 					servletResponse.setContentType("text/html; charset=utf-8");
 					// URL decode values
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "URL decode values");
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "URL decode values");
 					sAsUrl = URLDecoder.decode(sAsUrl, "UTF-8");
 					sUid = URLDecoder.decode(sUid, "UTF-8");
 					sSignature = URLDecoder.decode(sSignature, "UTF-8");
 	
 					// validate signature
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "validate signature from A-Select Server ");
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "validate signature from A-Select Server ");
 					StringBuffer sbSignature = new StringBuffer(sRid);
 					sbSignature.append(sAsUrl);
 					sbSignature.append(sUid);
@@ -264,7 +264,7 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 						sbSignature.append(sLanguage);
 
 					sSignature = _cryptoEngine.generateSignature(sbSignature.toString());
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "signature:" + sSignature);
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "signature:" + sSignature);
 
 					htServiceRequest.put("signature", sSignature);
 					showAuthenticateForm(pwOut, ""/*no error*/, htServiceRequest);
@@ -273,14 +273,14 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 					// get info from QueryString
 					String sRid = URLDecoder.decode((String) htServiceRequest.get("rid"), "UTF-8");
 			        HashMap<String , Object> htSessionContext = _sessionManager.getSessionContext(sRid + RID_POSTFIX);
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Retrieved sessionContext:" + htSessionContext);
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Retrieved sessionContext:" + htSessionContext);
 			        
 					// get info from sessionContext
 					DiscoveryInformation discoveryinfo = (DiscoveryInformation) htSessionContext.get("discoveryinfo");
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Retrieved discoveryinfo:" + discoveryinfo);
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Retrieved discoveryinfo:" + discoveryinfo);
 					
 					String sReturnURL = (String) htSessionContext.get("siam_url");					
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Retrieved ReturnURL:" + sReturnURL);
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Retrieved ReturnURL:" + sReturnURL);
 					
 					String sAsUrl = URLDecoder.decode((String) htServiceRequest.get("as_url"), "UTF-8");
 					String sUid = URLDecoder.decode((String) htServiceRequest.get("uid"), "UTF-8");
@@ -288,7 +288,7 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 					String sSignature = URLDecoder.decode((String) htServiceRequest.get("signature"), "UTF-8");
 					
 					String sRetryCounter = (String) htServiceRequest.get("retry_counter");
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "sRetryCounter:" + sRetryCounter);
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "sRetryCounter:" + sRetryCounter);
 					sCountry = (String) htSessionContext.get("country");
 					sLanguage = (String) htSessionContext.get("language");
 					String sMyUrl = servletRequest.getRequestURL().toString();
@@ -317,7 +317,7 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 					// handle openidresponse and find out if the user is authentic
 			        RegistrationModel registrationModel = RegistrationService.processReturn(discoveryinfo, htServiceRequestAsMap, sReturnURL, _systemLogger);
 			        if (registrationModel != null) {
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "Retrieved OpenID:" + registrationModel.getOpenId());
+						_systemLogger.log(Level.FINEST, MODULE, sMethod, "Retrieved OpenID:" + registrationModel.getOpenId());
 			        	matches = true;
 			        }
 					if (matches) {
@@ -359,7 +359,7 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 								sbSignature.append(sLanguage);
 
 							sSignature = _cryptoEngine.generateSignature(sbSignature.toString());
-							_systemLogger.log(Level.INFO, MODULE, sMethod, "signature:" + sSignature);
+							_systemLogger.log(Level.FINEST, MODULE, sMethod, "signature:" + sSignature);
 							htServiceRequest.put("signature", sSignature);
 							
 							showAuthenticateForm(pwOut, Errors.ERROR_DB_INVALID_PASSWORD, htServiceRequest);
@@ -428,7 +428,7 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 		if (sCountry == null || sCountry.trim().length() < 1)
 			sCountry = null;
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Starting openid stuff");		
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "Starting openid stuff");		
 		try {
 			servletResponse.setContentType("text/html; charset=utf-8");
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
@@ -437,13 +437,13 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 			String sMyUrl = servletRequest.getRequestURL().toString();
 			String sRid = servletRequest.getParameter("rid");
 			String sAsUrl = servletRequest.getParameter("as_url");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "as_url:" + sAsUrl);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "as_url:" + sAsUrl);
 			sUid = servletRequest.getParameter("uid");
 			String sAsId = servletRequest.getParameter("a-select-server");
 //			sPassword = servletRequest.getParameter("password");
 //			sOpenID = servletRequest.getParameter("openid");
 			String sSignature = servletRequest.getParameter("signature");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "signature:" + sSignature);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "signature:" + sSignature);
 			String sRetryCounter = servletRequest.getParameter("retry_counter");
 			
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "User entered OpenID: " + sUid);
@@ -475,8 +475,8 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 				showAuthenticateForm(pwOut, Errors.ERROR_DB_INVALID_PASSWORD, htServiceRequest);
 			}
 			else { // Decent user id found, verify signature
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Start verify signature");
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "URL decode values");
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Start verify signature");
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "URL decode values");
 				
 				StringBuffer sbSignature = new StringBuffer(sRid);
 				sbSignature.append(sAsUrl);
@@ -502,7 +502,7 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 			        DiscoveryInformation discoveryInformation = RegistrationService.performDiscoveryOnUserSuppliedIdentifier(userSuppliedIdentifier.trim(), _systemLogger);
 			        // Store the discovery results in session.
 			        HashMap<String, Object> hDiscovery = new HashMap<String, Object>();
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Stored discoveryInformation:" + discoveryInformation);
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Stored discoveryInformation:" + discoveryInformation);
 
 			        hDiscovery.put("discoveryinfo", discoveryInformation);
 			        hDiscovery.put("my_url", sMyUrl);
@@ -532,7 +532,7 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 						"&uid=" + URLEncoder.encode(sUid, "UTF-8") + "&signature=" + URLEncoder.encode(sSignature, "UTF-8") +
 						"&retry_counter=" + URLEncoder.encode(sRetryCounter, "UTF-8");
 					
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Stored returnURL:" + returnURL);
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Stored returnURL:" + returnURL);
 					hDiscovery.put("siam_url", returnURL);
 					
 			        // We must NOT overwrite our aselectsession, therefore the RID_POSTFIX construction will store a separate session					
@@ -548,18 +548,18 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 					if (htSessionContext != null) {
 						htSessionContext.putAll(hDiscovery);
 						_sessionManager.updateSession(sFabricatedRid, htSessionContext);
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "Updated session for storing discoveryinfo with id:" + sFabricatedRid);
+						_systemLogger.log(Level.FINEST, MODULE, sMethod, "Updated session for storing discoveryinfo with id:" + sFabricatedRid);
 					}
 					else {
 				        _sessionManager.createSession(sFabricatedRid, hDiscovery);
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "Created session for storing discoveryinfo with id:" + sFabricatedRid);
+						_systemLogger.log(Level.FINEST, MODULE, sMethod, "Created session for storing discoveryinfo with id:" + sFabricatedRid);
 					}
 			        // Create the AuthRequest
 			        AuthRequest authRequest = RegistrationService.createOpenIdAuthRequest(discoveryInformation, returnURL);
 			        // Now take the AuthRequest and forward it on to the OP
 			        
 			        // maybe implement new handler or special request parameter in doGet
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Starting redirect with redirectURL:" + authRequest.getDestinationUrl(true));			        
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Starting redirect with redirectURL:" + authRequest.getDestinationUrl(true));			        
 			        servletResponse.sendRedirect(authRequest.getDestinationUrl(true));
 				}
 			}
@@ -710,9 +710,9 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 				String sRid = servletRequest.getParameter("rid");
 				String sAsUrl = servletRequest.getParameter("as_url");
 				String sAsId = servletRequest.getParameter("a-select-server");
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "sRid:" + sRid);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "sAsUrl:" + sAsUrl);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "sAsId:" + sAsId);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "sRid:" + sRid);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "sAsUrl:" + sAsUrl);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "sAsId:" + sAsId);
 
 				if (sRid == null || sAsUrl == null || sAsId == null) {
 					getTemplateAndShowErrorPage(pwOut, sResultCode, sResultCode, sLanguage, VERSION);
@@ -794,7 +794,7 @@ public class OpenIDAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 		StringBuffer sbResponse = new StringBuffer("&rid=");
 		// add rid to response
 		sbResponse.append(sRid);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "sbResponse so far:" + sbResponse );
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "sbResponse so far:" + sbResponse );
 
 		try {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received, API request not supported (yet).");

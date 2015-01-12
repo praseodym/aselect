@@ -186,11 +186,11 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 		StringBuffer sbBuffer = null;
 		HashMap htResponse = new HashMap();
 		htResponse.put("result", Errors.ERROR_ASELECT_INTERNAL_ERROR);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "sRid=" + sRid);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "sRid=" + sRid);
 
 		try {
 			// 20120403, Bauke: passes as parameter: HashMap htSessionContext = _sessionManager.getSessionContext(sRid);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Context=" + htSessionContext);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Context=" + htSessionContext);
 			if (htSessionContext == null) {
 				sbBuffer = new StringBuffer("Could not fetch session context for rid='");
 				sbBuffer.append(sRid).append("'.");
@@ -347,7 +347,7 @@ public class SMSAuthSPHandler implements IAuthSPProtocolHandler
 			sbBuffer.append(_sAuthsp);
 			sAsUrl = sbBuffer.toString();
 			sSignature = URLDecoder.decode(sSignature, "UTF-8");
-			_systemLogger.log(Level.FINER, MODULE, sMethod, "sSignature="+sSignature);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "sSignature="+sSignature);
 			StringBuffer sbSignature = new StringBuffer(sRid);
 			sbSignature.append(sAsUrl);
 			sbSignature.append(sResultCode);

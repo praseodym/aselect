@@ -387,7 +387,7 @@ public class RadiusAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 		String sMethod = "doPost";
 		PrintWriter pwOut = null;
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "servletRequest=" + servletRequest);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "servletRequest=" + servletRequest);
 		String sLanguage = servletRequest.getParameter("language");  // optional language code
 		if (sLanguage == null || sLanguage.trim().length() < 1)
 			sLanguage = null;
@@ -443,7 +443,7 @@ public class RadiusAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit go
 				sbSignature.append(sCountry);
 			if (sLanguage != null)
 				sbSignature.append(sLanguage);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Check signature:" + sbSignature);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Check signature:" + sbSignature);
 			if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), sSignature)) {
 				StringBuffer sbWarning = new StringBuffer("Invalid signature from A-Select Server '");
 				sbWarning.append(sAsId);

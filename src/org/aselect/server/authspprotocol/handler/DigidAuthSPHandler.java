@@ -305,7 +305,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			htRequest.put("shared_secret", sSharedSecret);
 			htRequest.put("a-select-server", sASelectServerId);
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Send to DigiD=" + sASelectServerUrl +
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Send to DigiD=" + sASelectServerUrl +
 					" req=" + hashtable2CGIMessage(htRequest));
 
 			// Send to DigiD!
@@ -377,7 +377,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 	public HashMap verifyAuthenticationResponse(HashMap htResponse, HashMap htSessionContext)
 	{
 		String sMethod = "verifyAuthenticationResponse";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "====");
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "====");
 
 		HashMap<String, Object> result = new HashMap<String, Object>();
 		String resultCode = Errors.ERROR_ASELECT_INTERNAL_ERROR;
@@ -411,7 +411,7 @@ public class DigidAuthSPHandler implements IAuthSPProtocolHandler
 			reqParams.put("aselect_credentials", credentials);
 			reqParams.put("shared_secret", sharedSecret);
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "sendMessage to " + _sAuthSPUrl + " request=" + reqParams);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "sendMessage to " + _sAuthSPUrl + " request=" + reqParams);
 			HashMap<String, Object> response = null;
 			try {
 				response = _oClientCommunicator.sendMessage(reqParams, _sAuthSPUrl);

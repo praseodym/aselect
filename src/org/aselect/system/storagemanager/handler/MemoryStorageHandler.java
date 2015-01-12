@@ -119,7 +119,7 @@ public class MemoryStorageHandler implements IStorageHandler
 			HashMap htStorageContainer = (HashMap) _htStorage.get(oKey);
 			if (htStorageContainer != null) {
 				oValue = htStorageContainer.get("contents");
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "MSH get(" + sTxt + ") -->" + htStorageContainer);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "MSH get(" + sTxt + ") -->" + htStorageContainer);
 			}
 		}
 		catch (NullPointerException eNP) {
@@ -267,7 +267,7 @@ public class MemoryStorageHandler implements IStorageHandler
 	{
 		String sMethod = "put";
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, "this=" + this); // +" store="+_htStorage);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "MSH put(" + Utils.firstPartOf(oKey.toString(), 30) + ") ="
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "MSH put(" + Utils.firstPartOf(oKey.toString(), 30) + ") ="
 				+ oValue.toString() + " TS=" + lTimestamp);
 
 		HashMap htStorageContainer = new HashMap();
@@ -304,7 +304,7 @@ public class MemoryStorageHandler implements IStorageHandler
 	{
 		String sMethod = "remove";
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, " this=" + this); // +" "+_htStorage);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "MSH remove(" + Utils.firstPartOf(oKey.toString(), 30) + ") ");
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "MSH remove(" + Utils.firstPartOf(oKey.toString(), 30) + ") ");
 		try {
 			// synchronized (_htStorage) {
 			if (_htStorage.remove(oKey) == null) {
@@ -429,7 +429,7 @@ public class MemoryStorageHandler implements IStorageHandler
 	public boolean containsKey(Object oKey)
 	throws ASelectStorageException
 	{
-		_systemLogger.log(Level.INFO, MODULE, "containsKey", "Key=" + Utils.firstPartOf(oKey.toString(), 30));
+		_systemLogger.log(Level.FINER, MODULE, "containsKey", "Key=" + Utils.firstPartOf(oKey.toString(), 30));
 		return _htStorage.containsKey(oKey);
 	}
 }

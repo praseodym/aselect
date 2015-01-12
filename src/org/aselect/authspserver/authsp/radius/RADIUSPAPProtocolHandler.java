@@ -301,7 +301,7 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 				System.arraycopy( baTempBuffer3, 0, baOutputBuffer, iIndex, trimmedLength );	// We want max MAXNAS_IDENT_LENGTH chars 
 				iIndex +=  trimmedLength;
 				
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "hostname (as hexstring, only using first  " + MAXNAS_IDENT_LENGTH + " bytes as nas-identifier): " + Utils.byteArrayToHexString( baTempBuffer3 ));
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "hostname (as hexstring, only using first  " + MAXNAS_IDENT_LENGTH + " bytes as nas-identifier): " + Utils.byteArrayToHexString( baTempBuffer3 ));
 
 				// RH, 20110728, set the NAS-Identifier, en
 			
@@ -313,7 +313,7 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 			// Cut off the buffer
 			byte[] newBuf = new byte[iIndex];
 			System.arraycopy(baOutputBuffer, 0, newBuf, 0, iIndex);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "len="+iIndex+ " request=" + Utils.byteArrayToHexString(newBuf));
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "len="+iIndex+ " request=" + Utils.byteArrayToHexString(newBuf));
 			
 			oRADIUSPacket.setData(newBuf);
 			_sErrorCode = Errors.ERROR_RADIUS_SUCCESS;
@@ -343,7 +343,7 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "uid=" + _sUid);
 		try {
 			byte[] baResponseBuffer = oRADIUSPacket.getData();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "response=" + Utils.byteArrayToHexString(baResponseBuffer));
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "response=" + Utils.byteArrayToHexString(baResponseBuffer));
 
 			// check code
 			iResponseBufferIndex = 0;
@@ -365,7 +365,7 @@ public class RADIUSPAPProtocolHandler extends AbstractRADIUSProtocolHandler
 
 			// length
 			iLength = ((baResponseBuffer[2] & 255) * 256) + (baResponseBuffer[3] & 255);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "len="+iLength);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "len="+iLength);
 			// skip length
 			iResponseBufferIndex += 2;
 

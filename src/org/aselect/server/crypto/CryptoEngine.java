@@ -334,7 +334,7 @@ public class CryptoEngine
 			// 20130411, Bauke: allow fixed valued key to symmetrically encode/decode data 
 			String sKey = ASelectConfigManager.getSimpleParam(oASelect, "encryption_key", false);
 			if (Utils.hasValue(sKey)) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Using configured encryption key: "+sKey);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Using configured encryption key: "+sKey);
 				_encryptionKey =  generate3DESKey(sKey, false /* not stored as base64 */);
 			}
 		}
@@ -424,7 +424,7 @@ public class CryptoEngine
 		PublicKey oPublicKey = null;
 		int iLoop = 0;
 		boolean bVerified = false;
-		_systemLogger.log(Level.FINER, MODULE, sMethod, "==== VS alias="+sAlias + " data="+sData);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "==== VS alias="+sAlias + " data="+sData);
 		try {
 			Signature oSignature = null;
 			if (_oSignatureProvider != null)

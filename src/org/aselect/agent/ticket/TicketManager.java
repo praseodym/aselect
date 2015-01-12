@@ -264,7 +264,7 @@ public class TicketManager extends StorageManager
 					}
 
 //				try {	// RH, 20111121, o
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "New Ticket=" + Utils.firstPartOf(sTicket,40)); // + ", Context="+htTicketContext);
+					_systemLogger.log(Level.FINER, MODULE, sMethod, "New Ticket=" + Utils.firstPartOf(sTicket,40)); // + ", Context="+htTicketContext);
 //					_oTicketTable.put(sTicket, htTicketContext);		// RH, 20111121, o
 				}
 				catch (ASelectStorageException e) {
@@ -413,7 +413,7 @@ public class TicketManager extends StorageManager
 
 		try {
 			int len = sTicket.length();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get Ticket(" + sTicket.substring(0, (len < 30) ? len : 30)+"...)");
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Get Ticket(" + sTicket.substring(0, (len < 30) ? len : 30)+"...)");
 			htResponse = (HashMap) _oTicketTable.get(sTicket);
 		}
 		catch (Exception e) {

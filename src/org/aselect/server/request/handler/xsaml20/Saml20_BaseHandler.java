@@ -435,7 +435,7 @@ public abstract class Saml20_BaseHandler extends ProtoRequestHandler
 			StringReader stringReader = new StringReader(docReceived);
 			InputSource inputSource = new InputSource(stringReader);
 			Document parsedDocument = builder.parse(inputSource);
-			_systemLogger.log(Level.INFO, MODULE, _sMethod, "parsedDocument=" + parsedDocument);
+			_systemLogger.log(Level.FINER, MODULE, _sMethod, "parsedDocument=" + parsedDocument);
 	
 			// Get AuthzDecision object
 			Element elementReceived = parsedDocument.getDocumentElement();

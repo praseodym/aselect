@@ -908,7 +908,7 @@ public class JNDIAttributeRequestor extends GenericAttributeRequestor
 		}
 
 		try {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "ATTR_CTX " + sDriver + "_" + sPrincipal + "_" + sPassword
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "ATTR_CTX " + sDriver + "_" + sPrincipal + "_" + sPassword
 					+ "_" + sUseSSL + "_" + sUrl);
 			oInitialDirContext = new InitialDirContext(createJNDIEnvironment(sDriver, sPrincipal, sPassword, sUseSSL, sUrl));
 		}

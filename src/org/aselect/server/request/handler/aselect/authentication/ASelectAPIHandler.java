@@ -609,7 +609,7 @@ public class ASelectAPIHandler extends AbstractAPIRequestHandler
 		HashMap htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
 		
 		String sSerializedAttributes = org.aselect.server.utils.Utils.serializeAttributes(htAttribs);
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "VERCRED SerAttr=" + sSerializedAttributes);
+		_systemLogger.log(Level.FINEST, _sModule, sMethod, "VERCRED SerAttr=" + sSerializedAttributes);
 
 		try {
 			oOutputMessage.setParam("organization", (String) htTGTContext.get("organization"));

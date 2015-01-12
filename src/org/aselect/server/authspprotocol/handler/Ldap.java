@@ -377,7 +377,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 			}
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Using user id: '" + sUserId + "' from allowed Authsps ");
 			if ("".equals(sUserId))
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Empty user id, would be nice to use "+htSessionContext.get("user_id"));
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Empty user id, would be nice to use "+htSessionContext.get("user_id"));
 
 			sbBuffer = new StringBuffer((String) htSessionContext.get("my_url"));
 			sbBuffer.append("?authsp=").append(_sAuthsp);
@@ -690,7 +690,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 	{
 		String sMethod = "handleDirectLogin2";
 
-		_systemLogger.log(Level.FINE, MODULE, sMethod, "servletResponse="+servletResponse);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "servletResponse="+servletResponse);
 		try {
 			String sRid = null;
 			String sUid = null;
@@ -741,7 +741,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				sbReqArgs.append("&user=").append(URLEncoder.encode(sUid, "UTF-8"));
 				sbReqArgs.append("&password=").append(URLEncoder.encode(sPassword, "UTF-8"));
 				String sArgs = sbReqArgs.toString();
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "To AUTHSP: " + sAuthSPUrl+" Args="+sArgs);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "To AUTHSP: " + sAuthSPUrl+" Args="+sArgs);
 							
 				if ("true".equals(sPostIt)) {  // use POST, must also be URL encoded!!!
 					
@@ -769,7 +769,7 @@ public class Ldap implements IAuthSPProtocolHandler, IAuthSPDirectLoginProtocolH
 				else {
 					StringBuffer sbRequest = new StringBuffer(sAuthSPUrl);
 					String sRequest = sbRequest.append("?").append(sbReqArgs).toString();
-					_systemLogger.log(Level.FINER, MODULE, sMethod, "GET request="+ sRequest);
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "GET request="+ sRequest);
 					URL oServer = new URL(sRequest);
 					URLConnection conn = oServer.openConnection();
 					InputStream iStream = conn.getInputStream();

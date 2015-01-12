@@ -247,7 +247,7 @@ public class SessionManager
 						return false;
 					}
 					// RH, 20111121, en
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "New SessionId/Rid=" + sSessionId
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "New SessionId/Rid=" + sSessionId
 							+ ", htSessionContext=" + htSessionContext);
 //					_oSessionTable.put(sSessionId, htSessionContext);		// RH, 20111121, o
 				}
@@ -290,7 +290,7 @@ public class SessionManager
 	{
 		try {
 			synchronized (_oSessionTable) {
-				_systemLogger.log(Level.INFO, MODULE, "killSession()", "Kill SessionId=" + sSessionId);
+				_systemLogger.log(Level.FINER, MODULE, "killSession()", "Kill SessionId=" + sSessionId);
 				_oSessionTable.remove(sSessionId);
 			}
 		}
@@ -334,7 +334,7 @@ public class SessionManager
 
 		try {
 			htResponse = (HashMap) _oSessionTable.get(sSessionId);
-			_systemLogger.log(Level.INFO, MODULE, "getSessionContext()", "SessionId=" + sSessionId + ", Context=" + htResponse);
+			_systemLogger.log(Level.FINEST, MODULE, "getSessionContext()", "SessionId=" + sSessionId + ", Context=" + htResponse);
 		}
 		catch (Exception e) {
 			_systemLogger.log(Level.WARNING, MODULE, "getSessionContext()", "Exception: " + e.getMessage());

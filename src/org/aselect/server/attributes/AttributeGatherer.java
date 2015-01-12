@@ -288,7 +288,7 @@ public class AttributeGatherer
 					// Load/verify a single requestor from config
 					String sID = _configManager.getParam(oRequestorConfig, sConfigItem = "id");					
 					String sUsage = ASelectConfigManager.getSimpleParam(oRequestorConfig, sConfigItem = "usage", false);
-					_systemLogger.log(Level.INFO, _MODULE, sMethod, "Requestor id="+sID+" usage="+sUsage);
+					_systemLogger.log(Level.FINEST, _MODULE, sMethod, "Requestor id="+sID+" usage="+sUsage);
 
 					Object oRequestorSpecificSection;
 					try {
@@ -518,7 +518,7 @@ public class AttributeGatherer
 				Enumeration enumPolicies = _vReleasePolicies.elements();
 				while (enumPolicies.hasMoreElements() && !bFound) {
 					String sKey = (String) enumPolicies.nextElement();
-					_systemLogger.log(Level.FINE, _MODULE, sMethod, "sKey="+sKey+" sArpTarget="+sArpTarget);
+					_systemLogger.log(Level.FINEST, _MODULE, sMethod, "sKey="+sKey+" sArpTarget="+sArpTarget);
 					if (Utils.matchWildcardMask(sArpTarget, sKey)) {
 						sReleasePolicy = sKey;
 						bFound = true;
@@ -557,7 +557,7 @@ public class AttributeGatherer
 				for (Object s : (_iGathererVersion>=2)?_sortedRequestors: keys) {
 					String sRequestorID = (_iGathererVersion>=2)? ((String)s).substring(4): (String)s;
 					Vector vAttributes = (Vector) htReleasePolicy.get(sRequestorID);
-					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER << Requestor=" + sRequestorID+" release="+vAttributes);
+					_systemLogger.log(Level.FINEST, _MODULE, sMethod, "GATHER << Requestor=" + sRequestorID+" release="+vAttributes);
 					
 					IAttributeRequestor attributeRequestor = (IAttributeRequestor) _htRequestors.get(sRequestorID);
 					if (attributeRequestor == null) {
@@ -576,7 +576,7 @@ public class AttributeGatherer
 						StringBuffer sb = new StringBuffer("Could not gather attributes for user \"").append(sUid).append("\"");
 						_systemLogger.log(Level.WARNING, _MODULE, sMethod, sb.toString(), eA);
 					}
-					_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER >> Requestor=" + sRequestorID + " attrs from this requestor="+htAttrsFromAR);
+					_systemLogger.log(Level.FINEST, _MODULE, sMethod, "GATHER >> Requestor=" + sRequestorID + " attrs from this requestor="+htAttrsFromAR);
 
 					// Merge the returned attributes with our set
 					if (htAttrsFromAR != null) {
@@ -591,7 +591,7 @@ public class AttributeGatherer
 								StringBuffer sb = new StringBuffer("Attribute \"").append(sKey).append(
 										"\" returned by attribute requestor \"").append(sRequestorID).append(
 										"\" already exists (\"duplicate\"=\"" + sDuplicateOption + "\").");
-								_systemLogger.log(Level.INFO, _MODULE, sMethod, sb.toString());
+								_systemLogger.log(Level.FINEST, _MODULE, sMethod, sb.toString());
 
 								// add 1.5.4
 								if (sDuplicateOption != null) {
@@ -709,7 +709,7 @@ public class AttributeGatherer
 			htAttributes.put("handler", sAuthsp);
 		}
 
-		_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER END htAttributes=" + htAttributes);
+		_systemLogger.log(Level.FINEST, _MODULE, sMethod, "GATHER END htAttributes=" + htAttributes);
 		return htAttributes;
 	}
 
@@ -784,7 +784,7 @@ public class AttributeGatherer
 		String fld = (String) htTGTContext.get("attributes");
 		if (fld != null) {
 			HashMap htTgtAttributes = org.aselect.server.utils.Utils.deserializeAttributes(fld);
-			_systemLogger.log(Level.INFO, _MODULE, sMethod, "GATHER (remote)TGT \"attributes\"=" + htTgtAttributes);
+			_systemLogger.log(Level.FINEST, _MODULE, sMethod, "GATHER (remote)TGT \"attributes\"=" + htTgtAttributes);
 			Set keys = htTgtAttributes.keySet();
 			for (Object s : keys) {
 				String sKey = (String) s;

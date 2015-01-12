@@ -220,11 +220,11 @@ public class Idff12_SSO extends ProtoRequestHandler
 		String sUrlRid = request.getParameter("rid");
 		String sPathInfo = request.getPathInfo();
 		String sServer = null;
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "SSO PATH=" + sPathInfo + " " +
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "SSO PATH=" + sPathInfo + " " +
 				request.getMethod() + " " + request.getQueryString());
 
 		HashMap htCredentials = getASelectCredentials(request);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "getAselectCredentials: sUrlRid=" + sUrlRid +
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "getAselectCredentials: sUrlRid=" + sUrlRid +
 				" Credentials="	+ htCredentials);
 
 		if (htCredentials != null && !htCredentials.isEmpty()) {
@@ -235,12 +235,12 @@ public class Idff12_SSO extends ProtoRequestHandler
 			if (sRid != null && sServer != null) {
 				if (sUrlRid == null)
 					sUrlRid = sRid;
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Rid/Server present");
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "Rid/Server present");
 				sTgt = (String) htCredentials.get("tgt");
 				sSerAttributes = (String) htCredentials.get("attributes");
 
 				htTgtContext = _tgtManager.getTGT(sTgt);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "getTGT htTgtContext=" + htTgtContext
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "getTGT htTgtContext=" + htTgtContext
 						+ ", htAttributes=" + sSerAttributes);
 
 				// Idff session is used to store the Caller's Assertion consumerURL and RelayState
@@ -450,7 +450,7 @@ public class Idff12_SSO extends ProtoRequestHandler
 		String sMethod = "serializeTheseAttributes";
 		
 		String sSerializedAttributes = Utils.serializeAttributes(htAttribs);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "sSerializedAttributes=" + sSerializedAttributes);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "sSerializedAttributes=" + sSerializedAttributes);
 		return sSerializedAttributes;
 	}
 }

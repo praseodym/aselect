@@ -456,7 +456,7 @@ public abstract class AbstractMetaDataManager
 					java.security.cert.X509Certificate javaCert = SamlTools.getCertificate(cert);
 					if (javaCert != null) {
 						if (checkCertificate("", javaCert)) {
-							_systemLogger.log(Level.INFO, MODULE, sMethod, "OK "
+							_systemLogger.log(Level.FINER, MODULE, sMethod, "OK "
 									+ javaCert.getSubjectX500Principal().getName() + " - Issuer="
 									+ javaCert.getIssuerX500Principal().getName());
 							return true;
@@ -604,7 +604,7 @@ public abstract class AbstractMetaDataManager
 				try {
 					java.security.cert.X509Certificate javaCert = SamlTools.getCertificate(cert);
 					if (javaCert != null) {
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "Cert: "
+						_systemLogger.log(Level.FINER, MODULE, sMethod, "Cert: "
 								+ javaCert.getSubjectX500Principal().getName() + " - Issuer="
 								+ javaCert.getIssuerX500Principal().getName());
 						return javaCert.getPublicKey();
@@ -651,7 +651,7 @@ public abstract class AbstractMetaDataManager
 		}
 
 		String sAttrValue = descriptor.getDOM().getAttribute(sAttrName);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, sAttrName+"="+sAttrValue);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, sAttrName+"="+sAttrValue);
 		return sAttrValue;
 	}
 
@@ -795,14 +795,14 @@ public abstract class AbstractMetaDataManager
 								location = node.getNodeValue();
 								if (hmBinding != null)
 									hmBinding.put("binding", bindingMDValue);
-								_systemLogger.log(Level.INFO, MODULE, sMethod, "Found location for entityId="
+								_systemLogger.log(Level.FINER, MODULE, sMethod, "Found location for entityId="
 										+ entityId + " elementName=" + elementName + " bindingName=" + requestedBinding
 										+ " attrName=" + attrName + " location=" + location+" binding="+bindingMDValue);
 							}
 							else {
 								if (hmBinding != null)
 									hmBinding.clear();
-								_systemLogger.log(Level.INFO, MODULE, sMethod, "Did not find location for entityId="
+								_systemLogger.log(Level.FINER, MODULE, sMethod, "Did not find location for entityId="
 										+ entityId + " elementName=" + elementName + " bindingName=" + requestedBinding
 										+ " attrName=" + attrName + " locatione=" + location);
 							}
@@ -846,7 +846,7 @@ public abstract class AbstractMetaDataManager
 		MarshallerFactory marshallerFactory = Configuration.getMarshallerFactory();
 		Marshaller marshaller = marshallerFactory.getMarshaller(descriptor);
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Marshall " + descriptor);
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "Marshall " + descriptor);
 		// _systemLogger.log(Level.INFO, MODULE, sMethod, XMLHelper.prettyPrintXML(descriptor.getDOM()));
 		Element domDescriptor = marshaller.marshall(descriptor, parser.newDocument());
 		return domDescriptor;

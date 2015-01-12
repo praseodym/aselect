@@ -178,7 +178,7 @@ public class JDBCAttributeRequestor extends GenericAttributeRequestor
 			while (e.hasMoreElements()) {
 				String sName = (String) e.nextElement();
 				String sValue = (String) htTGTContext.get(sName);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Param[" + index + "]=" + sName + " Value=" + sValue);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Param[" + index + "]=" + sName + " Value=" + sValue);
 				if (sValue == null) {
 					StringBuffer sbError = new StringBuffer("Error retrieving '");
 					sbError.append(sName);

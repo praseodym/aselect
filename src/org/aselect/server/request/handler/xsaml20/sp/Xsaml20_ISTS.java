@@ -232,7 +232,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				sIdpSelectForm = Utils.replaceString(sIdpSelectForm, "[a-select-server]", _sServerId);  // 20110310
 				//sSelectForm = Utils.replaceString(sSelectForm, "[language]", sLanguage);
 				sIdpSelectForm = _configManager.updateTemplate(sIdpSelectForm, _htSessionContext, request);  // 20130822, Bauke: added to show requestor_friendly_name
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Template updated, [handler_url]="+sMyUrl + "/" + getID());
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "Template updated, [handler_url]="+sMyUrl + "/" + getID());
 				response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 				response.setContentType("text/html; charset=utf-8");
 				response.setHeader("Pragma", "no-cache");
@@ -245,7 +245,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				return new RequestState(null);
 			}
 			// federation_url was set or bIdpSelectForm is false
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "federation_url="+sFederationUrl);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "federation_url="+sFederationUrl);
 			_htSessionContext.put("user_state", "state_toidp");  // at least remove state_select
 			_oSessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120403, Bauke: was updateSession
 
@@ -272,7 +272,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 					sRedirectUrl = Utils.replaceString(sRedirectUrl, "[a-select-server]", _sServerId);
 					sRedirectUrl = Utils.replaceString(sRedirectUrl, "[rid]", sRid);
 					//sRedirectUrl = Utils.replaceString(sRedirectUrl, "[language]", sLanguage);
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Fallback REDIRECT to: " + sRedirectUrl);
+					_systemLogger.log(Level.FINER, MODULE, sMethod, "Fallback REDIRECT to: " + sRedirectUrl);
 					
 					response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 					response.setContentType("text/html; charset=utf-8");
@@ -289,7 +289,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			}
 			// The result is a single resource from our own resourcegroup
 			sFederationUrl = samResource.getId();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "IdP resource id="+sFederationUrl);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "IdP resource id="+sFederationUrl);
 
 			// 20090811, Bauke: save type of Authsp to store in the TGT later on
 			// This is needed to prevent session sync when we're not saml20
@@ -297,7 +297,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			_htSessionContext.put("federation_url", sFederationUrl);
 			_oSessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120403, Bauke: was updateSession
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get MetaData FederationUrl=" + sFederationUrl);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Get MetaData FederationUrl=" + sFederationUrl);
 			MetaDataManagerSp metadataMgr = MetaDataManagerSp.getHandle();
 			// RM_57_01
 			// RM_57_02
@@ -310,7 +310,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				sDestination = metadataMgr.getLocation(sFederationUrl,
 						SingleSignOnService.DEFAULT_ELEMENT_LOCAL_NAME, singleSignOnServiceBindingConstantREDIRECT);
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Location retrieved=" + sDestination);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Location retrieved=" + sDestination);
 			if ("".equals(sDestination))
 				throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 
@@ -341,7 +341,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			
 			// 20100311, Bauke: added for eHerkenning
 			PartnerData partnerData = MetaDataManagerSp.getHandle().getPartnerDataEntry(sFederationUrl);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Partnerdata: "+partnerData);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Partnerdata: "+partnerData);
 			String specialSettings = (partnerData == null)? null: partnerData.getSpecialSettings();
 			if (specialSettings != null && specialSettings.contains("minimum"))
 				requestedAuthnContext.setComparison(AuthnContextComparisonTypeEnumeration.MINIMUM);
@@ -375,7 +375,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			// ProtocolBinding and AssertionConsumerServiceURL
 			
 			if (partnerData !=null)
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "acsi="+partnerData.getAssertionConsumerServiceindex());
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "acsi="+partnerData.getAssertionConsumerServiceindex());
 			
 			if  (partnerData != null && partnerData.getAssertionConsumerServiceindex() != null) {
 				authnRequest.setAssertionConsumerServiceIndex(Integer.parseInt(partnerData.getAssertionConsumerServiceindex() ));
@@ -507,7 +507,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 			if (specialSettings != null && specialSettings.contains("relay_specials")) {
 				sSpecials = Utils.getAselectSpecials(_htSessionContext, false/*leave base64*/, _systemLogger);
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "<special_settings>="+specialSettings+" aselect_specials="+sSpecials);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "<special_settings>="+specialSettings+" aselect_specials="+sSpecials);
 			
 			// Create the new RelayState
 			String sRelayState = "idp=" + sFederationUrl;
@@ -515,7 +515,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				if (Utils.hasValue(sSpecials))
 					sRelayState += "&aselect_specials="+sSpecials;
 				sRelayState = Base64Codec.encode(sRelayState.getBytes());
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "RelayState="+sRelayState);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "RelayState="+sRelayState);
 			}
 
 			//
@@ -531,7 +531,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				Endpoint samlEndpoint = endpointBuilder.buildObject();
 				samlEndpoint.setLocation(sDestination);
 				samlEndpoint.setResponseLocation(sMyUrl);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "GET EndPoint="+samlEndpoint+" Destination="+sDestination);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "GET EndPoint="+samlEndpoint+" Destination="+sDestination);
 				
 				//HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response, sDestination);
 				HttpServletResponseAdapter outTransport = new HttpServletResponseAdapter(response,
@@ -557,7 +557,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				MarshallerFactory marshallerFactory = Configuration.getMarshallerFactory();
 				Marshaller marshaller = marshallerFactory.getMarshaller(messageContext.getOutboundSAMLMessage());
 				Node nodeMessageContext = marshaller.marshall(messageContext.getOutboundSAMLMessage());
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "RelayState="+sRelayState+" OutboundSAMLMessage:\n"+XMLHelper.prettyPrintXML(nodeMessageContext));
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "RelayState="+sRelayState+" OutboundSAMLMessage:\n"+XMLHelper.prettyPrintXML(nodeMessageContext));
 				
 				if (useSha256) {
 					Saml20_RedirectEncoder encoder = new Saml20_RedirectEncoder();  // is a HTTPRedirectDeflateEncoder
@@ -569,17 +569,17 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 					HTTPRedirectDeflateEncoder encoder = new HTTPRedirectDeflateEncoder();
 					encoder.encode(messageContext);  // does a sendRedirect()
 				}
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Ready "+messageContext);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "Ready "+messageContext);
 			}
 			else {  // POST
 				// 20100331, Bauke: added support for HTTP POST
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the authnRequest >======"+authnRequest);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "Sign the authnRequest >======"+authnRequest);
 				authnRequest = (AuthnRequest)SamlTools.signSamlObject(authnRequest, useSha256? "sha256": "sha1", 
 							"true".equalsIgnoreCase(partnerData.getAddkeyname()), "true".equalsIgnoreCase(partnerData.getAddcertificate()) );
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the authnRequest ======<"+authnRequest);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "Signed the authnRequest ======<"+authnRequest);
 
 				String sAssertion = XMLHelper.nodeToString(authnRequest.getDOM());
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Assertion=" + sAssertion);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "Assertion=" + sAssertion);
 				try {
 					byte[] bBase64Assertion = sAssertion.getBytes("UTF-8");
 					BASE64Encoder b64enc = new BASE64Encoder();
@@ -601,7 +601,7 @@ public class Xsaml20_ISTS extends Saml20_BaseHandler
 				if (sLang != null)
 					sInputs += buildHtmlInput("language",sLang);
 	
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Inputs=" + Utils.firstPartOf(sInputs,200));
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "Inputs=" + Utils.firstPartOf(sInputs,200));
 				handlePostForm(_sPostTemplate, sDestination, sInputs, response);
 			}
 			Tools.pauseSensorData(_configManager, _systemLogger, _htSessionContext);  //20111102 can change the session

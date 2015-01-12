@@ -320,10 +320,10 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 //			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested binding="+sReqBinding+" ForceAuthn = " + bForcedAuthn);
 			// RH, 20140922, sn
 			boolean bIsPassive = authnRequest.isPassive();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested binding="+sReqBinding+" ForceAuthn = " + bForcedAuthn + " IsPassive = " + bIsPassive);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Requested binding="+sReqBinding+" ForceAuthn = " + bForcedAuthn + " IsPassive = " + bIsPassive);
 			// RH, 20140922, en
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "SPRid=" + sSPRid + " RelayState=" + sRelayState);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "SPRid=" + sSPRid + " RelayState=" + sRelayState);
 
 			HashMap<String, String> hmBinding = new HashMap<String, String>();
 			String sAssertionConsumerServiceURL = getAssertionConsumerServiceURL(samlMessage, hmBinding);
@@ -344,7 +344,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 			String sASelectServerUrl = (String) htResponse.get("as_url");
 			String sIDPRid = (String) htResponse.get("rid");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Supplied rid=" + sIDPRid + " response=" + htResponse);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Supplied rid=" + sIDPRid + " response=" + htResponse);
 
 			// We need the session
 			//_htSessionContext = _oSessionManager.getSessionContext(sIDPRid);
@@ -373,7 +373,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			// RH, 20140922, sn
 			if (bIsPassive) {
 				_htSessionContext.put("forced_passive", new Boolean(bIsPassive)); 
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "'forced_passive' in htSession set to: "
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "'forced_passive' in htSession set to: "
 						+ bIsPassive);
 			}
 			// RH, 20140922, en
@@ -383,7 +383,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			// 'forced_authenticate' is used in the Session (a Boolean value), the meaning of both is identical
 			if (bForcedAuthn) {
 				_htSessionContext.put("forced_authenticate", new Boolean(bForcedAuthn));
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "'forced_authenticate' in htSession set to: "
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "'forced_authenticate' in htSession set to: "
 						+ bForcedAuthn);
 			}
 			_oSessionManager.setUpdateSession(_htSessionContext, _systemLogger);  // 20120403, Bauke: added
@@ -422,7 +422,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				sbURL.append("&forced_logon=").append(bForcedAuthn);
 			if (bIsPassive)
 				sbURL.append("&forced_passive=").append(bIsPassive);	// RH, 20140925, n
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sbURL.toString());
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Redirect to " + sbURL.toString());
 			_systemLogger.log(Audit.AUDIT, MODULE, sMethod, ">>> Challenge for credentials, redirect to:"
 					+ sbURL.toString());
 			httpResponse.sendRedirect(sbURL.toString());
@@ -819,7 +819,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 		//_systemLogger.log(Level.INFO, MODULE, sMethod, "Response signing ======<"+response);
 		
 		String sResponse = XMLHelper.nodeToString(response.getDOM());
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Response=" + sResponse);
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "Response=" + sResponse);
 		try {
 			byte[] bBase64Assertion = sResponse.getBytes("UTF-8");
 			BASE64Encoder b64enc = new BASE64Encoder();
@@ -863,7 +863,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			sInputs += buildHtmlInput("language",sLang);
 		
 		// Keep logging short:
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Template="+getPostTemplate()+" sInputs="+sInputs+" ...");
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "Template="+getPostTemplate()+" sInputs="+sInputs+" ...");
 		sInputs += buildHtmlInput("SAMLResponse", sResponse);  //Tools.htmlEncode(nodeMessageContext.getTextContent()));
 
 		// Let's POST the token
@@ -924,7 +924,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			_sReqSigning = (String) htSessionContext.get("sp_reqsigning");
 		if (_sReqSigning == null) {
 			_sReqSigning = _sDefaultSigning;
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested signing \"sp_reqsigning\" is missing, using default: " + _sReqSigning);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Requested signing \"sp_reqsigning\" is missing, using default: " + _sReqSigning);
 		}
 		
 		if (!"sha256".equals(_sReqSigning))  // we only support sha256 and sha1
@@ -937,7 +937,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			_sAddKeyName = (String) htSessionContext.get("sp_addkeyname");
 		if (_sAddKeyName == null) {
 			_sAddKeyName = _sDefaultAddKeyname;
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested signing \"sp_addkeyname\" is missing, using default:" + _sAddKeyName );
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Requested signing \"sp_addkeyname\" is missing, using default:" + _sAddKeyName );
 		}
 
 		// RH, 2011116, retrieve whether addcertificate requested
@@ -947,9 +947,9 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			_sAddCertificate = (String) htSessionContext.get("sp_addcertificate");
 		if (_sAddCertificate == null) {
 			_sAddCertificate = _sDefaultAddCertificate;
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Requested signing \"sp_addcertificate\" is missing, using default:" + _sAddCertificate);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Requested signing \"sp_addcertificate\" is missing, using default:" + _sAddCertificate);
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "SignAssertion="+_bSignAssertion+" ReqSigning="+_sReqSigning);
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "SignAssertion="+_bSignAssertion+" ReqSigning="+_sReqSigning);
 	}
 	
 	/**
@@ -996,20 +996,20 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			String sCtxRid = (String) htTGTContext.get("rid");
 			String sSubjectLocalityAddress = (String) htTGTContext.get("client_ip");
 			String sAssertionID = SamlTools.generateIdentifier(_systemLogger, MODULE);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "CHECK ctxRid=" + sCtxRid + " rid=" + sRid
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "CHECK ctxRid=" + sCtxRid + " rid=" + sRid
 					+ " client_ip=" + sSubjectLocalityAddress);
 
 			// ---- Attributes
 			// Create an attribute statement builder
 			QName qName = AttributeStatement.DEFAULT_ELEMENT_NAME;
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "AttributeStatement qName="+qName);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "AttributeStatement qName="+qName);
 			SAMLObjectBuilder<AttributeStatement> attributeStatementBuilder =
 				(SAMLObjectBuilder<AttributeStatement>) builderFactory.getBuilder(qName);
 			AttributeStatement attributeStatement = attributeStatementBuilder.buildObject();
 
 			// Create an attribute builder
 			qName = Attribute.DEFAULT_ELEMENT_NAME;
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Attribute qName="+qName+" AppId="+_sAppId);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Attribute qName="+qName+" AppId="+_sAppId);
 			SAMLObjectBuilder<Attribute> attributeBuilder = (SAMLObjectBuilder<Attribute>) builderFactory.getBuilder(qName);
 
 			// Gather attributes, including the attributes from the ticket context
@@ -1025,7 +1025,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			// 20101229, Bauke: add configurable fixed value attributes
 			if (_sAppId != null) {
 				HashMap<String,String> additionalAttributes = ApplicationManager.getHandle().getAdditionalAttributes(_sAppId);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "AddAttr="+additionalAttributes);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "AddAttr="+additionalAttributes);
 				if (additionalAttributes != null) {
 					Set<String> keys = additionalAttributes.keySet();
 					for (String sKey : keys) {
@@ -1034,7 +1034,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 						if (sValue == null) {	
 							sValue = htAttributes.get(sKey);
 						}// RH, 20130115, en
-						_systemLogger.log(Level.FINE, MODULE, sMethod, "Retrieved Attr "+sKey+"="+sValue);
+						_systemLogger.log(Level.FINEST, MODULE, sMethod, "Retrieved Attr "+sKey+"="+sValue);
 						htAllAttributes.put(sKey, sValue);
 					}
 				}
@@ -1057,7 +1057,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 				} else	if ((anyValue instanceof Iterable)) {
 						aValues = (Iterable)anyValue;
 				} else {
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Non Iterable attribute found, skipping:  "+sKey+"="+aValues);
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Non Iterable attribute found, skipping:  "+sKey+"="+aValues);
 					continue;
 				}
 
@@ -1069,7 +1069,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 					if ((oValue instanceof String)) {
 						sValue = (String)oValue;
 					} else {
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "Non String attribute found, skipping:  "+sKey+"="+aValues);
+						_systemLogger.log(Level.FINEST, MODULE, sMethod, "Non String attribute found, skipping:  "+sKey+"="+aValues);
 						continue;
 					}
 					
@@ -1079,14 +1079,14 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 					boolean bNvlAttrName = _sAddedPatching.contains("nvl_attrname");
 					if (bNvlAttrName) {
 						// add namespaces to the attribute
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "nvl_attrname");
+						_systemLogger.log(Level.FINER, MODULE, sMethod, "nvl_attrname");
 						boolean bXS = _sAddedPatching.contains("nvl_attr_namexsd");
 						Namespace namespace = new Namespace(XMLConstants.XSD_NS, (bXS)? "xsd": XMLConstants.XSD_PREFIX);
 						theAttribute.addNamespace(namespace);
 						namespace = new Namespace(XMLConstants.XSI_NS, XMLConstants.XSI_PREFIX);
 						theAttribute.addNamespace(namespace);
 						theAttribute.setNameFormat(Attribute.BASIC);  // URI_REFERENCE);  // BASIC);
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "Novell Attribute="+theAttribute);
+						_systemLogger.log(Level.FINER, MODULE, sMethod, "Novell Attribute="+theAttribute);
 					}
 					theAttributeValue = (XSString)stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
 					theAttributeValue.setValue(sValue);
@@ -1223,7 +1223,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			
 			// 20100525, flag added for Novell, they need PERSISTENT
 			boolean bNvlPersist = _sAddedPatching.contains("nvl_persist");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "nvl_persist=" + bNvlPersist);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "nvl_persist=" + bNvlPersist);
 			
 			//	RH, 20130117, sn
 			if ( _sAddedPatching.contains("saml_format_persist") ){
@@ -1260,7 +1260,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 			// 20090602, Bauke Saml-core-2.0, section 2.2.2: SHOULD be omitted:
 			// nameID.setNameQualifier(_sASelectServerUrl);
 			nameID.setValue((bNvlPersist)? sUid: sTgt);  // 20100811: depends on NameIDType
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "nameID=" + Utils.firstPartOf(nameID.getValue(), 30));
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "nameID=" + Utils.firstPartOf(nameID.getValue(), 30));
 
 			SAMLObjectBuilder<Subject> subjectBuilder = (SAMLObjectBuilder<Subject>) builderFactory
 					.getBuilder(Subject.DEFAULT_ELEMENT_NAME);
@@ -1303,7 +1303,7 @@ public class Xsaml20_SSO extends Saml20_BrowserHandler
 
 			// 20110406, Bauke: added option to only sign the assertion
 			if (_bSignAssertion) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign Assertion");
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "Sign Assertion");
 				assertion = (Assertion)SamlTools.signSamlObject(assertion, _sReqSigning,
 						"true".equals(_sAddKeyName), "true".equals(_sAddCertificate));
 			}

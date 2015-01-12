@@ -1130,7 +1130,7 @@ public class RequestHandler extends Thread
 
 			// all parameters are there; create a ticket for this user and
 			// store it in a ticket context
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Create the ticket for "+sUID);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Create the ticket for "+sUID);
 			HashMap htTicketContext = new HashMap();
 			htTicketContext.put("uid", sUID);
 			htTicketContext.put("organization", sOrg);
@@ -1175,7 +1175,7 @@ public class RequestHandler extends Thread
 			}
 
 			// prepare the response parameters for the calling application
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Prepare response, ticket="+sTicket);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Prepare response, ticket="+sTicket);
 			oOutputMessage.setParam("ticket", sTicket);
 			oOutputMessage.setParam("ticket_start_time", new Long(_ticketManager.getTicketStartTime(sTicket))
 					.toString());
@@ -1374,7 +1374,7 @@ public class RequestHandler extends Thread
 			}
 			catch (ASelectCommunicationException e) {
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET attributes_hash="+sAttributesHash+
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "VerTICKET attributes_hash="+sAttributesHash+
 					" req_uri=" + sReqURI+" reqAppId="+sReqAppId+" ip="+sIP);
 
 			// 20120527, Bauke: Communicate our batch_size to the filter, if it's 0, the filter will disable LbSensor output
@@ -1439,7 +1439,7 @@ public class RequestHandler extends Thread
 				}
 				// Get user attributes
 				HashMap htUserAttributes = deserializeAttributes((String) htTicketContext.get("attributes"));
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "VerTICKET attr=" + htUserAttributes);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "VerTICKET attr=" + htUserAttributes);
 
 				// Add ip if applicable
 				if (sIP != null)
@@ -1470,7 +1470,7 @@ public class RequestHandler extends Thread
 				lLastTime = Long.parseLong(sLastTime);
 			long now = new Date().getTime();
 			int interval = 1000 * ASelectAgentConfigManager.getHandle().getUpgradeTgtInterval();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Last upgrade_tgt:"+(now - lLastTime)+
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Last upgrade_tgt:"+(now - lLastTime)+
 						" ms ago, update="+(now - lLastTime >= interval)+" interval="+interval);
 			if (now - lLastTime >= interval) {  // default use 60 seconds intervals //  for backward compatibility we now use default = 0
 				htTicketContext.put("last_upgrade_tgt", Long.toString(now));
@@ -2097,9 +2097,9 @@ public class RequestHandler extends Thread
 			signRequest(htParams);
 
 			String sAsUrl = _configManager.getParam(oConfigSection, "url");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "ToSERVER, url=" + sAsUrl + ", params=" + htParams);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "ToSERVER, url=" + sAsUrl + ", params=" + htParams);
 			htResponse = sendRequestToASelectServer(sAsUrl, htParams);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "FromSERVER, htResponse=" + htResponse);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "FromSERVER, htResponse=" + htResponse);
 		}
 		catch (ASelectSAMException eSAM) {
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Error retrieving A-Select Server resource.", eSAM);
@@ -2166,7 +2166,7 @@ public class RequestHandler extends Thread
 			else
 				oSignature = Signature.getInstance(sSignatureAlgorithm);
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "htRequest=" + htRequest);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "htRequest=" + htRequest);
 			StringBuffer sbData = Tools.assembleSigningData(htRequest);
 
 			/* the following only works for the authenticate request
@@ -2191,7 +2191,7 @@ public class RequestHandler extends Thread
 			sValue = (String)htRequest.get("uid");
 			if (sValue != null)	sbData.append(sValue);*/
 			
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign:" + sbData);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Sign:" + sbData);
 			oSignature.initSign(_configManager.getSigningKey());
 			oSignature.update(sbData.toString().getBytes());
 			byte[] baRawSignature = oSignature.sign();

@@ -126,7 +126,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 		// SUGGEST allow for direct transient ID handling
 		String sMethod = "process";
 		String sPathInfo = request.getPathInfo();
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "==== Path=" + sPathInfo + " TokenRequestQuery: "
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "==== Path=" + sPathInfo + " TokenRequestQuery: "
 				+ request.getQueryString());
 		samlrequest = request.getParameter(PARM_NAME_SAMLREQUEST);
 		if (samlrequest == null) {
@@ -178,9 +178,9 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 		response.setHeader("Cache-Control", "no-cache, no-store");
 		PrintWriter pwOut = response.getWriter();
 		String[] atts = request.getParameterValues(PARM_NAME_ATRRIBUTES);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "attributes=" + atts);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "attributes=" + atts);
 		for (int i = 0; i < atts.length; i++) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "attributes[" + i + "]=" + atts[i]);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "attributes[" + i + "]=" + atts[i]);
 		}
 
 		// RM_61_07
@@ -191,7 +191,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 				|| PARM_VALUE_TRANSIENT.equalsIgnoreCase(samlrequest)) {
 
 			String token = request.getParameter(PARM_NAME_TOKEN);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "SAML token received:" + token);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "SAML token received:" + token);
 			if ("true".equalsIgnoreCase(urlencoding)) {
 				// We received de token URLEncoded so we URLDecode
 				token = URLDecoder.decode(token, "UTF-8");
@@ -204,7 +204,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 				baos.write(tokenArray);
 				token = baos.toString("UTF-8"); // We should have gotten UTF-8 formatted strings
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "decoded token received:" + token);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "decoded token received:" + token);
 
 			if (PARM_VALUE_ATRRIBUTESTATEMENT.equalsIgnoreCase(samlrequest)) {
 
@@ -255,7 +255,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 			TGTManager tgtm = TGTManager.getHandle();
 			HashMap ht = tgtm.getTGT(subject);
 			StringBuffer sb = new StringBuffer();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "ht:" + ht);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "ht:" + ht);
 			// RM_61_10
 			if (atts != null && ht != null && !ht.isEmpty()) {
 				for (int i = 0; i < atts.length; i++) {
@@ -267,14 +267,14 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 						// sb.append("\"").append(MimeUtility.encodeText(atts[i])).append('=').
 						// append(MimeUtility.encodeText(ht.get(atts[i]).toString())).append("\"").append(',');
 						_systemLogger
-								.log(Level.INFO, MODULE, sMethod, "attributes to return so far:" + (sb.toString()));
+								.log(Level.FINEST, MODULE, sMethod, "attributes to return so far:" + (sb.toString()));
 					}
 				}
 				int j = 0;
 				if ((j = sb.lastIndexOf(",")) >= 0)
 					sb.deleteCharAt(j); // remove last ","
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "TGT values retrieved:" + (sb.toString()));
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "TGT values retrieved:" + (sb.toString()));
 			returnstring = sb.toString();
 		}
 		else if (PARM_VALUE_TRANSIENT.equalsIgnoreCase(samlrequest)) {
@@ -323,7 +323,7 @@ public class Xsaml20_AttributeRequestHandler extends Saml20_BaseHandler
 			Document docReceivedAssertion = builder.parse(inputSource);
 			Element elementReceivedAssertion = docReceivedAssertion.getDocumentElement();
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "unmarhalling DOM:"
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "unmarhalling DOM:"
 					+ XMLHelper.prettyPrintXML(elementReceivedAssertion));
 			assertion = unmarshallAssertion(elementReceivedAssertion);
 		}

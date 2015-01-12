@@ -161,7 +161,7 @@ public class OldMemoryStorageHandler implements IStorageHandler
 			synchronized (_htStorage) {
 				HashMap htStorageContainer = (HashMap) _htStorage.get(oKey);
 				oValue = htStorageContainer.get("contents");
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "MSH get(" + sTxt + ") -->" + htStorageContainer);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "MSH get(" + sTxt + ") -->" + htStorageContainer);
 			}
 		}
 		catch (NullPointerException eNP) {
@@ -310,7 +310,7 @@ public class OldMemoryStorageHandler implements IStorageHandler
 	{
 		String sMethod = "put";
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, this + " store=" + _htStorage);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "MSH put(" + Utils.firstPartOf(oKey.toString(), 30) + ") ="
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "MSH put(" + Utils.firstPartOf(oKey.toString(), 30) + ") ="
 				+ oValue.toString() + " timestamp=" + lTimestamp);
 
 		HashMap htStorageContainer = new HashMap();
@@ -347,7 +347,7 @@ public class OldMemoryStorageHandler implements IStorageHandler
 	{
 		String sMethod = "remove";
 		_systemLogger.log(Level.FINEST, MODULE, sMethod, " this=" + /* this.getClass()+" "+ */this + " " + _htStorage);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "MSH remove(" + Utils.firstPartOf(oKey.toString(), 30) + ") ");
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "MSH remove(" + Utils.firstPartOf(oKey.toString(), 30) + ") ");
 		try {
 			synchronized (_htStorage) {
 				if (_htStorage.remove(oKey) == null) {
@@ -401,10 +401,10 @@ public class OldMemoryStorageHandler implements IStorageHandler
 				// Object oKey = eKeys.nextElement();
 				countAll++;
 				String sTxt = Utils.firstPartOf(oKey.toString(), 30);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, " Get=" + sTxt);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, " Get=" + sTxt);
 				HashMap xStorageContainer = (HashMap) _htStorage.get(oKey);
 				Long lStorageTime = (Long) xStorageContainer.get("timestamp");
-				_systemLogger.log(Level.INFO, MODULE, sMethod, " timestamp=" + lStorageTime);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, " timestamp=" + lStorageTime);
 
 				if (lTimestamp.longValue() >= lStorageTime.longValue()) {
 					_htStorage.remove(oKey);

@@ -249,7 +249,7 @@ public class SocialAuthSPHandler implements IAuthSPProtocolHandler
 			sAsUrl = sbTemp.toString();
 
 			sSignature = URLDecoder.decode(sSignature, "UTF-8");
-			_systemLogger.log(Level.FINER, MODULE, sMethod, "sSignature="+sSignature);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "sSignature="+sSignature);
 			sAsUrl = URLDecoder.decode(sAsUrl, "UTF-8");
 			if (sUid != null) sUid = URLDecoder.decode(sUid, "UTF-8");
 			
@@ -259,7 +259,7 @@ public class SocialAuthSPHandler implements IAuthSPProtocolHandler
 			
 			boolean bVerifies = CryptoEngine.getHandle().verifySignature(_sAuthsp, sbTemp.toString(), sSignature);
 			if (!bVerifies) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Invalid signature in response from AuthSP:" + _sAuthsp);
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid signature in response from AuthSP:" + _sAuthsp);
 				htResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 				return htResponse;
 			}

@@ -181,7 +181,7 @@ public class Utils
 		String _sMethod = "decodeCredentials";
 		String decodedCredentials = null;
 		try {
-			oSysLog.log(Level.INFO, MODULE, _sMethod, "Credentials are " + credentials);
+			oSysLog.log(Level.FINEST, MODULE, _sMethod, "Credentials are " + credentials);
 			byte[] TgtBlobBytes = CryptoEngine.getHandle().decryptTGT(credentials);
 			decodedCredentials = org.aselect.system.utils.Utils.byteArrayToHexString(TgtBlobBytes);
 		}

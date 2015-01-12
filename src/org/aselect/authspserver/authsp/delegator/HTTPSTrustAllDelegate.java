@@ -153,7 +153,7 @@ public class HTTPSTrustAllDelegate implements Delegate
 				  byte [] bEncoded = Base64.encodeBase64((this.delegateuser+":"+(delegatepassword == null ? "" : delegatepassword) ).getBytes("UTF-8")); 
 				  String encoded = new String(bEncoded, "UTF-8");
 				  conn.setRequestProperty("Authorization", "Basic "+encoded);
-					_systemLogger.log(Level.INFO, sModule, sMethod, "Using basic authentication, user=" + this.delegateuser);
+					_systemLogger.log(Level.FINEST, sModule, sMethod, "Using basic authentication, user=" + this.delegateuser);
 			}
 //			conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
 			conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");	// They (the delegate party) don't accept charset !!
@@ -169,7 +169,7 @@ public class HTTPSTrustAllDelegate implements Delegate
 			iReturnCode = conn.getResponseCode();
 			Map<String, List<String>> hFields = conn.getHeaderFields();
 			
-			_systemLogger.log(Level.INFO, sModule, sMethod, "response=" + iReturnCode);
+			_systemLogger.log(Level.FINEST, sModule, sMethod, "response=" + iReturnCode);
 			BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 			String line;
 			// Still to decide on response protocol

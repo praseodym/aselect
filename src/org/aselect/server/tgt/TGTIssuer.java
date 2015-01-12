@@ -323,7 +323,7 @@ public class TGTIssuer
 				sAppId = sbAppID.toString();
 			}
 
-			_systemLogger.log(Level.FINE, MODULE, sMethod, "htRemoteAttributes=" + htRemoteAttributes);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "htRemoteAttributes=" + htRemoteAttributes);
 			HashMap htTGTContext = new HashMap();
 			// The Saml20 protocol needs a return address:
 			Utils.copyHashmapValue("sp_assert_url", htTGTContext, htRemoteAttributes);
@@ -439,7 +439,7 @@ public class TGTIssuer
 			Tools.calculateAndReportSensorData(_configManager, _systemLogger, "srv_tgt", sRid, htSessionContext, sTgt, true);
 			_sessionManager.setDeleteSession(htSessionContext, _systemLogger);  // 20120403, Bauke: was killSession()
 			
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect to " + sAppUrl);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Redirect to " + sAppUrl);
 			String sLang = (String)htTGTContext.get("language");
 			sendTgtRedirect(sAppUrl, sTgt, sRid, oHttpServletResponse, sLang);
 		}
@@ -620,7 +620,7 @@ throws ASelectException
 			
 			// overwrite or set additional properties in the newly created tgt context
 			if (htAdditional != null) {
-				_systemLogger.log(Level.FINE, MODULE, sMethod, "htAdditional="+htAdditional);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "htAdditional="+htAdditional);
 				htTGTContext.putAll(htAdditional);
 			}
 			
@@ -629,7 +629,7 @@ throws ASelectException
 			sAuthspLevel = (String)htTGTContext.get("authsp_level");
 			if (sSelLevel != null && sAuthspLevel != null) {
 				if (Integer.parseInt(sSelLevel) < Integer.parseInt(sAuthspLevel)) {
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "UPGRADE sel_level to "+sAuthspLevel);
+					_systemLogger.log(Level.FINER, MODULE, sMethod, "UPGRADE sel_level to "+sAuthspLevel);
 					htTGTContext.put("sel_level", sAuthspLevel);
 				}
 			}
@@ -715,7 +715,7 @@ throws ASelectException
 			// 20100210, Bauke: Organization selection is here
 			AttributeGatherer ag = AttributeGatherer.getHandle();
 			HashMap<String,String> hUserOrganizations = ag.gatherOrganizations(htTGTContext);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "UserOrgs="+hUserOrganizations);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "UserOrgs="+hUserOrganizations);
 			
 			// Also places org_id in the TGT context:
 			boolean mustChooseOrg = Utils.handleOrganizationChoice(htTGTContext, hUserOrganizations);
@@ -960,7 +960,7 @@ throws ASelectException
 			// SSO Sessions in effect
 			htTGTContext.put("sp_issuer", sIssuer);
 			if (ssoSession == null) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "NEW SSO session for " + sUserId + " issuer=" + sIssuer);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "NEW SSO session for " + sUserId + " issuer=" + sIssuer);
 				ssoSession = new UserSsoSession(sUserId, ""); // sTgt);
 			}
 			ServiceProvider sp = new ServiceProvider(sIssuer);
@@ -1010,14 +1010,14 @@ throws ASelectException
 			String sSpecials = Utils.getParameterValueFromUrl(sAppUrl, "aselect_specials");
 			if (Utils.hasValue(sSpecials)) {
 				sAppUrl = sAppUrl.replace("aselect_specials="+sSpecials, "");
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "1="+sAppUrl);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "1="+sAppUrl);
 				sAppUrl = sAppUrl.replace("&&", "&");
 				if (sAppUrl.endsWith("&"))
 					sAppUrl = sAppUrl.substring(0, sAppUrl.length()-1);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "2="+sAppUrl);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "2="+sAppUrl);
 			}
 			else 
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "No aselect_specials");
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "No aselect_specials");
 			
 			// Check whether the application url contains cgi parameters
 			if (sAppUrl.indexOf("?") > 0)
@@ -1106,7 +1106,7 @@ throws ASelectException
 						sbReqArgs.append("&a-select-server=").append(URLEncoder.encode(_sServerId, "UTF-8"));
 						sbReqArgs.append("&signature=").append(URLEncoder.encode(sSignature, "UTF-8"));
 						String sArgs = sbReqArgs.toString();
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "To AUTHSP: " + _sAuthspURL+" Args="+sArgs);
+						_systemLogger.log(Level.FINER, MODULE, sMethod, "To AUTHSP: " + _sAuthspURL+" Args="+sArgs);
 			
 						String sResponse = null;
 						try {
@@ -1114,7 +1114,7 @@ throws ASelectException
 							HttpURLConnection conn = (HttpURLConnection)oServer.openConnection();
 							conn.setDoOutput(true);
 				
-							_systemLogger.log(Level.INFO, MODULE, sMethod, "POST Host="+oServer.getHost()+" Length="+sArgs.length());
+							_systemLogger.log(Level.FINER, MODULE, sMethod, "POST Host="+oServer.getHost()+" Length="+sArgs.length());
 							conn.setRequestMethod("POST");
 							conn.setRequestProperty("Host", oServer.getHost());
 							conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");

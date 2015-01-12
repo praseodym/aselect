@@ -360,7 +360,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 			_cryptoEngine.signRequest(htRequestTable);
 		}
 
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "VfyREMOTE htRequestTable=" + htRequestTable);
+		_systemLogger.log(Level.FINER, _sModule, sMethod, "VfyREMOTE htRequestTable=" + htRequestTable);
 
 		htResponseTable = oCommunicator.sendMessage(htRequestTable, sRemoteAsUrl);
 
@@ -370,7 +370,7 @@ public class ASelectBrowserHandler extends AbstractBrowserRequestHandler
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
 		}
 
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "VfyREMOTE htResponseTable=" + htResponseTable);
+		_systemLogger.log(Level.FINER, _sModule, sMethod, "VfyREMOTE htResponseTable=" + htResponseTable);
 
 		String sResultCode = (String) htResponseTable.get("result_code");
 		if (sResultCode == null) {

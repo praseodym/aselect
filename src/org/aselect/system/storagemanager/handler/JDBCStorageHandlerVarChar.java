@@ -77,7 +77,7 @@ public class JDBCStorageHandlerVarChar extends JDBCStorageHandler
 				oRet = decode(b64e.decodeBuffer(_sContextValue.substring(identifierQuote.length(), _sContextValue
 						.length()
 						- identifierQuote.length())));
-				_systemLogger.log(Level.FINER, MODULE, sMethod, "result=" + oRet);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "result=" + oRet);
 			}
 			else {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "The supplied key is not mapped to any value.");

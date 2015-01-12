@@ -173,7 +173,7 @@ public class PKIAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 			String sUserAttributes = servletRequest.getParameter("user_attribute");
 			String sAsId = servletRequest.getParameter("a-select-server");
 			String sPassword = servletRequest.getParameter("password");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "rid=" + sRid + "user_attr=" + sUserAttributes);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "rid=" + sRid + "user_attr=" + sUserAttributes);
 
 			String sTFAuthSpName = servletRequest.getParameter("tf_authsp");
 			String sTFAuthSpUrl = servletRequest.getParameter("tf_url");
@@ -244,7 +244,7 @@ public class PKIAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 			String sRid = servletRequest.getParameter("rid");
 			String sUserAttributes = servletRequest.getParameter("user_attribute");
 			String sAsId = servletRequest.getParameter("a-select-server");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "rid=" + sRid + " user_attr=" + sUserAttributes);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "rid=" + sRid + " user_attr=" + sUserAttributes);
 
 			String sTFAuthSpName = servletRequest.getParameter("tf_authsp");
 			String sTFAuthSpUrl = servletRequest.getParameter("tf_url");
@@ -344,16 +344,16 @@ public class PKIAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 			catch (ASelectConfigException e) {
 			}
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Get certificate for '" + sUserAttributes + "'");
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Get certificate for '" + sUserAttributes + "'");
 			// Get Client Certificate from user
 			oCerts = (X509Certificate[])servletRequest.getAttribute("javax.servlet.request.X509Certificate");
     		if (oCerts == null || oCerts.length <= 0) {
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "No Client Certificate Provided");
 				throw new ASelectException(Errors.PKI_NO_CLIENT_CERT_PROVIDED);
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "oCerts=" + oCerts + " length=" + oCerts.length);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "oCerts=" + oCerts + " length=" + oCerts.length);
 			oClientCert = oCerts[0];
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "ClientCert=" + oClientCert);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "ClientCert=" + oClientCert);
 
 			if (!sValidateDateCheck.equalsIgnoreCase("false")) {
 				// throws an ASelectException when certificate isn't
@@ -644,7 +644,7 @@ public class PKIAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 			}
 //			RH, 20131216, en			
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign[" + sbTemp + "]");
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Sign[" + sbTemp + "]");
 			sSignature = _cryptoEngine.generateSignature(sbTemp.toString());
 			if (sSignature == null) {
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Error occured during signature creation");
@@ -673,7 +673,7 @@ public class PKIAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 			sbTemp.append("&pki_subject_id=").append(sSubjectId); // Bauke: added
 		sbTemp.append("&signature=").append(sSignature);
 		try {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT: " + sbTemp);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "REDIRECT: " + sbTemp);
 			servletResponse.sendRedirect(sbTemp.toString());
 
 			if (sResultCode.equals(Errors.PKI_CLIENT_CERT_SUCCESS)) {  // user authenticated
@@ -886,7 +886,7 @@ public class PKIAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 			sbRequest.append("&retry_counter=").append("DUMMY");
 			sbRequest.append("&signature=").append("DUMMY");
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Send:" + sbRequest);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Send:" + sbRequest);
 			String sResponseString = send(sbRequest.toString());
 
 			HashMap xResponse = Utils.convertCGIMessage(sResponseString, false);

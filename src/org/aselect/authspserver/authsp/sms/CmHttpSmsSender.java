@@ -99,7 +99,7 @@ public class CmHttpSmsSender extends GenericSmsSender
 		_systemLogger.log(Level.INFO, sModule, sMethod, "url=" + providerUrl);
 		
 		String sMessage = applySmsTemplate(sTemplate, sSecret, false);
-		_systemLogger.log(Level.INFO, sModule, sMethod, "msg="+escapeXmlString(sMessage)+" cust="+sCustomerId+
+		_systemLogger.log(Level.FINEST, sModule, sMethod, "msg="+escapeXmlString(sMessage)+" cust="+sCustomerId+
 				" user="+this.user+" password="+this.password+" from="+from+" rcp="+recipients);
 		String sData = xmlSmsMessage.replaceAll("\\[MESSAGE\\]", escapeXmlString(sMessage));
 		sData = sData.replaceAll("\\[CUSTOMER\\]", sCustomerId);
@@ -112,9 +112,9 @@ public class CmHttpSmsSender extends GenericSmsSender
 		if (Utils.hasValue(this.gateway)) {
 			_systemLogger.log(Level.WARNING, sModule, sMethod, "Alternate gateway supplied, but not supported");
 		}
-		_systemLogger.log(Level.INFO, sModule, sMethod, "append");
+		_systemLogger.log(Level.FINEST, sModule, sMethod, "append");
 		sbResult.append(sData);
-		_systemLogger.log(Level.INFO, sModule, sMethod, "data=" + sbResult.toString());
+		_systemLogger.log(Level.FINEST, sModule, sMethod, "data=" + sbResult.toString());
 		return 0;
 	}
 	
@@ -153,7 +153,7 @@ public class CmHttpSmsSender extends GenericSmsSender
 	/**
 	 * Every request will get an HTTP response with status 200 (OK), even if the request is malformed.
 	 * If the request was correct, the response will be empty.
-	 * If the request was malformed, the response will start with “ERROR”.
+	 * If the request was malformed, the response will start with ï¿½ERRORï¿½.
 	 * @param rd - the Reader for the result
 	 * @return - 0 = ok
 	 */
@@ -169,7 +169,7 @@ public class CmHttpSmsSender extends GenericSmsSender
 			if ("".equals(sResult) && !"".equals(line))
 				sResult = line;	// get first non-empty line
 		}
-		_systemLogger.log(Level.INFO, sModule, sMethod, "result:" + sResult);
+		_systemLogger.log(Level.FINEST, sModule, sMethod, "result:" + sResult);
 
 		// Analyze the result
 		if (sResult.startsWith("Error:") || sResult.startsWith("ERROR")) {

@@ -468,23 +468,23 @@ public class PKIManager
 			crl.verify(oPublicKey);
 		}
 		catch (InvalidKeyException e) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, e.getMessage(), e);
+			_systemLogger.log(Level.FINE, MODULE, sMethod, e.getMessage(), e);
 			bValidCRL = false;
 		}
 		catch (CRLException e) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, e.getMessage(), e);
+			_systemLogger.log(Level.FINE, MODULE, sMethod, e.getMessage(), e);
 			bValidCRL = false;
 		}
 		catch (NoSuchAlgorithmException e) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, e.getMessage(), e);
+			_systemLogger.log(Level.FINE, MODULE, sMethod, e.getMessage(), e);
 			bValidCRL = false;
 		}
 		catch (NoSuchProviderException e) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, e.getMessage(), e);
+			_systemLogger.log(Level.FINE, MODULE, sMethod, e.getMessage(), e);
 			bValidCRL = false;
 		}
 		catch (SignatureException e) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, e.getMessage(), e);
+			_systemLogger.log(Level.FINE, MODULE, sMethod, e.getMessage(), e);
 			bValidCRL = false;
 		}
 		return bValidCRL;
@@ -874,9 +874,9 @@ public class PKIManager
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Run "+_bActive);
 			while (_bActive) {
 				try {
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Sleep "+_lMilliSeconds);
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Sleep "+_lMilliSeconds);
 					Thread.sleep(_lMilliSeconds);
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Slept "+_lMilliSeconds);
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Slept "+_lMilliSeconds);
 					Set keys = _htCRLs.keySet();
 					for (Object oCrlKey : keys) {
 						// Enumeration oCrlKeys = _htCRLs.keys();
@@ -981,7 +981,7 @@ public class PKIManager
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "Run "+_bActive);
 			while (_bActive) {
 				try {
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Sleep "+_lMilliSeconds);
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Sleep "+_lMilliSeconds);
 					Thread.sleep(_lMilliSeconds);
 					//_systemLogger.log(Level.INFO, MODULE, sMethod, "Slept "+_lMilliSeconds);
 					Set keys = _htFailedCRLs.keySet();
@@ -1092,15 +1092,15 @@ public class PKIManager
 			Thread oRequestThread;
 			while (_bActive) {
 				try {
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Accept");
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Accept");
 					Socket clientSocket = oSocket.accept();
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Accepted");
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Accepted");
 					oRequestDispatcher = new PKIAdminRequestDispatcher(clientSocket);
 					oRequestThread = new Thread(oRequestDispatcher);
 					oRequestThread.setDaemon(true);
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Start Thread");
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Start Thread");
 					oRequestThread.start();
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Started Thread");
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "Started Thread");
 				}
 				catch (Exception e) {
 					_systemLogger.log(Level.WARNING, MODULE, sMethod, e.getMessage(), e);

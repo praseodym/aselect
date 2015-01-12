@@ -102,7 +102,7 @@ public class Xsaml20_TokenRequestHandler extends Saml20_BaseHandler
 	{
 		String sMethod = "process";
 		String sPathInfo = request.getPathInfo();
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "==== Path=" + sPathInfo + " TokenRequestQuery: "
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "==== Path=" + sPathInfo + " TokenRequestQuery: "
 				+ request.getQueryString());
 		samlrequest = request.getParameter(PARM_NAME_SAMLREQUEST);
 		if (samlrequest == null) {

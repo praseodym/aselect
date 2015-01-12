@@ -90,7 +90,7 @@ public class WirelessServicesHttpSmsSender extends GenericSmsSender
 		if (this.gateway != null && !"".equals(this.gateway.trim())) {
 			_systemLogger.log(Level.WARNING, sModule, sMethod, "No alternate gateway support, you must use alternate URL for this");
 		}
-		_systemLogger.log(Level.INFO, sModule, sMethod, "url=" + providerUrl + " data=" + data.toString());
+		_systemLogger.log(Level.FINEST, sModule, sMethod, "url=" + providerUrl + " data=" + data.toString());
 		return 0;
 	}
 
@@ -110,7 +110,7 @@ public class WirelessServicesHttpSmsSender extends GenericSmsSender
 			if ("".equals(sResult) && !"".equals(line))
 				sResult = line;	// get first non-empty line
 		}
-		_systemLogger.log(Level.INFO, sModule, sMethod, "result:" + sResult);
+		_systemLogger.log(Level.FINEST, sModule, sMethod, "result:" + sResult);
 
 		// Analyze the result
 		int resLength = sResult.length();

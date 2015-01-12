@@ -225,7 +225,7 @@ public class DelegatorAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "No 'request_key_uid' parameter found in configuration, using default");
 				request_key_uid = DEFAULT_REQUEST_KEY_UID;
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "request_key_uid="+request_key_uid); 
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "request_key_uid="+request_key_uid); 
 			
 			try {
 				request_key_password = _configManager.getParam(_oAuthSpConfig, "request_key_password");
@@ -234,7 +234,7 @@ public class DelegatorAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "No 'request_key_password' parameter found in configuration, using default");
 				request_key_password = DEFAULT_REQUEST_KEY_PASSWD;
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "request_key_password="+request_key_password); 
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "request_key_password="+request_key_password); 
 
 			try {
 				response_key_uid = _configManager.getParam(_oAuthSpConfig, "response_key_uid");
@@ -243,7 +243,7 @@ public class DelegatorAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit
 				_systemLogger.log(Level.INFO, MODULE, sMethod, "No 'response_key_uid' parameter found in configuration, using default");
 				response_key_uid = DEFAULT_RESPONSE_KEY_UID;
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "response_key_uid="+response_key_uid); 
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "response_key_uid="+response_key_uid); 
 			// RH, 20130115, en
 
 			// RH, 20131220, sn
@@ -305,7 +305,7 @@ public class DelegatorAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit
 		try {
 			String sQueryString = servletRequest.getQueryString();
 			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, false);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "GET htServiceRequest=" + htServiceRequest);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "GET htServiceRequest=" + htServiceRequest);
 			sLanguage = (String) htServiceRequest.get("language");  // optional language code
 			if (sLanguage == null || sLanguage.trim().length() < 1)
 				sLanguage = null;
@@ -364,7 +364,7 @@ public class DelegatorAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit
 				// optional language code
 				if (sLanguage != null)
 					sbSignature.append(URLDecoder.decode(sLanguage, "UTF-8"));
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Verifying alias data signature:" 
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Verifying alias data signature:" 
 						+ sAsId + " " +  sbSignature.toString() + " " + sSignature );
 
 				if (!_cryptoEngine.verifySignature(sAsId, sbSignature.toString(), sSignature)) {
@@ -403,7 +403,7 @@ public class DelegatorAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit
 				if (sLanguage != null)
 					htServiceRequest.put("language", sLanguage);
 
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM htServiceRequest=" + htServiceRequest);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "FORM htServiceRequest=" + htServiceRequest);
 				showAuthenticateForm(pwOut, ""/*no error*/, htServiceRequest);
 			}
 		}
@@ -454,7 +454,7 @@ public class DelegatorAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit
 		String sLanguage = null;
 		String failureHandling = _sFailureHandling;	// Initially we use default from config, this might change if we suspect parameter tampering
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "POST htServiceRequest=" + servletRequest);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "POST htServiceRequest=" + servletRequest);
 		try {
 			sLanguage = servletRequest.getParameter("language");  // optional language code
 			if (sLanguage == null || sLanguage.trim().length() < 1)
@@ -478,7 +478,7 @@ public class DelegatorAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit
 			String sChallenge = servletRequest.getParameter("delegate_challenge");
 			String sChallengeResponse = servletRequest.getParameter("delegate_challenge_response");
 			String sDelegateSession = servletRequest.getParameter("delegate_session");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "uid=" + sUid + " rid=" + sRid);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "uid=" + sUid + " rid=" + sRid);
 
 			if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sAsId == null)
 					|| (sRetryCounter == null) || (sSignature == null)) {
@@ -602,7 +602,7 @@ public class DelegatorAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit
 					});
 
 					_systemLogger.log(Level.INFO, MODULE, sMethod, "Success");
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "responseparameters:" + responseparameters);
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "responseparameters:" + responseparameters);
 					if (responseparameters.get(response_key_uid) == null) {
 						String[] initialParms = { sUid };
 						responseparameters.put(response_key_uid, Arrays.asList(initialParms));	// if no user returned from delegate, use requested user
@@ -669,7 +669,7 @@ public class DelegatorAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit
 						if (sLanguage != null)
 							htServiceRequest.put("language", sLanguage);
 						
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM htServiceRequest=" + htServiceRequest);
+						_systemLogger.log(Level.FINEST, MODULE, sMethod, "FORM htServiceRequest=" + htServiceRequest);
 						showAuthenticateForm(pwOut, ""/*no error*/, htServiceRequest);
 					}
 					else {
@@ -678,7 +678,7 @@ public class DelegatorAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit
 							MODULE, sUid, servletRequest.getRemoteAddr(), sAsId, "denied", Errors.DELEGATOR_DELEGATE_FAIL
 							});
 						_systemLogger.log(Level.INFO, MODULE, sMethod, "Fail");
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "responseparameters:" + responseparameters);
+						_systemLogger.log(Level.FINEST, MODULE, sMethod, "responseparameters:" + responseparameters);
 						handleResult(servletRequest, servletResponse, pwOut, Integer.toString(iResultCode), sLanguage, failureHandling);
 					}					
 					break;
@@ -968,7 +968,7 @@ public class DelegatorAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit
 					sbTemp.append("&signature=").append(sSignature);
 
 					try {
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT " + sbTemp);
+						_systemLogger.log(Level.FINEST, MODULE, sMethod, "REDIRECT " + sbTemp);
 						servletResponse.sendRedirect(sbTemp.toString());
 					}
 					catch (IOException eIO) // could not send redirect

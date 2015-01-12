@@ -154,7 +154,7 @@ public class LogoutRequestSender
 		// 20090627, Bauke: pass return url, will be used by the Logout Response handler
 		if (sLogoutReturnUrl != null) { // && !"".equals(sLogoutReturnUrl))
 			messageContext.setRelayState(sLogoutReturnUrl);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Set RelayState=" + sLogoutReturnUrl);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Set RelayState=" + sLogoutReturnUrl);
 		}
 
 		BasicX509Credential credential = new BasicX509Credential();
@@ -172,7 +172,7 @@ public class LogoutRequestSender
 			throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR, e);
 		}
 		String msg = XMLHelper.prettyPrintXML(node);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "About to send:\n " + msg);
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "About to send:\n " + msg);
 
 		// Store it in the history
 		SamlHistoryManager history = SamlHistoryManager.getHandle();

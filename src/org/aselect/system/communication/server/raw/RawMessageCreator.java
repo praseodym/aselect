@@ -338,7 +338,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 		String sMethod = "setParam";
 		StringBuffer sbBuffer = null;
 
-		_systemLogger.log(Level.FINE, MODULE, sMethod, "param="+sName +" value="+sValue +" encode="+doUrlEncode);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "param="+sName +" value="+sValue +" encode="+doUrlEncode);
 		boolean bRetValue = false;
 		if (sName != null && sValue != null) // name and value may not be empty
 		{
@@ -370,7 +370,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 				sbBuffer = new StringBuffer("Parameter ");
 				sbBuffer.append(sName);
 				sbBuffer.append(" already exists in output message");
-				_systemLogger.log(Level.FINE, MODULE, sMethod, sbBuffer.toString());
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, sbBuffer.toString());
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 			}
 		}
@@ -423,7 +423,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 				sbBuffer = new StringBuffer("Parameter ");
 				sbBuffer.append(sName);
 				sbBuffer.append("[] already exists in output message");
-				_systemLogger.log(Level.FINE, MODULE, sMethod, sbBuffer.toString());
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, sbBuffer.toString());
 				throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 			}
 		}
@@ -587,7 +587,7 @@ public class RawMessageCreator implements IMessageCreatorInterface
 		try {
 //			OutputStream oStream = _oResponse.getOutputStream();
 			BufferedOutputStream oStream = new BufferedOutputStream(_oResponse.getOutputStream());
-			_systemLogger.log(Level.FINER, MODULE, sMethod, "Sending message:" + sMsg);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Sending message:" + sMsg);
 			oStream.write(sMsg.getBytes());
 			oStream.close();	// close() on BufferedOutputStream calls flush()
 			bRetVal = true;

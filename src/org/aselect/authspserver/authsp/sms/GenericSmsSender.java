@@ -93,7 +93,7 @@ public abstract class GenericSmsSender
 		// Assemble HTTP request
 		try {
 			iReturnCode = assembleSmsMessage(sTemplate, sSecret, from, recipients, data);
-			_systemLogger.log(Level.INFO, sModule, sMethod, "data=" + data.toString()+ " iReturnCode="+iReturnCode);
+			_systemLogger.log(Level.FINEST, sModule, sMethod, "data=" + data.toString()+ " iReturnCode="+iReturnCode);
 			if (iReturnCode != 0)
 				return iReturnCode;
 			
@@ -165,7 +165,7 @@ public abstract class GenericSmsSender
 		// 20130502, Bauke: added '%s' alternative
 		String sReplace = (sTemplate.contains("%s"))? "%s": "0";
 		String sMessage = sTemplate.replaceAll(sReplace, sSecret);
-		_systemLogger.log(Level.INFO, sModule, sMethod, "sMessage="+sMessage);
+		_systemLogger.log(Level.FINEST, sModule, sMethod, "sMessage="+sMessage);
 		return sMessage;
 	}
 

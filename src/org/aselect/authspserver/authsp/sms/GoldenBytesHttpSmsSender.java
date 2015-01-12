@@ -115,7 +115,7 @@ public class GoldenBytesHttpSmsSender extends GenericSmsSender
 		
 		// Look for a status code line
 		while ((line = rd.readLine()) != null) {
-			_systemLogger.log(Level.INFO, sModule, sMethod, "line["+line+"]");
+			_systemLogger.log(Level.FINEST, sModule, sMethod, "line["+line+"]");
 			if (line.length() <= 4)
 				continue;
 			if (Character.isDigit(line.charAt(0)) && Character.isDigit(line.charAt(1)) &&
@@ -125,7 +125,7 @@ public class GoldenBytesHttpSmsSender extends GenericSmsSender
 				break;
 			}
 		}
-		_systemLogger.log(Level.INFO, sModule, sMethod, "code="+sResultCode+"result="+sResult);
+		_systemLogger.log(Level.FINEST, sModule, sMethod, "code="+sResultCode+"result="+sResult);
 
 		if (!Utils.hasValue(sResultCode)) {
 			throw new DataSendException("SMS may not have been sent, no returncode available");
@@ -182,7 +182,7 @@ public class GoldenBytesHttpSmsSender extends GenericSmsSender
 		data.append(URLEncoder.encode("BODY", "UTF-8")).append(EQUAL_SIGN);  // Text of the message
 		data.append(URLEncoder.encode(sMessage, "UTF-8"));
 		
-		_systemLogger.log(Level.INFO, sModule, sMethod, "url=" + providerUrl + " data=" + data.toString());
+		_systemLogger.log(Level.FINEST, sModule, sMethod, "url=" + providerUrl + " data=" + data.toString());
 		return 0;
 	}
 }

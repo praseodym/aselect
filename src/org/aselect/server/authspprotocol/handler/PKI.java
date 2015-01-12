@@ -207,7 +207,7 @@ public class PKI implements IAuthSPProtocolHandler
 			// log start
 			StringBuffer sbInfo = new StringBuffer("Starting : ");
 			sbInfo.append(MODULE);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, sbInfo.toString());
 
 			try {
 				_sAuthsp = _oConfigManager.getParam(oAuthSpConfig, "id");
@@ -470,10 +470,10 @@ public class PKI implements IAuthSPProtocolHandler
 					hmAttrs.put("pki_subject_id", sSubjectId); // Bauke: added
 					hmResponse.put("uid", sSubjectId);  // 20120615, Bauke: set default value for uid
 				}
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "hmAttrs="+hmAttrs);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "hmAttrs="+hmAttrs);
 				HashMap hmWork = new HashMap();
 				HashMap hmNewAttrs = AttributeSetter.attributeProcessing(hmWork/*is empty*/, hmAttrs, attributeSetters, _systemLogger);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "hmNewAttrs="+hmNewAttrs);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "hmNewAttrs="+hmNewAttrs);
 				hmResponse.putAll(hmNewAttrs);
 				return hmResponse;
 			}

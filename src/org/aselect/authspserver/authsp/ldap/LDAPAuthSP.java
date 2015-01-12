@@ -254,8 +254,8 @@ public class LDAPAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit good
 
 			// check if the request is an API call
 			String sRequestName = (String) htServiceRequest.get("request");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "LDAP GET { query-->" + sQueryString);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "req="+sRequestName+" pwd="+(String)htServiceRequest.get("password"));
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "LDAP GET { query-->" + sQueryString);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "req="+sRequestName+" pwd="+(String)htServiceRequest.get("password"));
 
 			if (sRequestName != null) {  // API request, no URL decoding done yet
 				handleApiRequest(htServiceRequest, servletRequest, pwOut, servletResponse);
@@ -356,7 +356,7 @@ public class LDAPAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit good
 
 
 		String sRequest = servletRequest.getParameter("request");
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "LDAP POST { req="+sRequest+" query-->" + servletRequest.getQueryString()+" len="+servletRequest.getContentLength());
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "LDAP POST { req="+sRequest+" query-->" + servletRequest.getQueryString()+" len="+servletRequest.getContentLength());
 		try {
 			// 20141208, Bauke: utf-8 added
 			servletResponse.setContentType("text/html; charset=utf-8");	// RH, 20111021, n	// contenttype must be set before getwriter
@@ -378,7 +378,7 @@ public class LDAPAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit good
 			String sPassword = servletRequest.getParameter("password");
 			String sSignature = servletRequest.getParameter("signature");
 			String sRetryCounter = servletRequest.getParameter("retry_counter");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "req="+sRequest+" pwd=["+sPassword+"]");
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "req="+sRequest+" pwd=["+sPassword+"]");
 			
 			if ("authenticate".equals(sRequest)) {
 				HashMap htServiceRequest = new HashMap();
@@ -390,20 +390,20 @@ public class LDAPAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit good
 				if (sRid != null) htServiceRequest.put("rid", sRid);
 				if (sPassword != null) htServiceRequest.put("password", sPassword);
 				if (sSignature != null) htServiceRequest.put("signature", sSignature);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "htServiceRequest="+htServiceRequest);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "htServiceRequest="+htServiceRequest);
 				handleApiRequest(htServiceRequest, servletRequest, pwOut, servletResponse);
 				return;
 			}
 			setDisableCachingHttpHeaders(servletRequest, servletResponse);
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "sRequest="+sRequest+" sRid="+sRid+" sUid="+sUid+" sPassword="+sPassword);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "sRequest="+sRequest+" sRid="+sRid+" sUid="+sUid+" sPassword="+sPassword);
 			if (sRid == null || sAsUrl == null || sUid == null || sPassword == null || sAsId == null ||
 								sRetryCounter == null || sSignature == null) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: one or more mandatory parameters missing, handling error locally.");
 				failureHandling = "local";	// RH, 20111021, n
 				throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "LDAP POST " + servletRequest + " --> " + sMethod + ", "
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "LDAP POST " + servletRequest + " --> " + sMethod + ", "
 					+ sRid + ": " + sMyUrl);
 
 			if (sPassword.trim().length() < 1) // invalid password
@@ -580,7 +580,7 @@ public class LDAPAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit good
 					sbTemp.append("&result_code=").append(sResultCode);
 					sbTemp.append("&a-select-server=").append(sAsId);
 					sbTemp.append("&signature=").append(sSignature);
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIR " + sbTemp);
+					_systemLogger.log(Level.FINEST, MODULE, sMethod, "REDIR " + sbTemp);
 					try {
 						servletResponse.sendRedirect(sbTemp.toString());
 					}
@@ -641,7 +641,7 @@ public class LDAPAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit good
 		sbResponse.append(sRid);
 		int iAllowedRetries = 0;
 		try {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "REQ " + htServiceRequest.get("request"));
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "REQ " + htServiceRequest.get("request"));
 			if (!htServiceRequest.get("request").equals("authenticate") || !Utils.hasValue(sRid)) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid API request received.");
 				throw new ASelectException(Errors.ERROR_LDAP_INVALID_REQUEST);

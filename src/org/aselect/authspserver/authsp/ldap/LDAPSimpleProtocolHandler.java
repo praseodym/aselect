@@ -103,7 +103,7 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 			htEnvironment.put(Context.SECURITY_CREDENTIALS, sPassword);
 			additionalSettings(htEnvironment);
 
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "USR_BIND " + _sLDAPUrl + "_" + _sDriver + "_" + "simple1"
+			_systemLogger.log(Level.FINEST, _sModule, sMethod, "USR_BIND " + _sLDAPUrl + "_" + _sDriver + "_" + "simple1"
 					+ "_" + sbTemp.toString());
 			try {
 				oDirContext = new InitialDirContext(htEnvironment);
@@ -118,7 +118,7 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 				 */
 				StringBuffer sbFine = new StringBuffer("Could not authenticate user (invalid password): ");
 				sbFine.append(_sUid);
-				_systemLogger.log(Level.FINE, _sModule, sMethod, sbFine.toString());
+				_systemLogger.log(Level.FINEST, _sModule, sMethod, sbFine.toString());
 				throw new ASelectException(Errors.ERROR_LDAP_INVALID_PASSWORD);
 			}
 			catch (CommunicationException eC) {
@@ -169,7 +169,7 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 			htEnvironment.put(Context.SECURITY_CREDENTIALS, _sPrincipalPwd);
 			additionalSettings(htEnvironment);
 	
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "PRINCP_BIND " + _sLDAPUrl + "_" + _sDriver + "_" + "simple2"
+			_systemLogger.log(Level.FINEST, _sModule, sMethod, "PRINCP_BIND " + _sLDAPUrl + "_" + _sDriver + "_" + "simple2"
 					+ "_" + _sPrincipalDn + "_" + _sPrincipalPwd);
 			try {
 				oPrincipalContext = new InitialDirContext(htEnvironment);
@@ -204,7 +204,7 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 			SearchControls oScope = new SearchControls();
 			oScope.setSearchScope(SearchControls.SUBTREE_SCOPE);
 	
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "SRCH " + _sBaseDn + "_" + sQuery + "_sub");
+			_systemLogger.log(Level.FINEST, _sModule, sMethod, "SRCH " + _sBaseDn + "_" + sQuery + "_sub");
 			try {
 				enumSearchResults = oPrincipalContext.search(_sBaseDn, sQuery, oScope);
 			}
@@ -248,7 +248,7 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 			htEnvironment.put(Context.SECURITY_CREDENTIALS, sPassword);
 			additionalSettings(htEnvironment);
 	
-			_systemLogger.log(Level.INFO, _sModule, sMethod, "USR_BIND " + _sLDAPUrl + "_" + _sDriver +
+			_systemLogger.log(Level.FINEST, _sModule, sMethod, "USR_BIND " + _sLDAPUrl + "_" + _sDriver +
 					"_" + "simple3"	+ "_" + sbTemp.toString());
 			try {
 				oDirContext = new InitialDirContext(htEnvironment);
@@ -324,7 +324,7 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 		int rc;
 		
 		Attributes attrs = oDirContext.getAttributes(sUserDN);
-		_systemLogger.log(Level.INFO, _sModule, sMethod, "attr_valid_until="+_sAttrValidUntil+" attr_allowed_logins="+_sAttrAllowedLogins+" Attributes="+attrs);
+		_systemLogger.log(Level.FINEST, _sModule, sMethod, "attr_valid_until="+_sAttrValidUntil+" attr_allowed_logins="+_sAttrAllowedLogins+" Attributes="+attrs);
 		
 		// Check validity time first
 		if (Utils.hasValue(_sAttrValidUntil)) {
@@ -332,7 +332,7 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 			if (Utils.hasValue(sValidUntil)) {  // validity time was set
 				long now = new Date().getTime();
 				long validUntil = Long.valueOf(sValidUntil);
-				_systemLogger.log(Level.INFO, _sModule, sMethod, "now="+now+" validUntil="+validUntil+" Seconds left: "+String.valueOf((validUntil-now)/1000));
+				_systemLogger.log(Level.FINEST, _sModule, sMethod, "now="+now+" validUntil="+validUntil+" Seconds left: "+String.valueOf((validUntil-now)/1000));
 				if (now > validUntil) {
 					return -1;  // not OK
 				}
@@ -344,7 +344,7 @@ public class LDAPSimpleProtocolHandler extends AbstractLDAPProtocolHandler
 			String sLoginsLeft = getAttribute(attrs, _sAttrAllowedLogins);
 			if (Utils.hasValue(sLoginsLeft)) {
 				int loginsLeft = Integer.valueOf(sLoginsLeft);
-				_systemLogger.log(Level.INFO, _sModule, sMethod, "loginsLeft="+loginsLeft);
+				_systemLogger.log(Level.FINEST, _sModule, sMethod, "loginsLeft="+loginsLeft);
 				loginsLeft--;
 				if (loginsLeft <= 0) {
 					// delete account

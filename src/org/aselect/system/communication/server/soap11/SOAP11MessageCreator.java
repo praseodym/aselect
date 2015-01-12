@@ -278,7 +278,7 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 			sbBuffer.append(Errors.ERROR_ASELECT_USE_ERROR);
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString());
 			// log additional info
-			_systemLogger.log(Level.FINE, MODULE, sMethod, "Received SOAP inputmessage:\n" + _oRequest.getMessage());
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Received SOAP inputmessage:\n" + _oRequest.getMessage());
 
 			// set HTTP response code
 			oResponse.setProperty("Status", "" + SOAPConstants.ERR_RESPONSECODE);
@@ -364,7 +364,7 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 			sb.append(sName);
 			sb.append(", cause: ");
 			sb.append(Errors.ERROR_ASELECT_USE_ERROR);
-			_systemLogger.log(Level.FINE, MODULE, sMethod, sb.toString());
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, sb.toString());
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 		}
 		return sValue.trim();
@@ -403,7 +403,7 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 			sb.append(sName);
 			sb.append(", cause: ");
 			sb.append(Errors.ERROR_ASELECT_USE_ERROR);
-			_systemLogger.log(Level.FINE, MODULE, sMethod, sb.toString());
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, sb.toString());
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR);
 		}
 		return sa;
@@ -456,7 +456,7 @@ public class SOAP11MessageCreator implements IMessageCreatorInterface
 			_elOutputRPCBody.appendChild(xParamName);
 		}
 		else { // update paramater with new value
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Updating parameter: " + sName);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "Updating parameter: " + sName);
 			Element xParamName = (Element) xParams.item(0);
 			Node xOldValue = xParamName.getFirstChild();
 			xParamName.replaceChild(xParamValue, xOldValue);

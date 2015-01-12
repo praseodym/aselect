@@ -95,7 +95,7 @@ public class MollieHttpSmsSender extends GenericSmsSender
 			data.append(EQUAL_SIGN).append(URLEncoder.encode(this.gateway, "UTF-8"));
 		}
 		// RH, 20080729, en
-		_systemLogger.log(Level.INFO, sModule, sMethod, "url=" + providerUrl + " data=" + data.toString());
+		_systemLogger.log(Level.FINEST, sModule, sMethod, "url=" + providerUrl + " data=" + data.toString());
 		return 0;
 	}
 
@@ -145,7 +145,7 @@ public class MollieHttpSmsSender extends GenericSmsSender
 				break;
 			}
 		}
-		_systemLogger.log(Level.INFO, sModule, sMethod, "resultcode=" + sResultCode);
+		_systemLogger.log(Level.FINEST, sModule, sMethod, "resultcode=" + sResultCode);
 		if (sResultCode.equals("10"))
 			return 0;  // OK
 		else if (sResultCode.equals("25"))

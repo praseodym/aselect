@@ -258,7 +258,7 @@ public class IDPFHandler extends ProtoRequestHandler
 	    				"&app_url=" + URLEncoder.encode(ridAppURL, "UTF-8") +
 //			    				"&check-signature=" + URLEncoder.encode(ridCheckSignature, "UTF-8") +
 	    				"&app_id=" + URLEncoder.encode(appID, "UTF-8");
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Requesting rid through: " + ridURL);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "Requesting rid through: " + ridURL);
 
     			URL url = new URL(ridURL); 
     			
@@ -268,7 +268,7 @@ public class IDPFHandler extends ProtoRequestHandler
     			while ((inputLine = in.readLine()) != null) {
     				ridResponse += inputLine;
     			}
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Requesting rid response: " + ridResponse);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "Requesting rid response: " + ridResponse);
     		}
     		catch (Exception e) { 	
 				_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not retrieve rid from aselectserver: " + ridAselectServer);
@@ -285,7 +285,7 @@ public class IDPFHandler extends ProtoRequestHandler
     		}
 
     		String extractedRid = ridResponse.replaceFirst(".*rid=([^&]*).*$", "$1");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "rid retrieved: " + extractedRid);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "rid retrieved: " + extractedRid);
 
 			_htSessionContext = _oSessionManager.getSessionContext(extractedRid);
 			if (_htSessionContext == null) {
@@ -295,7 +295,7 @@ public class IDPFHandler extends ProtoRequestHandler
 			_htSessionContext = setupSessionContext(_htSessionContext);
 
 			String javaxSessionid = request.getSession().getId();
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "idpfsessionid: " +javaxSessionid);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "idpfsessionid: " +javaxSessionid);
 
 			_htSessionContext.put("idpfsessionid", javaxSessionid);
 			
@@ -310,7 +310,7 @@ public class IDPFHandler extends ProtoRequestHandler
 						"request=" + URLEncoder.encode(loginrequest, "UTF-8") +
 						"&a-select-server=" + URLEncoder.encode(ridAselectServer, "UTF-8") +
 						"&rid=" + extractedRid;
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Requesting login through redirect with redirectURL: " + redirectURL);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "Requesting login through redirect with redirectURL: " + redirectURL);
 				
 	    		response.sendRedirect(redirectURL);
 			}
@@ -365,7 +365,7 @@ public class IDPFHandler extends ProtoRequestHandler
 
 //	        userSelectedClaimedId =  decodedAttributes.replaceFirst(".*uid=([^&]*).*$", "$1");
 	        userSelectedClaimedId =  decodedAttributes.replaceFirst(".*" + Pattern.quote(elected_uid_attributename) + "=([^&]*).*$", "$1");	// configurable passed_uid
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Retrieved: " +elected_uid_attributename + " (elected_uid_attributename) from aselect attributes: " + userSelectedClaimedId);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Retrieved: " +elected_uid_attributename + " (elected_uid_attributename) from aselect attributes: " + userSelectedClaimedId);
 	        
 	        Boolean authenticatedAndApproved = false;
 	        try {
@@ -384,7 +384,7 @@ public class IDPFHandler extends ProtoRequestHandler
 	    			String sInputs = generatePostForm(userSelectedClaimedId);
 
 	    			// Keep logging short:
-	    			_systemLogger.log(Level.INFO, MODULE, sMethod, "Template="+getPostTemplate()+" sInputs="+sInputs+" ...");
+	    			_systemLogger.log(Level.FINER, MODULE, sMethod, "Template="+getPostTemplate()+" sInputs="+sInputs+" ...");
 
 	    			handlePostForm(sSelectForm, getEndpointurl(), sInputs, response);
 	    		}
@@ -483,7 +483,7 @@ public class IDPFHandler extends ProtoRequestHandler
 			while ((inputLine = in.readLine()) != null) {
 				finalResult += inputLine;
 			}
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Retrieved attributes in: " + finalResult);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Retrieved attributes in: " + finalResult);
 
 		} catch (Exception e) { 	
 			_systemLogger.log(Level.SEVERE, MODULE, sMethod, "Could not retrieve attributes from aselectserver: " + finalReqAselectServer);

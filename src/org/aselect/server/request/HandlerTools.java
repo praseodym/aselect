@@ -136,7 +136,7 @@ public class HandlerTools
 		if (addedSecurity != null && addedSecurity.contains("cookies") && httpOnly == 1) {
 				sValue += "; Secure; HttpOnly";
 		}
-		logger.log(Level.INFO, MODULE, sMethod, "Add Cookie, Header: " + sValue);
+		logger.log(Level.FINER, MODULE, sMethod, "Add Cookie, Header: " + sValue);
 		
 		//response.setHeader("Set-Cookie", sValue);
 		// 20121029, Bauke: It must be possible to have multiple "Set-Cookie" headers! Therefore use addHeader().
@@ -172,7 +172,7 @@ public class HandlerTools
 			sCookiePath = _configManager.getCookiePath();
 		cookie.setPath(sCookiePath); // was: "/aselectserver/server");
 		cookie.setMaxAge(0);
-		logger.log(Level.INFO, MODULE, sMethod, "Delete Cookie="+sCookieName+" Domain="+sCookieDomain+" Path="+sCookiePath);
+		logger.log(Level.FINE, MODULE, sMethod, "Delete Cookie="+sCookieName+" Domain="+sCookieDomain+" Path="+sCookiePath);
 		response.addCookie(cookie);
 	}
 
@@ -328,7 +328,7 @@ public class HandlerTools
 		}
 
 		for (int i = 0; i < aCookies.length; i++) {
-			logger.log(Level.INFO, MODULE, sMethod, "Cookie " + aCookies[i].getName() + "=" + aCookies[i].getValue()
+			logger.log(Level.FINER, MODULE, sMethod, "Cookie " + aCookies[i].getName() + "=" + aCookies[i].getValue()
 					+ ", Path=" + aCookies[i].getPath() + ", Domain=" + aCookies[i].getDomain() + ", Age="
 					+ aCookies[i].getMaxAge());
 		}
@@ -419,7 +419,7 @@ public class HandlerTools
 				continue;
 			}
 			String sValue = (String)parms.get(parmName);
-			systemLogger.log(Level.FINER, MODULE, sMethod, "parm:" + parmName + " has value:" + sValue);
+			systemLogger.log(Level.FINEST, MODULE, sMethod, "parm:" + parmName + " has value:" + sValue);
 			Attribute attribute = attributeBuilder.buildObject();
 			attribute.setName(parmName);
 			XSString attributeValue = (XSString) stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
@@ -429,13 +429,13 @@ public class HandlerTools
 
 			attributeStatement.getAttributes().add(attribute);
 		}
-		systemLogger.log(Level.INFO, MODULE, sMethod, "Finalizing the assertion building, sign="+sign);
+		systemLogger.log(Level.FINER, MODULE, sMethod, "Finalizing the assertion building, sign="+sign);
 		assertion.getAttributeStatements().add(attributeStatement);
 		assertion = marshallAssertion(assertion, false);
 		if (sign) {
-			systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the final Assertion >======");
+			systemLogger.log(Level.FINER, MODULE, sMethod, "Sign the final Assertion >======");
 			assertion = (Assertion)SamlTools.signSamlObject(assertion);
-			systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the Assertion ======<" + assertion);
+			systemLogger.log(Level.FINER, MODULE, sMethod, "Signed the Assertion ======<" + assertion);
 		}
 
 		// // Only for testing
@@ -501,7 +501,7 @@ public class HandlerTools
 
 		
 		
-		systemLogger.log(Level.INFO, MODULE, sMethod, nameID.getValue());
+		systemLogger.log(Level.FINER, MODULE, sMethod, nameID.getValue());
 		SAMLObjectBuilder<Subject> subjectBuilder = (SAMLObjectBuilder<Subject>) _oBuilderFactory
 				.getBuilder(Subject.DEFAULT_ELEMENT_NAME);
 		Subject subject = subjectBuilder.buildObject();
@@ -577,7 +577,7 @@ public class HandlerTools
 					continue;
 				}
 				String sValue = (String)parms.get(parmName);
-				systemLogger.log(Level.FINER, MODULE, sMethod, "parm:" + parmName + " has value:" + sValue);
+				systemLogger.log(Level.FINEST, MODULE, sMethod, "parm:" + parmName + " has value:" + sValue);
 				Attribute attribute = attributeBuilder.buildObject();
 				attribute.setName(parmName);
 				XSString attributeValue = (XSString) stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME,
@@ -590,13 +590,13 @@ public class HandlerTools
 			assertion.getAttributeStatements().add(attributeStatement);
 		}
 
-		systemLogger.log(Level.INFO, MODULE, sMethod, "Finalizing the assertion building, sign="+sign);
+		systemLogger.log(Level.FINER, MODULE, sMethod, "Finalizing the assertion building, sign="+sign);
 		assertion = marshallAssertion(assertion, false);
 		if (sign) {
-			systemLogger.log(Level.INFO, MODULE, sMethod, "Sign the final Assertion >======");
+			systemLogger.log(Level.FINER, MODULE, sMethod, "Sign the final Assertion >======");
 //			assertion = (Assertion)SamlTools.signSamlObject(assertion);
 			assertion = (Assertion)SamlTools.signSamlObject(assertion, null, true, true); // sha1 default algorithm
-			systemLogger.log(Level.INFO, MODULE, sMethod, "Signed the Assertion ======<" + assertion);
+			systemLogger.log(Level.FINER, MODULE, sMethod, "Signed the Assertion ======<" + assertion);
 		}
 
 		return assertion;
@@ -696,7 +696,7 @@ public class HandlerTools
 			Node node = marshaller.marshall(assertion);
 			if (doLog) {
 				String msg = XMLHelper.prettyPrintXML(node);
-				systemLogger.log(Level.INFO, MODULE, sMethod, msg);
+				systemLogger.log(Level.FINEST, MODULE, sMethod, msg);
 			}
 		}
 		catch (MarshallingException e) {

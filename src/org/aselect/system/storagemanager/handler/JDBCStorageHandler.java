@@ -354,7 +354,7 @@ public class JDBCStorageHandler implements IStorageHandler
 				// oRet = decode(oResultSet.getBytes(_sContextValue.replace(identifierQuote, " ").trim())); // o
 				oRet = decode(oResultSet.getBytes(_sContextValue.substring(identifierQuote.length(),
 						_sContextValue.length()	- identifierQuote.length())));
-				_systemLogger.log(Level.FINER, MODULE, sMethod, "result=" + oRet);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "result=" + oRet);
 			}
 			else {
 				_systemLogger.log(Level.FINE, MODULE, sMethod, "The supplied key is not mapped to any value.");
@@ -629,7 +629,7 @@ public class JDBCStorageHandler implements IStorageHandler
 		// RM_69_02
 		switch (eMode) {
 		case INSERTFIRST: // do insert first
-			_systemLogger.log(Level.INFO, MODULE, sMethod,
+			_systemLogger.log(Level.FINER, MODULE, sMethod,
 					"Doing put with eMode INSERTFIRST" );
 			try {
 				create(oKey, oValue, lTimestamp);
@@ -650,7 +650,7 @@ public class JDBCStorageHandler implements IStorageHandler
 			}
 			break;
 		case UPDATEFIRST: // do updatefirst
-			_systemLogger.log(Level.INFO, MODULE, sMethod,
+			_systemLogger.log(Level.FINER, MODULE, sMethod,
 			"Doing put with eMode UPDATEFIRST" );
 			try {
 				update(oKey, oValue, lTimestamp);
@@ -670,7 +670,7 @@ public class JDBCStorageHandler implements IStorageHandler
 			}
 			break;
 		case INSERTONLY: // do only insert, throw exception on duplicate key
-			_systemLogger.log(Level.INFO, MODULE, sMethod,
+			_systemLogger.log(Level.FINER, MODULE, sMethod,
 			"Doing put with eMode INSERTONLY" );
 			try {
 				create(oKey, oValue, lTimestamp);
@@ -689,7 +689,7 @@ public class JDBCStorageHandler implements IStorageHandler
 			}
 			break;
 		default:	// do the old stuff for backward compatibility
-			_systemLogger.log(Level.INFO, MODULE, sMethod,
+			_systemLogger.log(Level.FINER, MODULE, sMethod,
 			"Doing put with eMode default" );
 			put(oKey, oValue, lTimestamp);
 			break;
@@ -774,7 +774,7 @@ public class JDBCStorageHandler implements IStorageHandler
 				sbBuffer.append(") ");
 				// RH, 20080714, en
 				sbBuffer.append("VALUES (?,?,?,?)");
-				_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oValue);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oValue);
 
 //				try { // added 1.5.4
 //					oStatement.close();
@@ -873,7 +873,7 @@ public class JDBCStorageHandler implements IStorageHandler
 						" = ? ");
 				// sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?"); // old
 				sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?"); // new
-				_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oValue);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oValue);
 
 //				try { // added 1.5.4
 //					oStatement.close();
@@ -984,7 +984,7 @@ public class JDBCStorageHandler implements IStorageHandler
 			sbBuffer.append("FROM ").append(_sTableName).append(" ");
 			// sbBuffer.append("WHERE ").append(_sContextKeyHash).append(" = ?"); // old
 			sbBuffer.append("WHERE ").append(_sContextKey).append(" = ?"); // new
-			_systemLogger.log(Level.FINER, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oValue);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "sql=" + sbBuffer + " -> " + oValue);
 
 			// Connection oConnection = getConnection(); // RH, 20090604, o
 			oConnection = getConnection(); // RH, 20090604, n

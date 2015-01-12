@@ -334,7 +334,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			else {
 				// The SAMLRequest must be signed
 				if (bIsPostRequest) {  // POST, check request
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "SAML POST EntityId=" + sEntityId+" VerifySignature=" + is_bVerifySignature());
+					_systemLogger.log(Level.FINER, MODULE, sMethod, "SAML POST EntityId=" + sEntityId+" VerifySignature=" + is_bVerifySignature());
 					if (is_bVerifySignature()) { // Check signature.
 						getKeyAndCheckSignature(sEntityId, samlMessage);  // throws an exception on error
 					}
@@ -557,12 +557,12 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 					// 20091011, Bauke: needs to be scheduled only once
 					if (responseIssuer == null) { // It's an HTTP request from the initiating SP
 						// Schedule the task at the configured time
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "TIMER logout (as backup)");
+						_systemLogger.log(Level.FINER, MODULE, sMethod, "TIMER logout (as backup)");
 						SLOTimer timer = SLOTimer.getHandle(_systemLogger);
 						// Store the session with the remaining SP's in it
 						SLOTimerTask task = new SLOTimerTask(sNameID, originalLogoutRequest.getID(), sso, _sASelectServerUrl);
 						long now = new Date().getTime();
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "Schedule timer +"+redirectLogoutTimeout*1000);
+						_systemLogger.log(Level.FINER, MODULE, sMethod, "Schedule timer +"+redirectLogoutTimeout*1000);
 						timer.schedule(task, new Date(now + redirectLogoutTimeout * 1000));
 					}
 
@@ -593,11 +593,11 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 				}
 				else {
 					// This will logout all SP's
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "TIMER logout for SP=" + serviceProvider);
+					_systemLogger.log(Level.FINER, MODULE, sMethod, "TIMER logout for SP=" + serviceProvider);
 					SLOTimer timer = SLOTimer.getHandle(_systemLogger);
 					SLOTimerTask task = new SLOTimerTask(sNameID, originalLogoutRequest.getID(), sso, _sASelectServerUrl);
 					// schedule it for now. No need to wait
-					_systemLogger.log(Level.INFO, MODULE, sMethod, "Schedule timer now");
+					_systemLogger.log(Level.FINER, MODULE, sMethod, "Schedule timer now");
 					timer.schedule(task, new Date());
 					// Continue with the rest
 				}
@@ -606,7 +606,7 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			// No SP's left (except the initiating SP)
 			String sSendIdPLogout = (String) htTGTContext.get("SendIdPLogout");
 			String sAuthspType = (String) htTGTContext.get("authsp_type");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "No SP's left. SendIdPLogout="+sSendIdPLogout + " authsp_type="+sAuthspType);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "No SP's left. SendIdPLogout="+sSendIdPLogout + " authsp_type="+sAuthspType);
 			// For Saml20, will also send word to the IdP
 			if (sAuthspType != null && sAuthspType.equals("saml20") && sSendIdPLogout == null) {
 				htTGTContext.put("SendIdPLogout", "true");

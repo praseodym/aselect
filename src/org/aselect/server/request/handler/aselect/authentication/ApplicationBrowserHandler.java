@@ -3556,18 +3556,18 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 	
 		// No "usi" available in this entry
 		hmRequest.put("usi", Tools.generateUniqueSensorId());  // 20120111, Bauke added
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmRequest=" + hmRequest);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "hmRequest=" + hmRequest);
 		
 		// Exception for bad shared_secret:
 		HashMap<String, Object> hmResponse = handleAuthenticateAndCreateSession(hmRequest, null);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmResponse=" + hmResponse);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "hmResponse=" + hmResponse);
 
 		String sResultCode = (String) hmResponse.get("result_code");
 		if (!sResultCode.equals(Errors.ERROR_ASELECT_SUCCESS)) {  // never happens (either success or exception is raised
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "} AUTHN unsuccessful, result_code=" + sResultCode);
 			throw new ASelectException(Errors.ERROR_ASELECT_IO);
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "} AUTHN htResponse=" + hmResponse);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "} AUTHN htResponse=" + hmResponse);
 
 		// Retrieve the session just created
 		String sRid = (String)hmResponse.get("rid");
@@ -3593,10 +3593,10 @@ public class ApplicationBrowserHandler extends AbstractBrowserRequestHandler
 		
 		// Only perform user/password authentication (will update the session):
 		IAuthSPDirectLoginProtocolHandler oProtocolHandler = _authspHandlerManager.getAuthSPDirectLoginProtocolHandler(sAuthSp);
-		_systemLogger.log(Level.FINE, MODULE, sMethod, "HttpSR="+servletResponse);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "HttpSR="+servletResponse);
 		boolean bSuccess = oProtocolHandler.handleDirectLoginRequest(hmDirectRequest, null/*serlvet request*/, null/*servlet response*/,
 					_htSessionContext, null/*additional*/, null /*output writer*/, _sMyServerId, "en", "nl");
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Success="+bSuccess+" hm="+hmDirectRequest);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "Success="+bSuccess+" hm="+hmDirectRequest);
 		
 		// Pass result in the header, but only if successful
 		if (bSuccess) {

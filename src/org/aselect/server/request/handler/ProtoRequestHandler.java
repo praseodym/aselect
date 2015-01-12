@@ -205,13 +205,13 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "sRid=" + sUserId + " != uid=" + htTGTContext.get("rid"));
 			return null;
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Attributes for sUserId=" + sUserId + " rid=" + sRid);
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "Attributes for sUserId=" + sUserId + " rid=" + sRid);
 
 		// Gather attributes, but also use the attributes from the ticket context
 		HashMap htAllAttributes = getAttributesFromTgtAndGatherer(htTGTContext);
 
 		// And assemble the credentials
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Credentials for sUserId=" + sUserId + " rid=" + sRid);
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "Credentials for sUserId=" + sUserId + " rid=" + sRid);
 		HashMap htCredentials = new HashMap();
 		htCredentials.put("rid", sRid);
 		htCredentials.put("uid", sUserId);
@@ -271,13 +271,13 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		
 		String sTgtAttributes = (String) htTGTContext.get("attributes");
 		HashMap htTgtAttributes = org.aselect.server.utils.Utils.deserializeAttributes(sTgtAttributes);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Attributes from TGT-\"attributes\"=" + htTgtAttributes);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "Attributes from TGT-\"attributes\"=" + htTgtAttributes);
 
 		AttributeGatherer oAttributeGatherer = AttributeGatherer.getHandle();
 		HashMap htAttribs = oAttributeGatherer.gatherAttributes(htTGTContext);
 		if (htAttribs == null)
 			htAttribs = new HashMap();
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Attributes after Gathering=" + htAttribs);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "Attributes after Gathering=" + htAttribs);
 		// Can be empty, can contain multi-valued attributes in Vectors
 
 		// Copy the gathered attributes over the ticket context attributes
@@ -307,7 +307,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		TGTManager _tgtManager = TGTManager.getHandle();
 
 		int len = sTgt.length();
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "getTGT(" + sTgt.substring(0, (len < 30) ? len : 30) + "...)");
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "getTGT(" + sTgt.substring(0, (len < 30) ? len : 30) + "...)");
 		HashMap htTGTContext = _tgtManager.getTGT(sTgt);
 		if (htTGTContext == null)
 			return null;
@@ -348,7 +348,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		if (sCredentialsCookie == null)
 			return null;
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "sCredentialsCookie=" + sCredentialsCookie);
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "sCredentialsCookie=" + sCredentialsCookie);
 		/*
 		 * Bauke, 20081209: Cookie only contains tgt-value HashMap htCredentialsParams =
 		 * Utils.convertCGIMessage(sCredentialsCookie); _systemLogger.log(Level.INFO, MODULE, sMethod,
@@ -595,7 +595,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			sTemplate = Utils.replaceString(sTemplate, "[rid]", sRid);
 			sTemplate = Utils.replaceString(sTemplate, "[a-select-server]", sAselectServer);
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Form " + sTemplate);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Form " + sTemplate);
 			pwOut.print(sTemplate);
 		}
 		catch (Exception e) {
@@ -703,9 +703,9 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		// if checkSignature is true, caller must supply a signature as well
 
 		// 20090606: Bauke: changed external call to direct method call
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmRequest=" + hmRequest);
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "hmRequest=" + hmRequest);
 		HashMap<String, Object> hmResponse = handleAuthenticateAndCreateSession(hmRequest, null);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmResponse=" + hmResponse);
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "hmResponse=" + hmResponse);
 
 		/*
 		 * try { hmResponse = iClientComm.sendMessage(hmRequest, sASelectURL); } catch (Exception e) {
@@ -826,7 +826,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		}
 		_systemLogger.log(Level.INFO, MODULE, sMethod, "Find session:" + sPrefix + sRidCookie);
 		HashMap htSessionData = _oSessionManager.getSessionContext(sPrefix + sRidCookie);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "htSessionData=" + htSessionData);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "htSessionData=" + htSessionData);
 
 		if (htSessionData != null)
 			htSessionData.put("session_rid", sRidCookie); // in case we need it
@@ -918,7 +918,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			// We want at least the "uid" attribute, so other A-Select servers can work with the result
 			htAttributes.put("uid", sUid);
 		}
-		_systemLogger.log(Level.INFO, MODULE, "extractUidAndAttributes", "htAttributes=" + htAttributes);
+		_systemLogger.log(Level.FINEST, MODULE, "extractUidAndAttributes", "htAttributes=" + htAttributes);
 		return htAttributes;
 	}
 
@@ -932,10 +932,10 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 	protected String extractNameIdentifier(String sAssertion)
 	{
 		String sResult = Tools.extractFromXml(sAssertion, "saml:NameIdentifier", true);
-		_systemLogger.log(Level.INFO, MODULE, "extractNameIdentifier", "sResult=" + sResult);
+		_systemLogger.log(Level.FINER, MODULE, "extractNameIdentifier", "sResult=" + sResult);
 		if (sResult == null) {
 			sResult = Tools.extractFromXml(sAssertion, "NameIdentifier", true);
-			_systemLogger.log(Level.INFO, MODULE, "extractNameIdentifier", "sResult=" + sResult);
+			_systemLogger.log(Level.FINER, MODULE, "extractNameIdentifier", "sResult=" + sResult);
 		}
 		return sResult;
 	}
@@ -992,7 +992,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 
 			htResult.put(sAttrName, sAttrValue);
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "htResult=" + htResult);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "htResult=" + htResult);
 		return htResult;
 	}
 
@@ -1038,7 +1038,7 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		if (sSecLevel == null) sSecLevel = (String) htAttributes.get("betrouwbaarheidsniveau");
 		if (sSecLevel == null) sSecLevel = sAuthspLevel;
 		if (sSecLevel == null) sSecLevel = "5";
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "UserId=" + sUserId + ", secLevel=" + sSecLevel);
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "UserId=" + sUserId + ", secLevel=" + sSecLevel);
 
 		htAttributes.put("uid", sUserId);
 		htAttributes.put("betrouwbaarheidsniveau", sSecLevel);
@@ -1156,13 +1156,13 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		}
 		SAMLAssertion oSAMLAssertion = _saml11Builder.createMySAMLAssertion(sProviderId, sUid, sNameIdFormat, sIP,
 				sHost, sSubjConf, sAudience, htAttributes);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "oSAMLAssertion=" + oSAMLAssertion);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "oSAMLAssertion=" + oSAMLAssertion);
 
 		// Sign the assertion
 		Vector vCertificatesToInclude = new Vector();
 		vCertificatesToInclude.add(_configManager.getDefaultCertificate());
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Sign");
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "Sign");
 //		oSAMLAssertion.sign(XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA1, _configManager.getDefaultPrivateKey(),
 //				vCertificatesToInclude);	//	RH, 20130924, o
 		oSAMLAssertion.sign(getXMLSignatureAlg(sSignAlg), _configManager.getDefaultPrivateKey(),
@@ -1273,24 +1273,24 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 			Element domElement = this.parseSamlMessage(sAssertion);
 
 			// Tools.visitNode(null, domElement, _systemLogger);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Create Assertion");
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Create Assertion");
 			// MySAMLAssertion oAssert = new MySAMLAssertion(domElement, _systemLogger);
 			// RM_32_02
 			SAMLAssertion oAssert = new SAMLAssertion(domElement);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "Created");
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "Created");
 
 			if (oAssert.isSigned()) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Signed!");
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "Signed!");
 				_oASelectConfigManager = ASelectConfigManager.getHandle();
 				String _sKeystoreName = new StringBuffer(_oASelectConfigManager.getWorkingdir()).append(File.separator)
 						.append("keystores").append(File.separator).append("providers.keystore").toString();
 
 				// Extract the Issuer to retrieve associated public key
 				String sIssuer = domElement.getAttribute("Issuer");
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Issuer=" + sIssuer);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "Issuer=" + sIssuer);
 
 				PublicKey pKey = loadPublicKeyFromKeystore(_sKeystoreName, sIssuer);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "pkey=" + pKey);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "pkey=" + pKey);
 				oAssert.verify(pKey);
 			}
 			else {
@@ -1354,12 +1354,12 @@ public abstract class ProtoRequestHandler extends AbstractRequestHandler
 		if (!sMessage.equals("")) {
 			try {
 				DOMParser parser = new DOMParser();
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "PARSE message: " + sMessage);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "PARSE message: " + sMessage);
 				StringReader sr = new StringReader(sMessage);
 				InputSource is = new InputSource(sr);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "parse: " + Tools.clipString(sMessage, 100, true));
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "parse: " + Tools.clipString(sMessage, 100, true));
 				parser.parse(is);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "parsed");
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "parsed");
 
 				// Get root XML tag
 				Document doc = (Document) parser.getDocument();

@@ -318,11 +318,11 @@ public class Utils
 			// Found a base64 encoded RelayState
 			sRelay = new String(Base64Codec.decode(sRelay));
 			sSpecials = Utils.getParameterValueFromUrl(sRelay, "aselect_specials");
-			logger.log(Level.INFO, MODULE, sMethod, "sRelay="+sRelay+" sSpecials="+sSpecials);
+			logger.log(Level.FINER, MODULE, sMethod, "sRelay="+sRelay+" sSpecials="+sSpecials);
 		}
 		if (sSpecials == null) {
 			sSpecials = (String)htSessionContext.get("aselect_specials");
-			logger.log(Level.INFO, MODULE, sMethod, "aselect_specials="+sSpecials);
+			logger.log(Level.FINER, MODULE, sMethod, "aselect_specials="+sSpecials);
 		}
 		if (sSpecials == null) {  // try application url
 			String sAppUrl = (String)htSessionContext.get("app_url");
@@ -331,7 +331,7 @@ public class Utils
 		}
 		if (decode && Utils.hasValue(sSpecials)) {
 			sSpecials = new String(Base64Codec.decode(sSpecials));
-			logger.log(Level.INFO, MODULE, sMethod, "sSpecials="+sSpecials);
+			logger.log(Level.FINER, MODULE, sMethod, "sSpecials="+sSpecials);
 		}
 		return sSpecials;
 	}
@@ -352,7 +352,7 @@ public class Utils
 		if (htSessionContext == null)
 			return;
 		if (logger != null)
-			logger.log(Level.INFO, MODULE, sMethod, "Set status="+sStatus);
+			logger.log(Level.FINER, MODULE, sMethod, "Set status="+sStatus);
 		if ("del".equals(sStatus))
 			htSessionContext.put("status", sStatus);
 		else {
@@ -360,7 +360,7 @@ public class Utils
 			if (!"del".equals(sOld))
 				htSessionContext.put("status", sStatus);
 			else if (logger != null)
-				logger.log(Level.INFO, MODULE, sMethod, "Skip status, already="+sOld);
+				logger.log(Level.FINER, MODULE, sMethod, "Skip status, already="+sOld);
 		}
 	}
 
@@ -411,21 +411,21 @@ public class Utils
 	{
 		final String sMethod = "handleAllConditionals";
 
-		logger.log(Level.INFO, MODULE, sMethod, "error="+bErrCond+" specials="+sSpecials);
+		logger.log(Level.FINER, MODULE, sMethod, "error="+bErrCond+" specials="+sSpecials);
 		sText = Utils.replaceConditional(sText, "[if_error,", ",", "]", bErrCond, logger);
 		
 		// 20131028, Bauke: added multiple conditions
 		if (sSpecials != null) {
 			String sParCond = getParameterValueFromUrl(sSpecials, "if_cond");
 			// Can take the form: if_cond=condition1,condition2,...
-			logger.log(Level.INFO, MODULE, sMethod, "parCond="+sParCond);
+			logger.log(Level.FINER, MODULE, sMethod, "parCond="+sParCond);
 			if (sParCond != null) {
 				// Replace true conditions
 				String[] saCond = sParCond.split(",");
 				for (int i = 0; i < saCond.length; i++) {
 					// sText example: ...[if_cond,user_change,class="row",class="do_not_display"]...
 					// First handle: if_cond,user_change
-					logger.log(Level.INFO, MODULE, sMethod, "saCond["+i+"]="+saCond[i]);
+					logger.log(Level.FINER, MODULE, sMethod, "saCond["+i+"]="+saCond[i]);
 					sText = Utils.replaceConditional(sText, "[if_cond,"+saCond[i]+",", ",", "]", true, logger);
 					sText = Utils.replaceConditional(sText, "#if_cond,"+saCond[i]+"#", "#else_cond,"+saCond[i]+"#", "#end_cond,"+saCond[i]+"#", true, logger);
 				}
@@ -474,7 +474,7 @@ public class Utils
 			return sText;
 
 		// RH, 20100622, use of ASelectLogger causes cyclic dependency server<->system
-		if (logger!=null) logger.log(Level.INFO, MODULE, sMethod, "Search="+sSearch);
+		if (logger!=null) logger.log(Level.FINER, MODULE, sMethod, "Search="+sSearch);
 		while (true) {
 			idx = sText.indexOf(sSearch);
 			if (idx < 0)
@@ -532,7 +532,7 @@ public class Utils
 		//
 		if (sText == null)
 			return sText;
-		if (logger!=null) logger.log(Level.INFO, MODULE, sMethod, "Search="+sSearch);
+		if (logger!=null) logger.log(Level.FINER, MODULE, sMethod, "Search="+sSearch);
 		
 		while (true) {
 			//logger.log(Level.INFO, MODULE, sMethod, "Text="+Utils.firstPartOf(sText, 45));
@@ -953,7 +953,7 @@ public class Utils
 		final String sMethod = "getSimpleSection";
 		Object oSection = null;
 
-		oSysLog.log(Level.INFO, MODULE, sMethod, "Param=" + sSection + " cfg=" + oConfMgr);
+		oSysLog.log(Level.FINEST, MODULE, sMethod, "Param=" + sSection + " cfg=" + oConfMgr);
 		try {
 			oSection = oConfMgr.getSection(oConfig, sSection);
 		}

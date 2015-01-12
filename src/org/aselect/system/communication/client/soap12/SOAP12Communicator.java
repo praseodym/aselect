@@ -191,7 +191,7 @@ public class SOAP12Communicator implements IClientCommunicator
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, sbBuffer.toString(), eMU);
 			throw new ASelectCommunicationException(Errors.ERROR_ASELECT_USE_ERROR, eMU);
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Response=" + Utils.firstPartOf(sResponse, 120));
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "Response=" + Utils.firstPartOf(sResponse, 120));
 
 		// Parse and return response
 		elBody = this.parse(sResponse);
@@ -230,7 +230,7 @@ public class SOAP12Communicator implements IClientCommunicator
 		}
 		// int len = sResponse.length();
 		// _systemLogger.log(Level.INFO, MODULE, sMethod, "Response="+sResponse.substring(0, (len<40)?len:40));
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Response=" + sResponse);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "Response=" + sResponse);
 		return sResponse;
 	}
 
@@ -354,7 +354,7 @@ public class SOAP12Communicator implements IClientCommunicator
 
 		// http://[target address]/[schema target]
 		url = new URL(sUrl);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "url="+sUrl+" msg="+sMessage);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "url="+sUrl+" msg="+sMessage);
 
 		try {
 			// open HTTP connection to URL
@@ -388,7 +388,7 @@ public class SOAP12Communicator implements IClientCommunicator
 				 * stream isInput.close();
 				 */// RH, 20080717, eo
 				sbBuf = new StringBuffer(Tools.stream2string(connection.getInputStream(), true)); // RH, 20080717, n
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "result="+Utils.firstPartOf(sbBuf.toString(), 40));
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "result="+Utils.firstPartOf(sbBuf.toString(), 40));
 				break;
 			}
 			case 400: // Bad request

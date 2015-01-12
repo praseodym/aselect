@@ -298,7 +298,7 @@ public class JNDIConnector implements IUDBConnector
 
 			oDirContext = getConnection();
 			try {
-				_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "Query="+sbQuery.toString());
+				_oASelectSystemLogger.log(Level.FINEST, MODULE, sMethod, "Query="+sbQuery.toString());
 				oSearchResults = oDirContext.search(_sBaseDN, sbQuery.toString(), oScope);
 			}
 			catch (NamingException e) {
@@ -337,7 +337,7 @@ public class JNDIConnector implements IUDBConnector
 					Object objValue = oAttribute.get();
 					Class<? extends Object> c = objValue.getClass();
 					boolean isString = "java.lang.String".equals(c.getCanonicalName());
-					_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "AttrID="+sAttribute+
+					_oASelectSystemLogger.log(Level.FINEST, MODULE, sMethod, "AttrID="+sAttribute+
 										" ClassName="+c.getCanonicalName()+" ="+(isString? (String)objValue: "---"));
 					if (!isString)
 						continue;  // skip
@@ -373,7 +373,7 @@ public class JNDIConnector implements IUDBConnector
 			for (Object s : keys) {
 				String sAttributeName = (String) s;
 				sAttributeValue = (String) htUserRecord.get(sAttributeName);
-				_oASelectSystemLogger.log(Level.FINER, MODULE, sMethod, "Attr: "+sAttributeName+"="+sAttributeValue);
+				_oASelectSystemLogger.log(Level.FINEST, MODULE, sMethod, "Attr: "+sAttributeName+"="+sAttributeValue);
 				if (sAttributeName.startsWith("ASELECT") && sAttributeName.endsWith("REGISTERED")) {
 					// Only store user attributes of authsps that are registered for the user
 					if (sAttributeValue.equalsIgnoreCase("TRUE")) {
@@ -381,7 +381,7 @@ public class JNDIConnector implements IUDBConnector
 						String sAuthSPID = sAttributeName.substring(7, sAttributeName.length() - 10);
 						StringBuffer sbUserAttributes = new StringBuffer("ASELECT").append(sAuthSPID).append("USERATTRIBUTES");
 						sAttributeValue = (String)htUserRecord.get(sbUserAttributes.toString());
-						_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "Reg: "+sbUserAttributes+"="+sAttributeValue);
+						_oASelectSystemLogger.log(Level.FINEST, MODULE, sMethod, "Reg: "+sbUserAttributes+"="+sAttributeValue);
 						
 						// The user attribute is used as a login name later on,
 						// but apparently it can be empty too!
@@ -394,7 +394,7 @@ public class JNDIConnector implements IUDBConnector
 							htUserAttributes.put(sCFGAuthSPID, sAttributeValue+("SMS".equals(sAuthSPID)? sVoicePhone: ""));
 						}
 						// Result looks like: Ldap=<value of AselectLdapUserAttributes>
-						_oASelectSystemLogger.log(Level.FINE, MODULE, sMethod, "Translated "+sAuthSPID+
+						_oASelectSystemLogger.log(Level.FINEST, MODULE, sMethod, "Translated "+sAuthSPID+
 										" to "+sCFGAuthSPID+" value="+sAttributeValue+sVoicePhone);
 					}
 				}
@@ -481,7 +481,7 @@ public class JNDIConnector implements IUDBConnector
 			oScope.setSearchScope(SearchControls.SUBTREE_SCOPE);
 			oDirContext = getConnection();
 
-			_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "JndiATTR Base=" + _sBaseDN + ", Qry=" + sbQuery);
+			_oASelectSystemLogger.log(Level.FINEST, MODULE, sMethod, "JndiATTR Base=" + _sBaseDN + ", Qry=" + sbQuery);
 			try {
 				oSearchResults = oDirContext.search(_sBaseDN, sbQuery.toString(), oScope);
 			}
@@ -501,7 +501,7 @@ public class JNDIConnector implements IUDBConnector
 				oAttributes = oSearchResult.getAttributes();
 				boolean bFound = false; // attribute found
 
-				_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "JndiATTR Attrs=" + oAttributes);
+				_oASelectSystemLogger.log(Level.FINEST, MODULE, sMethod, "JndiATTR Attrs=" + oAttributes);
 				StringBuffer sbUserAttributes = new StringBuffer("aselect");
 				sbUserAttributes.append(sAuthSPId);
 				sbUserAttributes.append("UserAttributes");
@@ -554,7 +554,7 @@ public class JNDIConnector implements IUDBConnector
 			catch (Exception e) {
 			}
 		}
-		_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "Return=" + sAttributeValue);
+		_oASelectSystemLogger.log(Level.FINEST, MODULE, sMethod, "Return=" + sAttributeValue);
 		return sAttributeValue;
 	}
 
@@ -601,7 +601,7 @@ public class JNDIConnector implements IUDBConnector
 			}
 
 			sbQuery = new StringBuffer("(").append(_sUserDN).append("=").append(sUserId).append(")");
-			_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "Search for "+sbQuery);
+			_oASelectSystemLogger.log(Level.FINER, MODULE, sMethod, "Search for "+sbQuery);
 			
 			SearchControls oScope = new SearchControls();
 			oScope.setSearchScope(SearchControls.SUBTREE_SCOPE);
@@ -613,7 +613,7 @@ public class JNDIConnector implements IUDBConnector
 				// We only handle the first returned record.
 				SearchResult oSearchResult = (SearchResult) oSearchResults.next();
 				oAttributes = oSearchResult.getAttributes();
-				_oASelectSystemLogger.log(Level.INFO, MODULE, sMethod, "Found "+oAttributes);
+				_oASelectSystemLogger.log(Level.FINEST, MODULE, sMethod, "Found "+oAttributes);
 				
 				boolean bFound = false; // attribute found
 				for (NamingEnumeration oAttrEnum = oAttributes.getAll(); oAttrEnum.hasMore() && !bFound;) {

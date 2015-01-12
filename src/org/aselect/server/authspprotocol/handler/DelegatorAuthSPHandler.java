@@ -170,7 +170,7 @@ public class DelegatorAuthSPHandler implements IAuthSPProtocolHandler
 			// log start
 			StringBuffer sbInfo = new StringBuffer("Starting : ");
 			sbInfo.append(MODULE);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, sbInfo.toString());
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, sbInfo.toString());
 
 			try {
 				_sAuthsp = _oConfigManager.getParam(oAuthSpConfig, "id");
@@ -393,13 +393,13 @@ public class DelegatorAuthSPHandler implements IAuthSPProtocolHandler
 				sbTemp.append(sDelegateFields);
 
 			boolean bVerifies = false;
-			_systemLogger.log(Level.INFO, MODULE, sMethod,  "Verify[" + sbTemp + "]");
+			_systemLogger.log(Level.FINEST, MODULE, sMethod,  "Verify[" + sbTemp + "]");
 			bVerifies = CryptoEngine.getHandle().verifySignature(_sAuthsp, sbTemp.toString(), sSignature);
 
 			if (!bVerifies) {
 				sbTemp = new StringBuffer();
 				sbTemp.append(" invalid signature in response from AuthSP:" + _sAuthsp);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, sbTemp.toString());
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, sbTemp.toString());
 
 				htResponse.put("result", Errors.ERROR_ASELECT_AUTHSP_INVALID_RESPONSE);
 				return htResponse;

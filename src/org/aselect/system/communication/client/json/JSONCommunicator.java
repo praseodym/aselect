@@ -187,13 +187,13 @@ public class JSONCommunicator implements IClientCommunicator
 		StringBuffer sbBuffer = new StringBuffer();
 
 		sbBuffer = new StringBuffer(sUrl).append("?").append(sParams);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "URL=" + sbBuffer.toString());
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "URL=" + sbBuffer.toString());
 		try {
 			urlSomeServer = new URL(sbBuffer.toString());
 			brInput = new BufferedReader(new InputStreamReader(urlSomeServer.openStream()), 16000);
 			String s = null;
 			while ( (s = brInput.readLine()) != null) {
-				_systemLogger.log(Level.FINER, MODULE, sMethod, "Input from the other server=" +s);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Input from the other server=" +s);
 				sInputLine += s;
 			}
 			brInput.close();

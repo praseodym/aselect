@@ -69,7 +69,7 @@ public abstract class BasicRequestHandler
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request since no applications are configured.");
 			throw new ASelectException(Errors.ERROR_ASELECT_SERVER_INVALID_REQUEST);
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "hmInput=" + hmInput);
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "hmInput=" + hmInput);
 		String sUsi = hmInput.get("usi");
 		if (!Utils.hasValue(sUsi))
 			sUsi = Tools.generateUniqueSensorId();  // 20120111, Bauke added
@@ -135,7 +135,7 @@ public abstract class BasicRequestHandler
 			if (sUid != null)
 				sbData.append(sUid);
 
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "sbData=" + sbData);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "sbData=" + sbData);
 			verifyApplicationSignature(sSignature, sbData.toString(), sAppId);
 		}
 
@@ -195,7 +195,7 @@ public abstract class BasicRequestHandler
 		
 		// RH, 20140422, sn
 		if (sAuthsp == null && aApp.getFirstAuthsp() != null ) {
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "found first_authsp="+aApp.getFirstAuthsp()+" ,setting fixed_authsp to:"+aApp.getFirstAuthsp());
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "found first_authsp="+aApp.getFirstAuthsp()+" ,setting fixed_authsp to:"+aApp.getFirstAuthsp());
 			htSessionContext.put("fixed_authsp", aApp.getFirstAuthsp());
 		}			
 		// RH, 20140422, en
@@ -251,7 +251,7 @@ public abstract class BasicRequestHandler
 		else if (sUrlTarget != null)
 			sbAsUrl.append(sUrlTarget);
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "appLevel="+intAppLevel+" maxAppLevel="+intMaxAppLevel);
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "appLevel="+intAppLevel+" maxAppLevel="+intMaxAppLevel);
 		Vector vAuthSPs = _authSPManagerManager.getConfiguredAuthSPs(intAppLevel, intMaxAppLevel);
 		
 		// Authentication OK
@@ -266,7 +266,7 @@ public abstract class BasicRequestHandler
 			// If there is a first_authsp there must be a next_authsp defined for this app
 			// to ensure no tgt will be set until next_authsp has been handled
 			if (_authSPManagerManager.getNextAuthSP(aApp.getFirstAuthsp(), aApp.getId()) != null) {
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Found first_authsp="+aApp.getFirstAuthsp()+" , setting direct_authsp to:"+aApp.getFirstAuthsp());
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "Found first_authsp="+aApp.getFirstAuthsp()+" , setting direct_authsp to:"+aApp.getFirstAuthsp());
 				// A-Select will show username and password box in one page.
 				sbAsUrl.append("?request=direct_login1");
 				htSessionContext.put("direct_authsp", aApp.getFirstAuthsp());
@@ -361,7 +361,7 @@ public abstract class BasicRequestHandler
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Unknown user id or user account is not enabled.");
 			return false;
 		}
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "User is enabled: "+sUID);
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "User is enabled: "+sUID);
 		return true;
 	}
 	
@@ -383,7 +383,7 @@ public abstract class BasicRequestHandler
 		Long now = new Date().getTime();
 		String ssTime = (String)htTGTContext.get("sessionsynctime");
 		Long lastSync = (ssTime == null) ? 0 : Long.parseLong(ssTime);
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "Redirect sync after="+lSyncTime+" Elapsed="+ (now-lastSync)+": now="+now+" last="+ssTime);
+		_systemLogger.log(Level.FINER, MODULE, sMethod, "Redirect sync after="+lSyncTime+" Elapsed="+ (now-lastSync)+": now="+now+" last="+ssTime);
 		return (now - lastSync > lSyncTime);
 	}
 

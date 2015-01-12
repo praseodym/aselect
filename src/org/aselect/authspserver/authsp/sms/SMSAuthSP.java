@@ -279,7 +279,7 @@ public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 		try {
 			String sQueryString = servletRequest.getQueryString();
 			HashMap htServiceRequest = Utils.convertCGIMessage(sQueryString, false);
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "GET htServiceRequest=" + htServiceRequest);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "GET htServiceRequest=" + htServiceRequest);
 			sLanguage = (String) htServiceRequest.get("language");  // optional language code
 			if (sLanguage == null || sLanguage.trim().length() < 1)
 				sLanguage = null;
@@ -326,7 +326,7 @@ public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 				sbData.append(sAserverId);
 				if (sCountry != null) sbData.append(sCountry);
 				if (sLanguage != null) sbData.append(sLanguage);
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "Verifying alias data signature:" 
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "Verifying alias data signature:" 
 						+ sAserverId + " Data=" +  sbData.toString() + " Sign=" + sSignature );
 
 				if (!_cryptoEngine.verifySignature(sAserverId, sbData.toString(), sSignature)) {
@@ -373,7 +373,7 @@ public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 					// We want to show the challenge form only the first time around,
 					// therefore make sure the form contains a "challenge" input field.
 					if (_bShow_challenge && htServiceRequest.get("challenge") == null ) {
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "challenge FORM htServiceRequest=" + htServiceRequest);
+						_systemLogger.log(Level.FINEST, MODULE, sMethod, "challenge FORM htServiceRequest=" + htServiceRequest);
 						
 						// Challenge form should inform user about invalid phone number 
 						/* 20141216, Bauke: set error_code to activate the error message in challenge.html: */
@@ -385,7 +385,7 @@ public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 				}
 
 				// Code sent successfully
-				_systemLogger.log(Level.INFO, MODULE, sMethod, "FORM htServiceRequest=" + htServiceRequest);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "FORM htServiceRequest=" + htServiceRequest);
 				showAuthenticateForm(pwOut, ""/*no error*/, htServiceRequest);
 			}
 		}
@@ -462,7 +462,7 @@ public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 		String sLanguage = null;
 		String failureHandling = _sFailureHandling;	// Initially we use default from config, this might change if we suspect parameter tampering
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "POST htServiceRequest=" + servletRequest);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "POST htServiceRequest=" + servletRequest);
 		try {
 			sLanguage = servletRequest.getParameter("language");  // optional language code
 			if (sLanguage == null || sLanguage.trim().length() < 1)
@@ -484,7 +484,7 @@ public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 			sUid = servletRequest.getParameter("uid");
 			String sSignature = servletRequest.getParameter("signature");
 			String sRetryCounter = servletRequest.getParameter("retry_counter");
-			_systemLogger.log(Level.INFO, MODULE, sMethod, "uid=" + sUid + " password=" + sPassword + " rid=" + sRid);
+			_systemLogger.log(Level.FINEST, MODULE, sMethod, "uid=" + sUid + " password=" + sPassword + " rid=" + sRid);
 			if ((sRid == null) || (sAsUrl == null) || (sUid == null) || (sPassword == null) || (sAserverId == null)
 					|| (sRetryCounter == null) || (sSignature == null)) {
 				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Invalid request received: one or more mandatory parameters missing, handling error locally.");
@@ -713,7 +713,7 @@ public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 		}
 		// RH, 20100907, en
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "error_code="+sError+" message="+sErrorMessage);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "error_code="+sError+" message="+sErrorMessage);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[uid]", sUid);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[rid]", sRid);
 		sAuthenticateForm = Utils.replaceString(sAuthenticateForm, "[as_url]", sAsUrl);
@@ -788,7 +788,7 @@ public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 		}
 		// RH, 20100907, en
 
-		_systemLogger.log(Level.INFO, MODULE, sMethod, "error_code="+sError+" message="+sErrorMessage);
+		_systemLogger.log(Level.FINEST, MODULE, sMethod, "error_code="+sError+" message="+sErrorMessage);
 		sChallengeForm = Utils.replaceString(sChallengeForm, "[uid]", sUid);
 		sChallengeForm = Utils.replaceString(sChallengeForm, "[rid]", sRid);
 		sChallengeForm = Utils.replaceString(sChallengeForm, "[as_url]", sAsUrl);
@@ -868,7 +868,7 @@ public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 					sbTemp.append("&signature=").append(sSignature);
 
 					try {
-						_systemLogger.log(Level.INFO, MODULE, sMethod, "REDIRECT " + sbTemp);
+						_systemLogger.log(Level.FINEST, MODULE, sMethod, "REDIRECT " + sbTemp);
 						servletResponse.sendRedirect(sbTemp.toString());
 					}
 					catch (IOException eIO) // could not send redirect
@@ -917,7 +917,7 @@ public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 		//String sText = _sSmsText.replaceAll("0", sSecret);
 		
 		// RM_20_04
-		_systemLogger.log(Level.INFO, MODULE, "generateAndSend", "Text=" + _sSmsText+ " Secret=" + sSecret);
+		_systemLogger.log(Level.FINEST, MODULE, "generateAndSend", "Text=" + _sSmsText+ " Secret=" + sSecret);
 		int result = 0;
 		if (_fixed_secret == null) {
 			result = _oSmsSender.sendSms(_sSmsText, sSecret, _sSmsFrom, sRecipient);	// RH, 20110913, n
