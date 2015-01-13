@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+# Author: Bauke Hiemstra - www.anoigo.nl
+#
+# Licensed under EUPL 1.0 (http://ec.europe.eu/idabc/servlets/Doc?id=27470) or /opt/anoigo/license
+# Copyright: Anoigo Ltd. (http://www.anoigo.nl)
+#
+# Version 1.0 - 7-7-2009
+#
+# Start or stop the lbsensor application
+# NOTE: This script must be run in the lbsensor installation directory
+#
+export LBSENSOR_HOME=/opt/anoigo/am/aselect
+: ${JAVA_HOME?"JAVA_HOME has not been set"}
+JAVAOPTS="-verbose"
+
+case "$1" in
+start)
+    # NOTE: classpath is controled by META.INF/Manifest.MF
+    exec ${JAVA_HOME}/bin/java ${JAVA_OPTS} -server \
+    		-Duser.dir="$LBSENSOR_HOME/work/lbsensor" \
+    		-classpath "$LBSENSOR_HOME/bin/lbsensor" \
+		-jar "$LBSENSOR_HOME/bin/lbsensor/org.aselect.lbsensor.jar" &
+    ;;
+stop)
+    FIND=org.aselect.lbsensor.jar
+    PIDS=`ps -ef | grep $FIND | grep -v "grep $FIND" | grep -v "killproc $FIND" | gawk '{ print $2 }'`
+    case "$PIDS" in
+    '') ;;
+    *) echo Stop $PIDS; kill $PIDS;;
+    esac
+    ;;
+*)
+    echo "Usage `basename $0` start/stop"
+    exit 1
+    ;;
+esac

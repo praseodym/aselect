@@ -1,0 +1,72 @@
+<xml>
+<lbsensor>
+    <logging id="system" target='file'>
+	<level>FINER</level>
+	<target id='file'>
+	    <max_file_size>1024000</max_file_size>
+	    <nr_of_files>4</nr_of_files>
+	    <directory>/opt/anoigo/am/aselect/log/lbsensor</directory>
+	</target>
+    </logging>
+</lbsensor>
+
+<handlers>
+<!-- BEGIN_ECHO_APPLICATION -->
+    <!-- functions as a simple http application, echoes url/header/data info
+	 can be used for testing purposes, otherwise not needed -->
+    <handler id="echo" class="org.aselect.lbsensor.handler.BasicSensorHandler">
+	<listen_port>1800</listen_port>
+    </handler>
+<!-- END_ECHO_APPLICATION -->
+
+<!-- BEGIN_HTTP_SENSOR-->
+    <!-- client: register up/down state by polling a HTTP server
+	 server: receive performance statistics from clients -->
+    <handler id="http_sensor" class="org.aselect.lbsensor.handler.HttpSensor">
+	<listen_port>1801</listen_port>
+	<server_url>https://aselect.anoigo.nl/aselectserver/server?request=alive</server_url>
+	<sign_of_life>Server is ALIVE</sign_of_life> <!-- expected response from server -->
+	<nr_of_intervals>6</nr_of_intervals> <!-- for the running average calculation -->
+	<interval_length>30</interval_length> <!-- for the running average calculation (seconds) -->
+	<polling_interval>601</polling_interval> <!-- start a poll when no data is received for ... seconds -->
+    </handler>
+    <!-- server: provide a client with data collected by a sensor -->
+    <handler id="http_dispatch" class="org.aselect.lbsensor.handler.SensorDataDispatcher">
+	<listen_port>1802</listen_port>
+	<store_handler_id>http_sensor</store_handler_id> <!-- refers to the sensor id -->
+	<accept_limit>4000</accept_limit> <!-- in milliseconds, report 404 when response time is larger -->
+	<down_limit>15000</down_limit> <!-- in milliseconds, report 503 when response time is larger -->
+    </handler>
+<!-- END_HTTP_SENSOR-->
+
+<!-- BEGIN_JDBC_SENSOR-->
+    <!-- client: jdbc does not send data, so only polling is used -->
+    <handler id="jdbc_sensor" class="org.aselect.lbsensor.handler.JdbcSensor">
+	<listen_port>1803</listen_port>
+	<jdbc_driver>com.mysql.jdbc.Driver</jdbc_driver>
+	<jdbc_url>jdbc:mysql://127.0.0.1:10000/ASELECT</jdbc_url>
+	<username>aselect</username>
+	<password>demodemo</password>
+	<query>select count(*) from ASELECT.aselect_tgt;</query>
+	<polling_interval>67</polling_interval>
+    </handler>
+    <!-- server: listens for client requests -->
+    <handler id="jdbc_dispatch" class="org.aselect.lbsensor.handler.SensorDataDispatcher">
+	<listen_port>1804</listen_port>
+	<store_handler_id>jdbc_sensor</store_handler_id>
+	<accept_limit>1200</accept_limit> <!-- in milliseconds -->
+    </handler>
+<!-- END_JDBC_SENSOR-->
+
+<!-- BEGIN_TIMER_SENSOR-->
+    <!-- server: listens for client requests, export results to file -->
+    <handler id="data_collector" class="org.aselect.lbsensor.handler.DataCollectSensor">
+	<listen_port>1805</listen_port>
+	<export_after>600</export_after>
+	<collect_level>1</collect_level>
+	<run_export>60</run_export>
+	<translate_usi>1</translate_usi>
+    </handler>
+<!-- END_TIMER_SENSOR-->
+</handlers>
+</xml>

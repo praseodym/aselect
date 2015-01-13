@@ -1,0 +1,14 @@
+<xml>
+<aselect>
+...
+<!-- BEGIN_TIMER_SENSOR-->
+    <timer_sensor>
+	<sensor_url>http://localhost:1805</sensor_url>
+	<clientcommunicator>raw</clientcommunicator>
+	<batch_size>20</batch_size>
+	<batch_period>60</batch_period>
+    </timer_sensor>
+<!-- END_TIMER_SENSOR-->
+</aselect>
+...
+<xml>
