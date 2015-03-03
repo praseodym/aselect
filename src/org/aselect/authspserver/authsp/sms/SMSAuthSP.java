@@ -539,7 +539,8 @@ public class SMSAuthSP extends AbstractAuthSP  // 20141201, Bauke: inherit goodi
 				String formSignature = sa[2];
 				sRetryCounter = sa[0] + ":" + sa[1]; // now also contains formtoken
 				String signedParms = sConcat(sAserverId, sUid, sRetryCounter);
-				_systemLogger.log(Level.FINEST, MODULE, sMethod, "sRetryCounter:" +sa[1] + ", formtoken:" + formtoken);
+//				_systemLogger.log(Level.FINEST, MODULE, sMethod, "sRetryCounter:" +sa[1] + ", formtoken:" + formtoken);
+				_systemLogger.log(Level.FINEST, MODULE, sMethod, "sRetryCounter:" + sRetryCounter + ", formtoken:" + formtoken);
 				if ( !_cryptoEngine.verifyMySignature(signedParms, formSignature) || !sa[1].equals(formtoken) ) {
 					StringBuffer sbWarning = new StringBuffer("Invalid signature from User form '");
 					sbWarning.append(sAserverId).append("' for user: ").append(sUid);
