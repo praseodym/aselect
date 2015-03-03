@@ -605,6 +605,10 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			
 			// No SP's left (except the initiating SP)
 			String sSendIdPLogout = (String) htTGTContext.get("SendIdPLogout");
+			//////////////////////////////////////////////
+			// 20150224, for testing logout
+//			sSendIdPLogout = "true";
+			////////////////////////////////////////////////////
 			String sAuthspType = (String) htTGTContext.get("authsp_type");
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "No SP's left. SendIdPLogout="+sSendIdPLogout + " authsp_type="+sAuthspType);
 			// For Saml20, will also send word to the IdP
@@ -612,7 +616,9 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 				htTGTContext.put("SendIdPLogout", "true");
 				tgtManager.updateTGT(sNameID, htTGTContext);
 				// Should also come back to this handler, but an IdP will send to the slo_http_response handler!
-				sendLogoutToIdP(httpRequest, httpResponse, sNameID, htTGTContext, _sASelectServerUrl, null/* sLogoutReturnUrl */);
+//				sendLogoutToIdP(httpRequest, httpResponse, sNameID, htTGTContext, _sASelectServerUrl, null/* sLogoutReturnUrl */);
+				// RH, 20150226, for testing
+				sendLogoutToIdP(httpRequest, httpResponse, sNameID, htTGTContext, _sASelectServerUrl, originalLogoutRequest.getID()/* sLogoutReturnUrl */);
 				// _sASelectServerUrl+"/saml20_sp_slo_http_request");
 				// The sp_slo_htt_response handler must take care of TgT destruction
 				// and responding to the caller
@@ -625,6 +631,10 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 		// And answer the initiating SP by sending a LogoutResponse
 		// Get location from metadata, try ResponseLocation first, then Location
 		MetaDataManagerIdp metadataManager = MetaDataManagerIdp.getHandle();
+		///////////////////
+		// RH, 20150224, for testing
+//		initiatingSP = "https://siam20.theopenfactory.local/aselectserver/server";
+		////////////////////////////////////////
 		String logoutResponseLocation = metadataManager.getResponseLocation(initiatingSP,
 				SingleLogoutService.DEFAULT_ELEMENT_LOCAL_NAME, SAMLConstants.SAML2_REDIRECT_BINDING_URI);
 		if (logoutResponseLocation == null) {
@@ -637,7 +647,8 @@ public abstract class Saml20_BrowserHandler extends Saml20_BaseHandler
 			// see if "initiatingSP" == idp
 			_systemLogger.log(Level.FINER, MODULE, sMethod, "initiatingSP: " + initiatingSP + ", _sASelectServerUrl: " +  _sASelectServerUrl);
 			
-			if (initiatingSP.equalsIgnoreCase(_sASelectServerUrl)) {
+//			if (initiatingSP.equalsIgnoreCase(_sASelectServerUrl)) {// RH, 20150223, o
+			if (_sASelectServerUrl.equalsIgnoreCase(initiatingSP)) {	// RH, 20150223, n, avoid null pointers
 				logoutResponseLocation = _sASelectServerUrl + "/saml20_idp_slo_http_response";
 			}
 		}

@@ -86,10 +86,16 @@ public class LogoutResponseSender
 		SAMLObjectBuilder<Endpoint> endpointBuilder = (SAMLObjectBuilder<Endpoint>) builderFactory
 				.getBuilder(AssertionConsumerService.DEFAULT_ELEMENT_NAME);
 		Endpoint samlEndpoint = endpointBuilder.buildObject();
-		samlEndpoint.setLocation(logoutResponseLocation);
-		String sAppUrl = request.getRequestURL().toString();
-		samlEndpoint.setResponseLocation(sAppUrl);
-
+		// RH, 20150226, so
+//		samlEndpoint.setLocation(logoutResponseLocation);
+//		String sAppUrl = request.getRequestURL().toString();
+//		samlEndpoint.setResponseLocation(sAppUrl)
+		// RH, 20150226, eo
+		// RH, 20150226, sn
+		// HTTPRedirectDeflateEncoder only uses ResponseLocation when sending StatusResponseType and ResponseLocation not empty
+		samlEndpoint.setResponseLocation(logoutResponseLocation);
+		// RH, 20150226, en
+		
 		HttpServletResponseAdapter outTransport = SamlTools.createHttpServletResponseAdapter(response,
 				logoutResponseLocation);
 		// RH 20081113, set appropriate headers

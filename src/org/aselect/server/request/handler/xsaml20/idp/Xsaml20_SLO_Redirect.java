@@ -24,6 +24,7 @@ import org.aselect.server.application.ApplicationManager;
 import org.aselect.server.config.ASelectConfigManager;
 import org.aselect.server.request.HandlerTools;
 import org.aselect.server.request.handler.xsaml20.Saml20_BrowserHandler;
+import org.aselect.server.request.handler.xsaml20.SamlHistoryManager;
 import org.aselect.server.request.handler.xsaml20.SamlTools;
 import org.aselect.server.request.handler.xsaml20.ServiceProvider;
 import org.aselect.server.tgt.TGTManager;
@@ -142,6 +143,12 @@ public class Xsaml20_SLO_Redirect extends Saml20_BrowserHandler
 			String sConsent = httpRequest.getParameter("consent");
 			String sInitiatingSP = logoutRequest.getIssuer().getValue();
 			_systemLogger.log(Level.INFO, MODULE, sMethod, "consent=" + sConsent + " SP=" + sInitiatingSP);
+
+			// RH, 20150226, for testing
+			// Store it in the history
+			SamlHistoryManager history = SamlHistoryManager.getHandle();
+			String originalID = logoutRequest.getID();
+			history.put(originalID, logoutRequest.getDOM());
 
 			String sNameID = logoutRequest.getNameID().getValue();
 			TGTManager tgtManager = TGTManager.getHandle();

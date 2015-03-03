@@ -33,6 +33,7 @@ import org.opensaml.saml2.core.LogoutResponse;
 import org.opensaml.saml2.core.StatusCode;
 import org.opensaml.ws.message.encoder.MessageEncodingException;
 import org.opensaml.xml.XMLObject;
+import org.opensaml.xml.util.XMLHelper;
 import org.w3c.dom.Element;
 
 
@@ -41,7 +42,7 @@ import org.w3c.dom.Element;
 //
 public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 {
-	private static final String MODULE = "idp.LogoutResponseHandler";
+	private static final String MODULE = "idp.Xsaml20_SLO_Response";
 	private final String LOGOUTRESPONSE = "LogoutResponse";
 
 	private int _iRedirectLogoutTimeout = 30;
@@ -136,6 +137,8 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 		XMLObject originalRequest = null;
 		try {
 			originalRequest = SamlTools.unmarshallElement(element);
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "originalRequest=" + XMLHelper.prettyPrintXML(originalRequest.getDOM()));	// RH, 20150224, n
+			
 		}
 		catch (MessageEncodingException e) {
 			_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error while unmarshalling " + element, e);
@@ -164,9 +167,42 @@ public class Xsaml20_SLO_Response extends Saml20_BrowserHandler
 			}
 			return;
 		}
-		///////////////////////////////////////
-		logoutNextSessionSP(httpRequest, httpResponse, originalLogoutRequest, null, null,
+
+		// RH, 20150226, sn, retrieve originatingSP logoutrequest, the SP that started the logout sequence
+		Element element2 = null;
+		String originatingSPIssuer = null;
+		String originatingSPLogoutRequestID = null;
+		
+		// sRelayState contains originatingSPID
+		if (sRelayState != null && (element2 = (Element) SamlHistoryManager.getHandle().get(sRelayState)) != null) {
+			SamlHistoryManager.getHandle().remove(sRelayState); // we only need it once
+			// Get the original LogoutRequest sent by the originatingSP
+			XMLObject originatingSPRequest = null;
+			try {
+				originatingSPRequest = SamlTools.unmarshallElement(element2);
+				_systemLogger.log(Level.FINER, MODULE, sMethod, "originatingSPRequest=" + XMLHelper.prettyPrintXML(originatingSPRequest.getDOM()));
+			}
+			catch (MessageEncodingException e) {
+				_systemLogger.log(Level.WARNING, MODULE, sMethod, "Error while unmarshalling " + element, e);
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			}
+			if (!(originatingSPRequest instanceof LogoutRequest)) {
+				// Must be a LogoutRequest
+				String msg = "LogoutRequest expected from SamlMessageHistory but received: " + originatingSPRequest.getClass();
+				_systemLogger.log(Level.INFO, MODULE, sMethod, msg);
+				throw new ASelectException(Errors.ERROR_ASELECT_INTERNAL_ERROR);
+			}
+			 LogoutRequest originatingSPLogoutRequest = (LogoutRequest) originatingSPRequest;
+			 originatingSPIssuer = originatingSPLogoutRequest.getIssuer().getValue();
+			 originatingSPLogoutRequestID = originatingSPLogoutRequest.getID();
+		} else {
+			_systemLogger.log(Level.FINER, MODULE, sMethod, "No originatingSP LogoutRequest found, sRelayState=" + sRelayState);
+		}
+
+//		logoutNextSessionSP(httpRequest, httpResponse, originalLogoutRequest, null, null,	// RH, 20150226, o
+		logoutNextSessionSP(httpRequest, httpResponse, originalLogoutRequest, originatingSPIssuer, originatingSPLogoutRequestID,
 				_bTryRedirectLogoutFirst, _bSkipInvalidRedirects, _iRedirectLogoutTimeout, null, logoutResponse.getIssuer());
+		//	RH, 20150226, en
 	}
 
 	/* (non-Javadoc)
